@@ -5,5 +5,5 @@ protocol multimanDupMgrsMgr {
 
 child:
     multimanDupMgrs();
-    __delete__();
+    async __delete__();
 };

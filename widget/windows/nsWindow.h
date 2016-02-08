@@ -25,6 +25,7 @@
 #include "nsITimer.h"
 #include "nsRegion.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "nsMargin.h"
@@ -172,11 +173,6 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr) override;
   NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
-  NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                                         double aOriginalDeltaY,
-                                                         double& aOverriddenDeltaX,
-                                                         double& aOverriddenDeltaY) override;
-
   virtual nsresult        SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                    int32_t aNativeKeyCode,
                                                    uint32_t aModifierFlags,
@@ -309,8 +305,9 @@ public:
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 
-  virtual void SetCandidateWindowForPlugin(int32_t aX,
-                                           int32_t aY) override;
+  virtual void SetCandidateWindowForPlugin(
+                 const mozilla::widget::CandidateWindowPosition&
+                   aPosition) override;
   virtual void DefaultProcOfPluginEvent(
                  const mozilla::WidgetPluginEvent& aEvent) override;
 
@@ -633,7 +630,7 @@ protected:
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 
-  CRITICAL_SECTION mPresentLock;
+  mozilla::gfx::CriticalSection mPresentLock;
 
   double mSizeConstraintsScale; // scale in effect when setting constraints
 };

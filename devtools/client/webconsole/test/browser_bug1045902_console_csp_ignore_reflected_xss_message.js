@@ -1,14 +1,10 @@
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* Description of the test:
- * We are loading a file with the following CSP:
- *     'reflected-xss filter'
- * This directive is not supported, hence we confirm that
- * the according message is displayed in the web console.
- */
+// Tests that a file with an unsupported CSP directive ('reflected-xss filter')
+// displays the appropriate message to the console.
 
 "use strict";
 

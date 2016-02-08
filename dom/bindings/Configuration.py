@@ -150,7 +150,15 @@ class Configuration:
             if t.isUnion():
                 filenamesForUnion = self.filenamesPerUnion[t.name]
                 if t.filename() not in filenamesForUnion:
-                    if len(filenamesForUnion) == 0:
+                    # We have a to be a bit careful: some of our built-in
+                    # typedefs are for unions, and those unions end up with
+                    # "<unknown>" as the filename.  If that happens, we don't
+                    # want to try associating this union with one particular
+                    # filename, since there isn't one to associate it with,
+                    # really.
+                    if t.filename() == "<unknown>":
+                        uniqueFilenameForUnion = None
+                    elif len(filenamesForUnion) == 0:
                         # This is the first file that we found a union with this
                         # name in, record the union as part of the file.
                         uniqueFilenameForUnion = t.filename()

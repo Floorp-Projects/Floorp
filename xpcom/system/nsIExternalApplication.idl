@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsPIDOMWindow;
+interface nsPIDOMWindowInner;
 
 [builtinclass, uuid(adf6b501-609a-4f54-ac16-39b54d6358b5)]
 interface nsICustomEventDispatch : nsISupports {
@@ -19,9 +19,9 @@ interface nsICustomPropertyBag : nsISupports {
   void removeProperty(in AString name);
 };
 
-[builtinclass, uuid(c100de94-e699-4941-b528-eaff1af5b15c)]
+[builtinclass, uuid(ce42a847-3926-473e-95e0-ed4a88977232)]
 interface nsIExternalApplication : nsISupports {
-  void init(in nsPIDOMWindow window, in nsICustomPropertyBag bag, in nsICustomEventDispatch callback);
+  void init(in nsPIDOMWindowInner window, in nsICustomPropertyBag bag, in nsICustomEventDispatch callback);
   void postMessage(in AString message);
 };
 

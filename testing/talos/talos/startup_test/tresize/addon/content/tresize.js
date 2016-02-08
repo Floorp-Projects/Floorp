@@ -16,7 +16,7 @@ var dumpDataSet = false;
 var doneCallback = null;
 
 function painted() {
-  window.gBrowser.removeEventListener("MozAfterPaint", painted, true);
+  window.removeEventListener("MozAfterPaint", painted, true);
   var paintTime = window.performance.now();
   Profiler.pause("resize " + count);
   dataSet[count].end = paintTime;
@@ -26,7 +26,7 @@ function painted() {
 function resizeTest() {
   try {
     windowSize += resizeIncrement;
-    window.gBrowser.addEventListener("MozAfterPaint", painted, true);
+    window.addEventListener("MozAfterPaint", painted, true);
     Profiler.resume("resize " + count);
     dataSet[count] = {'start': window.performance.now()};
     window.resizeTo(windowSize,windowSize);

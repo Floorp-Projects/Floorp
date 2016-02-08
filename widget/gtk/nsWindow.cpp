@@ -2201,7 +2201,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             GdkWindow *gdkWin = GDK_WINDOW(children->data);
             nsWindow *kid = get_window_for_gdk_window(gdkWin);
             if (kid && gdk_window_is_visible(gdkWin)) {
-                nsAutoTArray<LayoutDeviceIntRect,1> clipRects;
+                AutoTArray<LayoutDeviceIntRect,1> clipRects;
                 kid->GetWindowClipRegion(&clipRects);
                 LayoutDeviceIntRect bounds;
                 kid->GetBounds(bounds);
@@ -4315,9 +4315,9 @@ nsWindow::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
 {
     const nsTArray<LayoutDeviceIntRect>* newRects = &aRects;
 
-    nsAutoTArray<LayoutDeviceIntRect,1> intersectRects;
+    AutoTArray<LayoutDeviceIntRect,1> intersectRects;
     if (aIntersectWithExisting) {
-        nsAutoTArray<LayoutDeviceIntRect,1> existingRects;
+        AutoTArray<LayoutDeviceIntRect,1> existingRects;
         GetWindowClipRegion(&existingRects);
 
         LayoutDeviceIntRegion existingRegion = RegionFromArray(existingRects);
@@ -5089,7 +5089,7 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
         // the current submenu
         uint32_t popupsToRollup = UINT32_MAX;
         if (!aAlwaysRollup) {
-            nsAutoTArray<nsIWidget*, 5> widgetChain;
+            AutoTArray<nsIWidget*, 5> widgetChain;
             uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
             for (uint32_t i=0; i<widgetChain.Length(); ++i) {
                 nsIWidget* widget = widgetChain[i];

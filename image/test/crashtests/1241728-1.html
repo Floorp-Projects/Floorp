@@ -1,0 +1,17 @@
+<html>
+<body>
+<img id='m1' src='data:image/bmp;base64,Qk16AAAAAAAAAJUAABMoAAAAIA4AACAAACYBAAQAAgAAAAB/AAQCAADE9Sj/AAkAAAAAAAAR4AAAAAD/AAAA//8A////AAAAAAAAAAAAAAAAADAAMzMzMzMzMDMzMwMzGAMzMzMzMzMwABEIAf8AAAAzMzMzMzMwADIzMxERERMzMxERERGAADMzMwAAAIAzMzMzMzMzPzMzMwAAADAAADNGMzMzM0JNegAAAAAAABN2AAAAKAAAACAOAAAgFgAAAQAEAAIAAAAAfxYAEgsAABILAAAAABp/VLge/AAA/+D6AAAAAP8AAP//AP///wAAAAAwAAMzMzMzIgOPMzMzOxCA/42NjY2NjY2NjY0zM0EcMzLgMzAzMzMzMzMzMzMzMzMfAAAREREz/xE2MzczMzwWMzMAAACAMzMzLzMzMz8zMzMAAAAwAAAzRkZGRkYzMzAzMwkDMzMwSjMzMxEzMzMwABERAR4EADPyMzMzMzMwFhYWLQAAAIAzERYGFhYWFhYWVhYWFhYWFhYWFhYWFhYWFhYWFhsWAxYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYzM0EcMzLgMzAzMzMWFhYWFhYW//8AAAMWFhYWFhYWFhEZEREDMzMzMzMzMzMwfzMzM1AzMAMzMzQgAAAAEQMzMzMwFwAIAIMzMzMeYRAcMzLgMzAzMzMzAzL4MzMzMzPoAzMzMzMv+i/uMzMzMzM='>
+<img id='m2' height='2' width='2'>
+<canvas id='c1'></canvas>
+<script>
+  var im1=document.getElementById('m1');
+  var im2=document.getElementById('m2');
+  im2.src=im1.src;
+  window.onload=function(){
+    var ctx=document.getElementById('c1').getContext('2d');
+    ctx.drawImage(im1, 0, 0);
+    ctx.drawImage(im2, 0, 0);
+  }
+</script>
+</body>
+</html>

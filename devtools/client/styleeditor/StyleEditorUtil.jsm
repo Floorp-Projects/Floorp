@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* All top-level definitions here are exports.  */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
@@ -26,87 +29,82 @@ const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const console = require("resource://gre/modules/Console.jsm").console;
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 
-
 /**
  * Returns a localized string with the given key name from the string bundle.
  *
- * @param aName
+ * @param name
  * @param ...rest
  *        Optional arguments to format in the string.
  * @return string
  */
-this._ = function _(aName)
-{
+function _(name) {
   try {
     if (arguments.length == 1) {
-      return gStringBundle.GetStringFromName(aName);
+      return gStringBundle.GetStringFromName(name);
     }
     let rest = Array.prototype.slice.call(arguments, 1);
-    return gStringBundle.formatStringFromName(aName, rest, rest.length);
-  }
-  catch (ex) {
+    return gStringBundle.formatStringFromName(name, rest, rest.length);
+  } catch (ex) {
     console.error(ex);
-    throw new Error("L10N error. '" + aName + "' is missing from " + PROPERTIES_URL);
+    throw new Error("L10N error. '" + name + "' is missing from " +
+                    PROPERTIES_URL);
   }
 }
 
 /**
  * Assert an expression is true or throw if false.
  *
- * @param aExpression
- * @param aMessage
+ * @param expression
+ * @param message
  *        Optional message.
- * @return aExpression
+ * @return expression
  */
-this.assert = function assert(aExpression, aMessage)
-{
-  if (!!!(aExpression)) {
-    let msg = aMessage ? "ASSERTION FAILURE:" + aMessage : "ASSERTION FAILURE";
+function assert(expression, message) {
+  if (!expression) {
+    let msg = message ? "ASSERTION FAILURE:" + message : "ASSERTION FAILURE";
     log(msg);
     throw new Error(msg);
   }
-  return aExpression;
+  return expression;
 }
 
 /**
  * Retrieve or set the text content of an element.
  *
- * @param DOMElement aRoot
+ * @param DOMElement root
  *        The element to use for querySelector.
- * @param string aSelector
+ * @param string selector
  *        Selector string for the element to get/set the text content.
- * @param string aText
+ * @param string textContent
  *        Optional text to set.
  * @return string
  *         Text content of matching element or null if there were no element
- *         matching aSelector.
+ *         matching selector.
  */
-this.text = function text(aRoot, aSelector, aText)
-{
-  let element = aRoot.querySelector(aSelector);
+function text(root, selector, textContent) {
+  let element = root.querySelector(selector);
   if (!element) {
     return null;
   }
 
-  if (aText === undefined) {
+  if (textContent === undefined) {
     return element.textContent;
   }
-  element.textContent = aText;
-  return aText;
+  element.textContent = textContent;
+  return textContent;
 }
 
 /**
  * Iterates _own_ properties of an object.
  *
- * @param aObject
+ * @param object
  *        The object to iterate.
- * @param function aCallback(aKey, aValue)
+ * @param function callback(aKey, aValue)
  */
-function forEach(aObject, aCallback)
-{
-  for (let key in aObject) {
-    if (aObject.hasOwnProperty(key)) {
-      aCallback(key, aObject[key]);
+function forEach(object, callback) {
+  for (let key in object) {
+    if (object.hasOwnProperty(key)) {
+      callback(key, object[key]);
     }
   }
 }
@@ -116,52 +114,54 @@ function forEach(aObject, aCallback)
  *
  * @param ...rest
  *        One or multiple arguments to log.
- *        If multiple arguments are given, they will be joined by " " in the log.
+ *        If multiple arguments are given, they will be joined by " "
+ *        in the log.
  */
-this.log = function log()
-{
+function log() {
   console.logStringMessage(Array.prototype.slice.call(arguments).join(" "));
 }
 
 /**
  * Wire up element(s) matching selector with attributes, event listeners, etc.
  *
- * @param DOMElement aRoot
+ * @param DOMElement root
  *        The element to use for querySelectorAll.
- *        Can be null if aSelector is a DOMElement.
- * @param string|DOMElement aSelectorOrElement
+ *        Can be null if selector is a DOMElement.
+ * @param string|DOMElement selectorOrElement
  *        Selector string or DOMElement for the element(s) to wire up.
- * @param object aDescriptor
- *        An object describing how to wire matching selector, supported properties
- *        are "events" and "attributes" taking objects themselves.
+ * @param object descriptor
+ *        An object describing how to wire matching selector,
+ *        supported properties are "events" and "attributes" taking
+ *        objects themselves.
  *        Each key of properties above represents the name of the event or
  *        attribute, with the value being a function used as an event handler or
  *        string to use as attribute value.
- *        If aDescriptor is a function, the argument is equivalent to :
- *        {events: {'click': aDescriptor}}
+ *        If descriptor is a function, the argument is equivalent to :
+ *        {events: {'click': descriptor}}
  */
-this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
-{
+function wire(root, selectorOrElement, descriptor) {
   let matches;
-  if (typeof(aSelectorOrElement) == "string") { // selector
-    matches = aRoot.querySelectorAll(aSelectorOrElement);
+  if (typeof selectorOrElement == "string") {
+    // selector
+    matches = root.querySelectorAll(selectorOrElement);
     if (!matches.length) {
       return;
     }
   } else {
-    matches = [aSelectorOrElement]; // element
+    // element
+    matches = [selectorOrElement];
   }
 
-  if (typeof(aDescriptor) == "function") {
-    aDescriptor = {events: {click: aDescriptor}};
+  if (typeof descriptor == "function") {
+    descriptor = {events: {click: descriptor}};
   }
 
   for (let i = 0; i < matches.length; i++) {
     let element = matches[i];
-    forEach(aDescriptor.events, function (aName, aHandler) {
-      element.addEventListener(aName, aHandler, false);
+    forEach(descriptor.events, function(name, handler) {
+      element.addEventListener(name, handler, false);
     });
-    forEach(aDescriptor.attributes, element.setAttribute);
+    forEach(descriptor.attributes, element.setAttribute);
   }
 }
 
@@ -181,10 +181,9 @@ this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
  * @param AString suggestedFilename
  *        The suggested filename when toSave is true.
  */
-this.showFilePicker = function showFilePicker(path, toSave, parentWindow,
-                                              callback, suggestedFilename)
-{
-  if (typeof(path) == "string") {
+function showFilePicker(path, toSave, parentWindow, callback,
+                        suggestedFilename) {
+  if (typeof path == "string") {
     try {
       if (Services.io.extractScheme(path) == "file") {
         let uri = Services.io.newURI(path, null, null);
@@ -197,7 +196,8 @@ this.showFilePicker = function showFilePicker(path, toSave, parentWindow,
       return;
     }
     try {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file =
+          Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
       file.initWithPath(path);
       callback(file);
       return;
@@ -206,7 +206,8 @@ this.showFilePicker = function showFilePicker(path, toSave, parentWindow,
       return;
     }
   }
-  if (path) { // "path" is an nsIFile
+  if (path) {
+    // "path" is an nsIFile
     callback(path);
     return;
   }

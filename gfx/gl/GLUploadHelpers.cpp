@@ -501,30 +501,29 @@ UploadImageDataToTexture(GLContext* gl,
             NS_ASSERTION(false, "Unhandled image surface format!");
     }
 
-    nsIntRegionRectIterator iter(paintRegion);
-    const IntRect *iterRect;
 
     // Top left point of the region's bounding rectangle.
     IntPoint topLeft = paintRegion.GetBounds().TopLeft();
 
-    while ((iterRect = iter.Next())) {
+    for (auto iter = paintRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& rect = iter.Get();
         // The inital data pointer is at the top left point of the region's
         // bounding rectangle. We need to find the offset of this rect
         // within the region and adjust the data pointer accordingly.
         unsigned char *rectData =
-            aData + DataOffset(iterRect->TopLeft() - topLeft, aStride, aFormat);
+            aData + DataOffset(rect.TopLeft() - topLeft, aStride, aFormat);
 
-        NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0),
+        NS_ASSERTION(textureInited || (rect.x == 0 && rect.y == 0),
                      "Must be uploading to the origin when we don't have an existing texture");
 
         if (textureInited && CanUploadSubTextures(gl)) {
             TexSubImage2DHelper(gl,
                                 aTextureTarget,
                                 0,
-                                iterRect->x,
-                                iterRect->y,
-                                iterRect->width,
-                                iterRect->height,
+                                rect.x,
+                                rect.y,
+                                rect.width,
+                                rect.height,
                                 aStride,
                                 pixelSize,
                                 format,
@@ -535,8 +534,8 @@ UploadImageDataToTexture(GLContext* gl,
                              aTextureTarget,
                              0,
                              internalFormat,
-                             iterRect->width,
-                             iterRect->height,
+                             rect.width,
+                             rect.height,
                              aStride,
                              pixelSize,
                              0,

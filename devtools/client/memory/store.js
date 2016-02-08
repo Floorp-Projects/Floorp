@@ -16,7 +16,8 @@ module.exports = function () {
   // we'll later attach to the store
   if (DevToolsUtils.testing) {
     history = [];
-    shouldLog = true;
+    // Uncomment this for TONS of logging in tests.
+    // shouldLog = true;
   }
 
   let store = createStore({

@@ -64,7 +64,7 @@ public:
    ***************************************************************************/
   void Notify(const BluetoothSignal& aParam); // BluetoothSignalObserver
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return GetOwner();
   }
@@ -73,7 +73,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
   virtual void DisconnectFromOwner() override;
 
-  BluetoothGatt(nsPIDOMWindow* aOwner,
+  BluetoothGatt(nsPIDOMWindowInner* aOwner,
                 const nsAString& aDeviceAddr);
 
 private:

@@ -1087,18 +1087,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       </method>
 
       <method name="invalidate">
+        <parameter name="reason"/>
         <body>
           <![CDATA[
           // Don't bother doing work if we're not even showing
           if (!this.mPopupOpen)
             return;
 
-          this._invalidate();
+          this._invalidate(reason);
           ]]>
         </body>
       </method>
 
       <method name="_invalidate">
+        <parameter name="reason"/>
         <body>
           <![CDATA[
           // collapsed if no matches
@@ -1117,7 +1119,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (this._appendResultTimeout) {
             clearTimeout(this._appendResultTimeout);
           }
-          this._appendCurrentResult();
+          this._appendCurrentResult(reason);
         ]]>
         </body>
       </method>
@@ -1209,6 +1211,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       </method>
 
       <method name="_appendCurrentResult">
+        <parameter name="invalidateReason"/>
         <body>
           <![CDATA[
           var controller = this.mInput.controller;
@@ -1225,22 +1228,21 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             // trim the leading/trailing whitespace
             var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");
 
-            // Unescape the URI spec for showing as an entry in the popup
-            let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
-              getService(Components.interfaces.nsITextToSubURI).
-              unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
+            let url = controller.getValueAt(this._currentIndex);
 
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
 
-              // Completely re-use the existing richlistitem if it's the same.
-              // Also re-use it if we are about to replace the currently mouse
-              // selected item, to avoid surprising the user.
+              // Completely reuse the existing richlistitem for invalidation
+              // due to new results, but only when: the item is the same, *OR*
+              // we are about to replace the currently mouse-selected item, to
+              // avoid surprising the user.
+              let iface = Components.interfaces.nsIAutoCompletePopup;
               if (item.getAttribute("text") == trimmedSearchString &&
-                   (item.getAttribute("url") == url ||
-                    this.richlistbox.mouseSelectedIndex === this._currentIndex)
-                  ) {
+                  invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
+                  (item.getAttribute("url") == url ||
+                   this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
                 item.collapsed = false;
                 this._currentIndex++;
                 continue;
@@ -1397,7 +1399,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let parts = [
               this.getAttribute("title"),
-              this.getAttribute("url"),
+              this.getAttribute("displayurl"),
             ];
             let label = parts.filter(str => str).join(" ")
 
@@ -1667,19 +1669,29 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
+      <field name="_textToSubURI">null</field>
+      <method name="_unescapeUrl">
+        <parameter name="url"/>
+        <body>
+          <![CDATA[
+          if (!this._textToSubURI) {
+            this._textToSubURI =
+              Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                        .getService(Components.interfaces.nsITextToSubURI);
+          }
+          return this._textToSubURI.unEscapeURIForUI("UTF-8", url);
+          ]]>
+        </body>
+      </method>
+
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          let url = this.getAttribute("url");
+          let originalUrl = this.getAttribute("url");
           let title = this.getAttribute("title");
           let type = this.getAttribute("type");
 
-          let displayUrl = url;
-
-          let input = this.parentNode.parentNode.input;
-          if (typeof input.trimValue == "function")
-            displayUrl = input.trimValue(url);
-
+          let displayUrl;
           let emphasiseTitle = true;
           let emphasiseUrl = true;
 
@@ -1711,16 +1723,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // If the type includes an action, set up the item appropriately.
           if (initialTypes.has("action")) {
-            let action = this._parseActionUrl(url);
+            let action = this._parseActionUrl(originalUrl);
             this.setAttribute("actiontype", action.type);
 
             if (action.type == "switchtab") {
               this.classList.add("overridable-action");
-              displayUrl = action.params.url;
+              displayUrl = this._unescapeUrl(action.params.url);
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
             } else if (action.type == "remotetab") {
-              displayUrl = action.params.url;
+              displayUrl = this._unescapeUrl(action.params.url);
               let desc = action.params.deviceName;
               this._setUpDescription(this._action, desc, true);
             } else if (action.type == "searchengine") {
@@ -1776,14 +1788,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               }
             } else if (action.type == "visiturl") {
               emphasiseUrl = false;
-              displayUrl = action.params.url;
-
+              displayUrl = this._unescapeUrl(action.params.url);
               let sourceStr = this._stringBundle.GetStringFromName("visitURL");
               title = this._generateEmphasisPairs(sourceStr, [
                                                     [displayUrl, "match"],
                                                   ]);
             }
-
           }
 
           // Check if we have a search engine name
@@ -1796,6 +1806,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
             displayUrl = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
           }
+
+          if (!displayUrl) {
+            let input = this.parentNode.parentNode.input;
+            let url = typeof(input.trimValue) == "function" ?
+                      input.trimValue(originalUrl) :
+                      originalUrl;
+            displayUrl = this._unescapeUrl(url);
+          }
+          this.setAttribute("displayurl", displayUrl);
 
           // Check if we have an auto-fill URL
           if (initialTypes.has("autofill")) {
@@ -1879,7 +1898,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (title == "") {
             title = displayUrl;
             try {
-              let uri = Services.io.newURI(url, null, null);
+              let uri = Services.io.newURI(originalUrl, null, null);
               // Not all valid URLs have a domain.
               if (uri.host)
                 title = uri.host;
@@ -1918,6 +1937,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           try {
             action.params = JSON.parse(params);
+            for (let key in action.params) {
+              action.params[key] = decodeURIComponent(action.params[key]);
+            }
           } catch (e) {
             // If this failed, we assume that params is not a JSON object, and
             // is instead just a flat string. This will happen when

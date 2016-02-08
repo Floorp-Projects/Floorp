@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIDocShell;
 interface nsIContent;
 interface nsIFrameLoader;
@@ -370,13 +370,13 @@ interface nsIMessageManagerGlobal : nsISyncMessageSender
   DOMString btoa(in DOMString aBase64Data);
 };
 
-[scriptable, builtinclass, uuid(fff36099-9f84-4c7c-b69a-1cbf103d1708)]
+[scriptable, builtinclass, uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
 interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
 {
   /**
    * The current top level window in the frame or null.
    */
-  readonly attribute nsIDOMWindow content;
+  readonly attribute mozIDOMWindowProxy content;
 
   /**
    * The top level docshell or null.
@@ -384,7 +384,7 @@ interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
   readonly attribute nsIDocShell docShell;
 };
 
-[uuid(9c6bd4d7-88d2-46d6-8606-f2d57d46f051)]
+[uuid(b39a3324-b574-4f85-8cdb-274d04f807ef)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();

@@ -20,7 +20,7 @@ function test() {
       windowsToClose.push(aWin);
       executeSoon(() => aCallback(aWin));
     });
-  };
+  }
 
   function waitForTabLoad(aWin, aCallback) {
     aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {

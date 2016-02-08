@@ -1352,21 +1352,19 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
     JSObject* resultObject = nullptr;
     RValueAllocation a = iter.readAllocation();
     MOZ_ASSERT(iter.allocationReadable(a));
+    MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG, a.fpuReg().isSimd128());
     const FloatRegisters::RegisterContent* raw = iter.floatAllocationPointer(a);
     switch (SimdType(type_)) {
       case SimdType::Bool32x4:
-        MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG,
-                      a.fpuReg().isSimd128());
         resultObject = js::CreateSimd<Bool32x4>(cx, (const Bool32x4::Elem*) raw);
         break;
       case SimdType::Int32x4:
-        MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG,
-                      a.fpuReg().isSimd128());
         resultObject = js::CreateSimd<Int32x4>(cx, (const Int32x4::Elem*) raw);
         break;
+      case SimdType::Uint32x4:
+        resultObject = js::CreateSimd<Uint32x4>(cx, (const Uint32x4::Elem*) raw);
+        break;
       case SimdType::Float32x4:
-        MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG,
-                      a.fpuReg().isSimd128());
         resultObject = js::CreateSimd<Float32x4>(cx, (const Float32x4::Elem*) raw);
         break;
       case SimdType::Float64x2:
@@ -1383,9 +1381,6 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
         break;
       case SimdType::Uint16x8:
         MOZ_CRASH("NYI, RSimdBox of UInt16x8");
-        break;
-      case SimdType::Uint32x4:
-        MOZ_CRASH("NYI, RSimdBox of UInt32x4");
         break;
       case SimdType::Bool8x16:
         MOZ_CRASH("NYI, RSimdBox of Bool8x16");

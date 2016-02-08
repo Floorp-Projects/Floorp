@@ -1718,6 +1718,7 @@ cubeb_ops const wasapi_ops = {
   /*.stream_set_panning =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
-  /*.stream_register_device_changed_callback =*/ NULL
+  /*.stream_register_device_changed_callback =*/ NULL,
+  /*.register_device_collection_changed =*/ NULL
 };
 } // namespace anonymous

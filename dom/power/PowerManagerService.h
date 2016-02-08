@@ -60,7 +60,7 @@ public:
                                ContentParent* aContentParent);
 
   already_AddRefed<WakeLock>
-  NewWakeLock(const nsAString& aTopic, nsIDOMWindow* aWindow,
+  NewWakeLock(const nsAString& aTopic, nsPIDOMWindowInner* aWindow,
               mozilla::ErrorResult& aRv);
 
 private:

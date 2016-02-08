@@ -39,6 +39,9 @@ class GeckoInstance(object):
         "marionette.defaultPrefs.enabled": True,
         "startup.homepage_welcome_url": "about:blank",
         "toolkit.telemetry.enabled": False,
+        # Until Bug 1238095 is fixed, we have to enable CPOWs in order
+        # for Marionette tests to work properly.
+        "dom.ipc.cpows.forbid-unsafe-from-browser": False,
     }
 
     def __init__(self, host, port, bin, profile=None, addons=None,

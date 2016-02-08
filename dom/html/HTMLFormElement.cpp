@@ -657,7 +657,7 @@ HTMLFormElement::DoSubmit(WidgetEvent* aEvent)
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
-  nsPIDOMWindow *window = OwnerDoc()->GetWindow();
+  nsPIDOMWindowOuter *window = OwnerDoc()->GetWindow();
 
   if (window) {
     mSubmitPopupState = window->GetPopupControlState();
@@ -903,7 +903,7 @@ HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
   if (!window) {
     return NS_ERROR_FAILURE;
   }
@@ -1007,7 +1007,7 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     // XXXbz what do the submit observers actually want?  The window
     // of the document this is shown in?  Or something else?
     // sXBL/XBL2 issue
-    nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
 
     bool loop = true;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
@@ -1017,7 +1017,7 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
                       do_QueryInterface(inst));
       if (formSubmitObserver) {
         rv = formSubmitObserver->Notify(this,
-                                        window,
+                                        window ? window->GetCurrentInnerWindow() : nullptr,
                                         aActionURL,
                                         aCancelSubmit);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1490,14 +1490,6 @@ HTMLFormElement::RemoveElementFromTableInternal(
   return NS_OK;
 }
 
-static PLDHashOperator
-RemovePastNames(const nsAString& aName,
-                nsCOMPtr<nsISupports>& aData,
-                void* aClosure)
-{
-  return aClosure == aData ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
-}
-
 nsresult
 HTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
                                         const nsAString& aName,
@@ -1507,7 +1499,11 @@ HTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
   // the past names map.
   if (aRemoveReason == ElementRemoved) {
     uint32_t oldCount = mPastNameLookupTable.Count();
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+    for (auto iter = mPastNameLookupTable.Iter(); !iter.Done(); iter.Next()) {
+      if (static_cast<void*>(aElement) == iter.Data()) {
+        iter.Remove();
+      }
+    }
     if (oldCount != mPastNameLookupTable.Count()) {
       ++mExpandoAndGeneration.generation;
     }
@@ -2529,7 +2525,11 @@ HTMLFormElement::RemoveImageElementFromTable(HTMLImageElement* aElement,
   // If the element is being removed from the form, we have to remove it from
   // the past names map.
   if (aRemoveReason == ElementRemoved) {
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+    for (auto iter = mPastNameLookupTable.Iter(); !iter.Done(); iter.Next()) {
+      if (static_cast<void*>(aElement) == iter.Data()) {
+        iter.Remove();
+      }
+    }
   }
 
   return RemoveElementFromTableInternal(mImageNameLookupTable, aElement, aName);

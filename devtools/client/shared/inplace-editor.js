@@ -373,11 +373,7 @@ InplaceEditor.prototype = {
     // will be wrong.
     this._measurement.textContent = this.input.value.replace(/ /g, "\u00a0");
 
-    // We add a bit of padding to the end.  Should be enough to fit
-    // any letter that could be typed, otherwise we'll scroll before
-    // we get a chance to resize.  Yuck.
-    let width = this._measurement.offsetWidth + 10;
-
+    let width = this._measurement.offsetWidth;
     if (this.multiline) {
       // Make sure there's some content in the current line.  This is a hack to
       // account for the fact that after adding a newline the <pre> doesn't grow
@@ -386,7 +382,12 @@ InplaceEditor.prototype = {
       this.input.style.height = this._measurement.offsetHeight + "px";
     }
 
-    this.input.style.width = width + "px";
+    if (width === 0) {
+      // If the editor is empty use a width corresponding to 1 character.
+      this.input.style.width = "1ch";
+    } else {
+      this.input.style.width = width + "px";
+    }
   },
 
   /**
@@ -819,7 +820,7 @@ InplaceEditor.prototype = {
   /**
    * Handle loss of focus by calling done if it hasn't been called yet.
    */
-  _onBlur: function(event, doNotClear) {
+  _onBlur: function(event) {
     if (event && this.popup && this.popup.isOpen &&
         this.popup.selectedIndex >= 0) {
       let label, preLabel;
@@ -865,19 +866,11 @@ InplaceEditor.prototype = {
       };
       this.popup._panel.addEventListener("popuphidden", onPopupHidden);
       this.popup.hidePopup();
-      // Content type other than CSS_MIXED is used in rule-view where the values
-      // are live previewed. So we apply the value before returning.
-      if (this.contentType != CONTENT_TYPES.CSS_MIXED) {
-        this._apply();
-      }
       return;
     }
 
     this._apply();
-
-    if (!doNotClear) {
-      this._clear();
-    }
+    this._clear();
   },
 
   /**

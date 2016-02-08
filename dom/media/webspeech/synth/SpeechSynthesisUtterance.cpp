@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(SpeechSynthesisUtterance, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SpeechSynthesisUtterance, DOMEventTargetHelper)
 
-SpeechSynthesisUtterance::SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow,
+SpeechSynthesisUtterance::SpeechSynthesisUtterance(nsPIDOMWindowInner* aOwnerWindow,
                                                    const nsAString& text)
   : DOMEventTargetHelper(aOwnerWindow)
   , mText(text)
@@ -63,7 +63,7 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
                                       const nsAString& aText,
                                       ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);

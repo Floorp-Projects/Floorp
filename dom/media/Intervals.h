@@ -255,7 +255,7 @@ class IntervalSet
 public:
   typedef IntervalSet<T> SelfType;
   typedef Interval<T> ElemType;
-  typedef nsAutoTArray<ElemType,4> ContainerType;
+  typedef AutoTArray<ElemType,4> ContainerType;
   typedef typename ContainerType::index_type IndexType;
 
   IntervalSet()

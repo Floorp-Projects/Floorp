@@ -188,6 +188,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
 
   const nsStyleSVG* styleSVG = styleContext->StyleSVG();
 
+  bool checkedDashAndStrokeIsDashed = false;
   if (aFlags != eIgnoreStrokeDashing) {
     DashState dashState =
       GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
@@ -201,6 +202,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
       // Prevent our caller from wasting time looking at a pattern without gaps:
       aStrokeOptions->DiscardDashPattern();
     }
+    checkedDashAndStrokeIsDashed = (dashState == eDashedStroke);
   }
 
   aStrokeOptions->mLineWidth =
@@ -220,10 +222,12 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     break;
   }
 
-  if (ShapeTypeHasNoCorners(aElement)) {
+  if (ShapeTypeHasNoCorners(aElement) && !checkedDashAndStrokeIsDashed) {
+    // Note: if aFlags == eIgnoreStrokeDashing then we may be returning the
+    // wrong linecap value here, since the actual linecap used on render in this
+    // case depends on whether the stroke is dashed or not.
     aStrokeOptions->mLineCap = CapStyle::BUTT;
-  }
-  else {
+  } else {
     switch (styleSVG->mStrokeLinecap) {
       case NS_STYLE_STROKE_LINECAP_BUTT:
         aStrokeOptions->mLineCap = CapStyle::BUTT;

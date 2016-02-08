@@ -17,34 +17,34 @@ async protocol PWebSocketEventListener
   manager PNecko;
 
 child:
-  WebSocketCreated(uint32_t awebSocketSerialID,
-                   nsString aURI,
-                   nsCString aProtocols);
+  async WebSocketCreated(uint32_t awebSocketSerialID,
+                         nsString aURI,
+                         nsCString aProtocols);
 
-  WebSocketOpened(uint32_t awebSocketSerialID,
-                  nsString aEffectiveURI,
-                  nsCString aProtocols,
-                  nsCString aExtensions);
+  async WebSocketOpened(uint32_t awebSocketSerialID,
+                        nsString aEffectiveURI,
+                        nsCString aProtocols,
+                        nsCString aExtensions);
 
-  WebSocketMessageAvailable(uint32_t awebSocketSerialID,
-                            nsCString aData,
-                            uint16_t aMessageType);
+  async WebSocketMessageAvailable(uint32_t awebSocketSerialID,
+                                  nsCString aData,
+                                  uint16_t aMessageType);
 
-  WebSocketClosed(uint32_t awebSocketSerialID,
-                  bool aWasClean,
-                  uint16_t aCode,
-                  nsString aReason);
+  async WebSocketClosed(uint32_t awebSocketSerialID,
+                        bool aWasClean,
+                        uint16_t aCode,
+                        nsString aReason);
 
-  FrameReceived(uint32_t aWebSocketSerialID,
-                WebSocketFrameData aFrameData);
+  async FrameReceived(uint32_t aWebSocketSerialID,
+                      WebSocketFrameData aFrameData);
 
-  FrameSent(uint32_t aWebSocketSerialID,
-            WebSocketFrameData aFrameData);
+  async FrameSent(uint32_t aWebSocketSerialID,
+                  WebSocketFrameData aFrameData);
 
-  __delete__();
+  async __delete__();
 
 parent:
-  Close();
+  async Close();
 };
 
 } //namespace net

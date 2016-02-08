@@ -52,7 +52,7 @@ var PluginHost = {
     if (iid.equals(Ci.nsIPluginHost)
      || iid.equals(Ci.nsISupports))
       return this;
-  
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 }
@@ -106,13 +106,13 @@ function run_test() {
 
   // initialize the blocklist with no entries
   copyBlocklistToProfile(do_get_file("data/test_bug514327_3_empty.xml"));
-  
+
   gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
-  
+
   // should NOT be marked as outdated by the blocklist
   do_check_true(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
-  
+
   do_test_pending();
 
   // update blocklist with data that marks the plugin as outdated
@@ -124,10 +124,10 @@ function test_part_1() {
   do_check_true(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
   // and the notifyUser pref should be set to true
   do_check_true(gPrefs.getBoolPref("plugins.update.notifyUser"));
-  
+
   // preternd the user has been notified, reset the pref
   gPrefs.setBoolPref("plugins.update.notifyUser", false);
-  
+
   // update blocklist with data that marks the plugin as outdated
   do_update_blocklist("test_bug514327_3_outdated_2.xml", test_part_2);
 }

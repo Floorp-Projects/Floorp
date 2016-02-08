@@ -12,7 +12,8 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
-loader.loadSubScript("chrome://marionette/content/actions.js");
+
+Cu.import("chrome://marionette/content/actions.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/elements.js");
@@ -49,7 +50,7 @@ var elementManager = new ElementManager([]);
 var capabilities = {};
 var interactions = new Interactions(utils, () => capabilities);
 
-var actions = new ActionChain(utils, checkForInterrupted);
+var actions = new actions.Chain(utils, checkForInterrupted);
 var importedScripts = null;
 
 // Contains the last file input element that was the target of
@@ -183,7 +184,7 @@ function dispatch(fn) {
       if (typeof rv == "undefined") {
         sendOk(id);
       } else {
-        sendResponse({value: rv}, id);
+        sendResponse(rv, id);
       }
     };
 
@@ -397,35 +398,56 @@ function deleteSession(msg) {
   actions.touchIds = {};
 }
 
-/*
- * Helper methods
- */
-
 /**
- * Generic method to send a message to the server
+ * Send asynchronous reply to chrome.
+ *
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
+ * @param {AsyncContentSender.ResponseType} type
+ *     Type of response.
+ * @param {?=} data
+ *     JSON serialisable object to accompany the message.  Defaults to
+ *     an empty dictionary.
  */
-function sendToServer(name, data, objs, id) {
-  if (!data) {
-    data = {}
-  }
-  if (id) {
-    data.command_id = id;
-  }
-  sendAsyncMessage(name, data, objs);
+function sendToServer(uuid, data = undefined) {
+  let channel = new proxy.AsyncMessageChannel(
+      () => this,
+      sendAsyncMessage.bind(this));
+  channel.reply(uuid, data);
 }
 
 /**
- * Send response back to server
+ * Send asynchronous reply with value to chrome.
+ *
+ * @param {?} obj
+ *     JSON serialisable object of arbitrary type and complexity.
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
  */
-function sendResponse(value, command_id) {
-  sendToServer("Marionette:done", value, null, command_id);
+function sendResponse(obj, id) {
+  sendToServer(id, obj);
 }
 
 /**
- * Send ack back to server
+ * Send asynchronous reply to chrome.
+ *
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
  */
-function sendOk(command_id) {
-  sendToServer("Marionette:ok", null, null, command_id);
+function sendOk(uuid) {
+  sendToServer(uuid);
+}
+
+/**
+ * Send asynchronous error reply to chrome.
+ *
+ * @param {Error} err
+ *     Error to notify chrome of.
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
+ */
+function sendError(err, uuid) {
+  sendToServer(uuid, err);
 }
 
 /**
@@ -433,13 +455,6 @@ function sendOk(command_id) {
  */
 function sendLog(msg) {
   sendToServer("Marionette:log", {message: msg});
-}
-
-/**
- * Send error message to server
- */
-function sendError(err, cmdId) {
-  sendToServer("Marionette:error", null, {error: err}, cmdId);
 }
 
 /**
@@ -548,7 +563,7 @@ function createExecuteContentSandbox(win, timeout) {
           _emu_cbs = {};
           sendError(new WebDriverError("Emulator callback still pending when finish() called"), id);
         } else {
-          sendResponse({value: elementManager.wrapValue(obj)}, id);
+          sendResponse(elementManager.wrapValue(obj), id);
         }
       }
 
@@ -630,7 +645,7 @@ function executeScript(msg, directInject) {
         sendError(new JavaScriptError("Marionette.finish() not called"), asyncTestCommandId);
       }
       else {
-        sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
+        sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
       }
     }
     else {
@@ -656,7 +671,7 @@ function executeScript(msg, directInject) {
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
-      sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
+      sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
     }
   } catch (e) {
     let err = new JavaScriptError(
@@ -1712,7 +1727,7 @@ function switchToFrame(msg) {
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 
-  sendResponse({value: rv}, command_id);
+  sendResponse(rv, command_id);
 }
 
 function addCookie(cookie) {
@@ -1765,8 +1780,8 @@ function deleteAllCookies() {
 }
 
 function getAppCacheStatus(msg) {
-  sendResponse({ value: curContainer.frame.applicationCache.status },
-               msg.json.command_id);
+  sendResponse(
+      curContainer.frame.applicationCache.status, msg.json.command_id);
 }
 
 // emulator callbacks

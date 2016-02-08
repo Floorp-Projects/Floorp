@@ -112,9 +112,11 @@ EXPORTS.mozilla.layout += [
 
 UNIFIED_SOURCES += [
     'AsyncScrollBase.cpp',
+    'DetailsFrame.cpp',
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',
     'nsAbsoluteContainingBlock.cpp',
+    'nsBackdropFrame.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
     'nsBlockReflowState.cpp',
@@ -165,6 +167,7 @@ UNIFIED_SOURCES += [
     'ScrollbarActivity.cpp',
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',
+    'SummaryFrame.cpp',
     'TextOverflow.cpp',
 ]
 

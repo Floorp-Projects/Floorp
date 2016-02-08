@@ -93,7 +93,7 @@ nsFormFillController::~nsFormFillController()
   // Remove ourselves as a focus listener from all cached docShells
   uint32_t count = mDocShells.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsPIDOMWindow> window = GetWindowForDocShell(mDocShells[i]);
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetWindowForDocShell(mDocShells[i]);
     RemoveWindowListeners(window);
   }
 }
@@ -233,7 +233,7 @@ nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePop
   mPopups.AppendElement(aPopup);
 
   // Listen for focus events on the domWindow of the docShell
-  nsCOMPtr<nsPIDOMWindow> window = GetWindowForDocShell(aDocShell);
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindowForDocShell(aDocShell);
   AddWindowListeners(window);
 
   return NS_OK;
@@ -246,7 +246,7 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
 
   // Stop listening for focus events on the domWindow of the docShell
-  nsCOMPtr<nsPIDOMWindow> window =
+  nsCOMPtr<nsPIDOMWindowOuter> window =
     GetWindowForDocShell(mDocShells.SafeElementAt(index));
   RemoveWindowListeners(window);
 
@@ -1071,7 +1071,7 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
 //// nsFormFillController
 
 void
-nsFormFillController::AddWindowListeners(nsPIDOMWindow *aWindow)
+nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
   if (!aWindow)
     return;
@@ -1104,7 +1104,7 @@ nsFormFillController::AddWindowListeners(nsPIDOMWindow *aWindow)
 }
 
 void
-nsFormFillController::RemoveWindowListeners(nsPIDOMWindow *aWindow)
+nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
   if (!aWindow)
     return;
@@ -1203,13 +1203,13 @@ nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
   nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
   NS_ENSURE_TRUE(node, nullptr);
 
-  nsCOMPtr<nsPIDOMWindow> win = node->OwnerDoc()->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = node->OwnerDoc()->GetWindow();
   NS_ENSURE_TRUE(win, nullptr);
 
   return win->GetDocShell();
 }
 
-nsPIDOMWindow *
+nsPIDOMWindowOuter*
 nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
 {
   nsCOMPtr<nsIContentViewer> contentViewer;

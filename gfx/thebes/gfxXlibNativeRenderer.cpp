@@ -492,6 +492,10 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     }
 
     DrawTarget* drawTarget = ctx->GetDrawTarget();
+    if (!drawTarget) {
+        gfxCriticalError() << "gfxContext without a DrawTarget";
+        return;
+    }
 
     // Clipping to the region affected by drawing allows us to consider only
     // the portions of the clip region that will be affected by drawing.
@@ -533,16 +537,18 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     gfxPoint deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
     cairo_t* cairo = static_cast<cairo_t*>
         (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
-    if (!cairo)
+    if (!cairo) {
         return;
+    }
 
     cairo_surface_t* cairoTarget = cairo_get_group_target(cairo);
     cairo_surface_t* tempXlibSurface =
         CreateTempXlibSurface(cairoTarget, drawTarget, size,
                               canDrawOverBackground, flags, screen, visual,
                               &method);
-    if (!tempXlibSurface)
+    if (!tempXlibSurface) {
         return;
+    }
 
     bool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
     if (!drawIsOpaque) {
@@ -574,26 +580,20 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
         cairo_surface_get_content(tempXlibSurface) == CAIRO_CONTENT_COLOR ?
             SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     if (method != eAlphaExtraction) {
-        if (drawTarget) {
-            RefPtr<SourceSurface> sourceSurface =
-                Factory::CreateSourceSurfaceForCairoSurface(tempXlibSurface, size, moz2DFormat);
-            if (sourceSurface) {
-                drawTarget->DrawSurface(sourceSurface,
-                    Rect(offset.x, offset.y, size.width, size.height),
-                    Rect(0, 0, size.width, size.height));
-            }
-        } else {
-            RefPtr<gfxASurface> tmpSurf = gfxASurface::Wrap(tempXlibSurface);
-            ctx->SetSource(tmpSurf, offset);
-            ctx->Paint();
+        RefPtr<SourceSurface> sourceSurface =
+            Factory::CreateSourceSurfaceForCairoSurface(tempXlibSurface, size, moz2DFormat);
+        if (sourceSurface) {
+            drawTarget->DrawSurface(sourceSurface,
+                Rect(offset.x, offset.y, size.width, size.height),
+                Rect(0, 0, size.width, size.height));
         }
         cairo_surface_destroy(tempXlibSurface);
         return;
     }
-    
+
     RefPtr<gfxImageSurface> blackImage =
         CopyXlibSurfaceToImage(tempXlibSurface, size, SurfaceFormat::A8R8G8B8_UINT32);
-    
+
     cairo_t* tmpCtx = cairo_create(tempXlibSurface);
     cairo_set_source_rgba(tmpCtx, 1.0, 1.0, 1.0, 1.0);
     cairo_set_operator(tmpCtx, CAIRO_OPERATOR_SOURCE);
@@ -602,7 +602,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft());
     RefPtr<gfxImageSurface> whiteImage =
         CopyXlibSurfaceToImage(tempXlibSurface, size, SurfaceFormat::X8R8G8B8_UINT32);
-  
+
     if (blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS &&
         whiteImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
         if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage)) {
@@ -611,18 +611,13 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
         }
 
         gfxASurface* paintSurface = blackImage;
-        if (drawTarget) {
-            RefPtr<SourceSurface> sourceSurface =
-                Factory::CreateSourceSurfaceForCairoSurface(paintSurface->CairoSurface(),
-                                                            size, moz2DFormat);
-            if (sourceSurface) {
-                drawTarget->DrawSurface(sourceSurface,
-                    Rect(offset.x, offset.y, size.width, size.height),
-                    Rect(0, 0, size.width, size.height));
-            }
-        } else {
-            ctx->SetSource(paintSurface, offset);
-            ctx->Paint();
+        RefPtr<SourceSurface> sourceSurface =
+            Factory::CreateSourceSurfaceForCairoSurface(paintSurface->CairoSurface(),
+                                                        size, moz2DFormat);
+        if (sourceSurface) {
+            drawTarget->DrawSurface(sourceSurface,
+                Rect(offset.x, offset.y, size.width, size.height),
+                Rect(0, 0, size.width, size.height));
         }
     }
     cairo_surface_destroy(tempXlibSurface);

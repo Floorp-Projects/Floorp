@@ -20,6 +20,20 @@
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/dom/WebCryptoThreadPool.h"
 
+// Template taken from security/nss/lib/util/templates.c
+// This (or SGN_EncodeDigestInfo) would ideally be exported
+// by NSS and until that happens we have to keep our own copy.
+const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+      0, NULL, sizeof(SGNDigestInfo) },
+    { SEC_ASN1_INLINE,
+      offsetof(SGNDigestInfo,digestAlgorithm),
+      SEC_ASN1_GET(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_OCTET_STRING,
+      offsetof(SGNDigestInfo,digest) },
+    { 0, }
+};
+
 namespace mozilla {
 namespace dom {
 
@@ -70,6 +84,7 @@ enum TelemetryAlgorithm {
   TA_ECDH            = 20,
   TA_PBKDF2          = 21,
   TA_ECDSA           = 22,
+  TA_HKDF            = 23,
 };
 
 // Convenience functions for extracting / converting information
@@ -262,6 +277,41 @@ MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult)
   }
 
   return true;
+}
+
+inline SECOidTag
+MapHashAlgorithmNameToOID(const nsString& aName)
+{
+  SECOidTag hashOID(SEC_OID_UNKNOWN);
+
+  if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
+    hashOID = SEC_OID_SHA1;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+    hashOID = SEC_OID_SHA256;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
+    hashOID = SEC_OID_SHA384;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
+    hashOID = SEC_OID_SHA512;
+  }
+
+  return hashOID;
+}
+
+inline CK_MECHANISM_TYPE
+MapHashAlgorithmNameToMgfMechanism(const nsString& aName) {
+  CK_MECHANISM_TYPE mech(UNKNOWN_CK_MECHANISM);
+
+  if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
+    mech = CKG_MGF1_SHA1;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+    mech = CKG_MGF1_SHA256;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
+    mech = CKG_MGF1_SHA384;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
+    mech = CKG_MGF1_SHA512;
+  }
+
+  return mech;
 }
 
 // Helper function to clone data from an ArrayBuffer or ArrayBufferView object
@@ -838,24 +888,15 @@ public:
     }
     // Otherwise mLabel remains the empty octet string, as intended
 
-    // Look up the MGF based on the KeyAlgorithm.
-    // static_cast is safe because we only get here if the algorithm name
-    // is RSA-OAEP, and that only happens if we've constructed
-    // an RsaHashedKeyAlgorithm.
-    mHashMechanism = KeyAlgorithmProxy::GetMechanism(aKey.Algorithm().mRsa.mHash);
+    KeyAlgorithm& hashAlg = aKey.Algorithm().mRsa.mHash;
+    mHashMechanism = KeyAlgorithmProxy::GetMechanism(hashAlg);
+    mMgfMechanism = MapHashAlgorithmNameToMgfMechanism(hashAlg.mName);
 
-    switch (mHashMechanism) {
-      case CKM_SHA_1:
-        mMgfMechanism = CKG_MGF1_SHA1; break;
-      case CKM_SHA256:
-        mMgfMechanism = CKG_MGF1_SHA256; break;
-      case CKM_SHA384:
-        mMgfMechanism = CKG_MGF1_SHA384; break;
-      case CKM_SHA512:
-        mMgfMechanism = CKG_MGF1_SHA512; break;
-      default:
-        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-        return;
+    // Check we found appropriate mechanisms.
+    if (mHashMechanism == UNKNOWN_CK_MECHANISM ||
+        mMgfMechanism == UNKNOWN_CK_MECHANISM) {
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return;
     }
   }
 
@@ -1040,11 +1081,14 @@ public:
                            const CryptoOperationData& aData,
                            bool aSign)
     : mOidTag(SEC_OID_UNKNOWN)
+    , mHashMechanism(UNKNOWN_CK_MECHANISM)
+    , mMgfMechanism(UNKNOWN_CK_MECHANISM)
     , mPrivKey(aKey.GetPrivateKey())
     , mPubKey(aKey.GetPublicKey())
+    , mSaltLength(0)
     , mSign(aSign)
     , mVerified(false)
-    , mEcdsa(false)
+    , mAlgorithm(Algorithm::UNKNOWN)
   {
     ATTEMPT_BUFFER_INIT(mData, aData);
     if (!aSign) {
@@ -1052,34 +1096,44 @@ public:
     }
 
     nsString algName;
+    nsString hashAlgName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
 
-    // Look up the SECOidTag
     if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
-      mEcdsa = false;
+      mAlgorithm = Algorithm::RSA_PKCS1;
       Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSASSA_PKCS1);
       CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_RSASSA_PKCS1);
+      hashAlgName = aKey.Algorithm().mRsa.mHash.mName;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
+      mAlgorithm = Algorithm::RSA_PSS;
+      Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSA_PSS);
+      CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_RSA_PSS);
 
-      // For RSA, the hash name comes from the key algorithm
-      nsString hashName = aKey.Algorithm().mRsa.mHash.mName;
-      switch (MapAlgorithmNameToMechanism(hashName)) {
-        case CKM_SHA_1:
-          mOidTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION; break;
-        case CKM_SHA256:
-          mOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION; break;
-        case CKM_SHA384:
-          mOidTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION; break;
-        case CKM_SHA512:
-          mOidTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION; break;
-        default:
-          mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-          return;
+      KeyAlgorithm& hashAlg = aKey.Algorithm().mRsa.mHash;
+      hashAlgName = hashAlg.mName;
+      mHashMechanism = KeyAlgorithmProxy::GetMechanism(hashAlg);
+      mMgfMechanism = MapHashAlgorithmNameToMgfMechanism(hashAlgName);
+
+      // Check we found appropriate mechanisms.
+      if (mHashMechanism == UNKNOWN_CK_MECHANISM ||
+          mMgfMechanism == UNKNOWN_CK_MECHANISM) {
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
       }
+
+      RootedDictionary<RsaPssParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      mSaltLength = params.mSaltLength;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
-      mEcdsa = true;
+      mAlgorithm = Algorithm::ECDSA;
       Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_ECDSA);
       CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_ECDSA);
 
@@ -1091,36 +1145,25 @@ public:
         return;
       }
 
-      nsString hashName;
-      mEarlyRv = GetAlgorithmName(aCx, params.mHash, hashName);
+      mEarlyRv = GetAlgorithmName(aCx, params.mHash, hashAlgName);
       if (NS_FAILED(mEarlyRv)) {
         mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
         return;
-      }
-
-      CK_MECHANISM_TYPE hashMechanism = MapAlgorithmNameToMechanism(hashName);
-      if (hashMechanism == UNKNOWN_CK_MECHANISM) {
-        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-        return;
-      }
-
-      switch (hashMechanism) {
-        case CKM_SHA_1:
-          mOidTag = SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE; break;
-        case CKM_SHA256:
-          mOidTag = SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE; break;
-        case CKM_SHA384:
-          mOidTag = SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE; break;
-        case CKM_SHA512:
-          mOidTag = SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE; break;
-        default:
-          mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-          return;
       }
     } else {
       // This shouldn't happen; CreateSignVerifyTask shouldn't create
       // one of these unless it's for the above algorithms.
       MOZ_ASSERT(false);
+    }
+
+    // Must have a valid algorithm by now.
+    MOZ_ASSERT(mAlgorithm != Algorithm::UNKNOWN);
+
+    // Determine hash algorithm to use.
+    mOidTag = MapHashAlgorithmNameToOID(hashAlgName);
+    if (mOidTag == SEC_OID_UNKNOWN) {
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return;
     }
 
     // Check that we have the appropriate key
@@ -1132,63 +1175,88 @@ public:
 
 private:
   SECOidTag mOidTag;
+  CK_MECHANISM_TYPE mHashMechanism;
+  CK_MECHANISM_TYPE mMgfMechanism;
   ScopedSECKEYPrivateKey mPrivKey;
   ScopedSECKEYPublicKey mPubKey;
   CryptoBuffer mSignature;
   CryptoBuffer mData;
+  uint32_t mSaltLength;
   bool mSign;
   bool mVerified;
-  bool mEcdsa;
+
+  // The signature algorithm to use.
+  enum class Algorithm: uint8_t {ECDSA, RSA_PKCS1, RSA_PSS, UNKNOWN};
+  Algorithm mAlgorithm;
 
   virtual nsresult DoCrypto() override
   {
-    nsresult rv;
-    if (mSign) {
-      ScopedSECItem signature(::SECITEM_AllocItem(nullptr, nullptr, 0));
-      if (!signature.get()) {
+    SECStatus rv;
+    ScopedSECItem hash(::SECITEM_AllocItem(nullptr, nullptr,
+                                           HASH_ResultLenByOidTag(mOidTag)));
+    if (!hash) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // Compute digest over given data.
+    rv = PK11_HashBuf(mOidTag, hash->data, mData.Elements(), mData.Length());
+    NS_ENSURE_SUCCESS(MapSECStatus(rv), NS_ERROR_DOM_OPERATION_ERR);
+
+    // Wrap hash in a digest info template (RSA-PKCS1 only).
+    if (mAlgorithm == Algorithm::RSA_PKCS1) {
+      ScopedSGNDigestInfo di(SGN_CreateDigestInfo(mOidTag, hash->data, hash->len));
+      if (!di) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 
-      rv = MapSECStatus(SEC_SignData(signature, mData.Elements(),
-                                     mData.Length(), mPrivKey, mOidTag));
-
-      if (mEcdsa) {
-        // DER-decode the signature
-        int signatureLength = PK11_SignatureLen(mPrivKey);
-        ScopedSECItem rawSignature(DSAU_DecodeDerSigToLen(signature.get(),
-                                                          signatureLength));
-        if (!rawSignature.get()) {
-          return NS_ERROR_DOM_OPERATION_ERR;
-        }
-
-        ATTEMPT_BUFFER_ASSIGN(mSignature, rawSignature);
-      } else {
-        ATTEMPT_BUFFER_ASSIGN(mSignature, signature);
+      // Reuse |hash|.
+      SECITEM_FreeItem(hash, false);
+      if (!SEC_ASN1EncodeItem(nullptr, hash, di, SGN_DigestInfoTemplate)) {
+        return NS_ERROR_DOM_OPERATION_ERR;
       }
+    }
 
+    SECItem* params = nullptr;
+    CK_MECHANISM_TYPE mech = PK11_MapSignKeyType((mSign ? mPrivKey->keyType :
+                                                          mPubKey->keyType));
+
+    CK_RSA_PKCS_PSS_PARAMS rsaPssParams;
+    SECItem rsaPssParamsItem = { siBuffer, };
+
+    // Set up parameters for RSA-PSS.
+    if (mAlgorithm == Algorithm::RSA_PSS) {
+      rsaPssParams.hashAlg = mHashMechanism;
+      rsaPssParams.mgf = mMgfMechanism;
+      rsaPssParams.sLen = mSaltLength;
+
+      rsaPssParamsItem.data = (unsigned char*)&rsaPssParams;
+      rsaPssParamsItem.len = sizeof(rsaPssParams);
+      params = &rsaPssParamsItem;
+
+      mech = CKM_RSA_PKCS_PSS;
+    }
+
+    // Allocate SECItem to hold the signature.
+    uint32_t len = mSign ? PK11_SignatureLen(mPrivKey) : 0;
+    ScopedSECItem sig(::SECITEM_AllocItem(nullptr, nullptr, len));
+    if (!sig) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    if (mSign) {
+      // Sign the hash.
+      rv = PK11_SignWithMechanism(mPrivKey, mech, params, sig, hash);
+      NS_ENSURE_SUCCESS(MapSECStatus(rv), NS_ERROR_DOM_OPERATION_ERR);
+      ATTEMPT_BUFFER_ASSIGN(mSignature, sig);
     } else {
-      ScopedSECItem signature(::SECITEM_AllocItem(nullptr, nullptr, 0));
-      if (!signature.get()) {
-        return NS_ERROR_DOM_UNKNOWN_ERR;
+      // Copy the given signature to the SECItem.
+      if (!mSignature.ToSECItem(nullptr, sig)) {
+        return NS_ERROR_DOM_OPERATION_ERR;
       }
 
-      if (mEcdsa) {
-        // DER-encode the signature
-        ScopedSECItem rawSignature(::SECITEM_AllocItem(nullptr, nullptr, 0));
-        if (!rawSignature || !mSignature.ToSECItem(nullptr, rawSignature)) {
-          return NS_ERROR_DOM_UNKNOWN_ERR;
-        }
-
-        rv = MapSECStatus(DSAU_EncodeDerSigWithLen(signature, rawSignature,
-                                                   rawSignature->len));
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
-      } else if (!mSignature.ToSECItem(nullptr, signature)) {
-        return NS_ERROR_DOM_UNKNOWN_ERR;
-      }
-
-      rv = MapSECStatus(VFY_VerifyData(mData.Elements(), mData.Length(),
-                                       mPubKey, signature, mOidTag, nullptr));
-      mVerified = NS_SUCCEEDED(rv);
+      // Verify the signature.
+      rv = PK11_VerifyWithMechanism(mPubKey, mech, params, sig, hash, nullptr);
+      mVerified = NS_SUCCEEDED(MapSECStatus(rv));
     }
 
     return NS_OK;
@@ -1223,22 +1291,19 @@ public:
 
     TelemetryAlgorithm telemetryAlg;
     if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1))   {
-      mOidTag = SEC_OID_SHA1;
       telemetryAlg = TA_SHA_1;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-      mOidTag = SEC_OID_SHA256;
       telemetryAlg = TA_SHA_224;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-      mOidTag = SEC_OID_SHA384;
       telemetryAlg = TA_SHA_256;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-      mOidTag = SEC_OID_SHA512;
       telemetryAlg = TA_SHA_384;
     } else {
       mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
     }
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, telemetryAlg);
+    mOidTag = MapHashAlgorithmNameToOID(algName);
   }
 
 private:
@@ -1443,6 +1508,13 @@ public:
       return;
     }
 
+    // This task only supports raw and JWK format.
+    if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
+        !mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return;
+    }
+
     // If this is an HMAC key, import the hash name
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
       RootedDictionary<HmacImportParams> params(aCx);
@@ -1507,14 +1579,15 @@ public:
           !mJwk.mUse.Value().EqualsLiteral(JWK_USE_ENC)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
+    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HKDF) ||
+               mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
       if (mKey->HasUsageOtherThan(CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
       mKey->Algorithm().MakeAes(mAlgName, length);
 
       if (mDataIsJwk && mJwk.mUse.WasPassed()) {
-        // There is not a 'use' value consistent with PBKDF
+        // There is not a 'use' value consistent with PBKDF or HKDF
         return NS_ERROR_DOM_DATA_ERR;
       };
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
@@ -1595,7 +1668,8 @@ public:
 
     // If this is RSA with a hash, cache the hash name
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
       RootedDictionary<RsaHashedImportParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv)) {
@@ -1697,7 +1771,8 @@ private:
            mKey->HasUsageOtherThan(CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+               mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
            mKey->HasUsageOtherThan(CryptoKey::VERIFY)) ||
           (mKey->GetKeyType() == CryptoKey::PRIVATE &&
@@ -2283,7 +2358,8 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
   // Construct an appropriate KeyAlorithm
   uint32_t privateAllowedUsages = 0, publicAllowedUsages = 0;
   if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-      mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+      mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+      mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
     RootedDictionary<RsaHashedKeyGenParams> params(aCx);
     mEarlyRv = Coerce(aCx, params, aAlgorithm);
     if (NS_FAILED(mEarlyRv)) {
@@ -2386,6 +2462,7 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
 
   // Set key usages.
   if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+      mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS) ||
       mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
     privateAllowedUsages = CryptoKey::SIGN;
     publicAllowedUsages = CryptoKey::VERIFY;
@@ -2396,6 +2473,8 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
              mAlgName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
     privateAllowedUsages = CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS;
     publicAllowedUsages = 0;
+  } else {
+    MOZ_ASSERT(false); // This shouldn't happen.
   }
 
   mKeyPair->mPrivateKey.get()->SetExtractable(aExtractable);
@@ -2496,6 +2575,156 @@ GenerateAsymmetricKeyTask::Cleanup()
 {
   mKeyPair = nullptr;
 }
+
+class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask
+{
+public:
+  DeriveHkdfBitsTask(JSContext* aCx,
+      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
+    : mSymKey(aKey.GetSymKey())
+  {
+    Init(aCx, aAlgorithm, aKey, aLength);
+  }
+
+  DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+    : mSymKey(aKey.GetSymKey())
+  {
+    size_t length;
+    mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
+
+    if (NS_SUCCEEDED(mEarlyRv)) {
+      Init(aCx, aAlgorithm, aKey, length);
+    }
+  }
+
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            uint32_t aLength)
+  {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_HKDF);
+    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HKDF);
+
+    // Check that we have a key.
+    if (mSymKey.Length() == 0) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+
+    RootedDictionary<HkdfParams> params(aCx);
+    mEarlyRv = Coerce(aCx, params, aAlgorithm);
+    if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+
+    // length must be greater than zero.
+    if (aLength == 0) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+
+    // Extract the hash algorithm.
+    nsString hashName;
+    mEarlyRv = GetAlgorithmName(aCx, params.mHash, hashName);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    // Check the given hash algorithm.
+    switch (MapAlgorithmNameToMechanism(hashName)) {
+      case CKM_SHA_1: mMechanism = CKM_NSS_HKDF_SHA1; break;
+      case CKM_SHA256: mMechanism = CKM_NSS_HKDF_SHA256; break;
+      case CKM_SHA384: mMechanism = CKM_NSS_HKDF_SHA384; break;
+      case CKM_SHA512: mMechanism = CKM_NSS_HKDF_SHA512; break;
+      default:
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+    }
+
+    ATTEMPT_BUFFER_INIT(mSalt, params.mSalt)
+    ATTEMPT_BUFFER_INIT(mInfo, params.mInfo)
+    mLengthInBytes = ceil((double)aLength / 8);
+    mLengthInBits = aLength;
+  }
+
+private:
+  size_t mLengthInBits;
+  size_t mLengthInBytes;
+  CryptoBuffer mSalt;
+  CryptoBuffer mInfo;
+  CryptoBuffer mSymKey;
+  CK_MECHANISM_TYPE mMechanism;
+
+  virtual nsresult DoCrypto() override
+  {
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // Import the key
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
+
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    if (!slot.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    ScopedPK11SymKey baseKey(PK11_ImportSymKey(slot, mMechanism,
+                                               PK11_OriginUnwrap, CKA_WRAP,
+                                               &keyItem, nullptr));
+    if (!baseKey) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    SECItem salt = { siBuffer, nullptr, 0 };
+    SECItem info = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &salt, mSalt);
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &info, mInfo);
+
+    CK_NSS_HKDFParams hkdfParams = { true, salt.data, salt.len,
+                                     true, info.data, info.len };
+    SECItem params = { siBuffer, (unsigned char*)&hkdfParams,
+                       sizeof(hkdfParams) };
+
+    // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
+    // derived symmetric key and don't matter because we ignore them anyway.
+    ScopedPK11SymKey symKey(PK11_Derive(baseKey, mMechanism, &params,
+                                        CKM_SHA512_HMAC, CKA_SIGN,
+                                        mLengthInBytes));
+
+    if (!symKey.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    nsresult rv = MapSECStatus(PK11_ExtractKeyValue(symKey));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // This doesn't leak, because the SECItem* returned by PK11_GetKeyData
+    // just refers to a buffer managed by symKey. The assignment copies the
+    // data, so mResult manages one copy, while symKey manages another.
+    ATTEMPT_BUFFER_ASSIGN(mResult, PK11_GetKeyData(symKey));
+
+    if (mLengthInBytes > mResult.Length()) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    if (!mResult.SetLength(mLengthInBytes, fallible)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    // If the number of bits to derive is not a multiple of 8 we need to
+    // zero out the remaining bits that were derived but not requested.
+    if (mLengthInBits % 8) {
+      mResult[mResult.Length() - 1] &= 0xff << (mLengthInBits % 8);
+    }
+
+    return NS_OK;
+  }
+};
 
 class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask
 {
@@ -3035,6 +3264,7 @@ WebCryptoTask::CreateSignVerifyTask(JSContext* aCx,
   if (algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
     return new HmacTask(aCx, aAlgorithm, aKey, aSignature, aData, aSign);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS) ||
              algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
     return new AsymmetricSignVerifyTask(aCx, aAlgorithm, aKey, aSignature,
                                         aData, aSign);
@@ -3103,11 +3333,13 @@ WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_HKDF) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
     return new ImportSymmetricKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                       aExtractable, aKeyUsages);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
     return new ImportRsaKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                 aExtractable, aKeyUsages);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
@@ -3153,6 +3385,7 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
@@ -3192,6 +3425,7 @@ WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
     return new GenerateSymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else if (algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
+             algName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_ECDH) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_ECDSA) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
@@ -3225,6 +3459,12 @@ WebCryptoTask::CreateDeriveKeyTask(JSContext* aCx,
   nsresult rv = GetAlgorithmName(aCx, aAlgorithm, algName);
   if (NS_FAILED(rv)) {
     return new FailureTask(rv);
+  }
+
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_HKDF)) {
+    return new DeriveKeyTask<DeriveHkdfBitsTask>(aCx, aAlgorithm, aBaseKey,
+                                                 aDerivedKeyType, aExtractable,
+                                                 aKeyUsages);
   }
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_PBKDF2)) {
@@ -3271,6 +3511,10 @@ WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
     return new DeriveDhBitsTask(aCx, aAlgorithm, aKey, aLength);
+  }
+
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_HKDF)) {
+    return new DeriveHkdfBitsTask(aCx, aAlgorithm, aKey, aLength);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -3358,12 +3602,14 @@ WebCryptoTask::CreateUnwrapKeyTask(JSContext* aCx,
   if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CBC) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CTR) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_GCM) ||
+      keyAlgName.EqualsASCII(WEBCRYPTO_ALG_HKDF) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_HMAC)) {
     importTask = new ImportSymmetricKeyTask(aCx, aFormat,
                                             aUnwrappedKeyAlgorithm,
                                             aExtractable, aKeyUsages);
   } else if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP)) {
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS)) {
     importTask = new ImportRsaKeyTask(aCx, aFormat,
                                       aUnwrappedKeyAlgorithm,
                                       aExtractable, aKeyUsages);

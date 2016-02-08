@@ -46,7 +46,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PerformanceObserver::PerformanceObserver(nsPIDOMWindow* aOwner,
+PerformanceObserver::PerformanceObserver(nsPIDOMWindowInner* aOwner,
                                          PerformanceObserverCallback& aCb)
   : mOwner(aOwner)
   , mCallback(&aCb)
@@ -78,7 +78,7 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
                                  ErrorResult& aRv)
 {
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindow> ownerWindow =
+    nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
       do_QueryInterface(aGlobal.GetAsSupports());
     if (!ownerWindow) {
       aRv.Throw(NS_ERROR_FAILURE);

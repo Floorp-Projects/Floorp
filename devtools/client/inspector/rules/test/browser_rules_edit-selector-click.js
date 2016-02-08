@@ -54,7 +54,7 @@ function* testClickOnSelectorEditorInput(view) {
   info("Click outside the editor input");
   let onBlur = once(editorInput, "blur");
   let rect = editorInput.getBoundingClientRect();
-  EventUtils.synthesizeMouse(editorInput, rect.width + 5, 0, {},
+  EventUtils.synthesizeMouse(editorInput, rect.width + 5, rect.height / 2, {},
     view.styleWindow);
   yield onBlur;
 

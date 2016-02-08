@@ -48,7 +48,7 @@ function run_test() {
 
   // not blocked - won't match due to invalid regexp
   do_check_true(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
-  
+
   // blocked - the invalid regexp for the previous item shouldn't affect this one
   do_check_true(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == nsIBLS.STATE_BLOCKED);
 

@@ -435,7 +435,7 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM)
   nsSize containerSize = GetSize();
   for (nsIFrame* childFrame : mFrames) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
-      nsIFrame* firstKid = childFrame->GetFirstPrincipalChild();
+      nsIFrame* firstKid = childFrame->PrincipalChildList().FirstChild();
       ascent = std::max(ascent,
                         LogicalRect(aWM, firstKid->GetNormalRect(),
                                     containerSize).BEnd(aWM));
@@ -546,7 +546,7 @@ nsTableRowFrame::CalcBSize(const nsHTMLReflowState& aReflowState)
       }
       // bsize may have changed, adjust descent to absorb any excess difference
       nscoord ascent;
-       if (!kidFrame->GetFirstPrincipalChild()->GetFirstPrincipalChild())
+       if (!kidFrame->PrincipalChildList().FirstChild()->PrincipalChildList().FirstChild())
          ascent = desSize.BSize(wm);
        else
          ascent = cellFrame->GetCellBaseline();
@@ -961,7 +961,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         }
         // bsize may have changed, adjust descent to absorb any excess difference
         nscoord ascent;
-        if (!kidFrame->GetFirstPrincipalChild()->GetFirstPrincipalChild()) {
+        if (!kidFrame->PrincipalChildList().FirstChild()->PrincipalChildList().FirstChild()) {
           ascent = desiredSize.BSize(wm);
         } else {
           ascent = ((nsTableCellFrame *)kidFrame)->GetCellBaseline();
@@ -1418,7 +1418,7 @@ nsTableRowFrame::GetNextRow() const
   return nullptr;
 }
 
-NS_DECLARE_FRAME_PROPERTY(RowUnpaginatedHeightProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(RowUnpaginatedHeightProperty, nscoord)
 
 void
 nsTableRowFrame::SetUnpaginatedBSize(nsPresContext* aPresContext,
@@ -1427,14 +1427,14 @@ nsTableRowFrame::SetUnpaginatedBSize(nsPresContext* aPresContext,
   NS_ASSERTION(!GetPrevInFlow(), "program error");
   // Get the property
   aPresContext->PropertyTable()->
-    Set(this, RowUnpaginatedHeightProperty(), NS_INT32_TO_PTR(aValue));
+    Set(this, RowUnpaginatedHeightProperty(), aValue);
 }
 
 nscoord
 nsTableRowFrame::GetUnpaginatedBSize()
 {
   FrameProperties props = FirstInFlow()->Properties();
-  return NS_PTR_TO_INT32(props.Get(RowUnpaginatedHeightProperty()));
+  return props.Get(RowUnpaginatedHeightProperty());
 }
 
 void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,

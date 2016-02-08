@@ -29,10 +29,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   runSafeSyncWithoutClone,
+  BaseContext,
   LocaleData,
   MessageBroker,
   Messenger,
@@ -60,6 +65,10 @@ var api = context => {
         let name = connectInfo && connectInfo.name || "";
         let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
         return context.messenger.connect(context.messageManager, name, recipient);
+      },
+
+      get lastError() {
+        return context.lastError;
       },
 
       getManifest: function() {
@@ -95,6 +104,10 @@ var api = context => {
         return context.extension.baseURI.resolve(url);
       },
 
+      get lastError() {
+        return context.lastError;
+      },
+
       inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
     },
 
@@ -107,11 +120,13 @@ var api = context => {
 };
 
 // Represents a content script.
-function Script(options) {
+function Script(options, deferred = PromiseUtils.defer()) {
   this.options = options;
   this.run_at = this.options.run_at;
   this.js = this.options.js || [];
   this.css = this.options.css || [];
+
+  this.deferred = deferred;
 
   this.matches_ = new MatchPattern(this.options.matches);
   this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
@@ -137,16 +152,6 @@ Script.prototype = {
       return false;
     }
 
-    if ("innerWindowID" in this.options) {
-      let innerWindowID = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils)
-                                .currentInnerWindowID;
-
-      if (innerWindowID !== this.options.innerWindowID) {
-        return false;
-      }
-    }
-
     // TODO: match_about_blank.
 
     return true;
@@ -154,6 +159,7 @@ Script.prototype = {
 
   tryInject(extension, window, sandbox, shouldRun) {
     if (!this.matches(window)) {
+      this.deferred.reject();
       return;
     }
 
@@ -172,6 +178,7 @@ Script.prototype = {
       }
     }
 
+    let result;
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
       for (let url of this.js) {
@@ -189,13 +196,26 @@ Script.prototype = {
           charset: "UTF-8",
           async: AppConstants.platform == "gonk",
         };
-        runSafeSyncWithoutClone(Services.scriptloader.loadSubScriptWithOptions, url, options);
+        try {
+          result = Services.scriptloader.loadSubScriptWithOptions(url, options);
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
 
       if (this.options.jsCode) {
-        Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        try {
+          result = Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
     }
+
+    // TODO: Handle this correctly when we support runAt and allFrames.
+    this.deferred.resolve(result);
   },
 };
 
@@ -216,109 +236,103 @@ var ExtensionManager;
 // Scope in which extension content script code can run. It uses
 // Cu.Sandbox to run the code. There is a separate scope for each
 // frame.
-function ExtensionContext(extensionId, contentWindow, contextOptions = {}) {
-  let { isExtensionPage } = contextOptions;
+class ExtensionContext extends BaseContext {
+  constructor(extensionId, contentWindow, contextOptions = {}) {
+    super();
 
-  this.isExtensionPage = isExtensionPage;
-  this.extension = ExtensionManager.get(extensionId);
-  this.extensionId = extensionId;
-  this.contentWindow = contentWindow;
+    let { isExtensionPage } = contextOptions;
 
-  this.onClose = new Set();
+    this.isExtensionPage = isExtensionPage;
+    this.extension = ExtensionManager.get(extensionId);
+    this.extensionId = extensionId;
+    this.contentWindow = contentWindow;
 
-  let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-  let outerWindowId = utils.outerWindowID;
-  let frameId = contentWindow == contentWindow.top ? 0 : outerWindowId;
-  this.frameId = frameId;
+    let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    let outerWindowId = utils.outerWindowID;
+    let frameId = contentWindow == contentWindow.top ? 0 : outerWindowId;
+    this.frameId = frameId;
 
-  let mm = getWindowMessageManager(contentWindow);
-  this.messageManager = mm;
+    let mm = getWindowMessageManager(contentWindow);
+    this.messageManager = mm;
 
-  let prin;
-  let contentPrincipal = contentWindow.document.nodePrincipal;
-  let ssm = Services.scriptSecurityManager;
-  if (ssm.isSystemPrincipal(contentPrincipal)) {
-    // Make sure we don't hand out the system principal by accident.
-    prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
-  } else {
+    let prin;
+    let contentPrincipal = contentWindow.document.nodePrincipal;
+    let ssm = Services.scriptSecurityManager;
+
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, {addonId: extensionId});
-    prin = [contentPrincipal, extensionPrincipal];
-  }
+    Object.defineProperty(this, "principal",
+                          {value: extensionPrincipal, enumerable: true, configurable: true});
 
-  if (isExtensionPage) {
-    if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
-      throw new Error("Invalid target window for this extension context");
+    if (ssm.isSystemPrincipal(contentPrincipal)) {
+      // Make sure we don't hand out the system principal by accident.
+      prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+    } else {
+      prin = [contentPrincipal, extensionPrincipal];
     }
-    // This is an iframe with content script API enabled and its principal should be the
-    // contentWindow itself. (we create a sandbox with the contentWindow as principal and with X-rays disabled
-    // because it enables us to create the APIs object in this sandbox object and then copying it
-    // into the iframe's window, see Bug 1214658 for rationale)
-    this.sandbox = Cu.Sandbox(contentWindow, {
-      sandboxPrototype: contentWindow,
-      wantXrays: false,
-      isWebExtensionContentScript: true,
-    });
-  } else {
-    this.sandbox = Cu.Sandbox(prin, {
-      sandboxPrototype: contentWindow,
-      wantXrays: true,
-      isWebExtensionContentScript: true,
-      wantGlobalProperties: ["XMLHttpRequest"],
-    });
+
+    if (isExtensionPage) {
+      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
+        throw new Error("Invalid target window for this extension context");
+      }
+      // This is an iframe with content script API enabled and its principal should be the
+      // contentWindow itself. (we create a sandbox with the contentWindow as principal and with X-rays disabled
+      // because it enables us to create the APIs object in this sandbox object and then copying it
+      // into the iframe's window, see Bug 1214658 for rationale)
+      this.sandbox = Cu.Sandbox(contentWindow, {
+        sandboxPrototype: contentWindow,
+        wantXrays: false,
+        isWebExtensionContentScript: true,
+      });
+    } else {
+      this.sandbox = Cu.Sandbox(prin, {
+        sandboxPrototype: contentWindow,
+        wantXrays: true,
+        isWebExtensionContentScript: true,
+        wantGlobalProperties: ["XMLHttpRequest"],
+      });
+    }
+
+    let delegate = {
+      getSender(context, target, sender) {
+        // Nothing to do here.
+      },
+    };
+
+    let url = contentWindow.location.href;
+    let broker = ExtensionContent.getBroker(mm);
+    // The |sender| parameter is passed directly to the extension.
+    let sender = {id: this.extension.uuid, frameId, url};
+    // Properties in |filter| must match those in the |recipient|
+    // parameter of sendMessage.
+    let filter = {extensionId, frameId};
+    this.messenger = new Messenger(this, broker, sender, filter, delegate);
+
+    this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
+
+    // Sandboxes don't get Xrays for some weird compatibility
+    // reason. However, we waive here anyway in case that changes.
+    Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
+
+    injectAPI(api(this), this.chromeObj);
+
+    // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
+    if (isExtensionPage) {
+      Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
+      Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
+    }
   }
 
-  let delegate = {
-    getSender(context, target, sender) {
-      // Nothing to do here.
-    },
-  };
-
-  let url = contentWindow.location.href;
-  let broker = ExtensionContent.getBroker(mm);
-  // The |sender| parameter is passed directly to the extension.
-  let sender = {id: this.extension.uuid, frameId, url};
-  // Properties in |filter| must match those in the |recipient|
-  // parameter of sendMessage.
-  let filter = {extensionId, frameId};
-  this.messenger = new Messenger(this, broker, sender, filter, delegate);
-
-  this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
-
-  // Sandboxes don't get Xrays for some weird compatibility
-  // reason. However, we waive here anyway in case that changes.
-  Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
-
-  injectAPI(api(this), this.chromeObj);
-
-  // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
-  if (isExtensionPage) {
-    Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
-    Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
-  }
-}
-
-ExtensionContext.prototype = {
   get cloneScope() {
     return this.sandbox;
-  },
+  }
 
   execute(script, shouldRun) {
     script.tryInject(this.extension, this.contentWindow, this.sandbox, shouldRun);
-  },
-
-  callOnClose(obj) {
-    this.onClose.add(obj);
-  },
-
-  forgetOnClose(obj) {
-    this.onClose.delete(obj);
-  },
+  }
 
   close() {
-    for (let obj of this.onClose) {
-      obj.close();
-    }
+    super.unload();
 
     // Overwrite the content script APIs with an empty object if the APIs objects are still
     // defined in the content window (See Bug 1214658 for rationale).
@@ -327,11 +341,10 @@ ExtensionContext.prototype = {
       Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
       Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
     }
-
     Cu.nukeSandbox(this.sandbox);
     this.sandbox = null;
-  },
-};
+  }
+}
 
 function windowId(window) {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -404,6 +417,8 @@ var DocumentManager = {
     } else if (topic == "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
+      MessageChannel.abortResponses({ innerWindowID: windowId });
+
       // Close any existent content-script context for the destroyed window.
       if (this.contentScriptWindows.has(windowId)) {
         let extensions = this.contentScriptWindows.get(windowId);
@@ -416,7 +431,7 @@ var DocumentManager = {
 
       // Close any existent iframe extension page context for the destroyed window.
       if (this.extensionPageWindows.has(windowId)) {
-        let context = this.extensionWindows.get(windowId);
+        let context = this.extensionPageWindows.get(windowId);
         context.close();
         this.extensionPageWindows.delete(windowId);
       }
@@ -446,7 +461,7 @@ var DocumentManager = {
     let window = global.content;
     let context = this.getContentScriptContext(extensionId, window);
     if (!context) {
-      return;
+      throw new Error("Unexpected add-on ID");
     }
 
     // TODO: Somehow make sure we have the right permissions for this origin!
@@ -534,6 +549,8 @@ var DocumentManager = {
         this.extensionPageWindows.delete(winId);
       }
     }
+
+    MessageChannel.abortResponses({ extensionId });
 
     this.extensionCount--;
     if (this.extensionCount == 0) {
@@ -645,44 +662,86 @@ ExtensionManager = {
   },
 };
 
+class ExtensionGlobal {
+  constructor(global) {
+    this.global = global;
+
+    MessageChannel.addListener(global, "Extension:Capture", this);
+    MessageChannel.addListener(global, "Extension:Execute", this);
+
+    this.broker = new MessageBroker([global]);
+
+    this.windowId = global.content
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils)
+                          .outerWindowID;
+
+    global.sendAsyncMessage("Extension:TopWindowID", { windowId: this.windowId });
+  }
+
+  uninit() {
+    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", { windowId: this.windowId });
+  }
+
+  get messageFilter() {
+    return {
+      innerWindowID: this.global.content
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils)
+                         .currentInnerWindowID,
+    };
+  }
+
+  receiveMessage({ target, messageName, recipient, data }) {
+    switch (messageName) {
+      case "Extension:Capture":
+        let win = this.global.content;
+
+        const XHTML_NS = "http://www.w3.org/1999/xhtml";
+        let canvas = win.document.createElementNS(XHTML_NS, "canvas");
+        canvas.width = data.width;
+        canvas.height = data.height;
+        canvas.mozOpaque = true;
+
+        let ctx = canvas.getContext("2d");
+
+        // We need to scale the image to the visible size of the browser,
+        // in order for the result to appear as the user sees it when
+        // settings like full zoom come into play.
+        ctx.scale(canvas.width / win.innerWidth,
+                  canvas.height / win.innerHeight);
+
+        ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
+
+        return canvas.toDataURL(`image/${data.options.format}`,
+                                data.options.quality / 100);
+
+      case "Extension:Execute":
+        let deferred = PromiseUtils.defer();
+
+        let script = new Script(data.options, deferred);
+        let { extensionId } = recipient;
+        DocumentManager.executeScript(target, extensionId, script);
+
+        return deferred.promise;
+    }
+  }
+}
+
 this.ExtensionContent = {
   globals: new Map(),
 
   init(global) {
-    let broker = new MessageBroker([global]);
-    this.globals.set(global, broker);
-
-    global.addMessageListener("Extension:Execute", this);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:TopWindowID", {windowId});
+    this.globals.set(global, new ExtensionGlobal(global));
   },
 
   uninit(global) {
+    this.globals.get(global).uninit();
     this.globals.delete(global);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId});
   },
 
   getBroker(messageManager) {
-    return this.globals.get(messageManager);
-  },
-
-  receiveMessage({target, name, data}) {
-    switch (name) {
-      case "Extension:Execute":
-        let script = new Script(data.options);
-        let {extensionId} = data;
-        DocumentManager.executeScript(target, extensionId, script);
-        break;
-    }
+    return this.globals.get(messageManager).broker;
   },
 };
 

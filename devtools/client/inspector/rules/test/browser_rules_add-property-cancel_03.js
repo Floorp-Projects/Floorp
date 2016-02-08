@@ -48,6 +48,6 @@ function* testCancelNewOnEscape(inspector, view) {
     "Should have canceled creating a new text property.");
   ok(!elementRuleEditor.propertyList.hasChildNodes(),
     "Should not have any properties.");
-  is(view.styleDocument.body, view.styleDocument.activeElement,
+  is(view.styleDocument.documentElement, view.styleDocument.activeElement,
     "Correct element has focus");
 }

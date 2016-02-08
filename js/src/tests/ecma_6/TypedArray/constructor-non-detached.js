@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer
 
 const constructors = [
     Int8Array,
@@ -13,14 +13,14 @@ const constructors = [
 ];
 
 for (var constructor of constructors) {
-    for (var neuterType of ["change-data", "same-data"]) {
+    for (var detachType of ["change-data", "same-data"]) {
         var buf = new constructor();
-        neuter(buf.buffer, neuterType);
-        assertThrowsInstanceOf(()=> new constructor(buf), TypeError);
+        detachArrayBuffer(buf.buffer, detachType);
+        assertThrowsInstanceOf(() => new constructor(buf), TypeError);
 
         var buffer = new ArrayBuffer();
-        neuter(buffer, neuterType);
-        assertThrowsInstanceOf(()=> new constructor(buffer), TypeError);
+        detachArrayBuffer(buffer, detachType);
+        assertThrowsInstanceOf(() => new constructor(buffer), TypeError);
     }
 }
 

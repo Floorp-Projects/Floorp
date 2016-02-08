@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 TestInterfaceSetlike::TestInterfaceSetlike(JSContext* aCx,
-                                           nsPIDOMWindow* aParent)
+                                           nsPIDOMWindowInner* aParent)
 : mParent(aParent)
 {
 }
@@ -31,7 +31,7 @@ already_AddRefed<TestInterfaceSetlike>
 TestInterfaceSetlike::Constructor(const GlobalObject& aGlobal,
                                   ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -48,7 +48,7 @@ TestInterfaceSetlike::WrapObject(JSContext* aCx,
   return TestInterfaceSetlikeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 TestInterfaceSetlike::GetParentObject() const
 {
   return mParent;

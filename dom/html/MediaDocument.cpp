@@ -193,8 +193,7 @@ MediaDocument::BecomeInteractive()
   // In principle, if we knew the readyState code to work, we could infer
   // restoration from GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE.
   bool restoring = false;
-  nsPIDOMWindow* window = GetWindow();
-  if (window) {
+  if (nsPIDOMWindowOuter* window = GetWindow()) {
     nsIDocShell* docShell = window->GetDocShell();
     if (docShell) {
       docShell->GetRestoringDocument(&restoring);

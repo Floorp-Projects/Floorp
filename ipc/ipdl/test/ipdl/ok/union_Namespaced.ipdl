@@ -12,7 +12,7 @@ namespace puppies {
 
 protocol union_Namespaced {
 child:
-    Msg(Socks s);
+    async Msg(Socks s);
 };
 
 } // namespace puppies

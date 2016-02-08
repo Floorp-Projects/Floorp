@@ -2,24 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-* {
-  box-sizing: border-box;
-}
-
-:root {
-  height: 100%;
-}
-
-body {
+#sidebar-panel-fontinspector {
   display: flex;
   flex-direction: column;
   height: 100%;
   margin: 0;
   padding-bottom: 20px;
+  width: 100%;
 }
 
-#root {
+#font-container {
   overflow: auto;
+  flex: auto;
+  height: 0px;
 }
 
 #all-fonts {
@@ -27,7 +22,7 @@ body {
   margin: 0;
 }
 
-#showall {
+#font-showall {
   border-radius: 0;
   border: 1px solid black;
   margin: 3px;
@@ -37,12 +32,12 @@ body {
   right: 0;
 }
 
-.dim > #root,
+.dim > #font-container,
 .font:not(.has-code) .font-css-code,
 .font-is-local,
 .font-is-remote,
 .font.is-local .font-format-url,
-#template {
+#font-template {
   display: none;
 }
 
@@ -68,7 +63,7 @@ body {
   overflow-x: auto;
 }
 
-#preview-text-input {
+#font-preview-text-input {
   font: inherit;
   margin-top: 1px;
   margin-bottom: 1px;

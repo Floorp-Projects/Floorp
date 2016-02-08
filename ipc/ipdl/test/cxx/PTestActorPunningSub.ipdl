@@ -8,8 +8,8 @@ protocol PTestActorPunningSub {
     manager PTestActorPunning;
 
 child:
-    Bad();
-    __delete__();
+    async Bad();
+    async __delete__();
 };
 
 } // namespace mozilla

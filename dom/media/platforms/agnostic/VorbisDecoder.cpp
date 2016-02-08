@@ -71,8 +71,8 @@ VorbisDataDecoder::Init()
   PodZero(&mVorbisDsp);
   PodZero(&mVorbisBlock);
 
-  nsAutoTArray<unsigned char*,4> headers;
-  nsAutoTArray<size_t,4> headerLens;
+  AutoTArray<unsigned char*,4> headers;
+  AutoTArray<size_t,4> headerLens;
   if (!XiphExtradataToHeaders(headers, headerLens,
                               mInfo.mCodecSpecificConfig->Elements(),
                               mInfo.mCodecSpecificConfig->Length())) {

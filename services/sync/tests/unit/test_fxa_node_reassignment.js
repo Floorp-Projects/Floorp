@@ -93,9 +93,10 @@ function prepareServer(cbAfterTokenFetch) {
 function getReassigned() {
   try {
     return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
-  } catch (ex if (ex.result == Cr.NS_ERROR_UNEXPECTED)) {
-    return false;
   } catch (ex) {
+    if (ex.result == Cr.NS_ERROR_UNEXPECTED) {
+      return false;
+    }
     do_throw("Got exception retrieving lastSyncReassigned: " +
              Log.exceptionStr(ex));
   }
@@ -107,7 +108,7 @@ function getReassigned() {
  * Runs `between` between the two. This can be used to undo deliberate failure
  * setup, detach observers, etc.
  */
-function syncAndExpectNodeReassignment(server, firstNotification, between,
+function* syncAndExpectNodeReassignment(server, firstNotification, between,
                                        secondNotification, url) {
   _("Starting syncAndExpectNodeReassignment\n");
   let deferred = Promise.defer();
@@ -155,7 +156,7 @@ function syncAndExpectNodeReassignment(server, firstNotification, between,
   yield deferred.promise;
 }
 
-add_task(function test_momentary_401_engine() {
+add_task(function* test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");
   let server = yield prepareServer();
   let john   = server.user("johndoe");
@@ -207,7 +208,7 @@ add_task(function test_momentary_401_engine() {
 });
 
 // This test ends up being a failing info fetch *after we're already logged in*.
-add_task(function test_momentary_401_info_collections_loggedin() {
+add_task(function* test_momentary_401_info_collections_loggedin() {
   _("Test a failure for info/collections after login that's resolved by reassignment.");
   let server = yield prepareServer();
 
@@ -235,7 +236,7 @@ add_task(function test_momentary_401_info_collections_loggedin() {
 // This test ends up being a failing info fetch *before we're logged in*.
 // In this case we expect to recover during the login phase - so the first
 // sync succeeds.
-add_task(function test_momentary_401_info_collections_loggedout() {
+add_task(function* test_momentary_401_info_collections_loggedout() {
   _("Test a failure for info/collections before login that's resolved by reassignment.");
 
   let oldHandler;
@@ -269,7 +270,7 @@ add_task(function test_momentary_401_info_collections_loggedout() {
 });
 
 // This test ends up being a failing meta/global fetch *after we're already logged in*.
-add_task(function test_momentary_401_storage_loggedin() {
+add_task(function* test_momentary_401_storage_loggedin() {
   _("Test a failure for any storage URL after login that's resolved by" +
     "reassignment.");
   let server = yield prepareServer();
@@ -296,7 +297,7 @@ add_task(function test_momentary_401_storage_loggedin() {
 });
 
 // This test ends up being a failing meta/global fetch *before we've logged in*.
-add_task(function test_momentary_401_storage_loggedout() {
+add_task(function* test_momentary_401_storage_loggedout() {
   _("Test a failure for any storage URL before login, not just engine parts. " +
     "Resolved by reassignment.");
   let server = yield prepareServer();
@@ -318,4 +319,3 @@ add_task(function test_momentary_401_storage_loggedout() {
                                       "weave:service:sync:finish",
                                       Service.storageURL + "meta/global");
 });
-

@@ -30,9 +30,9 @@ class nsDOMDataChannel final : public mozilla::DOMEventTargetHelper,
 {
 public:
   nsDOMDataChannel(already_AddRefed<mozilla::DataChannel>& aDataChannel,
-                   nsPIDOMWindow* aWindow);
+                   nsPIDOMWindowInner* aWindow);
 
-  nsresult Init(nsPIDOMWindow* aDOMWindow);
+  nsresult Init(nsPIDOMWindowInner* aDOMWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDATACHANNEL
@@ -44,7 +44,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     override;
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }

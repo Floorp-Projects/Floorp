@@ -127,12 +127,6 @@
   margin: 0 2px;
 }
 
-.identity-notification-icon,
-#identity-notification-icon {
-  list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
-  /* XXX: need HiDPI version */
-}
-
 .geo-notification-icon,
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);

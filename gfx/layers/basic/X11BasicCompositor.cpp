@@ -53,10 +53,10 @@ X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
   NS_ASSERTION(!aSrcOffset, "SrcOffset should not be used with linux OMTC basic");
 
   if (aDestRegion) {
-    nsIntRegionRectIterator iter(*aDestRegion);
-    while (const IntRect* iterRect = iter.Next()) {
-      IntRect srcRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height);
-      IntPoint dstPoint(iterRect->x, iterRect->y);
+    for (auto iter = aDestRegion->RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      IntRect srcRect(rect.x, rect.y, rect.width, rect.height);
+      IntPoint dstPoint(rect.x, rect.y);
 
       // We're uploading regions to our buffer, so let's just copy contents over
       mBufferDrawTarget->CopySurface(aSurface, srcRect, dstPoint);

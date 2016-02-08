@@ -1130,6 +1130,8 @@ nsContextMenu.prototype = {
 
   saveVideoFrameAsImage: function () {
     let mm = this.browser.messageManager;
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
+
     let name = "";
     if (this.mediaURL) {
       try {
@@ -1150,7 +1152,8 @@ nsContextMenu.prototype = {
       mm.removeMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
       let dataURL = message.data.dataURL;
       saveImageURL(dataURL, name, "SaveImageTitle", true, false,
-                   document.documentURIObject, document);
+                   document.documentURIObject, null, null, null,
+                   isPrivate);
     };
     mm.addMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
   },
@@ -1386,18 +1389,20 @@ nsContextMenu.prototype = {
   saveMedia: function() {
     let doc = this.ownerDoc;
     let referrerURI = gContextMenuContentData.documentURIObject;
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
       this._canvasToDataURL(this.target).then(function(dataURL) {
         saveImageURL(dataURL, "canvas.png", "SaveImageTitle",
-                     true, false, referrerURI, doc);
+                     true, false, referrerURI, null, null, null,
+                     isPrivate);
       }, Cu.reportError);
     }
     else if (this.onImage) {
       urlSecurityCheck(this.mediaURL, this.principal);
       saveImageURL(this.mediaURL, null, "SaveImageTitle", false,
-                   false, referrerURI, doc, gContextMenuContentData.contentType,
-                   gContextMenuContentData.contentDisposition);
+                   false, referrerURI, null, gContextMenuContentData.contentType,
+                   gContextMenuContentData.contentDisposition, isPrivate);
     }
     else if (this.onVideo || this.onAudio) {
       urlSecurityCheck(this.mediaURL, this.principal);

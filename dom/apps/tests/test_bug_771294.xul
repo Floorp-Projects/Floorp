@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 771294">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=771294"
+     target="_blank">Mozilla Bug 771294</a>
+  </body>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.setAllAppsLaunchable(true);
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PopupNotifications.jsm");
+
+let PopupNotifications = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler.ownerDocument.defaultView
+                                   .PopupNotifications;
+addEventListener("DOMContentLoaded", () => {
+  let iframe = document.getElementById("iframe");
+  iframe.addEventListener("load", function(e) {
+    promiseNoPopup().then(SimpleTest.finish);
+  });
+});
+</script>
+
+  <!-- Load a page that initiates an app installation and then immediately
+     - redirects to a page at a different origin.  We can't do this directly
+     - inside this test page, because that would cause the test to hang. -->
+  <iframe id="iframe" src="http://test/chrome/dom/apps/tests/install_and_redirect_helper.xul"/>
+
+</window>

@@ -45,7 +45,7 @@ public:
   // Initialize this wake lock on behalf of the given window.  Null windows are
   // allowed; a lock without an associated window is always considered
   // invisible.
-  nsresult Init(const nsAString &aTopic, nsIDOMWindow* aWindow);
+  nsresult Init(const nsAString &aTopic, nsPIDOMWindowInner* aWindow);
 
   // Initialize this wake lock on behalf of the given process.  If the process
   // dies, the lock is released.  A wake lock initialized via this method is
@@ -54,7 +54,7 @@ public:
 
   // WebIDL methods
 
-  nsISupports* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

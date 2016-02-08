@@ -1,89 +1,111 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=479863
--->
 <head>
   <title>Test for Bug 479863</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
-
-<video id='v1'></video>
-<video id='v2' preload="auto"></video>
-<video id='v3' autoplay></video>
-<video id='v4'></video>
-<video id='v5'></video>
-<video id='v6'></video>
-
 <pre id="test">
-<script type="application/javascript">
-function is() {}
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
 
-var suspendCount = {};
-var expectedSuspendCount = {v1:2, v2:1, v3:1, v4:2, v5:2, v6:2};
-var totalSuspendCount = 0;
-for (var i = 0; i < expectedSuspendCount.length; ++i) {
-  totalSuspendCount += expectedSuspendCount[i];
+function checkSuspendCount(evt) {
+  var v = evt.target;
+  ++v.suspendCount;
+  is(v.networkState, v.NETWORK_IDLE, v.name + " got suspended, count=" + v.suspendCount);
+  if (v.suspendCount == v.expectedSuspendCount) {
+    removeNodeAndSource(v);
+    manager.finished(v.name);
+  }
+  if (v.suspendCount > v.expectedSuspendCount) {
+    ok(false, v.name + " got too many suspend events");
+  }
 }
 
-function suspended(event) {
-  // If the element suspends the download, it should not then be able to
-  // complete it, so we should be stuck in NETWORK_IDLE even though this
-  // event handler could run a long time after the actual suspend.
-  var expectedState = event.type == "load" ? event.target.NETWORK_LOADED
-    : event.target.NETWORK_IDLE;
-
-  is(event.target.networkState, expectedState,
-     event.target.id + " suspended networkState");
-  suspendCount[event.target.id]++;
-
-  --totalSuspendCount;
-  if (totalSuspendCount == 0) {
-    // We're done.
-    for (var i = 1; i <= 6; ++i) {
-      var id = "v" + i;
-      is(suspendCount[id], expectedSuspendCount[id], "Suspend count for " + id);
+var tests = [
+  {
+    name: 'v1',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend: function(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.preload = 'auto';
+      }
     }
-    SimpleTest.finish();
+  },
+  {
+    name: 'v2',
+    preload: 'auto',
+    expectedSuspendCount: 1,
+    onsuspend: checkSuspendCount
+  },
+  {
+    name: 'v3',
+    preload: 'none',
+    autoplay: true,
+    expectedSuspendCount: 1,
+    onsuspend: checkSuspendCount
+  },
+  {
+    name: 'v4',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend: function(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.play();
+      }
+    }
+  },
+  // disable v5 since media element doesn't support 'load' event anymore.
+  /*{
+    name: 'v5',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend: function(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.currentTime = 0.1;
+      }
+    }
+  },*/
+  {
+    name: 'v6',
+    preload: 'none',
+    expectedSuspendCount: 2,
+    onsuspend: function(evt) {
+      checkSuspendCount(evt);
+      if (evt.target.suspendCount == 1) {
+        evt.target.autoplay = true;
+      }
+    }
   }
+];
 
-  if (suspendCount[event.target.id] > 1)
-    return;
-
-  if (event.target.id == "v1") {
-    event.target.preload = "auto";
-  } else if (event.target.id == "v4") {
-    event.target.play();
-  } else if (event.target.id == "v5") {
-    event.target.currentTime = 0.1;
-  } else if (event.target.id == "v6") {
-    event.target.autoplay = true;
+function startTest(test, token) {
+  var v = document.createElement("video");
+  v.name = test.name;
+  var key = Math.random();
+  v.src = "seek.ogv?key=" + key + "&id=" + v.name;
+  v.preload = test.preload;
+  v.suspendCount = 0;
+  v.expectedSuspendCount = test.expectedSuspendCount;
+  if (test.autoplay) {
+    v.autoplay = true;
   }
+  v.onsuspend = test.onsuspend;
+  document.body.appendChild(v);
+  manager.started(v.name);
 }
-
-var key = Math.random();
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
-function beginTest() {
-  for (var i = 1; i <= 6; ++i) {
-    var id = "v" + i;
-    var v = document.getElementById(id);
-    suspendCount[id] = 0;
-    v.addEventListener("suspend", suspended, false);
-    // Treat "load" as "suspend" for now, it means the same thing: we
-    // stopped the download.
-    v.addEventListener("load", suspended, false);
-    v.src = "seek.ogv?key=" + key + "&id=" + id;
-  }
-}
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, function() {
+  manager.runTests(tests, startTest);
+});
+
 </script>
 </pre>
 </body>

@@ -36,10 +36,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "IdleService",
 let SUSPICIOUSLY_MANY_ADDONS = 5;
 
 this.AddonWatcher = {
-  init: function(callback) {
+  /**
+   * Watch this topic to be informed when a slow add-on is detected and should
+   * be reported to the user.
+   *
+   * If you need finer-grained control, use PerformanceWatcher.jsm.
+   */
+  TOPIC_SLOW_ADDON_DETECTED: "addon-watcher-detected-slow-addon",
+
+  init: function() {
     this._initializedTimeStamp = Cu.now();
 
-    this._callback = callback;
     try {
       this._ignoreList = new Set(JSON.parse(Preferences.get("browser.addon-watch.ignore", null)));
     } catch (ex) {
@@ -50,20 +57,11 @@ this.AddonWatcher = {
     this._warmupPeriod = Preferences.get("browser.addon-watch.warmup-ms", 60 * 1000 /* 1 minute */);
     this._idleThreshold = Preferences.get("browser.addon-watch.deactivate-after-idle-ms", 3000);
     this.paused = false;
-    this.callback = callback;
   },
   uninit: function() {
     this.paused = true;
   },
   _initializedTimeStamp: 0,
-
-  set callback(callback) {
-    this._callback = callback;
-    if (this._callback == null) {
-      this.paused = true;
-    }
-  },
-  _callback: null,
 
   set paused(paused) {
     if (paused) {
@@ -196,12 +194,7 @@ this.AddonWatcher = {
         // Ok, time to inform the user.
         alerts.latestNotificationTimeStamp = now;
         alerts.occurrencesSinceLastNotification = 0;
-        try {
-          this._callback(addonId);
-        } catch (ex) {
-          Cu.reportError("Error in AddonWatcher callback " + ex);
-          Cu.reportError(Task.Debugging.generateReadableStack(ex.stack));
-        }
+        Services.obs.notifyObservers(null, this.TOPIC_SLOW_ADDON_DETECTED, addonId);
 
         highestNumberOfAddonsToReport--;
       }

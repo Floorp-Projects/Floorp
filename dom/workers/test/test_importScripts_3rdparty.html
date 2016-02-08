@@ -1,0 +1,134 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for 3rd party imported script and muted errors</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+const workerURL = 'http://mochi.test:8888/tests/dom/workers/test/importScripts_3rdParty_worker.js';
+
+var tests = [
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onmessage = function(event) {
+      ok("result" in event.data && event.data.result, "It seems we don't share data!");
+      next();
+    };
+
+    worker.postMessage({ url: location.href, test: 'try', nested: false });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onmessage = function(event) {
+      ok("result" in event.data && event.data.result, "It seems we don't share data in nested workers!");
+      next();
+    };
+
+    worker.postMessage({ url: location.href, test: 'try', nested: true });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onmessage = function(event) {
+      ok("result" in event.data && event.data.result, "It seems we don't share data via eventListener!");
+      next();
+    };
+
+    worker.postMessage({ url: location.href, test: 'eventListener', nested: false });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onmessage = function(event) {
+      ok("result" in event.data && event.data.result, "It seems we don't share data in nested workers via eventListener!");
+      next();
+    };
+
+    worker.postMessage({ url: location.href, test: 'eventListener', nested: true });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onmessage = function(event) {
+      ok("result" in event.data && event.data.result, "It seems we don't share data via onerror!");
+      next();
+    };
+    worker.onerror = function(event) {
+      event.preventDefault();
+    }
+
+    worker.postMessage({ url: location.href, test: 'onerror', nested: false });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onerror = function(event) {
+      event.preventDefault();
+      ok(event instanceof ErrorEvent, "ErrorEvent received.");
+      is(event.filename, workerURL, "ErrorEvent.filename is correct");
+      next();
+    };
+
+    worker.postMessage({ url: location.href, test: 'none', nested: false });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.addEventListener("error", function(event) {
+      event.preventDefault();
+      ok(event instanceof ErrorEvent, "ErrorEvent received.");
+      is(event.filename, workerURL, "ErrorEvent.filename is correct");
+      next();
+    });
+
+    worker.postMessage({ url: location.href, test: 'none', nested: false });
+  },
+
+  function() {
+    var worker = new Worker("importScripts_3rdParty_worker.js");
+    worker.onerror = function(event) {
+      ok(false, "No error should be received!");
+    };
+
+    worker.onmessage = function(event) {
+      ok("error" in event.data && event.data.error, "The error has been fully received from a nested worker");
+      next();
+    };
+    worker.postMessage({ url: location.href, test: 'none', nested: true });
+  },
+
+  function() {
+    var url = URL.createObjectURL(new Blob(["%&%^&%^"]));
+    var worker = new Worker(url);
+    worker.onerror = function(event) {
+      event.preventDefault();
+      ok(event instanceof ErrorEvent, "ErrorEvent received.");
+      next();
+    };
+  }
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+</script>
+</body>
+</html>

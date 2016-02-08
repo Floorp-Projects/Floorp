@@ -53,7 +53,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySystemAccess)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindow* aParent,
+MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                            const nsAString& aKeySystem,
                                            const nsAString& aCDMVersion,
                                            const MediaKeySystemConfiguration& aConfig)
@@ -74,7 +74,7 @@ MediaKeySystemAccess::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
   return MediaKeySystemAccessBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 MediaKeySystemAccess::GetParentObject() const
 {
   return mParent;
@@ -573,7 +573,7 @@ MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
 
 /* static */
 void
-MediaKeySystemAccess::NotifyObservers(nsIDOMWindow* aWindow,
+MediaKeySystemAccess::NotifyObservers(nsPIDOMWindowInner* aWindow,
                                       const nsAString& aKeySystem,
                                       MediaKeySystemStatus aStatus)
 {

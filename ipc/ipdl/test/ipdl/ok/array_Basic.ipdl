@@ -1,4 +1,4 @@
 protocol array_Basic {
 child:
-    Msg(int[] array);
+    async Msg(int[] array);
 };

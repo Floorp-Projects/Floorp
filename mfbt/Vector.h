@@ -972,7 +972,13 @@ Vector<T, N, AP>::growBy(size_t aIncr)
       return false;
     }
   } else if (aIncr + mLength > N) {
-    if (!allocPolicy().checkSimulatedOOM()) {
+    bool checkSimulatedOOM =
+#ifdef DEBUG
+    aIncr + mLength > mReserved;
+#else
+    true;
+#endif
+    if (checkSimulatedOOM && !allocPolicy().checkSimulatedOOM()) {
       return false;
     }
   }

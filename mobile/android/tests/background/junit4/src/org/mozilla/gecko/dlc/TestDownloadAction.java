@@ -5,32 +5,23 @@
 
 package org.mozilla.gecko.dlc;
 
+import android.content.Context;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
-
-import android.content.Context;
-
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Collections;
-
-import ch.boye.httpclientandroidlib.HttpEntity;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.HttpStatus;
-import ch.boye.httpclientandroidlib.StatusLine;
-import ch.boye.httpclientandroidlib.client.HttpClient;
-import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -41,6 +32,9 @@ import static org.mockito.Mockito.*;
 @RunWith(TestRunner.class)
 public class TestDownloadAction {
     private static final String TEST_URL = "http://example.org";
+
+    private static final int STATUS_OK = 200;
+    private static final int STATUS_PARTIAL_CONTENT = 206;
 
     /**
      * Scenario: The current network is metered.
@@ -55,8 +49,8 @@ public class TestDownloadAction {
 
         action.perform(RuntimeEnvironment.application, null);
 
-        verify(action, never()).buildHttpClient();
-        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
+        verify(action, never()).buildHttpURLConnection(anyString());
+        verify(action, never()).download(anyString(), any(File.class));
     }
 
     /**
@@ -73,8 +67,8 @@ public class TestDownloadAction {
         action.perform(RuntimeEnvironment.application, null);
 
         verify(action, never()).isActiveNetworkMetered(any(Context.class));
-        verify(action, never()).buildHttpClient();
-        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
+        verify(action, never()).buildHttpURLConnection(anyString());
+        verify(action, never()).download(anyString(), any(File.class));
     }
 
     /**
@@ -102,7 +96,7 @@ public class TestDownloadAction {
 
         action.perform(RuntimeEnvironment.application, catalog);
 
-        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
+        verify(action, never()).download(anyString(), any(File.class));
         verify(catalog).markAsDownloaded(content);
     }
 
@@ -114,15 +108,16 @@ public class TestDownloadAction {
      */
     @Test(expected=BaseAction.RecoverableDownloadContentException.class)
     public void testServerErrorsAreRecoverable() throws Exception {
-        HttpClient client = mockHttpClient(500, "");
+        HttpURLConnection connection = mockHttpURLConnection(500, "");
 
         File temporaryFile = mock(File.class);
         doReturn(false).when(temporaryFile).exists();
 
         DownloadAction action = spy(new DownloadAction(null));
-        action.download(client, TEST_URL, temporaryFile);
+        doReturn(connection).when(action).buildHttpURLConnection(anyString());
+        action.download(TEST_URL, temporaryFile);
 
-        verify(client).execute(any(HttpUriRequest.class));
+        verify(connection).getInputStream();
     }
 
     /**
@@ -133,15 +128,16 @@ public class TestDownloadAction {
      */
     @Test(expected=BaseAction.UnrecoverableDownloadContentException.class)
     public void testClientErrorsAreUnrecoverable() throws Exception {
-        HttpClient client = mockHttpClient(404, "");
+        HttpURLConnection connection = mockHttpURLConnection(404, "");
 
         File temporaryFile = mock(File.class);
         doReturn(false).when(temporaryFile).exists();
 
         DownloadAction action = spy(new DownloadAction(null));
-        action.download(client, TEST_URL, temporaryFile);
+        doReturn(connection).when(action).buildHttpURLConnection(anyString());
+        action.download(TEST_URL, temporaryFile);
 
-        verify(client).execute(any(HttpUriRequest.class));
+        verify(connection).getInputStream();
     }
 
     /**
@@ -169,14 +165,13 @@ public class TestDownloadAction {
         doReturn(file).when(action).getDestinationFile(RuntimeEnvironment.application, content);
 
         doReturn(false).when(action).verify(eq(file), anyString());
-        doNothing().when(action).download(any(HttpClient.class), anyString(), eq(file));
+        doNothing().when(action).download(anyString(), eq(file));
         doReturn(true).when(action).verify(eq(file), anyString());
         doNothing().when(action).extract(eq(file), eq(file), anyString());
 
         action.perform(RuntimeEnvironment.application, catalog);
 
-        verify(action).buildHttpClient();
-        verify(action).download(any(HttpClient.class), anyString(), eq(file));
+        verify(action).download(anyString(), eq(file));
         verify(action).extract(eq(file), eq(file), anyString());
         verify(catalog).markAsDownloaded(content);
     }
@@ -209,8 +204,8 @@ public class TestDownloadAction {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         doReturn(outputStream).when(action).openFile(eq(temporaryFile), anyBoolean());
 
-        HttpClient client = mockHttpClient(HttpStatus.SC_PARTIAL_CONTENT, "HelloWorld");
-        doReturn(client).when(action).buildHttpClient();
+        HttpURLConnection connection = mockHttpURLConnection(STATUS_PARTIAL_CONTENT, "HelloWorld");
+        doReturn(connection).when(action).buildHttpURLConnection(anyString());
 
         File destinationFile = mockNotExistingFile();
         doReturn(destinationFile).when(action).getDestinationFile(RuntimeEnvironment.application, content);
@@ -220,12 +215,9 @@ public class TestDownloadAction {
 
         action.perform(RuntimeEnvironment.application, catalog);
 
-        ArgumentCaptor<HttpGet> argument = ArgumentCaptor.forClass(HttpGet.class);
-        verify(client).execute(argument.capture());
+        verify(connection).getInputStream();
+        verify(connection).setRequestProperty("Range", "bytes=1337-");
 
-        HttpGet request = argument.getValue();
-        Assert.assertTrue(request.containsHeader("Range"));
-        Assert.assertEquals("bytes=1337-", request.getFirstHeader("Range").getValue());
         Assert.assertEquals("HelloWorld", new String(outputStream.toByteArray(), "UTF-8"));
 
         verify(action).openFile(eq(temporaryFile), eq(true));
@@ -261,8 +253,8 @@ public class TestDownloadAction {
         doReturn(outputStream).when(action).openFile(eq(temporaryFile), anyBoolean());
         doThrow(IOException.class).when(outputStream).write(any(byte[].class), anyInt(), anyInt());
 
-        HttpClient client = mockHttpClient(HttpStatus.SC_PARTIAL_CONTENT, "HelloWorld");
-        doReturn(client).when(action).buildHttpClient();
+        HttpURLConnection connection = mockHttpURLConnection(STATUS_PARTIAL_CONTENT, "HelloWorld");
+        doReturn(connection).when(action).buildHttpURLConnection(anyString());
 
         doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
 
@@ -306,7 +298,7 @@ public class TestDownloadAction {
 
         action.perform(RuntimeEnvironment.application, catalog);
 
-        verify(action, never()).download(any(HttpClient.class), anyString(), eq(temporaryFile));
+        verify(action, never()).download(anyString(), eq(temporaryFile));
         verify(action).verify(eq(temporaryFile), anyString());
         verify(action).extract(eq(temporaryFile), eq(destinationFile), anyString());
         verify(catalog).markAsDownloaded(content);
@@ -333,7 +325,7 @@ public class TestDownloadAction {
 
         DownloadAction action = spy(new DownloadAction(null));
         doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
-        doNothing().when(action).download(any(HttpClient.class), anyString(), any(File.class));
+        doNothing().when(action).download(anyString(), any(File.class));
         doReturn(false).when(action).verify(any(File.class), anyString());
 
         File temporaryFile = mockNotExistingFile();
@@ -372,8 +364,8 @@ public class TestDownloadAction {
 
         doReturn(true).when(action).hasEnoughDiskSpace(content, destinationFile, temporaryFile);
 
-        verify(action, never()).buildHttpClient();
-        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
+        verify(action, never()).buildHttpURLConnection(anyString());
+        verify(action, never()).download(anyString(), any(File.class));
         verify(action, never()).verify(any(File.class), anyString());
         verify(catalog, never()).markAsDownloaded(content);
     }
@@ -444,9 +436,9 @@ public class TestDownloadAction {
         doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
         doReturn(true).when(action).hasEnoughDiskSpace(eq(content), any(File.class), any(File.class));
 
-        HttpClient client = mock(HttpClient.class);
-        doThrow(IOException.class).when(client).execute(any(HttpUriRequest.class));
-        doReturn(client).when(action).buildHttpClient();
+        HttpURLConnection connection = mockHttpURLConnection(STATUS_OK, "");
+        doThrow(IOException.class).when(connection).getInputStream();
+        doReturn(connection).when(action).buildHttpURLConnection(anyString());
 
         action.perform(RuntimeEnvironment.application, catalog);
 
@@ -476,7 +468,7 @@ public class TestDownloadAction {
         doReturn(mockNotExistingFile()).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
         doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
         doReturn(true).when(action).hasEnoughDiskSpace(eq(content), any(File.class), any(File.class));
-        doNothing().when(action).download(any(HttpClient.class), anyString(), any(File.class));
+        doNothing().when(action).download(anyString(), any(File.class));
         doReturn(true).when(action).verify(any(File.class), anyString());
 
         File destinationFile = mock(File.class);
@@ -541,20 +533,12 @@ public class TestDownloadAction {
         return file;
     }
 
-    private static HttpClient mockHttpClient(int statusCode, String content) throws Exception {
-        StatusLine status = mock(StatusLine.class);
-        doReturn(statusCode).when(status).getStatusCode();
+    private static HttpURLConnection mockHttpURLConnection(int statusCode, String content) throws Exception {
+        HttpURLConnection connection = mock(HttpURLConnection.class);
 
-        HttpEntity entity = mock(HttpEntity.class);
-        doReturn(new ByteArrayInputStream(content.getBytes("UTF-8"))).when(entity).getContent();
+        doReturn(statusCode).when(connection).getResponseCode();
+        doReturn(new ByteArrayInputStream(content.getBytes("UTF-8"))).when(connection).getInputStream();
 
-        HttpResponse response = mock(HttpResponse.class);
-        doReturn(status).when(response).getStatusLine();
-        doReturn(entity).when(response).getEntity();
-
-        HttpClient client = mock(HttpClient.class);
-        doReturn(response).when(client).execute(any(HttpUriRequest.class));
-
-        return client;
+        return connection;
     }
 }

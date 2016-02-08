@@ -81,6 +81,16 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
   return true;
 }
 
+void
+SourceSurfaceSkia::InitFromBitmap(const SkBitmap& aBitmap)
+{
+  mBitmap = aBitmap;
+
+  mSize = IntSize(mBitmap.width(), mBitmap.height());
+  mFormat = SkiaColorTypeToGfxFormat(mBitmap.colorType(), mBitmap.alphaType());
+  mStride = mBitmap.rowBytes();
+}
+
 #ifdef USE_SKIA_GPU
 bool
 SourceSurfaceSkia::InitFromGrTexture(GrTexture* aTexture,

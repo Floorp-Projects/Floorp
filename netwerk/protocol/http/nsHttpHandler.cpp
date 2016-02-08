@@ -143,7 +143,7 @@ nsHttpHandler::nsHttpHandler()
     , mResponseTimeout(PR_SecondsToInterval(300))
     , mResponseTimeoutEnabled(false)
     , mNetworkChangedTimeout(5000)
-    , mMaxRequestAttempts(3)
+    , mMaxRequestAttempts(6)
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
     , mH2MandatorySuiteEnabled(false)
@@ -2239,7 +2239,7 @@ nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
     // on B2G, contains the necessary information on wifi and gateway
 
     nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(cb);
-    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(domWindow);
+    nsCOMPtr<nsPIDOMWindowOuter> piWindow = do_QueryInterface(domWindow);
     if (!piWindow)
         return;
 

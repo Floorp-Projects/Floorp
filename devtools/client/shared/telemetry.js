@@ -175,6 +175,11 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_SCRATCHPAD_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_SCRATCHPAD_TIME_ACTIVE_SECONDS"
     },
+    "scratchpad-window": {
+      histogram: "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_SCRATCHPAD_WINDOW_TIME_ACTIVE_SECONDS"
+    },
     responsive: {
       histogram: "DEVTOOLS_RESPONSIVE_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_RESPONSIVE_OPENED_PER_USER_FLAG",

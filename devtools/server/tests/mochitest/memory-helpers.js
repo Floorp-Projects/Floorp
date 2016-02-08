@@ -22,26 +22,14 @@ function startServerAndGetSelectedTabMemory() {
   DebuggerServer.addBrowserActors();
   var client = new DebuggerClient(DebuggerServer.connectPipe());
 
-  return new Promise((resolve, reject) => {
-    client.connect(response => {
-      if (response.error) {
-        reject(new Error(response.error + ": " + response.message));
-        return;
-      }
+  return client.connect()
+    .then(() => client.listTabs())
+    .then(response => {
+      var form = response.tabs[response.selected];
+      var memory = MemoryFront(client, form, response);
 
-      client.listTabs(response => {
-        if (response.error) {
-          reject(new Error(response.error + ": " + response.message));
-          return;
-        }
-
-        var form = response.tabs[response.selected];
-        var memory = MemoryFront(client, form, response);
-
-        resolve({ memory, client });
-      });
+      return { memory, client };
     });
-  });
 }
 
 function destroyServerAndFinish(client) {

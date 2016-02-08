@@ -485,7 +485,7 @@ PluginScriptableObjectParent::ScriptableEnumerate(NPObject* aObject,
     return false;
   }
 
-  AutoInfallibleTArray<PluginIdentifier, 10> identifiers;
+  AutoTArray<PluginIdentifier, 10> identifiers;
   bool success;
   if (!actor->CallEnumerate(&identifiers, &success)) {
     NS_WARNING("Failed to send message!");
@@ -830,7 +830,7 @@ PluginScriptableObjectParent::AnswerInvoke(const PluginIdentifier& aId,
     return true;
   }
 
-  AutoFallibleTArray<NPVariant, 10> convertedArgs;
+  AutoTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, fallible)) {
@@ -913,7 +913,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(InfallibleTArray<Variant>&& aA
     return true;
   }
 
-  AutoFallibleTArray<NPVariant, 10> convertedArgs;
+  AutoTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, fallible)) {
@@ -1233,7 +1233,7 @@ PluginScriptableObjectParent::AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
     return true;
   }
 
-  AutoFallibleTArray<NPVariant, 10> convertedArgs;
+  AutoTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, fallible)) {

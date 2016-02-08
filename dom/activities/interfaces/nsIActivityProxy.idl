@@ -4,17 +4,17 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 /**
   * Implemented by @mozilla.org/dom/activities/proxy;1
   */
-[scriptable, uuid(e04c0bbc-ab7d-41ba-b801-1068dd58660b)]
+[scriptable, uuid(87653623-d864-4b03-8874-96808b8cdb81)]
 interface nsIActivityProxy : nsISupports
 {
     void startActivity(in nsISupports /* MozActivity */ activity,
                        in jsval options,
-                       in nsIDOMWindow window,
+                       in mozIDOMWindow window,
                        in unsigned long long childID);
     void cleanup();
 };

@@ -33,3 +33,22 @@ def get_build_vars(directory, cmd):
         cmd.log_manager.replace_terminal_handler(old_logger)
 
     return build_vars
+
+def sanitize_cflags(flags):
+    # We filter out -Xclang arguments as clang based tools typically choke on
+    # passing these flags down to the clang driver.  -Xclang tells the clang
+    # driver driver to pass whatever comes after it down to clang cc1, which is
+    # why we skip -Xclang and the argument immediately after it.  Here is an
+    # example: the following two invocations pass |-foo -bar -baz| to cc1:
+    # clang -cc1 -foo -bar -baz
+    # clang -Xclang -foo -Xclang -bar -Xclang -baz
+    sanitized = []
+    saw_xclang = False
+    for flag in flags:
+        if flag == '-Xclang':
+            saw_xclang = True
+        elif saw_xclang:
+            saw_xclang = False
+        else:
+            sanitized.append(flag)
+    return sanitized

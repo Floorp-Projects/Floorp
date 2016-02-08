@@ -351,7 +351,7 @@ public:
 
   WebProgressListener(PromiseWorkerProxy* aPromiseProxy,
                       ServiceWorkerPrivate* aServiceWorkerPrivate,
-                      nsPIDOMWindow* aWindow,
+                      nsPIDOMWindowOuter* aWindow,
                       nsIURI* aBaseURI)
   : mPromiseProxy(aPromiseProxy)
   , mServiceWorkerPrivate(aServiceWorkerPrivate)
@@ -459,7 +459,7 @@ private:
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   nsCOMPtr<nsIURI> mBaseURI;
 };
 
@@ -502,7 +502,7 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsPIDOMWindow> window;
+    nsCOMPtr<nsPIDOMWindowOuter> window;
     nsresult rv = OpenWindow(getter_AddRefs(window));
     if (NS_SUCCEEDED(rv)) {
       MOZ_ASSERT(window);
@@ -562,7 +562,7 @@ public:
 
 private:
   nsresult
-  OpenWindow(nsPIDOMWindow** aWindow)
+  OpenWindow(nsPIDOMWindowOuter** aWindow)
   {
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
 
@@ -602,20 +602,20 @@ private:
       nsCString spec;
       uri->GetSpec(spec);
 
-      nsCOMPtr<nsIDOMWindow> newWindow;
+      nsCOMPtr<mozIDOMWindowProxy> newWindow;
       pwwatch->OpenWindow2(nullptr,
                            spec.get(),
                            nullptr,
                            nullptr,
                            false, false, true, nullptr, nullptr,
                            getter_AddRefs(newWindow));
-      nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(newWindow);
+      nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);
       return NS_OK;
     }
 
     // Find the most recent browser window and open a new tab in it.
-    nsCOMPtr<nsPIDOMWindow> browserWindow =
+    nsCOMPtr<nsPIDOMWindowOuter> browserWindow =
       nsContentUtils::GetMostRecentNonPBWindow();
     if (!browserWindow) {
       // It is possible to be running without a browser window on Mac OS, so
@@ -636,7 +636,7 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMWindow> win;
+    nsCOMPtr<mozIDOMWindowProxy> win;
     rv = bwin->OpenURI(uri, nullptr,
                        nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
                        nsIBrowserDOMWindow::OPEN_NEW,
@@ -646,8 +646,7 @@ private:
     }
     NS_ENSURE_STATE(win);
 
-    nsCOMPtr<nsPIDOMWindow> pWin = do_QueryInterface(win);
-    pWin = pWin->GetOuterWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> pWin = nsPIDOMWindowOuter::From(win);
     pWin.forget(aWindow);
 
     return NS_OK;

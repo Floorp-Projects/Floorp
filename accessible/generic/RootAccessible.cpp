@@ -485,12 +485,10 @@ RootAccessible::RelationByType(RelationType aType)
   if (!mDocumentNode || aType != RelationType::EMBEDS)
     return DocAccessibleWrap::RelationByType(aType);
 
-  nsPIDOMWindow* rootWindow = mDocumentNode->GetWindow();
-  if (rootWindow) {
-    nsCOMPtr<nsIDOMWindow> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
-    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(contentWindow);
-    if (piWindow) {
-      nsCOMPtr<nsIDocument> contentDocumentNode = piWindow->GetDoc();
+  if (nsPIDOMWindowOuter* rootWindow = mDocumentNode->GetWindow()) {
+    nsCOMPtr<nsPIDOMWindowOuter> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
+    if (contentWindow) {
+      nsCOMPtr<nsIDocument> contentDocumentNode = contentWindow->GetDoc();
       if (contentDocumentNode) {
         DocAccessible* contentDocument =
           GetAccService()->GetDocAccessible(contentDocumentNode);

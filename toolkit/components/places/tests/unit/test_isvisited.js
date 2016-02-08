@@ -13,12 +13,12 @@ add_task(function* test_execute()
 {
   var referrer = uri("about:blank");
 
-  // add a http:// uri 
+  // add a http:// uri
   var uri1 = uri("http://mozilla.com");
   yield PlacesTestUtils.addVisits({uri: uri1, referrer: referrer});
   do_check_guid_for_uri(uri1);
   do_check_true(yield promiseIsURIVisited(uri1));
- 
+
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
   yield PlacesTestUtils.addVisits({uri: uri2, referrer: referrer});

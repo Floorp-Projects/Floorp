@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=11
+MOD_MINOR_VERSION=12
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -1856,10 +1856,6 @@ tools are selected during the Xcode/Developer Tools installation.])
             PR_MD_ASFILES=os_Linux_ppc.s
         fi
         ;;
-    m68k)
-        CFLAGS="$CFLAGS -m68020-60"
-        CXXFLAGS="$CXXFLAGS -m68020-60"
-        ;;
     esac    
     ;;
 
@@ -2543,7 +2539,8 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 _SAVE_LIBS="$LIBS"
 LIBS="$LIBS $OS_LIBS"
-AC_CHECK_FUNCS(dladdr gettid lchown setpriority strerror syscall)
+AC_CHECK_FUNCS(dladdr gettid lchown setpriority strerror syscall dnl
+ secure_getenv __secure_getenv)
 LIBS="$_SAVE_LIBS"
 
 dnl ========================================================

@@ -292,7 +292,7 @@ class JSObject : public js::gc::Cell
 
     void fixupAfterMovingGC();
 
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
+    static const JS::TraceKind TraceKind = JS::TraceKind::Object;
     static const size_t MaxTagBits = 3;
     static bool isNullLike(const JSObject* obj) { return uintptr_t(obj) < (1 << MaxTagBits); }
 

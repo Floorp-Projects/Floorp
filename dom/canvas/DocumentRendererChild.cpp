@@ -37,7 +37,7 @@ DocumentRendererChild::~DocumentRendererChild()
 {}
 
 bool
-DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
+DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
                                       const nsRect& documentRect,
                                       const mozilla::gfx::Matrix& transform,
                                       const nsString& aBGColor,
@@ -50,9 +50,8 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
         nsContentUtils::FlushLayoutForTree(window);
 
     RefPtr<nsPresContext> presContext;
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
-    if (win) {
-        nsIDocShell* docshell = win->GetDocShell();
+    if (window) {
+        nsIDocShell* docshell = window->GetDocShell();
         if (docshell) {
             docshell->GetPresContext(getter_AddRefs(presContext));
         }

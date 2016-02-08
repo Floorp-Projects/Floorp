@@ -95,7 +95,7 @@ nsSVGMarkerFrame::GetCanvasTM()
 static nsIFrame*
 GetAnonymousChildFrame(nsIFrame* aFrame)
 {
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
+  nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
   MOZ_ASSERT(kid && kid->GetType() == nsGkAtoms::svgMarkerAnonChildFrame,
              "expected to find anonymous child of marker frame");
   return kid;

@@ -2,12 +2,4 @@
   "extends": [
     "../toolkit/.eslintrc"
   ],
-
-  "rules": {
-    // No redeclaring variables
-    "no-redeclare": 2,
-
-    // Functions must always return something or nothing
-    "consistent-return": 2,
-  }
 }

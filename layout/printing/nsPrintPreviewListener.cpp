@@ -179,7 +179,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
           nsIDocument* parentDoc = doc->GetParentDocument();
           NS_ASSERTION(parentDoc, "no parent document");
 
-          nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(parentDoc->GetWindow());
+          nsCOMPtr<nsPIDOMWindowOuter> win = parentDoc->GetWindow();
 
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && win) {

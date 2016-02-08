@@ -381,12 +381,12 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
   if (!fm)
     return false;
 
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
+  nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
   fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
   if (!focusedWindow)
     return false;
 
-  nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(focusedWindow));
+  auto* piwin = nsPIDOMWindowOuter::From(focusedWindow);
   nsIDocShell *docShell = piwin->GetDocShell();
   if (!docShell) {
     return false;
@@ -441,7 +441,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
 {
-  nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
+  AutoTArray<nsShortcutCandidate, 10> accessKeys;
   nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
 
   if (accessKeys.IsEmpty()) {

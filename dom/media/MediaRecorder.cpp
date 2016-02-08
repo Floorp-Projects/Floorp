@@ -768,7 +768,7 @@ MediaRecorder::~MediaRecorder()
 }
 
 MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
-                             nsPIDOMWindow* aOwnerWindow)
+                             nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
   , mState(RecordingState::Inactive)
 {
@@ -781,7 +781,7 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
 
 MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
                              uint32_t aSrcOutput,
-                             nsPIDOMWindow* aOwnerWindow)
+                             nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
   , mState(RecordingState::Inactive)
 {
@@ -813,8 +813,7 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
 void
 MediaRecorder::RegisterActivityObserver()
 {
-  nsPIDOMWindow* window = GetOwner();
-  if (window) {
+  if (nsPIDOMWindowInner* window = GetOwner()) {
     nsIDocument* doc = window->GetExtantDoc();
     if (doc) {
       doc->RegisterActivityObserver(
@@ -826,8 +825,7 @@ MediaRecorder::RegisterActivityObserver()
 void
 MediaRecorder::UnRegisterActivityObserver()
 {
-  nsPIDOMWindow* window = GetOwner();
-  if (window) {
+  if (nsPIDOMWindowInner* window = GetOwner()) {
     nsIDocument* doc = window->GetExtantDoc();
     if (doc) {
       doc->UnregisterActivityObserver(
@@ -966,7 +964,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
                            const MediaRecorderOptions& aInitDict,
                            ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -993,7 +991,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -1150,7 +1148,7 @@ MediaRecorder::RemoveSession(Session* aSession)
 void
 MediaRecorder::NotifyOwnerDocumentActivityChanged()
 {
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   NS_ENSURE_TRUE_VOID(window);
   nsIDocument* doc = window->GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);

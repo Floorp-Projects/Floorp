@@ -23,27 +23,27 @@ protocol PBackgroundIDBVersionChangeTransaction
   manages PBackgroundIDBRequest;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  Commit();
-  Abort(nsresult resultCode);
+  async Commit();
+  async Abort(nsresult resultCode);
 
-  CreateObjectStore(ObjectStoreMetadata metadata);
-  DeleteObjectStore(int64_t objectStoreId);
+  async CreateObjectStore(ObjectStoreMetadata metadata);
+  async DeleteObjectStore(int64_t objectStoreId);
 
-  CreateIndex(int64_t objectStoreId,
-              IndexMetadata metadata);
-  DeleteIndex(int64_t objectStoreId,
-              int64_t indexId);
+  async CreateIndex(int64_t objectStoreId,
+                    IndexMetadata metadata);
+  async DeleteIndex(int64_t objectStoreId,
+                    int64_t indexId);
 
-  PBackgroundIDBCursor(OpenCursorParams params);
+  async PBackgroundIDBCursor(OpenCursorParams params);
 
-  PBackgroundIDBRequest(RequestParams params);
+  async PBackgroundIDBRequest(RequestParams params);
 
 child:
-  __delete__();
+  async __delete__();
 
-  Complete(nsresult result);
+  async Complete(nsresult result);
 };
 
 } // namespace indexedDB

@@ -327,7 +327,7 @@ nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
                                       const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
                                       nsTArray<int32_t>& aSourceIndices)
 {
-  nsAutoTArray<nsSVGStringInfo,2> sources;
+  AutoTArray<nsSVGStringInfo,2> sources;
   aPrimitiveElement->GetSourceImageNames(sources);
 
   for (uint32_t j = 0; j < sources.Length(); j++) {
@@ -394,7 +394,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
        ++primitiveElementIndex) {
     nsSVGFE* filter = primitives[primitiveElementIndex];
 
-    nsAutoTArray<int32_t,2> sourceIndices;
+    AutoTArray<int32_t,2> sourceIndices;
     nsresult rv = GetSourceIndices(filter, aPrimitiveDescrs, imageTable, sourceIndices);
     if (NS_FAILED(rv)) {
       return rv;

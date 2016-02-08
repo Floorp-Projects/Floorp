@@ -11,7 +11,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsGlobalWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsILoadInfo.h"
 #include "nsIURI.h"
@@ -30,8 +29,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
-#include "SharedWorker.h"
-#include "ServiceWorker.h"
 #include "js/HeapAPI.h"
 #include "GeckoProfiler.h"
 #include "WorkerPrivate.h"
@@ -431,7 +428,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_ADDREF_INHERITED(nsPerformance, PerformanceBase)
 NS_IMPL_RELEASE_INHERITED(nsPerformance, PerformanceBase)
 
-nsPerformance::nsPerformance(nsPIDOMWindow* aWindow,
+nsPerformance::nsPerformance(nsPIDOMWindowInner* aWindow,
                              nsDOMNavigationTiming* aDOMTiming,
                              nsITimedChannel* aChannel,
                              nsPerformance* aParentPerformance)
@@ -829,7 +826,7 @@ PerformanceBase::PerformanceBase()
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
-PerformanceBase::PerformanceBase(nsPIDOMWindow* aWindow)
+PerformanceBase::PerformanceBase(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
   , mPendingNotificationObserversTask(false)
@@ -919,37 +916,6 @@ PerformanceBase::ClearResourceTimings()
 }
 
 DOMHighResTimeStamp
-PerformanceBase::TranslateTime(DOMHighResTimeStamp aTime,
-                               const WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
-                               ErrorResult& aRv)
-{
-  TimeStamp otherCreationTimeStamp;
-
-  if (aTimeSource.IsWindow()) {
-    RefPtr<nsPerformance> performance = aTimeSource.GetAsWindow().GetPerformance();
-    if (NS_WARN_IF(!performance)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-    }
-    otherCreationTimeStamp = performance->CreationTimeStamp();
-  } else if (aTimeSource.IsWorker()) {
-    otherCreationTimeStamp = aTimeSource.GetAsWorker().CreationTimeStamp();
-  } else if (aTimeSource.IsSharedWorker()) {
-    SharedWorker& sharedWorker = aTimeSource.GetAsSharedWorker();
-    WorkerPrivate* workerPrivate = sharedWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
-  } else if (aTimeSource.IsServiceWorker()) {
-    ServiceWorker& serviceWorker = aTimeSource.GetAsServiceWorker();
-    WorkerPrivate* workerPrivate = serviceWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
-  } else {
-    MOZ_CRASH("This should not be possible.");
-  }
-
-  return RoundTime(
-    aTime + (otherCreationTimeStamp - CreationTimeStamp()).ToMilliseconds());
-}
-
-DOMHighResTimeStamp
 PerformanceBase::RoundTime(double aTime) const
 {
   // Round down to the nearest 5us, because if the timer is too accurate people
@@ -992,7 +958,7 @@ DOMHighResTimeStamp
 PerformanceBase::ResolveTimestampFromName(const nsAString& aName,
                                           ErrorResult& aRv)
 {
-  nsAutoTArray<RefPtr<PerformanceEntry>, 1> arr;
+  AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   DOMHighResTimeStamp ts;
   Optional<nsAString> typeParam;
   nsAutoString str;

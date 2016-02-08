@@ -413,8 +413,8 @@ add_task(function* test_createRoom() {
 // Test if opening a new room window works correctly.
 add_task(function* test_openRoom() {
   let openedUrl;
-  Chat.open = function(contentWindow, origin, title, url) {
-    openedUrl = url;
+  Chat.open = function(contentWindow, options) {
+    openedUrl = options.url;
   };
 
   LoopRooms.open("fakeToken");

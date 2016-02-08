@@ -144,18 +144,19 @@ function TypedObjectGetReference(descr, typedObj, offset) {
 
 function TypedObjectGetSimd(descr, typedObj, offset) {
   var type = DESCR_TYPE(descr);
+  var simdTypeDescr = GetSimdTypeDescr(type);
   switch (type) {
   case JS_SIMDTYPEREPR_FLOAT32X4:
     var x = Load_float32(typedObj, offset + 0);
     var y = Load_float32(typedObj, offset + 4);
     var z = Load_float32(typedObj, offset + 8);
     var w = Load_float32(typedObj, offset + 12);
-    return GetFloat32x4TypeDescr()(x, y, z, w);
+    return simdTypeDescr(x, y, z, w);
 
   case JS_SIMDTYPEREPR_FLOAT64X2:
     var x = Load_float64(typedObj, offset + 0);
     var y = Load_float64(typedObj, offset + 8);
-    return GetFloat64x2TypeDescr()(x, y);
+    return simdTypeDescr(x, y);
 
   case JS_SIMDTYPEREPR_INT8X16:
     var s0 = Load_int8(typedObj, offset + 0);
@@ -174,8 +175,7 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s13 = Load_int8(typedObj, offset + 13);
     var s14 = Load_int8(typedObj, offset + 14);
     var s15 = Load_int8(typedObj, offset + 15);
-    return GetInt8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7,
-                                 s8, s9, s10, s11, s12, s13, s14, s15);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15);
 
   case JS_SIMDTYPEREPR_INT16X8:
     var s0 = Load_int16(typedObj, offset + 0);
@@ -186,14 +186,14 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s5 = Load_int16(typedObj, offset + 10);
     var s6 = Load_int16(typedObj, offset + 12);
     var s7 = Load_int16(typedObj, offset + 14);
-    return GetInt16x8TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7);
 
   case JS_SIMDTYPEREPR_INT32X4:
     var x = Load_int32(typedObj, offset + 0);
     var y = Load_int32(typedObj, offset + 4);
     var z = Load_int32(typedObj, offset + 8);
     var w = Load_int32(typedObj, offset + 12);
-    return GetInt32x4TypeDescr()(x, y, z, w);
+    return simdTypeDescr(x, y, z, w);
 
   case JS_SIMDTYPEREPR_UINT8X16:
     var s0 = Load_uint8(typedObj, offset + 0);
@@ -212,8 +212,7 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s13 = Load_uint8(typedObj, offset + 13);
     var s14 = Load_uint8(typedObj, offset + 14);
     var s15 = Load_uint8(typedObj, offset + 15);
-    return GetUint8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7,
-                                 s8, s9, s10, s11, s12, s13, s14, s15);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15);
 
   case JS_SIMDTYPEREPR_UINT16X8:
     var s0 = Load_uint16(typedObj, offset + 0);
@@ -224,14 +223,14 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s5 = Load_uint16(typedObj, offset + 10);
     var s6 = Load_uint16(typedObj, offset + 12);
     var s7 = Load_uint16(typedObj, offset + 14);
-    return GetUint16x8TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7);
 
   case JS_SIMDTYPEREPR_UINT32X4:
     var x = Load_uint32(typedObj, offset + 0);
     var y = Load_uint32(typedObj, offset + 4);
     var z = Load_uint32(typedObj, offset + 8);
     var w = Load_uint32(typedObj, offset + 12);
-    return GetUint32x4TypeDescr()(x, y, z, w);
+    return simdTypeDescr(x, y, z, w);
 
   case JS_SIMDTYPEREPR_BOOL8X16:
     var s0 = Load_int8(typedObj, offset + 0);
@@ -250,8 +249,7 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s13 = Load_int8(typedObj, offset + 13);
     var s14 = Load_int8(typedObj, offset + 14);
     var s15 = Load_int8(typedObj, offset + 15);
-    return GetBool8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7,
-                                  s8, s9, s10, s11, s12, s13, s14, s15);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15);
 
   case JS_SIMDTYPEREPR_BOOL16X8:
     var s0 = Load_int16(typedObj, offset + 0);
@@ -262,19 +260,19 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s5 = Load_int16(typedObj, offset + 10);
     var s6 = Load_int16(typedObj, offset + 12);
     var s7 = Load_int16(typedObj, offset + 14);
-    return GetBool16x8TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
+    return simdTypeDescr(s0, s1, s2, s3, s4, s5, s6, s7);
 
   case JS_SIMDTYPEREPR_BOOL32X4:
     var x = Load_int32(typedObj, offset + 0);
     var y = Load_int32(typedObj, offset + 4);
     var z = Load_int32(typedObj, offset + 8);
     var w = Load_int32(typedObj, offset + 12);
-    return GetBool32x4TypeDescr()(x, y, z, w);
+    return simdTypeDescr(x, y, z, w);
 
   case JS_SIMDTYPEREPR_BOOL64X2:
     var x = Load_int32(typedObj, offset + 0);
     var y = Load_int32(typedObj, offset + 8);
-    return GetBool64x2TypeDescr()(x, y);
+    return simdTypeDescr(x, y);
 
   }
 

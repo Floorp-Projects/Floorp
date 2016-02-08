@@ -733,7 +733,7 @@ BytecodeEmitter::pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t 
     }
 }
 
-JSObject*
+StaticScope*
 BytecodeEmitter::innermostStaticScope() const
 {
     if (StmtInfoBCE* stmt = innermostScopeStmt())
@@ -1362,9 +1362,7 @@ BytecodeEmitter::atBodyLevel(StmtInfoBCE* stmt) const
     if (sc->staticScope()->is<StaticEvalScope>()) {
         bool bl = !stmt->enclosing;
         MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
-        MOZ_ASSERT_IF(bl, stmt->staticScope
-                              ->as<StaticBlockScope>()
-                              .enclosingStaticScope() == sc->staticScope());
+        MOZ_ASSERT_IF(bl, stmt->staticScope->enclosingScope() == sc->staticScope());
         return bl;
     }
     return !stmt;
@@ -1467,8 +1465,8 @@ BytecodeEmitter::computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definitio
         // object. Aliased block bindings do not need adjusting; see
         // computeAliasedSlots.
         uint32_t slot = dn->pn_scopecoord.slot();
-        if (blockScopeOfDef(dn)->is<JSFunction>() ||
-            blockScopeOfDef(dn)->is<ModuleObject>())
+        if (blockScopeOfDef(dn)->is<StaticFunctionScope>() ||
+            blockScopeOfDef(dn)->is<StaticModuleScope>())
         {
             MOZ_ASSERT(IsArgOp(*op) || slot < bceOfDef->script->bindings.numBodyLevelLocals());
             MOZ_ALWAYS_TRUE(bceOfDef->lookupAliasedName(bceOfDef->script, dn->name(), &slot));
@@ -1569,8 +1567,11 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
             // Look up for name in function and block scopes.
             if (ssi.type() == StaticScopeIter<NoGC>::Function) {
                 RootedScript funScript(cx, ssi.funScript());
-                if (funScript->funHasExtensibleScope() || ssi.fun().atom() == pn->pn_atom)
+                if (funScript->funHasExtensibleScope() ||
+                    ssi.fun().function().atom() == pn->pn_atom)
+                {
                     return false;
+                }
 
                 // Skip the current function, since we're trying to convert a
                 // free name.
@@ -1582,7 +1583,7 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                     }
                 }
             } else if (ssi.type() == StaticScopeIter<NoGC>::Module) {
-                RootedScript moduleScript(cx, ssi.moduleScript());
+                RootedScript moduleScript(cx, ssi.module().script());
                 uint32_t slot_;
                 if (lookupAliasedName(moduleScript, name, &slot_, pn)) {
                     slot = Some(slot_);
@@ -1590,7 +1591,8 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                 }
 
                 // Convert module import accesses to use JSOP_GETIMPORT.
-                RootedModuleEnvironmentObject env(cx, &ssi.module().initialEnvironment());
+                RootedModuleEnvironmentObject env(cx, &ssi.module().moduleObject()
+                                                       .initialEnvironment());
                 RootedPropertyName propName(cx, name);
                 MOZ_ASSERT(env);
                 if (env->hasImportBinding(propName)) {
@@ -1833,12 +1835,11 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
          * Currently, the ALIASEDVAR ops do not support accessing the
          * callee of a DeclEnvObject, so use NAME.
          */
-        JSFunction* fun = sc->asFunctionBox()->function();
-        if (blockScopeOfDef(dn) != fun)
+        if (blockScopeOfDef(dn) != sc->asFunctionBox()->staticScope())
             return true;
 
-        MOZ_ASSERT(fun->isLambda());
-        MOZ_ASSERT(pn->pn_atom == fun->atom());
+        MOZ_ASSERT(sc->asFunctionBox()->function()->isLambda());
+        MOZ_ASSERT(pn->pn_atom == sc->asFunctionBox()->function()->atom());
 
         /*
          * Leave pn->isOp(JSOP_GETNAME) if this->fun needs a CallObject to
@@ -1900,9 +1901,18 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
      * bloat where a single live function keeps its whole global script
      * alive.), ScopeCoordinateToTypeSet is not able to find the var/let's
      * associated TypeSet.
+     *
+     * Note the following does not prevent us from optimizing block scopes at
+     * global level, e.g.,
+     *
+     *   { let x; function f() { x = 42; } }
      */
-    if (bceOfDef != this && bceOfDef->sc->isGlobalContext())
+    if (dn->kind() == Definition::LET || dn->kind() == Definition::CONSTANT) {
+        if (IsStaticGlobalLexicalScope(blockScopeOfDef(dn)))
+            return true;
+    } else if (bceOfDef != this && bceOfDef->sc->isGlobalContext()) {
         return true;
+    }
 
     if (!pn->pn_scopecoord.set(parser->tokenStream, hops, slot))
         return false;
@@ -3529,9 +3539,9 @@ BytecodeEmitter::emitSetThis(ParseNode* pn)
 }
 
 static bool
-IsModuleOnScopeChain(JSObject* obj)
+IsModuleOnScopeChain(StaticScope* scope)
 {
-    for (StaticScopeIter<NoGC> ssi(obj); !ssi.done(); ssi++) {
+    for (StaticScopeIter<NoGC> ssi(scope); !ssi.done(); ssi++) {
         if (ssi.type() == StaticScopeIter<NoGC>::Module)
             return true;
     }
@@ -3759,7 +3769,6 @@ BytecodeEmitter::emitDestructuringDeclsWithEmitter(JSOp prologueOp, ParseNode* p
                 continue;
             ParseNode* target = element;
             if (element->isKind(PNK_SPREAD)) {
-                MOZ_ASSERT(element->pn_kid->isKind(PNK_NAME));
                 target = element->pn_kid;
             }
             if (target->isKind(PNK_ASSIGN))
@@ -5375,15 +5384,17 @@ BytecodeEmitter::emitHoistedFunctionsInList(ParseNode* list)
     MOZ_ASSERT(list->pn_xflags & PNX_FUNCDEFS);
 
     for (ParseNode* pn = list->pn_head; pn; pn = pn->pn_next) {
+        ParseNode* maybeFun = pn;
+
         if (!sc->strict()) {
-            while (pn->isKind(PNK_LABEL))
-                pn = pn->as<LabeledStatement>().statement();
+            while (maybeFun->isKind(PNK_LABEL))
+                maybeFun = maybeFun->as<LabeledStatement>().statement();
         }
 
-        if (pn->isKind(PNK_ANNEXB_FUNCTION) ||
-            (pn->isKind(PNK_FUNCTION) && pn->functionIsHoisted()))
+        if (maybeFun->isKind(PNK_ANNEXB_FUNCTION) ||
+            (maybeFun->isKind(PNK_FUNCTION) && maybeFun->functionIsHoisted()))
         {
-            if (!emitTree(pn))
+            if (!emitTree(maybeFun))
                 return false;
         }
     }
@@ -6380,14 +6391,21 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         SharedContext* outersc = sc;
         if (fun->isInterpretedLazy()) {
             if (!fun->lazyScript()->sourceObject()) {
-                JSObject* scope = innermostStaticScope();
+                // Two cases that can arise during parsing can cause the static
+                // scope chain to be incorrectly linked up: (1) the
+                // transformation of blocks from non-scopeful to scopeful when
+                // the first block-scoped declaration is found; (2) legacy
+                // comprehension expression transplantation. The
+                // setEnclosingScope call below fixes these cases.
+                Rooted<StaticScope*> enclosingScope(cx, innermostStaticScope());
+                fun->lazyScript()->staticScope()->setEnclosingScope(enclosingScope);
+
                 JSObject* source = script->sourceObject();
-                fun->lazyScript()->setParent(scope, &source->as<ScriptSourceObject>());
+                fun->lazyScript()->initSource(&source->as<ScriptSourceObject>());
             }
             if (emittingRunOnceLambda)
                 fun->lazyScript()->setTreatAsRunOnce();
         } else {
-
             if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
                 funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
             MOZ_ASSERT_IF(outersc->strict(), funbox->strictScript);
@@ -6400,9 +6418,13 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             const TransitiveCompileOptions& transitiveOptions = parser->options();
             CompileOptions options(cx, transitiveOptions);
 
-            Rooted<JSObject*> enclosingScope(cx, innermostStaticScope());
+            // See comment above regarding funScope->setEnclosingScope().
+            Rooted<StaticScope*> funScope(cx, funbox->staticScope());
+            Rooted<StaticScope*> enclosingScope(cx, innermostStaticScope());
+            funScope->setEnclosingScope(enclosingScope);
+
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
-            Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
+            Rooted<JSScript*> script(cx, JSScript::Create(cx, funScope, false, options,
                                                           sourceObject,
                                                           funbox->bufStart, funbox->bufEnd));
             if (!script)
@@ -6416,8 +6438,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                                  insideNonGlobalEval, lineNum, emitterMode);
             if (!bce2.init())
                 return false;
-
-            /* We measured the max scope depth when we parsed the function. */
             if (!bce2.emitFunctionScript(pn->pn_body))
                 return false;
 
@@ -8913,7 +8933,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_REGEXP:
-        if (!emitRegExp(regexpList.add(pn->as<RegExpLiteral>().objbox())))
+        if (!emitRegExp(objectList.add(pn->as<RegExpLiteral>().objbox())))
             return false;
         break;
 
@@ -9200,43 +9220,9 @@ CGConstList::finish(ConstArray* array)
  * Find the index of the given object for code generator.
  *
  * Since the emitter refers to each parsed object only once, for the index we
- * use the number of already indexes objects. We also add the object to a list
+ * use the number of already indexed objects. We also add the object to a list
  * to convert the list to a fixed-size array when we complete code generation,
  * see js::CGObjectList::finish below.
- *
- * Most of the objects go to BytecodeEmitter::objectList but for regexp we use
- * a separated BytecodeEmitter::regexpList. In this way the emitted index can
- * be directly used to store and fetch a reference to a cloned RegExp object
- * that shares the same JSRegExp private data created for the object literal in
- * objbox. We need a cloned object to hold lastIndex and other direct
- * properties that should not be shared among threads sharing a precompiled
- * function or script.
- *
- * If the code being compiled is function code, allocate a reserved slot in
- * the cloned function object that shares its precompiled script with other
- * cloned function objects and with the compiler-created clone-parent. There
- * are nregexps = script->regexps()->length such reserved slots in each
- * function object cloned from fun->object. NB: during compilation, a funobj
- * slots element must never be allocated, because JSObject::allocSlot could
- * hand out one of the slots that should be given to a regexp clone.
- *
- * If the code being compiled is global code, the cloned regexp are stored in
- * fp->vars slot and to protect regexp slots from GC we set fp->nvars to
- * nregexps.
- *
- * The slots initially contain undefined or null. We populate them lazily when
- * JSOP_REGEXP is executed for the first time.
- *
- * Why clone regexp objects?  ECMA specifies that when a regular expression
- * literal is scanned, a RegExp object is created.  In the spec, compilation
- * and execution happen indivisibly, but in this implementation and many of
- * its embeddings, code is precompiled early and re-executed in multiple
- * threads, or using multiple global objects, or both, for efficiency.
- *
- * In such cases, naively following ECMA leads to wrongful sharing of RegExp
- * objects, which makes for collisions on the lastIndex property (especially
- * for global regexps) and on any ad-hoc properties.  Also, __proto__ refers to
- * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
 unsigned
 CGObjectList::add(ObjectBox* objbox)

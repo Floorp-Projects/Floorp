@@ -68,6 +68,7 @@ xul|*.inline-link:-moz-focusring,
 xul|button:-moz-focusring > xul|*.button-box,
 xul|menulist:-moz-focusring > xul|*.menulist-label-box,
 xul|radio[focused="true"] > xul|*.radio-label-box,
+html|input[type="checkbox"]:-moz-focusring + html|label:before,
 xul|checkbox:-moz-focusring > xul|*.checkbox-label-box {
   outline: 1px dotted;
 }

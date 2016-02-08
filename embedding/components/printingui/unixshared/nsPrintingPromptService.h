@@ -43,7 +43,7 @@ protected:
   virtual ~nsPrintingPromptService();
 
 private:
-  nsresult DoDialog(nsIDOMWindow *aParent,
+  nsresult DoDialog(mozIDOMWindowProxy *aParent,
                     nsIDialogParamBlock *aParamBlock, 
                     nsIWebBrowserPrint *aWebBrowserPrint, 
                     nsIPrintSettings* aPS,

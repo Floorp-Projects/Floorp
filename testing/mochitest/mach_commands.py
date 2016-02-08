@@ -537,6 +537,8 @@ class MachCommands(MachCommandBase):
         if buildapp in ('b2g',):
             run_mochitest = mochitest.run_b2g_test
         elif buildapp == 'android':
+            from mozrunner.devices.android_device import grant_runtime_permissions
+            grant_runtime_permissions(self, kwargs['app'])
             run_mochitest = mochitest.run_android_test
         else:
             run_mochitest = mochitest.run_desktop_test
@@ -607,6 +609,9 @@ class RobocopCommands(MachCommandBase):
             print(ROBOCOP_TESTS_NOT_FOUND.format('\n'.join(
                 sorted(list(test_paths)))))
             return 1
+
+        from mozrunner.devices.android_device import grant_runtime_permissions
+        grant_runtime_permissions(self, kwargs['app'])
 
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)

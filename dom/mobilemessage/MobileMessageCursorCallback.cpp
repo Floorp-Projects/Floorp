@@ -28,7 +28,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
 NS_IMPL_ADDREF_INHERITED(MobileMessageCursor, DOMCursor)
 NS_IMPL_RELEASE_INHERITED(MobileMessageCursor, DOMCursor)
 
-MobileMessageCursor::MobileMessageCursor(nsPIDOMWindow* aWindow,
+MobileMessageCursor::MobileMessageCursor(nsPIDOMWindowInner* aWindow,
                                          nsICursorContinueCallback* aCallback)
   : DOMCursor(aWindow, aCallback)
 {

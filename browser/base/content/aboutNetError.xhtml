@@ -144,12 +144,6 @@
         }
       }
 
-      function sendErrorReport() {
-        var event = new CustomEvent("AboutNetErrorSendReport", {bubbles:true});
-
-        document.dispatchEvent(event);
-      }
-
       function initPage()
       {
         var err = getErrorCode();
@@ -260,13 +254,7 @@
                   var event = new CustomEvent("AboutNetErrorSetAutomatic",
                     {bubbles:true, detail:evt.target.checked});
                   document.dispatchEvent(event);
-                  if (evt.target.checked) {
-                    sendErrorReport();
-                  }
                 }, false);
-
-              var retryBtn = document.getElementById('reportCertificateErrorRetry');
-              retryBtn.addEventListener('click', sendErrorReport, false);
             }
           }
           if (getErrorCode() == "weakCryptoUsed" || getErrorCode() == "sslv3Used") {
@@ -527,12 +515,6 @@
         <p>
           <input type="checkbox" id="automaticallyReportInFuture" />
           <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
-
-          <span id="reportingState">
-            <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
-            <span id="reportSendingMessage">&errorReporting.sending;</span>
-            <span id="reportSentMessage">&errorReporting.sent;</span>
-          </span>
         </p>
       </div>
 

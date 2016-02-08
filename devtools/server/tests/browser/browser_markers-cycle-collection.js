@@ -12,7 +12,8 @@ add_task(function*() {
   // This test runs very slowly on linux32 debug EC2 instances.
   requestLongerTimeout(2);
 
-  let doc = yield addTab(MAIN_DOMAIN + "doc_force_cc.html");
+  let browser = yield addTab(MAIN_DOMAIN + "doc_force_cc.html");
+  let doc = browser.contentDocument;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());

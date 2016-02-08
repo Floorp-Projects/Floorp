@@ -45,12 +45,12 @@ function run_test()
 function init()
 {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function onConnect() {
-    gClient.listTabs(function onListTabs(aResponse) {
+  gClient.connect()
+    .then(() => gClient.listTabs())
+    .then(aResponse => {
       gActorId = aResponse.test;
       run_next_test();
     });
-  });
 }
 
 function checkStack(expectedName) {

@@ -15,7 +15,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsICachingChannel.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIUploadChannel.h"
+#include "nsIFormPOSTActionChannel.h"
 #include "mozilla/Attributes.h"
 
 class nsViewSourceChannel final : public nsIViewSourceChannel,
@@ -24,7 +24,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIHttpChannelInternal,
                                   public nsICachingChannel,
                                   public nsIApplicationCacheChannel,
-                                  public nsIUploadChannel
+                                  public nsIFormPOSTActionChannel
 {
 
 public:
@@ -40,6 +40,7 @@ public:
     NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
     NS_FORWARD_SAFE_NSIAPPLICATIONCACHECONTAINER(mApplicationCacheChannel)
     NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
+    NS_FORWARD_SAFE_NSIFORMPOSTACTIONCHANNEL(mPostChannel)
     NS_FORWARD_SAFE_NSIHTTPCHANNELINTERNAL(mHttpChannelInternal)
 
     // nsViewSourceChannel methods:
@@ -68,6 +69,7 @@ protected:
     nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
     nsCOMPtr<nsIApplicationCacheChannel> mApplicationCacheChannel;
     nsCOMPtr<nsIUploadChannel>  mUploadChannel;
+    nsCOMPtr<nsIFormPOSTActionChannel> mPostChannel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsIURI>            mOriginalURI;
     nsCOMPtr<nsIURI>            mBaseURI;

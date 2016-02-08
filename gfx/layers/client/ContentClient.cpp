@@ -379,7 +379,7 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
     mForwarder->UseComponentAlphaTextures(this, mTextureClient,
                                           mTextureClientOnWhite);
   } else {
-    nsAutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
+    AutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
     CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
     t->mTextureClient = mTextureClient;
     IntSize size = mTextureClient->GetSize();

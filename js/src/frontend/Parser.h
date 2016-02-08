@@ -143,6 +143,9 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     DeclVector      vars_;              /* var/const definitions */
     DeclVector      bodyLevelLexicals_; /* lexical definitions at body-level */
 
+    typedef HashSet<JSAtom*, DefaultHasher<JSAtom*>, LifoAllocPolicy<Fallible>> DeclaredNameSet;
+    DeclaredNameSet bodyLevelLexicallyDeclaredNames_;
+
     bool checkLocalsOverflow(TokenStream& ts);
 
   public:
@@ -181,7 +184,8 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
      *    'pn' if they are in the scope of 'pn'.
      *  + Pre-existing placeholders in the scope of 'pn' have been removed.
      */
-    bool define(TokenStream& ts, HandlePropertyName name, Node pn, Definition::Kind);
+    bool define(TokenStream& ts, HandlePropertyName name, Node pn, Definition::Kind kind,
+                bool declaringVarInCatchBody = false);
 
     /*
      * Let definitions may shadow same-named definitions in enclosing scopes.
@@ -254,7 +258,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     // The comments atop checkDestructuring explain the distinction between
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
-    bool            inDeclDestructuring:1;
+    bool inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
                  Node maybeFunction, SharedContext* sc, Directives* newDirectives)
@@ -269,6 +273,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         args_(prs->context),
         vars_(prs->context),
         bodyLevelLexicals_(prs->context),
+        bodyLevelLexicallyDeclaredNames_(prs->alloc),
         parserPC(&prs->pc),
         oldpc(prs->pc),
         lexdeps(prs->context),
@@ -290,10 +295,20 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
     StmtInfoPC* innermostNonLabelStmt() const { return stmtStack.innermostNonLabel(); }
-    JSObject* innermostStaticScope() const {
+    StaticScope* innermostStaticScope() const {
         if (StmtInfoPC* stmt = innermostScopeStmt())
             return stmt->staticScope;
         return sc->staticScope();
+    }
+
+    bool isBodyLevelLexicallyDeclaredName(HandleAtom name) {
+        return bodyLevelLexicallyDeclaredNames_.has(name);
+    }
+
+    bool addBodyLevelLexicallyDeclaredName(TokenStream& ts, HandleAtom name) {
+        if (!bodyLevelLexicallyDeclaredNames_.put(name))
+            return ts.reportError(JSMSG_OUT_OF_MEMORY);
+        return true;
     }
 
     // True if we are at the topmost level of a entire script or function body.
@@ -310,9 +325,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         if (sc->staticScope()->is<StaticEvalScope>()) {
             bool bl = !stmt->enclosing;
             MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
-            MOZ_ASSERT_IF(bl, stmt->staticScope
-                                  ->template as<StaticBlockScope>()
-                                  .enclosingStaticScope() == sc->staticScope());
+            MOZ_ASSERT_IF(bl, stmt->staticScope->enclosingScope() == sc->staticScope());
             return bl;
         }
         return !stmt;
@@ -507,11 +520,11 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
-                                JSObject* enclosingStaticScope);
+                                Handle<StaticScope*> enclosingStaticScope);
 
     // Use when the funbox is the outermost.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
-                                GeneratorKind generatorKind, HandleObject enclosingStaticScope)
+                                GeneratorKind generatorKind, Handle<StaticScope*> enclosingStaticScope)
     {
         return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
                               enclosingStaticScope);
@@ -521,7 +534,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind)
     {
-        RootedObject enclosing(context, outerpc->innermostStaticScope());
+        Rooted<StaticScope*> enclosing(context, outerpc->innermostStaticScope());
         return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
     }
 
@@ -534,7 +547,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
                             HandleObject proto);
 
-    bool generateBlockId(JSObject* staticScope, uint32_t* blockIdOut) {
+    bool generateBlockId(StaticScope* staticScope, uint32_t* blockIdOut) {
         if (blockScopes.length() == StmtInfoPC::BlockIdLimit) {
             tokenStream.reportError(JSMSG_NEED_DIET, "program");
             return false;
@@ -600,7 +613,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node standaloneFunctionBody(HandleFunction fun, Handle<PropertyNameVector> formals,
                                 GeneratorKind generatorKind,
                                 Directives inheritedDirectives, Directives* newDirectives,
-                                HandleObject enclosingStaticScope);
+                                Handle<StaticScope*> enclosingStaticScope);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
@@ -660,7 +673,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
     Node statements(YieldHandling yieldHandling);
 
-    Node blockStatement(YieldHandling yieldHandling);
+    Node blockStatement(YieldHandling yieldHandling,
+                        unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
     Node ifStatement(YieldHandling yieldHandling);
     Node doWhileStatement(YieldHandling yieldHandling);
     Node whileStatement(YieldHandling yieldHandling);

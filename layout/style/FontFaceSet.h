@@ -12,13 +12,12 @@
 #include "gfxUserFontSet.h"
 #include "nsCSSRules.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsPIDOMWindow.h"
 
 struct gfxFontFaceSrc;
 class gfxUserFontEntry;
 class nsFontFaceLoader;
 class nsIPrincipal;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace css {
@@ -100,7 +99,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
   NS_DECL_NSIDOMEVENTLISTENER
 
-  FontFaceSet(nsPIDOMWindow* aWindow, nsIDocument* aDocument);
+  FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

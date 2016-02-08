@@ -8,4 +8,3 @@ pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privac
 pref("datareporting.healthreport.uploadEnabled", true);
 
 pref("datareporting.healthreport.about.reportUrl", "https://fhr.cdn.mozilla.net/%LOCALE%/v4/");
-pref("datareporting.healthreport.about.reportUrlUnified", "https://fhr.cdn.mozilla.net/%LOCALE%/v4/");

@@ -14,6 +14,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
+#include "xpcAccessibleDocument.h"
 
 namespace mozilla {
 namespace a11y {
@@ -23,6 +24,11 @@ ProxyAccessible::Shutdown()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsDoc());
   NS_ASSERTION(!mOuterDoc, "Why do we still have a child doc?");
+  xpcAccessibleDocument* xpcDoc =
+    GetAccService()->GetCachedXPCDocument(Document());
+  if (xpcDoc) {
+    xpcDoc->NotifyOfShutdown(this);
+  }
 
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc accessibles
   // can be destroyed before the doc they own.
@@ -772,7 +778,7 @@ ProxyAccessible::TableSelectedRowCount()
 void
 ProxyAccessible::TableSelectedCells(nsTArray<ProxyAccessible*>* aCellIDs)
 {
-  nsAutoTArray<uint64_t, 30> cellIDs;
+  AutoTArray<uint64_t, 30> cellIDs;
   Unused << mDoc->SendTableSelectedCells(mID, &cellIDs);
   aCellIDs->SetCapacity(cellIDs.Length());
   for (uint32_t i = 0; i < cellIDs.Length(); ++i) {
@@ -851,7 +857,7 @@ ProxyAccessible::AtkTableRowHeader(int32_t aRow)
 void
 ProxyAccessible::SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems)
 {
-  nsAutoTArray<uint64_t, 10> itemIDs;
+  AutoTArray<uint64_t, 10> itemIDs;
   Unused << mDoc->SendSelectedItems(mID, &itemIDs);
   aSelectedItems->SetCapacity(itemIDs.Length());
   for (size_t i = 0; i < itemIDs.Length(); ++i) {

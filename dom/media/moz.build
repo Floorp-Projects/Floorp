@@ -133,6 +133,7 @@ EXPORTS += [
     'MP3FrameParser.h',
     'nsIDocumentActivity.h',
     'RtspMediaResource.h',
+    'SeekTarget.h',
     'SelfRef.h',
     'SharedBuffer.h',
     'StreamBuffer.h',

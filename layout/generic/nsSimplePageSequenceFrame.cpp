@@ -520,7 +520,7 @@ GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<RefPtr<HTMLCanvasElemen
         }
       }
 
-      if (!child->GetFirstPrincipalChild()) {
+      if (!child->PrincipalChildList().FirstChild()) {
         nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(child);
         if (subdocumentFrame) {
           // Descend into the subdocument
@@ -742,7 +742,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
-    nsIFrame* conFrame = currentPage->GetFirstPrincipalChild();
+    nsIFrame* conFrame = currentPage->PrincipalChildList().FirstChild();
     if (mSelectionHeight >= 0) {
       conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -mYSelOffset));
       nsContainerFrame::PositionChildViews(conFrame);
@@ -837,7 +837,7 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.Clear();
 
-    nsIFrame* child = GetFirstPrincipalChild();
+    nsIFrame* child = PrincipalChildList().FirstChild();
     nsRect dirty = aDirtyRect;
     dirty.ScaleInverseRoundOut(PresContext()->GetPrintPreviewScale());
 

@@ -28,7 +28,7 @@ sync protocol PHeapSnapshotTempFileHelper
 parent:
     sync OpenHeapSnapshotTempFile() returns (OpenHeapSnapshotTempFileResponse response);
 
-    __delete__();
+    async __delete__();
 };
 
 } // namespace devtools

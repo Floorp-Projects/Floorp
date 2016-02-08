@@ -221,13 +221,14 @@ public abstract class HomeFragment extends Fragment {
 
             // Fetch an icon big enough for use as a home screen icon.
             final String displayTitle = info.getDisplayTitle();
-            new AsyncTask<Void, Void, Void>() {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
-                protected Void doInBackground(Void... voids) {
+                public void run() {
                     GeckoAppShell.createShortcut(displayTitle, info.url);
-                    return null;
+
                 }
-            }.execute();
+            });
+
             return true;
         }
 
@@ -393,6 +394,7 @@ public abstract class HomeFragment extends Fragment {
 
             switch(mType) {
                 case BOOKMARKS:
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
                     mDB.removeBookmarksWithURL(cr, mUrl);
                     break;
 
@@ -401,6 +403,7 @@ public abstract class HomeFragment extends Fragment {
                     break;
 
                 case READING_LIST:
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "reading_list");
                     mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
                     break;

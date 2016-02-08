@@ -22,7 +22,7 @@ child:
   /**
    * Sent when the asynchronous request has completed.
    */
-  __delete__(MessageReply response);
+  async __delete__(MessageReply response);
 };
 
 struct ReplyMessageSend

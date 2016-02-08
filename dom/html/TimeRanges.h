@@ -93,7 +93,7 @@ private:
     }
   };
 
-  nsAutoTArray<TimeRange,4> mRanges;
+  AutoTArray<TimeRange,4> mRanges;
 
   nsCOMPtr<nsISupports> mParent;
 

@@ -15,79 +15,12 @@
 #endif
               android:targetSdkVersion="23"/>
 
-#include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
-
-#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-#include ../search/manifests/SearchAndroidManifest_permissions.xml.in
-#endif
-
-    <!-- A signature level permission specific to each Firefox version (Android
-         package name, e.g., org.mozilla.firefox).  Use this permission to
-         broadcast securely within a single Firefox version.  This needs to
-         agree with GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION. -->
-    <permission
-        android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE"
-        android:protectionLevel="signature"/>
-
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />
-
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
-    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"/>
-    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
-#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-#endif
-#ifdef MOZ_WEBSMS_BACKEND
-    <!-- WebSMS -->
-    <uses-permission android:name="android.permission.SEND_SMS"/>
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.WRITE_SMS"/>
-    <uses-permission android:name="android.permission.READ_SMS"/>
-
-    <uses-feature android:name="android.hardware.telephony"/>
-#endif
-
-    <uses-feature android:name="android.hardware.location" android:required="false"/>
-    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
-    <uses-feature android:name="android.hardware.touchscreen"/>
-
-#ifdef NIGHTLY_BUILD
-    <!-- Contacts API -->
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-#endif
-
-    <!-- Tab Queue -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-
-#ifdef MOZ_ANDROID_BEAM
-    <!-- Android Beam support -->
-    <uses-permission android:name="android.permission.NFC"/>
-    <uses-feature android:name="android.hardware.nfc" android:required="false"/>
-#endif
-
-#ifdef MOZ_WEBRTC
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
-    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
-#endif
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
-
-    <!-- App requires OpenGL ES 2.0 -->
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+<!-- The bouncer APK and the main APK should define the same set of
+     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
+     the likelihood of permission-related surprises when installing the main APK
+     on top of a pre-installed bouncer APK.  Add such shared elements in the
+     fileincluded here, so that they can be referenced by both APKs. -->
+#include FennecManifest_permissions.xml.in
 
     <application android:label="@string/moz_app_displayname"
                  android:icon="@drawable/icon"
@@ -111,6 +44,11 @@
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 #endif
 
+        <!-- Fennec is shipped as the Android package named
+             org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java
+             package hierarchy inside the Android package used to have an
+             org.mozilla.{fennec,firefox,firefox_beta} subtree *and* an
+             org.mozilla.gecko subtree; it now only has org.mozilla.gecko. -->
         <activity android:name="@MOZ_ANDROID_BROWSER_INTENT_CLASS@"
                   android:label="@string/moz_app_displayname"
                   android:taskAffinity="@ANDROID_PACKAGE_NAME@.BROWSER"
@@ -120,25 +58,7 @@
                   android:launchMode="singleTask"
                   android:exported="true"
                   android:theme="@style/Gecko.App">
-          <!-- We export this activity so that it can be launched by explicit
-               intents, in particular homescreen shortcuts.  See Bug 1032217.
-               In future we would prefer to move all intent filters off the .App
-               alias and onto BrowserApp so that we can deprecate activities
-               that refer to pre-processed class names. -->
-        </activity>
 
-        <!-- Fennec is shipped as the Android package named
-             org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java package
-             hierarchy inside the Android package has both an
-             org.mozilla.{fennec,firefox,firefox_beta} subtree *and* an
-             org.mozilla.gecko subtree.  The non-org.mozilla.gecko is deprecated
-             and we would like to get rid of it entirely.  Until that happens, we
-             have external consumers (such as intents and bookmarks) of
-             non-org.mozilla.gecko Activity classes, so we define activity aliases
-             for backwards compatibility. -->
-        <activity-alias android:name=".App"
-                        android:label="@MOZ_APP_DISPLAYNAME@"
-                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
             <!-- android:priority ranges between -1000 and 1000.  We never want
                  another activity to usurp the MAIN action, so we ratchet our
                  priority up. -->
@@ -219,7 +139,7 @@
                 <action android:name="org.mozilla.gecko.DEBUG" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
         <service android:name="org.mozilla.gecko.GeckoService" />
 
@@ -293,36 +213,6 @@
             <action android:name="android.intent.action.GET_RESTRICTION_ENTRIES" />
           </intent-filter>
         </receiver>
-
-        <!-- Activity used for launching non-privileged WebApps via a URL -->
-        <activity android:name="org.mozilla.gecko.Webapp"
-                  android:label="@string/webapp_generic_name"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:launchMode="singleTask"
-                  android:taskAffinity="org.mozilla.gecko.WEBAPP"
-                  android:process=":@ANDROID_PACKAGE_NAME@.Webapp"
-                  android:excludeFromRecents="true"
-                  android:exported="true"
-                  android:theme="@style/Gecko.App">
-          <!-- We export this activity so that it can be launched by explicit
-               intents, in particular old-style WebApp launching homescreen
-               shortcuts. Such shortcuts were made before the new "synthetic
-               APK" WebApps were deployed. See Bug 1032217. -->
-        </activity>
-
-        <!-- Alias Webapp so we can launch it from the package namespace. Prefer
-             to launch with the fully qualified name "org.mozilla.gecko.Webapp". -->
-        <activity-alias android:name=".Webapp"
-                        android:label="@string/webapp_generic_name"
-                        android:targetActivity="org.mozilla.gecko.Webapp">
-            <intent-filter>
-                <action android:name="org.mozilla.gecko.WEBAPP" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
-            </intent-filter>
-        </activity-alias>
 
         <!-- Declare a predefined number of Webapp<num> activities. These are
              used so that each web app can launch in its own process. Keep
@@ -469,6 +359,9 @@
             android:name="org.mozilla.gecko.dlc.DownloadContentService">
         </service>
 
+        <service
+          android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
+          android:exported="false"/>
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 

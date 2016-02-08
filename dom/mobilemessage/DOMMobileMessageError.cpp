@@ -30,7 +30,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMError)
 NS_IMPL_ADDREF_INHERITED(DOMMobileMessageError, DOMError)
 NS_IMPL_RELEASE_INHERITED(DOMMobileMessageError, DOMError)
 
-DOMMobileMessageError::DOMMobileMessageError(nsPIDOMWindow* aWindow,
+DOMMobileMessageError::DOMMobileMessageError(nsPIDOMWindowInner* aWindow,
                                              const nsAString& aName,
                                              SmsMessage* aSms)
   : DOMError(aWindow, aName)
@@ -39,7 +39,7 @@ DOMMobileMessageError::DOMMobileMessageError(nsPIDOMWindow* aWindow,
 {
 }
 
-DOMMobileMessageError::DOMMobileMessageError(nsPIDOMWindow* aWindow,
+DOMMobileMessageError::DOMMobileMessageError(nsPIDOMWindowInner* aWindow,
                                              const nsAString& aName,
                                              MmsMessage* aMms)
   : DOMError(aWindow, aName)

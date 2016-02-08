@@ -8,9 +8,9 @@ sync protocol PTestIndirectProtocolParamManage {
     manages PTestIndirectProtocolParamFirst;
     manages PTestIndirectProtocolParamSecond;
 both:
-    PTestIndirectProtocolParamFirst();
-    PTestIndirectProtocolParamSecond();
-    __delete__();
+    async PTestIndirectProtocolParamFirst();
+    async PTestIndirectProtocolParamSecond();
+    async __delete__();
 };
 
 }

@@ -1480,7 +1480,7 @@ nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
                             parent->AsDOMNode());
   }
 
-  nsresult result;
+  nsresult result = NS_OK;
   RefPtr<JoinNodeTxn> txn = CreateTxnForJoinNode(aLeftNode, aRightNode);
   if (txn)  {
     result = DoTransaction(txn);
@@ -2664,7 +2664,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
                         nsIContent& aNewLeftNode)
 {
   // Remember all selection points.
-  nsAutoTArray<SavedRange, 10> savedRanges;
+  AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
     SelectionType type(1 << i);
     SavedRange range;
@@ -2811,7 +2811,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
   nsINode* parent = GetNodeLocation(aNodeToKeep, &keepOffset);
 
   // Remember all selection points.
-  nsAutoTArray<SavedRange, 10> savedRanges;
+  AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
     SelectionType type(1 << i);
     SavedRange range;
@@ -3837,7 +3837,7 @@ nsEditor::SplitNodeDeep(nsIContent& aNode,
       didSplit = true;
       ErrorResult rv;
       nsCOMPtr<nsIContent> newLeftNode = SplitNode(nodeToSplit, offset, rv);
-      NS_ENSURE_TRUE(!rv.Failed(), -1);
+      NS_ENSURE_TRUE(!NS_FAILED(rv.StealNSResult()), -1);
 
       rightNode = nodeToSplit;
       leftNode = newLeftNode;
@@ -5039,8 +5039,8 @@ nsEditor::IsActiveInDOMWindow()
   NS_ENSURE_TRUE(fm, false);
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsPIDOMWindow* ourWindow = doc->GetWindow();
-  nsCOMPtr<nsPIDOMWindow> win;
+  nsPIDOMWindowOuter* ourWindow = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win;
   nsIContent* content =
     nsFocusManager::GetFocusedDescendant(ourWindow, false,
                                          getter_AddRefs(win));

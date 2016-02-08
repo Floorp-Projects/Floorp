@@ -26,7 +26,7 @@ NS_IMPL_RELEASE_INHERITED(TVChannel, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TVChannel)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TVChannel::TVChannel(nsPIDOMWindow* aWindow,
+TVChannel::TVChannel(nsPIDOMWindowInner* aWindow,
                      TVSource* aSource)
   : DOMEventTargetHelper(aWindow)
   , mSource(aSource)
@@ -39,7 +39,7 @@ TVChannel::~TVChannel()
 }
 
 /* static */ already_AddRefed<TVChannel>
-TVChannel::Create(nsPIDOMWindow* aWindow,
+TVChannel::Create(nsPIDOMWindowInner* aWindow,
                   TVSource* aSource,
                   nsITVChannelData* aData)
 {

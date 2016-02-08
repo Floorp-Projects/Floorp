@@ -45,6 +45,12 @@ if CONFIG['VPX_ARM_ASM']:
         if f.endswith('.c') and 'neon' in f:
             SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
 
+    if CONFIG['OS_TARGET'] == 'Android':
+        # For cpu-features.h
+        LOCAL_INCLUDES += [
+            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
+        ]
+
 # boolhuff_armv5te.asm defines the same functions as boolhuff.c instead of
 # using RTCD, so we have to make sure we only add one of the two.
 if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:

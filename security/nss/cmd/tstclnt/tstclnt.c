@@ -968,7 +968,7 @@ int main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
+    tmp = PR_GetEnvSecure("NSS_DEBUG_TIMEOUT");
     if (tmp && tmp[0]) {
        int sec = PORT_Atoi(tmp);
        if (sec > 0) {

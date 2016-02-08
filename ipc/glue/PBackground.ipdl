@@ -60,46 +60,46 @@ sync protocol PBackground
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
-  PBackgroundTest(nsCString testArg);
+  async PBackgroundTest(nsCString testArg);
 
-  PBackgroundIDBFactory(LoggingInfo loggingInfo);
+  async PBackgroundIDBFactory(LoggingInfo loggingInfo);
 
-  PBackgroundIndexedDBUtils();
+  async PBackgroundIndexedDBUtils();
 
-  PVsync();
+  async PVsync();
 
-  PCameras();
+  async PCameras();
 
-  PUDPSocket(OptionalPrincipalInfo pInfo, nsCString filter);
-  PBroadcastChannel(PrincipalInfo pInfo, nsCString origin, nsString channel,
-                    bool privateBrowsing);
+  async PUDPSocket(OptionalPrincipalInfo pInfo, nsCString filter);
+  async PBroadcastChannel(PrincipalInfo pInfo, nsCString origin, nsString channel,
+                          bool privateBrowsing);
 
-  PServiceWorkerManager();
+  async PServiceWorkerManager();
 
-  ShutdownServiceWorkerRegistrar();
+  async ShutdownServiceWorkerRegistrar();
 
-  PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
+  async PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
 
-  PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+  async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
-  PNuwa();
+  async PNuwa();
 
-  MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+  async MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
-  PAsmJSCacheEntry(OpenMode openMode,
-                   WriteParams write,
-                   PrincipalInfo principalInfo);
+  async PAsmJSCacheEntry(OpenMode openMode,
+                         WriteParams write,
+                         PrincipalInfo principalInfo);
 
-  PQuota();
+  async PQuota();
 
 child:
-  PCache();
-  PCacheStreamControl();
+  async PCache();
+  async PCacheStreamControl();
 
 both:
-  PBlob(BlobConstructorParams params);
+  async PBlob(BlobConstructorParams params);
 
-  PFileDescriptorSet(FileDescriptor fd);
+  async PFileDescriptorSet(FileDescriptor fd);
 };
 
 } // namespace ipc

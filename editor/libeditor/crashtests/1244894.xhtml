@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+    document.designMode = 'on';
+    document.execCommand("indent", false, null);
+    document.execCommand("insertText", false, "a");
+    document.execCommand("forwardDelete", false, null);
+    document.execCommand("justifyfull", false, null);
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</head>
+
+<body> <span class="v"></span></body><body><input type="file" /></body>
+
+</html>

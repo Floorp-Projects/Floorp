@@ -39,7 +39,7 @@ struct WindowTitleData {
 
 nsresult
 nsWindowMediator::GetDOMWindow(nsIXULWindow* inWindow,
-                               nsCOMPtr<nsIDOMWindow>& outDOMWindow)
+                               nsCOMPtr<nsPIDOMWindowOuter>& outDOMWindow)
 {
   nsCOMPtr<nsIDocShell> docShell;
 
@@ -265,7 +265,8 @@ nsWindowMediator::RemoveEnumerator(nsAppShellWindowEnumerator * inEnumerator)
 // Returns the window of type inType ( if null return any window type ) which has the most recent
 // time stamp
 NS_IMETHODIMP
-nsWindowMediator::GetMostRecentWindow(const char16_t* inType, nsIDOMWindow** outWindow)
+nsWindowMediator::GetMostRecentWindow(const char16_t* inType,
+                                      mozIDOMWindowProxy** outWindow)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(outWindow);
@@ -277,10 +278,9 @@ nsWindowMediator::GetMostRecentWindow(const char16_t* inType, nsIDOMWindow** out
   // the requested type
   nsWindowInfo* info = MostRecentWindowInfo(inType, false);
   if (info && info->mWindow) {
-    nsCOMPtr<nsIDOMWindow> DOMWindow;
+    nsCOMPtr<nsPIDOMWindowOuter> DOMWindow;
     if (NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
-      *outWindow = DOMWindow;
-      NS_ADDREF(*outWindow);
+      DOMWindow.forget(outWindow);
       return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -290,14 +290,14 @@ nsWindowMediator::GetMostRecentWindow(const char16_t* inType, nsIDOMWindow** out
 }
 
 NS_IMETHODIMP
-nsWindowMediator::GetMostRecentNonPBWindow(const char16_t* aType, nsIDOMWindow** aWindow)
+nsWindowMediator::GetMostRecentNonPBWindow(const char16_t* aType, mozIDOMWindowProxy** aWindow)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aWindow);
   *aWindow = nullptr;
 
   nsWindowInfo *info = MostRecentWindowInfo(aType, true);
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow;
   if (info && info->mWindow) {
     GetDOMWindow(info->mWindow, domWindow);
   }
@@ -343,7 +343,7 @@ nsWindowMediator::MostRecentWindowInfo(const char16_t* inType,
         continue;
       }
 
-      nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(docShell->GetWindow());
+      nsCOMPtr<nsPIDOMWindowOuter> piwindow = docShell->GetWindow();
       if (!piwindow || piwindow->Closed()) {
         continue;
       }
@@ -358,32 +358,33 @@ nsWindowMediator::MostRecentWindowInfo(const char16_t* inType,
 
 NS_IMETHODIMP
 nsWindowMediator::GetOuterWindowWithId(uint64_t aWindowID,
-                                       nsIDOMWindow** aWindow)
+                                       mozIDOMWindowProxy** aWindow)
 {
-  *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
-  NS_IF_ADDREF(*aWindow);
+  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
+  nsCOMPtr<nsPIDOMWindowOuter> outer = window ? window->AsOuter() : nullptr;
+  outer.forget(aWindow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindowMediator::GetCurrentInnerWindowWithId(uint64_t aWindowID,
-                                              nsIDOMWindow** aWindow)
+                                              mozIDOMWindow** aWindow)
 {
-  nsCOMPtr<nsPIDOMWindow> inner = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
+  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
 
   // not found
-  if (!inner)
+  if (!window)
     return NS_OK;
 
-  nsCOMPtr<nsPIDOMWindow> outer = inner->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindowInner> inner = window->AsInner();
+  nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
   NS_ENSURE_TRUE(outer, NS_ERROR_UNEXPECTED);
 
   // outer is already using another inner, so it's same as not found
   if (outer->GetCurrentInnerWindow() != inner)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMWindow> ret = do_QueryInterface(outer);
-  ret.forget(aWindow);
+  inner.forget(aWindow);
   return NS_OK;
 }
 

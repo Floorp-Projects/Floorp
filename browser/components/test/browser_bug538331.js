@@ -408,7 +408,7 @@ function reloadUpdateManagerData()
 
 function writeUpdatesToXMLFile(aText)
 {
-  const PERMS_FILE = 0644;
+  const PERMS_FILE = 0o644;
 
   const MODE_WRONLY   = 0x02;
   const MODE_CREATE   = 0x08;

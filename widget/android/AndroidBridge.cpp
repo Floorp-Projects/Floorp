@@ -1770,7 +1770,7 @@ GetScaleFactor(nsPresContext* aPresContext) {
 }
 
 nsresult
-AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect, Object::Param buffer,
+AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedViewRect, Object::Param buffer,
                                   float zoomFactor) {
     nsresult rv;
 
@@ -1785,12 +1785,12 @@ AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect,
 
     AutoLocalJNIFrame jniFrame(env, 0);
 
-    nsCOMPtr <nsPIDOMWindow> win = do_QueryInterface(window);
-    if (!win) {
+    if (!window) {
         return NS_ERROR_FAILURE;
     }
-    RefPtr<nsPresContext> presContext;
 
+    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
+    RefPtr<nsPresContext> presContext;
     nsIDocShell* docshell = win->GetDocShell();
 
     if (docshell) {
@@ -1845,7 +1845,7 @@ AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect,
     return NS_OK;
 }
 
-nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, Object::Param buffer, bool &shouldStore)
+nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t bufW, int32_t bufH, int32_t tabId, Object::Param buffer, bool &shouldStore)
 {
     nsresult rv;
     float scale = 1.0;
@@ -1891,9 +1891,8 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 
     AutoLocalJNIFrame jniFrame(env, 0);
 
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
-    if (!win)
-        return NS_ERROR_FAILURE;
+    MOZ_ASSERT(window);
+    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
     RefPtr<nsPresContext> presContext;
 
     nsIDocShell* docshell = win->GetDocShell();

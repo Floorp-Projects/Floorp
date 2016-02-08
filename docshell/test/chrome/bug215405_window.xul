@@ -113,7 +113,8 @@
       // https no-cache
       testName = "[nocache]";
 
-      // Load a page with a no-cache header
+      // Load a page with a no-cache header. This should not be
+      // restricted like no-store (bug 567365)
       gBrowser.loadURI(nocacheURI);
       yield undefined;
 
@@ -141,19 +142,19 @@
       yield undefined;
 
 
-      // Now go back in history. First page should not have been cached.
+      // Now go back in history to the cached page.
       gBrowser.goBack();
       yield undefined;
 
 
-      // First uncacheable page will now be reloaded. Check scroll position
-      // restored, and form contents not
+      // First page will now be reloaded. Check scroll position
+      // and form contents are restored
       is(gBrowser.contentWindow.scrollX, scrollX, testName +
          " horizontal axis scroll position not correctly restored");
       is(gBrowser.contentWindow.scrollY, scrollY, testName +
          " vertical axis scroll position not correctly restored");
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
-      isnot(formValue, text, testName + " form value incorrectly restored");
+      is(formValue, text, testName + " form value not correctly restored");
       
       // nextTest has to be called from here, as no events are fired in this
       // step

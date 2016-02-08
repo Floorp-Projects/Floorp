@@ -23,15 +23,7 @@ public class testAdobeFlash extends PixelTest {
         }
 
         // Enable plugins
-        JSONObject jsonPref = new JSONObject();
-        try {
-            jsonPref.put("name", "plugin.enable");
-            jsonPref.put("type", "string");
-            jsonPref.put("value", "1");
-            setPreferenceAndWaitForChange(jsonPref);
-        } catch (Exception ex) {
-            mAsserter.ok(false, "exception in testAdobeFlash", ex.toString());
-        }
+        setPreferenceAndWaitForChange("plugin.enable", "1");
 
         blockForGeckoReady();
 

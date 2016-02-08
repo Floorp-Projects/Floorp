@@ -129,6 +129,22 @@ protected:
   the tracking list, to ensure no additional attempt to free the resources
   will be made.
 
+  ----------------------------------------------------------------------------
+  IMPORTANT NOTE REGARDING CLASSES THAT IMPLEMENT nsNSSShutDownObject BUT DO
+  NOT DIRECTLY HOLD NSS RESOURCES:
+  ----------------------------------------------------------------------------
+  Currently, classes that do not hold NSS resources but do call NSS functions
+  inherit from nsNSSShutDownObject (and use the lock/isAlreadyShutDown
+  mechanism) as a way of ensuring it is safe to call those functions. Because
+  these classes do not hold any resources, however, it is tempting to skip the
+  destructor component of this interface. This MUST NOT be done, because
+  if an object of such a class is destructed before the nsNSSShutDownList
+  processes all of its entries, this essentially causes a use-after-free when
+  nsNSSShutDownList reaches the entry that has been destroyed. The safe way to
+  do this is to implement the destructor as usual but omit the call to
+  destructorSafeDestroyNSSReference() as it is unnecessary and probably isn't
+  defined for that class.
+
   destructorSafeDestroyNSSReference() does not need to acquire an
   nsNSSShutDownPreventionLock or check isAlreadyShutDown() as long as it
   is only called by the destructor that has already acquired the lock and

@@ -335,8 +335,15 @@ DebuggerClient.prototype = {
    * @param aOnConnected function
    *        If specified, will be called when the greeting packet is
    *        received from the debugging server.
+   *
+   * @return Promise
+   *         Resolves once connected with an array whose first element
+   *         is the application type, by default "browser", and the second
+   *         element is the traits object (help figure out the features
+   *         and behaviors of the server we connect to. See RootActor).
    */
   connect: function (aOnConnected) {
+    let deferred = promise.defer();
     this.emit("connect");
 
     // Also emit the event on the |DebuggerClient| object (not on the instance),
@@ -348,9 +355,11 @@ DebuggerClient.prototype = {
       if (aOnConnected) {
         aOnConnected(aApplicationType, aTraits);
       }
+      deferred.resolve([aApplicationType, aTraits]);
     });
 
     this._transport.ready();
+    return deferred.promise;
   },
 
   /**
@@ -1100,12 +1109,14 @@ DebuggerClient.prototype = {
       request.emit("json-reply", packet);
     };
 
-    this._pendingRequests.forEach((list, actor) => {
+    let pendingRequests = new Map(this._pendingRequests);
+    this._pendingRequests.clear();
+    pendingRequests.forEach((list, actor) => {
       list.forEach(request => reject("pending", request, actor));
     });
-    this._pendingRequests.clear();
-    this._activeRequests.forEach(reject.bind(null, "active"));
+    let activeRequests = new Map(this._activeRequests);
     this._activeRequests.clear();
+    activeRequests.forEach(reject.bind(null, "active"));
 
     // The |_pools| array on the client-side currently is used only by
     // protocol.js to store active fronts, mirroring the actor pools found in

@@ -914,6 +914,14 @@ constexpr char GeckoSmsManager::NotifyThreadCursorResult_t::signature[];
 
 constexpr char GeckoThread::name[];
 
+constexpr char GeckoThread::CheckAndSetState_t::name[];
+constexpr char GeckoThread::CheckAndSetState_t::signature[];
+
+auto GeckoThread::CheckAndSetState(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1) -> bool
+{
+    return mozilla::jni::Method<CheckAndSetState_t>::Call(nullptr, nullptr, a0, a1);
+}
+
 constexpr char GeckoThread::PumpMessageLoop_t::name[];
 constexpr char GeckoThread::PumpMessageLoop_t::signature[];
 
@@ -1118,11 +1126,33 @@ auto GeckoView::Window::GlController() const -> mozilla::jni::Object::LocalRef
 
 constexpr char PrefsHelper::name[];
 
-constexpr char PrefsHelper::GetPrefsById_t::name[];
-constexpr char PrefsHelper::GetPrefsById_t::signature[];
+constexpr char PrefsHelper::CallPrefHandler_t::name[];
+constexpr char PrefsHelper::CallPrefHandler_t::signature[];
 
-constexpr char PrefsHelper::RemovePrefsObserver_t::name[];
-constexpr char PrefsHelper::RemovePrefsObserver_t::signature[];
+auto PrefsHelper::CallPrefHandler(mozilla::jni::Object::Param a0, int32_t a1, mozilla::jni::String::Param a2, bool a3, int32_t a4, mozilla::jni::String::Param a5) -> void
+{
+    return mozilla::jni::Method<CallPrefHandler_t>::Call(nullptr, nullptr, a0, a1, a2, a3, a4, a5);
+}
+
+constexpr char PrefsHelper::AddObserver_t::name[];
+constexpr char PrefsHelper::AddObserver_t::signature[];
+
+constexpr char PrefsHelper::GetPrefs_t::name[];
+constexpr char PrefsHelper::GetPrefs_t::signature[];
+
+constexpr char PrefsHelper::RemoveObserver_t::name[];
+constexpr char PrefsHelper::RemoveObserver_t::signature[];
+
+constexpr char PrefsHelper::SetPref_t::name[];
+constexpr char PrefsHelper::SetPref_t::signature[];
+
+constexpr char PrefsHelper::OnPrefChange_t::name[];
+constexpr char PrefsHelper::OnPrefChange_t::signature[];
+
+auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool a2, int32_t a3, mozilla::jni::String::Param a4) -> void
+{
+    return mozilla::jni::Method<OnPrefChange_t>::Call(nullptr, nullptr, a0, a1, a2, a3, a4);
+}
 
 constexpr char Restrictions::name[];
 
@@ -1276,6 +1306,9 @@ auto GLController::Destroy() const -> void
 
 constexpr char GLController::DisposeNative_t::name[];
 constexpr char GLController::DisposeNative_t::signature[];
+
+constexpr char GLController::OnSizeChanged_t::name[];
+constexpr char GLController::OnSizeChanged_t::signature[];
 
 constexpr char GLController::PauseCompositor_t::name[];
 constexpr char GLController::PauseCompositor_t::signature[];
@@ -1442,6 +1475,9 @@ auto LayerView::updateZoomedView(mozilla::jni::Object::Param a0) -> void
 
 constexpr char NativePanZoomController::name[];
 
+constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::name[];
+constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::signature[];
+
 constexpr char NativePanZoomController::Destroy_t::name[];
 constexpr char NativePanZoomController::Destroy_t::signature[];
 
@@ -1468,6 +1504,22 @@ constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::signatur
 auto NativePanZoomController::RequestContentRepaintWrapper(float a0, float a1, float a2, float a3, float a4) const -> void
 {
     return mozilla::jni::Method<RequestContentRepaintWrapper_t>::Call(this, nullptr, a0, a1, a2, a3, a4);
+}
+
+constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];
+constexpr char NativePanZoomController::UpdateOverscrollOffset_t::signature[];
+
+auto NativePanZoomController::UpdateOverscrollOffset(float a0, float a1) const -> void
+{
+    return mozilla::jni::Method<UpdateOverscrollOffset_t>::Call(this, nullptr, a0, a1);
+}
+
+constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::name[];
+constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::signature[];
+
+auto NativePanZoomController::UpdateOverscrollVelocity(float a0, float a1) const -> void
+{
+    return mozilla::jni::Method<UpdateOverscrollVelocity_t>::Call(this, nullptr, a0, a1);
 }
 
 constexpr char ProgressiveUpdateData::name[];
@@ -1759,6 +1811,16 @@ constexpr char Clipboard::SetClipboardText_t::signature[];
 auto Clipboard::SetClipboardText(mozilla::jni::String::Param a0) -> void
 {
     return mozilla::jni::Method<SetClipboardText_t>::Call(nullptr, nullptr, a0);
+}
+
+constexpr char HardwareCodecCapabilityUtils::name[];
+
+constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::name[];
+constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::signature[];
+
+auto HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(mozilla::jni::String::Param a0) -> bool
+{
+    return mozilla::jni::Method<FindDecoderCodecInfoForMimeType_t>::Call(nullptr, nullptr, a0);
 }
 
 constexpr char NativeJSContainer::name[];

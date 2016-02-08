@@ -993,7 +993,7 @@ nsPlacesAutoComplete.prototype = {
         default:
           // We do not want to remove the token if we did not match.
           continue;
-      };
+      }
 
       aTokens.splice(i, 1);
     }

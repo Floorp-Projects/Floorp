@@ -29,11 +29,11 @@ function getChromeActors(callback)
   DebuggerServer.allowChromeProcess = true;
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(() => {
-    client.getProcess().then(response => {
+  client.connect()
+    .then(() => client.getProcess())
+    .then(response => {
       callback(client, response.form);
     });
-  });
 
   SimpleTest.registerCleanupFunction(() => {
     DebuggerServer.destroy();

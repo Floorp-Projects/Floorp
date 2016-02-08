@@ -163,6 +163,12 @@ public:
     eAllStrokeOptions,
     eIgnoreStrokeDashing
   };
+  /**
+   * Note: the linecap style returned in aStrokeOptions is not valid when
+   * ShapeTypeHasNoCorners(aElement) == true && aFlags == eIgnoreStrokeDashing,
+   * since when aElement has no corners the rendered linecap style depends on
+   * whether or not the stroke is dashed.
+   */
   static void GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                nsSVGElement* aElement,
                                nsStyleContext* aStyleContext,

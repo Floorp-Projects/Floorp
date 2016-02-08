@@ -221,8 +221,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
   uint64_t corruptedFrames = 0;
 
   if (sVideoStatsEnabled) {
-    nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
-    if (window) {
+    if (nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow()) {
       nsPerformance* perf = window->GetPerformance();
       if (perf) {
         creationTime = perf->Now();

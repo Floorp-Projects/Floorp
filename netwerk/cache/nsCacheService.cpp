@@ -2915,7 +2915,7 @@ nsCacheService::ClearDoomList()
 void
 nsCacheService::DoomActiveEntries(DoomCheckFn check)
 {
-    nsAutoTArray<nsCacheEntry*, 8> array;
+    AutoTArray<nsCacheEntry*, 8> array;
 
     for (auto iter = mActiveEntries.Iter(); !iter.Done(); iter.Next()) {
         nsCacheEntry* entry =

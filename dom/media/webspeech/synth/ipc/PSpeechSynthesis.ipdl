@@ -25,19 +25,19 @@ sync protocol PSpeechSynthesis
 
 child:
 
-    VoiceAdded(RemoteVoice aVoice);
+    async VoiceAdded(RemoteVoice aVoice);
 
-    VoiceRemoved(nsString aUri);
+    async VoiceRemoved(nsString aUri);
 
-    SetDefaultVoice(nsString aUri, bool aIsDefault);
+    async SetDefaultVoice(nsString aUri, bool aIsDefault);
 
-    IsSpeakingChanged(bool aIsSpeaking);
+    async IsSpeakingChanged(bool aIsSpeaking);
 
 parent:
-    __delete__();
+    async __delete__();
 
-    PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
-                            float aVolume, float aRate, float aPitch);
+    async PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
+                                  float aVolume, float aRate, float aPitch);
 
     sync ReadVoicesAndState() returns (RemoteVoice[] aVoices,
                                        nsString[] aDefaults, bool aIsSpeaking);

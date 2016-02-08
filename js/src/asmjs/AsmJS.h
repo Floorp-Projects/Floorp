@@ -85,17 +85,6 @@ IsValidAsmJSHeapLength(uint32_t length);
 extern uint32_t
 RoundUpToNextValidAsmJSHeapLength(uint32_t length);
 
-// The assumed page size; dynamically checked in CompileAsmJS.
-#ifdef _MIPS_ARCH_LOONGSON3A
-static const size_t AsmJSPageSize = 16384;
-#else
-static const size_t AsmJSPageSize = 4096;
-#endif
-
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-extern const size_t AsmJSMappedSize;
-#endif
-
 } // namespace js
 
 #endif // asmjs_asmjs_h

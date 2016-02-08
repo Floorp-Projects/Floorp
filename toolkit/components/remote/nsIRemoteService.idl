@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 /**
  * Start and stop the remote service (xremote/phremote), and register
@@ -17,7 +17,7 @@ interface nsIDOMWindow;
  *               of freezing the functionality you need.
  */
 
-[scriptable, uuid(a2240f6a-f1e4-4548-9e1a-6f3bc9b2426c)]
+[scriptable, uuid(bf23f1c3-7012-42dd-b0bb-a84060ccc52e)]
 interface nsIRemoteService : nsISupports
 {
   /**
@@ -36,7 +36,7 @@ interface nsIRemoteService : nsISupports
    * configured to accept incoming remote requests. If this method is called
    * before startup(), the registration will happen once startup() is called.
    */
-  void registerWindow(in nsIDOMWindow aWindow);
+  void registerWindow(in mozIDOMWindow aWindow);
 
   /**
    * Stop the remote service from accepting additional requests.

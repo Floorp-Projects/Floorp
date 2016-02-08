@@ -128,13 +128,9 @@ public:
         // Take a faster path that doesn't require unioning the overflow areas
         // of our children.
 
-#ifdef DEBUG
-        bool hasInitialOverflowPropertyApplied = false;
-        frame->Properties().Get(nsIFrame::DebugInitialOverflowPropertyApplied(),
-                                 &hasInitialOverflowPropertyApplied);
-        NS_ASSERTION(hasInitialOverflowPropertyApplied,
+        NS_ASSERTION(frame->Properties().Get(
+                       nsIFrame::DebugInitialOverflowPropertyApplied()),
                      "InitialOverflowProperty must be set first.");
-#endif
 
         nsOverflowAreas* overflow = 
           static_cast<nsOverflowAreas*>(frame->Properties().Get(nsIFrame::InitialOverflowProperty()));
@@ -394,7 +390,7 @@ private:
                                 const RestyleHintData& aRestyleHintData);
 
   typedef nsClassHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
-  typedef nsAutoTArray< RefPtr<Element>, 32> RestyleRootArray;
+  typedef AutoTArray< RefPtr<Element>, 32> RestyleRootArray;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS, one flag
   // from ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS, and might also include

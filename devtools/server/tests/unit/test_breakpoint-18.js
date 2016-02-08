@@ -26,7 +26,7 @@ function run_test_with_server(aServer, aCallback)
   gDebuggee = addTestGlobal("test-breakpoints", aServer);
   gDebuggee.console = { log: x => void x };
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect(function () {
+  gClient.connect().then(function () {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
                            function (aResponse, aTabClient, aThreadClient) {

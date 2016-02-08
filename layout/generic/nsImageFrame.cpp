@@ -219,7 +219,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mDisplayingIcon)
     gIconLoad->RemoveIconObserver(this);
 
-  nsSplittableFrame::DestroyFrom(aDestructRoot);
+  ImageFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -255,7 +255,7 @@ nsImageFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
                    nsIFrame*         aPrevInFlow)
 {
-  nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
+  ImageFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
   mListener = new nsImageListener(this);
 
@@ -681,16 +681,18 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
   }
 
   if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
-    if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
-      nsIPresShell *presShell = PresContext()->GetPresShell();
-      if (presShell) { 
-        presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
-                                    NS_FRAME_IS_DIRTY);
+    if (intrinsicSizeChanged) {
+      if (!(mState & IMAGE_SIZECONSTRAINED)) {
+        nsIPresShell *presShell = PresContext()->GetPresShell();
+        if (presShell) {
+          presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                      NS_FRAME_IS_DIRTY);
+        }
+      } else {
+        // We've already gotten the initial reflow, and our size hasn't changed,
+        // so we're ready to request a decode.
+        MaybeDecodeForPredictedSize();
       }
-    } else {
-      // We've already gotten the initial reflow, and our size hasn't changed,
-      // so we're ready to request a decode.
-      MaybeDecodeForPredictedSize();
     }
     // Update border+content to account for image change
     InvalidateFrame();
@@ -2069,7 +2071,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     }
   }
 
-  return nsSplittableFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return ImageFrameSuper::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 nsresult
@@ -2106,8 +2108,8 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
                                int32_t aModType)
 {
-  nsresult rv = nsSplittableFrame::AttributeChanged(aNameSpaceID,
-                                                    aAttribute, aModType);
+  nsresult rv = ImageFrameSuper::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
   if (NS_FAILED(rv)) {
     return rv;
   }

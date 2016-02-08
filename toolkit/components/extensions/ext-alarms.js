@@ -5,7 +5,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Set[Alarm]]
@@ -114,18 +113,22 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
           [name, callback] = args;
         }
 
-        for (let alarm of alarmsMap.get(extension)) {
-          if (alarm.name == name) {
-            runSafe(context, callback, alarm.data);
-            break;
+        let promise = new Promise((resolve, reject) => {
+          for (let alarm of alarmsMap.get(extension)) {
+            if (alarm.name == name) {
+              return resolve(alarm.data);
+            }
           }
-        }
+          reject("No matching alarm");
+        });
+
+        return context.wrapPromise(promise, callback);
       },
 
       getAll: function(callback) {
         let alarms = alarmsMap.get(extension);
         let result = alarms.map(alarm => alarm.data);
-        runSafe(context, callback, result);
+        return context.wrapPromise(Promise.resolve(result), callback);
       },
 
       clear: function(...args) {
@@ -146,9 +149,7 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
           }
         }
 
-        if (callback) {
-          runSafe(context, callback, cleared);
-        }
+        return context.wrapPromise(Promise.resolve(cleared), callback);
       },
 
       clearAll: function(callback) {
@@ -158,9 +159,7 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
           alarm.clear();
           cleared = true;
         }
-        if (callback) {
-          runSafe(context, callback, cleared);
-        }
+        return context.wrapPromise(Promise.resolve(cleared), callback);
       },
 
       onAlarm: new EventManager(context, "alarms.onAlarm", fire => {

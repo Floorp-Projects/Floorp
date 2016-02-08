@@ -4114,10 +4114,210 @@ var gCSSProperties = {
   "mask": {
     domProp: "mask",
     inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    /* FIXME: All mask-border-* should be added when we implement them. */
+    subproperties: ["mask-clip", "mask-image", "mask-mode", "mask-origin", "mask-position", "mask-repeat", "mask-size" , "mask-composite"],
+    initial_values: [ "auto", "none", "repeat", "add", "0% 0%", "top left", "left top", "0% 0% / auto", "top left / auto", "left top / auto", "0% 0% / auto auto",
+      "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "left top / auto none", "left top / auto auto none",
+      "auto none repeat add top left", "left top repeat none add", "none repeat add top left / auto", "left top / auto repeat none add auto", "none repeat add 0% 0% / auto auto auto" ],
+    other_values: [
+      "none alpha repeat add left top",
+      "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
+      "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') alpha left top add",
+      "repeat-x",
+      "repeat-y",
+      "no-repeat",
+      "none repeat-y alpha add 0% 0%",
+      "substract",
+      "0% top substract alpha repeat none",
+      "top",
+      "left",
+      "50% 50%",
+      "center",
+      "top / 100px",
+      "left / contain",
+      "left / cover",
+      "10px / 10%",
+      "10em / calc(20px)",
+      "top left / 100px 100px",
+      "top left / 100px auto",
+      "top left / 100px 10%",
+      "top left / 100px calc(20px)",
+      "bottom right add none alpha repeat",
+      "50% alpha",
+      "alpha 50%",
+      "50%",
+      "url(#mymask)",
+      "-moz-radial-gradient(10% bottom, #ffffff, black) add no-repeat",
+      "-moz-linear-gradient(10px 10px -45deg, red, blue) repeat",
+      "-moz-linear-gradient(10px 10px -0.125turn, red, blue) repeat",
+      "-moz-repeating-radial-gradient(10% bottom, #ffffff, black) add no-repeat",
+      "-moz-repeating-linear-gradient(10px 10px -45deg, red, blue) repeat",
+      "-moz-element(#test) alpha",
+      /* multiple mask-image */
+      "url(404.png), url(404.png)",
+      "repeat-x, substract, none",
+      "0% top url(404.png), url(404.png) 0% top",
+      "substract repeat-y top left url(404.png), repeat-x alpha",
+      "url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green), -moz-element(#a) alpha",
+      "top left / contain, bottom right / cover",
+      /* test cases with clip+origin in the shorthand */
+      "url(404.png) alpha padding-box",
+      "url(404.png) border-box alpha",
+      "content-box url(404.png)",
+      "url(404.png) alpha padding-box padding-box",
+      "url(404.png) alpha padding-box border-box",
+      "content-box border-box url(404.png)",
+    ],
+    invalid_values: [
+      /* mixes with keywords have to be in correct order */
+      "50% left", "top 50%",
+      /* no quirks mode colors */
+      "-moz-radial-gradient(10% bottom, ffffff, black) add no-repeat",
+      /* no quirks mode lengths */
+      "-moz-linear-gradient(10 10px -45deg, red, blue) repeat",
+      "-moz-linear-gradient(10px 10 -45deg, red, blue) repeat",
+      "linear-gradient(red -99, yellow, green, blue 120%)",
+      /* bug 258080: don't accept background-position separated */
+      "left url(404.png) top", "top url(404.png) left",
+      "alpha padding-box url(404.png) border-box",
+      "alpha padding-box url(404.png) padding-box",
+      "-moz-element(#a rubbish)",
+    ]
+  },
+  "mask-clip": {
+    domProp: "maskClip",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "border-box" ],
+    other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+    invalid_values: [ "margin-box", "content-box content-box" ]
+  },
+  "mask-image": {
+    domProp: "maskImage",
+    inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "url(#mymask)" ],
-    invalid_values: []
+    other_values: [
+    "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
+    "none, none",
+    "none, none, none, none, none",
+    "url(#mymask)",
+    "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
+    "none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
+    "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
+    ].concat(validGradientAndElementValues),
+    invalid_values: [
+    ].concat(invalidGradientAndElementValues),
+    unbalanced_values: [
+    ].concat(unbalancedGradientAndElementValues)
+  },
+  "mask-mode": {
+    domProp: "maskMode",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "alpha", "luminance", "auto, auto", "auto, alpha", "alpha, luminance, auto"],
+    invalid_values: [ "auto auto", "alpha auto" ]
+  },
+  "mask-composite": {
+    domProp: "maskComposite",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "add" ],
+    other_values: [ "substract", "intersect", "exclude", "add, add", "substract, intersect", "substract, substract, add"],
+    invalid_values: [ "add substract", "intersect exclude" ]
+  },
+  "mask-origin": {
+    domProp: "maskOrigin",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "padding-box" ],
+    other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+    invalid_values: [ "margin-box", "padding-box padding-box" ]
+  },
+  "mask-position": {
+    domProp: "maskPosition",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "top 0% left 0%", "top 0% left", "top left", "left top", "0% 0%", "0% top", "left 0%" ],
+    other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%", "top left, top left", "top left, top right", "top right, top left", "left top, 0% 0%", "10% 20%, 30%, 40%", "top left, bottom right", "right bottom, left top", "0%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
+      "calc(20px)",
+      "calc(20px) 10px",
+      "10px calc(20px)",
+      "calc(20px) 25%",
+      "25% calc(20px)",
+      "calc(20px) calc(20px)",
+      "calc(20px + 1em) calc(20px / 2)",
+      "calc(20px + 50%) calc(50% - 10px)",
+      "calc(-20px) calc(-50%)",
+      "calc(-20%) calc(-50%)",
+      "0px 0px",
+      "right 20px top 60px",
+      "right 20px bottom 60px",
+      "left 20px top 60px",
+      "left 20px bottom 60px",
+      "right -50px top -50px",
+      "left -50px bottom -50px",
+      "right 20px top -50px",
+      "right -20px top 50px",
+      "right 3em bottom 10px",
+      "bottom 3em right 10px",
+      "top 3em right 10px",
+      "left 15px",
+      "10px top",
+      "left top 15px",
+      "left 10px top",
+      "left 20%",
+      "right 20%"
+    ],
+    invalid_values: [ "center 10px center 4px", "center 10px center",
+                      "top 20%", "bottom 20%", "50% left", "top 50%",
+                      "50% bottom 10%", "right 10% 50%", "left right",
+                      "top bottom", "left 10% right",
+                      "top 20px bottom 20px", "left left",
+                      "0px calc(0px + rubbish)"],
+  },
+  "mask-repeat": {
+    domProp: "maskRepeat",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "repeat", "repeat repeat" ],
+    other_values: [ "repeat-x", "repeat-y", "no-repeat",
+      "repeat-x, repeat-x",
+      "repeat, no-repeat",
+      "repeat-y, no-repeat, repeat-y",
+      "repeat, repeat, repeat",
+      "repeat no-repeat",
+      "no-repeat repeat",
+      "no-repeat no-repeat",
+      "repeat repeat, repeat repeat",
+    ],
+    invalid_values: [ "repeat repeat repeat",
+                      "repeat-x repeat-y",
+                      "repeat repeat-x",
+                      "repeat repeat-y",
+                      "repeat-x repeat",
+                      "repeat-y repeat" ]
+  },
+  "mask-size": {
+    domProp: "maskSize",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "contain", "cover", "100px auto", "auto 100px", "100% auto", "auto 100%", "25% 50px", "3em 40%",
+      "calc(20px)",
+      "calc(20px) 10px",
+      "10px calc(20px)",
+      "calc(20px) 25%",
+      "25% calc(20px)",
+      "calc(20px) calc(20px)",
+      "calc(20px + 1em) calc(20px / 2)",
+      "calc(20px + 50%) calc(50% - 10px)",
+      "calc(-20px) calc(-50%)",
+      "calc(-20%) calc(-50%)"
+    ],
+    invalid_values: [ "contain contain", "cover cover", "cover auto", "auto cover", "contain cover", "cover contain", "-5px 3px", "3px -5px", "auto -5px", "-5px auto", "5 3", "10px calc(10px + rubbish)" ]
   },
   "shape-rendering": {
     domProp: "shapeRendering",
@@ -4234,10 +4434,10 @@ var gCSSProperties = {
   },
   "-moz-window-dragging": {
     domProp: "MozWindowDragging",
-    inherited: true,
+    inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "no-drag" ],
-    other_values: [ "drag" ],
+    initial_values: [ "default" ],
+    other_values: [ "drag", "no-drag" ],
     invalid_values: [ "none" ]
   },
   "align-content": {
@@ -4886,7 +5086,7 @@ function get_computed_value(cs, property)
   var info = gCSSProperties[property];
   if (info.type == CSS_TYPE_TRUE_SHORTHAND ||
       (info.type == CSS_TYPE_SHORTHAND_AND_LONGHAND &&
-       property == "text-decoration")) {
+        (property == "text-decoration" || property == "mask"))) {
     var results = [];
     for (var idx in info.subproperties) {
       var subprop = info.subproperties[idx];
@@ -6061,10 +6261,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid [] [foo bar]",
       "subgrid repeat(1, [])",
       "subgrid Repeat(4, [a] [b c] [] [d])",
-      "repeat(auto-fill, [])",
-      "[] repeat(Auto-fill, [a] [b c] [] [d])",
-      "[x] repeat( Auto-fill, [a b c]) []",
-      "[x] repeat(auto-fill, []) [y z]"
+      "subgrid repeat(auto-fill, [])",
+      "subgrid [x] repeat( Auto-fill, [a b c]) []",
+      "subgrid [x] repeat(auto-fill, []) [y z]"
     );
     gCSSProperties["grid-template-columns"].invalid_values.push(
       "subgrid (foo) 40px",
@@ -6086,6 +6285,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid [a] repeat(auto-fit,[])",
       "subgrid repeat(auto-fill, 1px)",
       "subgrid repeat(auto-fill, 1px [])",
+      "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
       "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
     );
   }
@@ -6130,15 +6330,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     type: CSS_TYPE_TRUE_SHORTHAND,
     subproperties: [
       "grid-template-areas",
-      "grid-template-columns",
       "grid-template-rows",
+      "grid-template-columns",
     ],
     initial_values: [
       "none",
       "none / none",
     ],
     other_values: [
-      // <'grid-template-columns'> / <'grid-template-rows'>
+      // <'grid-template-rows'> / <'grid-template-columns'>
       "40px / 100px",
       "[foo] 40px [bar] / [baz] 100px [fizz]",
       " none/100px",
@@ -6146,18 +6346,18 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
       "'fizz'",
       "[bar] 'fizz'",
-      "[foo] 40px / 'fizz'",
-      "[foo] 40px / [bar] 'fizz'",
-      "[foo] 40px / 'fizz' 100px",
-      "[foo] 40px / [bar] 'fizz' 100px",
-      "[foo] 40px / [bar] 'fizz' 100px [buzz]",
-      "[foo] 40px / [bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b]",
+      "'fizz' / [foo] 40px",
+      "[bar] 'fizz' / [foo] 40px",
+      "'fizz' 100px / [foo] 40px",
+      "[bar] 'fizz' 100px / [foo] 40px",
+      "[bar] 'fizz' 100px [buzz] / [foo] 40px",
+      "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
     ],
     invalid_values: [
       "[foo] [bar] 40px / 100px",
-      "40px / [fizz] [buzz] 100px",
-      "40px / [fizz] [buzz] 'foo'",
-      "none / 'foo'"
+      "[fizz] [buzz] 100px / 40px",
+      "[fizz] [buzz] 'foo' / 40px",
+      "'foo' / none"
     ]
   };
   if (isGridTemplateSubgridValueEnabled) {
@@ -6183,11 +6383,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     type: CSS_TYPE_TRUE_SHORTHAND,
     subproperties: [
       "grid-template-areas",
-      "grid-template-columns",
       "grid-template-rows",
+      "grid-template-columns",
       "grid-auto-flow",
-      "grid-auto-columns",
       "grid-auto-rows",
+      "grid-auto-columns",
       "grid-column-gap",
       "grid-row-gap",
     ],
@@ -7019,6 +7219,64 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "-moz-user-select",
     subproperties: [ "-moz-user-select" ],
+  };
+  gCSSProperties["-webkit-mask"] = {
+    domProp: "webkitMask",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "mask",
+    subproperties: [ "mask-clip", "mask-image", "mask-mode", "mask-origin", "mask-position", "mask-repeat", "mask-size" , "mask-composite" ],
+  };
+  gCSSProperties["-webkit-mask-clip"] = {
+    domProp: "webkitMaskClip",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-clip",
+    subproperties: [ "mask-clip" ],
+  };
+
+  gCSSProperties["-webkit-mask-composite"] = {
+    domProp: "webkitMaskComposite",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-composite",
+    subproperties: [ "mask-composite" ],
+  };
+
+  gCSSProperties["-webkit-mask-image"] = {
+    domProp: "webkitMaskImage",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-image",
+    subproperties: [ "mask-image" ],
+  };
+  gCSSProperties["-webkit-mask-origin"] = {
+    domProp: "webkitMaskOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-origin",
+    subproperties: [ "mask-origin" ],
+  };
+  gCSSProperties["-webkit-mask-position"] = {
+    domProp: "webkitMaskPosition",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-position",
+    subproperties: [ "mask-position" ],
+  };
+  gCSSProperties["-webkit-mask-repeat"] = {
+    domProp: "webkitMaskRepeat",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-repeat",
+    subproperties: [ "mask-repeat" ],
+  };
+  gCSSProperties["-webkit-mask-size"] = {
+    domProp: "webkitMaskSize",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-size",
+    subproperties: [ "mask-size" ],
   };
 }
 

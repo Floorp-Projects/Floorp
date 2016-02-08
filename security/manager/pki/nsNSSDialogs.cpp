@@ -11,7 +11,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMWindow.h"
+#include "mozIDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -76,7 +76,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   *_canceled = false;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
 
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
@@ -128,7 +128,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   }
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   rv = nsNSSDialogHelper::openDialog(parent, 
                                      "chrome://pippki/content/downloadcert.xul",
                                      dlgParamBlock);
@@ -168,7 +168,7 @@ nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
     return NS_ERROR_FAILURE;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
 
   nsAutoString title;
   rv = mPIPStringBundle->GetStringFromName(MOZ_UTF16("caCertExistsTitle"),
@@ -316,7 +316,7 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   nsresult rv;
   *_retval = true;
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block =
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
@@ -363,7 +363,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
   }
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   bool ignored = false;
   char16_t* pwTemp = nullptr;
   rv = promptSvc->PromptPassword(parent, nullptr, msg.get(), &pwTemp, nullptr,
@@ -402,7 +402,7 @@ nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
   }
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   return nsNSSDialogHelper::openDialog(parent,
                                        "chrome://pippki/content/certViewer.xul",
                                        dlgParamBlock,
@@ -415,7 +415,7 @@ nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeyge
   nsresult rv;
 
   // Get the parent window for the dialog
-  nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(aCtx);
+  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(aCtx);
 
   rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/createCertInfo.xul",
@@ -476,7 +476,7 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
     nsresult rv = NS_ERROR_FAILURE;
     
     // Get the parent window for the dialog
-    nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(aCtx);
+    nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(aCtx);
     
     nsCOMPtr<nsIWindowWatcher> windowWatcher = 
         do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
@@ -487,7 +487,7 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
         windowWatcher->GetActiveWindow(getter_AddRefs(parent));
     }
     
-    nsCOMPtr<nsIDOMWindow> newWindow;
+    nsCOMPtr<mozIDOMWindowProxy> newWindow;
     rv = windowWatcher->OpenWindow(parent,
         "chrome://pippki/content/protectedAuth.xul",
         "_blank",

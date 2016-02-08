@@ -95,7 +95,7 @@ CompositorChild::Destroy()
     mLayerManager = nullptr;
   }
 
-  nsAutoTArray<PLayerTransactionChild*, 16> transactions;
+  AutoTArray<PLayerTransactionChild*, 16> transactions;
   ManagedPLayerTransactionChild(transactions);
   for (int i = transactions.Length() - 1; i >= 0; --i) {
     RefPtr<LayerTransactionChild> layers =
@@ -234,10 +234,10 @@ static void CalculatePluginClip(const LayoutDeviceIntRect& aBounds,
   }
   // shift to plugin widget origin
   contentVisibleRegion.MoveBy(-aBounds.x, -aBounds.y);
-  LayoutDeviceIntRegion::RectIterator iter(contentVisibleRegion);
-  for (const LayoutDeviceIntRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
-    aResult.AppendElement(*rgnRect);
-    aVisibleBounds.UnionRect(aVisibleBounds, *rgnRect);
+  for (auto iter = contentVisibleRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const LayoutDeviceIntRect& rect = iter.Get();
+    aResult.AppendElement(rect);
+    aVisibleBounds.UnionRect(aVisibleBounds, rect);
   }
 }
 #endif

@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.3.231';
-var pdfjsBuild = '58329f7';
+var pdfjsVersion = '1.4.42';
+var pdfjsBuild = '4c59712';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -94,7 +94,7 @@ var CustomStyle = (function CustomStyleClosure() {
   // in some versions of IE9 it is critical that ms appear in this list
   // before Moz
   var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
-  var _cache = {};
+  var _cache = Object.create(null);
 
   function CustomStyle() {}
 
@@ -369,9 +369,9 @@ function warn(msg) {
   }
 }
 
-// Deprecated API function -- treated as warnings.
+// Deprecated API function -- display regardless of the PDFJS.verbosity setting.
 function deprecated(details) {
-  warn('Deprecated API usage: ' + details);
+  console.log('Deprecated API usage: ' + details);
 }
 
 // Fatal errors that should trigger the fallback UI and halt execution by
@@ -414,6 +414,21 @@ function combineUrl(baseUrl, url) {
     return baseUrl;
   }
   return new URL(url, baseUrl).href;
+}
+
+// Checks if URLs have the same origin. For non-HTTP based URLs, returns false.
+function isSameOrigin(baseUrl, otherUrl) {
+  try {
+    var base = new URL(baseUrl);
+    if (!base.origin || base.origin === 'null') {
+      return false; // non-HTTP url
+    }
+  } catch (e) {
+    return false;
+  }
+
+  var other = new URL(otherUrl, base);
+  return base.origin === other.origin;
 }
 
 // Validates if URL is safe and allowed, e.g. to avoid XSS.
@@ -469,6 +484,18 @@ function shadow(obj, prop, value) {
   return value;
 }
 PDFJS.shadow = shadow;
+
+function getLookupTableFactory(initializer) {
+  var lookup;
+  return function () {
+    if (initializer) {
+      lookup = Object.create(null);
+      initializer(lookup);
+      initializer = null;
+    }
+    return lookup;
+  };
+}
 
 var LinkTarget = PDFJS.LinkTarget = {
   NONE: 0, // Default value.
@@ -1244,7 +1271,7 @@ var StatTimer = (function StatTimerClosure() {
     return str;
   }
   function StatTimer() {
-    this.started = {};
+    this.started = Object.create(null);
     this.times = [];
     this.enabled = true;
   }
@@ -1338,8 +1365,8 @@ function MessageHandler(sourceName, targetName, comObj) {
   this.comObj = comObj;
   this.callbackIndex = 1;
   this.postMessageTransfers = true;
-  var callbacksCapabilities = this.callbacksCapabilities = {};
-  var ah = this.actionHandler = {};
+  var callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
+  var ah = this.actionHandler = Object.create(null);
 
   this._onComObjOnMessage = function messageHandlerComObjOnMessage(event) {
     var data = event.data;
@@ -1510,6 +1537,7 @@ exports.combineUrl = combineUrl;
 exports.createPromiseCapability = createPromiseCapability;
 exports.deprecated = deprecated;
 exports.error = error;
+exports.getLookupTableFactory = getLookupTableFactory;
 exports.info = info;
 exports.isArray = isArray;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1519,6 +1547,7 @@ exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
 exports.isInt = isInt;
 exports.isNum = isNum;
 exports.isString = isString;
+exports.isSameOrigin = isSameOrigin;
 exports.isValidUrl = isValidUrl;
 exports.addLinkAttributes = addLinkAttributes;
 exports.loadJpegStream = loadJpegStream;
@@ -2360,7 +2389,7 @@ FontLoader.prototype = {
 
 var FontFaceObject = (function FontFaceObjectClosure() {
   function FontFaceObject(translatedData) {
-    this.compiledGlyphs = {};
+    this.compiledGlyphs = Object.create(null);
     // importing translated data
     for (var i in translatedData) {
       this[i] = translatedData[i];
@@ -2496,7 +2525,7 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
     }
 
     this.metaDocument = meta;
-    this.metadata = {};
+    this.metadata = Object.create(null);
     this.parse();
   }
 
@@ -5869,6 +5898,7 @@ var error = sharedUtil.error;
 var deprecated = sharedUtil.deprecated;
 var info = sharedUtil.info;
 var isArrayBuffer = sharedUtil.isArrayBuffer;
+var isSameOrigin = sharedUtil.isSameOrigin;
 var loadJpegStream = sharedUtil.loadJpegStream;
 var stringToBytes = sharedUtil.stringToBytes;
 var warn = sharedUtil.warn;
@@ -6506,11 +6536,9 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       return this.transport.getDestination(id);
     },
     /**
-     * @return {Promise} A promise that is resolved with: an Array containing
-     *   the pageLabels that correspond to the pageIndexes; or null, when no
-     *   pageLabels are present in the PDF file.
-     *   NOTE: If the pageLabels are all identical to standard page numbering,
-     *         i.e. [1, 2, 3, ...], the promise is resolved with an empty Array.
+     * @return {Promise} A promise that is resolved with:
+     *   an Array containing the pageLabels that correspond to the pageIndexes,
+     *   or `null` when no pageLabels are present in the PDF file.
      */
     getPageLabels: function PDFDocumentProxy_getPageLabels() {
       return this.transport.getPageLabels();
@@ -6688,7 +6716,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     this.objs = new PDFObjects();
     this.cleanupAfterRender = false;
     this.pendingCleanup = false;
-    this.intentStates = {};
+    this.intentStates = Object.create(null);
     this.destroyed = false;
   }
   PDFPageProxy.prototype = /** @lends PDFPageProxy.prototype */ {
@@ -6763,7 +6791,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       var renderingIntent = (params.intent === 'print' ? 'print' : 'display');
 
       if (!this.intentStates[renderingIntent]) {
-        this.intentStates[renderingIntent] = {};
+        this.intentStates[renderingIntent] = Object.create(null);
       }
       var intentState = this.intentStates[renderingIntent];
 
@@ -6850,17 +6878,23 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       function operatorListChanged() {
         if (intentState.operatorList.lastChunk) {
           intentState.opListReadCapability.resolve(intentState.operatorList);
+
+          var i = intentState.renderTasks.indexOf(opListTask);
+          if (i >= 0) {
+            intentState.renderTasks.splice(i, 1);
+          }
         }
       }
 
       var renderingIntent = 'oplist';
       if (!this.intentStates[renderingIntent]) {
-        this.intentStates[renderingIntent] = {};
+        this.intentStates[renderingIntent] = Object.create(null);
       }
       var intentState = this.intentStates[renderingIntent];
+      var opListTask;
 
       if (!intentState.opListReadCapability) {
-        var opListTask = {};
+        opListTask = {};
         opListTask.operatorListChanged = operatorListChanged;
         intentState.receivingOperatorList = true;
         intentState.opListReadCapability = createPromiseCapability();
@@ -6903,6 +6937,10 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
 
       var waitOn = [];
       Object.keys(this.intentStates).forEach(function(intent) {
+        if (intent === 'oplist') {
+          // Avoid errors below, since the renderTasks are just stubs.
+          return;
+        }
         var intentState = this.intentStates[intent];
         intentState.renderTasks.forEach(function(renderTask) {
           var renderCompleted = renderTask.capability.promise.
@@ -7028,6 +7066,14 @@ var PDFWorker = (function PDFWorkerClosure() {
       });
     }
     return PDFJS.fakeWorkerFilesLoadedCapability.promise;
+  }
+
+  function createCDNWrapper(url) {
+    // We will rely on blob URL's property to specify origin.
+    // We want this function to fail in case if createObjectURL or Blob do not
+    // exist or fail for some reason -- our Worker creation will fail anyway.
+    var wrapper = 'importScripts(\'' + url + '\');';
+    return URL.createObjectURL(new Blob([wrapper]));
   }
 
   function PDFWorker(name) {
@@ -7653,7 +7699,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
  */
 var PDFObjects = (function PDFObjectsClosure() {
   function PDFObjects() {
-    this.objs = {};
+    this.objs = Object.create(null);
   }
 
   PDFObjects.prototype = {
@@ -7744,7 +7790,7 @@ var PDFObjects = (function PDFObjectsClosure() {
     },
 
     clear: function PDFObjects_clear() {
-      this.objs = {};
+      this.objs = Object.create(null);
     }
   };
   return PDFObjects;

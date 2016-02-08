@@ -36,7 +36,7 @@ nsPrintProgress::~nsPrintProgress()
   (void)ReleaseListeners();
 }
 
-NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
+NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
                                                   const char *dialogURL,
                                                   nsISupports *parameters, 
                                                   nsIObserver *openDialogObserver,
@@ -64,11 +64,11 @@ NS_IMETHODIMP nsPrintProgress::GetPrompter(nsIPrompt **_retval)
   *_retval = nullptr;
 
   if (! m_closeProgress && m_dialog) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(m_dialog);
+    nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(m_dialog);
     MOZ_ASSERT(window);
     return window->GetPrompter(_retval);
   }
-    
+
   return NS_ERROR_FAILURE;
 }
 
@@ -201,7 +201,8 @@ NS_IMETHODIMP nsPrintProgress::ShowProgress(int32_t percent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsPrintProgress::SetDocShell(nsIDocShell *shell, nsIDOMWindow *window)
+NS_IMETHODIMP nsPrintProgress::SetDocShell(nsIDocShell *shell,
+                                           mozIDOMWindowProxy *window)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

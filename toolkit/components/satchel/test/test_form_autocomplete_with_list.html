@@ -99,7 +99,7 @@ registerPopupShownListener(popupShownListener);
 * This is a bit hacky, as many operations happen asynchronously.
 * Various mechanisms call runTests as a result of operations:
 *   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
-*   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it 
+*   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it
 */
 function runTest() {
     testNum++;
@@ -168,7 +168,7 @@ function runTest() {
         restoreForm();
         doKey("down");
         break;
-        
+
     case 6:
         //Delete the first entry (of 3)
         doKey("down");
@@ -347,7 +347,7 @@ function runTest() {
       // Adding an attribute after the first one while on the first then going
       // down and push enter. Value should be the on from the new suggestion.
       doKey("down");
-      var datalist = document.getElementById('suggest');
+      datalist = document.getElementById('suggest');
       var added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
 
@@ -368,7 +368,7 @@ function runTest() {
     case 202:
       // Change the first element value attribute.
       doKey("down");
-      var datalist = document.getElementById('suggest');
+      datalist = document.getElementById('suggest');
       prevValue = datalist.children[0].value;
       datalist.children[0].value = "foo";
       expectPopup();
@@ -379,7 +379,7 @@ function runTest() {
       doKey("return");
       checkForm("foo");
 
-      var datalist = document.getElementById('suggest');
+      datalist = document.getElementById('suggest');
       datalist.children[0].value = prevValue;
       expectPopup();
       restoreForm();
@@ -389,7 +389,7 @@ function runTest() {
     case 204:
       // Change the textContent to update the value attribute.
       doKey("down");
-      var datalist = document.getElementById('suggest');
+      datalist = document.getElementById('suggest');
       prevValue = datalist.children[0].getAttribute('value');
       datalist.children[0].removeAttribute('value');
       datalist.children[0].textContent = "foobar";
@@ -401,7 +401,7 @@ function runTest() {
       doKey("return");
       checkForm("foobar");
 
-      var datalist = document.getElementById('suggest');
+      datalist = document.getElementById('suggest');
       datalist.children[0].setAttribute('value', prevValue);
       testNum = 299;
       expectPopup();

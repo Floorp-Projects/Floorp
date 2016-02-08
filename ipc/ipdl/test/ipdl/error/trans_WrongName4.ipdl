@@ -2,7 +2,7 @@ intr protocol trans_WrongName4 {
 
 child:
     intr Msg();
-    __delete__();
+    async __delete__();
 
 state S1:
     send Msg goto S1;

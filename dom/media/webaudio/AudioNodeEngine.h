@@ -128,7 +128,7 @@ public:
   }
 
 private:
-  nsAutoTArray<Storage, 2> mContents;
+  AutoTArray<Storage, 2> mContents;
 };
 
 /**
@@ -253,7 +253,7 @@ class AudioNodeEngine
 {
 public:
   // This should be compatible with AudioNodeStream::OutputChunks.
-  typedef nsAutoTArray<AudioBlock, 1> OutputChunks;
+  typedef AutoTArray<AudioBlock, 1> OutputChunks;
 
   explicit AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode)

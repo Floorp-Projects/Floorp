@@ -65,7 +65,7 @@ child:
   /**
    * Sent when the asynchronous request has completed.
    */
-  __delete__(IccReply response);
+  async __delete__(IccReply response);
 };
 
 } // namespace icc

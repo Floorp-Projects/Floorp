@@ -83,7 +83,7 @@ SettingsDB.prototype = {
     let chan = NetUtil.newChannel({
       uri: NetUtil.newURI(settingsFile),
       loadUsingSystemPrincipal: true});
-    let stream = chan.open();
+    let stream = chan.open2();
     // Obtain a converter to read from a UTF-8 encoded input stream.
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);

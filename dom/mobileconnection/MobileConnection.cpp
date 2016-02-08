@@ -108,7 +108,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MobileConnection, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MobileConnection, DOMEventTargetHelper)
 
-MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
+MobileConnection::MobileConnection(nsPIDOMWindowInner* aWindow,
+                                   uint32_t aClientId)
   : DOMEventTargetHelper(aWindow)
   , mClientId(aClientId)
 {

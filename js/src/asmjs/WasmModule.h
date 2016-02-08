@@ -177,11 +177,9 @@ class Import
         return pod.exitGlobalDataOffset_;
     }
     uint32_t interpExitCodeOffset() const {
-        MOZ_ASSERT(pod.interpExitCodeOffset_);
         return pod.interpExitCodeOffset_;
     }
     uint32_t jitExitCodeOffset() const {
-        MOZ_ASSERT(pod.jitExitCodeOffset_);
         return pod.jitExitCodeOffset_;
     }
 
@@ -306,17 +304,26 @@ typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
 // The ExportMap describes how Exports are mapped to the fields of the export
 // object. This allows a single Export to be used in multiple fields.
+// The 'fieldNames' vector provides the list of names of the module's exports.
+// For each field in fieldNames, 'fieldsToExports' provides either:
+//  - the sentinel value MemoryExport indicating an export of linear memory; or
+//  - the index of an export (both into the module's ExportVector and the
+//    ExportMap's exportFuncIndices vector).
+// Lastly, the 'exportFuncIndices' vector provides, for each exported function,
+// the internal index of the function.
 
 struct ExportMap
 {
-    typedef Vector<uint32_t, 0, SystemAllocPolicy> FieldToExportVector;
+    static const uint32_t MemoryExport = UINT32_MAX;
 
-    CacheableCharsVector exportNames;
     CacheableCharsVector fieldNames;
-    FieldToExportVector fieldsToExports;
+    Uint32Vector fieldsToExports;
+    Uint32Vector exportFuncIndices;
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
+
+typedef UniquePtr<ExportMap> UniqueExportMap;
 
 // A UniqueCodePtr owns allocated executable code. Code passed to the Module
 // constructor must be allocated via AllocateCode.
@@ -349,14 +356,6 @@ UsesHeap(HeapUsage heapUsage)
 {
     return bool(heapUsage);
 }
-
-// A Module can either be asm.js or wasm.
-
-enum ModuleKind
-{
-    Wasm,
-    AsmJS
-};
 
 // ModuleCacheablePod holds the trivially-memcpy()able serializable portion of
 // ModuleData.
@@ -534,16 +533,14 @@ class Module
     // This function transitions the module from a statically-linked state to a
     // dynamically-linked state. If this module usesHeap(), a non-null heap
     // buffer must be given. The given import vector must match the module's
-    // ImportVector.
+    // ImportVector. The function returns a new export object for this module.
 
-    bool dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
-                         Handle<FunctionVector> imports);
-
-    // This function creates and returns a new export object for this module.
-    // The lengths of exports() and map.exportNames must be the same.
-
-    bool createExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj,
-                            const ExportMap& map, MutableHandleObject exportObj);
+    bool dynamicallyLink(JSContext* cx,
+                         Handle<WasmModuleObject*> moduleObj,
+                         Handle<ArrayBufferObjectMaybeShared*> heap,
+                         Handle<FunctionVector> imports,
+                         const ExportMap& exportMap,
+                         MutableHandleObject exportObj);
 
     // The wasm heap, established by dynamicallyLink.
 
@@ -579,6 +576,7 @@ class Module
 
     const char* prettyFuncName(uint32_t funcIndex) const;
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no

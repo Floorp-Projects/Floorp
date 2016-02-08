@@ -246,6 +246,9 @@ class ReftestRunner(MozbuildObject):
         kwargs["ignoreWindowSize"] = True
         kwargs["printDeviceInfo"] = False
 
+        from mozrunner.devices.android_device import grant_runtime_permissions
+        grant_runtime_permissions(self, kwargs['app'])
+
         # A symlink and some path manipulations are required so that test
         # manifests can be found both locally and remotely (via a url)
         # using the same relative path.

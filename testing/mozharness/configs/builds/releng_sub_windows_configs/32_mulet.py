@@ -33,6 +33,5 @@ config = {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
     },
     'src_mozconfig': 'b2g/dev/config/mozconfigs/win32/mulet',
-    'purge_minsize': 9,
     #######################
 }

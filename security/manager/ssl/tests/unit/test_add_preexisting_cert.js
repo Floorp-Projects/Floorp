@@ -39,7 +39,7 @@ function run_test() {
   // Change the already existing intermediate certificate's trust using
   // addCertFromBase64(). We use findCertByNickname first to ensure that the
   // certificate already exists.
-  let int_cert = certDB.findCertByNickname(null, "int-limited-depth");
+  let int_cert = certDB.findCertByNickname("int-limited-depth");
   notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
   let base64_cert = btoa(getDERString(int_cert));
   certDB.addCertFromBase64(base64_cert, "p,p,p", "ignored_argument");

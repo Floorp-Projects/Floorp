@@ -32,9 +32,8 @@ using namespace mozilla::widget;
 static void
 InvalidateRegion(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion)
 {
-  LayoutDeviceIntRegion::RectIterator it(aRegion);
-  while(const LayoutDeviceIntRect* r = it.Next()) {
-    aWidget->Invalidate(*r);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    aWidget->Invalidate(iter.Get());
   }
 }
 
@@ -855,7 +854,7 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
   if (mIMEPreferenceOfParent.WantTextChange() &&
       (mIMEPreferenceOfParent.WantChangesCausedByComposition() ||
-       !aIMENotification.mTextChangeData.mCausedByComposition)) {
+       !aIMENotification.mTextChangeData.mCausedOnlyByComposition)) {
     mTabChild->SendNotifyIMETextChange(mContentCache, aIMENotification);
   } else {
     mTabChild->SendUpdateContentCache(mContentCache);
@@ -1182,13 +1181,13 @@ PuppetWidget::GetNativeData(uint32_t aDataType)
     }
     return (void*)nativeData;
   }
+  case NS_NATIVE_WINDOW:
   case NS_NATIVE_WIDGET:
   case NS_NATIVE_DISPLAY:
-    // These types are ignored (see bug 1183828).
+    // These types are ignored (see bug 1183828, bug 1240891).
     break;
   case NS_RAW_NATIVE_IME_CONTEXT:
     MOZ_CRASH("You need to call GetNativeIMEContext() instead");
-  case NS_NATIVE_WINDOW:
   case NS_NATIVE_PLUGIN_PORT:
   case NS_NATIVE_GRAPHIC:
   case NS_NATIVE_SHELLWIDGET:
@@ -1415,13 +1414,14 @@ PuppetWidget::GetCurrentWidgetListener()
 }
 
 void
-PuppetWidget::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
+PuppetWidget::SetCandidateWindowForPlugin(
+                const CandidateWindowPosition& aPosition)
 {
   if (!mTabChild) {
     return;
   }
 
-  mTabChild->SendSetCandidateWindowForPlugin(aX, aY);
+  mTabChild->SendSetCandidateWindowForPlugin(aPosition);
 }
 
 void

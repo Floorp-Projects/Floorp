@@ -14,15 +14,15 @@ function ViewedArrayBufferIfReified(tarray) {
 }
 
 function IsDetachedBuffer(buffer) {
-    // Typed arrays whose buffers are null use inline storage and can't have
-    // been neutered.
+    // A typed array with a null buffer has never had its buffer exposed to
+    // become detached.
     if (buffer === null)
         return false;
 
     assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
            "non-ArrayBuffer passed to IsDetachedBuffer");
 
-    // Typed arrays whose buffers map shared memory can't have been neutered.
+    // Shared array buffers are not detachable.
     //
     // This check is more expensive than desirable, but IsDetachedBuffer is
     // only hot for non-shared memory in SetFromNonTypedArray, so there is an
@@ -32,7 +32,7 @@ function IsDetachedBuffer(buffer) {
 	return false;
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
-    return (flags & JS_ARRAYBUFFER_NEUTERED_FLAG) !== 0;
+    return (flags & JS_ARRAYBUFFER_DETACHED_FLAG) !== 0;
 }
 
 function GetAttachedArrayBuffer(tarray) {
@@ -100,8 +100,9 @@ function TypedArrayCopyWithin(target, start, end = undefined) {
     // Steps 15-17.
     //
     // Note that getting or setting a typed array element must throw if the
-    // typed array is neutered, so the intrinsic below checks for neutering.
-    // This happens *only* if a get/set occurs, i.e. when |count > 0|.
+    // underlying buffer is detached, so the intrinsic below checks for
+    // detachment.  This happens *only* if a get/set occurs, i.e. when
+    // |count > 0|.
     //
     // Also note that this copies elements effectively by memmove, *not* in
     // step 17's specified order.  This is unobservable, but it would be if we
@@ -413,8 +414,8 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     if (len === 0)
         return -1;
 
-    // Steps 7-8.
-    var n = ToInteger(fromIndex);
+    // Steps 7-8.  Add zero to convert -0 to +0, per ES6 5.2.
+    var n = ToInteger(fromIndex) + 0;
 
     // Step 9.
     if (n >= len)
@@ -530,8 +531,8 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     if (len === 0)
         return -1;
 
-    // Steps 7-8.
-    var n = fromIndex === undefined ? len - 1 : ToInteger(fromIndex);
+    // Steps 7-8.  Add zero to convert -0 to +0, per ES6 5.2.
+    var n = fromIndex === undefined ? len - 1 : ToInteger(fromIndex) + 0;
 
     // Steps 9-10.
     var k = n >= 0 ? std_Math_min(n, len - 1) : len + n;
@@ -986,6 +987,13 @@ function TypedArraySort(comparefn) {
     var len = TypedArrayLength(obj);
 
     if (comparefn === undefined) {
+        // CountingSort doesn't invoke the comparefn
+        if (IsUint8TypedArray(obj)) {
+            return CountingSort(obj, len, false /* signed */);
+        } else if (IsInt8TypedArray(obj)) {
+            return CountingSort(obj, len, true /* signed */);
+        }
+
         comparefn = TypedArrayCompare;
     } else {
         // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26

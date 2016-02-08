@@ -10,7 +10,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -29,10 +29,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MmsMessage)
 
-  MmsMessage(nsPIDOMWindow* aWindow,
+  MmsMessage(nsPIDOMWindowInner* aWindow,
              mobilemessage::MmsMessageInternal* aMessage);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -96,7 +96,7 @@ private:
 
   ~MmsMessage();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<mobilemessage::MmsMessageInternal> mMessage;
 };
 

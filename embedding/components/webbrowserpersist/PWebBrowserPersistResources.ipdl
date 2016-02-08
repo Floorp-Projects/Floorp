@@ -12,15 +12,15 @@ protocol PWebBrowserPersistResources {
   manager PWebBrowserPersistDocument;
 
 parent:
-  VisitResource(nsCString aURI);
+  async VisitResource(nsCString aURI);
 
   // The actor sent here is in the START state; the parent-side
   // receiver will have to wait for it to enter the MAIN state
   // before exposing it with a visitDocument call.
-  VisitDocument(PWebBrowserPersistDocument aSubDocument);
+  async VisitDocument(PWebBrowserPersistDocument aSubDocument);
 
   // This reflects the endVisit method.
-  __delete__(nsresult aStatus);
+  async __delete__(nsresult aStatus);
 };
 
 } // namespace mozilla

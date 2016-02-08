@@ -458,17 +458,10 @@ private:
                          const PLDHashEntryHdr *aHdr,
                          const void *aKey);
 
-  static PLDHashOperator
-  SweepHashEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                 uint32_t number, void *arg);
   void SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue);
   bool DestroyIfNotMarked();
 
   static const PLDHashTableOps ChildrenHashOps;
-
-  static PLDHashOperator
-  EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                          uint32_t number, void *arg);
 
   Key GetKey() const {
     return Key(mRule, GetLevel(), IsImportantRule());

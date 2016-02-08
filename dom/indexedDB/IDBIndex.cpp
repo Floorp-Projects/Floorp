@@ -217,7 +217,7 @@ IDBIndex::IsAutoLocale() const
   return mMetadata->autoLocale();
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 IDBIndex::GetParentObject() const
 {
   AssertIsOnOwningThread();

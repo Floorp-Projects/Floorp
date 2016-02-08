@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var svgImage = document.getElementsByTagName("img")[0];
+    ctx.drawImage(svgImage, 1e+308, 0);
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='blue'/></svg>">
+
+</body>
+</html>

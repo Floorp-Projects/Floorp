@@ -32,7 +32,7 @@ function initDialog()
   dialog.topageInput     = document.getElementById("topageInput");
   dialog.topageLabel     = document.getElementById("topageLabel");
 
-  dialog.numCopiesInput  = document.getElementById("numCopiesInput");  
+  dialog.numCopiesInput  = document.getElementById("numCopiesInput");
 
   dialog.printframeGroup      = document.getElementById("printframeGroup");
   dialog.aslaidoutRadio       = document.getElementById("aslaidoutRadio");
@@ -86,7 +86,7 @@ function getPrinterDescription(printerName)
     s = gPrefs.getCharPref("print.printer_" + printerName + ".printer_description")
   } catch(e) {
   }
-    
+
   return s;
 }
 
@@ -108,9 +108,9 @@ listElement.prototype =
           }
         },
 
-    appendPrinterNames: 
-      function (aDataObject) 
-        { 
+    appendPrinterNames:
+      function (aDataObject)
+        {
           if ((null == aDataObject) || !aDataObject.hasMore()) {
             // disable dialog
             this.listElement.setAttribute("value", "");
@@ -126,14 +126,14 @@ listElement.prototype =
           }
           else {
             // build popup menu from printer names
-            var list = document.getElementById("printerList"); 
+            var list = document.getElementById("printerList");
             do {
               printerNameStr = aDataObject.getNext();
               list.appendItem(printerNameStr, printerNameStr, getPrinterDescription(printerNameStr));
             } while (aDataObject.hasMore());
             this.listElement.removeAttribute("disabled");
           }
-        } 
+        }
   };
 
 //---------------------------------------------------
@@ -163,15 +163,15 @@ function getPrinters()
 function setPrinterDefaultsForSelectedPrinter()
 {
   gPrintSettings.printerName = dialog.printerList.value;
-  
+
   dialog.descText.value = getPrinterDescription(gPrintSettings.printerName);
-  
-  // First get any defaults from the printer 
+
+  // First get any defaults from the printer
   printService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
-  
+
   // now augment them with any values from last time
   printService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSetInterface.kInitSaveAll);
-  
+
   if (doDebug) {
     dump("setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', paperName='"+gPrintSettings.paperName+"'\n");
   }
@@ -371,7 +371,7 @@ function onAccept()
   saveToPrefs = gPrefs.getBoolPref("print.save_print_settings");
 
   if (saveToPrefs && printService != null) {
-    var flags = gPrintSetInterface.kInitSavePaperSize      | 
+    var flags = gPrintSetInterface.kInitSavePaperSize      |
                 gPrintSetInterface.kInitSaveEdges          |
                 gPrintSetInterface.kInitSaveInColor        |
                 gPrintSetInterface.kInitSaveShrinkToFit    |

@@ -8,6 +8,7 @@
 
 #include "MediaDecoder.h"
 #include "MediaFormatReader.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 
@@ -38,7 +39,8 @@ public:
   // Returns true if the MP4 backend is preffed on.
   static bool IsEnabled();
 
-  static bool IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aReason);
+  static already_AddRefed<dom::Promise>
+  IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* aParent);
 
   void GetMozDebugReaderData(nsAString& aString) override;
 

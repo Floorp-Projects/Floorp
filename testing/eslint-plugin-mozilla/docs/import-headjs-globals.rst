@@ -16,6 +16,7 @@ The following file import patterns are supported:
 -  ``loader.loadSubScript(path)``
 -  ``loadSubScript(path)``
 -  ``loadHelperScript(path)``
+-  ``import-globals-from path``
 
 If path does not exist because it is generated e.g.
 ``testdir + "/somefile.js"`` we do our best to resolve it.

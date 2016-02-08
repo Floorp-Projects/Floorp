@@ -8,7 +8,7 @@ protocol PTestActorPunningPunned {
     manager PTestActorPunning;
 
 child:
-    __delete__();
+    async __delete__();
 };
 
 } // namespace mozilla

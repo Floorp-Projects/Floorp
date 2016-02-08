@@ -43,6 +43,10 @@ function scrollWheelOver(element, deltaY) {
   synthesizeNativeWheelAndWaitForScrollEvent(element, 10, 10, 0, deltaY, driveTest);
 }
 
+function reportPositions(outer, inner) {
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] outer.scrollTop = " + outer.scrollTop + " and inner.scrollTop = " + inner.scrollTop + "\n");
+}
+
 function* runTest() {
   var outer = document.getElementById('outer-frame');
   var inner = document.getElementById('inner-frame');
@@ -55,8 +59,10 @@ function* runTest() {
   window.addEventListener("wheel", wheelTargetRecorder);
 
   // Scroll |outer| to the bottom.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scrolling outer to the bottom\n");
   while (outer.scrollTop < outer.scrollTopMax) {
     yield scrollWheelOver(outer, -10);
+    reportPositions(outer, inner);
   }
 
   // Verify that this has brought |inner| under the wheel.
@@ -64,7 +70,9 @@ function* runTest() {
   window.removeEventListener("wheel", wheelTargetRecorder);
 
   // Immediately after, scroll it back up a bit.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scroll outer back up a bit\n");
   yield scrollWheelOver(outer, 10);
+  reportPositions(outer, inner);
 
   // Check that it was |outer| that scrolled back, and |inner| didn't
   // scroll at all, as all the above scrolls should be in the same
@@ -81,21 +89,27 @@ function* runTest() {
 
   // Scroll up a bit more. It's still |outer| scrolling because
   // |inner| is still scrolled all the way to the top.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scrolling up\n");
   yield scrollWheelOver(outer, 10);
+  reportPositions(outer, inner);
 
   // Wait for the transaction timeout to elapse.
   // timeout * 5 is used to make it less likely that the timeout is less than
   // the system timestamp resolution
+  dump("[WHEEL_TRANS_LOG] waiting for timeout\n");
   yield window.setTimeout(driveTest, timeout * 5);
 
   // Now scroll down. The transaction having timed out, the event
   // should pick up a new target, and that should be |inner|.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scrolling down after waiting for timeout\n");
   yield scrollWheelOver(outer, -10);
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] checking if inner has scrolled\n");
   ok(inner.scrollTop > 0, "'inner' should have been scrolled");
 
   // Finally, test scroll handoff after a timeout.
 
   // Continue scrolling |inner| down to the bottom.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scrolling inner to the bottom\n");
   var prevScrollTop = inner.scrollTop;
   while (inner.scrollTop < inner.scrollTopMax) {
     yield scrollWheelOver(outer, -10);
@@ -110,6 +124,7 @@ function* runTest() {
   yield window.setTimeout(driveTest, timeout * 5);
 
   // Continued downward scrolling should scroll |outer| to the bottom.
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scrolling outer to the bottom\n");
   prevScrollTop = outer.scrollTop;
   while (outer.scrollTop < outer.scrollTopMax) {
     yield scrollWheelOver(outer, -10);
@@ -133,7 +148,9 @@ function driveTest() {
 function startTest() {
   // Disable smooth scrolling because it makes the test flaky (we don't have a good
   // way of detecting when the scrolling is finished).
-  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, driveTest);
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false],
+                                     ["layers.dump", true],
+                                     ["apz.printtree", true]]}, driveTest);
 }
 
 SimpleTest.waitForExplicitFinish();

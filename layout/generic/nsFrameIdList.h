@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 FRAME_ID(BRFrame)
+FRAME_ID(DetailsFrame)
 FRAME_ID(nsAutoRepeatBoxFrame)
 FRAME_ID(nsBCTableCellFrame)
+FRAME_ID(nsBackdropFrame)
 FRAME_ID(nsBlockFrame)
 FRAME_ID(nsBox)
 FRAME_ID(nsBoxFrame)
@@ -174,4 +176,5 @@ FRAME_ID(nsTreeColFrame)
 FRAME_ID(nsVideoFrame)
 FRAME_ID(nsXULLabelFrame)
 FRAME_ID(nsXULScrollFrame)
+FRAME_ID(SummaryFrame)
 FRAME_ID(ViewportFrame)

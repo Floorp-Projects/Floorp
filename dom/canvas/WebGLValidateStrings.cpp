@@ -141,7 +141,7 @@ ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl, const char*
     if (name.IsEmpty())
         return false;
 
-    const uint32_t maxSize = 256;
+    const uint32_t maxSize = webgl->IsWebGL2() ? 1024 : 256;
     if (name.Length() > maxSize) {
         webgl->ErrorInvalidValue("%s: Identifier is %d characters long, exceeds the"
                                  " maximum allowed length of %d characters.",

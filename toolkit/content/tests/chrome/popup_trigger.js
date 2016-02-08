@@ -495,7 +495,7 @@ var popupTests = [
     var childframe = document.getElementById("childframe");
     if (childframe) {
       for (var t = 0; t < 2; t++) {
-        var child = childframe.contentDocument; 
+        var child = childframe.contentDocument;
         var evt = child.createEvent("Event");
         evt.initEvent("click", true, true);
         child.documentElement.dispatchEvent(evt);

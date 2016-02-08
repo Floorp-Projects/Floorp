@@ -87,17 +87,20 @@ endif
 
 # For all variables such as DLLFLAGS, that may contain $(DIST)
 DIST := $(ABS_DIST)
+# TODO: move this all to configure, but in Python
+ifndef MOZ_BUILD_NSPR
 NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
 ifneq (,$(strip $(NSPR_INCLUDE_DIR)))
 NSPR_INCLUDE_DIR := $(subst -I,,$(subst -I$(DIST),-I$(ABS_DIST),$(NSPR_INCLUDE_DIR)))
 else
-NSPR_INCLUDE_DIR = $(ABS_DIST)/include/nspr
+$(error Your NSPR CFLAGS are broken!)
 endif
 NSPR_LIB_DIR = $(firstword $(filter -L%,$(NSPR_LIBS)))
 ifneq (,$(strip $(NSPR_LIB_DIR)))
 NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
-NSPR_LIB_DIR = $(ABS_DIST)/lib
+$(error Your NSPR LDFLAGS are broken!)
+endif
 endif
 
 # To get debug symbols from NSS

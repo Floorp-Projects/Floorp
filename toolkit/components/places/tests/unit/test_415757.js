@@ -36,13 +36,13 @@ function run_test()
 add_task(function* test_execute()
 {
   // add pages to global history
-  for (var i = 0; i < TOTAL_SITES; i++) {
+  for (let i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test-" + i + ".com/";
     let testURI = uri(site);
     let when = Date.now() * 1000 + (i * TOTAL_SITES);
     yield PlacesTestUtils.addVisits({ uri: testURI, visitDate: when });
   }
-  for (var i = 0; i < TOTAL_SITES; i++) {
+  for (let i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test.com/" + i + "/";
     let testURI = uri(site);
     let when = Date.now() * 1000 + (i * TOTAL_SITES);
@@ -78,7 +78,7 @@ add_task(function* test_execute()
   }
 
   // check that all pages in www.test-X.com have NOT been removed
-  for (var i = 0; i < TOTAL_SITES; i++) {
+  for (let i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test-" + i + ".com/";
     let testURI = uri(site);
     do_check_true(uri_in_db(testURI));

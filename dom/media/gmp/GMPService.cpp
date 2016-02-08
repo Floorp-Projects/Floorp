@@ -171,7 +171,7 @@ GeckoMediaPluginService::RemoveObsoletePluginCrashCallbacks()
 }
 
 GeckoMediaPluginService::GMPCrashCallback::GMPCrashCallback(const uint32_t aPluginId,
-                                                            nsPIDOMWindow* aParentWindow,
+                                                            nsPIDOMWindowInner* aParentWindow,
                                                             nsIDocument* aDocument)
   : mPluginId(aPluginId)
   , mParentWindowWeakPtr(do_GetWeakReference(aParentWindow))
@@ -196,7 +196,7 @@ GeckoMediaPluginService::GMPCrashCallback::Run(const nsACString& aPluginName)
   // init.mPluginFilename
   // TODO: Can/should we fill them?
 
-  nsCOMPtr<nsPIDOMWindow> parentWindow;
+  nsCOMPtr<nsPIDOMWindowInner> parentWindow;
   nsCOMPtr<nsIDocument> document;
   if (!GetParentWindowAndDocumentIfValid(parentWindow, document)) {
     return;
@@ -213,14 +213,14 @@ GeckoMediaPluginService::GMPCrashCallback::Run(const nsACString& aPluginName)
 bool
 GeckoMediaPluginService::GMPCrashCallback::IsStillValid()
 {
-  nsCOMPtr<nsPIDOMWindow> parentWindow;
+  nsCOMPtr<nsPIDOMWindowInner> parentWindow;
   nsCOMPtr<nsIDocument> document;
   return GetParentWindowAndDocumentIfValid(parentWindow, document);
 }
 
 bool
 GeckoMediaPluginService::GMPCrashCallback::GetParentWindowAndDocumentIfValid(
-  nsCOMPtr<nsPIDOMWindow>& parentWindow,
+  nsCOMPtr<nsPIDOMWindowInner>& parentWindow,
   nsCOMPtr<nsIDocument>& document)
 {
   parentWindow = do_QueryReferent(mParentWindowWeakPtr);
@@ -240,7 +240,7 @@ GeckoMediaPluginService::GMPCrashCallback::GetParentWindowAndDocumentIfValid(
 
 void
 GeckoMediaPluginService::AddPluginCrashedEventTarget(const uint32_t aPluginId,
-                                                     nsPIDOMWindow* aParentWindow)
+                                                     nsPIDOMWindowInner* aParentWindow)
 {
   LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
 

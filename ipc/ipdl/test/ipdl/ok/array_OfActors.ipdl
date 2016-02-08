@@ -4,7 +4,7 @@ protocol array_OfActors {
     manages array_OfActorsSub;
 
 child:
-    Msg(array_OfActorsSub[] p);
+    async Msg(array_OfActorsSub[] p);
 
     array_OfActorsSub();
 };

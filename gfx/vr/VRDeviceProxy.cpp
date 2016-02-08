@@ -134,6 +134,10 @@ public:
     *aContentsScaleFactor = 1.0;
     return NS_OK;
   }
+  NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override {
+    *aScaleFactor = 1.0;
+    return NS_OK;
+  }
 
 protected:
   virtual ~FakeScreen() {}

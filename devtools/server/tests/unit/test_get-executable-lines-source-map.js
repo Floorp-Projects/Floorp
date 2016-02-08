@@ -16,7 +16,7 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-get-executable-lines");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function _onConnect() {
+  gClient.connect().then(function _onConnect() {
     attachTestTabAndResume(
       gClient,
       "test-get-executable-lines",

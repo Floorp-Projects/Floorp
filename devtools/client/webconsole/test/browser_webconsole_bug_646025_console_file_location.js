@@ -1,7 +1,7 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that console logging methods display the method location along with
 // the output in the console.
@@ -27,31 +27,31 @@ add_task(function* () {
       text: "message for level log",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
-      source: { url: "test-file-location.js", line: 5 },
+      source: { url: "test-file-location.js", line: 6 },
     },
     {
       text: "message for level info",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_INFO,
-      source: { url: "test-file-location.js", line: 6 },
+      source: { url: "test-file-location.js", line: 7 },
     },
     {
       text: "message for level warn",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_WARNING,
-      source: { url: "test-file-location.js", line: 7 },
+      source: { url: "test-file-location.js", line: 8 },
     },
     {
       text: "message for level error",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_ERROR,
-      source: { url: "test-file-location.js", line: 8 },
+      source: { url: "test-file-location.js", line: 9 },
     },
     {
       text: "message for level debug",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
-      source: { url: "test-file-location.js", line: 9 },
+      source: { url: "test-file-location.js", line: 10 },
     }],
   });
 });

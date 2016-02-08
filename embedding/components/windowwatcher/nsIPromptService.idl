@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * This is the interface to the embeddable prompt service; the service that
@@ -37,7 +37,7 @@ interface nsIDOMWindow;
  * tell the user to "Press OK to proceed."  Instead, such a prompt might be
  * rewritten to ask the user: "Would you like to proceed?"
  */
-[scriptable, uuid(1630C61A-325E-49ca-8759-A31B16C47AA5)]
+[scriptable, uuid(404ebfa2-d8f4-4c94-8416-e65a55f9df5a)]
 interface nsIPromptService : nsISupports
 {
   /**
@@ -50,7 +50,7 @@ interface nsIPromptService : nsISupports
    * @param aText
    *        Text to appear in the body of the dialog.
    */
-  void alert(in nsIDOMWindow aParent,
+  void alert(in mozIDOMWindowProxy aParent,
              in wstring aDialogTitle,
              in wstring aText);
 
@@ -69,7 +69,7 @@ interface nsIPromptService : nsISupports
    *        Contains the initial checked state of the checkbox when this method
    *        is called and the final checked state after this method returns.
    */
-  void alertCheck(in nsIDOMWindow aParent,
+  void alertCheck(in mozIDOMWindowProxy aParent,
                   in wstring aDialogTitle,
                   in wstring aText,
                   in wstring aCheckMsg,
@@ -87,7 +87,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel
    */
-  boolean confirm(in nsIDOMWindow aParent,
+  boolean confirm(in mozIDOMWindowProxy aParent,
                   in wstring aDialogTitle,
                   in wstring aText);
 
@@ -108,7 +108,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel
    */
-  boolean confirmCheck(in nsIDOMWindow aParent,
+  boolean confirmCheck(in mozIDOMWindowProxy aParent,
                        in wstring aDialogTitle,
                        in wstring aText,
                        in wstring aCheckMsg,
@@ -213,7 +213,7 @@ interface nsIPromptService : nsISupports
    *
    * where "AAA" and "BBB" correspond to one of the button titles.
    */
-  int32_t confirmEx(in nsIDOMWindow aParent,
+  int32_t confirmEx(in mozIDOMWindowProxy aParent,
                     in wstring aDialogTitle,
                     in wstring aText,
                     in unsigned long aButtonFlags,
@@ -245,7 +245,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel.
    */                        
-  boolean prompt(in nsIDOMWindow aParent,
+  boolean prompt(in mozIDOMWindowProxy aParent,
                  in wstring aDialogTitle,
                  in wstring aText,
                  inout wstring aValue, 
@@ -280,7 +280,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel.
    */                        
-  boolean promptUsernameAndPassword(in nsIDOMWindow aParent,
+  boolean promptUsernameAndPassword(in mozIDOMWindowProxy aParent,
                                     in wstring aDialogTitle,
                                     in wstring aText,
                                     inout wstring aUsername,
@@ -310,7 +310,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel.
    */                        
-  boolean promptPassword(in nsIDOMWindow aParent,
+  boolean promptPassword(in mozIDOMWindowProxy aParent,
                          in wstring aDialogTitle,
                          in wstring aText,
                          inout wstring aPassword,
@@ -337,7 +337,7 @@ interface nsIPromptService : nsISupports
    *
    * @return true for OK, false for Cancel.
    */                                                 
-  boolean select(in nsIDOMWindow aParent,
+  boolean select(in mozIDOMWindowProxy aParent,
                  in wstring aDialogTitle,
                  in wstring aText,
                  in  uint32_t aCount,

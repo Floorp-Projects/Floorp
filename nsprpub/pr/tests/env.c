@@ -18,6 +18,7 @@
 
 PRIntn  debug = 0;
 PRIntn  verbose = 0;
+PRIntn  secure = 0;
 PRBool  failedAlready = PR_FALSE;
 
 #define  ENVNAME    "NSPR_ENVIRONMENT_TEST_VARIABLE"
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 
     {   /* Get command line options */
         PLOptStatus os;
-        PLOptState *opt = PL_CreateOptState(argc, argv, "vd");
+        PLOptState *opt = PL_CreateOptState(argc, argv, "vds");
 
 	    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
@@ -55,6 +56,15 @@ int main(int argc, char **argv)
                 break;
             case 'v':  /* verbose */
                 verbose = 1;
+                break;
+            case 's':  /* secure / set[ug]id */
+                /*
+                ** To test PR_GetEnvSecure, make this executable (or a
+                ** copy of it) setuid / setgid / otherwise inherently
+                ** privileged (e.g., file capabilities) and run it
+                ** with this flag.
+                */
+                secure = 1;
                 break;
              default:
                 break;
@@ -111,6 +121,32 @@ int main(int argc, char **argv)
         failedAlready = PR_TRUE;
     } else {
         if (verbose) printf("env: PR_GetEnv() worked after setting it. Found: %s\n", value );
+    }
+
+    if ( secure ) {
+        /*
+        ** In this case we've been run with elevated privileges, so
+        ** test that PR_GetEnvSecure *doesn't* find that env var.
+        */
+        value = PR_GetEnvSecure( ENVNAME );
+        if ( NULL != value ) {
+            if (debug) printf( "env: PR_GetEnvSecure() failed; expected NULL, found \"%s\"\n", value );
+            failedAlready = PR_TRUE;
+        } else {
+            if (verbose) printf("env: PR_GetEnvSecure() worked\n" );
+        }
+    } else {
+        /*
+        ** In this case the program is being run normally, so do the
+        ** same check for PR_GetEnvSecure as for PR_GetEnv.
+        */
+        value = PR_GetEnvSecure( ENVNAME );
+        if ( (NULL == value ) || (strcmp( value, ENVVALUE)))  {
+            if (debug) printf( "env: PR_GetEnvSecure() Failed after setting\n" );
+            failedAlready = PR_TRUE;
+        } else {
+            if (verbose) printf("env: PR_GetEnvSecure() worked after setting it. Found: %s\n", value );
+        }
     }
 
 /* ---------------------------------------------------------------------- */

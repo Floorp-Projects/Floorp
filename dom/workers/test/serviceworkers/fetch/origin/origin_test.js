@@ -1,13 +1,19 @@
 var prefix = "/tests/dom/workers/test/serviceworkers/fetch/origin/";
 
+function addOpaqueRedirect(cache, file) {
+  return fetch(new Request(prefix + file, { redirect: "manual" })).then(function(response) {
+    return cache.put(prefix + file, response);
+  });
+}
+
 self.addEventListener("install", function(event) {
   event.waitUntil(
     self.caches.open("origin-cache")
       .then(c => {
         return Promise.all(
           [
-            c.add(new Request(prefix + 'index.sjs', {redirect: "manual"})),
-            c.add(new Request(prefix + 'index-to-https.sjs', {redirect: "manual"}))
+            addOpaqueRedirect(c, 'index.sjs'),
+            addOpaqueRedirect(c, 'index-to-https.sjs')
           ]
         );
       })

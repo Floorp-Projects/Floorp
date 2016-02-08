@@ -359,7 +359,8 @@ public:
                              nsTArray<uint8_t>* aBuffer,
                              int32_t* aLength) override;
     virtual bool
-    RecvSetCandidateWindow(const int32_t& aX, const int32_t& aY) override;
+    RecvSetCandidateWindow(
+        const mozilla::widget::CandidateWindowPosition& aPosition) override;
     virtual bool
     RecvRequestCommitOrCancel(const bool& aCommitted) override;
 

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   return new EventEmitter();
 });
 XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
-  return Services.strings.createBundle("chrome://browser/locale/loop/loop.properties");
+  return Services.strings.createBundle("chrome://loop/locale/loop.properties");
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRoomsCache",

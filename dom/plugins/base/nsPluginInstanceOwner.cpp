@@ -430,8 +430,7 @@ nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
   nsCOMPtr<nsIDocument> doc;
   GetDocument(getter_AddRefs(doc));
   if (doc) {
-    nsCOMPtr<nsPIDOMWindow> domWindow = doc->GetWindow();
-    if (domWindow) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> domWindow = doc->GetWindow()) {
       nsCOMPtr<nsIDocShell> docShell = domWindow->GetDocShell();
       if (docShell)
         docShell->AddWeakPrivacyTransitionObserver(this);
@@ -904,7 +903,7 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
         *aLength = aDist->Length();
         return true;
       }
-      nsAutoTArray<uint32_t, 16> clauses;
+      AutoTArray<uint32_t, 16> clauses;
       clauses.AppendElement(0);
       for (TextRange& range : *ranges) {
         if (!range.IsClause()) {
@@ -942,7 +941,8 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
 }
 
 bool
-nsPluginInstanceOwner::SetCandidateWindow(int32_t aX, int32_t aY)
+nsPluginInstanceOwner::SetCandidateWindow(
+    const widget::CandidateWindowPosition& aPosition)
 {
   if (NS_WARN_IF(!mPluginFrame)) {
     return false;
@@ -956,7 +956,7 @@ nsPluginInstanceOwner::SetCandidateWindow(int32_t aX, int32_t aY)
     }
   }
 
-  widget->SetCandidateWindowForPlugin(aX, aY);
+  widget->SetCandidateWindowForPlugin(aPosition);
   return true;
 }
 
@@ -2056,12 +2056,12 @@ static unsigned int XInputEventState(const WidgetInputEvent& anEvent)
 static bool
 ContentIsFocusedWithinWindow(nsIContent* aContent)
 {
-  nsPIDOMWindow* outerWindow = aContent->OwnerDoc()->GetWindow();
+  nsPIDOMWindowOuter* outerWindow = aContent->OwnerDoc()->GetWindow();
   if (!outerWindow) {
     return false;
   }
 
-  nsPIDOMWindow* rootWindow = outerWindow->GetPrivateRoot();
+  nsPIDOMWindowOuter* rootWindow = outerWindow->GetPrivateRoot();
   if (!rootWindow) {
     return false;
   }
@@ -2071,7 +2071,7 @@ ContentIsFocusedWithinWindow(nsIContent* aContent)
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindow> focusedFrame;
+  nsCOMPtr<nsPIDOMWindowOuter> focusedFrame;
   nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedDescendant(rootWindow, true, getter_AddRefs(focusedFrame));
   return (focusedContent.get() == aContent);
 }
@@ -3310,8 +3310,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 #ifndef XP_MACOSX
       // If we're running in the content process, we need a remote widget created in chrome.
       if (XRE_IsContentProcess()) {
-        if (nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow()) {
-          if (nsCOMPtr<nsPIDOMWindow> topWindow = window->GetTop()) {
+        if (nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow()) {
+          if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop()) {
             dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
             if (tc) {
               // This returns a PluginWidgetProxy which remotes a number of calls.

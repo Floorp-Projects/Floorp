@@ -197,8 +197,12 @@ add_task(function*() {
 
   yield findVariableViewProperties([{name: "ss2", value: "changed=ss2"}]);
 
-  // Clearing items
-  yield gWindow.clear();
+  // Clearing items. Bug 1233497 makes it so that we can no longer yield
+  // CPOWs from Tasks. We work around this by calling clear via a ContentTask
+  // instead.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    return Task.spawn(content.wrappedJSObject.clear);
+  });
 
   yield gUI.once("store-objects-cleared");
 

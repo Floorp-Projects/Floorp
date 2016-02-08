@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
@@ -41,9 +42,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
 const PREF_READERVIEW_TRIGGER = "browser.uitour.readerViewTrigger";
+const PREF_SURVEY_DURATION = "browser.uitour.surveyDuration";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
-  "endUrlbarCapture",
   "forceShowReaderIcon",
   "getConfiguration",
   "getTreatmentTag",
@@ -90,7 +91,6 @@ this.UITour = {
   pageIDSourceBrowsers: new WeakMap(),
   /* Map from browser chrome windows to a Set of <browser>s in which a tour is open (both visible and hidden) */
   tourBrowsersByWindow: new WeakMap(),
-  urlbarCapture: new WeakMap(),
   appMenuOpenForAnnotation: new Set(),
   availableTargetsCache: new WeakMap(),
   clearAvailableTargetsCache() {
@@ -577,41 +577,6 @@ this.UITour = {
         break;
       }
 
-      case "startUrlbarCapture": {
-        if (typeof data.text != "string" || !data.text ||
-            typeof data.url != "string" || !data.url) {
-          log.warn("startUrlbarCapture: Text or URL not specified");
-          return false;
-        }
-
-        let uri = null;
-        try {
-          uri = Services.io.newURI(data.url, null, null);
-        } catch (e) {
-          log.warn("startUrlbarCapture: Malformed URL specified");
-          return false;
-        }
-
-        let secman = Services.scriptSecurityManager;
-        let contentDocument = browser.contentWindow.document;
-        let principal = contentDocument.nodePrincipal;
-        let flags = secman.DISALLOW_INHERIT_PRINCIPAL;
-        try {
-          secman.checkLoadURIWithPrincipal(principal, uri, flags);
-        } catch (e) {
-          log.warn("startUrlbarCapture: Orginating page doesn't have permission to open specified URL");
-          return false;
-        }
-
-        this.startUrlbarCapture(window, data.text, data.url);
-        break;
-      }
-
-      case "endUrlbarCapture": {
-        this.endUrlbarCapture(window);
-        break;
-      }
-
       case "getConfiguration": {
         if (typeof data.configuration != "string") {
           log.warn("getConfiguration: No configuration option specified");
@@ -698,8 +663,8 @@ this.UITour = {
         targetPromise.then(target => {
           let searchbar = target.node;
           searchbar.value = data.term;
-          searchbar.inputChanged();
-        }).then(null, Cu.reportError);
+          searchbar.updateGoButtonVisibility();
+        });
         break;
       }
 
@@ -806,14 +771,6 @@ this.UITour = {
         this.teardownTourForWindow(window);
         break;
       }
-
-      case "input": {
-        if (aEvent.target.id == "urlbar") {
-          let window = aEvent.target.ownerDocument.defaultView;
-          this.handleUrlbarInput(window);
-        }
-        break;
-      }
     }
   },
 
@@ -903,7 +860,6 @@ this.UITour = {
     controlCenterPanel.removeEventListener("popuphidden", this.onPanelHidden);
     controlCenterPanel.removeEventListener("popuphiding", this.hideControlCenterAnnotations);
 
-    this.endUrlbarCapture(aWindow);
     this.resetTheme();
 
     // If there are no more tour tabs left in the window, teardown the tour for the whole window.
@@ -1106,7 +1062,8 @@ this.UITour = {
    * Show the Heartbeat UI to request user feedback. This function reports back to the
    * caller using |notify|. The notification event name reflects the current status the UI
    * is in (either "Heartbeat:NotificationOffered", "Heartbeat:NotificationClosed",
-   * "Heartbeat:LearnMore", "Heartbeat:Engaged" or "Heartbeat:Voted").
+   * "Heartbeat:LearnMore", "Heartbeat:Engaged", "Heartbeat:Voted",
+   * "Heartbeat:SurveyExpired" or "Heartbeat:WindowClosed").
    * When a "Heartbeat:Voted" event is notified
    * the data payload contains a |score| field which holds the rating picked by the user.
    * Please note that input parameters are already validated by the caller.
@@ -1132,16 +1089,115 @@ this.UITour = {
    * @param {String} [aOptions.learnMoreURL=null]
    *        The learn more URL to open when clicking on the learn more link. No learn more
    *        will be shown if this is an invalid URL.
-   * @param {String} [aOptions.privateWindowsOnly=false]
+   * @param {boolean} [aOptions.privateWindowsOnly=false]
    *        Whether the heartbeat UI should only be targeted at a private window (if one exists).
    *        No notifications should be fired when this is true.
+   * @param {String} [aOptions.surveyId]
+   *        An ID for the survey, reflected in the Telemetry ping.
+   * @param {Number} [aOptions.surveyVersion]
+   *        Survey's version number, reflected in the Telemetry ping.
+   * @param {boolean} [aOptions.testing]
+   *        Whether this is a test survey, reflected in the Telemetry ping.
    */
   showHeartbeat(aChromeWindow, aOptions) {
-    let maybeNotifyHeartbeat = (...aParams) => {
+    // Initialize survey state
+    let pingSent = false;
+    let surveyResults = {};
+    let surveyEndTimer = null;
+
+    /**
+     * Accumulates survey events and submits to Telemetry after the survey ends.
+     *
+     * @param {String} aEventName
+     *        Heartbeat event name
+     * @param {Object} aParams
+     *        Additional parameters and their values
+     */
+    let maybeNotifyHeartbeat = (aEventName, aParams = {}) => {
+      // Return if event occurred after the ping was sent
+      if (pingSent) {
+        log.warn("maybeNotifyHeartbeat: event occurred after ping sent:", aEventName, aParams);
+        return;
+      }
+
+      // No Telemetry from private-window-only Heartbeats
       if (aOptions.privateWindowsOnly) {
         return;
       }
-      this.notify(...aParams);
+
+      let ts = Date.now();
+      let sendPing = false;
+      switch (aEventName) {
+        case "Heartbeat:NotificationOffered":
+          surveyResults.flowId = aOptions.flowId;
+          surveyResults.offeredTS = ts;
+          break;
+        case "Heartbeat:LearnMore":
+          // record only the first click
+          if (!surveyResults.learnMoreTS) {
+            surveyResults.learnMoreTS = ts;
+          }
+          break;
+        case "Heartbeat:Engaged":
+          surveyResults.engagedTS = ts;
+          break;
+        case "Heartbeat:Voted":
+          surveyResults.votedTS = ts;
+          surveyResults.score = aParams.score;
+          break;
+        case "Heartbeat:SurveyExpired":
+          surveyResults.expiredTS = ts;
+          break;
+        case "Heartbeat:NotificationClosed":
+          // this is the final event in most surveys
+          surveyResults.closedTS = ts;
+          sendPing = true;
+          break;
+        case "Heartbeat:WindowClosed":
+          surveyResults.windowClosedTS = ts;
+          sendPing = true;
+          break;
+        default:
+          log.error("maybeNotifyHeartbeat: unrecognized event:", aEventName);
+          break;
+      }
+
+      aParams.timestamp = ts;
+      aParams.flowId = aOptions.flowId;
+      this.notify(aEventName, aParams);
+
+      if (!sendPing) {
+        return;
+      }
+
+      // Send the ping to Telemetry
+      let payload = Object.assign({}, surveyResults);
+      payload.version = 1;
+      for (let meta of ["surveyId", "surveyVersion", "testing"]) {
+        if (aOptions.hasOwnProperty(meta)) {
+          payload[meta] = aOptions[meta];
+        }
+      }
+
+      log.debug("Sending payload to Telemetry: aEventName:", aEventName,
+                "payload:", payload);
+
+      TelemetryController.submitExternalPing("heartbeat", payload, {
+        addClientId: true,
+        addEnvironment: true,
+      });
+
+      // only for testing
+      this.notify("Heartbeat:TelemetrySent", payload);
+
+      // Survey is complete, clear out the expiry timer & survey configuration
+      if (surveyEndTimer) {
+        clearTimeout(surveyEndTimer);
+        surveyEndTimer = null;
+      }
+
+      pingSent = true;
+      surveyResults = {};
     };
 
     let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
@@ -1152,7 +1208,7 @@ this.UITour = {
         label: aOptions.engagementButtonLabel,
         callback: () => {
           // Let the consumer know user engaged.
-          maybeNotifyHeartbeat("Heartbeat:Engaged", { flowId: aOptions.flowId, timestamp: Date.now() });
+          maybeNotifyHeartbeat("Heartbeat:Engaged");
 
           userEngaged(new Map([
             ["type", "button"],
@@ -1167,11 +1223,16 @@ this.UITour = {
     }
     // Create the notification. Prefix its ID to decrease the chances of collisions.
     let notice = nb.appendNotification(aOptions.message, "heartbeat-" + aOptions.flowId,
-      "chrome://browser/skin/heartbeat-icon.svg", nb.PRIORITY_INFO_HIGH, buttons, function() {
-        // Let the consumer know the notification bar was closed. This also happens
-        // after voting.
-        maybeNotifyHeartbeat("Heartbeat:NotificationClosed", { flowId: aOptions.flowId, timestamp: Date.now() });
-    }.bind(this));
+                                       "chrome://browser/skin/heartbeat-icon.svg",
+                                       nb.PRIORITY_INFO_HIGH, buttons,
+                                       (aEventType) => {
+                                         if (aEventType != "removed") {
+                                           return;
+                                         }
+                                         // Let the consumer know the notification bar was closed.
+                                         // This also happens after voting.
+                                         maybeNotifyHeartbeat("Heartbeat:NotificationClosed");
+                                       });
 
     // Get the elements we need to style.
     let messageImage =
@@ -1242,11 +1303,7 @@ this.UITour = {
         let rating = Number(evt.target.getAttribute("data-score"), 10);
 
         // Let the consumer know user voted.
-        maybeNotifyHeartbeat("Heartbeat:Voted", {
-          flowId: aOptions.flowId,
-          score: rating,
-          timestamp: Date.now(),
-        });
+        maybeNotifyHeartbeat("Heartbeat:Voted", { score: rating });
 
         // Append the score data to the engagement URL.
         userEngaged(new Map([
@@ -1285,8 +1342,7 @@ this.UITour = {
       learnMore.className = "text-link";
       learnMore.href = learnMoreURL.toString();
       learnMore.setAttribute("value", aOptions.learnMoreLabel);
-      learnMore.addEventListener("click", () => maybeNotifyHeartbeat("Heartbeat:LearnMore",
-        { flowId: aOptions.flowId, timestamp: Date.now() }));
+      learnMore.addEventListener("click", () => maybeNotifyHeartbeat("Heartbeat:LearnMore"));
       frag.appendChild(learnMore);
     }
 
@@ -1297,10 +1353,23 @@ this.UITour = {
     messageText.classList.add("heartbeat");
 
     // Let the consumer know the notification was shown.
-    maybeNotifyHeartbeat("Heartbeat:NotificationOffered", {
-      flowId: aOptions.flowId,
-      timestamp: Date.now(),
-    });
+    maybeNotifyHeartbeat("Heartbeat:NotificationOffered");
+
+    // End the survey if the user quits, closes the window, or
+    // hasn't responded before expiration.
+    if (!aOptions.privateWindowsOnly) {
+      function handleWindowClosed(aTopic) {
+        maybeNotifyHeartbeat("Heartbeat:WindowClosed");
+        aChromeWindow.removeEventListener("SSWindowClosing", handleWindowClosed);
+      }
+      aChromeWindow.addEventListener("SSWindowClosing", handleWindowClosed);
+
+      let surveyDuration = Services.prefs.getIntPref(PREF_SURVEY_DURATION) * 1000;
+      surveyEndTimer = setTimeout(() => {
+        maybeNotifyHeartbeat("Heartbeat:SurveyExpired");
+        nb.removeNotification(notice);
+      }, surveyDuration);
+    }
   },
 
   /**
@@ -1763,41 +1832,6 @@ this.UITour = {
     aPanel.hidden = false;
   },
 
-  startUrlbarCapture: function(aWindow, aExpectedText, aUrl) {
-    let urlbar = aWindow.document.getElementById("urlbar");
-    this.urlbarCapture.set(aWindow, {
-      expected: aExpectedText.toLocaleLowerCase(),
-      url: aUrl
-    });
-    urlbar.addEventListener("input", this);
-  },
-
-  endUrlbarCapture: function(aWindow) {
-    let urlbar = aWindow.document.getElementById("urlbar");
-    urlbar.removeEventListener("input", this);
-    this.urlbarCapture.delete(aWindow);
-  },
-
-  handleUrlbarInput: function(aWindow) {
-    if (!this.urlbarCapture.has(aWindow))
-      return;
-
-    let urlbar = aWindow.document.getElementById("urlbar");
-
-    let {expected, url} = this.urlbarCapture.get(aWindow);
-
-    if (urlbar.value.toLocaleLowerCase().localeCompare(expected) != 0)
-      return;
-
-    urlbar.handleRevert();
-
-    let tab = aWindow.gBrowser.addTab(url, {
-      owner: aWindow.gBrowser.selectedTab,
-      relatedToCurrent: true
-    });
-    aWindow.gBrowser.selectedTab = tab;
-  },
-
   getConfiguration: function(aMessageManager, aWindow, aConfiguration, aCallbackID) {
     switch (aConfiguration) {
       case "appinfo":
@@ -1814,12 +1848,8 @@ this.UITour = {
         appinfo["defaultBrowser"] = isDefaultBrowser;
 
         let canSetDefaultBrowserInBackground = true;
-        if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-          let prefBranch =
-            Services.prefs.getBranch("browser.shell.associationHash");
-          let prefChildren = prefBranch.getChildList("");
-          canSetDefaultBrowserInBackground = prefChildren.length > 0;
-        } else if (AppConstants.isPlatformAndVersionAtLeast("macosx", "10.10")) {
+        if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2") ||
+            AppConstants.isPlatformAndVersionAtLeast("macosx", "10.10")) {
           canSetDefaultBrowserInBackground = false;
         } else if (AppConstants.platform == "linux") {
           // The ShellService may not exist on some versions of Linux.

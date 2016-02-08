@@ -72,6 +72,13 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   MOZ_ASSERT(aOriginalSize.width > 0 && aOriginalSize.height > 0,
              "Invalid original size");
 
+  // Only downscale from reasonable sizes to avoid using too much memory/cpu
+  // downscaling and decoding. 1 << 20 == 1,048,576 seems a reasonable limit.
+  if (aOriginalSize.width > (1 << 20) || aOriginalSize.height > (1 << 20)) {
+    NS_WARNING("Trying to downscale image frame that is too large");
+    return NS_ERROR_INVALID_ARG;
+  }
+
   mFrameRect = aFrameRect.valueOr(nsIntRect(nsIntPoint(), aOriginalSize));
   MOZ_ASSERT(mFrameRect.x >= 0 && mFrameRect.y >= 0 &&
              mFrameRect.width >= 0 && mFrameRect.height >= 0,
@@ -99,10 +106,20 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
                                0, mTargetSize.width,
                                mXFilter.get());
 
+  if (mXFilter->max_filter() <= 0 || mXFilter->num_values() != mTargetSize.width) {
+    NS_WARNING("Failed to compute filters for image downscaling");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   skia::resize::ComputeFilters(resizeMethod,
                                mOriginalSize.height, mTargetSize.height,
                                0, mTargetSize.height,
                                mYFilter.get());
+
+  if (mYFilter->max_filter() <= 0 || mYFilter->num_values() != mTargetSize.height) {
+    NS_WARNING("Failed to compute filters for image downscaling");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Allocate the buffer, which contains scanlines of the original image.
   // pad by 15 to handle overreads by the simd code

@@ -274,6 +274,14 @@ protected:
   uint64_t mUserTimeStart;
   uint64_t mSystemTimeStart;
 
+  bool mIsHandlingUserInput;
+
+  /**
+   * The number of user inputs since the start of the process. Used to
+   * determine whether the current iteration has triggered a
+   * (JS-implemented) user input.
+   */
+  uint64_t mUserInputCount;
 
   /**********************************************************
    *
@@ -339,10 +347,13 @@ protected:
    *   calls to `StopwatchStart` and `StopwatchCommit`.
    * @param cycles The total number of cycles for this thread
    *   between the calls to `StopwatchStart` and `StopwatchCommit`.
+   * @param isJankVisible If `true`, expect that the user will notice
+   *   any slowdown.
    * @param group The group containing the data to commit.
    */
   void CommitGroup(uint64_t iteration,
                    uint64_t userTime, uint64_t systemTime,  uint64_t cycles,
+                   bool isJankVisible,
                    nsPerformanceGroup* group);
 
 
@@ -374,6 +385,23 @@ protected:
   bool mIsMonitoringPerCompartment;
 
 
+  /**********************************************************
+   *
+   * Determining whether jank is user-visible.
+   */
+
+  /**
+   * `true` if we believe that any slowdown can cause a noticeable
+   * delay in handling user-input.
+   *
+   * In the current implementation, we return `true` if the latest
+   * user input was less than MAX_DURATION_OF_INTERACTION_MS ago. This
+   * includes all inputs (mouse, keyboard, other devices), with the
+   * exception of mousemove.
+   */
+  bool IsHandlingUserInput();
+
+
 public:
   /**********************************************************
    *
@@ -393,7 +421,7 @@ public:
    * Clear the set of pending alerts and dispatch the pending alerts
    * to observers.
    */
-  void NotifyJankObservers();
+  void NotifyJankObservers(const mozilla::Vector<uint64_t>& previousJankLevels);
 
 private:
   /**
@@ -444,6 +472,27 @@ private:
    * performance.
    */
   uint32_t mJankAlertBufferingDelay;
+
+  /**
+   * The threshold above which jank, as reported by the refresh drivers,
+   * is considered user-visible.
+   *
+   * A value of n means that any jank above 2^n ms will be considered
+   * user visible.
+   */
+  short mJankLevelVisibilityThreshold;
+
+  /**
+   * The number of microseconds during which we assume that a
+   * user-interaction can keep the code jank-critical. Any user
+   * interaction that lasts longer than this duration is expected to
+   * either have already caused jank or have caused a nested event
+   * loop.
+   *
+   * In either case, we consider that monitoring
+   * jank-during-interaction after this duration is useless.
+   */
+  uint64_t mMaxExpectedDurationOfInteractionUS;
 };
 
 
@@ -712,9 +761,18 @@ public:
   uint64_t HighestRecentCPOW();
 
   /**
-   * Reset highest recent CPOW/jank to 0.
+   * Record that this group has recently been involved in handling
+   * user input. Note that heuristics are involved here, so the
+   * result is not 100% accurate.
    */
-  void ResetHighest();
+  void RecordUserInput();
+  bool HasRecentUserInput();
+
+  /**
+   * Reset recent values (recent highest CPOW and jank, involvement in
+   * user input).
+   */
+  void ResetRecent();
 private:
   /**
    * The target used by observers to register for watching slow
@@ -735,6 +793,16 @@ private:
    * were last called, in microseconds.
    */
   uint64_t mHighestCPOW;
+
+  /**
+   * `true` if this group has been involved in handling user input,
+   * `false` otherwise.
+   *
+   * Note that we use heuristics to determine whether a group is
+   * involved in handling user input, so this value is not 100%
+   * accurate.
+   */
+  bool mHasRecentUserInput;
 
   /**
    * `true` if this group has caused a performance alert and this alert

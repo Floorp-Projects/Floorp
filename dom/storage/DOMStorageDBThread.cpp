@@ -65,6 +65,34 @@ Scheme0Scope(DOMStorageCacheBridge* aCache)
     result.Append(':');
   }
 
+  // If there is more than just appid and/or inbrowser stored in origin
+  // attributes, put it to the schema 0 scope as well.  We must do that
+  // to keep the scope column unique (same resolution as schema 1 has
+  // with originAttributes and originKey columns) so that switch between
+  // schema 1 and 0 always works in both ways.
+  nsAutoCString remaining;
+  oa.mAppId = 0;
+  oa.mInBrowser = false;
+  oa.CreateSuffix(remaining);
+  if (!remaining.IsEmpty()) {
+    MOZ_ASSERT(!suffix.IsEmpty());
+
+    if (result.IsEmpty()) {
+      // Must contain the old prefix, otherwise we won't search for the whole
+      // origin attributes suffix.
+      result.Append(NS_LITERAL_CSTRING("0:f:"));
+    }
+    // Append the whole origin attributes suffix despite we have already stored
+    // appid and inbrowser.  We are only looking for it when the scope string
+    // starts with "$appid:$inbrowser:" (with whatever valid values).
+    //
+    // The OriginAttributes suffix is a string in a form like:
+    // "^addonId=101&userContextId=5" and it's ensured it always starts with '^'
+    // and never contains ':'.  See OriginAttributes::CreateSuffix.
+    result.Append(suffix);
+    result.Append(':');
+  }
+
   result.Append(aCache->OriginNoSuffix());
 
   return result;
@@ -442,10 +470,8 @@ DOMStorageDBThread::OpenDatabaseConnection()
 }
 
 nsresult
-DOMStorageDBThread::InitDatabase()
+DOMStorageDBThread::OpenAndUpdateDatabase()
 {
-  Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_INIT_DATABASE_MS> timer;
-
   nsresult rv;
 
   // Here we are on the worker thread. This opens the worker connection.
@@ -457,12 +483,40 @@ DOMStorageDBThread::InitDatabase()
   rv = TryJournalMode();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+DOMStorageDBThread::InitDatabase()
+{
+  Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_INIT_DATABASE_MS> timer;
+
+  nsresult rv;
+
+  // Here we are on the worker thread. This opens the worker connection.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  rv = OpenAndUpdateDatabase();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = DOMStorageDBUpdater::Update(mWorkerConnection);
+  if (NS_FAILED(rv)) {
+    // Update has failed, rather throw the database away and try
+    // opening and setting it up again.
+    rv = mWorkerConnection->Close();
+    mWorkerConnection = nullptr;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDatabaseFile->Remove(false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = OpenAndUpdateDatabase();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Create a read-only clone
   (void)mWorkerConnection->Clone(true, getter_AddRefs(mReaderConnection));
   NS_ENSURE_TRUE(mReaderConnection, NS_ERROR_FAILURE);
-
-  rv = DOMStorageDBUpdater::Update(mWorkerConnection);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Database open and all initiation operation are done.  Switching this flag
   // to true allow main thread to read directly from the database.
@@ -1153,32 +1207,6 @@ bool OriginPatternMatches(const nsACString& aOriginSuffix, const OriginAttribute
   return aPattern.Matches(oa);
 }
 
-PLDHashOperator
-ForgetUpdatesForOrigin(const nsACString& aMapping,
-                      nsAutoPtr<DOMStorageDBThread::DBOperation>& aPendingTask,
-                      void* aArg)
-{
-  DOMStorageDBThread::DBOperation* newOp = static_cast<DOMStorageDBThread::DBOperation*>(aArg);
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClear &&
-      (aPendingTask->OriginNoSuffix() != newOp->OriginNoSuffix() ||
-       aPendingTask->OriginSuffix() != newOp->OriginSuffix())) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClearMatchingOrigin &&
-      !StringBeginsWith(aPendingTask->OriginNoSuffix(), newOp->Origin())) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClearMatchingOriginAttributes &&
-      !OriginPatternMatches(aPendingTask->OriginSuffix(), newOp->OriginPattern())) {
-    return PL_DHASH_NEXT;
-  }
-
-  return PL_DHASH_REMOVE;
-}
-
 } // namespace
 
 bool
@@ -1250,7 +1278,28 @@ DOMStorageDBThread::PendingOperations::Add(DOMStorageDBThread::DBOperation* aOpe
     // We do this as an optimization as well as a must based on the logic,
     // if we would not delete the update tasks, changes would have been stored
     // to the database after clear operations have been executed.
-    mUpdates.Enumerate(ForgetUpdatesForOrigin, aOperation);
+    for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
+      nsAutoPtr<DBOperation>& pendingTask = iter.Data();
+
+      if (aOperation->Type() == DBOperation::opClear &&
+          (pendingTask->OriginNoSuffix() != aOperation->OriginNoSuffix() ||
+           pendingTask->OriginSuffix() != aOperation->OriginSuffix())) {
+        continue;
+      }
+
+      if (aOperation->Type() == DBOperation::opClearMatchingOrigin &&
+          !StringBeginsWith(pendingTask->OriginNoSuffix(), aOperation->Origin())) {
+        continue;
+      }
+
+      if (aOperation->Type() == DBOperation::opClearMatchingOriginAttributes &&
+          !OriginPatternMatches(pendingTask->OriginSuffix(), aOperation->OriginPattern())) {
+        continue;
+      }
+
+      iter.Remove();
+    }
+
     mClears.Put(aOperation->Target(), aOperation);
     break;
 
@@ -1267,20 +1316,6 @@ DOMStorageDBThread::PendingOperations::Add(DOMStorageDBThread::DBOperation* aOpe
   }
 }
 
-namespace {
-
-PLDHashOperator
-CollectTasks(const nsACString& aMapping, nsAutoPtr<DOMStorageDBThread::DBOperation>& aOperation, void* aArg)
-{
-  nsTArray<nsAutoPtr<DOMStorageDBThread::DBOperation> >* tasks =
-    static_cast<nsTArray<nsAutoPtr<DOMStorageDBThread::DBOperation> >*>(aArg);
-
-  tasks->AppendElement(aOperation.forget());
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 bool
 DOMStorageDBThread::PendingOperations::Prepare()
 {
@@ -1291,10 +1326,14 @@ DOMStorageDBThread::PendingOperations::Prepare()
   // scheduled, we drop all updates matching that scope. So,
   // all scope-related update operations we have here now were
   // scheduled after the clear operations.
-  mClears.Enumerate(CollectTasks, &mExecList);
+  for (auto iter = mClears.Iter(); !iter.Done(); iter.Next()) {
+    mExecList.AppendElement(iter.Data().forget());
+  }
   mClears.Clear();
 
-  mUpdates.Enumerate(CollectTasks, &mExecList);
+  for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
+    mExecList.AppendElement(iter.Data().forget());
+  }
   mUpdates.Clear();
 
   return !!mExecList.Length();

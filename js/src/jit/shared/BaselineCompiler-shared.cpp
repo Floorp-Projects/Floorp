@@ -89,12 +89,14 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
     uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
     if (phase == POST_INITIALIZE) {
         masm.store32(Imm32(frameFullSize), frameSizeAddress);
-        uint32_t descriptor = MakeFrameDescriptor(frameFullSize + argSize, JitFrame_BaselineJS);
+        uint32_t descriptor = MakeFrameDescriptor(frameFullSize + argSize, JitFrame_BaselineJS,
+                                                  ExitFrameLayout::Size());
         masm.push(Imm32(descriptor));
 
     } else if (phase == PRE_INITIALIZE) {
         masm.store32(Imm32(frameBaseSize), frameSizeAddress);
-        uint32_t descriptor = MakeFrameDescriptor(frameBaseSize + argSize, JitFrame_BaselineJS);
+        uint32_t descriptor = MakeFrameDescriptor(frameBaseSize + argSize, JitFrame_BaselineJS,
+                                                  ExitFrameLayout::Size());
         masm.push(Imm32(descriptor));
 
     } else {
@@ -117,7 +119,7 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
         masm.bind(&afterWrite);
         masm.store32(ICTailCallReg, frameSizeAddress);
         masm.add32(Imm32(argSize), ICTailCallReg);
-        masm.makeFrameDescriptor(ICTailCallReg, JitFrame_BaselineJS);
+        masm.makeFrameDescriptor(ICTailCallReg, JitFrame_BaselineJS, ExitFrameLayout::Size());
         masm.push(ICTailCallReg);
     }
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);

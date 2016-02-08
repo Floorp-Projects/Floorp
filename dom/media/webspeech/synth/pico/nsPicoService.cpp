@@ -640,10 +640,11 @@ nsPicoService::LoadEngine(PicoVoice* aVoice)
   }
 
   if (!mPicoMemArea) {
-    mPicoMemArea = new uint8_t[PICO_MEM_SIZE];
+    mPicoMemArea = MakeUnique<uint8_t[]>(PICO_MEM_SIZE);
   }
 
-  status = sPicoApi.pico_initialize(mPicoMemArea, PICO_MEM_SIZE, &mPicoSystem);
+  status = sPicoApi.pico_initialize(mPicoMemArea.get(),
+                                    PICO_MEM_SIZE, &mPicoSystem);
   PICO_ENSURE_SUCCESS_VOID("pico_initialize", status);
 
   status = sPicoApi.pico_loadResource(mPicoSystem, aVoice->mTaFile.get(), &mTaResource);

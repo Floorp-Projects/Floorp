@@ -19,7 +19,7 @@ function run_test()
   initTestDebuggerServer();
   DebuggerServer.addBrowserActors();
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(getRegistry);
+  gClient.connect().then(getRegistry);
   do_test_pending();
 }
 

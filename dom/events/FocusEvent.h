@@ -42,12 +42,12 @@ public:
 protected:
   ~FocusEvent() {}
 
-  nsresult InitFocusEvent(const nsAString& aType,
-                          bool aCanBubble,
-                          bool aCancelable,
-                          nsIDOMWindow* aView,
-                          int32_t aDetail,
-                          EventTarget* aRelatedTarget);
+  void InitFocusEvent(const nsAString& aType,
+                      bool aCanBubble,
+                      bool aCancelable,
+                      nsGlobalWindow* aView,
+                      int32_t aDetail,
+                      EventTarget* aRelatedTarget);
 };
 
 } // namespace dom

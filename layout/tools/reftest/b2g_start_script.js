@@ -49,5 +49,19 @@ setPermissions();
 var reftest = {};
 Cu.import("chrome://reftest/content/reftest.jsm", reftest);
 
-// Start the reftests
-reftest.OnRefTestLoad(win);
+// Prevent display off during testing.
+navigator.mozPower.screenEnabled = true;
+var settingLock = navigator.mozSettings.createLock();
+var settingResult = settingLock.set({
+  'screen.timeout': 0
+});
+settingResult.onsuccess = function () {
+  dump("Set screen.time to 0\n");
+  // Start the reftests
+  reftest.OnRefTestLoad(win);
+}
+settingResult.onerror = function () {
+  dump("Change screen.time failed\n");
+  // Start the reftests
+  reftest.OnRefTestLoad(win);
+}

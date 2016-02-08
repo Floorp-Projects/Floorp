@@ -1053,18 +1053,17 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
     }
 
     if (regionToUpdate) {
-      nsIntRegionRectIterator iter(*regionToUpdate);
-      const IntRect *iterRect;
-      while ((iterRect = iter.Next())) {
+      for (auto iter = regionToUpdate->RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& rect = iter.Get();
         D3D11_BOX box;
         box.front = 0;
         box.back = 1;
-        box.left = iterRect->x;
-        box.top = iterRect->y;
-        box.right = iterRect->XMost();
-        box.bottom = iterRect->YMost();
+        box.left = rect.x;
+        box.top = rect.y;
+        box.right = rect.XMost();
+        box.bottom = rect.YMost();
 
-        void* data = map.mData + map.mStride * iterRect->y + BytesPerPixel(aSurface->GetFormat()) * iterRect->x;
+        void* data = map.mData + map.mStride * rect.y + BytesPerPixel(aSurface->GetFormat()) * rect.x;
 
         mCompositor->GetDC()->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * mSize.height);
       }

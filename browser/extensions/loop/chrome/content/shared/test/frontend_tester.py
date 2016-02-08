@@ -18,6 +18,9 @@ DEBUG = False
 # for other browsers, though.
 #
 
+# This is the common directory segment, what you need to get from the
+# common path to the relative path location. Used to get the redirects
+# correct both locally and on the build systems.
 gCommonDir = None
 
 # These redirects map the paths expected by the index.html files to the paths
@@ -41,6 +44,9 @@ class ThreadingSimpleServer(SocketServer.ThreadingMixIn,
     pass
 
 
+# Overrides the simpler HTTP server handler to introduce redirects to map
+# files that are opened using absolete paths to ones which are relative
+# to the source tree.
 class HttpRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_HEAD(s):
         lastSlash = s.path.rfind("/")

@@ -96,9 +96,8 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
-                                      const nsAString &nickname,
-                                      nsIX509Cert **_rvCert)
+nsNSSCertificateDB::FindCertByNickname(const nsAString& nickname,
+                                       nsIX509Cert** _rvCert)
 {
   NS_ENSURE_ARG_POINTER(_rvCert);
   *_rvCert = nullptr;
@@ -127,9 +126,8 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP 
-nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
-                                   nsIX509Cert **_cert)
+NS_IMETHODIMP
+nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
 {
   NS_ENSURE_ARG_POINTER(aDBkey);
   NS_ENSURE_ARG(aDBkey[0]);
@@ -199,10 +197,9 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
 }
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken, 
-                                     uint32_t      aType,
-                                     uint32_t     *_count,
-                                     char16_t  ***_certNames)
+nsNSSCertificateDB::FindCertNicknames(uint32_t aType,
+                                      uint32_t* _count,
+                                      char16_t*** _certNames)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -660,75 +657,6 @@ loser:
   return nsrv;
 }
 
-NS_IMETHODIMP
-nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length, 
-                                            nsIInterfaceRequestor *ctx)
-
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  SECStatus srv = SECFailure;
-  nsresult nsrv = NS_OK;
-  ScopedCERTCertificate cert;
-  SECItem **rawCerts = nullptr;
-  int numcerts;
-  int i;
-  nsNSSCertTrust trust;
-  char *serverNickname = nullptr;
- 
-  PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  CERTDERCerts *certCollection = getCertsFromPackage(arena, data, length, locker);
-  if (!certCollection) {
-    PORT_FreeArena(arena, false);
-    return NS_ERROR_FAILURE;
-  }
-  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certCollection->rawCerts,
-                                 nullptr, false, true);
-  if (!cert) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-  numcerts = certCollection->numcerts;
-  rawCerts = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numcerts);
-  if ( !rawCerts ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-
-  for ( i = 0; i < numcerts; i++ ) {
-    rawCerts[i] = &certCollection->rawCerts[i];
-  }
-
-  serverNickname = DefaultServerNicknameForCert(cert.get());
-  srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageSSLServer,
-             numcerts, rawCerts, nullptr, true, false,
-             serverNickname);
-  PR_FREEIF(serverNickname);
-  if ( srv != SECSuccess ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-
-  trust.SetValidServerPeer();
-  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), cert.get(),
-                             trust.GetTrust());
-  if ( srv != SECSuccess ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-loser:
-  PORT_Free(rawCerts);
-  if (arena) 
-    PORT_FreeArena(arena, true);
-  return nsrv;
-}
-
 nsresult
 nsNSSCertificateDB::ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx,  const nsNSSShutDownPreventionLock &proofOfLock)
 {
@@ -1084,10 +1012,8 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
 }
 
 
-NS_IMETHODIMP 
-nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken, 
-                                        nsIFile *aFile,
-                                        uint32_t aType)
+NS_IMETHODIMP
+nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -1098,65 +1024,53 @@ nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken,
   switch (aType) {
     case nsIX509Cert::CA_CERT:
     case nsIX509Cert::EMAIL_CERT:
-    case nsIX509Cert::SERVER_CERT:
       // good
       break;
-    
+
     default:
       // not supported (yet)
       return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-  PRFileDesc *fd = nullptr;
-
-  rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-
-  if (NS_FAILED(rv))
+  PRFileDesc* fd = nullptr;
+  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  if (NS_FAILED(rv)) {
     return rv;
-
-  if (!fd)
+  }
+  if (!fd) {
     return NS_ERROR_FAILURE;
-
-  PRFileInfo file_info;
-  if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &file_info))
-    return NS_ERROR_FAILURE;
-  
-  unsigned char *buf = new unsigned char[file_info.size];
-  
-  int32_t bytes_obtained = PR_Read(fd, buf, file_info.size);
-  PR_Close(fd);
-  
-  if (bytes_obtained != file_info.size)
-    rv = NS_ERROR_FAILURE;
-  else {
-	  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-
-    switch (aType) {
-      case nsIX509Cert::CA_CERT:
-        rv = ImportCertificates(buf, bytes_obtained, aType, cxt);
-        break;
-        
-      case nsIX509Cert::SERVER_CERT:
-        rv = ImportServerCertificate(buf, bytes_obtained, cxt);
-        break;
-
-      case nsIX509Cert::EMAIL_CERT:
-        rv = ImportEmailCertificate(buf, bytes_obtained, cxt);
-        break;
-      
-      default:
-        break;
-    }
   }
 
-  delete [] buf;
-  return rv;  
+  PRFileInfo fileInfo;
+  if (PR_GetOpenFileInfo(fd, &fileInfo) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto buf = MakeUnique<unsigned char[]>(fileInfo.size);
+  int32_t bytesObtained = PR_Read(fd, buf.get(), fileInfo.size);
+  PR_Close(fd);
+
+  if (bytesObtained != fileInfo.size) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+
+  switch (aType) {
+    case nsIX509Cert::CA_CERT:
+      return ImportCertificates(buf.get(), bytesObtained, aType, cxt);
+    case nsIX509Cert::EMAIL_CERT:
+      return ImportEmailCertificate(buf.get(), bytesObtained, cxt);
+    default:
+      MOZ_ASSERT(false, "Unsupported type should have been filtered out");
+      break;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::ImportPKCS12File(nsISupports *aToken, 
-                                     nsIFile *aFile)
+nsNSSCertificateDB::ImportPKCS12File(nsISupports* aToken, nsIFile* aFile)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -1173,10 +1087,10 @@ nsNSSCertificateDB::ImportPKCS12File(nsISupports *aToken,
 }
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::ExportPKCS12File(nsISupports     *aToken, 
-                                     nsIFile          *aFile,
-                                     uint32_t          count,
-                                     nsIX509Cert     **certs)
+nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
+                                     nsIFile* aFile,
+                                     uint32_t count,
+                                     nsIX509Cert** certs)
                                      //const char16_t **aCertNames)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1343,20 +1257,21 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
+                                           nsIX509Cert** _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
+
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   ScopedCERTCertList certlist(
       PK11_FindCertsFromEmailAddress(aEmailAddress, nullptr));
   if (!certlist)
-    return NS_ERROR_FAILURE;  
+    return NS_ERROR_FAILURE;
 
   // certlist now contains certificates with the right email address,
   // but they might not have the correct usage or might even be invalid

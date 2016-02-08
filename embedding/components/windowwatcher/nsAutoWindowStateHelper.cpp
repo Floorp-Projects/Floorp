@@ -20,7 +20,7 @@ using namespace mozilla::dom;
  ****************** nsAutoWindowStateHelper *********************
  ****************************************************************/
 
-nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsPIDOMWindow* aWindow)
+nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsPIDOMWindowOuter* aWindow)
   : mWindow(aWindow)
   , mDefaultEnabled(DispatchEventToChrome("DOMWillOpenModalDialog"))
 {

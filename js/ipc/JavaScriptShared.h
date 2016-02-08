@@ -155,10 +155,10 @@ class JavaScriptShared : public CPOWManager
     bool toSymbolVariant(JSContext* cx, JS::Symbol* sym, SymbolVariant* symVarp);
     JS::Symbol* fromSymbolVariant(JSContext* cx, SymbolVariant symVar);
 
-    bool fromDescriptor(JSContext* cx, JS::Handle<JSPropertyDescriptor> desc,
+    bool fromDescriptor(JSContext* cx, JS::Handle<JS::PropertyDescriptor> desc,
                         PPropertyDescriptor* out);
     bool toDescriptor(JSContext* cx, const PPropertyDescriptor& in,
-                      JS::MutableHandle<JSPropertyDescriptor> out);
+                      JS::MutableHandle<JS::PropertyDescriptor> out);
 
     bool toObjectOrNullVariant(JSContext* cx, JSObject* obj, ObjectOrNullVariant* objVarp);
     JSObject* fromObjectOrNullVariant(JSContext* cx, ObjectOrNullVariant objVar);

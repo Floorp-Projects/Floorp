@@ -265,8 +265,7 @@ static nscoord
 GetMaxOptionBSize(nsIFrame* aContainer, WritingMode aWM)
 {
   nscoord result = 0;
-  for (nsIFrame* option = aContainer->GetFirstPrincipalChild();
-       option; option = option->GetNextSibling()) {
+  for (nsIFrame* option : aContainer->PrincipalChildList()) {
     nscoord optionBSize;
     if (nsCOMPtr<nsIDOMHTMLOptGroupElement>
         (do_QueryInterface(option->GetContent()))) {
@@ -932,11 +931,13 @@ void
 nsListControlFrame::SetInitialChildList(ChildListID    aListID,
                                         nsFrameList&   aChildList)
 {
-  // First check to see if all the content has been added
-  mIsAllContentHere = mContent->IsDoneAddingChildren();
-  if (!mIsAllContentHere) {
-    mIsAllFramesHere    = false;
-    mHasBeenInitialized = false;
+  if (aListID == kPrincipalList) {
+    // First check to see if all the content has been added
+    mIsAllContentHere = mContent->IsDoneAddingChildren();
+    if (!mIsAllContentHere) {
+      mIsAllFramesHere    = false;
+      mHasBeenInitialized = false;
+    }
   }
   nsHTMLScrollFrame::SetInitialChildList(aListID, aChildList);
 

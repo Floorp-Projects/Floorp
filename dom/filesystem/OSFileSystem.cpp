@@ -35,7 +35,7 @@ OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 }
 
 void
-OSFileSystem::Init(nsPIDOMWindow* aWindow)
+OSFileSystem::Init(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(!mWindow, "No duple Init() calls");
@@ -43,7 +43,7 @@ OSFileSystem::Init(nsPIDOMWindow* aWindow)
   mWindow = aWindow;
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 OSFileSystem::GetWindow() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");

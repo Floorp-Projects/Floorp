@@ -7,7 +7,6 @@
 #ifndef nsWindowRoot_h__
 #define nsWindowRoot_h__
 
-class nsPIDOMWindow;
 class nsIDOMEvent;
 class nsIGlobalObject;
 
@@ -23,7 +22,7 @@ class nsIGlobalObject;
 class nsWindowRoot final : public nsPIWindowRoot
 {
 public:
-  explicit nsWindowRoot(nsPIDOMWindow* aWindow);
+  explicit nsWindowRoot(nsPIDOMWindowOuter* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
@@ -42,7 +41,7 @@ public:
 
   // nsPIWindowRoot
 
-  virtual nsPIDOMWindow* GetWindow() override;
+  virtual nsPIDOMWindowOuter* GetWindow() override;
 
   virtual nsresult GetControllers(nsIControllers** aResult) override;
   virtual nsresult GetControllerForCommand(const char * aCommand,
@@ -59,7 +58,7 @@ public:
     mParent = aTarget;
   }
   virtual mozilla::dom::EventTarget* GetParentTarget() override { return mParent; }
-  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   nsIGlobalObject* GetParentObject();
@@ -82,7 +81,7 @@ protected:
                                                 nsTArray<nsCString>& aDisabledCommands);
 
   // Members
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   // We own the manager, which owns event listeners attached to us.
   RefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
@@ -95,6 +94,6 @@ protected:
 };
 
 extern already_AddRefed<mozilla::dom::EventTarget>
-NS_NewWindowRoot(nsPIDOMWindow* aWindow);
+NS_NewWindowRoot(nsPIDOMWindowOuter* aWindow);
 
 #endif

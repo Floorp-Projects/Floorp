@@ -52,7 +52,7 @@ public:
 
   // ========= Begin WebIDL bindings. ===========
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   virtual JSObject*

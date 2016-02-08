@@ -15,18 +15,17 @@ try:
 
         def initialize_options(self):
             TestCommand.initialize_options(self)
-            self.pytest_args = None
+            self.pytest_args = []
 
         def finalize_options(self):
             TestCommand.finalize_options(self)
-            self.test_args = []
-            self.test_suite = True
+            #self.test_args = []
+            #self.test_suite = True
 
         def run_tests(self):
             # import here, because outside the eggs aren't loaded
             import pytest
-            errno = pytest.main(self.pytest_args)
-            sys.exit(errno)
+            sys.exit(pytest.main(self.pytest_args))
 
     setup_params = {
         'entry_points': {
@@ -61,7 +60,24 @@ def read_file(*paths):
 long_description = read_file('docs', 'index.rst')
 long_description = long_description.strip().split('split here', 1)[0]
 # Add release history
-long_description += "\n\n" + read_file('docs', 'changes.rst')
+changes = read_file('docs', 'changes.rst')
+# Only report last two releases for brevity
+releases_found = 0
+change_lines = []
+for line in changes.splitlines():
+    change_lines.append(line)
+    if line.startswith('--------------'):
+        releases_found += 1
+    if releases_found > 2:
+        break
+
+changes = '\n'.join(change_lines[:-2]) + '\n'
+changes += '`Full Changelog <https://virtualenv.pypa.io/en/latest/changes.html>`_.'
+# Replace issue/pull directives
+changes = re.sub(r':pull:`(\d+)`', r'PR #\1', changes)
+changes = re.sub(r':issue:`(\d+)`', r'#\1', changes)
+
+long_description += '\n\n' + changes
 
 
 def get_version():
@@ -97,6 +113,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
     keywords='setuptools deployment installation distutils',
     author='Ian Bicking',

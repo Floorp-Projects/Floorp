@@ -133,7 +133,7 @@ static uint64_t gCounterID = 0;
 typedef nsClassHashtable<nsUint32HashKey, DataStoreInfo> HashApp;
 
 void
-RejectPromise(nsPIDOMWindow* aWindow, Promise* aPromise, nsresult aRv)
+RejectPromise(nsPIDOMWindowInner* aWindow, Promise* aPromise, nsresult aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(NS_FAILED(aRv));
@@ -160,32 +160,26 @@ DeleteDatabase(const nsAString& aName,
   db->Delete();
 }
 
-PLDHashOperator
-DeleteDataStoresAppEnumerator(
-                             const uint32_t& aAppId,
-                             nsAutoPtr<DataStoreInfo>& aInfo,
-                             void* aUserData)
+static void
+DeleteDataStoresHelper(nsClassHashtable<nsStringHashKey, HashApp>& aStores,
+                       uint32_t aAppId)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  auto* appId = static_cast<uint32_t*>(aUserData);
-  if (*appId != aAppId) {
-    return PL_DHASH_NEXT;
+  for (auto iter1 = aStores.Iter(); !iter1.Done(); iter1.Next()) {
+    nsAutoPtr<HashApp>& apps = iter1.Data();
+    for (auto iter2 = apps->Iter(); !iter2.Done(); iter2.Next()) {
+      if (aAppId == iter2.Key()) {
+        nsAutoPtr<DataStoreInfo>& info = iter2.Data();
+        DeleteDatabase(info->mName, info->mManifestURL);
+        iter2.Remove();
+      }
+    }
+
+    if (apps->Count() == 0) {
+      iter1.Remove();
+    }
   }
-
-  DeleteDatabase(aInfo->mName, aInfo->mManifestURL);
-  return PL_DHASH_REMOVE;
-}
-
-PLDHashOperator
-DeleteDataStoresEnumerator(const nsAString& aName,
-                           nsAutoPtr<HashApp>& aApps,
-                           void* aUserData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  aApps->Enumerate(DeleteDataStoresAppEnumerator, aUserData);
-  return aApps->Count() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
 }
 
 void
@@ -323,7 +317,7 @@ HomeScreenPrefCallback(const char* aPrefName, void* /* aClosure */)
 class PendingRequest
 {
 public:
-  void Init(nsPIDOMWindow* aWindow, Promise* aPromise,
+  void Init(nsPIDOMWindowInner* aWindow, Promise* aPromise,
             const nsTArray<DataStoreInfo>& aStores,
             const nsTArray<nsString>& aPendingDataStores)
   {
@@ -333,7 +327,7 @@ public:
     mPendingDataStores = aPendingDataStores;
   }
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Promise> mPromise;
   nsTArray<DataStoreInfo> mStores;
 
@@ -793,7 +787,7 @@ DataStoreService::InstallAccessDataStore(uint32_t aAppId,
 }
 
 NS_IMETHODIMP
-DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
+DataStoreService::GetDataStores(mozIDOMWindow* aWindow,
                                 const nsAString& aName,
                                 const nsAString& aOwner,
                                 nsISupports** aDataStores)
@@ -801,7 +795,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
   // FIXME This will be a thread-safe method.
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
   if (!window) {
     return NS_ERROR_FAILURE;
   }
@@ -867,7 +861,8 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
 }
 
 void
-DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
+DataStoreService::GetDataStoresCreate(nsPIDOMWindowInner* aWindow,
+                                      Promise* aPromise,
                                       const nsTArray<DataStoreInfo>& aStores)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -900,7 +895,7 @@ DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
 }
 
 void
-DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
+DataStoreService::GetDataStoresResolve(nsPIDOMWindowInner* aWindow,
                                        Promise* aPromise,
                                        const nsTArray<DataStoreInfo>& aStores)
 {
@@ -1164,8 +1159,8 @@ DataStoreService::DeleteDataStores(uint32_t aAppId)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  mStores.Enumerate(DeleteDataStoresEnumerator, &aAppId);
-  mAccessStores.Enumerate(DeleteDataStoresEnumerator, &aAppId);
+  DeleteDataStoresHelper(mStores, aAppId);
+  DeleteDataStoresHelper(mAccessStores, aAppId);
 }
 
 NS_IMETHODIMP

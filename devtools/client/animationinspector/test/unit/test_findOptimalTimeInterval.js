@@ -14,66 +14,64 @@ const {findOptimalTimeInterval} = require("devtools/client/animationinspector/ut
 // findOptimalTimeInterval function. Each object should have the following
 // properties:
 // - desc: an optional string that will be printed out
-// - timeScale: a number that represents how many pixels is 1ms
-// - minSpacing: an optional number that represents the minim space between 2
-//   time graduations
+// - minTimeInterval: a number that represents the minimum time in ms
+//   that should be displayed in one interval
 // - expectedInterval: a number that you expect the findOptimalTimeInterval
 //   function to return as a result.
 //   Optionally you can pass a string where `interval` is the calculated
 //   interval, this string will be eval'd and tested to be truthy.
 const TEST_DATA = [{
-  desc: "With 1px being 1ms and no minSpacing, expect the interval to be the " +
-        "interval multiple",
-  timeScale: 1,
-  minSpacing: undefined,
+  desc: "With no minTimeInterval, expect the interval to be 0",
+  minTimeInterval: null,
+  expectedInterval: 0
+}, {
+  desc: "With a minTimeInterval of 0 ms, expect the interval to be 0",
+  minTimeInterval: 0,
+  expectedInterval: 0
+}, {
+  desc: "With a minInterval of 1ms, expect the interval to be the 1ms too",
+  minTimeInterval: 1,
+  expectedInterval: 1
+}, {
+  desc: "With a very small minTimeInterval, expect the interval to be 1ms",
+  minTimeInterval: 1e-31,
+  expectedInterval: 1
+}, {
+  desc: "With a minInterval of 2.5ms, expect the interval to be 2.5ms too",
+  minTimeInterval: 2.5,
+  expectedInterval: 2.5
+}, {
+  desc: "With a minInterval of 5ms, expect the interval to be 5ms too",
+  minTimeInterval: 5,
+  expectedInterval: 5
+}, {
+  desc: "With a minInterval of 7ms, expect the interval to be the next " +
+        "multiple of 5",
+  minTimeInterval: 7,
+  expectedInterval: 10
+}, {
+  minTimeInterval: 20,
   expectedInterval: 25
 }, {
-  desc: "With 1px being 1ms and a custom minSpacing being a multiple of 25 " +
-        "expect the interval to be the custom min spacing",
-  timeScale: 1,
-  minSpacing: 50,
+  minTimeInterval: 33,
   expectedInterval: 50
 }, {
-  desc: "With 1px being 1ms and a custom minSpacing not being multiple of 25 " +
-        "expect the interval to be the next multiple of 10",
-  timeScale: 1,
-  minSpacing: 26,
-  expectedInterval: 50
+  minTimeInterval: 987,
+  expectedInterval: 1000
 }, {
-  desc: "If 1ms corresponds to a distance that is greater than the min " +
-        "spacing then, expect the interval to be this distance",
-  timeScale: 20,
-  minSpacing: undefined,
-  expectedInterval: 20
+  minTimeInterval: 1234,
+  expectedInterval: 2500
 }, {
-  desc: "If 1ms corresponds to a distance that is greater than the min " +
-        "spacing then, expect the interval to be this distance, even if it " +
-        "isn't a multiple of 25",
-  timeScale: 33,
-  minSpacing: undefined,
-  expectedInterval: 33
-}, {
-  desc: "If 1ms is a very small distance, then expect this distance to be " +
-        "multiplied by 25, 50, 100, 200, etc... until it goes over the min " +
-        "spacing",
-  timeScale: 0.001,
-  minSpacing: undefined,
-  expectedInterval: 12.8
-}, {
-  desc: "If the time scale is such that we need to iterate more than the " +
-        "maximum allowed number of iterations, then expect an interval lower " +
-        "than the minimum one",
-  timeScale: 1e-31,
-  minSpacing: undefined,
-  expectedInterval: "interval < 10"
+  minTimeInterval: 9800,
+  expectedInterval: 10000
 }];
 
 function run_test() {
-  for (let {timeScale, desc, minSpacing, expectedInterval} of TEST_DATA) {
-    do_print("Testing timeScale: " + timeScale + " and minSpacing: " +
-              minSpacing + ". Expecting " + expectedInterval + ".");
+  for (let {minTimeInterval, desc, expectedInterval} of TEST_DATA) {
+    do_print(`Testing minTimeInterval: ${minTimeInterval}.
+              Expecting ${expectedInterval}.`);
 
-    let interval = findOptimalTimeInterval(timeScale, minSpacing);
+    let interval = findOptimalTimeInterval(minTimeInterval);
     if (typeof expectedInterval == "string") {
       ok(eval(expectedInterval), desc);
     } else {

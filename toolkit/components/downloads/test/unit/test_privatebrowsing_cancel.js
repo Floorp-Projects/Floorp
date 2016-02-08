@@ -227,16 +227,16 @@ function run_test() {
   // Create all target files
   let fileD = tmpDir.clone();
   fileD.append(downloadDDest);
-  fileD.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileD.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let fileE = tmpDir.clone();
   fileE.append(downloadEDest);
-  fileE.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileE.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let fileF = tmpDir.clone();
   fileF.append(downloadFDest);
-  fileF.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileF.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let fileG = tmpDir.clone();
   fileG.append(downloadGDest);
-  fileG.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileG.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Create Download-D
   let dlD = addDownload(httpserv, {

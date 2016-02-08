@@ -23,12 +23,12 @@ NS_IMPL_RELEASE_INHERITED(TextTrackList, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrackList)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TextTrackList::TextTrackList(nsPIDOMWindow* aOwnerWindow)
+TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
 {
 }
 
-TextTrackList::TextTrackList(nsPIDOMWindow* aOwnerWindow,
+TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow,
                              TextTrackManager* aTextTrackManager)
  : DOMEventTargetHelper(aOwnerWindow)
  , mTextTrackManager(aTextTrackManager)

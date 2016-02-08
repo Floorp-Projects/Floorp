@@ -23,7 +23,7 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
 
-  static already_AddRefed<PresentationConnection> Create(nsPIDOMWindow* aWindow,
+  static already_AddRefed<PresentationConnection> Create(nsPIDOMWindowInner* aWindow,
                                                          const nsAString& aId,
                                                          PresentationConnectionState aState);
 
@@ -48,7 +48,7 @@ public:
   IMPL_EVENT_HANDLER(message);
 
 private:
-  PresentationConnection(nsPIDOMWindow* aWindow,
+  PresentationConnection(nsPIDOMWindowInner* aWindow,
                          const nsAString& aId,
                          PresentationConnectionState aState);
 

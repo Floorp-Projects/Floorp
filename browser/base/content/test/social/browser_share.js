@@ -205,53 +205,53 @@ var tests = {
     port.postMessage({topic: "test-init"});
     executeSoon(runOneTest);
   },
-  testShareMicrodata: function(next) {
+  testShareMicroformats: function(next) {
     SocialService.addProvider(manifest, function(provider) {
       let port = provider.getWorkerPort();
       let target, testTab;
 
       let expecting = JSON.stringify({
-        "url": "https://example.com/browser/browser/base/content/test/social/microdata.html",
-        "title": "My Blog",
-        "previews": [],
-        "microdata": {
+        "url": "https://example.com/browser/browser/base/content/test/social/microformats.html",
+        "title": "Raspberry Pi Page",
+        "previews": ["https://example.com/someimage.jpg"],
+        "microformats": {
           "items": [{
-              "types": ["http://schema.org/BlogPosting"],
+              "type": ["h-product"],
               "properties": {
-                "headline": ["Progress report"],
-                "datePublished": ["2013-08-29"],
-                "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html?comments=0"],
-                "comment": [{
-                    "types": ["http://schema.org/UserComments"],
+                "name": ["Raspberry Pi"],
+                "photo": ["https://example.com/someimage.jpg"],
+                "description": [{
+                    "value": "The Raspberry Pi is a credit-card sized computer that plugs into your TV and a keyboard. It's a capable little PC which can be used for many of the things that your desktop PC does, like spreadsheets, word-processing and games. It also plays high-definition video. We want to see it being used by kids all over the world to learn programming.",
+                    "html": "The Raspberry Pi is a credit-card sized computer that plugs into your TV and a keyboard. It's a capable little PC which can be used for many of the things that your desktop PC does, like spreadsheets, word-processing and games. It also plays high-definition video. We want to see it being used by kids all over the world to learn programming."
+                  }
+                ],
+                "url": ["https://example.com/"],
+                "price": ["£29.95"],
+                "review": [{
+                    "value": "4.5 out of 5",
+                    "type": ["h-review"],
                     "properties": {
-                      "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c1"],
-                      "creator": [{
-                          "types": ["http://schema.org/Person"],
-                          "properties": {
-                            "name": ["Greg"]
-                          }
-                        }
-                      ],
-                      "commentTime": ["2013-08-29"]
-                    }
-                  }, {
-                    "types": ["http://schema.org/UserComments"],
-                    "properties": {
-                      "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c2"],
-                      "creator": [{
-                          "types": ["http://schema.org/Person"],
-                          "properties": {
-                            "name": ["Charlotte"]
-                          }
-                        }
-                      ],
-                      "commentTime": ["2013-08-29"]
+                      "rating": ["4.5"]
                     }
                   }
-                ]
+                ],
+                "category": ["Computer", "Education"]
               }
             }
-          ]
+          ],
+          "rels": {
+            "tag": ["https://example.com/wiki/computer", "https://example.com/wiki/education"]
+          },
+          "rel-urls": {
+            "https://example.com/wiki/computer": {
+              "text": "Computer",
+              "rels": ["tag"]
+            },
+            "https://example.com/wiki/education": {
+              "text": "Education",
+              "rels": ["tag"]
+            }
+          }
         }
       });
 
@@ -259,15 +259,15 @@ var tests = {
         let topic = e.data.topic;
         switch (topic) {
           case "got-share-data-message":
-            is(JSON.stringify(e.data.result), expecting, "microdata data ok");
+            is(JSON.stringify(e.data.result), expecting, "microformats data ok");
             gBrowser.removeTab(testTab);
             SocialService.disableProvider(manifest.origin, next);
             break;
         }
       }
       port.postMessage({topic: "test-init"});
-  
-      let url = "https://example.com/browser/browser/base/content/test/social/microdata.html"
+
+      let url = "https://example.com/browser/browser/base/content/test/social/microformats.html"
       addTab(url, function(tab) {
         testTab = tab;
         let doc = tab.linkedBrowser.contentDocument;

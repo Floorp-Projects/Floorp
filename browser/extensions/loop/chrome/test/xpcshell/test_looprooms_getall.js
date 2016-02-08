@@ -6,12 +6,9 @@
 /* exported run_test */
 
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource:///modules/Chat.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 timerHandlers.startTimer = callback => callback();
-
-var openChatOrig = Chat.open;
 
 const kKey = "uGIs-kGbYt1hBBwjyW7MLQ";
 
@@ -147,8 +144,6 @@ function run_test() {
   Services.prefs.setCharPref("loop.key", kKey);
 
   do_register_cleanup(function() {
-    // Revert original Chat.open implementation
-    Chat.open = openChatOrig;
     Services.prefs.clearUserPref("loop.key");
     Services.prefs.clearUserPref("loop.key.fxa");
 

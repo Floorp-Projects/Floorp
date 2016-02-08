@@ -572,13 +572,15 @@ public class Favicons {
      * Useful for creating homescreen shortcuts without being limited
      * by possibly low-resolution values in the cache.
      *
+     * The icon will be scaled to the preferred Android launcher icon size.
+     *
      * Deduces the favicon URL from the browser database, guessing if necessary.
      *
      * @param url page URL to get a large favicon image for.
      * @param onFaviconLoadedListener listener to call back with the result.
      */
-    public static void getPreferredSizeFaviconForPage(Context context, String url, OnFaviconLoadedListener onFaviconLoadedListener) {
+    public static void getPreferredSizeFaviconForPage(Context context, String url, String iconURL, OnFaviconLoadedListener onFaviconLoadedListener) {
         int preferredSize = GeckoAppShell.getPreferredIconSize();
-        loadUncachedFavicon(context, url, null, 0, preferredSize, onFaviconLoadedListener);
+        loadUncachedFavicon(context, url, iconURL, 0, preferredSize, onFaviconLoadedListener);
     }
 }

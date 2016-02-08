@@ -25,7 +25,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileConnectionInfo)
 
-  explicit MobileConnectionInfo(nsPIDOMWindow* aWindow);
+  explicit MobileConnectionInfo(nsPIDOMWindowInner* aWindow);
 
   MobileConnectionInfo(const nsAString& aState, bool aConnected,
                        bool aEmergencyCallsOnly, bool aRoaming,
@@ -38,7 +38,7 @@ public:
   void
   Update(nsIMobileConnectionInfo* aInfo);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -109,7 +109,7 @@ private:
   bool mConnected;
   bool mEmergencyCallsOnly;
   bool mRoaming;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<MobileNetworkInfo> mNetworkInfo;
   RefPtr<MobileCellInfo> mCellInfo;
   Nullable<MobileConnectionState> mState;

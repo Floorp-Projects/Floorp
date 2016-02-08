@@ -205,7 +205,7 @@ GMPWrapper.prototype = {
   get updateDate() {
     let time = Number(GMPPrefs.get(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, null,
                                    this._plugin.id));
-    if (time !== NaN && this.isInstalled) {
+    if (!isNaN(time) && this.isInstalled) {
       return new Date(time * 1000)
     }
     return null;
@@ -537,7 +537,6 @@ var GMPProvider = {
     configureLogging();
     this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.GMP",
                                                           "GMPProvider.");
-    let telemetry = {};
     this.buildPluginList();
     this.ensureProperCDMInstallState();
 
@@ -578,14 +577,6 @@ var GMPProvider = {
                          e.name + " - sandboxing not available?", e);
         }
       }
-
-      if (this.isEnabled) {
-        telemetry[id] = {
-          userDisabled: wrapper.userDisabled,
-          version: wrapper.version,
-          applyBackgroundUpdates: wrapper.applyBackgroundUpdates,
-        };
-      }
     }
 
     var emeEnabled = Preferences.get(GMPPrefs.KEY_EME_ENABLED, false);
@@ -603,8 +594,6 @@ var GMPProvider = {
         this._log.warn("startup - adding clearkey CDM failed", e);
       }
     }
-
-    AddonManagerPrivate.setTelemetryDetails("GMP", telemetry);
   },
 
   shutdown: function() {

@@ -81,7 +81,7 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
 #elif defined(MOZ_WIDGET_GONK)
                 factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, forwarder, flags);
 #elif defined(GL_PROVIDER_GLX)
-                if (sGLXLibrary.UseSurfaceSharing())
+                if (sGLXLibrary.UseTextureFromPixmap())
                   factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
 #elif defined(MOZ_WIDGET_UIKIT)
                 factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, forwarder, mFlags);
@@ -114,6 +114,12 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
             default:
               break;
         }
+
+#ifdef GL_PROVIDER_GLX
+        if (!factory && sGLXLibrary.UseTextureFromPixmap()) {
+            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
+        }
+#endif
     }
 
     return factory;
@@ -840,7 +846,8 @@ DrawBuffer::Create(GLContext* const gl,
 
 DrawBuffer::~DrawBuffer()
 {
-    mGL->MakeCurrent();
+    if (!mGL->MakeCurrent())
+        return;
 
     GLuint fb = mFB;
     GLuint rbs[] = {
@@ -917,7 +924,8 @@ ReadBuffer::Create(GLContext* gl,
 
 ReadBuffer::~ReadBuffer()
 {
-    mGL->MakeCurrent();
+    if (!mGL->MakeCurrent())
+        return;
 
     GLuint fb = mFB;
     GLuint rbs[] = {

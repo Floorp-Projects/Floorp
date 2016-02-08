@@ -6,7 +6,7 @@ Telemetry behaviour is controlled through the preferences listed here.
 Default behaviors
 -----------------
 
-Sending only happens on official builds (i.e. with ``MOZILLA_OFFICIAL``set) with ``MOZ_TELEMETRY_REPORTING`` defined.
+Sending only happens on official builds (i.e. with ``MOZILLA_OFFICIAL`` set) with ``MOZ_TELEMETRY_REPORTING`` defined.
 All other builds drop all outgoing pings, so they will also not retry sending them later.
 
 Preferences
@@ -18,16 +18,6 @@ Preferences
 
   * Telemetry is always enabled and recording *base* data.
   * Telemetry will send additional ``main`` pings.
-
-``toolkit.telemetry.unifiedIsOptIn``
-
-  When true, we enable the Telemetry system only for people that opted into Telemetry, even if unified Telemetry is enabled.
-  Defaults to false & requires a restart.
-
-``toolkit.telemetry.optoutSample``
-
-  When true, we enable Telemetry opt-out for a sample of users when ``.unified`` and ``unifiedIsOptIn`` are on.
-  Defaults to false.
 
 ``toolkit.telemetry.enabled``
 
@@ -70,10 +60,6 @@ Data-choices notification
 ``datareporting.policy.dataSubmissionEnabled``
 
   This is the data submission master kill switch. If disabled, no policy is shown or upload takes place, ever.
-
-``datareporting.policy.dataSubmissionEnabled.v2``
-
-  If disabled, FHR v2 data will not be sent to Mozilla servers. Telemetry v4 data submission will not be affected. This is like ``datareporting.policy.dataSubmissionEnabled``, but only affects FHR - Telemetry upload will not be disabled.
 
 ``datareporting.policy.dataSubmissionPolicyNotifiedTime``
 

@@ -23,17 +23,17 @@
     <implementation implements="nsIDOMXULLabeledControlElement">
       <property name="label" onget="return this.getAttribute('label');">
         <setter>
-          this.setAttribute('label', val); 
+          this.setAttribute('label', val);
           var elt = document.getAnonymousElementByAttribute(this, "class", "fileFieldLabel");
           return (elt.value = val);
         </setter>
       </property>
-      
+
       <field name="_file">null</field>
       <property name="file"  onget="return this._file">
         <setter>
         <![CDATA[
-          this._file = val; 
+          this._file = val;
           if (val) {
             this.image = this._getIconURLForFile(val);
             this.label = this._getDisplayNameForFile(val);
@@ -42,11 +42,11 @@
             this.removeAttribute("image");
             var bundle = document.getAnonymousElementByAttribute(this, "anonid", "bundle");
             this.label = bundle.getString("downloadHelperNoneSelected");
-          }            
+          }
           return val;
         ]]>
         </setter>
-      </property>      
+      </property>
       <method name="_getDisplayNameForFile">
         <parameter name="aFile"/>
         <body>
@@ -77,7 +77,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="_getIconURLForFile">
         <parameter name="aFile"/>
         <body>
@@ -89,7 +89,7 @@
           var fph = ios.getProtocolHandler("file")
                        .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
           var urlspec = fph.getURLSpecFromFile(aFile);
-          return "moz-icon://" + urlspec + "?size=16";  
+          return "moz-icon://" + urlspec + "?size=16";
         ]]>
         </body>
       </method>

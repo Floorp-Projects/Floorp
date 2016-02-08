@@ -33,7 +33,7 @@ GCRuntime::poke()
 
 #ifdef JS_GC_ZEAL
     /* Schedule a GC to happen "soon" after a GC poke. */
-    if (zealMode == ZealPokeValue)
+    if (hasZealMode(ZealMode::Poke))
         nextScheduled = 1;
 #endif
 }

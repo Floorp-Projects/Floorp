@@ -536,7 +536,7 @@ nsBrowserElement::GetAllowedAudioChannels(
 
     MOZ_ASSERT(doc);
 
-    nsCOMPtr<nsIDOMWindow> win;
+    nsCOMPtr<mozIDOMWindowProxy> win;
     aRv = doc->GetDefaultView(getter_AddRefs(win));
     if (NS_WARN_IF(aRv.Failed())) {
       return;
@@ -544,11 +544,8 @@ nsBrowserElement::GetAllowedAudioChannels(
 
     MOZ_ASSERT(win);
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(win);
-
-    if (!window->IsInnerWindow()) {
-      window = window->GetCurrentInnerWindow();
-    }
+    auto* window = nsPIDOMWindowOuter::From(win);
+    nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
 
     nsCOMPtr<nsIMozBrowserFrame> mozBrowserFrame =
       do_QueryInterface(frameElement);
@@ -572,7 +569,7 @@ nsBrowserElement::GetAllowedAudioChannels(
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
             ("nsBrowserElement, GetAllowedAudioChannels, this = %p\n", this));
 
-    GenerateAllowedAudioChannels(window, frameLoader, mBrowserElementAPI,
+    GenerateAllowedAudioChannels(innerWindow, frameLoader, mBrowserElementAPI,
                                  manifestURL, parentApp,
                                  mBrowserElementAudioChannels, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -585,7 +582,7 @@ nsBrowserElement::GetAllowedAudioChannels(
 
 /* static */ void
 nsBrowserElement::GenerateAllowedAudioChannels(
-                 nsPIDOMWindow* aWindow,
+                 nsPIDOMWindowInner* aWindow,
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
                  const nsAString& aManifestURL,

@@ -75,10 +75,10 @@ if (typeof assertErrorMessage === 'undefined') {
                 throw new Error("Assertion failed: expected exception " + ctor.name + ", got " + e);
             if (typeof test == "string") {
                 if (test != e.message)
-                    throw new Error("Assertion failed: expeceted " + test + ", got " + e.message);
+                    throw new Error("Assertion failed: expected " + test + ", got " + e.message);
             } else {
                 if (!test.test(e.message))
-                    throw new Error("Assertion failed: expeceted " + test.toString() + ", got " + e.message);
+                    throw new Error("Assertion failed: expected " + test.toString() + ", got " + e.message);
             }
             return;
         }

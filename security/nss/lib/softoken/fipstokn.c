@@ -436,7 +436,7 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
     }
 
-    if ((envp = PR_GetEnv("NSS_ENABLE_AUDIT")) != NULL) {
+    if ((envp = PR_GetEnvSecure("NSS_ENABLE_AUDIT")) != NULL) {
 	sftk_audit_enabled = (atoi(envp) == 1);
     }
 

@@ -213,7 +213,7 @@ Blob::Blob(nsISupports* aParent, BlobImpl* aImpl)
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aParent);
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aParent);
     if (win) {
       MOZ_ASSERT(win->IsInnerWindow());
     }
@@ -259,7 +259,7 @@ Blob::ToFile()
 already_AddRefed<File>
 Blob::ToFile(const nsAString& aName, ErrorResult& aRv) const
 {
-  nsAutoTArray<RefPtr<BlobImpl>, 1> blobImpls;
+  AutoTArray<RefPtr<BlobImpl>, 1> blobImpls;
   blobImpls.AppendElement(mImpl);
 
   nsAutoString contentType;
@@ -602,7 +602,7 @@ File::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
   impl->InitializeChromeFile(window, aData, aBag, true, aRv);
@@ -630,7 +630,7 @@ File::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
   impl->InitializeChromeFile(window, aData, aBag, aRv);

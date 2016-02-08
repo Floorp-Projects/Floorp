@@ -28,12 +28,12 @@ protocol PFilePicker
   manager PBrowser;
 
 parent:
-    Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
-         nsString defaultExtension, nsString[] filters, nsString[] filterNames,
-         nsString displayDirectory);
+    async Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
+               nsString defaultExtension, nsString[] filters, nsString[] filterNames,
+               nsString displayDirectory);
 
 child:
-    __delete__(MaybeInputFiles files, int16_t result);
+    async __delete__(MaybeInputFiles files, int16_t result);
 };
 
 } // namespace dom

@@ -189,6 +189,7 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
+        facebookEnabled: false,
         roomData: { roomUrl: "http://invalid" },
         savingContext: false,
         show: true,
@@ -239,10 +240,31 @@ describe("loop.roomViews", function() {
           }));
       });
 
+    it("should not display the Facebook Share button when it is disabled in prefs",
+      function() {
+        view = mountTestComponent({
+          facebookEnabled: false
+        });
+
+        expect(view.getDOMNode().querySelectorAll(".btn-facebook"))
+          .to.have.length.of(0);
+      });
+
+    it("should display the Facebook Share button only when it is enabled in prefs",
+      function() {
+        view = mountTestComponent({
+          facebookEnabled: true
+        });
+
+        expect(view.getDOMNode().querySelectorAll(".btn-facebook"))
+          .to.have.length.of(1);
+      });
+
     it("should dispatch a FacebookShareRoomUrl action when the facebook button is clicked",
       function() {
         var url = "http://invalid";
         view = mountTestComponent({
+          facebookEnabled: true,
           roomData: {
             roomUrl: url
           }
@@ -331,6 +353,7 @@ describe("loop.roomViews", function() {
       props = _.extend({
         chatWindowDetached: false,
         dispatcher: dispatcher,
+        facebookEnabled: false,
         roomStore: roomStore,
         onCallTerminated: onCallTerminatedStub
       }, props);

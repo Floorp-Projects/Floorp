@@ -41,8 +41,10 @@ exports.AddonsComponent = React.createClass({
     let client = this.props.client;
     let targets = this.state.extensions;
     let name = Strings.GetStringFromName("extensions");
+    let debugDisabled = !Services.prefs.getBoolPref("devtools.chrome.enabled");
     return React.createElement("div", null,
-      React.createElement(TargetListComponent, { name, targets, client })
+      React.createElement(TargetListComponent,
+        { name, targets, client, debugDisabled })
     );
   },
 

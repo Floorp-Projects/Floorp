@@ -24,6 +24,7 @@
 #include "nsITimer.h"
 #include "nsString.h"
 
+#include "mozIDOMWindow.h"
 #include "mozStorageHelper.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"

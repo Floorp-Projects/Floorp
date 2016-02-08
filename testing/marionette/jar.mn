@@ -42,5 +42,4 @@ marionette.jar:
   content/MockFilePicker.jsm (../specialpowers/content/MockFilePicker.jsm)
   content/MockColorPicker.jsm (../specialpowers/content/MockColorPicker.jsm)
   content/MockPermissionPrompt.jsm (../specialpowers/content/MockPermissionPrompt.jsm)
-  content/MockPaymentsUIGlue.jsm (../specialpowers/content/MockPaymentsUIGlue.jsm)
   content/Assert.jsm (../modules/Assert.jsm)

@@ -12,7 +12,6 @@
 #include "nsIConsoleService.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMMessageEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
@@ -256,10 +255,10 @@ private:
 
 struct WindowAction
 {
-  nsPIDOMWindow* mWindow;
+  nsPIDOMWindowInner* mWindow;
   bool mDefaultAction;
 
-  MOZ_IMPLICIT WindowAction(nsPIDOMWindow* aWindow)
+  MOZ_IMPLICIT WindowAction(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow), mDefaultAction(true)
   { }
 
@@ -645,7 +644,7 @@ public:
   DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                    DOMEventTargetHelper* aTarget, bool aIsMainThread)
   {
-    nsCOMPtr<nsPIDOMWindow> parent;
+    nsCOMPtr<nsPIDOMWindowInner> parent;
     if (aIsMainThread) {
       parent = do_QueryInterface(aTarget->GetParentObject());
     }
@@ -711,17 +710,15 @@ public:
       domEvent = do_QueryObject(event);
     } else {
       RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
-      nsresult rv = event->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                            false /* non-bubbling */,
-                                            false /* cancelable */,
-                                            messageData,
-                                            EmptyString(),
-                                            EmptyString(),
-                                            nullptr);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        xpc::Throw(aCx, rv);
-        return false;
-      }
+      event->InitMessageEvent(nullptr,
+                              NS_LITERAL_STRING("message"),
+                              false /* non-bubbling */,
+                              false /* cancelable */,
+                              messageData,
+                              EmptyString(),
+                              EmptyString(),
+                              nullptr,
+                              nullptr);
       event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
                                           ports));
       domEvent = do_QueryObject(event);
@@ -791,18 +788,15 @@ private:
 
     RefPtr<MessageEvent> event = new MessageEvent(globalScope, nullptr,
                                                     nullptr);
-    nsresult rv =
-      event->InitMessageEvent(NS_LITERAL_STRING("message"),
-                              false, // canBubble
-                              true, // cancelable
-                              data,
-                              EmptyString(),
-                              EmptyString(),
-                              nullptr);
-    if (NS_FAILED(rv)) {
-      xpc::Throw(aCx, rv);
-      return false;
-    }
+    event->InitMessageEvent(nullptr,
+                            NS_LITERAL_STRING("message"),
+                            false, // canBubble
+                            true, // cancelable
+                            data,
+                            EmptyString(),
+                            EmptyString(),
+                            nullptr,
+                            nullptr);
     event->SetTrusted(true);
 
     nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
@@ -2229,11 +2223,25 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     aParent->CopyJSSettings(mJSSettings);
 
     MOZ_ASSERT(IsDedicatedWorker());
+    mNowBaseTimeStamp = aParent->NowBaseTimeStamp();
+    mNowBaseTimeHighRes = aParent->NowBaseTime();
   }
   else {
     AssertIsOnMainThread();
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
+
+    if (IsDedicatedWorker() && mLoadInfo.mWindow &&
+        mLoadInfo.mWindow->GetPerformance()) {
+      mNowBaseTimeStamp = mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
+        GetNavigationStartTimeStamp();
+      mNowBaseTimeHighRes =
+      mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
+        GetNavigationStartHighRes();
+    } else {
+      mNowBaseTimeStamp = CreationTimeStamp();
+      mNowBaseTimeHighRes = CreationTime();
+    }
   }
 }
 
@@ -2540,7 +2548,8 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Freeze(JSContext* aCx, nsPIDOMWindow* aWindow)
+WorkerPrivateParent<Derived>::Freeze(JSContext* aCx,
+                                     nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(aCx);
@@ -2598,7 +2607,7 @@ WorkerPrivateParent<Derived>::Freeze(JSContext* aCx, nsPIDOMWindow* aWindow)
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Thaw(JSContext* aCx, nsPIDOMWindow* aWindow)
+WorkerPrivateParent<Derived>::Thaw(JSContext* aCx, nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(aCx);
@@ -3133,14 +3142,14 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
 {
   AssertIsOnMainThread();
 
-  nsAutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
+  AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
   GetAllSharedWorkers(sharedWorkers);
 
   if (sharedWorkers.IsEmpty()) {
     return;
   }
 
-  nsAutoTArray<WindowAction, 10> windowActions;
+  AutoTArray<WindowAction, 10> windowActions;
   nsresult rv;
 
   // First fire the error event at all SharedWorker objects. This may include
@@ -3150,7 +3159,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     RefPtr<SharedWorker>& sharedWorker = sharedWorkers[index];
 
     // May be null.
-    nsPIDOMWindow* window = sharedWorker->GetOwner();
+    nsPIDOMWindowInner* window = sharedWorker->GetOwner();
 
     RootedDictionary<ErrorEventInit> errorInit(aCx);
     errorInit.mBubbles = false;
@@ -3261,7 +3270,7 @@ WorkerPrivateParent<Derived>::GetAllSharedWorkers(
 template <class Derived>
 void
 WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
-                                                         nsPIDOMWindow* aWindow)
+                                                    nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
@@ -3541,7 +3550,7 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
 
   AssertIsOnMainThread();
 
-  nsPIDOMWindow* outer = mLoadInfo.mWindow->GetOuterWindow();
+  nsPIDOMWindowOuter* outer = mLoadInfo.mWindow->GetOuterWindow();
   NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == mLoadInfo.mWindow,
                "Inner window no longer correct!");
 }
@@ -3718,7 +3727,7 @@ WorkerDebugger::GetUrl(nsAString& aResult)
 }
 
 NS_IMETHODIMP
-WorkerDebugger::GetWindow(nsIDOMWindow** aResult)
+WorkerDebugger::GetWindow(mozIDOMWindow** aResult)
 {
   AssertIsOnMainThread();
 
@@ -3731,7 +3740,7 @@ WorkerDebugger::GetWindow(nsIDOMWindow** aResult)
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
+  nsCOMPtr<nsPIDOMWindowInner> window = mWorkerPrivate->GetWindow();
   window.forget(aResult);
   return NS_OK;
 }
@@ -4099,7 +4108,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
 
 // static
 nsresult
-WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
+WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                            WorkerPrivate* aParent, const nsAString& aScriptURL,
                            bool aIsChromeWorker,
                            LoadGroupBehavior aLoadGroupBehavior,
@@ -4193,7 +4202,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     }
 
     // See if we're being called from a window.
-    nsCOMPtr<nsPIDOMWindow> globalWindow = aWindow;
+    nsCOMPtr<nsPIDOMWindowInner> globalWindow = aWindow;
     if (!globalWindow) {
       nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
         nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(aCx));
@@ -4208,8 +4217,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     if (globalWindow) {
       // Only use the current inner window, and only use it if the caller can
       // access it.
-      nsPIDOMWindow* outerWindow = globalWindow->GetOuterWindow();
-      if (outerWindow) {
+      if (nsPIDOMWindowOuter* outerWindow = globalWindow->GetOuterWindow()) {
         loadInfo.mWindow = outerWindow->GetCurrentInnerWindow();
         // TODO: fix this for SharedWorkers with multiple documents (bug 1177935)
         loadInfo.mServiceWorkersTestingInWindow =
@@ -5160,7 +5168,7 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
     }
   }
 
-  nsAutoTArray<ParentType*, 10> children;
+  AutoTArray<ParentType*, 10> children;
   children.AppendElements(mChildWorkers);
 
   for (uint32_t index = 0; index < children.Length(); index++) {
@@ -5957,7 +5965,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
                         (now - actual_now).ToMilliseconds()));
   }
 
-  nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
+  AutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
     nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
     if (info->mTargetTime > now) {

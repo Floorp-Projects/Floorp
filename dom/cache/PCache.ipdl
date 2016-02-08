@@ -22,12 +22,12 @@ protocol PCache
   manages PCachePushStream;
 
 parent:
-  PCacheOp(CacheOpArgs aOpArgs);
-  PCachePushStream();
-  Teardown();
+  async PCacheOp(CacheOpArgs aOpArgs);
+  async PCachePushStream();
+  async Teardown();
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 } // namespace cache

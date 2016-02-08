@@ -12,7 +12,7 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function(aType, aTraits) {
+  gClient.connect().then(function(aType, aTraits) {
     attachTestTab(gClient, "test-1", test_attach);
   });
   do_test_pending();

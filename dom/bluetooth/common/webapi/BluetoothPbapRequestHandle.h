@@ -30,9 +30,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothPbapRequestHandle)
 
   static already_AddRefed<BluetoothPbapRequestHandle>
-    Create(nsPIDOMWindow* aOwner);
+    Create(nsPIDOMWindowInner* aOwner);
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwner;
   }
@@ -52,10 +52,10 @@ public:
                                                    ErrorResult& aRv);
 
 private:
-  BluetoothPbapRequestHandle(nsPIDOMWindow* aOwner);
+  BluetoothPbapRequestHandle(nsPIDOMWindowInner* aOwner);
   ~BluetoothPbapRequestHandle();
 
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 };
 
 END_BLUETOOTH_NAMESPACE

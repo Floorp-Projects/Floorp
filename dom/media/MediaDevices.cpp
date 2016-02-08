@@ -144,7 +144,7 @@ already_AddRefed<Promise>
 MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
                            ErrorResult &aRv)
 {
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
   RefPtr<Promise> p = Promise::Create(go, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
@@ -160,7 +160,7 @@ MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
 already_AddRefed<Promise>
 MediaDevices::EnumerateDevices(ErrorResult &aRv)
 {
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
   RefPtr<Promise> p = Promise::Create(go, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);

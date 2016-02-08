@@ -786,6 +786,9 @@ TrackBuffersManager::ShutdownDemuxers()
     mAudioTracks.mDemuxer->BreakCycles();
     mAudioTracks.mDemuxer = nullptr;
   }
+  // We shouldn't change mInputDemuxer while a demuxer init/reset request is
+  // being processed. See bug 1239983.
+  MOZ_DIAGNOSTIC_ASSERT(!mDemuxerInitRequest.Exists());
   mInputDemuxer = nullptr;
   mLastParsedEndTime.reset();
 }
@@ -843,6 +846,9 @@ TrackBuffersManager::OnDemuxerResetDone(nsresult)
     RejectAppend(NS_ERROR_ABORT, __func__);
     return;
   }
+  // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
+  // request was being processed. See bug 1239983.
+  MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
 
   // Recreate track demuxers.
   uint32_t numVideos = mInputDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
@@ -918,6 +924,9 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     RejectAppend(NS_ERROR_ABORT, __func__);
     return;
   }
+  // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
+  // request was being processed. See bug 1239983.
+  MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
 
   MediaInfo info;
 
@@ -927,6 +936,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     mVideoTracks.mDemuxer = mInputDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
     MOZ_ASSERT(mVideoTracks.mDemuxer);
     info.mVideo = *mVideoTracks.mDemuxer->GetInfo()->GetAsVideoInfo();
+    info.mVideo.mTrackId = 2;
   }
 
   uint32_t numAudios = mInputDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
@@ -935,6 +945,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     mAudioTracks.mDemuxer = mInputDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
     MOZ_ASSERT(mAudioTracks.mDemuxer);
     info.mAudio = *mAudioTracks.mDemuxer->GetInfo()->GetAsAudioInfo();
+    info.mAudio.mTrackId = 1;
   }
 
   int64_t videoDuration = numVideos ? info.mVideo.mDuration : 0;

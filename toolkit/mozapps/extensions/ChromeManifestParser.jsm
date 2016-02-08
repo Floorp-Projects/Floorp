@@ -80,14 +80,14 @@ this.ChromeManifestParser = {
     lines.forEach(parseLine.bind(this));
     return data;
   },
-  
+
   _readFromJar: function(aURI) {
     let data = "";
     let entries = [];
     let readers = [];
-    
+
     try {
-      // Deconstrict URI, which can be nested jar: URIs. 
+      // Deconstrict URI, which can be nested jar: URIs.
       let uri = aURI.clone();
       while (uri instanceof Ci.nsIJARURI) {
         entries.push(uri.JAREntry);
@@ -99,7 +99,7 @@ this.ChromeManifestParser = {
                    createInstance(Ci.nsIZipReader);
       reader.open(uri.QueryInterface(Ci.nsIFileURL).file);
       readers.push(reader);
-  
+
       // Open the nested jars.
       for (let i = entries.length - 1; i > 0; i--) {
         let innerReader = Cc["@mozilla.org/libjar/zip-reader;1"].
@@ -108,7 +108,7 @@ this.ChromeManifestParser = {
         readers.push(innerReader);
         reader = innerReader;
       }
-      
+
       // First entry is the actual file we want to read.
       let zis = reader.getInputStream(entries[0]);
       data = NetUtil.readInputStreamToString(zis, zis.available());
@@ -120,15 +120,15 @@ this.ChromeManifestParser = {
         flushJarCache(readers[i].file);
       }
     }
-    
+
     return data;
   },
-  
+
   _readFromFile: function(aURI) {
     let file = aURI.QueryInterface(Ci.nsIFileURL).file;
     if (!file.exists() || !file.isFile())
       return "";
-    
+
     let data = "";
     let fis = Cc["@mozilla.org/network/file-input-stream;1"].
               createInstance(Ci.nsIFileInputStream);

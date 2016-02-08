@@ -1,5 +1,7 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Ensure that only panels that are relevant to the addon debugger
 // display in the toolbox
@@ -8,22 +10,19 @@ const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
 
 var gAddon, gClient, gThreadClient, gDebugger, gSources;
 var PREFS = [
-  "devtools.canvasdebugger.enabled",
-  "devtools.shadereditor.enabled",
-  "devtools.performance.enabled",
-  "devtools.netmonitor.enabled"
+  ["devtools.canvasdebugger.enabled", true],
+  ["devtools.shadereditor.enabled", true],
+  ["devtools.performance.enabled", true],
+  ["devtools.netmonitor.enabled", true],
+  ["devtools.scratchpad.enabled", true]
 ];
 function test() {
   Task.spawn(function*() {
+    // Store and enable all optional dev tools panels
+    yield pushPrefs(...PREFS);
+
     let addon = yield addAddon(ADDON_URL);
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
-
-    // Store and enable all optional dev tools panels
-    let originalPrefs = PREFS.map(pref => {
-      let original = Services.prefs.getBoolPref(pref);
-      Services.prefs.setBoolPref(pref, true)
-      return original;
-    });
 
     // Check only valid tabs are shown
     let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
@@ -43,8 +42,6 @@ function test() {
 
     yield addonDebugger.destroy();
     yield removeAddon(addon);
-
-    PREFS.forEach((pref, i) => Services.prefs.setBoolPref(pref, originalPrefs[i]));
 
     finish();
   });

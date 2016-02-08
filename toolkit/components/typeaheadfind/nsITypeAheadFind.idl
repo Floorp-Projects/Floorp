@@ -12,12 +12,13 @@
 
 /******************************** Declarations *******************************/
 
+interface mozIDOMWindow;
 interface nsIDocShell;
 
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(f4411c5b-761b-498c-8050-dcfc8311f69e)]
+[scriptable, uuid(c8ca2c38-7030-4453-ae63-a16eeb10e096)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -68,7 +69,7 @@ interface nsITypeAheadFind : nsISupports
                                         // Most recent elem found, if a link
   readonly attribute nsIDOMElement foundEditable;
                                         // Most recent elem found, if editable
-  readonly attribute nsIDOMWindow currentWindow;
+  readonly attribute mozIDOMWindow currentWindow;
                                         // Window of most recent match
 
 

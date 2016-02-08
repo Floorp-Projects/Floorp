@@ -1,4 +1,5 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft= javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1088,7 +1089,7 @@ Messages.Extended = function(messagePieces, options = {})
   }
 
   this._repeatID.quoteStrings = this._quoteStrings;
-  this._repeatID.messagePieces = messagePieces + "";
+  this._repeatID.messagePieces = JSON.stringify(messagePieces);
   this._repeatID.actors = new Set(); // using a set to avoid duplicates
 };
 

@@ -59,13 +59,14 @@ public:
   }
 
   // ImageCapture class members
-  nsPIDOMWindow* GetParentObject() { return GetOwner(); }
+  nsPIDOMWindowInner* GetParentObject() { return GetOwner(); }
 
   static already_AddRefed<ImageCapture> Constructor(const GlobalObject& aGlobal,
                                                     VideoStreamTrack& aTrack,
                                                     ErrorResult& aRv);
 
-  ImageCapture(VideoStreamTrack* aVideoStreamTrack, nsPIDOMWindow* aOwnerWindow);
+  ImageCapture(VideoStreamTrack* aVideoStreamTrack,
+               nsPIDOMWindowInner* aOwnerWindow);
 
   // Post a Blob event to script.
   nsresult PostBlobEvent(Blob* aBlob);

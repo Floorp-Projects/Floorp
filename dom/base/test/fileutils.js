@@ -36,7 +36,7 @@ function testFile(file, contents, test) {
                       [{ name: "hello", value: "world"},
                        { name: "myfile",
                          value: contents,
-                         fileName: file.name || "blob",
+                         fileName: file.name || "",
                          contentType: file.type || "application/octet-stream" }]);
     testHasRun();
   }

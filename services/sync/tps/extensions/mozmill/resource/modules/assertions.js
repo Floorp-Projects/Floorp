@@ -658,7 +658,10 @@ Expect.prototype.waitFor = function Expect_waitFor(aCallback, aMessage, aTimeout
   try {
     Assert.prototype.waitFor.apply(this, arguments);
   }
-  catch (ex if ex instanceof errors.AssertionError) {
+  catch (ex) {
+    if (!ex instanceof errors.AssertionError) {
+      throw ex;
+    }
     message = ex.message;
     condition = false;
   }

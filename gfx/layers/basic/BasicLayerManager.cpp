@@ -43,7 +43,7 @@
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion, etc
-#include "nsTArray.h"                   // for nsAutoTArray
+#include "nsTArray.h"                   // for AutoTArray
 #ifdef MOZ_ENABLE_SKIA
 #include "skia/include/core/SkCanvas.h"         // for SkCanvas
 #include "skia/include/core/SkBitmapDevice.h"   // for SkBitmapDevice
@@ -123,6 +123,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
       group.mMaskSurface = GetMaskForLayer(aLayer, &group.mMaskTransform);
       return group;
     }
+    aContext->Restore();
   }
 
   Matrix maskTransform;
@@ -456,9 +457,8 @@ MarkLayersHidden(Layer* aLayer, const IntRect& aClipRect,
     // content is opaque
     if ((aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
         (newFlags & ALLOW_OPAQUE)) {
-      nsIntRegionRectIterator it(region);
-      while (const IntRect* sr = it.Next()) {
-        r = *sr;
+      for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
+        r = iter.Get();
         TransformIntRect(r, transform, ToInsideIntRect);
 
         r.IntersectRect(r, newClipRect);
@@ -623,10 +623,9 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
 
     PaintLayer(mTarget, mRoot, aCallback, aCallbackData);
     if (!mRegionToClear.IsEmpty()) {
-      nsIntRegionRectIterator iter(mRegionToClear);
-      const IntRect *r;
-      while ((r = iter.Next())) {
-        mTarget->GetDrawTarget()->ClearRect(Rect(r->x, r->y, r->width, r->height));
+      for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& r = iter.Get();
+        mTarget->GetDrawTarget()->ClearRect(Rect(r.x, r.y, r.width, r.height));
       }
     }
     if (mWidget) {
@@ -899,7 +898,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
   } else {
     ContainerLayer* container =
         static_cast<ContainerLayer*>(aPaintContext.mLayer);
-    nsAutoTArray<Layer*, 12> children;
+    AutoTArray<Layer*, 12> children;
     container->SortChildrenBy3DZOrder(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
       Layer* layer = children.ElementAt(i);

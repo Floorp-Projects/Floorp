@@ -67,7 +67,7 @@ function DeferredSaveTester(aDataProvider) {
     };
 
   return tester;
-};
+}
 
 /**
  * Install a mock nsITimer factory that triggers on the next spin of

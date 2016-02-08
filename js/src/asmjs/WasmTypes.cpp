@@ -21,6 +21,7 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
+#include "asmjs/Wasm.h"
 #include "asmjs/WasmModule.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
@@ -252,8 +253,12 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
 
 CompileArgs::CompileArgs(ExclusiveContext* cx)
   :
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    useSignalHandlersForOOB(cx->canUseSignalHandlers()),
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+    // Signal-handling is only used to eliminate bounds checks when the OS page
+    // size is an even divisor of the WebAssembly page size.
+    useSignalHandlersForOOB(cx->canUseSignalHandlers() &&
+                            gc::SystemPageSize() <= PageSize &&
+                            PageSize % gc::SystemPageSize() == 0),
 #else
     useSignalHandlersForOOB(false),
 #endif

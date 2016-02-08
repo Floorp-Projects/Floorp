@@ -77,7 +77,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
 
   // We have interpreted the argument as a relative file URI, but the file
   // doesn't exist. Try URI fixup heuristics: see bug 290782.
- 
+
   try {
     uri = urifixup.createFixupURI(aArgument, 0);
   }
@@ -129,7 +129,7 @@ function needHomepageOverride(prefb) {
     // a way to make existing profiles retain the default that we removed.
     if (savedmstone)
       prefb.setBoolPref("browser.rights.3.shown", true);
-    
+
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
     prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
     return (savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE);
@@ -195,7 +195,7 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
 
     return wwatch.openWindow(parent, url, target, features, argstring);
   }
-  
+
   // Pass an array to avoid the browser "|"-splitting behavior.
   var argArray = Components.classes["@mozilla.org/supports-array;1"]
                     .createInstance(Components.interfaces.nsISupportsArray);

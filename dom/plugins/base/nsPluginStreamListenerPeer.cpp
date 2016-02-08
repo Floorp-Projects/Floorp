@@ -1236,8 +1236,7 @@ nsPluginStreamListenerPeer::GetInterfaceGlobal(const nsIID& aIID, void** result)
     nsCOMPtr<nsIDocument> doc;
     nsresult rv = owner->GetDocument(getter_AddRefs(doc));
     if (NS_SUCCEEDED(rv) && doc) {
-      nsPIDOMWindow *window = doc->GetWindow();
-      if (window) {
+      if  (nsPIDOMWindowOuter *window = doc->GetWindow()) {
         nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(window);
         nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(webNav);
         return ir->GetInterface(aIID, result);

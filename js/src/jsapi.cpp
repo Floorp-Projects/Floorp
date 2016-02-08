@@ -59,6 +59,7 @@
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
+#include "gc/Policy.h"
 #include "jit/JitCommon.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
@@ -928,7 +929,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
             newIdentity = &p->value().get().toObject();
 
             // When we remove origv from the wrapper map, its wrapper, newIdentity,
-            // must immediately cease to be a cross-compartment wrapper. Neuter it.
+            // must immediately cease to be a cross-compartment wrapper. Nuke it.
             destination->removeWrapper(p);
             NukeCrossCompartmentWrapper(cx, newIdentity);
 
@@ -2017,7 +2018,7 @@ JS_SetImmutablePrototype(JSContext *cx, JS::HandleObject obj, bool *succeeded)
 
 JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc)
+                                MutableHandle<PropertyDescriptor> desc)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2027,7 +2028,7 @@ JS_GetOwnPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
 
 JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
-                            MutableHandle<JSPropertyDescriptor> desc)
+                            MutableHandle<PropertyDescriptor> desc)
 {
     JSAtom* atom = Atomize(cx, name, strlen(name));
     if (!atom)
@@ -2038,7 +2039,7 @@ JS_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
 
 JS_PUBLIC_API(bool)
 JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name,
-                              MutableHandle<JSPropertyDescriptor> desc)
+                              MutableHandle<PropertyDescriptor> desc)
 {
     JSAtom* atom = AtomizeChars(cx, name, js_strlen(name));
     if (!atom)
@@ -2049,14 +2050,14 @@ JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* n
 
 JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
-                             MutableHandle<JSPropertyDescriptor> desc)
+                             MutableHandle<PropertyDescriptor> desc)
 {
     return GetPropertyDescriptor(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
-                         MutableHandle<JSPropertyDescriptor> desc)
+                         MutableHandle<PropertyDescriptor> desc)
 {
     JSAtom* atom = Atomize(cx, name, strlen(name));
     if (!atom)
@@ -2067,7 +2068,7 @@ JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
 
 static bool
 DefinePropertyByDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<JSPropertyDescriptor> desc, ObjectOpResult& result)
+                           Handle<PropertyDescriptor> desc, ObjectOpResult& result)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2078,14 +2079,14 @@ DefinePropertyByDescriptor(JSContext* cx, HandleObject obj, HandleId id,
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id,
-                      Handle<JSPropertyDescriptor> desc, ObjectOpResult& result)
+                      Handle<PropertyDescriptor> desc, ObjectOpResult& result)
 {
     return DefinePropertyByDescriptor(cx, obj, id, desc, result);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id,
-                      Handle<JSPropertyDescriptor> desc)
+                      Handle<PropertyDescriptor> desc)
 {
     ObjectOpResult result;
     return DefinePropertyByDescriptor(cx, obj, id, desc, result) &&
@@ -2338,7 +2339,7 @@ JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, double valu
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    Handle<JSPropertyDescriptor> desc,
+                    Handle<PropertyDescriptor> desc,
                     ObjectOpResult& result)
 {
     JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
@@ -2350,7 +2351,7 @@ JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    Handle<JSPropertyDescriptor> desc)
+                    Handle<PropertyDescriptor> desc)
 {
     JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
@@ -2884,7 +2885,7 @@ JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
 
 JS_PUBLIC_API(bool)
 JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS::HandleValueArray& args,
-              MutableHandleValue rval)
+              MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2906,12 +2907,12 @@ JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS:
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return js::Construct(cx, fval, cargs, newTargetVal, rval);
+    return js::Construct(cx, fval, cargs, newTargetVal, objp);
 }
 
 JS_PUBLIC_API(bool)
 JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
-              MutableHandleValue rval)
+              MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2927,7 +2928,7 @@ JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return js::Construct(cx, fval, cargs, fval, rval);
+    return js::Construct(cx, fval, cargs, fval, objp);
 }
 
 
@@ -3061,7 +3062,7 @@ DefineSelfHostedProperty(JSContext* cx, HandleObject obj, HandleId id,
             return false;
         }
         MOZ_ASSERT(setterValue.isObject() && setterValue.toObject().is<JSFunction>());
-        setterFunc = &getterValue.toObject().as<JSFunction>();
+        setterFunc = &setterValue.toObject().as<JSFunction>();
     }
     JSNative setterOp = JS_DATA_TO_FUNC_PTR(JSNative, setterFunc.get());
 
@@ -3201,7 +3202,7 @@ JS_PUBLIC_API(bool)
 JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
                                        HandleObject obj,
                                        HandleValue descObj,
-                                       MutableHandle<JSPropertyDescriptor> desc)
+                                       MutableHandle<PropertyDescriptor> desc)
 {
     if (!ToPropertyDescriptor(cx, descObj, true, desc))
         return false;
@@ -3455,8 +3456,9 @@ CreateNonSyntacticScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
 
     staticScopeObj.set(&globalLexical->staticBlock());
     if (!scopeChain.empty()) {
-        staticScopeObj.set(StaticNonSyntacticScope::create(cx, staticScopeObj));
-        if (!staticScopeObj)
+        Rooted<StaticNonSyntacticScope*> scope(cx,
+            StaticNonSyntacticScope::create(cx, staticScopeObj));
+        if (!scope)
             return false;
 
         // The XPConnect subscript loader, which may pass in its own dynamic
@@ -3477,10 +3479,11 @@ CreateNonSyntacticScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
         // TODOshu: disallow the subscript loader from using non-distinguished
         // objects as dynamic scopes.
         dynamicScopeObj.set(
-            cx->compartment()->getOrCreateNonSyntacticLexicalScope(cx, staticScopeObj,
-                                                                   dynamicScopeObj));
+            cx->compartment()->getOrCreateNonSyntacticLexicalScope(cx, scope, dynamicScopeObj));
         if (!dynamicScopeObj)
             return false;
+
+        staticScopeObj.set(scope);
     }
 
     return true;
@@ -3494,7 +3497,7 @@ IsFunctionCloneable(HandleFunction fun)
 
     // If a function was compiled to be lexically nested inside some other
     // script, we cannot clone it without breaking the compiler's assumptions.
-    if (JSObject* scope = fun->nonLazyScript()->enclosingStaticScope()) {
+    if (StaticScope* scope = fun->nonLazyScript()->enclosingStaticScope()) {
         // If the script is directly under the global scope, we can clone it.
         if (IsStaticGlobalLexicalScope(scope))
             return true;
@@ -3511,7 +3514,7 @@ IsFunctionCloneable(HandleFunction fun)
             if (block.needsClone())
                 return false;
 
-            JSObject* enclosing = block.enclosingStaticScope();
+            StaticScope* enclosing = block.enclosingScope();
 
             // If the script is an indirect eval that is immediately scoped
             // under the global, we can clone it.
@@ -4084,7 +4087,7 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 JS_PUBLIC_API(bool)
 JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
 {
-    static const size_t TINY_LENGTH = 25 * 1000;
+    static const size_t TINY_LENGTH = 5 * 1000;
     static const size_t HUGE_LENGTH = 100 * 1000;
 
     // These are heuristics which the caller may choose to ignore (e.g., for
@@ -4577,11 +4580,11 @@ JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& input
     if (!FillArgumentsFromArraylike(cx, args, inputArgs))
         return nullptr;
 
-    RootedValue rval(cx);
-    if (!js::Construct(cx, ctorVal, args, ctorVal, &rval))
+    RootedObject obj(cx);
+    if (!js::Construct(cx, ctorVal, args, ctorVal, &obj))
         return nullptr;
 
-    return &rval.toObject();
+    return obj;
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -5750,9 +5753,9 @@ JS_AbortIfWrongThread(JSRuntime* rt)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_GetGCZeal(JSContext* cx, uint8_t* zeal, uint32_t* frequency, uint32_t* nextScheduled)
+JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits, uint32_t* frequency, uint32_t* nextScheduled)
 {
-    cx->runtime()->gc.getZeal(zeal, frequency, nextScheduled);
+    cx->runtime()->gc.getZealBits(zealBits, frequency, nextScheduled);
 }
 
 JS_PUBLIC_API(void)

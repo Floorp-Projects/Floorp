@@ -84,7 +84,7 @@ public:
    ***************************************************************************/
   void Notify(const BluetoothSignal& aData); // BluetoothSignalObserver
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return mOwner;
   }
@@ -93,7 +93,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void DisconnectFromOwner() override;
-  BluetoothGattServer(nsPIDOMWindow* aOwner);
+  BluetoothGattServer(nsPIDOMWindowInner* aOwner);
 
   /* Invalidate the GATT server.
    * If the BluetoothAdapter turns off, existing BluetoothGattServer instances
@@ -155,7 +155,7 @@ private:
   /****************************************************************************
    * Variables
    ***************************************************************************/
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 
   /**
    * Random generated UUID of this GATT client.

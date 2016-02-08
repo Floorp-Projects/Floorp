@@ -36,6 +36,7 @@
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/unused.h"
 #include "nsThreadSyncDispatch.h"
 #include "LeakRefPtr.h"
 
@@ -238,6 +239,15 @@ private:
 
 struct nsThreadShutdownContext
 {
+  nsThreadShutdownContext()
+  {
+    MOZ_COUNT_CTOR(nsThreadShutdownContext);
+  }
+  ~nsThreadShutdownContext()
+  {
+    MOZ_COUNT_DTOR(nsThreadShutdownContext);
+  }
+
   // NB: This will be the last reference.
   RefPtr<nsThread> terminatingThread;
   nsThread* joiningThread;
@@ -505,6 +515,19 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
 
 nsThread::~nsThread()
 {
+  NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
+               "shouldn't be waiting on other threads to shutdown");
+#ifdef DEBUG
+  // We deliberately leak these so they can be tracked by the leak checker.
+  // If you're having nsThreadShutdownContext leaks, you can set:
+  //   XPCOM_MEM_LOG_CLASSES=nsThreadShutdownContext
+  // during a test run and that will at least tell you what thread is
+  // requesting shutdown on another, which can be helpful for diagnosing
+  // the leak.
+  for (size_t i = 0; i < mRequestedShutdownContexts.Length(); ++i) {
+    Unused << mRequestedShutdownContexts[i].forget();
+  }
+#endif
 }
 
 nsresult

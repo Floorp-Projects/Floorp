@@ -607,7 +607,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
 
     // Any value that's a literal we can write out as an inline
     // attribute on the RDF:Description
-    nsAutoTArray<nsIRDFResource*, 8> visited;
+    AutoTArray<nsIRDFResource*, 8> visited;
     int32_t skipped = 0;
 
     nsCOMPtr<nsISimpleEnumerator> arcs;

@@ -477,8 +477,7 @@ CacheStorage::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   bool privateBrowsing = false;
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
-  if (window) {
+  if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global)) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (doc) {
       nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();

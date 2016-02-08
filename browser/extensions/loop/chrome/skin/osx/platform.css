@@ -21,11 +21,6 @@
     border-radius: 0;
   }
 
-  /* Hide Pause/Resume button until the functionality is complete */
-  notification[value="loop-sharing-notification"] .notification-button[type="pause"] {
-    display:none;
-  }
-
   notification[value="loop-sharing-notification"].paused .notification-button {
     background: #57bd35;
   }

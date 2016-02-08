@@ -7,7 +7,7 @@
 
 #include "base/message_pump.h"
 #include "base/time.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 // Declare structs we need from libevent.h rather than including it
 struct event_base;
@@ -192,7 +192,7 @@ public:
     mBufferSize(aBufferSize),
     mTerminator(aTerminator)
   {
-    mReceiveBuffer = new char[mBufferSize];
+    mReceiveBuffer = mozilla::MakeUnique<char[]>(mBufferSize);
   }
 
   ~LineWatcher() {}
@@ -208,7 +208,7 @@ protected:
 private:
   virtual void OnFileCanReadWithoutBlocking(int aFd) final override;
 
-  nsAutoPtr<char> mReceiveBuffer;
+  mozilla::UniquePtr<char[]> mReceiveBuffer;
   int mReceivedIndex;
   int mBufferSize;
   char mTerminator;

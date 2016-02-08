@@ -126,6 +126,10 @@
                        hidden="true">
           <menupopup position="bottomright topright"></menupopup>
         </toolbarbutton>
+        <toolbarbutton id="command-button-noautohide"
+                       class="command-button command-button-invertable"
+                       tooltiptext="&toolboxNoAutoHideTooltip;"
+                       hidden="true" />
       </hbox>
       <vbox id="toolbox-controls-separator" class="devtools-separator"/>
       <hbox id="toolbox-option-container"/>
@@ -145,5 +149,6 @@
       <splitter id="toolbox-console-splitter" class="devtools-horizontal-splitter" hidden="true" />
       <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
     </vbox>
+    <tooltip id="aHTMLTooltip" page="true" />
   </notificationbox>
 </window>

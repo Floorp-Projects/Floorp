@@ -3332,7 +3332,7 @@ ssl_SetDefaultsFromEnvironment(void)
         char * ev;
         firsttime = 0;
 #ifdef DEBUG
-        ev = getenv("SSLDEBUGFILE");
+        ev = PR_GetEnvSecure("SSLDEBUGFILE");
         if (ev && ev[0]) {
             ssl_trace_iob = fopen(ev, "w");
         }
@@ -3340,19 +3340,19 @@ ssl_SetDefaultsFromEnvironment(void)
             ssl_trace_iob = stderr;
         }
 #ifdef TRACE
-        ev = getenv("SSLTRACE");
+        ev = PR_GetEnvSecure("SSLTRACE");
         if (ev && ev[0]) {
             ssl_trace = atoi(ev);
             SSL_TRACE(("SSL: tracing set to %d", ssl_trace));
         }
 #endif /* TRACE */
-        ev = getenv("SSLDEBUG");
+        ev = PR_GetEnvSecure("SSLDEBUG");
         if (ev && ev[0]) {
             ssl_debug = atoi(ev);
             SSL_TRACE(("SSL: debugging set to %d", ssl_debug));
         }
 #endif /* DEBUG */
-        ev = getenv("SSLKEYLOGFILE");
+        ev = PR_GetEnvSecure("SSLKEYLOGFILE");
         if (ev && ev[0]) {
             ssl_keylog_iob = fopen(ev, "a");
             if (!ssl_keylog_iob) {
@@ -3366,21 +3366,21 @@ ssl_SetDefaultsFromEnvironment(void)
             }
         }
 #ifndef NO_PKCS11_BYPASS
-        ev = getenv("SSLBYPASS");
+        ev = PR_GetEnvSecure("SSLBYPASS");
         if (ev && ev[0]) {
             ssl_defaults.bypassPKCS11 = (ev[0] == '1');
             SSL_TRACE(("SSL: bypass default set to %d", \
                       ssl_defaults.bypassPKCS11));
         }
 #endif /* NO_PKCS11_BYPASS */
-        ev = getenv("SSLFORCELOCKS");
+        ev = PR_GetEnvSecure("SSLFORCELOCKS");
         if (ev && ev[0] == '1') {
             ssl_force_locks = PR_TRUE;
             ssl_defaults.noLocks = 0;
             strcpy(lockStatus + LOCKSTATUS_OFFSET, "FORCED.  ");
             SSL_TRACE(("SSL: force_locks set to %d", ssl_force_locks));
         }
-        ev = getenv("NSS_SSL_ENABLE_RENEGOTIATION");
+        ev = PR_GetEnvSecure("NSS_SSL_ENABLE_RENEGOTIATION");
         if (ev) {
             if (ev[0] == '1' || LOWER(ev[0]) == 'u')
                 ssl_defaults.enableRenegotiation = SSL_RENEGOTIATE_UNRESTRICTED;
@@ -3393,13 +3393,13 @@ ssl_SetDefaultsFromEnvironment(void)
             SSL_TRACE(("SSL: enableRenegotiation set to %d",
                        ssl_defaults.enableRenegotiation));
         }
-        ev = getenv("NSS_SSL_REQUIRE_SAFE_NEGOTIATION");
+        ev = PR_GetEnvSecure("NSS_SSL_REQUIRE_SAFE_NEGOTIATION");
         if (ev && ev[0] == '1') {
             ssl_defaults.requireSafeNegotiation = PR_TRUE;
             SSL_TRACE(("SSL: requireSafeNegotiation set to %d",
                         PR_TRUE));
         }
-        ev = getenv("NSS_SSL_CBC_RANDOM_IV");
+        ev = PR_GetEnvSecure("NSS_SSL_CBC_RANDOM_IV");
         if (ev && ev[0] == '0') {
             ssl_defaults.cbcRandomIV = PR_FALSE;
             SSL_TRACE(("SSL: cbcRandomIV set to 0"));

@@ -239,7 +239,7 @@ ImageBitmapRenderingContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     imageLayer->SetContainer(imageContainer);
   }
 
-  nsAutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
   RefPtr<layers::Image> image = ClipToIntrinsicSize();
   imageList.AppendElement(ImageContainer::NonOwningImage(image));
   imageContainer->SetCurrentImages(imageList);

@@ -21,6 +21,11 @@ function doConsoleCalls(aState)
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
 
   top.console.log("foobarBaz-log", undefined);
+
+  top.console.log("Float from not a number: %f", "foo");
+  top.console.log("Float from string: %f", "1.2");
+  top.console.log("Float from number: %f", 1.3);
+
   top.console.info("foobarBaz-info", null);
   top.console.warn("foobarBaz-warn", top.document.documentElement);
   top.console.debug(null);
@@ -51,6 +56,18 @@ function doConsoleCalls(aState)
       functionName: "doConsoleCalls",
       timeStamp: /^\d+$/,
       arguments: ["foobarBaz-log", { type: "undefined" }],
+    },
+    {
+      level: "log",
+      arguments: ["Float from not a number: NaN"],
+    },
+    {
+      level: "log",
+      arguments: ["Float from string: 1.200000"],
+    },
+    {
+      level: "log",
+      arguments: ["Float from number: 1.300000"],
     },
     {
       level: "info",

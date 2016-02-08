@@ -25,7 +25,7 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONRESPONDINGLISTENER
 
-  static already_AddRefed<PresentationReceiver> Create(nsPIDOMWindow* aWindow,
+  static already_AddRefed<PresentationReceiver> Create(nsPIDOMWindowInner* aWindow,
                                                        const nsAString& aSessionId);
 
   virtual void DisconnectFromOwner() override;
@@ -41,7 +41,7 @@ public:
   IMPL_EVENT_HANDLER(connectionavailable);
 
 private:
-  explicit PresentationReceiver(nsPIDOMWindow* aWindow);
+  explicit PresentationReceiver(nsPIDOMWindowInner* aWindow);
 
   ~PresentationReceiver();
 

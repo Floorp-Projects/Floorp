@@ -9,12 +9,12 @@
 
 <dialog id="exceptiondialog"
         windowtype="mozilla:exceptiondialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&exceptionMgr.title;"
         buttons="cancel,extra1,extra2"
         buttonlabelextra1="&exceptionMgr.exceptionButton.label;"
         buttonaccesskeyextra1="&exceptionMgr.exceptionButton.accesskey;"
-        style="width: 500px; height: 480px;"
+        style="width: 46em; min-height: 38em;"
         onload="initExceptionDialog();"
         ondialogextra1="addException();"
         ondialogextra2="checkCert();"
@@ -28,7 +28,7 @@
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
   <script type="application/javascript" src="chrome://pippki/content/exceptionDialog.js"/>
-  
+
   <hbox>
     <vbox>
 #ifdef MOZ_WIDGET_GTK
@@ -63,27 +63,25 @@
 
   <groupbox id="certStatusGroupBox" flex="1">
     <caption label="&exceptionMgr.certstatus.caption;"/>
-    <vbox  style="overflow: auto;" flex="1">
-      <hbox>
-        <description id="headerDescription" style="white-space: pre-wrap;"
-                     flex="1"/>
-        <vbox>
-          <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
-                  accesskey="&exceptionMgr.certstatus.accesskey;"
-                  disabled="true" oncommand="viewCertButtonClick();"/>
-        </vbox>
-      </hbox>      
-      <description id="statusDescription"
-                   style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="statusLongDescription" style="white-space: pre-wrap;"/>
-      <description id="status2Description"
-                   style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="status2LongDescription" style="white-space: pre-wrap;"/>
-      <description id="status3Description" 
-                   style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="status3LongDescription" style="white-space: pre-wrap;"/>
-      <spacer flex="1"/>
-    </vbox>
+    <hbox>
+      <description id="headerDescription" style="white-space: pre-wrap;"
+                   flex="1"/>
+      <vbox>
+        <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
+                accesskey="&exceptionMgr.certstatus.accesskey;"
+                disabled="true" oncommand="viewCertButtonClick();"/>
+      </vbox>
+    </hbox>
+    <description id="statusDescription"
+                 style="font-weight: bold; padding-bottom: 1em;"/>
+    <description id="statusLongDescription" style="white-space: pre-wrap;"/>
+    <description id="status2Description"
+                 style="font-weight: bold; padding-bottom: 1em;"/>
+    <description id="status2LongDescription" style="white-space: pre-wrap;"/>
+    <description id="status3Description"
+                 style="font-weight: bold; padding-bottom: 1em;"/>
+    <description id="status3LongDescription" style="white-space: pre-wrap;"/>
+    <spacer flex="1"/>
     <checkbox id="permanent" disabled="true"
               label="&exceptionMgr.permanent.label;"
               accesskey="&exceptionMgr.permanent.accesskey;"/>

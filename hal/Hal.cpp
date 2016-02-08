@@ -94,12 +94,9 @@ AssertMainProcess()
 #if !defined(MOZ_WIDGET_GONK)
 
 bool
-WindowIsActive(nsIDOMWindow* aWindow)
+WindowIsActive(nsPIDOMWindowInner* aWindow)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(window, false);
-
-  nsIDocument* document = window->GetDoc();
+  nsIDocument* document = aWindow->GetDoc();
   NS_ENSURE_TRUE(document, false);
 
   return !document->Hidden();
@@ -118,7 +115,7 @@ void InitLastIDToVibrate()
 } // namespace
 
 void
-Vibrate(const nsTArray<uint32_t>& pattern, nsIDOMWindow* window)
+Vibrate(const nsTArray<uint32_t>& pattern, nsPIDOMWindowInner* window)
 {
   Vibrate(pattern, WindowIdentifier(window));
 }
@@ -155,7 +152,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 }
 
 void
-CancelVibrate(nsIDOMWindow* window)
+CancelVibrate(nsPIDOMWindowInner* window)
 {
   CancelVibrate(WindowIdentifier(window));
 }

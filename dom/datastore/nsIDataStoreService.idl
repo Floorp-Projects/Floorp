@@ -5,11 +5,11 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIPrincipal;
 interface nsIArray;
 
-[scriptable, uuid(79944b1c-187d-11e4-abb6-74d02b97e723)]
+[scriptable, uuid(44a8de94-d3dd-4a3a-a582-41027d36ceb5)]
 interface nsIDataStoreService : nsISupports
 {
   void installDataStore(in unsigned long appId,
@@ -24,7 +24,7 @@ interface nsIDataStoreService : nsISupports
                               in DOMString manifestURL,
                               in boolean readOnly);
 
-  nsISupports getDataStores(in nsIDOMWindow window,
+  nsISupports getDataStores(in mozIDOMWindow window,
                             in DOMString name,
                             in DOMString owner);
 

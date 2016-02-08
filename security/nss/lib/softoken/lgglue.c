@@ -418,7 +418,7 @@ sftkdbCall_Shutdown(void)
 #endif
 	crv = (*legacy_glue_shutdown)(parentForkedAfterC_Initialize);
     }
-    disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
+    disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
     if (!disableUnload) {
         PR_UnloadLibrary(legacy_glue_lib);
     }

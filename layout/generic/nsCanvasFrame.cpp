@@ -410,15 +410,22 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool needBlendContainer = false;
 
     // Create separate items for each background layer.
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
-      if (bg->mLayers[i].mImage.IsEmpty()) {
+    const nsStyleImageLayers& layers = bg->mImage;
+    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
+      if (layers.mLayers[i].mImage.IsEmpty()) {
         continue;
       }
-      if (bg->mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+      if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
         needBlendContainer = true;
       }
-      aLists.BorderBackground()->AppendNewToTop(
-        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg));
+      nsDisplayCanvasBackgroundImage* bgItem =
+        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg);
+      if (bgItem->ShouldFixToViewport(aBuilder)) {
+        aLists.BorderBackground()->AppendNewToTop(
+          nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
+      } else {
+        aLists.BorderBackground()->AppendNewToTop(bgItem);
+      }
     }
 
     if (needBlendContainer) {
@@ -427,8 +434,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  nsIFrame* kid;
-  for (kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
+  for (nsIFrame* kid : PrincipalChildList()) {
     // Put our child into its own pseudo-stack.
     BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }

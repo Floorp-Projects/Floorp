@@ -13,6 +13,7 @@ add_task(function*() {
   let {markup} = inspector;
 
   info("Get a test container");
+  yield selectNode("#test", inspector);
   let container = yield getContainerForSelector("#test", inspector);
 
   info("Simulate a drag/drop on this container");

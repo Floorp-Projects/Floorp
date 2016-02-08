@@ -38,7 +38,7 @@ public:
     , mHasOrHasHadOwnerWindow(false)
   {
   }
-  explicit DOMEventTargetHelper(nsPIDOMWindow* aWindow)
+  explicit DOMEventTargetHelper(nsPIDOMWindowInner* aWindow)
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
@@ -121,9 +121,9 @@ public:
                        JSContext* aCx,
                        JS::Value* aValue);
   using dom::EventTarget::GetEventHandler;
-  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override
   {
-    return nsPIDOMWindow::GetOuterFromCurrentInner(GetOwner());
+    return nsPIDOMWindowOuter::GetFromCurrentInner(GetOwner());
   }
 
   nsresult CheckInnerWindowCorrectness()
@@ -135,9 +135,9 @@ public:
     return NS_OK;
   }
 
-  nsPIDOMWindow* GetOwner() const { return mOwnerWindow; }
+  nsPIDOMWindowInner* GetOwner() const { return mOwnerWindow; }
   void BindToOwner(nsIGlobalObject* aOwner);
-  void BindToOwner(nsPIDOMWindow* aOwner);
+  void BindToOwner(nsPIDOMWindowInner* aOwner);
   void BindToOwner(DOMEventTargetHelper* aOther);
   virtual void DisconnectFromOwner();                   
   nsIGlobalObject* GetParentObject() const
@@ -186,7 +186,7 @@ private:
   // mParentObject pre QI-ed and cached (inner window)
   // (it is needed for off main thread access)
   // It is obtained in BindToOwner and reset in DisconnectFromOwner.
-  nsPIDOMWindow* MOZ_NON_OWNING_REF mOwnerWindow;
+  nsPIDOMWindowInner* MOZ_NON_OWNING_REF mOwnerWindow;
   bool                       mHasOrHasHadOwnerWindow;
 };
 

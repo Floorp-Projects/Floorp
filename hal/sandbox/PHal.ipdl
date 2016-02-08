@@ -100,83 +100,83 @@ prio(normal upto urgent) sync protocol PHal {
     manager PContent;
 
 child:
-    NotifyBatteryChange(BatteryInformation aBatteryInfo);
-    NotifyNetworkChange(NetworkInformation aNetworkInfo);
-    NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
-    NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
-    NotifySwitchChange(SwitchEvent aEvent);
-    NotifySystemClockChange(int64_t aClockDeltaMS); 
-    NotifySystemTimezoneChange(SystemTimezoneChangeInformation aSystemTimezoneChangeInfo); 
+    async NotifyBatteryChange(BatteryInformation aBatteryInfo);
+    async NotifyNetworkChange(NetworkInformation aNetworkInfo);
+    async NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
+    async NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
+    async NotifySwitchChange(SwitchEvent aEvent);
+    async NotifySystemClockChange(int64_t aClockDeltaMS); 
+    async NotifySystemTimezoneChange(SystemTimezoneChangeInformation aSystemTimezoneChangeInfo); 
 
 parent:
-    Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
-    CancelVibrate(uint64_t[] id, PBrowser browser);
+    async Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
+    async CancelVibrate(uint64_t[] id, PBrowser browser);
 
-    EnableBatteryNotifications();
-    DisableBatteryNotifications();
+    async EnableBatteryNotifications();
+    async DisableBatteryNotifications();
     sync GetCurrentBatteryInformation()
       returns (BatteryInformation aBatteryInfo);
 
-    EnableNetworkNotifications();
-    DisableNetworkNotifications();
+    async EnableNetworkNotifications();
+    async DisableNetworkNotifications();
     sync GetCurrentNetworkInformation()
       returns (NetworkInformation aNetworkInfo);
 
     sync GetScreenEnabled() returns (bool enabled);
-    SetScreenEnabled(bool aEnabled);
+    async SetScreenEnabled(bool aEnabled);
 
     sync GetKeyLightEnabled() returns (bool enabled);
-    SetKeyLightEnabled(bool aEnabled);
+    async SetKeyLightEnabled(bool aEnabled);
 
     sync GetCpuSleepAllowed() returns (bool allowed);
-    SetCpuSleepAllowed(bool aAllowed);
+    async SetCpuSleepAllowed(bool aAllowed);
 
     sync GetScreenBrightness() returns (double brightness);
-    SetScreenBrightness(double aBrightness);
+    async SetScreenBrightness(double aBrightness);
 
-    AdjustSystemClock(int64_t aDeltaMilliseconds);
-    SetTimezone(nsCString aTimezoneSpec);
+    async AdjustSystemClock(int64_t aDeltaMilliseconds);
+    async SetTimezone(nsCString aTimezoneSpec);
     sync GetTimezone()
       returns (nsCString aTimezoneSpec);
     sync GetTimezoneOffset()
       returns (int32_t aTimezoneOffset);
-    EnableSystemClockChangeNotifications();
-    DisableSystemClockChangeNotifications();
-    EnableSystemTimezoneChangeNotifications();
-    DisableSystemTimezoneChangeNotifications();
+    async EnableSystemClockChangeNotifications();
+    async DisableSystemClockChangeNotifications();
+    async EnableSystemTimezoneChangeNotifications();
+    async DisableSystemTimezoneChangeNotifications();
 
-    ModifyWakeLock(nsString aTopic,
-                   WakeLockControl aLockAdjust,
-                   WakeLockControl aHiddenAdjust,
-                   uint64_t aProcessID);
-    EnableWakeLockNotifications();
-    DisableWakeLockNotifications();
+    async ModifyWakeLock(nsString aTopic,
+                         WakeLockControl aLockAdjust,
+                         WakeLockControl aHiddenAdjust,
+                         uint64_t aProcessID);
+    async EnableWakeLockNotifications();
+    async DisableWakeLockNotifications();
     sync GetWakeLockInfo(nsString aTopic)
       returns (WakeLockInformation aWakeLockInfo);
 
-    EnableScreenConfigurationNotifications();
-    DisableScreenConfigurationNotifications();
+    async EnableScreenConfigurationNotifications();
+    async DisableScreenConfigurationNotifications();
     prio(urgent) sync GetCurrentScreenConfiguration()
       returns (ScreenConfiguration aScreenConfiguration);
     sync LockScreenOrientation(ScreenOrientationInternal aOrientation)
       returns (bool allowed);
-    UnlockScreenOrientation();
+    async UnlockScreenOrientation();
  
-    EnableSwitchNotifications(SwitchDevice aDevice);
-    DisableSwitchNotifications(SwitchDevice aDevice);
+    async EnableSwitchNotifications(SwitchDevice aDevice);
+    async DisableSwitchNotifications(SwitchDevice aDevice);
     sync GetCurrentSwitchState(SwitchDevice aDevice)
       returns (SwitchState aState);
 
-    FactoryReset(nsString aReason);
+    async FactoryReset(nsString aReason);
 
 child:
-    NotifySensorChange(SensorData aSensorData);
+    async NotifySensorChange(SensorData aSensorData);
 
 parent:
-    EnableSensorNotifications(SensorType aSensor);
-    DisableSensorNotifications(SensorType aSensor);
+    async EnableSensorNotifications(SensorType aSensor);
+    async DisableSensorNotifications(SensorType aSensor);
 
-    __delete__();
+    async __delete__();
 };
 
 } // namespace hal

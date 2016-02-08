@@ -968,18 +968,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   NS_ShutdownNativeCharsetUtils();
 #endif
 
-#if defined(XP_WIN)
-  // This exit(0) call is intended to be temporary, to get shutdown leak
-  // checking working on Linux.
-  // On Windows XP debug, there are intermittent failures in
-  // dom/media/tests/mochitest/test_peerConnection_basicH264Video.html
-  // if we don't exit early in a child process. See bug 1073310.
-  if (XRE_IsContentProcess() && !IsVistaOrLater()) {
-      NS_WARNING("Exiting child process early!");
-      exit(0);
-  }
-#endif
-
   // Shutdown xpcom. This will release all loaders and cause others holding
   // a refcount to the component manager to release it.
   if (nsComponentManagerImpl::gComponentManager) {
@@ -1054,13 +1042,13 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   NS_LogTerm();
 
 #if defined(MOZ_WIDGET_GONK)
-  // This exit(0) call is intended to be temporary, to get shutdown leak
-  // checking working on Linux.
+  // This _exit(0) call is intended to be temporary, to get shutdown leak
+  // checking working on non-B2G platforms.
   // On debug B2G, the child process crashes very late.  Instead, just
   // give up so at least we exit cleanly. See bug 1071866.
   if (XRE_IsContentProcess()) {
       NS_WARNING("Exiting child process early!");
-      exit(0);
+      _exit(0);
   }
 #endif
 

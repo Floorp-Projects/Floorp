@@ -5,20 +5,34 @@
 import sys
 import string
 
+# Generates a line of WebIDL with the given spelling of the property name
+# (whether camelCase, _underscorePrefixed, etc.) and the given array of
+# extended attributes.
+def generateLine(propName, extendedAttrs):
+    return "  [%s] attribute DOMString %s;\n" % (", ".join(extendedAttrs),
+                                                 propName)
 propList = eval(sys.stdin.read())
 props = ""
 for [name, prop, id, flags, pref, proptype] in propList:
     if "CSS_PROPERTY_INTERNAL" in flags:
         continue
+    # Unfortunately, even some of the getters here are fallible
+    # (e.g. on nsComputedDOMStyle).
     extendedAttrs = ["Throws", "TreatNullAs=EmptyString"]
     if pref is not "":
         extendedAttrs.append('Pref="%s"' % pref)
+
+    # webkit properties get a capitalized "WebkitFoo" accessor (added here)
+    # as well as a camelcase "webkitFoo" accessor (added next).
+    if (prop.startswith("Webkit")):
+        props += generateLine(prop, extendedAttrs)
+
+    # Generate a line with camelCase spelling of property-name (or capitalized,
+    # for Moz-prefixed properties):
     if not prop.startswith("Moz"):
         prop = prop[0].lower() + prop[1:]
-    # Unfortunately, even some of the getters here are fallible
-    # (e.g. on nsComputedDOMStyle).
-    props += "  [%s] attribute DOMString %s;\n" % (", ".join(extendedAttrs),
-                                                   prop)
+    props += generateLine(prop, extendedAttrs)
+
     # Per spec, what's actually supposed to happen here is that we're supposed
     # to have properties for:
     #
@@ -30,18 +44,17 @@ for [name, prop, id, flags, pref, proptype] in propList:
     # Note that "float" will cause a property called "float" to exist due to (1)
     # in that list.
     #
-    # In practice, cssFloat is the only case in which "name" doesn't contain "-"
-    # but also doesn't match "prop".  So the stuff we did with "prop" covers (3)
-    # and all of (1) except "float".   If we now output attributes for all the
-    # cases where "name" doesn't match "prop" and "name" doesn't start with "-",
-    # that will cover "float" and (2).
+    # In practice, cssFloat is the only case in which "name" doesn't contain
+    # "-" but also doesn't match "prop".  So the above generatePropLine() call
+    # covered (3) and all of (1) except "float".  If we now output attributes
+    # for all the cases where "name" doesn't match "prop" and "name" doesn't
+    # start with "-", that will cover "float" and (2).
     if prop != name and name[0] != "-":
         extendedAttrs.append('BinaryName="%s"' % prop)
         # Throw in a '_' before the attribute name, because some of these
         # property names collide with IDL reserved words.
-        props += "  [%s] attribute DOMString _%s;\n" % (
-            ", ".join(extendedAttrs),
-            name)
+        props += generateLine("_" + name, extendedAttrs)
+
 
 idlFile = open(sys.argv[1], "r")
 idlTemplate = idlFile.read()

@@ -118,7 +118,7 @@ XDRState<mode>::codeFunction(MutableHandleFunction objp)
     if (!VersionCheck(this))
         return false;
 
-    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
     return XDRInterpretedFunction(this, staticLexical, nullptr, objp);
 }
 
@@ -132,7 +132,7 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     if (!VersionCheck(this))
         return false;
 
-    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
     if (!XDRScript(this, staticLexical, nullptr, nullptr, scriptp))
         return false;
 

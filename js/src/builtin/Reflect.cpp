@@ -114,7 +114,12 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 6.
-    return Construct(cx, args.get(0), constructArgs, newTarget, args.rval());
+    RootedObject obj(cx);
+    if (!Construct(cx, args.get(0), constructArgs, newTarget, &obj))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
 }
 
 /* ES6 26.1.3 Reflect.defineProperty(target, propertyKey, attributes) */
@@ -135,7 +140,7 @@ Reflect_defineProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Steps 4-5.
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!ToPropertyDescriptor(cx, args.get(2), true, &desc))
         return false;
 

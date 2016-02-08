@@ -1,8 +1,7 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that makes sure messages are not considered repeated when coming from
 // different lines of code, or from different severities, etc.
@@ -30,6 +29,7 @@ add_task(function* () {
   yield testCSSRepeats(hud);
   yield testCSSRepeatsAfterReload(hud);
   yield testConsoleRepeats(hud);
+  yield testConsoleFalsyValues(hud);
 
   Services.prefs.clearUserPref(PREF);
 });
@@ -121,6 +121,55 @@ function testConsoleRepeats(hud) {
         text: "undefined",
         category: CATEGORY_WEBDEV,
         repeats: 1,
+      },
+    ],
+  });
+}
+
+function testConsoleFalsyValues(hud) {
+  hud.jsterm.clearOutput(true);
+  hud.jsterm.execute("testConsoleFalsyValues()");
+
+  info("wait for repeats of falsy values with the console API");
+
+  return waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "console.log 'NaN' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'undefined' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'null' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'NaN' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
+      },
+      {
+        name: "console.log 'undefined' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
+      },
+      {
+        name: "console.log 'null' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
       },
     ],
   });

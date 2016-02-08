@@ -64,12 +64,12 @@ public:
                             const ChromeFilePropertyBag& aBag,
                             ErrorResult& aRv);
 
-  void InitializeChromeFile(nsPIDOMWindow* aWindow,
+  void InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                             const nsAString& aData,
                             const ChromeFilePropertyBag& aBag,
                             ErrorResult& aRv);
 
-  void InitializeChromeFile(nsPIDOMWindow* aWindow,
+  void InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                             nsIFile* aData,
                             const ChromeFilePropertyBag& aBag,
                             bool aIsFromNsIFile,

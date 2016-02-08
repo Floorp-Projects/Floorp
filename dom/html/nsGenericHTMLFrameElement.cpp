@@ -85,7 +85,7 @@ nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 nsIDocument*
 nsGenericHTMLFrameElement::GetContentDocument()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetContentWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetContentWindow();
   if (!win) {
     return nullptr;
   }
@@ -103,16 +103,7 @@ nsGenericHTMLFrameElement::GetContentDocument()
   return doc;
 }
 
-nsresult
-nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
-{
-  NS_PRECONDITION(aContentWindow, "Null out param");
-  nsCOMPtr<nsPIDOMWindow> window = GetContentWindow();
-  window.forget(aContentWindow);
-  return NS_OK;
-}
-
-already_AddRefed<nsPIDOMWindow>
+already_AddRefed<nsPIDOMWindowOuter>
 nsGenericHTMLFrameElement::GetContentWindow()
 {
   EnsureFrameLoader();
@@ -131,7 +122,7 @@ nsGenericHTMLFrameElement::GetContentWindow()
   nsCOMPtr<nsIDocShell> doc_shell;
   mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
 
-  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(doc_shell);
+  nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(doc_shell);
 
   if (!win) {
     return nullptr;

@@ -4,6 +4,20 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "default_locale": {
+            "type": "string",
+            "optional": "true"
+          }
+        }
+      }
+    ]
+  },
+  {
     "namespace": "i18n",
     "description": "Use the <code>browser.i18n</code> infrastructure to implement internationalization across your whole app or extension.",
     "types": [
@@ -19,6 +33,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Gets the accept-languages of the browser. This is different from the locale used by the browser; to get the locale, use $(ref:i18n.getUILanguage).",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -67,6 +82,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Detects the language of the provided text using CLD.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",

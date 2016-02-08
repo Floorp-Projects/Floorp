@@ -21,7 +21,7 @@ class MediaKeySystemAccessManager final : public nsIObserver
 {
 public:
 
-  explicit MediaKeySystemAccessManager(nsPIDOMWindow* aWindow);
+  explicit MediaKeySystemAccessManager(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(MediaKeySystemAccessManager, nsIObserver)
@@ -73,7 +73,7 @@ private:
 
   nsTArray<PendingRequest> mRequests;
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   bool mAddedObservers;
 };
 

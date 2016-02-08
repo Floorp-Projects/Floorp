@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1086997
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1086997</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+'use strict';
+
+const {
+  ConsoleAPI
+} = SpecialPowers.Cu.import('resource://gre/modules/Console.jsm');
+
+var warning = null;
+
+var originalWarn = ConsoleAPI.prototype.warn;
+ConsoleAPI.prototype.warn = function(aWarning) {
+  warning = aWarning;
+};
+
+[
+  {
+    func: () => data.jsonText = JSON.stringify(1),
+    warning: 'Manifest should be an object.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify(null),
+    warning: 'Manifest should be an object.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify('a string'),
+    warning: 'Manifest should be an object.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      scope: 'https://www.mozilla.org',
+    }),
+    warning: 'The scope URL must be same origin as document.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      scope: 'foo',
+      start_url: 'bar',
+    }),
+    warning: 'The start URL is outside the scope, so the scope is invalid.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      start_url: 'https://www.mozilla.org',
+    }),
+    warning: 'The start URL must be same origin as document.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      start_url: 42,
+    }),
+    warning: 'Expected the manifest\'s start_url member to be a string.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      theme_color: '42',
+    }),
+    warning: 'theme_color: 42 is not a valid CSS color.',
+  },
+  {
+    func: () => data.jsonText = JSON.stringify({
+      background_color: '42',
+    }),
+    warning: 'background_color: 42 is not a valid CSS color.',
+  },
+].forEach(function(test) {
+  test.func();
+
+  processor.process(data);
+
+  is(warning, test.warning, 'Correct warning.');
+
+  warning = null;
+  data.manifestURL = manifestURL;
+  data.docURL = docURL;
+});
+
+ConsoleAPI.prototype.warn = originalWarn;
+  </script>
+</head>

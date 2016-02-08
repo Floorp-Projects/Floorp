@@ -7,6 +7,7 @@
 #include "TelephonyChild.h"
 
 #include "mozilla/dom/telephony/TelephonyDialCallback.h"
+#include "mozilla/UniquePtr.h"
 #include "TelephonyIPCService.h"
 
 USING_TELEPHONY_NAMESPACE
@@ -212,12 +213,13 @@ TelephonyRequestChild::DoResponse(const DialResponseMMISuccess& aResponse)
       uint32_t count = info.get_ArrayOfnsString().Length();
       const nsTArray<nsString>& additionalInformation = info.get_ArrayOfnsString();
 
-      nsAutoArrayPtr<const char16_t*> additionalInfoPtrs(new const char16_t*[count]);
+      auto additionalInfoPtrs = MakeUnique<const char16_t*[]>(count);
       for (size_t i = 0; i < count; ++i) {
         additionalInfoPtrs[i] = additionalInformation[i].get();
       }
 
-      callback->NotifyDialMMISuccessWithStrings(statusMessage, count, additionalInfoPtrs);
+      callback->NotifyDialMMISuccessWithStrings(statusMessage, count,
+                                                additionalInfoPtrs.get());
       break;
     }
     case AdditionalInformation::TArrayOfnsMobileCallForwardingOptions: {

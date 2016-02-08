@@ -1232,7 +1232,7 @@ PlacesToolbar.prototype = {
         let childRect = child.getBoundingClientRect();
         childOverflowed = this.isRTL ? (childRect.left < scrollRect.left)
                                      : (childRect.right > scrollRect.right);
-                                      
+
       }
       child.style.visibility = childOverflowed ? "hidden" : "visible";
     }

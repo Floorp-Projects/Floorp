@@ -623,10 +623,6 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
     mOtherFamilyNamesInitialized = true;
 }
 
-typedef CFArrayRef (CTFontCopyDefaultCascadeListForLanguagesFunc)(CTFontRef font, CFArrayRef languagePrefList);
-static CTFontCopyDefaultCascadeListForLanguagesFunc*
-    CTFontCopyDefaultCascadeListForLanguagesPtr = nullptr;
-
 /* gfxMacPlatformFontList */
 #pragma mark-
 
@@ -649,11 +645,6 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     // cache this in a static variable so that MacOSFontFamily objects
     // don't have to repeatedly look it up
     sFontManager = [NSFontManager sharedFontManager];
-
-    // available in 10.8 and above
-    CTFontCopyDefaultCascadeListForLanguagesPtr =
-        (CTFontCopyDefaultCascadeListForLanguagesFunc*)
-            dlsym(RTLD_DEFAULT, "CTFontCopyDefaultCascadeListForLanguages");
 }
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList()
@@ -733,7 +724,7 @@ gfxMacPlatformFontList::InitFontList()
 void
 gfxMacPlatformFontList::InitSingleFaceList()
 {
-    nsAutoTArray<nsString, 10> singleFaceFonts;
+    AutoTArray<nsString, 10> singleFaceFonts;
     gfxFontUtils::GetPrefsFontList("font.single-face-list", singleFaceFonts);
 
     uint32_t numFonts = singleFaceFonts.Length();
@@ -792,63 +783,6 @@ static NSString* GetRealFamilyName(NSFont* aFont)
 const CGFloat kTextDisplayCrossover = 20.0; // use text family below this size
 
 void
-gfxMacPlatformFontList::LookupFontCascadeForLang(const nsACString& aLang,
-                                                 nsTArray<gfxFontFamily*>& aCascadeList)
-{
-    // if cascade not available just return empty list
-    if (!CTFontCopyDefaultCascadeListForLanguagesPtr) {
-        return;
-    }
-
-    // get the system font (note: the lang parameter doesn't affect the result)
-    CTFontRef systemFont =
-        CTFontCreateUIFontForLanguage(kCTFontSystemFontType, 12.0,
-                                      CFSTR("en-US"));
-
-    // fetch cascade list
-    CFStringRef langStr =
-        CFStringCreateWithCString(kCFAllocatorDefault,
-                                  PromiseFlatCString(aLang).get(),
-                                  kCFStringEncodingUTF8);
-    CFStringRef languages[1] = { langStr };
-    CFArrayRef langList = CFArrayCreate(kCFAllocatorDefault,
-                                        (const void **) languages, 1,
-                                        &kCFTypeArrayCallBacks);
-    CFRelease(langStr);
-    CFArrayRef cascade =
-        CTFontCopyDefaultCascadeListForLanguagesPtr(systemFont, langList);
-    CFRelease(systemFont);
-    CFRelease(langList);
-
-    // iterate over font descriptors in cascade array
-    for (NSFontDescriptor* fontDesc in (NSArray*) cascade) {
-        // First, determine the font family name. Since font cascades
-        // sometimes include weird "meta" names, need to determine the
-        // family name using the CGFont object
-        CTFontDescriptorRef fd = (CTFontDescriptorRef) fontDesc;
-        CTFontRef fontRef = CTFontCreateWithFontDescriptor(fd, 0.0, 0);
-        CFRelease(fd);
-        CGFontRef cgFontRef = CTFontCopyGraphicsFont(fontRef, NULL);
-        CFRelease(fontRef);
-        CFStringRef psname = CGFontCopyPostScriptName(cgFontRef);
-        CFRelease(cgFontRef);
-        fontRef = CTFontCreateWithName(psname, 0.0, NULL);
-        CFRelease(psname);
-        CFStringRef name = CTFontCopyFamilyName(fontRef);
-        CFRelease(fontRef);
-
-        // lookup the family and append it to the list
-        nsAutoString familyStr;
-        GetStringForNSString((NSString*) name, familyStr);
-        CFRelease(name);
-        gfxFontFamily* family = FindFamily(familyStr);
-        if (family) {
-            aCascadeList.AppendElement(family);
-        }
-    }
-}
-
-void
 gfxMacPlatformFontList::InitSystemFonts()
 {
     // system font under 10.11 are two distinct families for text/display sizes
@@ -863,7 +797,6 @@ gfxMacPlatformFontList::InitSystemFonts()
     nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
     mSystemTextFontFamily = FindSystemFontFamily(familyName);
     NS_ASSERTION(mSystemTextFontFamily, "null system display font family");
-    mSystemTextFontFamily->SetLinkedSystemFamily();
 
     // display font family, if on OSX 10.11
     if (mUseSizeSensitiveSystemFont) {
@@ -872,7 +805,6 @@ gfxMacPlatformFontList::InitSystemFonts()
         nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
         mSystemDisplayFontFamily = FindSystemFontFamily(familyName);
         NS_ASSERTION(mSystemDisplayFontFamily, "null system display font family");
-        mSystemDisplayFontFamily->SetLinkedSystemFamily();
 
 #if DEBUG
         // confirm that the optical size switch is at 20.0
@@ -900,12 +832,6 @@ gfxMacPlatformFontList::InitSystemFonts()
                    " -- please log a bug!!");
     }
 #endif
-
-    nsAutoCString en("en");
-    nsAutoTArray<gfxFontFamily*,10> list;
-    LookupFontCascadeForLang(en, list);
-    mDefaultCascadeLangs.PutEntry(en);
-    mDefaultCascadeFamilies.AppendElements(list);
 }
 
 gfxFontFamily*
@@ -1019,7 +945,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
             ::CFStringCompare(familyNameRef, CFSTR("LastResort"),
                               kCFCompareCaseInsensitive) != kCFCompareEqualTo)
         {
-            nsAutoTArray<UniChar, 1024> buffer;
+            AutoTArray<UniChar, 1024> buffer;
             CFIndex familyNameLen = ::CFStringGetLength(familyNameRef);
             buffer.SetLength(familyNameLen+1);
             ::CFStringGetCharacters(familyNameRef, ::CFRangeMake(0, familyNameLen),
@@ -1253,68 +1179,6 @@ gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
     aFontStyle.systemFont = true;
 }
 
-void
-gfxMacPlatformFontList::AppendLinkedSystemFamilies(nsIAtom* aLanguage,
-                                                   nsTArray<gfxFontFamily*>& aFamilyList)
-{
-    // map lang atom to lang string
-    nsAutoCString lang;
-    GetSampleLangForGroup(aLanguage, lang, false);
-    ToLowerCase(lang);
-
-    // the font cascade code is fussy about the hyphen/underbar before the
-    // region code, so zh_TW is recognized, zh-TW is ignored
-    if (lang.EqualsLiteral("zh-tw")) {
-        lang.AssignLiteral("zh_tw");
-    } else if (lang.EqualsLiteral("zh-cn")) {
-        lang.AssignLiteral("zh_cn");
-    }
-
-    // if no lang or lang in default lang hash? if so, append defaults
-    if (lang.IsEmpty() || mDefaultCascadeLangs.GetEntry(lang)) {
-        aFamilyList.AppendElements(mDefaultCascadeFamilies);
-        return;
-    }
-
-    // check to see if cached already
-    PrefFontList* fontsForLang = mNonDefaultCascadeFamilies.Get(lang);
-    if (fontsForLang) {
-        aFamilyList.AppendElements(*fontsForLang);
-        return;
-    }
-
-    // lookup the cascade fonts
-    nsAutoTArray<gfxFontFamily*,10> list;
-    LookupFontCascadeForLang(lang, list);
-
-    // compare with defaults
-    bool sameAsDefault = true;
-    if (list.Length() == mDefaultCascadeFamilies.Length()) {
-        uint32_t num = list.Length();
-        for (uint32_t i = 0; i < num; i++) {
-            if (list[i] != mDefaultCascadeFamilies[i]) {
-                sameAsDefault = false;
-                break;
-            }
-        }
-    }
-
-    // if same as default, add lang to hash and return defaults
-    if (sameAsDefault) {
-        mDefaultCascadeLangs.PutEntry(lang);
-        aFamilyList.AppendElements(mDefaultCascadeFamilies);
-        return;
-    }
-
-    // add cascade to cascade cache
-    fontsForLang = new PrefFontList;
-    fontsForLang->AppendElements(list);
-    mNonDefaultCascadeFamilies.Put(lang, fontsForLang);
-
-    // use the new list
-    aFamilyList.AppendElements(list);
-}
-
 // used to load system-wide font info on off-main thread
 class MacFontInfo : public FontInfoData {
 public:
@@ -1383,7 +1247,7 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
             CFStringRef faceName = (CFStringRef)
                 CTFontDescriptorCopyAttribute(faceDesc, kCTFontNameAttribute);
 
-            nsAutoTArray<UniChar, 1024> buffer;
+            AutoTArray<UniChar, 1024> buffer;
             CFIndex len = CFStringGetLength(faceName);
             buffer.SetLength(len+1);
             CFStringGetCharacters(faceName, ::CFRangeMake(0, len),

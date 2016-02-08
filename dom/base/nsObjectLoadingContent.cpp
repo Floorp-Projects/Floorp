@@ -1527,6 +1527,7 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   nsAutoCString uri;
   aURI->GetSpec(uri);
   if (uri.Find("enablejsapi=1", true, 0, -1) != kNotFound) {
+    Telemetry::Accumulate(Telemetry::YOUTUBE_NONREWRITABLE_EMBED_SEEN, 1);
     return false;
   }
 
@@ -3275,12 +3276,17 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     sPrefsInitialized = true;
   }
 
-  if (XRE_IsParentProcess() &&
-      BrowserTabsRemoteAutostart()) {
-    // Plugins running OOP from the chrome process along with plugins running
-    // OOP from the content process will hang. Let's prevent that situation.
-    aReason = eFallbackDisabled;
-    return false;
+  if (BrowserTabsRemoteAutostart()) {
+    bool shouldLoadInParent = nsPluginHost::ShouldLoadTypeInParent(mContentType);
+    bool inParent = XRE_IsParentProcess();
+
+    if (shouldLoadInParent != inParent) {
+      // Plugins need to be locked to either the parent process or the content
+      // process. If a plugin is locked to one process type, it can't be used in
+      // the other. Otherwise we'll get hangs.
+      aReason = eFallbackDisabled;
+      return false;
+    }
   }
 
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
@@ -3336,11 +3342,11 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   MOZ_ASSERT(thisContent);
   nsIDocument* ownerDoc = thisContent->OwnerDoc();
 
-  nsCOMPtr<nsPIDOMWindow> window = ownerDoc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = ownerDoc->GetWindow();
   if (!window) {
     return false;
   }
-  nsCOMPtr<nsPIDOMWindow> topWindow = window->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop();
   NS_ENSURE_TRUE(topWindow, false);
   nsCOMPtr<nsIDocument> topDoc = topWindow->GetDoc();
   NS_ENSURE_TRUE(topDoc, false);
@@ -3698,7 +3704,7 @@ nsObjectLoadingContent::TeardownProtoChain()
 bool
 nsObjectLoadingContent::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                                   JS::Handle<jsid> aId,
-                                  JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                                  JS::MutableHandle<JS::PropertyDescriptor> aDesc)
 {
   // We don't resolve anything; we just try to make sure we're instantiated.
   // This purposefully does not fire for chrome/xray resolves, see bug 967694

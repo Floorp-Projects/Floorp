@@ -6,16 +6,23 @@
 
 Library('nspr')
 
-if CONFIG['MOZ_FOLD_LIBS']:
-    # When folding libraries, nspr is actually in the nss library.
-    USE_LIBS += [
-        'nss',
+if CONFIG['MOZ_BUILD_NSPR']:
+    DIRS += [
+        'pr',
+        'ds',
+        'libc',
     ]
-elif CONFIG['MOZ_BUILD_NSPR']:
-    USE_LIBS += [
-        '/nsprpub/lib/ds/plds4',
-        '/nsprpub/lib/libc/src/plc4',
-        '/nsprpub/pr/src/nspr4',
-    ]
+    if CONFIG['MOZ_FOLD_LIBS']:
+        # When folding libraries, nspr is actually in the nss library.
+        USE_LIBS += [
+            'nss',
+        ]
+    else:
+        USE_LIBS += [
+            'nspr4',
+            'plc4',
+            'plds4',
+        ]
+    EXPORTS.nspr += ['prcpucfg.h']
 else:
     OS_LIBS += CONFIG['NSPR_LIBS']

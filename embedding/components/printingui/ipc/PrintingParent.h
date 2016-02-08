@@ -10,7 +10,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/embedding/PPrintingParent.h"
 
-class nsIDOMWindow;
+class nsPIDOMWindowOuter;
 class PPrintProgressDialogParent;
 class PPrintSettingsDialogParent;
 
@@ -66,7 +66,7 @@ public:
     virtual ~PrintingParent();
 
 private:
-    nsIDOMWindow*
+    nsPIDOMWindowOuter*
     DOMWindowFromBrowserParent(PBrowserParent* parent);
 
     nsresult

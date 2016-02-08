@@ -54,7 +54,7 @@ function run_test() {
   let client = new DebuggerClient(trace);
   let rootClient;
 
-  client.connect((applicationType, traits) => {
+  client.connect().then(([applicationType, traits]) => {
     rootClient = RootFront(client);
 
     rootClient.simpleReturn().then(() => {

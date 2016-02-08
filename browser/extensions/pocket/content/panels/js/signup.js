@@ -2,7 +2,7 @@
 PKT_SIGNUP_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
-var PKT_SIGNUP_OVERLAY = function (options) 
+var PKT_SIGNUP_OVERLAY = function (options)
 {
     var myself = this;
     this.inited = false;
@@ -62,7 +62,7 @@ var PKT_SIGNUP_OVERLAY = function (options)
 };
 
 PKT_SIGNUP_OVERLAY.prototype = {
-    create : function() 
+    create : function()
     {
         var myself = this;
 

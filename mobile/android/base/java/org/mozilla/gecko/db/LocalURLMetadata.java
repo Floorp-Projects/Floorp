@@ -181,8 +181,6 @@ public class LocalURLMetadata implements URLMetadata {
             }
         }
 
-        Telemetry.addToHistogram("FENNEC_TILES_CACHE_HIT", data.size());
-
         // If everything was in the cache, we're done!
         if (urlsToQuery.size() == 0) {
             return Collections.unmodifiableMap(data);

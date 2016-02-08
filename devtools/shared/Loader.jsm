@@ -71,7 +71,7 @@ XPCOMUtils.defineLazyGetter(loaderModules, "CSS", () => {
   return Cu.Sandbox(this, {wantGlobalProperties: ["CSS"]}).CSS;
 });
 
-var sharedGlobalBlacklist = ["sdk/indexed-db"];
+var sharedGlobalBlocklist = ["sdk/indexed-db"];
 
 /**
  * Used when the tools should be loaded from the Firefox package itself.
@@ -108,7 +108,7 @@ BuiltinProvider.prototype = {
       globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
-      sharedGlobalBlacklist: sharedGlobalBlacklist
+      sharedGlobalBlocklist,
     });
 
     return promise.resolve(undefined);
@@ -171,7 +171,7 @@ SrcdirProvider.prototype = {
       globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
-      sharedGlobalBlacklist: sharedGlobalBlacklist
+      sharedGlobalBlocklist,
     });
 
     return this._writeManifest(srcDir).then(null, Cu.reportError);

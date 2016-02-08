@@ -14,7 +14,7 @@
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -85,7 +85,7 @@ public:
   void Shutdown();
 
 private:
-  BroadcastChannel(nsPIDOMWindow* aWindow,
+  BroadcastChannel(nsPIDOMWindowInner* aWindow,
                    const PrincipalInfo& aPrincipalInfo,
                    const nsACString& aOrigin,
                    const nsAString& aChannel,

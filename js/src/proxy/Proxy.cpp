@@ -553,7 +553,7 @@ js::proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 bool
 js::proxy_DefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                         Handle<JSPropertyDescriptor> desc,
+                         Handle<PropertyDescriptor> desc,
                          ObjectOpResult& result)
 {
     return Proxy::defineProperty(cx, obj, id, desc, result);
@@ -581,7 +581,7 @@ js::proxy_SetProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue 
 
 bool
 js::proxy_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                                   MutableHandle<JSPropertyDescriptor> desc)
+                                   MutableHandle<PropertyDescriptor> desc)
 {
     return Proxy::getOwnPropertyDescriptor(cx, obj, id, desc);
 }

@@ -256,7 +256,10 @@ BookmarksEngine.prototype = {
       stmt.params.id = id;
       let rows = Async.querySpinningly(stmt, ["url"]);
       url = rows.length == 0 ? "<not found>" : rows[0].url;
-    } catch (ex if !Async.isShutdownException(ex)) {
+    } catch (ex) {
+      if (Async.isShutdownException(ex)) {
+        throw ex;
+      }
       if (ex instanceof Ci.mozIStorageError) {
         url = `<failed: Storage error: ${ex.message} (${ex.result})>`;
       } else {
@@ -414,7 +417,7 @@ BookmarksEngine.prototype = {
     SyncEngine.prototype._syncStartup.call(this);
 
     let cb = Async.makeSpinningCallback();
-    Task.spawn(function() {
+    Task.spawn(function* () {
       // For first-syncs, make a backup for the user to restore
       if (this.lastSync == 0) {
         this._log.debug("Bookmarks backup starting.");
@@ -440,7 +443,10 @@ BookmarksEngine.prototype = {
       let guidMap;
       try {
         guidMap = this._buildGUIDMap();
-      } catch (ex if !Async.isShutdownException(ex)) {
+      } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
         this._log.warn("Error while building GUID map, skipping all other incoming items", ex);
         throw {code: Engine.prototype.eEngineAbortApplyIncoming,
                cause: ex};
@@ -1367,7 +1373,7 @@ BookmarksStore.prototype = {
 
   wipe: function BStore_wipe() {
     let cb = Async.makeSpinningCallback();
-    Task.spawn(function() {
+    Task.spawn(function* () {
       // Save a backup before clearing out all bookmarks.
       yield PlacesBackups.create(null, true);
       for (let guid of kSpecialIds.guids)

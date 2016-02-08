@@ -1,0 +1,277 @@
+load(libdir + "wasm.js");
+
+// ----------------------------------------------------------------------------
+// exports
+
+var o = wasmEvalText('(module)');
+assertEq(Object.getOwnPropertyNames(o).length, 0);
+
+var o = wasmEvalText('(module (func))');
+assertEq(Object.getOwnPropertyNames(o).length, 0);
+
+var o = wasmEvalText('(module (func) (export "" 0))');
+assertEq(typeof o, "function");
+assertEq(o.name, "wasm-function[0]");
+assertEq(o.length, 0);
+assertEq(o(), undefined);
+
+var o = wasmEvalText('(module (func) (export "a" 0))');
+var names = Object.getOwnPropertyNames(o);
+assertEq(names.length, 1);
+assertEq(names[0], 'a');
+var desc = Object.getOwnPropertyDescriptor(o, 'a');
+assertEq(typeof desc.value, "function");
+assertEq(desc.value.name, "wasm-function[0]");
+assertEq(desc.value.length, 0);
+assertEq(desc.value(), undefined);
+assertEq(desc.writable, true);
+assertEq(desc.enumerable, true);
+assertEq(desc.configurable, true);
+assertEq(desc.value(), undefined);
+
+var o = wasmEvalText('(module (func) (func) (export "" 0) (export "a" 1))');
+assertEq(typeof o, "function");
+assertEq(o.name, "wasm-function[0]");
+assertEq(o.length, 0);
+assertEq(o(), undefined);
+var desc = Object.getOwnPropertyDescriptor(o, 'a');
+assertEq(typeof desc.value, "function");
+assertEq(desc.value.name, "wasm-function[1]");
+assertEq(desc.value.length, 0);
+assertEq(desc.value(), undefined);
+assertEq(desc.writable, true);
+assertEq(desc.enumerable, true);
+assertEq(desc.configurable, true);
+assertEq(desc.value(), undefined);
+
+wasmEvalText('(module (func) (func) (export "a" 0))');
+wasmEvalText('(module (func) (func) (export "a" 1))');
+assertErrorMessage(() => wasmEvalText('(module (func) (export "a" 1))'), TypeError, /export function index out of range/);
+assertErrorMessage(() => wasmEvalText('(module (func) (func) (export "a" 2))'), TypeError, /export function index out of range/);
+
+var o = wasmEvalText('(module (func) (export "a" 0) (export "b" 0))');
+assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
+assertEq(o.a.name, "wasm-function[0]");
+assertEq(o.b.name, "wasm-function[0]");
+assertEq(o.a === o.b, true);
+
+var o = wasmEvalText('(module (func) (func) (export "a" 0) (export "b" 1))');
+assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
+assertEq(o.a.name, "wasm-function[0]");
+assertEq(o.b.name, "wasm-function[1]");
+assertEq(o.a === o.b, false);
+
+var o = wasmEvalText('(module (func (result i32) (i32.const 1)) (func (result i32) (i32.const 2)) (export "a" 0) (export "b" 1))');
+assertEq(o.a(), 1);
+assertEq(o.b(), 2);
+var o = wasmEvalText('(module (func (result i32) (i32.const 1)) (func (result i32) (i32.const 2)) (export "a" 1) (export "b" 0))');
+assertEq(o.a(), 2);
+assertEq(o.b(), 1);
+
+assertErrorMessage(() => wasmEvalText('(module (func) (export "a" 0) (export "a" 0))'), TypeError, /duplicate export/);
+assertErrorMessage(() => wasmEvalText('(module (func) (func) (export "a" 0) (export "a" 1))'), TypeError, /duplicate export/);
+
+// ----------------------------------------------------------------------------
+// signatures
+
+assertErrorMessage(() => wasmEvalText('(module (func (result i32)))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (nop)))'), TypeError, mismatchError("void", "i32"));
+wasmEvalText('(module (func (nop)))');
+wasmEvalText('(module (func (result i32) (i32.const 42)))');
+wasmEvalText('(module (func (param i32)))');
+wasmEvalText('(module (func (param i32) (result i32) (i32.const 42)))');
+wasmEvalText('(module (func (result i32) (param i32) (i32.const 42)))');
+wasmEvalText('(module (func (param f32)))');
+wasmEvalText('(module (func (param f64)))');
+
+assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
+assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
+
+// ----------------------------------------------------------------------------
+// imports
+
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /Second argument, if present, must be an Object/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /Second argument, if present, must be an Object/);
+
+const noImportObj = /no import object given/;
+const notObject = /import object field is not an Object/;
+const notFunction = /import object field is not a Function/;
+
+var code = '(module (import "a" "b"))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
+assertErrorMessage(() => wasmEvalText(code, {}), TypeError, notObject);
+assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notObject);
+assertErrorMessage(() => wasmEvalText(code, {a:{}}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:{b:1}}), TypeError, notFunction);
+wasmEvalText(code, {a:{b:()=>{}}});
+
+var code = '(module (import "" "b"))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, /module name cannot be empty/);
+
+var code = '(module (import "a" ""))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
+assertErrorMessage(() => wasmEvalText(code, {}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notFunction);
+wasmEvalText(code, {a:()=>{}});
+
+var code = '(module (import "a" "") (import "b" "c") (import "c" ""))';
+assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), TypeError, notFunction);
+wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:()=>{}});
+
+// ----------------------------------------------------------------------------
+// memory
+
+wasmEvalText('(module (memory 65536))');
+wasmEvalText('(module (memory 131072))');
+assertErrorMessage(() => wasmEvalText('(module (memory 0))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 1))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65535))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 131071))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 2147483648))'), TypeError, /initial memory size too big/);
+
+// May OOM, but must not crash:
+try {
+    wasmEvalText('(module (memory 2147418112))');
+} catch (e) {
+    assertEq(String(e).indexOf("out of memory") != -1, true);
+}
+
+assertErrorMessage(() => wasmEvalText('(module (export "" memory))'), TypeError, /no memory section/);
+
+var buf = wasmEvalText('(module (memory 65536) (export "" memory))');
+assertEq(buf instanceof ArrayBuffer, true);
+assertEq(buf.byteLength, 65536);
+
+assertErrorMessage(() => wasmEvalText('(module (memory 65536) (export "a" memory) (export "a" memory))'), TypeError, /duplicate export/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65536) (func) (export "a" memory) (export "a" 0))'), TypeError, /duplicate export/);
+var {a, b} = wasmEvalText('(module (memory 65536) (export "a" memory) (export "b" memory))');
+assertEq(a instanceof ArrayBuffer, true);
+assertEq(a, b);
+
+var obj = wasmEvalText('(module (memory 65536) (func (result i32) (i32.const 42)) (func (nop)) (export "a" memory) (export "b" 0) (export "c" 1))');
+assertEq(obj.a instanceof ArrayBuffer, true);
+assertEq(obj.b instanceof Function, true);
+assertEq(obj.c instanceof Function, true);
+assertEq(obj.a.byteLength, 65536);
+assertEq(obj.b(), 42);
+assertEq(obj.c(), undefined);
+
+var obj = wasmEvalText('(module (memory 65536) (func (result i32) (i32.const 42)) (export "" memory) (export "a" 0) (export "b" 0))');
+assertEq(obj instanceof ArrayBuffer, true);
+assertEq(obj.a instanceof Function, true);
+assertEq(obj.b instanceof Function, true);
+assertEq(obj.a, obj.b);
+assertEq(obj.byteLength, 65536);
+assertEq(obj.a(), 42);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65536 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a") (segment 2 "b")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+assertEq(new Uint8Array(buf)[1], 0);
+assertEq(new Uint8Array(buf)[2], 'b'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65535 "c")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
+
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65536 "a")) (export "" memory))'), TypeError, /data segment does not fit/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65535 "ab")) (export "" memory))'), TypeError, /data segment does not fit/);
+
+// ----------------------------------------------------------------------------
+// locals
+
+assertEq(wasmEvalText('(module (func (param i32) (result i32) (get_local 0)) (export "" 0))')(), 0);
+assertEq(wasmEvalText('(module (func (param i32) (result i32) (get_local 0)) (export "" 0))')(42), 42);
+assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 0)) (export "" 0))')(42, 43), 42);
+assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 1)) (export "" 0))')(42, 43), 43);
+
+assertErrorMessage(() => wasmEvalText('(module (func (get_local 0)))'), TypeError, /get_local index out of range/);
+wasmEvalText('(module (func (local i32)))');
+wasmEvalText('(module (func (local i32) (local f32)))');
+assertEq(wasmEvalText('(module (func (result i32) (local i32) (get_local 0)) (export "" 0))')(), 0);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (local i32) (get_local 0)))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (local f32) (get_local 0)))'), TypeError, mismatchError("f32", "i32"));
+assertEq(wasmEvalText('(module (func (result i32) (param i32) (local f32) (get_local 0)) (export "" 0))')(), 0);
+assertEq(wasmEvalText('(module (func (result f32) (param i32) (local f32) (get_local 1)) (export "" 0))')(), 0);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (param i32) (local f32) (get_local 0)))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (param i32) (local f32) (get_local 1)))'), TypeError, mismatchError("f32", "i32"));
+
+assertErrorMessage(() => wasmEvalText('(module (func (set_local 0 (i32.const 0))))'), TypeError, /set_local index out of range/);
+wasmEvalText('(module (func (local i32) (set_local 0 (i32.const 0))))');
+assertErrorMessage(() => wasmEvalText('(module (func (local f32) (set_local 0 (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (local f32) (set_local 0 (nop))))'), TypeError, mismatchError("void", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (local i32) (local f32) (set_local 0 (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (local i32) (local f32) (set_local 1 (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
+wasmEvalText('(module (func (local i32) (local f32) (set_local 0 (get_local 0))))');
+wasmEvalText('(module (func (local i32) (local f32) (set_local 1 (get_local 1))))');
+assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.const 42))) (export "" 0))')(), 42);
+assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (get_local 0))) (export "" 0))')(), 0);
+
+assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), TypeError, /NYI/);
+
+// ----------------------------------------------------------------------------
+// blocks
+
+assertEq(wasmEvalText('(module (func (block)) (export "" 0))')(), undefined);
+
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block)))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (block))))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (local i32) (set_local 0 (block))))'), TypeError, mismatchError("void", "i32"));
+
+assertEq(wasmEvalText('(module (func (block (block))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (result i32) (block (i32.const 42))) (export "" 0))')(), 42);
+assertEq(wasmEvalText('(module (func (result i32) (block (block (i32.const 42)))) (export "" 0))')(), 42);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (block (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+
+assertEq(wasmEvalText('(module (func (result i32) (block (i32.const 13) (block (i32.const 42)))) (export "" 0))')(), 42);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (param f32) (block (get_local 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+
+// ----------------------------------------------------------------------------
+// calls
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (nop)) (func (call 0 (i32.const 0))))'), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (param i32) (nop)) (func (call 0)))'), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))'), TypeError);
+assertErrorMessage(() => wasmEvalText('(module (func (nop)) (func (call 3)))'), TypeError, /callee index out of range/);
+wasmEvalText('(module (func (nop)) (func (call 0)))');
+wasmEvalText('(module (func (param i32) (nop)) (func (call 0 (i32.const 0))))');
+assertEq(wasmEvalText('(module (func (result i32) (i32.const 42)) (func (result i32) (call 0)) (export "" 1))')(), 42);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 0)) (export "" 0))')(), InternalError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0)) (export "" 0))')(), InternalError);
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', {a:()=>{}}), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0)))', {a:()=>{}}), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param f32)) (func (call_import 0 (i32.const 0))))', {a:()=>{}}), TypeError);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, /import index out of range/);
+wasmEvalText('(module (import "a" "") (func (call_import 0)))', {a:()=>{}});
+wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0 (i32.const 0))))', {a:()=>{}});
+
+var f = wasmEvalText('(module (import "inc" "") (func (call_import 0)) (export "" 0))', {inc:()=>counter++});
+var g = wasmEvalText('(module (import "f" "") (func (block (call_import 0) (call_import 0))) (export "" 0))', {f});
+var counter = 0;
+f();
+assertEq(counter, 1);
+g();
+assertEq(counter, 3);
+
+var f = wasmEvalText('(module (import "callf" "") (func (call_import 0)) (export "" 0))', {callf:()=>f()});
+assertThrowsInstanceOf(() => f(), InternalError);
+
+var f = wasmEvalText('(module (import "callg" "") (func (call_import 0)) (export "" 0))', {callg:()=>g()});
+var g = wasmEvalText('(module (import "callf" "") (func (call_import 0)) (export "" 0))', {callf:()=>f()});
+assertThrowsInstanceOf(() => f(), InternalError);
+
+var code = '(module (import "one" "" (result i32)) (import "two" "" (result i32)) (func (result i32) (i32.const 3)) (func (result i32) (i32.const 4)) (func (result i32) BODY) (export "" 2))';
+var imports = {one:()=>1, two:()=>2};
+assertEq(wasmEvalText(code.replace('BODY', '(call_import 0)'), imports)(), 1);
+assertEq(wasmEvalText(code.replace('BODY', '(call_import 1)'), imports)(), 2);
+assertEq(wasmEvalText(code.replace('BODY', '(call 0)'), imports)(), 3);
+assertEq(wasmEvalText(code.replace('BODY', '(call 1)'), imports)(), 4);

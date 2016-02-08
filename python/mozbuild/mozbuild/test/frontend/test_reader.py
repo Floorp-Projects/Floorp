@@ -42,11 +42,13 @@ class TestBuildReader(unittest.TestCase):
 
         return MockConfig(path, **kwargs)
 
-    def reader(self, name, enable_tests=False, **kwargs):
+    def reader(self, name, enable_tests=False, error_is_fatal=True, **kwargs):
         extra = {}
         if enable_tests:
             extra['ENABLE_TESTS'] = '1'
-        config = self.config(name, extra_substs=extra)
+        config = self.config(name,
+                             extra_substs=extra,
+                             error_is_fatal=error_is_fatal)
 
         return BuildReader(config, **kwargs)
 
@@ -238,6 +240,11 @@ class TestBuildReader(unittest.TestCase):
         e = bre.exception
         self.assertIn('A moz.build file called the error() function.', str(e))
         self.assertIn('    Some error.', str(e))
+
+    def test_error_error_func_ok(self):
+        reader = self.reader('reader-error-error-func', error_is_fatal=False)
+
+        contexts = list(reader.read_topsrcdir())
 
     def test_inheriting_variables(self):
         reader = self.reader('inheriting-variables')

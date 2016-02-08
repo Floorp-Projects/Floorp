@@ -109,7 +109,7 @@ public class GeckoScreenOrientation {
      * @return Whether the screen orientation has changed.
      */
     public boolean update() {
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             return false;
         }
@@ -211,6 +211,13 @@ public class GeckoScreenOrientation {
         return update();
     }
 
+    private Activity getActivity() {
+        if (GeckoAppShell.getGeckoInterface() == null) {
+            return null;
+        }
+        return GeckoAppShell.getGeckoInterface().getActivity();
+    }
+
     /*
      * Set the given requested orientation for the current activity.
      * This is essentially an unlock without an update.
@@ -219,14 +226,15 @@ public class GeckoScreenOrientation {
      *        Gecko screen orientation.
      *
      * @return Whether the requested orientation was set. This can only fail if
-     *         the current activity cannot be retrieved vie GeckoAppShell.
+     *         the current activity cannot be retrieved via GeckoAppShell.
      *
      */
     private boolean setRequestedOrientation(ScreenOrientation aScreenOrientation) {
         int activityOrientation = screenOrientationToActivityInfoOrientation(aScreenOrientation);
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             Log.w(LOGTAG, "setRequestOrientation: failed to get activity");
+            return false;
         }
         if (activity.getRequestedOrientation() == activityOrientation) {
             return false;
@@ -289,7 +297,7 @@ public class GeckoScreenOrientation {
      * @return Device rotation from Display.getRotation().
      */
     private int getRotation() {
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             Log.w(LOGTAG, "getRotation: failed to get activity");
             return DEFAULT_ROTATION;

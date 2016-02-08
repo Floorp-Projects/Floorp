@@ -30,7 +30,7 @@ var src1 = [ 10, 20, 30, 40,
              ];
 Object.defineProperty(src1, 4, {
   get: function () {
-    neuter(ab1, "change-data");
+    detachArrayBuffer(ab1, "change-data");
     gc();
     return 200;
   }
@@ -58,7 +58,7 @@ var src2 = [ 10, 20, 30, 40,
              ];
 Object.defineProperty(src2, 4, {
   get: function () {
-    neuter(ab2, "same-data");
+    detachArrayBuffer(ab2, "same-data");
     gc();
     return 200;
   }

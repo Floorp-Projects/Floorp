@@ -88,7 +88,7 @@ public:
 
     virtual nsresult Run() {
         const auto& buffer = jni::Object::Ref::From(mBuffer->GetObject());
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
         mBrowserApp->GetBrowserTab(mTabId, getter_AddRefs(tab));
         if (!tab) {
@@ -265,6 +265,7 @@ nsAppShell::Init()
     if (obsServ) {
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
         obsServ->AddObserver(this, "profile-after-change", false);
+        obsServ->AddObserver(this, "chrome-document-loaded", false);
         obsServ->AddObserver(this, "quit-application-granted", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
@@ -329,8 +330,20 @@ nsAppShell::Observe(nsISupports* aSubject,
         }
         removeObserver = true;
 
+    } else if (!strcmp(aTopic, "chrome-document-loaded")) {
+        if (jni::IsAvailable()) {
+            // Our first window has loaded, assume any JS initialization has run.
+            widget::GeckoThread::CheckAndSetState(
+                    widget::GeckoThread::State::PROFILE_READY(),
+                    widget::GeckoThread::State::RUNNING());
+        }
+        removeObserver = true;
+
     } else if (!strcmp(aTopic, "quit-application-granted")) {
         if (jni::IsAvailable()) {
+            widget::GeckoThread::SetState(
+                    widget::GeckoThread::State::EXITING());
+
             // We are told explicitly to quit, perhaps due to
             // nsIAppStartup::Quit being called. We should release our hold on
             // nsIAppStartup and let it continue to quit.
@@ -341,6 +354,11 @@ nsAppShell::Observe(nsISupports* aSubject,
             }
         }
         removeObserver = true;
+
+    } else if (!strcmp(aTopic, "nsPref:changed")) {
+        if (jni::IsAvailable()) {
+            mozilla::PrefsHelper::OnPrefChange(aData);
+        }
     }
 
     if (removeObserver) {
@@ -478,7 +496,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
 
     case AndroidGeckoEvent::SENSOR_EVENT: {
-        nsAutoTArray<float, 4> values;
+        AutoTArray<float, 4> values;
         mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
 
         switch (type) {
@@ -603,7 +621,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         RefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
         const auto& mBuffer = jni::Object::Ref::From(javaBuffer->GetObject());
 
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
         nsAppShell::Get()->mBrowserApp->GetBrowserTab(tabId, getter_AddRefs(tab));
         if (!tab) {
@@ -714,15 +732,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         free(uri);
         if (flag)
             free(flag);
-        break;
-    }
-
-    case AndroidGeckoEvent::SIZE_CHANGED: {
-        // store the last resize event to dispatch it to new windows with a FORCED_RESIZE event
-        if (curEvent.get() != gLastSizeChange) {
-            gLastSizeChange = AndroidGeckoEvent::CopyResizeEvent(curEvent.get());
-        }
-        nsWindow::OnGlobalAndroidEvent(curEvent.get());
         break;
     }
 
@@ -932,13 +941,6 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
             queue.insertBack(this);
             break;
         }
-    }
-}
-
-void
-nsAppShell::ResendLastResizeEvent(nsWindow* aDest) {
-    if (gLastSizeChange) {
-        nsWindow::OnGlobalAndroidEvent(gLastSizeChange);
     }
 }
 

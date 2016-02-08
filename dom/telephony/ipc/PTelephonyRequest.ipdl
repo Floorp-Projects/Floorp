@@ -66,14 +66,14 @@ protocol PTelephonyRequest
   manager PTelephony;
 
 child:
-  NotifyEnumerateCallState(nsTelephonyCallInfo aInfo);
+  async NotifyEnumerateCallState(nsTelephonyCallInfo aInfo);
 
-  NotifyDialMMI(nsString aServiceCode);
+  async NotifyDialMMI(nsString aServiceCode);
 
   /**
    * Sent when the asynchronous request has completed.
    */
-  __delete__(IPCTelephonyResponse aResponse);
+  async __delete__(IPCTelephonyResponse aResponse);
 };
 
 } /* namespace telephony */

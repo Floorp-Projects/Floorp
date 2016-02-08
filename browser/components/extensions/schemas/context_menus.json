@@ -4,6 +4,20 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "contextMenus"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "contextMenus",
     "description": "Use the <code>browser.contextMenus</code> API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
     "properties": {
@@ -195,6 +209,7 @@
         "name": "update",
         "type": "function",
         "description": "Updates a previously created context menu item.",
+        "async": "callback",
         "parameters": [
           {
             "choices": [
@@ -281,6 +296,7 @@
         "name": "remove",
         "type": "function",
         "description": "Removes a context menu item.",
+        "async": "callback",
         "parameters": [
           {
             "choices": [
@@ -303,6 +319,7 @@
         "name": "removeAll",
         "type": "function",
         "description": "Removes all context menu items added by this extension.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",

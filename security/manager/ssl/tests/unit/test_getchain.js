@@ -44,7 +44,7 @@ function check_matching_issuer_and_getchain(expected_issuer_serial, cert) {
         "Serial numbers via cert.issuer and via getChain() should match");
 }
 
-function check_getchain(ee_cert, ssl_ca, email_ca){
+function check_getchain(ee_cert, ssl_ca, email_ca) {
   // A certificate should first build a chain/issuer to
   // a SSL trust domain, then an EMAIL trust domain and then
   // an object signer trust domain.
@@ -71,7 +71,7 @@ function run_test() {
     addCertFromFile(certdb, `test_getchain/${cert}.pem`, ",,");
   }
 
-  let ee_cert = certdb.findCertByNickname(null, 'ee');
+  let ee_cert = certdb.findCertByNickname('ee');
   notEqual(ee_cert, null, "EE cert should be in the cert DB");
 
   let ca = get_ca_array();

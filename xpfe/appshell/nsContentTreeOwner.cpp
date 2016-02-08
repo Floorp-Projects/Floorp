@@ -145,7 +145,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
     return NS_ERROR_FAILURE;
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow)) ||
+      aIID.Equals(NS_GET_IID(nsPIDOMWindowOuter))) {
     NS_ENSURE_STATE(mXULWindow);
     nsCOMPtr<nsIDocShellTreeItem> shell;
     mXULWindow->GetPrimaryContentShell(getter_AddRefs(shell));
@@ -846,7 +847,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const char16_t* aTitle)
 // nsContentTreeOwner: nsIWindowProvider
 //*****************************************************************************   
 NS_IMETHODIMP
-nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
+nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
                                   uint32_t aChromeFlags,
                                   bool aCalledFromJS,
                                   bool aPositionSpecified,
@@ -855,9 +856,11 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
                                   bool* aWindowIsNew,
-                                  nsIDOMWindow** aReturn)
+                                  mozIDOMWindowProxy** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aParent);
+
+  auto* parent = nsPIDOMWindowOuter::From(aParent);
   
   *aReturn = nullptr;
 
@@ -884,7 +887,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
 
     BrowserElementParent::OpenWindowResult opened =
-      BrowserElementParent::OpenWindowInProcess(aParent, aURI, aName,
+      BrowserElementParent::OpenWindowInProcess(parent, aURI, aName,
                                                 aFeatures, aReturn);
 
     // If OpenWindowInProcess handled the open (by opening it or blocking the
@@ -915,7 +918,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   }
 
   int32_t openLocation =
-    nsWindowWatcher::GetWindowOpenLocation(aParent, aChromeFlags, aCalledFromJS,
+    nsWindowWatcher::GetWindowOpenLocation(parent, aChromeFlags, aCalledFromJS,
                                            aPositionSpecified, aSizeSpecified);
 
   if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&
@@ -924,7 +927,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWin;
+  nsCOMPtr<mozIDOMWindowProxy> domWin;
   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
   nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
   if (!chromeWin) {
@@ -1075,7 +1078,7 @@ nsSiteWindow::SetFocus(void)
     nsCOMPtr<nsIDocShell> docshell;
     window->GetDocShell(getter_AddRefs(docshell));
     if (docShell) {
-      nsCOMPtr<nsIDOMWindow> domWindow(docShell->GetWindow());
+      nsCOMPtr<nsPIDOMWindowOuter> domWindow(docShell->GetWindow());
       if (domWindow)
         domWindow->Focus();
     }
@@ -1142,7 +1145,7 @@ nsSiteWindow::Blur(void)
       return NS_OK;
     }
 
-    nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(docshell->GetWindow());
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow = docshell->GetWindow();
     if (domWindow)
       domWindow->Focus();
   }

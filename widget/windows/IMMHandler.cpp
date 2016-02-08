@@ -2756,7 +2756,7 @@ IMMHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm)
 {
   // Hack for ATOK.  ATOK (Japanese IME) refers native caret position at
   // deciding candidate window position.
-  if (aForm->dwStyle == CFS_CANDIDATEPOS && aWindow->PluginHasFocus()) {
+  if (aWindow->PluginHasFocus()) {
     // We cannot retrieve proper character height from plugin.  Therefore,
     // we should assume that the caret height is always 20px since if less than
     // this height, candidate window may overlap with composition string when

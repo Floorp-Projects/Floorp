@@ -11,7 +11,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState.
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -67,12 +67,9 @@ public:
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 
-  WorkerPrivate*
-  GetWorkerPrivate() const;
-
 private:
   // This class can only be created from the ServiceWorkerManager.
-  ServiceWorker(nsPIDOMWindow* aWindow, ServiceWorkerInfo* aInfo);
+  ServiceWorker(nsPIDOMWindowInner* aWindow, ServiceWorkerInfo* aInfo);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();

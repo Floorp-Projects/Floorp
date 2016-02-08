@@ -15,7 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 template <class> struct already_AddRefed;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -35,7 +35,7 @@ class IDBFileRequest final : public DOMRequest,
 
 public:
   static already_AddRefed<IDBFileRequest>
-  Create(nsPIDOMWindow* aOwner, IDBFileHandle* aFileHandle,
+  Create(nsPIDOMWindowInner* aOwner, IDBFileHandle* aFileHandle,
          bool aWrapAsDOMRequest);
 
   // WebIDL
@@ -80,7 +80,7 @@ public:
   SetError(nsresult aError) override;
 
 private:
-  IDBFileRequest(nsPIDOMWindow* aWindow,
+  IDBFileRequest(nsPIDOMWindowInner* aWindow,
                  IDBFileHandle* aFileHandle,
                  bool aWrapAsDOMRequest);
 

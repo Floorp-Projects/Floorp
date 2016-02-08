@@ -12,7 +12,7 @@
 
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -24,11 +24,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TelephonyCallId)
 
-  TelephonyCallId(nsPIDOMWindow* aWindow, const nsAString& aNumber,
+  TelephonyCallId(nsPIDOMWindowInner* aWindow, const nsAString& aNumber,
                   uint16_t aNumberPresentation, const nsAString& aName,
                   uint16_t aNamePresentation);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -66,7 +66,7 @@ public:
 private:
   ~TelephonyCallId();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsString mNumber;
   uint16_t mNumberPresentation;
   nsString mName;

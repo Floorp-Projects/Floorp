@@ -91,7 +91,7 @@ class SharedArrayRawBuffer
 /*
  * SharedArrayBufferObject
  *
- * When transferred to a WebWorker, the buffer is not neutered on the
+ * When transferred to a WebWorker, the buffer is not detached on the
  * parent side, and both child and parent reference the same buffer.
  *
  * The underlying memory is memory-mapped and reference counted

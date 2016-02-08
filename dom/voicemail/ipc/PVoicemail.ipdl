@@ -15,21 +15,21 @@ sync protocol PVoicemail
   manager PContent;
 
 child:
-  NotifyInfoChanged(uint32_t aServiceId,
-                    nsString aNumber,
-                    nsString aDisplayName);
+  async NotifyInfoChanged(uint32_t aServiceId,
+                          nsString aNumber,
+                          nsString aDisplayName);
 
-  NotifyStatusChanged(uint32_t aServiceId,
-                      bool aHasMessages,
-                      int32_t aMessageCount,
-                      nsString aNumber,
-                      nsString aDisplayName);
+  async NotifyStatusChanged(uint32_t aServiceId,
+                            bool aHasMessages,
+                            int32_t aMessageCount,
+                            nsString aNumber,
+                            nsString aDisplayName);
 
 parent:
   /**
    * Send when child no longer needs to use PVoicemail.
    */
-  __delete__();
+  async __delete__();
 
   sync GetAttributes(uint32_t aServiceId)
     returns (nsString aNumber,

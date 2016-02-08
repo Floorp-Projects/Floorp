@@ -238,7 +238,10 @@ RecordManager.prototype = {
       record.deserialize(this.response);
 
       return this.set(url, record);
-    } catch (ex if !Async.isShutdownException(ex)) {
+    } catch (ex) {
+      if (Async.isShutdownException(ex)) {
+        throw ex;
+      }
       this._log.debug("Failed to import record", ex);
       return null;
     }

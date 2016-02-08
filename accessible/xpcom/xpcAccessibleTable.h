@@ -23,6 +23,9 @@ public:
   explicit xpcAccessibleTable(Accessible* aIntl) :
     xpcAccessibleGeneric(aIntl) { }
 
+  xpcAccessibleTable(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleGeneric(aProxy, aInterfaces) {}
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
@@ -80,7 +83,8 @@ protected:
   virtual ~xpcAccessibleTable() {}
 
 private:
-  TableAccessible* Intl() { return mIntl->AsTable(); }
+  TableAccessible* Intl()
+  { return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsTable() : nullptr; }
 
   xpcAccessibleTable(const xpcAccessibleTable&) = delete;
   xpcAccessibleTable& operator =(const xpcAccessibleTable&) = delete;

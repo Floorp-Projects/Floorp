@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that expanded DominatorTreeItems are correctly rendered and updated
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <!-- Give the container height so that the whole tree is rendered. -->
+    <div id="container" style="height: 900px;"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+        window.onload = Task.async(function* () {
+          try {
+            const container = document.getElementById("container");
+
+            // simple tree with one root and one child
+            const root = makeTestDominatorTreeNode(
+              { moreChildrenAvailable: false },
+              [
+                makeTestDominatorTreeNode({ moreChildrenAvailable: false }),
+              ]);
+            ok(root.children);
+
+            // root node is expanded
+            const expanded = new Set();
+            expanded.add(root.nodeId);
+
+            let component = yield renderComponent(
+              DominatorTreeComponent(immutableUpdate(
+                TEST_DOMINATOR_TREE_PROPS,
+                {
+                  dominatorTree: immutableUpdate(
+                    TEST_DOMINATOR_TREE_PROPS.dominatorTree,
+                    { expanded, root }
+                  ),
+                })), container);
+            ok(true, "Dominator tree rendered");
+
+            is(container.querySelectorAll(".tree-node").length, 2,
+                "Should display two rows");
+            is(container.querySelectorAll(".arrow.open").length, 1,
+                "Should display one expanded arrow");
+
+            yield setProps(component, immutableUpdate(
+              TEST_DOMINATOR_TREE_PROPS,
+              {
+                dominatorTree: immutableUpdate(
+                  TEST_DOMINATOR_TREE_PROPS.dominatorTree,
+                  { expanded: new Set(), root }
+                )
+              }));
+            ok(true, "Dominator tree props updated to collapse all nodes");
+
+            is(container.querySelectorAll(".tree-node").length, 1,
+                "Should display only one row");
+            is(container.querySelectorAll(".arrow.open").length, 0,
+                "Should display no expanded arrow");
+
+          } catch(e) {
+            ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+          } finally {
+            SimpleTest.finish();
+          }
+        });
+        </script>
+    </pre>
+</body>
+</html>

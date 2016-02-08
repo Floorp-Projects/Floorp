@@ -760,8 +760,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // for some protocols, we expect the location to be absolute.
     // if so, and if the location indeed appears to be a valid URI, then go
     // ahead and treat it like one.
+
+    nsAutoCString scheme;
     if (mExpectAbsLoc &&
-        NS_SUCCEEDED(net_ExtractURLScheme(loc, nullptr, nullptr, nullptr))) {
+        NS_SUCCEEDED(net_ExtractURLScheme(loc, scheme))) {
         // escape as absolute 
         escFlags = esc_Forced | esc_AlwaysCopy | esc_Minimal;
     }
@@ -827,7 +829,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     PRTime t;
     aIndex->GetLastModified(&t);
 
-    if (t == -1) {
+    if (t == -1LL) {
         pushBuffer.AppendLiteral("></td>\n <td>");
     } else {
         pushBuffer.AppendLiteral(" sortable-data=\"");

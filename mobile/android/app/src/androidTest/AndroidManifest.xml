@@ -6,10 +6,13 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="${MOZ_ANDROID_MIN_SDK_VERSION}"
-              android:targetSdkVersion="22"/>
+              android:targetSdkVersion="23"/>
     <!-- TODO: re-instate maxSdkVersion. -->
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <instrumentation
         android:name="org.mozilla.gecko.FennecInstrumentationTestRunner"

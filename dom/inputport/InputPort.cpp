@@ -24,7 +24,7 @@ NS_IMPL_RELEASE_INHERITED(InputPort, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(InputPort)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-InputPort::InputPort(nsPIDOMWindow* aWindow)
+InputPort::InputPort(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsConnected(false)
 {

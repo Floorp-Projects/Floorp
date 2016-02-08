@@ -23,7 +23,7 @@ public:
   NS_DECL_NSIDOMWINDOWCOLLECTION
 
   uint32_t GetLength();
-  already_AddRefed<nsIDOMWindow> IndexedGetter(uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
 
   //local methods
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);

@@ -19,7 +19,6 @@
 #include "nsWeakReference.h"
 
 // Interfaces
-#include "nsIDOMWindow.h"
 #include "nsIObserver.h"
 
 // Classes
@@ -52,7 +51,7 @@ public:
   NS_IMETHOD Print(nsIPrintSettings*       aPrintSettings,
                    nsIWebProgressListener* aWebProgressListener);
   NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings,
-                          nsIDOMWindow *aChildDOMWin,
+                          mozIDOMWindowProxy* aChildDOMWin,
                           nsIWebProgressListener* aWebProgressListener);
   NS_IMETHOD GetIsFramesetDocument(bool *aIsFramesetDocument);
   NS_IMETHOD GetIsIFrameSelected(bool *aIsIFrameSelected);
@@ -135,7 +134,7 @@ public:
   nsresult CheckForPrinters(nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount);
 
-  bool IsThereARangeSelection(nsIDOMWindow * aDOMWin);
+  bool IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin);
 
   void FirePrintingErrorEvent(nsresult aPrintError);
   //---------------------------------------------------------------------
@@ -144,17 +143,17 @@ public:
   // Timer Methods
   nsresult StartPagePrintTimer(nsPrintObject* aPO);
 
-  bool IsWindowsInOurSubTree(nsPIDOMWindow * aDOMWindow);
+  bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow);
   static bool IsParentAFrameSet(nsIDocShell * aParent);
   bool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
-                                 nsIDOMWindow* aDOMWin,
-                                 bool& aIsParentFrameSet);
+                               nsPIDOMWindowOuter* aDOMWin,
+                               bool& aIsParentFrameSet);
 
   static nsPrintObject* FindPrintObjectByDOMWin(nsPrintObject* aParentObject,
-                                                nsIDOMWindow* aDOMWin);
+                                                nsPIDOMWindowOuter* aDOMWin);
 
   // get the currently infocus frame for the document viewer
-  already_AddRefed<nsIDOMWindow> FindFocusedDOMWindow();
+  already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow();
 
   //---------------------------------------------------------------------
   // Static Methods

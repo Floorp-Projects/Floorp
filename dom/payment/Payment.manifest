@@ -1,6 +1,5 @@
-component {a920adc0-c36e-4fd0-8de0-aac1ac6ebbd0} Payment.js
-contract @mozilla.org/payment/content-helper;1 {a920adc0-c36e-4fd0-8de0-aac1ac6ebbd0}
-category JavaScript-navigator-property mozPay @mozilla.org/payment/content-helper;1
+component {80035846-6732-4fcc-961b-f336b65218f4} Payment.js
+contract @mozilla.org/payment/content-helper-service;1 {80035846-6732-4fcc-961b-f336b65218f4}
 
 component {b8bce4e7-fbf0-4719-a634-b1bf9018657c} PaymentFlowInfo.js
 contract @mozilla.org/payment/flow-info;1 {b8bce4e7-fbf0-4719-a634-b1bf9018657c}
