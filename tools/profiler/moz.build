@@ -104,6 +104,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',
         ]
 
+    if not CONFIG['MOZ_CRASHREPORTER'] and CONFIG['OS_TARGET'] in ('Android', 'gonk'):
+        SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/android/breakpad_getcontext.S']
+
     if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
         DEFINES['ARCH_ARMV6'] = True
 
