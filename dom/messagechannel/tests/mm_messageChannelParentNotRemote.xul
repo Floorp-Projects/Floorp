@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Test MessageChannel API with nsFrameMessageManager(bug 1174624)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="prepare_test()">
+
+  <!-- test code goes here -->
+  <script type="application/javascript"
+          src="chrome://mochitests/content/chrome/dom/messagechannel/tests/mm_messageChannelParent.js"></script>
+  <browser type="content" src="about:blank" id="messagechannel_remote"/>
+</window>
