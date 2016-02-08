@@ -559,7 +559,10 @@ class RefTest(object):
         def record_last_test(message):
             """Records the last test seen by this harness for the benefit of crash logging."""
             if message['action'] == 'test_start':
-                self.lastTestSeen = message['test']
+                if isinstance(message['test'], tuple):
+                    self.lastTestSeen = message['test'][0]
+                else:
+                    self.lastTestSeen = message['test']
 
         self.log.add_handler(record_last_test)
 
@@ -598,7 +601,10 @@ class RefTest(object):
         runner.process_handler = None
 
         if status:
-            self.log.error("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % (self.lastTestSeen, status))
+            msg = "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % \
+                (self.lastTestSeen, status)
+            # use process_output so message is logged verbatim
+            self.log.process_output(None, msg)
         else:
             self.lastTestSeen = 'Main app process exited normally'
 
