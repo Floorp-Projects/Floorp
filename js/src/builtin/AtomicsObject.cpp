@@ -877,8 +877,8 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     HandleValue objv = args.get(0);
     HandleValue idx1v = args.get(1);
     HandleValue countv = args.get(2);
-    HandleValue valv = args.get(3);
-    HandleValue idx2v = args.get(4);
+    HandleValue idx2v = args.get(3);
+    HandleValue valv = args.get(4);
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
