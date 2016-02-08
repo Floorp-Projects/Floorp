@@ -420,7 +420,10 @@ class LiveBundle : public TempObject
     { }
 
   public:
-    static LiveBundle* New(TempAllocator& alloc, SpillSet* spill, LiveBundle* spillParent) {
+    static LiveBundle* FallibleNew(TempAllocator& alloc, SpillSet* spill, LiveBundle* spillParent)
+    {
+        if (!alloc.ensureBallast())
+            return nullptr;
         return new(alloc) LiveBundle(spill, spillParent);
     }
 
