@@ -130,7 +130,8 @@ public:
               bool aIsFlashPlugin,
               bool aSupportsAsyncInit,
               int64_t aLastModifiedTime,
-              bool aFromExtension);
+              bool aFromExtension,
+              int32_t aSandboxLevel);
 
   void TryUnloadPlugin(bool inShutdown);
 
@@ -170,6 +171,7 @@ public:
   nsCString     mFullPath; // UTF-8
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;
+  int32_t       mSandboxLevel;
 
   void          InvalidateBlocklistState();
 
@@ -185,6 +187,7 @@ private:
                 const char* const* aMimeDescriptions,
                 const char* const* aExtensions,
                 uint32_t aVariantCount);
+  void InitSandboxLevel();
   nsresult EnsureMembersAreUTF8();
   void FixupVersion();
 
