@@ -161,24 +161,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
     checkTestsCompleted();
   }
 
-  //Set the first set of mixed content settings and increment the counter.
-  //Enable <picture> and <img srcset> for the test.
-  changePrefs([[ "dom.image.srcset.enabled", true ], [ "dom.image.picture.enabled", true ]],
-    function() {
-      //listen for a messages from the mixed content test harness
-      window.addEventListener("message", receiveMessage, false);
+  function startTest() {
+    //Set the first set of mixed content settings and increment the counter.
+    //Enable <picture> and <img srcset> for the test.
+    changePrefs([[ "dom.image.srcset.enabled", true ], [ "dom.image.picture.enabled", true ]],
+      function() {
+        //listen for a messages from the mixed content test harness
+        window.addEventListener("message", receiveMessage, false);
 
-      //Kick off test
-      reloadFrame();
-    }
-  );
+        //Kick off test
+        reloadFrame();
+      }
+    );
+  }
 
   SimpleTest.waitForExplicitFinish();
 
   </script>
 </head>
 
-<body>
+<body onload='startTest()'>
   <div id="framediv"></div>
   <pre id="log"></pre>
 </body>
