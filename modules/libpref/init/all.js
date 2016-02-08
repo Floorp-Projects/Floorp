@@ -567,7 +567,16 @@ pref("apz.content_response_timeout", 300);
 pref("apz.drag.enabled", false);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
+
+// See bug 1246676, we're experimenting to see what's best
+#if defined(XP_WIN)
+pref("apz.displayport_expiry_ms", 0);
+#elif defined(XP_MACOSX)
+pref("apz.displayport_expiry_ms", 30000);
+#else
 pref("apz.displayport_expiry_ms", 15000);
+#endif
+
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
