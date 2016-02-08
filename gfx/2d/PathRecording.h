@@ -94,9 +94,9 @@ public:
   ~PathRecording();
 
   virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
-  virtual already_AddRefed<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual already_AddRefed<PathBuilder> CopyToBuilder(FillRule aFillRule) const;
   virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
-                                                             FillRule aFillRule = FillRule::FILL_WINDING) const;
+                                                             FillRule aFillRule) const;
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   { return mPath->ContainsPoint(aPoint, aTransform); }
   virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,

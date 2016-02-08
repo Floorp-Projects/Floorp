@@ -1004,15 +1004,6 @@ gfxContext::EnsurePath()
 
       mTransformChanged = false;
     }
-
-    if (FillRule::FILL_WINDING == mPath->GetFillRule()) {
-      return;
-    }
-
-    mPathBuilder = mPath->CopyToBuilder();
-
-    mPath = mPathBuilder->Finish();
-    mPathBuilder = nullptr;
     return;
   }
 

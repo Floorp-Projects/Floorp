@@ -45,8 +45,7 @@ IsEvalCacheCandidate(JSScript* script)
     // script's first object, which entrains the eval's scope.
     return script->savedCallerFun() &&
            !script->hasSingletons() &&
-           script->objects()->length == 1 &&
-           !script->hasRegexps();
+           script->objects()->length == 1;
 }
 
 /* static */ HashNumber

@@ -173,18 +173,13 @@ JSScript::functionOrCallerFunction()
 inline js::RegExpObject*
 JSScript::getRegExp(size_t index)
 {
-    js::ObjectArray* arr = regexps();
-    MOZ_ASSERT(uint32_t(index) < arr->length);
-    JSObject* obj = arr->vector[index];
-    MOZ_ASSERT(obj->is<js::RegExpObject>());
-    return (js::RegExpObject*) obj;
+    return &getObject(index)->as<js::RegExpObject>();
 }
 
 inline js::RegExpObject*
 JSScript::getRegExp(jsbytecode* pc)
 {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
-    return getRegExp(GET_UINT32_INDEX(pc));
+    return &getObject(pc)->as<js::RegExpObject>();
 }
 
 inline js::GlobalObject&

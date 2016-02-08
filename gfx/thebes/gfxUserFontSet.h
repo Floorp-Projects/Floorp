@@ -526,6 +526,9 @@ protected:
     // true when local names have been looked up, false otherwise
     bool mLocalRulesUsed;
 
+    // true when rules using local names need to be redone
+    bool mRebuildLocalRules;
+
     // performance stats
     uint32_t mDownloadCount;
     uint64_t mDownloadSize;

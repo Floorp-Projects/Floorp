@@ -1087,7 +1087,6 @@ class JSScript : public js::gc::TenuredCell
     enum ArrayKind {
         CONSTS,
         OBJECTS,
-        REGEXPS,
         TRYNOTES,
         BLOCK_SCOPES,
         ARRAY_KIND_BITS
@@ -1242,9 +1241,8 @@ class JSScript : public js::gc::TenuredCell
     // successfully creating any kind (function or other) of new JSScript.
     // However, callers of fullyInitFromEmitter() do not need to do this.
     static bool partiallyInit(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
-                              uint32_t nconsts, uint32_t nobjects, uint32_t nregexps,
-                              uint32_t ntrynotes, uint32_t nblockscopes, uint32_t nyieldoffsets,
-                              uint32_t nTypeSets);
+                              uint32_t nconsts, uint32_t nobjects, uint32_t ntrynotes,
+                              uint32_t nblockscopes, uint32_t nyieldoffsets, uint32_t nTypeSets);
     static bool fullyInitFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
                                      js::frontend::BytecodeEmitter* bce);
     static void linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
@@ -1782,7 +1780,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool hasConsts()        { return hasArray(CONSTS);      }
     bool hasObjects()       { return hasArray(OBJECTS);     }
-    bool hasRegexps()       { return hasArray(REGEXPS);     }
     bool hasTrynotes()      { return hasArray(TRYNOTES);    }
     bool hasBlockScopes()   { return hasArray(BLOCK_SCOPES); }
     bool hasYieldOffsets()  { return isGenerator(); }
@@ -1791,8 +1788,7 @@ class JSScript : public js::gc::TenuredCell
 
     size_t constsOffset()       { return 0; }
     size_t objectsOffset()      { return OFF(constsOffset,      hasConsts,      js::ConstArray);      }
-    size_t regexpsOffset()      { return OFF(objectsOffset,     hasObjects,     js::ObjectArray);     }
-    size_t trynotesOffset()     { return OFF(regexpsOffset,     hasRegexps,     js::ObjectArray);     }
+    size_t trynotesOffset()     { return OFF(objectsOffset,     hasObjects,     js::ObjectArray);     }
     size_t blockScopesOffset()  { return OFF(trynotesOffset,    hasTrynotes,    js::TryNoteArray);    }
     size_t yieldOffsetsOffset() { return OFF(blockScopesOffset, hasBlockScopes, js::BlockScopeArray); }
 
@@ -1806,11 +1802,6 @@ class JSScript : public js::gc::TenuredCell
     js::ObjectArray* objects() {
         MOZ_ASSERT(hasObjects());
         return reinterpret_cast<js::ObjectArray*>(data + objectsOffset());
-    }
-
-    js::ObjectArray* regexps() {
-        MOZ_ASSERT(hasRegexps());
-        return reinterpret_cast<js::ObjectArray*>(data + regexpsOffset());
     }
 
     js::TryNoteArray* trynotes() {
