@@ -26,7 +26,7 @@ const xulappURI = module.uri.replace("loader/cuddlefish.js",
 // We need to keep a reference to the sandbox in order to unload it in
 // bootstrap.js
 
-const loaderSandbox = loadSandbox(loaderURI);
+var loaderSandbox = loadSandbox(loaderURI);
 const loaderModule = loaderSandbox.exports;
 
 const { incompatibility } = Cu.import(xulappURI, {}).XulApp;
