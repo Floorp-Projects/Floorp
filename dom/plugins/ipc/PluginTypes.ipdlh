@@ -21,6 +21,7 @@ struct PluginTag
   nsCString version;
   int64_t lastModifiedTime;
   bool isFromExtension;
+  int32_t sandboxLevel;
 };
 
 union PluginIdentifier
