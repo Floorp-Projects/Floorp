@@ -1,21 +1,19 @@
 /* Copyright 2015 Google Inc. All Rights Reserved.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+   Distributed under MIT license.
+   See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
 /* Macros for compiler / platform specific features and build options.
 
    Build options are:
+    * BROTLI_BUILD_32_BIT disables 64-bit optimizations
+    * BROTLI_BUILD_64_BIT forces to use 64-bit optimizations
+    * BROTLI_BUILD_BIG_ENDIAN forces to use big-endian optimizations
+    * BROTLI_BUILD_ENDIAN_NEUTRAL disables endian-aware optimizations
+    * BROTLI_BUILD_LITTLE_ENDIAN forces to use little-endian optimizations
+    * BROTLI_BUILD_MODERN_COMPILER forces to use modern compilers built-ins,
+      features and attributes
     * BROTLI_BUILD_PORTABLE disables dangerous optimizations, like unaligned
       read and overlapping memcpy; this reduces decompression speed by 5%
     * BROTLI_DEBUG dumps file name and line number when decoder detects stream
@@ -41,15 +39,64 @@
 #define __has_feature(x) 0
 #endif
 
-#ifdef BROTLI_BUILD_PORTABLE
-#define BROTLI_ALIGNED_READ 1
-#define BROTLI_SAFE_MEMMOVE 1
-#else
-#define BROTLI_ALIGNED_READ 0
-#define BROTLI_SAFE_MEMMOVE 0
+#if defined(__sparc)
+#define BROTLI_TARGET_SPARC
 #endif
 
-#define BROTLI_ASAN_BUILD __has_feature(address_sanitizer)
+#if defined(__arm__) || defined(__thumb__) || \
+    defined(_M_ARM) || defined(_M_ARMT)
+#define BROTLI_TARGET_ARM
+#if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7)) || \
+    (defined(M_ARM) && (M_ARM >= 7))
+#define BROTLI_TARGET_ARMV7
+#endif  /* ARMv7 */
+#if defined(__aarch64__)
+#define BROTLI_TARGET_ARMV8
+#endif  /* ARMv8 */
+#endif  /* ARM */
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define BROTLI_TARGET_X64
+#endif
+
+#if defined(__PPC64__)
+#define BROTLI_TARGET_POWERPC64
+#endif
+
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#define BROTLI_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
+#else
+#define BROTLI_GCC_VERSION 0
+#endif
+
+#if defined(__ICC)
+#define BROTLI_ICC_VERSION __ICC
+#else
+#define BROTLI_ICC_VERSION 0
+#endif
+
+#if defined(BROTLI_BUILD_MODERN_COMPILER)
+#define BROTLI_MODERN_COMPILER 1
+#elif (BROTLI_GCC_VERSION > 300) || (BROTLI_ICC_VERSION >= 1600)
+#define BROTLI_MODERN_COMPILER 1
+#else
+#define BROTLI_MODERN_COMPILER 0
+#endif
+
+/* SPARC and ARMv6 don't support unaligned read.
+   Choose portable build for them. */
+#if !defined(BROTLI_BUILD_PORTABLE)
+#if defined(BROTLI_TARGET_SPARC) || \
+    (defined(BROTLI_TARGET_ARM) && !defined(BROTLI_TARGET_ARMV7))
+#define BROTLI_BUILD_PORTABLE
+#endif  /* SPARK or ARMv6 */
+#endif  /* portable build */
+
+#ifdef BROTLI_BUILD_PORTABLE
+#define BROTLI_ALIGNED_READ 1
+#else
+#define BROTLI_ALIGNED_READ 0
+#endif
 
 /* Define "PREDICT_TRUE" and "PREDICT_FALSE" macros for capable compilers.
 
@@ -68,8 +115,7 @@ OR:
   }
 
 */
-#if (__GNUC__ > 2) || (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || \
-    (defined(__llvm__) && __has_builtin(__builtin_expect))
+#if BROTLI_MODERN_COMPILER || __has_builtin(__builtin_expect)
 #define PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
 #define PREDICT_FALSE(x) (__builtin_expect(x, 0))
 #else
@@ -78,15 +124,13 @@ OR:
 #endif
 
 /* IS_CONSTANT macros returns true for compile-time constant expressions. */
-#if (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) || \
-    (defined(__llvm__) && __has_builtin(__builtin_constant_p))
+#if BROTLI_MODERN_COMPILER || __has_builtin(__builtin_constant_p)
 #define IS_CONSTANT(x) __builtin_constant_p(x)
 #else
 #define IS_CONSTANT(x) 0
 #endif
 
-#if (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) || \
-    (defined(__llvm__) && __has_attribute(always_inline))
+#if BROTLI_MODERN_COMPILER || __has_attribute(always_inline)
 #define ATTRIBUTE_ALWAYS_INLINE __attribute__ ((always_inline))
 #else
 #define ATTRIBUTE_ALWAYS_INLINE
@@ -109,39 +153,46 @@ OR:
 #define BROTLI_DCHECK(x)
 #endif
 
-#if (defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || \
-     defined(__PPC64__))
+#if defined(BROTLI_BUILD_64_BIT)
+#define BROTLI_64_BITS 1
+#elif defined(BROTLI_BUILD_32_BIT)
+#define BROTLI_64_BITS 0
+#elif defined(BROTLI_TARGET_X64) || defined(BROTLI_TARGET_ARMV8) || \
+    defined(BROTLI_TARGET_POWERPC64)
 #define BROTLI_64_BITS 1
 #else
 #define BROTLI_64_BITS 0
 #endif
 
-#if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
+#if defined(BROTLI_BUILD_BIG_ENDIAN)
+#define BROTLI_LITTLE_ENDIAN 0
+#define BROTLI_BIG_ENDIAN 1
+#elif defined(BROTLI_BUILD_LITTLE_ENDIAN)
 #define BROTLI_LITTLE_ENDIAN 1
+#define BROTLI_BIG_ENDIAN 0
+#elif defined(BROTLI_BUILD_ENDIAN_NEUTRAL)
+#define BROTLI_LITTLE_ENDIAN 0
+#define BROTLI_BIG_ENDIAN 0
+#elif defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#define BROTLI_LITTLE_ENDIAN 1
+#define BROTLI_BIG_ENDIAN 0
 #elif defined(_WIN32)
 /* Win32 can currently always be assumed to be little endian */
 #define BROTLI_LITTLE_ENDIAN 1
+#define BROTLI_BIG_ENDIAN 0
 #else
+#if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+#define BROTLI_BIG_ENDIAN 1
+#else
+#define BROTLI_BIG_ENDIAN 0
+#endif
 #define BROTLI_LITTLE_ENDIAN 0
 #endif
 
-#if (BROTLI_64_BITS && BROTLI_LITTLE_ENDIAN)
-#define BROTLI_64_BITS_LITTLE_ENDIAN 1
-#else
-#define BROTLI_64_BITS_LITTLE_ENDIAN 0
-#endif
-
-#if (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1) || \
-    (defined(__llvm__) && __has_attribute(noinline))
+#if BROTLI_MODERN_COMPILER || __has_attribute(noinline)
 #define BROTLI_NOINLINE __attribute__ ((noinline))
 #else
 #define BROTLI_NOINLINE
-#endif
-
-#if BROTLI_ASAN_BUILD && !defined(BROTLI_BUILD_PORTABLE)
-#define BROTLI_NO_ASAN __attribute__((no_sanitize("address"))) BROTLI_NOINLINE
-#else
-#define BROTLI_NO_ASAN
 #endif
 
 #define BROTLI_REPEAT(N, X) { \
@@ -150,8 +201,8 @@ OR:
   if ((N & 4) != 0) {X; X; X; X;} \
 }
 
-#if (__GNUC__ > 2) || defined(__llvm__)
-#if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7))
+#if BROTLI_MODERN_COMPILER || defined(__llvm__)
+#if defined(BROTLI_TARGET_ARMV7)
 static BROTLI_INLINE unsigned BrotliRBit(unsigned input) {
   unsigned output;
   __asm__("rbit %0, %1\n" : "=r"(output) : "r"(input));
@@ -160,5 +211,20 @@ static BROTLI_INLINE unsigned BrotliRBit(unsigned input) {
 #define BROTLI_RBIT(x) BrotliRBit(x)
 #endif  /* armv7 */
 #endif  /* gcc || clang */
+
+#if defined(BROTLI_TARGET_ARM)
+#define BROTLI_HAS_UBFX 1
+#else
+#define BROTLI_HAS_UBFX 0
+#endif
+
+#define BROTLI_ALLOC(S, L) S->alloc_func(S->memory_manager_opaque, L)
+
+#define BROTLI_FREE(S, X) { \
+  S->free_func(S->memory_manager_opaque, X); \
+  X = NULL; \
+}
+
+#define BROTLI_UNUSED(X) (void)(X)
 
 #endif  /* BROTLI_DEC_PORT_H_ */
