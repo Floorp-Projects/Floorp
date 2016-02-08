@@ -1,0 +1,10 @@
+REDUX_UPGRADING
+
+Current version of redux : 3.3.0
+
+1 - grab the unminified version of redux on npm. For release 3.3.0 for instance,
+https://npmcdn.com/redux@3.3.0/dist/redux.js
+
+2 - replace the content of devtools/client/shared/vendor
+
+3 - update the current version in this file
