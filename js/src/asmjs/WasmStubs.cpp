@@ -407,7 +407,12 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, ProfilingOffse
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
-        MOZ_CRASH("Float32 shouldn't be returned from a FFI");
+        MOZ_ASSERT(!mg.isAsmJS(), "import can't return float32 in asm.js");
+        masm.call(SymbolicAddress::InvokeImport_F64);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
+        masm.loadDouble(argv, ReturnDoubleReg);
+        masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
+        break;
       case ExprType::F64:
         masm.call(SymbolicAddress::InvokeImport_F64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
@@ -658,7 +663,9 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, ProfilingOffsets*
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
-        MOZ_CRASH("Float shouldn't be returned from an import");
+        MOZ_ASSERT(!mg.isAsmJS(), "import can't return float32 in asm.js");
+        masm.convertValueToFloat(JSReturnOperand, ReturnFloat32Reg, &oolConvert);
+        break;
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
         break;
@@ -719,6 +726,13 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, ProfilingOffsets*
             masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
             masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
+            break;
+          case ExprType::F32:
+            MOZ_ASSERT(!mg.isAsmJS(), "import can't return float32 in asm.js");
+            masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
+            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
+            masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
+            masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
             break;
           default:
             MOZ_CRASH("Unsupported convert type");
