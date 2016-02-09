@@ -1839,11 +1839,6 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
-    case "$host" in
-    *mingw*)
-        PERL="/bin/sh ${_topsrcdir}/build/msys-perl-wrapper"
-        ;;
-    esac
 
     case "${host_cpu}" in
     i*86)
