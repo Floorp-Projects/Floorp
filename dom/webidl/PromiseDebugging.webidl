@@ -52,6 +52,7 @@ callback interface UncaughtRejectionObserver {
 
 [ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
+#ifndef SPIDERMONKEY_PROMISE
   /**
    * The various functions on this interface all expect to take promises but
    * don't want the WebIDL behavior of assimilating random passed-in objects
@@ -129,6 +130,8 @@ interface PromiseDebugging {
    */
   [Throws]
   static DOMHighResTimeStamp getTimeToSettle(object p);
+
+#endif // SPIDERMONKEY_PROMISE
 
   /**
    * Watching uncaught rejections on the current thread.
