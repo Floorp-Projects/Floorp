@@ -1404,6 +1404,12 @@ MacroAssemblerARM::ma_b(Label* dest, Assembler::Condition c)
     return as_b(dest, c);
 }
 
+BufferOffset
+MacroAssemblerARM::ma_b(wasm::JumpTarget target, Assembler::Condition c)
+{
+    return as_b(target, c);
+}
+
 void
 MacroAssemblerARM::ma_bx(Register dest, Assembler::Condition c)
 {

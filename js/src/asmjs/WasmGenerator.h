@@ -219,8 +219,8 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Stubs:
     bool defineInlineStub(Offsets offsets);
-    bool defineInterruptStub(Offsets offsets);
-    bool defineOutOfBoundsStub(Offsets offsets);
+    void defineInterruptExit(uint32_t offset);
+    void defineOutOfBoundsExit(uint32_t offset);
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of

@@ -173,7 +173,6 @@ class MacroAssemblerNone : public Assembler
     size_t numCodeLabels() const { MOZ_CRASH(); }
     CodeLabel codeLabel(size_t) { MOZ_CRASH(); }
 
-    void retargetWithOffset(size_t, const LabelBase*, LabelBase*) { MOZ_CRASH(); }
     bool asmMergeWith(const MacroAssemblerNone&) { MOZ_CRASH(); }
 
     void trace(JSTracer*) { MOZ_CRASH(); }
@@ -192,6 +191,7 @@ class MacroAssemblerNone : public Assembler
     void flushBuffer() { MOZ_CRASH(); }
 
     template <typename T> void bind(T) { MOZ_CRASH(); }
+    void bindLater(Label*, wasm::JumpTarget) { MOZ_CRASH(); }
     template <typename T> void j(Condition, T) { MOZ_CRASH(); }
     template <typename T> void jump(T) { MOZ_CRASH(); }
     void haltingAlign(size_t) { MOZ_CRASH(); }
@@ -245,7 +245,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
     template <typename T, typename S> void branch32(Condition, T, S, Label*) { MOZ_CRASH(); }
-    template <typename T, typename S> void branchTest32(Condition, T, S, Label*) { MOZ_CRASH(); }
+    template <typename T, typename S, typename L> void branchTest32(Condition, T, S, L) { MOZ_CRASH(); }
     template <typename T, typename S> void branchAdd32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchSub32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchPtr(Condition, T, S, Label*) { MOZ_CRASH(); }
@@ -369,7 +369,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void branchTestNumber(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestGCThing(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestPrimitive(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestMagic(Condition, T, Label*) { MOZ_CRASH(); }
+    template <typename T, typename L> void branchTestMagic(Condition, T, L) { MOZ_CRASH(); }
     template <typename T> void branchTestMagicValue(Condition, T, JSWhyMagic, Label*) { MOZ_CRASH(); }
     void boxDouble(FloatRegister, ValueOperand) { MOZ_CRASH(); }
     void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }

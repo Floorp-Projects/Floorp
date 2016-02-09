@@ -575,7 +575,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(-mir->endOffset())).offset();
-        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
     }
     uint32_t before = masm.size();
     masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
@@ -609,7 +609,7 @@ CodeGeneratorX64::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
     uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(-mir->endOffset())).offset();
-        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
     }
     uint32_t before = masm.size();
     masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
@@ -643,7 +643,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
-        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
     }
     uint32_t before = masm.size();
     if (value->isConstant()) {
@@ -686,7 +686,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
-        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
     }
 
     uint32_t before = masm.size();

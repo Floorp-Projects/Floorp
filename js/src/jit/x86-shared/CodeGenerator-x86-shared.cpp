@@ -338,7 +338,10 @@ CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck)
     MOZ_ASSERT(oolCheck->offset() != 0,
                "An access without a constant offset doesn't need a separate OffsetBoundsCheck");
     masm.cmp32(oolCheck->ptrReg(), Imm32(-uint32_t(oolCheck->offset())));
-    masm.j(Assembler::Below, oolCheck->outOfBounds());
+    if (oolCheck->maybeOutOfBounds())
+        masm.j(Assembler::Below, oolCheck->maybeOutOfBounds());
+    else
+        masm.j(Assembler::Below, wasm::JumpTarget::OutOfBounds);
 
 #ifdef JS_CODEGEN_X64
     // In order to get the offset to wrap properly, we must sign-extend the
@@ -353,7 +356,7 @@ CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck)
 uint32_t
 CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access,
                                                    const MInstruction* mir,
-                                                   Register ptr, Label* fail)
+                                                   Register ptr, Label* maybeFail)
 {
     // Emit a bounds-checking branch for |access|.
 
@@ -366,8 +369,8 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* acces
     // this case, we need a second branch, which we emit out of line since it's
     // unlikely to be needed in normal programs.
     if (access->offset() != 0) {
-        OffsetBoundsCheck* oolCheck = new(alloc()) OffsetBoundsCheck(fail, ptr, access->offset());
-        fail = oolCheck->entry();
+        auto oolCheck = new(alloc()) OffsetBoundsCheck(maybeFail, ptr, access->offset());
+        maybeFail = oolCheck->entry();
         pass = oolCheck->rejoin();
         addOutOfLineCode(oolCheck, mir);
     }
@@ -378,7 +381,10 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* acces
     // (heapLength - access->endOffset()), allowing us to test whether the end
     // of the access is beyond the end of the heap.
     uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(-access->endOffset())).offset();
-    masm.j(Assembler::Above, fail);
+    if (maybeFail)
+        masm.j(Assembler::Above, maybeFail);
+    else
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
 
     if (pass)
         masm.bind(pass);
@@ -394,7 +400,7 @@ CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess
     if (!gen->needsAsmJSBoundsCheckBranch(access))
         return wasm::HeapAccess::NoLengthCheck;
 
-    return emitAsmJSBoundsCheckBranch(access, mir, ToRegister(ptr), masm.asmOnOutOfBoundsLabel());
+    return emitAsmJSBoundsCheckBranch(access, mir, ToRegister(ptr), nullptr);
 }
 
 uint32_t
@@ -2327,8 +2333,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     static const SimdConstant Int32MaxX4 = SimdConstant::SplatX4(2147483647.f);
     static const SimdConstant Int32MinX4 = SimdConstant::SplatX4(-2147483648.f);
 
-    Label bail;
-    Label* onConversionError = gen->compilingAsmJS() ? masm.asmOnConversionErrorLabel() : &bail;
+    Label onConversionError;
 
     FloatRegister input = ool->input();
     Register temp = ool->temp();
@@ -2338,18 +2343,20 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     masm.vcmpleps(Operand(input), scratch, scratch);
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(15));
-    masm.j(Assembler::NotEqual, onConversionError);
+    masm.j(Assembler::NotEqual, &onConversionError);
 
     masm.loadConstantFloat32x4(Int32MaxX4, scratch);
     masm.vcmpleps(Operand(input), scratch, scratch);
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
-    masm.j(Assembler::NotEqual, onConversionError);
+    masm.j(Assembler::NotEqual, &onConversionError);
 
     masm.jump(ool->rejoin());
 
-    if (bail.used()) {
-        masm.bind(&bail);
+    if (gen->compilingAsmJS()) {
+        masm.bindLater(&onConversionError, wasm::JumpTarget::ConversionError);
+    } else {
+        masm.bind(&onConversionError);
         bailout(ool->ins()->snapshot());
     }
 }
