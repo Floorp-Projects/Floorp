@@ -13,39 +13,20 @@ add_task(function* testExecuteScript() {
   function background() {
     let promises = [
       {
-        background: "rgb(0, 0, 0)",
-        foreground: "rgb(255, 192, 203)",
-        promise: resolve => {
-          browser.tabs.insertCSS({
-            file: "file1.css",
-            code: "* { background: black }",
-          }, result => {
-            browser.test.assertEq(undefined, result, "Expected callback result");
-            resolve();
-          });
-        },
-      },
-      {
-        background: "rgb(0, 0, 0)",
+        background: "transparent",
         foreground: "rgb(0, 113, 4)",
-        promise: resolve => {
-          browser.tabs.insertCSS({
+        promise: () => {
+          return browser.tabs.insertCSS({
             file: "file2.css",
-          }, result => {
-            browser.test.assertEq(undefined, result, "Expected callback result");
-            resolve();
           });
         },
       },
       {
         background: "rgb(42, 42, 42)",
         foreground: "rgb(0, 113, 4)",
-        promise: resolve => {
-          browser.tabs.insertCSS({
+        promise: () => {
+          return browser.tabs.insertCSS({
             code: "* { background: rgb(42, 42, 42) }",
-          }, result => {
-            browser.test.assertEq(undefined, result, "Expected callback result");
-            resolve();
           });
         },
       },
@@ -58,23 +39,29 @@ add_task(function* testExecuteScript() {
 
     function next() {
       if (!promises.length) {
-        browser.test.notifyPass("insertCSS");
         return;
       }
 
       let {promise, background, foreground} = promises.shift();
-      new Promise(promise).then(() => {
-        browser.tabs.executeScript({
+      return promise().then(result => {
+        browser.test.assertEq(undefined, result, "Expected callback result");
+
+        return browser.tabs.executeScript({
           code: `(${checkCSS})()`,
-        }, result => {
-          browser.test.assertEq(background, result[0], "Expected background color");
-          browser.test.assertEq(foreground, result[1], "Expected foreground color");
-          next();
         });
+      }).then(result => {
+        browser.test.assertEq(background, result[0], "Expected background color");
+        browser.test.assertEq(foreground, result[1], "Expected foreground color");
+        return next();
       });
     }
 
-    next();
+    next().then(() => {
+      browser.test.notifyPass("insertCSS");
+    }).catch(e => {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFailure("insertCSS");
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -85,7 +72,6 @@ add_task(function* testExecuteScript() {
     background,
 
     files: {
-      "file1.css": "* { color: pink }",
       "file2.css": "* { color: rgb(0, 113, 4) }",
     },
   });

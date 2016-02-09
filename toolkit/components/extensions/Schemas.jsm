@@ -665,7 +665,7 @@ class IntegerType extends Type {
     }
 
     // Ensure it's between -2**31 and 2**31-1
-    if ((value | 0) !== value) {
+    if (!Number.isSafeInteger(value)) {
       return context.error("Integer is out of range");
     }
 

@@ -643,7 +643,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
                                    message, recipient);
       },
 
-      _execute: function(tabId, details, kind) {
+      _execute: function(tabId, details, kind, method) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
 
@@ -651,6 +651,15 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           js: [],
           css: [],
         };
+
+        // We require a `code` or a `file` property, but we can't accept both.
+        if ((details.code === null) == (details.file === null)) {
+          return Promise.reject({message: `${method} requires either a 'code' or a 'file' property, but not both`});
+        }
+
+        if (details.frameId !== null && details.allFrames) {
+          return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
+        }
 
         let recipient = {
           innerWindowID: tab.linkedBrowser.innerWindowID,
@@ -677,22 +686,27 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         if (details.allFrames) {
           options.all_frames = details.allFrames;
         }
+        if (details.frameId !== null) {
+          options.frame_id = details.frameId;
+        }
         if (details.matchAboutBlank) {
           options.match_about_blank = details.matchAboutBlank;
         }
         if (details.runAt !== null) {
           options.run_at = details.runAt;
+        } else {
+          options.run_at = "document_idle";
         }
 
         return context.sendMessage(mm, "Extension:Execute", {options}, recipient);
       },
 
       executeScript: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "js");
+        return self.tabs._execute(tabId, details, "js", "executeScript");
       },
 
       insertCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css");
+        return self.tabs._execute(tabId, details, "css", "insertCSS");
       },
 
       connect: function(tabId, connectInfo) {
