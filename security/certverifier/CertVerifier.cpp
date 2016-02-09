@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include "BRNameMatchingPolicy.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
@@ -38,13 +39,15 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            OcspGetConfig ogc,
                            uint32_t certShortLifetimeInDays,
                            PinningMode pinningMode,
-                           SHA1Mode sha1Mode)
+                           SHA1Mode sha1Mode,
+                           BRNameMatchingPolicy::Mode nameMatchingMode)
   : mOCSPDownloadConfig(odc)
   , mOCSPStrict(osc == ocspStrict)
   , mOCSPGETEnabled(ogc == ocspGetEnabled)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
   , mPinningMode(pinningMode)
   , mSHA1Mode(sha1Mode)
+  , mNameMatchingMode(nameMatchingMode)
 {
 }
 
@@ -716,7 +719,16 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
-  result = CheckCertHostname(peerCertInput, hostnameInput);
+  bool isBuiltInRoot;
+  result = IsCertChainRootBuiltInRoot(builtChain, isBuiltInRoot);
+  if (result != Success) {
+    PR_SetError(MapResultToPRErrorCode(result), 0);
+    return SECFailure;
+  }
+  BRNameMatchingPolicy nameMatchingPolicy(
+    isBuiltInRoot ? mNameMatchingMode
+                  : BRNameMatchingPolicy::Mode::DoNotEnforce);
+  result = CheckCertHostname(peerCertInput, hostnameInput, nameMatchingPolicy);
   if (result != Success) {
     // Treat malformed name information as a domain mismatch.
     if (result == Result::ERROR_BAD_DER) {

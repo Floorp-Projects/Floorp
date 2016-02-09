@@ -29,7 +29,7 @@ keyUsage:[digitalSignature,nonRepudiation,keyEncipherment,
 extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              nsSGC, # Netscape Server Gated Crypto
              OCSPSigning,timeStamping]
-subjectAlternativeName:[<dNSName>,...]
+subjectAlternativeName:[<dNSName|directoryName>,...]
 authorityInformationAccess:<OCSP URI>
 certificatePolicies:<policy OID>
 nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
@@ -531,14 +531,19 @@ class Certificate(object):
             extKeyUsageExtension.setComponentByPosition(count, self.keyPurposeToOID(keyPurpose))
         self.addExtension(rfc2459.id_ce_extKeyUsage, extKeyUsageExtension, critical)
 
-    def addSubjectAlternativeName(self, dNSNames, critical):
+    def addSubjectAlternativeName(self, names, critical):
         subjectAlternativeName = rfc2459.SubjectAltName()
-        for count, dNSName in enumerate(dNSNames.split(',')):
+        for count, name in enumerate(names.split(',')):
             generalName = rfc2459.GeneralName()
-            # The string may have things like '\0' (i.e. a slash
-            # followed by the number zero) that have to be decoded into
-            # the resulting '\x00' (i.e. a byte with value zero).
-            generalName.setComponentByName('dNSName', dNSName.decode(encoding='string_escape'))
+            if '/' in name:
+                directoryName = stringToDN(name,
+                                           tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
+                generalName.setComponentByName('directoryName', directoryName)
+            else:
+                # The string may have things like '\0' (i.e. a slash
+                # followed by the number zero) that have to be decoded into
+                # the resulting '\x00' (i.e. a byte with value zero).
+                generalName.setComponentByName('dNSName', name.decode(encoding='string_escape'))
             subjectAlternativeName.setComponentByPosition(count, generalName)
         self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName, critical)
 

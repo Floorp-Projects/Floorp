@@ -21,9 +21,10 @@ public:
 
   SharedCertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                      OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
-                     PinningMode pinningMode, SHA1Mode sha1Mode)
+                     PinningMode pinningMode, SHA1Mode sha1Mode,
+                     BRNameMatchingPolicy::Mode nameMatchingMode)
     : mozilla::psm::CertVerifier(odc, osc, ogc, certShortLifetimeInDays,
-                                 pinningMode, sha1Mode)
+                                 pinningMode, sha1Mode, nameMatchingMode)
   {
   }
 };
