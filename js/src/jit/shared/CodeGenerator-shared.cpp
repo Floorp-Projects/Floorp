@@ -1501,11 +1501,11 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
         masm.freeStack(mir->spIncrement());
 
     MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % AsmJSStackAlignment == 0);
-
-#ifdef DEBUG
     static_assert(AsmJSStackAlignment >= ABIStackAlignment &&
                   AsmJSStackAlignment % ABIStackAlignment == 0,
                   "The asm.js stack alignment should subsume the ABI-required alignment");
+
+#ifdef DEBUG
     Label ok;
     masm.branchTestStackPtr(Assembler::Zero, Imm32(AsmJSStackAlignment - 1), &ok);
     masm.breakpoint();

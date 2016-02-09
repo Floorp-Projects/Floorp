@@ -10610,13 +10610,11 @@ CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
                   wasm::SymbolicAddress::RuntimeInterruptUint32,
                   Imm32(0),
                   &rejoin);
-    {
-        uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
-                                                   ABIStackAlignment);
-        masm.reserveStack(stackFixup);
-        masm.call(lir->funcDesc(), lir->interruptExit());
-        masm.freeStack(stackFixup);
-    }
+
+    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % ABIStackAlignment == 0);
+    masm.call(wasm::SymbolicAddress::HandleExecutionInterrupt);
+    masm.branchIfFalseBool(ReturnReg, masm.asmThrowLabel());
+
     masm.bind(&rejoin);
 }
 

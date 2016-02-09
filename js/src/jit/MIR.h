@@ -7370,26 +7370,10 @@ class MInterruptCheck : public MNullaryInstruction
 class MAsmJSInterruptCheck
   : public MNullaryInstruction
 {
-    Label* interruptExit_;
-    wasm::CallSiteDesc funcDesc_;
-
-    MAsmJSInterruptCheck(Label* interruptExit, const wasm::CallSiteDesc& funcDesc)
-      : interruptExit_(interruptExit), funcDesc_(funcDesc)
-    {}
-
   public:
     INSTRUCTION_HEADER(AsmJSInterruptCheck)
-
-    static MAsmJSInterruptCheck* New(TempAllocator& alloc, Label* interruptExit,
-                                     const wasm::CallSiteDesc& funcDesc)
-    {
-        return new(alloc) MAsmJSInterruptCheck(interruptExit, funcDesc);
-    }
-    Label* interruptExit() const {
-        return interruptExit_;
-    }
-    const wasm::CallSiteDesc& funcDesc() const {
-        return funcDesc_;
+    static MAsmJSInterruptCheck* New(TempAllocator& alloc) {
+        return new(alloc) MAsmJSInterruptCheck;
     }
 };
 
