@@ -32,7 +32,7 @@ function test() {
 
   BrowserTestUtils.openNewForegroundTab(gBrowser).then(tab => {
     ourTab = tab;
-    BrowserTestUtils.waitForContentEvent(ourTab.linkedBrowser, "DOMContentLoaded",
+    BrowserTestUtils.waitForContentEvent(ourTab.linkedBrowser, "DOMContentLoaded")
                     .then(errorListener);
     BrowserTestUtils.loadURI(ourTab.linkedBrowser, kUniqueURI.spec);
   });
