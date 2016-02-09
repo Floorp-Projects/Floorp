@@ -29,7 +29,7 @@ class nsLoadGroup : public nsILoadGroup,
 {
 public:
     NS_DECL_AGGREGATED
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // nsIRequest methods:
     NS_DECL_NSIREQUEST
@@ -79,7 +79,7 @@ protected:
 
     nsWeakPtr                       mObserver;
     nsWeakPtr                       mParentLoadGroup;
-    
+
     nsresult                        mStatus;
     int32_t                         mPriority;
     bool                            mIsCanceling;
@@ -92,6 +92,8 @@ protected:
 
     /* For nsPILoadGroupInternal */
     uint32_t                        mTimedNonCachedRequestsUntilOnEndPageLoad;
+
+    nsCString                       mUserAgentOverrideCache;
 };
 
 #endif // nsLoadGroup_h__
