@@ -863,8 +863,7 @@ class IonBuilder
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
 
-    InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target,
-                              MIRType simdType, SimdSign sign = SimdSign::NotApplicable);
+    InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type);
 
     template <typename T>
     InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,
