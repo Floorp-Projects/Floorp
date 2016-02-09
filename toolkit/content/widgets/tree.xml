@@ -1237,7 +1237,10 @@
       <property name="ordinal">
         <getter><![CDATA[
           var val = this.getAttribute("ordinal");
-          return "" + (val == "" ? 1 : (val == "0" ? 0 : parseInt(val)));
+          if (val == "")
+            return "1";
+
+          return "" + (val == "0" ? 0 : parseInt(val));
         ]]></getter>
         <setter><![CDATA[
           this.setAttribute("ordinal", val);

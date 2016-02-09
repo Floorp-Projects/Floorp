@@ -42,6 +42,9 @@ var AnimationsPanel = {
     this.timelineCurrentTimeEl = $("#timeline-current-time");
     this.rateSelectorEl = $("#timeline-rate");
 
+    this.rewindTimelineButtonEl.setAttribute("title",
+      L10N.getStr("timeline.rewindButtonTooltip"));
+
     // If the server doesn't support toggling all animations at once, hide the
     // whole global toolbar.
     if (!AnimationsController.traits.hasToggleAll) {
@@ -212,6 +215,12 @@ var AnimationsPanel = {
     let {isMoving, isUserDrag, time} = data;
 
     this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
+
+    let l10nPlayProperty = isMoving ? "timeline.resumedButtonTooltip" :
+                                      "timeline.pausedButtonTooltip";
+
+    this.playTimelineButtonEl.setAttribute("title",
+      L10N.getStr(l10nPlayProperty));
 
     // If the timeline data changed as a result of the user dragging the
     // scrubber, then pause all animations and set their currentTimes.

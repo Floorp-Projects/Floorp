@@ -688,7 +688,76 @@ var DOMFullscreenHandler = {
 };
 DOMFullscreenHandler.init();
 
+var RefreshBlocker = {
+  init() {
+    this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
+                     .createInstance(Ci.nsIWebProgress);
+    this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_REFRESH);
+
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_REFRESH);
+
+    addMessageListener("RefreshBlocker:Refresh", this);
+  },
+
+  uninit() {
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
+    webProgress.removeProgressListener(this._filter);
+
+    this._filter.removeProgressListener(this);
+    this._filter = null;
+
+    removeMessageListener("RefreshBlocker:Refresh", this);
+  },
+
+  onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
+    if (Services.prefs.getBoolPref("accessibility.blockautorefresh")) {
+      let win = aWebProgress.DOMWindow;
+      let outerWindowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils)
+                             .outerWindowID;
+
+      sendAsyncMessage("RefreshBlocker:Blocked", {
+        URI: aURI.spec,
+        originCharset: aURI.originCharset,
+        delay: aDelay,
+        sameURI: aSameURI,
+        outerWindowID,
+      });
+
+      return false;
+    }
+
+    return true;
+  },
+
+  receiveMessage(message) {
+    let data = message.data;
+
+    if (message.name == "RefreshBlocker:Refresh") {
+      let win = Services.wm.getOuterWindowWithId(data.outerWindowID);
+      let refreshURI = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .QueryInterface(Ci.nsIRefreshURI);
+
+      let URI = BrowserUtils.makeURI(data.URI, data.originCharset, null);
+
+      refreshURI.forceRefreshURI(URI, data.delay, true);
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener2,
+                                         Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsISupports]),
+};
+
+RefreshBlocker.init();
+
 ExtensionContent.init(this);
 addEventListener("unload", () => {
   ExtensionContent.uninit(this);
+  RefreshBlocker.uninit();
 });

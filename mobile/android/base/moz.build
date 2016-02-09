@@ -116,6 +116,7 @@ gujar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/NativeEventListener.java',
     'util/NativeJSContainer.java',
     'util/NativeJSObject.java',
+    'util/NetworkUtils.java',
     'util/NonEvictingLruCache.java',
     'util/PrefUtils.java',
     'util/ProxySelector.java',
