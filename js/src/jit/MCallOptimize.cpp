@@ -203,13 +203,13 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
       // SIMD natives.
       case InlinableNative::SimdInt32x4:
-        return inlineSimd(callInfo, target, MIRType_Int32x4, SimdSign::Signed);
+        return inlineSimd(callInfo, target, SimdType::Int32x4);
       case InlinableNative::SimdUint32x4:
-        return inlineSimd(callInfo, target, MIRType_Int32x4, SimdSign::Unsigned);
+        return inlineSimd(callInfo, target, SimdType::Uint32x4);
       case InlinableNative::SimdFloat32x4:
-        return inlineSimd(callInfo, target, MIRType_Float32x4);
+        return inlineSimd(callInfo, target, SimdType::Float32x4);
       case InlinableNative::SimdBool32x4:
-        return inlineSimd(callInfo, target, MIRType_Bool32x4);
+        return inlineSimd(callInfo, target, SimdType::Bool32x4);
 
       // Testing functions.
       case InlinableNative::TestBailout:
@@ -3062,7 +3062,7 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
 // When the controlling simdType is an integer type, sign indicates whether the lanes should
 // be treated as signed or unsigned integers.
 IonBuilder::InliningStatus
-IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType, SimdSign sign)
+IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
 {
     if (!JitSupportsSimd()) {
         trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
@@ -3074,9 +3074,8 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType,
     MOZ_ASSERT(jitInfo && jitInfo->type() == JSJitInfo::InlinableNative);
     SimdOperation simdOp = SimdOperation(jitInfo->nativeOp);
 
-    MOZ_ASSERT(IsSimdType(simdType));
-    MOZ_ASSERT((sign != SimdSign::NotApplicable) == IsIntegerSimdType(simdType),
-               "Signedness must be specified for ints, and only for ints");
+    MIRType simdType = SimdTypeToMIRType(type);
+    SimdSign sign = GetSimdSign(type);
 
     switch(simdOp) {
       case SimdOperation::Constructor:
