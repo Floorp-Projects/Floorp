@@ -212,8 +212,6 @@ function run_test_1() {
     do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a1.sourceURI, null);
     do_check_true(a1.foreignInstall);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.seen);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -228,8 +226,6 @@ function run_test_1() {
     do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a2.sourceURI, null);
     do_check_true(a2.foreignInstall);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.seen);
 
     do_check_neq(a3, null);
     do_check_eq(a3.id, "addon3@tests.mozilla.org");
@@ -244,8 +240,6 @@ function run_test_1() {
     do_check_eq(a3.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a3.sourceURI, null);
     do_check_true(a3.foreignInstall);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.seen);
 
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
@@ -830,17 +824,14 @@ function run_test_12() {
                                callback_soon(function([a1, a2, a3, a4, a5]) {
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
-    do_check_true(a1.seen);
     do_check_true(a1.isActive);
 
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
-    do_check_false(a2.seen);
     do_check_false(a2.isActive);
 
     do_check_neq(a3, null);
     do_check_false(a3.userDisabled);
-    do_check_true(a3.seen);
     do_check_true(a3.isActive);
 
     var dest = profileDir.clone();
@@ -871,17 +862,14 @@ function run_test_12() {
                                  function([a1, a2, a3, a4, a5]) {
       do_check_neq(a1, null);
       do_check_false(a1.userDisabled);
-      do_check_true(a1.seen);
       do_check_true(a1.isActive);
 
       do_check_neq(a2, null);
       do_check_false(a2.userDisabled);
-      do_check_true(a2.seen);
       do_check_true(a2.isActive);
 
       do_check_neq(a3, null);
       do_check_true(a3.userDisabled);
-      do_check_false(a3.seen);
       do_check_false(a3.isActive);
 
       var dest = profileDir.clone();
@@ -912,17 +900,14 @@ function run_test_12() {
                                    function([a1, a2, a3, a4, a5]) {
         do_check_neq(a1, null);
         do_check_false(a1.userDisabled);
-        do_check_true(a1.seen);
         do_check_true(a1.isActive);
 
         do_check_neq(a2, null);
         do_check_true(a2.userDisabled);
-        do_check_false(a2.seen);
         do_check_false(a2.isActive);
 
         do_check_neq(a3, null);
         do_check_true(a3.userDisabled);
-        do_check_false(a3.seen);
         do_check_false(a3.isActive);
 
         do_execute_soon(end_test);

@@ -39,10 +39,10 @@ function initialize() {
   let bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/newaddon.properties");
 
   AddonManager.getAddonByID(id, function(aAddon) {
-    // If the add-on doesn't exist or it is already enabled or it has already
-    // been seen or it cannot be enabled then this UI is useless, just close it.
-    // This shouldn't normally happen unless session restore restores the tab.
-    if (!aAddon || !aAddon.userDisabled || aAddon.seen ||
+    // If the add-on doesn't exist or it is already enabled or it cannot be
+    // enabled then this UI is useless, just close it. This shouldn't normally
+    // happen unless session restore restores the tab
+    if (!aAddon || !aAddon.userDisabled ||
         !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE)) {
       window.close();
       return;
@@ -77,14 +77,6 @@ function initialize() {
       locationLabel.setAttribute("tooltiptext", location);
     } else {
       document.getElementById("location").hidden = true;
-    }
-
-    // Only mark the add-on as seen if the page actually gets focus
-    if (document.hasFocus()) {
-      aAddon.markAsSeen();
-    }
-    else {
-      document.addEventListener("focus", () => aAddon.markAsSeen(), false);
     }
 
     var event = document.createEvent("Events");
