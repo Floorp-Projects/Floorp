@@ -51,6 +51,9 @@ public final class GeckoProfile {
     // In the client ID file, the attribute title in the JSON object containing the client ID value.
     private static final String CLIENT_ID_JSON_ATTR = "clientID";
 
+    private static final String TIMES_PATH = "times.json";
+    private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
+
     // Only tests should need to do this.
     // We can default this to AppConstants.RELEASE_BUILD once we fix Bug 1069687.
     private static volatile boolean sAcceptDirectoryChanges = true;
@@ -620,6 +623,40 @@ public final class GeckoProfile {
             // Don't log to avoid leaking data in JSONObject.
             throw new IOException("Client ID does not exist in JSONObject");
         }
+    }
+
+    /**
+     * @return the profile creation date in the format returned by {@link System#currentTimeMillis()} or -1 if the value
+     *         was not found.
+     */
+    @WorkerThread
+    public long getProfileCreationDate() {
+        try {
+            return getProfileCreationDateFromTimesFile();
+        } catch (final IOException e) {
+            return getAndPersistProfileCreationDateFromFilesystem();
+        }
+    }
+
+    @WorkerThread
+    private long getProfileCreationDateFromTimesFile() throws IOException {
+        final JSONObject obj = readJSONObjectFromFile(TIMES_PATH);
+        try {
+            return obj.getLong(PROFILE_CREATION_DATE_JSON_ATTR);
+        } catch (final JSONException e) {
+            // Don't log to avoid leaking data in JSONObject.
+            throw new IOException("Profile creation does not exist in JSONObject");
+        }
+    }
+
+    /**
+     * TODO (bug 1246816): Implement ProfileAge.jsm - getOldestProfileTimestamp. Persist results to times.json.
+     * Update comment in getProfileCreationDate too.
+     * @return -1 until implemented.
+     */
+    @WorkerThread
+    private long getAndPersistProfileCreationDateFromFilesystem() {
+        return -1;
     }
 
     /**
