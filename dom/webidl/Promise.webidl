@@ -15,7 +15,10 @@ callback PromiseInit = void (object resolve, object reject);
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
-// REMOVE THE RELEVANT ENTRY FROM test_interfaces.html WHEN THIS IS IMPLEMENTED IN JS.
+// When using SpiderMonkey promises, we don't want to define all this stuff;
+// just define a tiny interface to make codegen of Promise arguments and return
+// values work.
+#ifndef SPIDERMONKEY_PROMISE
 [Constructor(PromiseInit init),
  Exposed=(Window,Worker,System)]
 // Need to escape "Promise" so it's treated as an identifier.
@@ -56,3 +59,10 @@ interface _Promise {
   [NewObject, Throws]
   static any race(optional any iterable);
 };
+#else // SPIDERMONKEY_PROMISE
+[NoInterfaceObject,
+ Exposed=(Window,Worker,System)]
+// Need to escape "Promise" so it's treated as an identifier.
+interface _Promise {
+};
+#endif // SPIDERMONKEY_PROMISE

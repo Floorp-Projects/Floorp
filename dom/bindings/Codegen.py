@@ -5190,8 +5190,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     $*{exceptionCode}
                   }
                   ErrorResult promiseRv;
+                #ifdef SPIDERMONKEY_PROMISE
+                  JS::Rooted<JSObject*> promiseCtor(cx, JS::GetPromiseConstructor(cx));
+                #else
                   JS::Handle<JSObject*> promiseCtor =
                     PromiseBinding::GetConstructorObjectHandle(cx, globalObj);
+                #endif // SPIDERMONKEY_PROMISE
                   if (!promiseCtor) {
                     $*{exceptionCode}
                   }
