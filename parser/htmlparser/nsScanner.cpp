@@ -23,9 +23,6 @@
 
 using mozilla::dom::EncodingUtils;
 
-// We replace NUL characters with this character.
-static char16_t sInvalid = UCS2_REPLACEMENT_CHAR;
-
 nsReadEndCondition::nsReadEndCondition(const char16_t* aTerminateChars) :
   mChars(aTerminateChars), mFilter(char16_t(~0)) // All bits set
 {
