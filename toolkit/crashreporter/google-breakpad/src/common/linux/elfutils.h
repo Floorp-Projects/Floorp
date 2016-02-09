@@ -30,8 +30,8 @@
 // elfutils.h: Utilities for dealing with ELF files.
 //
 
-#ifndef COMMON_LINUX_ELFUTILS_H__
-#define COMMON_LINUX_ELFUTILS_H__
+#ifndef COMMON_LINUX_ELFUTILS_H_
+#define COMMON_LINUX_ELFUTILS_H_
 
 #include <elf.h>
 #include <link.h>
@@ -79,7 +79,7 @@ bool FindElfSection(const void *elf_mapped_base,
                     const char *section_name,
                     uint32_t section_type,
                     const void **section_start,
-                    int *section_size,
+                    size_t *section_size,
                     int *elfclass);
 
 // Internal helper method, exposed for convenience for callers
@@ -101,7 +101,7 @@ FindElfSectionByName(const char* name,
 bool FindElfSegment(const void *elf_mapped_base,
                     uint32_t segment_type,
                     const void **segment_start,
-                    int *segment_size,
+                    size_t *segment_size,
                     int *elfclass);
 
 // Convert an offset from an Elf header into a pointer to the mapped
@@ -115,4 +115,4 @@ GetOffset(const typename ElfClass::Ehdr* elf_header,
 
 }  // namespace google_breakpad
 
-#endif  // COMMON_LINUX_ELFUTILS_H__
+#endif  // COMMON_LINUX_ELFUTILS_H_

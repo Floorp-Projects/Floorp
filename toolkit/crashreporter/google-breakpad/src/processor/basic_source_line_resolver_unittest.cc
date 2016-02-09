@@ -27,9 +27,9 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <assert.h>
 #include <stdio.h>
 
-#include <map>
 #include <string>
 
 #include "breakpad_googletest_includes.h"
@@ -49,21 +49,12 @@ namespace {
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CFIFrameInfo;
 using google_breakpad::CodeModule;
-using google_breakpad::FromUniqueString;
 using google_breakpad::MemoryRegion;
 using google_breakpad::StackFrame;
-using google_breakpad::ToUniqueString;
-using google_breakpad::UniqueString;
 using google_breakpad::WindowsFrameInfo;
 using google_breakpad::linked_ptr;
 using google_breakpad::scoped_ptr;
-using google_breakpad::ustr__ZDcfa;
-using google_breakpad::ustr__ZDra;
-using google_breakpad::ustr__ZSebx;
-using google_breakpad::ustr__ZSebp;
-using google_breakpad::ustr__ZSedi;
-using google_breakpad::ustr__ZSesi;
-using google_breakpad::ustr__ZSesp;
+using google_breakpad::SymbolParseHelper;
 
 class TestCodeModule : public CodeModule {
  public:
@@ -112,6 +103,9 @@ class MockMemoryRegion: public MemoryRegion {
     *value = address;
     return true;
   }
+  void Print() const {
+    assert(false);
+  }
 };
 
 // Verify that, for every association in ACTUAL, EXPECTED has the same
@@ -120,30 +114,27 @@ class MockMemoryRegion: public MemoryRegion {
 // ".cfa".
 static bool VerifyRegisters(
     const char *file, int line,
-    const std::map<const UniqueString*, uint32_t> &expected,
-    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual_regmap) {
-  std::map<const UniqueString*, uint32_t> actual;
-  actual_regmap.copy_to_map(&actual);
-
-  std::map<const UniqueString*, uint32_t>::const_iterator a;
-  a = actual.find(ustr__ZDcfa());
+    const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
+  a = actual.find(".cfa");
   if (a == actual.end())
     return false;
-  a = actual.find(ustr__ZDra());
+  a = actual.find(".ra");
   if (a == actual.end())
     return false;
   for (a = actual.begin(); a != actual.end(); a++) {
-    std::map<const UniqueString*, uint32_t>::const_iterator e =
+    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
       expected.find(a->first);
     if (e == expected.end()) {
       fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
-              file, line, FromUniqueString(a->first), a->second);
+              file, line, a->first.c_str(), a->second);
       return false;
     }
     if (e->second != a->second) {
       fprintf(stderr,
               "%s:%d: register '%s' recovered value was 0x%x, expected 0x%x\n",
-              file, line, FromUniqueString(a->first), a->second, e->second);
+              file, line, a->first.c_str(), a->second, e->second);
       return false;
     }
     // Don't complain if this doesn't recover all registers. Although
@@ -268,26 +259,26 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
 
   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
-  std::map<const UniqueString*, uint32_t> expected_caller_registers;
+  CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
   MockMemoryRegion memory;
 
   // Regardless of which instruction evaluation takes place at, it
   // should produce the same values for the caller's registers.
-  expected_caller_registers[ustr__ZDcfa()] = 0x1001c;
-  expected_caller_registers[ustr__ZDra()]  = 0xf6438648;
-  expected_caller_registers[ustr__ZSebp()] = 0x10038;
-  expected_caller_registers[ustr__ZSebx()] = 0x98ecadc3;
-  expected_caller_registers[ustr__ZSesi()] = 0x878f7524;
-  expected_caller_registers[ustr__ZSedi()] = 0x6312f9a5;
+  expected_caller_registers[".cfa"] = 0x1001c;
+  expected_caller_registers[".ra"]  = 0xf6438648;
+  expected_caller_registers["$ebp"] = 0x10038;
+  expected_caller_registers["$ebx"] = 0x98ecadc3;
+  expected_caller_registers["$esi"] = 0x878f7524;
+  expected_caller_registers["$edi"] = 0x6312f9a5;
 
   frame.instruction = 0x3d40;
   frame.module = &module1;
   current_registers.clear();
-  current_registers.set(ustr__ZSesp(), 0x10018);
-  current_registers.set(ustr__ZSebp(), 0x10038);
-  current_registers.set(ustr__ZSebx(), 0x98ecadc3);
-  current_registers.set(ustr__ZSesi(), 0x878f7524);
-  current_registers.set(ustr__ZSedi(), 0x6312f9a5);
+  current_registers["$esp"] = 0x10018;
+  current_registers["$ebp"] = 0x10038;
+  current_registers["$ebx"] = 0x98ecadc3;
+  current_registers["$esi"] = 0x878f7524;
+  current_registers["$edi"] = 0x6312f9a5;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -297,7 +288,7 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
                               expected_caller_registers, caller_registers));
 
   frame.instruction = 0x3d41;
-  current_registers.set(ustr__ZSesp(), 0x10014);
+  current_registers["$esp"] = 0x10014;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -307,7 +298,7 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
                               expected_caller_registers, caller_registers));
 
   frame.instruction = 0x3d43;
-  current_registers.set(ustr__ZSebp(), 0x10014);
+  current_registers["$ebp"] = 0x10014;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -317,7 +308,7 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
                   expected_caller_registers, caller_registers);
 
   frame.instruction = 0x3d54;
-  current_registers.set(ustr__ZSebx(), 0x6864f054U);
+  current_registers["$ebx"] = 0x6864f054U;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -327,7 +318,7 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
                   expected_caller_registers, caller_registers);
 
   frame.instruction = 0x3d5a;
-  current_registers.set(ustr__ZSesi(), 0x6285f79aU);
+  current_registers["$esi"] = 0x6285f79aU;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -337,7 +328,7 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
                   expected_caller_registers, caller_registers);
 
   frame.instruction = 0x3d84;
-  current_registers.set(ustr__ZSedi(), 0x64061449U);
+  current_registers["$edi"] = 0x64061449U;
   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
   ASSERT_TRUE(cfi_frame_info.get());
   ASSERT_TRUE(cfi_frame_info.get()
@@ -390,13 +381,15 @@ TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
 TEST_F(TestBasicSourceLineResolver, TestInvalidLoads)
 {
   TestCodeModule module3("module3");
-  ASSERT_FALSE(resolver.LoadModule(&module3,
+  ASSERT_TRUE(resolver.LoadModule(&module3,
                                    testdata_dir + "/module3_bad.out"));
-  ASSERT_FALSE(resolver.HasModule(&module3));
+  ASSERT_TRUE(resolver.HasModule(&module3));
+  ASSERT_TRUE(resolver.IsModuleCorrupt(&module3));
   TestCodeModule module4("module4");
-  ASSERT_FALSE(resolver.LoadModule(&module4,
+  ASSERT_TRUE(resolver.LoadModule(&module4,
                                    testdata_dir + "/module4_bad.out"));
-  ASSERT_FALSE(resolver.HasModule(&module4));
+  ASSERT_TRUE(resolver.HasModule(&module4));
+  ASSERT_TRUE(resolver.IsModuleCorrupt(&module4));
   TestCodeModule module5("module5");
   ASSERT_FALSE(resolver.LoadModule(&module5,
                                    testdata_dir + "/invalid-filename"));
@@ -415,6 +408,268 @@ TEST_F(TestBasicSourceLineResolver, TestUnload)
   ASSERT_FALSE(resolver.HasModule(&module1));
   ASSERT_TRUE(resolver.LoadModule(&module1, testdata_dir + "/module1.out"));
   ASSERT_TRUE(resolver.HasModule(&module1));
+}
+
+// Test parsing of valid FILE lines.  The format is:
+// FILE <id> <filename>
+TEST(SymbolParseHelper, ParseFileValid) {
+  long index;
+  char *filename;
+
+  char kTestLine[] = "FILE 1 file name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFile(kTestLine, &index, &filename));
+  EXPECT_EQ(1, index);
+  EXPECT_EQ("file name", string(filename));
+
+  // 0 is a valid index.
+  char kTestLine1[] = "FILE 0 file name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFile(kTestLine1, &index, &filename));
+  EXPECT_EQ(0, index);
+  EXPECT_EQ("file name", string(filename));
+}
+
+// Test parsing of invalid FILE lines.  The format is:
+// FILE <id> <filename>
+TEST(SymbolParseHelper, ParseFileInvalid) {
+  long index;
+  char *filename;
+
+  // Test missing file name.
+  char kTestLine[] = "FILE 1 ";
+  ASSERT_FALSE(SymbolParseHelper::ParseFile(kTestLine, &index, &filename));
+
+  // Test bad index.
+  char kTestLine1[] = "FILE x1 file name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFile(kTestLine1, &index, &filename));
+
+  // Test large index.
+  char kTestLine2[] = "FILE 123123123123123123123123 file name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFile(kTestLine2, &index, &filename));
+
+  // Test negative index.
+  char kTestLine3[] = "FILE -2 file name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFile(kTestLine3, &index, &filename));
+}
+
+// Test parsing of valid FUNC lines.  The format is:
+// FUNC <address> <size> <stack_param_size> <name>
+TEST(SymbolParseHelper, ParseFunctionValid) {
+  uint64_t address;
+  uint64_t size;
+  long stack_param_size;
+  char *name;
+
+  char kTestLine[] = "FUNC 1 2 3 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine, &address, &size,
+                                               &stack_param_size, &name));
+  EXPECT_EQ(1ULL, address);
+  EXPECT_EQ(2ULL, size);
+  EXPECT_EQ(3, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+
+  // Test hex address, size, and param size.
+  char kTestLine1[] = "FUNC a1 a2 a3 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine1, &address, &size,
+                                               &stack_param_size, &name));
+  EXPECT_EQ(0xa1ULL, address);
+  EXPECT_EQ(0xa2ULL, size);
+  EXPECT_EQ(0xa3, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+
+  char kTestLine2[] = "FUNC 0 0 0 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine2, &address, &size,
+                                               &stack_param_size, &name));
+  EXPECT_EQ(0ULL, address);
+  EXPECT_EQ(0ULL, size);
+  EXPECT_EQ(0, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+}
+
+// Test parsing of invalid FUNC lines.  The format is:
+// FUNC <address> <size> <stack_param_size> <name>
+TEST(SymbolParseHelper, ParseFunctionInvalid) {
+  uint64_t address;
+  uint64_t size;
+  long stack_param_size;
+  char *name;
+
+  // Test missing function name.
+  char kTestLine[] = "FUNC 1 2 3 ";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine, &address, &size,
+                                                &stack_param_size, &name));
+  // Test bad address.
+  char kTestLine1[] = "FUNC 1z 2 3 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine1, &address, &size,
+                                                &stack_param_size, &name));
+  // Test large address.
+  char kTestLine2[] = "FUNC 123123123123123123123123123 2 3 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine2, &address, &size,
+                                                &stack_param_size, &name));
+  // Test bad size.
+  char kTestLine3[] = "FUNC 1 z2 3 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine3, &address, &size,
+                                                &stack_param_size, &name));
+  // Test large size.
+  char kTestLine4[] = "FUNC 1 231231231231231231231231232 3 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine4, &address, &size,
+                                                &stack_param_size, &name));
+  // Test bad param size.
+  char kTestLine5[] = "FUNC 1 2 3z function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine5, &address, &size,
+                                                &stack_param_size, &name));
+  // Test large param size.
+  char kTestLine6[] = "FUNC 1 2 312312312312312312312312323 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine6, &address, &size,
+                                                &stack_param_size, &name));
+  // Negative param size.
+  char kTestLine7[] = "FUNC 1 2 -5 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine7, &address, &size,
+                                                &stack_param_size, &name));
+}
+
+// Test parsing of valid lines.  The format is:
+// <address> <size> <line number> <source file id>
+TEST(SymbolParseHelper, ParseLineValid) {
+  uint64_t address;
+  uint64_t size;
+  long line_number;
+  long source_file;
+
+  char kTestLine[] = "1 2 3 4";
+  ASSERT_TRUE(SymbolParseHelper::ParseLine(kTestLine, &address, &size,
+                                           &line_number, &source_file));
+  EXPECT_EQ(1ULL, address);
+  EXPECT_EQ(2ULL, size);
+  EXPECT_EQ(3, line_number);
+  EXPECT_EQ(4, source_file);
+
+  // Test hex size and address.
+  char kTestLine1[] = "a1 a2 3 4  // some comment";
+  ASSERT_TRUE(SymbolParseHelper::ParseLine(kTestLine1, &address, &size,
+                                           &line_number, &source_file));
+  EXPECT_EQ(0xa1ULL, address);
+  EXPECT_EQ(0xa2ULL, size);
+  EXPECT_EQ(3, line_number);
+  EXPECT_EQ(4, source_file);
+
+  // 0 is a valid line number.
+  char kTestLine2[] = "a1 a2 0 4  // some comment";
+  ASSERT_TRUE(SymbolParseHelper::ParseLine(kTestLine2, &address, &size,
+                                           &line_number, &source_file));
+  EXPECT_EQ(0xa1ULL, address);
+  EXPECT_EQ(0xa2ULL, size);
+  EXPECT_EQ(0, line_number);
+  EXPECT_EQ(4, source_file);
+}
+
+// Test parsing of invalid lines.  The format is:
+// <address> <size> <line number> <source file id>
+TEST(SymbolParseHelper, ParseLineInvalid) {
+  uint64_t address;
+  uint64_t size;
+  long line_number;
+  long source_file;
+
+  // Test missing source file id.
+  char kTestLine[] = "1 2 3";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine, &address, &size,
+                                            &line_number, &source_file));
+  // Test bad address.
+  char kTestLine1[] = "1z 2 3 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine1, &address, &size,
+                                            &line_number, &source_file));
+  // Test large address.
+  char kTestLine2[] = "123123123123123123123123 2 3 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine2, &address, &size,
+                                            &line_number, &source_file));
+  // Test bad size.
+  char kTestLine3[] = "1 z2 3 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine3, &address, &size,
+                                            &line_number, &source_file));
+  // Test large size.
+  char kTestLine4[] = "1 123123123123123123123123 3 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine4, &address, &size,
+                                            &line_number, &source_file));
+  // Test bad line number.
+  char kTestLine5[] = "1 2 z3 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine5, &address, &size,
+                                            &line_number, &source_file));
+  // Test negative line number.
+  char kTestLine6[] = "1 2 -1 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine6, &address, &size,
+                                            &line_number, &source_file));
+  // Test large line number.
+  char kTestLine7[] = "1 2 123123123123123123123 4";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine7, &address, &size,
+                                            &line_number, &source_file));
+  // Test bad source file id.
+  char kTestLine8[] = "1 2 3 f";
+  ASSERT_FALSE(SymbolParseHelper::ParseLine(kTestLine8, &address, &size,
+                                            &line_number, &source_file));
+}
+
+// Test parsing of valid PUBLIC lines.  The format is:
+// PUBLIC <address> <stack_param_size> <name>
+TEST(SymbolParseHelper, ParsePublicSymbolValid) {
+  uint64_t address;
+  long stack_param_size;
+  char *name;
+
+  char kTestLine[] = "PUBLIC 1 2 3";
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &address,
+                                                   &stack_param_size, &name));
+  EXPECT_EQ(1ULL, address);
+  EXPECT_EQ(2, stack_param_size);
+  EXPECT_EQ("3", string(name));
+
+  // Test hex size and address.
+  char kTestLine1[] = "PUBLIC a1 a2 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &address,
+                                                   &stack_param_size, &name));
+  EXPECT_EQ(0xa1ULL, address);
+  EXPECT_EQ(0xa2, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+
+  // Test 0 is a valid address.
+  char kTestLine2[] = "PUBLIC 0 a2 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &address,
+                                                   &stack_param_size, &name));
+  EXPECT_EQ(0ULL, address);
+  EXPECT_EQ(0xa2, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+}
+
+// Test parsing of invalid PUBLIC lines.  The format is:
+// PUBLIC <address> <stack_param_size> <name>
+TEST(SymbolParseHelper, ParsePublicSymbolInvalid) {
+  uint64_t address;
+  long stack_param_size;
+  char *name;
+
+  // Test missing source function name.
+  char kTestLine[] = "PUBLIC 1 2 ";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &address,
+                                                    &stack_param_size, &name));
+  // Test bad address.
+  char kTestLine1[] = "PUBLIC 1z 2 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &address,
+                                                    &stack_param_size, &name));
+  // Test large address.
+  char kTestLine2[] = "PUBLIC 123123123123123123123123 2 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &address,
+                                                    &stack_param_size, &name));
+  // Test bad param stack size.
+  char kTestLine3[] = "PUBLIC 1 z2 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine3, &address,
+                                                    &stack_param_size, &name));
+  // Test large param stack size.
+  char kTestLine4[] = "PUBLIC 1 123123123123123123123123123 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine4, &address,
+                                                    &stack_param_size, &name));
+  // Test negative param stack size.
+  char kTestLine5[] = "PUBLIC 1 -5 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine5, &address,
+                                                    &stack_param_size, &name));
 }
 
 }  // namespace

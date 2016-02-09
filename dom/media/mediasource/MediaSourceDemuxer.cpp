@@ -12,6 +12,7 @@
 #include "MediaSourceUtils.h"
 #include "SourceBufferList.h"
 #include "nsPrintfCString.h"
+#include "OpusDecoder.h"
 
 namespace mozilla {
 
@@ -296,6 +297,10 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mType(aType)
   , mMonitor("MediaSourceTrackDemuxer")
   , mReset(true)
+  , mPreRoll(
+      TimeUnit::FromMicroseconds(
+        OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType)
+          ? 80000 : 0))
 {
 }
 
@@ -379,14 +384,24 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
   TimeIntervals buffered = mManager->Buffered(mType);
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
+  TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::FromMicroseconds(0));
 
-  if (!buffered.Contains(aTime)) {
-    // We don't have the data to seek to.
-    return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
-                                        __func__);
+  if (!buffered.Contains(seekTime)) {
+    if (!buffered.Contains(aTime)) {
+      // We don't have the data to seek to.
+      return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+                                          __func__);
+    }
+    // Theorically we should reject the promise with WAITING_FOR_DATA,
+    // however, to avoid unwanted regressions we assume that if at this time
+    // we don't have the wanted data it won't come later.
+    // Instead of using the pre-rolled time, use the earliest time available in
+    // the interval.
+    TimeIntervals::IndexType index = buffered.Find(aTime);
+    MOZ_ASSERT(index != TimeIntervals::NoIndex);
+    seekTime = buffered[index].mStart;
   }
-  TimeUnit seekTime =
-    mManager->Seek(mType, aTime, MediaSourceDemuxer::EOS_FUZZ);
+  seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ);
   bool error;
   RefPtr<MediaRawData> sample =
     mManager->GetSample(mType,

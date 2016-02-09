@@ -544,6 +544,18 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
     Assembler::patchCall(callerOffset, calleeOffset);
 }
 
+CodeOffset
+MacroAssembler::thunkWithPatch()
+{
+    return Assembler::thunkWithPatch();
+}
+
+void
+MacroAssembler::patchThunk(uint32_t jumpOffset, uint32_t targetOffset)
+{
+    Assembler::patchThunk(jumpOffset, targetOffset);
+}
+
 void
 MacroAssembler::callAndPushReturnAddress(Register reg)
 {

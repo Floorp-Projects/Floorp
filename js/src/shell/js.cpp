@@ -139,7 +139,7 @@ static const double MAX_TIMEOUT_INTERVAL = 1800.0;
 // Per-runtime shell state.
 struct ShellRuntime
 {
-    ShellRuntime();
+    explicit ShellRuntime(JSRuntime* rt);
 
     bool isWorker;
     double timeoutInterval;
@@ -287,12 +287,14 @@ extern JS_EXPORT_API(void)   add_history(char* line);
 } // extern "C"
 #endif
 
-ShellRuntime::ShellRuntime()
+ShellRuntime::ShellRuntime(JSRuntime* rt)
   : isWorker(false),
     timeoutInterval(-1.0),
     serviceInterrupt(false),
     haveInterruptFunc(false),
+    interruptFunc(rt, NullValue()),
     lastWarningEnabled(false),
+    lastWarning(rt, NullValue()),
     watchdogLock(nullptr),
     watchdogWakeup(nullptr),
     watchdogThread(nullptr),
@@ -2771,7 +2773,7 @@ WorkerMain(void* arg)
         return;
     }
 
-    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>(rt);
     if (!sr) {
         JS_DestroyRuntime(rt);
         js_delete(input);
@@ -2825,6 +2827,9 @@ WorkerMain(void* arg)
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
     DestroyContext(cx, false);
+
+    KillWatchdog(rt);
+
     JS_DestroyRuntime(rt);
 
     js_delete(input);
@@ -6994,7 +6999,7 @@ main(int argc, char** argv, char** envp)
     if (!rt)
         return 1;
 
-    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>(rt);
     if (!sr)
         return 1;
 
@@ -7005,9 +7010,6 @@ main(int argc, char** argv, char** envp)
     JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;
-
-    sr->interruptFunc.init(rt, NullValue());
-    sr->lastWarning.init(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 

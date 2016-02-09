@@ -36,6 +36,7 @@
 #ifndef PROCESSOR_STACKWALKER_UNITTEST_UTILS_H_
 #define PROCESSOR_STACKWALKER_UNITTEST_UTILS_H_
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
@@ -74,6 +75,9 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
   }
   bool GetMemoryAtAddress(uint64_t address, uint64_t *value) const {
     return GetMemoryLittleEndian(address, value);
+  }
+  void Print() const {
+    assert(false);
   }
 
  private:
@@ -171,18 +175,21 @@ class MockSymbolSupplier: public google_breakpad::SymbolSupplier {
                                            const SystemInfo *system_info,
                                            string *symbol_file,
                                            string *symbol_data));
-  MOCK_METHOD4(GetCStringSymbolData, SymbolResult(const CodeModule *module,
+  MOCK_METHOD5(GetCStringSymbolData, SymbolResult(const CodeModule *module,
                                                   const SystemInfo *system_info,
                                                   string *symbol_file,
-                                                  char **symbol_data));
+                                                  char **symbol_data,
+                                                  size_t *symbol_data_size));
   MOCK_METHOD1(FreeSymbolData, void(const CodeModule *module));
 
   // Copies the passed string contents into a newly allocated buffer.
   // The newly allocated buffer will be freed during destruction.
-  char* CopySymbolDataAndOwnTheCopy(const std::string &info) {
-    unsigned int buffer_size = info.size() + 1;
-    char *symbol_data = new char [buffer_size];
-    strcpy(symbol_data, info.c_str());
+  char* CopySymbolDataAndOwnTheCopy(const std::string &info,
+                                    size_t *symbol_data_size) {
+    *symbol_data_size = info.size() + 1;
+    char *symbol_data = new char[*symbol_data_size];
+    memcpy(symbol_data, info.c_str(), info.size());
+    symbol_data[info.size()] = '\0';
     symbol_data_to_free_.push_back(symbol_data);
     return symbol_data;
   }

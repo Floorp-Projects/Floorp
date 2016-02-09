@@ -37,8 +37,11 @@ TEST_HARNESS_BINS += \
   $(NULL)
 endif
 
+# The fileid utility depends on mozglue. See bug 1069556.
 ifeq ($(OS_ARCH),Darwin)
-TEST_HARNESS_BINS += fix_macosx_stack.py
+TEST_HARNESS_BINS += \
+  fix_macosx_stack.py \
+  $(DLL_PREFIX)mozglue$(DLL_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),Linux)

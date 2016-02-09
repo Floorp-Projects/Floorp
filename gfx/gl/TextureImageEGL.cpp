@@ -207,14 +207,20 @@ TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& 
         region = aRegion;
     }
 
+    bool needInit = mTextureState == Created;
+    size_t uploadSize = 0;
     mTextureFormat =
       UploadSurfaceToTexture(mGLContext,
                              aSurf,
                              region,
                              mTexture,
-                             mTextureState == Created,
+                             &uploadSize,
+                             needInit,
                              bounds.TopLeft() + gfx::IntPoint(aFrom.x, aFrom.y),
                              false);
+    if (uploadSize > 0) {
+        UpdateUploadSize(uploadSize);
+    }
 
     mTextureState = Valid;
     return true;

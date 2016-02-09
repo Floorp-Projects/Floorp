@@ -13,35 +13,34 @@
 int
 snprintf(char *str, size_t n, const char *fmt, ...)
 {
-	va_list ap;
+    va_list ap;
 #ifdef VSPRINTF_CHARSTAR
-	char *rp;
+    char *rp;
 #else
-	int rval;
+    int rval;
 #endif
-	va_start(ap, fmt);
+    va_start(ap, fmt);
 #ifdef VSPRINTF_CHARSTAR
-	rp = vsprintf(str, fmt, ap);
-	va_end(ap);
-	return (strlen(rp));
+    rp = vsprintf(str, fmt, ap);
+    va_end(ap);
+    return (strlen(rp));
 #else
-	rval = vsprintf(str, fmt, ap);
-	va_end(ap);
-	return (rval);
+    rval = vsprintf(str, fmt, ap);
+    va_end(ap);
+    return (rval);
 #endif
 }
 
 int
-vsnprintf(str, n, fmt, ap)
-	char *str;
-	size_t n;
-	const char *fmt;
-	va_list ap;
+    vsnprintf(str, n, fmt, ap) char *str;
+size_t n;
+const char *fmt;
+va_list ap;
 {
 #ifdef VSPRINTF_CHARSTAR
-	return (strlen(vsprintf(str, fmt, ap)));
+    return (strlen(vsprintf(str, fmt, ap)));
 #else
-	return (vsprintf(str, fmt, ap));
+    return (vsprintf(str, fmt, ap));
 #endif
 }
 

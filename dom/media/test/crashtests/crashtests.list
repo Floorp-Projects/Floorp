@@ -78,7 +78,7 @@ load 1080986.html
 load 1122218.html
 load 1127188.html
 load 1157994.html
-load 1158427.html
+skip-if(!B2G) load 1158427.html
 load 1185176.html
 load 1185192.html
 load 1228484.html

@@ -25,7 +25,7 @@ namespace js {
 namespace wasm {
 
 bool
-GenerateStubs(ModuleGenerator& mg, bool usesHeap);
+GenerateStubs(ModuleGenerator& mg);
 
 } // namespace wasm
 } // namespace js

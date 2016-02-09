@@ -708,6 +708,7 @@ struct AsmJSInternalCallee
 class AssemblerShared
 {
     wasm::CallSiteAndTargetVector callsites_;
+    wasm::JumpSiteArray jumpsites_;
     wasm::HeapAccessVector heapAccesses_;
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
     Vector<AsmJSAbsoluteAddress, 0, SystemAllocPolicy> asmJSAbsoluteAddresses_;
@@ -740,15 +741,20 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    void append(const wasm::CallSiteDesc& desc, CodeOffset label, size_t framePushed,
+    void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, size_t framePushed,
                 uint32_t targetIndex = wasm::CallSiteAndTarget::NOT_INTERNAL)
     {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
-        wasm::CallSite callsite(desc, label.offset(), framePushed + sizeof(AsmJSFrame));
+        wasm::CallSite callsite(desc, retAddr.offset(), framePushed + sizeof(AsmJSFrame));
         enoughMemory_ &= callsites_.append(wasm::CallSiteAndTarget(callsite, targetIndex));
     }
     wasm::CallSiteAndTargetVector& callSites() { return callsites_; }
+
+    void append(wasm::JumpTarget target, uint32_t offset) {
+        enoughMemory_ &= jumpsites_[target].append(offset);
+    }
+    const wasm::JumpSiteArray& jumpSites() const { return jumpsites_; }
 
     void append(wasm::HeapAccess access) { enoughMemory_ &= heapAccesses_.append(access); }
     wasm::HeapAccessVector&& extractHeapAccesses() { return Move(heapAccesses_); }
@@ -780,6 +786,14 @@ class AssemblerShared
         enoughMemory_ &= callsites_.appendAll(other.callsites_);
         for (; i < callsites_.length(); i++)
             callsites_[i].offsetReturnAddressBy(delta);
+
+        for (wasm::JumpTarget target : mozilla::MakeEnumeratedRange(wasm::JumpTarget::Limit)) {
+            wasm::Uint32Vector& offsets = jumpsites_[target];
+            i = offsets.length();
+            enoughMemory_ &= offsets.appendAll(other.jumpsites_[target]);
+            for (; i < offsets.length(); i++)
+                offsets[i] += delta;
+        }
 
         i = heapAccesses_.length();
         enoughMemory_ &= heapAccesses_.appendAll(other.heapAccesses_);

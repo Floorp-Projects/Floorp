@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<title>Testcase for bug 1243409</title>
+<html class="reftest-wait">
+<body>
+<svg>
+  <g transform="matrix(1, 0, 0, 1, 0, 30)">
+    <rect fill-opacity="1" height="10" width="20" fill="#000"></rect>
+  </g>
+</svg>
+<script>
+var m = document.querySelector('svg > g').transform.baseVal[0].matrix;
+var times = 2;
+
+function doTest() {
+  if(!times--) {
+    document.documentElement.removeAttribute("class");
+    return;
+  }
+
+  m.e += 10;
+  m.f -= 10;
+  window.requestAnimationFrame(doTest);
+}
+
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

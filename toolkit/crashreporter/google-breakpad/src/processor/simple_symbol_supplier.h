@@ -118,7 +118,8 @@ class SimpleSymbolSupplier : public SymbolSupplier {
   virtual SymbolResult GetCStringSymbolData(const CodeModule *module,
                                             const SystemInfo *system_info,
                                             string *symbol_file,
-                                            char **symbol_data);
+                                            char **symbol_data,
+                                            size_t *symbol_data_size);
 
   // Free the data buffer allocated in the above GetCStringSymbolData();
   virtual void FreeSymbolData(const CodeModule *module);

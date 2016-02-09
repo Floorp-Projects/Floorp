@@ -19,13 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
   var y = navigator.mozContacts;
   is(x, y, "Should have gotten the same mozContacts object again");
 
-  // Test Javascript-navigator-property objects
-  x = navigator.mozApps;
-  is(typeof x, "object", "Should have a mozApps object");
-  delete navigator.mozApps;
-  y = navigator.mozApps;
-  is(x, y, "Should have gotten the same mozApps object again");
-
   </script>
 </head>
 <body>

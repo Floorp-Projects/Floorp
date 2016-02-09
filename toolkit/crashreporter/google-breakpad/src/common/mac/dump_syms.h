@@ -45,6 +45,7 @@
 
 #include "common/byte_cursor.h"
 #include "common/mac/macho_reader.h"
+#include "common/mac/super_fat_arch.h"
 #include "common/module.h"
 #include "common/scoped_ptr.h"
 #include "common/symbol_data.h"
@@ -53,11 +54,13 @@ namespace google_breakpad {
 
 class DumpSymbols {
  public:
-  explicit DumpSymbols(SymbolData symbol_data)
+  DumpSymbols(SymbolData symbol_data, bool handle_inter_cu_refs)
       : symbol_data_(symbol_data),
+        handle_inter_cu_refs_(handle_inter_cu_refs),
         input_pathname_(),
         object_filename_(),
         contents_(),
+        object_files_(),
         selected_object_file_(),
         selected_object_name_() { }
   ~DumpSymbols() {
@@ -90,14 +93,14 @@ class DumpSymbols {
   // architecture matches that of this dumper program.
   bool SetArchitecture(const std::string &arch_name);
 
-  // Return a pointer to an array of 'struct fat_arch' structures,
-  // describing the object files contained in this dumper's file. Set
-  // *|count| to the number of elements in the array. The returned array is
-  // owned by this DumpSymbols instance.
+  // Return a pointer to an array of SuperFatArch structures describing the
+  // object files contained in this dumper's file. Set *|count| to the number
+  // of elements in the array. The returned array is owned by this DumpSymbols
+  // instance.
   //
   // If there are no available architectures, this function
   // may return NULL.
-  const struct fat_arch *AvailableArchitectures(size_t *count) {
+  const SuperFatArch* AvailableArchitectures(size_t *count) {
     *count = object_files_.size();
     if (object_files_.size() > 0)
       return &object_files_[0];
@@ -119,6 +122,11 @@ class DumpSymbols {
   class DumperLineToModule;
   class LoadCommandDumper;
 
+  // This method behaves similarly to NXFindBestFatArch, but it supports
+  // SuperFatArch.
+  SuperFatArch* FindBestMatchForArchitecture(
+      cpu_type_t cpu_type, cpu_subtype_t cpu_subtype);
+
   // Return an identifier string for the file this DumpSymbols is dumping.
   std::string Identifier();
 
@@ -127,7 +135,8 @@ class DumpSymbols {
   // on failure, report the problem and return false.
   bool ReadDwarf(google_breakpad::Module *module,
                  const mach_o::Reader &macho_reader,
-                 const mach_o::SectionMap &dwarf_sections) const;
+                 const mach_o::SectionMap &dwarf_sections,
+                 bool handle_inter_cu_refs) const;
 
   // Read DWARF CFI or .eh_frame data from |section|, belonging to
   // |macho_reader|, and record it in |module|.  If |eh_frame| is true,
@@ -142,6 +151,9 @@ class DumpSymbols {
   // The selection of what type of symbol data to read/write.
   const SymbolData symbol_data_;
 
+  // Whether to handle references between compilation units.
+  const bool handle_inter_cu_refs_;
+
   // The name of the file or bundle whose symbols this will dump.
   // This is the path given to Read, for use in error messages.
   std::string input_pathname_;
@@ -155,15 +167,15 @@ class DumpSymbols {
   // The complete contents of object_filename_, mapped into memory.
   scoped_array<uint8_t> contents_;
 
-  // A vector of fat_arch structures describing the object files
+  // A vector of SuperFatArch structures describing the object files
   // object_filename_ contains. If object_filename_ refers to a fat binary,
   // this may have more than one element; if it refers to a Mach-O file, this
   // has exactly one element.
-  vector<struct fat_arch> object_files_;
+  vector<SuperFatArch> object_files_;
 
   // The object file in object_files_ selected to dump, or NULL if
   // SetArchitecture hasn't been called yet.
-  const struct fat_arch *selected_object_file_;
+  const SuperFatArch *selected_object_file_;
 
   // A string that identifies the selected object file, for use in error
   // messages.  This is usually object_filename_, but if that refers to a
