@@ -47,19 +47,19 @@ DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double,  MOZ_JNICALL_ABI);
 
 } // namespace detail
 
-constexpr char Object::name[];
-template<> const char TypedObject<jstring>::name[] = "java/lang/String";
-template<> const char TypedObject<jclass>::name[] = "java/lang/Class";
-template<> const char TypedObject<jthrowable>::name[] = "java/lang/Throwable";
-template<> const char TypedObject<jbooleanArray>::name[] = "[Z";
-template<> const char TypedObject<jbyteArray>::name[] = "[B";
-template<> const char TypedObject<jcharArray>::name[] = "[C";
-template<> const char TypedObject<jshortArray>::name[] = "[S";
-template<> const char TypedObject<jintArray>::name[] = "[I";
-template<> const char TypedObject<jlongArray>::name[] = "[J";
-template<> const char TypedObject<jfloatArray>::name[] = "[F";
-template<> const char TypedObject<jdoubleArray>::name[] = "[D";
-template<> const char TypedObject<jobjectArray>::name[] = "[Ljava/lang/Object;";
+template<> const char Context<Object, jobject>::name[] = "java/lang/Object";
+template<> const char Context<TypedObject<jstring>, jstring>::name[] = "java/lang/String";
+template<> const char Context<TypedObject<jclass>, jclass>::name[] = "java/lang/Class";
+template<> const char Context<TypedObject<jthrowable>, jthrowable>::name[] = "java/lang/Throwable";
+template<> const char Context<TypedObject<jbooleanArray>, jbooleanArray>::name[] = "[Z";
+template<> const char Context<TypedObject<jbyteArray>, jbyteArray>::name[] = "[B";
+template<> const char Context<TypedObject<jcharArray>, jcharArray>::name[] = "[C";
+template<> const char Context<TypedObject<jshortArray>, jshortArray>::name[] = "[S";
+template<> const char Context<TypedObject<jintArray>, jintArray>::name[] = "[I";
+template<> const char Context<TypedObject<jlongArray>, jlongArray>::name[] = "[J";
+template<> const char Context<TypedObject<jfloatArray>, jfloatArray>::name[] = "[F";
+template<> const char Context<TypedObject<jdoubleArray>, jdoubleArray>::name[] = "[D";
+template<> const char Context<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
 
 
 JNIEnv* sGeckoThreadEnv;
@@ -128,8 +128,7 @@ bool ThrowException(JNIEnv *aEnv, const char *aClass,
 {
     MOZ_ASSERT(aEnv, "Invalid thread JNI env");
 
-    ClassObject::LocalRef cls =
-            ClassObject::LocalRef::Adopt(aEnv->FindClass(aClass));
+    Class::LocalRef cls = Class::LocalRef::Adopt(aEnv->FindClass(aClass));
     MOZ_ASSERT(cls, "Cannot find exception class");
 
     return !aEnv->ThrowNew(cls.Get(), aMessage);
@@ -158,7 +157,7 @@ bool HandleUncaughtException(JNIEnv* aEnv)
     if (stack) {
         // GeckoAppShell wants us to annotate and trigger the crash reporter.
         CrashReporter::AnnotateCrashReport(
-                NS_LITERAL_CSTRING("AuxiliaryJavaStack"), nsCString(stack));
+                NS_LITERAL_CSTRING("AuxiliaryJavaStack"), stack->ToCString());
     }
 #endif // MOZ_CRASHREPORTER
 
@@ -203,6 +202,11 @@ void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle)
 
     env->SetLongField(instance, sJNIObjectHandleField,
                       static_cast<jlong>(handle));
+}
+
+jclass GetClassGlobalRef(JNIEnv* aEnv, const char* aClassName)
+{
+    return AndroidBridge::GetClassGlobalRef(aEnv, aClassName);
 }
 
 } // jni
