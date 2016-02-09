@@ -28,7 +28,6 @@ class DeadObjectProxy : public BaseProxyHandler
                                  AutoIdVector& props) const override;
     virtual bool delete_(JSContext* cx, HandleObject wrapper, HandleId id,
                          ObjectOpResult& result) const override;
-    virtual bool enumerate(JSContext* cx, HandleObject wrapper, MutableHandleObject objp) const override;
     virtual bool getPrototype(JSContext* cx, HandleObject proxy,
                               MutableHandleObject protop) const override;
     virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
@@ -39,6 +38,7 @@ class DeadObjectProxy : public BaseProxyHandler
 
     /* SpiderMonkey extensions. */
     // BaseProxyHandler::getPropertyDescriptor will throw by calling getOwnPropertyDescriptor.
+    // BaseProxyHandler::enumerate will throw by calling ownKeys.
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                             const CallArgs& args) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
