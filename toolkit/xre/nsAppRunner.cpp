@@ -253,6 +253,12 @@ static char **gQtOnlyArgv;
 #include <fontconfig/fontconfig.h>
 #endif
 #include "BinaryPath.h"
+#ifndef MOZ_BUILDID
+// See comment in Makefile.in why we want to avoid including buildid.h.
+// Still include it when MOZ_BUILDID is not set, which can happen with some
+// build backends.
+#include "buildid.h"
+#endif
 
 #ifdef MOZ_LINKER
 extern "C" MFBT_API bool IsSignalHandlingBroken();

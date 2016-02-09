@@ -7,10 +7,3 @@
 NSDISTMODE = copy
 
 PROGRAMS_DEST = $(DIST)/bin
-
-include $(topsrcdir)/config/rules.mk
-
-MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
-
-webapprt.$(OBJ_SUFFIX): $(DEPTH)/config/buildid

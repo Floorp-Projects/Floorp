@@ -15,8 +15,10 @@ export TOPLEVEL_BUILD := 1
 
 default::
 
+ifndef TEST_MOZBUILD
 ifdef MOZ_BUILD_APP
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
+endif
 endif
 
 include $(topsrcdir)/config/config.mk
@@ -27,6 +29,10 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    .mozconfig.mk
+
+ifndef MOZ_PROFILE_USE
+buildid.h: FORCE
+endif
 
 ifdef JS_STANDALONE
 configure_dir = $(topsrcdir)/js/src
