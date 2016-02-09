@@ -103,7 +103,7 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
 		-DBOOKMARKS_INCLUDE_DIR=$(TOPSRCDIR)/browser/locales/en-US/profile \
-		-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
+		-DMOZ_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
 		$(ACDEFINES) \
 		install_$(subst /,_,$*)
 

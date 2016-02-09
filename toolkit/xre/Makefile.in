@@ -28,15 +28,15 @@ ifdef MOZ_SOURCE_STAMP
 
 endif # MOZ_SOURCE_STAMP
 
-GRE_BUILDID   := $(strip $(firstword $(shell cat $(DEPTH)/config/buildid 2>/dev/null)))
-$(call errorIfEmpty,GRE_MILESTONE GRE_BUILDID)
+MOZ_BUILDID   := $(strip $(firstword $(shell cat $(DEPTH)/config/buildid 2>/dev/null)))
+$(call errorIfEmpty,GRE_MILESTONE MOZ_BUILDID)
 
-DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
+DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
 
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(milestone_txt)
 
 platform.ini: FORCE
-	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(GRE_BUILDID) $(INIARGS) $(milestone_txt) > $@
+	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(MOZ_BUILDID) $(INIARGS) $(milestone_txt) > $@
 
 GARBAGE += platform.ini
 
