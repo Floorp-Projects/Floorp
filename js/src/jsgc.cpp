@@ -7737,6 +7737,8 @@ JSObject*
 NewMemoryInfoObject(JSContext* cx)
 {
     RootedObject obj(cx, JS_NewObject(cx, nullptr));
+    if (!obj)
+        return nullptr;
 
     using namespace MemInfo;
     struct NamedGetter {
