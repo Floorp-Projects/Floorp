@@ -6,7 +6,7 @@
 # for webapprt.ini need to be set after PP_TARGETS are expanded in rules.mk.
 include $(topsrcdir)/config/rules.mk
 
-MOZ_APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID)
+MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
 
 $(FINAL_TARGET)/webapprt.ini: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
