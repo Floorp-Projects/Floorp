@@ -6,17 +6,22 @@
 
 #include "WinUtils.h"
 
+#include <knownfolders.h>
+#include <winioctl.h>
+
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
 #include "KeyboardLayout.h"
 #include "nsIDOMMouseEvent.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/unused.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 
@@ -43,6 +48,7 @@
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
 #include "nsLookAndFeel.h"
+#include "nsWindowsHelpers.h"
 
 #ifdef NS_ENABLE_TSF
 #include <textstor.h>
@@ -428,6 +434,18 @@ WinUtils::DwmInvalidateIconicBitmapsProc WinUtils::dwmInvalidateIconicBitmapsPtr
 WinUtils::DwmDefWindowProcProc WinUtils::dwmDwmDefWindowProcPtr = nullptr;
 WinUtils::DwmGetCompositionTimingInfoProc WinUtils::dwmGetCompositionTimingInfoPtr = nullptr;
 WinUtils::DwmFlushProc WinUtils::dwmFlushProcPtr = nullptr;
+
+// Prefix for path used by NT calls.
+const wchar_t kNTPrefix[] = L"\\??\\";
+const size_t kNTPrefixLen = ArrayLength(kNTPrefix) - 1;
+
+struct CoTaskMemFreePolicy
+{
+  void operator()(void* aPtr) {
+    ::CoTaskMemFree(aPtr);
+  }
+};
+
 
 /* static */
 void
@@ -1689,6 +1707,119 @@ WinUtils::GetMaxTouchPoints()
     return GetSystemMetrics(SM_MAXIMUMTOUCHES);
   }
   return 0;
+}
+
+#pragma pack(push, 1)
+typedef struct REPARSE_DATA_BUFFER {
+  ULONG  ReparseTag;
+  USHORT ReparseDataLength;
+  USHORT Reserved;
+  union {
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      ULONG  Flags;
+      WCHAR  PathBuffer[1];
+    } SymbolicLinkReparseBuffer;
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      WCHAR  PathBuffer[1];
+    } MountPointReparseBuffer;
+    struct {
+      UCHAR DataBuffer[1];
+    } GenericReparseBuffer;
+  };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#pragma pack(pop)
+
+/* static */
+bool
+WinUtils::ResolveMovedUsersFolder(std::wstring& aPath)
+{
+  // Users folder was introduced with Vista.
+  if (!IsVistaOrLater()) {
+    return true;
+  }
+
+  wchar_t* usersPath;
+  if (FAILED(WinUtils::SHGetKnownFolderPath(FOLDERID_UserProfiles, 0, nullptr,
+                                            &usersPath))) {
+    return false;
+  }
+
+  // Ensure usersPath gets freed properly.
+  UniquePtr<wchar_t, CoTaskMemFreePolicy> autoFreePath(usersPath);
+
+  // Is aPath in Users folder?
+  size_t usersLen = wcslen(usersPath);
+  if (_wcsnicmp(aPath.c_str(), usersPath, usersLen) != 0 ||
+      aPath[usersLen] != L'\\') {
+    return true;
+  }
+
+  DWORD attributes = ::GetFileAttributesW(usersPath);
+  if (attributes == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+
+  // Junction points are implemented as reparse points, is the Users folder one?
+  if (!(attributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
+    return true;
+  }
+
+  // Get the reparse point data.
+  nsAutoHandle usersHandle(
+    ::CreateFileW(usersPath, 0,
+                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                  nullptr, OPEN_EXISTING,
+                  FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                  nullptr));
+
+  char maxReparseBuf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE] = {0};
+  REPARSE_DATA_BUFFER* reparseBuf = (REPARSE_DATA_BUFFER*)maxReparseBuf;
+  DWORD bytesReturned = 0;
+  if (!::DeviceIoControl(usersHandle, FSCTL_GET_REPARSE_POINT, nullptr, 0,
+                         reparseBuf, MAXIMUM_REPARSE_DATA_BUFFER_SIZE,
+                         &bytesReturned, nullptr)) {
+    return false;
+  }
+
+  // Check to see if the reparse point is a junction point.
+  if (reparseBuf->ReparseTag != IO_REPARSE_TAG_MOUNT_POINT) {
+    return true;
+  }
+
+  // The offset and length are in bytes. Length doesn't include null.
+  wchar_t* substituteName = reparseBuf->MountPointReparseBuffer.PathBuffer +
+    reparseBuf->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t);
+  std::wstring::size_type substituteLen =
+    reparseBuf->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+
+  // If the substitute path starts with the NT namespace then remove it.
+  if (wcsncmp(substituteName, kNTPrefix, kNTPrefixLen) == 0) {
+    substituteName += kNTPrefixLen;
+    substituteLen -= kNTPrefixLen;
+  }
+
+  // Check that what remains looks like a drive letter path.
+  if (substituteName[1] != L':' || substituteName[2] != L'\\') {
+    return false;
+  }
+
+  // The documentation for SHGetKnownFolderPath says that it doesn't return a
+  // trailing backslash. The REPARSE_DATA_BUFFER path doesn't seem to have one
+  // either, but the documentation doesn't mention it, so let's make sure.
+  if (substituteName[substituteLen - 1] == L'\\') {
+    --substituteLen;
+  }
+
+  aPath.replace(0, usersLen, substituteName, substituteLen);
+  return true;
 }
 
 } // namespace widget
