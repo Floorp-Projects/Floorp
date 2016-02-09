@@ -1,0 +1,111 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* General */
+
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+/******************************************************************************/
+/* TreeView Customization */
+
+.treeTable {
+  width: 100%;
+}
+
+/* Space for read only properties icon */
+.treeTable td.treeValueCell {
+  padding-left: 16px;
+}
+
+/* Read only properties have a padlock icon */
+.treeTable tr:not(.writable) td.treeValueCell {
+  background: url("chrome://devtools/skin/images/firebug/read-only.svg") no-repeat;
+  background-position: 1px 5px;
+  background-size: 10px 10px;
+}
+
+/* Non-enumerable properties are grayed out */
+.treeTable tr:not(.enumerable) td.treeValueCell {
+  opacity: 0.7;
+}
+
+.treeTable > tbody > tr > td {
+  border-bottom: 1px solid #EFEFEF;
+}
+
+/* Label Types */
+.treeTable .userLabel,
+.treeTable .userClassLabel,
+.treeTable .userFunctionLabel {
+  font-weight: bold;
+}
+
+.treeTable .userLabel {
+  color: #000000;
+}
+
+.treeTable .userClassLabel {
+  color: #E90000;
+}
+
+.treeTable .userFunctionLabel {
+  color: #025E2A;
+}
+
+.treeTable .domLabel {
+  color: #000000;
+}
+
+.treeTable .domClassLabel {
+  color: #E90000;
+}
+
+.treeTable .domFunctionLabel {
+  color: #025E2A;
+}
+
+.treeTable .ordinalLabel {
+  color: SlateBlue;
+  font-weight: bold;
+}
+
+/******************************************************************************/
+/* Selection */
+
+.treeTable .treeRow:hover a,
+.treeTable .treeRow:hover span {
+  color: var(--theme-selection-color) !important;
+}
+
+/******************************************************************************/
+/* Toolbar */
+
+.toolbar {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 2;
+}
+
+.treeTable {
+  z-index: 1;
+  margin-top: 25px;
+}
+
+/******************************************************************************/
+/* Theme Dark */
+
+.theme-dark .treeTable > tbody > tr > td {
+  border-bottom: none;
+}
+
+.theme-dark body {
+  background-color: var(--theme-body-background);
+}
