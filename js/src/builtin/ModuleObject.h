@@ -162,7 +162,6 @@ class ModuleNamespaceObject : public ProxyObject
                              AutoIdVector& props) const override;
         bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                      ObjectOpResult& result) const override;
-        bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const override;
         bool getPrototype(JSContext* cx, HandleObject proxy,
                           MutableHandleObject protop) const override;
         bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
