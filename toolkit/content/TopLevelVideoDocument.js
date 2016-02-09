@@ -4,11 +4,8 @@
 
 "use strict";
 
+// <video> is used for top-level audio documents as well
 let videoElement = document.getElementsByTagName("video")[0];
-
-// ignore standalone audio files
-if (videoElement.videoWidth == 0 || videoElement.videoHeight == 0)
-  return;
 
 // 1. Handle fullscreen mode;
 // 2. Send keystrokes to the video element if the body element is focused,
@@ -18,7 +15,7 @@ document.addEventListener("keypress", ev => {
     return;
 
   // Maximize the video when pressing F11,
-  // because this is the standalone video document.
+  // because this is the standanlone video document.
   if (ev.key == "F11") {
     // If we're in browser fullscreen mode, it means the user pressed F11
     // while browser chrome or another tab had focus.
