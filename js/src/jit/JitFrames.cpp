@@ -118,9 +118,6 @@ JitFrameIterator::JitFrameIterator(JSContext* cx)
         current_ = activation_->bailoutData()->fp();
         frameSize_ = activation_->bailoutData()->topFrameSize();
         type_ = JitFrame_Bailout;
-    } else if (activation_->isLazyLinkExitFrame()) {
-        type_ = JitFrame_LazyLink;
-        MOZ_ASSERT(isExitFrameLayout<LazyLinkExitFrameLayout>());
     }
 }
 
@@ -136,9 +133,6 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator& activations)
         current_ = activation_->bailoutData()->fp();
         frameSize_ = activation_->bailoutData()->topFrameSize();
         type_ = JitFrame_Bailout;
-    } else if (activation_->isLazyLinkExitFrame()) {
-        type_ = JitFrame_LazyLink;
-        MOZ_ASSERT(isExitFrameLayout<LazyLinkExitFrameLayout>());
     }
 }
 
@@ -1419,7 +1413,6 @@ MarkJitActivation(JSTracer* trc, const JitActivationIterator& activations)
     for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case JitFrame_Exit:
-          case JitFrame_LazyLink:
             MarkJitExitFrame(trc, frames);
             break;
           case JitFrame_BaselineJS:
@@ -2690,9 +2683,6 @@ JitFrameIterator::dump() const
         break;
       case JitFrame_Exit:
         fprintf(stderr, " Exit frame\n");
-        break;
-      case JitFrame_LazyLink:
-        fprintf(stderr, " Lazy link frame\n");
         break;
     };
     fputc('\n', stderr);

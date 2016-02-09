@@ -457,6 +457,18 @@ SSL_IMPORT SECStatus SSL_VersionRangeGet(PRFileDesc *fd,
 SSL_IMPORT SECStatus SSL_VersionRangeSet(PRFileDesc *fd,
 					 const SSLVersionRange *vrange);
 
+/* Sets the version to check the server random against for the
+ * fallback check defined in [draft-ietf-tls-tls13-11 Section 6.3.1.1].
+ * This function is provided to allow for detection of forced downgrade
+ * attacks against client-side reconnect-and-fallback outside of TLS
+ * by setting |version| to be that of the original connection, rather
+ * than that of the new connection.
+ *
+ * The default, which can also be enabled by setting |version| to
+ * zero, is just to check against the max version in the
+ * version range (see SSL_VersionRangeSet). */
+SSL_IMPORT SECStatus SSL_SetDowngradeCheckVersion(PRFileDesc *fd,
+                                                  PRUint16 version);
 
 /* Values for "policy" argument to SSL_CipherPolicySet */
 /* Values returned by SSL_CipherPolicyGet. */

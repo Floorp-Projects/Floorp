@@ -37,7 +37,7 @@
 
 #include "processor/static_map_iterator.h"
 
-#include "common/logging.h"
+#include "processor/logging.h"
 
 namespace google_breakpad {
 

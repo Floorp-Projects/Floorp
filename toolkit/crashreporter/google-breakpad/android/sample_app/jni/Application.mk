@@ -28,4 +28,4 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 APP_STL := stlport_static
-APP_ABI := armeabi armeabi-v7a
+APP_ABI := all

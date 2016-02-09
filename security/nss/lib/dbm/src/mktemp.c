@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1987, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,7 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. ***REMOVED*** - see 
+ * 3. ***REMOVED*** - see
  *    ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
@@ -30,7 +30,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)mktemp.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)mktemp.c    8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef macintosh
@@ -60,90 +60,91 @@ int
 mkstemp(char *path)
 {
 #ifdef XP_OS2
-	FILE *temp = tmpfile();
+    FILE *temp = tmpfile();
 
-	return (temp ? fileno(temp) : -1);
+    return (temp ? fileno(temp) : -1);
 #else
-	int fd;
+    int fd;
 
-	return (_gettemp(path, &fd, 0) ? fd : -1);
+    return (_gettemp(path, &fd, 0) ? fd : -1);
 #endif
 }
 
 int
 mkstempflags(char *path, int extraFlags)
 {
-	int fd;
+    int fd;
 
-	return (_gettemp(path, &fd, extraFlags) ? fd : -1);
+    return (_gettemp(path, &fd, extraFlags) ? fd : -1);
 }
 
 /* NB: This routine modifies its input string, and does not always restore it.
 ** returns 1 on success, 0 on failure.
 */
-static int 
+static int
 _gettemp(char *path, register int *doopen, int extraFlags)
-{    
-	register char *start, *trv;
-	struct stat sbuf;
-	unsigned int pid;
+{
+    register char *start, *trv;
+    struct stat sbuf;
+    unsigned int pid;
 
-	pid = getpid();
-	for (trv = path; *trv; ++trv);		/* extra X's get set to 0's */
-	while (*--trv == 'X') {
-		*trv = (pid % 10) + '0';
-		pid /= 10;
-	}
+    pid = getpid();
+    for (trv = path; *trv; ++trv)
+        ; /* extra X's get set to 0's */
+    while (*--trv == 'X') {
+        *trv = (pid % 10) + '0';
+        pid /= 10;
+    }
 
-	/*
-	 * check the target directory; if you have six X's and it
-	 * doesn't exist this runs for a *very* long time.
-	 */
-	for (start = trv + 1;; --trv) {
-		char saved;
-		if (trv <= path)
-			break;
-		saved = *trv;
-		if (saved == '/' || saved == '\\') {
-			int rv;
-			*trv = '\0';
-			rv = stat(path, &sbuf);
-			*trv = saved;
-			if (rv)
-				return(0);
-			if (!S_ISDIR(sbuf.st_mode)) {
-				errno = ENOTDIR;
-				return(0);
-			}
-			break;
-		}
-	}
+    /*
+     * check the target directory; if you have six X's and it
+     * doesn't exist this runs for a *very* long time.
+     */
+    for (start = trv + 1;; --trv) {
+        char saved;
+        if (trv <= path)
+            break;
+        saved = *trv;
+        if (saved == '/' || saved == '\\') {
+            int rv;
+            *trv = '\0';
+            rv = stat(path, &sbuf);
+            *trv = saved;
+            if (rv)
+                return (0);
+            if (!S_ISDIR(sbuf.st_mode)) {
+                errno = ENOTDIR;
+                return (0);
+            }
+            break;
+        }
+    }
 
-	for (;;) {
-		if (doopen) {
-			if ((*doopen =
-			    open(path, O_CREAT|O_EXCL|O_RDWR|extraFlags, 0600)) >= 0)
-				return(1);
-			if (errno != EEXIST)
-				return(0);
-		}
-		else if (stat(path, &sbuf))
-			return(errno == ENOENT ? 1 : 0);
+    for (;;) {
+        if (doopen) {
+            if ((*doopen =
+                     open(path, O_CREAT | O_EXCL | O_RDWR | extraFlags, 0600)) >= 0)
+                return (1);
+            if (errno != EEXIST)
+                return (0);
+        }
+        else if (stat(path, &sbuf))
+            return (errno == ENOENT ? 1 : 0);
 
-		/* tricky little algorithm for backward compatibility */
-		for (trv = start;;) {
-			if (!*trv)
-				return(0);
-			if (*trv == 'z')
-				*trv++ = 'a';
-			else {
-				if (isdigit(*trv))
-					*trv = 'a';
-				else
-					++*trv;
-				break;
-			}
-		}
-	}
-	/*NOTREACHED*/
+        /* tricky little algorithm for backward compatibility */
+        for (trv = start;;) {
+            if (!*trv)
+                return (0);
+            if (*trv == 'z')
+                *trv++ = 'a';
+            else {
+                if (isdigit(*trv))
+                    *trv = 'a';
+                else
+                    ++*trv;
+                break;
+            }
+        }
+    }
+    /*NOTREACHED*/
 }

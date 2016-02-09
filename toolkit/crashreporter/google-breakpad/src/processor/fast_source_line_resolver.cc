@@ -47,6 +47,7 @@
 #include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "processor/module_factory.h"
+#include "processor/simple_serializer-inl.h"
 
 using std::map;
 using std::make_pair;
@@ -143,8 +144,14 @@ WindowsFrameInfo FastSourceLineResolver::CopyWFI(const char *raw) {
 // Loads a map from the given buffer in char* type.
 // Does NOT take ownership of mem_buffer.
 // In addition, treat mem_buffer as const char*.
-bool FastSourceLineResolver::Module::LoadMapFromMemory(char *mem_buffer) {
-  if (!mem_buffer) return false;
+bool FastSourceLineResolver::Module::LoadMapFromMemory(
+    char *memory_buffer,
+    size_t memory_buffer_size) {
+  if (!memory_buffer) return false;
+
+  // Read the "is_corrupt" flag.
+  const char *mem_buffer = memory_buffer;
+  mem_buffer = SimpleSerializer<bool>::Read(mem_buffer, &is_corrupt_);
 
   const uint32_t *map_sizes = reinterpret_cast<const uint32_t*>(mem_buffer);
 

@@ -175,7 +175,7 @@ endif
 
 # Turn off TLS compression support because it requires system zlib.
 # See bug 580679 comment 18.
-DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ZLIB=
+DEFAULT_GMAKE_FLAGS += NSS_SSL_ENABLE_ZLIB=
 
 # Disable building of the test programs in security/nss/lib/zlib
 DEFAULT_GMAKE_FLAGS += PROGRAMS=

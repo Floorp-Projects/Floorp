@@ -19,8 +19,8 @@ mozilla::LazyLogModule gADTSDemuxerLog("ADTSDemuxer");
 #define ADTSLOGV(msg, ...) \
   MOZ_LOG(gADTSDemuxerLog, LogLevel::Verbose, ("ADTSDemuxer " msg, ##__VA_ARGS__))
 #else
-#define ADTSLOG(msg, ...) do {} while (false)
-#define ADTSLOG(msg, ...) do {} while (false)
+#define ADTSLOG(msg, ...)  do {} while (false)
+#define ADTSLOGV(msg, ...) do {} while (false)
 #endif
 
 namespace mozilla {

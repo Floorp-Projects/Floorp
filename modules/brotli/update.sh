@@ -3,7 +3,7 @@
 # Script to update the mozilla in-tree copy of the Brotli decompressor.
 # Run this within the /modules/brotli directory of the source tree.
 
-MY_TEMP_DIR=`mktemp -d -t brotli_update` || exit 1
+MY_TEMP_DIR=`mktemp -d -t brotli_update.XXXXXX` || exit 1
 
 git clone https://github.com/google/brotli ${MY_TEMP_DIR}/brotli
 

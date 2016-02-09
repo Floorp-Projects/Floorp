@@ -1589,8 +1589,8 @@ CSS_PROP_POSITION(
     AlignContent,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    kAutoCompletionAlignJustifyContent,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
@@ -1599,8 +1599,8 @@ CSS_PROP_POSITION(
     AlignItems,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    kAutoCompletionAlignItems,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
@@ -1609,8 +1609,8 @@ CSS_PROP_POSITION(
     AlignSelf,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
@@ -1720,8 +1720,8 @@ CSS_PROP_POSITION(
     JustifyContent,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    kAutoCompletionAlignJustifyContent,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
@@ -1730,8 +1730,9 @@ CSS_PROP_POSITION(
     JustifyItems,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    // for auto-completion we use same values as justify-self:
+    kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
@@ -1740,8 +1741,8 @@ CSS_PROP_POSITION(
     JustifySelf,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
-    nullptr,
+    VARIANT_HK,
+    kAutoCompletionAlignJustifySelf,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
