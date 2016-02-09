@@ -530,7 +530,7 @@ class MochitestArguments(ArgumentContainer):
         [["--valgrind-args"],
          {"dest": "valgrindArgs",
           "default": None,
-          "help": "Extra arguments to pass to Valgrind.",
+          "help": "Comma-separated list of extra arguments to pass to Valgrind.",
           }],
         [["--valgrind-supp-files"],
          {"dest": "valgrindSuppFiles",
