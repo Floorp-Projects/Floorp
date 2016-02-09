@@ -446,7 +446,7 @@ pref("ui.touch.radius.rightmm", 3);
 pref("ui.touch.radius.bottommm", 2);
 pref("ui.touch.radius.visitedWeight", 120);
 
-pref("ui.mouse.radius.enabled", true);
+pref("ui.mouse.radius.enabled", false);
 pref("ui.mouse.radius.leftmm", 3);
 pref("ui.mouse.radius.topmm", 5);
 pref("ui.mouse.radius.rightmm", 3);
