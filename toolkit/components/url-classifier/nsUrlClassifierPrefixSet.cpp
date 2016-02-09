@@ -35,11 +35,9 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 NS_IMPL_ISUPPORTS(
   nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet, nsIMemoryReporter)
 
-MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
-
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
-  : mTotalPrefixes(0)
-  , mMemoryInUse(0)
+  : mLock("nsUrlClassifierPrefixSet.mLock")
+  , mTotalPrefixes(0)
   , mMemoryReportPath()
 {
   if (!gUrlClassifierPrefixSetLog)
@@ -68,6 +66,8 @@ nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet()
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
 {
+  MutexAutoLock lock(mLock);
+
   nsresult rv = NS_OK;
 
   if (aLength <= 0) {
@@ -81,14 +81,14 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
     rv = MakePrefixSet(aArray, aLength);
   }
 
-  mMemoryInUse = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
-
   return rv;
 }
 
 nsresult
 nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLength)
 {
+  mLock.AssertCurrentThreadOwns();
+
   if (aLength == 0) {
     return NS_OK;
   }
@@ -138,6 +138,8 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
 nsresult
 nsUrlClassifierPrefixSet::GetPrefixesNative(FallibleTArray<uint32_t>& outArray)
 {
+  MutexAutoLock lock(mLock);
+
   if (!outArray.SetLength(mTotalPrefixes, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -163,6 +165,9 @@ NS_IMETHODIMP
 nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
                                       uint32_t** aPrefixes)
 {
+  // No need to get mLock here because this function does not directly touch
+  // the class's data members. (GetPrefixesNative() will get mLock, however.)
+
   NS_ENSURE_ARG_POINTER(aCount);
   *aCount = 0;
   NS_ENSURE_ARG_POINTER(aPrefixes);
@@ -190,6 +195,8 @@ uint32_t nsUrlClassifierPrefixSet::BinSearch(uint32_t start,
                                              uint32_t end,
                                              uint32_t target)
 {
+  mLock.AssertCurrentThreadOwns();
+
   while (start != end && end >= start) {
     uint32_t i = start + ((end - start) >> 1);
     uint32_t value = mIndexPrefixes[i];
@@ -207,6 +214,8 @@ uint32_t nsUrlClassifierPrefixSet::BinSearch(uint32_t start,
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
 {
+  MutexAutoLock lock(mLock);
+
   *aFound = false;
 
   if (mIndexPrefixes.Length() == 0) {
@@ -251,13 +260,21 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
   return NS_OK;
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
+
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
                                          nsISupports* aData, bool aAnonymize)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // No need to get mLock here because this function does not directly touch
+  // the class's data members. (SizeOfIncludingThis() will get mLock, however.)
+
+  size_t amount = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
+
   return aHandleReport->Callback(
-    EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,
-    mMemoryInUse,
+    EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES, amount,
     NS_LITERAL_CSTRING("Memory used by the prefix set for a URL classifier."),
     aData);
 }
@@ -265,6 +282,8 @@ nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
 size_t
 nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
+  MutexAutoLock lock(mLock);
+
   size_t n = 0;
   n += aMallocSizeOf(this);
   n += mIndexDeltas.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -278,6 +297,8 @@ nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeO
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 {
+  MutexAutoLock lock(mLock);
+
   *aEmpty = (mIndexPrefixes.Length() == 0);
   return NS_OK;
 }
@@ -285,6 +306,8 @@ nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
 {
+  MutexAutoLock lock(mLock);
+
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FILELOAD_TIME> timer;
 
   nsCOMPtr<nsIInputStream> localInFile;
@@ -365,14 +388,14 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
   MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
   LOG(("Loading PrefixSet successful"));
 
-  mMemoryInUse = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 {
+  MutexAutoLock lock(mLock);
+
   nsCOMPtr<nsIOutputStream> localOutFile;
   nsresult rv = NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
                                             PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
