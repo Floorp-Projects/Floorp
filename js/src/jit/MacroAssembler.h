@@ -504,6 +504,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
 
+    // Thunks provide the ability to jump to any uint32_t offset from any other
+    // uint32_t offset without using a constant pool (thus returning a simple
+    // CodeOffset instead of a CodeOffsetJump).
+    CodeOffset thunkWithPatch() PER_SHARED_ARCH;
+    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
+
     // Push the return address and make a call. On platforms where this function
     // is not defined, push the link register (pushReturnAddress) at the entry
     // point of the callee.
