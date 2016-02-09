@@ -226,6 +226,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
+#include "mozilla/dom/U2F.h"
 #ifdef HAVE_SIDEBAR
 #include "mozilla/dom/ExternalBinding.h"
 #endif
@@ -1885,6 +1886,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStatusbar)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScrollbars)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mU2F)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMozSelfSupport)
@@ -1959,6 +1961,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatusbar)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScrollbars)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mU2F)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
@@ -4346,6 +4349,23 @@ nsGlobalWindow::GetCrypto(ErrorResult& aError)
     mCrypto->Init(this);
   }
   return mCrypto;
+}
+
+mozilla::dom::U2F*
+nsGlobalWindow::GetU2f(ErrorResult& aError)
+{
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+
+  if (!mU2F) {
+    RefPtr<U2F> u2f = new U2F();
+    u2f->Init(AsInner(), aError);
+    if (NS_WARN_IF(aError.Failed())) {
+      return nullptr;
+    }
+
+    mU2F = u2f;
+  }
+  return mU2F;
 }
 
 nsIControllers*

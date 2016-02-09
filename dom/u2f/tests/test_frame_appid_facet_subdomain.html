@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <script src="u2futil.js"></script>
+</head>
+<body>
+<p>Test for AppID / FacetID behavior for FIDO Universal Second Factor</p>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SpecialPowers.setBoolPref("security.webauth.u2f", true);
+SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", true);
+
+var version = "U2F_V2";
+var challenge = new Uint8Array(16);
+
+local_is(window.location.origin, "https://test1.example.com", "Is loaded correctly");
+
+// eTLD+1 check
+u2f.register("https://example.com/appId", [{
+  version: version,
+  challenge: bytesToBase64UrlSafe(challenge),
+}], [], function(res){
+  local_is(res.errorCode, 0, "AppID should work from a subdomain");
+});
+
+u2f.register("https://example.net/appId", [{
+  version: version,
+  challenge: bytesToBase64UrlSafe(challenge),
+}], [], function(res){
+  local_isnot(res.errorCode, 0, "AppID should not work from other domains");
+});
+
+local_finished();
+
+</script>
+</body>
+</html>
