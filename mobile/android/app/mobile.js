@@ -579,10 +579,10 @@ pref("apz.touch_start_tolerance", "0.06");
 pref("apz.axis_lock.breakout_angle", "0.7853982");    // PI / 4 (45 degrees)
 // APZ physics settings reviewed by UX
 pref("apz.axis_lock.mode", 1); // Use "strict" axis locking
-pref("apz.fling_curve_function_x1", "0.41");
-pref("apz.fling_curve_function_y1", "0.0");
-pref("apz.fling_curve_function_x2", "0.80");
-pref("apz.fling_curve_function_y2", "1.0");
+pref("apz.fling_curve_function_x1", "0.59");
+pref("apz.fling_curve_function_y1", "0.46");
+pref("apz.fling_curve_function_x2", "0.05");
+pref("apz.fling_curve_function_y2", "1.00");
 pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.1");
@@ -930,7 +930,10 @@ pref("layout.accessiblecaret.enabled", true);
 pref("layout.accessiblecaret.enabled", false);
 #endif
 
-// Android need persistent carets and actionbar. Turn off the caret timeout.
+// Android needs to show the caret when long tapping on an empty content.
+pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", true);
+
+// Android needs persistent carets and actionbar. Turn off the caret timeout.
 pref("layout.accessiblecaret.timeout_ms", 0);
 
 // Android generates long tap (mouse) events.

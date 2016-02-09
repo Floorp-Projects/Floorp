@@ -68,8 +68,9 @@ class LinuxCoreDumper : public LinuxDumper {
   // Copies content of |length| bytes from a given process |child|,
   // starting from |src|, into |dest|. This method extracts the content
   // the core dump and fills |dest| with a sequence of marker bytes
-  // if the expected data is not found in the core dump.
-  virtual void CopyFromProcess(void* dest, pid_t child, const void* src,
+  // if the expected data is not found in the core dump. Returns true if
+  // the expected data is found in the core dump.
+  virtual bool CopyFromProcess(void* dest, pid_t child, const void* src,
                                size_t length);
 
   // Implements LinuxDumper::GetThreadInfoByIndex().

@@ -90,9 +90,7 @@ bool StabsToModule::EndCompilationUnit(uint64_t address) {
 bool StabsToModule::StartFunction(const string &name,
                                   uint64_t address) {
   assert(!current_function_);
-  Module::Function *f = new Module::Function;
-  f->name = Demangle(name);
-  f->address = address;
+  Module::Function *f = new Module::Function(Demangle(name), address);
   f->size = 0;           // We compute this in StabsToModule::Finalize().
   f->parameter_size = 0; // We don't provide this information.
   current_function_ = f;
@@ -133,7 +131,7 @@ bool StabsToModule::Line(uint64_t address, const char *name, int number) {
 }
 
 bool StabsToModule::Extern(const string &name, uint64_t address) {
-  Module::Extern *ext = new Module::Extern;
+  Module::Extern *ext = new Module::Extern(address);
   // Older libstdc++ demangle implementations can crash on unexpected
   // input, so be careful about what gets passed in.
   if (name.compare(0, 3, "__Z") == 0) {
@@ -143,7 +141,6 @@ bool StabsToModule::Extern(const string &name, uint64_t address) {
   } else {
     ext->name = name;
   }
-  ext->address = address;
   module_->AddExtern(ext);
   return true;
 }

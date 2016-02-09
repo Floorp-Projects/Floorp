@@ -75,8 +75,6 @@
 #include <vector>
 
 #include "common/using_std_string.h"
-#include "common/unique_string.h"
-#include "common/module.h"
 
 namespace google_breakpad {
 
@@ -85,21 +83,11 @@ using std::vector;
 
 class MemoryRegion;
 
-// A union type for elements in the postfix evaluator's stack.
-template<typename ValueType>
-class StackElem {
- public:
-  StackElem(ValueType val) { isValue = true; u.val = val; }
-  StackElem(const UniqueString* ustr) { isValue = false; u.ustr = ustr; }
-  bool isValue;
-  union { ValueType val; const UniqueString* ustr; } u;
-};
-
 template<typename ValueType>
 class PostfixEvaluator {
  public:
-  typedef UniqueStringMap<ValueType> DictionaryType;
-  typedef UniqueStringMap<bool>      DictionaryValidityType;
+  typedef map<string, ValueType> DictionaryType;
+  typedef map<string, bool> DictionaryValidityType;
 
   // Create a PostfixEvaluator object that may be used (with Evaluate) on
   // one or more expressions.  PostfixEvaluator does not take ownership of
@@ -117,13 +105,13 @@ class PostfixEvaluator {
   // non-NULL, any keys set in the dictionary as a result of evaluation
   // will also be set to true in assigned, providing a way to determine if
   // an expression modifies any of its input variables.
-  bool Evaluate(const Module::Expr &expr, DictionaryValidityType *assigned);
+  bool Evaluate(const string &expression, DictionaryValidityType *assigned);
 
-  // Like Evaluate, but expects the expression to denote a value.
-  // If evaluation succeeds and (in the case of a postfix expression)
-  // leaves exactly one value on the stack, pop that value, store it in
-  // *result, and return true. Otherwise, return false.
-  bool EvaluateForValue(const Module::Expr& expression, ValueType* result);
+  // Like Evaluate, but provides the value left on the stack to the
+  // caller. If evaluation succeeds and leaves exactly one value on
+  // the stack, pop that value, store it in *result, and return true.
+  // Otherwise, return false.
+  bool EvaluateForValue(const string &expression, ValueType *result);
 
   DictionaryType* dictionary() const { return dictionary_; }
 
@@ -144,17 +132,13 @@ class PostfixEvaluator {
   // if the topmost entry is a constant or variable identifier, and sets
   // |identifier| accordingly.  Returns POP_RESULT_FAIL on failure, such
   // as when the stack is empty.
-  PopResult PopValueOrIdentifier(ValueType *value,
-                                 const UniqueString** identifier);
+  PopResult PopValueOrIdentifier(ValueType *value, string *identifier);
 
   // Retrieves the topmost value on the stack.  If the topmost entry is
   // an identifier, the dictionary is queried for the identifier's value.
   // Returns false on failure, such as when the stack is empty or when
   // a nonexistent identifier is named.
   bool PopValue(ValueType *value);
-
-  // Pushes a UniqueString* on the stack.
-  void PushIdentifier(const UniqueString* ustr);
 
   // Retrieves the top two values on the stack, in the style of PopValue.
   // value2 is popped before value1, so that value1 corresponds to the
@@ -186,7 +170,7 @@ class PostfixEvaluator {
   // The stack contains state information as execution progresses.  Values
   // are pushed on to it as the expression string is read and as operations
   // yield values; values are popped when used as operands to operators.
-  vector<StackElem<ValueType> > stack_;
+  vector<string> stack_;
 };
 
 }  // namespace google_breakpad

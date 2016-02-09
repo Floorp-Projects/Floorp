@@ -8288,12 +8288,10 @@ CodeGenerator::generateAsmJS(wasm::FuncOffsets* offsets)
     // pushing framePushed to catch cases with really large frames.
     Label onOverflow;
     if (!omitOverRecursedCheck()) {
-        // See comment below.
-        Label* target = frameSize() > 0 ? &onOverflow : masm.asmStackOverflowLabel();
         masm.branchPtr(Assembler::AboveOrEqual,
                        wasm::SymbolicAddress::StackLimit,
                        masm.getStackPointer(),
-                       target);
+                       &onOverflow);
     }
 
     if (!generateBody())
@@ -8302,13 +8300,17 @@ CodeGenerator::generateAsmJS(wasm::FuncOffsets* offsets)
     masm.bind(&returnLabel_);
     wasm::GenerateFunctionEpilogue(masm, frameSize(), offsets);
 
-    if (onOverflow.used()) {
-        // The stack overflow stub assumes that only sizeof(AsmJSFrame) bytes have
-        // been pushed. The overflow check occurs after incrementing by
+    if (!omitOverRecursedCheck()) {
+        // The stack overflow stub assumes that only sizeof(AsmJSFrame) bytes
+        // have been pushed. The overflow check occurs after incrementing by
         // framePushed, so pop that before jumping to the overflow exit.
-        masm.bind(&onOverflow);
-        masm.addToStackPtr(Imm32(frameSize()));
-        masm.jump(masm.asmStackOverflowLabel());
+        if (frameSize() > 0) {
+            masm.bind(&onOverflow);
+            masm.addToStackPtr(Imm32(frameSize()));
+            masm.jump(wasm::JumpTarget::StackOverflow);
+        } else {
+            masm.bindLater(&onOverflow, wasm::JumpTarget::StackOverflow);
+        }
     }
 
 #if defined(JS_ION_PERF)
@@ -10610,13 +10612,11 @@ CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
                   wasm::SymbolicAddress::RuntimeInterruptUint32,
                   Imm32(0),
                   &rejoin);
-    {
-        uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
-                                                   ABIStackAlignment);
-        masm.reserveStack(stackFixup);
-        masm.call(lir->funcDesc(), lir->interruptExit());
-        masm.freeStack(stackFixup);
-    }
+
+    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % ABIStackAlignment == 0);
+    masm.call(wasm::SymbolicAddress::HandleExecutionInterrupt);
+    masm.branchIfFalseBool(ReturnReg, wasm::JumpTarget::Throw);
+
     masm.bind(&rejoin);
 }
 

@@ -567,7 +567,16 @@ pref("apz.content_response_timeout", 300);
 pref("apz.drag.enabled", false);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
+
+// See bug 1246676, we're experimenting to see what's best
+#if defined(XP_WIN)
+pref("apz.displayport_expiry_ms", 0);
+#elif defined(XP_MACOSX)
+pref("apz.displayport_expiry_ms", 30000);
+#else
 pref("apz.displayport_expiry_ms", 15000);
+#endif
+
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
@@ -1879,6 +1888,9 @@ pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 
 // Use the HSTS preload list by default
 pref("network.stricttransportsecurity.preloadlist", true);
+
+// Use JS mDNS as a fallback
+pref("network.mdns.use_js_fallback", false);
 
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
@@ -4942,6 +4954,9 @@ pref("layout.accessiblecaret.bar.width", "2.0");
 
 // Show the selection bars at the two ends of the selection highlight.
 pref("layout.accessiblecaret.bar.enabled", true);
+
+// Show the caret when long tapping on an empty content.
+pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
 
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
 // no one touches it. Set the value to 0 to disable this feature.

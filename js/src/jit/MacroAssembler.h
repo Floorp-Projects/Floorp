@@ -339,12 +339,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
-    // Asm failure labels
-    NonAssertingLabel asmStackOverflowLabel_;
-    NonAssertingLabel asmSyncInterruptLabel_;
-    NonAssertingLabel asmOnConversionErrorLabel_;
-    NonAssertingLabel asmOnOutOfBoundsLabel_;
-
   public:
     MacroAssembler()
       : framePushed_(0),
@@ -509,6 +503,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
+
+    // Thunks provide the ability to jump to any uint32_t offset from any other
+    // uint32_t offset without using a constant pool (thus returning a simple
+    // CodeOffset instead of a CodeOffsetJump).
+    CodeOffset thunkWithPatch() PER_SHARED_ARCH;
+    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
 
     // Push the return address and make a call. On platforms where this function
     // is not defined, push the link register (pushReturnAddress) at the entry
@@ -870,7 +870,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
-    void branchIfFalseBool(Register reg, Label* label) {
+    template <class L>
+    void branchIfFalseBool(Register reg, L label) {
         // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
         branchTest32(Assembler::Zero, reg, Imm32(0xFF), label);
     }
@@ -1409,32 +1410,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         return &failureLabel_;
     }
 
-    Label* asmSyncInterruptLabel() {
-        return &asmSyncInterruptLabel_;
-    }
-    const Label* asmSyncInterruptLabel() const {
-        return &asmSyncInterruptLabel_;
-    }
-    Label* asmStackOverflowLabel() {
-        return &asmStackOverflowLabel_;
-    }
-    const Label* asmStackOverflowLabel() const {
-        return &asmStackOverflowLabel_;
-    }
-    Label* asmOnOutOfBoundsLabel() {
-        return &asmOnOutOfBoundsLabel_;
-    }
-    const Label* asmOnOutOfBoundsLabel() const {
-        return &asmOnOutOfBoundsLabel_;
-    }
-    Label* asmOnConversionErrorLabel() {
-        return &asmOnConversionErrorLabel_;
-    }
-    const Label* asmOnConversionErrorLabel() const {
-        return &asmOnConversionErrorLabel_;
-    }
-
-    bool asmMergeWith(MacroAssembler& masm);
     void finish();
     void link(JitCode* code);
 

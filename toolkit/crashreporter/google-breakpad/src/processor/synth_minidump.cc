@@ -77,6 +77,9 @@ SystemInfo::SystemInfo(const Dump &dump,
     D32(system_info.cpu.x86_cpu_info.version_information);
     D32(system_info.cpu.x86_cpu_info.feature_information);
     D32(system_info.cpu.x86_cpu_info.amd_extended_cpu_features);
+  } else if (system_info.processor_architecture == MD_CPU_ARCHITECTURE_ARM) {
+    D32(system_info.cpu.arm_cpu_info.cpuid);
+    D32(system_info.cpu.arm_cpu_info.elf_hwcaps);
   } else {
     D64(system_info.cpu.other_cpu_info.processor_features[0]);
     D64(system_info.cpu.other_cpu_info.processor_features[1]);
@@ -190,6 +193,42 @@ Context::Context(const Dump &dump, const MDRawContextARM &context)
   for (int i = 0; i < MD_FLOATINGSAVEAREA_ARM_FPEXTRA_COUNT; ++i)
     D32(context.float_save.extra[i]);
   assert(Size() == sizeof(MDRawContextARM));
+}
+
+Context::Context(const Dump &dump, const MDRawContextMIPS &context)
+    : Section(dump) {
+  // The caller should have properly set the CPU type flag.
+  assert(context.context_flags & MD_CONTEXT_MIPS);
+  D32(context.context_flags);
+  D32(context._pad0);
+
+  for (int i = 0; i < MD_CONTEXT_MIPS_GPR_COUNT; ++i)
+    D64(context.iregs[i]);
+
+  D64(context.mdhi);
+  D64(context.mdlo);
+
+  for (int i = 0; i < MD_CONTEXT_MIPS_DSP_COUNT; ++i)
+    D32(context.hi[i]);
+
+  for (int i = 0; i < MD_CONTEXT_MIPS_DSP_COUNT; ++i)
+    D32(context.lo[i]);
+
+  D32(context.dsp_control);
+  D32(context._pad1);
+
+  D64(context.epc);
+  D64(context.badvaddr);
+  D32(context.status);
+  D32(context.cause);
+
+  for (int i = 0; i < MD_FLOATINGSAVEAREA_MIPS_FPR_COUNT; ++i)
+    D64(context.float_save.regs[i]);
+
+  D32(context.float_save.fpcsr);
+  D32(context.float_save.fir);
+
+  assert(Size() == sizeof(MDRawContextMIPS));
 }
 
 Thread::Thread(const Dump &dump,

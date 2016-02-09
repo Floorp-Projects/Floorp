@@ -5,10 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include ../../cmd/platlibs.mk
-include ../../cmd/platrules.mk
 
 MKPROG = $(CCC)
 MKSHLIB	= $(CCC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)
+
+# gtests pick up errors with signed/unsigned comparisons on some platforms
+# even though we disabled -Wsign-compare.
+# This catches that by enabling the warning.
+# Only add -Wsign-compare if -Werror is enabled, lest we add it on the wrong
+# platform.
+ifeq (-Werror,$(filter -Werror -Wsign-compare,$(WARNING_CFLAGS)))
+WARNING_CFLAGS += -Wsign-compare
+endif
+WARNING_CFLAGS := $(filter-out -w44018,$(WARNING_CFLAGS))
 
 ifeq (WINNT,$(OS_ARCH))
     # -EHsc because gtest has exception handlers

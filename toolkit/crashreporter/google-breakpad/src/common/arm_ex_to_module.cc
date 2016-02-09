@@ -55,78 +55,82 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 // Derived from libunwind, with extensive modifications.
 
-#include "common/unique_string.h"
 #include "common/arm_ex_to_module.h"
 
 #include <stdio.h>
 #include <assert.h>
 
-// For big-picture comments on how the EXIDX reader works, 
+// For big-picture comments on how the EXIDX reader works,
 // see arm_ex_reader.cc.
 
 #define ARM_EXBUF_START(x) (((x) >> 4) & 0x0f)
 #define ARM_EXBUF_COUNT(x) ((x) & 0x0f)
 #define ARM_EXBUF_END(x)   (ARM_EXBUF_START(x) + ARM_EXBUF_COUNT(x))
 
-using google_breakpad::ustr__pc;
-using google_breakpad::ustr__lr;
-using google_breakpad::ustr__sp;
-using google_breakpad::ustr__ZDra;
-using google_breakpad::ustr__ZDcfa;
 using google_breakpad::Module;
-using google_breakpad::ToUniqueString;
-using google_breakpad::UniqueString;
 
 namespace arm_ex_to_module {
 
+static const char* const regnames[] = {
+ "r0", "r1", "r2",  "r3",  "r4",  "r5", "r6", "r7",
+ "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc",
+ "f0", "f1", "f2",  "f3",  "f4",  "f5", "f6", "f7",
+ "fps", "cpsr"
+};
+
 // Translate command from extab_data to command for Module.
 int ARMExToModule::TranslateCmd(const struct extab_data* edata,
-                                Module::StackFrameEntry* entry,
-                                Module::Expr& vsp) {
+                                Module::StackFrameEntry* entry, string& vsp) {
   int ret = 0;
   switch (edata->cmd) {
     case ARM_EXIDX_CMD_FINISH:
       /* Copy LR to PC if there isn't currently a rule for PC in force. */
-      if (entry->initial_rules.find(ustr__pc())
+      if (entry->initial_rules.find("pc")
           == entry->initial_rules.end()) {
-        if (entry->initial_rules.find(ustr__lr())
+        if (entry->initial_rules.find("lr")
             == entry->initial_rules.end()) {
-          entry->initial_rules[ustr__pc()] = Module::Expr(ustr__lr(),
-                                                          0, false); // "lr"
+          entry->initial_rules["pc"] = "lr";
         } else {
-          entry->initial_rules[ustr__pc()] = entry->initial_rules[ustr__lr()];
+          entry->initial_rules["pc"] = entry->initial_rules["lr"];
         }
       }
       break;
     case ARM_EXIDX_CMD_SUB_FROM_VSP:
-      vsp = vsp.add_delta(- static_cast<long>(edata->data));
+      {
+        char c[16];
+        sprintf(c, " %d -", edata->data);
+        vsp += c;
+      }
       break;
     case ARM_EXIDX_CMD_ADD_TO_VSP:
-      vsp = vsp.add_delta(static_cast<long>(edata->data));
+      {
+        char c[16];
+        sprintf(c, " %d +", edata->data);
+        vsp += c;
+      }
       break;
     case ARM_EXIDX_CMD_REG_POP:
       for (unsigned int i = 0; i < 16; i++) {
         if (edata->data & (1 << i)) {
-          entry->initial_rules[ToUniqueString(regnames[i])] = vsp.deref();
-          vsp = vsp.add_delta(4);
+          entry->initial_rules[regnames[i]]
+            = vsp + " ^";
+          vsp += " 4 +";
         }
       }
       /* Set cfa in case the SP got popped. */
       if (edata->data & (1 << 13)) {
-        vsp = entry->initial_rules[ustr__sp()];
+        vsp = entry->initial_rules["sp"];
       }
       break;
     case ARM_EXIDX_CMD_REG_TO_SP: {
       assert (edata->data < 16);
       const char* const regname = regnames[edata->data];
-      const UniqueString* regname_us = ToUniqueString(regname);
-      if (entry->initial_rules.find(regname_us) == entry->initial_rules.end()) {
-        entry->initial_rules[ustr__sp()] = Module::Expr(regname_us,
-                                                        0, false); // "regname"
+      if (entry->initial_rules.find(regname) == entry->initial_rules.end()) {
+        entry->initial_rules["sp"] = regname;
       } else {
-        entry->initial_rules[ustr__sp()] = entry->initial_rules[regname_us];
+        entry->initial_rules["sp"] = entry->initial_rules[regname];
       }
-      vsp = entry->initial_rules[ustr__sp()];
+      vsp = entry->initial_rules["sp"];
       break;
     }
     case ARM_EXIDX_CMD_VFP_POP:
@@ -134,23 +138,23 @@ int ARMExToModule::TranslateCmd(const struct extab_data* edata,
          pointer. */
       for (unsigned int i = ARM_EXBUF_START(edata->data);
            i <= ARM_EXBUF_END(edata->data); i++) {
-        vsp = vsp.add_delta(8);
+        vsp += " 8 +";
       }
       if (!(edata->data & ARM_EXIDX_VFP_FSTMD)) {
-        vsp = vsp.add_delta(4);
+        vsp += " 4 +";
       }
       break;
     case ARM_EXIDX_CMD_WREG_POP:
       for (unsigned int i = ARM_EXBUF_START(edata->data);
            i <= ARM_EXBUF_END(edata->data); i++) {
-        vsp = vsp.add_delta(8);
+        vsp += " 8 +";
       }
       break;
     case ARM_EXIDX_CMD_WCGR_POP:
       // Pop wCGR registers under mask {wCGR3,2,1,0}, hence "i < 4"
       for (unsigned int i = 0; i < 4; i++) {
         if (edata->data & (1 << i)) {
-          vsp = vsp.add_delta(4);
+          vsp += " 4 +";
         }
       }
       break;
@@ -181,9 +185,8 @@ void ARMExToModule::AddStackFrame(uintptr_t addr, size_t size) {
   stack_frame_entry_ = new Module::StackFrameEntry;
   stack_frame_entry_->address = addr;
   stack_frame_entry_->size = size;
-  Module::Expr sp_expr = Module::Expr(ustr__sp(), 0, false); // "sp"
-  stack_frame_entry_->initial_rules[ustr__ZDcfa()] = sp_expr; // ".cfa"
-  vsp_ = sp_expr;
+  stack_frame_entry_->initial_rules[".cfa"] = "sp";
+  vsp_ = "sp";
 }
 
 int ARMExToModule::ImproveStackFrame(const struct extab_data* edata) {
@@ -196,11 +199,11 @@ void ARMExToModule::DeleteStackFrame() {
 
 void ARMExToModule::SubmitStackFrame() {
   // return address always winds up in pc
-  stack_frame_entry_->initial_rules[ustr__ZDra()] // ".ra"
-    = stack_frame_entry_->initial_rules[ustr__pc()];
+  stack_frame_entry_->initial_rules[".ra"]
+    = stack_frame_entry_->initial_rules["pc"];
   // the final value of vsp is the new value of sp
-  stack_frame_entry_->initial_rules[ustr__sp()] = vsp_;
+  stack_frame_entry_->initial_rules["sp"] = vsp_;
   module_->AddStackFrameEntry(stack_frame_entry_);
 }
 
-} // namespace arm_ex_to_module
+}  // namespace arm_ex_to_module

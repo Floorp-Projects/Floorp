@@ -96,14 +96,14 @@ CrashGenerationClient::CrashGenerationClient(
     const CustomClientInfo* custom_info)
         : pipe_name_(pipe_name),
           pipe_handle_(NULL),
+          custom_info_(),
           dump_type_(dump_type),
-          thread_id_(0),
-          server_process_id_(0),
           crash_event_(NULL),
           crash_generated_(NULL),
           server_alive_(NULL),
-          exception_pointers_(NULL),
-          custom_info_() {
+          server_process_id_(0),
+          thread_id_(0),
+          exception_pointers_(NULL) {
   memset(&assert_info_, 0, sizeof(assert_info_));
   if (custom_info) {
     custom_info_ = *custom_info;
@@ -116,14 +116,14 @@ CrashGenerationClient::CrashGenerationClient(
     const CustomClientInfo* custom_info)
         : pipe_name_(),
           pipe_handle_(pipe_handle),
+          custom_info_(),
           dump_type_(dump_type),
-          thread_id_(0),
-          server_process_id_(0),
           crash_event_(NULL),
           crash_generated_(NULL),
           server_alive_(NULL),
-          exception_pointers_(NULL),
-          custom_info_() {
+          server_process_id_(0),
+          thread_id_(0),
+          exception_pointers_(NULL) {
   memset(&assert_info_, 0, sizeof(assert_info_));
   if (custom_info) {
     custom_info_ = *custom_info;
@@ -178,6 +178,10 @@ CrashGenerationClient::~CrashGenerationClient() {
 //
 // Returns true if the registration is successful; false otherwise.
 bool CrashGenerationClient::Register() {
+  if (IsRegistered()) {
+    return true;
+  }
+
   HANDLE pipe = ConnectToServer();
   if (!pipe) {
     return false;

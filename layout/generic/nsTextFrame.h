@@ -558,6 +558,7 @@ public:
 protected:
   virtual ~nsTextFrame();
 
+  gfxTextRun* mTextRun;
   nsIFrame*   mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along
   // a next-continuation chain. And of course mContentOffset is always <= the
@@ -574,7 +575,6 @@ protected:
   // start.
   int32_t     mContentLengthHint;
   nscoord     mAscent;
-  gfxTextRun* mTextRun;
 
   /**
    * Return true if the frame is part of a Selection.

@@ -8,7 +8,7 @@
 /*
  * devtm.h
  *
- * This file contains module-private definitions for the low-level 
+ * This file contains module-private definitions for the low-level
  * cryptoki devices.
  */
 

@@ -41,11 +41,20 @@
 
 #include "common/symbol_data.h"
 #include "common/using_std_string.h"
-#include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 class Module;
+
+struct DumpOptions {
+  DumpOptions(SymbolData symbol_data, bool handle_inter_cu_refs)
+      : symbol_data(symbol_data),
+        handle_inter_cu_refs(handle_inter_cu_refs) {
+  }
+
+  SymbolData symbol_data;
+  bool handle_inter_cu_refs;
+};
 
 // Find all the debugging information in OBJ_FILE, an ELF executable
 // or shared library, and write it to SYM_STREAM in the Breakpad symbol
@@ -55,7 +64,7 @@ class Module;
 // SYMBOL_DATA allows limiting the type of symbol data written.
 bool WriteSymbolFile(const string &obj_file,
                      const std::vector<string>& debug_dirs,
-                     SymbolData symbol_data,
+                     const DumpOptions& options,
                      std::ostream &sym_stream);
 
 // As above, but simply return the debugging information in MODULE
@@ -63,16 +72,8 @@ bool WriteSymbolFile(const string &obj_file,
 // Module object and must delete it when finished.
 bool ReadSymbolData(const string& obj_file,
                     const std::vector<string>& debug_dirs,
-                    SymbolData symbol_data,
+                    const DumpOptions& options,
                     Module** module);
-
-// Same as ReadSymbolData, except don't try to open the file; instead
-// just use the in-memory data (mapped image of it) located at OBJ_FILE.
-bool ReadSymbolDataInternal(const uint8_t* obj_file,
-                            const string& obj_filename,
-                            const std::vector<string>& debug_dirs,
-                            SymbolData symbol_data,
-                            Module** module);
 
 }  // namespace google_breakpad
 
