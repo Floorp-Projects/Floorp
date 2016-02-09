@@ -9817,19 +9817,14 @@ CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir)
     Register value = ToRegister(lir->value());
     Register output = ToRegister(lir->output());
 
-    // Keep this in sync with isLockfree() in jit/AtomicOperations-inl.h.
+    // Keep this in sync with isLockfree() in jit/AtomicOperations.h.
+    MOZ_ASSERT(!AtomicOperations::isLockfree(8));
 
     Label Ldone, Lfailed;
     masm.move32(Imm32(1), output);
-    if (AtomicOperations::isLockfree8())
-        masm.branch32(Assembler::Equal, value, Imm32(8), &Ldone);
-    else
-        masm.branch32(Assembler::Equal, value, Imm32(8), &Lfailed);
     masm.branch32(Assembler::Equal, value, Imm32(4), &Ldone);
     masm.branch32(Assembler::Equal, value, Imm32(2), &Ldone);
     masm.branch32(Assembler::Equal, value, Imm32(1), &Ldone);
-    if (!AtomicOperations::isLockfree8())
-        masm.bind(&Lfailed);
     masm.move32(Imm32(0), output);
     masm.bind(&Ldone);
 }
