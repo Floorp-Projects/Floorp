@@ -840,7 +840,7 @@ void GrAAConvexTessellator::lineTo(SkPoint p, bool isCurve) {
         // floating point precision issues mean it can actually happen on paths that were determined
         // to be convex.
         if (duplicate_pt(p, this->lastPoint())) {
-          return;
+            return;
         }
     }
     SkScalar initialRingCoverage = fStrokeWidth < 0.0f ? 0.5f : 1.0f;

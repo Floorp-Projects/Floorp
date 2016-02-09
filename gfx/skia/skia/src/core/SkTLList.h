@@ -10,7 +10,7 @@
 
 #include "SkTInternalLList.h"
 #include "SkTypes.h"
-#include "SkUtility.h"
+#include <utility>
 
 /** Doubly-linked list of objects. The objects' lifetimes are controlled by the list. I.e. the
     the list creates the objects and they are deleted upon removal. This class block-allocates
@@ -72,7 +72,7 @@ public:
         Node* node = this->createNode();
         fList.addToHead(node);
         this->validate();
-        return new (node->fObj)  T(skstd::forward<Args>(args)...);
+        return new (node->fObj)  T(std::forward<Args>(args)...);
     }
 
     /** Adds a new element to the list at the tail. */
@@ -81,7 +81,7 @@ public:
         Node* node = this->createNode();
         fList.addToTail(node);
         this->validate();
-        return new (node->fObj) T(skstd::forward<Args>(args)...);
+        return new (node->fObj) T(std::forward<Args>(args)...);
     }
 
     /** Adds a new element to the list before the location indicated by the iterator. If the
@@ -91,7 +91,7 @@ public:
         Node* node = this->createNode();
         fList.addBefore(node, location.getNode());
         this->validate();
-        return new (node->fObj) T(skstd::forward<Args>(args)...);
+        return new (node->fObj) T(std::forward<Args>(args)...);
     }
 
     /** Adds a new element to the list after the location indicated by the iterator. If the
@@ -101,7 +101,7 @@ public:
         Node* node = this->createNode();
         fList.addAfter(node, location.getNode());
         this->validate();
-        return new (node->fObj) T(skstd::forward<Args>(args)...);
+        return new (node->fObj) T(std::forward<Args>(args)...);
     }
 
     /** Convenience methods for getting an iterator initialized to the head/tail of the list. */
