@@ -8,7 +8,9 @@
 #include "GMPUtils.h"
 #include "nsIFile.h"
 #include "nsIRunnable.h"
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #include "WinUtils.h"
+#endif
 
 #include "base/string_util.h"
 #include "base/process_util.h"
