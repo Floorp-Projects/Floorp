@@ -52,6 +52,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
@@ -311,6 +313,21 @@ ExtensionPage = class extends BaseContext {
   }
 };
 
+// For extensions that have called setUninstallURL(), send an event
+// so the browser can display the URL.
+let UninstallObserver = {
+  init: function() {
+    AddonManager.addAddonListener(this);
+  },
+
+  onUninstalling: function(addon) {
+    let extension = GlobalManager.extensionMap.get(addon.id);
+    if (extension) {
+      Management.emit("uninstall", extension);
+    }
+  },
+};
+
 // Responsible for loading extension APIs into the right globals.
 GlobalManager = {
   // Number of extensions currently enabled.
@@ -326,6 +343,7 @@ GlobalManager = {
   init(extension) {
     if (this.count == 0) {
       Services.obs.addObserver(this, "content-document-global-created", false);
+      UninstallObserver.init();
     }
     this.count++;
 
@@ -805,6 +823,8 @@ this.Extension = function(addonData) {
 
   this.hasShutdown = false;
   this.onShutdown = new Set();
+
+  this.uninstallURL = null;
 
   this.permissions = new Set();
   this.whiteListedHosts = null;
