@@ -11,6 +11,7 @@ GENERATED_WEBIDL_FILES = [
 PREPROCESSED_WEBIDL_FILES = [
     'HTMLMediaElement.webidl',
     'Navigator.webidl',
+    'Promise.webidl',
     'ServiceWorkerRegistration.webidl',
     'Window.webidl',
 ]
@@ -390,7 +391,6 @@ WEBIDL_FILES = [
     'PresentationRequest.webidl',
     'ProcessingInstruction.webidl',
     'ProfileTimelineMarker.webidl',
-    'Promise.webidl',
     'PromiseDebugging.webidl',
     'PropertyIndexedKeyframes.webidl',
     'RadioNodeList.webidl',
