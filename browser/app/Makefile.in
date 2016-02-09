@@ -79,7 +79,7 @@ LPROJ := Contents/Resources/$(LPROJ_ROOT).lproj
 clean clobber repackage::
 	$(RM) -r $(dist_dest)
 
-MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/config/buildid)
+MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/buildid.h)
 
 .PHONY: repackage
 tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
