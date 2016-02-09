@@ -21,7 +21,9 @@ function getTargetForSelectedTab() {
 
 this.DevTools = {
   init(libDir) {
-    let panels = ["options", "webconsole", "inspector", "jsdebugger", "netmonitor"];
+    let panels = ["options", "webconsole", "jsdebugger", "styleeditor",
+                  "performance", "netmonitor"];
+
     panels.forEach(panel => {
       this.configurations[panel] = {};
       this.configurations[panel].applyConfig = () => {
