@@ -585,6 +585,13 @@ CompartmentDestroyedCallback(JSFreeOp* fop, JSCompartment* compartment)
     JS_SetCompartmentPrivate(compartment, nullptr);
 }
 
+static size_t
+CompartmentSizeOfIncludingThisCallback(MallocSizeOf mallocSizeOf, JSCompartment* compartment)
+{
+    CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
+    return priv ? priv->SizeOfIncludingThis(mallocSizeOf) : 0;
+}
+
 void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 {
     // Skip this part if XPConnect is shutting down. We get into
@@ -1516,7 +1523,10 @@ XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 size_t
 CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 {
-    return mallocSizeOf(this) + mWrappedJSMap->SizeOfWrappedJS(mallocSizeOf);
+    size_t n = mallocSizeOf(this);
+    n += mWrappedJSMap->SizeOfIncludingThis(mallocSizeOf);
+    n += mWrappedJSMap->SizeOfWrappedJS(mallocSizeOf);
+    return n;
 }
 
 /***************************************************************************/
@@ -2372,6 +2382,11 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jit-compartment"),
         cStats.jitCompartment,
         "The JIT compartment.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("private-data"),
+        cStats.privateData,
+        "Extra data attached to the compartment by XPConnect, including "
+        "its wrapped-js.");
 
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
@@ -3447,6 +3462,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
     JS_SetErrorReporter(runtime, xpc::SystemErrorReporter);
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
+    JS_SetSizeOfIncludingThisCompartmentCallback(runtime, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_AddFinalizeCallback(runtime, FinalizeCallback, nullptr);
