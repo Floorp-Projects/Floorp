@@ -1125,12 +1125,18 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
         // last line until the point where we stopped parsing.
         nsScannerIterator startLastLine = currentExpatPosition;
         startLastLine.advance(-((ptrdiff_t)lastLineLength));
-        CopyUnicodeTo(startLastLine, currentExpatPosition, mLastLine);
+        if (!CopyUnicodeTo(startLastLine, currentExpatPosition, mLastLine)) {
+          return (mInternalState = NS_ERROR_OUT_OF_MEMORY);
+        }
       }
       else {
         // There was no line break in the consumed data, append the consumed
         // data.
-        AppendUnicodeTo(oldExpatPosition, currentExpatPosition, mLastLine);
+        if (!AppendUnicodeTo(oldExpatPosition,
+                             currentExpatPosition,
+                             mLastLine)) {
+          return (mInternalState = NS_ERROR_OUT_OF_MEMORY);
+        }
       }
     }
 
