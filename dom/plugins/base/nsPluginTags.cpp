@@ -699,6 +699,13 @@ nsPluginTag::HasSameNameAndMimes(const nsPluginTag *aPluginTag) const
   return true;
 }
 
+NS_IMETHODIMP
+nsPluginTag::GetLoaded(bool* aIsLoaded)
+{
+  *aIsLoaded = !!mPlugin;
+  return NS_OK;
+}
+
 void nsPluginTag::TryUnloadPlugin(bool inShutdown)
 {
   // We never want to send NPP_Shutdown to an in-process plugin unless
@@ -1023,5 +1030,13 @@ nsFakePluginTag::GetLastModifiedTime(PRTime* aLastModifiedTime)
   // FIXME-jsplugins What should this return, if anything?
   MOZ_ASSERT(aLastModifiedTime);
   *aLastModifiedTime = 0;
+  return NS_OK;
+}
+
+// We don't load fake plugins out of a library, so they should always be there.
+NS_IMETHODIMP
+nsFakePluginTag::GetLoaded(bool* ret)
+{
+  *ret = true;
   return NS_OK;
 }
