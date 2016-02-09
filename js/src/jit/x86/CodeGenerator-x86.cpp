@@ -668,7 +668,7 @@ CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, 
 
     if (boundsCheck) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-endOffset)).offset();
-        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
+        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
     }
 
     // Add in the actual heap pointer explicitly, to avoid opening up

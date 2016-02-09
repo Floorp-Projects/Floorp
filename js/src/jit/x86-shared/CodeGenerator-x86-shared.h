@@ -53,15 +53,15 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // Additional bounds checking for heap accesses with constant offsets.
     class OffsetBoundsCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     {
-        Label* outOfBounds_;
+        Label* maybeOutOfBounds_;
         Register ptrReg_;
         int32_t offset_;
       public:
-        OffsetBoundsCheck(Label* outOfBounds, Register ptrReg, int32_t offset)
-          : outOfBounds_(outOfBounds), ptrReg_(ptrReg), offset_(offset)
+        OffsetBoundsCheck(Label* maybeOutOfBounds, Register ptrReg, int32_t offset)
+          : maybeOutOfBounds_(maybeOutOfBounds), ptrReg_(ptrReg), offset_(offset)
         {}
 
-        Label* outOfBounds() const { return outOfBounds_; }
+        Label* maybeOutOfBounds() const { return maybeOutOfBounds_; }
         Register ptrReg() const { return ptrReg_; }
         int32_t offset() const { return offset_; }
         void accept(CodeGeneratorX86Shared* codegen) {

@@ -639,20 +639,18 @@ ModuleGenerator::defineInlineStub(Offsets offsets)
     return module_->codeRanges.emplaceBack(CodeRange::Inline, offsets);
 }
 
-bool
-ModuleGenerator::defineInterruptStub(Offsets offsets)
+void
+ModuleGenerator::defineInterruptExit(uint32_t offset)
 {
     MOZ_ASSERT(finishedFuncs_);
-    link_->pod.interruptOffset = offsets.begin;
-    return module_->codeRanges.emplaceBack(CodeRange::Inline, offsets);
+    link_->pod.interruptOffset = offset;
 }
 
-bool
-ModuleGenerator::defineOutOfBoundsStub(Offsets offsets)
+void
+ModuleGenerator::defineOutOfBoundsExit(uint32_t offset)
 {
     MOZ_ASSERT(finishedFuncs_);
-    link_->pod.outOfBoundsOffset = offsets.begin;
-    return module_->codeRanges.emplaceBack(CodeRange::Inline, offsets);
+    link_->pod.outOfBoundsOffset = offset;
 }
 
 bool
@@ -667,7 +665,7 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
 
     module_->prettyFuncNames = Move(prettyFuncNames);
 
-    if (!GenerateStubs(*this, UsesHeap(module_->heapUsage)))
+    if (!GenerateStubs(*this))
         return false;
 
     masm_.finish();
