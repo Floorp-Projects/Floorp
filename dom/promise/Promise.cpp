@@ -2547,14 +2547,14 @@ void
 PromiseWorkerProxy::ResolvedCallback(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue)
 {
-  RunCallback(aCx, aValue, &Promise::ResolveInternal);
+  RunCallback(aCx, aValue, &Promise::MaybeResolve);
 }
 
 void
 PromiseWorkerProxy::RejectedCallback(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue)
 {
-  RunCallback(aCx, aValue, &Promise::RejectInternal);
+  RunCallback(aCx, aValue, &Promise::MaybeReject);
 }
 
 bool
