@@ -36,7 +36,11 @@
 
 #else
 
+#include <asm/ptrace.h>
 #include <sys/cdefs.h>
+#if defined (__mips__)
+#include <sys/types.h>
+#endif
 #include <sys/user.h>
 #include <unistd.h>
 
@@ -44,7 +48,7 @@
 extern "C" {
 #endif  // __cplusplus
 
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__aarch64__)
 typedef unsigned long long elf_greg_t;
 #else
 typedef unsigned long  elf_greg_t;
@@ -52,6 +56,10 @@ typedef unsigned long  elf_greg_t;
 
 #ifdef __arm__
 #define ELF_NGREG (sizeof(struct user_regs) / sizeof(elf_greg_t))
+#elif defined(__aarch64__)
+#define ELF_NGREG (sizeof(struct user_pt_regs) / sizeof(elf_greg_t))
+#elif defined(__mips__)
+#define ELF_NGREG 45
 #else
 #define ELF_NGREG (sizeof(struct user_regs_struct) / sizeof(elf_greg_t))
 #endif
@@ -92,6 +100,9 @@ struct elf_prpsinfo {
 #ifdef __x86_64__
   unsigned int   pr_uid;
   unsigned int   pr_gid;
+#elif defined(__mips__)
+  unsigned long  pr_uid;
+  unsigned long  pr_gid;
 #else
   unsigned short pr_uid;
   unsigned short pr_gid;

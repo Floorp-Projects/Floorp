@@ -15,17 +15,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=707564
 
   addLoadEvent(function() {
     var props = Object.getOwnPropertyNames(frames[0].navigator);
-    isnot(props.indexOf("mozApps"), -1,
-          "Should enumerate a mozApps property on navigator");
+    isnot(props.indexOf("mozContacts"), -1,
+          "Should enumerate a mozContacts property on navigator");
 
     // Now enumerate a different navigator object
     var found = false;
     for (var name in frames[1].navigator) {
-      if (name == "mozApps") {
+      if (name == "mozContacts") {
         found = true;
       }
     }
-    ok(found, "Should enumerate a mozApps property on navigator via for...in");
+    ok(found, "Should enumerate a mozContacts property on navigator via for...in");
     SimpleTest.finish();
   });
   </script>

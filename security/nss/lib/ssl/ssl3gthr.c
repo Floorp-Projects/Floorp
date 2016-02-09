@@ -413,7 +413,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	     */
 	    PORT_Assert(!ss->firstHsDone);
 
-	    if (ssl3_WaitingForStartOfServerSecondRound(ss)) {
+	    if (ssl3_WaitingForServerSecondRound(ss)) {
 		keepGoing = PR_FALSE;
 	    } else {
 		ss->ssl3.hs.canFalseStart = PR_FALSE;

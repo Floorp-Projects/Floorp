@@ -3,6 +3,8 @@ $inherits:
   from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
   payload:
+    # these tests take longer than most to complete
+    maxRunTime: 5400
     command:
       - --e10s
     capabilities:

@@ -1597,6 +1597,7 @@ class Assembler : public AssemblerShared
     BufferOffset as_b(BOffImm off, Condition c, Label* documentation = nullptr);
 
     BufferOffset as_b(Label* l, Condition c = Always);
+    BufferOffset as_b(wasm::JumpTarget target, Condition c = Always);
     BufferOffset as_b(BOffImm off, Condition c, BufferOffset inst);
 
     // blx can go to either an immediate or a register. When blx'ing to a
@@ -1704,10 +1705,10 @@ class Assembler : public AssemblerShared
     bool nextLink(BufferOffset b, BufferOffset* next);
     void bind(Label* label, BufferOffset boff = BufferOffset());
     void bind(RepatchLabel* label);
+    void bindLater(Label* label, wasm::JumpTarget target);
     uint32_t currentOffset() {
         return nextOffset().getOffset();
     }
-    void retargetWithOffset(size_t baseOffset, const LabelBase* label, LabelBase* target);
     void retarget(Label* label, Label* target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label* label, void* target, Relocation::Kind reloc);

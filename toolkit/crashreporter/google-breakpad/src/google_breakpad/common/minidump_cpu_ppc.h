@@ -140,6 +140,11 @@ typedef struct {
   MDVectorSaveAreaPPC   vector_save;
 } MDRawContextPPC;  /* Based on ppc_thread_state */
 
+/* Indices into gpr for registers with a dedicated or conventional purpose. */
+enum MDPPCRegisterNumbers {
+  MD_CONTEXT_PPC_REG_SP = 1
+};
+
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma pack(0)
 #else

@@ -179,10 +179,12 @@ long
 DER_GetInteger(const SECItem *it)
 {
     long ival = 0;
-    unsigned len = it->len;
+    PRBool negative = PR_FALSE;
+    unsigned int len = it->len;
+    unsigned int originalLength = len;
     unsigned char *cp = it->data;
     unsigned long overflow = 0x1ffUL << (((sizeof(ival) - 1) * 8) - 1);
-    unsigned long ofloinit;
+    unsigned long mask = 1;
 
     PORT_Assert(len);
     if (!len) {
@@ -190,14 +192,15 @@ DER_GetInteger(const SECItem *it)
 	return 0;
     }
 
-    if (*cp & 0x80)
-    	ival = -1L;
-    ofloinit = ival & overflow;
+    if (*cp & 0x80) {
+	negative = PR_TRUE;
+	overflow <<= 1;
+    }
 
     while (len) {
-	if ((ival & overflow) != ofloinit) {
+	if ((ival & overflow) != 0) {
 	    PORT_SetError(SEC_ERROR_BAD_DER);
-	    if (ival < 0) {
+	    if (negative) {
 		return LONG_MIN;
 	    }
 	    return LONG_MAX;
@@ -205,6 +208,11 @@ DER_GetInteger(const SECItem *it)
 	ival = ival << 8;
 	ival |= *cp++;
 	--len;
+    }
+    if (negative && ival && (overflow & ival) == 0) {
+	mask <<=  ((originalLength  * 8) - 1);
+	ival &= ~mask;
+	ival -= mask;
     }
     return ival;
 }

@@ -152,7 +152,7 @@ function browserLoadEvent() {
   setupStorage(gBrowserStorage.localStorage);
   setupStorage(gBrowserStorage.sessionStorage);
 
-  navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+  navigator.mozApps.mgmt.getAll().onsuccess = function() {
     for (i in this.result) {
       var app = this.result[i];
       if (app.manifestURL == gManifestURL) {

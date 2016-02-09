@@ -109,4 +109,99 @@ DirectoryEnumerator::Next()
   return nullptr;
 }
 
+bool
+ReadIntoArray(nsIFile* aFile,
+              nsTArray<uint8_t>& aOutDst,
+              size_t aMaxLength)
+{
+  if (!FileExists(aFile)) {
+    return false;
+  }
+
+  PRFileDesc* fd = nullptr;
+  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  int32_t length = PR_Seek(fd, 0, PR_SEEK_END);
+  PR_Seek(fd, 0, PR_SEEK_SET);
+
+  if (length < 0 || (size_t)length > aMaxLength) {
+    NS_WARNING("EME file is longer than maximum allowed length");
+    PR_Close(fd);
+    return false;
+  }
+  aOutDst.SetLength(length);
+  int32_t bytesRead = PR_Read(fd, aOutDst.Elements(), length);
+  PR_Close(fd);
+  return (bytesRead == length);
+}
+
+static bool
+ReadIntoString(nsIFile* aFile,
+               nsCString& aOutDst,
+               size_t aMaxLength)
+{
+  nsTArray<uint8_t> buf;
+  bool rv = ReadIntoArray(aFile, buf, aMaxLength);
+  if (rv) {
+    buf.AppendElement(0); // Append null terminator, required by nsC*String.
+    aOutDst = nsDependentCString((const char*)buf.Elements(), buf.Length() - 1);
+  }
+  return rv;
+}
+
+bool
+GMPInfoFileParser::Init(nsIFile* aInfoFile)
+{
+  nsTArray<nsCString> lines;
+  static const size_t MAX_GMP_INFO_FILE_LENGTH = 5 * 1024;
+
+  nsAutoCString info;
+  if (!ReadIntoString(aInfoFile, info, MAX_GMP_INFO_FILE_LENGTH)) {
+    NS_WARNING("Failed to read info file in GMP process.");
+    return false;
+  }
+
+  // Note: we pass "\r\n" to SplitAt so that we'll split lines delimited
+  // by \n (Unix), \r\n (Windows) and \r (old MacOSX).
+  SplitAt("\r\n", info, lines);
+
+  for (nsCString line : lines) {
+    nsTArray<nsCString> tokens;
+    SplitAt(":", line, tokens);
+    if (tokens.Length() < 2) {
+      continue;
+    }
+    nsCString key = tokens[0];
+    ToLowerCase(key);
+    key.Trim(" ");
+    nsCString* value = new nsCString(tokens[1]);
+    value->Trim(" ");
+    mValues.Put(key, value); // Hashtable assumes ownership of value.
+  }
+
+  return true;
+}
+
+bool
+GMPInfoFileParser::Contains(const nsCString& aKey) const {
+  nsCString key(aKey);
+  ToLowerCase(key);
+  return mValues.Contains(key);
+}
+
+nsCString
+GMPInfoFileParser::Get(const nsCString& aKey) const {
+  MOZ_ASSERT(Contains(aKey));
+  nsCString key(aKey);
+  ToLowerCase(key);
+  nsCString* p = nullptr;
+  if (mValues.Get(key, &p)) {
+    return nsCString(*p);
+  }
+  return EmptyCString();
+}
+
 } // namespace mozilla

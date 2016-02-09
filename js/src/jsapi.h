@@ -1110,7 +1110,12 @@ class JS_PUBLIC_API(RuntimeOptions) {
         asyncStack_(true),
         werror_(false),
         strictMode_(false),
-        extraWarnings_(false)
+        extraWarnings_(false),
+#ifdef RELEASE_BUILD
+        matchFlagArgument_(true)
+#else
+        matchFlagArgument_(false)
+#endif
     {
     }
 
@@ -1202,6 +1207,12 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool matchFlagArgument() const { return matchFlagArgument_; }
+    RuntimeOptions& setMatchFlagArgument(bool flag) {
+        matchFlagArgument_ = flag;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
@@ -1213,6 +1224,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool werror_ : 1;
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;
+    bool matchFlagArgument_ : 1;
 };
 
 JS_PUBLIC_API(RuntimeOptions&)

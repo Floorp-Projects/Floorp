@@ -1,16 +1,7 @@
 /* Copyright 2013 Google Inc. All Rights Reserved.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+   Distributed under MIT license.
+   See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
 /* Transformations on dictionary words. */
@@ -18,8 +9,6 @@
 #ifndef BROTLI_DEC_TRANSFORM_H_
 #define BROTLI_DEC_TRANSFORM_H_
 
-#include <stdio.h>
-#include <ctype.h>
 #include "./port.h"
 #include "./types.h"
 
@@ -278,22 +267,19 @@ static BROTLI_NOINLINE int TransformDictionaryWord(
   }
   {
     const int t = kTransforms[transform].transform;
-    int skip = t < kOmitFirst1 ? 0 : t - (kOmitFirst1 - 1);
     int i = 0;
-    uint8_t* uppercase;
-    if (skip > len) {
-      skip = len;
-    }
-    word += skip;
-    len -= skip;
-    if (t <= kOmitLast9) {
+    int skip = t - (kOmitFirst1 - 1);
+    if (skip > 0) {
+      word += skip;
+      len -= skip;
+    } else if (t <= kOmitLast9) {
       len -= t;
     }
     while (i < len) { dst[idx++] = word[i++]; }
-    uppercase = &dst[idx - len];
     if (t == kUppercaseFirst) {
-      ToUpperCase(uppercase);
+      ToUpperCase(&dst[idx - len]);
     } else if (t == kUppercaseAll) {
+      uint8_t* uppercase = &dst[idx - len];
       while (len > 0) {
         int step = ToUpperCase(uppercase);
         uppercase += step;

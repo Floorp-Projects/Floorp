@@ -323,6 +323,7 @@ class MacroAssemblerARM : public Assembler
 
     // Branches when done from within arm-specific code.
     BufferOffset ma_b(Label* dest, Condition c = Always);
+    BufferOffset ma_b(wasm::JumpTarget target, Condition c = Always);
     void ma_b(void* target, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);
 
@@ -608,6 +609,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(addr, scratch);
         ma_bx(scratch);
     }
+    void jump(wasm::JumpTarget target) {
+        as_b(target);
+    }
 
     void negl(Register reg) {
         ma_neg(reg, reg, SetCC);
@@ -865,8 +869,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         cond = testNumber(cond, t);
         ma_b(label, cond);
     }
-    template <typename T>
-    void branchTestMagic(Condition cond, const T& t, Label* label) {
+    template <typename T, class L>
+    void branchTestMagic(Condition cond, const T& t, L label) {
         cond = testMagic(cond, t);
         ma_b(label, cond);
     }
@@ -891,7 +895,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testStringTruthy(truthy, value);
         ma_b(label, c);
     }
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         // x86 likes test foo, foo rather than cmp foo, #0.
         // Convert the former into the latter.
@@ -901,7 +906,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
             ma_tst(lhs, rhs);
         ma_b(label, cond);
     }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Imm32 imm, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         ma_tst(lhs, imm);
         ma_b(label, cond);

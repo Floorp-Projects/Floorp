@@ -23,7 +23,7 @@ HOST_USE_LIBS += [
 HostProgram('dump_syms')
 
 LOCAL_INCLUDES += [
-    '../../..',
     '../../../common/solaris',
 ]
 
+include('/toolkit/crashreporter/crashreporter.mozbuild')

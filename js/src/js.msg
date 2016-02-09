@@ -294,6 +294,7 @@ MSG_DEF(JSMSG_NO_CLASS_CONSTRUCTOR,    0, JSEXN_TYPEERR,   "class default constr
 MSG_DEF(JSMSG_NO_EXPORT_NAME,          0, JSEXN_SYNTAXERR, "missing export name")
 MSG_DEF(JSMSG_NO_IMPORT_NAME,          0, JSEXN_SYNTAXERR, "missing import name")
 MSG_DEF(JSMSG_NO_VARIABLE_NAME,        0, JSEXN_SYNTAXERR, "missing variable name")
+MSG_DEF(JSMSG_OBSOLETE_FLAGS_ARG,      0, JSEXN_NONE, "flags argument of String.prototype.{search,match,replace} is no longer supported")
 MSG_DEF(JSMSG_OF_AFTER_FOR_NAME,       0, JSEXN_SYNTAXERR, "missing 'of' after for")
 MSG_DEF(JSMSG_PAREN_AFTER_ARGS,        0, JSEXN_SYNTAXERR, "missing ) after argument list")
 MSG_DEF(JSMSG_PAREN_AFTER_CATCH,       0, JSEXN_SYNTAXERR, "missing ) after catch")

@@ -157,6 +157,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     DebugOnly<bool>                 finishedFuncs_;
 
     bool finishOutstandingTask();
+    bool funcIsDefined(uint32_t funcIndex) const;
     bool finishTask(IonCompileTask* task);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
@@ -218,9 +219,8 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Stubs:
     bool defineInlineStub(Offsets offsets);
-    bool defineSyncInterruptStub(ProfilingOffsets offsets);
-    bool defineAsyncInterruptStub(Offsets offsets);
-    bool defineOutOfBoundsStub(Offsets offsets);
+    void defineInterruptExit(uint32_t offset);
+    void defineOutOfBoundsExit(uint32_t offset);
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of

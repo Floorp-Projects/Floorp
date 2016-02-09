@@ -41,6 +41,7 @@
 
 #include <string>
 
+#include "client/mac/handler/ucontext_compat.h"
 #include "common/scoped_ptr.h"
 
 #if !TARGET_OS_IPHONE
@@ -188,7 +189,7 @@ class ExceptionHandler {
   bool WriteMinidumpWithException(int exception_type,
                                   int exception_code,
                                   int exception_subcode,
-                                  ucontext_t *task_context,
+                                  breakpad_ucontext_t *task_context,
                                   mach_port_t thread_name,
                                   bool exit_after_write,
                                   bool report_current_thread);

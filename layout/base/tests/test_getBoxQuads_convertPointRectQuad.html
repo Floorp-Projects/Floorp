@@ -245,7 +245,7 @@ That ensures the first quad's X position is not equal to the anonymous block's X
   ><div style="width:110px; height:20px; background:black"></div
   ><em style="width:130px;"></em></span>
 
-<table cellspacing="0" id="table" style="border:0; margin:0; padding:0; background:orange">
+<table cellspacing="0" id="table" style="border:0; margin:8px; padding:0; background:orange">
   <tbody style="padding:0; margin:0; border:0; background:blue">
     <tr style="height:50px; padding:0; margin:0; border:0">
       <td style="border:0; margin:0; padding:0">Cell</td>
@@ -507,6 +507,10 @@ function runTest() {
   isEval("text.getBoxQuads({box:'margin'}).length", 2);
   isEval("text.getBoxQuads({box:'margin'})[0].bounds.left", textX);
   isEval("text.getBoxQuads({box:'margin'})[1].bounds.left", textX - 150);
+
+  // Test table margins
+  isEval("table.getBoxQuads({box:'margin'}).length", 1);
+  isEval("table.getBoxQuads({box:'margin'})[0].bounds.height", 106);
 
   // Check that a text node whose layout might have been optimized away gives
   // correct results.
