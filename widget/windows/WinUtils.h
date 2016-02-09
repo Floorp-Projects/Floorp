@@ -388,6 +388,18 @@ public:
   static uint32_t GetMaxTouchPoints();
 
   /**
+   * Detect if path is within the Users folder and Users is actually a junction
+   * point to another folder.
+   * If this is detected it will change the path to the actual path.
+   *
+   * @param aPath path to be resolved.
+   * @return true if successful, including if nothing needs to be changed.
+   *         false if something failed or aPath does not exist, aPath will
+   *               remain unchanged.
+   */
+  static bool ResolveMovedUsersFolder(std::wstring& aPath);
+
+  /**
   * dwmapi.dll function typedefs and declarations
   */
   typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
