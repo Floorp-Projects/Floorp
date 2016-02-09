@@ -67,6 +67,8 @@ std::ostream& operator<<(std::ostream& aStream,
 /*static*/ bool
 AccessibleCaretManager::sSelectionBarEnabled = false;
 /*static*/ bool
+AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
+/*static*/ bool
 AccessibleCaretManager::sCaretsExtendedVisibility = false;
 /*static*/ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
@@ -89,6 +91,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   if (!addedPrefs) {
     Preferences::AddBoolVarCache(&sSelectionBarEnabled,
                                  "layout.accessiblecaret.bar.enabled");
+    Preferences::AddBoolVarCache(&sCaretShownWhenLongTappingOnEmptyContent,
+      "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
     Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
                                  "layout.accessiblecaret.extendedvisibility");
     Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
@@ -267,14 +271,30 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
         case UpdateCaretsHint::Default:
           if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
             mFirstCaret->SetAppearance(Appearance::Normal);
+          } else if (sCaretShownWhenLongTappingOnEmptyContent) {
+            if (mFirstCaret->IsLogicallyVisible()) {
+              // Possible cases are: 1) SelectWordOrShortcut() sets the
+              // appearance to Normal. 2) When the caret is out of viewport and
+              // now scrolling into viewport, it has appearance NormalNotShown.
+              mFirstCaret->SetAppearance(Appearance::Normal);
+            } else {
+              // Possible cases are: a) Single tap on current empty content;
+              // OnSelectionChanged() sets the appearance to None due to
+              // MOUSEDOWN_REASON. b) Single tap on other empty content;
+              // OnBlur() sets the appearance to None.
+              //
+              // Do nothing to make the appearance remains None so that it can
+              // be distinguished from case 2). Also do not set the appearance
+              // to NormalNotShown here like the default update behavior.
+            }
           } else {
             mFirstCaret->SetAppearance(Appearance::NormalNotShown);
           }
           break;
 
         case UpdateCaretsHint::RespectOldAppearance:
-          // Do nothing to prevent the appearance of the caret being
-          // changed from NormalNotShown to Normal.
+          // Do nothing to preserve the appearance of the caret set by the
+          // caller.
           break;
       }
       break;
@@ -484,6 +504,10 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   if (focusableFrame && newFocusEditingHost &&
       !HasNonEmptyTextContent(newFocusEditingHost)) {
     ChangeFocusToOrClearOldFocus(focusableFrame);
+
+    if (sCaretShownWhenLongTappingOnEmptyContent) {
+      mFirstCaret->SetAppearance(Appearance::Normal);
+    }
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
     UpdateCaretsWithHapticFeedback();

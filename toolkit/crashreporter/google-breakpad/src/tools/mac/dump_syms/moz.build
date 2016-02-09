@@ -27,7 +27,6 @@ HOST_USE_LIBS += [
 HostProgram('dump_syms')
 
 LOCAL_INCLUDES += [
-    '../../..',
     '../../../common/mac',
 ]
 
@@ -35,3 +34,5 @@ if CONFIG['HOST_OS_ARCH'] != 'Darwin':
     HOST_CXXFLAGS += [
         '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
     ]
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')

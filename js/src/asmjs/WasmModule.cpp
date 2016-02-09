@@ -375,7 +375,7 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
 
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit || u.kind_ == Interrupt);
+    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)

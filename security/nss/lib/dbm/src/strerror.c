@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,7 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. ***REMOVED*** - see 
+ * 3. ***REMOVED*** - see
  *    ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
@@ -30,44 +30,43 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)strerror.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)strerror.c  8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include <string.h>
 
 #ifdef _DLL
-#define sys_nerr    (*_sys_nerr_dll)
+#define sys_nerr (*_sys_nerr_dll)
 #endif
 
 #ifndef HAVE_STRERROR
 #ifndef _AFXDLL
 char *
-strerror(num)
-	int num;
+    strerror(num) int num;
 {
-	extern int sys_nerr;
-	extern char *sys_errlist[];
-#define	UPREFIX	"Unknown error: "
-	static char ebuf[40] = UPREFIX;		/* 64-bit number + slop */
-	register unsigned int errnum;
-	register char *p, *t;
-	char tmp[40];
+    extern int sys_nerr;
+    extern char *sys_errlist[];
+#define UPREFIX "Unknown error: "
+    static char ebuf[40] = UPREFIX; /* 64-bit number + slop */
+    register unsigned int errnum;
+    register char *p, *t;
+    char tmp[40];
 
-	errnum = num;				/* convert to unsigned */
-	if (errnum < sys_nerr)
-		return(sys_errlist[errnum]);
+    errnum = num; /* convert to unsigned */
+    if (errnum < sys_nerr)
+        return (sys_errlist[errnum]);
 
-	/* Do this by hand, so we don't include stdio(3). */
-	t = tmp;
-	do {
-		*t++ = "0123456789"[errnum % 10];
-	} while (errnum /= 10);
-	for (p = ebuf + sizeof(UPREFIX) - 1;;) {
-		*p++ = *--t;
-		if (t <= tmp)
-			break;
-	}
-	return(ebuf);
+    /* Do this by hand, so we don't include stdio(3). */
+    t = tmp;
+    do {
+        *t++ = "0123456789"[errnum % 10];
+    } while (errnum /= 10);
+    for (p = ebuf + sizeof(UPREFIX) - 1;;) {
+        *p++ = *--t;
+        if (t <= tmp)
+            break;
+    }
+    return (ebuf);
 }
 
 #endif

@@ -149,7 +149,7 @@ void InstallExceptionHandlerAndCrash(bool install_filter,
   ASSERT_TRUE(DoesPathExist(temp_path));
   google_breakpad::ExceptionHandler exc(
       temp_path,
-      install_filter ? 
+      install_filter ?
         (filter_return_value ?
           &CrashHandlerFilter<true> :
           &CrashHandlerFilter<false>) :
@@ -178,7 +178,7 @@ TEST(AssertDeathSanity, Regex) {
       std::string(kFoo) +
       std::string(kEndOfLine));
 
-  ASSERT_DEATH(DoCrash(kBar), 
+  ASSERT_DEATH(DoCrash(kBar),
     std::string(kStartOfLine) +
       std::string(kBar) +
       std::string(kEndOfLine));

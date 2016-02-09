@@ -797,8 +797,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cond = testPrimitive(cond, t);
         j(cond, label);
     }
-    template <typename T>
-    void branchTestMagic(Condition cond, const T& t, Label* label) {
+    template <typename T, class L>
+    void branchTestMagic(Condition cond, const T& t, L label) {
         cond = testMagic(cond, t);
         j(cond, label);
     }

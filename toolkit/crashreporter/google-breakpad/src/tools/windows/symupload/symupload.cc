@@ -36,6 +36,7 @@
 //  debug_identifier: the debug file's identifier, usually consisting of
 //                    the guid and age embedded in the pdb, e.g.
 //                    "11111111BBBB3333DDDD555555555555F"
+//  product: the HTTP-friendly product name, e.g. "MyApp"
 //  version: the file version of the module, e.g. "1.2.3.4"
 //  os: the operating system that the module was built for, always
 //      "windows" in this implementation.
@@ -153,33 +154,43 @@ static bool DumpSymbolsToTempFile(const wchar_t *file,
   return writer.GetModuleInfo(pdb_info);
 }
 
-void printUsageAndExit() {
-  wprintf(L"Usage: symupload [--timeout NN] <file.exe|file.dll> <symbol upload URL>\n\n");
-  wprintf(L"Timeout is in milliseconds, or can be 0 to be unlimited\n\n");
-  wprintf(L"Example:\n\n\tsymupload.exe --timeout 0 chrome.dll http://no.free.symbol.server.for.you\n");
+__declspec(noreturn) void printUsageAndExit() {
+  wprintf(L"Usage:\n\n"
+          L"    symupload [--timeout NN] [--product product_name] ^\n"
+          L"              <file.exe|file.dll> <symbol upload URL> ^\n"
+          L"              [...<symbol upload URLs>]\n\n");
+  wprintf(L"  - Timeout is in milliseconds, or can be 0 to be unlimited.\n");
+  wprintf(L"  - product_name is an HTTP-friendly product name. It must only\n"
+          L"    contain an ascii subset: alphanumeric and punctuation.\n"
+          L"    This string is case-sensitive.\n\n");
+  wprintf(L"Example:\n\n"
+          L"    symupload.exe --timeout 0 --product Chrome ^\n"
+          L"        chrome.dll http://no.free.symbol.server.for.you\n");
   exit(0);
 }
 int wmain(int argc, wchar_t *argv[]) {
-  if ((argc != 3) &&
-      (argc != 5)) {
-    printUsageAndExit();
+  const wchar_t *module;
+  const wchar_t *product = nullptr;
+  int timeout = -1;
+  int currentarg = 1;
+  while (argc > currentarg + 1) {
+    if (!wcscmp(L"--timeout", argv[currentarg])) {
+      timeout = _wtoi(argv[currentarg + 1]);
+      currentarg += 2;
+      continue;
+    }
+    if (!wcscmp(L"--product", argv[currentarg])) {
+      product = argv[currentarg + 1];
+      currentarg += 2;
+      continue;
+    }
+    break;
   }
 
-  const wchar_t *module, *url;
-  int timeout = -1;
-  if (argc == 3) {
-    module = argv[1];
-    url = argv[2];
-  } else {
-    // check for timeout flag
-    if (!wcscmp(L"--timeout", argv[1])) {
-      timeout  = _wtoi(argv[2]);
-      module = argv[3];
-      url = argv[4];
-    } else {
-      printUsageAndExit();
-    }
-  }
+  if (argc >= currentarg + 2)
+    module = argv[currentarg++];
+  else
+    printUsageAndExit();
 
   wstring symbol_file;
   PDBModuleInfo pdb_info;
@@ -196,6 +207,17 @@ int wmain(int argc, wchar_t *argv[]) {
   parameters[L"debug_identifier"] = pdb_info.debug_identifier;
   parameters[L"os"] = L"windows";  // This version of symupload is Windows-only
   parameters[L"cpu"] = pdb_info.cpu;
+  
+  // Don't make a missing product name a hard error.  Issue a warning and let
+  // the server decide whether to reject files without product name.
+  if (product) {
+    parameters[L"product"] = product;
+  } else {
+    fwprintf(
+        stderr,
+        L"Warning: No product name (flag --product) was specified for %s\n",
+        module);
+  }
 
   // Don't make a missing version a hard error.  Issue a warning, and let the
   // server decide whether to reject files without versions.
@@ -206,20 +228,32 @@ int wmain(int argc, wchar_t *argv[]) {
     fwprintf(stderr, L"Warning: Could not get file version for %s\n", module);
   }
 
-  bool success = HTTPUpload::SendRequest(url, parameters,
-                                         symbol_file, L"symbol_file",
-										 timeout == -1 ? NULL : &timeout,
-                                         NULL, NULL);
-  _wunlink(symbol_file.c_str());
+  map<wstring, wstring> files;
+  files[L"symbol_file"] = symbol_file;
 
-  if (!success) {
-    fwprintf(stderr, L"Symbol file upload failed\n");
-    return 1;
+  bool success = true;
+
+  while (currentarg < argc) {
+    int response_code;
+    if (!HTTPUpload::SendRequest(argv[currentarg], parameters, files,
+                                 timeout == -1 ? NULL : &timeout,
+                                 nullptr, &response_code)) {
+      success = false;
+      fwprintf(stderr,
+               L"Symbol file upload to %s failed. Response code = %ld\n",
+               argv[currentarg], response_code);
+    }
+    currentarg++;
   }
 
-  wprintf(L"Uploaded symbols for windows-%s/%s/%s (%s %s)\n",
-          pdb_info.cpu.c_str(), pdb_info.debug_file.c_str(),
-          pdb_info.debug_identifier.c_str(), code_file.c_str(),
-          file_version.c_str());
-  return 0;
+  _wunlink(symbol_file.c_str());
+
+  if (success) {
+    wprintf(L"Uploaded symbols for windows-%s/%s/%s (%s %s)\n",
+            pdb_info.cpu.c_str(), pdb_info.debug_file.c_str(),
+            pdb_info.debug_identifier.c_str(), code_file.c_str(),
+            file_version.c_str());
+  }
+
+  return success ? 0 : 1;
 }

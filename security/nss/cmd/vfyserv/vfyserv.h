@@ -135,14 +135,4 @@ void lockedVars_WaitForDone(lockedVars *lv);
 
 int lockedVars_AddToCount(lockedVars *lv, int addend);
 
-/* Buffer stuff. */
-
-static const char stopCmd[] = { "GET /stop " };
-static const char defaultHeader[] = {
-	"HTTP/1.0 200 OK\r\n"
-	"Server: SSL sample server\r\n"
-	"Content-type: text/plain\r\n"
-	"\r\n"
-};
-
 #endif

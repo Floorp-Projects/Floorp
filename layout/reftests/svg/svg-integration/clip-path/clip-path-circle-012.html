@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Masking: Test clip-path property and circle function with position 009</title>
+  <link rel="author" title="Dirk Schulze" href="mailto:dschulze@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/css-masking-1/#clipping-paths">
+  <link rel="help" href="http://www.w3.org/TR/css-masking-1/#propdef-clip-path">
+  <link rel="match" href="clip-path-circle-006-ref.html">
+  <meta name="assert" content="The clip-path property takes the basic shape
+    circle with a position for clipping of a rectangle. On pass you should see
+    a green circle.">
+</head>
+<body>
+  <p>The test passes if there is a green circle.</p>
+  <div style="width: 400px; height: 400px; background-color: green; clip-path: circle(100px at 100px 100px);"></div>
+</body>
+</html>

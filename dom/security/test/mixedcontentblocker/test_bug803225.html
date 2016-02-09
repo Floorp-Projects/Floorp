@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Testing Whitelist of Resource Schemed for Mixed Content Blocker
+Testing Whitelist of Resource Scheme for Mixed Content Blocker
 https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 -->
 <head>
@@ -11,10 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script>
-
-  var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
-  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
-
   var counter = 0;
   var settings = [ [true, true], [true, false], [false, true], [false, false] ];
 
@@ -22,16 +18,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   var blockDisplay;
 
   //Cycle through 4 different preference settings.
-  function changePrefs(x) {
-    SpecialPowers.setBoolPref("security.mixed_content.block_display_content", settings[x][0]);
-    SpecialPowers.setBoolPref("security.mixed_content.block_active_content", settings[x][1]);
-    blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
-    blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
-  }
+  function changePrefs(callback) {
+    let newPrefs = [["security.mixed_content.block_display_content", settings[counter][0]],
+                    ["security.mixed_content.block_active_content", settings[counter][1]]];
 
-  //Set the first set of settings (true, true) and increment the counter.
-  changePrefs(counter);
-  counter++;
+    SpecialPowers.pushPrefEnv({"set": newPrefs}, function () {
+      blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+      blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+      counter++;
+      callback();
+    });
+  }
 
   var testsToRun = {
     /* https - Tests already run as part of bug 62178. */
@@ -49,6 +46,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     document.getElementById("log").textContent += "\n" + msg;
   }
 
+  function reloadFrame() {
+    document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>';
+  }
+
   function checkTestsCompleted() {
     for (var prop in testsToRun) {
       // some test hasn't run yet so we're not done
@@ -61,23 +62,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
          testsToRun[prop] = false;
        }
       //call to change the preferences
-      changePrefs(counter);
-      counter++;
-      log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
-      document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>';
+      changePrefs(function() {
+        log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
+        reloadFrame();
+      });
     }
     else {
-      //set the prefs back to what they were set to originally
-      SpecialPowers.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
       SimpleTest.finish();
     }
   }
 
   var firstTest = true;
 
-  // listen for a messages from the mixed content test harness
-  window.addEventListener("message", receiveMessage, false);
   function receiveMessage(event) {
     if(firstTest) {
       log("blockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
@@ -135,14 +131,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     checkTestsCompleted();
   }
 
+  function startTest() {
+    //Set the first set of settings (true, true) and increment the counter.
+    changePrefs(function() {
+      // listen for a messages from the mixed content test harness
+      window.addEventListener("message", receiveMessage, false);
+
+      reloadFrame();
+    });
+  }
+
   SimpleTest.waitForExplicitFinish();
   </script>
 </head>
 
-<body>
-  <div id="framediv">
-    <iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>
-  </div>
+<body onload='startTest()'>
+  <div id="framediv"></div>
   <pre id="log"></pre>
 </body>
 </html>

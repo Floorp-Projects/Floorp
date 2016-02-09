@@ -239,7 +239,7 @@ CrashGenerationServer::ClientEvent(short revents)
         // A nasty process could try and send us too many descriptors and
         // force a leak.
         for (unsigned i = 0; i < num_fds; ++i)
-          HANDLE_EINTR(close(reinterpret_cast<int*>(CMSG_DATA(hdr))[i]));
+          close(reinterpret_cast<int*>(CMSG_DATA(hdr))[i]);
         return true;
       } else {
         signal_fd = reinterpret_cast<int*>(CMSG_DATA(hdr))[0];
@@ -253,7 +253,7 @@ CrashGenerationServer::ClientEvent(short revents)
 
   if (crashing_pid == -1 || signal_fd == -1) {
     if (signal_fd)
-      HANDLE_EINTR(close(signal_fd));
+      close(signal_fd);
     return true;
   }
 
@@ -264,7 +264,7 @@ CrashGenerationServer::ClientEvent(short revents)
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,
                                       kCrashContextSize)) {
-    HANDLE_EINTR(close(signal_fd));
+    close(signal_fd);
     return true;
   }
 
@@ -276,7 +276,7 @@ CrashGenerationServer::ClientEvent(short revents)
 
   // Send the done signal to the process: it can exit now.
   // (Closing this will make the child's sys_read unblock and return 0.)
-  HANDLE_EINTR(close(signal_fd));
+  close(signal_fd);
 
   return true;
 }

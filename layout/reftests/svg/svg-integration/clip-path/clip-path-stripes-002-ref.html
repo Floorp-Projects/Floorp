@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Masking: Reftest reference</title>
+  <link rel="author" title="Dirk Schulze" href="mailto:dschulze@adobe.com">
+</head>
+<style>
+div {
+  width: 50px;
+  height: 50px;
+  background-color: green;
+  padding: 25px;
+  margin: 25px;
+  border: red solid 25px;
+  border-left: lime solid 25px;
+}
+</style>
+<body>
+  <p>The test passes if you see a green vertical stripe next to a lime green vertical stripe, both stripes should be of equal size and there should be no red.</p>
+  <div style="clip-path: polygon(12.5% 25%, 37.5% 50px, 75px 50%, 25px 100px) margin-box"></div>
+  <svg>
+    <clipPath id="c1">
+      <rect x="0" y="50" width="50" height="50"/>
+    </clipPath>
+  </svg>
+</body>
+</html>

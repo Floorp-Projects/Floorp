@@ -46,7 +46,7 @@
 
 #include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
-#include "common/logging.h"
+#include "processor/logging.h"
 #include "processor/tokenize.h"
 
 namespace google_breakpad {

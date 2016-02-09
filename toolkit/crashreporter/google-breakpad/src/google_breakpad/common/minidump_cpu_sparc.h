@@ -138,6 +138,11 @@ typedef struct {
 
 } MDRawContextSPARC;  /* CONTEXT_SPARC */
 
+/* Indices into g_r for registers with a dedicated or conventional purpose. */
+enum MDSPARCRegisterNumbers {
+  MD_CONTEXT_SPARC_REG_SP = 14
+};
+
 /* For (MDRawContextSPARC).context_flags.  These values indicate the type of
  * context stored in the structure.  MD_CONTEXT_SPARC is Breakpad-defined.  Its
  * value was chosen to avoid likely conflicts with MD_CONTEXT_* for other

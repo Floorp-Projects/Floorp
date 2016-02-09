@@ -35,6 +35,7 @@
 
 #include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
+#include "google_breakpad/processor/process_result.h"
 
 namespace google_breakpad {
 
@@ -44,41 +45,6 @@ class StackFrameSymbolizer;
 class SourceLineResolverInterface;
 class SymbolSupplier;
 struct SystemInfo;
-// Return type for Process()
-enum ProcessResult {
-  PROCESS_OK,                                 // The minidump was
-                                              // processed
-                                              // successfully.
-
-  PROCESS_ERROR_MINIDUMP_NOT_FOUND,           // The minidump file
-                                              // was not found.
-
-  PROCESS_ERROR_NO_MINIDUMP_HEADER,           // The minidump file
-                                              // had no header
-
-  PROCESS_ERROR_NO_THREAD_LIST,               // The minidump file
-                                              // had no thread list.
-
-  PROCESS_ERROR_GETTING_THREAD,               // There was an error
-                                              // getting one
-                                              // thread's data from
-                                              // the minidump.
-
-  PROCESS_ERROR_GETTING_THREAD_ID,            // There was an error
-                                              // getting a thread id
-                                              // from the thread's
-                                              // data.
-
-  PROCESS_ERROR_DUPLICATE_REQUESTING_THREADS, // There was more than
-                                              // one requesting
-                                              // thread.
-
-  PROCESS_SYMBOL_SUPPLIER_INTERRUPTED         // The minidump
-                                              // processing was
-                                              // interrupted by the
-                                              // SymbolSupplier(not
-                                              // fatal)
-};
 
 class MinidumpProcessor {
  public:
@@ -123,6 +89,12 @@ class MinidumpProcessor {
   // the minidump.
   static bool GetOSInfo(Minidump* dump, SystemInfo* info);
 
+  // Populates the |process_create_time| parameter with the create time of the
+  // crashed process.  Returns false if this information is not available in
+  // the minidump |dump|.
+  static bool GetProcessCreateTime(Minidump* dump,
+                                   uint32_t* process_create_time);
+
   // Returns a textual representation of the reason that a crash occurred,
   // if the minidump in dump was produced as a result of a crash.  Returns
   // an empty string if this information cannot be determined.  If address
@@ -153,6 +125,8 @@ class MinidumpProcessor {
   // does not exist or cannot be determined.
   static string GetAssertion(Minidump* dump);
 
+  void set_enable_objdump(bool enabled) { enable_objdump_ = enabled; }
+
  private:
   StackFrameSymbolizer* frame_symbolizer_;
   // Indicate whether resolver_helper_ is owned by this instance.
@@ -162,6 +136,10 @@ class MinidumpProcessor {
   // guess how likely it is that the crash represents an exploitable
   // memory corruption issue.
   bool enable_exploitability_;
+
+  // This flag permits the exploitability scanner to shell out to objdump
+  // for purposes of disassembly.
+  bool enable_objdump_;
 };
 
 }  // namespace google_breakpad

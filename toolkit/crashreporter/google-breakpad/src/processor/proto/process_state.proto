@@ -46,10 +46,13 @@ package google_breakpad;
 // A proto representation of a process, in a fully-digested state.
 // See src/google_breakpad/processor/process_state.h
 message ProcessStateProto {
-  // Next value: 13
+  // Next value: 14
 
   // The time-date stamp of the original minidump (time_t format)
   optional int64 time_date_stamp = 1;
+
+  // The time-date stamp when the process was created (time_t format)
+  optional int64 process_create_time = 13;
 
   message Crash {
     // The type of crash.  OS- and possibly CPU- specific.  For example,

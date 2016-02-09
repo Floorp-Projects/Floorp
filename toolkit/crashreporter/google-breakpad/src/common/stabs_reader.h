@@ -53,11 +53,10 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_A_OUT_H
-#include <a.out.h>
-#endif
 #ifdef HAVE_MACH_O_NLIST_H
 #include <mach-o/nlist.h>
+#elif defined(HAVE_A_OUT_H)
+#include <a.out.h>
 #endif
 
 #include <string>
