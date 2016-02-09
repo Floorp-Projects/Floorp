@@ -53,8 +53,8 @@ function range(start, end) {
 
 function once(target, name, cb) {
   var p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function() {
-      target.removeEventListener(name, arguments.callee);
+    target.addEventListener(name, function onceEvent() {
+      target.removeEventListener(name, onceEvent);
       resolve();
     });
   });
