@@ -13,16 +13,16 @@ milestone_txt = $(topsrcdir)/config/milestone.txt
 include $(topsrcdir)/config/rules.mk
 
 MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template='{node}\n' 2>/dev/null))
-ifdef MOZ_SOURCE_STAMP
+ifneq (,$(strip $(MOZ_SOURCE_STAMP)))
 
-  INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
+  DEFINES += -DMOZ_SOURCE_STAMP=$(MOZ_SOURCE_STAMP)
 
   ifdef MOZ_INCLUDE_SOURCE_INFO
     source_repo := $(call getSourceRepo)
 
     # extra sanity check for old versions of hg, no showconfig support
     ifneq (,$(filter http%,$(source_repo)))
-      INIARGS += --sourcerepo=$(source_repo)
+      DEFINES += -DMOZ_SOURCE_REPO=$(source_repo)
     endif
   endif
 
@@ -34,12 +34,3 @@ $(call errorIfEmpty,GRE_MILESTONE MOZ_BUILDID)
 DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
 
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(milestone_txt)
-
-platform.ini: FORCE
-	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(MOZ_BUILDID) $(INIARGS) $(milestone_txt) > $@
-
-GARBAGE += platform.ini
-
-# Moving this out of libs breaks packaging.
-libs:: platform.ini
-	$(INSTALL) $^ $(DIST)/bin
