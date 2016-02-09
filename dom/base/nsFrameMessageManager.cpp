@@ -1791,6 +1791,14 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope, true, &script);
 }
 
+void
+nsMessageManagerScriptExecutor::Trace(const TraceCallbacks& aCallbacks, void* aClosure)
+{
+  for (size_t i = 0, length = mAnonymousGlobalScopes.Length(); i < length; ++i) {
+    aCallbacks.Trace(&mAnonymousGlobalScopes[i], "mAnonymousGlobalScopes[i]", aClosure);
+  }
+}
+
 bool
 nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   nsISupports* aScope,
