@@ -1,3 +1,8 @@
+# Disable <details> and <summary>
+pref(dom.details_element.enabled,false) == single-summary.html disabled-single-summary-ref.html
+pref(dom.details_element.enabled,false) == open-single-summary.html disabled-single-summary-ref.html
+pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-ref.html
+
 # Basic <summary> handling
 pref(dom.details_element.enabled,true) == multiple-summary.html single-summary.html
 pref(dom.details_element.enabled,true) == open-multiple-summary.html open-multiple-summary-ref.html
