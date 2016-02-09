@@ -8,7 +8,7 @@ const {AddonWatcher} = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 function setup() {
-  requestLongerTimeout(10);
+  requestLongerTimeout(20);
 
   info("Checking for mozscreenshots extension");
   return new Promise((resolve) => {

@@ -4,13 +4,11 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -23,7 +21,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckedTextView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -31,12 +28,8 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
     private static final String LOGTAG = "GeckoFindInPageBar";
     private static final String REQUEST_ID = "FindInPageBar";
 
-    // Will be removed by Bug 1113297.
-    private static final boolean MATCH_CASE_ENABLED = AppConstants.NIGHTLY_BUILD;
-
     private final Context mContext;
     private CustomEditText mFindText;
-    private CheckedTextView mMatchCase;
     private TextView mStatusText;
     private boolean mInflated;
 
@@ -70,13 +63,6 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
                 return false;
             }
         });
-
-        mMatchCase = (CheckedTextView) content.findViewById(R.id.find_matchcase);
-        if (MATCH_CASE_ENABLED) {
-            mMatchCase.setOnClickListener(this);
-        } else {
-            mMatchCase.setVisibility(View.GONE);
-        }
 
         mStatusText = (TextView) content.findViewById(R.id.find_status);
 
@@ -153,15 +139,6 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         String extras = getResources().getResourceEntryName(viewId);
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, extras);
 
-        if (viewId == R.id.find_matchcase) {
-            // Toggle matchcase state (color).
-            mMatchCase.toggle();
-
-            // Repeat the find after a matchcase change.
-            sendRequestToFinderHelper("FindInPage:Find", mFindText.getText().toString());
-            return;
-        }
-
         if (viewId == R.id.find_prev) {
             sendRequestToFinderHelper("FindInPage:Prev", mFindText.getText().toString());
             getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
@@ -223,16 +200,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
      * Request find operation, and update matchCount results (current count and total).
      */
     private void sendRequestToFinderHelper(final String request, final String searchString) {
-        final JSONObject json = new JSONObject();
-        try {
-            json.put("searchString", searchString);
-            json.put("matchCase", mMatchCase.isChecked());
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - Error creating JSONObject", e);
-            return;
-        }
-
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest(request, json) {
+        GeckoAppShell.sendRequestToGecko(new GeckoRequest(request, searchString) {
             @Override
             public void onResponse(NativeJSObject nativeJSObject) {
                 final int total = nativeJSObject.optInt("total", 0);

@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
+                                  "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PerformanceWatcher",
                                   "resource://gre/modules/PerformanceWatcher.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",

@@ -333,16 +333,11 @@ function DBAddonInternal(aLoaded) {
 
   this._key = this.location + ":" + this.id;
 
-  if (aLoaded._sourceBundle) {
-    this._sourceBundle = aLoaded._sourceBundle;
-  }
-  else if (aLoaded.descriptor) {
-    this._sourceBundle = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    this._sourceBundle.persistentDescriptor = aLoaded.descriptor;
-  }
-  else {
+  if (!aLoaded._sourceBundle) {
     throw new Error("Expected passed argument to contain a descriptor");
   }
+
+  this._sourceBundle = aLoaded._sourceBundle;
 
   XPCOMUtils.defineLazyGetter(this, "pendingUpgrade", function() {
       for (let install of XPIProvider.installs) {
@@ -659,6 +654,16 @@ this.XPIDatabase = {
       // Make AddonInternal instances from the loaded data and save them
       let addonDB = new Map();
       for (let loadedAddon of inputAddons.addons) {
+        loadedAddon._sourceBundle = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        try {
+          loadedAddon._sourceBundle.persistentDescriptor = loadedAddon.descriptor;
+        }
+        catch (e) {
+          // We can fail here when the descriptor is invalid, usually from the
+          // wrong OS
+          logger.warn("Could not find source bundle for add-on " + loadedAddon.id, e);
+        }
+
         let newAddon = new DBAddonInternal(loadedAddon);
         addonDB.set(newAddon._key, newAddon);
       }
@@ -1883,6 +1888,19 @@ this.XPIDatabaseReconcile = {
       return aManifests[aInstallLocation.name][aId];
     };
 
+    // Add-ons loaded from the database can have an uninitialized _sourceBundle
+    // if the descriptor was invalid. Swallow that error and say they don't exist.
+    let exists = (aAddon) => {
+      try {
+        return aAddon._sourceBundle.exists();
+      }
+      catch (e) {
+        if (e.result == Cr.NS_ERROR_NOT_INITIALIZED)
+          return false;
+        throw e;
+      }
+    };
+
     // Get the previous add-ons from the database and put them into maps by location
     let previousAddons = new Map();
     for (let a of XPIDatabase.getAddons()) {
@@ -2080,7 +2098,7 @@ this.XPIDatabaseReconcile = {
           // If the previous add-on was in a different path, bootstrapped
           // and still exists then call its uninstall method.
           if (previousAddon.bootstrap && previousAddon._installLocation &&
-              previousAddon._sourceBundle.exists() &&
+              exists(previousAddon) &&
               currentAddon._sourceBundle.path != previousAddon._sourceBundle.path) {
 
             XPIProvider.callBootstrapMethod(previousAddon, previousAddon._sourceBundle,
@@ -2139,7 +2157,7 @@ this.XPIDatabaseReconcile = {
 
       // If the previous add-on was bootstrapped and still exists then call its
       // uninstall method.
-      if (previousAddon.bootstrap && previousAddon._sourceBundle.exists()) {
+      if (previousAddon.bootstrap && exists(previousAddon)) {
         XPIProvider.callBootstrapMethod(previousAddon, previousAddon._sourceBundle,
                                         "uninstall", BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         XPIProvider.unloadBootstrapScope(previousAddon.id);
