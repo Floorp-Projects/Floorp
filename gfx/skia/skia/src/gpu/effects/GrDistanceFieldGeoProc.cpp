@@ -13,8 +13,8 @@
 
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
+#include "glsl/GrGLSLUniformHandler.h"
 #include "glsl/GrGLSLUtil.h"
 #include "glsl/GrGLSLVarying.h"
 #include "glsl/GrGLSLVertexShaderBuilder.h"
@@ -26,7 +26,6 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
 public:
     GrGLDistanceFieldA8TextGeoProc()
         : fViewMatrix(SkMatrix::InvalidMatrix())
-        , fColor(GrColor_ILLEGAL)
 #ifdef SK_GAMMA_APPLY_TO_A8
         , fDistanceAdjust(-1.0f)
 #endif
@@ -35,13 +34,13 @@ public:
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
         const GrDistanceFieldA8TextGeoProc& dfTexEffect =
                 args.fGP.cast<GrDistanceFieldA8TextGeoProc>();
-        GrGLSLGPBuilder* pb = args.fPB;
         GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
         SkAssertResult(fragBuilder->enableFeature(
                 GrGLSLFragmentShaderBuilder::kStandardDerivatives_GLSLFeature));
 
         GrGLSLVertexBuilder* vertBuilder = args.fVertBuilder;
         GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
+        GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
 
         // emit attributes
         varyingHandler->emitAttributes(dfTexEffect);
@@ -50,32 +49,28 @@ public:
         // adjust based on gamma
         const char* distanceAdjustUniName = nullptr;
         // width, height, 1/(3*width)
-        fDistanceAdjustUni = pb->addUniform(GrGLSLProgramBuilder::kFragment_Visibility,
-            kFloat_GrSLType, kDefault_GrSLPrecision,
-            "DistanceAdjust", &distanceAdjustUniName);
+        fDistanceAdjustUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+                                                        kFloat_GrSLType, kDefault_GrSLPrecision,
+                                                        "DistanceAdjust", &distanceAdjustUniName);
 #endif
 
         // Setup pass through color
         if (!dfTexEffect.colorIgnored()) {
-            if (dfTexEffect.hasVertexColor()) {
-                varyingHandler->addPassThroughAttribute(dfTexEffect.inColor(), args.fOutputColor);
-            } else {
-                this->setupUniformColor(pb, fragBuilder, args.fOutputColor, &fColorUniform);
-            }
+            varyingHandler->addPassThroughAttribute(dfTexEffect.inColor(), args.fOutputColor);
         }
 
         // Setup position
-        this->setupPosition(pb,
-                            vertBuilder,
+        this->setupPosition(vertBuilder,
+                            uniformHandler,
                             gpArgs,
                             dfTexEffect.inPosition()->fName,
                             dfTexEffect.viewMatrix(),
                             &fViewMatrixUniform);
 
         // emit transforms
-        this->emitTransforms(pb,
-                             vertBuilder,
+        this->emitTransforms(vertBuilder,
                              varyingHandler,
+                             uniformHandler,
                              gpArgs->fPositionVar,
                              dfTexEffect.inPosition()->fName,
                              args.fTransformsIn,
@@ -173,13 +168,6 @@ public:
             GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
             pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
         }
-
-        if (dfa8gp.color() != fColor && !dfa8gp.hasVertexColor()) {
-            float c[4];
-            GrColorToRGBAFloat(dfa8gp.color(), c);
-            pdman.set4fv(fColorUniform, 1, c);
-            fColor = dfa8gp.color();
-        }
     }
 
     static inline void GenKey(const GrGeometryProcessor& gp,
@@ -187,8 +175,7 @@ public:
                               GrProcessorKeyBuilder* b) {
         const GrDistanceFieldA8TextGeoProc& dfTexEffect = gp.cast<GrDistanceFieldA8TextGeoProc>();
         uint32_t key = dfTexEffect.getFlags();
-        key |= dfTexEffect.hasVertexColor() << 16;
-        key |= dfTexEffect.colorIgnored() << 17;
+        key |= dfTexEffect.colorIgnored() << 16;
         key |= ComputePosKey(dfTexEffect.viewMatrix()) << 25;
         b->add32(key);
 
@@ -202,8 +189,6 @@ public:
 
 private:
     SkMatrix      fViewMatrix;
-    GrColor       fColor;
-    UniformHandle fColorUniform;
     UniformHandle fViewMatrixUniform;
 #ifdef SK_GAMMA_APPLY_TO_A8
     float         fDistanceAdjust;
@@ -237,9 +222,7 @@ GrDistanceFieldA8TextGeoProc::GrDistanceFieldA8TextGeoProc(GrColor color,
     this->initClassID<GrDistanceFieldA8TextGeoProc>();
     fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
                                                    kHigh_GrSLPrecision));
-    if (flags & kColorAttr_DistanceFieldEffectFlag) {
-        fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
-    }
+    fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
     fInTextureCoords = &this->addVertexAttrib(Attribute("inTextureCoords",
                                                           kVec2s_GrVertexAttribType));
     this->addTextureAccess(&fTextureAccess);
@@ -290,19 +273,18 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
 public:
     GrGLDistanceFieldPathGeoProc()
         : fViewMatrix(SkMatrix::InvalidMatrix())
-        , fColor(GrColor_ILLEGAL)
         , fTextureSize(SkISize::Make(-1, -1)) {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
         const GrDistanceFieldPathGeoProc& dfTexEffect = args.fGP.cast<GrDistanceFieldPathGeoProc>();
 
-        GrGLSLGPBuilder* pb = args.fPB;
         GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
         SkAssertResult(fragBuilder->enableFeature(
                                      GrGLSLFragmentShaderBuilder::kStandardDerivatives_GLSLFeature));
 
         GrGLSLVertexBuilder* vertBuilder = args.fVertBuilder;
         GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
+        GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
 
         // emit attributes
         varyingHandler->emitAttributes(dfTexEffect);
@@ -312,35 +294,31 @@ public:
 
         // setup pass through color
         if (!dfTexEffect.colorIgnored()) {
-            if (dfTexEffect.hasVertexColor()) {
-                varyingHandler->addPassThroughAttribute(dfTexEffect.inColor(), args.fOutputColor);
-            } else {
-                this->setupUniformColor(pb, fragBuilder, args.fOutputColor, &fColorUniform);
-            }
+            varyingHandler->addPassThroughAttribute(dfTexEffect.inColor(), args.fOutputColor);
         }
         vertBuilder->codeAppendf("%s = %s;", v.vsOut(), dfTexEffect.inTextureCoords()->fName);
 
         // Setup position
-        this->setupPosition(pb,
-                            vertBuilder,
+        this->setupPosition(vertBuilder,
+                            uniformHandler,
                             gpArgs,
                             dfTexEffect.inPosition()->fName,
                             dfTexEffect.viewMatrix(),
                             &fViewMatrixUniform);
 
         // emit transforms
-        this->emitTransforms(pb,
-                             vertBuilder,
+        this->emitTransforms(vertBuilder,
                              varyingHandler,
+                             uniformHandler,
                              gpArgs->fPositionVar,
                              dfTexEffect.inPosition()->fName,
                              args.fTransformsIn,
                              args.fTransformsOut);
 
         const char* textureSizeUniName = nullptr;
-        fTextureSizeUni = pb->addUniform(GrGLSLProgramBuilder::kFragment_Visibility,
-                                         kVec2f_GrSLType, kDefault_GrSLPrecision,
-                                         "TextureSize", &textureSizeUniName);
+        fTextureSizeUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+                                                     kVec2f_GrSLType, kDefault_GrSLPrecision,
+                                                     "TextureSize", &textureSizeUniName);
 
         // Use highp to work around aliasing issues
         fragBuilder->codeAppend(GrGLSLShaderVar::PrecisionString(args.fGLSLCaps,
@@ -413,13 +391,6 @@ public:
             GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
             pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
         }
-
-        if (dfpgp.color() != fColor) {
-            float c[4];
-            GrColorToRGBAFloat(dfpgp.color(), c);
-            pdman.set4fv(fColorUniform, 1, c);
-            fColor = dfpgp.color();
-        }
     }
 
     static inline void GenKey(const GrGeometryProcessor& gp,
@@ -429,17 +400,14 @@ public:
 
         uint32_t key = dfTexEffect.getFlags();
         key |= dfTexEffect.colorIgnored() << 16;
-        key |= dfTexEffect.hasVertexColor() << 17;
         key |= ComputePosKey(dfTexEffect.viewMatrix()) << 25;
         b->add32(key);
     }
 
 private:
-    UniformHandle fColorUniform;
     UniformHandle fTextureSizeUni;
     UniformHandle fViewMatrixUniform;
     SkMatrix      fViewMatrix;
-    GrColor       fColor;
     SkISize       fTextureSize;
 
     typedef GrGLSLGeometryProcessor INHERITED;
@@ -464,9 +432,7 @@ GrDistanceFieldPathGeoProc::GrDistanceFieldPathGeoProc(
     this->initClassID<GrDistanceFieldPathGeoProc>();
     fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
                                                    kHigh_GrSLPrecision));
-    if (flags & kColorAttr_DistanceFieldEffectFlag) {
-        fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
-    }
+    fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
     fInTextureCoords = &this->addVertexAttrib(Attribute("inTextureCoords",
                                                         kVec2f_GrVertexAttribType));
     this->addTextureAccess(&fTextureAccess);
@@ -514,17 +480,17 @@ const GrGeometryProcessor* GrDistanceFieldPathGeoProc::TestCreate(GrProcessorTes
 class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
 public:
     GrGLDistanceFieldLCDTextGeoProc()
-        : fViewMatrix(SkMatrix::InvalidMatrix()), fColor(GrColor_ILLEGAL) {
+        : fViewMatrix(SkMatrix::InvalidMatrix()) {
         fDistanceAdjust = GrDistanceFieldLCDTextGeoProc::DistanceAdjust::Make(1.0f, 1.0f, 1.0f);
     }
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
         const GrDistanceFieldLCDTextGeoProc& dfTexEffect =
                 args.fGP.cast<GrDistanceFieldLCDTextGeoProc>();
-        GrGLSLGPBuilder* pb = args.fPB;
 
         GrGLSLVertexBuilder* vertBuilder = args.fVertBuilder;
         GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
+        GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
 
         // emit attributes
         varyingHandler->emitAttributes(dfTexEffect);
@@ -533,21 +499,21 @@ public:
 
         // setup pass through color
         if (!dfTexEffect.colorIgnored()) {
-            this->setupUniformColor(pb, fragBuilder, args.fOutputColor, &fColorUniform);
+            varyingHandler->addPassThroughAttribute(dfTexEffect.inColor(), args.fOutputColor);
         }
 
         // Setup position
-        this->setupPosition(pb,
-                            vertBuilder,
+        this->setupPosition(vertBuilder,
+                            uniformHandler,
                             gpArgs,
                             dfTexEffect.inPosition()->fName,
                             dfTexEffect.viewMatrix(),
                             &fViewMatrixUniform);
 
         // emit transforms
-        this->emitTransforms(pb,
-                             vertBuilder,
+        this->emitTransforms(vertBuilder,
                              varyingHandler,
+                             uniformHandler,
                              gpArgs->fPositionVar,
                              dfTexEffect.inPosition()->fName,
                              args.fTransformsIn,
@@ -628,9 +594,9 @@ public:
 
         // adjust width based on gamma
         const char* distanceAdjustUniName = nullptr;
-        fDistanceAdjustUni = pb->addUniform(GrGLSLProgramBuilder::kFragment_Visibility,
-            kVec3f_GrSLType, kDefault_GrSLPrecision,
-            "DistanceAdjust", &distanceAdjustUniName);
+        fDistanceAdjustUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+                                                        kVec3f_GrSLType, kDefault_GrSLPrecision,
+                                                        "DistanceAdjust", &distanceAdjustUniName);
         fragBuilder->codeAppendf("distance -= %s;", distanceAdjustUniName);
 
         // To be strictly correct, we should compute the anti-aliasing factor separately
@@ -693,13 +659,6 @@ public:
             GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
             pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
         }
-
-        if (dflcd.color() != fColor) {
-            float c[4];
-            GrColorToRGBAFloat(dflcd.color(), c);
-            pdman.set4fv(fColorUniform, 1, c);
-            fColor = dflcd.color();
-        }
     }
 
     static inline void GenKey(const GrGeometryProcessor& gp,
@@ -722,7 +681,6 @@ public:
 
 private:
     SkMatrix                                     fViewMatrix;
-    GrColor                                      fColor;
     UniformHandle                                fViewMatrixUniform;
     UniformHandle                                fColorUniform;
     GrDistanceFieldLCDTextGeoProc::DistanceAdjust fDistanceAdjust;
@@ -748,6 +706,7 @@ GrDistanceFieldLCDTextGeoProc::GrDistanceFieldLCDTextGeoProc(
     this->initClassID<GrDistanceFieldLCDTextGeoProc>();
     fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
                                                    kHigh_GrSLPrecision));
+    fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
     fInTextureCoords = &this->addVertexAttrib(Attribute("inTextureCoords",
                                                         kVec2s_GrVertexAttribType));
     this->addTextureAccess(&fTextureAccess);

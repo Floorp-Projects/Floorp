@@ -745,17 +745,52 @@ const GrGLInterface* GrGLAssembleGLESInterface(void* ctx, GrGLGetProc get) {
         GET_PROC_SUFFIX(ProgramPathFragmentInputGen, NV);
     }
 
+    if (extensions.has("GL_CHROMIUM_path_rendering")) {
+        GET_PROC_SUFFIX(MatrixLoadf, CHROMIUM);
+        GET_PROC_SUFFIX(MatrixLoadIdentity, CHROMIUM);
+        GET_PROC_SUFFIX(PathCommands, CHROMIUM);
+        GET_PROC_SUFFIX(PathParameteri, CHROMIUM);
+        GET_PROC_SUFFIX(PathParameterf, CHROMIUM);
+        GET_PROC_SUFFIX(GenPaths, CHROMIUM);
+        GET_PROC_SUFFIX(DeletePaths, CHROMIUM);
+        GET_PROC_SUFFIX(IsPath, CHROMIUM);
+        GET_PROC_SUFFIX(PathStencilFunc, CHROMIUM);
+        GET_PROC_SUFFIX(StencilFillPath, CHROMIUM);
+        GET_PROC_SUFFIX(StencilStrokePath, CHROMIUM);
+        GET_PROC_SUFFIX(StencilFillPathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(StencilStrokePathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(CoverFillPath, CHROMIUM);
+        GET_PROC_SUFFIX(CoverStrokePath, CHROMIUM);
+        GET_PROC_SUFFIX(CoverFillPathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(CoverStrokePathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(StencilThenCoverFillPath, CHROMIUM);
+        GET_PROC_SUFFIX(StencilThenCoverStrokePath, CHROMIUM);
+        GET_PROC_SUFFIX(StencilThenCoverFillPathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(StencilThenCoverStrokePathInstanced, CHROMIUM);
+        GET_PROC_SUFFIX(ProgramPathFragmentInputGen, CHROMIUM);
+        // GL_CHROMIUM_path_rendering additions:
+        GET_PROC_SUFFIX(BindFragmentInputLocation, CHROMIUM);
+    }
+
     if (extensions.has("GL_NV_framebuffer_mixed_samples")) {
         GET_PROC_SUFFIX(CoverageModulation, NV);
     }
-
-    if (version >= GR_GL_VER(3,0) || extensions.has("GL_EXT_draw_instanced")) {
-        GET_PROC(DrawArraysInstanced);
-        GET_PROC(DrawElementsInstanced);
+    if (extensions.has("GL_CHROMIUM_framebuffer_mixed_samples")) {
+        GET_PROC_SUFFIX(CoverageModulation, CHROMIUM);
     }
 
-    if (version >= GR_GL_VER(3,0) || extensions.has("GL_EXT_instanced_arrays")) {
+    if (version >= GR_GL_VER(3,0)) {
+        GET_PROC(DrawArraysInstanced);
+        GET_PROC(DrawElementsInstanced);
+    } else if (extensions.has("GL_EXT_draw_instanced")) {
+        GET_PROC_SUFFIX(DrawArraysInstanced, EXT);
+        GET_PROC_SUFFIX(DrawElementsInstanced, EXT);
+    }
+
+    if (version >= GR_GL_VER(3,0)) {
         GET_PROC(VertexAttribDivisor);
+    } else if (extensions.has("GL_EXT_instanced_arrays")) {
+        GET_PROC_SUFFIX(VertexAttribDivisor, EXT);
     }
 
     if (extensions.has("GL_NV_bindless_texture")) {

@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1237983 - Investigate and remove the Bagheera Client implementation.
+Bug 1246756 - Update Skia to m49 branch.
 
