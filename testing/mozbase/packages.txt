@@ -4,7 +4,6 @@ mozcrash.pth:testing/mozbase/mozcrash
 mozdebug.pth:testing/mozbase/mozdebug
 mozdevice.pth:testing/mozbase/mozdevice
 mozfile.pth:testing/mozbase/mozfile
-mozhttpd.pth:testing/mozbase/mozhttpd
 mozinfo.pth:testing/mozbase/mozinfo
 mozinstall.pth:testing/mozbase/mozinstall
 mozleak.pth:testing/mozbase/mozleak

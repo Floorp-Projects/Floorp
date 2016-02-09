@@ -11,8 +11,8 @@ import time
 import traceback
 import urllib
 import utils
-import mozhttpd
 
+from wptserve.server import WebTestHttpd
 from mozlog import get_proxy_logger
 
 from talos.results import TalosResults
@@ -68,11 +68,11 @@ def buildCommandLine(test):
 
 
 def setup_webserver(webserver):
-    """use mozhttpd to setup a webserver"""
+    """use wptserve to setup a webserver"""
     LOG.info("starting webserver on %r" % webserver)
 
     host, port = webserver.split(':')
-    return mozhttpd.MozHttpd(host=host, port=int(port), docroot=here)
+    return WebTestHttpd(host=host, port=int(port), doc_root=here)
 
 
 def run_tests(config, browser_config):

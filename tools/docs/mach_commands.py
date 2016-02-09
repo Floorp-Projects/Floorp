@@ -13,7 +13,7 @@ from mach.decorators import (
     CommandProvider,
 )
 
-import mozhttpd
+from wptserve.server import WebTestHttpd
 
 from mozbuild.base import MachCommandBase
 
@@ -90,7 +90,7 @@ class Documentation(MachCommandBase):
             if len(addr) != 2:
                 return die('invalid address: %s' % http)
 
-            httpd = mozhttpd.MozHttpd(host=addr[0], port=addr[1], docroot=outdir)
+            httpd = WebTestHttpd(host=addr[0], port=addr[1], doc_root=outdir)
             print('listening on %s:%d' % addr)
             httpd.start(block=True)
 

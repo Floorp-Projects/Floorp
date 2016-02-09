@@ -7,7 +7,7 @@
 from mozprofile import FirefoxProfile, Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner, CLI
-from mozhttpd import MozHttpd
+from wptserve.server import WebTestHttpd
 import json
 import socket
 import threading
@@ -26,8 +26,8 @@ if __name__ == '__main__':
   debug_args, interactive = cli.debugger_arguments()
 
   build = MozbuildObject.from_environment()
-  httpd = MozHttpd(port=PORT,
-                   docroot=os.path.join(build.topsrcdir, "build", "pgo"))
+  httpd = WebTestHttpd(port=PORT,
+                       doc_root=os.path.join(build.topsrcdir, "build", "pgo"))
   httpd.start(block=False)
 
   locations = ServerLocations()

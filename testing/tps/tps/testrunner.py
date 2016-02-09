@@ -11,7 +11,7 @@ import tempfile
 import time
 import traceback
 
-from mozhttpd import MozHttpd
+from wptserve.server import WebTestHttpd
 import mozinfo
 from mozprofile import Profile
 import mozversion
@@ -435,8 +435,8 @@ class TPSTestRunner(object):
             testlist = [os.path.basename(self.testfile)]
         testdir = os.path.dirname(self.testfile)
 
-        self.mozhttpd = MozHttpd(port=4567, docroot=testdir)
-        self.mozhttpd.start()
+        self.httpd = WebTestHttpd(port=4567, doc_root=testdir)
+        self.httpd.start()
 
         # run each test, and save the results
         for test in testlist:
@@ -459,7 +459,7 @@ class TPSTestRunner(object):
                     print '\nTest failed with --stop-on-error specified; not running any more tests.\n'
                     break
 
-        self.mozhttpd.stop()
+        self.httpd.stop()
 
         # generate the postdata we'll use to post the results to the db
         self.postdata = { 'tests': self.results,

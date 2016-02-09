@@ -243,7 +243,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             mozbase_dir = os.path.join('tests', 'mozbase')
             self.register_virtualenv_module(
                 'manifestparser', os.path.join(mozbase_dir, 'manifestdestiny'))
-            for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork', 'mozhttpd',
+            for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork',
                       'mozcrash', 'mozinstall', 'mozdevice', 'mozprofile',
                       'mozprocess', 'mozrunner'):
                 self.register_virtualenv_module(

@@ -22,7 +22,6 @@ class TestVirtualenvMixin(unittest.TestCase):
                     'logilab-astng': '0.23.1',
                     'logilab-common': '0.57.1',
                     'mozdevice': '0.2',
-                    'mozhttpd': '0.3',
                     'mozinfo': '0.3.3',
                     'nose': '1.1.2',
                     'pyflakes': '0.5.0',
