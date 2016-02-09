@@ -2991,6 +2991,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if self.descriptor.name == "Promise":
             speciesSetup = CGGeneric(fill(
                 """
+                #ifndef SPIDERMONKEY_PROMISE
                 JS::Rooted<JSObject*> promiseConstructor(aCx, *interfaceCache);
                 JS::Rooted<jsid> species(aCx,
                   SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::species)));
@@ -2998,6 +2999,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                            JSPROP_SHARED, Promise::PromiseSpecies, nullptr)) {
                   $*{failureCode}
                 }
+                #endif // SPIDERMONKEY_PROMISE
                 """,
                 failureCode=failureCode))
         else:
@@ -5189,22 +5191,33 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   if (promiseGlobal.Failed()) {
                     $*{exceptionCode}
                   }
+
+                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
+                  if (!JS_WrapValue(cx, &valueToResolve)) {
+                    $*{exceptionCode}
+                  }
                   ErrorResult promiseRv;
                 #ifdef SPIDERMONKEY_PROMISE
-                  JS::Rooted<JSObject*> promiseCtor(cx, JS::GetPromiseConstructor(cx));
+                  nsCOMPtr<nsIGlobalObject> global =
+                    do_QueryInterface(promiseGlobal.GetAsSupports());
+                  if (!global) {
+                    promiseRv.Throw(NS_ERROR_UNEXPECTED);
+                    promiseRv.MaybeSetPendingException(cx);
+                    $*{exceptionCode}
+                  }
+                  $${declName} = Promise::Resolve(global, cx, valueToResolve,
+                                                  promiseRv);
+                  if (promiseRv.MaybeSetPendingException(cx)) {
+                    $*{exceptionCode}
+                  }
                 #else
                   JS::Handle<JSObject*> promiseCtor =
                     PromiseBinding::GetConstructorObjectHandle(cx, globalObj);
-                #endif // SPIDERMONKEY_PROMISE
                   if (!promiseCtor) {
                     $*{exceptionCode}
                   }
                   JS::Rooted<JS::Value> resolveThisv(cx, JS::ObjectValue(*promiseCtor));
                   JS::Rooted<JS::Value> resolveResult(cx);
-                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
-                  if (!JS_WrapValue(cx, &valueToResolve)) {
-                    $*{exceptionCode}
-                  }
                   Promise::Resolve(promiseGlobal, resolveThisv, valueToResolve,
                                    &resolveResult, promiseRv);
                   if (promiseRv.MaybeSetPendingException(cx)) {
@@ -5216,6 +5229,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     promiseRv.MaybeSetPendingException(cx);
                     $*{exceptionCode}
                   }
+                #endif // SPIDERMONKEY_PROMISE
                 }
                 """,
                 getPromiseGlobal=getPromiseGlobal,
