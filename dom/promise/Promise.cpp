@@ -698,10 +698,108 @@ Promise::MaybeReject(JSContext* aCx,
   }
 }
 
+#define SLOT_NATIVEHANDLER 0
+#define SLOT_NATIVEHANDLER_TASK 1
+
+enum class NativeHandlerTask : int32_t {
+  Resolve,
+  Reject
+};
+
+static bool
+NativeHandlerCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+{
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  JS::Rooted<JS::Value> v(aCx,
+                          js::GetFunctionNativeReserved(&args.callee(),
+                                                        SLOT_NATIVEHANDLER));
+  MOZ_ASSERT(v.isObject());
+
+  PromiseNativeHandler* handler;
+  if (NS_FAILED(UNWRAP_OBJECT(PromiseNativeHandler, &v.toObject(),
+                              handler))) {
+    return Throw(aCx, NS_ERROR_UNEXPECTED);
+  }
+
+  v = js::GetFunctionNativeReserved(&args.callee(), SLOT_NATIVEHANDLER_TASK);
+  NativeHandlerTask task = static_cast<NativeHandlerTask>(v.toInt32());
+
+  if (task == NativeHandlerTask::Resolve) {
+    handler->ResolvedCallback(aCx, args.get(0));
+  } else {
+    MOZ_ASSERT(task == NativeHandlerTask::Reject);
+    handler->RejectedCallback(aCx, args.get(0));
+  }
+
+  return true;
+}
+
+static JSObject*
+CreateNativeHandlerFunction(JSContext* aCx, JS::Handle<JSObject*> aHolder,
+                            NativeHandlerTask aTask)
+{
+  JSFunction* func = js::NewFunctionWithReserved(aCx, NativeHandlerCallback,
+                                                 /* nargs = */ 1,
+                                                 /* flags = */ 0, nullptr);
+  if (!func) {
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
+
+  JS::ExposeObjectToActiveJS(aHolder);
+  js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER,
+                                JS::ObjectValue(*aHolder));
+  js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER_TASK,
+                                JS::Int32Value(static_cast<int32_t>(aTask)));
+
+  return obj;
+}
+
 void
 Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
 {
-  // XXXbz Implementation coming up in the next diff.
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+    // Our API doesn't allow us to return a useful error.  Not like this should
+    // happen anyway.
+    return;
+  }
+  jsapi.TakeOwnershipOfErrorReporting();
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> handlerWrapper(cx);
+  // Note: PromiseNativeHandler is NOT wrappercached.  So we can't use
+  // ToJSValue here, because it will try to do XPConnect wrapping on it, sadly.
+  if (NS_WARN_IF(!aRunnable->WrapObject(cx, nullptr, &handlerWrapper))) {
+    // Again, no way to report errors.
+    jsapi.ClearException();
+    return;
+  }
+
+  JS::Rooted<JSObject*> resolveFunc(cx);
+  resolveFunc =
+    CreateNativeHandlerFunction(cx, handlerWrapper, NativeHandlerTask::Resolve);
+  if (NS_WARN_IF(!resolveFunc)) {
+    jsapi.ClearException();
+    return;
+  }
+
+  JS::Rooted<JSObject*> rejectFunc(cx);
+  rejectFunc =
+    CreateNativeHandlerFunction(cx, handlerWrapper, NativeHandlerTask::Reject);
+  if (NS_WARN_IF(!rejectFunc)) {
+    jsapi.ClearException();
+    return;
+  }
+
+  JS::Rooted<JSObject*> promiseObj(cx, GetWrapper());
+  if (NS_WARN_IF(!JS::AddPromiseReactions(cx, promiseObj, resolveFunc,
+                                          rejectFunc))) {
+    jsapi.ClearException();
+    return;
+  }
 }
 
 void
