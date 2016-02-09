@@ -96,41 +96,40 @@
 
 #include <cstring>
 
-#include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
+#include "BRNameMatchingPolicy.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
-#include "nsIBadCertListener2.h"
-#include "nsICertOverrideService.h"
-#include "nsISiteSecurityService.h"
-#include "nsNSSComponent.h"
-#include "nsNSSIOLayer.h"
-#include "nsNSSShutDown.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/net/DNS.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
-#include "nsIThreadPool.h"
-#include "nsISocketProvider.h"
-#include "nsXPCOMCIDInternal.h"
-#include "nsComponentManagerUtils.h"
-#include "nsServiceManagerUtils.h"
 #include "PSMRunnable.h"
 #include "RootCertificateTelemetryUtils.h"
 #include "SharedSSLState.h"
-#include "nsContentUtils.h"
-#include "nsURLHelper.h"
-
-#include "ssl.h"
 #include "cert.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/net/DNS.h"
+#include "mozilla/unused.h"
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsIBadCertListener2.h"
+#include "nsICertOverrideService.h"
+#include "nsISiteSecurityService.h"
+#include "nsISocketProvider.h"
+#include "nsIThreadPool.h"
+#include "nsNSSComponent.h"
+#include "nsNSSIOLayer.h"
+#include "nsNSSShutDown.h"
+#include "nsServiceManagerUtils.h"
+#include "nsURLHelper.h"
+#include "nsXPCOMCIDInternal.h"
+#include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
 #include "secerr.h"
 #include "secoidt.h"
 #include "secport.h"
+#include "ssl.h"
 #include "sslerr.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
@@ -432,13 +431,28 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
       return SECFailure;
     }
-    result = CheckCertHostname(certInput, hostnameInput);
+    // Use a lax policy so as to not generate potentially spurious name
+    // mismatch "hints".
+    BRNameMatchingPolicy nameMatchingPolicy(
+      BRNameMatchingPolicy::Mode::DoNotEnforce);
+    // CheckCertHostname expects that its input represents a certificate that
+    // has already been successfully validated by BuildCertChain. This is
+    // obviously not the case, however, because we're in the error path of
+    // certificate verification. Thus, this is problematic. In the future, it
+    // would be nice to remove this optimistic additional error checking and
+    // simply punt to the front-end, which can more easily (and safely) perform
+    // extra checks to give the user hints as to why verification failed.
+    result = CheckCertHostname(certInput, hostnameInput, nameMatchingPolicy);
     // Treat malformed name information as a domain mismatch.
     if (result == Result::ERROR_BAD_DER ||
         result == Result::ERROR_BAD_CERT_DOMAIN) {
       collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
       errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
-    } else if (result != Success) {
+    } else if (IsFatalError(result)) {
+      // Because its input has not been validated by BuildCertChain,
+      // CheckCertHostname can return an error that is less important than the
+      // original certificate verification error. Only return an error result
+      // from this function if we've encountered a fatal error.
       PR_SetError(MapResultToPRErrorCode(result), 0);
       return SECFailure;
     }

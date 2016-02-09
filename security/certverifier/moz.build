@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'BRNameMatchingPolicy.h',
     'CertVerifier.h',
     'OCSPCache.h',
 ]
 
 UNIFIED_SOURCES += [
+    'BRNameMatchingPolicy.cpp',
     'CertVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
