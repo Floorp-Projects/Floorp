@@ -19,8 +19,10 @@
 #include "asmjs/WasmText.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
+#include "jsdtoa.h"
 #include "jsnum.h"
 #include "jsprf.h"
 #include "jsstr.h"
@@ -32,8 +34,13 @@
 
 using namespace js;
 using namespace js::wasm;
+using mozilla::BitwiseCast;
+using mozilla::CountLeadingZeroes32;
 using mozilla::CheckedInt;
+using mozilla::FloatingPoint;
 using mozilla::Maybe;
+using mozilla::PositiveInfinity;
+using mozilla::SpecificNaN;
 
 static const unsigned AST_LIFO_DEFAULT_CHUNK_SIZE = 4096;
 
@@ -466,6 +473,14 @@ class WasmAstConversionOperator final : public WasmAstExpr
 class WasmToken
 {
   public:
+    enum FloatLiteralKind
+    {
+        HexNumber,
+        DecNumber,
+        Infinity,
+        NaN
+    };
+
     enum Kind
     {
         BinaryOpcode,
@@ -479,12 +494,15 @@ class WasmToken
         EndOfFile,
         Error,
         Export,
+        Float,
         Func,
         GetLocal,
         If,
         IfElse,
         Import,
-        Integer,
+        Index,
+        UnsignedInteger,
+        SignedInteger,
         Memory,
         Local,
         Module,
@@ -504,7 +522,10 @@ class WasmToken
     const char16_t* begin_;
     const char16_t* end_;
     union {
-        uint32_t integer_;
+        uint32_t index_;
+        uint64_t uint_;
+        int64_t sint_;
+        FloatLiteralKind floatLiteralKind_;
         ValType valueType_;
         Expr expr_;
     } u;
@@ -518,13 +539,38 @@ class WasmToken
         MOZ_ASSERT(kind_ != Error);
         MOZ_ASSERT((kind == EndOfFile) == (begin == end));
     }
-    explicit WasmToken(uint32_t integer, const char16_t* begin, const char16_t* end)
-      : kind_(Integer),
+    explicit WasmToken(uint32_t index, const char16_t* begin, const char16_t* end)
+      : kind_(Index),
         begin_(begin),
         end_(end)
     {
         MOZ_ASSERT(begin != end);
-        u.integer_ = integer;
+        u.index_ = index;
+    }
+    explicit WasmToken(uint64_t uint, const char16_t* begin, const char16_t* end)
+      : kind_(UnsignedInteger),
+        begin_(begin),
+        end_(end)
+    {
+        MOZ_ASSERT(begin != end);
+        u.uint_ = uint;
+    }
+    explicit WasmToken(int64_t sint, const char16_t* begin, const char16_t* end)
+      : kind_(SignedInteger),
+        begin_(begin),
+        end_(end)
+    {
+        MOZ_ASSERT(begin != end);
+        u.sint_ = sint;
+    }
+    explicit WasmToken(FloatLiteralKind floatLiteralKind,
+                       const char16_t* begin, const char16_t* end)
+      : kind_(Float),
+        begin_(begin),
+        end_(end)
+    {
+        MOZ_ASSERT(begin != end);
+        u.floatLiteralKind_ = floatLiteralKind;
     }
     explicit WasmToken(Kind kind, ValType valueType, const char16_t* begin, const char16_t* end)
       : kind_(kind),
@@ -566,9 +612,21 @@ class WasmToken
         MOZ_ASSERT(end_ - begin_ >= 2);
         return TwoByteChars(begin_ + 1, end_ - begin_ - 2);
     }
-    uint32_t integer() const {
-        MOZ_ASSERT(kind_ == Integer);
-        return u.integer_;
+    uint32_t index() const {
+        MOZ_ASSERT(kind_ == Index);
+        return u.index_;
+    }
+    uint64_t uint() const {
+        MOZ_ASSERT(kind_ == UnsignedInteger);
+        return u.uint_;
+    }
+    int64_t sint() const {
+        MOZ_ASSERT(kind_ == SignedInteger);
+        return u.sint_;
+    }
+    FloatLiteralKind floatLiteralKind() const {
+        MOZ_ASSERT(kind_ == Float);
+        return u.floatLiteralKind_;
     }
     ValType valueType() const {
         MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
@@ -640,6 +698,74 @@ IsHexDigit(char c, uint8_t* value)
     }
 
     return false;
+}
+
+static WasmToken
+LexHexFloatLiteral(const char16_t* begin, const char16_t* end, const char16_t** curp)
+{
+    const char16_t* cur = begin;
+
+    if (cur != end && (*cur == '-' || *cur == '+'))
+        cur++;
+
+    MOZ_ASSERT(cur != end && *cur == '0');
+    cur++;
+    MOZ_ASSERT(cur != end && *cur == 'x');
+    cur++;
+
+    uint8_t digit;
+    while (cur != end && IsHexDigit(*cur, &digit))
+        cur++;
+
+    if (cur != end && *cur == '.')
+        cur++;
+
+    while (cur != end && IsHexDigit(*cur, &digit))
+        cur++;
+
+    if (cur != end && *cur == 'p') {
+        cur++;
+
+        if (cur != end && (*cur == '-' || *cur == '+'))
+            cur++;
+
+        while (cur != end && IsWasmDigit(*cur))
+            cur++;
+    }
+
+    *curp = cur;
+    return WasmToken(WasmToken::HexNumber, begin, cur);
+}
+
+static WasmToken
+LexDecFloatLiteral(const char16_t* begin, const char16_t* end, const char16_t** curp)
+{
+    const char16_t* cur = begin;
+
+    if (cur != end && (*cur == '-' || *cur == '+'))
+        cur++;
+
+    while (cur != end && IsWasmDigit(*cur))
+        cur++;
+
+    if (cur != end && *cur == '.')
+        cur++;
+
+    while (cur != end && IsWasmDigit(*cur))
+        cur++;
+
+    if (cur != end && *cur == 'e') {
+        cur++;
+
+        if (cur != end && (*cur == '-' || *cur == '+'))
+            cur++;
+
+        while (cur != end && IsWasmDigit(*cur))
+            cur++;
+    }
+
+    *curp = cur;
+    return WasmToken(WasmToken::DecNumber, begin, cur);
 }
 
 static bool
@@ -752,17 +878,60 @@ class WasmTokenStream
             cur_++;
             return WasmToken(WasmToken::CloseParen, begin, cur_);
 
+          case '+': case '-':
+            cur_++;
+            if (consume(MOZ_UTF16("infinity")))
+                goto infinity;
+            if (consume(MOZ_UTF16("nan")))
+                goto nan;
+            if (!IsWasmDigit(*cur_))
+                break;
+            MOZ_FALLTHROUGH;
           case '0': case '1': case '2': case '3': case '4':
           case '5': case '6': case '7': case '8': case '9': {
-            CheckedInt<uint32_t> u32 = 0;
-            while (cur_ != end_ && IsWasmDigit(*cur_)) {
-                u32 *= 10;
-                u32 += *cur_ - '0';
-                if (!u32.isValid())
+            CheckedInt<uint64_t> u = 0;
+            if (consume(MOZ_UTF16("0x"))) {
+                if (cur_ == end_)
                     return fail(begin);
-                cur_++;
+                do {
+                    if (*cur_ == '.' || *cur_ == 'p')
+                        return LexHexFloatLiteral(begin, end_, &cur_);
+                    uint8_t digit;
+                    if (!IsHexDigit(*cur_, &digit))
+                        break;
+                    u *= 16;
+                    u += digit;
+                    if (!u.isValid())
+                        return fail(begin);
+                    cur_++;
+                } while (cur_ != end_);
+            } else {
+                while (cur_ != end_) {
+                    if (*cur_ == '.' || *cur_ == 'e')
+                        return LexDecFloatLiteral(begin, end_, &cur_);
+                    if (!IsWasmDigit(*cur_))
+                        break;
+                    u *= 10;
+                    u += *cur_ - '0';
+                    if (!u.isValid())
+                        return fail(begin);
+                    cur_++;
+                }
             }
-            return WasmToken(u32.value(), begin, cur_);
+
+            uint64_t value = u.value();
+            if (*begin == '-') {
+                if (value > uint64_t(INT64_MIN))
+                    return fail(begin);
+                value = -value;
+                return WasmToken(int64_t(value), begin, cur_);
+            }
+
+            CheckedInt<uint32_t> index = u.value();
+            if (index.isValid())
+                return WasmToken(index.value(), begin, cur_);
+
+            return WasmToken(value, begin, cur_);
           }
 
           case 'b':
@@ -1187,6 +1356,10 @@ class WasmTokenStream
             }
             if (consume(MOZ_UTF16("import")))
                 return WasmToken(WasmToken::Import, begin, cur_);
+            if (consume(MOZ_UTF16("infinity"))) {
+            infinity:
+                return WasmToken(WasmToken::Infinity, begin, cur_);
+            }
             if (consume(MOZ_UTF16("if"))) {
                 if (consume(MOZ_UTF16("_else")))
                     return WasmToken(WasmToken::IfElse, begin, cur_);
@@ -1207,6 +1380,17 @@ class WasmTokenStream
             break;
 
           case 'n':
+            if (consume(MOZ_UTF16("nan"))) {
+            nan:
+                if (consume(MOZ_UTF16(":"))) {
+                    if (!consume(MOZ_UTF16("0x")))
+                        break;
+                    uint8_t digit;
+                    while (cur_ != end_ && IsHexDigit(*cur_, &digit))
+                        cur_++;
+                }
+                return WasmToken(WasmToken::NaN, begin, cur_);
+            }
             if (consume(MOZ_UTF16("nop")))
                 return WasmToken(WasmToken::Nop, begin, cur_);
             break;
@@ -1303,12 +1487,18 @@ struct WasmParseContext
     WasmTokenStream ts;
     LifoAlloc& lifo;
     UniqueChars* error;
+    DtoaState* dtoaState;
 
     WasmParseContext(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
       : ts(text, error),
         lifo(lifo),
-        error(error)
+        error(error),
+        dtoaState(NewDtoaState())
     {}
+
+    ~WasmParseContext() {
+        DestroyDtoaState(dtoaState);
+    }
 };
 
 static WasmAstExpr*
@@ -1350,7 +1540,7 @@ static WasmAstCall*
 ParseCall(WasmParseContext& c, Expr expr)
 {
     WasmToken index;
-    if (!c.ts.match(WasmToken::Integer, &index, c.error))
+    if (!c.ts.match(WasmToken::Index, &index, c.error))
         return nullptr;
 
     WasmAstExprVector args(c.lifo);
@@ -1362,18 +1552,300 @@ ParseCall(WasmParseContext& c, Expr expr)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstCall(expr, index.integer(), Move(args));
+    return new(c.lifo) WasmAstCall(expr, index.index(), Move(args));
+}
+
+static uint_fast8_t
+CountLeadingZeroes4(uint8_t x)
+{
+    MOZ_ASSERT((x & -0x10) == 0);
+    return CountLeadingZeroes32(x) - 28;
+}
+
+template <typename T>
+static T
+ushl(T lhs, unsigned rhs)
+{
+    return rhs < sizeof(T) * CHAR_BIT ? (lhs << rhs) : 0;
+}
+
+template <typename T>
+static T
+ushr(T lhs, unsigned rhs)
+{
+    return rhs < sizeof(T) * CHAR_BIT ? (lhs >> rhs) : 0;
+}
+
+template<typename Float>
+static bool
+ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
+{
+    MOZ_ALWAYS_TRUE(*cur++ == 'n' && *cur++ == 'a' && *cur++ == 'n');
+    typedef FloatingPoint<Float> Traits;
+    typedef typename Traits::Bits Bits;
+
+    if (cur != end) {
+        MOZ_ALWAYS_TRUE(*cur++ == ':' && *cur++ == '0' && *cur++ == 'x');
+        if (cur == end)
+            return false;
+        CheckedInt<Bits> u = 0;
+        do {
+            uint8_t digit;
+            MOZ_ALWAYS_TRUE(IsHexDigit(*cur, &digit));
+            u *= 16;
+            u += digit;
+            cur++;
+        } while (cur != end);
+        if (!u.isValid())
+            return false;
+        Bits value = u.value();
+        if ((value & ~Traits::kSignificandBits) != 0)
+            return false;
+        // NaN payloads must contain at least one set bit.
+        if (value == 0)
+            return false;
+        *result = SpecificNaN<Float>(0, value);
+    } else {
+        // Produce the spec's default NaN.
+        *result = SpecificNaN<Float>(0, (Traits::kSignificandBits + 1) >> 1);
+    }
+    return true;
+}
+
+template <typename Float>
+static bool
+ParseHexFloatLiteral(const char16_t* cur, const char16_t* end, Float* result)
+{
+    MOZ_ALWAYS_TRUE(*cur++ == '0' && *cur++ == 'x');
+    typedef FloatingPoint<Float> Traits;
+    typedef typename Traits::Bits Bits;
+    static const unsigned numBits = sizeof(Float) * CHAR_BIT;
+    static const Bits allOnes = ~Bits(0);
+    static const Bits mostSignificantBit = ~(allOnes >> 1);
+
+    // Significand part.
+    Bits significand = 0;
+    CheckedInt<int32_t> exponent = 0;
+    bool sawFirstNonZero = false;
+    bool discardedExtraNonZero = false;
+    const char16_t* dot = nullptr;
+    int significandPos;
+    for (; cur != end; cur++) {
+        if (*cur == '.') {
+            MOZ_ASSERT(!dot);
+            dot = cur;
+            continue;
+        }
+
+        uint8_t digit;
+        if (!IsHexDigit(*cur, &digit))
+            break;
+        if (!sawFirstNonZero) {
+            if (digit == 0)
+                continue;
+            // We've located the first non-zero digit; we can now determine the
+            // initial exponent. If we're after the dot, count the number of
+            // zeros from the dot to here, and adjust for the number of leading
+            // zero bits in the digit. Set up significandPos to put the first
+            // nonzero at the most significant bit.
+            int_fast8_t lz = CountLeadingZeroes4(digit);
+            ptrdiff_t zeroAdjustValue = !dot ? 1 : dot + 1 - cur;
+            CheckedInt<ptrdiff_t> zeroAdjust = zeroAdjustValue;
+            zeroAdjust *= 4;
+            zeroAdjust -= lz + 1;
+            if (!zeroAdjust.isValid())
+                return false;
+            exponent = zeroAdjust.value();
+            significandPos = numBits - (4 - lz);
+            sawFirstNonZero = true;
+        } else {
+            // We've already seen a non-zero; just take 4 more bits.
+            if (!dot)
+                exponent += 4;
+            if (significandPos > -4)
+                significandPos -= 4;
+        }
+
+        // Or the newly parsed digit into significand at signicandPos.
+        if (significandPos >= 0) {
+            significand |= ushl(Bits(digit), significandPos);
+        } else if (significandPos > -4) {
+            significand |= ushr(digit, 4 - significandPos);
+            discardedExtraNonZero = (digit & ~ushl(allOnes, 4 - significandPos)) != 0;
+        } else if (digit != 0) {
+            discardedExtraNonZero = true;
+        }
+    }
+
+    // Exponent part.
+    if (cur != end) {
+        MOZ_ALWAYS_TRUE(*cur++ == 'p');
+        bool isNegated = false;
+        if (cur != end && (*cur == '-' || *cur == '+'))
+            isNegated = *cur++ == '-';
+        CheckedInt<int32_t> parsedExponent = 0;
+        while (cur != end && IsWasmDigit(*cur))
+            parsedExponent = parsedExponent * 10 + (*cur++ - '0');
+        if (isNegated)
+            parsedExponent = -parsedExponent;
+        exponent += parsedExponent;
+    }
+
+    MOZ_ASSERT(cur == end);
+    if (!exponent.isValid())
+        return false;
+
+    // Create preliminary exponent and significand encodings of the results.
+    Bits encodedExponent, encodedSignificand, discardedSignificandBits;
+    if (significand == 0) {
+        // Zero. The exponent is encoded non-biased.
+        encodedExponent = 0;
+        encodedSignificand = 0;
+        discardedSignificandBits = 0;
+    } else if (MOZ_UNLIKELY(exponent.value() <= int32_t(-Traits::kExponentBias))) {
+        // Underflow to subnormal or zero.
+        encodedExponent = 0;
+        encodedSignificand = ushr(significand,
+                                  numBits - Traits::kExponentShift -
+                                  exponent.value() - Traits::kExponentBias);
+        discardedSignificandBits =
+            ushl(significand,
+                 Traits::kExponentShift + exponent.value() + Traits::kExponentBias);
+    } else if (MOZ_LIKELY(exponent.value() <= int32_t(Traits::kExponentBias))) {
+        // Normal (non-zero). The significand's leading 1 is encoded implicitly.
+        encodedExponent = (Bits(exponent.value()) + Traits::kExponentBias) <<
+                          Traits::kExponentShift;
+        MOZ_ASSERT(significand & mostSignificantBit);
+        encodedSignificand = ushr(significand, numBits - Traits::kExponentShift - 1) &
+                             Traits::kSignificandBits;
+        discardedSignificandBits = ushl(significand, Traits::kExponentShift + 1);
+    } else {
+        // Overflow to infinity.
+        encodedExponent = Traits::kExponentBits;
+        encodedSignificand = 0;
+        discardedSignificandBits = 0;
+    }
+    MOZ_ASSERT((encodedExponent & ~Traits::kExponentBits) == 0);
+    MOZ_ASSERT((encodedSignificand & ~Traits::kSignificandBits) == 0);
+    MOZ_ASSERT(encodedExponent != Traits::kExponentBits || encodedSignificand == 0);
+    Bits bits = encodedExponent | encodedSignificand;
+
+    // Apply rounding. If this overflows the significand, it carries into the
+    // exponent bit according to the magic of the IEEE 754 encoding.
+    bits += (discardedSignificandBits & mostSignificantBit) &&
+            ((discardedSignificandBits & ~mostSignificantBit) ||
+             discardedExtraNonZero ||
+             // ties to even
+             (encodedSignificand & 1));
+
+    *result = BitwiseCast<Float>(bits);
+    return true;
+}
+
+template <typename Float>
+static bool
+ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
+{
+    const char16_t* begin = token.begin();
+    const char16_t* end = token.end();
+    const char16_t* cur = begin;
+
+    bool isNegated = false;
+    if (*cur == '-' || *cur == '+')
+        isNegated = *cur++ == '-';
+
+    switch (token.floatLiteralKind()) {
+      case WasmToken::Infinity:
+        *result = PositiveInfinity<Float>();
+        break;
+      case WasmToken::NaN:
+        if (!ParseNaNLiteral(cur, end, result))
+            return false;
+        break;
+      case WasmToken::HexNumber:
+        if (!ParseHexFloatLiteral(cur, end, result))
+            return false;
+        break;
+      case WasmToken::DecNumber: {
+        // Call into JS' strtod. Tokenization has already required that the
+        // string is well-behaved.
+        LifoAlloc::Mark mark = c.lifo.mark();
+        char* buffer = c.lifo.newArray<char>(end - begin + 1);
+        if (!buffer)
+            return false;
+        for (ptrdiff_t i = 0; i < end - cur; ++i)
+            buffer[i] = char(cur[i]);
+        char* strtod_end;
+        int err;
+        Float d = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end, &err);
+        if (err != 0 || strtod_end == buffer) {
+            c.lifo.release(mark);
+            return false;
+        }
+        c.lifo.release(mark);
+        *result = d;
+        break;
+      }
+    }
+
+    if (isNegated)
+        *result = -*result;
+
+    return true;
 }
 
 static WasmAstConst*
 ParseConst(WasmParseContext& c, WasmToken constToken)
 {
+    WasmToken val = c.ts.get();
     switch (constToken.valueType()) {
       case ValType::I32: {
-        WasmToken val;
-        if (!c.ts.match(WasmToken::Integer, &val, c.error))
+        switch (val.kind()) {
+          case WasmToken::Index:
+            return new(c.lifo) WasmAstConst(Val(val.index()));
+          case WasmToken::UnsignedInteger: {
+            CheckedInt<uint32_t> uint = val.uint();
+            if (uint.isValid())
+                return new(c.lifo) WasmAstConst(Val(uint.value()));
             return nullptr;
-        return new(c.lifo) WasmAstConst(Val(val.integer()));
+          }
+          case WasmToken::SignedInteger: {
+            CheckedInt<int32_t> sint = val.sint();
+            if (sint.isValid())
+                return new(c.lifo) WasmAstConst(Val(uint32_t(sint.value())));
+            return nullptr;
+          }
+          default:
+            return nullptr;
+        }
+      }
+      case ValType::I64: {
+        switch (val.kind()) {
+          case WasmToken::Index:
+            return new(c.lifo) WasmAstConst(Val(val.index()));
+          case WasmToken::UnsignedInteger:
+            return new(c.lifo) WasmAstConst(Val(val.uint()));
+          case WasmToken::SignedInteger:
+            return new(c.lifo) WasmAstConst(Val(uint64_t(val.sint())));
+          default:
+            return nullptr;
+        }
+      }
+      case ValType::F32: {
+        if (val.kind() != WasmToken::Float)
+            return nullptr;
+        float result;
+        if (!ParseFloatLiteral(c, val, &result))
+            return nullptr;
+        return new(c.lifo) WasmAstConst(Val(result));
+      }
+      case ValType::F64: {
+        if (val.kind() != WasmToken::Float)
+            return nullptr;
+        double result;
+        if (!ParseFloatLiteral(c, val, &result))
+            return nullptr;
+        return new(c.lifo) WasmAstConst(Val(result));
       }
       default:
         c.ts.generateError(constToken, c.error);
@@ -1385,24 +1857,24 @@ static WasmAstGetLocal*
 ParseGetLocal(WasmParseContext& c)
 {
     WasmToken localIndex;
-    if (!c.ts.match(WasmToken::Integer, &localIndex, c.error))
+    if (!c.ts.match(WasmToken::Index, &localIndex, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstGetLocal(localIndex.integer());
+    return new(c.lifo) WasmAstGetLocal(localIndex.index());
 }
 
 static WasmAstSetLocal*
 ParseSetLocal(WasmParseContext& c)
 {
     WasmToken localIndex;
-    if (!c.ts.match(WasmToken::Integer, &localIndex, c.error))
+    if (!c.ts.match(WasmToken::Index, &localIndex, c.error))
         return nullptr;
 
     WasmAstExpr* value = ParseExpr(c);
     if (!value)
         return nullptr;
 
-    return new(c.lifo) WasmAstSetLocal(localIndex.integer(), *value);
+    return new(c.lifo) WasmAstSetLocal(localIndex.index(), *value);
 }
 
 static WasmAstUnaryOperator*
@@ -1584,21 +2056,21 @@ ParseSegment(WasmParseContext& c)
         return nullptr;
 
     WasmToken dstOffset;
-    if (!c.ts.match(WasmToken::Integer, &dstOffset, c.error))
+    if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
         return nullptr;
 
     WasmToken text;
     if (!c.ts.match(WasmToken::Text, &text, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstSegment(dstOffset.integer(), text.text());
+    return new(c.lifo) WasmAstSegment(dstOffset.index(), text.text());
 }
 
 static WasmAstMemory*
 ParseMemory(WasmParseContext& c)
 {
     WasmToken initialSize;
-    if (!c.ts.match(WasmToken::Integer, &initialSize, c.error))
+    if (!c.ts.match(WasmToken::Index, &initialSize, c.error))
         return nullptr;
 
     WasmAstSegmentVector segments(c.lifo);
@@ -1610,7 +2082,7 @@ ParseMemory(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstMemory(initialSize.integer(), Move(segments));
+    return new(c.lifo) WasmAstMemory(initialSize.index(), Move(segments));
 }
 
 static WasmAstImport*
@@ -1662,8 +2134,8 @@ ParseExport(WasmParseContext& c)
 
     WasmToken exportee = c.ts.get();
     switch (exportee.kind()) {
-      case WasmToken::Integer:
-        return new(c.lifo) WasmAstExport(name.text(), exportee.integer());
+      case WasmToken::Index:
+        return new(c.lifo) WasmAstExport(name.text(), exportee.index());
       case WasmToken::Memory:
         return new(c.lifo) WasmAstExport(name.text());
       default:
@@ -1786,6 +2258,15 @@ EncodeConst(Encoder& e, WasmAstConst& c)
       case ValType::I32:
         return e.writeExpr(Expr::I32Const) &&
                e.writeVarU32(c.val().i32());
+      case ValType::I64:
+        return e.writeExpr(Expr::I64Const) &&
+               e.writeVarU64(c.val().i64());
+      case ValType::F32:
+        return e.writeExpr(Expr::F32Const) &&
+               e.writeF32(c.val().f32());
+      case ValType::F64:
+        return e.writeExpr(Expr::F64Const) &&
+               e.writeF64(c.val().f64());
       default:
         break;
     }
