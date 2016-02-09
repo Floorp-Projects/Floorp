@@ -4186,23 +4186,6 @@ nsGlobalWindow::IndexedGetter(uint32_t aIndex)
   MOZ_CRASH();
 }
 
-void
-nsGlobalWindow::GetSupportedNames(nsTArray<nsString>& aNames)
-{
-  FORWARD_TO_OUTER_VOID(GetSupportedNames, (aNames));
-
-  nsDOMWindowList* windows = GetWindowList();
-  if (windows) {
-    uint32_t length = windows->GetLength();
-    nsString* name = aNames.AppendElements(length);
-    for (uint32_t i = 0; i < length; ++i, ++name) {
-      nsCOMPtr<nsIDocShellTreeItem> item =
-        windows->GetDocShellTreeItemAt(i);
-      item->GetName(*name);
-    }
-  }
-}
-
 bool
 nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                           JS::Handle<jsid> aId,
