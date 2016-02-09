@@ -11,6 +11,11 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+// Tie `content` to this frame scripts' global scope explicitly. If we don't, then
+// `content` might be out of eval's scope and GC'ed before this script is done.
+// See bug 1229195 for empirical proof.
+var gContent = content;
+
 // social frames are always treated as app tabs
 docShell.isAppTab = true;
 
@@ -25,8 +30,8 @@ addEventListener("DOMTitleChanged", function(e) {
     sendAsyncMessage("DOMTitleChanged", {
       title: e.target.title
     });
-    gDOMTitleChangedByUs = false;
   }
+  gDOMTitleChangedByUs = false;
 });
 
 // Error handling class used to listen for network errors in the social frames
