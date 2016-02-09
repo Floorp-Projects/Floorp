@@ -375,23 +375,25 @@ function adHocExchange() {
     assertEq(exchangeLoop(a), -100000);
 }
 
+// isLockFree(n) may return true only if there is an integer array
+// on which atomic operations is allowed whose byte size is n,
+// ie, it must return false for n=8.
+//
+// SpiderMonkey has isLockFree(1), isLockFree(2), isLockFree(4) on all
+// supported platforms, though this is not guaranteed by the spec.
+
 var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
                    9,    10,    11,    12];
-var answers = [ true,  true, false,  true, false, false, false, {},
+var answers = [ true,  true, false,  true, false, false, false, false,
 	       false, false, false, false];
 
 function testIsLockFree() {
-    var saved8 = "Invalid";
-
     // This ought to defeat most compile-time resolution.
     for ( var i=0 ; i < sizes.length ; i++ ) {
 	var v = Atomics.isLockFree(sizes[i]);
 	var a = answers[i];
 	assertEq(typeof v, 'boolean');
-	if (typeof a == 'boolean')
-	    assertEq(v, a);
-	else
-	    saved8 = v;
+	assertEq(v, a);
     }
 
     // This ought to be optimizable.
@@ -402,7 +404,7 @@ function testIsLockFree() {
     assertEq(Atomics.isLockFree(5), false);
     assertEq(Atomics.isLockFree(6), false);
     assertEq(Atomics.isLockFree(7), false);
-    assertEq(Atomics.isLockFree(8), saved8);
+    assertEq(Atomics.isLockFree(8), false);
     assertEq(Atomics.isLockFree(9), false);
     assertEq(Atomics.isLockFree(10), false);
     assertEq(Atomics.isLockFree(11), false);
