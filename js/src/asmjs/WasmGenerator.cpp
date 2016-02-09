@@ -173,6 +173,15 @@ ModuleGenerator::finishOutstandingTask()
     return finishTask(task);
 }
 
+static const uint32_t BadEntry = UINT32_MAX;
+
+bool
+ModuleGenerator::funcIsDefined(uint32_t funcIndex) const
+{
+    return funcIndex < funcEntryOffsets_.length() &&
+           funcEntryOffsets_[funcIndex] != BadEntry;
+}
+
 bool
 ModuleGenerator::finishTask(IonCompileTask* task)
 {
@@ -187,10 +196,10 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     // Record the non-profiling entry for whole-module linking later.
     // Cannot simply append because funcIndex order is nonlinear.
     if (func.index() >= funcEntryOffsets_.length()) {
-        if (!funcEntryOffsets_.resize(func.index() + 1))
+        if (!funcEntryOffsets_.appendN(BadEntry, func.index() - funcEntryOffsets_.length() + 1))
             return false;
     }
-    MOZ_ASSERT(funcEntryOffsets_[func.index()] == 0);
+    MOZ_ASSERT(!funcIsDefined(func.index()));
     funcEntryOffsets_[func.index()] = results.offsets().nonProfilingEntry;
 
     // Merge the compiled results into the whole-module masm.
@@ -403,7 +412,9 @@ ModuleGenerator::exportFuncIndex(uint32_t index) const
 uint32_t
 ModuleGenerator::exportEntryOffset(uint32_t index) const
 {
-    return funcEntryOffsets_[exportMap_->exportFuncIndices[index]];
+    uint32_t funcIndex = exportMap_->exportFuncIndices[index];
+    MOZ_ASSERT(funcIsDefined(funcIndex));
+    return funcEntryOffsets_[funcIndex];
 }
 
 const Sig&
@@ -550,6 +561,9 @@ ModuleGenerator::finishFuncDefs()
             return false;
     }
 
+    for (uint32_t funcIndex = 0; funcIndex < funcEntryOffsets_.length(); funcIndex++)
+        MOZ_ASSERT(funcIsDefined(funcIndex));
+
     // During codegen, all wasm->wasm (internal) calls use AsmJSInternalCallee
     // as the call target, which contains the function-index of the target.
     // These get recorded in a CallSiteAndTargetVector in the MacroAssembler
@@ -611,8 +625,11 @@ ModuleGenerator::defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elem
     StaticLinkData::FuncPtrTable& table = link_->funcPtrTables[index];
     MOZ_ASSERT(table.elemOffsets.length() == elemFuncIndices.length());
 
-    for (size_t i = 0; i < elemFuncIndices.length(); i++)
-        table.elemOffsets[i] = funcEntryOffsets_[elemFuncIndices[i]];
+    for (size_t i = 0; i < elemFuncIndices.length(); i++) {
+        uint32_t funcIndex = elemFuncIndices[i];
+        MOZ_ASSERT(funcIsDefined(funcIndex));
+        table.elemOffsets[i] = funcEntryOffsets_[funcIndex];
+    }
 }
 
 bool
