@@ -95,13 +95,13 @@ class MacroAssemblerX86Shared : public Assembler
     Double* getDouble(double d);
     SimdData* getSimdData(const SimdConstant& v);
 
-    bool asmMergeWith(const MacroAssemblerX86Shared& other);
-
   public:
     using Assembler::call;
 
     MacroAssemblerX86Shared()
     { }
+
+    bool asmMergeWith(const MacroAssemblerX86Shared& other);
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
@@ -604,12 +604,14 @@ class MacroAssemblerX86Shared : public Assembler
         testw(rhs, lhs);
         j(cond, label);
     }
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         test32(lhs, rhs);
         j(cond, label);
     }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Imm32 imm, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         test32(lhs, imm);
         j(cond, label);
@@ -639,6 +641,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void jump(const Address& addr) {
         jmp(Operand(addr));
+    }
+    void jump(wasm::JumpTarget target) {
+        jmp(target);
     }
 
     void convertInt32ToDouble(Register src, FloatRegister dest) {
