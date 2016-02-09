@@ -1033,18 +1033,20 @@ MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
     }
 
     if (numVectors() == 1)
-        return MSimdSwizzle::New(alloc, vector(0), type(), lanes[0], lanes[1], lanes[2], lanes[3]);
+        return MSimdSwizzle::New(alloc, vector(0), lanes[0], lanes[1], lanes[2], lanes[3]);
 
     MOZ_ASSERT(numVectors() == 2);
-    return MSimdShuffle::New(alloc, vector(0), vector(1), type(), lanes[0], lanes[1], lanes[2], lanes[3]);
+    return MSimdShuffle::New(alloc, vector(0), vector(1), lanes[0], lanes[1], lanes[2], lanes[3]);
 }
 
 MInstruction*
 MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* obj,
-                           MIRType fromType, MIRType toType, SimdSign sign)
+                           MIRType toType, SimdSign sign)
 {
+    MIRType fromType = obj->type();
+
     if (SupportsUint32x4FloatConversions || sign != SimdSign::Unsigned) {
-        MInstruction* ins = New(alloc, obj, fromType, toType, sign);
+        MInstruction* ins = New(alloc, obj, toType, sign);
         addTo->add(ins);
         return ins;
     }
@@ -1076,37 +1078,32 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
         // Compute hi = obj >> 16 (lane-wise unsigned shift).
         MInstruction* c16 = MConstant::New(alloc, Int32Value(16));
         addTo->add(c16);
-        MInstruction* hi = MSimdShift::New(alloc, obj, c16, MSimdShift::ursh, MIRType_Int32x4);
+        MInstruction* hi = MSimdShift::New(alloc, obj, c16, MSimdShift::ursh);
         addTo->add(hi);
 
         // Compute lo = obj & 0xffff (lane-wise).
         MInstruction* m16 =
           MSimdConstant::New(alloc, SimdConstant::SplatX4(0xffff), MIRType_Int32x4);
         addTo->add(m16);
-        MInstruction* lo =
-          MSimdBinaryBitwise::New(alloc, obj, m16, MSimdBinaryBitwise::and_, MIRType_Int32x4);
+        MInstruction* lo = MSimdBinaryBitwise::New(alloc, obj, m16, MSimdBinaryBitwise::and_);
         addTo->add(lo);
 
         // Mix in the exponents.
         MInstruction* exphi =
           MSimdConstant::New(alloc, SimdConstant::SplatX4(0x53000000), MIRType_Int32x4);
         addTo->add(exphi);
-        MInstruction* mhi =
-          MSimdBinaryBitwise::New(alloc, hi, exphi, MSimdBinaryBitwise::or_, MIRType_Int32x4);
+        MInstruction* mhi = MSimdBinaryBitwise::New(alloc, hi, exphi, MSimdBinaryBitwise::or_);
         addTo->add(mhi);
         MInstruction* explo =
           MSimdConstant::New(alloc, SimdConstant::SplatX4(0x4b000000), MIRType_Int32x4);
         addTo->add(explo);
-        MInstruction* mlo =
-          MSimdBinaryBitwise::New(alloc, lo, explo, MSimdBinaryBitwise::or_, MIRType_Int32x4);
+        MInstruction* mlo = MSimdBinaryBitwise::New(alloc, lo, explo, MSimdBinaryBitwise::or_);
         addTo->add(mlo);
 
         // Bit-cast both to Float32x4.
-        MInstruction* fhi =
-          MSimdReinterpretCast::New(alloc, mhi, MIRType_Int32x4, MIRType_Float32x4);
+        MInstruction* fhi = MSimdReinterpretCast::New(alloc, mhi, MIRType_Float32x4);
         addTo->add(fhi);
-        MInstruction* flo =
-          MSimdReinterpretCast::New(alloc, mlo, MIRType_Int32x4, MIRType_Float32x4);
+        MInstruction* flo = MSimdReinterpretCast::New(alloc, mlo, MIRType_Float32x4);
         addTo->add(flo);
 
         // Subtract out the bias: 0x1.0p39f + 0x1.0p23f.
@@ -1116,12 +1113,12 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
           MSimdConstant::New(alloc, SimdConstant::SplatX4(BiasValue), MIRType_Float32x4);
         addTo->add(bias);
         MInstruction* fhi_debiased =
-          MSimdBinaryArith::New(alloc, fhi, bias, MSimdBinaryArith::Op_sub, MIRType_Float32x4);
+          MSimdBinaryArith::New(alloc, fhi, bias, MSimdBinaryArith::Op_sub);
         addTo->add(fhi_debiased);
 
         // Compute the final result.
-        MInstruction* result = MSimdBinaryArith::New(alloc, fhi_debiased, flo,
-                                                     MSimdBinaryArith::Op_add, MIRType_Float32x4);
+        MInstruction* result =
+          MSimdBinaryArith::New(alloc, fhi_debiased, flo, MSimdBinaryArith::Op_add);
         addTo->add(result);
 
         return result;
@@ -1130,7 +1127,7 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
     if (fromType == MIRType_Float32x4 && toType == MIRType_Int32x4) {
         // The Float32x4 -> Uint32x4 conversion can throw if the input is out of
         // range. This is handled by the LFloat32x4ToUint32x4 expansion.
-        MInstruction* ins = New(alloc, obj, fromType, toType, sign);
+        MInstruction* ins = New(alloc, obj, toType, sign);
         addTo->add(ins);
         return ins;
     }
@@ -1140,8 +1137,11 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
 
 MInstruction*
 MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
-                              MDefinition* right, Operation op, MIRType opType, SimdSign sign)
+                              MDefinition* right, Operation op, SimdSign sign)
 {
+    MOZ_ASSERT(left->type() == right->type());
+    MIRType opType = left->type();
+    MOZ_ASSERT(IsSimdType(opType));
     bool IsEquality = op == equal || op == notEqual;
 
     if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && !IsEquality) {
@@ -1153,16 +1153,13 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
         addTo->add(bias);
 
         // Add the bias.
-        MInstruction* bleft =
-          MSimdBinaryArith::New(alloc, left, bias, MSimdBinaryArith::Op_add, opType);
+        MInstruction* bleft = MSimdBinaryArith::New(alloc, left, bias, MSimdBinaryArith::Op_add);
         addTo->add(bleft);
-        MInstruction* bright =
-          MSimdBinaryArith::New(alloc, right, bias, MSimdBinaryArith::Op_add, opType);
+        MInstruction* bright = MSimdBinaryArith::New(alloc, right, bias, MSimdBinaryArith::Op_add);
         addTo->add(bright);
 
         // Do the equivalent signed comparison.
-        MInstruction* result =
-          MSimdBinaryComp::New(alloc, bleft, bright, op, opType, SimdSign::Signed);
+        MInstruction* result = MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
         addTo->add(result);
 
         return result;
@@ -1176,7 +1173,7 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
     }
 
     // This is a legal operation already. Just create the instruction requested.
-    MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, opType, sign);
+    MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, sign);
     addTo->add(result);
     return result;
 }
