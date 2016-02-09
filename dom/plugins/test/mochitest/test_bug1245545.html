@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta><charset="utf-8"/>
+    <title>Test Modifying Plugin click-to-play Flag</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="plugin-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body onload="startTest()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+     SpecialPowers.pushPrefEnv({ "set": [
+       ['dom.ipc.plugins.unloadTimeoutSecs', 0]
+     ] });
+
+     function startTest() {
+       let url = SimpleTest.getTestFileURL("file_bug1245545.js");
+       let script = SpecialPowers.loadChromeScript(url);
+       script.addMessageListener("check-plugin-unload", testChromeUnload);
+       var testPlugin = getTestPlugin();
+       ok(testPlugin, "Should have Test Plug-in");
+       is(testPlugin.loaded, true, "Test plugin should be loaded");
+       var pluginNode = document.getElementById("theplugin");
+       pluginNode.parentNode.removeChild(pluginNode);
+       // Poll for plugin to unload.
+       function testContentUnload() {
+         if (!testPlugin.loaded) {
+           ok(true, "Test plugin unloaded in client process");
+           // Start the chrome unload test
+           testChromeUnload(true);
+         } else {
+           setTimeout(testContentUnload, 0);
+         }
+       }
+
+       function testChromeUnload(isLoaded) {
+         if (!isLoaded) {
+           ok(true, "Test plugin unloaded in chrome process");
+           SimpleTest.finish();
+         } else {
+           var results = script.sendAsyncMessage("check-plugin-unload");
+         }
+       }
+       testContentUnload();
+     }
+    </script>
+    <object id="theplugin" type="application/x-test"></object>
+
+  </body>
+</html>
