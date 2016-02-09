@@ -578,7 +578,7 @@ class Decoder
             u |= UInt(byte & 0x7F) << shift;
             shift += 7;
         } while (shift != numBitsInSevens);
-        if (!readU8(&byte) || (byte & (-1 << remainderBits)))
+        if (!readU8(&byte) || (byte & (unsigned(-1) << remainderBits)))
             return false;
         if (out)
             *out = u | UInt(byte) << numBitsInSevens;
