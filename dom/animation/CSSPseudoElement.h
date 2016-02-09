@@ -40,6 +40,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  nsCSSPseudoElements::Type GetType() const { return mPseudoType; }
   void GetType(nsString& aRetVal) const
   {
     MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
