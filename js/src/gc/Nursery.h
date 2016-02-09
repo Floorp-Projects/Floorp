@@ -303,8 +303,8 @@ class Nursery
     struct NurseryChunkLayout {
         char data[NurseryChunkUsableSize];
         gc::ChunkTrailer trailer;
-        uintptr_t start() { return uintptr_t(&data); }
-        uintptr_t end() { return uintptr_t(&trailer); }
+        uintptr_t start() const { return uintptr_t(&data); }
+        uintptr_t end() const { return uintptr_t(&trailer); }
     };
     static_assert(sizeof(NurseryChunkLayout) == gc::ChunkSize,
                   "Nursery chunk size must match gc::Chunk size.");
@@ -328,7 +328,7 @@ class Nursery
         initChunk(chunkno);
     }
 
-    void updateDecommittedRegion();
+    void updateNumActiveChunks(int newCount);
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
         MOZ_ASSERT(numActiveChunks_ > 0);
