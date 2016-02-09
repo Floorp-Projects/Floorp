@@ -1197,12 +1197,14 @@ GenerateValueEntries(Element* aTarget,
       // Parse the property's string value and produce a KeyframeValueEntry (or
       // more than one, for shorthands) for it.
       nsTArray<PropertyStyleAnimationValuePair> values;
-      if (StyleAnimationValue::ComputeValues(pair.mProperty,
-                                             nsCSSProps::eEnabledForAllContent,
-                                             aTarget,
-                                             pair.mValues[0],
-                                             /* aUseSVGMode */ false,
-                                             values)) {
+      if (StyleAnimationValue::ComputeValues(
+            pair.mProperty,
+            nsCSSProps::eEnabledForAllContent,
+            aTarget,
+            nsCSSPseudoElements::ePseudo_NotPseudoElement,
+            pair.mValues[0],
+            /* aUseSVGMode */ false,
+            values)) {
         for (auto& value : values) {
           // If we already got a value for this property on the keyframe,
           // skip this one.
@@ -1477,12 +1479,14 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     // value instead.
     nsTArray<PropertyStyleAnimationValuePair> fromValues;
     float fromKey = 0.0f;
-    if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-                                            nsCSSProps::eEnabledForAllContent,
-                                            aTarget,
-                                            pair.mValues[0],
-                                            /* aUseSVGMode */ false,
-                                            fromValues)) {
+    if (!StyleAnimationValue::ComputeValues(
+          pair.mProperty,
+          nsCSSProps::eEnabledForAllContent,
+          aTarget,
+          nsCSSPseudoElements::ePseudo_NotPseudoElement,
+          pair.mValues[0],
+          /* aUseSVGMode */ false,
+          fromValues)) {
       // We need to throw for an invalid first value, since that would imply an
       // additive animation, which we don't support yet.
       aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
@@ -1529,12 +1533,14 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     for (size_t i = 0; i < count - 1; ++i) {
       nsTArray<PropertyStyleAnimationValuePair> toValues;
       float toKey = (i + 1) * portion;
-      if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-                                              nsCSSProps::eEnabledForAllContent,
-                                              aTarget,
-                                              pair.mValues[i + 1],
-                                              /* aUseSVGMode */ false,
-                                              toValues)) {
+      if (!StyleAnimationValue::ComputeValues(
+            pair.mProperty,
+            nsCSSProps::eEnabledForAllContent,
+            aTarget,
+            nsCSSPseudoElements::ePseudo_NotPseudoElement,
+            pair.mValues[i + 1],
+            /* aUseSVGMode */ false,
+            toValues)) {
         if (i + 1 == count - 1) {
           // We need to throw for an invalid last value, since that would
           // imply an additive animation, which we don't support yet.
