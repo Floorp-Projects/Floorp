@@ -507,7 +507,7 @@ var gCookiesWindow = {
 
   _getUserContextString: function(aUserContextId) {
     if (parseInt(aUserContextId) == 0) {
-      return this._bundle.getString("noUserContextLabel");
+      return this._bundle.getString("defaultUserContextLabel");
     }
 
     return UserContextUI.getUserContextLabel(aUserContextId);
