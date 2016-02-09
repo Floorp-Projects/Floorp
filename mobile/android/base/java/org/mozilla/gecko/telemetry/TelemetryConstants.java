@@ -38,6 +38,7 @@ public class TelemetryConstants {
         public static final String LOCALE = "locale";
         public static final String OS_ATTR = "os";
         public static final String OS_VERSION = "osversion";
+        public static final String PROFILE_CREATION_DATE = "profileDate";
         public static final String SEQ = "seq";
         public static final String VERSION_ATTR = "v";
     }
