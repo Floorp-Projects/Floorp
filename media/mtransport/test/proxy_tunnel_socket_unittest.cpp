@@ -23,7 +23,6 @@ extern "C" {
 }
 
 #include "databuffer.h"
-#include "mtransport_test_utils.h"
 #include "dummysocket.h"
 
 #include "nr_socket_prsock.h"
@@ -34,7 +33,6 @@ extern "C" {
 #include "gtest_utils.h"
 
 using namespace mozilla;
-MtransportTestUtils *test_utils;
 
 const std::string kRemoteAddr = "192.0.2.133";
 const uint16_t kRemotePort = 3333;
@@ -108,7 +106,7 @@ class DummyResolver {
   nr_resolver *resolver_;
 };
 
-class ProxyTunnelSocketTest : public ::testing::Test {
+class ProxyTunnelSocketTest : public MtransportTest {
  public:
   ProxyTunnelSocketTest()
       : socket_impl_(nullptr),
@@ -119,7 +117,9 @@ class ProxyTunnelSocketTest : public ::testing::Test {
     nr_proxy_tunnel_config_destroy(&config_);
   }
 
-  void SetUp() {
+  void SetUp() override {
+    MtransportTest::SetUp();
+
     nr_resolver_ = resolver_impl_.get_nr_resolver();
 
     int r = nr_str_port_to_transport_addr(
@@ -343,19 +343,4 @@ TEST_F(ProxyTunnelSocketTest, TestConnectProxyGarbageResponse) {
   size_t read = 0;
   r = nr_socket_read(nr_socket_, buf, sizeof(buf), &read, 0);
   ASSERT_EQ(0ul, read);
-}
-
-int main(int argc, char **argv)
-{
-  test_utils = new MtransportTestUtils();
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-
-  // Start the tests
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-
-  delete test_utils;
-  return rv;
 }
