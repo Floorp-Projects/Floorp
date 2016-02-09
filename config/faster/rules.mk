@@ -80,7 +80,7 @@ $(TOPOBJDIR)/%: FORCE
 # corresponding install manifests are named correspondingly, with forward
 # slashes replaced with underscores, and prefixed with `install_`. That is,
 # the install manifest for `dist/bin` would be `install_dist_bin`.
-$(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/buildid
+$(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/buildid.h
 	@# For now, force preprocessed files to be reprocessed every time.
 	@# The overhead is not that big, and this avoids waiting for proper
 	@# support for defines tracking in process_install_manifest.
@@ -91,7 +91,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
 		-DBOOKMARKS_INCLUDE_DIR=$(TOPSRCDIR)/browser/locales/en-US/profile \
-		-DMOZ_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
 		$(ACDEFINES) \
 		install_$(subst /,_,$*)
 
