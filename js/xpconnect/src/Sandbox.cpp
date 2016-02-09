@@ -292,9 +292,8 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     if (rv.MaybeSetPendingException(cx)) {
         return false;
     }
-    if (!GetOrCreateDOMReflector(cx, response, args.rval())) {
-        return false;
-    }
+
+    args.rval().setObject(*response->PromiseObj());
     return true;
 }
 

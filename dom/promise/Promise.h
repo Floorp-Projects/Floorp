@@ -71,7 +71,12 @@ public:
     { 0x8a, 0xf9, 0x31, 0x5e, 0x8f, 0xce, 0x75, 0x65 } }
 
 class Promise : public nsISupports,
+#ifndef SPIDERMONKEY_PROMISE
+                // Only wrappercached when we're not using SpiderMonkey
+                // promises, because those don't have a useful object moved
+                // hook, which wrappercache needs.
                 public nsWrapperCache,
+#endif // SPIDERMONKEY_PROMISE
                 public SupportsWeakPtr<Promise>
 {
   friend class NativePromiseCallback;
@@ -92,7 +97,12 @@ class Promise : public nsISupports,
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROMISE_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+#ifdef SPIDERMONKEY_PROMISE
+  // We're not skippable, since we're not owned from JS to start with.
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Promise)
+#else // SPIDERMONKEY_PROMISE
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(Promise)
+#endif // SPIDERMONKEY_PROMISE
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Promise)
 
   // Promise creation tries to create a JS reflector for the Promise, so is
@@ -163,10 +173,11 @@ public:
     return mGlobal;
   }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
 #ifdef SPIDERMONKEY_PROMISE
+  bool
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+             JS::MutableHandle<JSObject*> aWrapper);
+
   // Do the equivalent of Promise.resolve in the current compartment of aCx.
   // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
   // function MUST return a non-null value.
@@ -194,7 +205,23 @@ public:
        JS::MutableHandle<JS::Value> aRetval,
        ErrorResult& aRv);
 
+  JSObject* PromiseObj() const
+  {
+    if (mPromiseObj) {
+      JS::ExposeObjectToActiveJS(mPromiseObj);
+    }
+    return mPromiseObj;
+  }
+
 #else // SPIDERMONKEY_PROMISE
+  JSObject* PromiseObj()
+  {
+    return GetWrapper();
+  }
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
   static already_AddRefed<Promise>
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv, JS::Handle<JSObject*> aDesiredProto);
@@ -396,7 +423,7 @@ private:
   template <typename T>
   void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
     ThreadsafeAutoJSContext cx;
-    JSObject* wrapper = GetWrapper();
+    JSObject* wrapper = PromiseObj();
     MOZ_ASSERT(wrapper); // We preserved it!
 
     JSAutoCompartment ac(cx, wrapper);
@@ -492,6 +519,8 @@ private:
   // Once `GetID()` has been called, a unique-to-the-process identifier for this
   // promise. Until then, `0`.
   uint64_t mID;
+#else // SPIDERMONKEY_PROMISE
+  JS::Heap<JSObject*> mPromiseObj;
 #endif // SPIDERMONKEY_PROMISE
 };
 

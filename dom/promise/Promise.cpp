@@ -399,8 +399,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Promise)
 #ifndef SPIDERMONKEY_PROMISE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolveCallbacks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRejectCallbacks)
-#endif // SPIDERMONKEY_PROMISE
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+#else // SPIDERMONKEY_PROMISE
+  tmp->mPromiseObj = nullptr;
+#endif // SPIDERMONKEY_PROMISE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Promise)
@@ -418,13 +420,15 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAllocationStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRejectionStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mFullfillmentStack)
-#endif // SPIDERMONKEY_PROMISE
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+#else // SPIDERMONKEY_PROMISE
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPromiseObj);
+#endif // SPIDERMONKEY_PROMISE
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+#ifndef SPIDERMONKEY_PROMISE
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Promise)
   if (tmp->IsBlack()) {
-#ifndef SPIDERMONKEY_PROMISE
     JS::ExposeValueToActiveJS(tmp->mResult);
     if (tmp->mAllocationStack) {
       JS::ExposeObjectToActiveJS(tmp->mAllocationStack);
@@ -435,7 +439,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Promise)
     if (tmp->mFullfillmentStack) {
       JS::ExposeObjectToActiveJS(tmp->mFullfillmentStack);
     }
-#endif // SPIDERMONKEY_PROMISE
     return true;
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
@@ -447,12 +450,15 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Promise)
   return tmp->IsBlack();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+#endif // SPIDERMONKEY_PROMISE
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Promise)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Promise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Promise)
+#ifndef SPIDERMONKEY_PROMISE
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+#endif // SPIDERMONKEY_PROMISE
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(Promise)
 NS_INTERFACE_MAP_END
@@ -473,6 +479,8 @@ Promise::Promise(nsIGlobalObject* aGlobal)
   , mIsLastInChain(true)
   , mWasNotifiedAsUncaught(false)
   , mID(0)
+#else // SPIDERMONKEY_PROMISE
+  , mPromiseObj(nullptr)
 #endif // SPIDERMONKEY_PROMISE
 {
   MOZ_ASSERT(mGlobal);
@@ -494,13 +502,19 @@ Promise::~Promise()
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return PromiseBinding::Wrap(aCx, this, aGivenProto);
-}
-
 #ifdef SPIDERMONKEY_PROMISE
+
+bool
+Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                    JS::MutableHandle<JSObject*> aWrapper)
+{
+#ifdef DEBUG
+  binding_detail::AssertReflectorHasGivenProto(aCx, mPromiseObj, aGivenProto);
+#endif // DEBUG
+  JS::ExposeObjectToActiveJS(mPromiseObj);
+  aWrapper.set(mPromiseObj);
+  return true;
+}
 
 // static
 already_AddRefed<Promise>
@@ -567,7 +581,7 @@ Promise::All(const GlobalObject& aGlobal,
   }
 
   for (auto& promise : aPromiseList) {
-    JS::Rooted<JSObject*> promiseObj(cx, promise->GetWrapper());
+    JS::Rooted<JSObject*> promiseObj(cx, promise->PromiseObj());
     // Just in case, make sure these are all in the context compartment.
     if (!JS_WrapObject(cx, &promiseObj)) {
       aRv.NoteJSContextException();
@@ -599,7 +613,7 @@ Promise::Then(JSContext* aCx,
   // should consider aCalleeGlobal, but in practice our only caller is
   // DOMRequest::Then, which is not working with a Promise subclass, so things
   // should be OK.
-  JS::Rooted<JSObject*> promise(aCx, GetWrapper());
+  JS::Rooted<JSObject*> promise(aCx, PromiseObj());
   if (!JS_WrapObject(aCx, &promise)) {
     aRv.NoteJSContextException();
     return;
@@ -663,24 +677,19 @@ Promise::CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv)
   }
 
   JS::Rooted<JSObject*> doNothingObj(cx, JS_GetFunctionObject(doNothingFunc));
-
-  JS::Rooted<JSObject*> wrapper(cx);
-  wrapper = JS::NewPromiseObject(cx, doNothingObj, aDesiredProto);
-  if (!wrapper) {
+  mPromiseObj = JS::NewPromiseObject(cx, doNothingObj, aDesiredProto);
+  if (!mPromiseObj) {
     JS_ClearPendingException(cx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-
-  SetWrapper(wrapper);
-  dom::PreserveWrapper(this);
 }
 
 void
 Promise::MaybeResolve(JSContext* aCx,
                       JS::Handle<JS::Value> aValue)
 {
-  JS::Rooted<JSObject*> p(aCx, GetWrapper());
+  JS::Rooted<JSObject*> p(aCx, PromiseObj());
   if (!JS::ResolvePromise(aCx, p, aValue)) {
     // Now what?  There's nothing sane to do here.
     JS_ClearPendingException(aCx);
@@ -691,7 +700,7 @@ void
 Promise::MaybeReject(JSContext* aCx,
                      JS::Handle<JS::Value> aValue)
 {
-  JS::Rooted<JSObject*> p(aCx, GetWrapper());
+  JS::Rooted<JSObject*> p(aCx, PromiseObj());
   if (!JS::RejectPromise(aCx, p, aValue)) {
     // Now what?  There's nothing sane to do here.
     JS_ClearPendingException(aCx);
@@ -794,7 +803,7 @@ Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
     return;
   }
 
-  JS::Rooted<JSObject*> promiseObj(cx, GetWrapper());
+  JS::Rooted<JSObject*> promiseObj(cx, PromiseObj());
   if (NS_WARN_IF(!JS::AddPromiseReactions(cx, promiseObj, resolveFunc,
                                           rejectFunc))) {
     jsapi.ClearException();
@@ -822,12 +831,17 @@ Promise::CreateFromExisting(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(js::GetObjectCompartment(aGlobal->GetGlobalJSObject()) ==
              js::GetObjectCompartment(aPromiseObj));
   RefPtr<Promise> p = new Promise(aGlobal);
-  p->SetWrapper(aPromiseObj);
-  dom::PreserveWrapper(p.get());
+  p->mPromiseObj = aPromiseObj;
   return p.forget();
 }
 
 #else // SPIDERMONKEY_PROMISE
+
+JSObject*
+Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return PromiseBinding::Wrap(aCx, this, aGivenProto);
+}
 
 already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
