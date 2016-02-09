@@ -8,6 +8,7 @@ import errno
 import json
 import os
 import platform
+import random
 import sys
 import time
 import uuid
@@ -183,6 +184,14 @@ CATEGORIES = {
 }
 
 
+# Server to which to submit telemetry data
+BUILD_TELEMETRY_SERVER = 'http://52.88.27.118/build-metrics-dev'
+
+
+# We submit data to telemetry approximately every this many mach invocations
+TELEMETRY_SUBMISSION_FREQUENCY = 10
+
+
 def get_state_dir():
     """Obtain the path to a directory to hold state.
 
@@ -246,8 +255,24 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         # For now, we'll just record the mach command that was invoked.
         data['argv'] = sys.argv
 
-        with open(os.path.join(outgoing_dir, str(uuid.uuid4())), 'w') as f:
+        with open(os.path.join(outgoing_dir, str(uuid.uuid4()) + '.json'),
+                  'w') as f:
             json.dump(data, f, sort_keys=True)
+
+    def should_skip_dispatch(context, handler):
+        # The user is performing a maintenance command.
+        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'mercurial-setup'):
+            return True
+
+        # We are running in automation.
+        if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
+            return True
+
+        # The environment is likely a machine invocation.
+        if sys.stdin.closed or not sys.stdin.isatty():
+            return True
+
+        return False
 
     def pre_dispatch_handler(context, handler, args):
         """Perform global checks before command dispatch.
@@ -257,23 +282,13 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         tools are up to date.
         """
         # Don't do anything when...
-
-        # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'mercurial-setup'):
-            return
-
-        # We are running in automation.
-        if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
+        if should_skip_dispatch(context, handler):
             return
 
         # User has disabled first run check.
         if 'I_PREFER_A_SUBOPTIMAL_MERCURIAL_EXPERIENCE' in os.environ:
             return
         if 'NO_MERCURIAL_SETUP_CHECK' in os.environ:
-            return
-
-        # The environment is likely a machine invocation.
-        if sys.stdin.closed or not sys.stdin.isatty():
             return
 
         # Mercurial isn't managing this source checkout.
@@ -295,6 +310,68 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if mtime is None:
             print(NO_MERCURIAL_SETUP.format(mach=sys.argv[0]), file=sys.stderr)
             sys.exit(2)
+
+    def post_dispatch_handler(context, handler, args):
+        """Perform global operations after command dispatch.
+
+
+        For now,  we will use this to handle build system telemetry.
+        """
+        # Don't do anything when...
+        if should_skip_dispatch(context, handler):
+            return
+
+        # We have not opted-in to telemetry
+        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+            return
+
+        # Every n-th operation
+        if random.randint(1, TELEMETRY_SUBMISSION_FREQUENCY) != 1:
+            return
+
+        # No data to work with anyway
+        outgoing = os.path.join(get_state_dir()[0], 'telemetry', 'outgoing')
+        if not os.path.isdir(outgoing):
+            return
+
+        # We can't import requests until after it has been added during the
+        # bootstrapping below.
+        import requests
+
+        submitted = os.path.join(get_state_dir()[0], 'telemetry', 'submitted')
+        try:
+            os.mkdir(submitted)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        session = requests.Session()
+        for filename in os.listdir(outgoing):
+            path = os.path.join(outgoing, filename)
+            if os.path.isdir(path) or not path.endswith('.json'):
+                continue
+            with open(path, 'r') as f:
+                data = f.read()
+                r = session.post(BUILD_TELEMETRY_SERVER, data=data,
+                                 headers={'Content-Type': 'application/json'})
+                # TODO: some of these errors are likely not recoverable, as
+                # written, we'll retry indefinitely
+                if r.status_code != 200:
+                    print('Error posting to telemetry: %s %s' %
+                          (r.status_code, r.text))
+                    continue
+
+            os.rename(os.path.join(outgoing, filename),
+                      os.path.join(submitted, filename))
+
+        session.close()
+
+        # Discard submitted data that is >= 30 days old
+        now = time.time()
+        for filename in os.listdir(submitted):
+            ctime = os.stat(os.path.join(submitted, filename)).st_ctime
+            if now - ctime >= 60*60*24*30:
+                os.remove(os.path.join(submitted, filename))
 
     def populate_context(context, key=None):
         if key is None:
@@ -334,6 +411,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         if key == 'telemetry_handler':
             return telemetry_handler
+
+        if key == 'post_dispatch_handler':
+            return post_dispatch_handler
 
         raise AttributeError(key)
 
