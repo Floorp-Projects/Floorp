@@ -58,17 +58,18 @@ public class TelemetryPingGenerator {
      * @param docId A unique document ID for the ping associated with the upload to this server
      * @param clientId The client ID of this profile (from Gecko)
      * @param serverURLSchemeHostPort The server url with the scheme, host, and port (e.g. "http://mozilla.org:80")
+     * @param profileCreationDateDays The profile creation date in days to the UNIX epoch, NOT MILLIS.
      * @throws IOException when client ID could not be created
      */
     public static TelemetryPing createCorePing(final Context context, final String docId, final String clientId,
-            final String serverURLSchemeHostPort, final int seq) {
+            final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays) {
         final String serverURL = getTelemetryServerURL(docId, serverURLSchemeHostPort, CorePing.NAME);
-        final ExtendedJSONObject payload = createCorePingPayload(context, clientId, seq);
+        final ExtendedJSONObject payload = createCorePingPayload(context, clientId, seq, profileCreationDateDays);
         return new TelemetryPing(serverURL, payload);
     }
 
     private static ExtendedJSONObject createCorePingPayload(final Context context, final String clientId,
-            final int seq) {
+            final int seq, final long profileCreationDate) {
         final ExtendedJSONObject ping = new ExtendedJSONObject();
         ping.put(CorePing.VERSION_ATTR, CorePing.VERSION_VALUE);
         ping.put(CorePing.OS_ATTR, CorePing.OS_VALUE);
@@ -87,6 +88,12 @@ public class TelemetryPingGenerator {
         ping.put(CorePing.SEQ, seq);
         if (AppConstants.MOZ_SWITCHBOARD) {
             ping.put(CorePing.EXPERIMENTS, getActiveExperiments(context));
+        }
+        // TODO (bug 1246816): Remove this "optional" parameter work-around when
+        // GeckoProfile.getAndPersistProfileCreationDateFromFilesystem is implemented. That method returns -1
+        // while it's not implemented so we don't include the parameter in the ping if that's the case.
+        if (profileCreationDate >= 0) {
+            ping.put(CorePing.PROFILE_CREATION_DATE, profileCreationDate);
         }
         return ping;
     }
