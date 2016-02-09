@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1195018
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1195018</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * background_color member
+ * https://w3c.github.io/manifest/#background_color-member
+ **/
+'use strict';
+
+typeTests.forEach(type => {
+  data.jsonText = JSON.stringify({
+    background_color: type
+  });
+  var result = processor.process(data);
+
+  is(result.background_color, undefined, `Expect non-string background_color to be undefined: ${typeof type}.`);
+});
+
+var validThemeColors = [
+  'maroon',
+  '#f00',
+  '#ff0000',
+  'rgb(255,0,0)',
+  'rgb(100%, 0%, 0%)',
+  'rgb(255,0,0)',
+  'rgb(300,0,0)',
+  'rgb(255,-10,0)',
+  'rgb(110%, 0%, 0%)',
+  'rgb(255,0,0)',
+  'rgba(255,0,0,1)',
+  'rgb(100%,0%,0%)',
+  'rgba(100%,0%,0%,1)',
+  'rgba(0,0,255,0.5)',
+  'rgba(100%, 50%, 0%, 0.1)',
+  'hsl(120, 100%, 50%)',
+  'hsla(120, 100%, 50%, 1)',
+];
+
+validThemeColors.forEach(background_color => {
+  data.jsonText = JSON.stringify({
+    background_color: background_color
+  });
+  var result = processor.process(data);
+
+  is(result.background_color, background_color, `Expect background_color to be returned: ${background_color}.`);
+});
+
+var invalidThemeColors = [
+  'marooon',
+  'f000000',
+  '#ff00000',
+  'rgb(255 0 0)',
+  'rgb(100, 0%, 0%)',
+  'rgb(255,0)',
+  'rgb(300 0 0)',
+  'rbg(255,-10,0)',
+  'rgb(110, 0%, 0%)',
+  '(255,0,0) }',
+  'rgba(255)',
+  ' rgb(100%,0%,0%) }',
+  'hsl 120, 100%, 50%',
+  'hsla{120, 100%, 50%, 1}',
+]
+
+invalidThemeColors.forEach(background_color => {
+  data.jsonText = JSON.stringify({
+    background_color: background_color
+  });
+  var result = processor.process(data);
+
+  is(result.background_color, undefined, `Expect background_color to be undefined: ${background_color}.`);
+});
+
+// Trim tests
+validThemeColors.forEach(background_color => {
+  var expandedThemeColor = `${seperators}${lineTerminators}${background_color}${lineTerminators}${seperators}`;
+  data.jsonText = JSON.stringify({
+    background_color: expandedThemeColor
+  });
+  var result = processor.process(data);
+
+  is(result.background_color, background_color, `Expect trimmed background_color to be returned.`);
+});
+  </script>
+</head>
