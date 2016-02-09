@@ -1149,19 +1149,24 @@ function getPropertyBagValue(bag, key) {
  * been submitted. This function will also test the crash
  * reports extra data to see if it matches expectedExtra.
  *
- * @param expectedExtra
+ * @param expectedExtra (object)
  *        An Object whose key-value pairs will be compared
  *        against the key-value pairs in the extra data of the
  *        crash report. A test failure will occur if there is
  *        a mismatch.
  *
- *        Note that this will only check the values that exist
+ *        If the value of the key-value pair is "null", this will
+ *        be interpreted as "this key should not be included in the
+ *        extra data", and will cause a test failure if it is detected
+ *        in the crash report.
+ *
+ *        Note that this will ignore any keys that are not included
  *        in expectedExtra. It's possible that the crash report
  *        will contain other extra information that is not
  *        compared against.
  * @returns Promise
  */
-function promiseCrashReport(expectedExtra) {
+function promiseCrashReport(expectedExtra={}) {
   return Task.spawn(function*() {
     info("Starting wait on crash-report-status");
     let [subject, data] =
@@ -1200,8 +1205,12 @@ function promiseCrashReport(expectedExtra) {
       let key = enumerator.getNext().QueryInterface(Ci.nsIProperty).name;
       let value = extra.getPropertyAsAString(key);
       if (key in expectedExtra) {
-        is(value, expectedExtra[key],
-           `Crash report had the right extra value for ${key}`);
+        if (expectedExtra[key] == null) {
+          ok(false, `Got unexpected key ${key} with value ${value}`);
+        } else {
+          is(value, expectedExtra[key],
+             `Crash report had the right extra value for ${key}`);
+        }
       }
     }
   });

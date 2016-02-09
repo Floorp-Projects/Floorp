@@ -170,14 +170,15 @@ function getActiveInspector() {
  * visible and ready
  */
 var openInspectorSidebarTab = Task.async(function*(id, hostType) {
-  let {toolbox, inspector} = yield openInspector();
+  let {toolbox, inspector, testActor} = yield openInspector();
 
   info("Selecting the " + id + " sidebar");
   inspector.sidebar.select(id);
 
   return {
     toolbox,
-    inspector
+    inspector,
+    testActor
   };
 });
 

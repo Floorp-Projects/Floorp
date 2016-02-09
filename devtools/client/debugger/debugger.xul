@@ -495,7 +495,4 @@
       <textbox id="conditional-breakpoint-panel-textbox"/>
     </vbox>
   </panel>
-
-  <script type="text/javascript" src="resource://gre/browser/modules/devtools/debugger/mocks.js"/>
-  <script type="text/javascript" src="resource://gre/browser/modules/devtools/debugger/mock-init.js"/>
 </window>
