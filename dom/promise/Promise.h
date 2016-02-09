@@ -99,10 +99,15 @@ public:
   // fallible.  Furthermore, we don't want to do JS-wrapping on a 0-refcount
   // object, so we addref before doing that and return the addrefed pointer
   // here.
+#ifdef SPIDERMONKEY_PROMISE
+  static already_AddRefed<Promise>
+  Create(nsIGlobalObject* aGlobal, ErrorResult& aRv);
+#else
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
          // Passing null for aDesiredProto will use Promise.prototype.
          JS::Handle<JSObject*> aDesiredProto = nullptr);
+#endif // SPIDERMONKEY_PROMISE
 
   typedef void (Promise::*MaybeFunc)(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue);
@@ -161,6 +166,35 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+#ifdef SPIDERMONKEY_PROMISE
+  // Do the equivalent of Promise.resolve in the current compartment of aCx.
+  // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
+  // function MUST return a non-null value.
+  static already_AddRefed<Promise>
+  Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
+          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
+  // Do the equivalent of Promise.reject in the current compartment of aCx.
+  // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
+  // function MUST return a non-null value.
+  static already_AddRefed<Promise>
+  Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
+         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
+  All(const GlobalObject& aGlobal,
+      const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
+
+  void
+  Then(JSContext* aCx,
+       // aCalleeGlobal may not be in the compartment of aCx, when called over
+       // Xrays.
+       JS::Handle<JSObject*> aCalleeGlobal,
+       AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
+       JS::MutableHandle<JS::Value> aRetval,
+       ErrorResult& aRv);
+
+#else // SPIDERMONKEY_PROMISE
   static already_AddRefed<Promise>
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv, JS::Handle<JSObject*> aDesiredProto);
@@ -214,6 +248,7 @@ public:
 
   static bool
   PromiseSpecies(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
+#endif // SPIDERMONKEY_PROMISE
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
@@ -221,23 +256,36 @@ public:
 
   JSCompartment* Compartment() const;
 
+#ifndef SPIDERMONKEY_PROMISE
   // Return a unique-to-the-process identifier for this Promise.
   uint64_t GetID();
+#endif // SPIDERMONKEY_PROMISE
 
   // Queue an async microtask to current main or worker thread.
   static void
   DispatchToMicroTask(nsIRunnable* aRunnable);
 
+#ifndef SPIDERMONKEY_PROMISE
   enum JSCallbackSlots {
     SLOT_PROMISE = 0,
     SLOT_DATA
   };
+#endif // SPIDERMONKEY_PROMISE
+
+#ifdef SPIDERMONKEY_PROMISE
+  // Create a dom::Promise from a given SpiderMonkey Promise object.
+  // aPromiseObj MUST be in the compartment of aGlobal's global JS object.
+  static already_AddRefed<Promise>
+  CreateFromExisting(nsIGlobalObject* aGlobal,
+                     JS::Handle<JSObject*> aPromiseObj);
+#endif // SPIDERMONKEY_PROMISE
 
 protected:
   struct PromiseCapability;
 
-  // Do NOT call this unless you're Promise::Create.  I wish we could enforce
-  // that from inside this class too, somehow.
+  // Do NOT call this unless you're Promise::Create or
+  // Promise::CreateFromExisting.  I wish we could enforce that from inside this
+  // class too, somehow.
   explicit Promise(nsIGlobalObject* aGlobal);
 
   virtual ~Promise();
@@ -246,6 +294,7 @@ protected:
   // use the default prototype for the sort of Promise we have.
   void CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv);
 
+#ifndef SPIDERMONKEY_PROMISE
   // Create the JS resolving functions of resolve() and reject(). And provide
   // references to the two functions by calling PromiseInit passed from Promise
   // constructor.
@@ -284,15 +333,17 @@ protected:
   {
     return mWasNotifiedAsUncaught;
   }
+#endif // SPIDERMONKEY_PROMISE
 
 private:
-  friend class PromiseDebugging;
-
   enum PromiseState {
     Pending,
     Resolved,
     Rejected
   };
+
+#ifndef SPIDERMONKEY_PROMISE
+  friend class PromiseDebugging;
 
   void SetState(PromiseState aState)
   {
@@ -340,6 +391,7 @@ private:
                        JS::Handle<JS::Value> aValue);
   void RejectInternal(JSContext* aCx,
                       JS::Handle<JS::Value> aValue);
+#endif // SPIDERMONKEY_PROMISE
 
   template <typename T>
   void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
@@ -357,6 +409,7 @@ private:
     (this->*aFunc)(cx, val);
   }
 
+#ifndef SPIDERMONKEY_PROMISE
   // Static methods for the PromiseInit functions.
   static bool
   JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
@@ -375,8 +428,6 @@ private:
   static JSObject*
   CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTask);
 
-  void HandleException(JSContext* aCx);
-
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
   void RemoveFeature();
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
@@ -384,9 +435,13 @@ private:
   // Capture the current stack and store it in aTarget.  If false is
   // returned, an exception is presumably pending on aCx.
   bool CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget);
+#endif // SPIDERMONKEY_PROMISE
+
+  void HandleException(JSContext* aCx);
 
   RefPtr<nsIGlobalObject> mGlobal;
 
+#ifndef SPIDERMONKEY_PROMISE
   nsTArray<RefPtr<PromiseCallback> > mResolveCallbacks;
   nsTArray<RefPtr<PromiseCallback> > mRejectCallbacks;
 
@@ -437,6 +492,7 @@ private:
   // Once `GetID()` has been called, a unique-to-the-process identifier for this
   // promise. Until then, `0`.
   uint64_t mID;
+#endif // SPIDERMONKEY_PROMISE
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Promise, NS_PROMISE_IID)
