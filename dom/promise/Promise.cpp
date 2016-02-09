@@ -868,7 +868,11 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
       return;
     }
 
+#ifdef SPIDERMONKEY_PROMISE
+    JSObject* defaultCtor = JS::GetPromiseConstructor(aCx);
+#else
     JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx, global);
+#endif // SPIDERMONKEY_PROMISE
     if (!defaultCtor) {
       aRv.NoteJSContextException();
       return;
@@ -1210,7 +1214,11 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
   { // Scope for JSAutoCompartment
     JSAutoCompartment ac(aCx, aCalleeGlobal);
     JSObject* defaultCtor =
+#ifdef SPIDERMONKEY_PROMISE
+      JS::GetPromiseConstructor(aCx);
+#else
       PromiseBinding::GetConstructorObject(aCx, calleeGlobal);
+#endif // SPIDERMONKEY_PROMISE
     if (!defaultCtor) {
       aRv.NoteJSContextException();
       return;
