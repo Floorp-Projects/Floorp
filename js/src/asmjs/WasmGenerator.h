@@ -157,6 +157,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     DebugOnly<bool>                 finishedFuncs_;
 
     bool finishOutstandingTask();
+    bool funcIsDefined(uint32_t funcIndex) const;
     bool finishTask(IonCompileTask* task);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
