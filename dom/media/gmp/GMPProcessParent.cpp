@@ -8,6 +8,7 @@
 #include "GMPUtils.h"
 #include "nsIFile.h"
 #include "nsIRunnable.h"
+#include "WinUtils.h"
 
 #include "base/string_util.h"
 #include "base/process_util.h"
@@ -55,13 +56,25 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
   path->GetNativePath(voucherPath);
 
   vector<string> args;
-  args.push_back(mGMPPath);
-  args.push_back(string(voucherPath.BeginReading(), voucherPath.EndReading()));
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::wstring wGMPPath = UTF8ToWide(mGMPPath.c_str());
+
+  // The sandbox doesn't allow file system rules where the paths contain
+  // symbolic links or junction points. Sometimes the Users folder has been
+  // moved to another drive using a junction point, so allow for this specific
+  // case. See bug 1236680 for details.
+  if (!widget::WinUtils::ResolveMovedUsersFolder(wGMPPath)) {
+    NS_WARNING("ResolveMovedUsersFolder failed for GMP path.");
+    return false;
+  }
   mAllowedFilesRead.push_back(wGMPPath + L"\\*");
+  args.push_back(WideToUTF8(wGMPPath));
+#else
+  args.push_back(mGMPPath);
 #endif
+
+  args.push_back(string(voucherPath.BeginReading(), voucherPath.EndReading()));
 
   return SyncLaunch(args, aTimeoutMs, base::GetCurrentProcessArchitecture());
 }
