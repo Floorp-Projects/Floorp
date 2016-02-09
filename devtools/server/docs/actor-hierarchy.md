@@ -7,22 +7,24 @@ once a parent is removed from the pool, its children are removed as well.
 
 The overall hierarchy of actors looks like this:
 
-  RootActor: First one, automatically instanciated when we start connecting.
-   |         Mostly meant to instanciate new actors.
+  RootActor: First one, automatically instantiated when we start connecting.
+   |         Mostly meant to instantiate new actors.
    |
    |--> Global-scoped actors:
    |    Actors exposing features related to the main process,
-   |    that are not specific to any document/app/addon.
+   |    that are not specific to any particular context (document, tab, app,
+   |    add-on, or worker).
    |    A good example is the preference actor.
    |
    \--> "TabActor" (or alike):
-          |    Actors meant to designate one document, tab, app, addon
-          |    and track its lifetime.
+          |    Actors meant to designate one context (document, tab, app,
+          |    add-on, or worker) and track its lifetime.  Generally, there is
+          |    one of these for each thing you can point a toolbox at.
           |
           \--> Tab-scoped actors:
                Actors exposing one particular feature set, this time,
-               specific to a given document/app/addon.
-               Like console, inspector actors.
+               specific to a given context (document, tab, app, add-on, or
+               worker).  Examples include the console and inspector actors.
                These actors may extend this hierarchy by having their
                own children, like LongStringActor, WalkerActor, etc.
 
@@ -52,6 +54,15 @@ and returns its `actorID`. That's the main role of RootActor.
    |       Returned by "connect" on RemoteBrowserActor (for tabs) or
    |       "getAppActor" on the Webapps actor (for apps).
    |
+   |-- WorkerActor (worker.js)
+   |   Targets a worker (applies to various kinds like web worker, service
+   |   worker, etc.).
+   |   Returned by "listWorkers" request to the root actor to get all workers.
+   |   Returned by "listWorkers" request to a BrowserTabActor to get workers for
+   |   a specific tab.
+   |   Returned by "listWorkers" request to a ChildProcessActor to get workers
+   |   for the chrome of the child process.
+   |
    |-- ChromeActor (chrome.js)
    |   Targets all resources in the parent process of firefox
    |   (chrome documents, JSM, JS XPCOM, etc.).
@@ -63,23 +74,23 @@ and returns its `actorID`. That's the main role of RootActor.
    |   matching the targeted process.
    |
    \-- BrowserAddonActor (addon.js)
-       Targets the javascript of addons.
+       Targets the javascript of add-ons.
        Returned by "listAddons" request.
 
 ## "TabActor"
 
 Those are the actors exposed by the root actors which are meant to track the
-lifetime of a given context: tab, app, process or addon. It also allows
-to fetch the tab-scoped actors connected to this context. Actors like console,
-inspector, thread (for debugger), styleinspector, etc. Most of them inherit
-from TabActor (defined in webbrowser.js) which is document centric.
-It automatically tracks the lifetime of the targeted document, but it also
-tracks its iframes and allows switching the context to one of its iframes.
-For historical reasons, these actors also handle creating the ThreadActor,
-used to manage breakpoints in the debugger. All the other tab-scoped actors are
-created when we access the TabActor's grip. We return the tab-scoped actors
-`actorID` in it. Actors inheriting from TabActor expose `attach`/`detach`
-requests, that allows to start/stop the ThreadActor.
+lifetime of a given context: tab, app, process, add-on, or worker. It also
+allows to fetch the tab-scoped actors connected to this context. Actors like
+console, inspector, thread (for debugger), styleinspector, etc. Most of them
+inherit from TabActor (defined in webbrowser.js) which is document centric. It
+automatically tracks the lifetime of the targeted document, but it also tracks
+its iframes and allows switching the context to one of its iframes. For
+historical reasons, these actors also handle creating the ThreadActor, used to
+manage breakpoints in the debugger. All the other tab-scoped actors are created
+when we access the TabActor's grip. We return the tab-scoped actors `actorID` in
+it. Actors inheriting from TabActor expose `attach`/`detach` requests, that
+allows to start/stop the ThreadActor.
 
 The tab-scoped actors expect to find the following properties on the "TabActor":
  - threadActor:
@@ -108,11 +119,11 @@ attributes and events:
  - chromeEventHandler:
    The chrome event handler for the current context. Allows to listen to events
    that can be missing/cancelled on this document itself.
-See TabActor documentation for events definition.
 
+See TabActor documentation for events definition.
 
 ## Tab-scoped actors
 
-Each of these actors focuses on providing one particular feature set, specific to one context,
-that can be a web page, an app, a top level firefox window, a process or an addon resource.
-
+Each of these actors focuses on providing one particular feature set, specific
+to one context, that can be a web page, an app, a top level firefox window, a
+process, an add-on, or a worker.
