@@ -300,7 +300,7 @@ function initPluginsRow() {
   let entries = Array.from(permissionMap, item => ({ name: item[1], permission: item[0] }));
 
   entries.sort(function(a, b) {
-    return a.name < b.name ? -1 : (a.name == b.name ? 0 : 1);
+    return a.name.localeCompare(b.name);
   });
 
   let permissionEntries = entries.map(p => fillInPluginPermissionTemplate(p.name, p.permission));

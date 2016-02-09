@@ -320,9 +320,13 @@ function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
   let extensionRes = gRDF.GetResource(PREFIX_EXTENSION + aId);
   let themeRes = gRDF.GetResource(PREFIX_THEME + aId);
   let itemRes = gRDF.GetResource(PREFIX_ITEM + aId);
-  let addonRes = ds.ArcLabelsOut(extensionRes).hasMoreElements() ? extensionRes
-               : ds.ArcLabelsOut(themeRes).hasMoreElements() ? themeRes
-               : itemRes;
+  let addonRes;
+  if (ds.ArcLabelsOut(extensionRes).hasMoreElements())
+    addonRes = extensionRes;
+  else if (ds.ArcLabelsOut(themeRes).hasMoreElements())
+    addonRes = themeRes;
+  else
+    addonRes = itemRes;
 
   // If we have an update key then the update manifest must be signed
   if (aUpdateKey) {

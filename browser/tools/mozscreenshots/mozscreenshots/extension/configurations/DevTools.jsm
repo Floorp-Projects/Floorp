@@ -10,7 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 
 function getTargetForSelectedTab() {
