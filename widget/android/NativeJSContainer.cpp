@@ -49,8 +49,8 @@ CheckJSCall(bool result)
     return result;
 }
 
-template<class C> bool
-CheckJNIArgument(const jni::Ref<C>& arg)
+template<class C, typename T> bool
+CheckJNIArgument(const jni::Ref<C, T>& arg)
 {
     if (!arg) {
         jni::ThrowException("java/lang/IllegalArgumentException",
@@ -246,8 +246,8 @@ class NativeJSContainerImpl final
         if (!CheckJSCall(autoStr.init(mJSContext, str))) {
             return nullptr;
         }
-        // Param<String> can automatically convert a nsString to jstring.
-        return jni::Param<jni::String>(autoStr, mEnv);
+        // StringParam can automatically convert a nsString to jstring.
+        return jni::StringParam(autoStr, mEnv);
     }
 
     jni::String::LocalRef
@@ -374,8 +374,7 @@ class NativeJSContainerImpl final
     ObjectNewArray(JS::HandleObject array, size_t length)
     {
         auto jarray = Prop::NativeArray::Adopt(mEnv, mEnv->NewObjectArray(
-                length,
-                jni::Accessor::EnsureClassRef<typename Prop::ClassType>(mEnv),
+                length, typename Prop::ClassType::Context().ClassRef(),
                 nullptr));
         if (!jarray) {
             return nullptr;
@@ -815,7 +814,7 @@ public:
                                       JS::NullHandleValue, AppendJSON, &json))) {
             return nullptr;
         }
-        return jni::Param<jni::String>(json, mEnv);
+        return jni::StringParam(json, mEnv);
     }
 };
 
