@@ -3267,18 +3267,6 @@ IonBuilder::convertToBooleanSimdLane(MDefinition* scalar)
     return result;
 }
 
-static inline
-bool SimdTypeToMIRType(SimdType type, MIRType* mirType)
-{
-    switch (type) {
-      case SimdType::Int32x4:
-      case SimdType::Uint32x4:    *mirType = MIRType_Int32x4;   return true;
-      case SimdType::Float32x4:   *mirType = MIRType_Float32x4; return true;
-      case SimdType::Bool32x4:    *mirType = MIRType_Bool32x4;  return true;
-      default:                    return false;
-    }
-}
-
 IonBuilder::InliningStatus
 IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 {
@@ -3289,8 +3277,10 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 
     // Generic constructor of SIMD valuesX4.
     MIRType simdType;
-    if (!SimdTypeToMIRType(descr->type(), &simdType))
+    if (!MaybeSimdTypeToMIRType(descr->type(), &simdType)) {
+        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
         return InliningStatus_NotInlined;
+    }
 
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
