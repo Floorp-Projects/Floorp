@@ -65,4 +65,11 @@ interface _Promise {
 // Need to escape "Promise" so it's treated as an identifier.
 interface _Promise {
 };
+
+// Hack to allow us to have JS owning and properly tracing/CCing/etc a
+// PromiseNativeHandler.
+[NoInterfaceObject,
+ Exposed=(Window,Worker,System)]
+interface PromiseNativeHandler {
+};
 #endif // SPIDERMONKEY_PROMISE
