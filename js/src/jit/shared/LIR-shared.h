@@ -1206,26 +1206,14 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 
 class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
-    Label* interruptExit_;
-    const wasm::CallSiteDesc& funcDesc_;
-
   public:
     LIR_HEADER(AsmJSInterruptCheck);
 
-    LAsmJSInterruptCheck(Label* interruptExit, const wasm::CallSiteDesc& funcDesc)
-      : interruptExit_(interruptExit), funcDesc_(funcDesc)
-    {
-    }
+    LAsmJSInterruptCheck()
+    { }
 
     bool isCall() const {
         return true;
-    }
-
-    Label* interruptExit() const {
-        return interruptExit_;
-    }
-    const wasm::CallSiteDesc& funcDesc() const {
-        return funcDesc_;
     }
 };
 

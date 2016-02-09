@@ -2013,10 +2013,10 @@ MacroAssembler::asmMergeWith(MacroAssembler& other)
     if (!MacroAssemblerSpecific::asmMergeWith(other))
         return false;
 
-    retargetWithOffset(sizeBeforeMerge, other.asmSyncInterruptLabel(), asmSyncInterruptLabel());
     retargetWithOffset(sizeBeforeMerge, other.asmStackOverflowLabel(), asmStackOverflowLabel());
     retargetWithOffset(sizeBeforeMerge, other.asmOnOutOfBoundsLabel(), asmOnOutOfBoundsLabel());
     retargetWithOffset(sizeBeforeMerge, other.asmOnConversionErrorLabel(), asmOnConversionErrorLabel());
+    retargetWithOffset(sizeBeforeMerge, other.asmThrowLabel(), asmThrowLabel());
     return true;
 }
 
