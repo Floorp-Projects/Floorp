@@ -12,6 +12,8 @@
 // function"; for now, we just use "object".
 callback PromiseInit = void (object resolve, object reject);
 
+callback PromiseJobCallback = void();
+
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 

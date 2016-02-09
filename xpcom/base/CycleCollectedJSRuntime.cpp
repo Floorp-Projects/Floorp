@@ -68,6 +68,7 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "js/Debug.h"
@@ -468,6 +469,10 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   };
   SetDOMCallbacks(mJSRuntime, &DOMcallbacks);
 
+#ifdef SPIDERMONKEY_PROMISE
+  JS::SetEnqueuePromiseJobCallback(mJSRuntime, EnqueuePromiseJobCallback, this);
+#endif // SPIDERMONKEY_PROMISE
+
   JS::dbg::SetDebuggerMallocSizeOf(mJSRuntime, moz_malloc_size_of);
 
   nsCycleCollector_registerJSRuntime(this);
@@ -862,6 +867,45 @@ CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
   MOZ_ASSERT(JS_GetRuntime(aContext) == self->Runtime());
 
   return self->CustomContextCallback(aContext, aOperation);
+}
+
+class PromiseJobRunnable final : public nsRunnable
+{
+public:
+  PromiseJobRunnable(JSContext* aCx, JS::HandleObject aCallback)
+    : mCallback(new PromiseJobCallback(aCx, aCallback, nullptr))
+  {
+  }
+
+  virtual ~PromiseJobRunnable()
+  {
+  }
+
+protected:
+  NS_IMETHOD
+  Run() override
+  {
+    mCallback->Call();
+    return NS_OK;
+  }
+
+private:
+  RefPtr<PromiseJobCallback> mCallback;
+};
+
+/* static */
+bool
+CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
+                                                   JS::HandleObject aJob,
+                                                   void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+  MOZ_ASSERT(JS_GetRuntime(aCx) == self->Runtime());
+  MOZ_ASSERT(Get() == self);
+
+  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aCx, aJob);
+  self->GetPromiseMicroTaskQueue().push(runnable);
+  return true;
 }
 
 struct JsGcTracer : public TraceCallbacks
