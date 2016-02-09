@@ -48,6 +48,28 @@ function getUA(host) {
   return xhr.response;
 }
 
+function testUATab(host, expected, sameQ, message, testNavQ, navSameQ, navMessage, callback) {
+  let url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+  let uri = Services.io.newURI(url, null, null);
+  let tab = BrowserApp.addTab(uri.spec, { selected: true, parentId: BrowserApp.selectedTab.id });
+  let browser = tab.browser;
+
+  browser.addEventListener("load", function handle() {
+    ok(sameQ == (browser.contentDocument.body.innerHTML.indexOf(expected) != -1), message);
+    if(testNavQ) {
+      ok(navSameQ == (browser.contentWindow.navigator.userAgent.indexOf(expected) != -1), navMessage);
+    }
+    browser.removeEventListener("load", handle, true);
+    BrowserApp.closeTab(tab);
+    callback();
+  }, true);
+}
+
+function testUATabNoNav(host, expected, sameQ, message, callback) {
+  testUATab(host, expected, sameQ, message, false, true, '', callback);
+}
+
 const OVERRIDES = [
   {
     domain: 'example.org',
@@ -120,33 +142,25 @@ function testDownload(callback) {
       [PREF_UPDATES_TIMEOUT, 10000],
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
-  }, function waitForUpdate() { setTimeout(function () {
-    var ifr = document.createElement('IFRAME');
-    ifr.src = "about:blank";
-
-    ifr.addEventListener('load', function() {
-      var nav = ifr.contentWindow.navigator;
-      if (nav.userAgent !== UA_OVERRIDE) {
-        waitForUpdate();
-        return;
-      }
-
-      info('Overrode navigator UA');
-      is(getUA(location.origin), UA_OVERRIDE, 'Header UA not overridden');
-
+  }, setTimeout( function waitForUpdate() {
+    testUATabNoNav(location.origin, UA_OVERRIDE, true, 'Header UA not overridden', function() {
       var updateTime = parseInt(getUA('http://example.org'));
-      ok(startTime <= updateTime, 'Update was before start time');
-      ok(updateTime <= Date.now(), 'Update was after present time');
+      todo(startTime <= updateTime, 'Update was before start time');
+      todo(updateTime <= Date.now(), 'Update was after present time');
 
-      OVERRIDES.forEach(function (val) {
-        val.expected && is(getUA(val.host), val.expected,
-          'Incorrect URL parameter: ' + val.override);
-      });
-      callback();
-    }, false);
-
-    document.getElementById('content').appendChild(ifr);
-  }, 100); });
+      let overs = OVERRIDES;
+      (function nextOverride() {
+        val = overs.shift();
+        if (val.expected) {
+           testUATabNoNav(val.host, val.expected, true, 'Incorrect URL parameter: ' + val.override, function() {
+            overs.length ? nextOverride() : callback();
+          });
+        } else {
+          nextOverride();
+        }
+      })();
+    });
+  }, 2000));
 }
 
 function testBadUpdate(callback) {
@@ -204,10 +218,11 @@ function testProfileLoad(callback) {
               setTimeout(waitForLoad, 100);
               return;
             }
-            is(getUA(location.origin), UA_ALT_OVERRIDE, 'Did not apply saved override');
-            saveFilePreviousSize = file.fileSize;
-            callback();
-          }, false);
+            testUATabNoNav(location.origin, UA_ALT_OVERRIDE, true, 'Did not apply saved override', function () {
+              saveFilePreviousSize = file.fileSize;
+              callback();
+            });
+          }, true);
 
           document.getElementById('content').appendChild(ifr);
         })();
@@ -259,6 +274,11 @@ var FU = SpecialPowers.wrap(FileUtils);
 
 SpecialPowers.Cu.import("resource://gre/modules/osfile.jsm", window);
 var OSF = SpecialPowers.wrap(OS).File;
+
+const Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
+
+let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+let BrowserApp = chromeWin.BrowserApp;
 
 // Load UserAgentOverrides.jsm after we load update timer manager
 var UAO = null;
