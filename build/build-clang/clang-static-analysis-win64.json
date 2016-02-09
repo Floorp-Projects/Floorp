@@ -1,0 +1,16 @@
+{
+    "llvm_revision": "259916",
+    "stages": "3",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64/cl.exe",
+    "cxx": "c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64/cl.exe",
+    "patches": {
+    }
+}

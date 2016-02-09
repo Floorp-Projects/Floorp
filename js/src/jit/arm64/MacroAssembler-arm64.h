@@ -556,6 +556,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Fcvt(ARMFPRegister(dest, 32), ARMFPRegister(src, 64));
     }
 
+    using vixl::MacroAssembler::B;
+    void B(wasm::JumpTarget) {
+        MOZ_CRASH("NYI");
+    }
+    void B(wasm::JumpTarget, Condition cond) {
+        MOZ_CRASH("NYI");
+    }
+
     void branchTruncateDouble(FloatRegister src, Register dest, Label* fail) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch64 = temps.AcquireX();
@@ -755,6 +763,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void jump(const Address& addr) {
         loadPtr(addr, ip0);
         Br(vixl::ip0);
+    }
+    void jump(wasm::JumpTarget target) {
+        MOZ_CRASH("NYI");
     }
 
     void align(int alignment) {
@@ -1410,7 +1421,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         branch32(cond, scratch32.asUnsized(), rhs, label);
     }
 
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         // x86 prefers |test foo, foo| to |cmp foo, #0|.
         // Convert the former to the latter for ARM.
@@ -1420,7 +1432,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             test32(lhs, rhs);
         B(label, cond);
     }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Imm32 imm, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         test32(lhs, imm);
         B(label, cond);
@@ -1754,8 +1767,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testPrimitive(cond, t);
         B(label, c);
     }
-    template <typename T>
-    void branchTestMagic(Condition cond, const T& t, Label* label) {
+    template <typename T, typename L>
+    void branchTestMagic(Condition cond, const T& t, L label) {
         Condition c = testMagic(cond, t);
         B(label, c);
     }

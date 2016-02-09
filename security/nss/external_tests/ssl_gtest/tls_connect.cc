@@ -35,6 +35,9 @@ static const uint16_t kTlsV11V12Arr[] = {SSL_LIBRARY_VERSION_TLS_1_1,
 static const uint16_t kTlsV12PlusArr[] = {SSL_LIBRARY_VERSION_TLS_1_2};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV12Plus = ::testing::ValuesIn(kTlsV12PlusArr);
+static const uint16_t kTlsV13Arr[] = {SSL_LIBRARY_VERSION_TLS_1_3};
+::testing::internal::ParamGenerator<uint16_t>
+  TlsConnectTestBase::kTlsV13 = ::testing::ValuesIn(kTlsV13Arr);
 
 static std::string VersionString(uint16_t version) {
   switch(version) {
@@ -46,6 +49,8 @@ static std::string VersionString(uint16_t version) {
     return "1.1";
   case SSL_LIBRARY_VERSION_TLS_1_2:
     return "1.2";
+  case SSL_LIBRARY_VERSION_TLS_1_3:
+    return "1.3";
   default:
     std::cerr << "Invalid version: " << version << std::endl;
     EXPECT_TRUE(false);
@@ -131,6 +136,8 @@ void TlsConnectTestBase::EnsureTlsSetup() {
 }
 
 void TlsConnectTestBase::Handshake() {
+  EnsureTlsSetup();
+  client_->SetServerKeyBits(server_->server_key_bits());
   client_->Handshake();
   server_->Handshake();
 
@@ -173,24 +180,33 @@ void TlsConnectTestBase::CheckConnected() {
             << " cipher suite " << client_->cipher_suite_name()
             << std::endl;
 
-  // Check and store session ids.
-  std::vector<uint8_t> sid_c1 = client_->session_id();
-  EXPECT_EQ(32U, sid_c1.size());
-  std::vector<uint8_t> sid_s1 = server_->session_id();
-  EXPECT_EQ(32U, sid_s1.size());
-  EXPECT_EQ(sid_c1, sid_s1);
-  session_ids_.push_back(sid_c1);
+  if (client_->version() < SSL_LIBRARY_VERSION_TLS_1_3) {
+    // Check and store session ids.
+    std::vector<uint8_t> sid_c1 = client_->session_id();
+    EXPECT_EQ(32U, sid_c1.size());
+    std::vector<uint8_t> sid_s1 = server_->session_id();
+    EXPECT_EQ(32U, sid_s1.size());
+    EXPECT_EQ(sid_c1, sid_s1);
+    session_ids_.push_back(sid_c1);
+  }
+
+  CheckExtendedMasterSecret();
 
   CheckResumption(expected_resumption_mode_);
-  // Check whether the extended master secret extension was negotiated.
-  CheckExtendedMasterSecret();
+}
+
+void TlsConnectTestBase::CheckKeys(SSLKEAType keaType,
+                                   SSLAuthType authType) const {
+  client_->CheckKEAType(keaType);
+  server_->CheckKEAType(keaType);
+  client_->CheckAuthType(authType);
+  server_->CheckAuthType(authType);
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {
   server_->StartConnect();
   client_->StartConnect();
   Handshake();
-
   ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
   ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
 }
@@ -236,7 +252,7 @@ void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
 
   if (resume_ct) {
     // Check that the last two session ids match.
-    EXPECT_GE(2U, session_ids_.size());
+    EXPECT_EQ(2U, session_ids_.size());
     EXPECT_EQ(session_ids_[session_ids_.size()-1],
               session_ids_[session_ids_.size()-2]);
   }
@@ -265,14 +281,19 @@ void TlsConnectTestBase::CheckSrtp() const {
 void TlsConnectTestBase::SendReceive() {
   client_->SendData(50);
   server_->SendData(50);
-  WAIT_(client_->received_bytes() == 50U &&
-        server_->received_bytes() == 50U, 2000);
-  ASSERT_EQ(50U, client_->received_bytes());
-  ASSERT_EQ(50U, server_->received_bytes());
+  Receive(50);
 }
 
+void TlsConnectTestBase::Receive(size_t amount) {
+  WAIT_(client_->received_bytes() == amount &&
+        server_->received_bytes() == amount, 2000);
+  ASSERT_EQ(amount, client_->received_bytes());
+  ASSERT_EQ(amount, server_->received_bytes());
+}
+
+
 void TlsConnectTestBase::ExpectExtendedMasterSecret(bool expected) {
-    expect_extended_master_secret_ = expected;
+  expect_extended_master_secret_ = expected;
 }
 
 void TlsConnectTestBase::CheckExtendedMasterSecret() {

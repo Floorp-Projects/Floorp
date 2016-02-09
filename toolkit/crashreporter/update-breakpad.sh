@@ -3,29 +3,44 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Usage: update-breakpad.sh <path to breakpad SVN>
+set -v -e -x
+
+# Usage: update-breakpad.sh <path to breakpad git clone> [rev, defaults to HEAD]
 
 if [ $# -lt 1 ]; then
-  echo "Usage: update-breakpad.sh /path/to/google-breakpad/"
+  echo "Usage: update-breakpad.sh /path/to/breakpad/src [rev]"
   exit 1
 fi
 
-crashreporter_dir=`dirname $0`
+crashreporter_dir=`realpath $(dirname $0)`
 repo=${crashreporter_dir}/../..
 rm -rf ${crashreporter_dir}/google-breakpad
-svn export $1 ${crashreporter_dir}/google-breakpad
+
+breakpad_repo=$1
+rev=${2-HEAD}
+(cd $breakpad_repo; git archive --prefix=toolkit/crashreporter/google-breakpad/ $rev) | (cd $repo; tar xf -)
+# Breakpad uses gclient for externals, so manually export what we need.
+lss_rev=`python -c "import sys; execfile(sys.argv[1]); print deps['src/src/third_party/lss'].split('@')[1]" ${crashreporter_dir}/google-breakpad/DEPS`
+(cd $breakpad_repo/src/third_party/lss; git archive --prefix=toolkit/crashreporter/google-breakpad/src/third_party/lss/ $lss_rev) | (cd $repo; tar xf -)
 
 # remove some extraneous bits
-rm -rf ${crashreporter_dir}/google-breakpad/src/third_party/protobuf ${crashreporter_dir}/google-breakpad/src/testing/ ${crashreporter_dir}/google-breakpad/src/tools/gyp/
+rm -rf \
+  ${crashreporter_dir}/google-breakpad/docs/ \
+  ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
+  ${crashreporter_dir}/google-breakpad/src/testing/ \
+  ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
+  ${crashreporter_dir}/google-breakpad/src/processor/testdata/ \
+  ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/
+
 # restore our Makefile.ins
 hg -R ${repo} st -n | grep "Makefile\.in$" | xargs hg revert --no-backup
 # and moz.build files
 hg -R ${repo} st -n | grep "moz\.build$" | xargs hg revert --no-backup
 # and some other makefiles
-hg -R ${repo} st -n | grep "objs\.mk$" | xargs hg revert --no-backup
+hg -R ${repo} st -n | grep "objs\.mozbuild$" | xargs hg revert --no-backup
 
-# Record `svn info`
-svn info $1 > ${crashreporter_dir}/google-breakpad/SVN-INFO
+# Record git rev
+(cd $breakpad_repo; git rev-parse $rev) > ${crashreporter_dir}/google-breakpad/GIT-INFO
 
 # Apply any local patches
 shopt -s nullglob
@@ -43,6 +58,6 @@ for p in ${crashreporter_dir}/breakpad-patches/*.patch; do
     fi
 done
 # remove any .orig files that snuck in
-find ${crashreporter_dir}/google-breakpad -name "*.orig" -print0 | xargs -0 rm
+find ${crashreporter_dir}/google-breakpad -name "*.orig" -exec rm '{}' \;
 
 hg addremove ${crashreporter_dir}/google-breakpad/

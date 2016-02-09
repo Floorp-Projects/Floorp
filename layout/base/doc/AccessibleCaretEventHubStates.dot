@@ -1,6 +1,10 @@
 // Steps to generate AccessibleCaretEventHubStates.png
 // 1. Install Graphviz
 // 2. dot -T png -o AccessibleCaretEventHubStates.png AccessibleCaretEventHubStates.dot
+//
+// Note: If the edge has 'constraint=false', it is not used in ranking the
+// nodes. http://www.graphviz.org/doc/info/attrs.html#d:constraint
+
 digraph event_hub_states {
   node [style=filled];
   edge [color="gray30", fontcolor="gray20", fontsize=12]
@@ -25,6 +29,7 @@ digraph event_hub_states {
 
   LongTap [color="#E8C516"]
   LongTap -> NoAction [label="Release"];
+  LongTap -> Scroll [label="Scroll start", constraint=false];
 
   Scroll [color="#FF9022"]
   Scroll -> PostScroll [label="Scroll end"];

@@ -8,6 +8,7 @@
 #include "sslerr.h"
 #include "sslproto.h"
 #include <memory>
+#include <functional>
 
 extern "C" {
 // This is not something that should make you happy.
@@ -47,18 +48,39 @@ class TlsInspectorClientHelloVersionChanger : public TlsHandshakeFilter {
  public:
   TlsInspectorClientHelloVersionChanger(TlsAgent* server) : server_(server) {}
 
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output) {
-    if (handshake_type == kTlsHandshakeClientKeyExchange) {
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) {
+    if (header.handshake_type() == kTlsHandshakeClientKeyExchange) {
       EXPECT_EQ(
           SECSuccess,
           SSLInt_IncrementClientHandshakeVersion(server_->ssl_fd()));
     }
-    return false;
+    return KEEP;
   }
 
  private:
   TlsAgent* server_;
+};
+
+// Set the version number in the ClientHello.
+class TlsInspectorClientHelloVersionSetter : public TlsHandshakeFilter {
+ public:
+  TlsInspectorClientHelloVersionSetter(uint16_t version) : version_(version) {}
+
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) {
+    if (header.handshake_type() == kTlsHandshakeClientHello) {
+      *output = input;
+      output->Write(0, version_, 2);
+      return CHANGE;
+    }
+    return KEEP;
+  }
+
+ private:
+  uint16_t version_;
 };
 
 class TlsServerKeyExchangeEcdhe {
@@ -91,19 +113,20 @@ TEST_P(TlsConnectGeneric, SetupOnly) {}
 TEST_P(TlsConnectGeneric, Connect) {
   SetExpectedVersion(std::get<1>(GetParam()));
   Connect();
-  client_->CheckAuthType(ssl_auth_rsa);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
 TEST_P(TlsConnectGeneric, ConnectEcdsa) {
   SetExpectedVersion(std::get<1>(GetParam()));
   ResetEcdsa();
   Connect();
-  client_->CheckAuthType(ssl_auth_ecdsa);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
 TEST_P(TlsConnectGeneric, ConnectFalseStart) {
   client_->EnableFalseStart();
   Connect();
+  SendReceive();
 }
 
 TEST_P(TlsConnectGeneric, ConnectResumed) {
@@ -230,15 +253,40 @@ TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  server_->CheckAuthType(ssl_auth_rsa);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
+
+// Temporary copy for TLS 1.3 because 1.3 is stream only.
+TEST_P(TlsConnectStream, ClientAuth) {
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
+}
+
+// In TLS 1.3, the client sends its cert rejection on the
+// second flight, and since it has already received the
+// server's Finished, it transitions to complete and
+// then gets an alert from the server. The test harness
+// doesn't handle this right yet.
+TEST_P(TlsConnectStream, DISABLED_ClientAuthRequiredRejected) {
+  server_->RequestClientAuth(true);
+  ConnectExpectFail();
+}
+
+TEST_P(TlsConnectStream, ClientAuthRequestedRejected) {
+  server_->RequestClientAuth(false);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
+}
+
 
 TEST_P(TlsConnectGeneric, ClientAuthEcdsa) {
   ResetEcdsa();
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  server_->CheckAuthType(ssl_auth_ecdsa);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
 static const SSLSignatureAndHashAlg SignatureEcdsaSha384[] = {
@@ -298,8 +346,13 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmNoOverlapStaticRsa) {
                                   PR_ARRAY_SIZE(SignatureRsaSha256));
   DisableDheAndEcdheCiphers();
   Connect();
-  client_->CheckKEAType(ssl_kea_rsa);
-  client_->CheckAuthType(ssl_auth_rsa);
+  CheckKeys(ssl_kea_rsa, ssl_auth_rsa);
+}
+
+TEST_P(TlsConnectStreamPre13, ConnectStaticRSA) {
+  DisableDheAndEcdheCiphers();
+  Connect();
+  CheckKeys(ssl_kea_rsa, ssl_auth_rsa);
 }
 
 // Signature algorithms governs both verification and generation of signatures.
@@ -339,13 +392,23 @@ TEST_P(TlsConnectGeneric, ConnectAlpn) {
   server_->CheckAlpn(SSL_NEXT_PROTO_NEGOTIATED, "a");
 }
 
+// Temporary copy to test Alpn with TLS 1.3.
+TEST_P(TlsConnectStream, ConnectAlpn) {
+  EnableAlpn();
+  Connect();
+  client_->CheckAlpn(SSL_NEXT_PROTO_SELECTED, "a");
+  server_->CheckAlpn(SSL_NEXT_PROTO_NEGOTIATED, "a");
+}
+
 TEST_P(TlsConnectDatagram, ConnectSrtp) {
   EnableSrtp();
   Connect();
   CheckSrtp();
 }
 
-TEST_P(TlsConnectStream, ConnectAndClientRenegotiate) {
+// 1.3 is disabled in the next few tests because we don't
+// presently support resumption in 1.3.
+TEST_P(TlsConnectStreamPre13, ConnectAndClientRenegotiate) {
   Connect();
   server_->PrepareForRenegotiate();
   client_->StartRenegotiate();
@@ -353,7 +416,7 @@ TEST_P(TlsConnectStream, ConnectAndClientRenegotiate) {
   CheckConnected();
 }
 
-TEST_P(TlsConnectStream, ConnectAndServerRenegotiate) {
+TEST_P(TlsConnectStreamPre13, ConnectAndServerRenegotiate) {
   Connect();
   client_->PrepareForRenegotiate();
   server_->StartRenegotiate();
@@ -361,21 +424,15 @@ TEST_P(TlsConnectStream, ConnectAndServerRenegotiate) {
   CheckConnected();
 }
 
-TEST_P(TlsConnectStream, ConnectStaticRSA) {
-  DisableDheAndEcdheCiphers();
-  Connect();
-  client_->CheckKEAType(ssl_kea_rsa);
-}
-
-TEST_P(TlsConnectStream, ConnectDhe) {
+TEST_P(TlsConnectStreamPre13, ConnectDhe) {
   DisableEcdheCiphers();
   Connect();
-  client_->CheckKEAType(ssl_kea_dh);
+  CheckKeys(ssl_kea_dh, ssl_auth_rsa);
 }
 
 // Test that a totally bogus EPMS is handled correctly.
 // This test is stream so we can catch the bad_record_mac alert.
-TEST_P(TlsConnectStream, ConnectStaticRSABogusCKE) {
+TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
   DisableDheAndEcdheCiphers();
   TlsInspectorReplaceHandshakeMessage* i1 =
       new TlsInspectorReplaceHandshakeMessage(kTlsHandshakeClientKeyExchange,
@@ -392,7 +449,7 @@ TEST_P(TlsConnectStream, ConnectStaticRSABogusCKE) {
 
 // Test that a PMS with a bogus version number is handled correctly.
 // This test is stream so we can catch the bad_record_mac alert.
-TEST_P(TlsConnectStream, ConnectStaticRSABogusPMSVersionDetect) {
+TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
   DisableDheAndEcdheCiphers();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
       server_));
@@ -416,15 +473,15 @@ TEST_P(TlsConnectGeneric, ConnectStaticRSABogusPMSVersionIgnore) {
 
 TEST_P(TlsConnectStream, ConnectEcdhe) {
   Connect();
-  client_->CheckKEAType(ssl_kea_ecdh);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
-TEST_P(TlsConnectStream, ConnectEcdheTwiceReuseKey) {
+TEST_P(TlsConnectStreamPre13, ConnectEcdheTwiceReuseKey) {
   TlsInspectorRecordHandshakeMessage* i1 =
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  client_->CheckKEAType(ssl_kea_ecdh);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
@@ -435,7 +492,7 @@ TEST_P(TlsConnectStream, ConnectEcdheTwiceReuseKey) {
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  client_->CheckKEAType(ssl_kea_ecdh);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -446,7 +503,7 @@ TEST_P(TlsConnectStream, ConnectEcdheTwiceReuseKey) {
                       dhe1.public_key_.len()));
 }
 
-TEST_P(TlsConnectStream, ConnectEcdheTwiceNewKey) {
+TEST_P(TlsConnectStreamPre13, ConnectEcdheTwiceNewKey) {
   server_->EnsureTlsSetup();
   SECStatus rv =
       SSL_OptionSet(server_->ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
@@ -455,7 +512,7 @@ TEST_P(TlsConnectStream, ConnectEcdheTwiceNewKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  client_->CheckKEAType(ssl_kea_ecdh);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
@@ -469,7 +526,7 @@ TEST_P(TlsConnectStream, ConnectEcdheTwiceNewKey) {
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  client_->CheckKEAType(ssl_kea_ecdh);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -540,7 +597,7 @@ TEST_P(TlsConnectGeneric, ConnectExtendedMasterSecretStaticRSA) {
 }
 
 // This test is stream so we can catch the bad_record_mac alert.
-TEST_P(TlsConnectStream, ConnectExtendedMasterSecretStaticRSABogusCKE) {
+TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusCKE) {
   DisableDheAndEcdheCiphers();
   EnableExtendedMasterSecret();
   TlsInspectorReplaceHandshakeMessage* inspect =
@@ -557,7 +614,7 @@ TEST_P(TlsConnectStream, ConnectExtendedMasterSecretStaticRSABogusCKE) {
 }
 
 // This test is stream so we can catch the bad_record_mac alert.
-TEST_P(TlsConnectStream, ConnectExtendedMasterSecretStaticRSABogusPMSVersionDetect) {
+TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusPMSVersionDetect) {
   DisableDheAndEcdheCiphers();
   EnableExtendedMasterSecret();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
@@ -569,7 +626,7 @@ TEST_P(TlsConnectStream, ConnectExtendedMasterSecretStaticRSABogusPMSVersionDete
   EXPECT_EQ(kTlsAlertBadRecordMac, alert_recorder->description());
 }
 
-TEST_P(TlsConnectStream, ConnectExtendedMasterSecretStaticRSABogusPMSVersionIgnore) {
+TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusPMSVersionIgnore) {
   DisableDheAndEcdheCiphers();
   EnableExtendedMasterSecret();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
@@ -588,7 +645,7 @@ TEST_P(TlsConnectGeneric, ConnectExtendedMasterSecretECDHE) {
   Connect();
 }
 
-TEST_P(TlsConnectGeneric, ConnectExtendedMasterSecretTicket) {
+TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretTicket) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   EnableExtendedMasterSecret();
   Connect();
@@ -601,21 +658,21 @@ TEST_P(TlsConnectGeneric, ConnectExtendedMasterSecretTicket) {
   Connect();
 }
 
-TEST_P(TlsConnectGeneric,
+TEST_P(TlsConnectGenericPre13,
        ConnectExtendedMasterSecretClientOnly) {
   client_->EnableExtendedMasterSecret();
   ExpectExtendedMasterSecret(false);
   Connect();
 }
 
-TEST_P(TlsConnectGeneric,
+TEST_P(TlsConnectGenericPre13,
        ConnectExtendedMasterSecretServerOnly) {
   server_->EnableExtendedMasterSecret();
   ExpectExtendedMasterSecret(false);
   Connect();
 }
 
-TEST_P(TlsConnectGeneric,
+TEST_P(TlsConnectGenericPre13,
        ConnectExtendedMasterSecretResumeWithout) {
   EnableExtendedMasterSecret();
   Connect();
@@ -629,7 +686,7 @@ TEST_P(TlsConnectGeneric,
   EXPECT_EQ(kTlsAlertHandshakeFailure, alert_recorder->description());
 }
 
-TEST_P(TlsConnectGeneric,
+TEST_P(TlsConnectGenericPre13,
        ConnectNormalResumeWithExtendedMasterSecret) {
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
   ExpectExtendedMasterSecret(false);
@@ -639,6 +696,242 @@ TEST_P(TlsConnectGeneric,
   EnableExtendedMasterSecret();
   ExpectResumption(RESUME_NONE);
   Connect();
+}
+
+TEST_P(TlsConnectStream, ConnectWithCompressionMaybe)
+{
+  EnsureTlsSetup();
+  client_->EnableCompression();
+  server_->EnableCompression();
+  Connect();
+  EXPECT_EQ(client_->version() < SSL_LIBRARY_VERSION_TLS_1_3, client_->is_compressed());
+  SendReceive();
+}
+
+
+TEST_P(TlsConnectStream, ConnectSendReceive) {
+  Connect();
+  SendReceive();
+}
+
+TEST_P(TlsConnectStream, ServerNegotiateTls10) {
+  uint16_t minver, maxver;
+  client_->GetVersionRange(&minver, &maxver);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           maxver);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_0);
+  Connect();
+}
+
+TEST_P(TlsConnectStream, ServerNegotiateTls11) {
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_1)
+    return;
+
+  uint16_t minver, maxver;
+  client_->GetVersionRange(&minver, &maxver);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           maxver);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_1);
+  Connect();
+}
+
+TEST_P(TlsConnectStream, ServerNegotiateTls12) {
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_2)
+    return;
+
+  uint16_t minver, maxver;
+  client_->GetVersionRange(&minver, &maxver);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           maxver);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  Connect();
+}
+
+// Test the ServerRandom version hack from
+// [draft-ietf-tls-tls13-11 Section 6.3.1.1].
+// The first three tests test for active tampering. The next
+// two validate that we can also detect fallback using the
+// SSL_SetDowngradeCheckVersion() API.
+TEST_F(TlsConnectTest, TestDowngradeDetectionToTls11) {
+  client_->SetPacketFilter(new TlsInspectorClientHelloVersionSetter
+                           (SSL_LIBRARY_VERSION_TLS_1_1));
+  ConnectExpectFail();
+  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+}
+
+/* Attempt to negotiate the bogus DTLS 1.1 version. */
+TEST_F(DtlsConnectTest, TestDtlsVersion11) {
+  client_->SetPacketFilter(new TlsInspectorClientHelloVersionSetter(
+      ((~0x0101) & 0xffff)));
+  ConnectExpectFail();
+  // It's kind of surprising that SSL_ERROR_NO_CYPHER_OVERLAP is
+  // what is returned here, but this is deliberate in ssl3_HandleAlert().
+  EXPECT_EQ(SSL_ERROR_NO_CYPHER_OVERLAP, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
+}
+
+#ifdef NSS_ENABLE_TLS_1_3
+TEST_F(TlsConnectTest, TestDowngradeDetectionToTls12) {
+  EnsureTlsSetup();
+  client_->SetPacketFilter(new TlsInspectorClientHelloVersionSetter
+                           (SSL_LIBRARY_VERSION_TLS_1_2));
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConnectExpectFail();
+  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+}
+#endif
+
+// TLS 1.1 clients do not check the random values, so we should
+// instead get a handshake failure alert from the server.
+TEST_F(TlsConnectTest, TestDowngradeDetectionToTls10) {
+  client_->SetPacketFilter(new TlsInspectorClientHelloVersionSetter
+                          (SSL_LIBRARY_VERSION_TLS_1_0));
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_1);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  ConnectExpectFail();
+  ASSERT_EQ(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE, server_->error_code());
+  ASSERT_EQ(SSL_ERROR_DECRYPT_ERROR_ALERT, client_->error_code());
+}
+
+TEST_F(TlsConnectTest, TestFallbackFromTls12) {
+  EnsureTlsSetup();
+  client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_1);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  ConnectExpectFail();
+  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+}
+
+#ifdef NSS_ENABLE_TLS_1_3
+TEST_F(TlsConnectTest, TestFallbackFromTls13) {
+  EnsureTlsSetup();
+  client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConnectExpectFail();
+  ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
+}
+#endif
+
+class BeforeFinished : public TlsRecordFilter {
+ private:
+  enum HandshakeState {
+    BEFORE_CCS,
+    AFTER_CCS,
+    DONE
+  };
+  typedef std::function<void(void)> VoidFunction;
+
+ public:
+  BeforeFinished(TlsAgent* client, TlsAgent* server,
+                 VoidFunction before_ccs, VoidFunction before_finished)
+      : client_(client),
+        server_(server),
+        before_ccs_(before_ccs),
+        before_finished_(before_finished),
+        state_(BEFORE_CCS) {}
+
+ protected:
+  virtual PacketFilter::Action FilterRecord(
+      const RecordHeader& header, const DataBuffer& body, DataBuffer* out) {
+    switch (state_) {
+      case BEFORE_CCS:
+        // Awaken when we see the CCS.
+        if (header.content_type() == kTlsChangeCipherSpecType) {
+          before_ccs_();
+
+          // Write the CCS out as a separate write, so that we can make
+          // progress. Ordinarily, libssl sends the CCS and Finished together,
+          // but that means that they both get processed together.
+          DataBuffer ccs;
+          header.Write(&ccs, 0, body);
+          server_->SendDirect(ccs);
+          ForceRead();
+          state_ = AFTER_CCS;
+          // Request that the original record be dropped by the filter.
+          return DROP;
+        }
+        break;
+
+      case AFTER_CCS:
+        EXPECT_EQ(kTlsHandshakeType, header.content_type());
+        // This could check that data contains a Finished message, but it's
+        // encrypted, so that's too much extra work.
+
+        before_finished_();
+        state_ = DONE;
+        break;
+
+      case DONE:
+        break;
+    }
+    return KEEP;
+  }
+
+ private:
+  void ForceRead() {
+    // Read from the socket to get libssl to process the handshake messages that
+    // were sent from the server up until now.
+    uint8_t block[10];
+    int32_t rv = PR_Read(client_->ssl_fd(), block, sizeof(block));
+    // Expect a blocking error here, since the handshake shouldn't have completed.
+    EXPECT_GT(0, rv);
+    EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PR_GetError());
+  }
+
+  TlsAgent* client_;
+  TlsAgent* server_;
+  VoidFunction before_ccs_;
+  VoidFunction before_finished_;
+  HandshakeState state_;
+};
+
+// TODO Pre13
+TEST_P(TlsConnectGeneric, ClientWriteBetweenCCSAndFinishedWithFalseStart) {
+  client_->EnableFalseStart();
+  server_->SetPacketFilter(new BeforeFinished(client_, server_, [this]() {
+        EXPECT_TRUE(client_->can_falsestart_hook_called());
+      }, [this]() {
+        // Write something, which used to fail: bug 1235366.
+        client_->SendData(10);
+      }));
+
+  Connect();
+  server_->SendData(10);
+  Receive(10);
+}
+
+TEST_P(TlsConnectGeneric, AuthCompleteBeforeFinishedWithFalseStart) {
+  client_->EnableFalseStart();
+  client_->SetAuthCertificateCallback(
+      [](TlsAgent&, PRBool, PRBool) -> SECStatus {
+        return SECWouldBlock;
+      });
+  server_->SetPacketFilter(new BeforeFinished(client_, server_, []() {
+        // Do nothing before CCS
+      }, [this]() {
+        EXPECT_FALSE(client_->can_falsestart_hook_called());
+        // AuthComplete before Finished still enables false start.
+        EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+        EXPECT_TRUE(client_->can_falsestart_hook_called());
+        client_->SendData(10);
+      }));
+
+  Connect();
+  server_->SendData(10);
+  Receive(10);
 }
 
 INSTANTIATE_TEST_CASE_P(VariantsStream10, TlsConnectGeneric,
@@ -665,5 +958,12 @@ INSTANTIATE_TEST_CASE_P(VersionsStream10, TlsConnectStream,
                         TlsConnectTestBase::kTlsV10);
 INSTANTIATE_TEST_CASE_P(VersionsStream, TlsConnectStream,
                         TlsConnectTestBase::kTlsV11V12);
-
+INSTANTIATE_TEST_CASE_P(VersionsStream10Pre13, TlsConnectStreamPre13,
+                        TlsConnectTestBase::kTlsV10);
+INSTANTIATE_TEST_CASE_P(VersionsStreamPre13, TlsConnectStreamPre13,
+                        TlsConnectTestBase::kTlsV11V12);
+#ifdef NSS_ENABLE_TLS_1_3
+INSTANTIATE_TEST_CASE_P(VersionsStream13, TlsConnectStream,
+                        TlsConnectTestBase::kTlsV13);
+#endif
 }  // namespace nspr_test

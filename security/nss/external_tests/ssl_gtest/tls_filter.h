@@ -20,18 +20,52 @@ class TlsRecordFilter : public PacketFilter {
  public:
   TlsRecordFilter() : count_(0) {}
 
-  virtual bool Filter(const DataBuffer& input, DataBuffer* output);
+  virtual PacketFilter::Action Filter(const DataBuffer& input,
+                                      DataBuffer* output);
 
   // Report how many packets were altered by the filter.
   size_t filtered_packets() const { return count_; }
 
+  class Versioned {
+   public:
+    Versioned() : version_(0) {}
+    bool is_dtls() const { return IsDtls(version_); }
+    uint16_t version() const { return version_; }
+
+   protected:
+    uint16_t version_;
+  };
+
+  class RecordHeader : public Versioned {
+   public:
+    RecordHeader()
+        : Versioned(), content_type_(0), sequence_number_(0) {}
+
+    uint8_t content_type() const { return content_type_; }
+    uint64_t sequence_number() const { return sequence_number_; }
+    size_t header_length() const { return is_dtls() ? 11 : 3; }
+
+    // Parse the header; return true if successful; body in an outparam if OK.
+    bool Parse(TlsParser* parser, DataBuffer* body);
+    // Write the header and body to a buffer at the given offset.
+    // Return the offset of the end of the write.
+    size_t Write(DataBuffer* buffer, size_t offset, const DataBuffer& body) const;
+
+   private:
+    uint8_t content_type_;
+    uint64_t sequence_number_;
+  };
+
  protected:
-  virtual bool FilterRecord(uint8_t content_type, uint16_t version,
-                            const DataBuffer& data, DataBuffer* changed) = 0;
+  // The record filter receives the record contentType, version and DTLS
+  // sequence number (which is zero for TLS), plus the existing record payload.
+  // It returns an action (KEEP, CHANGE, DROP).  It writes to the `changed`
+  // outparam with the new record contents if it chooses to CHANGE the record.
+  virtual PacketFilter::Action FilterRecord(const RecordHeader& header,
+                                            const DataBuffer& data,
+                                            DataBuffer* changed) = 0;
+
  private:
-  size_t ApplyFilter(uint8_t content_type, uint16_t version,
-                     const DataBuffer& record, DataBuffer* output,
-                     size_t offset, bool* changed);
 
   size_t count_;
 };
@@ -43,20 +77,37 @@ class TlsHandshakeFilter : public TlsRecordFilter {
  public:
   TlsHandshakeFilter() {}
 
-  // Reads the length from the record header.
-  // This also reads the DTLS fragment information and checks it.
-  static bool ReadLength(TlsParser* parser, uint16_t version, uint32_t *length);
+  class HandshakeHeader : public Versioned {
+   public:
+    HandshakeHeader()
+        : Versioned(), handshake_type_(0), message_seq_(0) {}
+
+    uint8_t handshake_type() const { return handshake_type_; }
+    bool Parse(TlsParser* parser, const RecordHeader& record_header,
+               DataBuffer* body);
+    size_t Write(DataBuffer* buffer, size_t offset,
+                 const DataBuffer& body) const;
+
+   private:
+    // Reads the length from the record header.
+    // This also reads the DTLS fragment information and checks it.
+    bool ReadLength(TlsParser* parser, const RecordHeader& header,
+                    uint32_t *length);
+
+    uint8_t handshake_type_;
+    uint16_t message_seq_;
+    // fragment_offset is always zero in these tests.
+  };
 
  protected:
-  virtual bool FilterRecord(uint8_t content_type, uint16_t version,
-                            const DataBuffer& input, DataBuffer* output);
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output) = 0;
+  virtual PacketFilter::Action FilterRecord(const RecordHeader& header,
+                                            const DataBuffer& input,
+                                            DataBuffer* output);
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) = 0;
 
  private:
-  size_t ApplyFilter(uint16_t version, uint8_t handshake_type,
-                     const DataBuffer& record, DataBuffer* output,
-                     size_t length_offset, size_t value_offset, bool* changed);
 };
 
 // Make a copy of the first instance of a handshake message.
@@ -65,8 +116,9 @@ class TlsInspectorRecordHandshakeMessage : public TlsHandshakeFilter {
   TlsInspectorRecordHandshakeMessage(uint8_t handshake_type)
       : handshake_type_(handshake_type), buffer_() {}
 
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output);
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
 
   const DataBuffer& buffer() const { return buffer_; }
 
@@ -82,8 +134,9 @@ class TlsInspectorReplaceHandshakeMessage : public TlsHandshakeFilter {
                                       const DataBuffer& replacement)
       : handshake_type_(handshake_type), buffer_(replacement) {}
 
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output);
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
 
  private:
   uint8_t handshake_type_;
@@ -96,8 +149,9 @@ class TlsAlertRecorder : public TlsRecordFilter {
  public:
   TlsAlertRecorder() : level_(255), description_(255) {}
 
-  virtual bool FilterRecord(uint8_t content_type, uint16_t version,
-                            const DataBuffer& input, DataBuffer* output);
+  virtual PacketFilter::Action FilterRecord(const RecordHeader& header,
+                                            const DataBuffer& input,
+                                            DataBuffer* output);
 
   uint8_t level() const { return level_; }
   uint8_t description() const { return description_; }
@@ -115,7 +169,8 @@ class ChainedPacketFilter : public PacketFilter {
       : filters_(filters.begin(), filters.end()) {}
   virtual ~ChainedPacketFilter();
 
-  virtual bool Filter(const DataBuffer& input, DataBuffer* output);
+  virtual PacketFilter::Action Filter(const DataBuffer& input,
+                                      DataBuffer* output);
 
   // Takes ownership of the filter.
   void Add(PacketFilter* filter) {
