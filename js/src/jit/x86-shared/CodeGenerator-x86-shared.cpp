@@ -377,13 +377,61 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* acces
     // field, so -access->endOffset() will turn into
     // (heapLength - access->endOffset()), allowing us to test whether the end
     // of the access is beyond the end of the heap.
-    uint32_t maybeCmpOffset = masm.cmp32WithPatch(ptr, Imm32(-access->endOffset())).offset();
+    uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(-access->endOffset())).offset();
     masm.j(Assembler::Above, fail);
 
     if (pass)
         masm.bind(pass);
 
-    return maybeCmpOffset;
+    return cmpOffset;
+}
+
+uint32_t
+CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* access,
+                                                          const MInstruction* mir,
+                                                          const LAllocation* ptr)
+{
+    if (!gen->needsAsmJSBoundsCheckBranch(access))
+        return wasm::HeapAccess::NoLengthCheck;
+
+    return emitAsmJSBoundsCheckBranch(access, mir, ToRegister(ptr), masm.asmOnOutOfBoundsLabel());
+}
+
+uint32_t
+CodeGeneratorX86Shared::maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
+                                                      OutOfLineLoadTypedArrayOutOfBounds** ool)
+{
+    MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
+    *ool = nullptr;
+
+    if (!gen->needsAsmJSBoundsCheckBranch(mir))
+        return wasm::HeapAccess::NoLengthCheck;
+
+    if (mir->isAtomicAccess())
+        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+
+    *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(ins->output()),
+                                                           mir->accessType());
+
+    addOutOfLineCode(*ool, mir);
+    return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), (*ool)->entry());
+}
+
+uint32_t
+CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins,
+                                                       Label** rejoin)
+{
+    MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
+    *rejoin = nullptr;
+
+    if (!gen->needsAsmJSBoundsCheckBranch(mir))
+        return wasm::HeapAccess::NoLengthCheck;
+
+    if (mir->isAtomicAccess())
+        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+
+    *rejoin = alloc().lifoAlloc()->newInfallible<Label>();
+    return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), *rejoin);
 }
 
 void
