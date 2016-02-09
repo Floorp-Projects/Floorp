@@ -47,7 +47,7 @@ class MachCommands(MachCommandBase):
 
         from mozbuild.base import MozbuildObject
         from mozfile import TemporaryDirectory
-        from mozhttpd import MozHttpd
+        from wptserve.server import WebTestHttpd
         from mozprofile import FirefoxProfile, Preferences
         from mozprofile.permissions import ServerLocations
         from mozrunner import FirefoxRunner
@@ -58,7 +58,7 @@ class MachCommands(MachCommandBase):
 
         # XXX: currently we just use the PGO inputs for Valgrind runs.  This may
         # change in the future.
-        httpd = MozHttpd(docroot=os.path.join(build_dir, 'pgo'))
+        httpd = WebTestHttpd(doc_root=os.path.join(build_dir, 'pgo'))
         httpd.start(block=False)
 
         with TemporaryDirectory() as profilePath:

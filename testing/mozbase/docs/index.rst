@@ -44,7 +44,6 @@ want to do then dive in!
    manifestparser
    gettinginfo
    setuprunning
-   mozhttpd
    loggingreporting
    devicemanagement
 
