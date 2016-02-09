@@ -38,9 +38,9 @@ SmsManager::NotifySmsReceived(int32_t aId,
     message.iccId() = EmptyString();
     message.delivery() = eDeliveryState_Received;
     message.deliveryStatus() = eDeliveryStatus_Success;
-    message.sender() = aSender ? nsString(aSender) : EmptyString();
+    message.sender() = aSender ? aSender->ToString() : EmptyString();
     message.receiver() = EmptyString();
-    message.body() = aBody ? nsString(aBody) : EmptyString();
+    message.body() = aBody ? aBody->ToString() : EmptyString();
     message.messageClass() = static_cast<MessageClass>(aMessageClass);
     message.timestamp() = aTimestamp;
     message.sentTimestamp() = aSentTimestamp;
@@ -76,8 +76,8 @@ SmsManager::NotifySmsSent(int32_t aId,
     message.delivery() = eDeliveryState_Sent;
     message.deliveryStatus() = eDeliveryStatus_Pending;
     message.sender() = EmptyString();
-    message.receiver() = aReceiver ? nsString(aReceiver) : EmptyString();
-    message.body() = aBody ? nsString(aBody) : EmptyString();
+    message.receiver() = aReceiver ? aReceiver->ToString() : EmptyString();
+    message.body() = aBody ? aBody->ToString() : EmptyString();
     message.messageClass() = eMessageClass_Normal;
     message.timestamp() = aTimestamp;
     message.sentTimestamp() = aTimestamp;
@@ -125,8 +125,8 @@ SmsManager::NotifySmsDelivery(int32_t aId,
     message.delivery() = eDeliveryState_Sent;
     message.deliveryStatus() = static_cast<DeliveryStatus>(aDeliveryStatus);
     message.sender() = EmptyString();
-    message.receiver() = aReceiver ? nsString(aReceiver) : EmptyString();
-    message.body() = aBody ? nsString(aBody) : EmptyString();
+    message.receiver() = aReceiver ? aReceiver->ToString() : EmptyString();
+    message.body() = aBody ? aBody->ToString() : EmptyString();
     message.messageClass() = eMessageClass_Normal;
     message.timestamp() = aTimestamp;
     message.sentTimestamp() = aTimestamp;
@@ -175,7 +175,7 @@ SmsManager::NotifyGetSms(int32_t aId,
                          bool aRead,
                          int32_t aRequestId)
 {
-    nsString receiver(aReceiver);
+    nsString receiver(aReceiver->ToString());
     DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
                                              : eDeliveryState_Sent;
 
@@ -187,9 +187,9 @@ SmsManager::NotifyGetSms(int32_t aId,
     message.iccId() = EmptyString();
     message.delivery() = state;
     message.deliveryStatus() = static_cast<DeliveryStatus>(aDeliveryStatus);
-    message.sender() = aSender ? nsString(aSender) : EmptyString();
+    message.sender() = aSender ? aSender->ToString() : EmptyString();
     message.receiver() = receiver;
-    message.body() = aBody ? nsString(aBody) : EmptyString();
+    message.body() = aBody ? aBody->ToString() : EmptyString();
     message.messageClass() = eMessageClass_Normal;
     message.timestamp() = aTimestamp;
     message.sentTimestamp() = aTimestamp;
@@ -289,9 +289,9 @@ SmsManager::NotifyThreadCursorResult(int64_t aId,
     ThreadData thread;
     thread.id() = aId;
     thread.lastMessageSubject() = aLastMessageSubject ?
-                                    nsString(aLastMessageSubject) :
+                                    aLastMessageSubject->ToString() :
                                     EmptyString();
-    thread.body() = aBody ? nsString(aBody) : EmptyString();
+    thread.body() = aBody ? aBody->ToString() : EmptyString();
     thread.unreadCount() = aUnreadCount;
     thread.timestamp() = aTimestamp;
     thread.lastMessageType() = eMessageType_SMS;
@@ -340,7 +340,7 @@ SmsManager::NotifyMessageCursorResult(int32_t aMessageId,
                                       bool aRead,
                                       int32_t aRequestId)
 {
-    nsString receiver = nsString(aReceiver);
+    nsString receiver = aReceiver->ToString();
     DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
                                              : eDeliveryState_Sent;
 
@@ -351,9 +351,9 @@ SmsManager::NotifyMessageCursorResult(int32_t aMessageId,
     message.iccId() = EmptyString();
     message.delivery() = state;
     message.deliveryStatus() = static_cast<DeliveryStatus>(aDeliveryStatus);
-    message.sender() = aSender ? nsString(aSender) : EmptyString();
+    message.sender() = aSender ? aSender->ToString() : EmptyString();
     message.receiver() = receiver;
-    message.body() = aBody ? nsString(aBody) : EmptyString();
+    message.body() = aBody ? aBody->ToString() : EmptyString();
     message.messageClass() = eMessageClass_Normal;
     message.timestamp() = aTimestamp;
     message.sentTimestamp() = aTimestamp;
