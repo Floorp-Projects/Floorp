@@ -566,6 +566,18 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
     MOZ_CRASH("NYI");
 }
 
+CodeOffset
+MacroAssembler::thunkWithPatch()
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchThunk(uint32_t thunkOffset, uint32_t targetOffset)
+{
+    MOZ_CRASH("NYI");
+}
+
 void
 MacroAssembler::pushReturnAddress()
 {

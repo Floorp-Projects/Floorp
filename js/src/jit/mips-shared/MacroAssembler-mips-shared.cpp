@@ -1156,6 +1156,18 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
                                          PatchedImmPtr((const void*)calleeOffset));
 }
 
+CodeOffset
+MacroAssembler::thunkWithPatch()
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchThunk(uint32_t callerOffset, uint32_t calleeOffset)
+{
+    MOZ_CRASH("NYI");
+}
+
 void
 MacroAssembler::call(wasm::SymbolicAddress target)
 {

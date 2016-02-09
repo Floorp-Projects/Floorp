@@ -4941,15 +4941,59 @@ MacroAssembler::call(JitCode* c)
 CodeOffset
 MacroAssembler::callWithPatch()
 {
-    // For now, assume that it'll be nearby.
+    // The caller ensures that the call is always in range using thunks (below)
+    // as necessary.
     as_bl(BOffImm(), Always, /* documentation */ nullptr);
     return CodeOffset(currentOffset());
 }
+
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
     BufferOffset inst(callerOffset - 4);
     as_bl(BufferOffset(calleeOffset).diffB<BOffImm>(inst), Always, inst);
+}
+
+CodeOffset
+MacroAssembler::thunkWithPatch()
+{
+    // The goal of the thunk is to be able to jump to any address without the
+    // usual 32MiB branch range limitation. Additionally, to make the thunk
+    // simple to use, the thunk does not use the constant pool or require
+    // patching an absolute address. Instead, a relative offset is used which
+    // can be patched during compilation.
+
+    // Inhibit pools since these three words must be contiguous so that the offset
+    // calculations below are valid.
+    AutoForbidPools afp(this, 3);
+
+    // When pc is used, the read value is the address of the instruction + 8.
+    // This is exactly the address of the uint32 word we want to load.
+    ScratchRegisterScope scratch(*this);
+    ma_ldr(Address(pc, 0), scratch);
+
+    // Branch by making pc the destination register.
+    ma_add(pc, scratch, pc, LeaveCC, Always);
+
+    // Allocate space which will be patched by patchThunk().
+    CodeOffset u32Offset(currentOffset());
+    writeInst(UINT32_MAX);
+
+    return u32Offset;
+}
+
+void
+MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
+{
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));
+    MOZ_ASSERT(*u32 == UINT32_MAX);
+
+    uint32_t addOffset = u32Offset - 4;
+    MOZ_ASSERT(editSrc(BufferOffset(addOffset))->is<InstALU>());
+
+    // When pc is read as the operand of the add, its value is the address of
+    // the add instruction + 8.
+    *u32 = (targetOffset - addOffset) - 8;
 }
 
 void
