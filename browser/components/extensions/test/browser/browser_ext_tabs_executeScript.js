@@ -8,33 +8,134 @@ add_task(function* testExecuteScript() {
   let messageManagersSize = MessageChannel.messageManagers.size;
   let responseManagersSize = MessageChannel.responseManagers.size;
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+  const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+  const URL = BASE + "file_iframe_document.html";
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, URL, true);
 
   function background() {
-    browser.tabs.executeScript({
-      file: "script.js",
-      code: "42",
-    }, result => {
-      browser.test.assertEq(42, result, "Expected callback result");
-      browser.test.sendMessage("got result", result);
-    });
+    browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
+      return browser.webNavigation.getAllFrames({tabId: tabs[0].id});
+    }).then(frames => {
+      browser.test.log(`FRAMES: ${frames[1].frameId} ${JSON.stringify(frames)}\n`);
+      return Promise.all([
+        browser.tabs.executeScript({
+          code: "42",
+        }).then(result => {
+          browser.test.assertEq(42, result, "Expected callback result");
+        }),
 
-    browser.tabs.executeScript({
-      file: "script2.js",
-    }, result => {
-      browser.test.assertEq(27, result, "Expected callback result");
-      browser.test.sendMessage("got callback", result);
-    });
+        browser.tabs.executeScript({
+          file: "script.js",
+          code: "42",
+        }).then(result => {
+          browser.test.fail("Expected not to be able to execute a script with both file and code");
+        }, error => {
+          browser.test.assertTrue(/a 'code' or a 'file' property, but not both/.test(error.message),
+                                  "Got expected error");
+        }),
 
-    browser.runtime.onMessage.addListener(message => {
-      browser.test.assertEq("script ran", message, "Expected runtime message");
-      browser.test.sendMessage("got message", message);
+        browser.tabs.executeScript({
+          file: "script.js",
+        }).then(result => {
+          browser.test.assertEq(undefined, result, "Expected callback result");
+        }),
+
+        browser.tabs.executeScript({
+          file: "script2.js",
+        }).then(result => {
+          browser.test.assertEq(27, result, "Expected callback result");
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
+          allFrames: true,
+        }).then(result => {
+          browser.test.assertTrue(Array.isArray(result), "Result is an array");
+
+          browser.test.assertEq(2, result.length, "Result has correct length");
+
+          browser.test.assertTrue(/\/file_iframe_document\.html$/.test(result[0]), "First result is correct");
+          browser.test.assertEq("http://mochi.test:8888/", result[1], "Second result is correct");
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
+          runAt: "document_end",
+        }).then(result => {
+          browser.test.assertTrue(typeof(result) == "string", "Result is a string");
+
+          browser.test.assertTrue(/\/file_iframe_document\.html$/.test(result), "Result is correct");
+        }),
+
+        browser.tabs.executeScript({
+          code: "window",
+        }).then(result => {
+          browser.test.fail("Expected error when returning non-structured-clonable object");
+        }, error => {
+          browser.test.assertEq("Script returned non-structured-clonable data",
+                                error.message, "Got expected error");
+        }),
+
+        browser.tabs.executeScript({
+          code: "Promise.resolve(window)",
+        }).then(result => {
+          browser.test.fail("Expected error when returning non-structured-clonable object");
+        }, error => {
+          browser.test.assertEq("Script returned non-structured-clonable data",
+                                error.message, "Got expected error");
+        }),
+
+        browser.tabs.executeScript({
+          code: "Promise.resolve(42)",
+        }).then(result => {
+          browser.test.assertEq(42, result, "Got expected promise resolution value as result");
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
+          runAt: "document_end",
+          allFrames: true,
+        }).then(result => {
+          browser.test.assertTrue(Array.isArray(result), "Result is an array");
+
+          browser.test.assertEq(2, result.length, "Result has correct length");
+
+          browser.test.assertTrue(/\/file_iframe_document\.html$/.test(result[0]), "First result is correct");
+          browser.test.assertEq("http://mochi.test:8888/", result[1], "Second result is correct");
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
+          frameId: frames[0].frameId,
+        }).then(result => {
+          browser.test.assertTrue(/\/file_iframe_document\.html$/.test(result), `Result for frameId[0] is correct: ${result}`);
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
+          frameId: frames[1].frameId,
+        }).then(result => {
+          browser.test.assertEq("http://mochi.test:8888/", result, "Result for frameId[1] is correct");
+        }),
+
+        new Promise(resolve => {
+          browser.runtime.onMessage.addListener(message => {
+            browser.test.assertEq("script ran", message, "Expected runtime message");
+            resolve();
+          });
+        }),
+      ]);
+    }).then(() => {
+      browser.test.notifyPass("executeScript");
+    }).catch(e => {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFail("executeScript");
     });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/"],
+      "permissions": ["http://mochi.test/", "webNavigation"],
     },
 
     background,
@@ -50,9 +151,7 @@ add_task(function* testExecuteScript() {
 
   yield extension.startup();
 
-  yield extension.awaitMessage("got result");
-  yield extension.awaitMessage("got callback");
-  yield extension.awaitMessage("got message");
+  yield extension.awaitFinish("executeScript");
 
   yield extension.unload();
 
