@@ -187,7 +187,7 @@ function mpTestModernBeatsLegacy(eventInfo) {
 // Test that an event which bubbles may fire listeners of different flavors
 // (modern vs. legacy) at each bubbling level, depending on what's registered
 // at that level.
-function mpTestAncestorsWithDiffListeners(eventInfo) {
+function mpTestDiffListenersEventBubbling(eventInfo) {
   return new Promise(
     function(resolve, reject) {
       var grandparent = createChildDiv();
@@ -198,35 +198,31 @@ function mpTestAncestorsWithDiffListeners(eventInfo) {
       var eventSentToTarget;
 
       target.addEventListener(eventInfo.modern_name,
-        createHandlerWithTypeCheck(eventInfo.modern_name,
-                                   function(e) {
-                                     ok(e.bubbles, "Expecting event to bubble");
-                                     eventSentToTarget = e;
-                                     didEventFireOnTarget = true;
-                                   }));
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          ok(e.bubbles, "Expecting event to bubble");
+          eventSentToTarget = e;
+          didEventFireOnTarget = true;
+        }));
 
       parent.addEventListener(eventInfo.legacy_name,
-        createHandlerWithTypeCheck(eventInfo.legacy_name,
-                                   function(e) {
-                                     is(e, eventSentToTarget,
-                                        "Same event object should bubble, " +
-                                        "despite difference in type");
-                                     didEventFireOnParent = true;
-                                   }));
+        createHandlerWithTypeCheck(eventInfo.legacy_name, function(e) {
+          is(e, eventSentToTarget,
+             "Same event object should bubble, despite difference in type");
+          didEventFireOnParent = true;
+        }));
 
       grandparent.addEventListener(eventInfo.modern_name,
-        createHandlerWithTypeCheck(eventInfo.modern_name,
-                                   function(e) {
-                                     ok(didEventFireOnTarget,
-                                        "Event should have fired on child");
-                                     ok(didEventFireOnParent,
-                                        "Event should have fired on parent");
-                                     is(e, eventSentToTarget,
-                                        "Same event object should bubble, " +
-                                        "despite difference in type");
-                                     parent.removeChild(target);
-                                     resolve();
-                                   }));
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+        ok(didEventFireOnTarget,
+           "Event should have fired on child");
+        ok(didEventFireOnParent,
+           "Event should have fired on parent");
+        is(e, eventSentToTarget,
+           "Same event object should bubble, despite difference in type");
+        parent.removeChild(target);
+        resolve();
+      }));
+
       eventInfo.trigger_event(target);
     }
   );
@@ -239,7 +235,7 @@ function main() {
   }).then(function() {
     return Promise.all(gLegacyEventInfo.map(mpTestModernBeatsLegacy));
   }).then(function() {
-    return Promise.all(gLegacyEventInfo.map(mpTestAncestorsWithDiffListeners));
+    return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventBubbling));
   }).then(function() {
     SimpleTest.finish();
   }).catch(function(reason) {
