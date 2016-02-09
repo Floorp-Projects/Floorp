@@ -3312,7 +3312,7 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
       MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
     current->add(values);
 
-    MSimdBox* obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject,
+    MSimdBox* obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject, descr->type(),
                                   inlineTypedObject->group()->initialHeap(constraints()));
     current->add(obj);
     current->push(obj);
@@ -3369,9 +3369,20 @@ IonBuilder::inlineSimdCheck(CallInfo& callInfo, JSNative native, SimdType type)
 MDefinition*
 IonBuilder::unboxSimd(MDefinition* ins, SimdType type)
 {
-    MIRType mirType = SimdTypeToMIRType(type);
+    // Trivial optimization: If ins is a MSimdBox of the same SIMD type, there
+    // is no way the unboxing could fail, and we can skip it altogether.
+    // This is the same thing MSimdUnbox::foldsTo() does, but we can save the
+    // memory allocation here.
+    if (ins->isSimdBox()) {
+        MSimdBox* box = ins->toSimdBox();
+        if (box->simdType() == type) {
+            MDefinition* value = box->input();
+            MOZ_ASSERT(value->type() == SimdTypeToMIRType(type));
+            return value;
+        }
+    }
 
-    MSimdUnbox* unbox = MSimdUnbox::New(alloc(), ins, mirType);
+    MSimdUnbox* unbox = MSimdUnbox::New(alloc(), ins, type);
     current->add(unbox);
     return unbox;
 }
@@ -3379,7 +3390,8 @@ IonBuilder::unboxSimd(MDefinition* ins, SimdType type)
 IonBuilder::InliningStatus
 IonBuilder::boxSimd(CallInfo& callInfo, MDefinition* ins, InlineTypedObject* templateObj)
 {
-    MSimdBox* obj = MSimdBox::New(alloc(), constraints(), ins, templateObj,
+    SimdType simdType = templateObj->typeDescr().as<SimdTypeDescr>().type();
+    MSimdBox* obj = MSimdBox::New(alloc(), constraints(), ins, templateObj, simdType,
                                   templateObj->group()->initialHeap(constraints()));
 
     // In some cases, ins has already been added to current.
