@@ -48,6 +48,7 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
+#include "gtest_ringbuffer_dumper.h"
 #include "mtransport_test_utils.h"
 #include "nss.h"
 #include "ssl.h"
@@ -97,14 +98,17 @@ extern "C" {
     ASSERT_EQ(expected, actual); \
   } while(0)
 
+using test::RingbufferDumper;
+
 class MtransportTest : public ::testing::Test {
 public:
   MtransportTest()
     : test_utils_(nullptr)
+    , dumper_(nullptr)
   {
   }
 
-  void SetUp() {
+  void SetUp() override {
     test_utils_ = new MtransportTestUtils();
     NSS_NoDB_Init(nullptr);
     NSS_SetDomesticPolicy();
@@ -135,9 +139,17 @@ public:
 
     // Some tests are flaky and need to check if they're supposed to run.
     webrtc_enabled_ = CheckEnvironmentFlag("MOZ_WEBRTC_TESTS");
+
+    ::testing::TestEventListeners& listeners =
+        ::testing::UnitTest::GetInstance()->listeners();
+
+    dumper_ = new RingbufferDumper(test_utils_);
+    listeners.Append(dumper_);
   }
 
-  void TearDown() {
+  void TearDown() override {
+    ::testing::UnitTest::GetInstance()->listeners().Release(dumper_);
+    delete dumper_;
     delete test_utils_;
   }
 
@@ -178,6 +190,7 @@ public:
   }
 
   MtransportTestUtils* test_utils_;
+  RingbufferDumper* dumper_;
 
   std::string turn_server_;
   std::string turn_user_;

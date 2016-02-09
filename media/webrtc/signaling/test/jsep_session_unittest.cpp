@@ -35,6 +35,8 @@
 #include "FakeIPC.h"
 #include "FakeIPC.cpp"
 
+#include "TestHarness.h"
+
 namespace mozilla {
 static std::string kAEqualsCandidate("a=candidate:");
 const static size_t kNumCandidatesPerComponent = 3;
