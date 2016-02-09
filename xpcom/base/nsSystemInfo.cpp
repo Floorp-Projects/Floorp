@@ -31,6 +31,7 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#include <dlfcn.h>
 #include <unistd.h>
 #include <fstream>
 #include "mozilla/Tokenizer.h"
@@ -702,12 +703,32 @@ nsSystemInfo::Init()
                           gtk_micro_version);
   }
 
+  nsAutoCString secondaryLibrary;
   if (gtkver_len > 0) {
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
-                               nsDependentCSubstring(gtkver, gtkver_len));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    secondaryLibrary.Append(nsDependentCSubstring(gtkver, gtkver_len));
+  }
+
+  void* libpulse = dlopen("libpulse.so.0", RTLD_LAZY);
+  const char* libpulseVersion = "not-available";
+  if (libpulse) {
+    auto pa_get_library_version = reinterpret_cast<const char* (*)()>
+      (dlsym(libpulse, "pa_get_library_version"));
+
+    if (pa_get_library_version) {
+      libpulseVersion = pa_get_library_version();
     }
+  }
+
+  secondaryLibrary.AppendPrintf(",libpulse %s", libpulseVersion);
+
+  if (libpulse) {
+    dlclose(libpulse);
+  }
+
+  rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
+                             secondaryLibrary);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 #endif
 
