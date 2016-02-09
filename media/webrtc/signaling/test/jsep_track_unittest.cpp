@@ -22,6 +22,8 @@
 #include "FakeIPC.h"
 #include "FakeIPC.cpp"
 
+#include "TestHarness.h"
+
 namespace mozilla {
 
 class JsepTrackTest : public ::testing::Test
