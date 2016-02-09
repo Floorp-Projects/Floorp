@@ -29,95 +29,78 @@ const UA_PARTIAL_TO = UA_WHOLE_OVERRIDE;
 const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
 const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
 
-function getUA(host) {
-  var url = location.pathname;
+function testUATab(host, expected, sameQ, message, testNavQ, navSameQ, navMessage, callback) {
+  let url = location.pathname;
   url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+  let uri = Services.io.newURI(url, null, null);
+  let tab = BrowserApp.addTab(uri.spec, { selected: true, parentId: BrowserApp.selectedTab.id });
+  let browser = tab.browser;
 
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, false); // sync request
-  xhr.send();
-  is(xhr.status, 200, 'request failed');
-  is(typeof xhr.response, 'string', 'invalid response');
-  return xhr.response;
+  browser.addEventListener("load", function handle() {
+    ok(sameQ == (browser.contentDocument.body.innerHTML.indexOf(expected) != -1), message);
+    if(testNavQ) {
+      ok(navSameQ == (browser.contentWindow.navigator.userAgent.indexOf(expected) != -1), navMessage);
+    }
+    browser.removeEventListener("load", handle, true);
+    BrowserApp.closeTab(tab);
+    callback();
+  }, true);
+}
+
+function testUATabNoNav(host, expected, sameQ, message, callback) {
+  testUATab(host, expected, sameQ, message, false, true, '', callback);
 }
 
 function testUA(options, callback) {
-
   var [domain, override, test_hosts, expected] =
     [options.domain, options.override, options.test_hosts, options.expected];
 
-  info('Overriding ' + domain + ' with ' + override);
+  (function nextTest() {
+    let test_host = test_hosts.shift();
 
-  function is_subdomain(host) {
-    var [test_domain] = host.slice(host.lastIndexOf('/') + 1).split(':', 1);
-    return test_domain === domain || test_domain.endsWith('.' + domain);
-  }
+    info("Overriding " + domain + " with " + override + " for " + test_host);
 
-  var localhost = location.origin;
-  var overrideNavigator = is_subdomain(localhost);
-  var navigator_ua, test_ua = [];
+    function is_subdomain(host) {
+      var [test_domain] = host.slice(host.lastIndexOf('/') + 1).split(':', 1);
+      return test_domain === domain || test_domain.endsWith('.' + domain);
+    }
 
-  // store UA before pref change, to be compared later
-  if (overrideNavigator) {
-    navigator_ua = navigator.userAgent;
-  }
-  test_hosts.forEach(function (test_host) {
-    test_ua.push(getUA(test_host));
-  });
-  // set the override pref to override the UA
-  SpecialPowers.pushPrefEnv({
-    set: [[PREF_OVERRIDES_BRANCH + domain, override]],
-  }, function () {
-    var ifr = document.createElement('IFRAME');
-    ifr.src = "about:blank";
+    var localhost = location.origin;
+    var overrideNavigator = is_subdomain(localhost);
+    var navigator_ua, test_ua;
 
-    ifr.addEventListener('load', function() {
-      var nav = ifr.contentWindow.navigator;
+    if (overrideNavigator) {
+      navigator_ua = navigator.userAgent;
+    }
 
-      // check that the UA has changed after pref change
-      if (overrideNavigator) {
-        is(nav.userAgent, expected,
-          'Navigator UA not overridden at step ' + (++step));
-      } else {
-        is(nav.userAgent, DEFAULT_UA,
-          'Navigator UA should not be overridden at step ' + (++step));
-      }
+    let url = location.pathname;
+    url = test_host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+    let uri = Services.io.newURI(url, null, null);
+    let tab = BrowserApp.addTab(uri.spec, { selected: true, parentId: BrowserApp.selectedTab.id });
+    let browser = tab.browser;
 
-      test_hosts.forEach(function (test_host) {
-        is(getUA(test_host), expected,
-          'Header UA not overridden at step ' + (++step));
-      });
-
-      // clear the override pref to undo overriding the UA
+    browser.addEventListener("load", function handle() {
+      test_ua = browser.contentDocument.body.innerHTML;
+      browser.removeEventListener("load", handle, true);
+      BrowserApp.closeTab(tab);
       SpecialPowers.pushPrefEnv({
-        clear: [[PREF_OVERRIDES_BRANCH + domain]],
+        set: [[PREF_OVERRIDES_BRANCH + domain, override]],
       }, function () {
-        var ifr = document.createElement('IFRAME');
-        ifr.src = "about:blank";
-
-        ifr.addEventListener('load', function() {
-          var nav = ifr.contentWindow.navigator;
-
-          // check that the UA has changed back
-          if (overrideNavigator) {
-            is(nav.userAgent, navigator_ua,
-              'Navigator UA not restored at step ' + (++step));
-          }
-          test_hosts.forEach(function (test_host, i) {
-            is(getUA(test_host), test_ua[i],
-              'Header UA not restored at step ' + (++step));
+        testUATab(test_host, expected, true, 'Header UA not overridden at step ' + (++step), true,
+          true, 'Navigator UA not overridden at step ' + (++step), function () {
+          // clear the override pref to undo overriding the UA
+          SpecialPowers.pushPrefEnv({
+            clear: [[PREF_OVERRIDES_BRANCH + domain]],
+          }, function () {
+            testUATabNoNav(test_host, test_ua, true, 'Header UA not restored at step ' + (++step), function() {
+              test_hosts.length ? nextTest() : callback();
+            });
           });
-          callback();
         });
-
-        document.getElementById('content').appendChild(ifr);
       });
-    }, false);
-
-    document.getElementById('content').appendChild(ifr);
-  });
+    }, true);
+  })();
 }
-
 
 var step = 0; // for logging
 var tests = [
@@ -175,16 +158,15 @@ function testInactive(callback) {
       [PREF_OVERRIDES_BRANCH + location.hostname, UA_WHOLE_OVERRIDE]
     ]
   }, function () {
-    isnot(navigator.userAgent, UA_WHOLE_OVERRIDE,
-      'Failed to disable navigator UA override');
-    isnot(getUA(location.origin), UA_WHOLE_OVERRIDE,
-      'Failed to disable header UA override');
-    SpecialPowers.pushPrefEnv({
-      clear: [
-        [PREF_OVERRIDES_ENABLED],
-        [PREF_OVERRIDES_BRANCH + location.hostname]
-      ]
-    }, callback);
+    testUATab(location.origin, UA_WHOLE_OVERRIDE, false, 'Failed to disabled header UA override at step ' + (++step),
+      true, false, 'Failed to disable navigator UA override at step + ' + (++step), function () {
+      SpecialPowers.pushPrefEnv({
+        clear: [
+          [PREF_OVERRIDES_ENABLED],
+          [PREF_OVERRIDES_BRANCH + location.hostname]
+        ]
+      }, callback);
+    });
   });
 }
 
@@ -206,22 +188,22 @@ function testPriority(callback) {
       ]
     }, function () {
       // should use first override at this point
-      is(getUA(host),
-        UA_WHOLE_EXPECTED, 'UA not overridden');
-      // add a second override that should be used
-      testUA({
-        domain: level2,
-        override: UA_PARTIAL_OVERRIDE,
-        test_hosts: [host],
-        expected: UA_PARTIAL_EXPECTED
-      }, function () {
-        // add a third override that should not be used
+      testUATabNoNav(host, UA_WHOLE_EXPECTED, true, 'UA not overridden at step ' + (++step), function() {
+        // add a second override that should be used
         testUA({
-          domain: level0,
+          domain: level2,
           override: UA_PARTIAL_OVERRIDE,
           test_hosts: [host],
-          expected: UA_WHOLE_EXPECTED
-        }, tests.length ? nextTest : callback);
+          expected: UA_PARTIAL_EXPECTED
+        }, function () {
+          // add a third override that should not be used
+          testUA({
+            domain: level0,
+            override: UA_PARTIAL_OVERRIDE,
+            test_hosts: [host],
+            expected: UA_WHOLE_EXPECTED
+          }, tests.length ? nextTest : callback);
+        });
       });
     });
   })();
@@ -240,8 +222,14 @@ SpecialPowers.wrap(UserAgentOverrides).init();
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestCompleteLog();
+SimpleTest.requestLongerTimeout(5);
 
 info(SpecialPowers.Cc["@mozilla.org/dom/site-specific-user-agent;1"].number);
+
+const Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
+
+let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+let BrowserApp = chromeWin.BrowserApp;
 
 testOverrides(function() {
   testInactive(function() {
