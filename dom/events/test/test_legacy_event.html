@@ -219,7 +219,8 @@ function mpTestDiffListenersEventBubbling(eventInfo) {
            "Event should have fired on parent");
         is(e, eventSentToTarget,
            "Same event object should bubble, despite difference in type");
-        parent.removeChild(target);
+        // Clean up.
+        grandparent.parentNode.removeChild(grandparent);
         resolve();
       }));
 
