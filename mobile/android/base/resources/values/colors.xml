@@ -141,9 +141,6 @@
   <color name="tab_history_favicon_background">#FFFFFF</color>
   <color name="tab_history_border_color">#DADADF</color>
 
-  <!-- Colour used for Find-In-Page dialog -->
-  <color name="find_matchcase_off">#D02626</color>
-
   <!-- Canvas delegate paint color -->
   <color name="canvas_delegate_paint">#FFFF0000</color>
 

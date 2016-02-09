@@ -794,4 +794,36 @@ this.BrowserTestUtils = {
       }, interval);
     });
   },
+
+  /**
+   * Waits for a <xul:notification> with a particular value to appear
+   * for the <xul:notificationbox> of the passed in browser.
+   *
+   * @param tabbrowser (<xul:tabbrowser>)
+   *        The gBrowser that hosts the browser that should show
+   *        the notification. For most tests, this will probably be
+   *        gBrowser.
+   * @param browser (<xul:browser>)
+   *        The browser that should be showing the notification.
+   * @param notificationValue (string)
+   *        The "value" of the notification, which is often used as
+   *        a unique identifier. Example: "plugin-crashed".
+   * @return Promise
+   *        Resolves to the <xul:notification> that is being shown.
+   */
+  waitForNotificationBar(tabbrowser, browser, notificationValue) {
+    let notificationBox = tabbrowser.getNotificationBox(browser);
+    return new Promise((resolve) => {
+      let check = (event) => {
+        return event.target.value == notificationValue;
+      };
+
+      BrowserTestUtils.waitForEvent(notificationBox, "AlertActive",
+                                    false, check).then((event) => {
+        // The originalTarget of the AlertActive on a notificationbox
+        // will be the notification itself.
+        resolve(event.originalTarget);
+      });
+    });
+  },
 };

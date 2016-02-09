@@ -393,7 +393,11 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
   // do this three times, one for each state of pageUpOrDownMovesSelection,
   // and then once with the accel key pressed
   for (let t = 0; t < 3; t++) {
-    let testidmod = (t == 2) ? " with accel" : (t == 1) ? " rev" : "";
+    let testidmod = "";
+    if (t == 2)
+      testidmod = " with accel"
+    else if (t == 1)
+      testidmod = " rev";
     var keymod = (t == 2) ? { accelKey: true } : { };
 
     var moveselection = tree.pageUpOrDownMovesSelection;
@@ -1164,10 +1168,20 @@ function testtag_tree_wheel(aTree)
   function helper(aStart, aDelta, aIntDelta, aDeltaMode)
   {
     aTree.treeBoxObject.scrollToRow(aStart);
-    var expected = !aIntDelta ? aStart :
-          aDeltaMode != WheelEvent.DOM_DELTA_PAGE ? aStart + aIntDelta :
-          aIntDelta > 0 ? aStart + aTree.treeBoxObject.getPageLength() :
-                          aStart - aTree.treeBoxObject.getPageLength();
+    var expected;
+    if (!aIntDelta) {
+      expected = aStart;
+    }
+    else if (aDeltaMode != WheelEvent.DOM_DELTA_PAGE) {
+      expected = aStart + aIntDelta;
+    }
+    else if (aIntDelta > 0) {
+      expected = aStart + aTree.treeBoxObject.getPageLength();
+    }
+    else {
+      expected = aStart - aTree.treeBoxObject.getPageLength();
+    }
+
     if (expected < 0) {
       expected = 0;
     }

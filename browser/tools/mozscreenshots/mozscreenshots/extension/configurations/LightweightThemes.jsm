@@ -15,12 +15,12 @@ Cu.import("resource://gre/modules/Timer.jsm");
 
 this.LightweightThemes = {
   init(libDir) {
-    // convert -size 3000x200 canvas:black black_theme.png
+    // convert -size 3000x200 canvas:#333 black_theme.png
     let blackImage = libDir.clone();
     blackImage.append("black_theme.png");
     this._blackImageURL = Services.io.newFileURI(blackImage).spec;
 
-    // convert -size 3000x200 canvas:white white_theme.png
+    // convert -size 3000x200 canvas:#eee white_theme.png
     let whiteImage = libDir.clone();
     whiteImage.append("white_theme.png");
     this._whiteImageURL = Services.io.newFileURI(whiteImage).spec;
@@ -40,7 +40,7 @@ this.LightweightThemes = {
           name:        "black",
           headerURL:   LightweightThemes._blackImageURL,
           footerURL:   LightweightThemes._blackImageURL,
-          textcolor:   "#ffffff",
+          textcolor:   "#eeeeee",
           accentcolor: "#111111",
         });
 
@@ -62,7 +62,7 @@ this.LightweightThemes = {
           name:        "white",
           headerURL:   LightweightThemes._whiteImageURL,
           footerURL:   LightweightThemes._whiteImageURL,
-          textcolor:   "#000000",
+          textcolor:   "#111111",
           accentcolor: "#eeeeee",
         });
         // Wait for LWT listener

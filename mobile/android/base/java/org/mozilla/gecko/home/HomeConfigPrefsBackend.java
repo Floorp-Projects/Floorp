@@ -33,17 +33,17 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-class HomeConfigPrefsBackend implements HomeConfigBackend {
+public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
     private static final int VERSION = 3;
 
     // This key was originally used to store only an array of panel configs.
-    private static final String PREFS_CONFIG_KEY_OLD = "home_panels";
+    public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
 
     // This key is now used to store a version number with the array of panel configs.
-    private static final String PREFS_CONFIG_KEY = "home_panels_with_version";
+    public static final String PREFS_CONFIG_KEY = "home_panels_with_version";
 
     // Keys used with JSON object stored in prefs.
     private static final String JSON_KEY_PANELS = "panels";

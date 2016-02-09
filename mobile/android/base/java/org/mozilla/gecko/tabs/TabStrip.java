@@ -15,7 +15,8 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
-import org.mozilla.gecko.BrowserApp.Refreshable;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.BrowserApp.TabStripInterface;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -24,13 +25,14 @@ import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 public class TabStrip extends ThemedLinearLayout
-                      implements Refreshable {
+                      implements TabStripInterface {
     private static final String LOGTAG = "GeckoTabStrip";
 
     private final TabStripView tabStripView;
     private final ThemedImageButton addTabButton;
 
     private final TabsListener tabsListener;
+    private OnTabAddedOrRemovedListener tabChangedListener;
 
     public TabStrip(Context context) {
         this(context, null);
@@ -100,6 +102,10 @@ public class TabStrip extends ThemedLinearLayout
         addTabButton.setPrivateMode(isPrivate);
     }
 
+    public void setOnTabChangedListener(OnTabAddedOrRemovedListener listener) {
+        tabChangedListener = listener;
+    }
+
     private class TabsListener implements Tabs.OnTabsChangedListener {
         @Override
         public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -110,10 +116,16 @@ public class TabStrip extends ThemedLinearLayout
 
                 case ADDED:
                     tabStripView.addTab(tab);
+                    if (tabChangedListener != null) {
+                        tabChangedListener.onTabChanged();
+                    }
                     break;
 
                 case CLOSED:
                     tabStripView.removeTab(tab);
+                    if (tabChangedListener != null) {
+                        tabChangedListener.onTabChanged();
+                    }
                     break;
 
                 case SELECTED:
