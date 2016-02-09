@@ -544,33 +544,33 @@ Distance( const nsScannerIterator& aStart, const nsScannerIterator& aEnd )
     return Position::Distance(Position(aStart), Position(aEnd));
   }
 
-void
+bool
 CopyUnicodeTo( const nsScannerIterator& aSrcStart,
                const nsScannerIterator& aSrcEnd,
                nsAString& aDest );
 
 inline
-void
+bool
 CopyUnicodeTo( const nsScannerSubstring& aSrc, nsAString& aDest )
   {
     nsScannerIterator begin, end;
-    CopyUnicodeTo(aSrc.BeginReading(begin), aSrc.EndReading(end), aDest);
+    return CopyUnicodeTo(aSrc.BeginReading(begin), aSrc.EndReading(end), aDest);
   }
 
-void
+bool
 AppendUnicodeTo( const nsScannerIterator& aSrcStart,
                  const nsScannerIterator& aSrcEnd,
                  nsAString& aDest );
 
 inline
-void
+bool
 AppendUnicodeTo( const nsScannerSubstring& aSrc, nsAString& aDest )
   {
     nsScannerIterator begin, end;
-    AppendUnicodeTo(aSrc.BeginReading(begin), aSrc.EndReading(end), aDest);
+    return AppendUnicodeTo(aSrc.BeginReading(begin), aSrc.EndReading(end), aDest);
   }
 
-void
+bool
 AppendUnicodeTo( const nsScannerIterator& aSrcStart,
                  const nsScannerIterator& aSrcEnd,
                  nsScannerSharedSubstring& aDest );

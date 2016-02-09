@@ -1512,7 +1512,9 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
               if (theContext) {
                 theIterationIsOk = allowIteration && theContextIsStringBased;
                 if (theContext->mCopyUnused) {
-                  theContext->mScanner->CopyUnusedData(mUnusedInput);
+                  if (!theContext->mScanner->CopyUnusedData(mUnusedInput)) {
+                    mInternalState = NS_ERROR_OUT_OF_MEMORY;
+                  }
                 }
 
                 delete theContext;
