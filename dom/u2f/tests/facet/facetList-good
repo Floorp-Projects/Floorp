@@ -1,0 +1,8 @@
+{
+  "trustedFacets" : [{
+    "version": { "major": 1, "minor" : 0 },
+    "ids": [
+     "https://fido.example.com"
+    ]
+  }]
+}
