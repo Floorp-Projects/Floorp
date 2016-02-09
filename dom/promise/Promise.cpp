@@ -2034,37 +2034,6 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
   }
 }
 
-class WrappedWorkerRunnable final : public WorkerSameThreadRunnable
-{
-public:
-  WrappedWorkerRunnable(workers::WorkerPrivate* aWorkerPrivate, nsIRunnable* aRunnable)
-    : WorkerSameThreadRunnable(aWorkerPrivate)
-    , mRunnable(aRunnable)
-  {
-    MOZ_ASSERT(aRunnable);
-    MOZ_COUNT_CTOR(WrappedWorkerRunnable);
-  }
-
-  bool
-  WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override
-  {
-    NS_ASSERT_OWNINGTHREAD(WrappedWorkerRunnable);
-    mRunnable->Run();
-    return true;
-  }
-
-private:
-  virtual
-  ~WrappedWorkerRunnable()
-  {
-    MOZ_COUNT_DTOR(WrappedWorkerRunnable);
-    NS_ASSERT_OWNINGTHREAD(WrappedWorkerRunnable);
-  }
-
-  nsCOMPtr<nsIRunnable> mRunnable;
-  NS_DECL_OWNINGTHREAD
-};
-
 /* static */ void
 Promise::DispatchToMicroTask(nsIRunnable* aRunnable)
 {
