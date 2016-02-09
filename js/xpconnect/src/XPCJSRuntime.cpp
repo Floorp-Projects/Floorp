@@ -2296,11 +2296,6 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         "Orphan DOM nodes, i.e. those that are only reachable from JavaScript "
         "objects.");
 
-    ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("private-data"),
-        extras.sizeOfXPCPrivate,
-        "Extra data attached to the compartment by XPConnect, including "\
-        "wrapped-js that is local to a single compartment.");
-
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
         cStats.scriptsGCHeap,
         "JSScript instances. There is one per user-defined function in a "
@@ -2824,7 +2819,6 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             // Note: cannot use amIAddonManager implementation at this point,
             // as it is a JS service and the JS heap is currently not idle.
             // Otherwise, we could have computed the add-on id at this point.
-            extras->sizeOfXPCPrivate = cp->SizeOfIncludingThis(mallocSizeOf_);
         }
 
         // Get the compartment's global.
