@@ -420,6 +420,7 @@ class MercurialVCS(ScriptMixin, LogMixin, object):
         with "source" using Mercurial's share extension
         """
         self.info("Sharing %s to %s." % (source, dest))
+        self.mkdir_p(dest)
         if self.run_command(self.hg + ['share', '-U', source, dest],
                             error_list=HgErrorList):
             raise VCSException("Unable to share %s to %s!" % (source, dest))
