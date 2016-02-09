@@ -395,10 +395,7 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
-    if (gen->needsAsmJSBoundsCheckBranch(mir))
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
-                                                    masm.asmOnOutOfBoundsLabel());
+    uint32_t maybeCmpOffset = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -452,28 +449,21 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                       : Operand(ToRegister(ptr), mir->offset());
 
     memoryBarrier(mir->barrierBefore());
-    OutOfLineLoadTypedArrayOutOfBounds* ool = nullptr;
-    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
-    if (gen->needsAsmJSBoundsCheckBranch(mir)) {
-        Label* jumpTo = nullptr;
-        if (mir->isAtomicAccess()) {
-            jumpTo = masm.asmOnOutOfBoundsLabel();
-        } else {
-            ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), accessType);
-            addOutOfLineCode(ool, mir);
-            jumpTo = ool->entry();
-        }
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
-    }
+
+    OutOfLineLoadTypedArrayOutOfBounds* ool;
+    uint32_t maybeCmpOffset = maybeEmitAsmJSLoadBoundsCheck(mir, ins, &ool);
 
     uint32_t before = masm.size();
     load(accessType, srcAddr, out);
     uint32_t after = masm.size();
+
     if (ool) {
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
         masm.bind(ool->rejoin());
     }
+
     memoryBarrier(mir->barrierAfter());
+
     masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
 }
 
@@ -573,10 +563,7 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
-    if (gen->needsAsmJSBoundsCheckBranch(mir))
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
-                                                    masm.asmOnOutOfBoundsLabel());
+    uint32_t maybeCmpOffset = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -629,25 +616,21 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
                       : Operand(ToRegister(ptr), mir->offset());
 
     memoryBarrier(mir->barrierBefore());
-    Label* rejoin = nullptr;
-    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
-    if (gen->needsAsmJSBoundsCheckBranch(mir)) {
-        Label* jumpTo = nullptr;
-        if (mir->isAtomicAccess())
-            jumpTo = masm.asmOnOutOfBoundsLabel();
-        else
-            rejoin = jumpTo = alloc().lifoAlloc()->newInfallible<Label>();
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
-    }
+
+    Label* rejoin;
+    uint32_t maybeCmpOffset = maybeEmitAsmJSStoreBoundsCheck(mir, ins, &rejoin);
 
     uint32_t before = masm.size();
     store(accessType, value, dstAddr);
     uint32_t after = masm.size();
+
     if (rejoin) {
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
         masm.bind(rejoin);
     }
+
     memoryBarrier(mir->barrierAfter());
+
     masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
 }
 
