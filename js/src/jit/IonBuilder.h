@@ -859,7 +859,8 @@ class IonBuilder
     // SIMD helpers.
     bool canInlineSimd(CallInfo& callInfo, JSNative native, unsigned numArgs,
                        InlineTypedObject** templateObj);
-    IonBuilder::InliningStatus boxSimd(CallInfo& callInfo, MInstruction* ins,
+    MDefinition* unboxSimd(MDefinition* ins, SimdType type);
+    IonBuilder::InliningStatus boxSimd(CallInfo& callInfo, MDefinition* ins,
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
 
@@ -879,7 +880,7 @@ class IonBuilder
     InliningStatus inlineSimdSplat(CallInfo& callInfo, JSNative native, MIRType mirType);
     InliningStatus inlineSimdShuffle(CallInfo& callInfo, JSNative native, MIRType type,
                                      unsigned numVectors, unsigned numLanes);
-    InliningStatus inlineSimdCheck(CallInfo& callInfo, JSNative native, MIRType type);
+    InliningStatus inlineSimdCheck(CallInfo& callInfo, JSNative native, SimdType type);
     InliningStatus inlineSimdConvert(CallInfo& callInfo, JSNative native, bool isCast,
                                      MIRType from, MIRType to,
                                      SimdSign sign = SimdSign::NotApplicable);
