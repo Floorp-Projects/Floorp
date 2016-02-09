@@ -143,6 +143,8 @@ config = {
                 "--total-chunks=16",
                 "--extra-profile-file=fonts",
                 "--suite=reftest",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
             ],
             "tests": ["tests/layout/reftests/reftest.list"],
         },
