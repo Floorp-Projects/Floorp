@@ -11,7 +11,6 @@ define(function(require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
-  const { Rep } = createFactories(require("./rep"));
   const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
 
@@ -169,6 +168,8 @@ define(function(require, exports, module) {
     displayName: "ItemRep",
 
     render: function() {
+      const { Rep } = createFactories(require("./rep"));
+
       let object = this.props.object;
       let delim = this.props.delim;
       return (
