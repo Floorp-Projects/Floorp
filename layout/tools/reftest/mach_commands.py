@@ -281,8 +281,6 @@ class ReftestRunner(MozbuildObject):
                 imp.load_module('reftest', fh, path, ('.py', 'r', imp.PY_SOURCE))
             import reftest
 
-        # Remove the stdout handler from the internal logger and let mach deal with it
-        runreftest.log.removeHandler(runreftest.log.handlers[0])
         self.log_manager.enable_unstructured()
         try:
             rv = reftest.run(**kwargs)
