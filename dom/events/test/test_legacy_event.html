@@ -229,12 +229,63 @@ function mpTestDiffListenersEventBubbling(eventInfo) {
   );
 }
 
+// Test that an event in the capture phase may fire listeners of different
+// flavors (modern vs. legacy) at each level, depending on what's registered
+// at that level.
+function mpTestDiffListenersEventCapturing(eventInfo) {
+  return new Promise(
+    function(resolve, reject) {
+      var grandparent = createChildDiv();
+      var parent = createChildDiv(grandparent);
+      var target = createChildDiv(parent);
+      var didEventFireOnTarget = false;
+      var didEventFireOnParent = false;
+      var didEventFireOnGrandparent = false;
+      var eventSentToGrandparent;
+
+      grandparent.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          eventSentToGrandparent = e;
+          didEventFireOnGrandparent = true;
+        }), true);
+
+      parent.addEventListener(eventInfo.legacy_name,
+        createHandlerWithTypeCheck(eventInfo.legacy_name, function(e) {
+          is(e.eventPhase, Event.CAPTURING_PHASE,
+             "event should be in capturing phase");
+          is(e, eventSentToGrandparent,
+             "Same event object should capture, despite difference in type");
+          ok(didEventFireOnGrandparent,
+             "Event should have fired on grandparent");
+          didEventFireOnParent = true;
+      }), true);
+
+      target.addEventListener(eventInfo.modern_name,
+        createHandlerWithTypeCheck(eventInfo.modern_name, function(e) {
+          is(e.eventPhase, Event.AT_TARGET,
+             "event should be at target phase");
+          is(e, eventSentToGrandparent,
+             "Same event object should capture, despite difference in type");
+          ok(didEventFireOnParent,
+             "Event should have fired on parent");
+          // Clean up.
+          grandparent.parentNode.removeChild(grandparent);
+          resolve();
+      }), true);
+
+      eventInfo.trigger_event(target);
+    }
+  );
+}
+
 // MAIN FUNCTION: Kick off the tests.
 function main() {
   Promise.resolve().then(function() {
     return Promise.all(gLegacyEventInfo.map(mpTestLegacyEventSent))
   }).then(function() {
     return Promise.all(gLegacyEventInfo.map(mpTestModernBeatsLegacy));
+  }).then(function() {
+    return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventCapturing));
   }).then(function() {
     return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventBubbling));
   }).then(function() {
