@@ -5178,6 +5178,11 @@ nsHttpChannel::BeginConnect()
     // notify "http-on-modify-request" observers
     CallOnModifyRequestObservers();
 
+    // If mLoadGroup is null, e10s is enabled and this will be handled by HttpChannelChild.
+    if (mLoadGroup) {
+      HttpBaseChannel::SetLoadGroupUserAgentOverride();
+    }
+
     // Check to see if we should redirect this channel elsewhere by
     // nsIHttpChannel.redirectTo API request
     if (mAPIRedirectToURI) {
