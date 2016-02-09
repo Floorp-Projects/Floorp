@@ -1158,7 +1158,7 @@ var Cmds = {
 
   reloadDevtools: function(event) {
     if (Services.prefs.prefHasUserValue("devtools.loader.srcdir")) {
-      let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      let {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
       devtools.reload();
     }
   }

@@ -465,10 +465,18 @@
 
         // set fading
         var fade = this.getAttribute("fade");
-        var fadeDelay = (fade == "fast") ? 1 : fade == "slow" ? 4000 : 0;
-        if (fadeDelay) {
-          this._fadeTimer = setTimeout(() => this.hidePopup(true), fadeDelay, this);
+        var fadeDelay = 0;
+        if (fade == "fast") {
+          fadeDelay = 1;
         }
+        else if (fade == "slow") {
+          fadeDelay = 4000;
+        }
+        else {
+          return;
+        }
+
+        this._fadeTimer = setTimeout(() => this.hidePopup(true), fadeDelay, this);
       ]]>
       </handler>
       <handler event="popuphiding" phase="target">

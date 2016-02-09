@@ -40,11 +40,6 @@ function copyStringShowSnackbar(string, notifyString) {
 
 // Delay filtering while typing in MS
 const FILTER_DELAY = 500;
-/* Constants for usage telemetry */
-const LOGINS_LIST_VIEWED = 0;
-const LOGIN_VIEWED = 1;
-const LOGIN_EDITED = 2;
-const LOGIN_PW_TOGGLED = 3;
 
 var Logins = {
   _logins: [],
@@ -71,9 +66,7 @@ var Logins = {
     let getAllLogins = () => {
       let logins = [];
       try {
-        TelemetryStopwatch.start("PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS");
         logins = Services.logins.getAllLogins();
-        TelemetryStopwatch.finish("PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS");
       } catch(e) {
         // It's likely that the Master Password was not entered; give
         // a hint to the next person.
@@ -226,7 +219,6 @@ var Logins = {
   },
 
   _showList: function () {
-    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGINS_LIST_VIEWED);
     let loginsListPage = document.getElementById("logins-list-page");
     loginsListPage.classList.remove("hidden");
 
@@ -249,7 +241,6 @@ var Logins = {
     }
   },
   _showEditLoginDialog: function (login) {
-    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_VIEWED);
     let listPage = document.getElementById("logins-list-page");
     listPage.classList.add("hidden");
 
@@ -289,7 +280,6 @@ var Logins = {
   },
 
   _onSaveEditLogin: function() {
-    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_EDITED);
     let newUsername = document.getElementById("username").value;
     let newPassword = document.getElementById("password").value;
     let newDomain  = document.getElementById("hostname").value;
@@ -328,7 +318,6 @@ var Logins = {
   },
 
   _onPasswordBtn: function () {
-    Services.telemetry.getHistogramById("PWMGR_ABOUT_LOGINS_USAGE").add(LOGIN_PW_TOGGLED);
     this._updatePasswordBtn(this._isPasswordBtnInHideMode());
   },
 

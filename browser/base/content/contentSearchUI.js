@@ -277,9 +277,13 @@ ContentSearchUIController.prototype = {
     if (this.suggestionAtIndex(this.selectedIndex)) {
       eventData.selection = {
         index: this.selectedIndex,
-        kind: aEvent instanceof MouseEvent ? "mouse" :
-              aEvent instanceof KeyboardEvent ? "key" : undefined,
+        kind: undefined,
       };
+      if (aEvent instanceof MouseEvent) {
+        eventData.selection.kind = "mouse";
+      } else if (aEvent instanceof KeyboardEvent) {
+        eventData.selection.kind = "key";
+      }
     }
 
     this._sendMsg("Search", eventData);

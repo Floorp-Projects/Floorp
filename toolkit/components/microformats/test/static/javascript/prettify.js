@@ -581,11 +581,11 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     var wrapper = undefined;
     for (var c = element.firstChild; c; c = c.nextSibling) {
       var type = c.nodeType;
-      wrapper = (type === 1)  // Element Node
-          ? (wrapper ? element : c)
-          : (type === 3)  // Text Node
-          ? (notWs.test(c.nodeValue) ? element : wrapper)
-          : wrapper;
+      if (type === 1) {
+        wrapper = wrapper ? element : c;
+      } else if (type === 3) {
+        wrapper = notWs.test(c.nodeValue) ? element : wrapper;
+      }
     }
     return wrapper === element ? undefined : wrapper;
   }
@@ -1411,9 +1411,11 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
             // Look for a class like linenums or linenums:<n> where <n> is the
             // 1-indexed number of the first line.
             var lineNums = cs.className.match(/\blinenums\b(?::(\d+))?/);
-            lineNums = lineNums
-                  ? lineNums[1] && lineNums[1].length ? +lineNums[1] : true
-                  : false;
+            if (lineNums) {
+              lineNums = lineNums[1] && lineNums[1].length ? +lineNums[1] : true;
+            } else {
+              lineNums = false;
+            }
             if (lineNums) { numberLines(cs, lineNums); }
 
             // do the pretty printing
