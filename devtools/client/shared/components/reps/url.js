@@ -32,7 +32,50 @@ define(function(require, exports, module) {
     });
   }
 
+  function getFileName(url) {
+    let split = splitURLBase(url);
+    return split.name;
+  }
+
+  function splitURLBase(url) {
+    if (!isDataURL(url)) {
+      return splitURLTrue(url);
+    }
+    return {};
+  }
+
+  function isDataURL(url) {
+    return (url && url.substr(0, 5) == "data:");
+  }
+
+  function splitURLTrue(url) {
+    const reSplitFile = /(.*?):\/{2,3}([^\/]*)(.*?)([^\/]*?)($|\?.*)/;
+    let m = reSplitFile.exec(url);
+
+    if (!m) {
+      return {
+        name: url,
+        path: url
+      };
+    } else if (m[4] == "" && m[5] == "") {
+      return {
+        protocol: m[1],
+        domain: m[2],
+        path: m[3],
+        name: m[3] != "/" ? m[3] : m[2]
+      };
+    }
+
+    return {
+      protocol: m[1],
+      domain: m[2],
+      path: m[2] + m[3],
+      name: m[4] + m[5]
+    };
+  }
+
   // Exports from this module
   exports.parseURLParams = parseURLParams;
   exports.parseURLEncodedText = parseURLEncodedText;
+  exports.getFileName = getFileName;
 });
