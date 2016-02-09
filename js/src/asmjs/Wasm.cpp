@@ -952,6 +952,9 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
     if (!d.readCStringIf(DataSection))
         return true;
 
+    if (!heap)
+        return Fail(cx, d, "data section requires a memory section");
+
     uint32_t sectionStart;
     if (!d.startSection(&sectionStart))
         return Fail(cx, d, "expected data section byte size");
