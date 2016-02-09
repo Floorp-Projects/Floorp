@@ -3358,14 +3358,17 @@ class MSimdBox
 {
   protected:
     CompilerGCPointer<InlineTypedObject*> templateObject_;
+    SimdType simdType_;
     gc::InitialHeap initialHeap_;
 
     MSimdBox(CompilerConstraintList* constraints,
              MDefinition* op,
              InlineTypedObject* templateObject,
+             SimdType simdType,
              gc::InitialHeap initialHeap)
       : MUnaryInstruction(op),
         templateObject_(templateObject),
+        simdType_(simdType),
         initialHeap_(initialHeap)
     {
         MOZ_ASSERT(IsSimdType(op->type()));
@@ -3382,13 +3385,18 @@ class MSimdBox
                          CompilerConstraintList* constraints,
                          MDefinition* op,
                          InlineTypedObject* templateObject,
+                         SimdType simdType,
                          gc::InitialHeap initialHeap)
     {
-        return new(alloc) MSimdBox(constraints, op, templateObject, initialHeap);
+        return new(alloc) MSimdBox(constraints, op, templateObject, simdType, initialHeap);
     }
 
     InlineTypedObject* templateObject() const {
         return templateObject_;
+    }
+
+    SimdType simdType() const {
+        return simdType_;
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3396,12 +3404,13 @@ class MSimdBox
     }
 
     bool congruentTo(const MDefinition* ins) const override {
-        if (congruentIfOperandsEqual(ins)) {
-            MOZ_ASSERT(ins->toSimdBox()->initialHeap() == initialHeap());
-            return true;
-        }
-
-        return false;
+        if (!congruentIfOperandsEqual(ins))
+            return false;
+        const MSimdBox* box = ins->toSimdBox();
+        if (box->simdType() != simdType())
+            return false;
+        MOZ_ASSERT(box->initialHeap() == initialHeap());
+        return true;
     }
 
     AliasSet getAliasSet() const override {
@@ -3419,9 +3428,13 @@ class MSimdUnbox
     public SingleObjectPolicy::Data
 {
   protected:
-    MSimdUnbox(MDefinition* op, MIRType type)
-      : MUnaryInstruction(op)
+    SimdType simdType_;
+
+    MSimdUnbox(MDefinition* op, SimdType simdType)
+      : MUnaryInstruction(op),
+        simdType_(simdType)
     {
+        MIRType type = SimdTypeToMIRType(simdType);
         MOZ_ASSERT(IsSimdType(type));
         setGuard();
         setMovable();
@@ -3432,14 +3445,18 @@ class MSimdUnbox
     INSTRUCTION_HEADER(SimdUnbox)
     ALLOW_CLONE(MSimdUnbox)
 
-    static MSimdUnbox* New(TempAllocator& alloc, MDefinition* op, MIRType type)
+    static MSimdUnbox* New(TempAllocator& alloc, MDefinition* op, SimdType simdType)
     {
-        return new(alloc) MSimdUnbox(op, type);
+        return new(alloc) MSimdUnbox(op, simdType);
     }
+
+    SimdType simdType() const { return simdType_; }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
-        return congruentIfOperandsEqual(ins);
+        if (!congruentIfOperandsEqual(ins))
+            return false;
+        return ins->toSimdUnbox()->simdType() == simdType();
     }
 
     AliasSet getAliasSet() const override {

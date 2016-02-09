@@ -994,12 +994,14 @@ MSimdUnbox::foldsTo(TempAllocator& alloc)
     MDefinition* in = input();
 
     if (in->isSimdBox()) {
+        MSimdBox* box = in->toSimdBox();
         // If the operand is a MSimdBox, then we just reuse the operand of the
         // MSimdBox as long as the type corresponds to what we are supposed to
         // unbox.
-        in = in->toSimdBox()->input();
-        if (in->type() != type())
+        in = box->input();
+        if (box->simdType() != simdType())
             return this;
+        MOZ_ASSERT(in->type() == type());
         return in;
     }
 
