@@ -778,34 +778,6 @@ GenerateStackOverflowStub(ModuleGenerator& mg, Label* throwLabel)
     return mg.defineInlineStub(offsets);
 }
 
-// Generate a stub that is called from the synchronous, inline interrupt checks
-// when the interrupt flag is set. This stub calls the C++ function to handle
-// the interrupt which returns whether execution has been interrupted.
-static bool
-GenerateSyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
-{
-    MacroAssembler& masm = mg.masm();
-
-    masm.setFramePushed(0);
-    unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, ShadowStackSpace);
-
-    ProfilingOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::Native, &offsets,
-                         masm.asmSyncInterruptLabel());
-
-    AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(SymbolicAddress::HandleExecutionInterrupt);
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
-
-    GenerateExitEpilogue(masm, framePushed, ExitReason::Native, &offsets);
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return mg.defineSyncInterruptStub(offsets);
-}
-
 // Generate a stub that is jumped to from an out-of-bounds heap access when
 // there are throwing semantics. This stub calls a C++ function to report an
 // error and then jumps to the throw stub to pop the activation.
@@ -878,7 +850,7 @@ static const LiveRegisterSet AllRegsExceptSP(
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 static bool
-GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
+GenerateInterruptStub(ModuleGenerator& mg, Label* throwLabel)
 {
     MacroAssembler& masm = mg.masm();
 
@@ -1033,7 +1005,7 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
         return false;
 
     offsets.end = masm.currentOffset();
-    return mg.defineAsyncInterruptStub(offsets);
+    return mg.defineInterruptStub(offsets);
 }
 
 // If an exception is thrown, simply pop all frames (since asm.js does not
@@ -1077,54 +1049,47 @@ GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
 bool
 wasm::GenerateStubs(ModuleGenerator& mg, bool usesHeap)
 {
+    MacroAssembler& masm = mg.masm();
+
     for (unsigned i = 0; i < mg.numExports(); i++) {
         if (!GenerateEntry(mg, i, usesHeap))
             return false;
     }
 
-    Label onThrow;
-
     for (size_t i = 0; i < mg.numImports(); i++) {
         ProfilingOffsets interp;
-        if (!GenerateInterpExitStub(mg, i, &onThrow, &interp))
+        if (!GenerateInterpExitStub(mg, i, masm.asmThrowLabel(), &interp))
             return false;
 
         ProfilingOffsets jit;
-        if (!GenerateJitExitStub(mg, i, usesHeap, &onThrow, &jit))
+        if (!GenerateJitExitStub(mg, i, usesHeap, masm.asmThrowLabel(), &jit))
             return false;
 
         if (!mg.defineImport(i, interp, jit))
             return false;
     }
 
-    if (mg.masm().asmStackOverflowLabel()->used()) {
-        if (!GenerateStackOverflowStub(mg, &onThrow))
+    if (masm.asmStackOverflowLabel()->used()) {
+        if (!GenerateStackOverflowStub(mg, masm.asmThrowLabel()))
             return false;
     }
 
-    if (mg.masm().asmSyncInterruptLabel()->used()) {
-        if (!GenerateSyncInterruptStub(mg, &onThrow))
-            return false;
-    }
-
-    if (mg.masm().asmOnConversionErrorLabel()->used()) {
-        if (!GenerateConversionErrorStub(mg, &onThrow))
+    if (masm.asmOnConversionErrorLabel()->used()) {
+        if (!GenerateConversionErrorStub(mg, masm.asmThrowLabel()))
             return false;
     }
 
     // Generate unconditionally: the out-of-bounds exit may be used later even
     // if signal handling isn't used for out-of-bounds at the moment.
-    if (!GenerateOutOfBoundsStub(mg, &onThrow))
+    if (!GenerateOutOfBoundsStub(mg, masm.asmThrowLabel()))
         return false;
 
     // Generate unconditionally: the async interrupt may be taken at any time.
-    if (!GenerateAsyncInterruptStub(mg, &onThrow))
+    if (!GenerateInterruptStub(mg, masm.asmThrowLabel()))
         return false;
 
-    if (onThrow.used()) {
-        if (!GenerateThrowStub(mg, &onThrow))
-            return false;
-    }
+    if (!GenerateThrowStub(mg, masm.asmThrowLabel()))
+        return false;
 
     return true;
 }

@@ -341,9 +341,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Asm failure labels
     NonAssertingLabel asmStackOverflowLabel_;
-    NonAssertingLabel asmSyncInterruptLabel_;
     NonAssertingLabel asmOnConversionErrorLabel_;
     NonAssertingLabel asmOnOutOfBoundsLabel_;
+    NonAssertingLabel asmThrowLabel_;
 
   public:
     MacroAssembler()
@@ -1409,12 +1409,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         return &failureLabel_;
     }
 
-    Label* asmSyncInterruptLabel() {
-        return &asmSyncInterruptLabel_;
-    }
-    const Label* asmSyncInterruptLabel() const {
-        return &asmSyncInterruptLabel_;
-    }
     Label* asmStackOverflowLabel() {
         return &asmStackOverflowLabel_;
     }
@@ -1432,6 +1426,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     const Label* asmOnConversionErrorLabel() const {
         return &asmOnConversionErrorLabel_;
+    }
+    Label* asmThrowLabel() {
+        return &asmThrowLabel_;
+    }
+    const Label* asmThrowLabel() const {
+        return &asmThrowLabel_;
     }
 
     bool asmMergeWith(MacroAssembler& masm);

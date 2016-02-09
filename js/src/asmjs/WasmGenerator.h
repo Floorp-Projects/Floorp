@@ -218,8 +218,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Stubs:
     bool defineInlineStub(Offsets offsets);
-    bool defineSyncInterruptStub(ProfilingOffsets offsets);
-    bool defineAsyncInterruptStub(Offsets offsets);
+    bool defineInterruptStub(Offsets offsets);
     bool defineOutOfBoundsStub(Offsets offsets);
 
     // Return a ModuleData object which may be used to construct a Module, the

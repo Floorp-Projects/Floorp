@@ -623,14 +623,7 @@ ModuleGenerator::defineInlineStub(Offsets offsets)
 }
 
 bool
-ModuleGenerator::defineSyncInterruptStub(ProfilingOffsets offsets)
-{
-    MOZ_ASSERT(finishedFuncs_);
-    return module_->codeRanges.emplaceBack(CodeRange::Interrupt, offsets);
-}
-
-bool
-ModuleGenerator::defineAsyncInterruptStub(Offsets offsets)
+ModuleGenerator::defineInterruptStub(Offsets offsets)
 {
     MOZ_ASSERT(finishedFuncs_);
     link_->pod.interruptOffset = offsets.begin;
