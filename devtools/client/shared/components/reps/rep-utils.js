@@ -24,6 +24,14 @@ define(function(require, exports, module) {
     return result;
   }
 
+  /**
+   * Returns true if the given object is a grip (see RDP protocol)
+   */
+  function isGrip(object) {
+    return object && object.actor;
+  }
+
   // Exports from this module
   exports.createFactories = createFactories;
+  exports.isGrip = isGrip;
 });
