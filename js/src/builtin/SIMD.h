@@ -872,6 +872,37 @@ GetBooleanSimdType(SimdType t)
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad SIMD type");
 }
 
+// Get the number of lanes in a SIMD type.
+inline unsigned
+GetSimdLanes(SimdType t)
+{
+    switch(t) {
+      case SimdType::Int8x16:
+      case SimdType::Uint8x16:
+      case SimdType::Bool8x16:
+        return 16;
+
+      case SimdType::Int16x8:
+      case SimdType::Uint16x8:
+      case SimdType::Bool16x8:
+        return 8;
+
+      case SimdType::Int32x4:
+      case SimdType::Uint32x4:
+      case SimdType::Float32x4:
+      case SimdType::Bool32x4:
+        return 4;
+
+      case SimdType::Float64x2:
+      case SimdType::Bool64x2:
+        return 2;
+
+      case SimdType::Count:
+        break;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad SIMD type");
+}
+
 // Complete set of SIMD operations.
 //
 // No SIMD types implement all of these operations.
