@@ -365,7 +365,7 @@ Settings.prototype = {
               .sort(function (a , b) {
                 let qA = parseFloat(a.split(";q=")[1]) || 1.0;
                 let qB = parseFloat(b.split(";q=")[1]) || 1.0;
-                return qA < qB ? 1 : qA == qB ? 0 : -1;
+                return qB - qA;
               })
               .map(a => a.split(";")[0]);
     }
