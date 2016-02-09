@@ -5,7 +5,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozfile
-import mozhttpd
+from wptserve.server import WebTestHttpd
 import os
 import shutil
 import tempfile
@@ -352,13 +352,11 @@ user_pref("webgl.force-enabled", true);
         self.assertEqual(dict(read_prefs), expected_prefs)
 
     def test_read_prefs_ttw(self):
-        """test reading preferences through the web via mozhttpd"""
+        """test reading preferences through the web via wptserve"""
 
-        # create a MozHttpd instance
-        docroot = os.path.join(here, 'files')
-        host = '127.0.0.1'
-        port = 8888
-        httpd = mozhttpd.MozHttpd(host=host, port=port, docroot=docroot)
+        # create a server instance
+        httpd = WebTestHttpd(host='127.0.0.1', port=0,
+                             doc_root=os.path.join(here, 'files'))
 
         # create a preferences instance
         prefs = Preferences()
@@ -368,7 +366,8 @@ user_pref("webgl.force-enabled", true);
             httpd.start(block=False)
 
             # read preferences through the web
-            read = prefs.read_prefs('http://%s:%d/prefs_with_comments.js' % (host, port))
+            read = prefs.read_prefs('http://%s:%d/prefs_with_comments.js' %
+                                    httpd.httpd.server_address)
             self.assertEqual(dict(read), self._prefs_with_comments)
         finally:
             httpd.stop()

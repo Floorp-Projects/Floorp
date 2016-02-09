@@ -35,7 +35,7 @@ setup(name=PACKAGE_NAME,
       zip_safe=False,
       install_requires=deps,
       extras_require={'manifest': ['manifestparser >= 0.6']},
-      tests_require=['mozhttpd'],
+      tests_require=['wptserve'],
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]

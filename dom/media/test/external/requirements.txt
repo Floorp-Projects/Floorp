@@ -3,7 +3,6 @@ manifestparser==1.1
 mozcrash==0.16
 mozdevice==0.48
 mozfile==1.2
-mozhttpd==0.7
 mozinfo==0.9
 # optional - mozharness install step
 mozInstall==1.12

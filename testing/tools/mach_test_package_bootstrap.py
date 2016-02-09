@@ -16,7 +16,6 @@ SEARCH_PATHS = [
     'mozbase/mozdebug',
     'mozbase/mozdevice',
     'mozbase/mozfile',
-    'mozbase/mozhttpd',
     'mozbase/mozleak',
     'mozbase/mozlog',
     'mozbase/moznetwork',

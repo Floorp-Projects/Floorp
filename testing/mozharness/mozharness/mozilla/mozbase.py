@@ -31,7 +31,7 @@ class MozbaseMixin(object):
             url=os.path.join(mozbase_dir, 'manifestdestiny')
         )
 
-        for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork', 'mozhttpd',
+        for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork',
                   'mozcrash', 'mozinstall', 'mozdevice', 'mozprofile',
                   'mozprocess', 'mozrunner'):
             self.register_virtualenv_module(

@@ -4,7 +4,7 @@
 tests for mozfile.load
 """
 
-import mozhttpd
+from wptserve import server, handlers
 import os
 import tempfile
 import unittest
@@ -15,20 +15,20 @@ class TestLoad(unittest.TestCase):
     """test the load function"""
 
     def test_http(self):
-        """test with mozhttpd and a http:// URL"""
+        """test with wptserve and a http:// URL"""
 
-        def example(request):
+        @handlers.handler
+        def example(request, reponse):
             """example request handler"""
             body = 'example'
-            return (200, {'Content-type': 'text/plain',
-                          'Content-length': len(body)
-                          }, body)
+            return (200, [{'Content-type': 'text/plain',
+                           'Content-length': len(body)
+                          }], [body])
 
         host = '127.0.0.1'
-        httpd = mozhttpd.MozHttpd(host=host,
-                                  urlhandlers=[{'method': 'GET',
-                                                'path': '.*',
-                                                'function': example}])
+        httpd = server.WebTestHttpd(
+            host=host,
+            routes=[('GET', "*", example)])
         try:
             httpd.start(block=False)
             content = load(httpd.get_url()).read()
