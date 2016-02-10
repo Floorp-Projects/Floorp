@@ -575,7 +575,7 @@ BytecodeCompiler::compileModule()
 
     module->init(script);
 
-    ModuleBuilder builder(cx, module);
+    ModuleBuilder builder(cx->asJSContext(), module);
     ParseNode* pn = parser->standaloneModule(module, builder);
     if (!pn)
         return nullptr;
@@ -759,40 +759,20 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
 }
 
 ModuleObject*
-frontend::CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& optionsInput,
-                        SourceBufferHolder& srcBuf, LifoAlloc* alloc)
+frontend::CompileModule(JSContext* cx, HandleObject obj,
+                        const ReadOnlyCompileOptions& optionsInput,
+                        SourceBufferHolder& srcBuf)
 {
     MOZ_ASSERT(srcBuf.get());
-    MOZ_ASSERT(cx->isJSContext() == (alloc == nullptr));
-
-    if (!alloc)
-        alloc = &cx->asJSContext()->tempLifoAlloc();
 
     CompileOptions options(cx, optionsInput);
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
     options.setIsRunOnce(true);
 
-    // ! WARNING WARNING WARNING !
-    //
-    // See comment in Parser::bindLexical about optimizing global lexical
-    // bindings. If we start optimizing them, passing in cx's global lexical
-    // scope would be incorrect as cx can be an off-main-thread parse task's
-    // context here!
-    //
-    // ! WARNING WARNING WARNING !
     Rooted<StaticScope*> staticScope(cx, &cx->global()->lexicalScope().staticBlock());
-    BytecodeCompiler compiler(cx, alloc, options, srcBuf, staticScope,
+    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, staticScope,
                               TraceLogger_ParserCompileModule);
-    RootedModuleObject module(cx, compiler.compileModule());
-    if (!module)
-        return nullptr;
-
-    // This happens in GlobalHelperThreadState::finishModuleParseTask() when a
-    // module is compiled off main thread.
-    if (cx->isJSContext() && !ModuleObject::FreezeArrayProperties(cx->asJSContext(), module))
-        return nullptr;
-
-    return module;
+    return compiler.compileModule();
 }
 
 bool
