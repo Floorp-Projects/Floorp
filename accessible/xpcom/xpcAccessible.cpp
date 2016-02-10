@@ -268,10 +268,17 @@ xpcAccessible::GetDescription(nsAString& aDescription)
 NS_IMETHODIMP
 xpcAccessible::GetLanguage(nsAString& aLanguage)
 {
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->Language(aLanguage);
+  nsAutoString lang;
+  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+    proxy->Language(lang);
+  } else {
+    Intl()->Language(lang);
+  }
+
+  aLanguage.Assign(lang);
   return NS_OK;
 }
 
