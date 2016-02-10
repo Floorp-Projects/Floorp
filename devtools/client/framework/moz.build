@@ -11,6 +11,8 @@ TEST_HARNESS_FILES.xpcshell.devtools.client.framework.test += [
 
 DevToolsModules(
     'attach-thread.js',
+    'devtools-browser.js',
+    'devtools.js',
     'gDevTools.jsm',
     'selection.js',
     'sidebar.js',
