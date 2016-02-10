@@ -7,9 +7,12 @@
 
 #include "builtin/Promise.h"
 
+#include "mozilla/Atomics.h"
+
 #include "jscntxt.h"
 
 #include "gc/Heap.h"
+#include "js/Date.h"
 #include "js/Debug.h"
 
 #include "jsobjinlines.h"
@@ -89,6 +92,14 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         if (!reactions)
             return nullptr;
         promise->setFixedSlot(PROMISE_REJECT_REACTIONS_SLOT, ObjectValue(*reactions));
+
+        RootedObject stack(cx);
+        if (!JS::CaptureCurrentStack(cx, &stack, 0))
+            return nullptr;
+        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectValue(*stack));
+        Value now = JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) /
+                                               PRMJ_USEC_PER_MSEC));
+        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, now);
     }
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
@@ -170,6 +181,90 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
     // Step 11.
     return promise;
+}
+
+namespace {
+// Generator used by PromiseObject::getID.
+mozilla::Atomic<uint64_t> gIDGenerator(0);
+} // namespace
+
+double
+PromiseObject::getID()
+{
+    Value idVal(getReservedSlot(PROMISE_ID_SLOT));
+    if (idVal.isUndefined()) {
+        idVal.setDouble(++gIDGenerator);
+        setReservedSlot(PROMISE_ID_SLOT, idVal);
+    }
+    return idVal.toNumber();
+}
+
+/**
+ * Returns all promises that directly depend on this one. That means those
+ * created by calling `then` on this promise, or the promise returned by
+ * `Promise.all(iterable)` or `Promise.race(iterable)`, with this promise
+ * being a member of the passed-in `iterable`.
+ *
+ *
+ * For the then() case, we have both resolve and reject callbacks that know
+ * what the next promise is.
+ *
+ * For the race() case, likewise.
+ *
+ * For the all() case, our reject callback knows what the next promise is, but
+ * our resolve callback doesn't.
+ *
+ * So we walk over our _reject_ callbacks and ask each of them what promise
+ * its dependent promise is.
+ */
+bool
+PromiseObject::dependentPromises(JSContext* cx, AutoValueVector& values)
+{
+    RootedValue rejectReactionsVal(cx, getReservedSlot(PROMISE_REJECT_REACTIONS_SLOT));
+    RootedObject rejectReactions(cx, rejectReactionsVal.toObjectOrNull());
+    if (!rejectReactions)
+        return true;
+
+    AutoIdVector keys(cx);
+    if (!GetPropertyKeys(cx, rejectReactions, JSITER_OWNONLY, &keys))
+        return false;
+
+    if (keys.length() == 0)
+        return true;
+
+    if (!values.growBy(keys.length()))
+        return false;
+
+    RootedAtom capabilitiesAtom(cx, Atomize(cx, "capabilities", strlen("capabilities")));
+    if (!capabilitiesAtom)
+        return false;
+    RootedId capabilitiesId(cx, AtomToId(capabilitiesAtom));
+
+    // Each reaction is an internally-created object with the structure:
+    // {
+    //   capabilities: {
+    //     promise: [the promise this reaction resolves],
+    //     resolve: [the `resolve` callback content code provided],
+    //     reject:  [the `reject` callback content code provided],
+    //    },
+    //    handler: [the internal handler that fulfills/rejects the promise]
+    //  }
+    //
+    // In the following loop we collect the `capabilities.promise` values for
+    // each reaction.
+    for (size_t i = 0; i < keys.length(); i++) {
+        MutableHandleValue val = values[i];
+        if (!GetProperty(cx, rejectReactions, rejectReactions, keys[i], val))
+            return false;
+        RootedObject reaction(cx, &val.toObject());
+        if (!GetProperty(cx, reaction, reaction, capabilitiesId, val))
+            return false;
+        RootedObject capabilities(cx, &val.toObject());
+        if (!GetProperty(cx, capabilities, capabilities, cx->runtime()->commonNames->promise, val))
+            return false;
+    }
+
+    return true;
 }
 
 namespace js {

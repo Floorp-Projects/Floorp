@@ -48,6 +48,13 @@ drainJobQueue();
 
 assertEq(result, 'resolved with 0,1,2');
 
+// Empty lists result in a promise resolved with an empty array.
+result = undefined;
+originalThen.call(GetWaitForAllPromise([]), v=>(result = v));
+drainJobQueue();
+assertEq(result instanceof Array, true);
+assertEq(result.length, 0);
+
 //Empty lists result in a promise resolved with an empty array.
 result = undefined;
 originalThen.call(GetWaitForAllPromise([]), v=>(result = v));

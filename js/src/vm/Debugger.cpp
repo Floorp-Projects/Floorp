@@ -19,12 +19,14 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
+#include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
+#include "js/Date.h"
 #include "js/GCAPI.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
@@ -7576,14 +7578,32 @@ DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     obj = (JSObject*) obj->as<NativeObject>().getPrivate();                   \
     MOZ_ASSERT(obj)
 
-#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
-   CallArgs args = CallArgsFromVp(argc, vp);                                  \
-   RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));          \
-   if (!obj)                                                                  \
-       return false;                                                          \
-   Debugger* dbg = Debugger::fromChildJSObject(obj);                          \
-   obj = (JSObject*) obj->as<NativeObject>().getPrivate();                    \
-   MOZ_ASSERT(obj)
+#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj)  \
+    CallArgs args = CallArgsFromVp(argc, vp);                                  \
+    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));          \
+    if (!obj)                                                                  \
+        return false;                                                          \
+    Debugger* dbg = Debugger::fromChildJSObject(obj);                          \
+    obj = (JSObject*) obj->as<NativeObject>().getPrivate();                    \
+    MOZ_ASSERT(obj)
+
+#define THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, fnname, args, obj)                   \
+   THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj);                      \
+   if (!obj->is<PromiseObject>()) {                                                 \
+       JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,  \
+                            "Debugger", "Promise", obj->getClass()->name);          \
+       return false;                                                                \
+   }                                                                                \
+   Rooted<PromiseObject*> promise(cx, &obj->as<PromiseObject>());
+
+#define THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, fnname, args, dbg, obj)        \
+   THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj);           \
+   if (!obj->is<PromiseObject>()) {                                                 \
+       JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,  \
+                            "Debugger", "Promise", obj->getClass()->name);          \
+       return false;                                                                \
+   }                                                                                \
+   Rooted<PromiseObject*> promise(cx, &obj->as<PromiseObject>());
 
 static bool
 DebuggerObject_construct(JSContext* cx, unsigned argc, Value* vp)
@@ -7866,6 +7886,155 @@ DebuggerObject_getBoundArguments(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+null(CallArgs& args)
+{
+    args.rval().setNull();
+    return true;
+}
+
+#ifdef SPIDERMONKEY_PROMISE
+static bool
+DebuggerObject_getIsPromise(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isPromise", args, refobj);
+
+    args.rval().setBoolean(refobj->is<PromiseObject>());
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseState(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseState", args, dbg, refobj);
+
+    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedValue result(cx, UndefinedValue());
+    RootedValue reason(cx, UndefinedValue());
+    if (!obj)
+        return false;
+    RootedValue state(cx);
+    switch (promise->state()) {
+      case JS::PromiseState::Pending:
+        state.setString(cx->names().pending);
+        break;
+      case JS::PromiseState::Fulfilled:
+        state.setString(cx->names().fulfilled);
+        result = promise->value();
+        break;
+      case JS::PromiseState::Rejected:
+        state.setString(cx->names().rejected);
+        reason = promise->reason();
+        break;
+    }
+
+    if (!dbg->wrapDebuggeeValue(cx, &result))
+        return false;
+    if (!dbg->wrapDebuggeeValue(cx, &reason))
+        return false;
+
+    if (!DefineProperty(cx, obj, cx->names().state.get(), state))
+        return false;
+    if (!DefineProperty(cx, obj, cx->names().value.get(), result))
+        return false;
+    if (!DefineProperty(cx, obj, cx->names().reason.get(), reason))
+        return false;
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseLifetime(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseLifetime", args, refobj);
+
+    args.rval().setNumber(promise->lifetime());
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseTimeToResolution(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseTimeToResolution", args, refobj);
+
+    if (promise->state() == JS::PromiseState::Pending) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_RESOLVED);
+        return false;
+    }
+
+    args.rval().setNumber(promise->timeToResolution());
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseAllocationSite(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseAllocationSite", args, refobj);
+
+    RootedObject allocSite(cx, promise->allocationSite());
+    if (!allocSite)
+        return null(args);
+    if (!cx->compartment()->wrap(cx, &allocSite))
+        return false;
+    args.rval().set(ObjectValue(*allocSite));
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseResolutionSite(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseResolutionSite", args, refobj);
+
+    if (promise->state() == JS::PromiseState::Pending) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_RESOLVED);
+        return false;
+    }
+
+    RootedObject resolutionSite(cx, promise->resolutionSite());
+    if (!resolutionSite)
+        return null(args);
+    if (!cx->compartment()->wrap(cx, &resolutionSite))
+        return false;
+    args.rval().set(ObjectValue(*resolutionSite));
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseID(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseID", args, refobj);
+
+    args.rval().setNumber(promise->getID());
+    return true;
+}
+
+static bool
+DebuggerObject_getPromiseDependentPromises(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseDependentPromises", args, dbg, refobj);
+
+    AutoValueVector values(cx);
+    {
+        JSAutoCompartment ac(cx, promise);
+        if (!promise->dependentPromises(cx, values))
+            return false;
+    }
+    for (size_t i = 0; i < values.length(); i++) {
+        if (!dbg->wrapDebuggeeValue(cx, values[i]))
+            return false;
+    }
+    RootedArrayObject promises(cx);
+    if (values.length() == 0)
+        promises = NewDenseEmptyArray(cx);
+    else
+        promises = NewDenseCopiedArray(cx, values.length(), values[0].address());
+    if (!promises)
+        return false;
+    args.rval().setObject(*promises);
+    return true;
+}
+#endif // SPIDERMONKEY_PROMISE
+
+static bool
 DebuggerObject_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get global", args, dbg, obj);
@@ -7874,13 +8043,6 @@ DebuggerObject_getGlobal(JSContext* cx, unsigned argc, Value* vp)
     if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
     args.rval().set(v);
-    return true;
-}
-
-static bool
-null(CallArgs& args)
-{
-    args.rval().setNull();
     return true;
 }
 
@@ -8539,6 +8701,20 @@ static const JSPropertySpec DebuggerObject_properties[] = {
     JS_PS_END
 };
 
+#ifdef SPIDERMONKEY_PROMISE
+static const JSPropertySpec DebuggerObject_promiseProperties[] = {
+    JS_PSG("isPromise", DebuggerObject_getIsPromise, 0),
+    JS_PSG("promiseState", DebuggerObject_getPromiseState, 0),
+    JS_PSG("promiseLifetime", DebuggerObject_getPromiseLifetime, 0),
+    JS_PSG("promiseTimeToResolution", DebuggerObject_getPromiseTimeToResolution, 0),
+    JS_PSG("promiseAllocationSite", DebuggerObject_getPromiseAllocationSite, 0),
+    JS_PSG("promiseResolutionSite", DebuggerObject_getPromiseResolutionSite, 0),
+    JS_PSG("promiseID", DebuggerObject_getPromiseID, 0),
+    JS_PSG("promiseDependentPromises", DebuggerObject_getPromiseDependentPromises, 0),
+    JS_PS_END
+};
+#endif // SPIDERMONKEY_PROMISE
+
 static const JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
@@ -9103,6 +9279,11 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
                             nullptr, nullptr);
     if (!objectProto)
         return false;
+
+#ifdef SPIDERMONKEY_PROMISE
+    if (!DefinePropertiesAndFunctions(cx, objectProto, DebuggerObject_promiseProperties, nullptr))
+        return false;
+#endif // SPIDERMONKEY_PROMISE
 
     envProto = InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
                          DebuggerEnv_construct, 0,
