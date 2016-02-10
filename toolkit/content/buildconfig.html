@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 #filter substitution
+#include @TOPOBJDIR@/source-repo.h
 <html>
 <head>
   <meta charset="UTF-8">
@@ -18,14 +19,9 @@
 </head>
 <body class="aboutPageWideContainer">
 <h1>about:buildconfig</h1>
-#ifdef SOURCE_REPO
-#ifdef SOURCE_CHANGESET
+#ifdef MOZ_SOURCE_URL
 <h2>Source</h2>
-<p>Built from <a href="@SOURCE_REPO@/rev/@SOURCE_CHANGESET@">@SOURCE_REPO@/rev/@SOURCE_CHANGESET@</a></p>
-#endif
-#elifdef SOURCE_GIT_COMMIT
-<h2>Source</h2>
-<p>Built from git commit <a href="#">@SOURCE_GIT_COMMIT@</a></p>
+<p>Built from <a href="@MOZ_SOURCE_URL@">@MOZ_SOURCE_URL@</a></p>
 #endif
 <h2>Build platform</h2>
 <table>
