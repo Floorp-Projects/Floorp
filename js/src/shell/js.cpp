@@ -3423,6 +3423,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     JSFlatString* scriptContents = args[0].toString()->ensureFlat(cx);
     if (!scriptContents)
         return false;
@@ -3454,7 +3455,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     SourceBufferHolder srcBuf(chars, scriptContents->length(),
                               SourceBufferHolder::NoOwnership);
 
-    RootedObject module(cx, frontend::CompileModule(cx, options, srcBuf));
+    RootedObject module(cx, frontend::CompileModule(cx, global, options, srcBuf));
     if (!module)
         return false;
 
@@ -3786,109 +3787,6 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     return JS_ExecuteScript(cx, script, args.rval());
-}
-
-static bool
-CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       const char16_t* chars, size_t length,
-                       JS::OffThreadCompileCallback callback, void* callbackData)
-{
-    MOZ_ASSERT(JS::CanCompileOffThread(cx, options, length));
-    return StartOffThreadParseModule(cx, options, chars, length, callback, callbackData);
-}
-
-static JSObject*
-FinishOffThreadModule(JSContext* maybecx, JSRuntime* rt, void* token)
-{
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return HelperThreadState().finishModuleParseTask(maybecx, rt, token);
-}
-
-static bool
-OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() != 1 || !args[0].isString()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "offThreadCompileModule");
-        return false;
-    }
-
-    JSAutoByteString fileNameBytes;
-    CompileOptions options(cx);
-    options.setIntroductionType("js shell offThreadCompileModule")
-           .setFileAndLine("<string>", 1);
-    options.setIsRunOnce(true)
-           .setSourceIsLazy(false);
-    options.forceAsync = true;
-
-    JSString* scriptContents = args[0].toString();
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, scriptContents))
-        return false;
-
-    size_t length = scriptContents->length();
-    const char16_t* chars = stableChars.twoByteRange().start().get();
-
-    // Make sure we own the string's chars, so that they are not freed before
-    // the compilation is finished.
-    ScopedJSFreePtr<char16_t> ownedChars;
-    if (stableChars.maybeGiveOwnershipToCaller()) {
-        ownedChars = const_cast<char16_t*>(chars);
-    } else {
-        char16_t* copy = cx->pod_malloc<char16_t>(length);
-        if (!copy)
-            return false;
-
-        mozilla::PodCopy(copy, chars, length);
-        ownedChars = copy;
-        chars = copy;
-    }
-
-    if (!JS::CanCompileOffThread(cx, options, length)) {
-        JS_ReportError(cx, "cannot compile code on worker thread");
-        return false;
-    }
-
-    if (!offThreadState.startIfIdle(cx, ownedChars)) {
-        JS_ReportError(cx, "called offThreadCompileModule without receiving prior off-thread "
-                       "compilation");
-        return false;
-    }
-
-    if (!CompileOffThreadModule(cx, options, chars, length,
-                                OffThreadCompileScriptCallback, nullptr))
-    {
-        offThreadState.abandon(cx);
-        return false;
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSRuntime* rt = cx->runtime();
-    if (OffThreadParsingMustWaitForGC(rt))
-        gc::AutoFinishGC finishgc(rt);
-
-    void* token = offThreadState.waitUntilDone(cx);
-    if (!token) {
-        JS_ReportError(cx, "called finishOffThreadModule when no compilation is pending");
-        return false;
-    }
-
-    RootedObject module(cx, FinishOffThreadModule(cx, rt, token));
-    if (!module)
-        return false;
-
-    args.rval().setObject(*module);
-    return true;
 }
 
 struct MOZ_RAII FreeOnReturn
@@ -5251,16 +5149,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Wait for off-thread compilation to complete. If an error occurred,\n"
 "  throw the appropriate exception; otherwise, run the script and return\n"
 "  its value."),
-
-    JS_FN_HELP("offThreadCompileModule", OffThreadCompileModule, 1, 0,
-"offThreadCompileModule(code)",
-"  Compile |code| on a helper thread. To wait for the compilation to finish\n"
-"  and get the module object, call |finishOffThreadModule|."),
-
-    JS_FN_HELP("finishOffThreadModule", FinishOffThreadModule, 0, 0,
-"finishOffThreadModule()",
-"  Wait for off-thread compilation to complete. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the module object"),
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
