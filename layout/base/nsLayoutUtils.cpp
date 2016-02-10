@@ -4543,18 +4543,20 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   pctTotal += pctOutsideSize;
 
   nscoord size;
-  if (GetAbsoluteCoord(aStyleSize, size) ||
-      GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
-                        PROP_WIDTH, size)) {
-    result = nsLayoutUtils::AddPercents(aType, size + coordOutsideSize,
-                                        pctOutsideSize);
-  } else if (aType == nsLayoutUtils::MIN_ISIZE &&
-             (aStyleSize.HasPercent() ||
-              aStyleMaxSize.HasPercent()) &&
-             aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) {
+  if (aType == nsLayoutUtils::MIN_ISIZE &&
+      (aStyleSize.HasPercent() ||
+       aStyleMaxSize.HasPercent()) &&
+      aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) {
     // A percentage width or max-width on replaced elements means they
     // can shrink to 0.
+    // Note that if this is max-width, this overrides the fixed-width
+    // rule in the next condition.
     result = 0; // let |min| handle padding/border/margin
+  } else if (GetAbsoluteCoord(aStyleSize, size) ||
+             GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
+                               PROP_WIDTH, size)) {
+    result = nsLayoutUtils::AddPercents(aType, size + coordOutsideSize,
+                                        pctOutsideSize);
   } else {
     // NOTE: We could really do a lot better for percents and for some
     // cases of calc() containing percent (certainly including any where
