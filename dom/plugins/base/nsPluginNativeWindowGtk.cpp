@@ -24,6 +24,7 @@
 #endif
 #include "mozilla/X11Util.h"
 
+static void plug_added_cb(GtkWidget *widget, gpointer data);
 static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
 static void socket_unrealize_cb   (GtkWidget *widget, gpointer data);
 
@@ -163,6 +164,9 @@ nsresult nsPluginNativeWindowGtk::CreateXEmbedWindow(bool aEnableXtFocus) {
   // see plugin_window_filter_func() for details
   g_object_set_data(G_OBJECT(mSocketWidget), "enable-xt-focus", (void *)aEnableXtFocus);
 
+  g_signal_connect(mSocketWidget, "plug_added",
+                   G_CALLBACK(plug_added_cb), nullptr);
+
   // Make sure to handle the plug_removed signal.  If we don't the
   // socket will automatically be destroyed when the plug is
   // removed, which means we're destroying it more than once.
@@ -277,6 +281,32 @@ nsresult nsPluginNativeWindowGtk::CreateXtWindow() {
   return NS_OK;
 }
 #endif
+
+static void
+plug_window_finalize_cb(gpointer socket, GObject* plug_window)
+{
+  g_object_unref(socket);
+}
+
+static void
+plug_added_cb(GtkWidget *socket, gpointer data)
+{
+  // The plug window has been embedded, and gtk_socket_add_window() has added
+  // a filter to the socket's plug_window, passing the socket as data for the
+  // filter, so the socket must live as long as events may be received on the
+  // plug window.
+  //
+  // https://git.gnome.org/browse/gtk+/tree/gtk/gtksocket.c?h=3.18.7#n1124
+  g_object_ref(socket);
+  // When the socket is unrealized, perhaps during gtk_widget_destroy() from
+  // ~nsPluginNativeWindowGtk, the plug is removed.  The plug in the child
+  // process then destroys its widget and window.  When the browser process
+  // receives the DestroyNotify event for the plug window, GDK releases its
+  // reference to plugWindow.  This is typically the last reference and so the
+  // weak ref callback triggers release of the socket.
+  GdkWindow* plugWindow = gtk_socket_get_plug_window(GTK_SOCKET(socket));
+  g_object_weak_ref(G_OBJECT(plugWindow), plug_window_finalize_cb, socket);
+}
 
 /* static */
 gboolean
