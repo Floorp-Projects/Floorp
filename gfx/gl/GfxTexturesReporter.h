@@ -53,13 +53,18 @@ public:
         MOZ_COLLECT_REPORT("gfx-tiles-waste", KIND_OTHER, UNITS_BYTES,
             int64_t(sTileWasteAmount),
             "Memory lost due to tiles extending past content boundaries");
-        return MOZ_COLLECT_REPORT(
+        MOZ_COLLECT_REPORT(
             "gfx-textures", KIND_OTHER, UNITS_BYTES, int64_t(sAmount),
             "Memory used for storing GL textures.");
+        MOZ_COLLECT_REPORT(
+            "gfx-textures-peak", KIND_OTHER, UNITS_BYTES, int64_t(sPeakAmount),
+            "Peak memory used for storing GL textures.");
+        return NS_OK;
     }
 
 private:
     static Atomic<size_t> sAmount;
+    static Atomic<size_t> sPeakAmount;
     // Count the amount of memory lost to tile waste
     static Atomic<size_t> sTileWasteAmount;
 };
