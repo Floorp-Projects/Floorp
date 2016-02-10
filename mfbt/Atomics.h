@@ -323,7 +323,7 @@ struct AtomicIntrinsics<T*, Order>
 template<typename T>
 struct ToStorageTypeArgument
 {
-  static T convert (T aT) { return aT; }
+  static MOZ_CONSTEXPR T convert (T aT) { return aT; }
 };
 
 } // namespace detail
@@ -514,13 +514,13 @@ struct ToStorageTypeArgument
 {
   typedef typename AtomicStorageType<T>::Type ResultType;
 
-  static ResultType convert (T aT) { return ResultType(aT); }
+  static MOZ_CONSTEXPR ResultType convert (T aT) { return ResultType(aT); }
 };
 
 template<typename T>
 struct ToStorageTypeArgument<T, false>
 {
-  static T convert (T aT) { return aT; }
+  static MOZ_CONSTEXPR T convert (T aT) { return aT; }
 };
 
 } // namespace detail
