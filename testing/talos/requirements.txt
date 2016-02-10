@@ -1,7 +1,7 @@
 mozlog>=3.1
 mozcrash>=0.15
 mozfile>=1.2
-wptserve>=1.3.0
+mozhttpd>=0.7
 mozinfo>=0.8
 mozprocess>=0.22
 mozversion>=1.3

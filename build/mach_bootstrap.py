@@ -80,6 +80,7 @@ SEARCH_PATHS = [
     'testing/mozbase/mozdebug',
     'testing/mozbase/mozdevice',
     'testing/mozbase/mozfile',
+    'testing/mozbase/mozhttpd',
     'testing/mozbase/mozinfo',
     'testing/mozbase/mozinstall',
     'testing/mozbase/mozleak',
