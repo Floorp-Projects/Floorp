@@ -107,6 +107,7 @@ flags:
     - macosx64
     - macosx64-st-an
     - eslint-gecko
+    - android-gradle-build-dependencies
 
   tests:
     - cppunit
