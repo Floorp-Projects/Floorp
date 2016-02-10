@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test that service worker registrations not cleaned up in mochitests cause failures</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.expectRegisteredServiceWorker();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.interception.enabled", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true]
+]}, function() {
+  navigator.serviceWorker.register("empty.js", {scope: "scope"})
+    .then(function(registration) {
+      ok(registration, "Registration succeeded");
+      SimpleTest.finish();
+    });
+});
+</script>
+</body>
+</html>
