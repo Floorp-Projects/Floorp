@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
+MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 
 # Set the appropriate version code, based on the existance of the
 # MOZ_APP_ANDROID_VERSION_CODE variable.
@@ -15,7 +15,7 @@ else
         --with-android-cpu-arch=$(ANDROID_CPU_ARCH) \
         $(if $(MOZ_ANDROID_MIN_SDK_VERSION),--with-android-min-sdk=$(MOZ_ANDROID_MIN_SDK_VERSION)) \
         $(if $(MOZ_ANDROID_MAX_SDK_VERSION),--with-android-max-sdk=$(MOZ_ANDROID_MAX_SDK_VERSION)) \
-        $(MOZ_APP_BUILDID))
+        $(MOZ_BUILDID))
 endif
 
 DEFINES += \
@@ -23,7 +23,7 @@ DEFINES += \
   -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
   -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
   -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
-  -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
+  -DMOZ_BUILDID=$(MOZ_BUILDID) \
   $(NULL)
 
 GARBAGE += \

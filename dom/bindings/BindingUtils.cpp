@@ -2790,6 +2790,7 @@ ConvertExceptionToPromise(JSContext* cx,
                           JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval)
 {
+#ifndef SPIDERMONKEY_PROMISE
   GlobalObject global(cx, promiseScope);
   if (global.Failed()) {
     return false;
@@ -2824,6 +2825,33 @@ ConvertExceptionToPromise(JSContext* cx,
   }
 
   return GetOrCreateDOMReflector(cx, promise, rval);
+#else // SPIDERMONKEY_PROMISE
+  {
+    JSAutoCompartment ac(cx, promiseScope);
+
+    JS::Rooted<JS::Value> exn(cx);
+    if (!JS_GetPendingException(cx, &exn)) {
+      // This is very important: if there is no pending exception here but we're
+      // ending up in this code, that means the callee threw an uncatchable
+      // exception.  Just propagate that out as-is.
+      return false;
+    }
+
+    JS_ClearPendingException(cx);
+
+    JSObject* promise = JS::CallOriginalPromiseReject(cx, exn);
+    if (!promise) {
+      // We just give up.  Put the exception back.
+      JS_SetPendingException(cx, exn);
+      return false;
+    }
+
+    rval.setObject(*promise);
+  }
+
+  // Now make sure we rewrap promise back into the compartment we want
+  return JS_WrapValue(cx, rval);
+#endif // SPIDERMONKEY_PROMISE
 }
 
 /* static */

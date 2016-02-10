@@ -665,7 +665,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgb(1,2,3)))",
     "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00ff00))",
     "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00f))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, hsla(240, 30%, 50%, 0.9)))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, hsla(240, 30%, 50%, 0.8)))",
     "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgba(255, 230, 10, 0.5)))",
 
     // linear w/ multiple color stops:

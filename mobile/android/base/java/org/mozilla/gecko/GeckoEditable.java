@@ -150,18 +150,20 @@ final class GeckoEditable extends JNIObject
        replied, the action is removed from the queue
     */
     private static final class Action {
-        // For input events (keypress, etc.); use with IME_SYNCHRONIZE
+        // For input events (keypress, etc.); use with onImeSynchronize
         static final int TYPE_EVENT = 0;
-        // For Editable.replace() call; use with IME_REPLACE_TEXT
+        // For Editable.replace() call; use with onImeReplaceText
         static final int TYPE_REPLACE_TEXT = 1;
-        // For Editable.setSpan() call; use with IME_SYNCHRONIZE
+        // For Editable.setSpan() call; use with onImeSynchronize
         static final int TYPE_SET_SPAN = 2;
-        // For Editable.removeSpan() call; use with IME_SYNCHRONIZE
+        // For Editable.removeSpan() call; use with onImeSynchronize
         static final int TYPE_REMOVE_SPAN = 3;
-        // For focus events (in notifyIME); use with IME_ACKNOWLEDGE_FOCUS
+        // For focus events (in notifyIME); use with onImeAcknowledgeFocus
         static final int TYPE_ACKNOWLEDGE_FOCUS = 4;
-        // For switching handler; use with IME_SYNCHRONIZE
+        // For switching handler; use with onImeSynchronize
         static final int TYPE_SET_HANDLER = 5;
+        // For updating composition; use with onImeUpdateComposition
+        static final int TYPE_UPDATE_COMPOSITION = 6;
 
         final int mType;
         boolean mUpdateComposition;
@@ -215,6 +217,13 @@ final class GeckoEditable extends JNIObject
             action.mHandler = handler;
             return action;
         }
+
+        static Action newUpdateComposition(int start, int end) {
+            final Action action = new Action(TYPE_UPDATE_COMPOSITION);
+            action.mStart = start;
+            action.mEnd = end;
+            return action;
+        }
     }
 
     /* Queue of editing actions sent to Gecko thread that
@@ -261,8 +270,10 @@ final class GeckoEditable extends JNIObject
             case Action.TYPE_REPLACE_TEXT:
                 // Because we get composition styling here essentially for free,
                 // we don't need to check if we're in batch mode.
-                if (!icMaybeSendComposition(
+                if (icMaybeSendComposition(
                         action.mSequence, /* useEntireText */ true, /* notifyGecko */ false)) {
+                    mNeedCompositionUpdate = false;
+                } else {
                     // Since we don't have a composition, we can try sending key events.
                     sendCharKeyEvents(action);
                 }
@@ -271,6 +282,10 @@ final class GeckoEditable extends JNIObject
 
             case Action.TYPE_ACKNOWLEDGE_FOCUS:
                 onImeAcknowledgeFocus();
+                break;
+
+            case Action.TYPE_UPDATE_COMPOSITION:
+                onImeUpdateComposition(action.mStart, action.mEnd);
                 break;
 
             default:
@@ -519,7 +534,8 @@ final class GeckoEditable extends JNIObject
             if (found) {
                 icSendComposition(text, selStart, selEnd, composingStart, composingEnd);
                 if (notifyGecko) {
-                    onImeUpdateComposition(composingStart, composingEnd);
+                    mActionQueue.offer(Action.newUpdateComposition(
+                            composingStart, composingEnd));
                 }
                 return true;
             }
@@ -527,7 +543,7 @@ final class GeckoEditable extends JNIObject
 
         if (notifyGecko) {
             // Set the selection by using a composition without ranges
-            onImeUpdateComposition(selStart, selEnd);
+            mActionQueue.offer(Action.newUpdateComposition(selStart, selEnd));
         }
 
         if (DEBUG) {
@@ -1003,7 +1019,7 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    private boolean isSameText(int start, int oldEnd, CharSequence newText) {
+    private boolean geckoIsSameText(int start, int oldEnd, CharSequence newText) {
         return oldEnd - start == newText.length() &&
                TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
@@ -1051,14 +1067,28 @@ final class GeckoEditable extends JNIObject
 
             // Try to preserve both old spans and new spans in action.mSequence.
             // indexInText is where we can find waction.mSequence within the passed in text.
-            final int indexInText = TextUtils.indexOf(text, action.mSequence);
+            final int startWithinText = action.mStart - start;
+            int indexInText = TextUtils.indexOf(text, action.mSequence, startWithinText);
+            if (indexInText < 0 && startWithinText >= action.mSequence.length()) {
+                indexInText = text.toString().lastIndexOf(action.mSequence.toString(),
+                                                          startWithinText);
+            }
+
             if (indexInText < 0) {
-                // Text was changed from under us. We are force to discard any new spans.
+                // Text was changed from under us. We are forced to discard any new spans.
                 geckoReplaceText(start, oldEnd, text);
+
+                // Don't ignore the next selection change because we are forced to re-sync
+                // with Gecko here.
+                mIgnoreSelectionChange = false;
 
             } else if (indexInText == 0 && text.length() == action.mSequence.length()) {
                 // The new text exactly matches our sequence, so do a direct replace.
                 geckoReplaceText(start, oldEnd, action.mSequence);
+
+                // Ignore the next selection change because the selection change is a
+                // side-effect of the replace-text event we sent.
+                mIgnoreSelectionChange = true;
 
             } else {
                 // The sequence is embedded within the changed text, so we have to perform
@@ -1076,21 +1106,16 @@ final class GeckoEditable extends JNIObject
                                  text.subSequence(actionEnd - start, text.length()));
             }
 
-            // Ignore the next selection change because the selection change is a
-            // side-effect of the replace-text event we sent.
-            mIgnoreSelectionChange = true;
+        } else if (geckoIsSameText(start, oldEnd, text)) {
+            // Nothing to do because the text is the same. This could happen when
+            // the composition is updated for example, in which case we want to keep the
+            // Java selection.
+            mIgnoreSelectionChange = mIgnoreSelectionChange ||
+                    (action != null && action.mType == Action.TYPE_UPDATE_COMPOSITION);
+            return;
 
         } else {
             // Gecko side initiated the text change.
-            if (isSameText(start, oldEnd, text)) {
-                // Nothing to do because the text is the same. This could happen when
-                // the composition is updated for example. Ignore the next selection
-                // change because the selection change is a side-effect of the
-                // update-composition event we sent.
-                mIgnoreSelectionChange = true;
-                return;
-            }
-
             geckoReplaceText(start, oldEnd, text);
         }
 

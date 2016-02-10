@@ -1140,7 +1140,8 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
 
 // Helper for smart pointers (nsRefPtr/nsCOMPtr).
 template <template <typename> class SmartPtr, typename T,
-          typename U=typename EnableIf<IsRefcounted<T>::value, T>::Type>
+          typename U=typename EnableIf<IsRefcounted<T>::value, T>::Type,
+          typename V=typename EnableIf<IsSmartPtr<SmartPtr<T>>::value, T>::Type>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                      const SmartPtr<T>& value,
@@ -1148,6 +1149,19 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                      JS::Handle<JSObject*> givenProto = nullptr)
 {
   return WrapNewBindingNonWrapperCachedObject(cx, scope, value.get(), rval,
+                                              givenProto);
+}
+
+// Helper for object references (as opposed to pointers).
+template <typename T,
+          typename U=typename EnableIf<!IsSmartPtr<T>::value, T>::Type>
+inline bool
+WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
+                                     T& value,
+                                     JS::MutableHandle<JS::Value> rval,
+                                     JS::Handle<JSObject*> givenProto = nullptr)
+{
+  return WrapNewBindingNonWrapperCachedObject(cx, scope, &value, rval,
                                               givenProto);
 }
 

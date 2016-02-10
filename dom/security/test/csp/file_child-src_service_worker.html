@@ -9,13 +9,14 @@
     try {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register(
-            'file_child-src_service_worker.js'
-            + "#"
-            + page_id
+            'file_child-src_service_worker.js',
+            { scope: './' + page_id + '/' }
             ).then(function(reg)
               {
                 // registration worked
-                window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+                reg.unregister().then(function() {
+                  window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+                });
               }).catch(function(error) {
               // registration failed
               window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');

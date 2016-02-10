@@ -1387,9 +1387,9 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     // Call the iterator object's .next method.
     if (!GetProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
-    // We try to support the old and new iterator protocol at the same time!
+
     if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
-        // We still check for StopIterator
+        // Check for StopIteration.
         if (!cx->isExceptionPending())
             return false;
         RootedValue exception(cx);
@@ -1403,39 +1403,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
         return true;
     }
 
-    if (!rval.isObject()) {
-        // Old style generators might return primitive values
-        return true;
-    }
-
-    // If the object has both the done and value property, we assume
-    // it's using the new style protocol. Otherwise just return the object.
-    RootedObject result(cx, &rval.toObject());
-    bool found = false;
-    if (!HasProperty(cx, result, cx->names().done, &found))
-        return false;
-    if (!found)
-        return true;
-    if (!HasProperty(cx, result, cx->names().value, &found))
-        return false;
-    if (!found)
-        return true;
-
-    // At this point we hopefully have a new style iterator result
-
-    // 7.4.4 IteratorComplete
-    // Get iterResult.done
-    if (!GetProperty(cx, result, result, cx->names().done, rval))
-        return false;
-
-    bool done = ToBoolean(rval);
-    if (done) {
-         rval.setMagic(JS_NO_ITER_VALUE);
-         return true;
-     }
-
-    // 7.4.5 IteratorValue
-    return GetProperty(cx, result, result, cx->names().value, rval);
+    return true;
 }
 
 static bool

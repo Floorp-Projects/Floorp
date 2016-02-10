@@ -23,6 +23,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
 
 Cc["@mozilla.org/globalmessagemanager;1"]
   .getService(Ci.nsIMessageListenerManager)
@@ -448,6 +449,53 @@ this.BrowserTestUtils = {
         }
       }, capture);
     });
+  },
+
+  /**
+   * Like waitForEvent, but adds the event listener to the message manager
+   * global for browser.
+   *
+   * @param {string} eventName
+   *        Name of the event to listen to.
+   * @param {bool} capture [optional]
+   *        Whether to use a capturing listener.
+   * @param {function} checkFn [optional]
+   *        Called with the Event object as argument, should return true if the
+   *        event is the expected one, or false if it should be ignored and
+   *        listening should continue. If not specified, the first event with
+   *        the specified name resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next event, since this is probably a bug in the test.
+   *
+   * @returns {Promise}
+   */
+  waitForContentEvent(browser, eventName, capture, checkFn) {
+    let parameters = { eventName,
+                       capture,
+                       checkFnSource: checkFn ? checkFn.toSource() : null };
+    return ContentTask.spawn(browser, parameters,
+        function({ eventName, capture, checkFnSource }) {
+          let checkFn;
+          if (checkFnSource) {
+            checkFn = eval(`(() => (${checkFnSource}))()`);
+          }
+          return new Promise((resolve, reject) => {
+            addEventListener(eventName, function listener(event) {
+              let completion = resolve;
+              try {
+                if (checkFn && !checkFn(event)) {
+                  return;
+                }
+              } catch (e) {
+                completion = () => reject(e);
+              }
+              removeEventListener(eventName, listener, capture);
+              completion();
+            }, capture);
+          });
+        });
   },
 
   /**

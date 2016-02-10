@@ -494,13 +494,6 @@ ModuleNamespaceObject::ProxyHandler::delete_(JSContext* cx, HandleObject proxy, 
 }
 
 bool
-ModuleNamespaceObject::ProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
-                                               MutableHandleObject objp) const
-{
-    return BaseProxyHandler::enumerate(cx, proxy, objp);
-}
-
-bool
 ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
                                                      AutoIdVector& props) const
 {
@@ -591,6 +584,7 @@ ModuleObject::create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticS
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
+        js_delete<IndirectBindingMap>(bindings);
         return nullptr;
     }
 
@@ -842,6 +836,7 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleArra
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
+        js_delete<IndirectBindingMap>(bindings);
         return nullptr;
     }
 

@@ -264,13 +264,6 @@ ifdef MOZ_FOLD_LIBS_FLAGS
 DEFAULT_GMAKE_FLAGS += XCFLAGS='$(MOZ_FOLD_LIBS_FLAGS)'
 endif
 
-ifndef WARNINGS_AS_ERRORS
-DEFAULT_GMAKE_FLAGS += NSS_ENABLE_WERROR=0
-endif
-ifeq ($(OS_TARGET),Android)
-DEFAULT_GMAKE_FLAGS += NSS_ENABLE_WERROR=0
-endif
-
 NSS_SRCDIR = $(topsrcdir)
 
 NSS_DIRS =
@@ -349,6 +342,10 @@ INSTALL_TARGETS += IMPORT_LIB
 endif # MOZ_FOLD_LIBS
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (1,$(ALLOW_COMPILER_WARNINGS))
+DEFAULT_GMAKE_FLAGS += NSS_ENABLE_WERROR=0
+endif
 
 # Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
 # definitions in NSS, so just export it into the sub-make's environment.

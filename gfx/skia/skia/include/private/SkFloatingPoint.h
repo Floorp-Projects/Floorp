@@ -12,7 +12,7 @@
 
 #include "SkTypes.h"
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 
 // For _POSIX_VERSION
@@ -95,9 +95,9 @@ static inline float sk_float_copysign(float x, float y) {
         return (bits << 1) == (0xFF << 24);
     }
 #else
-    #define sk_float_isfinite(x)    isfinite(x)
-    #define sk_float_isnan(x)       isnan(x)
-    #define sk_float_isinf(x)       isinf(x)
+    #define sk_float_isfinite(x)    std::isfinite(x)
+    #define sk_float_isnan(x)       std::isnan(x)
+    #define sk_float_isinf(x)       std::isinf(x)
 #endif
 
 #define sk_double_isnan(a)          sk_float_isnan(a)

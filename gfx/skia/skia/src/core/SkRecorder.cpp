@@ -240,10 +240,6 @@ void SkRecorder::onDrawImageNine(const SkImage* image, const SkIRect& center,
     APPEND(DrawImageNine, this->copy(paint), image, center, dst);
 }
 
-void SkRecorder::onDrawSprite(const SkBitmap& bitmap, int left, int top, const SkPaint* paint) {
-    APPEND(DrawSprite, this->copy(paint), bitmap, left, top);
-}
-
 void SkRecorder::onDrawText(const void* text, size_t byteLength,
                             SkScalar x, SkScalar y, const SkPaint& paint) {
     APPEND(DrawText,
@@ -340,10 +336,9 @@ void SkRecorder::willSave() {
     APPEND(Save);
 }
 
-SkCanvas::SaveLayerStrategy SkRecorder::willSaveLayer(const SkRect* bounds,
-                                                      const SkPaint* paint,
-                                                      SkCanvas::SaveFlags flags) {
-    APPEND(SaveLayer, this->copy(bounds), this->copy(paint), flags);
+SkCanvas::SaveLayerStrategy SkRecorder::getSaveLayerStrategy(const SaveLayerRec& rec) {
+    APPEND(SaveLayer,
+           this->copy(rec.fBounds), this->copy(rec.fPaint), rec.fBackdrop, rec.fSaveLayerFlags);
     return SkCanvas::kNoLayer_SaveLayerStrategy;
 }
 

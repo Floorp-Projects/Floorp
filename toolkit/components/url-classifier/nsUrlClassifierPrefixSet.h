@@ -15,9 +15,9 @@
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/Atomics.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 
 class nsUrlClassifierPrefixSet final
   : public nsIUrlClassifierPrefixSet
@@ -35,12 +35,13 @@ public:
   NS_IMETHOD StoreToFile(nsIFile* aFile) override;
 
   nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
-  size_t SizeInMemory() { return mMemoryInUse; };
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
-protected:
+private:
   virtual ~nsUrlClassifierPrefixSet();
 
   static const uint32_t BUFFER_SIZE = 64 * 1024;
@@ -51,9 +52,11 @@ protected:
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
 
-  // Return the estimated size of the set on disk and in memory, in bytes.
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-
+  // Lock to prevent races between the url-classifier thread (which does most
+  // of the operations) and the main thread (which does memory reporting).
+  // It should be held for all operations between Init() and destruction that
+  // touch this class's data members.
+  mozilla::Mutex mLock;
   // list of fully stored prefixes, that also form the
   // start of a run of deltas in mIndexDeltas.
   nsTArray<uint32_t> mIndexPrefixes;
@@ -65,9 +68,6 @@ protected:
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
 
-  // memory report collection might happen while we're updating the prefixset
-  // on another thread, so pre-compute and remember the size (bug 1050108).
-  mozilla::Atomic<size_t> mMemoryInUse;
   nsCString mMemoryReportPath;
 };
 

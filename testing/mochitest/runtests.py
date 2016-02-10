@@ -1888,7 +1888,7 @@ class MochitestDesktop(MochitestBase):
         if valgrindPath:
             interactive = False
             valgrindArgs_split = ([] if valgrindArgs is None
-                                  else valgrindArgs.split())
+                                  else valgrindArgs.split(","))
 
             valgrindSuppFiles_final = []
             if valgrindSuppFiles is not None:

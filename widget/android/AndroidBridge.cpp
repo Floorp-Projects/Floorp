@@ -72,17 +72,17 @@ static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNI
 jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
 {
     // First try the default class loader.
-    auto classRef = ClassObject::LocalRef::Adopt(
+    auto classRef = Class::LocalRef::Adopt(
             env, env->FindClass(className));
 
     if (!classRef && sBridge && sBridge->mClassLoader) {
         // If the default class loader failed but we have an app class loader, try that.
         // Clear the pending exception from failed FindClass call above.
         env->ExceptionClear();
-        classRef = ClassObject::LocalRef::Adopt(env,
+        classRef = Class::LocalRef::Adopt(env, jclass(
                 env->CallObjectMethod(sBridge->mClassLoader.Get(),
                                       sBridge->mClassLoaderLoadClass,
-                                      Param<String>(className, env).Get()));
+                                      StringParam(className, env).Get())));
     }
 
     if (!classRef) {
@@ -93,7 +93,7 @@ jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
         MOZ_CRASH();
     }
 
-    return ClassObject::GlobalRef(env, classRef).Forget();
+    return Class::GlobalRef(env, classRef).Forget();
 }
 
 jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
@@ -199,7 +199,7 @@ AndroidBridge::AndroidBridge()
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
     mMessageQueue = widget::GeckoThread::MsgQueue();
-    auto msgQueueClass = ClassObject::LocalRef::Adopt(
+    auto msgQueueClass = Class::LocalRef::Adopt(
             jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
     // mMessageQueueNext must not be null
     mMessageQueueNext = GetMethodID(
@@ -474,7 +474,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
     auto jstrType = GeckoAppShell::GetMimeTypeFromExtensionsWrapper(aFileExt);
 
     if (jstrType) {
-        aMimeType = jstrType;
+        aMimeType = jstrType->ToCString();
     }
 }
 
@@ -486,7 +486,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
     auto jstrExt = GeckoAppShell::GetExtensionFromMimeTypeWrapper(aMimeType);
 
     if (jstrExt) {
-        aFileExt = nsCString(jstrExt);
+        aFileExt = jstrExt->ToCString();
     }
 }
 
@@ -498,7 +498,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     auto text = Clipboard::GetClipboardTextWrapper();
 
     if (text) {
-        aText = nsString(text);
+        aText = text->ToString();
     }
     return !!text;
 }
@@ -1673,7 +1673,7 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
     if (!jstrRet)
         return NS_ERROR_FAILURE;
 
-    aResult = nsCString(jstrRet);
+    aResult = jstrRet->ToCString();
     return NS_OK;
 }
 
@@ -1744,7 +1744,7 @@ AndroidBridge::GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResul
     if (!jstrThreadName)
         return false;
 
-    aResult = nsCString(jstrThreadName);
+    aResult = jstrThreadName->ToCString();
     return true;
 }
 
@@ -1758,7 +1758,7 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
     if (!jstrSampleName)
         return false;
 
-    aResult = nsCString(jstrSampleName);
+    aResult = jstrSampleName->ToCString();
     return true;
 }
 
@@ -2212,6 +2212,6 @@ nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsASt
     if (!path) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    aPath = nsString(path);
+    aPath = path->ToString();
     return NS_OK;
 }

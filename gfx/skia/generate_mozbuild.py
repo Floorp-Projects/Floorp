@@ -37,7 +37,6 @@ LOCAL_INCLUDES += [
     'skia/include/gpu',
     'skia/include/images',
     'skia/include/pathops',
-    'skia/include/pipe',
     'skia/include/ports',
     'skia/include/private',
     'skia/include/utils',

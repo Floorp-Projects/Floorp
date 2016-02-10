@@ -10,20 +10,16 @@
 
 #include "batches/GrVertexBatch.h"
 
-#include "GrAtlasTextContext.h"
+#include "text/GrAtlasTextContext.h"
+#include "text/GrDistanceFieldAdjustTable.h"
 
 class GrAtlasTextBatch : public GrVertexBatch {
 public:
     DEFINE_BATCH_CLASS_ID
-    static const size_t kLCDTextVASize = sizeof(SkPoint) + sizeof(SkIPoint16);
 
-    // position + local coord
-    static const size_t kColorTextVASize = sizeof(SkPoint) + sizeof(SkIPoint16);
-    static const size_t kGrayTextVASize = sizeof(SkPoint) + sizeof(GrColor) + sizeof(SkIPoint16);
-    static const int kVerticesPerGlyph = 4;
+    static const int kVerticesPerGlyph = GrAtlasTextBlob::kVerticesPerGlyph;
     static const int kIndicesPerGlyph = 6;
 
-    typedef GrAtlasTextContext::DistanceAdjustTable DistanceAdjustTable;
     typedef GrAtlasTextBlob Blob;
     typedef Blob::Run Run;
     typedef Run::SubRunInfo TextInfo;
@@ -60,10 +56,11 @@ public:
         return batch;
     }
 
-    static GrAtlasTextBatch* CreateDistanceField(int glyphCount, GrBatchFontCache* fontCache,
-                                                 const DistanceAdjustTable* distanceAdjustTable,
-                                                 SkColor filteredColor, bool isLCD,
-                                                 bool useBGR) {
+    static GrAtlasTextBatch* CreateDistanceField(
+                                              int glyphCount, GrBatchFontCache* fontCache,
+                                              const GrDistanceFieldAdjustTable* distanceAdjustTable,
+                                              SkColor filteredColor, bool isLCD,
+                                              bool useBGR) {
         GrAtlasTextBatch* batch = new GrAtlasTextBatch;
 
         batch->fFontCache = fontCache;
@@ -89,7 +86,7 @@ public:
         // We don't yet position distance field text on the cpu, so we have to map the vertex bounds
         // into device space
         const Run& run = geo.fBlob->fRuns[geo.fRun];
-        if (run.fSubRunInfo[geo.fSubRun].fDrawAsDistanceFields) {
+        if (run.fSubRunInfo[geo.fSubRun].drawAsDistanceFields()) {
             SkRect bounds = run.fVertexBounds;
             fBatch.fViewMatrix.mapRect(&bounds);
             this->setBounds(bounds);
@@ -101,26 +98,6 @@ public:
     const char* name() const override { return "TextBatch"; }
 
     SkString dumpInfo() const override;
-
-    static size_t GetVertexStride(GrMaskFormat maskFormat) {
-        switch (maskFormat) {
-            case kA8_GrMaskFormat:
-                return kGrayTextVASize;
-            case kARGB_GrMaskFormat:
-                return kColorTextVASize;
-            default:
-                return kLCDTextVASize;
-        }
-    }
-
-    static size_t GetVertexStrideDf(GrMaskFormat maskFormat, bool useLCDText) {
-        SkASSERT(maskFormat == kA8_GrMaskFormat);
-        if (useLCDText) {
-            return kLCDTextVASize;
-        } else {
-            return kGrayTextVASize;
-        }
-    }
 
 protected:
     void computePipelineOptimizations(GrInitInvariantOutput* color, 
@@ -220,7 +197,7 @@ private:
     GrBatchFontCache* fFontCache;
 
     // Distance field properties
-    SkAutoTUnref<const DistanceAdjustTable> fDistanceAdjustTable;
+    SkAutoTUnref<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
     SkColor fFilteredColor;
 
     typedef GrVertexBatch INHERITED;
