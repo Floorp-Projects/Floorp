@@ -543,13 +543,9 @@ DatabaseShutdown::Complete(nsresult, nsISupports*)
   if (NS_WARN_IF(!mBarrier)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsIAsyncShutdownBarrier> barrier = mBarrier.forget();
-  nsCOMPtr<nsIAsyncShutdownClient> parentClient = mParentClient.forget();
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
 
-  NS_ProxyRelease(mainThread, barrier);
-  NS_ProxyRelease(mainThread, parentClient);
+  NS_ReleaseOnMainThread(mBarrier.forget());
+  NS_ReleaseOnMainThread(mParentClient.forget());
 
   return NS_OK;
 }
