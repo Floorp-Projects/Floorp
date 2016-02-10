@@ -508,11 +508,19 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     HandleValue v = args.get(0);
-    if (!v.isInt32()) {
-        args.rval().setBoolean(false);
-        return true;
+    int32_t size;
+    if (v.isInt32()) {
+        size = v.toInt32();
+    } else {
+        double dsize;
+        if (!ToInteger(cx, v, &dsize))
+            return false;
+        if (!mozilla::NumberIsInt32(dsize, &size)) {
+            args.rval().setBoolean(false);
+            return true;
+        }
     }
-    args.rval().setBoolean(jit::AtomicOperations::isLockfree(v.toInt32()));
+    args.rval().setBoolean(jit::AtomicOperations::isLockfree(size));
     return true;
 }
 
