@@ -1570,9 +1570,7 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider) {
     CurrentState().transform = mTarget->GetTransform();
-    DrawTarget* oldDT = mTarget;
-    mTarget = nullptr;
-    mBufferProvider->ReturnAndUseDT(oldDT);
+    mBufferProvider->ReturnAndUseDT(mTarget.forget());
   }
 }
 
