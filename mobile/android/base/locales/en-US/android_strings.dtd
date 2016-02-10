@@ -469,7 +469,7 @@ size. -->
 <!ENTITY pref_scroll_title_bar2 "Full-screen browsing">
 <!ENTITY pref_scroll_title_bar_summary2 "Hide the &brandShortName; toolbar when scrolling down a page">
 
-<!ENTITY pref_tab_queue_title2 "Open multiple links">
+<!ENTITY pref_tab_queue_title3 "Tab queue">
 <!ENTITY pref_tab_queue_summary3 "Save them until the next time you open &brandShortName;">
 
 <!-- Localization note (page_removed): This string appears in a toast message when
