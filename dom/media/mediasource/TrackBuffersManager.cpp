@@ -173,20 +173,12 @@ TrackBuffersManager::ResetParserState()
   MSE_DEBUG("");
 
   // 1. If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
-  if (mAppendState == AppendState::PARSING_MEDIA_SEGMENT) {
-    nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableMethod(this, &TrackBuffersManager::FinishCodedFrameProcessing);
-    GetTaskQueue()->Dispatch(task.forget());
-  } else {
-    nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableMethod(this, &TrackBuffersManager::CompleteResetParserState);
-    GetTaskQueue()->Dispatch(task.forget());
-  }
+  // SourceBuffer.abort() has ensured that all complete coded frames have been
+  // processed. As such, we don't need to check for the value of mAppendState.
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &TrackBuffersManager::CompleteResetParserState);
+  GetTaskQueue()->Dispatch(task.forget());
 
-  // Our ResetParserState is really asynchronous, the current task has been
-  // interrupted and will complete shortly (or has already completed).
-  // We must however present to the main thread a stable, reset state.
-  // So we run the following operation now in the main thread.
   // 7. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
 }
@@ -312,24 +304,6 @@ TrackBuffersManager::Dump(const char* aPath)
 
 }
 #endif
-
-void
-TrackBuffersManager::FinishCodedFrameProcessing()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mProcessingRequest.Exists()) {
-    NS_WARNING("Processing request pending");
-    mProcessingRequest.Disconnect();
-  }
-  // The spec requires us to complete parsing synchronously any outstanding
-  // frames in the current media segment. This can't be implemented in a way
-  // that makes sense.
-  // As such we simply completely ignore the result of any pending input buffer.
-  // TODO: Link to W3C bug.
-
-  CompleteResetParserState();
-}
 
 void
 TrackBuffersManager::CompleteResetParserState()
