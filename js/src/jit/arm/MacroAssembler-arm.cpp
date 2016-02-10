@@ -4997,6 +4997,17 @@ MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
 }
 
 void
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetOffset)
+{
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + u32Offset);
+
+    uint32_t addOffset = u32Offset - 4;
+    MOZ_ASSERT(reinterpret_cast<Instruction*>(code + addOffset)->is<InstALU>());
+
+    *u32 = (targetOffset - addOffset) - 8;
+}
+
+void
 MacroAssembler::pushReturnAddress()
 {
     push(lr);
