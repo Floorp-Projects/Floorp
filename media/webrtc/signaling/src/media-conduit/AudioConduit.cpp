@@ -27,7 +27,6 @@
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "browser_logging/WebRtcLog.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
@@ -256,8 +255,6 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     CSFLogError(logTag, "%s Unable to create voice engine", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-
-  EnableWebRtcLog();
 
   if(!(mPtrVoEBase = VoEBase::GetInterface(mVoiceEngine)))
   {

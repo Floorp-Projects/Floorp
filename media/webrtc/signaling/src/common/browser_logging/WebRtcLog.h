@@ -9,5 +9,6 @@
 
 void StartWebRtcLog(uint32_t log_level = webrtc::kTraceDefault);
 void EnableWebRtcLog();
+void StopWebRtcLog();
 
 #endif
