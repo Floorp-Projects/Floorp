@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+function boom()
+{
+  var canvas = document.getElementById("canvas");
+  var ctx = SpecialPowers.wrap(canvas.getContext("2d"));
+  ctx.drawWindow(window, 0, 0, canvas.width, canvas.height, "red");
+}
+</script>
+</head>
+<body onload="boom();">
+<canvas id="canvas" width="10" height="10"></canvas>
+</body>
+</html>
