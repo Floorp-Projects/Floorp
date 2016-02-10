@@ -296,14 +296,6 @@ TrackBuffersManager::Detach()
   GetTaskQueue()->Dispatch(task.forget());
 }
 
-#if defined(DEBUG)
-void
-TrackBuffersManager::Dump(const char* aPath)
-{
-
-}
-#endif
-
 void
 TrackBuffersManager::CompleteResetParserState()
 {
