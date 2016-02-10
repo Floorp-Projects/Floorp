@@ -18,5 +18,5 @@ mk_add_options MOZ_PGO=1
 # defines.sh during the beta cycle
 export BUILDING_RELEASE=1
 
-. "$topsrcdir/build/unix/mozconfig.rust"
+. "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/build/mozconfig.common.override"
