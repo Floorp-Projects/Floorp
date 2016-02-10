@@ -216,10 +216,13 @@ xpcAccessible::GetState(uint32_t* aState, uint32_t* aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     nsAccUtils::To32States(states::DEFUNCT, aState, aExtraState);
-  else
+  else if (Intl())
     nsAccUtils::To32States(Intl()->State(), aState, aExtraState);
+  else
+    nsAccUtils::To32States(IntlGeneric().AsProxy()->State(), aState,
+                           aExtraState);
 
   return NS_OK;
 }
