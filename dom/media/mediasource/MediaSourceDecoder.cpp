@@ -256,6 +256,12 @@ MediaDecoderOwner::NextFrameStatus
 MediaSourceDecoder::NextFrameBufferedStatus()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mMediaSource ||
+      mMediaSource->ReadyState() == dom::MediaSourceReadyState::Closed) {
+    return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+  }
+
   // Next frame hasn't been decoded yet.
   // Use the buffered range to consider if we have the next frame available.
   TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
