@@ -273,31 +273,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         return observedGCs.put(majorGCNumber);
     }
 
-    bool isTrackingTenurePromotions() const {
-        return trackingTenurePromotions;
-    }
-
     bool isEnabled() const {
         return enabled;
     }
 
-    void logTenurePromotion(JSRuntime* rt, JSObject& obj, double when);
     static SavedFrame* getObjectAllocationSite(JSObject& obj);
-
-    struct TenurePromotionsLogEntry
-    {
-        TenurePromotionsLogEntry(JSRuntime* rt, JSObject& obj, double when);
-
-        const char* className;
-        double when;
-        RelocatablePtrObject frame;
-        size_t size;
-
-        void trace(JSTracer* trc) {
-            if (frame)
-                TraceEdge(trc, &frame, "Debugger::TenurePromotionsLogEntry::frame");
-        }
-    };
 
     struct AllocationsLogEntry
     {
@@ -345,12 +325,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     // debuggees participated in.
     using GCNumberSet = HashSet<uint64_t, DefaultHasher<uint64_t>, RuntimeAllocPolicy>;
     GCNumberSet observedGCs;
-
-    using TenurePromotionsLog = js::TraceableFifo<TenurePromotionsLogEntry>;
-    TenurePromotionsLog tenurePromotionsLog;
-    bool trackingTenurePromotions;
-    size_t maxTenurePromotionsLogLength;
-    bool tenurePromotionsLogOverflowed;
 
     using AllocationsLog = js::TraceableFifo<AllocationsLogEntry>;
 
