@@ -91,9 +91,7 @@ class FirefoxMediaHarness(MarionetteHarness):
 
 
 def cli():
-    mn_cli(runner_class=MediaTestRunner,
-           parser_class=FirefoxMediaHarness,
-           args=args)
+    mn_cli(MediaTestRunner, MediaTestArguments, FirefoxMediaHarness)
 
 if __name__ == '__main__':
     cli()
