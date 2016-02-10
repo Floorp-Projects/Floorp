@@ -33,13 +33,16 @@ if not CONFIG['JS_STANDALONE']:
     EXPORTS += [
         '!buildid.h',
         '!mozilla-config.h',
+        '!source-repo.h',
     ]
 
     GENERATED_FILES += [
         'buildid.h',
+        'source-repo.h',
     ]
 
     GENERATED_FILES['buildid.h'].script = 'build/variables.py:buildid_header'
+    GENERATED_FILES['source-repo.h'].script = 'build/variables.py:source_repo_header'
 
     DIRS += [
         'build',
