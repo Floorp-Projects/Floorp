@@ -9,6 +9,7 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
 
 const Types = require("../types");
 const Browser = createFactory(require("./browser"));
+const ViewportToolbar = createFactory(require("./viewport-toolbar"));
 
 module.exports = createClass({
 
@@ -17,22 +18,22 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
+    onRotateViewport: PropTypes.func.isRequired,
   },
 
   render() {
     let {
       location,
       viewport,
+      onRotateViewport,
     } = this.props;
 
-    // Additional elements will soon appear here around the Browser, like drag
-    // handles, etc.
     return dom.div(
       {
         className: "viewport"
       },
-      dom.div({
-        className: "viewport-header",
+      ViewportToolbar({
+        onRotateViewport,
       }),
       Browser({
         location,
