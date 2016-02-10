@@ -250,11 +250,16 @@ xpcAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP
 xpcAccessible::GetDescription(nsAString& aDescription)
 {
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   nsAutoString desc;
-  Intl()->Description(desc);
+  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+    proxy->Description(desc);
+  } else {
+    Intl()->Description(desc);
+  }
+
   aDescription.Assign(desc);
 
   return NS_OK;
