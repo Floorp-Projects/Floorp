@@ -2907,24 +2907,10 @@ DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs
 
 bool
 js::DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
-                    DefineAsIntrinsic intrinsic, PropertyDefinitionBehavior behavior)
+                    DefineAsIntrinsic intrinsic)
 {
     for (; fs->name; fs++) {
-        unsigned flags = fs->flags;
-        switch (behavior) {
-          case DefineAllProperties:
-            break;
-          case OnlyDefineLateProperties:
-            if (!(flags & JSPROP_DEFINE_LATE))
-                continue;
-            break;
-          default:
-            MOZ_ASSERT(behavior == DontDefineLateProperties);
-            if (flags & JSPROP_DEFINE_LATE)
-                continue;
-        }
-
-        if (!DefineFunctionFromSpec(cx, obj, fs, flags & ~JSPROP_DEFINE_LATE, intrinsic))
+        if (!DefineFunctionFromSpec(cx, obj, fs, fs->flags, intrinsic))
             return false;
     }
     return true;

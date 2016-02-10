@@ -3669,15 +3669,14 @@ JS_IsConstructor(JSFunction* fun)
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
-                   PropertyDefinitionBehavior behavior)
+JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return DefineFunctions(cx, obj, fs, NotIntrinsic, behavior);
+    return DefineFunctions(cx, obj, fs, NotIntrinsic);
 }
 
 JS_PUBLIC_API(JSFunction*)
