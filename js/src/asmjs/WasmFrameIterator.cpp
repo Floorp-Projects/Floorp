@@ -96,6 +96,7 @@ FrameIterator::settle()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::Inline:
+      case CodeRange::CallThunk:
         MOZ_CRASH("Should not encounter an exit during iteration");
     }
 }
@@ -491,6 +492,7 @@ ProfilingFrameIterator::initFromFP(const WasmActivation& activation)
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::Inline:
+      case CodeRange::CallThunk:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
 
@@ -541,6 +543,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     const CodeRange* codeRange = module_->lookupCodeRange(state.pc);
     switch (codeRange->kind()) {
       case CodeRange::Function:
+      case CodeRange::CallThunk:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit: {
         // When the pc is inside the prologue/epilogue, the innermost
@@ -557,7 +560,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         uint32_t offsetInCodeRange = offsetInModule - codeRange->begin();
         void** sp = (void**)state.sp;
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        if (offsetInCodeRange < PushedRetAddr) {
+        if (offsetInCodeRange < PushedRetAddr || codeRange->kind() == CodeRange::CallThunk) {
             // First instruction of the ARM/MIPS function; the return address is
             // still in lr and fp still holds the caller's fp.
             callerPC_ = state.lr;
@@ -571,7 +574,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp);
         } else
 #endif
-        if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn()) {
+        if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn() ||
+            codeRange->kind() == CodeRange::CallThunk)
+        {
             // The return address has been pushed on the stack but not fp; fp
             // still points to the caller's fp.
             callerPC_ = *sp;
@@ -655,6 +660,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::Inline:
+      case CodeRange::CallThunk:
         stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
         AssertMatchesCallSite(*module_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
@@ -696,6 +702,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
+      case CodeRange::CallThunk:        return "call thunk (in asm.js)";
     }
 
     MOZ_CRASH("bad code range kind");
@@ -769,6 +776,14 @@ wasm::EnableProfilingPrologue(const Module& module, const CallSite& callSite, bo
 #else
 # error "Missing architecture"
 #endif
+}
+
+void
+wasm::EnableProfilingThunk(const Module& module, const CallThunk& callThunk, bool enabled)
+{
+    const CodeRange& cr = module.codeRanges()[callThunk.u.codeRangeIndex];
+    uint32_t calleeOffset = enabled ? cr.funcProfilingEntry() : cr.funcNonProfilingEntry();
+    MacroAssembler::repatchThunk(module.code(), callThunk.offset, calleeOffset);
 }
 
 // Replace all the nops in all the epilogues of asm.js functions with jumps

@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmGenerator.h"
 
+#include "mozilla/EnumeratedRange.h"
+
 #include "asmjs/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -25,6 +27,8 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+
+using mozilla::MakeEnumeratedRange;
 
 // ****************************************************************************
 // ModuleGenerator
@@ -41,6 +45,8 @@ ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
     alloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), alloc_),
     funcIndexToExport_(cx),
+    lastPatchedCallsite_(0),
+    startOfUnpatchedBranches_(0),
     parallel_(false),
     outstanding_(0),
     tasks_(cx),
@@ -189,11 +195,111 @@ ModuleGenerator::funcEntry(uint32_t funcIndex) const
     return module_->codeRanges[funcIndexToCodeRange_[funcIndex]].funcNonProfilingEntry();
 }
 
+static uint32_t
+JumpRange()
+{
+    return Min(JitOptions.jumpThreshold, JumpImmediateRange);
+}
+
+typedef HashMap<uint32_t, uint32_t> OffsetMap;
+
+bool
+ModuleGenerator::convertOutOfRangeBranchesToThunks()
+{
+    masm_.haltingAlign(CodeAlignment);
+
+    // Create thunks for callsites that have gone out of range. Use a map to
+    // create one thunk for each callee since there is often high reuse.
+
+    OffsetMap alreadyThunked(cx_);
+    if (!alreadyThunked.init())
+        return false;
+
+    for (; lastPatchedCallsite_ < masm_.callSites().length(); lastPatchedCallsite_++) {
+        const CallSiteAndTarget& cs = masm_.callSites()[lastPatchedCallsite_];
+        if (!cs.isInternal())
+            continue;
+
+        uint32_t callerOffset = cs.returnAddressOffset();
+        MOZ_RELEASE_ASSERT(callerOffset < INT32_MAX);
+
+        if (funcIsDefined(cs.targetIndex())) {
+            uint32_t calleeOffset = funcEntry(cs.targetIndex());
+            MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
+
+            if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
+                masm_.patchCall(callerOffset, calleeOffset);
+                continue;
+            }
+        }
+
+        OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.targetIndex());
+        if (!p) {
+            Offsets offsets;
+            offsets.begin = masm_.currentOffset();
+            uint32_t thunkOffset = masm_.thunkWithPatch().offset();
+            if (masm_.oom())
+                return false;
+            offsets.end = masm_.currentOffset();
+
+            if (!module_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
+                return false;
+            if (!module_->callThunks.emplaceBack(thunkOffset, cs.targetIndex()))
+                return false;
+            if (!alreadyThunked.add(p, cs.targetIndex(), offsets.begin))
+                return false;
+        }
+
+        masm_.patchCall(callerOffset, p->value());
+    }
+
+    // Create thunks for jumps to stubs. Stubs are always generated at the end
+    // so unconditionally thunk all existing jump sites.
+
+    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
+        if (masm_.jumpSites()[target].empty())
+            continue;
+
+        for (uint32_t jumpSite : masm_.jumpSites()[target]) {
+            RepatchLabel label;
+            label.use(jumpSite);
+            masm_.bind(&label);
+        }
+
+        Offsets offsets;
+        offsets.begin = masm_.currentOffset();
+        uint32_t thunkOffset = masm_.thunkWithPatch().offset();
+        if (masm_.oom())
+            return false;
+        offsets.end = masm_.currentOffset();
+
+        if (!module_->codeRanges.emplaceBack(CodeRange::Inline, offsets))
+            return false;
+        if (!jumpThunks_[target].append(thunkOffset))
+            return false;
+    }
+
+    // Unlike callsites, which need to be persisted in the Module, we can simply
+    // flush jump sites after each patching pass.
+    masm_.clearJumpSites();
+
+    return true;
+}
+
 bool
 ModuleGenerator::finishTask(IonCompileTask* task)
 {
     const FuncBytecode& func = task->func();
     FuncCompileResults& results = task->results();
+
+    // Before merging in the new function's code, if jumps/calls in a previous
+    // function's body might go out of range, patch these to thunks which have
+    // full range.
+    if ((masm_.size() - startOfUnpatchedBranches_) + results.masm().size() > JumpRange()) {
+        startOfUnpatchedBranches_ = masm_.size();
+        if (!convertOutOfRangeBranchesToThunks())
+            return false;
+    }
 
     // Offset the recorded FuncOffsets by the offset of the function in the
     // whole module's code segment.
@@ -229,6 +335,113 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 
     freeTasks_.infallibleAppend(task);
     return true;
+}
+
+bool
+ModuleGenerator::finishCodegen()
+{
+    uint32_t offsetInWhole = masm_.size();
+
+    // Generate stubs in a separate MacroAssembler since, otherwise, for modules
+    // larger than the JumpImmediateRange, even local uses of Label will fail
+    // due to the large absolute offsets temporarily stored by Label::bind().
+
+    Vector<Offsets> entries(cx_);
+    Vector<ProfilingOffsets> interpExits(cx_);
+    Vector<ProfilingOffsets> jitExits(cx_);
+    EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
+    Offsets interruptExit;
+
+    {
+        TempAllocator alloc(&lifo_);
+        MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
+
+        if (!entries.resize(numExports()))
+            return false;
+        for (uint32_t i = 0; i < numExports(); i++) {
+            uint32_t target = exportMap_->exportFuncIndices[i];
+            const Sig& sig = module_->exports[i].sig();
+            entries[i] = GenerateEntry(masm, target, sig, usesHeap());
+        }
+
+        if (!interpExits.resize(numImports()))
+            return false;
+        if (!jitExits.resize(numImports()))
+            return false;
+        for (uint32_t i = 0; i < numImports(); i++) {
+            interpExits[i] = GenerateInterpExit(masm, module_->imports[i], i);
+            jitExits[i] = GenerateJitExit(masm, module_->imports[i], usesHeap());
+        }
+
+        for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
+            jumpTargets[target] = GenerateJumpTarget(masm, target);
+
+        interruptExit = GenerateInterruptStub(masm);
+
+        if (masm.oom() || !masm_.asmMergeWith(masm))
+            return false;
+    }
+
+    // Adjust each of the resulting Offsets (to account for being merged into
+    // masm_) and then create code ranges for all the stubs.
+
+    for (uint32_t i = 0; i < numExports(); i++) {
+        entries[i].offsetBy(offsetInWhole);
+        module_->exports[i].initStubOffset(entries[i].begin);
+        if (!module_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
+            return false;
+    }
+
+    for (uint32_t i = 0; i < numImports(); i++) {
+        interpExits[i].offsetBy(offsetInWhole);
+        module_->imports[i].initInterpExitOffset(interpExits[i].begin);
+        if (!module_->codeRanges.emplaceBack(CodeRange::ImportInterpExit, interpExits[i]))
+            return false;
+
+        jitExits[i].offsetBy(offsetInWhole);
+        module_->imports[i].initJitExitOffset(jitExits[i].begin);
+        if (!module_->codeRanges.emplaceBack(CodeRange::ImportJitExit, jitExits[i]))
+            return false;
+    }
+
+    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
+        jumpTargets[target].offsetBy(offsetInWhole);
+        if (!module_->codeRanges.emplaceBack(CodeRange::Inline, jumpTargets[target]))
+            return false;
+    }
+
+    interruptExit.offsetBy(offsetInWhole);
+    if (!module_->codeRanges.emplaceBack(CodeRange::Inline, interruptExit))
+        return false;
+
+    // The signal handler redirects PC to the out-of-bounds and interrupt stubs.
+
+    link_->pod.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
+    link_->pod.interruptOffset = interruptExit.begin;
+
+    // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
+    // emit new jumps to JumpTargets has finished.
+
+    if (!convertOutOfRangeBranchesToThunks())
+        return false;
+
+    // Now that all thunks have been generated, patch all the thunks.
+
+    for (CallThunk& callThunk : module_->callThunks) {
+        uint32_t funcIndex = callThunk.u.funcIndex;
+        callThunk.u.codeRangeIndex = funcIndexToCodeRange_[funcIndex];
+        masm_.patchThunk(callThunk.offset, funcEntry(funcIndex));
+    }
+
+    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
+        for (uint32_t thunkOffset : jumpThunks_[target])
+            masm_.patchThunk(thunkOffset, jumpTargets[target].begin);
+    }
+
+    // Code-generation is complete!
+
+    masm_.finish();
+    return !masm_.oom();
 }
 
 bool
@@ -343,11 +556,12 @@ ModuleGenerator::funcSig(uint32_t funcIndex) const
 bool
 ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex)
 {
+    MOZ_ASSERT(isAsmJS());
+
     uint32_t globalDataOffset;
     if (!allocateGlobalBytes(Module::SizeOfImportExit, sizeof(void*), &globalDataOffset))
         return false;
 
-    MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(importIndex == module_->imports.length());
     if (!addImport(sig(sigIndex), globalDataOffset))
         return false;
@@ -370,16 +584,6 @@ ModuleGenerator::import(uint32_t index) const
 {
     MOZ_ASSERT(shared_->imports[index].sig);
     return shared_->imports[index];
-}
-
-bool
-ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit)
-{
-    Import& import = module_->imports[index];
-    import.initInterpExitOffset(interpExit.begin);
-    import.initJitExitOffset(jitExit.begin);
-    return module_->codeRanges.emplaceBack(CodeRange::ImportInterpExit, interpExit) &&
-           module_->codeRanges.emplaceBack(CodeRange::ImportJitExit, jitExit);
 }
 
 bool
@@ -412,34 +616,9 @@ ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32
 }
 
 uint32_t
-ModuleGenerator::exportFuncIndex(uint32_t index) const
-{
-    return exportMap_->exportFuncIndices[index];
-}
-
-uint32_t
-ModuleGenerator::exportEntryOffset(uint32_t index) const
-{
-    return funcEntry(exportMap_->exportFuncIndices[index]);
-}
-
-const Sig&
-ModuleGenerator::exportSig(uint32_t index) const
-{
-    return module_->exports[index].sig();
-}
-
-uint32_t
 ModuleGenerator::numExports() const
 {
     return module_->exports.length();
-}
-
-bool
-ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
-{
-    module_->exports[index].initStubOffset(offsets.begin);
-    return module_->codeRanges.emplaceBack(CodeRange::Entry, offsets);
 }
 
 bool
@@ -570,21 +749,6 @@ ModuleGenerator::finishFuncDefs()
     for (uint32_t funcIndex = 0; funcIndex < funcIndexToCodeRange_.length(); funcIndex++)
         MOZ_ASSERT(funcIsDefined(funcIndex));
 
-    // During codegen, all wasm->wasm (internal) calls use AsmJSInternalCallee
-    // as the call target, which contains the function-index of the target.
-    // These get recorded in a CallSiteAndTargetVector in the MacroAssembler
-    // so that we can patch them now that all the function entry offsets are
-    // known.
-
-    for (CallSiteAndTarget& cs : masm_.callSites()) {
-        if (!cs.isInternal())
-            continue;
-        MOZ_ASSERT(cs.kind() == CallSiteDesc::Relative);
-        uint32_t callerOffset = cs.returnAddressOffset();
-        uint32_t calleeOffset = funcEntry(cs.targetIndex());
-        masm_.patchCall(callerOffset, calleeOffset);
-    }
-
     module_->functionBytes = masm_.size();
     finishedFuncs_ = true;
     return true;
@@ -639,27 +803,6 @@ ModuleGenerator::defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elem
 }
 
 bool
-ModuleGenerator::defineInlineStub(Offsets offsets)
-{
-    MOZ_ASSERT(finishedFuncs_);
-    return module_->codeRanges.emplaceBack(CodeRange::Inline, offsets);
-}
-
-void
-ModuleGenerator::defineInterruptExit(uint32_t offset)
-{
-    MOZ_ASSERT(finishedFuncs_);
-    link_->pod.interruptOffset = offset;
-}
-
-void
-ModuleGenerator::defineOutOfBoundsExit(uint32_t offset)
-{
-    MOZ_ASSERT(finishedFuncs_);
-    link_->pod.outOfBoundsOffset = offset;
-}
-
-bool
 ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
@@ -669,14 +812,10 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(finishedFuncs_);
 
+    if (!finishCodegen())
+        return false;
+
     module_->prettyFuncNames = Move(prettyFuncNames);
-
-    if (!GenerateStubs(*this))
-        return false;
-
-    masm_.finish();
-    if (masm_.oom())
-        return false;
 
     // Start global data on a new page so JIT code may be given independent
     // protection flags. Note assumption that global data starts right after

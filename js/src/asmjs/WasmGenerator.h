@@ -144,6 +144,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcIndexToCodeRange_;
     FuncIndexMap                    funcIndexToExport_;
+    uint32_t                        lastPatchedCallsite_;
+    uint32_t                        startOfUnpatchedBranches_;
+    JumpSiteArray                   jumpThunks_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -159,7 +162,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
     uint32_t funcEntry(uint32_t funcIndex) const;
+    bool convertOutOfRangeBranchesToThunks();
     bool finishTask(IonCompileTask* task);
+    bool finishCodegen();
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
     bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
@@ -196,15 +201,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool initImport(uint32_t importIndex, uint32_t sigIndex);
     uint32_t numImports() const;
     const ModuleImportGeneratorData& import(uint32_t index) const;
-    bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
 
     // Exports:
     bool declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex = nullptr);
     uint32_t numExports() const;
-    uint32_t exportFuncIndex(uint32_t index) const;
-    uint32_t exportEntryOffset(uint32_t index) const;
-    const Sig& exportSig(uint32_t index) const;
-    bool defineExport(uint32_t index, Offsets offsets);
     bool addMemoryExport(UniqueChars fieldName);
 
     // Function definitions:
@@ -217,11 +217,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool declareFuncPtrTable(uint32_t numElems, uint32_t* index);
     uint32_t funcPtrTableGlobalDataOffset(uint32_t index) const;
     void defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elemFuncIndices);
-
-    // Stubs:
-    bool defineInlineStub(Offsets offsets);
-    void defineInterruptExit(uint32_t offset);
-    void defineOutOfBoundsExit(uint32_t offset);
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of

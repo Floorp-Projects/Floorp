@@ -33,6 +33,7 @@ namespace wasm {
 class CallSite;
 class CodeRange;
 class Module;
+struct CallThunk;
 struct FuncOffsets;
 struct ProfilingOffsets;
 
@@ -111,6 +112,9 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 
 void
 EnableProfilingPrologue(const Module& module, const CallSite& callSite, bool enabled);
+
+void
+EnableProfilingThunk(const Module& module, const CallThunk& callThunk, bool enabled);
 
 void
 EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, bool enabled);
