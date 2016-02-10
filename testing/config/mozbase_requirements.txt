@@ -3,6 +3,7 @@
 ../mozbase/mozdebug
 ../mozbase/mozdevice
 ../mozbase/mozfile
+../mozbase/mozhttpd
 ../mozbase/mozinfo
 ../mozbase/mozinstall
 ../mozbase/mozleak

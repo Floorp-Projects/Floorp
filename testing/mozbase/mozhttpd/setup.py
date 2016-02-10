@@ -4,22 +4,27 @@
 
 from setuptools import setup
 
-PACKAGE_NAME = 'mozfile'
-PACKAGE_VERSION = '1.2'
+PACKAGE_VERSION = '0.7'
+deps = ['moznetwork >= 0.24']
 
-setup(name=PACKAGE_NAME,
+setup(name='mozhttpd',
       version=PACKAGE_VERSION,
-      description="Library of file utilities for use in Mozilla testing",
+      description="Python webserver intended for use with Mozilla testing",
       long_description="see http://mozbase.readthedocs.org/",
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla',
-      author='Mozilla Automation and Tools team',
+      author='Mozilla Automation and Testing Team',
       author_email='tools@lists.mozilla.org',
       url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL',
-      packages=['mozfile'],
+      packages=['mozhttpd'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=[],
-      tests_require=['mozhttpd']
+      install_requires=deps,
+      entry_points="""
+      # -*- Entry points: -*-
+      [console_scripts]
+      mozhttpd = mozhttpd:main
+      """,
       )
+

@@ -9,7 +9,7 @@ version = '0.5'
 
 deps = ['httplib2 == 0.7.3',
         'mozfile == 1.1',
-        'wptserve == 1.3.0',
+        'mozhttpd == 0.7',
         'mozinfo == 0.7',
         'mozinstall == 1.10',
         'mozprocess == 0.19',

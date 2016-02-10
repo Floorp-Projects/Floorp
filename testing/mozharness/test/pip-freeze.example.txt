@@ -9,6 +9,7 @@ logilab-astng==0.23.1
 logilab-common==0.57.1
 mozdevice==0.2
 -e hg+https://hg.mozilla.org/build/mozharness@df6b7f1e14d8c472125ef7a77b8a3b40c96ae181#egg=mozharness-jetperf
+mozhttpd==0.3
 mozinfo==0.3.3
 nose==1.1.2
 pyflakes==0.5.0

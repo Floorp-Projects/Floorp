@@ -6,8 +6,7 @@
 
 import os, unittest, subprocess, tempfile, shutil, urlparse, zipfile, StringIO
 import mozcrash
-from wptserve.server import WebTestHttpd
-from wptserve import handlers
+import mozhttpd
 import mozlog.unstructured as mozlog
 
 # Make logs go away
@@ -166,12 +165,11 @@ class TestCrash(unittest.TestCase):
             z.writestr("symbols.txt", "abc/xyz")
             z.close()
             return data.getvalue()
-
-        @handlers.handler
-        def get_symbols(request, response):
-            return (200, [], [make_zipfile()])
-        httpd = WebTestHttpd(port=0,
-                             routes=[("GET", "/symbols", get_symbols)])
+        def get_symbols(req):
+            headers = {}
+            return (200, headers, make_zipfile())
+        httpd = mozhttpd.MozHttpd(port=0,
+                                  urlhandlers=[{'method':'GET', 'path':'/symbols', 'function':get_symbols}])
         httpd.start()
         symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
                                         '/symbols','',''))
