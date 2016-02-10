@@ -70,12 +70,16 @@ public class ApkResources {
                 + "/raw/" + resourceName);
         StringBuilder fileContent = new StringBuilder();
         try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(context
+            final BufferedReader r = new BufferedReader(new InputStreamReader(context
                     .getContentResolver().openInputStream(resourceUri)));
-            String line;
+            try {
+                String line;
 
-            while ((line = r.readLine()) != null) {
-                fileContent.append(line);
+                while ((line = r.readLine()) != null) {
+                    fileContent.append(line);
+                }
+            } finally {
+                r.close();
             }
         } catch (FileNotFoundException e) {
             Log.e(LOGTAG, String.format("File not found: \"%s\"", resourceName));

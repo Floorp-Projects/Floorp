@@ -2294,16 +2294,44 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     // This function shall never fail! Silently eat any failure conditions.
 
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-
-    nsCOMPtr<nsIScriptError> scripterr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-
-    if (!scripterr || !console)
+    if (!console)
         return NS_OK;
 
     const uint64_t innerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
 
     RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
     JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
+
+    nsCOMPtr<nsIScriptError> scripterr;
+
+    if (errorObj) {
+        JS::RootedObject stackVal(cx, ExceptionStackOrNull(cx, errorObj));
+        if (stackVal) {
+            scripterr = new nsScriptErrorWithStack(stackVal);
+        }
+    }
+
+    nsString fileName;
+    int32_t lineNo = 0;
+
+    if (!scripterr) {
+        nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
+        if (frame) {
+            frame->GetFilename(fileName);
+            frame->GetLineNumber(&lineNo);
+            JS::Rooted<JS::Value> stack(cx);
+            nsresult rv = frame->GetNativeSavedFrame(&stack);
+            if (NS_SUCCEEDED(rv) && stack.isObject()) {
+              JS::Rooted<JSObject*> stackObj(cx, &stack.toObject());
+              scripterr = new nsScriptErrorWithStack(stackObj);
+            }
+        }
+    }
+
+    if (!scripterr) {
+        scripterr = new nsScriptError();
+    }
+
     if (err) {
         // It's a proper JS Error
         nsAutoString fileUni;
@@ -2332,17 +2360,6 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     RootedString msgstr(cx, ToString(cx, error));
     if (!msgstr)
         return NS_OK;
-
-    nsCOMPtr<nsIStackFrame> frame;
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    xpc->GetCurrentJSStack(getter_AddRefs(frame));
-
-    nsString fileName;
-    int32_t lineNo = 0;
-    if (frame) {
-        frame->GetFilename(fileName);
-        frame->GetLineNumber(&lineNo);
-    }
 
     nsAutoJSString msg;
     if (!msg.init(cx, msgstr))

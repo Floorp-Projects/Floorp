@@ -4648,6 +4648,7 @@ dnl ========================================================
 
 MOZ_ANDROID_GOOGLE_PLAY_SERVICES
 MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING
+MOZ_ANDROID_INSTALL_TRACKING
 
 
 dnl ========================================================

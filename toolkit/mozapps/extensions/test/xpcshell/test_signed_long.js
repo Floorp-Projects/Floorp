@@ -6,6 +6,8 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 // The test add-ons were signed by the dev root
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, true);
 
+gUseRealCertChecks = true;
+
 const DATA = "data/signing_checks/";
 
 const ID_63 = "123456789012345678901234567890123456789012345@tests.mozilla.org"
@@ -35,17 +37,18 @@ add_task(function* test_working() {
   }
 });
 
-// Installs the cases that should be broken
+// Checks the cases that should be broken
 add_task(function* test_broken() {
- yield promiseInstallAllFiles([do_get_file(DATA + "long_63_hash.xpi"),
-                               do_get_file(DATA + "long_64_hash.xpi")]);
+  function promiseInstallForFile(file) {
+    return new Promise(resolve => AddonManager.getInstallForFile(file, resolve));
+  }
 
-  let addons = yield promiseAddonsByIDs([ID_63, ID_64]);
+  let promises = [promiseInstallForFile(do_get_file(DATA + "long_63_hash.xpi")),
+                  promiseInstallForFile(do_get_file(DATA + "long_64_hash.xpi"))];
+  let installs = yield Promise.all(promises);
 
-  for (let addon of addons) {
-    do_check_neq(addon, null);
-    do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-
-    addon.uninstall();
+  for (let install of installs) {
+    do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+    do_check_eq(install.error, AddonManager.ERROR_CORRUPT_FILE);
   }
 });

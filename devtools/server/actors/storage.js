@@ -213,13 +213,13 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
     },
 
     destroy: function() {
-      this.hostVsStores = null;
       if (observationTopic) {
         Services.obs.removeObserver(this, observationTopic, false);
       }
       events.off(this.storageActor, "window-ready", this.onWindowReady);
       events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
 
+      this.hostVsStores = null;
       this.storageActor = null;
     },
 
