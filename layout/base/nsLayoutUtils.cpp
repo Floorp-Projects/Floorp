@@ -4551,7 +4551,7 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   } else if (aType == nsLayoutUtils::MIN_ISIZE &&
              (aStyleSize.HasPercent() ||
               aStyleMaxSize.HasPercent()) &&
-             aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
+             aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) {
     // A percentage width or max-width on replaced elements means they
     // can shrink to 0.
     result = 0; // let |min| handle padding/border/margin
