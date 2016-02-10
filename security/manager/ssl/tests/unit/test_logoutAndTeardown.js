@@ -16,16 +16,10 @@ function connect_and_teardown() {
 
   let reader = {
     onInputStreamReady: function(stream) {
-      try {
-        stream.available();
-        Assert.ok(false, "stream.available() should have thrown");
-      }
-      catch (e) {
-        Assert.equal(e.result, Components.results.NS_ERROR_FAILURE,
-                     "stream should be in an error state");
-        Assert.ok(tearDown, "this should be as a result of logoutAndTeardown");
-        run_next_test();
-      }
+      throws(() => stream.available(), /NS_ERROR_FAILURE/,
+             "stream should be in an error state");
+      ok(tearDown, "A tear down attempt should have occurred");
+      run_next_test();
     }
   };
 
