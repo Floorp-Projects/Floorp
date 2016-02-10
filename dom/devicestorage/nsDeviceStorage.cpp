@@ -3716,8 +3716,7 @@ DeviceStorageRequestManager::~DeviceStorageRequestManager()
     while (i > 0) {
       --i;
       DS_LOG_ERROR("terminate %u", mPending[i].mId);
-      NS_ProxyRelease(mOwningThread,
-        NS_ISUPPORTS_CAST(EventTarget*, mPending[i].mRequest.forget().take()));
+      NS_ProxyRelease(mOwningThread, mPending[i].mRequest.forget());
     }
   }
 }
