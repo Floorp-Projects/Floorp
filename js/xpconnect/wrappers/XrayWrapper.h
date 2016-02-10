@@ -251,17 +251,7 @@ public:
     }
 
     static bool construct(JSContext* cx, JS::HandleObject wrapper,
-                          const JS::CallArgs& args, const js::Wrapper& baseInstance)
-    {
-        JSXrayTraits& self = JSXrayTraits::singleton;
-        JS::RootedObject holder(cx, self.ensureHolder(cx, wrapper));
-        if (self.getProtoKey(holder) == JSProto_Function)
-            return baseInstance.construct(cx, wrapper, args);
-
-        JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js::ReportIsNotFunction(cx, v);
-        return false;
-    }
+                          const JS::CallArgs& args, const js::Wrapper& baseInstance);
 
     bool getPrototype(JSContext* cx, JS::HandleObject wrapper,
                       JS::HandleObject target,
