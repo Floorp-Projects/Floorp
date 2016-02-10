@@ -41,6 +41,21 @@
           return deferred.promise;
         }
 
+        function waitForUpdate(length) {
+          info(`Wait for update with length ${length}`);
+          let deferred = promise.defer();
+          let handler = (_, data) => {
+            if (data.length != length) {
+              return;
+            }
+            info(`Got update with length ${length}`);
+            Simulators.off("updated", handler);
+            deferred.resolve();
+          };
+          Simulators.on("updated", handler);
+          return deferred.promise;
+        }
+
         Task.spawn(function* () {
           let win = yield openWebIDE(false);
 
@@ -83,7 +98,11 @@
 
           sim10.install();
 
+          let updated = waitForUpdate(1);
           yield addonStatus(sim10, "installed");
+          yield updated;
+          // Wait for next tick to ensure UI elements are updated
+          yield nextTick();
 
           is(findAll(".runtime-panel-item-simulator").length, 1, "One simulator in runtime panel");
 
@@ -93,7 +112,11 @@
 
           sim20.install();
 
+          updated = waitForUpdate(2);
           yield addonStatus(sim20, "installed");
+          yield updated;
+          // Wait for next tick to ensure UI elements are updated
+          yield nextTick();
 
           is(findAll(".runtime-panel-item-simulator").length, 2, "Two simulators in runtime panel");
 
@@ -113,6 +136,7 @@
 
           ok(params.args.indexOf("-no-remote") > -1, "Simulator process arguments have --no-remote");
 
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           // Configure the fake 1.0 simulator.
@@ -255,6 +279,7 @@
           // Configure the fake 2.0 simulator.
 
           simulatorList.querySelectorAll(".configure-button")[1].click();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           // Test `name`.
@@ -297,11 +322,12 @@
           ok(params.args[sid + 1].includes(device.width + "x" + device.height), "Simulator screen resolution looks right");
 
           // Test Simulator Menu.
-          is(doc.querySelector("#tv_simulator_menu").style.visibility, "hidden", "OpenTVDummyDirectory Button is not hidden\n");
+          is(doc.querySelector("#tv_simulator_menu").style.visibility, "hidden", "OpenTVDummyDirectory Button is not hidden");
 
           // Restore default simulator options.
 
           doc.querySelector("#reset").click();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           for (let param in defaults.phone) {
@@ -314,11 +340,16 @@
 
           sim30tv.install();
 
+          updated = waitForUpdate(3);
           yield addonStatus(sim30tv, "installed");
+          yield updated;
+          // Wait for next tick to ensure UI elements are updated
+          yield nextTick();
 
           is(findAll(".runtime-panel-item-simulator").length, 3, "Three simulators in runtime panel");
 
           simulatorList.querySelectorAll(".configure-button")[2].click();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           for (let param in defaults.television) {
@@ -333,6 +364,7 @@
           Simulators._loadingPromise = null;
           Simulators._simulators = [];
           yield Simulators._load();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           is(findAll(".runtime-panel-item-simulator").length, 3, "Three simulators saved and reloaded " + Simulators._simulators.map(s => s.name).join(','));
@@ -354,9 +386,11 @@
           // Remove 1.0 simulator.
 
           simulatorList.querySelectorAll(".configure-button")[0].click();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           doc.querySelector("#remove").click();
+          // Wait for next tick to ensure UI elements are updated
           yield nextTick();
 
           is(findAll(".runtime-panel-item-simulator").length, 0, "Last simulator was removed");
