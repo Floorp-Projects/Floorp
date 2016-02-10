@@ -9147,8 +9147,12 @@ AssertIsPromise(JSContext* cx, HandleObject promise)
 }
 
 JS_PUBLIC_API(void)
-JS::dbg::onNewPromise(JSContext* cx, HandleObject promise)
+JS::dbg::onNewPromise(JSContext* cx, HandleObject promise_)
 {
+    RootedObject promise(cx, promise_);
+    if (IsWrapper(promise))
+        promise = UncheckedUnwrap(promise);
+    AutoCompartment ac(cx, promise);
     AssertIsPromise(cx, promise);
     Debugger::slowPathPromiseHook(cx, Debugger::OnNewPromise, promise);
 }
