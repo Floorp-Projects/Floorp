@@ -1096,7 +1096,7 @@ static const JSFunctionSpec object_methods[] = {
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
     JS_FN(js_toString_str,             obj_toString,                0,0),
-    JS_SELF_HOSTED_FN(js_toLocaleString_str, "Object_toLocaleString", 0,JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN(js_toLocaleString_str, "Object_toLocaleString", 0, 0),
     JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
     JS_FN(js_watch_str,                obj_watch,                   2,0),
@@ -1106,10 +1106,10 @@ static const JSFunctionSpec object_methods[] = {
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
     JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
 #if JS_OLD_GETTER_SETTER_METHODS
-    JS_SELF_HOSTED_FN(js_defineGetter_str, "ObjectDefineGetter",    2,JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_FN(js_defineSetter_str, "ObjectDefineSetter",    2,JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_FN(js_lookupGetter_str, "ObjectLookupGetter",    1,JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_FN(js_lookupSetter_str, "ObjectLookupSetter",    1,JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN(js_defineGetter_str, "ObjectDefineGetter",    2,0),
+    JS_SELF_HOSTED_FN(js_defineSetter_str, "ObjectDefineSetter",    2,0),
+    JS_SELF_HOSTED_FN(js_lookupGetter_str, "ObjectLookupGetter",    1,0),
+    JS_SELF_HOSTED_FN(js_lookupSetter_str, "ObjectLookupSetter",    1,0),
 #endif
     JS_FS_END
 };
@@ -1122,8 +1122,8 @@ static const JSPropertySpec object_properties[] = {
 };
 
 static const JSFunctionSpec object_static_methods[] = {
-    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2, JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_FN("getPrototypeOf", "ObjectGetPrototypeOf",     1, JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2, 0),
+    JS_SELF_HOSTED_FN("getPrototypeOf", "ObjectGetPrototypeOf",     1, 0),
     JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2, 0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2, 0),
     JS_FN("keys",                      obj_keys,                    1, 0),
@@ -1135,7 +1135,7 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_INLINABLE_FN("create",          obj_create,                  2, 0, ObjectCreate),
     JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1, 0),
     JS_FN("getOwnPropertySymbols",     obj_getOwnPropertySymbols,   1, 0),
-    JS_SELF_HOSTED_FN("isExtensible",  "ObjectIsExtensible",        1, JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN("isExtensible",  "ObjectIsExtensible",        1, 0),
     JS_FN("preventExtensions",         obj_preventExtensions,       1, 0),
     JS_FN("freeze",                    obj_freeze,                  1, 0),
     JS_FN("isFrozen",                  obj_isFrozen,                1, 0),
@@ -1205,22 +1205,6 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
     Rooted<NativeObject*> holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
     if (!holder)
         return false;
-
-    /*
-     * Define self-hosted functions on Object and Function after setting the
-     * intrinsics holder (which is needed to define self-hosted functions).
-     */
-    if (!cx->runtime()->isSelfHostingGlobal(global)) {
-        if (!JS_DefineFunctions(cx, ctor, object_static_methods, OnlyDefineLateProperties))
-            return false;
-        if (!JS_DefineFunctions(cx, proto, object_methods, OnlyDefineLateProperties))
-            return false;
-        RootedObject funProto(cx, global->getOrCreateFunctionPrototype(cx));
-        if (!funProto)
-            return false;
-        if (!JS_DefineFunctions(cx, funProto, function_methods, OnlyDefineLateProperties))
-            return false;
-    }
 
     /*
      * The global object should have |Object.prototype| as its [[Prototype]].
