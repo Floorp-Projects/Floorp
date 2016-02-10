@@ -5850,7 +5850,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     FlashPaint(aContext);
   }
 
-  if (presContext->GetDocShell() && isActiveLayerManager) {
+  if (presContext && presContext->GetDocShell() && isActiveLayerManager) {
     nsDocShell* docShell = static_cast<nsDocShell*>(presContext->GetDocShell());
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
