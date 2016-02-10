@@ -495,17 +495,8 @@ class Build(MachCommandBase):
 
             telemetry_handler = getattr(self._mach_context,
                                         'telemetry_handler', None)
-            telemetry_data = monitor.record_resource_usage()
-
-            # Record build configuration data. For now, we cherry pick
-            # items we need rather than grabbing everything, in order
-            # to avoid accidentally disclosing PII.
-            telemetry_data['substs'] = {
-                'MOZ_ARTIFACT_BUILDS': self.substs.get('MOZ_ARTIFACT_BUILDS',
-                                                       False)
-            }
-
-            telemetry_handler(self._mach_context, telemetry_data)
+            usage = monitor.record_resource_usage()
+            telemetry_handler(self._mach_context, usage)
 
         # Only for full builds because incremental builders likely don't
         # need to be burdened with this.
