@@ -2353,7 +2353,7 @@ RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
   MOZ_ASSERT(helper->mDisplayPortExpiryTimer);
   helper->mDisplayPortExpiryTimer = nullptr;
 
-  if (helper->IsAlwaysActive() || helper->mIsScrollParent) {
+  if (!helper->AllowDisplayPortExpiration() || helper->mIsScrollParent) {
     // If this is a scroll parent for some other scrollable frame, don't
     // expire the displayport because it would break scroll handoff. Once the
     // descendant scrollframes have their displayports expired, they will
@@ -2417,9 +2417,20 @@ void ScrollFrameHelper::ResetDisplayPortExpiryTimer()
   }
 }
 
-void ScrollFrameHelper::TriggerDisplayPortExpiration()
+bool ScrollFrameHelper::AllowDisplayPortExpiration()
 {
   if (IsAlwaysActive()) {
+    return false;
+  }
+  if (mIsRoot && mOuter->PresContext()->IsRoot()) {
+    return false;
+  }
+  return true;
+}
+
+void ScrollFrameHelper::TriggerDisplayPortExpiration()
+{
+  if (!AllowDisplayPortExpiration()) {
     return;
   }
 
