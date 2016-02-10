@@ -77,7 +77,8 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsSplittableFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
   
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
