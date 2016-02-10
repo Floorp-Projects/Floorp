@@ -2936,6 +2936,62 @@
         </body>
       </method>
 
+      <!-- Adopts a tab from another browser window, and inserts it at aIndex -->
+      <method name="adoptTab">
+        <parameter name="aTab"/>
+        <parameter name="aIndex"/>
+        <parameter name="aSelectTab"/>
+        <body>
+        <![CDATA[
+          // Swap the dropped tab with a new one we create and then close
+          // it in the other window (making it seem to have moved between
+          // windows).
+          let newTab = this.addTab("about:blank");
+          let newBrowser = this.getBrowserForTab(newTab);
+          let newURL = aTab.linkedBrowser.currentURI.spec;
+
+          // If we're an e10s browser window, an exception will be thrown
+          // if we attempt to drag a non-remote browser in, so we need to
+          // ensure that the remoteness of the newly created browser is
+          // appropriate for the URL of the tab being dragged in.
+          this.updateBrowserRemotenessByURL(newBrowser, newURL);
+
+          // Stop the about:blank load.
+          newBrowser.stop();
+          // Make sure it has a docshell.
+          newBrowser.docShell;
+
+          let numPinned = this._numPinnedTabs;
+          if (aIndex < numPinned || (aTab.pinned && aIndex == numPinned)) {
+            this.pinTab(newTab);
+          }
+
+          this.moveTabTo(newTab, aIndex);
+
+          // We need to select the tab before calling swapBrowsersAndCloseOther
+          // so that window.content in chrome windows points to the right tab
+          // when pagehide/show events are fired. This is no longer necessary
+          // for any exiting browser code, but it may be necessary for add-on
+          // compatibility.
+          if (aSelectTab) {
+            this.selectedTab = newTab;
+          }
+
+          aTab.parentNode._finishAnimateTabMove();
+          this.swapBrowsersAndCloseOther(newTab, aTab);
+
+          if (aSelectTab) {
+            // Call updateCurrentBrowser to make sure the URL bar is up to date
+            // for our new tab after we've done swapBrowsersAndCloseOther.
+            this.updateCurrentBrowser(true);
+          }
+
+          return newTab;
+        ]]>
+        </body>
+      </method>
+
+
       <method name="moveTabBackward">
         <body>
           <![CDATA[
@@ -5791,42 +5847,8 @@
             this.tabbrowser.moveTabTo(draggedTab, newIndex);
           }
         } else if (draggedTab) {
-          // swap the dropped tab with a new one we create and then close
-          // it in the other window (making it seem to have moved between
-          // windows)
           let newIndex = this._getDropIndex(event, false);
-          let newTab = this.tabbrowser.addTab("about:blank");
-          let newBrowser = this.tabbrowser.getBrowserForTab(newTab);
-          let draggedBrowserURL = draggedTab.linkedBrowser.currentURI.spec;
-
-          // If we're an e10s browser window, an exception will be thrown
-          // if we attempt to drag a non-remote browser in, so we need to
-          // ensure that the remoteness of the newly created browser is
-          // appropriate for the URL of the tab being dragged in.
-          this.tabbrowser.updateBrowserRemotenessByURL(newBrowser,
-                                                       draggedBrowserURL);
-
-          // Stop the about:blank load
-          newBrowser.stop();
-          // make sure it has a docshell
-          newBrowser.docShell;
-
-          let numPinned = this.tabbrowser._numPinnedTabs;
-          if (newIndex < numPinned || draggedTab.pinned && newIndex == numPinned)
-            this.tabbrowser.pinTab(newTab);
-          this.tabbrowser.moveTabTo(newTab, newIndex);
-
-          // We need to select the tab before calling swapBrowsersAndCloseOther
-          // so that window.content in chrome windows points to the right tab
-          // when pagehide/show events are fired.
-          this.tabbrowser.selectedTab = newTab;
-
-          draggedTab.parentNode._finishAnimateTabMove();
-          this.tabbrowser.swapBrowsersAndCloseOther(newTab, draggedTab);
-
-          // Call updateCurrentBrowser to make sure the URL bar is up to date
-          // for our new tab after we've done swapBrowsersAndCloseOther.
-          this.tabbrowser.updateCurrentBrowser(true);
+          this.tabbrowser.adoptTab(draggedTab, newIndex, true);
         } else {
           // Pass true to disallow dropping javascript: or data: urls
           let url;
