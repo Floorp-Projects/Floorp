@@ -43,6 +43,9 @@ public:
   // http://w3c.github.io/media-source/index.html#sourcebuffer-buffer-append
   virtual RefPtr<AppendPromise> BufferAppend() = 0;
 
+  // Abort any pending AppendData.
+  virtual void AbortAppendData() = 0;
+
   // Run MSE Reset Parser State Algorithm.
   // 3.5.2 Reset Parser State
   // http://w3c.github.io/media-source/#sourcebuffer-reset-parser-state
@@ -104,6 +107,10 @@ public:
   virtual void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) {}
   virtual void RestartGroupStartTimestamp() {}
   virtual media::TimeUnit GroupEndTimestamp() = 0;
+
+#if defined(DEBUG)
+  virtual void Dump(const char* aPath) { }
+#endif
 
 protected:
   virtual ~SourceBufferContentManager() { }
