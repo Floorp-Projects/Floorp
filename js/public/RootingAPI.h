@@ -934,7 +934,7 @@ MutableHandle<T>::MutableHandle(PersistentRooted<T>* root)
  * These roots can be used in heap-allocated data structures, so they are not
  * associated with any particular JSContext or stack. They are registered with
  * the JSRuntime itself, without locking, so they require a full JSContext to be
- * initialized, not one of its more restricted superclasses.  Initialization may
+ * initialized, not one of its more restricted superclasses. Initialization may
  * take place on construction, or in two phases if the no-argument constructor
  * is called followed by init().
  *
