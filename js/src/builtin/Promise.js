@@ -128,6 +128,8 @@ function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
     // Step 1.
     assert(GetPromiseState(promise) === PROMISE_STATE_PENDING,
            "Can't resolve non-pending promise");
+    assert(state >= PROMISE_STATE_PENDING && state <= PROMISE_STATE_REJECTED,
+           `Invalid Promise state <${state}>`);
 
     // Step 2.
     var reactions = UnsafeGetObjectFromReservedSlot(promise, reactionsSlot);
@@ -148,6 +150,10 @@ function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
     UnsafeSetReservedSlot(promise, PROMISE_RESOLVE_FUNCTION_SLOT, null);
     UnsafeSetReservedSlot(promise, PROMISE_REJECT_FUNCTION_SLOT, null);
 
+    // Now that everything else is done, do the things the debugger needs.
+    let site = _dbg_captureCurrentStack(0);
+    UnsafeSetReservedSlot(promise, PROMISE_RESOLUTION_SITE_SLOT, site);
+    UnsafeSetReservedSlot(promise, PROMISE_RESOLUTION_TIME_SLOT, std_Date_now());
     _dbg_onPromiseSettled(promise);
 
     // Step 7.
@@ -348,6 +354,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     let iterator = iteratorRecord.iterator;
     let next;
     let nextValue;
+    let allPromise = resultCapability.promise;
     while (true) {
         try {
             // Step 6.a.
@@ -377,7 +384,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
                 callContentFunction(resultCapability.resolve, undefined, values);
 
             // Step 6.d.iv.
-            return resultCapability.promise;
+            return allPromise;
         }
         try {
             // Step 6.e.
@@ -405,8 +412,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
         remainingElementsCount.value++;
 
         // Steps 6.r-s.
-        let result = callContentFunction(nextPromise.then, nextPromise, resolveElement,
-                                         resultCapability.reject);
+        BlockOnPromise(nextPromise, allPromise, resolveElement, resultCapability.reject);
 
         // Step 6.t.
         index++;
@@ -545,6 +551,7 @@ function PerformPromiseRace(iteratorRecord, resultCapability, C) {
 
     // Step 1.
     let iterator = iteratorRecord.iterator;
+    let racePromise = resultCapability.promise;
     let next;
     let nextValue;
     while (true) {
@@ -567,7 +574,7 @@ function PerformPromiseRace(iteratorRecord, resultCapability, C) {
             iteratorRecord.done = true;
 
             // Step 1.d.ii.
-            return resultCapability.promise;
+            return racePromise;
         }
         try {
             // Step 1.e.
@@ -584,10 +591,115 @@ function PerformPromiseRace(iteratorRecord, resultCapability, C) {
         let nextPromise = callContentFunction(C.resolve, C, nextValue);
 
         // Steps 1.i.
-        callContentFunction(nextPromise.then, nextPromise,
-                            resultCapability.resolve, resultCapability.reject);
+        BlockOnPromise(nextPromise, racePromise, resultCapability.resolve,
+                       resultCapability.reject);
     }
-    assert(false, "Shouldn't reach the end of PerformPromiseRace")
+    assert(false, "Shouldn't reach the end of PerformPromiseRace");
+}
+
+/**
+ * Calls |promise.then| with the provided hooks and adds |blockedPromise| to
+ * its list of dependent promises. Used by |Promise.all| and |Promise.race|.
+ *
+ * If |promise.then| is the original |Promise.prototype.then| function and
+ * the call to |promise.then| would use the original |Promise| constructor to
+ * create the resulting promise, this function skips the call to |promise.then|
+ * and thus creating a new promise that would not be observable by content.
+ */
+function BlockOnPromise(promise, blockedPromise, onResolve, onReject) {
+    let then = promise.then;
+
+    // By default, the blocked promise is added as an extra entry to the
+    // rejected promises list.
+    let addToDependent = true;
+    if (then === Promise_then && IsObject(promise) && IsPromise(promise)) {
+        // |then| is the original |Promise.prototype.then|, inline it here.
+        // 25.4.5.3., steps 3-4.
+        let PromiseCtor = GetBuiltinConstructor('Promise');
+        let C = SpeciesConstructor(promise, PromiseCtor);
+        let resultCapability;
+
+        if (C === PromiseCtor) {
+            resultCapability = {
+                __proto__: PromiseCapabilityRecordProto,
+                promise: blockedPromise,
+                reject: NullFunction,
+                resolve: NullFunction
+            };
+            addToDependent = false;
+        } else {
+            // 25.4.5.3., steps 5-6.
+            resultCapability = NewPromiseCapability(C);
+        }
+
+        // 25.4.5.3., step 7.
+        PerformPromiseThen(promise, onResolve, onReject, resultCapability);
+    } else {
+        // Optimization failed, do the normal call.
+        callContentFunction(then, promise, onResolve, onReject);
+    }
+    if (!addToDependent)
+        return;
+
+    // The promise created by the |promise.then| call or the inlined version
+    // of it above is visible to content (either because |promise.then| was
+    // overridden by content and could leak it, or because a constructor
+    // other than the original value of |Promise| was used to create it).
+    // To have both that promise and |blockedPromise| show up as dependent
+    // promises in the debugger, add a dummy reaction to the list of reject
+    // reactions that contains |blockedPromise|, but otherwise does nothing.
+    if (IsPromise(promise))
+        return callFunction(AddPromiseReaction, promise, PROMISE_REJECT_REACTIONS_SLOT,
+                            blockedPromise);
+
+    assert(IsWrappedPromise(promise), "Can only block on, maybe wrapped, Promise objects");
+    callFunction(CallPromiseMethodIfWrapped, promise, PROMISE_REJECT_REACTIONS_SLOT,
+                 blockedPromise, "AddPromiseReaction");
+}
+
+/**
+ * Invoked with a Promise as the receiver, AddPromiseReaction adds an entry to
+ * the reactions list in `slot`, using the other parameters as values for that
+ * reaction.
+ *
+ * If any of the callback functions aren't specified, they're set to
+ * NullFunction. Doing that here is useful in case the call is performed on an
+ * unwrapped Promise. Passing in NullFunctions would cause useless compartment
+ * switches.
+ *
+ * The reason for the target Promise to be passed as the receiver is so the
+ * same function can be used for wrapped and unwrapped Promise objects.
+ */
+function AddPromiseReaction(slot, dependentPromise, onResolve, onReject, handler) {
+    assert(IsPromise(this), "AddPromiseReaction expects an unwrapped Promise as the receiver");
+    assert(slot === PROMISE_FULFILL_REACTIONS_SLOT || slot === PROMISE_REJECT_REACTIONS_SLOT,
+           "Invalid slot");
+
+    if (!onResolve)
+        onResolve = NullFunction;
+    if (!onReject)
+        onReject = NullFunction;
+    if (!handler)
+        handler = NullFunction;
+
+    let reactions = UnsafeGetReservedSlot(this, slot);
+
+    // The reactions slot might've been reset because the Promise was resolved.
+    if (!reactions) {
+        assert(GetPromiseState(this) !== PROMISE_STATE_PENDING,
+               "Pending promises must have reactions lists.");
+        return;
+    }
+    _DefineDataProperty(reactions, reactions.length, {
+                            __proto__: PromiseReactionRecordProto,
+                            capabilities: {
+                                __proto__: PromiseCapabilityRecordProto,
+                                promise: dependentPromise,
+                                reject: onReject,
+                                resolve: onResolve
+                            },
+                            handler: handler
+                        });
 }
 
 // ES6, 25.4.4.4.

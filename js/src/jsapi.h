@@ -4340,8 +4340,34 @@ enum class PromiseState {
     Rejected
 };
 
+/**
+ * Returns the given Promise's state as a JS::PromiseState enum value.
+ */
 extern JS_PUBLIC_API(PromiseState)
 GetPromiseState(JS::HandleObject promise);
+
+/**
+ * Returns the given Promise's process-unique ID.
+ */
+JS_PUBLIC_API(double)
+GetPromiseID(JS::HandleObject promise);
+
+/**
+ * Returns the given Promise's result: either the resolution value for
+ * fulfilled promises, or the rejection reason for rejected ones.
+ */
+extern JS_PUBLIC_API(JS::Value)
+GetPromiseResult(JS::HandleObject promise);
+
+/**
+ * Returns a js::SavedFrame linked list of the stack that lead to the given
+ * Promise's allocation.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetPromiseAllocationSite(JS::HandleObject promise);
+
+extern JS_PUBLIC_API(JSObject*)
+GetPromiseResolutionSite(JS::HandleObject promise);
 
 /**
  * Calls the current compartment's original Promise.resolve on the original
@@ -4358,7 +4384,7 @@ extern JS_PUBLIC_API(JSObject*)
 CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue);
 
 /**
- * Resolves the given `promise` with the given `resolutionValue`.
+ * Resolves the given Promise with the given `resolutionValue`.
  *
  * Calls the `resolve` function that was passed to the executor function when
  * the Promise was created.
