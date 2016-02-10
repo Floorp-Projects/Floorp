@@ -11,5 +11,5 @@ ac_add_options --enable-verify-mar
 
 mk_add_options MOZ_PGO=1
 
-. "$topsrcdir/build/unix/mozconfig.rust"
+. "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/build/mozconfig.common.override"
