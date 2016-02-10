@@ -148,6 +148,8 @@ function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
     UnsafeSetReservedSlot(promise, PROMISE_RESOLVE_FUNCTION_SLOT, null);
     UnsafeSetReservedSlot(promise, PROMISE_REJECT_FUNCTION_SLOT, null);
 
+    _dbg_onPromiseSettled(promise);
+
     // Step 7.
     return TriggerPromiseReactions(reactions, valueOrReason);
 }

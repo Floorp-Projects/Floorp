@@ -10,6 +10,7 @@
 #include "jscntxt.h"
 
 #include "gc/Heap.h"
+#include "js/Debug.h"
 
 #include "jsobjinlines.h"
 
@@ -164,6 +165,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         if (!Invoke(cx, args))
             return nullptr;
     }
+
+    JS::dbg::onNewPromise(cx, promise);
 
     // Step 11.
     return promise;

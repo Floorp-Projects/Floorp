@@ -1939,6 +1939,24 @@ intrinsic_ModuleNamespaceExports(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+/**
+ * Intrinsic used to tell the debugger about settled promises.
+ *
+ * This is invoked both when resolving and rejecting promises, after the
+ * resulting state has been set on the promise, and it's up to the debugger
+ * to act on this signal in whichever way it wants.
+ */
+static bool
+intrinsic_onPromiseSettled(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedObject promise(cx, &args[0].toObject());
+    JS::dbg::onPromiseSettled(cx, promise);
+    args.rval().setUndefined();
+    return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2265,6 +2283,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4, 0),
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
+
+    JS_FN("_dbg_onPromiseSettled", intrinsic_onPromiseSettled, 1, 0),
 
     JS_FS_END
 };
