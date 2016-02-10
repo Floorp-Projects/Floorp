@@ -364,9 +364,9 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 /* Ensure that empty parts of the bookmarks container can be dragged on OSX, and on other OSes
  * only when a lwtheme is in use. */
 %ifdef XP_MACOSX
-#PlacesToolbarItems {
+#main-window[tabsintitlebar]:not([customizing]) #personal-bookmarks {
 %else
-#main-window[tabsintitlebar] #PlacesToolbarItems:-moz-lwtheme {
+#main-window[tabsintitlebar]:not([customizing]) #personal-bookmarks:-moz-lwtheme {
 %endif
   -moz-window-dragging: drag;
 }

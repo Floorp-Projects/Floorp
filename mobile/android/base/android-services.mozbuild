@@ -1068,4 +1068,5 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'tokenserver/TokenServerClientDelegate.java',
     'tokenserver/TokenServerException.java',
     'tokenserver/TokenServerToken.java',
+    'util/PRNGFixes.java',
 ]]

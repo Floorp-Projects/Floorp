@@ -6,22 +6,15 @@ var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function getWindowId(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils)
-               .outerWindowID;
-}
-
-function getParentWindowId(window) {
-  return getWindowId(window.parent);
-}
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+                                  "resource://gre/modules/WebNavigationFrames.jsm");
 
 function loadListener(event) {
   let document = event.target;
   let window = document.defaultView;
   let url = document.documentURI;
-  let windowId = getWindowId(window);
-  let parentWindowId = getParentWindowId(window);
+  let windowId = WebNavigationFrames.getWindowId(window);
+  let parentWindowId = WebNavigationFrames.getParentWindowId(window);
   sendAsyncMessage("Extension:DOMContentLoaded", {windowId, parentWindowId, url});
 }
 
@@ -51,7 +44,7 @@ var WebProgressListener = {
     let data = {
       requestURL: request.QueryInterface(Ci.nsIChannel).URI.spec,
       windowId: webProgress.DOMWindowID,
-      parentWindowId: getParentWindowId(webProgress.DOMWindow),
+      parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
       status,
       stateFlags,
     };
@@ -66,7 +59,7 @@ var WebProgressListener = {
         let data = {
           location: request.QueryInterface(Ci.nsIChannel).URI.spec,
           windowId: webProgress.DOMWindowID,
-          parentWindowId: getParentWindowId(webProgress.DOMWindow),
+          parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
           flags: 0,
         };
         sendAsyncMessage("Extension:LocationChange", data);
@@ -78,7 +71,7 @@ var WebProgressListener = {
     let data = {
       location: locationURI ? locationURI.spec : "",
       windowId: webProgress.DOMWindowID,
-      parentWindowId: getParentWindowId(webProgress.DOMWindow),
+      parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
       flags,
     };
     sendAsyncMessage("Extension:LocationChange", data);
@@ -91,10 +84,13 @@ var disabled = false;
 WebProgressListener.init();
 addEventListener("unload", () => {
   if (!disabled) {
+    disabled = true;
     WebProgressListener.uninit();
   }
 });
 addMessageListener("Extension:DisableWebNavigation", () => {
-  disabled = true;
-  WebProgressListener.uninit();
+  if (!disabled) {
+    disabled = true;
+    WebProgressListener.uninit();
+  }
 });

@@ -82,6 +82,15 @@ ifdef MOZ_ANDROID_GCM
         $(NULL)
 endif
 
+ifdef MOZ_INSTALL_TRACKING
+    JAVA_CLASSPATH += \
+        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(NULL)
+endif
+
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 # Library jars that we're bundling: these are subject to Proguard before inclusion
@@ -109,6 +118,15 @@ ifdef MOZ_ANDROID_GCM
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(NULL)
+endif
+
+ifdef MOZ_INSTALL_TRACKING
+    java_bundled_libs += \
+        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(NULL)
 endif
 
@@ -156,6 +174,30 @@ include $(topsrcdir)/config/config.mk
 library_jars := \
     $(ANDROID_SDK)/android.jar \
     $(NULL)
+
+# Android 23 (Marshmallow) deprecated a part of the Android platform, namely the
+# org.apache.http package.  Fennec removed all code that referenced said package
+# in order to easily ship to Android 23 devices (and, by extension, all devices
+# before Android 23).
+#
+# Google did not remove all code that referenced said package in their own
+# com.google.android.gms namespace!  It turns out that the org.apache.http
+# package is not removed, only deprecated and hidden by default.  Google added a
+# a `useLibrary` Gradle directive that allows legacy code to reference the
+# package, which is still (hidden) in the Android 23 platform.
+#
+# Fennec code doesn't need to compile against the deprecated package, since our
+# code doesn't reference the package anymore.  However, we do need to Proguard
+# against the deprecated package.  If we don't, Proguard -- which is a global
+# optimization -- sees Google libraries referencing "non-existent" libraries and
+# complains.  The solution is to mimic the `useLibraries` directive by declaring
+# the legacy package as a provided library jar.
+#
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1233238#c19 for symptoms and
+# more discussion.
+ifdef MOZ_INSTALL_TRACKING
+library_jars += $(ANDROID_SDK)/optional/org.apache.http.legacy.jar
+endif # MOZ_INSTALL_TRACKING
 
 library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
 
@@ -389,6 +431,9 @@ generated/android/support/design/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
+generated/com/google/android/gms/ads/R.java: .aapt.deps ;
+generated/com/google/android/gms/analytics/R.java: .aapt.deps ;
+generated/com/google/android/gms/appindexing/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
