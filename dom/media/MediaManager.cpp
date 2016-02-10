@@ -2631,6 +2631,9 @@ MediaManager::Shutdown()
   GetActiveWindows()->Clear();
   mActiveCallbacks.Clear();
   mCallIds.Clear();
+#ifdef MOZ_WEBRTC
+  StopWebRtcLog();
+#endif
 
   // Because mMediaThread is not an nsThread, we must dispatch to it so it can
   // clean up BackgroundChild. Continue stopping thread once this is done.
