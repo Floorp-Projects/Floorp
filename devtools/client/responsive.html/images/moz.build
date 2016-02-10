@@ -5,8 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'browser.js',
-    'viewport-toolbar.js',
-    'viewport.js',
-    'viewports.js',
+    'rotate-viewport.svg',
 )
