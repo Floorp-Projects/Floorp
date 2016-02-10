@@ -4296,14 +4296,12 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   // We should check that aChild does not contain pointer capturing elements.
   // If it does we should release the pointer capture for the elements.
-  if (aChild) {
-    for (auto iter = gPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
-      nsIPresShell::PointerCaptureInfo* data = iter.UserData();
-      if (data && data->mOverrideContent &&
-          nsContentUtils::ContentIsDescendantOf(data->mOverrideContent,
-                                                aChild)) {
-        nsIPresShell::ReleasePointerCapturingContent(iter.Key());
-      }
+  for (auto iter = gPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
+    nsIPresShell::PointerCaptureInfo* data = iter.UserData();
+    if (data && data->mOverrideContent &&
+        nsContentUtils::ContentIsDescendantOf(data->mOverrideContent,
+                                              aChild)) {
+      nsIPresShell::ReleasePointerCapturingContent(iter.Key());
     }
   }
 
