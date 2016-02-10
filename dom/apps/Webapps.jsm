@@ -3490,21 +3490,15 @@ this.DOMApplicationRegistry = {
     let requestChannel;
 
     let appURI = NetUtil.newURI(aNewApp.origin, null, null);
-    let principal =
-      Services.scriptSecurityManager.createCodebasePrincipal(appURI,
-                                                             {appId: aNewApp.localId});
-
     if (aIsLocalFileInstall) {
       requestChannel = NetUtil.newChannel({
         uri: aFullPackagePath,
-        loadingPrincipal: principal,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER}
+        loadUsingSystemPrincipal: true}
       ).QueryInterface(Ci.nsIFileChannel);
     } else {
       requestChannel = NetUtil.newChannel({
         uri: aFullPackagePath,
-        loadingPrincipal: principal,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER}
+        loadUsingSystemPrincipal: true}
       ).QueryInterface(Ci.nsIHttpChannel);
       requestChannel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     }
