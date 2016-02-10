@@ -300,14 +300,6 @@ TrackBuffersManager::Detach()
   MSE_DEBUG("");
 }
 
-#if defined(DEBUG)
-void
-TrackBuffersManager::Dump(const char* aPath)
-{
-
-}
-#endif
-
 void
 TrackBuffersManager::CompleteResetParserState()
 {
