@@ -37,12 +37,6 @@ namespace wasm {
   typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskVector;
 } // namespace wasm
 
-enum class ParseTaskKind
-{
-    Script,
-    Module
-};
-
 // Per-process state for off thread work items.
 class GlobalHelperThreadState
 {
@@ -225,11 +219,6 @@ class GlobalHelperThreadState
         return bool(numWasmFailedJobs);
     }
 
-    JSScript* finishParseTask(JSContext* maybecx, JSRuntime* rt, ParseTaskKind kind, void* token);
-    void mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
-                                   Handle<GlobalObject*> global,
-                                   JSCompartment* dest);
-
   private:
     /*
      * Number of wasm jobs that encountered failure for the active module.
@@ -238,8 +227,10 @@ class GlobalHelperThreadState
     uint32_t numWasmFailedJobs;
 
   public:
-    JSScript* finishScriptParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
-    JSObject* finishModuleParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
+    JSScript* finishParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
+    void mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
+                                   Handle<GlobalObject*> global,
+                                   JSCompartment* dest);
     bool compressionInProgress(SourceCompressionTask* task);
     SourceCompressionTask* compressionTaskForSource(ScriptSource* ss);
 
@@ -419,11 +410,6 @@ StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           const char16_t* chars, size_t length,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
-bool
-StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                          const char16_t* chars, size_t length,
-                          JS::OffThreadCompileCallback callback, void* callbackData);
-
 /*
  * Called at the end of GC to enqueue any Parse tasks that were waiting on an
  * atoms-zone GC to finish.
@@ -477,7 +463,6 @@ class MOZ_RAII AutoUnlockHelperThreadState
 
 struct ParseTask
 {
-    ParseTaskKind kind;
     ExclusiveContext* cx;
     OwningCompileOptions options;
     const char16_t* chars;
@@ -505,36 +490,19 @@ struct ParseTask
     bool overRecursed;
     bool outOfMemory;
 
-    ParseTask(ParseTaskKind kind, ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
+    ParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
               JSContext* initCx, const char16_t* chars, size_t length,
               JS::OffThreadCompileCallback callback, void* callbackData);
     bool init(JSContext* cx, const ReadOnlyCompileOptions& options);
 
     void activate(JSRuntime* rt);
-    virtual void parse() = 0;
     bool finish(JSContext* cx);
 
     bool runtimeMatches(JSRuntime* rt) {
         return exclusiveContextGlobal->runtimeFromAnyThread() == rt;
     }
 
-    virtual ~ParseTask();
-};
-
-struct ScriptParseTask : public ParseTask
-{
-    ScriptParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
-                    JSContext* initCx, const char16_t* chars, size_t length,
-                    JS::OffThreadCompileCallback callback, void* callbackData);
-    void parse() override;
-};
-
-struct ModuleParseTask : public ParseTask
-{
-    ModuleParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
-                    JSContext* initCx, const char16_t* chars, size_t length,
-                    JS::OffThreadCompileCallback callback, void* callbackData);
-    void parse() override;
+    ~ParseTask();
 };
 
 // Return whether, if a new parse task was started, it would need to wait for

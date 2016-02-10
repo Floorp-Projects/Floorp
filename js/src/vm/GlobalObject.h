@@ -469,39 +469,16 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initDateTimeFormatProto);
     }
 
-    static bool ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global);
-
-    JSObject* maybeGetModulePrototype() {
-        Value value = getSlot(MODULE_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
-    }
-
-    JSObject* maybeGetImportEntryPrototype() {
-        Value value = getSlot(IMPORT_ENTRY_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
-    }
-
-    JSObject* maybeGetExportEntryPrototype() {
-        Value value = getSlot(EXPORT_ENTRY_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
-    }
-
     JSObject* getModulePrototype() {
-        JSObject* proto = maybeGetModulePrototype();
-        MOZ_ASSERT(proto);
-        return proto;
+        return &getSlot(MODULE_PROTO).toObject();
     }
 
     JSObject* getImportEntryPrototype() {
-        JSObject* proto = maybeGetImportEntryPrototype();
-        MOZ_ASSERT(proto);
-        return proto;
+        return &getSlot(IMPORT_ENTRY_PROTO).toObject();
     }
 
     JSObject* getExportEntryPrototype() {
-        JSObject* proto = maybeGetExportEntryPrototype();
-        MOZ_ASSERT(proto);
-        return proto;
+        return &getSlot(EXPORT_ENTRY_PROTO).toObject();
     }
 
     static JSFunction*
