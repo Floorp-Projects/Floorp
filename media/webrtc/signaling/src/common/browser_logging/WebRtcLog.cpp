@@ -210,3 +210,8 @@ void EnableWebRtcLog()
   ConfigWebRtcLog(trace_mask, log_file, aec_log_dir, multi_log);
   return;
 }
+
+void StopWebRtcLog()
+{
+  webrtc::Trace::SetTraceFile(nullptr);
+}

@@ -11,6 +11,7 @@
 #include "prcvar.h"
 
 #include "mozilla/Telemetry.h"
+#include "browser_logging/WebRtcLog.h"
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
@@ -135,6 +136,7 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
     }
   }
 
+  EnableWebRtcLog();
   return NS_OK;
 }
 
@@ -155,6 +157,8 @@ void PeerConnectionCtx::Destroy() {
     delete gInstance;
     gInstance = nullptr;
   }
+
+  StopWebRtcLog();
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
