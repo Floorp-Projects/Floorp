@@ -58,7 +58,7 @@ interface nsILoadGroup : nsIRequest
      * By the time this call ends, aRequest will have been removed from the
      * loadgroup, even if this function throws an exception.
      */
-    void removeRequest(in nsIRequest aRequest,
+    void removeRequest(in nsIRequest aRequest, 
                        in nsISupports aContext,
                        in nsresult aStatus);
 
@@ -97,10 +97,4 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
-
-    /**
-     * The cached user agent override created by UserAgentOverrides.jsm. Used
-     * for all sub-resource requests in the loadgroup.
-     */
-    attribute ACString userAgentOverrideCache;
 };
