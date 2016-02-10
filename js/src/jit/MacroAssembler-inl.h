@@ -86,13 +86,6 @@ MacroAssembler::call(const wasm::CallSiteDesc& desc, const Register reg)
 }
 
 void
-MacroAssembler::call(const wasm::CallSiteDesc& desc, Label* label)
-{
-    CodeOffset l = call(label);
-    append(desc, l, framePushed());
-}
-
-void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, AsmJSInternalCallee callee)
 {
     CodeOffset l = callWithPatch();
