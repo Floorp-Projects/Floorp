@@ -142,7 +142,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     LifoAlloc                       lifo_;
     jit::TempAllocator              alloc_;
     jit::MacroAssembler             masm_;
-    Uint32Vector                    funcEntryOffsets_;
+    Uint32Vector                    funcIndexToCodeRange_;
     FuncIndexMap                    funcIndexToExport_;
 
     // Parallel compilation
@@ -158,6 +158,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
+    uint32_t funcEntry(uint32_t funcIndex) const;
     bool finishTask(IonCompileTask* task);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
