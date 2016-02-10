@@ -47,8 +47,6 @@ public:
 
   RefPtr<AppendPromise> BufferAppend() override;
 
-  void AbortAppendData() override;
-
   void ResetParserState() override;
 
   RefPtr<RangeRemovalPromise> RangeRemoval(media::TimeUnit aStart,
@@ -311,8 +309,7 @@ private:
 
   MozPromiseHolder<AppendPromise> mAppendPromise;
   // Set to true while SegmentParserLoop is running. This is used for diagnostic
-  // purposes only. We can't rely on mAppendPromise to be empty as it is only
-  // cleared in a follow up task.
+  // purposes only.
   bool mAppendRunning;
 
   // Trackbuffers definition.
@@ -352,8 +349,6 @@ private:
   // MediaSource duration mirrored from MediaDecoder on the main thread..
   Mirror<Maybe<double>> mMediaSourceDuration;
 
-  // Set to true if abort was called.
-  Atomic<bool> mAbort;
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
 
