@@ -104,7 +104,6 @@ GK_ATOM(applet, "applet")
 GK_ATOM(applyImports, "apply-imports")
 GK_ATOM(applyTemplates, "apply-templates")
 GK_ATOM(mozapptype, "mozapptype")
-GK_ATOM(apz, "apz")
 GK_ATOM(archive, "archive")
 GK_ATOM(area, "area")
 GK_ATOM(arrow, "arrow")
@@ -2270,13 +2269,20 @@ GK_ATOM(SendMail, "SendMail")
 GK_ATOM(ForwardMail, "ForwardMail")
 GK_ATOM(ReplyToMail, "ReplyToMail")
 
-// Smooth scroll events origins
+// Scroll origins (these are used in various scrolling functions in
+// nsIScrollableFrame and ScrollFrameHelper). These are divided into two lists
+// - origins in the first one have smooth-scrolling prefs associated with them,
+// under the "general.smoothScroll.<origin>.*" pref branch. Origins in the
+// second one do not.
 GK_ATOM(mouseWheel, "mouseWheel")  // For discrete wheel events (e.g. not OSX magic mouse)
 GK_ATOM(pixels,     "pixels")
 GK_ATOM(lines,      "lines")
 GK_ATOM(pages,      "pages")
 GK_ATOM(scrollbars, "scrollbars")
 GK_ATOM(other,      "other")
+// Scroll origins without smooth-scrolling prefs
+GK_ATOM(apz,        "apz")
+GK_ATOM(restore,    "restore")
 
 #ifdef ACCESSIBILITY
 GK_ATOM(alert, "alert")
