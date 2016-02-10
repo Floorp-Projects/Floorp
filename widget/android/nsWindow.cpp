@@ -335,6 +335,15 @@ public:
                          const InputContextAction& aAction);
     InputContext GetInputContext();
 
+    // RAII helper class that automatically sends an event reply through
+    // OnImeSynchronize, as required by events like OnImeReplaceText.
+    class AutoIMESynchronize {
+        GeckoViewSupport* const mGVS;
+    public:
+        AutoIMESynchronize(GeckoViewSupport* gvs) : mGVS(gvs) {}
+        ~AutoIMESynchronize() { mGVS->OnImeSynchronize(); }
+    };
+
     // Handle an Android KeyEvent.
     void OnKeyEvent(int32_t aAction, int32_t aKeyCode, int32_t aScanCode,
                     int32_t aMetaState, int64_t aTime, int32_t aUnicodeChar,
@@ -2328,9 +2337,11 @@ nsWindow::Natives::OnImeAcknowledgeFocus()
 {
     MOZ_ASSERT(mIMEMaskEventsCount > 0);
 
+    AutoIMESynchronize as(this);
+
     if (--mIMEMaskEventsCount > 0) {
         // Still not focused; reply to events, but don't do anything else.
-        return OnImeSynchronize();
+        return;
     }
 
     // The focusing handshake sequence is complete, and Java is waiting
@@ -2346,16 +2357,17 @@ nsWindow::Natives::OnImeAcknowledgeFocus()
     notification.mTextChangeData.mRemovedEndOffset =
         notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
     NotifyIME(notification);
-    OnImeSynchronize();
 }
 
 void
 nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                     jni::String::Param aText)
 {
+    AutoIMESynchronize as(this);
+
     if (mIMEMaskEventsCount > 0) {
         // Not focused; still reply to events, but don't do anything else.
-        return OnImeSynchronize();
+        return;
     }
 
     /*
@@ -2405,7 +2417,7 @@ nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                 window.DispatchEvent(event, status);
             }
             mIMEKeyEvents.Clear();
-            return OnImeSynchronize();
+            return;
         }
 
         {
@@ -2462,7 +2474,6 @@ nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     if (mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvents();
     }
-    OnImeSynchronize();
 }
 
 void
@@ -2495,6 +2506,8 @@ nsWindow::Natives::OnImeAddCompositionRange(
 void
 nsWindow::Natives::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
 {
+    AutoIMESynchronize as(this);
+
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
         return;
