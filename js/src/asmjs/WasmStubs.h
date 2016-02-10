@@ -25,19 +25,19 @@ namespace js {
 namespace wasm {
 
 extern Offsets
-GenerateEntry(MacroAssembler& masm, uint32_t target, const Sig& sig, bool usesHeap);
+GenerateEntry(jit::MacroAssembler& masm, uint32_t target, const Sig& sig, bool usesHeap);
 
 extern ProfilingOffsets
-GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t importIndex);
+GenerateInterpExit(jit::MacroAssembler& masm, const Import& import, uint32_t importIndex);
 
 extern ProfilingOffsets
-GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap);
+GenerateJitExit(jit::MacroAssembler& masm, const Import& import, bool usesHeap);
 
 extern Offsets
-GenerateJumpTarget(MacroAssembler& masm, JumpTarget target);
+GenerateJumpTarget(jit::MacroAssembler& masm, JumpTarget target);
 
 extern Offsets
-GenerateInterruptStub(MacroAssembler& masm);
+GenerateInterruptStub(jit::MacroAssembler& masm);
 
 } // namespace wasm
 } // namespace js
