@@ -176,16 +176,6 @@ SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
   NS_DispatchToMainThread(event);
 }
 
-#if defined(DEBUG)
-void
-SourceBufferList::Dump(const char* aPath)
-{
-  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    mSourceBuffers[i]->Dump(aPath);
-  }
-}
-#endif
-
 SourceBufferList::SourceBufferList(MediaSource* aMediaSource)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
