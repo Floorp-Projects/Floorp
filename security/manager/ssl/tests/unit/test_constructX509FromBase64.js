@@ -35,26 +35,22 @@ function testGood(data) {
 }
 
 function testBad(data) {
-  try {
-    let cert = certDB.constructX509FromBase64(data.input);
-    ok(false, `Should have gotten an exception for "${data.input}"`);
-  } catch (e) {
-    equal(e.result, data.result,
-          "Actual and expected exception result should match");
-  }
+  throws(() => certDB.constructX509FromBase64(data.input), data.result,
+         `Should get "${data.result}" for "${data.input}"`);
 }
 
 function run_test() {
   const badCases = [
     // Wrong type or too short
-    { input: null, result: Cr.NS_ERROR_ILLEGAL_VALUE },
-    { input: "", result: Cr.NS_ERROR_ILLEGAL_VALUE },
-    { input: "=", result: Cr.NS_ERROR_ILLEGAL_VALUE },
-    { input: "==", result: Cr.NS_ERROR_ILLEGAL_VALUE },
+    { input: null, result: /NS_ERROR_ILLEGAL_VALUE/ },
+    { input: "", result: /NS_ERROR_ILLEGAL_VALUE/ },
+    { input: "=", result: /NS_ERROR_ILLEGAL_VALUE/ },
+    { input: "==", result: /NS_ERROR_ILLEGAL_VALUE/ },
     // Not base64
-    { input: "forty-four dead stone lions", result: Cr.NS_ERROR_ILLEGAL_VALUE },
+    { input: "forty-four dead stone lions", result: /NS_ERROR_ILLEGAL_VALUE/ },
     // Not a cert
-    { input: "Zm9ydHktZm91ciBkZWFkIHN0b25lIGxpb25z", result: Cr.NS_ERROR_FAILURE }
+    { input: "Zm9ydHktZm91ciBkZWFkIHN0b25lIGxpb25z",
+      result: /NS_ERROR_FAILURE/ },
   ];
 
   // Real certs with all three padding levels
