@@ -2722,6 +2722,15 @@ public:
   static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
                                                       CSSSize aSize);
 
+  /**
+   * Returns true if the given scroll origin is "higher priority" than APZ.
+   * In general any content programmatic scrolls (e.g. scrollTo calls) are
+   * higher priority, and take precedence over APZ scrolling. This function
+   * returns true for those, and returns false for other origins like APZ
+   * itself, or scroll position updates from the history restore code.
+   */
+  static bool CanScrollOriginClobberApz(nsIAtom* aScrollOrigin);
+
   static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,
                                           nsIContent* aContent,
