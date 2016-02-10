@@ -513,10 +513,6 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     allowUnobservedAsmJS(false),
     collectCoverageInfo(false),
     observedGCs(cx->runtime()),
-    tenurePromotionsLog(cx),
-    trackingTenurePromotions(false),
-    maxTenurePromotionsLogLength(DEFAULT_MAX_LOG_LENGTH),
-    tenurePromotionsLogOverflowed(false),
     allocationsLog(cx),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
@@ -545,7 +541,6 @@ Debugger::~Debugger()
 {
     MOZ_ASSERT_IF(debuggees.initialized(), debuggees.empty());
     allocationsLog.clear();
-    tenurePromotionsLog.clear();
 
     /*
      * Since the inactive state for this link is a singleton cycle, it's always
@@ -1980,30 +1975,6 @@ Debugger::isDebuggeeUnbarriered(const JSCompartment* compartment) const
     return compartment->isDebuggee() && debuggees.has(compartment->unsafeUnbarrieredMaybeGlobal());
 }
 
-Debugger::TenurePromotionsLogEntry::TenurePromotionsLogEntry(JSRuntime* rt, JSObject& obj, double when)
-  : className(obj.getClass()->name),
-    when(when),
-    frame(getObjectAllocationSite(obj)),
-    size(JS::ubi::Node(&obj).size(rt->debuggerMallocSizeOf))
-{ }
-
-
-void
-Debugger::logTenurePromotion(JSRuntime* rt, JSObject& obj, double when)
-{
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-
-    if (!tenurePromotionsLog.emplaceBack(rt, obj, when))
-        oomUnsafe.crash("Debugger::logTenurePromotion");
-
-    if (tenurePromotionsLog.length() > maxTenurePromotionsLogLength) {
-        if (!tenurePromotionsLog.popFront())
-            oomUnsafe.crash("Debugger::logTenurePromotion");
-        MOZ_ASSERT(tenurePromotionsLog.length() == maxTenurePromotionsLogLength);
-        tenurePromotionsLogOverflowed = true;
-    }
-}
-
 bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                double when)
@@ -2680,12 +2651,6 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     environments.markCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.markCrossCompartmentEdges<DebuggerScript_trace>(trc);
     sources.markCrossCompartmentEdges<DebuggerSource_trace>(trc);
-
-    // Because we don't have access to a `cx` inside
-    // `Debugger::logTenurePromotion`, we can't hold onto CCWs inside the log,
-    // and instead have unwrapped cross-compartment edges. We need to be sure to
-    // mark those here.
-    tenurePromotionsLog.trace(trc);
 }
 
 /*
@@ -2862,7 +2827,6 @@ Debugger::trace(JSTracer* trc)
     }
 
     allocationsLog.trace(trc);
-    tenurePromotionsLog.trace(trc);
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);

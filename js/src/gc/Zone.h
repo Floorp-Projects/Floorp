@@ -260,9 +260,6 @@ struct Zone : public JS::shadow::Zone,
   private:
     DebuggerVector* debuggers;
 
-    using LogTenurePromotionQueue = js::Vector<JSObject*, 0, js::SystemAllocPolicy>;
-    LogTenurePromotionQueue awaitingTenureLogging;
-
     void sweepBreakpoints(js::FreeOp* fop);
     void sweepUniqueIds(js::FreeOp* fop);
     void sweepWeakMaps();
@@ -281,15 +278,6 @@ struct Zone : public JS::shadow::Zone,
     bool hasDebuggers() const { return debuggers && debuggers->length(); }
     DebuggerVector* getDebuggers() const { return debuggers; }
     DebuggerVector* getOrCreateDebuggers(JSContext* cx);
-
-    void enqueueForPromotionToTenuredLogging(JSObject& obj) {
-        MOZ_ASSERT(hasDebuggers());
-        MOZ_ASSERT(!IsInsideNursery(&obj));
-        js::AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!awaitingTenureLogging.append(&obj))
-            oomUnsafe.crash("Zone::enqueueForPromotionToTenuredLogging");
-    }
-    void logPromotionsToTenured();
 
     js::gc::ArenaLists arenas;
 
