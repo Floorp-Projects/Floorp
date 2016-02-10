@@ -180,29 +180,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case WRAPPER: {
-        /*
-         * We need to use TraceManuallyBarrieredEdge here because we mark
-         * wrapper roots in every slice. This is because of some rule-breaking
-         * in RemapAllWrappersForObject; see comment there.
-         */
-        TraceManuallyBarrieredEdge(trc, &static_cast<AutoWrapperRooter*>(this)->value.get(),
-                                   "JS::AutoWrapperRooter.value");
-        return;
-      }
-
-      case WRAPVECTOR: {
-        AutoWrapperVector::VectorImpl& vector = static_cast<AutoWrapperVector*>(this)->vector;
-        /*
-         * We need to use TraceManuallyBarrieredEdge here because we mark
-         * wrapper roots in every slice. This is because of some rule-breaking
-         * in RemapAllWrappersForObject; see comment there.
-         */
-        for (WrapperValue* p = vector.begin(); p < vector.end(); p++)
-            TraceManuallyBarrieredEdge(trc, &p->get(), "js::AutoWrapperVector.vector");
-        return;
-      }
-
       case CUSTOM:
         static_cast<JS::CustomAutoRooter*>(this)->trace(trc);
         return;
@@ -220,14 +197,12 @@ AutoGCRooter::traceAll(JSTracer* trc)
         traceAllInContext(&*cx, trc);
 }
 
-/* static */ void
-AutoGCRooter::traceAllWrappers(JSTracer* trc)
+void
+GCRuntime::traceStackWrappers(JSTracer* trc)
 {
-    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
-        for (AutoGCRooter* gcr = cx->roots.autoGCRooters_; gcr; gcr = gcr->down) {
-            if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
-                gcr->trace(trc);
-        }
+    for (auto* vec : stackWrappers) {
+        for (auto& v : *vec)
+            TraceManuallyBarrieredEdge(trc, &v, "stack wrapper");
     }
 }
 

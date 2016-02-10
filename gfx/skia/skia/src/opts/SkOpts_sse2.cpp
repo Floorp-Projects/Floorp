@@ -13,6 +13,7 @@
 #include "SkColorCubeFilter_opts.h"
 #include "SkMatrix_opts.h"
 #include "SkMorphologyImageFilter_opts.h"
+#include "SkSwizzler_opts.h"
 #include "SkUtils_opts.h"
 #include "SkXfermode_opts.h"
 
@@ -39,6 +40,10 @@ namespace SkOpts {
         matrix_translate = sk_sse2::matrix_translate;
         matrix_scale_translate = sk_sse2::matrix_scale_translate;
         matrix_affine = sk_sse2::matrix_affine;
+
+        premul_xxxa = sk_sse2::premul_xxxa;
+        swaprb_xxxa = sk_sse2::swaprb_xxxa;
+        premul_swaprb_xxxa = sk_sse2::premul_swaprb_xxxa;
     }
 }
 

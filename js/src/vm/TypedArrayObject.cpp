@@ -755,26 +755,6 @@ TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
     return false;
 }
 
-static bool
-FinishTypedArrayInit(JSContext* cx, HandleObject ctor, HandleObject proto)
-{
-    // Define `values` and `@@iterator` manually, because they are supposed to be the same object.
-    RootedId name(cx, NameToId(cx->names().values));
-    RootedFunction fun(cx, GetSelfHostedFunction(cx, "TypedArrayValues", name, 0));
-    if (!fun)
-        return false;
-
-    RootedValue funValue(cx, ObjectValue(*fun));
-    if (!DefineProperty(cx, proto, cx->names().values, funValue, nullptr, nullptr, 0))
-        return false;
-
-    RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-    if (!DefineProperty(cx, proto, iteratorId, funValue, nullptr, nullptr, 0))
-        return false;
-
-    return true;
-}
-
 /*
  * These next 3 functions are brought to you by the buggy GCC we use to build
  * B2G ICS. Older GCC versions have a bug in which they fail to compile
@@ -868,9 +848,8 @@ TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("sort", "TypedArraySort", 1, 0),
     JS_SELF_HOSTED_FN("entries", "TypedArrayEntries", 0, 0),
     JS_SELF_HOSTED_FN("keys", "TypedArrayKeys", 0, 0),
-    // Both of these are actually defined to the same object in FinishTypedArrayInit.
-    JS_SELF_HOSTED_FN("values", "TypedArrayValues", 0, JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_SYM_FN(iterator, "TypedArrayValues", 0, JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN("values", "TypedArrayValues", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "TypedArrayValues", 0, 0),
     JS_SELF_HOSTED_FN("includes", "TypedArrayIncludes", 2, 0),
     JS_FS_END
 };
@@ -911,7 +890,7 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
         nullptr,
         TypedArrayObject::protoFunctions,
         TypedArrayObject::protoAccessors,
-        FinishTypedArrayInit,
+        nullptr,
         ClassSpec::DontDefineConstructor
     }
 };

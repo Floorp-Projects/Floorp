@@ -718,6 +718,13 @@ JS_SetDestroyCompartmentCallback(JSRuntime* rt, JSDestroyCompartmentCallback cal
 }
 
 JS_PUBLIC_API(void)
+JS_SetSizeOfIncludingThisCompartmentCallback(JSRuntime* rt,
+                                             JSSizeOfIncludingThisCompartmentCallback callback)
+{
+    rt->sizeOfIncludingThisCompartmentCallback = callback;
+}
+
+JS_PUBLIC_API(void)
 JS_SetDestroyZoneCallback(JSRuntime* rt, JSZoneCallback callback)
 {
     rt->destroyZoneCallback = callback;

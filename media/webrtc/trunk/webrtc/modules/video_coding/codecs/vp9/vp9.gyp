@@ -26,7 +26,7 @@
           ],
         }, {
           'include_dirs': [
-            '../../../../../../../libvpx',
+            '$(MOZ_LIBVPX_CFLAGS)',
           ],
 	}],
         ['build_vp9==1', {

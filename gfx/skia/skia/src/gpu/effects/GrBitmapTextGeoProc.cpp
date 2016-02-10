@@ -10,8 +10,8 @@
 #include "GrTexture.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
+#include "glsl/GrGLSLUniformHandler.h"
 #include "glsl/GrGLSLVarying.h"
 #include "glsl/GrGLSLVertexShaderBuilder.h"
 
@@ -22,9 +22,9 @@ public:
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
         const GrBitmapTextGeoProc& cte = args.fGP.cast<GrBitmapTextGeoProc>();
 
-        GrGLSLGPBuilder* pb = args.fPB;
         GrGLSLVertexBuilder* vertBuilder = args.fVertBuilder;
         GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
+        GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
 
         // emit attributes
         varyingHandler->emitAttributes(cte);
@@ -49,17 +49,18 @@ public:
             if (cte.hasVertexColor()) {
                 varyingHandler->addPassThroughAttribute(cte.inColor(), args.fOutputColor);
             } else {
-                this->setupUniformColor(pb, fragBuilder, args.fOutputColor, &fColorUniform);
+                this->setupUniformColor(fragBuilder, uniformHandler, args.fOutputColor,
+                                        &fColorUniform);
             }
         }
 
         // Setup position
-        this->setupPosition(pb, vertBuilder, gpArgs, cte.inPosition()->fName);
+        this->setupPosition(vertBuilder, gpArgs, cte.inPosition()->fName);
 
         // emit transforms
-        this->emitTransforms(args.fPB,
-                             vertBuilder,
+        this->emitTransforms(vertBuilder,
                              varyingHandler,
+                             uniformHandler,
                              gpArgs->fPositionVar,
                              cte.inPosition()->fName,
                              cte.localMatrix(),
@@ -143,9 +144,8 @@ GrBitmapTextGeoProc::GrBitmapTextGeoProc(GrColor color, GrTexture* texture,
     this->initClassID<GrBitmapTextGeoProc>();
     fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType));
 
-    // TODO we could think about removing this attribute if color is ignored, but unfortunately
-    // we don't do text positioning in batch, so we can't quite do that yet.
-    bool hasVertexColor = kA8_GrMaskFormat == fMaskFormat;
+    bool hasVertexColor = kA8_GrMaskFormat == fMaskFormat ||
+                          kA565_GrMaskFormat == fMaskFormat;
     if (hasVertexColor) {
         fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
     }

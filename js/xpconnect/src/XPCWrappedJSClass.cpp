@@ -549,6 +549,22 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
+    // Check if the desired interface is a function interface. If so, we don't
+    // want to QI, because the function almost certainly doesn't have a QueryInterface
+    // property, and doesn't need one.
+    bool isFunc = false;
+    nsCOMPtr<nsIInterfaceInfo> info;
+    nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+    if (info && NS_SUCCEEDED(info->IsFunction(&isFunc)) && isFunc) {
+        RefPtr<nsXPCWrappedJS> wrapper;
+        RootedObject obj(nsContentUtils::RootingCx(), self->GetJSObject());
+        nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, aIID, getter_AddRefs(wrapper));
+
+        // Do the same thing we do for the "check for any existing wrapper" case above.
+        *aInstancePtr = wrapper.forget().take()->GetXPTCStub();
+        return rv;
+    }
+
     // else we do the more expensive stuff...
 
     // check if the JSObject claims to implement this interface

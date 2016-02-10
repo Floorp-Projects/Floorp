@@ -724,52 +724,6 @@ ScriptedDirectProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId 
     return result.succeed();
 }
 
-// ES6 (14 October, 2014) 9.5.11 Proxy.[[Enumerate]]
-bool
-ScriptedDirectProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
-                                      MutableHandleObject objp) const
-{
-    // step 1
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-
-    // step 2
-    if (!handler) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
-        return false;
-    }
-
-    // step 3: unnecessary assert
-    // step 4
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-
-    // step 5-6
-    RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().enumerate, &trap))
-        return false;
-
-    // step 7
-    if (trap.isUndefined())
-        return GetIterator(cx, target, 0, objp);
-
-    // step 8-9
-    Value argv[] = {
-        ObjectOrNullValue(target)
-    };
-    RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
-
-    // step 10
-    if (trapResult.isPrimitive()) {
-        ReportInvalidTrapResult(cx, proxy, cx->names().enumerate);
-        return false;
-    }
-
-    // step 11
-    objp.set(&trapResult.toObject());
-    return true;
-}
-
 // ES6 (22 May, 2014) 9.5.7 Proxy.[[HasProperty]](P)
 bool
 ScriptedDirectProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const

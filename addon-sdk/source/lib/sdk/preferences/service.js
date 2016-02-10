@@ -37,9 +37,6 @@ const Branch = function(branchName) {
         value: this.get(target, name, receiver)
       };
     },
-    enumerate(target) {
-      return branchKeys(branchName)[Symbol.iterator]();
-    },
     ownKeys(target) {
       return branchKeys(branchName);
     },

@@ -31,7 +31,7 @@ test(function() {
   assert_true("bar" in gsp, "bar in gsp");
   assert_true(gsp.hasOwnProperty("bar"), "gsp.hasOwnProperty(\"bar\")");
   assert_data_propdesc(Object.getOwnPropertyDescriptor(gsp, "bar"),
-                       false, true, true);
+                       true, false, true);
 }, "Static name on the prototype");
 test(function() {
   assert_equals(window.constructor, Window);
@@ -45,9 +45,8 @@ test(function() {
 
   var gsp = Object.getPrototypeOf(proto);
   assert_true("constructor" in gsp, "constructor in gsp");
-  assert_true(gsp.hasOwnProperty("constructor"), "gsp.hasOwnProperty(\"constructor\")");
-  assert_data_propdesc(Object.getOwnPropertyDescriptor(gsp, "constructor"),
-                       false, true, true);
+  assert_false(gsp.hasOwnProperty("constructor"), "gsp.hasOwnProperty(\"constructor\")");
+  assert_equals(Object.getOwnPropertyDescriptor(gsp, "constructor"), undefined)
 }, "constructor");
 var t = async_test("Dynamic name")
 var t2 = async_test("Ghost name")

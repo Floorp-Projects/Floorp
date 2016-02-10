@@ -12,10 +12,15 @@
 #include "SkBitmap.h"
 #include "SkGrPriv.h"
 #include "SkImage_Base.h"
+#include "SkImageCacherator.h"
 #include "SkPixelRef.h"
 
+static bool bmp_is_alpha_only(const SkBitmap& bm) { return kAlpha_8_SkColorType == bm.colorType(); }
+
 GrBitmapTextureAdjuster::GrBitmapTextureAdjuster(const SkBitmap* bmp)
-    : INHERITED(bmp->getTexture(), SkIRect::MakeWH(bmp->width(), bmp->height()))
+    : INHERITED(bmp->getTexture(),
+                SkIRect::MakeWH(bmp->width(), bmp->height()),
+                bmp_is_alpha_only(*bmp))
     , fBmp(bmp) {}
 
 void GrBitmapTextureAdjuster::makeCopyKey(const CopyParams& params, GrUniqueKey* copyKey) {
@@ -38,8 +43,15 @@ void GrBitmapTextureAdjuster::didCacheCopy(const GrUniqueKey& copyKey) {
 
 //////////////////////////////////////////////////////////////////////////////
 
+// SkImage's don't have a way of communicating whether they're alpha-only. So we fallback to
+// inspecting the texture.
+static bool tex_image_is_alpha_only(const SkImage_Base& img) {
+    return GrPixelConfigIsAlphaOnly(img.peekTexture()->config());
+}
+
 GrImageTextureAdjuster::GrImageTextureAdjuster(const SkImage_Base* img)
-    : INHERITED(img->peekTexture(), SkIRect::MakeWH(img->width(), img->height()))
+    : INHERITED(img->peekTexture(), SkIRect::MakeWH(img->width(), img->height()),
+                tex_image_is_alpha_only(*img))
     , fImageBase(img) {}
 
 void GrImageTextureAdjuster::makeCopyKey(const CopyParams& params, GrUniqueKey* copyKey) {
@@ -58,7 +70,7 @@ void GrImageTextureAdjuster::didCacheCopy(const GrUniqueKey& copyKey) {
 //////////////////////////////////////////////////////////////////////////////
 
 GrBitmapTextureMaker::GrBitmapTextureMaker(GrContext* context, const SkBitmap& bitmap)
-    : INHERITED(context, bitmap.width(), bitmap.height())
+    : INHERITED(context, bitmap.width(), bitmap.height(), bmp_is_alpha_only(bitmap))
     , fBitmap(bitmap) {
     SkASSERT(!bitmap.getTexture());
     if (!bitmap.isVolatile()) {
@@ -95,4 +107,37 @@ void GrBitmapTextureMaker::makeCopyKey(const CopyParams& copyParams, GrUniqueKey
 
 void GrBitmapTextureMaker::didCacheCopy(const GrUniqueKey& copyKey) {
     GrInstallBitmapUniqueKeyInvalidator(copyKey, fBitmap.pixelRef());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+static bool cacher_is_alpha_only(const SkImageCacherator& cacher) {
+    return kAlpha_8_SkColorType == cacher.info().colorType();
+}
+GrImageTextureMaker::GrImageTextureMaker(GrContext* context, SkImageCacherator* cacher,
+                                         const SkImage* client, SkImage::CachingHint chint)
+    : INHERITED(context, cacher->info().width(), cacher->info().height(),
+                cacher_is_alpha_only(*cacher))
+    , fCacher(cacher)
+    , fClient(client)
+    , fCachingHint(chint) {
+    if (client) {
+        GrMakeKeyFromImageID(&fOriginalKey, client->uniqueID(),
+                             SkIRect::MakeWH(this->width(), this->height()));
+    }
+}
+
+GrTexture* GrImageTextureMaker::refOriginalTexture() {
+    return fCacher->lockTexture(this->context(), fOriginalKey, fClient, fCachingHint);
+}
+
+void GrImageTextureMaker::makeCopyKey(const CopyParams& stretch, GrUniqueKey* paramsCopyKey) {
+    if (fOriginalKey.isValid() && SkImage::kAllow_CachingHint == fCachingHint) {
+        MakeCopyKeyFromOrigKey(fOriginalKey, stretch, paramsCopyKey);
+    }
+}
+
+void GrImageTextureMaker::didCacheCopy(const GrUniqueKey& copyKey) {
+    if (fClient) {
+        as_IB(fClient)->notifyAddedToCache();
+    }
 }

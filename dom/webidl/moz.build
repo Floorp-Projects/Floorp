@@ -11,6 +11,8 @@ GENERATED_WEBIDL_FILES = [
 PREPROCESSED_WEBIDL_FILES = [
     'HTMLMediaElement.webidl',
     'Navigator.webidl',
+    'Promise.webidl',
+    'PromiseDebugging.webidl',
     'ServiceWorkerRegistration.webidl',
     'Window.webidl',
 ]
@@ -97,6 +99,7 @@ WEBIDL_FILES = [
     'CSSAnimation.webidl',
     'CSSLexer.webidl',
     'CSSPrimitiveValue.webidl',
+    'CSSPseudoElement.webidl',
     'CSSRuleList.webidl',
     'CSSStyleDeclaration.webidl',
     'CSSStyleSheet.webidl',
@@ -389,8 +392,6 @@ WEBIDL_FILES = [
     'PresentationRequest.webidl',
     'ProcessingInstruction.webidl',
     'ProfileTimelineMarker.webidl',
-    'Promise.webidl',
-    'PromiseDebugging.webidl',
     'PropertyIndexedKeyframes.webidl',
     'RadioNodeList.webidl',
     'Range.webidl',

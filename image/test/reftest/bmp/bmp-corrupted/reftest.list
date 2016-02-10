@@ -15,3 +15,4 @@
 # https://en.wikipedia.org/wiki/BMP_file_format which we don't accept.)
 == wrapper.html?invalid-compression-BITFIELDS.bmp about:blank
 
+== wrapper.html?invalid-truncated-metadata.bmp about:blank
