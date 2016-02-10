@@ -2120,6 +2120,11 @@ public:
     eExcludesIgnorableWhitespace =      1 << 14,
     eSupportsCSSTransforms =            1 << 15,
 
+    // A replaced element that has replaced-element sizing
+    // characteristics (i.e., like images or iframes), as opposed to
+    // inline-block sizing characteristics (like form controls).
+    eReplacedSizing =                   1 << 16,
+
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
     // meaningful in DEBUG builds.
