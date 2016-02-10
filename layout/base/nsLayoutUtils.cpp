@@ -4544,11 +4544,14 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
 
   nscoord size;
   if (aType == nsLayoutUtils::MIN_ISIZE &&
-      (aStyleSize.HasPercent() ||
-       aStyleMaxSize.HasPercent()) &&
-      aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) {
+      (((aStyleSize.HasPercent() || aStyleMaxSize.HasPercent()) &&
+        aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) ||
+       (aStyleSize.HasPercent() &&
+        aFrame->GetType() == nsGkAtoms::textInputFrame))) {
     // A percentage width or max-width on replaced elements means they
     // can shrink to 0.
+    // This is also true for percentage widths (but not max-widths) on
+    // text inputs.
     // Note that if this is max-width, this overrides the fixed-width
     // rule in the next condition.
     result = 0; // let |min| handle padding/border/margin
