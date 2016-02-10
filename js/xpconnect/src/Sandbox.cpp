@@ -292,9 +292,8 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     if (rv.MaybeSetPendingException(cx)) {
         return false;
     }
-    if (!GetOrCreateDOMReflector(cx, response, args.rval())) {
-        return false;
-    }
+
+    args.rval().setObject(*response->PromiseObj());
     return true;
 }
 
@@ -1167,10 +1166,12 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         if (!options.globalProperties.Define(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
 
+#ifndef SPIDERMONKEY_PROMISE
         // Promise is supposed to be part of ES, and therefore should appear on
         // every global.
         if (!dom::PromiseBinding::GetConstructorObject(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
+#endif // SPIDERMONKEY_PROMISE
     }
 
     // We handle the case where the context isn't in a compartment for the

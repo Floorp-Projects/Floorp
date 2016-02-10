@@ -193,6 +193,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
     '/dom/xul',
+    '/editor/libeditor'
 ]
 
 JAR_MANIFESTS += ['jar.mn']

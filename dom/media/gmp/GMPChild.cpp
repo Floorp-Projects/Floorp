@@ -65,9 +65,7 @@ GMPChild::~GMPChild()
 
 static bool
 GetFileBase(const nsAString& aPluginPath,
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
             nsCOMPtr<nsIFile>& aLibDirectory,
-#endif
             nsCOMPtr<nsIFile>& aFileBase,
             nsAutoString& aBaseName)
 {
@@ -77,11 +75,9 @@ GetFileBase(const nsAString& aPluginPath,
     return false;
   }
 
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   if (NS_FAILED(aFileBase->Clone(getter_AddRefs(aLibDirectory)))) {
     return false;
   }
-#endif
 
   nsCOMPtr<nsIFile> parent;
   rv = aFileBase->GetParent(getter_AddRefs(parent));
@@ -102,18 +98,21 @@ GetFileBase(const nsAString& aPluginPath,
 }
 
 static bool
+GetFileBase(const nsAString& aPluginPath,
+            nsCOMPtr<nsIFile>& aFileBase,
+            nsAutoString& aBaseName)
+{
+  nsCOMPtr<nsIFile> unusedLibDir;
+  return GetFileBase(aPluginPath, unusedLibDir, aFileBase, aBaseName);
+}
+
+static bool
 GetPluginFile(const nsAString& aPluginPath,
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
               nsCOMPtr<nsIFile>& aLibDirectory,
-#endif
               nsCOMPtr<nsIFile>& aLibFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   GetFileBase(aPluginPath, aLibDirectory, aLibFile, baseName);
-#else
-  GetFileBase(aPluginPath, aLibFile, baseName);
-#endif
 
 #if defined(XP_MACOSX)
   nsAutoString binaryName = NS_LITERAL_STRING("lib") + baseName + NS_LITERAL_STRING(".dylib");
@@ -128,23 +127,42 @@ GetPluginFile(const nsAString& aPluginPath,
   return true;
 }
 
+#if !defined(XP_MACOSX)
+static bool
+GetPluginFile(const nsAString& aPluginPath,
+              nsCOMPtr<nsIFile>& aLibFile)
+{
+  nsCOMPtr<nsIFile> unusedlibDir;
+  return GetPluginFile(aPluginPath, unusedlibDir, aLibFile);
+}
+#endif
+
 static bool
 GetInfoFile(const nsAString& aPluginPath,
             nsCOMPtr<nsIFile>& aInfoFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  nsCOMPtr<nsIFile> unusedLibDir;
-  GetFileBase(aPluginPath, unusedLibDir, aInfoFile, baseName);
-#else
   GetFileBase(aPluginPath, aInfoFile, baseName);
-#endif
   nsAutoString infoFileName = baseName + NS_LITERAL_STRING(".info");
   aInfoFile->AppendRelativePath(infoFileName);
   return true;
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+static nsCString
+GetNativeTarget(nsIFile* aFile)
+{
+  bool isLink;
+  nsCString path;
+  aFile->IsSymlink(&isLink);
+  if (isLink) {
+    aFile->GetNativeTarget(path);
+  } else {
+    aFile->GetNativePath(path);
+  }
+  return path;
+}
+
 static bool
 GetPluginPaths(const nsAString& aPluginPath,
                nsCString &aPluginDirectoryPath,
@@ -157,19 +175,8 @@ GetPluginPaths(const nsAString& aPluginPath,
 
   // Mac sandbox rules expect paths to actual files and directories -- not
   // soft links.
-  bool isLink;
-  libDirectory->IsSymlink(&isLink);
-  if (isLink) {
-    libDirectory->GetNativeTarget(aPluginDirectoryPath);
-  } else {
-    libDirectory->GetNativePath(aPluginDirectoryPath);
-  }
-  libFile->IsSymlink(&isLink);
-  if (isLink) {
-    libFile->GetNativeTarget(aPluginFilePath);
-  } else {
-    libFile->GetNativePath(aPluginFilePath);
-  }
+  aPluginDirectoryPath = GetNativeTarget(libDirectory);
+  aPluginFilePath = GetNativeTarget(libFile);
 
   return true;
 }
@@ -205,19 +212,10 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
     return false;
   }
 
-  bool isLink;
-  app->IsSymlink(&isLink);
-  if (isLink) {
-    app->GetNativeTarget(aAppPath);
-  } else {
-    app->GetNativePath(aAppPath);
-  }
-  appBinary->IsSymlink(&isLink);
-  if (isLink) {
-    appBinary->GetNativeTarget(aAppBinaryPath);
-  } else {
-    appBinary->GetNativePath(aAppBinaryPath);
-  }
+  // Mac sandbox rules expect paths to actual files and directories -- not
+  // soft links.
+  aAppPath = GetNativeTarget(app);
+  appBinaryPath = GetNativeTarget(appBinary);
 
   return true;
 }
@@ -588,12 +586,7 @@ GetPluginVoucherFile(const nsAString& aPluginPath,
                      nsCOMPtr<nsIFile>& aOutVoucherFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  nsCOMPtr<nsIFile> libDir;
-  GetFileBase(aPluginPath, aOutVoucherFile, libDir, baseName);
-#else
   GetFileBase(aPluginPath, aOutVoucherFile, baseName);
-#endif
   nsAutoString infoFileName = baseName + NS_LITERAL_STRING(".voucher");
   aOutVoucherFile->AppendRelativePath(infoFileName);
 }

@@ -221,6 +221,14 @@ nsBMPDecoder::GetCompressedImageSize() const
 }
 
 void
+nsBMPDecoder::BeforeFinishInternal()
+{
+  if (!IsMetadataDecode() && !mImageData) {
+    PostDataError();
+  }
+}
+
+void
 nsBMPDecoder::FinishInternal()
 {
   // We shouldn't be called in error cases.
@@ -232,17 +240,18 @@ nsBMPDecoder::FinishInternal()
   // Send notifications if appropriate.
   if (!IsMetadataDecode() && HasSize()) {
 
+    // We should have image data.
+    MOZ_ASSERT(mImageData);
+
     // If it was truncated, fill in the missing pixels as black.
-    if (mImageData) {
-      while (mCurrentRow > 0) {
-        uint32_t* dst = RowBuffer();
-        while (mCurrentPos < mH.mWidth) {
-          SetPixel(dst, 0, 0, 0);
-          mCurrentPos++;
-        }
-        mCurrentPos = 0;
-        FinishRow();
+    while (mCurrentRow > 0) {
+      uint32_t* dst = RowBuffer();
+      while (mCurrentPos < mH.mWidth) {
+        SetPixel(dst, 0, 0, 0);
+        mCurrentPos++;
       }
+      mCurrentPos = 0;
+      FinishRow();
     }
 
     // Invalidate.
@@ -492,7 +501,7 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
     PostDataError();
     return Transition::TerminateFailure();
   }
-  // ICO BMPs must have a WinVMPv3 header. nsICODecoder should have already
+  // ICO BMPs must have a WinBMPv3 header. nsICODecoder should have already
   // terminated decoding if this isn't the case.
   MOZ_ASSERT_IF(mIsWithinICO, mH.mBIHSize == InfoHeaderLength::WIN_V3);
 

@@ -38,42 +38,6 @@ public:
 
     /*
      *
-     * Result code for the alpha components of a row.
-     *
-     */
-    typedef uint16_t ResultAlpha;
-    static const ResultAlpha kOpaque_ResultAlpha = 0xFFFF;
-    static const ResultAlpha kTransparent_ResultAlpha = 0x0000;
-
-    /*
-     *
-     * Checks if the result of decoding a row indicates that the row was
-     * transparent.
-     *
-     */
-    static bool IsTransparent(ResultAlpha r) {
-        return kTransparent_ResultAlpha == r;
-    }
-
-    /*
-     *
-     * Checks if the result of decoding a row indicates that the row was
-     * opaque.
-     *
-     */
-    static bool IsOpaque(ResultAlpha r) {
-        return kOpaque_ResultAlpha == r;
-    }
-
-    /*
-     *
-     * Constructs the proper result code based on accumulated alpha masks
-     *
-     */
-    static ResultAlpha GetResult(uint8_t zeroAlpha, uint8_t maxAlpha);
-
-    /*
-     *
      * Returns bits per pixel for source config
      *
      */
@@ -149,10 +113,8 @@ public:
      *  subset decodes.
      *  @param dst Where we write the output.
      *  @param src The next row of the source data.
-     *  @return A result code describing if the row was fully opaque, fully
-     *          transparent, or neither
      */
-    ResultAlpha swizzle(void* dst, const uint8_t* SK_RESTRICT src);
+    void swizzle(void* dst, const uint8_t* SK_RESTRICT src);
 
     /**
      * Implement fill using a custom width.
@@ -162,6 +124,16 @@ public:
         const SkImageInfo fillInfo = info.makeWH(fAllocatedWidth, info.height());
         SkSampler::Fill(fillInfo, dst, rowBytes, colorOrIndex, zeroInit);
     }
+
+    /**
+     *  If fSampleX > 1, the swizzler is sampling every fSampleX'th pixel and
+     *  discarding the rest.
+     *
+     *  This getter is currently used by SkBmpStandardCodec for Bmp-in-Ico decodes.
+     *  Ideally, the subclasses of SkCodec would have no knowledge of sampling, but
+     *  this allows us to apply a transparency mask to pixels after swizzling.
+     */
+    int sampleX() const { return fSampleX; }
 
 private:
 
@@ -177,12 +149,21 @@ private:
      *  @param offset The offset before the first pixel to sample.
                         Is in bytes or bits based on what deltaSrc is in.
      */
-    typedef ResultAlpha (*RowProc)(void* SK_RESTRICT dstRow,
-                                   const uint8_t* SK_RESTRICT src,
-                                   int dstWidth, int bpp, int deltaSrc, int offset,
-                                   const SkPMColor ctable[]);
+    typedef void (*RowProc)(void* SK_RESTRICT dstRow,
+                            const uint8_t* SK_RESTRICT src,
+                            int dstWidth, int bpp, int deltaSrc, int offset,
+                            const SkPMColor ctable[]);
 
-    const RowProc       fRowProc;
+    template <RowProc Proc>
+    static void SkipLeading8888ZerosThen(void* SK_RESTRICT dstRow,
+                                         const uint8_t* SK_RESTRICT src,
+                                         int dstWidth, int bpp, int deltaSrc, int offset,
+                                         const SkPMColor ctable[]);
+
+    // May be NULL.  We will not always be able to used an optimized function.
+    RowProc             fFastProc;
+    // Always non-NULL.  We use this if fFastProc is NULL.
+    const RowProc       fProc;
     const SkPMColor*    fColorTable;      // Unowned pointer
 
     // Subset Swizzles
@@ -269,8 +250,8 @@ private:
                                           //     fBPP is bitsPerPixel
     const int           fDstBPP;          // Bytes per pixel for the destination color type
 
-    SkSwizzler(RowProc proc, const SkPMColor* ctable, int srcOffset, int srcWidth, int dstOffset,
-            int dstWidth, int srcBPP, int dstBPP);
+    SkSwizzler(RowProc fastProc, RowProc proc, const SkPMColor* ctable, int srcOffset,
+            int srcWidth, int dstOffset, int dstWidth, int srcBPP, int dstBPP);
 
     int onSetSampleX(int) override;
 

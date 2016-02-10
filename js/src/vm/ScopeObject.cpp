@@ -2333,11 +2333,6 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const override
-    {
-        return BaseProxyHandler::enumerate(cx, proxy, objp);
-    }
-
     bool has(JSContext* cx, HandleObject proxy, HandleId id_, bool* bp) const override
     {
         RootedId id(cx, id_);

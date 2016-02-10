@@ -54,13 +54,6 @@ DeadObjectProxy::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
 }
 
 bool
-DeadObjectProxy::enumerate(JSContext* cx, HandleObject wrapper, MutableHandleObject objp) const
-{
-    ReportDead(cx);
-    return false;
-}
-
-bool
 DeadObjectProxy::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const
 {
     protop.set(nullptr);

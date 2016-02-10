@@ -20,6 +20,7 @@
 #include "SkTLazy.h"
 #include "SkTraceEvent.h"
 
+#include "batches/GrRectBatchFactory.h"
 #include "batches/GrVertexBatch.h"
 
 GrDefaultPathRenderer::GrDefaultPathRenderer(bool separateStencilSupport,
@@ -289,7 +290,7 @@ private:
         }
 
         if (maxVertices == 0 || maxVertices > ((int)SK_MaxU16 + 1)) {
-            SkDebugf("Cannot render path (%d)\n", maxVertices);
+            //SkDebugf("Cannot render path (%d)\n", maxVertices);
             return;
         }
 
@@ -697,7 +698,10 @@ bool GrDefaultPathRenderer::internalDrawPath(GrDrawTarget* target,
             }
             const SkMatrix& viewM = (reverse && viewMatrix.hasPerspective()) ? SkMatrix::I() :
                                                                                viewMatrix;
-            target->drawNonAARect(*pipelineBuilder, color, viewM, bounds, localMatrix);
+            SkAutoTUnref<GrDrawBatch> batch(
+                    GrRectBatchFactory::CreateNonAAFill(color, viewM, bounds, nullptr,
+                                                        &localMatrix));
+            target->drawBatch(*pipelineBuilder, batch);
         } else {
             if (passCount > 1) {
                 pipelineBuilder->setDisableColorXPFactory();
@@ -726,6 +730,7 @@ bool GrDefaultPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
 }
 
 bool GrDefaultPathRenderer::onDrawPath(const DrawPathArgs& args) {
+    GR_AUDIT_TRAIL_AUTO_FRAME(args.fTarget->getAuditTrail(), "GrDefaultPathRenderer::onDrawPath");
     return this->internalDrawPath(args.fTarget,
                                   args.fPipelineBuilder,
                                   args.fColor,
@@ -736,6 +741,7 @@ bool GrDefaultPathRenderer::onDrawPath(const DrawPathArgs& args) {
 }
 
 void GrDefaultPathRenderer::onStencilPath(const StencilPathArgs& args) {
+    GR_AUDIT_TRAIL_AUTO_FRAME(args.fTarget->getAuditTrail(),"GrDefaultPathRenderer::onStencilPath");
     SkASSERT(SkPath::kInverseEvenOdd_FillType != args.fPath->getFillType());
     SkASSERT(SkPath::kInverseWinding_FillType != args.fPath->getFillType());
     this->internalDrawPath(args.fTarget, args.fPipelineBuilder, GrColor_WHITE, *args.fViewMatrix,

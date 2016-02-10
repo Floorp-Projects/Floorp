@@ -9,10 +9,10 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 ifdef MOZ_APP_BASENAME
 APP_INI_DEPS = $(topsrcdir)/config/milestone.txt
 
-MOZ_APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 APP_INI_DEPS += $(DEPTH)/config/buildid
 
-DEFINES += -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID)
+DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
 
 APP_INI_DEPS += $(DEPTH)/config/autoconf.mk
 
