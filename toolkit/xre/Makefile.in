@@ -31,10 +31,10 @@ endif # MOZ_SOURCE_STAMP
 MOZ_BUILDID   := $(shell awk '{print $$3}' $(DEPTH)/buildid.h)
 $(call errorIfEmpty,GRE_MILESTONE MOZ_BUILDID)
 
-DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
-
 # Note these dependencies are broken because the target is *not* the cpp file.
 # BUT, actually fixing it would make libxul rebuilt on every single incremental
 # build because of the automatic buildid change. This is why we can't actually
 # include buildid.h there, because it would add the dependency.
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/buildid.h $(milestone_txt)
+
+nsAppRunner.$(OBJ_SUFFIX): DEFINES += -DMOZ_BUILDID=$(MOZ_BUILDID)
