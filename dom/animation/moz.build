@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom += [
     'AnimationEffectReadOnly.h',
     'AnimationEffectTimingReadOnly.h',
     'AnimationTimeline.h',
+    'CSSPseudoElement.h',
     'DocumentTimeline.h',
     'KeyframeEffect.h',
 ]
@@ -35,6 +36,7 @@ UNIFIED_SOURCES += [
     'AnimationUtils.cpp',
     'AnimValuesStyleRule.cpp',
     'ComputedTimingFunction.cpp',
+    'CSSPseudoElement.cpp',
     'DocumentTimeline.cpp',
     'EffectCompositor.cpp',
     'EffectSet.cpp',

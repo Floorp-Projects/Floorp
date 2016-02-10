@@ -259,7 +259,7 @@ public:
      */
 public:
     // Create and attach a window.
-    static void Open(const jni::ClassObject::LocalRef& aCls,
+    static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
                      GeckoView::Param aView, jni::Object::Param aGLController,
                      int32_t aWidth, int32_t aHeight);
@@ -334,6 +334,15 @@ public:
     void SetInputContext(const InputContext& aContext,
                          const InputContextAction& aAction);
     InputContext GetInputContext();
+
+    // RAII helper class that automatically sends an event reply through
+    // OnImeSynchronize, as required by events like OnImeReplaceText.
+    class AutoIMESynchronize {
+        GeckoViewSupport* const mGVS;
+    public:
+        AutoIMESynchronize(GeckoViewSupport* gvs) : mGVS(gvs) {}
+        ~AutoIMESynchronize() { mGVS->OnImeSynchronize(); }
+    };
 
     // Handle an Android KeyEvent.
     void OnKeyEvent(int32_t aAction, int32_t aKeyCode, int32_t aScanCode,
@@ -536,7 +545,7 @@ public:
             return false;
         }
 
-        nsTArray<int32_t> pointerId(aPointerId);
+        nsTArray<int32_t> pointerId(aPointerId->GetElements());
         MultiTouchInput::MultiTouchType type;
         size_t startIndex = 0;
         size_t endIndex = pointerId.Length();
@@ -569,12 +578,12 @@ public:
         input.modifiers = GetModifiers(aMetaState);
         input.mTouches.SetCapacity(endIndex - startIndex);
 
-        nsTArray<float> x(aX);
-        nsTArray<float> y(aY);
-        nsTArray<float> orientation(aOrientation);
-        nsTArray<float> pressure(aPressure);
-        nsTArray<float> toolMajor(aToolMajor);
-        nsTArray<float> toolMinor(aToolMinor);
+        nsTArray<float> x(aX->GetElements());
+        nsTArray<float> y(aY->GetElements());
+        nsTArray<float> orientation(aOrientation->GetElements());
+        nsTArray<float> pressure(aPressure->GetElements());
+        nsTArray<float> toolMajor(aToolMajor->GetElements());
+        nsTArray<float> toolMinor(aToolMinor->GetElements());
 
         MOZ_ASSERT(pointerId.Length() == x.Length());
         MOZ_ASSERT(pointerId.Length() == y.Length());
@@ -979,7 +988,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 }
 
 /* static */ void
-nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
+nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
                                  jni::Object::Param aGLController,
@@ -2660,8 +2669,8 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
                            change.mOldEnd, change.mNewEnd});
     }
 
-    int32_t selStart;
-    int32_t selEnd;
+    int32_t selStart = -1;
+    int32_t selEnd = -1;
 
     if (mIMESelectionChanged) {
         WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
@@ -2848,9 +2857,11 @@ nsWindow::GeckoViewSupport::OnImeAcknowledgeFocus()
 {
     MOZ_ASSERT(mIMEMaskEventsCount > 0);
 
+    AutoIMESynchronize as(this);
+
     if (--mIMEMaskEventsCount > 0) {
         // Still not focused; reply to events, but don't do anything else.
-        return OnImeSynchronize();
+        return;
     }
 
     // The focusing handshake sequence is complete, and Java is waiting
@@ -2866,23 +2877,24 @@ nsWindow::GeckoViewSupport::OnImeAcknowledgeFocus()
     notification.mTextChangeData.mRemovedEndOffset =
         notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
     NotifyIME(notification);
-    OnImeSynchronize();
 }
 
 void
 nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                              jni::String::Param aText)
 {
+    AutoIMESynchronize as(this);
+
     if (mIMEMaskEventsCount > 0) {
         // Not focused; still reply to events, but don't do anything else.
-        return OnImeSynchronize();
+        return;
     }
 
     /*
         Replace text in Gecko thread from aStart to aEnd with the string text.
     */
     RefPtr<nsWindow> kungFuDeathGrip(&window);
-    nsString string(aText);
+    nsString string(aText->ToString());
 
     const auto composition(window.GetIMEComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
@@ -2927,7 +2939,7 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                 window.DispatchEvent(event, status);
             }
             mIMEKeyEvents.Clear();
-            return OnImeSynchronize();
+            return;
         }
 
         {
@@ -2984,7 +2996,6 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     if (mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvents();
     }
-    OnImeSynchronize();
 }
 
 void
@@ -3017,6 +3028,8 @@ nsWindow::GeckoViewSupport::OnImeAddCompositionRange(
 void
 nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
 {
+    AutoIMESynchronize as(this);
+
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
         return;

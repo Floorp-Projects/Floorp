@@ -2112,6 +2112,8 @@ GK_ATOM(animationsOfAfterProperty, "AnimationsOfAfterProperty") // FrameAnimatio
 GK_ATOM(animationEffectsProperty, "AnimationEffectsProperty") // EffectSet*
 GK_ATOM(animationEffectsForBeforeProperty, "AnimationsEffectsForBeforeProperty") // EffectSet*
 GK_ATOM(animationEffectsForAfterProperty, "AnimationsEffectsForAfterProperty") // EffectSet*
+GK_ATOM(cssPseudoElementBeforeProperty, "CSSPseudoElementBeforeProperty") // CSSPseudoElement*
+GK_ATOM(cssPseudoElementAfterProperty, "CSSPseudoElementAfterProperty") // CSSPseudoElement*
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*

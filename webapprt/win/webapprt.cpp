@@ -326,7 +326,7 @@ namespace {
                           MAXPATHLEN);
     NS_ENSURE_SUCCESS(rv, false);
 
-    if (0 == strcmp(buildid, NS_STRINGIFY(GRE_BUILDID))) {
+    if (0 == strcmp(buildid, NS_STRINGIFY(MOZ_BUILDID))) {
       return AttemptGRELoadAndLaunch(firefoxDir);
     }
 

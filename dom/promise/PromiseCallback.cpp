@@ -15,6 +15,8 @@
 namespace mozilla {
 namespace dom {
 
+#ifndef SPIDERMONKEY_PROMISE
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PromiseCallback)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseCallback)
 
@@ -565,6 +567,8 @@ PromiseCallback::Factory(Promise* aNextPromise, JS::Handle<JSObject*> aGlobal,
   MOZ_ASSERT(false, "This should not happen");
   return nullptr;
 }
+
+#endif // SPIDERMONKEY_PROMISE
 
 } // namespace dom
 } // namespace mozilla

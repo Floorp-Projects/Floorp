@@ -73,7 +73,7 @@ private:
 
         auto type = widget::GeckoAppShell::ConnectionGetMimeType(mConnection);
         if (type) {
-            SetContentType(nsCString(type));
+            SetContentType(type->ToCString());
         }
     }
 

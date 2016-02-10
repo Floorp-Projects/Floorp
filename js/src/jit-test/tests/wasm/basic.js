@@ -118,6 +118,10 @@ var code = '(module (import "a" "") (import "b" "c") (import "c" ""))';
 assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), TypeError, notFunction);
 wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:()=>{}});
 
+wasmEvalText('(module (import "a" "" (result i32)))', {a: ()=> {}});
+wasmEvalText('(module (import "a" "" (result f32)))', {a: ()=> {}});
+wasmEvalText('(module (import "a" "" (result f64)))', {a: ()=> {}});
+
 // ----------------------------------------------------------------------------
 // memory
 
@@ -253,6 +257,15 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param f32)) (
 assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, /import index out of range/);
 wasmEvalText('(module (import "a" "") (func (call_import 0)))', {a:()=>{}});
 wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0 (i32.const 0))))', {a:()=>{}});
+
+function checkF32CallImport(v) {
+    assertEq(wasmEvalText('(module (import "a" "" (result f32)) (func (result f32) (call_import 0)) (export "" 0))', {a:()=>{ return v; }})(), Math.fround(v));
+}
+checkF32CallImport(13.37);
+checkF32CallImport(NaN);
+checkF32CallImport(-Infinity);
+checkF32CallImport(-0);
+checkF32CallImport(Math.pow(2, 32) - 1);
 
 var f = wasmEvalText('(module (import "inc" "") (func (call_import 0)) (export "" 0))', {inc:()=>counter++});
 var g = wasmEvalText('(module (import "f" "") (func (block (call_import 0) (call_import 0))) (export "" 0))', {f});

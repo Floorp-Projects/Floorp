@@ -39,6 +39,8 @@ struct AnimationCollection;
 class AnimValuesStyleRule;
 
 namespace dom {
+class ElementOrCSSPseudoElement;
+class OwningElementOrCSSPseudoElement;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
@@ -188,7 +190,7 @@ public:
   // KeyframeEffectReadOnly interface
   static already_AddRefed<KeyframeEffectReadOnly>
   Constructor(const GlobalObject& aGlobal,
-              Element* aTarget,
+              const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
@@ -202,20 +204,12 @@ public:
   // Not exposed to content.
   static already_AddRefed<KeyframeEffectReadOnly>
   Constructor(const GlobalObject& aGlobal,
-              Element* aTarget,
+              const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
               const TimingParams& aTiming,
               ErrorResult& aRv);
 
-  Element* GetTarget() const {
-    // Currently we never return animations from the API whose effect
-    // targets a pseudo-element so this should never be called when
-    // mPseudoType is not 'none' (see bug 1174575).
-    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
-               "Requesting the target of a KeyframeEffect that targets a"
-               " pseudo-element is not yet supported.");
-    return mTarget;
-  }
+  void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
@@ -351,6 +345,7 @@ protected:
   static void BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
+    nsCSSPseudoElements::Type aPseudoType,
     JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv);
