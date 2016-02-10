@@ -315,7 +315,7 @@ DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 GECKO_APP_AP_PATH = $(topobjdir)/mobile/android/base
 
 ifdef ENABLE_TESTS
-INNER_ROBOCOP_PACKAGE=echo
+INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
@@ -343,6 +343,8 @@ INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
 endif
 
 ifdef MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
+INNER_INSTALL_BOUNCER_PACKAGE=true
+ifdef ENABLE_TESTS
 UPLOAD_EXTRA_FILES += bouncer.apk
 
 bouncer_package=$(ABS_DIST)/bouncer.apk
@@ -359,6 +361,9 @@ INNER_INSTALL_BOUNCER_PACKAGE=\
    $(AAPT) dump permissions $(bouncer_package) | sort -u > $(bouncer_package).permissions && \
    diff -c $(PACKAGE).permissions $(bouncer_package).permissions || \
    (echo "*** Error: The permissions of the bouncer package differ from the permissions of the main package.  Ensure the bouncer and main package Android manifests agree, rebuild mobile/android, and re-package." && exit 1))
+else
+INNER_INSTALL_BOUNCER_PACKAGE=echo 'Testing is disabled, so the install bouncer is disabled - No trampolines for you'
+endif # ENABLE_TESTS
 else
 INNER_INSTALL_BOUNCER_PACKAGE=echo 'Install bouncer is disabled - No trampolines for you'
 endif # MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
