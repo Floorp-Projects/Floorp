@@ -9,7 +9,6 @@ def main(request, response):
     content_type = 'application/javascript'
 
     headers.append(('Content-Type', content_type))
-    # Return a different script for each access.  Use .clock() for best time
-    # resolution across different platforms.
-    return headers, '// %s' % (time.clock())
+    # Return a different script for each access.
+    return headers, '// %s' % (time.time())
 
