@@ -1028,9 +1028,12 @@ class AssemblerX86Shared : public AssemblerShared
     CodeOffset thunkWithPatch() {
         return CodeOffset(masm.jmp().offset());
     }
-    void patchThunk(uint32_t jumpOffset, uint32_t targetOffset) {
+    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) {
         unsigned char* code = masm.data();
-        X86Encoding::SetRel32(code + jumpOffset, code + targetOffset);
+        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+    }
+    static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
+        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
     }
 
     void breakpoint() {
