@@ -30,6 +30,8 @@
 using namespace js;
 using namespace js::wasm;
 
+using mozilla::IsNaN;
+
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
 
