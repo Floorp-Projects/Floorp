@@ -59,16 +59,15 @@ class JS_FRIEND_API(Wrapper);
  *
  * ### Proxies and internal methods
  *
- * ES6 draft rev 27 (24 August 2014) specifies 14 internal methods. The runtime
- * semantics of just about everything a script can do to an object is specified
- * in terms of these internal methods. For example:
+ * ES2016 specifies 13 internal methods. The runtime  semantics of just
+ * about everything a script can do to an object is specified in terms
+ * of these internal methods. For example:
  *
  *     JS code                      ES6 internal method that gets called
  *     ---------------------------  --------------------------------
  *     obj.prop                     obj.[[Get]](obj, "prop")
  *     "prop" in obj                obj.[[HasProperty]]("prop")
  *     new obj()                    obj.[[Construct]](<empty argument List>)
- *     for (k in obj) {}            obj.[[Enumerate]]()
  *
  * With regard to the implementation of these internal methods, there are three
  * very different kinds of object in SpiderMonkey.
@@ -262,14 +261,6 @@ class JS_FRIEND_API(BaseProxyHandler)
                          ObjectOpResult& result) const = 0;
 
     /*
-     * Because [[Enumerate]] is one of the standard traps it should be overridden.
-     * However for convenience BaseProxyHandler includes a pure virtual implementation,
-     * that turns the properties returned by getOwnEnumerablePropertyKeys (and proto walking)
-     * into an Iterator object.
-     */
-    virtual bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const = 0;
-
-    /*
      * These methods are standard, but the engine does not normally call them.
      * They're opt-in. See "Proxy prototype chains" above.
      *
@@ -315,6 +306,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const;
 
     /* SpiderMonkey extensions. */
+    virtual bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const;
     virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
                                        MutableHandle<PropertyDescriptor> desc) const;
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const;

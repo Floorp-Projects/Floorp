@@ -15,9 +15,11 @@
 #include "GrRenderTarget.h"
 #include "GrTextureProvider.h"
 #include "SkMatrix.h"
-#include "../private/SkMutex.h"
 #include "SkPathEffect.h"
 #include "SkTypes.h"
+#include "../private/GrAuditTrail.h"
+#include "../private/GrSingleOwner.h"
+#include "../private/SkMutex.h"
 
 struct GrBatchAtlasConfig;
 class GrBatchFontCache;
@@ -354,9 +356,13 @@ public:
     /** Enumerates all cached GPU resources and dumps their memory to traceMemoryDump. */
     void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const;
 
-    /** Draw font cache texture to render target */
-    void drawFontCache(const SkRect& rect, GrMaskFormat format, const SkPaint& paint,
-                       GrRenderTarget* target);
+    /** Get pointer to atlas texture for given mask format */
+    GrTexture* getFontAtlasTexture(GrMaskFormat format);
+
+    GrAuditTrail* getAuditTrail() { return &fAuditTrail; }
+
+    /** This is only useful for debug purposes */
+    SkDEBUGCODE(GrSingleOwner* debugSingleOwner() const { return &fSingleOwner; } )
 
 private:
     GrGpu*                          fGpu;
@@ -391,6 +397,11 @@ private:
     SkMutex                         fReadPixelsMutex;
     SkMutex                         fTestPMConversionsMutex;
 
+    // In debug builds we guard against improper thread handling
+    // This guard is passed to the GrDrawingManager and, from there to all the
+    // GrDrawContexts.  It is also passed to the GrTextureProvider and SkGpuDevice.
+    mutable GrSingleOwner fSingleOwner;
+
     struct CleanUpData {
         PFCleanUpFunc fFunc;
         void*         fInfo;
@@ -401,6 +412,8 @@ private:
     const uint32_t                  fUniqueID;
 
     SkAutoTDelete<GrDrawingManager> fDrawingManager;
+
+    GrAuditTrail                    fAuditTrail;
 
     // TODO: have the CMM use drawContexts and rm this friending
     friend class GrClipMaskManager; // the CMM is friended just so it can call 'drawingManager'

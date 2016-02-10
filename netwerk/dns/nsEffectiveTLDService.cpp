@@ -90,7 +90,7 @@ nsEffectiveTLDService::Init()
 #endif
     nsDomainEntry *entry = mHash.PutEntry(domain);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-    entry->SetData(&entries[i]);
+    entry->SetData(entries[i]);
   }
 
   MOZ_ASSERT(!gService);
@@ -113,7 +113,7 @@ nsEffectiveTLDService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize)
 {
   return MOZ_COLLECT_REPORT(
-    "explicit/xpcom/effective-TLD-service", KIND_HEAP, UNITS_BYTES,
+    "explicit/network/effective-TLD-service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(EffectiveTLDServiceMallocSizeOf),
     "Memory used by the effective TLD service.");
 }

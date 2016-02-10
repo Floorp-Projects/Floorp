@@ -37,11 +37,6 @@
 # Targets to be triggered for a default build
 default: $(addprefix install-,$(INSTALL_MANIFESTS))
 
-# Explicit files to be built for a default build
-ifndef TEST_MOZBUILD
-default: $(TOPOBJDIR)/dist/bin/platform.ini
-endif
-
 ifndef NO_XPIDL
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
@@ -72,13 +67,6 @@ ACDEFINES += -DBUILD_FASTER
 # fallback
 $(TOPOBJDIR)/faster/%: ;
 
-# And files under dist/ are meant to be copied from their first dependency
-# if there is no other rule.
-$(TOPOBJDIR)/dist/%:
-	rm -f $@
-	mkdir -p $(@D)
-	cp $< $@
-
 # Generic rule to fall back to the recursive make backend.
 # This needs to stay after other $(TOPOBJDIR)/* rules because GNU Make
 # <3.82 apply pattern rules in definition order, not stem length like
@@ -103,18 +91,13 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
 		-DBOOKMARKS_INCLUDE_DIR=$(TOPSRCDIR)/browser/locales/en-US/profile \
-		-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
+		-DMOZ_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
 		$(ACDEFINES) \
 		install_$(subst /,_,$*)
 
 # ============================================================================
 # Below is a set of additional dependencies and variables used to build things
 # that are not supported by data in moz.build.
-
-# Files to build with the recursive backend and simply copy
-$(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
-
-$(TOPOBJDIR)/toolkit/xre/platform.ini: $(TOPOBJDIR)/config/buildid
 
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
 # dist/idl to have been processed. When using the hybrid

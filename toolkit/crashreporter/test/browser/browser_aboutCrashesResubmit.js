@@ -3,8 +3,7 @@ function cleanup_and_finish() {
     cleanup_fake_appdir();
   } catch(ex) {}
   Services.prefs.clearUserPref("breakpad.reportURL");
-  gBrowser.removeTab(gBrowser.selectedTab);
-  finish();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab).then(finish);
 }
 
 /*
@@ -12,9 +11,11 @@ function cleanup_and_finish() {
  *
  * Check that the list of crashes displayed by about:crashes matches
  * the list of crashes that we placed in the pending+submitted directories.
+ *
+ * NB: This function is run in the child process via ContentTask.spawn.
  */
-function check_crash_list(tab, crashes) {
-  let doc = gBrowser.getBrowserForTab(tab).contentDocument;
+function check_crash_list(crashes) {
+  let doc = content.document;
   let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
   is(crashlinks.length, crashes.length,
     "about:crashes lists correct number of crash reports");
@@ -46,27 +47,33 @@ function check_submit_pending(tab, crashes) {
   let CrashID = null;
   let CrashURL = null;
   function csp_onload() {
-    if (browser.contentWindow.location != 'about:crashes') {
-      browser.removeEventListener("load", csp_onload, true);
-      // loaded the crash report page
-      ok(true, 'got submission onload');
+    // loaded the crash report page
+    ok(true, 'got submission onload');
+
+    ContentTask.spawn(browser, null, function() {
       // grab the Crash ID here to verify later
-      CrashID = browser.contentWindow.location.search.split("=")[1];
-      CrashURL = browser.contentWindow.location.toString();
+      let CrashID = content.location.search.split("=")[1];
+      let CrashURL = content.location.toString();
+
       // check the JSON content vs. what we submitted
-      let result = JSON.parse(browser.contentDocument.documentElement.textContent);
+      let result = JSON.parse(content.document.documentElement.textContent);
       is(result.upload_file_minidump, "MDMP", "minidump file sent properly");
       is(result.memory_report, "Let's pretend this is a memory report",
          "memory report sent properly");
-      is(result.Throttleable, 0, "correctly sent as non-throttleable");
+      is(+result.Throttleable, 0, "correctly sent as non-throttleable");
       // we checked these, they're set by the submission process,
       // so they won't be in the "extra" data.
       delete result.upload_file_minidump;
       delete result.memory_report;
       delete result.Throttleable;
+
+      return { id: CrashID, url: CrashURL, result };
+    }).then(({ id, url, result }) => {
       // Likewise, this is discarded before it gets to the server
       delete SubmittedCrash.extra.ServerURL;
 
+      CrashID = id;
+      CrashURL = url;
       for(let x in result) {
         if (x in SubmittedCrash.extra)
           is(result[x], SubmittedCrash.extra[x],
@@ -78,12 +85,13 @@ function check_submit_pending(tab, crashes) {
         if (!(y in result))
           ok(false, "property " + y + " missing from result data!");
       }
-      executeSoon(function() {
-                    browser.addEventListener("pageshow", csp_pageshow, true);
-                    // now navigate back
-                    browser.goBack();
-                  });
-    }
+
+      // NB: Despite appearances, this doesn't use a CPOW.
+      BrowserTestUtils.waitForEvent(browser, "pageshow", true).then(csp_pageshow);
+
+      // now navigate back
+      browser.goBack();
+    });
   }
   function csp_fail() {
     browser.removeEventListener("CrashSubmitFailed", csp_fail, true);
@@ -91,17 +99,15 @@ function check_submit_pending(tab, crashes) {
     cleanup_and_finish();
   }
   browser.addEventListener("CrashSubmitFailed", csp_fail, true);
-  browser.addEventListener("load", csp_onload, true);
+  BrowserTestUtils.browserLoaded(browser, false, (url) => url !== "about:crashes").then(csp_onload);
   function csp_pageshow() {
-    browser.removeEventListener("pageshow", csp_pageshow, true);
-    executeSoon(function () {
-                  is(browser.contentWindow.location, "about:crashes", "navigated back successfully");
-                  let link = browser.contentDocument.getElementById(CrashID);
+    ContentTask.spawn(browser, { CrashID, CrashURL }, function({ CrashID, CrashURL }) {
+                  is(content.location.href, "about:crashes", "navigated back successfully");
+                  let link = content.document.getElementById(CrashID);
                   isnot(link, null, "crash report link changed correctly");
                   if (link)
                     is(link.href, CrashURL, "crash report link points to correct href");
-                  cleanup_and_finish();
-                });
+                }).then(cleanup_and_finish);
   }
 
   // try submitting the pending report
@@ -111,8 +117,11 @@ function check_submit_pending(tab, crashes) {
       break;
     }
   }
-  EventUtils.sendMouseEvent({type:'click'}, SubmittedCrash.id,
-                            browser.contentWindow);
+
+  ContentTask.spawn(browser, SubmittedCrash.id, function(id) {
+    let link = content.document.getElementById(id);
+    link.click();
+  });
 }
 
 function test() {
@@ -136,14 +145,8 @@ function test() {
   Services.prefs.setCharPref("breakpad.reportURL",
                              "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs?id=");
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  let browser = gBrowser.getBrowserForTab(tab);
-  browser.addEventListener("load", function test_load() {
-                             browser.removeEventListener("load", test_load, true);
-                             executeSoon(function () {
-                                           check_crash_list(tab, crashes);
-                                           check_submit_pending(tab, crashes);
-                                         });
-                          }, true);
-  browser.loadURI("about:crashes", null, null);
+  BrowserTestUtils.openNewForegroundTab(gBrowser, "about:crashes").then((tab) => {
+    ContentTask.spawn(tab.linkedBrowser, crashes, check_crash_list)
+               .then(() => check_submit_pending(tab, crashes));
+  });
 }

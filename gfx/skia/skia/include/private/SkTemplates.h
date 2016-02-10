@@ -14,7 +14,6 @@
 #include "SkTLogic.h"
 #include "SkTypes.h"
 #include "SkUniquePtr.h"
-#include "SkUtility.h"
 #include <limits.h>
 #include <new>
 
@@ -43,7 +42,7 @@ template <typename D, typename S> static D* SkTAfter(S* ptr, size_t count = 1) {
 template <typename D, typename S> static D* SkTAddOffset(S* ptr, size_t byteOffset) {
     // The intermediate char* has the same cv-ness as D as this produces better error messages.
     // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
-    return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
+    return reinterpret_cast<D*>((char*)(ptr) + byteOffset);
 }
 
 template <typename R, typename T, R (*P)(T*)> struct SkFunctionWrapper {
@@ -272,9 +271,10 @@ public:
     }
 
     /** Resize the memory area pointed to by the current ptr without preserving contents. */
-    void reset(size_t count) {
+    T* reset(size_t count) {
         sk_free(fPtr);
         fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW);
+        return fPtr;
     }
 
     T* get() const { return fPtr; }
@@ -293,6 +293,13 @@ public:
 
     const T& operator[](int index) const {
         return fPtr[index];
+    }
+
+    /**
+     *  Releases the block back to the heap
+     */
+    void free() {
+        this->reset(0);
     }
 
     /**
