@@ -1045,9 +1045,6 @@ private:
   virtual bool
   DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) override;
 
-  virtual bool
-  RecvFlushPendingFileDeletions() override;
-
   virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;
   virtual bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor) override;
 
