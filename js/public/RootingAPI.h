@@ -1048,9 +1048,10 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
     }
 
   private:
-    void set(T value) {
+    template <typename U>
+    void set(U&& value) {
         MOZ_ASSERT(initialized());
-        ptr = value;
+        ptr = mozilla::Forward<U>(value);
     }
 
     // See the comment above Rooted::ptr.
