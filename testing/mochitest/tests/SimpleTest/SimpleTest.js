@@ -1055,6 +1055,9 @@ SimpleTest.finish = function() {
                                + "SimpleTest.waitForExplicitFinish() if you need "
                                + "it.)");
         }
+        if (SpecialPowers.isServiceWorkerRegistered()) {
+            SimpleTest.ok(false, "This test left a service worker registered without cleaning it up");
+        }
 
         if (parentRunner) {
             /* We're running in an iframe, and the parent has a TestRunner */
