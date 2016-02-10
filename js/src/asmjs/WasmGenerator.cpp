@@ -173,13 +173,20 @@ ModuleGenerator::finishOutstandingTask()
     return finishTask(task);
 }
 
-static const uint32_t BadEntry = UINT32_MAX;
+static const uint32_t BadCodeRange = UINT32_MAX;
 
 bool
 ModuleGenerator::funcIsDefined(uint32_t funcIndex) const
 {
-    return funcIndex < funcEntryOffsets_.length() &&
-           funcEntryOffsets_[funcIndex] != BadEntry;
+    return funcIndex < funcIndexToCodeRange_.length() &&
+           funcIndexToCodeRange_[funcIndex] != BadCodeRange;
+}
+
+uint32_t
+ModuleGenerator::funcEntry(uint32_t funcIndex) const
+{
+    MOZ_ASSERT(funcIsDefined(funcIndex));
+    return module_->codeRanges[funcIndexToCodeRange_[funcIndex]].funcNonProfilingEntry();
 }
 
 bool
@@ -193,24 +200,25 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     uint32_t offsetInWhole = masm_.size();
     results.offsets().offsetBy(offsetInWhole);
 
-    // Record the non-profiling entry for whole-module linking later.
-    // Cannot simply append because funcIndex order is nonlinear.
-    if (func.index() >= funcEntryOffsets_.length()) {
-        if (!funcEntryOffsets_.appendN(BadEntry, func.index() - funcEntryOffsets_.length() + 1))
+    // Add the CodeRange for this function.
+    uint32_t funcCodeRangeIndex = module_->codeRanges.length();
+    if (!module_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), results.offsets()))
+        return false;
+
+    // Maintain a mapping from function index to CodeRange index.
+    if (func.index() >= funcIndexToCodeRange_.length()) {
+        uint32_t n = func.index() - funcIndexToCodeRange_.length() + 1;
+        if (!funcIndexToCodeRange_.appendN(BadCodeRange, n))
             return false;
     }
     MOZ_ASSERT(!funcIsDefined(func.index()));
-    funcEntryOffsets_[func.index()] = results.offsets().nonProfilingEntry;
+    funcIndexToCodeRange_[func.index()] = funcCodeRangeIndex;
 
     // Merge the compiled results into the whole-module masm.
     DebugOnly<size_t> sizeBefore = masm_.size();
     if (!masm_.asmMergeWith(results.masm()))
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
-
-    // Add the CodeRange for this function.
-    if (!module_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), results.offsets()))
-        return false;
 
     // Keep a record of slow functions for printing in the final console message.
     unsigned totalTime = func.generateTime() + results.compileTime();
@@ -412,9 +420,7 @@ ModuleGenerator::exportFuncIndex(uint32_t index) const
 uint32_t
 ModuleGenerator::exportEntryOffset(uint32_t index) const
 {
-    uint32_t funcIndex = exportMap_->exportFuncIndices[index];
-    MOZ_ASSERT(funcIsDefined(funcIndex));
-    return funcEntryOffsets_[funcIndex];
+    return funcEntry(exportMap_->exportFuncIndices[index]);
 }
 
 const Sig&
@@ -561,7 +567,7 @@ ModuleGenerator::finishFuncDefs()
             return false;
     }
 
-    for (uint32_t funcIndex = 0; funcIndex < funcEntryOffsets_.length(); funcIndex++)
+    for (uint32_t funcIndex = 0; funcIndex < funcIndexToCodeRange_.length(); funcIndex++)
         MOZ_ASSERT(funcIsDefined(funcIndex));
 
     // During codegen, all wasm->wasm (internal) calls use AsmJSInternalCallee
@@ -575,7 +581,7 @@ ModuleGenerator::finishFuncDefs()
             continue;
         MOZ_ASSERT(cs.kind() == CallSiteDesc::Relative);
         uint32_t callerOffset = cs.returnAddressOffset();
-        uint32_t calleeOffset = funcEntryOffsets_[cs.targetIndex()];
+        uint32_t calleeOffset = funcEntry(cs.targetIndex());
         masm_.patchCall(callerOffset, calleeOffset);
     }
 
@@ -628,7 +634,7 @@ ModuleGenerator::defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elem
     for (size_t i = 0; i < elemFuncIndices.length(); i++) {
         uint32_t funcIndex = elemFuncIndices[i];
         MOZ_ASSERT(funcIsDefined(funcIndex));
-        table.elemOffsets[i] = funcEntryOffsets_[funcIndex];
+        table.elemOffsets[i] = funcEntry(funcIndex);
     }
 }
 
