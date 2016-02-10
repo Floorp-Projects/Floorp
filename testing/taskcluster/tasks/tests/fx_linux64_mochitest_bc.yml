@@ -6,7 +6,7 @@ task:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   metadata:
-    name: '[TC] Linux64 mochitest-browser-chrome M(bc{{chunk}})'
+    name: '[TC] Linux64 mochitest-browser-chrome'
     description: Mochitest browser-chrome run {{chunk}}
   payload:
     capabilities:
