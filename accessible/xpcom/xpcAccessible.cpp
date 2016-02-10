@@ -232,11 +232,16 @@ xpcAccessible::GetName(nsAString& aName)
 {
   aName.Truncate();
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   nsAutoString name;
-  Intl()->Name(name);
+  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+    proxy->Name(name);
+  } else {
+    Intl()->Name(name);
+  }
+
   aName.Assign(name);
 
   return NS_OK;
