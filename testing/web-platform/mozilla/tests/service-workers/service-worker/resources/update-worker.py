@@ -40,6 +40,7 @@ def main(request, response):
         extra_body = "addEventListener('install', function(e) { throw new Error('boom'); });"
 
     headers.append(('Content-Type', content_type))
-    # Return a different script for each access.
-    return headers, '/* %s */ %s' % (time.time(), extra_body)
+    # Return a different script for each access.  Use .time() and .clock() for
+    # best time resolution across different platforms.
+    return headers, '/* %s %s */ %s' % (time.time(), time.clock(), extra_body)
 
