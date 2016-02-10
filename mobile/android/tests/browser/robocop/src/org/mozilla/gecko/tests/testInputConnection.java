@@ -194,6 +194,25 @@ public class testInputConnection extends UITest {
             ic.deleteSurroundingText(4, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
+            // Bug 1241558 - wrong selection due to ignoring selection notification.
+            ic.setComposingText("foobar", 1);
+            assertTextAndSelectionAt("Can set the composing text", ic, "foobar", 6);
+            js.asyncCall("test_set_selection");
+            // Wait for text change notifications to come in.
+            processGeckoEvents(ic);
+            assertTextAndSelectionAt("Can select after committing", ic, "foobar", 3);
+            ic.setComposingText("barfoo", 1);
+            assertTextAndSelectionAt("Can compose after selecting", ic, "barfoo", 6);
+            ic.beginBatchEdit();
+            ic.setSelection(3, 3);
+            ic.finishComposingText();
+            ic.deleteSurroundingText(1, 1);
+            ic.endBatchEdit();
+            assertTextAndSelectionAt("Can delete after committing", ic, "baoo", 2);
+
+            ic.deleteSurroundingText(2, 2);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents(ic);
             processInputConnectionEvents();
