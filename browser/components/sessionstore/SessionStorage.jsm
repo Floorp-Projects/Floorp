@@ -151,8 +151,10 @@ var SessionStorageInternal = {
     try {
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);
       storage = storageManager.getStorage(window, aPrincipal);
+      storage.length; // XXX: Bug 1232955 - storage.length can throw, catch that failure
     } catch (e) {
       // sessionStorage might throw if it's turned off, see bug 458954
+      storage = null;
     }
 
     if (storage && storage.length) {
