@@ -12,7 +12,7 @@ import urllib2
 
 from manifestparser import ManifestParser
 import mozfile
-from wptserve.server import WebTestHttpd
+import mozhttpd
 import mozlog.unstructured as mozlog
 import mozprofile
 
@@ -63,7 +63,7 @@ class TestAddonsManager(unittest.TestCase):
         self.am.clean()
 
     def test_download(self):
-        server = WebTestHttpd(doc_root=os.path.join(here, 'addons'))
+        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
         server.start()
 
         # Download a valid add-on without a class instance to the general
@@ -173,7 +173,7 @@ class TestAddonsManager(unittest.TestCase):
         self.am.clean()
 
     def test_install_from_path_url(self):
-        server = WebTestHttpd(doc_root=os.path.join(here, 'addons'))
+        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
         server.start()
 
         addon = server.get_url() + 'empty.xpi'
@@ -345,7 +345,7 @@ class TestAddonsManager(unittest.TestCase):
     def test_noclean(self):
         """test `restore=True/False` functionality"""
 
-        server = WebTestHttpd(doc_root=os.path.join(here, 'addons'))
+        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
         server.start()
 
         profile = tempfile.mkdtemp()
