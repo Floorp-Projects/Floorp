@@ -904,16 +904,8 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasDomain;
 
   /**
-   * Controls the interpretation of 'uri'. When unset (default), the URI will
-   * request an exact match of the specified URI. When set, any history entry
-   * beginning in 'uri' will match. For example "http://bar.com/foo" will match
-   * "http://bar.com/foo" as well as "http://bar.com/foo/baz.gif".
-   */
-  attribute boolean uriIsPrefix;
-
-  /**
    * This is a URI to match, to, for example, find out every time you visited
-   * a given URI. Use uriIsPrefix to control whether this is an exact match.
+   * a given URI. This is an exact match.
    */
   attribute nsIURI uri;
   readonly attribute boolean hasUri;

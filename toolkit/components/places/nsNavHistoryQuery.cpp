@@ -126,7 +126,6 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_NOTANNOTATION "!annotation"
 #define QUERYKEY_ANNOTATION "annotation"
 #define QUERYKEY_URI "uri"
-#define QUERYKEY_URIISPREFIX "uriIsPrefix"
 #define QUERYKEY_SEPARATOR "OR"
 #define QUERYKEY_GROUP "group"
 #define QUERYKEY_SORT "sort"
@@ -426,9 +425,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     // uri
     query->GetHasUri(&hasIt);
     if (hasIt) {
-      AppendBoolKeyValueIfTrue(aQueryString,
-                               NS_LITERAL_CSTRING(QUERYKEY_URIISPREFIX),
-                               query, &nsINavHistoryQuery::GetUriIsPrefix);
       nsCOMPtr<nsIURI> uri;
       query->GetUri(getter_AddRefs(uri));
       NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE); // hasURI should tell is if invalid
@@ -725,10 +721,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       rv = query->SetUri(uri);
       NS_ENSURE_SUCCESS(rv, rv);
 
-    // URI is prefix
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_URIISPREFIX)) {
-      SetQueryKeyBool(kvp.value, query, &nsINavHistoryQuery::SetUriIsPrefix);
-
     // not annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
       nsAutoCString unescaped(kvp.value);
@@ -901,7 +893,7 @@ nsNavHistoryQuery::nsNavHistoryQuery()
     mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
     mOnlyBookmarked(false),
-    mDomainIsHost(false), mUriIsPrefix(false),
+    mDomainIsHost(false),
     mAnnotationIsNot(false),
     mTagsAreNot(false)
 {
@@ -916,7 +908,7 @@ nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
     mEndTime(aOther.mEndTime), mEndTimeReference(aOther.mEndTimeReference),
     mSearchTerms(aOther.mSearchTerms), mOnlyBookmarked(aOther.mOnlyBookmarked),
     mDomainIsHost(aOther.mDomainIsHost), mDomain(aOther.mDomain),
-    mUriIsPrefix(aOther.mUriIsPrefix), mUri(aOther.mUri),
+    mUri(aOther.mUri),
     mAnnotationIsNot(aOther.mAnnotationIsNot),
     mAnnotation(aOther.mAnnotation), mTags(aOther.mTags),
     mTagsAreNot(aOther.mTagsAreNot), mTransitions(aOther.mTransitions)
@@ -1070,17 +1062,6 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(bool* _retval)
 {
   // note that empty but not void is still a valid query (local files)
   *_retval = (! mDomain.IsVoid());
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsNavHistoryQuery::GetUriIsPrefix(bool* aIsPrefix)
-{
-  *aIsPrefix = mUriIsPrefix;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryQuery::SetUriIsPrefix(bool aIsPrefix)
-{
-  mUriIsPrefix = aIsPrefix;
   return NS_OK;
 }
 
