@@ -836,7 +836,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       ResolveShortcut( file, url );
       if ( !url.IsEmpty() ) {
         // convert it to unicode and pass it out
-        nsDependentString urlString(UTF8ToNewUnicode(url));
+        NS_ConvertUTF8toUTF16 urlString(url);
         // the internal mozilla URL format, text/x-moz-url, contains
         // URL\ntitle.  We can guess the title from the file's name.
         nsAutoString title;
