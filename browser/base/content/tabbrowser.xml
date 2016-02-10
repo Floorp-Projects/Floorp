@@ -747,6 +747,8 @@
               let topLevel = aWebProgress.isTopLevel;
 
               if (topLevel) {
+                let isSameDocument =
+                  !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
                 // If userTypedClear > 0, the document loaded correctly and we should be
                 // clearing the user typed value. We also need to clear the typed value
                 // if the document failed to load, to make sure the urlbar reflects the
@@ -758,14 +760,12 @@
                 if (this.mBrowser.userTypedClear > 0 ||
                     ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
                      aLocation.spec != "about:blank") ||
-                     aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+                     isSameDocument) {
                   this.mBrowser.userTypedValue = null;
                 }
 
                 // If the browser was playing audio, we should remove the playing state.
-                if (this.mTab.hasAttribute("soundplaying") &&
-                    (!this.mBrowser.lastURI ||
-                     this.mBrowser.lastURI.spec != aLocation.spec)) {
+                if (this.mTab.hasAttribute("soundplaying") && !isSameDocument) {
                   this.mTab.removeAttribute("soundplaying");
                   this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
                 }
@@ -788,9 +788,9 @@
                 }
 
                 // Don't clear the favicon if this onLocationChange was
-                // triggered by a pushState or a replaceState.  See bug 550565.
-                if (aWebProgress.isLoadingDocument &&
-                    !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)) {
+                // triggered by a pushState or a replaceState (bug 550565) or
+                // a hash change (bug 408415).
+                if (aWebProgress.isLoadingDocument && !isSameDocument) {
                   this.mBrowser.mIconURL = null;
                 }
 
