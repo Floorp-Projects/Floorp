@@ -53,7 +53,7 @@ public:
 
   KeyType GetKey() const
   {
-    return GetEffectiveTLDName(mData->strtab_index);
+    return GetEffectiveTLDName(mData.strtab_index);
   }
 
   bool KeyEquals(KeyTypePointer aKey) const
@@ -75,11 +75,11 @@ public:
 
   enum { ALLOW_MEMMOVE = true };
 
-  void SetData(const ETLDEntry* entry) { mData = entry; }
+  void SetData(ETLDEntry entry) { mData = entry; }
 
-  bool IsNormal() { return mData->wild || !mData->exception; }
-  bool IsException() { return mData->exception; }
-  bool IsWild() { return mData->wild; }
+  bool IsNormal() { return mData.wild || !mData.exception; }
+  bool IsException() { return mData.exception; }
+  bool IsWild() { return mData.wild; }
 
   static const char *GetEffectiveTLDName(size_t idx)
   {
@@ -87,7 +87,7 @@ public:
   }
 
 private:
-  const ETLDEntry* mData;
+  ETLDEntry mData;
 #define ETLD_STR_NUM_1(line) str##line
 #define ETLD_STR_NUM(line) ETLD_STR_NUM_1(line)
   struct etld_string_list {

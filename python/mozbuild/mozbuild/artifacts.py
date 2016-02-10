@@ -42,6 +42,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import collections
 import functools
+import glob
 import hashlib
 import logging
 import operator
@@ -261,10 +262,10 @@ class MacArtifactJob(ArtifactJob):
             #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 261, in _install_dmg
             #     subprocess.call('hdiutil detach %s -quiet' % appDir,
 
-            # TODO: Extract the bundle name from the archive (it may differ
-            # from MOZ_MACBUNDLE_NAME).
-            bundle_name = 'Nightly.app'
-            source = mozpath.join(tempdir, bundle_name)
+            bundle_dirs = glob.glob(mozpath.join(tempdir, '*.app'))
+            if len(bundle_dirs) != 1:
+                raise ValueError('Expected one source bundle, found: {}'.format(bundle_dirs))
+            [source] = bundle_dirs
 
             # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
             paths_no_keep_path = ('Contents/MacOS', [

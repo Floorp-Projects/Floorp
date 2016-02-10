@@ -5,35 +5,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/browser_frame_elements.html";
-var gWindow;
 
-function test() {
-  waitForExplicitFinish();
-
-  var tab = gBrowser.addTab(TEST_URI);
-  gBrowser.selectedTab = tab;
-  var browser = gBrowser.selectedBrowser;
-
-  registerCleanupFunction(function () {
-    gBrowser.removeTab(tab);
-    gWindow = null;
-  });
-
-  browser.addEventListener("DOMContentLoaded", function onLoad(event) {
-    browser.removeEventListener("DOMContentLoaded", onLoad, false);
-    executeSoon(function test_executeSoon() {
-      gWindow = browser.contentWindow;
-      startTests();
-    });
-  }, false);
+function getWindowUtils(window) {
+  return window.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
 
+add_task(function* test() {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URI }, function* (browser) {
+    if (!browser.isRemoteBrowser) {
+      // Non-e10s, access contentWindow and confirm its container is the browser:
+      let windowUtils = getWindowUtils(browser.contentWindow);
+      is (windowUtils.containerElement, browser,
+          "Container element for main window is xul:browser");
+
+    }
+
+    yield ContentTask.spawn(browser, null, startTests);
+    yield Task.spawn(mozBrowserTests(browser));
+  });
+});
+
 function startTests() {
+  function getWindowUtils(window) {
+    return window.
+      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+      getInterface(Components.interfaces.nsIDOMWindowUtils);
+  }
   info("Frame tests started");
 
   info("Checking top window");
-  let windowUtils = getWindowUtils(gWindow);
-  is (windowUtils.containerElement, gBrowser.selectedBrowser, "Container element for main window is xul:browser");
+  let gWindow = content;
   is (gWindow.top, gWindow, "gWindow is top");
   is (gWindow.parent, gWindow, "gWindow is parent");
 
@@ -60,28 +63,25 @@ function startTests() {
   is (objectDataUrlUtils.containerElement, objectDataUrl, "Container element for object window is the object");
   is (objectDataUrl.contentWindow.top, gWindow, "gWindow is top");
   is (objectDataUrl.contentWindow.parent, gWindow, "gWindow is parent");
+}
 
+function* mozBrowserTests(browser) {
   info("Granting special powers for mozbrowser");
-  SpecialPowers.addPermission("browser", true, gWindow.document);
+  SpecialPowers.addPermission("browser", true, TEST_URI);
   SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
 
-  info("Checking mozbrowser iframe");
-  let mozBrowserFrame = gWindow.document.createElement("iframe");
-  mozBrowserFrame.setAttribute("mozbrowser", "");
-  gWindow.document.body.appendChild(mozBrowserFrame);
-  is (mozBrowserFrame.contentWindow.top, mozBrowserFrame.contentWindow, "Mozbrowser top == iframe window");
-  is (mozBrowserFrame.contentWindow.parent, mozBrowserFrame.contentWindow, "Mozbrowser parent == iframe window");
+  yield ContentTask.spawn(browser, null, function() {
+    info("Checking mozbrowser iframe");
+    let mozBrowserFrame = content.document.createElement("iframe");
+    mozBrowserFrame.setAttribute("mozbrowser", "");
+    content.document.body.appendChild(mozBrowserFrame);
+    is (mozBrowserFrame.contentWindow.top, mozBrowserFrame.contentWindow,
+        "Mozbrowser top == iframe window");
+    is (mozBrowserFrame.contentWindow.parent, mozBrowserFrame.contentWindow,
+        "Mozbrowser parent == iframe window");
+  });
 
   info("Revoking special powers for mozbrowser");
   SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled')
-  SpecialPowers.removePermission("browser", gWindow.document);
-
-  finish();
-}
-
-function getWindowUtils(window)
-{
-  return window.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils);
+  SpecialPowers.removePermission("browser", TEST_URI);
 }

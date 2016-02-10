@@ -9,6 +9,7 @@
 #include "SkBitmapCache.h"
 #include "SkCanvas.h"
 #include "SkData.h"
+#include "SkImageEncoder.h"
 #include "SkImageGenerator.h"
 #include "SkImagePriv.h"
 #include "SkImageShader.h"
@@ -88,80 +89,6 @@ void SkImage::preroll(GrContext* ctx) const {
     }
 }
 
-SkImage* SkImage::applyFilter(SkImageFilter* filter, SkIPoint* offset,
-                              bool forceResultToOriginalSize) const {
-    if (!filter) {
-        return nullptr;
-    }
-
-    SkIPoint offsetStorage;
-    if (!offset) {
-        offset = &offsetStorage;
-    }
-    return as_IB(this)->onApplyFilter(filter, offset, forceResultToOriginalSize);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#include "SkImageFilter.h"
-#include "SkBitmapDevice.h"
-
-static SkIRect compute_fast_ibounds(SkImageFilter* filter, const SkIRect& srcBounds) {
-    SkRect fastBounds;
-    fastBounds.set(srcBounds);
-    filter->computeFastBounds(fastBounds, &fastBounds);
-    return fastBounds.roundOut();
-}
-
-class SkRasterImageFilterProxy : public SkImageFilter::Proxy {
-public:
-    SkBaseDevice* createDevice(int width, int height) override {
-        return SkBitmapDevice::Create(SkImageInfo::MakeN32Premul(width, height));
-    }
-
-    bool filterImage(const SkImageFilter*, const SkBitmap&, const SkImageFilter::Context&,
-                     SkBitmap*, SkIPoint*) override {
-        return false;
-    }
-};
-
-SkImage* SkImage_Base::onApplyFilter(SkImageFilter* filter, SkIPoint* offsetResult,
-                                     bool forceResultToOriginalSize) const {
-    SkBitmap src;
-    if (!this->getROPixels(&src)) {
-        return nullptr;
-    }
-
-    const SkIRect srcBounds = SkIRect::MakeWH(this->width(), this->height());
-
-    if (forceResultToOriginalSize) {
-        const SkIRect clipBounds = srcBounds;
-        SkRasterImageFilterProxy proxy;
-        SkImageFilter::Context ctx(SkMatrix::I(), clipBounds, SkImageFilter::Cache::Get(),
-                                   SkImageFilter::kExact_SizeConstraint);
-
-        SkBitmap dst;
-        if (filter->filterImage(&proxy, src, ctx, &dst, offsetResult)) {
-            dst.setImmutable();
-            return SkImage::NewFromBitmap(dst);
-        }
-    } else {
-        const SkIRect dstR = compute_fast_ibounds(filter, srcBounds);
-
-        SkImageInfo info = SkImageInfo::MakeN32Premul(dstR.width(), dstR.height());
-        SkAutoTUnref<SkSurface> surface(this->onNewSurface(info));
-
-        SkPaint paint;
-        paint.setImageFilter(filter);
-        surface->getCanvas()->drawImage(this, SkIntToScalar(-dstR.x()), SkIntToScalar(-dstR.y()),
-                                        &paint);
-
-        offsetResult->set(dstR.x(), dstR.y());
-        return surface->newImageSnapshot();
-    }
-    return nullptr;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 SkShader* SkImage::newShader(SkShader::TileMode tileX,
@@ -178,25 +105,14 @@ SkData* SkImage::encode(SkImageEncoder::Type type, int quality) const {
     return nullptr;
 }
 
-namespace {
-
-class DefaultSerializer :  public SkPixelSerializer {
-protected:
-    bool onUseEncodedData(const void *data, size_t len) override {
-        return true;
-    }
-
-    SkData* onEncodePixels(const SkImageInfo& info, const void* pixels, size_t rowBytes) override {
-        return SkImageEncoder::EncodeData(info, pixels, rowBytes, SkImageEncoder::kPNG_Type, 100);
-    }
-};
-
-} // anonymous namespace
-
 SkData* SkImage::encode(SkPixelSerializer* serializer) const {
-    DefaultSerializer defaultSerializer;
-    SkPixelSerializer* effectiveSerializer = serializer ? serializer : &defaultSerializer;
-
+    SkAutoTUnref<SkPixelSerializer> defaultSerializer;
+    SkPixelSerializer* effectiveSerializer = serializer;
+    if (!effectiveSerializer) {
+        defaultSerializer.reset(SkImageEncoder::CreatePixelSerializer());
+        SkASSERT(defaultSerializer.get());
+        effectiveSerializer = defaultSerializer.get();
+    }
     SkAutoTUnref<SkData> encoded(this->refEncoded());
     if (encoded && effectiveSerializer->useEncodedData(encoded->data(), encoded->size())) {
         return encoded.detach();
@@ -205,15 +121,15 @@ SkData* SkImage::encode(SkPixelSerializer* serializer) const {
     SkBitmap bm;
     SkAutoPixmapUnlock apu;
     if (as_IB(this)->getROPixels(&bm) && bm.requestLock(&apu)) {
-        const SkPixmap& pmap = apu.pixmap();
-        return effectiveSerializer->encodePixels(pmap.info(), pmap.addr(), pmap.rowBytes());
+        return effectiveSerializer->encode(apu.pixmap());
     }
 
     return nullptr;
 }
 
 SkData* SkImage::refEncoded() const {
-    return as_IB(this)->onRefEncoded();
+    GrContext* ctx = nullptr;   // should we allow the caller to pass in a ctx?
+    return as_IB(this)->onRefEncoded(ctx);
 }
 
 SkImage* SkImage::NewFromEncoded(SkData* encoded, const SkIRect* subset) {

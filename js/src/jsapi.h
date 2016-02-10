@@ -687,6 +687,10 @@ struct JSWrapObjectCallbacks
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp* fop, JSCompartment* compartment);
 
+typedef size_t
+(* JSSizeOfIncludingThisCompartmentCallback)(mozilla::MallocSizeOf mallocSizeOf,
+                                             JSCompartment* compartment);
+
 typedef void
 (* JSZoneCallback)(JS::Zone* zone);
 
@@ -1314,6 +1318,10 @@ JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API(void)
 JS_SetDestroyCompartmentCallback(JSRuntime* rt, JSDestroyCompartmentCallback callback);
+
+extern JS_PUBLIC_API(void)
+JS_SetSizeOfIncludingThisCompartmentCallback(JSRuntime* rt,
+                                             JSSizeOfIncludingThisCompartmentCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_SetDestroyZoneCallback(JSRuntime* rt, JSZoneCallback callback);

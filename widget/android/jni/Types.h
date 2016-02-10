@@ -27,7 +27,7 @@ template<typename T> struct TypeAdapter;
 
 // TypeAdapter<LocalRef<Cls>> applies when jobject is a return value.
 template<class Cls> struct TypeAdapter<LocalRef<Cls>> {
-    typedef decltype(Ref<Cls>(nullptr).Get()) JNIType;
+    using JNIType = typename Cls::Ref::JNIType;
 
     static constexpr auto Call = &JNIEnv::CallObjectMethodA;
     static constexpr auto StaticCall = &JNIEnv::CallStaticObjectMethodA;
@@ -37,7 +37,7 @@ template<class Cls> struct TypeAdapter<LocalRef<Cls>> {
     // Declare instance as jobject because JNI methods return
     // jobject even if the return value is really jstring, etc.
     static LocalRef<Cls> ToNative(JNIEnv* env, jobject instance) {
-        return LocalRef<Cls>::Adopt(env, instance);
+        return LocalRef<Cls>::Adopt(env, JNIType(instance));
     }
 
     static JNIType FromNative(JNIEnv*, LocalRef<Cls>&& instance) {
@@ -64,29 +64,29 @@ template<class Cls> constexpr jobject
 
 
 // TypeAdapter<Ref<Cls>> applies when jobject is a parameter value.
-template<class Cls> struct TypeAdapter<Ref<Cls>> {
-    typedef decltype(Ref<Cls>(nullptr).Get()) JNIType;
+template<class Cls, typename T> struct TypeAdapter<Ref<Cls, T>> {
+    using JNIType = typename Ref<Cls, T>::JNIType;
 
     static constexpr auto Set = &JNIEnv::SetObjectField;
     static constexpr auto StaticSet = &JNIEnv::SetStaticObjectField;
 
-    static Ref<Cls> ToNative(JNIEnv* env, JNIType instance) {
-        return Ref<Cls>::From(instance);
+    static DependentRef<Cls> ToNative(JNIEnv* env, JNIType instance) {
+        return DependentRef<Cls>(instance);
     }
 
-    static JNIType FromNative(JNIEnv*, const Ref<Cls>& instance) {
+    static JNIType FromNative(JNIEnv*, const Ref<Cls, T>& instance) {
         return instance.Get();
     }
 };
 
-template<class Cls> constexpr void
-    (JNIEnv::*TypeAdapter<Ref<Cls>>::Set)(jobject, jfieldID, jobject);
-template<class Cls> constexpr void
-    (JNIEnv::*TypeAdapter<Ref<Cls>>::StaticSet)(jclass, jfieldID, jobject);
+template<class Cls, typename T> constexpr void
+    (JNIEnv::*TypeAdapter<Ref<Cls, T>>::Set)(jobject, jfieldID, jobject);
+template<class Cls, typename T> constexpr void
+    (JNIEnv::*TypeAdapter<Ref<Cls, T>>::StaticSet)(jclass, jfieldID, jobject);
 
 
 // jstring has its own Param type.
-template<> struct TypeAdapter<Param<String>>
+template<> struct TypeAdapter<StringParam>
         : public TypeAdapter<String::Ref>
 {};
 
@@ -98,7 +98,7 @@ template<class Cls> struct TypeAdapter<const Cls&>
 #define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName) \
     \
     template<> struct TypeAdapter<NativeType> { \
-        typedef JNIType JNI##Type; \
+        using JNI##Type = JNIType; \
     \
         static constexpr auto Call = &JNIEnv::Call ## JNIName ## MethodA; \
         static constexpr auto StaticCall = &JNIEnv::CallStatic ## JNIName ## MethodA; \

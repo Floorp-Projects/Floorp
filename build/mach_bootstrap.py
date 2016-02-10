@@ -39,6 +39,9 @@ Please run `{mach} mercurial-setup` now.
 
 Note: `{mach} mercurial-setup` does not make any changes without prompting
 you first.
+
+You can disable this check by setting NO_MERCURIAL_SETUP_CHECK=1 in your
+environment.
 '''.strip()
 
 MERCURIAL_SETUP_FATAL_INTERVAL = 31 * 24 * 60 * 60
@@ -236,8 +239,10 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
             return
 
-        # We are a curmudgeon who has found this undocumented variable.
+        # User has disabled first run check.
         if 'I_PREFER_A_SUBOPTIMAL_MERCURIAL_EXPERIENCE' in os.environ:
+            return
+        if 'NO_MERCURIAL_SETUP_CHECK' in os.environ:
             return
 
         # The environment is likely a machine invocation.

@@ -59,9 +59,6 @@ public:
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                JS::AutoIdVector &props) const override;
 
-  virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                         JS::MutableHandle<JSObject*> objp) const override;
-
   // We override getOwnEnumerablePropertyKeys() and implement it directly
   // instead of using the default implementation, which would call
   // ownPropertyKeys and then filter out the non-enumerable ones. This avoids

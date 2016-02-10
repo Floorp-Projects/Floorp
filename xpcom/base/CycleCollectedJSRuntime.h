@@ -210,6 +210,9 @@ private:
   static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
+  static bool EnqueuePromiseJobCallback(JSContext* aCx,
+                                        JS::HandleObject aJob,
+                                        void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);

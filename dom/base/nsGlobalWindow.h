@@ -504,8 +504,6 @@ public:
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(uint32_t aIndex);
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
 
-  void GetSupportedNames(nsTArray<nsString>& aNames);
-
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
   static bool IsShowModalDialogEnabled(JSContext* /* unused */ = nullptr,
@@ -1604,9 +1602,11 @@ protected:
                     const RefPtr<mozilla::dom::StorageEvent>& aEvent,
                     mozilla::ErrorResult& aRv);
 
+public:
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
 
+protected:
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyleHelperOuter(mozilla::dom::Element& aElt,

@@ -176,7 +176,7 @@ public:
             return;
         }
 
-        nsCOMPtr<nsIURI> uri = ResolveURI(nsCString(uriStr));
+        nsCOMPtr<nsIURI> uri = ResolveURI(uriStr->ToCString());
         if (!uri) {
             return;
         }

@@ -2991,6 +2991,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if self.descriptor.name == "Promise":
             speciesSetup = CGGeneric(fill(
                 """
+                #ifndef SPIDERMONKEY_PROMISE
                 JS::Rooted<JSObject*> promiseConstructor(aCx, *interfaceCache);
                 JS::Rooted<jsid> species(aCx,
                   SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::species)));
@@ -2998,6 +2999,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                            JSPROP_SHARED, Promise::PromiseSpecies, nullptr)) {
                   $*{failureCode}
                 }
+                #endif // SPIDERMONKEY_PROMISE
                 """,
                 failureCode=failureCode))
         else:
@@ -5189,7 +5191,26 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   if (promiseGlobal.Failed()) {
                     $*{exceptionCode}
                   }
+
+                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
+                  if (!JS_WrapValue(cx, &valueToResolve)) {
+                    $*{exceptionCode}
+                  }
                   ErrorResult promiseRv;
+                #ifdef SPIDERMONKEY_PROMISE
+                  nsCOMPtr<nsIGlobalObject> global =
+                    do_QueryInterface(promiseGlobal.GetAsSupports());
+                  if (!global) {
+                    promiseRv.Throw(NS_ERROR_UNEXPECTED);
+                    promiseRv.MaybeSetPendingException(cx);
+                    $*{exceptionCode}
+                  }
+                  $${declName} = Promise::Resolve(global, cx, valueToResolve,
+                                                  promiseRv);
+                  if (promiseRv.MaybeSetPendingException(cx)) {
+                    $*{exceptionCode}
+                  }
+                #else
                   JS::Handle<JSObject*> promiseCtor =
                     PromiseBinding::GetConstructorObjectHandle(cx, globalObj);
                   if (!promiseCtor) {
@@ -5197,10 +5218,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   }
                   JS::Rooted<JS::Value> resolveThisv(cx, JS::ObjectValue(*promiseCtor));
                   JS::Rooted<JS::Value> resolveResult(cx);
-                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
-                  if (!JS_WrapValue(cx, &valueToResolve)) {
-                    $*{exceptionCode}
-                  }
                   Promise::Resolve(promiseGlobal, resolveThisv, valueToResolve,
                                    &resolveResult, promiseRv);
                   if (promiseRv.MaybeSetPendingException(cx)) {
@@ -5212,6 +5229,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     promiseRv.MaybeSetPendingException(cx);
                     $*{exceptionCode}
                   }
+                #endif // SPIDERMONKEY_PROMISE
                 }
                 """,
                 getPromiseGlobal=getPromiseGlobal,
@@ -6332,7 +6350,13 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 wrapMethod = "GetOrCreateDOMReflector"
                 wrapArgs = "cx, %s, ${jsvalHandle}" % result
             else:
-                if not returnsNewObject:
+                # Hack: the "Promise" interface is OK to return from
+                # non-newobject things even when it's not wrappercached; that
+                # happens when using SpiderMonkey promises, and the WrapObject()
+                # method will just return the existing reflector, which is just
+                # not stored in a wrappercache.
+                if (not returnsNewObject and
+                    descriptor.interface.identifier.name != "Promise"):
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
                 wrapMethod = "WrapNewBindingNonWrapperCachedObject"
                 wrapArgs = "cx, ${obj}, %s, ${jsvalHandle}" % result

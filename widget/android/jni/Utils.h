@@ -66,6 +66,8 @@ uintptr_t GetNativeHandle(JNIEnv* env, jobject instance);
 
 void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle);
 
+jclass GetClassGlobalRef(JNIEnv* aEnv, const char* aClassName);
+
 } // jni
 } // mozilla
 

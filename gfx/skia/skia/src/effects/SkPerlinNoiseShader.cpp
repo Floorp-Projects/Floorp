@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "SkDither.h"
 #include "SkPerlinNoiseShader.h"
 #include "SkColorFilter.h"
 #include "SkReadBuffer.h"
@@ -22,8 +21,8 @@
 #include "effects/GrConstColorProcessor.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramBuilder.h"
 #include "glsl/GrGLSLProgramDataManager.h"
+#include "glsl/GrGLSLUniformHandler.h"
 #endif
 
 static const int kBlockSize = 256;
@@ -467,19 +466,6 @@ void SkPerlinNoiseShader::PerlinNoiseShaderContext::shadeSpan(
     }
 }
 
-void SkPerlinNoiseShader::PerlinNoiseShaderContext::shadeSpan16(
-        int x, int y, uint16_t result[], int count) {
-    SkPoint point = SkPoint::Make(SkIntToScalar(x), SkIntToScalar(y));
-    StitchData stitchData;
-    DITHER_565_SCAN(y);
-    for (int i = 0; i < count; ++i) {
-        unsigned dither = DITHER_VALUE(x);
-        result[i] = SkDitherRGB32To565(shade(point, stitchData), dither);
-        DITHER_INC_X(x);
-        point.fX += SK_Scalar1;
-    }
-}
-
 /////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
@@ -621,19 +607,20 @@ GrGLPerlinNoise::GrGLPerlinNoise(const GrProcessor& processor)
 
 void GrGLPerlinNoise::emitCode(EmitArgs& args) {
     GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
+    GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
     SkString vCoords = fragBuilder->ensureFSCoords2D(args.fCoords, 0);
 
-    fBaseFrequencyUni = args.fBuilder->addUniform(GrGLSLProgramBuilder::kFragment_Visibility,
-                                                  kVec2f_GrSLType, kDefault_GrSLPrecision,
-                                                  "baseFrequency");
-    const char* baseFrequencyUni = args.fBuilder->getUniformCStr(fBaseFrequencyUni);
+    fBaseFrequencyUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+                                                   kVec2f_GrSLType, kDefault_GrSLPrecision,
+                                                   "baseFrequency");
+    const char* baseFrequencyUni = uniformHandler->getUniformCStr(fBaseFrequencyUni);
 
     const char* stitchDataUni = nullptr;
     if (fStitchTiles) {
-        fStitchDataUni = args.fBuilder->addUniform(GrGLSLProgramBuilder::kFragment_Visibility,
-                                                   kVec2f_GrSLType, kDefault_GrSLPrecision,
-                                                   "stitchData");
-        stitchDataUni = args.fBuilder->getUniformCStr(fStitchDataUni);
+        fStitchDataUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+                                                    kVec2f_GrSLType, kDefault_GrSLPrecision,
+                                                    "stitchData");
+        stitchDataUni = uniformHandler->getUniformCStr(fStitchDataUni);
     }
 
     // There are 4 lines, so the center of each line is 1/8, 3/8, 5/8 and 7/8

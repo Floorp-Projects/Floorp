@@ -239,24 +239,24 @@ struct ProxyArg
     }
 };
 
-template<class T>
-struct ProxyArg<Ref<T>>
+template<class C, typename T>
+struct ProxyArg<Ref<C, T>>
 {
     // Ref types need to be saved by global ref.
-    typedef typename T::GlobalRef Type;
-    typedef typename TypeAdapter<Ref<T>>::JNIType JNIType;
+    typedef typename C::GlobalRef Type;
+    typedef typename TypeAdapter<Ref<C, T>>::JNIType JNIType;
 
     static void Clear(JNIEnv* env, Type& ref) { ref.Clear(env); }
 
     static Type From(JNIEnv* env, JNIType val)
     {
-        return Type(env, T::Ref::From(val));
+        return Type(env, C::Ref::From(val));
     }
 };
 
-template<typename T> struct ProxyArg<const T&> : ProxyArg<T> {};
-template<> struct ProxyArg<Param<String>> : ProxyArg<Ref<String>> {};
-template<class T> struct ProxyArg<LocalRef<T>> : ProxyArg<Ref<T>> {};
+template<typename C> struct ProxyArg<const C&> : ProxyArg<C> {};
+template<> struct ProxyArg<StringParam> : ProxyArg<String::Ref> {};
+template<class C> struct ProxyArg<LocalRef<C>> : ProxyArg<typename C::Ref> {};
 
 // ProxyNativeCall implements the functor object that is passed to
 // UsesNativeCallProxy::OnNativeCall
@@ -268,11 +268,11 @@ class ProxyNativeCall
     template<class T, class I, class A, bool S, bool V>
     friend class NativeStubImpl;
 
-    // "this arg" refers to the ClassObject::LocalRef (for static methods) or
+    // "this arg" refers to the Class::LocalRef (for static methods) or
     // Owner::LocalRef (for instance methods) that we optionally (as indicated
     // by HasThisArg) pass into the destination C++ function.
     typedef typename mozilla::Conditional<IsStatic,
-            ClassObject, Owner>::Type ThisArgClass;
+            Class, Owner>::Type ThisArgClass;
     typedef typename mozilla::Conditional<IsStatic,
             jclass, jobject>::Type ThisArgJNIType;
 
@@ -280,7 +280,7 @@ class ProxyNativeCall
     // Method template parameter in NativeStubImpl::Wrap.
     typedef typename mozilla::Conditional<IsStatic,
             typename mozilla::Conditional<HasThisArg,
-                    void (*) (const ClassObject::LocalRef&, Args...),
+                    void (*) (const Class::LocalRef&, Args...),
                     void (*) (Args...)>::Type,
             typename mozilla::Conditional<HasThisArg,
                     void (Impl::*) (const typename Owner::LocalRef&, Args...),
@@ -308,7 +308,7 @@ class ProxyNativeCall
 
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && ThisArg, void>::Type
-    Call(const ClassObject::LocalRef& cls,
+    Call(const Class::LocalRef& cls,
          mozilla::IndexSequence<Indices...>) const
     {
         (*mNativeCall)(cls, mozilla::Get<Indices>(mArgs)...);
@@ -316,7 +316,7 @@ class ProxyNativeCall
 
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && !ThisArg, void>::Type
-    Call(const ClassObject::LocalRef& cls,
+    Call(const Class::LocalRef& cls,
          mozilla::IndexSequence<Indices...>) const
     {
         (*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
@@ -531,7 +531,7 @@ public:
     static MOZ_JNICALL void Wrap(JNIEnv* env, jobject instance)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            auto cls = ClassObject::LocalRef::Adopt(
+            auto cls = Class::LocalRef::Adopt(
                     env, env->GetObjectClass(instance));
             Dispatch(ProxyNativeCall<Impl, Owner, /* IsStatic */ true,
                     /* HasThisArg */ false, const typename Owner::LocalRef&>(
@@ -566,14 +566,14 @@ public:
     }
 
     // Static method with class reference
-    template<ReturnType (*Method) (const ClassObject::LocalRef&, Args...)>
+    template<ReturnType (*Method) (const Class::LocalRef&, Args...)>
     static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
             jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
                       "Native call proxy only supports void return type");
 
-        auto clazz = ClassObject::LocalRef::Adopt(env, cls);
+        auto clazz = Class::LocalRef::Adopt(env, cls);
         const auto res = TypeAdapter<ReturnType>::FromNative(env,
                 (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...));
         clazz.Forget();
@@ -604,7 +604,7 @@ public:
     }
 
     // Static method with class reference
-    template<void (*Method) (const ClassObject::LocalRef&, Args...)>
+    template<void (*Method) (const Class::LocalRef&, Args...)>
     static MOZ_JNICALL void Wrap(JNIEnv* env,
             jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
@@ -614,7 +614,7 @@ public:
                     Args...>(Method, env, cls, args...));
             return;
         }
-        auto clazz = ClassObject::LocalRef::Adopt(env, cls);
+        auto clazz = Class::LocalRef::Adopt(env, cls);
         (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...);
         clazz.Forget();
     }
@@ -656,11 +656,11 @@ public:
         if (sInited) {
             return;
         }
-        JNIEnv* const env = GetEnvForThread();
-        MOZ_ALWAYS_TRUE(!env->RegisterNatives(
-                Accessor::EnsureClassRef<Cls>(env),
-                 Natives::methods,
-                 sizeof(Natives::methods) / sizeof(Natives::methods[0])));
+        const auto& ctx = typename Cls::Context();
+        ctx.Env()->RegisterNatives(
+                ctx.ClassRef(), Natives::methods,
+                sizeof(Natives::methods) / sizeof(Natives::methods[0]));
+        MOZ_CATCH_JNI_EXCEPTION(ctx.Env());
         sInited = true;
     }
 

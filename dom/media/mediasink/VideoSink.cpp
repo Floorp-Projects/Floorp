@@ -34,7 +34,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mProducerID(ImageContainer::AllocateProducerID())
   , mFrameStats(aFrameStats)
   , mVideoFrameEndTime(-1)
-  , mOldDroppedCount(0)
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
@@ -364,10 +363,6 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
                 frame->mTime, frame->mFrameID, VideoQueue().GetSize());
   }
   mContainer->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
-
-  uint32_t dropped = mContainer->GetDroppedImageCount();
-  mFrameStats.NotifyDecodedFrames(0, 0, dropped - mOldDroppedCount);
-  mOldDroppedCount = dropped;
 }
 
 void

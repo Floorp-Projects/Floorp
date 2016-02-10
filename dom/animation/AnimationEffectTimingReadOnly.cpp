@@ -6,8 +6,10 @@
 
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnlyBinding.h"
+#include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 
 namespace mozilla {
@@ -28,30 +30,70 @@ TimingParams::TimingParams(double aDuration)
   mDuration.SetAsUnrestrictedDouble() = aDuration;
 }
 
-/* static */ TimingParams
-TimingParams::FromOptionsUnion(
-  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-  const dom::Element* aTarget)
+template <class OptionsType>
+static const dom::AnimationEffectTimingProperties&
+GetTimingProperties(const OptionsType& aOptions);
+
+template <>
+/* static */ const dom::AnimationEffectTimingProperties&
+GetTimingProperties(
+  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
+  return aOptions.GetAsKeyframeEffectOptions();
+}
+
+template <>
+/* static */ const dom::AnimationEffectTimingProperties&
+GetTimingProperties(
+  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
+  return aOptions.GetAsKeyframeAnimationOptions();
+}
+
+template <class OptionsType>
+static TimingParams
+TimingParamsFromOptionsUnion(
+  const OptionsType& aOptions,
+  const Nullable<dom::ElementOrCSSPseudoElement>& aTarget)
 {
   if (aOptions.IsUnrestrictedDouble()) {
     return TimingParams(aOptions.GetAsUnrestrictedDouble());
   } else {
-    MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
-    return TimingParams(aOptions.GetAsKeyframeEffectOptions(), aTarget);
+    // If aTarget is a pseudo element, we pass its parent element because
+    // TimingParams only needs its owner doc to parse easing and both pseudo
+    // element and its parent element should have the same owner doc.
+    // Bug 1246320: Avoid passing the element for parsing the timing function
+    RefPtr<dom::Element> targetElement;
+    if (!aTarget.IsNull()) {
+      const dom::ElementOrCSSPseudoElement& target = aTarget.Value();
+      MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
+                 "Uninitialized target");
+      if (target.IsElement()) {
+        targetElement = &target.GetAsElement();
+      } else {
+        targetElement = target.GetAsCSSPseudoElement().ParentElement();
+      }
+    }
+    return TimingParams(GetTimingProperties(aOptions), targetElement);
   }
 }
 
 /* static */ TimingParams
 TimingParams::FromOptionsUnion(
-  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-  const dom::Element* aTarget)
+  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+  const Nullable<dom::ElementOrCSSPseudoElement>& aTarget)
 {
-  if (aOptions.IsUnrestrictedDouble()) {
-    return TimingParams(aOptions.GetAsUnrestrictedDouble());
-  } else {
-    MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
-    return TimingParams(aOptions.GetAsKeyframeAnimationOptions(), aTarget);
-  }
+  return TimingParamsFromOptionsUnion(aOptions, aTarget);
+}
+
+/* static */ TimingParams
+TimingParams::FromOptionsUnion(
+  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+  const Nullable<dom::ElementOrCSSPseudoElement>& aTarget)
+{
+  return TimingParamsFromOptionsUnion(aOptions, aTarget);
 }
 
 bool
