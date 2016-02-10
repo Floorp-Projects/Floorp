@@ -123,9 +123,7 @@ private:
   // media segment have been processed.
   RefPtr<CodedFrameProcessingPromise> CodedFrameProcessing();
   void CompleteCodedFrameProcessing();
-  // Called by ResetParserState. Complete parsing the input buffer for the
-  // current media segment.
-  void FinishCodedFrameProcessing();
+  // Called by ResetParserState.
   void CompleteResetParserState();
   RefPtr<RangeRemovalPromise>
     CodedFrameRemovalWithPromise(media::TimeInterval aInterval);
