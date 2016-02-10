@@ -194,7 +194,7 @@ const CustomizableWidgets = [
       let items = doc.getElementById("PanelUI-historyItems");
       // Clear previous history items.
       while (items.firstChild) {
-        items.removeChild(items.firstChild);
+        items.firstChild.remove();
       }
 
       // Get all statically placed buttons to supply them with keyboard shortcuts.
@@ -205,32 +205,28 @@ const CustomizableWidgets = [
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
         handleResult: function (aResultSet) {
-          let onHistoryVisit = function (aUri, aEvent, aItem) {
-            doc.defaultView.openUILink(aUri, aEvent);
-            CustomizableUI.hidePanelForNode(aItem);
+          let onItemClick = function (aEvent) {
+            let item = aEvent.target;
+            win.openUILink(item.getAttribute("targetURI"), aEvent);
+            CustomizableUI.hidePanelForNode(item);
           };
           let fragment = doc.createDocumentFragment();
-          for (let row, i = 0; (row = aResultSet.getNextRow()); i++) {
-            try {
-              let uri = row.getResultByIndex(1);
-              let title = row.getResultByIndex(2);
-              let icon = row.getResultByIndex(6);
+          let row;
+          while ((row = aResultSet.getNextRow())) {
+            let uri = row.getResultByIndex(1);
+            let title = row.getResultByIndex(2);
+            let icon = row.getResultByIndex(6);
 
-              let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-              item.setAttribute("label", title || uri);
-              item.setAttribute("targetURI", uri);
-              item.setAttribute("class", "subviewbutton");
-              item.addEventListener("click", function (aEvent) {
-                onHistoryVisit(uri, aEvent, item);
-              });
-              if (icon) {
-                let iconURL = "moz-anno:favicon:" + icon;
-                item.setAttribute("image", iconURL);
-              }
-              fragment.appendChild(item);
-            } catch (e) {
-              log.error("Error while showing history subview: " + e);
+            let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+            item.setAttribute("label", title || uri);
+            item.setAttribute("targetURI", uri);
+            item.setAttribute("class", "subviewbutton");
+            item.addEventListener("click", onItemClick);
+            if (icon) {
+              let iconURL = "moz-anno:favicon:" + icon;
+              item.setAttribute("image", iconURL);
             }
+            fragment.appendChild(item);
           }
           items.appendChild(fragment);
         },
