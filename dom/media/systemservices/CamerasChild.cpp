@@ -19,6 +19,7 @@
 #include "mozilla/unused.h"
 #include "MediaUtils.h"
 #include "nsThreadUtils.h"
+#include "base/singleton.h"
 
 #undef LOG
 #undef LOG_ENABLED
@@ -63,26 +64,23 @@ public:
     LOG(("~CamerasSingleton: %p", this));
   }
 
-  static CamerasSingleton& GetInstance() {
-    static CamerasSingleton instance;
-    return instance;
-  }
-
   static OffTheBooksMutex& Mutex() {
-    return GetInstance().mCamerasMutex;
+    return gTheInstance.get()->mCamerasMutex;
   }
 
   static CamerasChild*& Child() {
-    GetInstance().Mutex().AssertCurrentThreadOwns();
-    return GetInstance().mCameras;
+    Mutex().AssertCurrentThreadOwns();
+    return gTheInstance.get()->mCameras;
   }
 
   static nsCOMPtr<nsIThread>& Thread() {
-    GetInstance().Mutex().AssertCurrentThreadOwns();
-    return GetInstance().mCamerasChildThread;
+    Mutex().AssertCurrentThreadOwns();
+    return gTheInstance.get()->mCamerasChildThread;
   }
 
 private:
+  static Singleton<CamerasSingleton> gTheInstance;
+
   // Reinitializing CamerasChild will change the pointers below.
   // We don't want this to happen in the middle of preparing IPC.
   // We will be alive on destruction, so this needs to be off the books.
