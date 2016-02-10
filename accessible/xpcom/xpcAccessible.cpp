@@ -285,11 +285,16 @@ xpcAccessible::GetLanguage(nsAString& aLanguage)
 NS_IMETHODIMP
 xpcAccessible::GetValue(nsAString& aValue)
 {
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   nsAutoString value;
-  Intl()->Value(value);
+  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+    proxy->Value(value);
+  } else {
+    Intl()->Value(value);
+  }
+
   aValue.Assign(value);
 
   return NS_OK;
