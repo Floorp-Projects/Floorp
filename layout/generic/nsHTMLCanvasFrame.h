@@ -86,7 +86,8 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsSplittableFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 
 #ifdef DEBUG_FRAME_DUMP
