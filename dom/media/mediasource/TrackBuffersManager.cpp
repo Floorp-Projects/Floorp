@@ -101,6 +101,7 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mSourceBufferAttributes(aAttributes)
   , mParentDecoder(new nsMainThreadPtrHolder<MediaSourceDecoder>(aParentDecoder, false /* strict */))
   , mMediaSourceDuration(mTaskQueue, Maybe<double>(), "TrackBuffersManager::mMediaSourceDuration (Mirror)")
+  , mAbort(false)
   , mEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold",
                                             100 * (1 << 20)))
   , mEvictionOccurred(false)
@@ -141,6 +142,7 @@ TrackBuffersManager::AppendIncomingBuffer(IncomingBuffer aData)
 {
   MOZ_ASSERT(OnTaskQueue());
   mIncomingBuffers.AppendElement(aData);
+  mAbort = false;
 }
 
 RefPtr<TrackBuffersManager::AppendPromise>
@@ -151,6 +153,23 @@ TrackBuffersManager::BufferAppend()
 
   return InvokeAsync(GetTaskQueue(), this,
                      __func__, &TrackBuffersManager::InitSegmentParserLoop);
+}
+
+// Abort any pending AppendData.
+// We don't really care about really aborting our inner loop as by spec the
+// process is happening asynchronously, as such where and when we would abort is
+// non-deterministic. The SourceBuffer also makes sure BufferAppend
+// isn't called should the appendBuffer be immediately aborted.
+// We do however want to ensure that no new task will be dispatched on our task
+// queue and only let the current one finish its job. For this we set mAbort
+// to true.
+void
+TrackBuffersManager::AbortAppendData()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("");
+
+  mAbort = true;
 }
 
 void
@@ -290,6 +309,9 @@ TrackBuffersManager::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("");
+
+  // Abort pending operations if any.
+  AbortAppendData();
 
   RefPtr<TrackBuffersManager> self = this;
   nsCOMPtr<nsIRunnable> task =
@@ -711,7 +733,7 @@ TrackBuffersManager::SegmentParserLoop()
           ->Then(GetTaskQueue(), __func__,
                  [self] (bool aNeedMoreData) {
                    self->mProcessingRequest.Complete();
-                   if (aNeedMoreData) {
+                   if (aNeedMoreData || self->mAbort) {
                      self->NeedMoreData();
                    } else {
                      self->ScheduleSegmentParserLoop();
@@ -730,7 +752,9 @@ void
 TrackBuffersManager::NeedMoreData()
 {
   MSE_DEBUG("");
-  RestoreCachedVariables();
+  if (!mAbort) {
+    RestoreCachedVariables();
+  }
   mAppendRunning = false;
   mAppendPromise.ResolveIfExists(mActiveTrack, __func__);
 }
@@ -816,7 +840,12 @@ void
 TrackBuffersManager::OnDemuxerResetDone(nsresult)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
   mDemuxerInitRequest.Complete();
+  if (mAbort) {
+    RejectAppend(NS_ERROR_ABORT, __func__);
+    return;
+  }
   // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
   // request was being processed. See bug 1239983.
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
@@ -888,8 +917,13 @@ void
 TrackBuffersManager::OnDemuxerInitDone(nsresult)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
   mDemuxerInitRequest.Complete();
 
+  if (mAbort) {
+    RejectAppend(NS_ERROR_ABORT, __func__);
+    return;
+  }
   // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
   // request was being processed. See bug 1239983.
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
@@ -1149,8 +1183,9 @@ TrackBuffersManager::OnDemuxFailed(TrackType aTrack,
                                    DemuxerFailureReason aFailure)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("Failed to demux %s, failure:%d",
-            aTrack == TrackType::kVideoTrack ? "video" : "audio", aFailure);
+  MSE_DEBUG("Failed to demux %s, failure:%d mAbort:%d",
+            aTrack == TrackType::kVideoTrack ? "video" : "audio",
+            aFailure, static_cast<bool>(mAbort));
   switch (aFailure) {
     case DemuxerFailureReason::END_OF_STREAM:
     case DemuxerFailureReason::WAITING_FOR_DATA:
@@ -1177,8 +1212,13 @@ void
 TrackBuffersManager::DoDemuxVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
   if (!HasVideo()) {
     DoDemuxAudio();
+    return;
+  }
+  if (mAbort) {
+    RejectProcessing(NS_ERROR_ABORT, __func__);
     return;
   }
   mVideoTracks.mDemuxRequest.Begin(mVideoTracks.mDemuxer->GetSamples(-1)
@@ -1201,8 +1241,13 @@ void
 TrackBuffersManager::DoDemuxAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
   if (!HasAudio()) {
     CompleteCodedFrameProcessing();
+    return;
+  }
+  if (mAbort) {
+    RejectProcessing(NS_ERROR_ABORT, __func__);
     return;
   }
   mAudioTracks.mDemuxRequest.Begin(mAudioTracks.mDemuxer->GetSamples(-1)
@@ -1225,6 +1270,7 @@ void
 TrackBuffersManager::CompleteCodedFrameProcessing()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
 
   // 1. For each coded frame in the media segment run the following steps:
   // Coded Frame Processing steps 1.1 to 1.21.
@@ -1295,12 +1341,22 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 void
 TrackBuffersManager::RejectProcessing(nsresult aRejectValue, const char* aName)
 {
+  if (mAbort) {
+    // mAppendPromise will be resolved immediately upon mProcessingPromise
+    // completing.
+    mAppendRunning = false;
+  }
   mProcessingPromise.RejectIfExists(aRejectValue, __func__);
 }
 
 void
 TrackBuffersManager::ResolveProcessing(bool aResolveValue, const char* aName)
 {
+  if (mAbort) {
+    // mAppendPromise will be resolved immediately upon mProcessingPromise
+    // completing.
+    mAppendRunning = false;
+  }
   mProcessingPromise.ResolveIfExists(aResolveValue, __func__);
 }
 
