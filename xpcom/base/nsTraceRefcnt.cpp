@@ -706,6 +706,7 @@ InitLog(const char* aEnvVar, const char* aMsg, FILE** aResult)
       } else {
         fprintf(stdout, "### %s defined -- unable to log %s to %s\n",
                 aEnvVar, aMsg, fname.get());
+        MOZ_ASSERT(false, "Tried and failed to create an XPCOM log");
       }
       return stream != nullptr;
     }
