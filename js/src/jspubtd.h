@@ -125,9 +125,6 @@ typedef void
 (* JSTraceDataOp)(JSTracer* trc, void* data);
 
 namespace js {
-
-void FinishGC(JSRuntime* rt);
-
 namespace gc {
 class AutoTraceSession;
 class StoreBuffer;
@@ -290,6 +287,29 @@ class RootLists
         for (auto& stackRootPtr : stackRoots_) {
             stackRootPtr = nullptr;
         }
+    }
+
+    ~RootLists() {
+        // The semantics of PersistentRooted containing pointers and tagged
+        // pointers are somewhat different from those of PersistentRooted
+        // containing a structure with a trace method. PersistentRooted
+        // containing pointers are allowed to outlive the owning RootLists,
+        // whereas those containing a traceable structure are not.
+        //
+        // The purpose of this feature is to support lazy initialization of
+        // global references for the several places in Gecko that do not have
+        // access to a tighter context, but that still need to refer to GC
+        // pointers. For such pointers, FinishPersistentRootedChains ensures
+        // that the contained references are nulled out when the owning
+        // RootLists dies to prevent UAF errors.
+        //
+        // However, for RootKind::Traceable, we do not know the concrete type
+        // of the held thing, so we simply cannot do this without accruing
+        // extra overhead and complexity for all users for a case that is
+        // unlikely to ever be used in practice. For this reason, the following
+        // assertion disallows usage of PersistentRooted<Traceable> that
+        // outlives the RootLists.
+        MOZ_ASSERT(heapRoots_[JS::RootKind::Traceable].isEmpty());
     }
 
     void traceStackRoots(JSTracer* trc);
