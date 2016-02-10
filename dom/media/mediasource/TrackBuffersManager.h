@@ -96,6 +96,10 @@ public:
                                            bool& aError);
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack);
 
+#if defined(DEBUG)
+  void Dump(const char* aPath) override;
+#endif
+
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
 private:
