@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<title>References for bug 823483</title>
+<style>
+
+body, input { font-size: 10px }
+input { padding: 0 1px; border: 1px solid maroon; font-family: monospace }
+
+td:first-child {
+   background: aqua;
+   border: thin solid;
+   padding: 1px 0;
+}
+
+td:nth-child(2) {
+  width: 100%;
+}
+
+td:nth-child(1) > * { vertical-align: bottom }
+
+canvas {
+  background: blue
+}
+
+</style>
+
+<table><tr>
+  <td><img></td>
+  <td>img, unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0"></td>
+  <td>img, width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><img style="width: 0; height: 0;"></td>
+  <td>img, max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><canvas height="10" width="10"></canvas></td>
+  <td>canvas, unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><canvas style="width: 0; height: 0" height="10" width="10"></canvas></td>
+  <td>canvas, width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><canvas style="width: 0; height: 0" height="10" width="10"></canvas></td>
+  <td>canvas, max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><iframe height="10" width="10"></iframe></td>
+  <td>iframe, almost unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><div style="width: 4px"><iframe style="vertical-align: bottom" height="10" width="2"></iframe></div></td>
+  <td>iframe, width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><div style="width: 4px"><iframe style="vertical-align: bottom" height="10" width="2"></iframe></div></td>
+  <td>iframe, max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="text"></td>
+  <td>input type="text", unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><div style="width:4px"><input type="text" style="width: 2px"></div></td>
+  <td>input type="text", width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><div><input type="text" style="visibility: hidden"></div></td>
+  <td>input type="text", max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="button"></td>
+  <td>empty input type="button", unstyled</td>
+</tr></table>
+
+<table><tr>
+  <!-- 2px border, 2px padding, 4px ::-moz-focus-inner padding, 2px ::-moz-focus-inner border -->
+  <td><div style="width: 10px"><input type="button" style="width: 5px"></div></td>
+  <td>empty input type="button", width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <!-- 2px border, 2px padding, 4px ::-moz-focus-inner padding, 2px ::-moz-focus-inner border -->
+  <td><div style="width: 10px"><input type="button" style="width: 5px"></div></td>
+  <td>empty input type="button", max-width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="button" value="Button"></td>
+  <td>nonempty input type="button", unstyled</td>
+</tr></table>
+
+<table><tr>
+  <td><div><input type="button" value="Button" style="visibility: hidden"></div></td>
+  <td>nonempty input type="button", width: 50%</td>
+</tr></table>
+
+<table><tr>
+  <td><div><input type="button" value="Button" style="visibility: hidden"></div></td>
+  <td>nonempty input type="button", max-width: 50%</td>
+</tr></table>
+
+<script>
+
+var images = document.getElementsByTagName("img");
+for (var i = 0; i < images.length; ++i) {
+  var image = images[i];
+  image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrJLJp84zgUAgEAgEAoFAcGUBocYBP+pqhN4AAAAASUVORK5CYII=";
+}
+
+</script>
