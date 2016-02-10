@@ -6,6 +6,8 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
@@ -109,7 +111,7 @@ GlobalObject::initImportEntryProto(JSContext* cx, Handle<GlobalObject*> global)
 }
 
 /* static */ ImportEntryObject*
-ImportEntryObject::create(JSContext* cx,
+ImportEntryObject::create(ExclusiveContext* cx,
                           HandleAtom moduleRequest,
                           HandleAtom importName,
                           HandleAtom localName)
@@ -181,7 +183,7 @@ StringOrNullValue(JSString* maybeString)
 }
 
 /* static */ ExportEntryObject*
-ExportEntryObject::create(JSContext* cx,
+ExportEntryObject::create(ExclusiveContext* cx,
                           HandleAtom maybeExportName,
                           HandleAtom maybeModuleRequest,
                           HandleAtom maybeImportName,
@@ -701,6 +703,62 @@ ModuleObject::initImportExportData(HandleArrayObject requestedModules,
     initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
 }
 
+static bool
+FreezeObjectProperty(JSContext* cx, HandleNativeObject obj, uint32_t slot)
+{
+    RootedObject property(cx, &obj->getSlot(slot).toObject());
+    return FreezeObject(cx, property);
+}
+
+/* static */ bool
+ModuleObject::FreezeArrayProperties(JSContext* cx, HandleModuleObject self)
+{
+    return FreezeObjectProperty(cx, self, RequestedModulesSlot) &&
+           FreezeObjectProperty(cx, self, ImportEntriesSlot) &&
+           FreezeObjectProperty(cx, self, LocalExportEntriesSlot) &&
+           FreezeObjectProperty(cx, self, IndirectExportEntriesSlot) &&
+           FreezeObjectProperty(cx, self, StarExportEntriesSlot);
+}
+
+static inline void
+AssertObjectPropertyFrozen(JSContext* cx, HandleNativeObject obj, uint32_t slot)
+{
+#ifdef DEBUG
+    bool frozen = false;
+    RootedObject property(cx, &obj->getSlot(slot).toObject());
+    MOZ_ALWAYS_TRUE(TestIntegrityLevel(cx, property, IntegrityLevel::Frozen, &frozen));
+    MOZ_ASSERT(frozen);
+#endif
+}
+
+/* static */ inline void
+ModuleObject::AssertArrayPropertiesFrozen(JSContext* cx, HandleModuleObject self)
+{
+    AssertObjectPropertyFrozen(cx, self, RequestedModulesSlot);
+    AssertObjectPropertyFrozen(cx, self, ImportEntriesSlot);
+    AssertObjectPropertyFrozen(cx, self, LocalExportEntriesSlot);
+    AssertObjectPropertyFrozen(cx, self, IndirectExportEntriesSlot);
+    AssertObjectPropertyFrozen(cx, self, StarExportEntriesSlot);
+}
+
+inline static void
+AssertModuleScopesMatch(ModuleObject* module)
+{
+    mozilla::DebugOnly<StaticModuleScope*> staticScope = module->staticScope();
+    MOZ_ASSERT(IsStaticGlobalLexicalScope(staticScope->enclosingScope()));
+    MOZ_ASSERT(&module->initialEnvironment().staticScope() == staticScope);
+}
+
+void
+ModuleObject::fixScopesAfterCompartmentMerge(JSContext* cx)
+{
+    AssertModuleScopesMatch(this);
+    Rooted<ClonedBlockObject*> lexicalScope(cx, &script()->global().lexicalScope());
+    staticScope()->setEnclosingScope(lexicalScope->staticScope());
+    initialEnvironment().setEnclosingScope(lexicalScope);
+    AssertModuleScopesMatch(this);
+}
+
 bool
 ModuleObject::hasScript() const
 {
@@ -777,6 +835,8 @@ ModuleObject::noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, Han
 /* static */ bool
 ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
 {
+    AssertArrayPropertiesFrozen(cx, self);
+
     FunctionDeclarationVector* funDecls = self->functionDeclarations();
     if (!funDecls) {
         JS_ReportError(cx, "Module function declarations have already been instantiated");
@@ -813,6 +873,8 @@ ModuleObject::setEvaluated()
 /* static */ bool
 ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
+    AssertArrayPropertiesFrozen(cx, self);
+
     RootedScript script(cx, self->script());
     RootedModuleEnvironmentObject scope(cx, self->environment());
     if (!scope) {
@@ -903,7 +965,7 @@ js::InitModuleClasses(JSContext* cx, HandleObject obj)
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
-ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module)
+ModuleBuilder::ModuleBuilder(ExclusiveContext* cx, HandleModuleObject module)
   : cx_(cx),
     module_(cx, module),
     requestedModules_(cx, AtomVector(cx)),
@@ -1186,8 +1248,6 @@ ArrayObject* ModuleBuilder::createArray(const GCVector<T>& vector)
     array->setDenseInitializedLength(length);
     for (uint32_t i = 0; i < length; i++)
         array->initDenseElement(i, MakeElementValue(vector[i]));
-    if (!JS_FreezeObject(cx_, array))
-        return nullptr;
 
     return array;
 }
