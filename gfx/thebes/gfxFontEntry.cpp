@@ -590,11 +590,12 @@ ShareTableAndGetBlob(nsTArray<uint8_t>&& aTable,
     Clear();
     // adopts elements of aTable
     mSharedBlobData = new FontTableBlobData(Move(aTable));
+
     mBlob = hb_blob_create(mSharedBlobData->GetTable(),
                            mSharedBlobData->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
                            mSharedBlobData, DeleteFontTableBlobData);
-    if (!mSharedBlobData) {
+    if (mBlob == hb_blob_get_empty() ) {
         // The FontTableBlobData was destroyed during hb_blob_create().
         // The (empty) blob is still be held in the hashtable with a strong
         // reference.
