@@ -211,7 +211,6 @@ class DesktopInstance(GeckoInstance):
         'dom.report_all_js_exceptions': True,
         'extensions.getAddons.cache.enabled': False,
         'extensions.installDistroAddons': False,
-        'extensions.logging.enabled': True,
         'extensions.showMismatchUI': False,
         'extensions.update.enabled': False,
         'extensions.update.notifyUser': False,
