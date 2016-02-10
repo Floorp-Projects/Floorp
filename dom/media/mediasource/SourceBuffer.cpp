@@ -586,16 +586,6 @@ SourceBuffer::Evict(double aStart, double aEnd)
   mContentManager->EvictBefore(TimeUnit::FromSeconds(evictTime));
 }
 
-#if defined(DEBUG)
-void
-SourceBuffer::Dump(const char* aPath)
-{
-  if (mContentManager) {
-    mContentManager->Dump(aPath);
-  }
-}
-#endif
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SourceBuffer)
