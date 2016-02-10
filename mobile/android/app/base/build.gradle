@@ -116,6 +116,13 @@ dependencies {
         compile 'com.google.android.gms:play-services-cast:8.1.0'
     }
 
+    if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
+        compile 'com.google.android.gms:play-services-ads:8.1.0'
+        compile 'com.google.android.gms:play-services-analytics:8.1.0'
+        compile 'com.google.android.gms:play-services-appindexing:8.1.0'
+        compile 'com.google.android.gms:play-services-basement:8.1.0'
+    }
+
     if (mozconfig.substs.MOZ_ANDROID_GCM) {
         compile 'com.google.android.gms:play-services-basement:8.1.0'
         compile 'com.google.android.gms:play-services-base:8.1.0'

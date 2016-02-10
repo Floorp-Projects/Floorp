@@ -64,11 +64,9 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
     let threadNode = this.threadNode = this._prepareCallTree(profile, interval, options);
     this._populateCallTree(threadNode, options);
 
-    if (showOptimizations) {
-      this.showOptimizations();
-    } else {
-      this.hideOptimizations();
-    }
+    // For better or worse, re-rendering loses frame selection,
+    // so we should always hide opts on rerender
+    this.hideOptimizations();
 
     this.emit(EVENTS.JS_CALL_TREE_RENDERED);
   },
@@ -82,19 +80,22 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
   },
 
   _onFocus: function (_, treeItem) {
+    let showOptimizations = PerformanceController.getOption("show-jit-optimizations");
     let recording = PerformanceController.getCurrentRecording();
     let frameNode = treeItem.frame;
-
-    if (!frameNode) {
-      console.warn("No frame found!");
-      return;
-    }
-
-    let frameData = frameNode.getInfo();
-    let optimizationSites = frameNode.hasOptimizations()
+    let optimizationSites = frameNode && frameNode.hasOptimizations()
                             ? frameNode.getOptimizations().optimizationSites
                             : [];
 
+    if (!showOptimizations || !frameNode || optimizationSites.length === 0) {
+      this.hideOptimizations();
+      this.emit("focus", treeItem);
+      return;
+    }
+
+    this.showOptimizations();
+
+    let frameData = frameNode.getInfo();
     let optimizations = JITOptimizationsView({
       frameData,
       optimizationSites,

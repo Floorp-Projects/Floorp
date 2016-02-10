@@ -3,4 +3,4 @@ mozscreenshots.jar:
   Screenshot.jsm
   TestRunner.jsm
   configurations/ (configurations/*.jsm)
-  lib/            (lib/*.png)
+  lib/            (lib/*)

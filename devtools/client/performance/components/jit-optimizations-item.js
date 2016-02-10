@@ -14,7 +14,8 @@ const {
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples");
-const JIT_EMPTY_TEXT = L10N.getStr("jit.empty");
+const JIT_TYPES = L10N.getStr("jit.types");
+const JIT_ATTEMPTS = L10N.getStr("jit.attempts");
 const PROPNAME_MAX_LENGTH = 4;
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
 // in `devtools/client/themes/jit-optimizations.css`
@@ -100,13 +101,13 @@ const JITOptimizationsItem = module.exports = createClass({
 
   _renderAttempts({ item: attempts }) {
     return dom.span({ className: "optimization-attempts" },
-      `Attempts (${attempts.length})`
+      `${JIT_ATTEMPTS} (${attempts.length})`
     );
   },
 
   _renderTypes({ item: types }) {
     return dom.span({ className: "optimization-types" },
-      `Types (${types.length})`
+      `${JIT_TYPES} (${types.length})`
     );
   },
 

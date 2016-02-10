@@ -422,7 +422,7 @@ var PocketOverlay = {
     }
 
     // add to bookmarks-menu-button
-    sib = document.getElementById("BMB_subscribeToPageMenuitem");
+    sib = document.getElementById("BMB_bookmarksToolbar");
     if (sib && !document.getElementById("BMB_pocket")) {
       let menu = createElementWithAttrs(document, "menuitem", {
         "id": "BMB_pocket",

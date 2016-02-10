@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
@@ -49,6 +50,9 @@ public final class GeckoProfile {
     private static final String CLIENT_ID_FILE_PATH = "datareporting/state.json";
     // In the client ID file, the attribute title in the JSON object containing the client ID value.
     private static final String CLIENT_ID_JSON_ATTR = "clientID";
+
+    private static final String TIMES_PATH = "times.json";
+    private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
 
     // Only tests should need to do this.
     // We can default this to AppConstants.RELEASE_BUILD once we fix Bug 1069687.
@@ -612,21 +616,47 @@ public final class GeckoProfile {
      */
     @WorkerThread
     public String getClientId() throws IOException {
-        final String clientIdFileContents;
+        final JSONObject obj = readJSONObjectFromFile(CLIENT_ID_FILE_PATH);
         try {
-            clientIdFileContents = readFile(CLIENT_ID_FILE_PATH);
-        } catch (final IOException e) {
-            // Don't log exception to avoid leaking profile path.
-            throw new IOException("Could not read client ID file to retrieve client ID");
-        }
-
-        try {
-            final org.json.JSONObject json = new org.json.JSONObject(clientIdFileContents);
-            return json.getString(CLIENT_ID_JSON_ATTR);
+            return obj.getString(CLIENT_ID_JSON_ATTR);
         } catch (final JSONException e) {
-            // Don't log exception to avoid leaking profile path.
-            throw new IOException("Could not parse JSON to retrieve client ID");
+            // Don't log to avoid leaking data in JSONObject.
+            throw new IOException("Client ID does not exist in JSONObject");
         }
+    }
+
+    /**
+     * @return the profile creation date in the format returned by {@link System#currentTimeMillis()} or -1 if the value
+     *         was not found.
+     */
+    @WorkerThread
+    public long getProfileCreationDate() {
+        try {
+            return getProfileCreationDateFromTimesFile();
+        } catch (final IOException e) {
+            return getAndPersistProfileCreationDateFromFilesystem();
+        }
+    }
+
+    @WorkerThread
+    private long getProfileCreationDateFromTimesFile() throws IOException {
+        final JSONObject obj = readJSONObjectFromFile(TIMES_PATH);
+        try {
+            return obj.getLong(PROFILE_CREATION_DATE_JSON_ATTR);
+        } catch (final JSONException e) {
+            // Don't log to avoid leaking data in JSONObject.
+            throw new IOException("Profile creation does not exist in JSONObject");
+        }
+    }
+
+    /**
+     * TODO (bug 1246816): Implement ProfileAge.jsm - getOldestProfileTimestamp. Persist results to times.json.
+     * Update comment in getProfileCreationDate too.
+     * @return -1 until implemented.
+     */
+    @WorkerThread
+    private long getAndPersistProfileCreationDateFromFilesystem() {
+        return -1;
     }
 
     /**
@@ -688,6 +718,24 @@ public final class GeckoProfile {
             } catch (IOException e) {
                 Log.e(LOGTAG, "Error closing writer while writing to file", e);
             }
+        }
+    }
+
+    @WorkerThread
+    public JSONObject readJSONObjectFromFile(final String filename) throws IOException {
+        final String fileContents;
+        try {
+            fileContents = readFile(filename);
+        } catch (final IOException e) {
+            // Don't log exception to avoid leaking profile path.
+            throw new IOException("Could not access given file to retrieve JSONObject");
+        }
+
+        try {
+            return new JSONObject(fileContents);
+        } catch (final JSONException e) {
+            // Don't log exception to avoid leaking profile path.
+            throw new IOException("Could not parse JSON to retrieve JSONObject");
         }
     }
 

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.WorkerThread;
 import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -33,6 +34,8 @@ import java.security.GeneralSecurityException;
 public class TelemetryUploadService extends BackgroundService {
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + TelemetryUploadService.class.getSimpleName(), 0, 23);
     private static final String WORKER_THREAD_NAME = LOGTAG + "Worker";
+
+    private static final int MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 
     public TelemetryUploadService() {
         super(WORKER_THREAD_NAME);
@@ -160,10 +163,11 @@ public class TelemetryUploadService extends BackgroundService {
         return true;
     }
 
+    @WorkerThread
     private void uploadCorePing(@NonNull final String docId, final int seq, @NonNull final String profileName,
                 @NonNull final String profilePath) {
         final GeckoProfile profile = GeckoProfile.get(this, profileName, profilePath);
-
+        final long profileCreationDate = getProfileCreationDate(profile);
         final String clientId;
         try {
             clientId = profile.getClientId();
@@ -179,8 +183,8 @@ public class TelemetryUploadService extends BackgroundService {
         final String serverURLSchemeHostPort =
                 sharedPrefs.getString(TelemetryConstants.PREF_SERVER_URL, TelemetryConstants.DEFAULT_SERVER_URL);
 
-        final TelemetryPing corePing =
-                TelemetryPingGenerator.createCorePing(this, docId, clientId, serverURLSchemeHostPort, seq);
+        final TelemetryPing corePing = TelemetryPingGenerator.createCorePing(this, docId, clientId,
+                serverURLSchemeHostPort, seq, profileCreationDate);
         final CorePingResultDelegate resultDelegate = new CorePingResultDelegate();
         uploadPing(corePing, resultDelegate);
     }
@@ -200,6 +204,20 @@ public class TelemetryUploadService extends BackgroundService {
         // We're in a background thread so we don't have any reason to do this asynchronously.
         // If we tried, onStartCommand would return and IntentService might stop itself before we finish.
         resource.postBlocking(ping.getPayload());
+    }
+
+    /**
+     * @return the profile creation date in the format expected by TelemetryPingGenerator.
+     */
+    @WorkerThread
+    private long getProfileCreationDate(final GeckoProfile profile) {
+        final long profileMillis = profile.getProfileCreationDate();
+        // TODO (bug 1246816): Remove this work-around when finishing bug. getProfileCreationDate can return -1,
+        // and we don't want to truncate (-1 / MILLIS) to 0.
+        if (profileMillis < 0) {
+            return profileMillis;
+        }
+        return (long) Math.floor((double) profileMillis / MILLIS_IN_DAY);
     }
 
     private static class CorePingResultDelegate extends ResultDelegate {
