@@ -4687,6 +4687,32 @@ JS::GetPromiseState(JS::HandleObject obj)
     return promise->as<PromiseObject>().state();
 }
 
+JS_PUBLIC_API(double)
+JS::GetPromiseID(JS::HandleObject promise)
+{
+    return promise->as<PromiseObject>().getID();
+}
+
+JS_PUBLIC_API(JS::Value)
+JS::GetPromiseResult(JS::HandleObject promiseObj)
+{
+    PromiseObject* promise = &promiseObj->as<PromiseObject>();
+    MOZ_ASSERT(promise->state() != JS::PromiseState::Pending);
+    return promise->state() == JS::PromiseState::Fulfilled ? promise->value() : promise->reason();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetPromiseAllocationSite(JS::HandleObject promise)
+{
+    return promise->as<PromiseObject>().allocationSite();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetPromiseResolutionSite(JS::HandleObject promise)
+{
+    return promise->as<PromiseObject>().resolutionSite();
+}
+
 JS_PUBLIC_API(JSObject*)
 JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
 {
