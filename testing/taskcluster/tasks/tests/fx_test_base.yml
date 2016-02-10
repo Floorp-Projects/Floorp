@@ -5,7 +5,6 @@ task:
   workerType: desktop-test
   scopes:
     - docker-worker:cache:level-{{level}}-{{project}}-test-workspace
-    - docker-worker:cache:level-{{level}}-{{project}}-test-tmp
   payload:
     image:
       type: 'task-image'
@@ -21,7 +20,6 @@ task:
       # put the workspace and /tmp on a cache, less for inter-task caching than
       # to get this directory on fast, non-aufs storage
       level-{{level}}-{{project}}-test-workspace: '/home/worker/workspace'
-      level-{{level}}-{{project}}-test-tmp: '/tmp'
 
     artifacts:
       'public/test':
