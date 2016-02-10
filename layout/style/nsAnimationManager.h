@@ -313,7 +313,11 @@ public:
    * accumulate animationstart events at other points when style
    * contexts are created.
    */
-  void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
+  void DispatchEvents()
+  {
+    RefPtr<nsAnimationManager> kungFuDeathGrip(this);
+    mEventDispatcher.DispatchEvents(mPresContext);
+  }
   void SortEvents()      { mEventDispatcher.SortEvents(); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
