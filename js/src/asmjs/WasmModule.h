@@ -67,9 +67,7 @@ struct StaticLinkData
     typedef Vector<InternalLink, 0, SystemAllocPolicy> InternalLinkVector;
 
     typedef Vector<uint32_t, 0, SystemAllocPolicy> OffsetVector;
-    struct SymbolicLinkArray : mozilla::EnumeratedArray<SymbolicAddress,
-                                                        SymbolicAddress::Limit,
-                                                        OffsetVector> {
+    struct SymbolicLinkArray : EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, OffsetVector> {
         WASM_DECLARE_SERIALIZABLE(SymbolicLinkArray)
     };
 
@@ -213,7 +211,7 @@ class CodeRange
     void assertValid();
 
   public:
-    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline };
+    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline, CallThunk };
 
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
@@ -237,7 +235,7 @@ class CodeRange
     // which is used for asynchronous profiling to determine the frame pointer.
 
     uint32_t profilingReturn() const {
-        MOZ_ASSERT(kind() != Entry && kind() != Inline);
+        MOZ_ASSERT(isFunction() || isImportExit());
         return profilingReturn_;
     }
 
@@ -246,6 +244,9 @@ class CodeRange
 
     bool isFunction() const {
         return kind() == Function;
+    }
+    bool isImportExit() const {
+        return kind() == ImportJitExit || kind() == ImportInterpExit;
     }
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());
@@ -287,6 +288,25 @@ class CodeRange
 };
 
 typedef Vector<CodeRange, 0, SystemAllocPolicy> CodeRangeVector;
+
+// A CallThunk describes the offset and target of thunks so that they may be
+// patched at runtime when profiling is toggled. Thunks are emitted to connect
+// callsites that are too far away from callees to fit in a single call
+// instruction's relative offset.
+
+struct CallThunk
+{
+    uint32_t offset;
+    union {
+        uint32_t funcIndex;
+        uint32_t codeRangeIndex;
+    } u;
+
+    CallThunk(uint32_t offset, uint32_t funcIndex) : offset(offset) { u.funcIndex = funcIndex; }
+    CallThunk() = default;
+};
+
+typedef Vector<CallThunk, 0, SystemAllocPolicy> CallThunkVector;
 
 // CacheableChars is used to cacheably store UniqueChars.
 
@@ -389,6 +409,7 @@ struct ModuleData : ModuleCacheablePod
     HeapAccessVector      heapAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
+    CallThunkVector       callThunks;
     CacheableCharsVector  prettyFuncNames;
     CacheableChars        filename;
     bool                  loadedFromCache;
@@ -496,6 +517,7 @@ class Module
     CompileArgs compileArgs() const { return module_->compileArgs; }
     const ImportVector& imports() const { return module_->imports; }
     const ExportVector& exports() const { return module_->exports; }
+    const CodeRangeVector& codeRanges() const { return module_->codeRanges; }
     const char* filename() const { return module_->filename.get(); }
     bool loadedFromCache() const { return module_->loadedFromCache; }
     bool staticallyLinked() const { return staticallyLinked_; }

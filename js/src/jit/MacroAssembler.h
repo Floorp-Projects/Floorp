@@ -498,7 +498,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void call(JitCode* c) PER_SHARED_ARCH;
 
     inline void call(const wasm::CallSiteDesc& desc, const Register reg);
-    inline void call(const wasm::CallSiteDesc& desc, Label* label);
     inline void call(const wasm::CallSiteDesc& desc, AsmJSInternalCallee callee);
 
     CodeOffset callWithPatch() PER_SHARED_ARCH;

@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include "asmjs/WasmBinary.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
@@ -4957,6 +4958,9 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 CodeOffset
 MacroAssembler::thunkWithPatch()
 {
+    static_assert(32 * 1024 * 1024 - JumpImmediateRange > wasm::MaxFuncs * 3 * sizeof(Instruction),
+                  "always enough space for thunks");
+
     // The goal of the thunk is to be able to jump to any address without the
     // usual 32MiB branch range limitation. Additionally, to make the thunk
     // simple to use, the thunk does not use the constant pool or require

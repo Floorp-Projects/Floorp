@@ -5866,6 +5866,13 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "Disable signals");
         }
         break;
+      case JSJITCOMPILER_JUMP_THRESHOLD:
+        if (value == uint32_t(-1)) {
+            jit::DefaultJitOptions defaultValues;
+            value = defaultValues.jumpThreshold;
+        }
+        jit::JitOptions.jumpThreshold = value;
+        break;
       default:
         break;
     }
