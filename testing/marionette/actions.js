@@ -7,21 +7,19 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-Cu.import("chrome://marionette/content/event.js");
-
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
 
-this.EXPORTED_SYMBOLS = ["action"];
+this.EXPORTED_SYMBOLS = ["actions"];
 
 const logger = Log.repository.getLogger("Marionette");
 
-this.action = {};
+this.actions = {};
 
 /**
  * Functionality for (single finger) action chains.
  */
-action.Chain = function(checkForInterrupted) {
+actions.Chain = function(utils, checkForInterrupted) {
   // for assigning unique ids to all touches
   this.nextTouchId = 1000;
   // keep track of active Touches
@@ -45,9 +43,12 @@ action.Chain = function(checkForInterrupted) {
 
   // determines if we create touch events
   this.inputSource = null;
+
+  // test utilities providing some event synthesis code
+  this.utils = utils;
 };
 
-action.Chain.prototype.dispatchActions = function(
+actions.Chain.prototype.dispatchActions = function(
     args,
     touchId,
     container,
@@ -105,7 +106,7 @@ action.Chain.prototype.dispatchActions = function(
  * @param {Object} modifiers
  *     An object of modifier keys present.
  */
-action.Chain.prototype.emitMouseEvent = function(
+actions.Chain.prototype.emitMouseEvent = function(
     doc,
     type,
     elClientX,
@@ -126,7 +127,7 @@ action.Chain.prototype.emitMouseEvent = function(
 
     let mods;
     if (typeof modifiers != "undefined") {
-      mods = event.parseModifiers_(modifiers);
+      mods = this.utils._parseModifiers(modifiers);
     } else {
       mods = 0;
     }
@@ -147,7 +148,7 @@ action.Chain.prototype.emitMouseEvent = function(
 /**
  * Reset any persisted values after a command completes.
  */
-action.Chain.prototype.resetValues = function() {
+actions.Chain.prototype.resetValues = function() {
   this.onSuccess = null;
   this.onError = null;
   this.container = null;
@@ -163,7 +164,7 @@ action.Chain.prototype.resetValues = function() {
  * keyModifiers is an object keeping track keyDown/keyUp pairs through
  * an action chain.
  */
-action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
+actions.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
   if (i == chain.length) {
     this.onSuccess(touchId || null);
     this.resetValues();
@@ -186,12 +187,12 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
 
   switch(command) {
     case "keyDown":
-      event.sendKeyDown(pack[1], keyModifiers, this.container.frame);
+      this.utils.sendKeyDown(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
     case "keyUp":
-      event.sendKeyUp(pack[1], keyModifiers, this.container.frame);
+      this.utils.sendKeyUp(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
@@ -323,7 +324,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
  *     Y coordinate relative to target.  If unspecified, the centre of
  *     the target is used.
  */
-action.Chain.prototype.coordinates = function(target, x, y) {
+actions.Chain.prototype.coordinates = function(target, x, y) {
   let box = target.getBoundingClientRect();
   if (x == null) {
     x = box.width / 2;
@@ -341,7 +342,7 @@ action.Chain.prototype.coordinates = function(target, x, y) {
  * Given an element and a pair of coordinates, returns an array of the
  * form [clientX, clientY, pageX, pageY, screenX, screenY].
  */
-action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
+actions.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
   let win = el.ownerDocument.defaultView;
   return [
     corx, // clientX
@@ -361,7 +362,7 @@ action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
  *     Y coordinate of the location to generate the event that is relative
  *     to the viewport.
  */
-action.Chain.prototype.generateEvents = function(
+actions.Chain.prototype.generateEvents = function(
     type, x, y, touchId, target, keyModifiers) {
   this.lastCoordinates = [x, y];
   let doc = this.container.frame.document;
@@ -494,7 +495,7 @@ action.Chain.prototype.generateEvents = function(
   this.checkForInterrupted();
 };
 
-action.Chain.prototype.mouseTap = function(doc, x, y, button, count, mod) {
+actions.Chain.prototype.mouseTap = function(doc, x, y, button, count, mod) {
   this.emitMouseEvent(doc, "mousemove", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mousedown", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mouseup", x, y, button, count, mod);
