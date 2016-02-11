@@ -1863,6 +1863,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
             direction = NegateBranchDirection(direction);
             MBasicBlock* otherBlock = branch->branchSuccessor(direction);
             if (!otherBlock->isMarked()) {
+                if (!alloc().ensureBallast())
+                    return false;
                 iterationBound =
                     analyzeLoopIterationCount(header, branch, direction);
                 if (iterationBound)
