@@ -17,6 +17,15 @@
   @hudButtonFocused@
 }
 
+#identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
+  border-bottom-right-radius: 3.5px;
+}
+
+#identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews:-moz-locale-dir(rtl) {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 3.5px;
+}
+
 #tracking-action-block,
 #tracking-action-unblock,
 #tracking-action-unblock-private,
