@@ -47,6 +47,8 @@ static const unsigned AST_LIFO_DEFAULT_CHUNK_SIZE = 4096;
 /*****************************************************************************/
 // wasm AST
 
+namespace {
+
 class WasmAstExpr;
 
 template <class T>
@@ -467,8 +469,12 @@ class WasmAstConversionOperator final : public WasmAstExpr
     WasmAstExpr* op() const { return op_; }
 };
 
+} // end anonymous namespace
+
 /*****************************************************************************/
 // wasm text token stream
+
+namespace {
 
 class WasmToken
 {
@@ -1481,9 +1487,12 @@ WasmToken WasmTokenStream::next()
     return fail(begin);
 }
 
+} // end anonymous namespace
 
 /*****************************************************************************/
 // wasm text format parser
+
+namespace {
 
 struct WasmParseContext
 {
@@ -2212,6 +2221,8 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
 
     return module;
 }
+
+} // end anonymous namespace
 
 /*****************************************************************************/
 // wasm function body serialization
