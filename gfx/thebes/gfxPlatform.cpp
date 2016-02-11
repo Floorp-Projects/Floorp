@@ -272,7 +272,7 @@ void CrashStatsLogForwarder::UpdateCrashReport()
 {
   std::stringstream message;
   for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-    message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ")";
+    message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
   }
 
 #ifdef MOZ_CRASHREPORTER
