@@ -382,10 +382,16 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = Intl()->Bounds();
+  nsIntRect rect;
+  if (Accessible* acc = IntlGeneric().AsAccessible()) {
+    rect = acc->Bounds();
+  } else {
+    rect = IntlGeneric().AsProxy()->Bounds();
+  }
+
   *aX = rect.x;
   *aY = rect.y;
   *aWidth = rect.width;
