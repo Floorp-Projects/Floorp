@@ -780,6 +780,9 @@ NS_INTERFACE_MAP_END
 
 Console::Console(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
+#ifdef DEBUG
+  , mOwningThread(PR_GetCurrentThread())
+#endif
   , mOuterID(0)
   , mInnerID(0)
 {
@@ -808,6 +811,7 @@ Console::Console(nsPIDOMWindowInner* aWindow)
 
 Console::~Console()
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mConsoleCallDataArray.IsEmpty());
 
   if (!NS_IsMainThread()) {
@@ -877,6 +881,8 @@ METHOD(Table, "table")
 void
 Console::Trace(JSContext* aCx)
 {
+  AssertIsOnOwningThread();
+
   const Sequence<JS::Value> data;
   Method(aCx, MethodTrace, NS_LITERAL_STRING("trace"), data);
 }
@@ -892,6 +898,8 @@ METHOD(GroupEnd, "groupEnd")
 void
 Console::Time(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 {
+  AssertIsOnOwningThread();
+
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
 
@@ -905,6 +913,8 @@ Console::Time(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 void
 Console::TimeEnd(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 {
+  AssertIsOnOwningThread();
+
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
 
@@ -918,6 +928,8 @@ Console::TimeEnd(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 void
 Console::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 {
+  AssertIsOnOwningThread();
+
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
 
@@ -931,12 +943,14 @@ Console::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 void
 Console::Profile(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
+  AssertIsOnOwningThread();
   ProfileMethod(aCx, NS_LITERAL_STRING("profile"), aData);
 }
 
 void
 Console::ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
+  AssertIsOnOwningThread();
   ProfileMethod(aCx, NS_LITERAL_STRING("profileEnd"), aData);
 }
 
@@ -1000,6 +1014,8 @@ void
 Console::Assert(JSContext* aCx, bool aCondition,
                 const Sequence<JS::Value>& aData)
 {
+  AssertIsOnOwningThread();
+
   if (!aCondition) {
     Method(aCx, MethodAssert, NS_LITERAL_STRING("assert"), aData);
   }
@@ -1010,6 +1026,8 @@ METHOD(Count, "count")
 void
 Console::NoopMethod()
 {
+  AssertIsOnOwningThread();
+
   // Nothing to do.
 }
 
@@ -1087,6 +1105,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
                 const nsAString& aMethodString,
                 const Sequence<JS::Value>& aData)
 {
+  AssertIsOnOwningThread();
+
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());
 
   ClearException ce(aCx);
@@ -1267,6 +1287,8 @@ enum {
 bool
 LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
+  AssertIsOnMainThread();
+
   JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
   JS::Rooted<JSObject*> callee(aCx, &args.callee());
 
@@ -1303,8 +1325,8 @@ void
 Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
                          const Sequence<JS::Value>& aArguments)
 {
-  MOZ_ASSERT(aData);
   AssertIsOnMainThread();
+  MOZ_ASSERT(aData);
 
   ConsoleStackEntry frame;
   if (aData->mTopStackFrame) {
@@ -1499,6 +1521,8 @@ namespace {
 bool
 FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence, nsString &aOutput)
 {
+  AssertIsOnMainThread();
+
   if (!aOutput.IsEmpty()) {
     JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
                                                        aOutput.get(),
@@ -1812,7 +1836,9 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
                     nsAString& aTimerLabel,
                     DOMHighResTimeStamp* aTimerValue)
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aTimerValue);
+
   *aTimerValue = 0;
 
   if (mTimerRegistry.Count() >= MAX_PAGE_TIMERS) {
@@ -1879,7 +1905,9 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
                    nsAString& aTimerLabel,
                    double* aTimerDuration)
 {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aTimerDuration);
+
   *aTimerDuration = 0;
 
   JS::Rooted<JS::Value> name(aCx, aName);
@@ -1947,6 +1975,8 @@ Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
                          const Sequence<JS::Value>& aArguments,
                          nsAString& aCountLabel)
 {
+  AssertIsOnOwningThread();
+
   ClearException ce(aCx);
 
   nsAutoString key;
@@ -2051,6 +2081,8 @@ Console::GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal)
 void
 Console::RegisterConsoleCallData(ConsoleCallData* aData)
 {
+  AssertIsOnOwningThread();
+
   MOZ_ASSERT(!mConsoleCallDataArray.Contains(aData));
   mConsoleCallDataArray.AppendElement(aData);
 }
@@ -2058,8 +2090,17 @@ Console::RegisterConsoleCallData(ConsoleCallData* aData)
 void
 Console::UnregisterConsoleCallData(ConsoleCallData* aData)
 {
+  AssertIsOnOwningThread();
+
   MOZ_ASSERT(mConsoleCallDataArray.Contains(aData));
   mConsoleCallDataArray.RemoveElement(aData);
+}
+
+void
+Console::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
 }
 
 } // namespace dom
