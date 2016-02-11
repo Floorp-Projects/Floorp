@@ -369,7 +369,7 @@ function showDefaultSnippets()
 }
 
 function fitToWidth() {
-  if (document.documentElement.scrollWidth > window.innerWidth) {
+  if (window.scrollMaxX != window.scrollMinX) {
     document.body.setAttribute("narrow", "true");
   } else if (document.body.hasAttribute("narrow")) {
     document.body.removeAttribute("narrow");
