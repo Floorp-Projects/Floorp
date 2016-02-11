@@ -928,7 +928,7 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
  * This code cannot re-enter Ion code. */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                     int32_t lastIndex, bool sticky,
+                     uint32_t lastIndex, bool sticky,
                      MatchPairs* maybeMatches, MutableHandleValue output)
 {
     MOZ_ASSERT(lastIndex <= INT32_MAX);
@@ -998,7 +998,7 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
  * This code cannot re-enter Ion code. */
 bool
 js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                    int32_t lastIndex, bool sticky, int32_t* endIndex)
+                    uint32_t lastIndex, bool sticky, int32_t* endIndex)
 {
     MOZ_ASSERT(lastIndex <= INT32_MAX);
 

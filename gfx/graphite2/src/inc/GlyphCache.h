@@ -112,6 +112,7 @@ public:
     const SlantBox & getSubBoundingSlantBox(unsigned short glyphid, uint8 subindex) const;
     const BBox &     getSubBoundingBBox(unsigned short glyphid, uint8 subindex) const;
     bool             check(unsigned short glyphid) const;
+    bool             hasBoxes() const { return _boxes != 0; }
 
     CLASS_NEW_DELETE;
     

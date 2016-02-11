@@ -171,6 +171,8 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--extra-profile-file=reftest/fonts",
                 "--suite=reftest",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
             ],
             "tests": ["reftest/tests/layout/reftests/reftest.list"],
             "run_filename": "remotereftest.py",

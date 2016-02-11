@@ -66,6 +66,9 @@ parent:
 
   async PBackgroundIndexedDBUtils();
 
+  // Use only for testing!
+  async FlushPendingFileDeletions();
+
   async PVsync();
 
   async PCameras();

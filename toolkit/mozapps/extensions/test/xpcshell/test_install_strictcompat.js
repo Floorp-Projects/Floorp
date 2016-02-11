@@ -7,11 +7,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-// Maximum error in file modification times. Some file systems don't store
-// modification times exactly. As long as we are closer than this then it
-// still passes.
-const MAX_TIME_DIFFERENCE = 3000;
-
 // install.rdf size, icon.png, icon64.png size
 const ADDON1_SIZE = 705 + 16 + 16;
 

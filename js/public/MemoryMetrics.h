@@ -468,7 +468,6 @@ struct RuntimeSizes
     macro(_, MallocHeap, object) \
     macro(_, MallocHeap, atomsTable) \
     macro(_, MallocHeap, contexts) \
-    macro(_, MallocHeap, dtoa) \
     macro(_, MallocHeap, temporary) \
     macro(_, MallocHeap, interpreterStack) \
     macro(_, MallocHeap, mathCache) \

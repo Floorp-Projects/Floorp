@@ -1055,9 +1055,6 @@ parent:
     sync KeygenProvideContent()
         returns (nsString aAttribute, nsString[] aContent);
 
-    // Use only for testing!
-    async FlushPendingFileDeletions();
-
     /**
      * Tell the chrome process there is an creation of PBrowser.
      * return a system-wise unique Id.

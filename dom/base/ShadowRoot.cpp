@@ -219,7 +219,7 @@ ShadowRoot::RemoveFromIdTable(Element* aElement, nsIAtom* aId)
   if (entry) {
     entry->RemoveIdElement(aElement);
     if (entry->IsEmpty()) {
-      mIdentifierMap.RawRemoveEntry(entry);
+      mIdentifierMap.RemoveEntry(entry);
     }
   }
 }

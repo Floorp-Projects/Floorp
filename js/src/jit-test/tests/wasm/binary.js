@@ -18,6 +18,7 @@ const declSectionStr = "decl";
 const importSectionStr = "import";
 const exportSectionStr = "export";
 const codeSectionStr = "code";
+const dataSectionStr = "data";
 const funcSubsectionStr = "func";
 
 const magicError = /failed to match magic number/;
@@ -170,3 +171,5 @@ wasmEval(toBuf(moduleWithSections([
     importSection([{sigIndex:0, module:"a", func:""}]),
     trivialDeclSection,
     trivialCodeSection])), {a:()=>{}});
+
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: dataSectionStr, body: [], } ]))), Error, /data section requires a memory section/);
