@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DOM: dom, createClass } =
+const { DOM: dom, createClass, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
@@ -17,6 +17,7 @@ module.exports = createClass({
     location: Types.location.isRequired,
     width: Types.viewport.width.isRequired,
     height: Types.viewport.height.isRequired,
+    isResizing: PropTypes.bool.isRequired,
   },
 
   render() {
@@ -24,11 +25,17 @@ module.exports = createClass({
       location,
       width,
       height,
+      isResizing,
     } = this.props;
+
+    let className = "browser";
+    if (isResizing) {
+      className += " resizing";
+    }
 
     return dom.iframe(
       {
-        className: "browser",
+        className,
         src: location,
         width,
         height,

@@ -8,8 +8,7 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
-const Browser = createFactory(require("./browser"));
-const ViewportToolbar = createFactory(require("./viewport-toolbar"));
+const ResizableViewport = createFactory(require("./resizable-viewport"));
 
 module.exports = createClass({
 
@@ -18,6 +17,7 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
+    onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
 
@@ -25,20 +25,19 @@ module.exports = createClass({
     let {
       location,
       viewport,
+      onResizeViewport,
       onRotateViewport,
     } = this.props;
 
     return dom.div(
       {
-        className: "viewport"
+        className: "viewport",
       },
-      ViewportToolbar({
-        onRotateViewport,
-      }),
-      Browser({
+      ResizableViewport({
         location,
-        width: viewport.width,
-        height: viewport.height,
+        viewport,
+        onResizeViewport,
+        onRotateViewport,
       })
     );
   },
