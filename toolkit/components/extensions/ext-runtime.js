@@ -85,6 +85,26 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         let info = {os, arch};
         return Promise.resolve(info);
       },
+
+      setUninstallURL: function(url) {
+        if (url.length == 0) {
+          return Promise.resolve();
+        }
+
+        let uri;
+        try {
+          uri = NetUtil.newURI(url);
+        } catch (e) {
+          return Promise.reject({ message: `Invalid URL: ${JSON.stringify(url)}` });
+        }
+
+        if (uri.scheme != "http" && uri.scheme != "https") {
+          return Promise.reject({ message: "url must have the scheme http or https" });
+        }
+
+        extension.uninstallURL = url;
+        return Promise.resolve();
+      },
     },
   };
 });

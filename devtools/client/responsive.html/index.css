@@ -1,6 +1,18 @@
 /* TODO: May break up into component local CSS.  Pending future discussions by
  * React component group on how to best handle CSS. */
 
+/**
+ * CSS Variables specific to the responsive design mode
+ */
+
+.theme-light {
+  --viewport-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+}
+
+.theme-dark {
+  --viewport-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+}
+
 html, body {
   margin: 0;
   height: 100%;
@@ -42,14 +54,46 @@ body {
   /* Align all viewports to the top */
   vertical-align: top;
   border: 1px solid var(--theme-splitter-color);
-  box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+  box-shadow: var(--viewport-box-shadow);
 }
 
-.viewport-header {
+/**
+ * Viewport Toolbar
+ */
+
+.viewport-toolbar {
   background-color: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  color: var(--theme-body-color-alt);
+  color: var(--theme-body-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  height: 18px;
+}
+
+.viewport-toolbar-button {
+  border: none;
+  display: block;
+  margin: 1px 3px;
+  padding: 0;
+  width: 16px;
   height: 16px;
+  opacity: 0.8;
+  background-color: var(--theme-body-color);
+  transition: background 0.25s ease;
+}
+
+.viewport-toolbar-button:hover {
+  opacity: 1;
+}
+
+.viewport-toolbar-button:active {
+  background-color: var(--theme-selection-background);
+  opacity: 1;
+}
+
+.viewport-rotate-button {
+  mask-image: url("./images/rotate-viewport.svg");
 }
 
 .browser {
