@@ -891,8 +891,8 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
   }
 
   nsAutoCString hostName;
-
-  if (NS_SUCCEEDED(uri->GetHost(hostName))) {
+  nsresult rv = nsContentUtils::GetHostOrIPv6WithBrackets(uri, hostName);
+  if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(hostName, aDomain);
   } else {
     // If we can't get the host from the URI (e.g. about:, javascript:,

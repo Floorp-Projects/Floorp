@@ -24,8 +24,20 @@
 namespace js {
 namespace wasm {
 
-bool
-GenerateStubs(ModuleGenerator& mg);
+extern Offsets
+GenerateEntry(jit::MacroAssembler& masm, uint32_t target, const Sig& sig, bool usesHeap);
+
+extern ProfilingOffsets
+GenerateInterpExit(jit::MacroAssembler& masm, const Import& import, uint32_t importIndex);
+
+extern ProfilingOffsets
+GenerateJitExit(jit::MacroAssembler& masm, const Import& import, bool usesHeap);
+
+extern Offsets
+GenerateJumpTarget(jit::MacroAssembler& masm, JumpTarget target);
+
+extern Offsets
+GenerateInterruptStub(jit::MacroAssembler& masm);
 
 } // namespace wasm
 } // namespace js

@@ -24,7 +24,7 @@ NS_NewHTMLDetailsElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 namespace mozilla {
 namespace dom {
 
-bool
+/* static */ bool
 HTMLDetailsElement::IsDetailsEnabled()
 {
   static bool isDetailsEnabled = false;

@@ -238,6 +238,12 @@ pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
 
+// Kinto blocklist preferences
+pref("services.kinto.base", "https://firefox.settings.services.mozilla.com/v1");
+pref("services.kinto.bucket", "blocklists");
+pref("services.kinto.onecrl.collection", "certificates");
+pref("services.kinto.onecrl.checked", 0);
+
 /* Don't let XPIProvider install distribution add-ons; we do our own thing on mobile. */
 pref("extensions.installDistroAddons", false);
 
@@ -440,7 +446,7 @@ pref("ui.touch.radius.rightmm", 3);
 pref("ui.touch.radius.bottommm", 2);
 pref("ui.touch.radius.visitedWeight", 120);
 
-pref("ui.mouse.radius.enabled", true);
+pref("ui.mouse.radius.enabled", false);
 pref("ui.mouse.radius.leftmm", 3);
 pref("ui.mouse.radius.topmm", 5);
 pref("ui.mouse.radius.rightmm", 3);

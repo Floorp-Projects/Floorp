@@ -91,6 +91,12 @@ class MachRegistrar(object):
 
         result = result or 0
         assert isinstance(result, (int, long))
+
+        if context:
+            postrun = getattr(context, 'post_dispatch_handler', None)
+            if postrun:
+                postrun(context, handler, args=kwargs)
+
         return result
 
     def dispatch(self, name, context=None, argv=None, **kwargs):

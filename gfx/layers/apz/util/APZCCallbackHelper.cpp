@@ -92,11 +92,11 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const CSSPoint& aPoint, bool& aSuccess
 
   // If the scrollable frame is currently in the middle of an async or smooth
   // scroll then we don't want to interrupt it (see bug 961280).
-  // Also if the scrollable frame got a scroll request from something other than us
+  // Also if the scrollable frame got a scroll request from a higher priority origin
   // since the last layers update, then we don't want to push our scroll request
   // because we'll clobber that one, which is bad.
   bool scrollInProgress = aFrame->IsProcessingAsyncScroll()
-      || (aFrame->LastScrollOrigin() && aFrame->LastScrollOrigin() != nsGkAtoms::apz)
+      || nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin())
       || aFrame->LastSmoothScrollOrigin();
   if (!scrollInProgress) {
     aFrame->ScrollToCSSPixelsApproximate(targetScrollPosition, nsGkAtoms::apz);

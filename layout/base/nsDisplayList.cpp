@@ -349,7 +349,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(Maybe<ComputedTimingFunction> aCTF)
+ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 {
   if (aCTF.isNothing()) {
     return TimingFunction(null_t());

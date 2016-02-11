@@ -301,6 +301,32 @@ add_test(function test_hugeStringThrows()
   run_next_test();
 });
 
+add_test(function test_pathPercentEncodedDot()
+{
+  var url = stringToURL("http://example.com/%2eX/X%2e/%2eX");
+  do_check_eq(url.spec, "http://example.com/.X/X./.X");
+
+  url = stringToURL("http://example.com/hello/%2e%2E/%2e");
+  do_check_eq(url.spec, "http://example.com/");
+
+  url = stringToURL("http://example.com/hello/%2e%2E/%");
+  do_check_eq(url.spec, "http://example.com/%");
+
+  url = stringToURL("http://example.com/hello/%2e%2E/%2");
+  do_check_eq(url.spec, "http://example.com/%2");
+
+  url = stringToURL("http://example.com/hello/%2e%2E/%#");
+  do_check_eq(url.spec, "http://example.com/%#");
+
+  url = stringToURL("http://example.com/hello/%2e%2E/%2?");
+  do_check_eq(url.spec, "http://example.com/%2?");
+
+  url = stringToURL("http://example.com/hello/%2e/");
+  do_check_eq(url.spec, "http://example.com/hello/");
+
+  run_next_test();
+});
+
 add_test(function test_filterWhitespace()
 {
   var url = stringToURL(" \r\n\th\nt\rt\tp://ex\r\n\tample.com/path\r\n\t/\r\n\tto the/fil\r\n\te.e\r\n\txt?que\r\n\try#ha\r\n\tsh \r\n\t ");

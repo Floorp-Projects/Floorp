@@ -404,10 +404,18 @@ SafeInstallOperation.prototype = {
     let oldFile = aCopy ? null : aFile.clone();
     let newFile = aFile.clone();
     try {
-      if (aCopy)
+      if (aCopy) {
         newFile.copyTo(aTargetDirectory, null);
-      else
+        // copyTo does not update the nsIFile with the new.
+        newFile = aTargetDirectory.clone();
+        newFile.append(aFile.leafName);
+        // Windows roaming profiles won't properly sync directories if a new file
+        // has an older lastModifiedTime than a previous file, so update.
+        newFile.lastModifiedTime = Date.now();
+      }
+      else {
         newFile.moveTo(aTargetDirectory, null);
+      }
     }
     catch (e) {
       logger.error("Failed to " + (aCopy ? "copy" : "move") + " file " + aFile.path +
@@ -5443,8 +5451,13 @@ AddonInstall.prototype = {
     }
 
     // No valid add-on was found, delete all the temporary files
-    for (let { file } of files)
-      file.remove(true);
+    for (let { file } of files) {
+      try {
+        file.remove(true);
+      } catch (e) {
+        this.logger.warn("Could not remove temp file " + file.path);
+      }
+    }
 
     return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
                            "Multi-package XPI does not contain any valid packages to install"]);

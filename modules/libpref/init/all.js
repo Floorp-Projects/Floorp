@@ -4438,7 +4438,7 @@ pref("gfx.apitrace.enabled",false);
 #ifdef MOZ_X11
 pref("gfx.content.use-native-pushlayer", true);
 #ifdef MOZ_WIDGET_GTK
-pref("gfx.xrender.enabled",true);
+pref("gfx.xrender.enabled",false);
 #endif
 #endif
 

@@ -3231,6 +3231,22 @@
     "kind": "boolean",
     "description": "Did UrlClassifier fail to construct the PrefixSet?"
   },
+  "URLCLASSIFIER_UPDATE_REMOTE_STATUS": {
+    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1150921],
+    "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
+  },
+  "URLCLASSIFIER_COMPLETE_REMOTE_STATUS": {
+    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1150921],
+    "description": "Server HTTP status code from remote SafeBrowsing gethash lookups. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
+  },
   "PLACES_PAGES_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
