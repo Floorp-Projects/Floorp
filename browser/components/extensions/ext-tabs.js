@@ -250,6 +250,49 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       onReplaced: ignoreEvent(context, "tabs.onReplaced"),
 
+      onMoved: new EventManager(context, "tabs.onMoved", fire => {
+        // There are certain circumstances where we need to ignore a move event.
+        //
+        // Namely, the first time the tab is moved after it's created, we need
+        // to report the final position as the initial position in the tab's
+        // onAttached or onCreated event. This is because most tabs are inserted
+        // in a temporary location and then moved after the TabOpen event fires,
+        // which generates a TabOpen event followed by a TabMove event, which
+        // does not match the contract of our API.
+        let ignoreNextMove = new WeakSet();
+
+        let openListener = event => {
+          ignoreNextMove.add(event.target);
+          // Remove the tab from the set on the next tick, since it will already
+          // have been moved by then.
+          Promise.resolve().then(() => {
+            ignoreNextMove.delete(event.target);
+          });
+        };
+
+        let moveListener = event => {
+          let tab = event.originalTarget;
+
+          if (ignoreNextMove.has(tab)) {
+            ignoreNextMove.delete(tab);
+            return;
+          }
+
+          fire(TabManager.getId(tab), {
+            windowId: WindowManager.getId(tab.ownerDocument.defaultView),
+            fromIndex: event.detail,
+            toIndex: tab._tPos,
+          });
+        };
+
+        AllWindowEvents.addListener("TabMove", moveListener);
+        AllWindowEvents.addListener("TabOpen", openListener);
+        return () => {
+          AllWindowEvents.removeListener("TabMove", moveListener);
+          AllWindowEvents.removeListener("TabOpen", openListener);
+        };
+      }).api(),
+
       onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
         function sanitize(extension, changeInfo) {
           let result = {};
