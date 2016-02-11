@@ -249,6 +249,7 @@ UNIFIED_SOURCES += [
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
     'OfflineObserver.cpp',
+    'PollableEvent.cpp',
     'Predictor.cpp',
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
