@@ -3,18 +3,13 @@
 # Copies the needed files from a directory containing the original
 # Decimal.h and Decimal.cpp source that we need.
 # If [blink-core-source-directory] is not specified, this script will
-# attempt to download the latest versions using svn.
-
-# This was last updated with svn r148833
+# attempt to download the latest versions using git.
 
 set -e
 
 FILES=(
-  "LICENSE-APPLE"
-  "LICENSE-LGPL-2"
-  "LICENSE-LGPL-2.1"
-  "platform/Decimal.h"
-  "platform/Decimal.cpp"
+  "Decimal.h"
+  "Decimal.cpp"
 )
 
 OWN_NAME=`basename $0`
@@ -40,20 +35,16 @@ if [ $# -eq 1 ]; then
     cp "$P" .
   done
 else
-  SVN="svn --non-interactive --trust-server-cert"
-  REPO_PATH="https://src.chromium.org/blink/trunk/Source/core"
-  #REPO_PATH="https://svn.webkit.org/repository/webkit/trunk/Source/WebCore"
-
-  printf "Looking up latest Blink revision number..."
-  LATEST_REV=`$SVN info $REPO_PATH | grep '^Revision: ' | cut -c11-`
-  echo done.
-
+  LATEST_SHA=$(git ls-remote https://chromium.googlesource.com/chromium/src.git/ | awk "/refs\/heads\/master/ {print \$1}")
+  REPO_PATH="https://chromium.googlesource.com/chromium/src.git/+/$LATEST_SHA/third_party/WebKit/Source/platform"
+  #REPO_PATH="https://github.com/WebKit/webkit/tree/master/Source/WebCore/platform"
   for F in "${FILES[@]}"
   do
-    printf "Exporting r$LATEST_REV of `basename $F`..."
-    $SVN export -r $LATEST_REV $REPO_PATH/$F 2>/dev/null 1>&2
+    printf "Downloading `basename $F`..."
+    curl "$REPO_PATH/${F}?format=TEXT" | base64 -D > "$F"
     echo done.
   done
+  echo $LATEST_SHA > UPSTREAM-GIT-SHA
 fi
 
 # Apply patches:
