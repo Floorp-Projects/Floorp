@@ -45,8 +45,9 @@
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "WorkerPrivate.h"
 #include "nsDOMClassInfo.h"
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/UseCounter.h"
@@ -3237,6 +3238,19 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
     window->GetExtantDoc()->WarnOnceAbout(aOperation);
   }
 }
+
+namespace binding_detail {
+JSObject*
+UnprivilegedJunkScopeOrWorkerGlobal()
+{
+  if (NS_IsMainThread()) {
+    return xpc::UnprivilegedJunkScope();
+  }
+
+  return workers::GetCurrentThreadWorkerPrivate()->
+    GlobalScope()->GetGlobalJSObject();
+}
+} // namespace binding_detail
 
 } // namespace dom
 } // namespace mozilla
