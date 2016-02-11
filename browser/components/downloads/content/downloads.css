@@ -42,7 +42,7 @@ richlistitem.download {
 }
 
 richlistitem.download[active] {
-  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-full-ui");
+  -moz-binding: url("chrome://browser/content/downloads/download.xml#download");
 }
 
 richlistitem.download button {
