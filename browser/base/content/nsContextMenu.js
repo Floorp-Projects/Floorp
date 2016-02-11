@@ -31,6 +31,7 @@ nsContextMenu.prototype = {
       return;
 
     this.hasPageMenu = false;
+    this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     if (!aIsShift) {
       if (this.isRemote) {
         this.hasPageMenu =
@@ -71,6 +72,8 @@ nsContextMenu.prototype = {
                                                    Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
+    // Reset after "on-build-contextmenu" notification in case selection was
+    // changed during the notification.
     this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     this.onPlainTextLink = false;
 

@@ -613,41 +613,33 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
           // If the window is not specified, use the window from the tab.
           let window = destinationWindow || tab.ownerDocument.defaultView;
-          let windowId = WindowManager.getId(window);
           let gBrowser = window.gBrowser;
 
-          let getInsertionPoint = () => {
-            let point = indexMap.get(window) || index;
-            // If the index is -1 it should go to the end of the tabs.
-            if (point == -1) {
-              point = gBrowser.tabs.length;
-            }
-            indexMap.set(window, point + 1);
-            return point;
-          };
+          let insertionPoint = indexMap.get(window) || index;
+          // If the index is -1 it should go to the end of the tabs.
+          if (insertionPoint == -1) {
+            insertionPoint = gBrowser.tabs.length;
+          }
 
-          if (WindowManager.getId(tab.ownerDocument.defaultView) !== windowId) {
+          // We can only move pinned tabs to a point within, or just after,
+          // the current set of pinned tabs. Unpinned tabs, likewise, can only
+          // be moved to a position after the current set of pinned tabs.
+          // Attempts to move a tab to an illegal position are ignored.
+          let numPinned = gBrowser._numPinnedTabs;
+          let ok = tab.pinned ? insertionPoint <= numPinned : insertionPoint >= numPinned;
+          if (!ok) {
+            continue;
+          }
+
+          indexMap.set(window, insertionPoint + 1);
+
+          if (tab.ownerDocument.defaultView !== window) {
             // If the window we are moving the tab in is different, then move the tab
             // to the new window.
-            let newTab = gBrowser.addTab("about:blank");
-            let newBrowser = gBrowser.getBrowserForTab(newTab);
-            gBrowser.updateBrowserRemotenessByURL(newBrowser, tab.linkedBrowser.currentURI.spec);
-            newBrowser.stop();
-            // This is necessary for getter side-effects.
-            void newBrowser.docShell;
-
-            if (tab.pinned) {
-              gBrowser.pinTab(newTab);
-            }
-
-            gBrowser.moveTabTo(newTab, getInsertionPoint());
-
-            tab.parentNode._finishAnimateTabMove();
-            gBrowser.swapBrowsersAndCloseOther(newTab, tab);
-            tab = newTab;
+            tab = gBrowser.adoptTab(tab, insertionPoint, false);
           } else {
             // If the window we are moving is the same, just move the tab.
-            gBrowser.moveTabTo(tab, getInsertionPoint());
+            gBrowser.moveTabTo(tab, insertionPoint);
           }
           tabsMoved.push(tab);
         }
