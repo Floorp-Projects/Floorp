@@ -3,60 +3,84 @@ menu items.
 
 Mac makes this astonishingly painful to test since their help menu is special magic,
 but we can at least test it on the other platforms.*/
-var menu;
 
-function test() {
-  waitForExplicitFinish();
+const NORMAL_PAGE = "http://example.com";
+const PHISH_PAGE = "http://www.itisatrap.org/firefox/its-a-trap.html";
 
-  gBrowser.selectedTab = gBrowser.addTab();
+/**
+ * Opens a new tab and browses to some URL, tests for the existence
+ * of the phishing menu items, and then runs a test function to check
+ * the state of the menu once opened. This function will take care of
+ * opening and closing the menu.
+ *
+ * @param url (string)
+ *        The URL to browse the tab to.
+ * @param testFn (function)
+ *        The function to run once the menu has been opened. This
+ *        function will be passed the "reportMenu" and "errorMenu"
+ *        DOM nodes as arguments, in that order. This function
+ *        should not yield anything.
+ * @returns Promise
+ */
+function check_menu_at_page(url, testFn) {
+  return BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "about:blank",
+  }, function*(browser) {
+    // We don't get load events when the DocShell redirects to error
+    // pages, but we do get DOMContentLoaded, so we'll wait for that.
+    let dclPromise = ContentTask.spawn(browser, null, function*() {
+      yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
+    });
+    browser.loadURI(url);
+    yield dclPromise;
 
-  // Navigate to a normal site
-  gBrowser.addEventListener("DOMContentLoaded", testNormal, false);
-  content.location = "http://example.com/";
+    let menu = document.getElementById("menu_HelpPopup");
+    ok(menu, "Help menu should exist");
+
+    let reportMenu =
+      document.getElementById("menu_HelpPopup_reportPhishingtoolmenu");
+    ok(reportMenu, "Report phishing menu item should exist");
+
+    let errorMenu =
+      document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu");
+    ok(errorMenu, "Report phishing error menu item should exist");
+
+    let menuOpen = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    menu.openPopup(null, "", 0, 0, false, null);
+    yield menuOpen;
+
+    testFn(reportMenu, errorMenu);
+
+    let menuClose = BrowserTestUtils.waitForEvent(menu, "popuphidden");
+    menu.hidePopup();
+    yield menuClose;
+  });
 }
 
-function testNormal() {
-  gBrowser.removeEventListener("DOMContentLoaded", testNormal, false);
+/**
+ * Tests that we show the "Report this page" menu item at a normal
+ * page.
+ */
+add_task(function*() {
+  yield check_menu_at_page(NORMAL_PAGE, (reportMenu, errorMenu) => {
+    ok(!reportMenu.hidden,
+       "Report phishing menu should be visible on normal sites");
+    ok(errorMenu.hidden,
+       "Report error menu item should be hidden on normal sites");
+  });
+});
 
-  // open the menu, to force it to update
-  menu = document.getElementById("menu_HelpPopup");
-  ok(menu, "Help menu should exist!");
+/**
+ * Tests that we show the "Report this page is okay" menu item at
+ * a reported attack site.
+ */
+add_task(function*() {
+  yield check_menu_at_page(PHISH_PAGE, (reportMenu, errorMenu) => {
+    ok(reportMenu.hidden,
+       "Report phishing menu should be hidden on phishing sites");
+    ok(!errorMenu.hidden,
+       "Report error menu item should be visible on phishing sites");
+  });
+});
 
-  menu.addEventListener("popupshown", testNormal_PopupListener, false);
-  menu.openPopup(null, "", 0, 0, false, null);
-}
-
-function testNormal_PopupListener() {
-  menu.removeEventListener("popupshown", testNormal_PopupListener, false);
-
-  var reportMenu = document.getElementById("menu_HelpPopup_reportPhishingtoolmenu");
-  var errorMenu = document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu");
-  is(reportMenu.hidden, false, "Report phishing menu should be visible on normal sites");
-  is(errorMenu.hidden, true, "Report error menu item should be hidden on normal sites");
-  menu.hidePopup();
-
-  // Now launch the phishing test.  Can't use onload here because error pages don't
-  // fire normal load events.
-  window.addEventListener("DOMContentLoaded", testPhishing, true);
-  content.location = "http://www.itisatrap.org/firefox/its-a-trap.html";
-}
-
-function testPhishing() {
-  window.removeEventListener("DOMContentLoaded", testPhishing, true);
-
-  menu.addEventListener("popupshown", testPhishing_PopupListener, false);
-  menu.openPopup(null, "", 0, 0, false, null);
-}
-
-function testPhishing_PopupListener() {
-  menu.removeEventListener("popupshown", testPhishing_PopupListener, false);
-
-  var reportMenu = document.getElementById("menu_HelpPopup_reportPhishingtoolmenu");
-  var errorMenu = document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu");
-  is(reportMenu.hidden, true, "Report phishing menu should be hidden on phishing sites");
-  is(errorMenu.hidden, false, "Report error menu item should be visible on phishing sites");
-  menu.hidePopup();
-
-  gBrowser.removeCurrentTab();
-  finish();
-}
