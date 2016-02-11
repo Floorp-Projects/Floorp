@@ -2724,31 +2724,33 @@ MCompare::operandTruncateKind(size_t index) const
     return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
 }
 
-static void
+static bool
 TruncateTest(TempAllocator& alloc, MTest* test)
 {
     // If all possible inputs to the test are either int32 or boolean,
     // convert those inputs to int32 so that an int32 test can be performed.
 
     if (test->input()->type() != MIRType_Value)
-        return;
+        return true;
 
     if (!test->input()->isPhi() || !test->input()->hasOneDefUse() || test->input()->isImplicitlyUsed())
-        return;
+        return true;
 
     MPhi* phi = test->input()->toPhi();
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* def = phi->getOperand(i);
         if (!def->isBox())
-            return;
+            return true;
         MDefinition* inner = def->getOperand(0);
         if (inner->type() != MIRType_Boolean && inner->type() != MIRType_Int32)
-            return;
+            return true;
     }
 
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* inner = phi->getOperand(i)->getOperand(0);
         if (inner->type() != MIRType_Int32) {
+            if (!alloc.ensureBallast())
+                return false;
             MBasicBlock* block = inner->block();
             inner = MToInt32::New(alloc, inner);
             block->insertBefore(block->lastIns(), inner->toInstruction());
@@ -2758,6 +2760,7 @@ TruncateTest(TempAllocator& alloc, MTest* test)
     }
 
     phi->setResultType(MIRType_Int32);
+    return true;
 }
 
 // Truncating instruction result is an optimization which implies
@@ -3009,8 +3012,10 @@ RangeAnalysis::truncate()
                 continue;
 
             if (iter->type() == MIRType_None) {
-                if (iter->isTest())
-                    TruncateTest(alloc(), iter->toTest());
+                if (iter->isTest()) {
+                    if (!TruncateTest(alloc(), iter->toTest()))
+                        return false;
+                }
                 continue;
             }
 
