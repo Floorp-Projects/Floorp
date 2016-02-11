@@ -11,6 +11,7 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
 #include "mozilla/dom/Element.h" // For dom::Element
 
@@ -69,7 +70,7 @@ AnimationUtils::ParseEasing(const dom::Element* aTarget,
               NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR) {
             return Nothing();
           }
-          // Fall through
+          MOZ_FALLTHROUGH;
         case eCSSUnit_Cubic_Bezier:
         case eCSSUnit_Steps: {
           nsTimingFunction timingFunction;
