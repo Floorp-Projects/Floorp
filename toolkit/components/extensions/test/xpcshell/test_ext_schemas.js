@@ -70,7 +70,7 @@ let json = [
          {
            name: "sub_foo",
            type: "function",
-           parameters: []
+           parameters: [],
          },
        ],
      },
