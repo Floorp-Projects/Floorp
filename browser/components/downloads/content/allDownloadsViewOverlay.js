@@ -505,6 +505,17 @@ HistoryDownloadElementShell.prototype = {
 };
 
 /**
+ * Relays commands from the download.xml binding to the selected items.
+ */
+const DownloadsView = {
+  onDownloadCommand(event, command) {
+    goDoCommand(command);
+  },
+
+  onDownloadClick() {},
+};
+
+/**
  * A Downloads Places View is a places view designed to show a places query
  * for history downloads alongside the session downloads.
  *
