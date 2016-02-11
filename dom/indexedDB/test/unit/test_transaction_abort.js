@@ -3,14 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var disableWorkerTest =
-  "This test requires a precise 'executeSoon()' to complete reliably. On a " +
-  "worker 'executeSoon()' currently uses 'setTimeout()', and that switches " +
-  "to the timer thread and back before completing. That gives the IndexedDB " +
-  "transaction thread time to fully complete transactions and to place " +
-  "'complete' events in the worker thread's queue before the timer event, " +
-  "causing ordering problems in the spot marked 'Worker Fails Here' below.";
-
 var testGenerator = testSteps();
 
 var abortFired = false;
@@ -338,8 +330,6 @@ function testSteps()
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
   transaction.objectStore("foo").put({hello: "world"}, 1).onsuccess = function(event) {
-    // Worker Fails Here! Due to the thread switching of 'executeSoon()' the
-    // transaction can commit and fire a 'complete' event before we continue.
     continueToNextStep();
   };
   yield undefined;
