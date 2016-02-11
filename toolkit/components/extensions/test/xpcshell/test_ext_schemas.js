@@ -275,6 +275,18 @@ function verify(...args) {
   tallied = null;
 }
 
+let talliedErrors = [];
+
+function checkErrors(errors) {
+  do_check_eq(talliedErrors.length, errors.length, "Got expected number of errors");
+  for (let [i, error] of errors.entries()) {
+    do_check_true(i in talliedErrors && talliedErrors[i].includes(error),
+                  `${JSON.stringify(error)} is a substring of error ${JSON.stringify(talliedErrors[i])}`);
+  }
+
+  talliedErrors.length = 0;
+}
+
 let wrapper = {
   url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
 
@@ -282,8 +294,20 @@ let wrapper = {
     return !url.startsWith("chrome:");
   },
 
+  logError(message) {
+    talliedErrors.push(message);
+  },
+
   callFunction(ns, name, args) {
     tally("call", ns, name, args);
+  },
+
+  getProperty(ns, name) {
+    tally("get", ns, name);
+  },
+
+  setProperty(ns, name, value) {
+    tally("set", ns, name, value);
   },
 
   addListener(ns, name, listener, args) {
@@ -564,4 +588,171 @@ add_task(function* () {
   Assert.throws(() => root.testing.extended2(true),
                 /Incorrect argument types/,
                 "should throw for wrong argument type");
+});
+
+let deprecatedJson = [
+  {namespace: "deprecated",
+
+   properties: {
+     accessor: {
+       type: "string",
+       writable: true,
+       deprecated: "This is not the property you are looking for",
+     },
+   },
+
+   types: [
+     {
+       "id": "Type",
+       "type": "string",
+     },
+   ],
+
+   functions: [
+     {
+       name: "property",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             foo: {
+               type: "string",
+             },
+           },
+           additionalProperties: {
+             type: "any",
+             deprecated: "Unknown property",
+           },
+         },
+       ],
+     },
+
+     {
+       name: "value",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               type: "integer",
+             },
+             {
+               type: "string",
+               deprecated: "Please use an integer, not ${value}",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "choices",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           deprecated: "You have no choices",
+           choices: [
+             {
+               type: "integer",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "ref",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               $ref: "Type",
+               deprecated: "Deprecated alias",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "method",
+       type: "function",
+       deprecated: "Do not call this method",
+       parameters: [
+       ],
+     },
+   ],
+
+   events: [
+     {
+       name: "onDeprecated",
+       type: "function",
+       deprecated: "This event does not work",
+     },
+   ],
+  },
+];
+
+add_task(function* testDeprecation() {
+  let url = "data:," + JSON.stringify(deprecatedJson);
+  let uri = BrowserUtils.makeURI(url);
+  yield Schemas.load(uri);
+
+  let root = {};
+  Schemas.inject(root, wrapper);
+
+  talliedErrors.length = 0;
+
+
+  root.deprecated.property({foo: "bar", xxx: "any", yyy: "property"});
+  verify("call", "deprecated", "property", [{foo: "bar", xxx: "any", yyy: "property"}]);
+  checkErrors([
+    "Error processing xxx: Unknown property",
+    "Error processing yyy: Unknown property",
+  ]);
+
+  root.deprecated.value(12);
+  verify("call", "deprecated", "value", [12]);
+  checkErrors([]);
+
+  root.deprecated.value("12");
+  verify("call", "deprecated", "value", ["12"]);
+  checkErrors(["Please use an integer, not \"12\""]);
+
+  root.deprecated.choices(12);
+  verify("call", "deprecated", "choices", [12]);
+  checkErrors(["You have no choices"]);
+
+  root.deprecated.ref("12");
+  verify("call", "deprecated", "ref", ["12"]);
+  checkErrors(["Deprecated alias"]);
+
+  root.deprecated.method();
+  verify("call", "deprecated", "method", []);
+  checkErrors(["Do not call this method"]);
+
+
+  void root.deprecated.accessor;
+  verify("get", "deprecated", "accessor", null);
+  checkErrors(["This is not the property you are looking for"]);
+
+  root.deprecated.accessor = "x";
+  verify("set", "deprecated", "accessor", "x");
+  checkErrors(["This is not the property you are looking for"]);
+
+
+  root.deprecated.onDeprecated.addListener(() => {});
+  checkErrors(["This event does not work"]);
+
+  root.deprecated.onDeprecated.removeListener(() => {});
+  checkErrors(["This event does not work"]);
+
+  root.deprecated.onDeprecated.hasListener(() => {});
+  checkErrors(["This event does not work"]);
 });
