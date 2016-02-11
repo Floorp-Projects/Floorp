@@ -17,6 +17,9 @@ createEnum([
   // Add an additional viewport to display the document.
   "ADD_VIEWPORT",
 
+  // Resize the viewport.
+  "RESIZE_VIEWPORT",
+
   // Rotate the viewport.
   "ROTATE_VIEWPORT",
 
