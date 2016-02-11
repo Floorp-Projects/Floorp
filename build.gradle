@@ -19,19 +19,11 @@ buildscript {
     repositories {
         jcenter()
 
-        // For spoon-gradle-plugin SNAPSHOT release.  This needs to go before
-        // the snapshots repository, otherwise we find a remote 1.0.3-SNAPSHOT
-        // that doesn't include nalexander's local changes.
-        maven {
-            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
-        }
     }
 
     dependencies {
-        // Unit testing support was added in 1.1.0. IntelliJ 14.1.4 and Android
-        // Studio 1.2.1.1 appear to work fine with plugin version 1.3.0.
         classpath 'com.android.tools.build:gradle:1.3.0'
-        classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.3-SNAPSHOT') {
+        classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.4') {
             // Without these, we get errors linting.
             exclude module: 'guava'
         }
