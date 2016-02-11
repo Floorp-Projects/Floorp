@@ -21,7 +21,6 @@
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
 #include "gfxRect.h"
-#include "mozilla/gfx/Point.h"
 
 #include "nsIAndroidBridge.h"
 #include "nsIMobileMessageCallback.h"
@@ -29,9 +28,9 @@
 #include "nsIDOMDOMCursor.h"
 
 #include "mozilla/Likely.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/TimeStamp.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Types.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
 
 // Some debug #defines
@@ -75,31 +74,6 @@ typedef struct AndroidSystemColors {
     nscolor panelColorForeground;
     nscolor panelColorBackground;
 } AndroidSystemColors;
-
-class DelayedTask {
-public:
-    DelayedTask(Task* aTask, int aDelayMs) {
-        mTask = aTask;
-        mRunTime = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(aDelayMs);
-    }
-
-    bool IsEarlierThan(DelayedTask *aOther) {
-        return mRunTime < aOther->mRunTime;
-    }
-
-    int64_t MillisecondsToRunTime() {
-        mozilla::TimeDuration timeLeft = mRunTime - mozilla::TimeStamp::Now();
-        return (int64_t)timeLeft.ToMilliseconds();
-    }
-
-    Task* GetTask() {
-        return mTask;
-    }
-
-private:
-    Task* mTask;
-    mozilla::TimeStamp mRunTime;
-};
 
 class ThreadCursorContinueCallback : public nsICursorContinueCallback
 {
@@ -438,9 +412,10 @@ protected:
     void (* Region_set)(void* region, void* rect);
 
 private:
-    // This will always be accessed from one thread (the Java UI thread),
-    // so we don't need to do locking to touch it.
-    nsTArray<DelayedTask*> mDelayedTaskQueue;
+    class DelayedTask;
+    nsTArray<DelayedTask> mUiTaskQueue;
+    mozilla::Mutex mUiTaskQueueLock;
+
 public:
     void PostTaskToUiThread(Task* aTask, int aDelayMs);
     int64_t RunDelayedUiThreadTasks();

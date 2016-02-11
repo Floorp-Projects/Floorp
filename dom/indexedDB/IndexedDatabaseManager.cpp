@@ -22,7 +22,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
@@ -934,12 +933,12 @@ IndexedDatabaseManager::FlushPendingFileDeletions()
       return rv;
     }
   } else {
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    if (NS_WARN_IF(!contentChild)) {
+    PBackgroundChild* bgActor = BackgroundChild::GetForCurrentThread();
+    if (NS_WARN_IF(!bgActor)) {
       return NS_ERROR_FAILURE;
     }
 
-    if (!contentChild->SendFlushPendingFileDeletions()) {
+    if (!bgActor->SendFlushPendingFileDeletions()) {
       return NS_ERROR_FAILURE;
     }
   }

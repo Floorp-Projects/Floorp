@@ -754,7 +754,8 @@ class AssemblerShared
     void append(wasm::JumpTarget target, uint32_t offset) {
         enoughMemory_ &= jumpsites_[target].append(offset);
     }
-    const wasm::JumpSiteArray& jumpSites() const { return jumpsites_; }
+    const wasm::JumpSiteArray& jumpSites() { return jumpsites_; }
+    void clearJumpSites() { for (auto& v : jumpsites_) v.clear(); }
 
     void append(wasm::HeapAccess access) { enoughMemory_ &= heapAccesses_.append(access); }
     wasm::HeapAccessVector&& extractHeapAccesses() { return Move(heapAccesses_); }

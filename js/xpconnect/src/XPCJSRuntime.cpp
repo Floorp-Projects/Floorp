@@ -2485,11 +2485,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         KIND_HEAP, rtStats.runtime.contexts,
         "JSContext objects and structures that belong to them.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/dtoa"),
-        KIND_HEAP, rtStats.runtime.dtoa,
-        "The DtoaState object, which is used for converting strings to "
-        "numbers and vice versa.");
-
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/temporary"),
         KIND_HEAP, rtStats.runtime.temporary,
         "Transient data (mostly parse nodes) held by the JSRuntime during "

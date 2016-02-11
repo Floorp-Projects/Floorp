@@ -123,7 +123,10 @@ FramePropertyTable::RemoveInternal(
   if (entry->mProp.mProperty == aProperty) {
     // There's only one entry and it's the one we want
     void* value = entry->mProp.mValue;
-    mEntries.RawRemoveEntry(entry);
+
+    // Here it's ok to use RemoveEntry() -- which may resize mEntries --
+    // because we null mLastEntry at the same time.
+    mEntries.RemoveEntry(entry);
     mLastEntry = nullptr;
     if (aFoundResult) {
       *aFoundResult = true;
@@ -209,6 +212,9 @@ FramePropertyTable::DeleteAllFor(const nsIFrame* aFrame)
   }
 
   DeleteAllForEntry(entry);
+
+  // mLastEntry points into mEntries, so we use RawRemoveEntry() which will not
+  // resize mEntries.
   mEntries.RawRemoveEntry(entry);
 }
 

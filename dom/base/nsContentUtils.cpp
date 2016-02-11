@@ -7270,13 +7270,13 @@ nsContentUtils::GetInnerWindowID(nsIRequest* aRequest)
   return inner ? inner->WindowID() : 0;
 }
 
-void
+nsresult
 nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsCString& aHost)
 {
   aHost.Truncate();
   nsresult rv = aURI->GetHost(aHost);
   if (NS_FAILED(rv)) { // Some URIs do not have a host
-    return;
+    return rv;
   }
 
   if (aHost.FindChar(':') != -1) { // Escape IPv6 address
@@ -7285,14 +7285,20 @@ nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsCString& aHost)
     aHost.Insert('[', 0);
     aHost.Append(']');
   }
+
+  return NS_OK;
 }
 
-void
+nsresult
 nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost)
 {
   nsAutoCString hostname;
-  GetHostOrIPv6WithBrackets(aURI, hostname);
+  nsresult rv = GetHostOrIPv6WithBrackets(aURI, hostname);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   CopyUTF8toUTF16(hostname, aHost);
+  return NS_OK;
 }
 
 void

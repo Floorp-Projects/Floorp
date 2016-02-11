@@ -3,6 +3,8 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   workerType: desktop-test
+  scopes:
+    - docker-worker:cache:level-{{level}}-{{project}}-test-workspace
   payload:
     image:
       type: 'task-image'
@@ -13,6 +15,12 @@ task:
         NEED_PULSEAUDIO: true
         GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
         GECKO_HEAD_REV: '{{{head_rev}}}'
+
+    cache:
+      # put the workspace and /tmp on a cache, less for inter-task caching than
+      # to get this directory on fast, non-aufs storage
+      level-{{level}}-{{project}}-test-workspace: '/home/worker/workspace'
+
     artifacts:
       'public/test':
         type: directory
