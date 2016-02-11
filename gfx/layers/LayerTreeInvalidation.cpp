@@ -233,13 +233,13 @@ struct LayerPropertiesBase : public LayerProperties
     return result;
   }
 
-  IntRect NewTransformedBounds()
+  virtual IntRect NewTransformedBounds()
   {
     return TransformRect(mLayer->GetVisibleRegion().ToUnknownRegion().GetBounds(),
                          GetTransformForInvalidation(mLayer));
   }
 
-  IntRect OldTransformedBounds()
+  virtual IntRect OldTransformedBounds()
   {
     return TransformRect(mVisibleRegion.ToUnknownRegion().GetBounds(), mTransform);
   }
@@ -275,8 +275,8 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     }
   }
 
-  virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
-                                            bool& aGeometryChanged)
+  nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
   {
     ContainerLayer* container = mLayer->AsContainerLayer();
     nsIntRegion invalidOfLayer; // Invalid regions of this layer.
@@ -382,6 +382,31 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     result.OrWith(invalidOfLayer);
 
     return result;
+  }
+
+  IntRect NewTransformedBounds() override
+  {
+    if (mLayer->Extend3DContext()) {
+      IntRect result;
+      for (UniquePtr<LayerPropertiesBase>& child : mChildren) {
+        result = result.Union(child->NewTransformedBounds());
+      }
+      return result;
+    }
+
+    return LayerPropertiesBase::NewTransformedBounds();
+  }
+
+  IntRect OldTransformedBounds() override
+  {
+    if (mLayer->Extend3DContext()) {
+      IntRect result;
+      for (UniquePtr<LayerPropertiesBase>& child : mChildren) {
+        result = result.Union(child->OldTransformedBounds());
+      }
+      return result;
+    }
+    return LayerPropertiesBase::OldTransformedBounds();
   }
 
   // The old list of children:
