@@ -49,7 +49,6 @@ fi
 
 # Apply patches:
 
-patch -p3 < floor-ceiling.patch
 patch -p3 < zero-serialization.patch
 patch -p3 < comparison-with-nan.patch
 patch -p3 < mfbt-abi-markers.patch
