@@ -15688,7 +15688,10 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             jsapi.Init();
             jsapi.TakeOwnershipOfErrorReporting();
             JSContext* cx = jsapi.cx();
-            JSAutoCompartment tempCompartment(cx, xpc::UnprivilegedJunkScope());
+            // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
+            // all we want is to wrap into _some_ scope and then unwrap to find
+            // the reflector, and wrapping has no side-effects.
+            JSAutoCompartment tempCompartment(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
             JS::Rooted<JS::Value> v(cx);
             if(!ToJSValue(cx, self, &v)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
