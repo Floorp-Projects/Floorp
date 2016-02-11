@@ -28,12 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform/Decimal.h"
+#include "Decimal.h"
+#include "moz-decimal-utils.h"
 
-#include "wtf/Allocator.h"
-#include "wtf/MathExtras.h"
-#include "wtf/Noncopyable.h"
-#include "wtf/text/StringBuilder.h"
+using namespace moz_decimal_utils;
 
 #include <algorithm>
 #include <float.h>
@@ -282,7 +280,7 @@ Decimal::Decimal(int32_t i32)
 }
 
 Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
-    : m_data(sign, exponent, coefficient)
+    : m_data(sign, coefficient ? exponent : 0, coefficient)
 {
 }
 
@@ -514,11 +512,15 @@ Decimal Decimal::operator/(const Decimal& rhs) const
 
 bool Decimal::operator==(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     return m_data == rhs.m_data || compareTo(rhs).isZero();
 }
 
 bool Decimal::operator!=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return true;
     if (m_data == rhs.m_data)
         return false;
     const Decimal result = compareTo(rhs);
@@ -537,6 +539,8 @@ bool Decimal::operator<(const Decimal& rhs) const
 
 bool Decimal::operator<=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     if (m_data == rhs.m_data)
         return true;
     const Decimal result = compareTo(rhs);
@@ -555,6 +559,8 @@ bool Decimal::operator>(const Decimal& rhs) const
 
 bool Decimal::operator>=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     if (m_data == rhs.m_data)
         return true;
     const Decimal result = compareTo(rhs);
@@ -687,7 +693,7 @@ Decimal Decimal::floor() const
 Decimal Decimal::fromDouble(double doubleValue)
 {
     if (std::isfinite(doubleValue))
-        return fromString(String::numberToStringECMAScript(doubleValue));
+        return fromString(mozToString(doubleValue));
 
     if (std::isinf(doubleValue))
         return infinity(doubleValue < 0 ? Negative : Positive);
@@ -928,7 +934,7 @@ double Decimal::toDouble() const
 {
     if (isFinite()) {
         bool valid;
-        const double doubleValue = toString().toDouble(&valid);
+        const double doubleValue = mozToDouble(toString(), &valid);
         return valid ? doubleValue : std::numeric_limits<double>::quiet_NaN();
     }
 
@@ -981,7 +987,7 @@ String Decimal::toString() const
         }
     }
 
-    const String digits = String::number(coefficient);
+    const String digits = mozToString(coefficient);
     int coefficientLength = static_cast<int>(digits.length());
     const int adjustedExponent = originalExponent + coefficientLength - 1;
     if (originalExponent <= 0 && adjustedExponent >= -6) {
@@ -1021,6 +1027,19 @@ String Decimal::toString() const
         }
     }
     return builder.toString();
+}
+
+bool Decimal::toString(char* strBuf, size_t bufLength) const
+{
+  ASSERT(bufLength > 0);
+  String str = toString();
+  size_t length = str.copy(strBuf, bufLength);
+  if (length < bufLength) {
+    strBuf[length] = '\0';
+    return true;
+  }
+  strBuf[bufLength - 1] = '\0';
+  return false;
 }
 
 Decimal Decimal::zero(Sign sign)
