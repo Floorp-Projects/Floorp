@@ -120,10 +120,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private static final int LEVEL_SHIELD_ENABLED = 5;
     private static final int LEVEL_SHIELD_DISABLED = 6;
 
-    private final ForegroundColorSpan mUrlColor;
     private final ForegroundColorSpan mBlockedColor;
-    private final ForegroundColorSpan mDomainColor;
-    private final ForegroundColorSpan mPrivateDomainColor;
 
     public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -136,12 +133,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
 
-        final Resources res = getResources();
-
-        mUrlColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_urltext));
         mBlockedColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_blockedtext));
-        mDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext));
-        mPrivateDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext_private));
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
 
@@ -257,29 +249,20 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return;
         }
 
+        final String baseDomain = tab.getBaseDomain();
+
         String strippedURL = stripAboutReaderURL(url);
 
         if (mPrefs.shouldTrimUrls()) {
             strippedURL = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(strippedURL));
         }
 
-        CharSequence title = strippedURL;
-
-        final String baseDomain = tab.getBaseDomain();
         if (!TextUtils.isEmpty(baseDomain)) {
-            final SpannableStringBuilder builder = new SpannableStringBuilder(title);
-
-            int index = title.toString().indexOf(baseDomain);
-            if (index > -1) {
-                builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor,
-                                index, index + baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-
-                title = builder;
-            }
+            setTitle(baseDomain);
+            setContentDescription(strippedURL);
+        } else {
+            setTitle(strippedURL);
         }
-
-        setTitle(title);
     }
 
     private String stripAboutReaderURL(final String url) {
