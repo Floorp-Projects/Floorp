@@ -20,6 +20,9 @@ config = {
         'stage_server': 'upload.ffxbld.productdelivery.stage.mozaws.net',
         "sendchange_masters": ["dev-master1.srv.releng.scl3.mozilla.com:9038"],
         'taskcluster_index': 'index.garbage.staging',
+        'post_upload_extra': ['--bucket-prefix', 'net-mozaws-stage-delivery',
+                              '--url-prefix', 'http://ftp.stage.mozaws.net/',
+                              ],
     },
     "production": {
         # if not clobberer_url, only clobber 'abs_work_dir'
