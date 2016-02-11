@@ -349,9 +349,6 @@ private:
   RefPtr<dom::SourceBufferAttributes> mSourceBufferAttributes;
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
 
-  // MediaSource duration mirrored from MediaDecoder on the main thread..
-  Mirror<Maybe<double>> mMediaSourceDuration;
-
   // Set to true if abort was called.
   Atomic<bool> mAbort;
   // Set to true if mediasource state changed to ended.
