@@ -206,6 +206,31 @@ EOF
 tar -zxf xcb-repo-*.tgz
 echo "deb file://$PWD/xcb precise all" >> /etc/apt/sources.list
 
+# Install Valgrind (trunk, late Jan 2016) and do some crude sanity
+# checks.  It has to go in /usr/local, otherwise it won't work.  Copy
+# the launcher binary to /usr/bin, though, so that direct invokations
+# of /usr/bin/valgrind also work.  Also install libc6-dbg since
+# Valgrind won't work at all without the debug symbols for libc.so and
+# ld.so being available.
+tooltool_fetch <<'EOF'
+[
+{
+    "size": 41331092,
+    "visibility": "public",
+    "digest": "a89393c39171b8304fc262094a650df9a756543ffe9fbec935911e7b86842c4828b9b831698f97612abb0eca95cf7f7b3ff33ea7a9b0313b30c9be413a5efffc",
+    "algorithm": "sha512",
+    "filename": "valgrind-15775-3206-ubuntu1204.tgz"
+}
+]
+EOF
+cp valgrind-15775-3206-ubuntu1204.tgz /tmp
+(cd / && tar xzf /tmp/valgrind-15775-3206-ubuntu1204.tgz)
+rm /tmp/valgrind-15775-3206-ubuntu1204.tgz
+cp /usr/local/bin/valgrind /usr/bin/valgrind
+apt-get install -y libc6-dbg
+valgrind --version
+valgrind date
+
 apt-get update
 
 apt-get -q -y --force-yes install \
