@@ -1,7 +1,7 @@
 diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
 --- a/mfbt/decimal/Decimal.cpp
 +++ b/mfbt/decimal/Decimal.cpp
-@@ -505,21 +505,25 @@ Decimal Decimal::operator/(const Decimal
+@@ -509,21 +509,25 @@ Decimal Decimal::operator/(const Decimal
      if (remainder > divisor / 2)
          ++result;
  
@@ -27,7 +27,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
      return !result.isZero();
  }
  
-@@ -528,16 +532,18 @@ bool Decimal::operator<(const Decimal& r
+@@ -532,16 +536,18 @@ bool Decimal::operator<(const Decimal& r
      const Decimal result = compareTo(rhs);
      if (result.isNaN())
          return false;
@@ -46,7 +46,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
      return result.isZero() || result.isNegative();
  }
  
-@@ -546,16 +552,18 @@ bool Decimal::operator>(const Decimal& r
+@@ -550,16 +556,18 @@ bool Decimal::operator>(const Decimal& r
      const Decimal result = compareTo(rhs);
      if (result.isNaN())
          return false;
