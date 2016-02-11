@@ -74,3 +74,4 @@ pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 == background-position-1.html background-position-1-ref.html
 == zero-opacity-animation.html about:blank
 == zero-opacity-text.html about:blank
+== negative-w-component.html negative-w-component-ref.html
