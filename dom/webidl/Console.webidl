@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [ChromeOnly,
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker, WorkerDebugger)]
 interface Console {
   void log(any... data);
   void info(any... data);
