@@ -4248,13 +4248,19 @@ this.XPIProvider = {
    * @return true if enabling the add-on should block e10s
    */
   isBlockingE10s: function(aAddon) {
-    // Only extensions change behaviour
-    if (aAddon.type != "extension")
+    if (aAddon.type != "extension" &&
+        aAddon.type != "webextension" &&
+        aAddon.type != "theme")
       return false;
 
     // The hotfix is exempt
     let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
     if (hotfixID && hotfixID == aAddon.id)
+      return false;
+
+    // The default theme is exempt
+    if (aAddon.type == "theme" &&
+        aAddon.internalName == XPIProvider.defaultSkin)
       return false;
 
     // System add-ons are exempt
