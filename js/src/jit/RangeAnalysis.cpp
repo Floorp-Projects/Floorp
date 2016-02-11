@@ -2782,6 +2782,8 @@ CloneForDeadBranches(TempAllocator& alloc, MInstruction* candidate)
         return true;
 
     MOZ_ASSERT(candidate->canClone());
+    if (!alloc.ensureBallast())
+        return false;
 
     MDefinitionVector operands(alloc);
     size_t end = candidate->numOperands();
