@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import errno
 import itertools
 import json
 import logging
@@ -1480,6 +1481,12 @@ class PackageFrontend(MachCommandBase):
 
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
+
+        try:
+            os.makedirs(cache_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
         import which
         if self._is_windows():
