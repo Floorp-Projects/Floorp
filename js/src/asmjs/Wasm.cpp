@@ -347,6 +347,33 @@ DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType expected)
 }
 
 static bool
+DecodeLoadStoreAddress(FunctionDecoder &f)
+{
+    uint32_t offset, align;
+    return DecodeExpr(f, ExprType::I32) &&
+           f.d().readVarU32(&offset) &&
+           f.d().readVarU32(&align) &&
+           mozilla::IsPowerOfTwo(align) &&
+           (offset == 0 || f.fail("NYI: address offsets")) &&
+           f.fail("NYI: wasm loads and stores");
+}
+
+static bool
+DecodeLoad(FunctionDecoder& f, ExprType expected, ExprType type)
+{
+    return DecodeLoadStoreAddress(f) &&
+           CheckType(f, type, expected);
+}
+
+static bool
+DecodeStore(FunctionDecoder& f, ExprType expected, ExprType type)
+{
+    return DecodeLoadStoreAddress(f) &&
+           DecodeExpr(f, expected) &&
+           CheckType(f, type, expected);
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -539,6 +566,38 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
                DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I64);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::F32);
+      case Expr::I32LoadMem:
+      case Expr::I32LoadMem8S:
+      case Expr::I32LoadMem8U:
+      case Expr::I32LoadMem16S:
+      case Expr::I32LoadMem16U:
+        return DecodeLoad(f, expected, ExprType::I32);
+      case Expr::I64LoadMem:
+      case Expr::I64LoadMem8S:
+      case Expr::I64LoadMem8U:
+      case Expr::I64LoadMem16S:
+      case Expr::I64LoadMem16U:
+      case Expr::I64LoadMem32S:
+      case Expr::I64LoadMem32U:
+        return DecodeLoad(f, expected, ExprType::I64);
+      case Expr::F32LoadMem:
+        return DecodeLoad(f, expected, ExprType::F32);
+      case Expr::F64LoadMem:
+        return DecodeLoad(f, expected, ExprType::F64);
+      case Expr::I32StoreMem:
+      case Expr::I32StoreMem8:
+      case Expr::I32StoreMem16:
+        return DecodeStore(f, expected, ExprType::I32);
+      case Expr::I64StoreMem:
+      case Expr::I64StoreMem8:
+      case Expr::I64StoreMem16:
+      case Expr::I64StoreMem32:
+        return f.fail("NYI: i64") &&
+               DecodeStore(f, expected, ExprType::I64);
+      case Expr::F32StoreMem:
+        return DecodeStore(f, expected, ExprType::F32);
+      case Expr::F64StoreMem:
+        return DecodeStore(f, expected, ExprType::F64);
       default:
         break;
     }
