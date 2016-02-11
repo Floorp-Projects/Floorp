@@ -5,8 +5,8 @@
 "use strict";
 
 var Cu = Components.utils;
-var {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {gDevTools} = require("devtools/client/framework/devtools");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {CssRuleView, _ElementStyle} = require("devtools/client/inspector/rules/rules");
 var {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");

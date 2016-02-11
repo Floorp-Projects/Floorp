@@ -17,11 +17,11 @@ function scopedCuImport(path) {
 }
 
 const {Services} = scopedCuImport("resource://gre/modules/Services.jsm");
-const {gDevTools} = scopedCuImport("resource://devtools/client/framework/gDevTools.jsm");
 const {console} = scopedCuImport("resource://gre/modules/Console.jsm");
 const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 const {require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
 
+const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 let promise = require("promise");
