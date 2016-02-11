@@ -3,9 +3,7 @@ dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 dnl Set the MOZ_ICU_VERSION variable to denote the current version of the
-dnl ICU library, and also the MOZ_SHARED_ICU which would be true if we are
-dnl linking against a shared library of ICU, either one that we build from
-dnl our copy of ICU or the system provided library.
+dnl ICU library, as well as a few other things.
 
 AC_DEFUN([MOZ_CONFIG_ICU], [
 
@@ -18,7 +16,6 @@ MOZ_ARG_WITH_BOOL(system-icu,
 
 if test -n "$MOZ_SYSTEM_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
-    MOZ_SHARED_ICU=1
 else
     MOZ_ICU_INCLUDES="/intl/icu/source/common /intl/icu/source/i18n"
 fi
@@ -79,21 +76,12 @@ if test -n "$USE_ICU"; then
     fi
     MOZ_ICU_VERSION="$version"
 
-    if test "$OS_TARGET" = WINNT; then
-        MOZ_SHARED_ICU=1
-    fi
-
-    if test -z "${JS_STANDALONE}" -a -n "${JS_SHARED_LIBRARY}${MOZ_SYSTEM_ICU}"; then
-        MOZ_SHARED_ICU=1
-    fi
-
     AC_SUBST(MOZ_ICU_VERSION)
-    AC_SUBST(MOZ_SHARED_ICU)
 
     if test -z "$MOZ_SYSTEM_ICU"; then
         case "$OS_TARGET" in
             WINNT)
-                ICU_LIB_NAMES="icuin icuuc icudt"
+                ICU_LIB_NAMES="sicuin sicuuc sicudt"
                 MOZ_ICU_DBG_SUFFIX=
                 if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
                     MOZ_ICU_DBG_SUFFIX=d
@@ -114,10 +102,8 @@ AC_SUBST(USE_ICU)
 AC_SUBST_LIST(ICU_LIB_NAMES)
 
 if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
-    dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
-    if test -z "$MOZ_SHARED_ICU"; then
-        AC_DEFINE(U_STATIC_IMPLEMENTATION)
-    fi
+    dnl We build ICU as a static library.
+    AC_DEFINE(U_STATIC_IMPLEMENTATION)
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.
     AC_DEFINE(U_USING_ICU_NAMESPACE,0)
@@ -198,12 +184,9 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
             ICU_TARGET_OPT="--build=$target --host=$target"
         fi
 
-        if test -z "$MOZ_SHARED_ICU"; then
-            # To reduce library size, use static linking
-            ICU_LINK_OPTS="--enable-static --disable-shared"
-        else
-            ICU_LINK_OPTS="--disable-static --enable-shared"
-        fi
+        # To reduce library size, use static linking
+        ICU_LINK_OPTS="--enable-static --disable-shared"
+
         # Force the ICU static libraries to be position independent code
         ICU_CFLAGS="$DSO_PIC_CFLAGS $CFLAGS"
         ICU_CXXFLAGS="$DSO_PIC_CFLAGS $CXXFLAGS"
@@ -276,13 +259,11 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
             ICU_CXXFLAGS="-I$_topsrcdir/build/gabi++/include $ICU_CXXFLAGS"
         fi
 
-        if test -z "$MOZ_SHARED_ICU"; then
-          ICU_CXXFLAGS="$ICU_CXXFLAGS -DU_STATIC_IMPLEMENTATION"
-          ICU_CFLAGS="$ICU_CFLAGS -DU_STATIC_IMPLEMENTATION"
-          if test "$GNU_CC"; then
-            ICU_CFLAGS="$ICU_CFLAGS -fvisibility=hidden"
-            ICU_CXXFLAGS="$ICU_CXXFLAGS -fvisibility=hidden"
-          fi
+        ICU_CXXFLAGS="$ICU_CXXFLAGS -DU_STATIC_IMPLEMENTATION"
+        ICU_CFLAGS="$ICU_CFLAGS -DU_STATIC_IMPLEMENTATION"
+        if test "$GNU_CC"; then
+          ICU_CFLAGS="$ICU_CFLAGS -fvisibility=hidden"
+          ICU_CXXFLAGS="$ICU_CXXFLAGS -fvisibility=hidden"
         fi
 
         (export AR="$AR"
