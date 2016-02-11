@@ -14,13 +14,6 @@ _HARNESS_FILES = \
   $(srcdir)/gaia_lock_screen.js \
   $(srcdir)/output.py \
   automation.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/droid.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/version_codes.py \
-  $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/Zeroconf.py \
-  $(topsrcdir)/testing/mozbase/moznetwork/moznetwork/moznetwork.py \
   $(topsrcdir)/build/mobile/b2gautomation.py \
   $(topsrcdir)/build/mobile/remoteautomation.py \
   $(topsrcdir)/testing/mochitest/server.js \

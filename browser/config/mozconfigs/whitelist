@@ -40,7 +40,6 @@ whitelist['nightly']['linux64'] += [
     'STRIP_FLAGS="--strip-debug"',
     'ac_add_options --with-ccache=/usr/bin/ccache',
     '. "$topsrcdir/build/mozconfig.cache"',
-    '. "$topsrcdir/build/mozconfig.rust"',
 ]
 
 whitelist['nightly']['macosx-universal'] += [
@@ -53,7 +52,6 @@ whitelist['nightly']['macosx-universal'] += [
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
-    '. "$topsrcdir/build/mozconfig.rust"',
 ]
 
 whitelist['nightly']['win32'] += [

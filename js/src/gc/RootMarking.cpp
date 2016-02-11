@@ -136,7 +136,10 @@ JS_FOR_EACH_TRACEKIND(FINISH_ROOT_LIST)
 #undef FINISH_ROOT_LIST
     FinishPersistentRootedChain<jsid>(heapRoots_[JS::RootKind::Id]);
     FinishPersistentRootedChain<Value>(heapRoots_[JS::RootKind::Value]);
-    FinishPersistentRootedChain<ConcreteTraceable>(heapRoots_[JS::RootKind::Traceable]);
+
+    // Note that we do not finalize the Traceable list as we do not know how to
+    // safely clear memebers. We instead assert that none escape the RootLists.
+    // See the comment on RootLists::~RootLists for details.
 }
 
 inline void

@@ -762,6 +762,21 @@ LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> a
                         Matrix4x4());
 }
 
+// Used to clear the 'mLayerComposited' flag at the beginning of each Render().
+static void
+ClearLayerFlags(Layer* aLayer) {
+  if (!aLayer) {
+    return;
+  }
+  if (aLayer->AsLayerComposite()) {
+    aLayer->AsLayerComposite()->SetLayerComposited(false);
+  }
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearLayerFlags(child);
+  }
+}
+
 void
 LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
 {
@@ -772,6 +787,8 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
     NS_WARNING("Call on destroyed layer manager");
     return;
   }
+
+  ClearLayerFlags(mRoot);
 
   // At this time, it doesn't really matter if these preferences change
   // during the execution of the function; we should be safe in all

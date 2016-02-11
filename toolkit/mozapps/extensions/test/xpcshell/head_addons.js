@@ -21,6 +21,15 @@ const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
 
+// Maximum error in file modification times. Some file systems don't store
+// modification times exactly. As long as we are closer than this then it
+// still passes.
+const MAX_TIME_DIFFERENCE = 3000;
+
+// Time to reset file modified time relative to Date.now() so we can test that
+// times are modified (10 hours old).
+const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
+
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -1233,6 +1242,7 @@ function writeInstallRDFToXPIFile(aData, aFile, aExtraFile) {
   var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
              createInstance(AM_Ci.nsIZipWriter);
   zipW.open(aFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
+  // Note these files are being created in the XPI archive with date "0" which is 1970-01-01.
   zipW.addEntryStream("install.rdf", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
                       stream, false);
   if (aExtraFile)

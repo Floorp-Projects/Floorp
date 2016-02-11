@@ -1151,7 +1151,7 @@ or run without that action (ie: --no-{action})"
         if auth_file:
             cmd.extend(['--authentication-file', auth_file])
         self.info(str(cmd))
-        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True)
+        self.run_command_m(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True)
 
     def query_revision(self, source_path=None):
         """ returns the revision of the build
