@@ -1404,8 +1404,10 @@ this.XPIDatabase = {
     for (let [, addon] of this.addonDB) {
       let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
 
-      if (active && XPIProvider.isBlockingE10s(addon))
+      if (active && XPIProvider.isBlockingE10s(addon)) {
         blockE10s = true;
+        break;
+      }
     }
     Preferences.set(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
   },
