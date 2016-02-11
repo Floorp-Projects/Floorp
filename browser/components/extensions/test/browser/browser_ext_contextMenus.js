@@ -54,12 +54,13 @@ add_task(function* () {
         { title: "child2", parentId: parentToDel, onclick: genericOnClick });
       browser.contextMenus.remove(parentToDel);
 
-      try {
-        browser.contextMenus.update(parent, { parentId: child2 });
-        browser.test.notifyFail();
-      } catch (e) {
-        browser.test.notifyPass();
-      }
+      browser.contextMenus.update(parent, { parentId: child2 }).then(
+        () => {
+          browser.test.notifyFail();
+        },
+        () => {
+          browser.test.notifyPass();
+        });
     },
   });
 

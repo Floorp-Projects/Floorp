@@ -405,10 +405,12 @@ GlobalManager = {
               // promises.
               promise = schemaApi[ns][name](...args, callback);
             } catch (e) {
-              promise = Promise.reject(e);
-              // TODO: Certain tests are still expecting API methods to
-              // throw errors.
-              throw e;
+              if (e instanceof context.cloneScope.Error) {
+                promise = Promise.reject(e);
+              } else {
+                Cu.reportError(e);
+                promise = Promise.reject({ message: "An unexpected error occurred" });
+              }
             }
 
             // TODO: This check should no longer be necessary
