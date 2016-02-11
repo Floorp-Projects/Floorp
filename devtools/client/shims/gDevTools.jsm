@@ -24,7 +24,6 @@ if (Services.prefs.getBoolPref(WARNING_PREF)) {
 
 this.EXPORTED_SYMBOLS = [
   "gDevTools",
-  "DevTools",
   "gDevToolsBrowser"
 ];
 
