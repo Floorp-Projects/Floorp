@@ -105,7 +105,7 @@
                      when-connection="secure secure-ev"/>
       </vbox>
 
-      <vbox id="identity-popup-securityView-body">
+      <vbox id="identity-popup-securityView-body" flex="1">
         <!-- (EV) Certificate Information -->
         <description id="identity-popup-content-verified-by"
                      when-connection="secure-ev">&identity.connectionVerified1;</description>
@@ -168,7 +168,9 @@
                 label="&identity.enableMixedContentBlocking.label;"
                 accesskey="&identity.enableMixedContentBlocking.accesskey;"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
+      </vbox>
 
+      <vbox id="identity-popup-securityView-footer">
         <!-- More Security Information -->
         <button label="&identity.moreInfoLinkText2;"
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
