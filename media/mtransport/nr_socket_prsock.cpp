@@ -113,6 +113,7 @@ nrappkit copyright:
 #include "nsITCPSocketCallback.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsISocketFilter.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -1496,7 +1497,7 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   ReentrantMonitorAutoEnter mon(monitor_);
   if (!socket_child_) {
     socket_child_ = socketChild;
-    socket_child_->SetFilterName(nsCString("stun"));
+    socket_child_->SetFilterName(nsCString(NS_NETWORK_SOCKET_FILTER_HANDLER_STUN_SUFFIX));
   } else {
     socketChild = nullptr;
   }
@@ -1926,6 +1927,8 @@ void NrTcpSocketIpc::connect_i(const nsACString &remote_addr,
 
   dom::TCPSocketChild* child = new dom::TCPSocketChild(NS_ConvertUTF8toUTF16(remote_addr), remote_port);
   socket_child_ = child;
+
+  socket_child_->SetFilterName(nsCString(NS_NETWORK_SOCKET_FILTER_HANDLER_STUN_SUFFIX));
 
   // XXX remove remote!
   socket_child_->SendWindowlessOpenBind(this,

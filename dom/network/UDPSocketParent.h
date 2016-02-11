@@ -10,7 +10,7 @@
 #include "mozilla/net/PUDPSocketParent.h"
 #include "nsCOMPtr.h"
 #include "nsIUDPSocket.h"
-#include "nsIUDPSocketFilter.h"
+#include "nsISocketFilter.h"
 #include "mozilla/net/OfflineObserver.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 
@@ -76,7 +76,7 @@ private:
 
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;
-  nsCOMPtr<nsIUDPSocketFilter> mFilter;
+  nsCOMPtr<nsISocketFilter> mFilter;
   RefPtr<mozilla::net::OfflineObserver> mObserver;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
