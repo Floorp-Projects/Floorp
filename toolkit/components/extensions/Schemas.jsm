@@ -802,7 +802,7 @@ class TypeProperty extends Entry {
           this.throwError(context, normalized.error);
         }
 
-        context.setProperty(this.namespaceName, name, normalized.value);
+        context.setProperty(path, name, normalized.value);
       };
 
       desc.set = Cu.exportFunction(setStub, dest);
