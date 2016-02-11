@@ -283,7 +283,7 @@
   <string name="tracking_protection_prompt_action_button">&tracking_protection_prompt_action_button;</string>
 
   <string name="pref_tab_queue_title">&pref_tab_queue_title3;</string>
-  <string name="pref_tab_queue_summary">&pref_tab_queue_summary3;</string>
+  <string name="pref_tab_queue_summary">&pref_tab_queue_summary4;</string>
   <string name="tab_queue_prompt_title">&tab_queue_prompt_title;</string>
   <string name="tab_queue_prompt_text">&tab_queue_prompt_text4;</string>
   <string name="tab_queue_prompt_tip_text">&tab_queue_prompt_tip_text2;</string>
