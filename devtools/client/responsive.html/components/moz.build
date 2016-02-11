@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'browser.js',
+    'viewport-toolbar.js',
     'viewport.js',
     'viewports.js',
 )

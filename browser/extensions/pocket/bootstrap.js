@@ -468,18 +468,6 @@ var PocketOverlay = {
       this.updatePocketItemVisibility(win.document);
     }
   },
-  onWidgetReset: function(aNode, aContainer) {
-    // CUI was reset and doesn't respect default area for API widgets, place our
-    // widget back to the default area
-    // initially place the button after the bookmarks button if it is in the UI
-    let widgets = CustomizableUI.getWidgetIdsInArea(CustomizableUI.AREA_NAVBAR);
-    let bmbtn = widgets.indexOf("bookmarks-menu-button");
-    if (bmbtn > -1) {
-      CustomizableUI.addWidgetToArea("pocket-button", CustomizableUI.AREA_NAVBAR, bmbtn + 1);
-    } else {
-      CustomizableUI.addWidgetToArea("pocket-button", CustomizableUI.AREA_NAVBAR);
-    }
-  },
   updatePocketItemVisibility: function(doc) {
     let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
     for (let prefix of ["panelMenu_", "menu_", "BMB_"]) {

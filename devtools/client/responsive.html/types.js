@@ -14,6 +14,9 @@ const { PropTypes } = require("devtools/client/shared/vendor/react");
  */
 exports.viewport = {
 
+  // The id of the viewport
+  id: PropTypes.number.isRequired,
+
   // The width of the viewport
   width: PropTypes.number,
 

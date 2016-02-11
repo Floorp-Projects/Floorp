@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.CryptoInfo;
@@ -87,8 +86,9 @@ public class CryptoRecord extends Record {
     this.payload = payload;
   }
 
-  public CryptoRecord(String jsonString) throws IOException, ParseException, NonObjectJSONException {
-    this(ExtendedJSONObject.parseJSONObject(jsonString));
+  public CryptoRecord(String jsonString) throws IOException, NonObjectJSONException {
+
+    this(new ExtendedJSONObject(jsonString));
   }
 
   /**
@@ -125,11 +125,10 @@ public class CryptoRecord extends Record {
    *        A CryptoRecord that encapsulates the provided record.
    *
    * @throws NonObjectJSONException
-   * @throws ParseException
    * @throws IOException
    */
   public static CryptoRecord fromJSONRecord(String jsonRecord)
-      throws ParseException, NonObjectJSONException, IOException, RecordParseException {
+      throws NonObjectJSONException, IOException, RecordParseException {
     byte[] bytes = jsonRecord.getBytes("UTF-8");
     ExtendedJSONObject object = ExtendedJSONObject.parseUTF8AsJSONObject(bytes);
 
@@ -138,12 +137,12 @@ public class CryptoRecord extends Record {
 
   // TODO: defensive programming.
   public static CryptoRecord fromJSONRecord(ExtendedJSONObject jsonRecord)
-      throws IOException, ParseException, NonObjectJSONException, RecordParseException {
+      throws IOException, NonObjectJSONException, RecordParseException {
     String id                  = (String) jsonRecord.get(KEY_ID);
     String collection          = (String) jsonRecord.get(KEY_COLLECTION);
     String jsonEncodedPayload  = (String) jsonRecord.get(KEY_PAYLOAD);
 
-    ExtendedJSONObject payload = ExtendedJSONObject.parseJSONObject(jsonEncodedPayload);
+    ExtendedJSONObject payload = new ExtendedJSONObject(jsonEncodedPayload);
 
     CryptoRecord record = new CryptoRecord(payload);
     record.guid         = id;
@@ -181,8 +180,7 @@ public class CryptoRecord extends Record {
     this.keyBundle = bundle;
   }
 
-  public CryptoRecord decrypt() throws CryptoException, IOException, ParseException,
-                       NonObjectJSONException {
+  public CryptoRecord decrypt() throws CryptoException, IOException, NonObjectJSONException {
     if (keyBundle == null) {
       throw new NoKeyBundleException();
     }

@@ -271,7 +271,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if self._name not in n_buckets_whitelist:
                 raise KeyError, ('New histogram %s is not permitted to have more than 100 buckets. '
                                 'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
-                                'Contact :vladan or the Perf team if you think an exception ought to be made.' % self._name)
+                                'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
