@@ -3,9 +3,9 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.io.IOException;
+import android.content.Context;
+import android.content.SharedPreferences;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -16,8 +16,7 @@ import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import java.io.IOException;
 
 /**
  * GlobalSession touches the Android prefs system. Stub that out.
@@ -30,7 +29,7 @@ public class MockPrefsGlobalSession extends GlobalSession {
       SyncConfiguration config, GlobalSessionCallback callback, Context context,
       ClientsDataDelegate clientsDelegate)
       throws SyncConfigurationException, IllegalArgumentException, IOException,
-      ParseException, NonObjectJSONException {
+      NonObjectJSONException {
     super(config, callback, context, clientsDelegate);
   }
 
@@ -39,7 +38,7 @@ public class MockPrefsGlobalSession extends GlobalSession {
       KeyBundle syncKeyBundle, GlobalSessionCallback callback, Context context,
       ClientsDataDelegate clientsDelegate)
       throws SyncConfigurationException, IllegalArgumentException, IOException,
-      ParseException, NonObjectJSONException {
+      NonObjectJSONException {
     return getSession(username, new BasicAuthHeaderProvider(username, password), null,
          syncKeyBundle, callback, context, clientsDelegate);
   }
@@ -49,7 +48,7 @@ public class MockPrefsGlobalSession extends GlobalSession {
       KeyBundle syncKeyBundle, GlobalSessionCallback callback, Context context,
       ClientsDataDelegate clientsDelegate)
       throws SyncConfigurationException, IllegalArgumentException, IOException,
-      ParseException, NonObjectJSONException {
+      NonObjectJSONException {
 
     final SharedPreferences prefs = new MockSharedPreferences();
     final SyncConfiguration config = new SyncConfiguration(username, authHeaderProvider, prefs);
