@@ -808,6 +808,8 @@ class Node {
     };
 };
 
+using NodeSet = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
+using NodeSetPtr = mozilla::UniquePtr<NodeSet, JS::DeletePolicy<NodeSet>>;
 
 /*** Edge and EdgeRange ***************************************************************************/
 
