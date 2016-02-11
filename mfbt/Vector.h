@@ -283,6 +283,7 @@ class Vector final : private AllocPolicy
 
   MOZ_WARN_UNUSED_RESULT bool growStorageBy(size_t aIncr);
   MOZ_WARN_UNUSED_RESULT bool convertToHeapStorage(size_t aNewCap);
+  MOZ_WARN_UNUSED_RESULT bool maybeCheckSimulatedOOM(size_t aRequestedSize);
 
   /* magic constants */
 
@@ -922,6 +923,23 @@ Vector<T, N, AP>::initCapacity(size_t aRequest)
 
 template<typename T, size_t N, class AP>
 inline bool
+Vector<T, N, AP>::maybeCheckSimulatedOOM(size_t aRequestedSize)
+{
+  if (aRequestedSize <= N) {
+    return true;
+  }
+
+#ifdef DEBUG
+  if (aRequestedSize <= mReserved) {
+    return true;
+  }
+#endif
+
+  return allocPolicy().checkSimulatedOOM();
+}
+
+template<typename T, size_t N, class AP>
+inline bool
 Vector<T, N, AP>::reserve(size_t aRequest)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
@@ -929,10 +947,8 @@ Vector<T, N, AP>::reserve(size_t aRequest)
     if (MOZ_UNLIKELY(!growStorageBy(aRequest - mLength))) {
       return false;
     }
-  } else if (aRequest > N) {
-    if (!allocPolicy().checkSimulatedOOM()) {
-      return false;
-    }
+  } else if (!maybeCheckSimulatedOOM(aRequest)) {
+    return false;
   }
 #ifdef DEBUG
   if (aRequest > mReserved) {
@@ -971,16 +987,8 @@ Vector<T, N, AP>::growBy(size_t aIncr)
     if (MOZ_UNLIKELY(!growStorageBy(aIncr))) {
       return false;
     }
-  } else if (aIncr + mLength > N) {
-    bool checkSimulatedOOM =
-#ifdef DEBUG
-    aIncr + mLength > mReserved;
-#else
-    true;
-#endif
-    if (checkSimulatedOOM && !allocPolicy().checkSimulatedOOM()) {
-      return false;
-    }
+  } else if (!maybeCheckSimulatedOOM(mLength + aIncr)) {
+    return false;
   }
   MOZ_ASSERT(mLength + aIncr <= mCapacity);
   T* newend = endNoCheck() + aIncr;
@@ -1003,10 +1011,8 @@ Vector<T, N, AP>::growByUninitialized(size_t aIncr)
     if (MOZ_UNLIKELY(!growStorageBy(aIncr))) {
       return false;
     }
-  } else if (aIncr + mLength > N) {
-    if (!allocPolicy().checkSimulatedOOM()) {
-      return false;
-    }
+  } else if (!maybeCheckSimulatedOOM(mLength + aIncr)) {
+    return false;
   }
   infallibleGrowByUninitialized(aIncr);
   return true;
@@ -1110,9 +1116,8 @@ Vector<T, N, AP>::appendN(const T& aT, size_t aNeeded)
     if (MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
       return false;
     }
-  } else if (mLength + aNeeded > N) {
-    if (!allocPolicy().checkSimulatedOOM())
-      return false;
+  } else if (!maybeCheckSimulatedOOM(mLength + aNeeded)) {
+    return false;
   }
 #ifdef DEBUG
   if (mLength + aNeeded > mReserved) {
@@ -1197,8 +1202,7 @@ Vector<T, N, AP>::append(const U* aInsBegin, const U* aInsEnd)
     if (MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
       return false;
     }
-  } else if (mLength + aNeeded > N) {
-    if (!allocPolicy().checkSimulatedOOM())
+  } else if (!maybeCheckSimulatedOOM(mLength + aNeeded)) {
       return false;
   }
 #ifdef DEBUG
@@ -1231,8 +1235,7 @@ Vector<T, N, AP>::append(U&& aU)
     if (MOZ_UNLIKELY(!growStorageBy(1))) {
       return false;
     }
-  } else if (mLength + 1 > N) {
-    if (!allocPolicy().checkSimulatedOOM())
+  } else if (!maybeCheckSimulatedOOM(mLength + 1)) {
       return false;
   }
 #ifdef DEBUG
