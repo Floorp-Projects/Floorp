@@ -5,30 +5,15 @@
 # Ensure that this happens before including rules.mk
 ifdef USE_ICU
   ifndef MOZ_SYSTEM_ICU
-  # Library names: On Windows, ICU uses modified library names for static
-  # and debug libraries.
-    ifdef MOZ_SHARED_ICU
-      ifeq ($(OS_ARCH),WINNT)
-        ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(libname)$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll)
-      else # ! WINNT
-        ifeq ($(OS_ARCH),Darwin)
-          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))
-        else # ! Darwin
-          ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(libname)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))
-        endif
-      endif # WINNT
-      ifdef ICU_FILES
-        ICU_DEST := $(DIST)/bin
-        INSTALL_TARGETS += ICU
-        $(ICU_FILES): buildicu
-        ICU_TARGET := target
-      endif
-    else # !MOZ_SHARED_ICU
-      ifeq ($(OS_ARCH),WINNT)
-        ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(MOZ_ICU_DBG_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname)$(MOZ_ICU_DBG_SUFFIX).lib;)
-      endif
-    endif # MOZ_SHARED_ICU
+    ifdef MOZ_ICU_DATA_ARCHIVE
+      ICU_FILES += $(DEPTH)/intl/icu/target/data/out/$(ICU_DATA_FILE)
+    endif
+    ifdef ICU_FILES
+      ICU_DEST := $(DIST)/bin
+      INSTALL_TARGETS += ICU
+      $(ICU_FILES): buildicu
+     ICU_TARGET := target
+    endif
   endif # !MOZ_SYSTEM_ICU
 endif # USE_ICU
 
@@ -50,7 +35,6 @@ ifdef CROSS_COMPILE
 	+ASAN_OPTIONS=detect_leaks=0 $(MAKE) -j1 -C $(DEPTH)/intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
 endif
 	+ASAN_OPTIONS=detect_leaks=0 $(MAKE) -j1 -C $(DEPTH)/intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
-	$(ICU_LIB_RENAME)
 
 distclean clean::
 ifdef CROSS_COMPILE
