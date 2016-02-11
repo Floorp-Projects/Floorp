@@ -14,13 +14,13 @@ var {TargetFactory} = require("devtools/client/framework/target");
 var {Tools} = require("devtools/client/definitions");
 var promise = require("promise");
 
-loader.lazyGetter(this, "Telemetry", () => require("devtools/client/shared/telemetry"));
-loader.lazyGetter(this, "WebConsoleFrame", () => require("devtools/client/webconsole/webconsole").WebConsoleFrame);
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
-loader.lazyGetter(this, "showDoorhanger", () => require("devtools/client/shared/doorhanger").showDoorhanger);
+loader.lazyRequireGetter(this, "showDoorhanger", "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
 
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
