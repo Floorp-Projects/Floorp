@@ -233,39 +233,43 @@ add_task(function* testInvalidIconSizes() {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
+        let promises = [];
         for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
           let assertSetIconThrows = function(detail, error, message) {
-            try {
-              detail.tabId = tabId;
-              browser[api].setIcon(detail);
-
-              browser.test.fail("Expected an error on invalid icon size.");
-              browser.test.notifyFail("setIcon with invalid icon size");
-              return;
-            } catch (e) {
-              browser.test.succeed("setIcon with invalid icon size");
-            }
+            detail.tabId = tabId;
+            promises.push(
+              browser[api].setIcon(detail).then(
+                () => {
+                  browser.test.fail("Expected an error on invalid icon size.");
+                  browser.test.notifyFail("setIcon with invalid icon size");
+                },
+                error => {
+                  browser.test.succeed("setIcon with invalid icon size");
+                }));
           };
+
+          let imageData = new ImageData(1, 1);
 
           // test invalid icon size inputs
           for (let type of ["path", "imageData"]) {
-            assertSetIconThrows({ [type]: { "abcdef": "test.png" } });
-            assertSetIconThrows({ [type]: { "48px": "test.png" } });
-            assertSetIconThrows({ [type]: { "20.5": "test.png" } });
-            assertSetIconThrows({ [type]: { "5.0": "test.png" } });
-            assertSetIconThrows({ [type]: { "-300": "test.png" } });
-            assertSetIconThrows({ [type]: {
-              "abc": "test.png",
-              "5": "test.png"
-            }});
+            let img = type == "imageData" ? imageData : "test.png";
+
+            assertSetIconThrows({ [type]: { "abcdef": img } });
+            assertSetIconThrows({ [type]: { "48px": img } });
+            assertSetIconThrows({ [type]: { "20.5": img } });
+            assertSetIconThrows({ [type]: { "5.0": img } });
+            assertSetIconThrows({ [type]: { "-300": img } });
+            assertSetIconThrows({ [type]: { "abc": img, "5": img }});
           }
 
-          assertSetIconThrows({ imageData: { "abcdef": "test.png" }, path: {"5": "test.png"} });
-          assertSetIconThrows({ path: { "abcdef": "test.png" }, imageData: {"5": "test.png"} });
+          assertSetIconThrows({ imageData: { "abcdef": imageData }, path: {"5": "test.png"} });
+          assertSetIconThrows({ path: { "abcdef": "test.png" }, imageData: {"5": imageData} });
         }
 
-        browser.test.notifyPass("setIcon with invalid icon size");
+        Promise.all(promises).then(() => {
+          browser.test.notifyPass("setIcon with invalid icon size");
+        });
       });
     }
   });
@@ -347,25 +351,24 @@ add_task(function* testSecureURLsDenied() {
         let urls = ["chrome://browser/content/browser.xul",
                     "javascript:true"];
 
+        let promises = [];
         for (let url of urls) {
           for (let api of ["pageAction", "browserAction"]) {
-            try {
-              browser[api].setIcon({tabId, path: url});
-
-              browser.test.fail(`Load of '${url}' succeeded. Expected failure.`);
-              browser.test.notifyFail("setIcon security tests");
-              return;
-            } catch (e) {
-              // We can't actually inspect the error here, since the
-              // error object belongs to the privileged scope of the API,
-              // rather than to the extension scope that calls into it.
-              // Just assume it's the expected security error, for now.
-              browser.test.succeed(`Load of '${url}' failed. Expected failure.`);
-            }
+            promises.push(
+              browser[api].setIcon({tabId, path: url}).then(
+                () => {
+                  browser.test.fail(`Load of '${url}' succeeded. Expected failure.`);
+                  browser.test.notifyFail("setIcon security tests");
+                },
+                error => {
+                  browser.test.succeed(`Load of '${url}' failed. Expected failure. ${error}`);
+                }));
           }
         }
 
-        browser.test.notifyPass("setIcon security tests");
+        Promise.all(promises).then(() => {
+          browser.test.notifyPass("setIcon security tests");
+        });
       });
     },
   });
