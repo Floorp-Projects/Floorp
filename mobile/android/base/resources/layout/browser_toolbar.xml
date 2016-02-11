@@ -106,7 +106,7 @@
                   style="@style/UrlBar.Button"
                   android:layout_alignLeft="@id/url_bar_entry"
                   android:layout_alignRight="@id/url_bar_entry"
-                  android:paddingLeft="8dip"
+                  android:paddingLeft="1dip"
                   android:paddingRight="4dip"/>
 
 </merge>
