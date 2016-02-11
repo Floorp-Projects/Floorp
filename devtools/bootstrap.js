@@ -82,7 +82,7 @@ function reload(event) {
   devtools.reload(reloadToolbox);
 
   // Also tells gDevTools to reload its dependencies
-  const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+  const {gDevTools} = devtools.require("devtools/client/framework/devtools");
   gDevTools.reload();
 }
 

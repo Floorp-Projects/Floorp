@@ -5,7 +5,6 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
