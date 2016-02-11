@@ -510,6 +510,7 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wwrite-strings"
 
     # -Wclass-varargs - catches objects passed by value to variadic functions.
+    # -Wimplicit-fallthrough - catches unintentional switch case fallthroughs
     # -Wloop-analysis - catches issues around loops
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wthread-safety - catches inconsistent use of mutexes
@@ -528,6 +529,7 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     MOZ_CXX_SUPPORTS_WARNING(-W, c++14-compat-pedantic, ac_cxx_has_wcxx14_compat_pedantic)
     MOZ_CXX_SUPPORTS_WARNING(-W, c++1z-compat, ac_cxx_has_wcxx1z_compat)
     MOZ_CXX_SUPPORTS_WARNING(-W, class-varargs, ac_cxx_has_wclass_varargs)
+    MOZ_CXX_SUPPORTS_WARNING(-W, implicit-fallthrough, ac_cxx_has_wimplicit_fallthrough)
     MOZ_CXX_SUPPORTS_WARNING(-W, loop-analysis, ac_cxx_has_wloop_analysis)
 
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
