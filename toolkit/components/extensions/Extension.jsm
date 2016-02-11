@@ -390,7 +390,7 @@ GlobalManager = {
             obj = obj[elt];
           }
           return obj;
-        };
+        }
         let schemaWrapper = {
           get cloneScope() {
             return context.cloneScope;
