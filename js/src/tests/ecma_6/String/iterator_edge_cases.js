@@ -7,7 +7,7 @@ function TestStringIteratorPrototypeConfusion() {
         throw new Error("Call did not throw");
     } catch (e) {
         assertEq(e instanceof TypeError, true);
-        assertEq(e.message, "CallStringIteratorMethodIfWrapped method called on incompatible String Iterator");
+        assertEq(e.message, "next method called on incompatible String Iterator");
     }
 }
 TestStringIteratorPrototypeConfusion();

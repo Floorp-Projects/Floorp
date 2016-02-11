@@ -1819,15 +1819,14 @@ var loadModule_misc = asmCompile('stdlib', 'foreign', 'heap', loadModule_misc_co
 function test_misc(heap) {
     var misc = loadModule_misc(this, {}, heap);
 
-    assertEq(misc.ilf1(), 1);
-    assertEq(misc.ilf2(), 1);
+    assertEq(misc.ilf1(), 1);   // Guaranteed by SpiderMonkey, not spec
+    assertEq(misc.ilf2(), 1);   // Guaranteed by SpiderMonkey, not spec
     assertEq(misc.ilf3(), 0);
-    assertEq(misc.ilf4(), 1);
+    assertEq(misc.ilf4(), 1);   // Guaranteed by SpiderMonkey, not spec
     assertEq(misc.ilf5(), 0);
     assertEq(misc.ilf6(), 0);
     assertEq(misc.ilf7(), 0);
-    var v = misc.ilf8();
-    assertEq(v === 0 || v === 1, true);
+    assertEq(misc.ilf8(), 0);   // Required by spec, for now
     assertEq(misc.ilf9(), 0);
 }
 

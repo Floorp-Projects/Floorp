@@ -564,8 +564,8 @@ RenderLayers(ContainerT* aContainer,
 
     if (layerToRender->HasLayerBeenComposited()) {
       // Composer2D will compose this layer so skip GPU composition
-      // this time & reset composition flag for next composition phase
-      layerToRender->SetLayerComposited(false);
+      // this time. The flag will be reset for the next composition phase
+      // at the beginning of LayerManagerComposite::Rener().
       gfx::IntRect clearRect = layerToRender->GetClearRect();
       if (!clearRect.IsEmpty()) {
         // Clear layer's visible rect on FrameBuffer with transparent pixels

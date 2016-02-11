@@ -795,11 +795,6 @@ class MochitestArguments(ArgumentContainer):
             "geckomediaplugin": 20000,
         }
 
-        # Bug 1091917 - We exit early in tab processes on Windows, so we don't
-        # get leak logs yet.
-        if mozinfo.isWin:
-            options.ignoreMissingLeaks.append("tab")
-
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the
         # mach command and therefore not finalized yet. Conversely, test paths

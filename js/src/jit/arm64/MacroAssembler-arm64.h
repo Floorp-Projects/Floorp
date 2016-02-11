@@ -2474,14 +2474,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
-    void appendCallSite(const wasm::CallSiteDesc& desc) {
-        MOZ_CRASH("appendCallSite");
-    }
-
-    void callExit(wasm::SymbolicAddress imm, uint32_t stackArgBytes) {
-        MOZ_CRASH("callExit");
-    }
-
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
         loadPtr(activation, scratch);

@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 from automation import Automation
-from devicemanager import DMError, DeviceManager
+from mozdevice import DMError, DeviceManager
 from mozlog import get_default_logger
 import mozcrash
 

@@ -551,9 +551,15 @@ MacroAssembler::thunkWithPatch()
 }
 
 void
-MacroAssembler::patchThunk(uint32_t jumpOffset, uint32_t targetOffset)
+MacroAssembler::patchThunk(uint32_t thunkOffset, uint32_t targetOffset)
 {
-    Assembler::patchThunk(jumpOffset, targetOffset);
+    Assembler::patchThunk(thunkOffset, targetOffset);
+}
+
+void
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset)
+{
+    Assembler::repatchThunk(code, thunkOffset, targetOffset);
 }
 
 void

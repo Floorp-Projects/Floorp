@@ -157,6 +157,7 @@ public:
         MOZ_RELEASE_ASSERT(aOther.mMessageName);
         mMessageName = aOther.mMessageName;
         aOther.mMessageName = nullptr;
+        mMoved = aOther.mMoved;
         aOther.mMoved = true;
 
         mMessageRoutingId = aOther.mMessageRoutingId;

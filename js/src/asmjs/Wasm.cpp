@@ -30,6 +30,8 @@
 using namespace js;
 using namespace js::wasm;
 
+using mozilla::IsNaN;
+
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
 
@@ -951,6 +953,9 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 {
     if (!d.readCStringIf(DataSection))
         return true;
+
+    if (!heap)
+        return Fail(cx, d, "data section requires a memory section");
 
     uint32_t sectionStart;
     if (!d.startSection(&sectionStart))
