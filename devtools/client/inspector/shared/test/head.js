@@ -14,8 +14,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 var {editableField, getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/client/shared/inplace-editor");
-var {console} =
-  Components.utils.import("resource://gre/modules/Console.jsm", {});
+var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
 // All tests are asynchronous
 waitForExplicitFinish();

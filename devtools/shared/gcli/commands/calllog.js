@@ -8,16 +8,9 @@ const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
 const { gDevTools } = require("devtools/client/framework/devtools");
+const Debugger = require("Debugger");
 
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-
-
-loader.lazyGetter(this, "Debugger", () => {
-  let global = Cu.getGlobalForObject({});
-  let JsDebugger = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
-  JsDebugger.addDebuggerToGlobal(global);
-  return global.Debugger;
-});
 
 var debuggers = [];
 var chromeDebuggers = [];
