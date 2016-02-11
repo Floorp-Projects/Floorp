@@ -71,8 +71,6 @@ class JS_PUBLIC_API(DominatorTree)
   private:
     // Types.
 
-    using NodeSet = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
-    using NodeSetPtr = mozilla::UniquePtr<NodeSet, JS::DeletePolicy<NodeSet>>;
     using PredecessorSets = js::HashMap<Node, NodeSetPtr, js::DefaultHasher<Node>,
                                         js::SystemAllocPolicy>;
     using NodeToIndexMap = js::HashMap<Node, uint32_t, js::DefaultHasher<Node>,
