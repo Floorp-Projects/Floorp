@@ -2246,6 +2246,8 @@ RangeAnalysis::analyze()
 
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition* def = *iter;
+            if (!alloc().ensureBallast())
+                return false;
 
             def->computeRange(alloc());
             JitSpew(JitSpew_Range, "computing range on %d", def->id());
