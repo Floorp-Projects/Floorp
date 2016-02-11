@@ -228,7 +228,7 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
     if (aAttribute == nullptr || aAttribute == nsGkAtoms::crop) {
         static nsIContent::AttrValuesArray strings[] =
           {&nsGkAtoms::left, &nsGkAtoms::start, &nsGkAtoms::center,
-           &nsGkAtoms::none, &nsGkAtoms::right, &nsGkAtoms::end, nullptr};
+           &nsGkAtoms::right, &nsGkAtoms::end, nullptr};
         CroppingStyle cropType;
         switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
                                           strings, eCaseMatters)) {
@@ -240,12 +240,11 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
             cropType = CropCenter;
             break;
           case 3:
-            cropType = CropNone;
-            break;
           case 4:
-          case 5:
-          default:
             cropType = CropRight;
+            break;
+          default:
+            cropType = CropNone;
             break;
         }
 
@@ -648,30 +647,25 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
     }
 
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    if (mCropType != CropNone) {
-      // start with an ellipsis
-      mCroppedTitle.Assign(kEllipsis);
+    // start with an ellipsis
+    mCroppedTitle.Assign(kEllipsis);
 
-      // see if the width is even smaller than the ellipsis
-      // if so, clear the text (XXX set as many '.' as we can?).
-      fm->SetTextRunRTL(false);
-      titleWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm,
-                                                       drawTarget);
+    // see if the width is even smaller than the ellipsis
+    // if so, clear the text (XXX set as many '.' as we can?).
+    fm->SetTextRunRTL(false);
+    titleWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm,
+                                                     drawTarget);
 
-      if (titleWidth > aWidth) {
-          mCroppedTitle.SetLength(0);
-          return 0;
-      }
-
-      // if the ellipsis fits perfectly, no use in trying to insert
-      if (titleWidth == aWidth)
-          return titleWidth;
-
-      aWidth -= titleWidth;
-    } else {
-      mCroppedTitle.Truncate(0);
-      titleWidth = 0;
+    if (titleWidth > aWidth) {
+        mCroppedTitle.SetLength(0);
+        return 0;
     }
+
+    // if the ellipsis fits perfectly, no use in trying to insert
+    if (titleWidth == aWidth)
+        return titleWidth;
+
+    aWidth -= titleWidth;
 
     // XXX: This whole block should probably take surrogates into account
     // XXX and clusters!
