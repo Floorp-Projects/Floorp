@@ -135,7 +135,6 @@ WEBIDL_FILES = [
     'DOMRect.webidl',
     'DOMRectList.webidl',
     'DOMRequest.webidl',
-    'DOMSettableTokenList.webidl',
     'DOMStringList.webidl',
     'DOMStringMap.webidl',
     'DOMTokenList.webidl',
