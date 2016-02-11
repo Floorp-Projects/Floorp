@@ -52,6 +52,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
@@ -311,6 +313,21 @@ ExtensionPage = class extends BaseContext {
   }
 };
 
+// For extensions that have called setUninstallURL(), send an event
+// so the browser can display the URL.
+let UninstallObserver = {
+  init: function() {
+    AddonManager.addAddonListener(this);
+  },
+
+  onUninstalling: function(addon) {
+    let extension = GlobalManager.extensionMap.get(addon.id);
+    if (extension) {
+      Management.emit("uninstall", extension);
+    }
+  },
+};
+
 // Responsible for loading extension APIs into the right globals.
 GlobalManager = {
   // Number of extensions currently enabled.
@@ -326,6 +343,7 @@ GlobalManager = {
   init(extension) {
     if (this.count == 0) {
       Services.obs.addObserver(this, "content-document-global-created", false);
+      UninstallObserver.init();
     }
     this.count++;
 
@@ -365,6 +383,10 @@ GlobalManager = {
 
         let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
         let schemaWrapper = {
+          get cloneScope() {
+            return context.cloneScope;
+          },
+
           callFunction(ns, name, args) {
             return schemaApi[ns][name](...args);
           },
@@ -379,22 +401,17 @@ GlobalManager = {
 
             let promise;
             try {
-              // TODO: Stop passing the callback once all APIs return
-              // promises.
-              promise = schemaApi[ns][name](...args, callback);
+              promise = schemaApi[ns][name](...args);
             } catch (e) {
-              promise = Promise.reject(e);
-              // TODO: Certain tests are still expecting API methods to
-              // throw errors.
-              throw e;
+              if (e instanceof context.cloneScope.Error) {
+                promise = Promise.reject(e);
+              } else {
+                Cu.reportError(e);
+                promise = Promise.reject({ message: "An unexpected error occurred" });
+              }
             }
 
-            // TODO: This check should no longer be necessary
-            // once all async methods return promises.
-            if (promise) {
-              return context.wrapPromise(promise, callback);
-            }
-            return undefined;
+            return context.wrapPromise(promise || Promise.resolve(), callback);
           },
 
           getProperty(ns, name) {
@@ -605,6 +622,10 @@ ExtensionData.prototype = {
         url: this.baseURI && this.baseURI.spec,
 
         principal: this.principal,
+
+        logError: error => {
+          this.logger.warn(`Loading extension '${this.id}': Reading manifest: ${error}`);
+        },
       };
 
       let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
@@ -805,6 +826,8 @@ this.Extension = function(addonData) {
 
   this.hasShutdown = false;
   this.onShutdown = new Set();
+
+  this.uninstallURL = null;
 
   this.permissions = new Set();
   this.whiteListedHosts = null;

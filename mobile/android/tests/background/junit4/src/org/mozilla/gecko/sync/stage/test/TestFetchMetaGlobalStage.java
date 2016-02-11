@@ -4,7 +4,6 @@
 package org.mozilla.gecko.sync.stage.test;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,7 +92,7 @@ public class TestFetchMetaGlobalStage {
     calledResetAllStages = false;
 
     // Set info collections to not have crypto.
-    infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_INFO_COLLECTIONS_JSON));
+    infoCollections = new InfoCollections(new ExtendedJSONObject(TEST_INFO_COLLECTIONS_JSON));
 
     syncKeyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
     callback = new MockGlobalSessionCallback();
@@ -335,7 +334,7 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertEquals(true, callback.calledError);
-    assertEquals(ParseException.class, callback.calledErrorException.getClass());
+    assertEquals(NonObjectJSONException.class, callback.calledErrorException.getClass());
   }
 
   protected void doFreshStart(MockServer server) {
@@ -350,7 +349,7 @@ public class TestFetchMetaGlobalStage {
   }
 
   @Test
-  public void testFreshStart() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException {
+  public void testFreshStart() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, CryptoException {
     final AtomicBoolean mgUploaded = new AtomicBoolean(false);
     final AtomicBoolean mgDownloaded = new AtomicBoolean(false);
     final MetaGlobal uploadedMg = new MetaGlobal(null, null);
@@ -360,7 +359,7 @@ public class TestFetchMetaGlobalStage {
       public void handle(Request request, Response response) {
         if (request.getMethod().equals("PUT")) {
           try {
-            ExtendedJSONObject body = ExtendedJSONObject.parseJSONObject(request.getContent());
+            ExtendedJSONObject body = new ExtendedJSONObject(request.getContent());
             assertTrue(body.containsKey("payload"));
             assertFalse(body.containsKey("default"));
 

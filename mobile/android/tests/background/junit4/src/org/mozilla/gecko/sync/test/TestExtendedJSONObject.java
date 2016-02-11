@@ -5,7 +5,6 @@ package org.mozilla.gecko.sync.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
@@ -20,6 +19,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -33,18 +33,7 @@ public class TestExtendedJSONObject {
   public static String exampleIntegral = "{\"modified\":1233702554,}";
 
   @Test
-  public void testDeepCopy() throws NonObjectJSONException, IOException, ParseException, NonArrayJSONException {
-    ExtendedJSONObject a = new ExtendedJSONObject(exampleJSON);
-    ExtendedJSONObject c = a.deepCopy();
-    assertTrue(a != c);
-    assertTrue(a.equals(c));
-    assertTrue(a.get("modified") == c.get("modified"));
-    assertTrue(a.getArray("success") != c.getArray("success"));
-    assertTrue(a.getArray("success").equals(c.getArray("success")));
-  }
-
-  @Test
-  public void testFractional() throws IOException, ParseException, NonObjectJSONException {
+  public void testFractional() throws IOException, NonObjectJSONException {
     ExtendedJSONObject o = new ExtendedJSONObject(exampleJSON);
     assertTrue(o.containsKey("modified"));
     assertTrue(o.containsKey("success"));
@@ -59,7 +48,7 @@ public class TestExtendedJSONObject {
   }
 
   @Test
-  public void testIntegral() throws IOException, ParseException, NonObjectJSONException {
+  public void testIntegral() throws IOException, NonObjectJSONException {
     ExtendedJSONObject o = new ExtendedJSONObject(exampleIntegral);
     assertTrue(o.containsKey("modified"));
     assertFalse(o.containsKey("success"));
@@ -73,10 +62,9 @@ public class TestExtendedJSONObject {
   public void testSafeInteger() {
     ExtendedJSONObject o = new ExtendedJSONObject();
     o.put("integer", Integer.valueOf(5));
-    o.put("double",  Double.valueOf(1.2));
     o.put("string",  "66");
     o.put("object",  new ExtendedJSONObject());
-    o.put("null",    null);
+    o.put("null", (JSONArray) null);
 
     assertEquals(Integer.valueOf(5),  o.getIntegerSafely("integer"));
     assertEquals(Integer.valueOf(66), o.getIntegerSafely("string"));
@@ -98,7 +86,7 @@ public class TestExtendedJSONObject {
     try {
       ExtendedJSONObject.parseJSONArray("[0, ");
       fail();
-    } catch (ParseException e) {
+    } catch (NonArrayJSONException e) {
       // Do nothing.
     }
 
@@ -124,14 +112,14 @@ public class TestExtendedJSONObject {
     try {
       ExtendedJSONObject.parseUTF8AsJSONObject("{}".getBytes("UTF-16"));
       fail();
-    } catch (ParseException e) {
+    } catch (NonObjectJSONException e) {
       // Do nothing.
     }
 
     try {
       ExtendedJSONObject.parseUTF8AsJSONObject("{".getBytes("UTF-8"));
       fail();
-    } catch (ParseException e) {
+    } catch (NonObjectJSONException e) {
       // Do nothing.
     }
   }
@@ -157,8 +145,7 @@ public class TestExtendedJSONObject {
     ExtendedJSONObject q = new ExtendedJSONObject(exampleJSON);
     q.put("modified", 0);
     assertNotSame(o, q);
-    q.put("modified", o.get("modified"));
-    assertEquals(o, q);
+    assertNotEquals(o, q);
   }
 
   @Test

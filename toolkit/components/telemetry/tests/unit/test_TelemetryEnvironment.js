@@ -406,7 +406,7 @@ function checkPartnerSection(data, isInitial) {
   if (isInitial) {
     Assert.equal(data.partner.partnerNames.length, 0);
   } else {
-    Assert.ok(data.partner.partnerNames.indexOf(PARTNER_NAME) >= 0);
+    Assert.ok(data.partner.partnerNames.includes(PARTNER_NAME));
   }
 }
 

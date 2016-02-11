@@ -17,23 +17,26 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+    onRotateViewport: PropTypes.func.isRequired,
   },
 
   render() {
     let {
       location,
       viewports,
+      onRotateViewport,
     } = this.props;
 
     return dom.div(
       {
         id: "viewports",
       },
-      viewports.map((viewport, index) => {
+      viewports.map(viewport => {
         return Viewport({
-          key: index,
+          key: viewport.id,
           location,
           viewport,
+          onRotateViewport: () => onRotateViewport(viewport.id),
         });
       })
     );

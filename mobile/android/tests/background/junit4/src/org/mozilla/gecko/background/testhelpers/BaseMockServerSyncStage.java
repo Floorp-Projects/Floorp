@@ -3,7 +3,6 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
@@ -67,7 +66,7 @@ public abstract class BaseMockServerSyncStage extends ServerSyncStage {
   }
 
   public SynchronizerConfiguration leakConfig()
-  throws NonObjectJSONException, IOException, ParseException {
+  throws NonObjectJSONException, IOException {
     return this.getConfig();
   }
 }

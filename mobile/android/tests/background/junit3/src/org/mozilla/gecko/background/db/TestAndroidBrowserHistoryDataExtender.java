@@ -3,24 +3,20 @@
 
 package org.mozilla.gecko.background.db;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import android.database.Cursor;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.sync.helpers.HistoryHelpers;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.NonArrayJSONException;
-import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryDataExtender;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 
-import android.database.Cursor;
+import java.util.ArrayList;
 
 public class TestAndroidBrowserHistoryDataExtender extends AndroidSyncTestCase {
 
@@ -36,7 +32,7 @@ public class TestAndroidBrowserHistoryDataExtender extends AndroidSyncTestCase {
     extender.close();
   }
 
-  public void testStoreFetch() throws NullCursorException, NonObjectJSONException, IOException, ParseException {
+  public void testStoreFetch() throws Exception {
     String guid = Utils.generateGuid();
     extender.store(Utils.generateGuid(), null);
     extender.store(guid, null);
@@ -55,7 +51,7 @@ public class TestAndroidBrowserHistoryDataExtender extends AndroidSyncTestCase {
     }
   }
 
-  public void testVisitsForGUID() throws NonArrayJSONException, NonObjectJSONException, IOException, ParseException, NullCursorException {
+  public void testVisitsForGUID() throws Exception {
     String guid = Utils.generateGuid();
     JSONArray visits = new ExtendedJSONObject("{ \"visits\": [ { \"key\" : \"value\" } ] }").getArray("visits");
 
