@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
 /**
  * Singleton object that represents the JSON View in-content tool.
  * It has the same lifetime as the browser. Initialization done by
- * DevTools() object from gDevTools.jsm
+ * DevTools() object from devtools/client/framework/devtools.js
  */
 var JsonView = {
   initialize: function() {

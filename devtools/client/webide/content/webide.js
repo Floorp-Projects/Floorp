@@ -6,10 +6,11 @@ var Cc = Components.classes;
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 
-Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {gDevTools} = require("devtools/client/framework/devtools");
+const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 const {Toolbox} = require("devtools/client/framework/toolbox");
 const Services = require("Services");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
