@@ -1172,26 +1172,13 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
     return true;
 }
 
-static bool
-WasmEval(JSContext* cx, unsigned argc, Value* vp)
+bool
+wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
+           HandleObject importObj, MutableHandleObject exportObj)
 {
     if (!CheckCompilerSupport(cx))
         return false;
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject callee(cx, &args.callee());
-
-    if (args.length() < 1 || args.length() > 2) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return false;
-    }
-
-    if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
-        ReportUsageError(cx, callee, "First argument must be an ArrayBuffer");
-        return false;
-    }
-
-    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
     const uint8_t* bytes = code->dataPointer();
     uint32_t length = code->byteLength();
 
@@ -1200,15 +1187,6 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         if (!copy.append(bytes, length))
             return false;
         bytes = copy.begin();
-    }
-
-    RootedObject importObj(cx);
-    if (!args.get(1).isUndefined()) {
-        if (!args.get(1).isObject()) {
-            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
-            return false;
-        }
-        importObj = &args[1].toObject();
     }
 
     UniqueChars file;
@@ -1229,8 +1207,42 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj))
+        return false;
+
+    return true;
+}
+
+
+static bool
+WasmEval(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() < 1 || args.length() > 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
+        ReportUsageError(cx, callee, "First argument must be an ArrayBuffer");
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
+
     RootedObject exportObj(cx);
-    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+    if (!Eval(cx, code, importObj, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);

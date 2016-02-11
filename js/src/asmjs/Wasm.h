@@ -22,6 +22,9 @@
 #include "gc/Rooting.h"
 
 namespace js {
+
+class ArrayBufferObject;
+
 namespace wasm {
 
 // Add wasm testing JS functions to the given JS global object.
@@ -43,6 +46,12 @@ static const unsigned PageSize = 64 * 1024;
 static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
 static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
+
+// Compiles the given binary wasm module given the ArrayBufferObject
+// and links the module's imports with the given import object.
+bool
+Eval(JSContext* cx, JS::Handle<ArrayBufferObject*> code,
+     JS::HandleObject importObj, JS::MutableHandleObject exportObj);
 
 }  // namespace wasm
 }  // namespace js
