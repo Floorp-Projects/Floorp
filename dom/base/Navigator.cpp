@@ -1342,9 +1342,10 @@ Navigator::SendBeacon(const nsAString& aUrl,
 
   RefPtr<BeaconStreamListener> beaconListener = new BeaconStreamListener();
   rv = channel->AsyncOpen2(beaconListener);
-  // do not throw if security checks fail within asyncOpen2
-  NS_ENSURE_SUCCESS(rv, false);
-
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
   // make the beaconListener hold a strong reference to the loadgroup
   // which is released in ::OnStartRequest
   beaconListener->SetLoadGroup(loadGroup);
