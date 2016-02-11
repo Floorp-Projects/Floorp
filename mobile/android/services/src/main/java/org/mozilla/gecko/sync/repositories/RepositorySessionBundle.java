@@ -4,12 +4,11 @@
 
 package org.mozilla.gecko.sync.repositories;
 
-import java.io.IOException;
-
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+
+import java.io.IOException;
 
 public class RepositorySessionBundle {
   public static final String LOG_TAG = RepositorySessionBundle.class.getSimpleName();
@@ -18,8 +17,9 @@ public class RepositorySessionBundle {
 
   protected final ExtendedJSONObject object;
 
-  public RepositorySessionBundle(String jsonString) throws IOException, ParseException, NonObjectJSONException {
-    object = ExtendedJSONObject.parseJSONObject(jsonString);
+  public RepositorySessionBundle(String jsonString) throws IOException, NonObjectJSONException {
+
+    object = new ExtendedJSONObject(jsonString);
   }
 
   public RepositorySessionBundle(long lastSyncTimestamp) {

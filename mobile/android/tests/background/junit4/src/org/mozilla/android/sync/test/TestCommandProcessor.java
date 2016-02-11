@@ -3,7 +3,6 @@
 
 package org.mozilla.android.sync.test;
 
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
@@ -49,14 +48,14 @@ public class TestCommandProcessor extends CommandProcessor {
   }
 
   @Test
-  public void testRegisterCommand() throws NonObjectJSONException, IOException, ParseException {
+  public void testRegisterCommand() throws NonObjectJSONException, IOException {
     assertNull(commands.get(commandType));
     this.registerCommand(commandType, new MockCommandRunner(1));
     assertNotNull(commands.get(commandType));
   }
 
   @Test
-  public void testProcessRegisteredCommand() throws NonObjectJSONException, IOException, ParseException {
+  public void testProcessRegisteredCommand() throws NonObjectJSONException, IOException {
     commandExecuted = false;
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(wellFormedCommand);
     this.registerCommand(commandType, new MockCommandRunner(1));
@@ -65,7 +64,7 @@ public class TestCommandProcessor extends CommandProcessor {
   }
 
   @Test
-  public void testProcessUnregisteredCommand() throws NonObjectJSONException, IOException, ParseException {
+  public void testProcessUnregisteredCommand() throws NonObjectJSONException, IOException {
     commandExecuted = false;
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(wellFormedCommand);
     this.processCommand(session, unparsedCommand);
@@ -73,7 +72,7 @@ public class TestCommandProcessor extends CommandProcessor {
   }
 
   @Test
-  public void testProcessInvalidCommand() throws NonObjectJSONException, IOException, ParseException {
+  public void testProcessInvalidCommand() throws NonObjectJSONException, IOException {
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(commandWithNoType);
     this.registerCommand(commandType, new MockCommandRunner(1));
     this.processCommand(session, unparsedCommand);
@@ -81,19 +80,19 @@ public class TestCommandProcessor extends CommandProcessor {
   }
 
   @Test
-  public void testParseCommandNoType() throws NonObjectJSONException, IOException, ParseException {
+  public void testParseCommandNoType() throws NonObjectJSONException, IOException {
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(commandWithNoType);
     assertNull(CommandProcessor.parseCommand(unparsedCommand));
   }
 
   @Test
-  public void testParseCommandNoArgs() throws NonObjectJSONException, IOException, ParseException {
+  public void testParseCommandNoArgs() throws NonObjectJSONException, IOException {
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(commandWithNoArgs);
     assertNull(CommandProcessor.parseCommand(unparsedCommand));
   }
 
   @Test
-  public void testParseWellFormedCommand() throws NonObjectJSONException, IOException, ParseException {
+  public void testParseWellFormedCommand() throws NonObjectJSONException, IOException {
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(wellFormedCommand);
     Command parsedCommand = CommandProcessor.parseCommand(unparsedCommand);
     assertNotNull(parsedCommand);
@@ -102,7 +101,7 @@ public class TestCommandProcessor extends CommandProcessor {
   }
 
   @Test
-  public void testParseCommandNullArg() throws NonObjectJSONException, IOException, ParseException {
+  public void testParseCommandNullArg() throws NonObjectJSONException, IOException {
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(wellFormedCommandWithNullArgs);
     Command parsedCommand = CommandProcessor.parseCommand(unparsedCommand);
     assertNotNull(parsedCommand);

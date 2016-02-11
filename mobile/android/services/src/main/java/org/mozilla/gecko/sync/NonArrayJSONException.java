@@ -10,4 +10,8 @@ public class NonArrayJSONException extends UnexpectedJSONException {
   public NonArrayJSONException(String detailMessage) {
     super(detailMessage);
   }
+
+  public NonArrayJSONException(Throwable throwable) {
+    super(throwable);
+  }
 }

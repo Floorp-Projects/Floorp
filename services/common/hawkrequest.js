@@ -42,7 +42,9 @@ const Prefs = new Preferences("services.common.rest.");
  *        Valid properties are:
  *
  *          now:                 <current time in milliseconds>,
- *          localtimeOffsetMsec: <local clock offset vs server>
+ *          localtimeOffsetMsec: <local clock offset vs server>,
+ *          headers:             <An object with header/value pairs to be sent
+ *                                as headers on the request>
  *
  * extra.localtimeOffsetMsec is the value in milliseconds that must be added to
  * the local clock to make it agree with the server's clock.  For instance, if
@@ -58,6 +60,7 @@ this.HAWKAuthenticatedRESTRequest =
   this.now = extra.now || Date.now();
   this.localtimeOffsetMsec = extra.localtimeOffsetMsec || 0;
   this._log.trace("local time, offset: " + this.now + ", " + (this.localtimeOffsetMsec));
+  this.extraHeaders = extra.headers || {};
 
   // Expose for testing
   this._intl = getIntl();
@@ -81,6 +84,10 @@ HAWKAuthenticatedRESTRequest.prototype = {
       let header = CryptoUtils.computeHAWK(this.uri, method, options);
       this.setHeader("Authorization", header.field);
       this._log.trace("hawk auth header: " + header.field);
+    }
+
+    for (let header in this.extraHeaders) {
+      this.setHeader(header, this.extraHeaders[header]);
     }
 
     this.setHeader("Content-Type", contentType);

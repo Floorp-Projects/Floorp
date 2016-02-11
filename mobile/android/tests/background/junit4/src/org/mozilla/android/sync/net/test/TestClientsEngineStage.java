@@ -6,7 +6,6 @@ package org.mozilla.android.sync.net.test;
 import ch.boye.httpclientandroidlib.HttpStatus;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,14 +60,14 @@ import static org.junit.Assert.fail;
 public class TestClientsEngineStage extends MockSyncClientsEngineStage {
   public final static String LOG_TAG = "TestClientsEngSta";
 
-  public TestClientsEngineStage() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException, URISyntaxException {
+  public TestClientsEngineStage() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, CryptoException, URISyntaxException {
     super();
     session = initializeSession();
   }
 
   // Static so we can set it during the constructor. This is so evil.
   private static MockGlobalSessionCallback callback;
-  private static GlobalSession initializeSession() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException, URISyntaxException {
+  private static GlobalSession initializeSession() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, CryptoException, URISyntaxException {
     callback = new MockGlobalSessionCallback();
     SyncConfiguration config = new SyncConfiguration(USERNAME, new BasicAuthHeaderProvider(USERNAME, PASSWORD), new MockSharedPreferences());
     config.syncKeyBundle = new KeyBundle(USERNAME, SYNC_KEY);
@@ -178,7 +177,6 @@ public class TestClientsEngineStage extends MockSyncClientsEngineStage {
         throws SyncConfigurationException,
                IllegalArgumentException,
                IOException,
-               ParseException,
                NonObjectJSONException {
       super(config, callback);
     }

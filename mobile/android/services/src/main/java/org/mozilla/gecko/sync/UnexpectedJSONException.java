@@ -11,6 +11,10 @@ public class UnexpectedJSONException extends Exception {
     super(detailMessage);
   }
 
+  public UnexpectedJSONException(Throwable throwable) {
+    super(throwable);
+  }
+
   public static class BadRequiredFieldJSONException extends UnexpectedJSONException {
     private static final long serialVersionUID = -9207736984784497612L;
 

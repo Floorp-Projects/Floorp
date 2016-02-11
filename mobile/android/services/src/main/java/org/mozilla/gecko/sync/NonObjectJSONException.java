@@ -10,4 +10,8 @@ public class NonObjectJSONException extends UnexpectedJSONException {
   public NonObjectJSONException(String detailMessage) {
     super(detailMessage);
   }
+
+  public NonObjectJSONException(Throwable throwable) {
+    super(throwable);
+  }
 }
