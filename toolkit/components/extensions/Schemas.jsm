@@ -630,7 +630,7 @@ class SubModuleType extends Type {
     super();
     this.functions = functions;
   }
-};
+}
 
 class NumberType extends Type {
   normalize(value, context) {
@@ -847,7 +847,7 @@ class SubModuleProperty extends Entry {
 
     // TODO: Inject this.properties.
   }
-};
+}
 
 // This class is a base class for FunctionEntrys and Events. It takes
 // care of validating parameter lists (i.e., handling of optional
@@ -862,7 +862,7 @@ class CallEntry extends Entry {
   }
 
   throwError(context, msg) {
-    throw context.makeError(`${msg} for ${this.path.join('.')}.${this.name}.`);
+    throw context.makeError(`${msg} for ${this.path.join(".")}.${this.name}.`);
   }
 
   checkParameters(args, context) {
@@ -1035,7 +1035,7 @@ this.Schemas = {
       let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
-          throw new Error(`Internal error: Namespace ${path.join('.')} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
+          throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
         }
       }
     }
@@ -1244,7 +1244,7 @@ this.Schemas = {
   loadProperty(namespaceName, name, prop) {
     if ("$ref" in prop) {
       if (!prop.unsupported) {
-        this.register(namespaceName, name, new SubModuleProperty(name, namespaceName, prop["$ref"],
+        this.register(namespaceName, name, new SubModuleProperty(name, namespaceName, prop.$ref,
                                                                  prop.properties || {}));
       }
     } else if ("value" in prop) {
