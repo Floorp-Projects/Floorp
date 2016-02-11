@@ -36,6 +36,8 @@ Structure::
                           // where manufacturer is truncated to 12 characters
                           // & model is truncated to 19 characters
       "arch": <string>, // e.g. "arm", "x86"
+      "profileDate": <pos integer>, // Profile creation date in days since
+                                    // UNIX epoch.
 
       "experiments": [<string>, …], // Optional, array of identifiers
                                     // for the active experiments
