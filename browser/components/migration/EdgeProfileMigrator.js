@@ -52,15 +52,17 @@ XPCOMUtils.defineLazyGetter(this, "gEdgeDatabase", function() {
  * @param {function}          filterFn  a function that is called for each row.
  *                                      Only rows for which it returns a truthy
  *                                      value are included in the result.
+ * @param {nsIFile}           dbFile    the database file to use. Defaults to
+ *                                      the main Edge database.
  * @returns {Array} An array of row objects.
  */
-function readTableFromEdgeDB(tableName, columns, filterFn) {
+function readTableFromEdgeDB(tableName, columns, filterFn, dbFile=gEdgeDatabase) {
   let database;
   let rows = [];
   try {
-    let logFile = gEdgeDatabase.parent;
+    let logFile = dbFile.parent;
     logFile.append("LogFiles");
-    database = ESEDBReader.openDB(gEdgeDatabase.parent, gEdgeDatabase, logFile);
+    database = ESEDBReader.openDB(dbFile.parent, dbFile, logFile);
 
     if (typeof columns == "function") {
       columns = columns(database);
@@ -74,7 +76,7 @@ function readTableFromEdgeDB(tableName, columns, filterFn) {
     }
   } catch (ex) {
     Cu.reportError("Failed to extract items from table " + tableName + " in Edge database at " +
-                   gEdgeDatabase.path + " due to the following error: " + ex);
+                   dbFile.path + " due to the following error: " + ex);
     // Deliberately make this fail so we expose failure in the UI:
     throw ex;
   } finally {
@@ -221,11 +223,14 @@ EdgeReadingListMigrator.prototype = {
   }),
 };
 
-function EdgeBookmarksMigrator() {
+function EdgeBookmarksMigrator(dbOverride) {
+  this.dbOverride = dbOverride;
 }
 
 EdgeBookmarksMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
+
+  get db() { return this.dbOverride || gEdgeDatabase; },
 
   get TABLE_NAME() { return "Favorites" },
 
@@ -233,21 +238,21 @@ EdgeBookmarksMigrator.prototype = {
     if ("_exists" in this) {
       return this._exists;
     }
-    return this._exists = (!!gEdgeDatabase && this._checkTableExists());
+    return this._exists = (!!this.db && this._checkTableExists());
   },
 
   _checkTableExists() {
     let database;
     let rv;
     try {
-      let logFile = gEdgeDatabase.parent;
+      let logFile = this.db.parent;
       logFile.append("LogFiles");
-      database = ESEDBReader.openDB(gEdgeDatabase.parent, gEdgeDatabase, logFile);
+      database = ESEDBReader.openDB(this.db.parent, this.db, logFile);
 
       rv = database.tableExists(this.TABLE_NAME);
     } catch (ex) {
-      Cu.reportError("Failed to check for table " + tableName + " in Edge database at " +
-                     gEdgeDatabase.path + " due to the following error: " + ex);
+      Cu.reportError("Failed to check for table " + this.TABLE_NAME + " in Edge database at " +
+                     this.db.path + " due to the following error: " + ex);
       return false;
     } finally {
       if (database) {
@@ -348,7 +353,7 @@ EdgeBookmarksMigrator.prototype = {
       }
       return true;
     }
-    let bookmarks = readTableFromEdgeDB(this.TABLE_NAME, columns, filterFn);
+    let bookmarks = readTableFromEdgeDB(this.TABLE_NAME, columns, filterFn, this.db);
     return {bookmarks, folderMap};
   },
 
@@ -388,9 +393,14 @@ EdgeBookmarksMigrator.prototype = {
 }
 
 function EdgeProfileMigrator() {
+  this.wrappedJSObject = this;
 }
 
 EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
+
+EdgeProfileMigrator.prototype.getESEMigratorForTesting = function(dbOverride) {
+  return new EdgeBookmarksMigrator(dbOverride);
+};
 
 EdgeProfileMigrator.prototype.getResources = function() {
   let bookmarksMigrator = new EdgeBookmarksMigrator();
