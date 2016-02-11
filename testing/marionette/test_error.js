@@ -14,19 +14,6 @@ function notok(condition) {
   ok(!(condition));
 }
 
-add_test(function test_BuiltinErrors() {
-  ok("Error" in error.BuiltinErrors);
-  ok("EvalError" in error.BuiltinErrors);
-  ok("InternalError" in error.BuiltinErrors);
-  ok("RangeError" in error.BuiltinErrors);
-  ok("ReferenceError" in error.BuiltinErrors);
-  ok("SyntaxError" in error.BuiltinErrors);
-  ok("TypeError" in error.BuiltinErrors);
-  ok("URIError" in error.BuiltinErrors);
-
-  run_next_test();
-});
-
 add_test(function test_isError() {
   notok(error.isError(null));
   notok(error.isError([]));
@@ -34,13 +21,6 @@ add_test(function test_isError() {
 
   ok(error.isError(new Components.Exception()));
   ok(error.isError(new Error()));
-  ok(error.isError(new EvalError()));
-  ok(error.isError(new InternalError()));
-  ok(error.isError(new RangeError()));
-  ok(error.isError(new ReferenceError()));
-  ok(error.isError(new SyntaxError()));
-  ok(error.isError(new TypeError()));
-  ok(error.isError(new URIError()));
   ok(error.isError(new WebDriverError()));
   ok(error.isError(new InvalidArgumentError()));
 
@@ -50,31 +30,9 @@ add_test(function test_isError() {
 add_test(function test_isWebDriverError() {
   notok(error.isWebDriverError(new Components.Exception()));
   notok(error.isWebDriverError(new Error()));
-  notok(error.isWebDriverError(new EvalError()));
-  notok(error.isWebDriverError(new InternalError()));
-  notok(error.isWebDriverError(new RangeError()));
-  notok(error.isWebDriverError(new ReferenceError()));
-  notok(error.isWebDriverError(new SyntaxError()));
-  notok(error.isWebDriverError(new TypeError()));
-  notok(error.isWebDriverError(new URIError()));
 
   ok(error.isWebDriverError(new WebDriverError()));
   ok(error.isWebDriverError(new InvalidArgumentError()));
-
-  run_next_test();
-});
-
-add_test(function test_wrap() {
-  equal(error.wrap(new WebDriverError()).name, "WebDriverError");
-  equal(error.wrap(new InvalidArgumentError()).name, "InvalidArgumentError");
-  equal(error.wrap(new Error()).name, "WebDriverError");
-  equal(error.wrap(new EvalError()).name, "WebDriverError");
-  equal(error.wrap(new InternalError()).name, "WebDriverError");
-  equal(error.wrap(new RangeError()).name, "WebDriverError");
-  equal(error.wrap(new ReferenceError()).name, "WebDriverError");
-  equal(error.wrap(new SyntaxError()).name, "WebDriverError");
-  equal(error.wrap(new TypeError()).name, "WebDriverError");
-  equal(error.wrap(new URIError()).name, "WebDriverError");
 
   run_next_test();
 });
