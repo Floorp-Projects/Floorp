@@ -4738,6 +4738,20 @@ JS_AtomizeAndPinJSString(JSContext* cx, HandleString str)
 }
 
 JS_PUBLIC_API(JSString*)
+JS_AtomizeString(JSContext* cx, const char* s)
+{
+    return JS_AtomizeStringN(cx, s, strlen(s));
+}
+
+JS_PUBLIC_API(JSString*)
+JS_AtomizeStringN(JSContext* cx, const char* s, size_t length)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    return Atomize(cx, s, length, DoNotPinAtom);
+}
+
+JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinString(JSContext* cx, const char* s)
 {
     return JS_AtomizeAndPinStringN(cx, s, strlen(s));
@@ -4779,6 +4793,20 @@ JS_NewUCStringCopyZ(JSContext* cx, const char16_t* s)
     if (!s)
         return cx->runtime()->emptyString;
     return NewStringCopyZ<CanGC>(cx, s);
+}
+
+JS_PUBLIC_API(JSString*)
+JS_AtomizeUCString(JSContext* cx, const char16_t* s)
+{
+    return JS_AtomizeUCStringN(cx, s, js_strlen(s));
+}
+
+JS_PUBLIC_API(JSString*)
+JS_AtomizeUCStringN(JSContext* cx, const char16_t* s, size_t length)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    return AtomizeChars(cx, s, length, DoNotPinAtom);
 }
 
 JS_PUBLIC_API(JSString*)
