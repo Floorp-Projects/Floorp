@@ -6,6 +6,10 @@ const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
+registerCleanupFunction(function() {
+  MockFilePicker.cleanup();
+});
+
 function waitForFilePicker() {
   return new Promise((resolve) => {
     MockFilePicker.showCallback = () => {
