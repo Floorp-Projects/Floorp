@@ -12257,11 +12257,15 @@ class CGDictionary(CGThing):
             "ToJSON", "bool",
             [Argument('nsAString&', 'aJSON')],
             body=dedent("""
-                MOZ_ASSERT(NS_IsMainThread());
                 AutoJSAPI jsapi;
                 jsapi.Init();
                 JSContext *cx = jsapi.cx();
-                JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope()); // Usage approved by bholley
+                // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here
+                // because we'll only be creating objects, in ways that have no
+                // side-effects, followed by a call to JS::ToJSONMaybeSafely,
+                // which likewise guarantees no side-effects for the sorts of
+                // things we will pass it.
+                JSAutoCompartment ac(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
                 JS::Rooted<JS::Value> val(cx);
                 if (!ToObjectInternal(cx, &val)) {
                   return false;
@@ -13242,7 +13246,6 @@ class CGBindingRoot(CGThing):
         bindingHeaders["WrapperFactory.h"] = descriptors
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
         bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries  # AutoJSAPI
-        bindingHeaders["xpcpublic.h"] = dictionaries  # xpc::UnprivilegedJunkScope
         # Ensure we see our enums in the generated .cpp file, for the ToJSValue
         # method body.  Also ensure that we see jsapi.h.
         if enums:
