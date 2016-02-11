@@ -11,8 +11,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
 else:
     # Order needs to be preserved
     for l in CONFIG['ICU_LIB_NAMES']:
-        USE_LIBS += ['%s/intl/icu/target/lib/%s%s' % (
-            'static:' if not CONFIG['MOZ_SHARED_ICU'] else '',
+        USE_LIBS += ['static:/intl/icu/target/lib/%s%s' % (
             l,
             CONFIG['MOZ_ICU_DBG_SUFFIX']
         )]
