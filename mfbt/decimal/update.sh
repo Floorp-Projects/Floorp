@@ -53,4 +53,6 @@ patch -p3 < zero-serialization.patch
 patch -p3 < comparison-with-nan.patch
 patch -p3 < mfbt-abi-markers.patch
 patch -p3 < to-moz-dependencies.patch
-patch -p3 < fix-wshadow-warnings.patch
+# The following is disabled. See
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1208357#c7
+#patch -p3 < fix-wshadow-warnings.patch
