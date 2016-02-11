@@ -1758,6 +1758,7 @@
             var aForceNotRemote;
             var aNoReferrer;
             var aUserContextId;
+            var aEventDetail;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1775,6 +1776,7 @@
               aForceNotRemote       = params.forceNotRemote;
               aNoReferrer           = params.noReferrer;
               aUserContextId        = params.userContextId;
+              aEventDetail          = params.eventDetail;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -1893,8 +1895,8 @@
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
-            var evt = document.createEvent("Events");
-            evt.initEvent("TabOpen", true, false);
+            var detail = aEventDetail || {};
+            var evt = new CustomEvent("TabOpen", { bubbles: true, detail });
             t.dispatchEvent(evt);
 
             // If we didn't swap docShells with a preloaded browser
@@ -2128,7 +2130,7 @@
 
             var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
-            if (!this._beginRemoveTab(aTab, false, null, true, skipPermitUnload))
+            if (!this._beginRemoveTab(aTab, null, null, true, skipPermitUnload))
               return;
 
             if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse)
@@ -2173,7 +2175,7 @@
 
       <method name="_beginRemoveTab">
         <parameter name="aTab"/>
-        <parameter name="aTabWillBeMoved"/>
+        <parameter name="aAdoptedByTab"/>
         <parameter name="aCloseWindowWithLastTab"/>
         <parameter name="aCloseWindowFastpath"/>
         <parameter name="aSkipPermitUnload"/>
@@ -2207,7 +2209,7 @@
               newTab = true;
             }
 
-            if (!aTab._pendingPermitUnload && !aTabWillBeMoved && !aSkipPermitUnload) {
+            if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
@@ -2241,11 +2243,10 @@
             // Dispatch a notification.
             // We dispatch it before any teardown so that event listeners can
             // inspect the tab that's about to close.
-            var evt = document.createEvent("UIEvent");
-            evt.initUIEvent("TabClose", true, false, window, aTabWillBeMoved ? 1 : 0);
+            var evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: aAdoptedByTab } });
             aTab.dispatchEvent(evt);
 
-            if (!aTabWillBeMoved && !gMultiProcessBrowser) {
+            if (!aAdoptedByTab && !gMultiProcessBrowser) {
               // Prevent this tab from showing further dialogs, since we're closing it
               var windowUtils = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
                                 getInterface(Ci.nsIDOMWindowUtils);
@@ -2261,7 +2262,7 @@
             filter.removeProgressListener(listener);
             listener.destroy();
 
-            if (browser.registeredOpenURI && !aTabWillBeMoved) {
+            if (browser.registeredOpenURI && !aAdoptedByTab) {
               this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
@@ -2495,7 +2496,7 @@
             // First, start teardown of the other browser.  Make sure to not
             // fire the beforeunload event in the process.  Close the other
             // window if this was its last tab.
-            if (!remoteBrowser._beginRemoveTab(aOtherTab, true, true))
+            if (!remoteBrowser._beginRemoveTab(aOtherTab, aOurTab, true))
               return;
 
             let modifiedAttrs = [];
@@ -2946,7 +2947,7 @@
           // Swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
           // windows).
-          let newTab = this.addTab("about:blank");
+          let newTab = this.addTab("about:blank", { eventDetail: { adoptedTab: aTab } });
           let newBrowser = this.getBrowserForTab(newTab);
           let newURL = aTab.linkedBrowser.currentURI.spec;
 
