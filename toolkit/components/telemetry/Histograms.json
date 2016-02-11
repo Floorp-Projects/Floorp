@@ -10169,5 +10169,13 @@
     "bug_numbers": [1245982],
     "kind": "count",
     "description": "Uses of HTMLMediaElement.fastSeek"
+  },
+  "TAB_SWITCH_CACHE_POSITION": {
+    "expires_in_version": "55",
+    "bug_numbers": [1242013],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Position in (theoretical) tab cache of tab being switched to"
   }
 }
