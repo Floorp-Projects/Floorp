@@ -5193,10 +5193,33 @@ JS_Stringify(JSContext* cx, MutableHandleValue vp, HandleObject replacer,
     StringBuffer sb(cx);
     if (!sb.ensureTwoByteChars())
         return false;
-    if (!Stringify(cx, vp, replacer, space, sb))
+    if (!Stringify(cx, vp, replacer, space, sb, StringifyBehavior::Normal))
         return false;
     if (sb.empty() && !sb.append(cx->names().null))
         return false;
+    return callback(sb.rawTwoByteBegin(), sb.length(), data);
+}
+
+JS_PUBLIC_API(bool)
+JS::ToJSONMaybeSafely(JSContext* cx, JS::HandleObject input,
+                      JSONWriteCallback callback, void* data)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, input);
+
+    StringBuffer sb(cx);
+    if (!sb.ensureTwoByteChars())
+        return false;
+
+    RootedValue inputValue(cx, ObjectValue(*input));
+    if (!Stringify(cx, &inputValue, nullptr, NullHandleValue, sb,
+                   StringifyBehavior::RestrictedSafe))
+        return false;
+
+    if (sb.empty() && !sb.append(cx->names().null))
+        return false;
+
     return callback(sb.rawTwoByteBegin(), sb.length(), data);
 }
 
@@ -5865,6 +5888,13 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
             rt->setCanUseSignalHandlers(false);
             JitSpew(js::jit::JitSpew_IonScripts, "Disable signals");
         }
+        break;
+      case JSJITCOMPILER_JUMP_THRESHOLD:
+        if (value == uint32_t(-1)) {
+            jit::DefaultJitOptions defaultValues;
+            value = defaultValues.jumpThreshold;
+        }
+        jit::JitOptions.jumpThreshold = value;
         break;
       default:
         break;

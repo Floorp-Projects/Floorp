@@ -360,7 +360,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     u.kind_ = kind;
 
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(u.kind_ == Entry || u.kind_ == Inline);
+    MOZ_ASSERT(u.kind_ == Entry || u.kind_ == Inline || u.kind_ == CallThunk);
 }
 
 CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
@@ -508,6 +508,7 @@ ModuleData::serializedSize() const
            SerializedPodVectorSize(heapAccesses) +
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
+           SerializedPodVectorSize(callThunks) +
            SerializedVectorSize(prettyFuncNames) +
            filename.serializedSize();
 }
@@ -522,6 +523,7 @@ ModuleData::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, heapAccesses);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
+    cursor = SerializePodVector(cursor, callThunks);
     cursor = SerializeVector(cursor, prettyFuncNames);
     cursor = filename.serialize(cursor);
     return cursor;
@@ -542,6 +544,7 @@ ModuleData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses)) &&
     (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
+    (cursor = DeserializePodVector(cx, cursor, &callThunks)) &&
     (cursor = DeserializeVector(cx, cursor, &prettyFuncNames)) &&
     (cursor = filename.deserialize(cx, cursor));
     return cursor;
@@ -562,6 +565,7 @@ ModuleData::clone(JSContext* cx, ModuleData* out) const
            ClonePodVector(cx, heapAccesses, &out->heapAccesses) &&
            ClonePodVector(cx, codeRanges, &out->codeRanges) &&
            ClonePodVector(cx, callSites, &out->callSites) &&
+           ClonePodVector(cx, callThunks, &out->callThunks) &&
            CloneVector(cx, prettyFuncNames, &out->prettyFuncNames) &&
            filename.clone(cx, &out->filename);
 }
@@ -575,6 +579,7 @@ ModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            heapAccesses.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
+           callThunks.sizeOfExcludingThis(mallocSizeOf) +
            prettyFuncNames.sizeOfExcludingThis(mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -791,6 +796,9 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
 
         for (const CallSite& callSite : module_->callSites)
             EnableProfilingPrologue(*this, callSite, enabled);
+
+        for (const CallThunk& callThunk : module_->callThunks)
+            EnableProfilingThunk(*this, callThunk, enabled);
 
         for (const CodeRange& codeRange : module_->codeRanges)
             EnableProfilingEpilogue(*this, codeRange, enabled);

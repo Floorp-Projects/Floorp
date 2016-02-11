@@ -48,7 +48,7 @@ RegExpMatcher(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                 int32_t lastIndex, bool sticky,
+                 uint32_t lastIndex, bool sticky,
                  MatchPairs* maybeMatches, MutableHandleValue output);
 
 extern bool
@@ -56,7 +56,7 @@ RegExpTester(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                int32_t lastIndex, bool sticky, int32_t* endIndex);
+                uint32_t lastIndex, bool sticky, int32_t* endIndex);
 
 /*
  * The following functions are for use by self-hosted code.

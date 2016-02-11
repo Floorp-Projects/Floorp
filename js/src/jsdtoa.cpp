@@ -49,6 +49,7 @@ static inline void dtoa_free(void* p) { return js_free(p); }
 
 #define NO_GLOBAL_STATE
 #define NO_ERRNO
+#define Omit_Private_Memory // This saves memory for the workloads we see.
 #define MALLOC dtoa_malloc
 #define FREE dtoa_free
 #include "dtoa.c"

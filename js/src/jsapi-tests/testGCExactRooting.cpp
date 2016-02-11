@@ -95,7 +95,7 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
         bool same;
 
         // Automatic move from stack to heap.
-        JS::PersistentRooted<MyContainer> heap(cx, container);
+        JS::PersistentRooted<MyContainer> heap(rt, container);
 
         // clear prior rooting.
         container.obj() = nullptr;
@@ -124,6 +124,42 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
     return true;
 }
 END_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
+
+static JS::PersistentRooted<JSObject*> sLongLived;
+BEGIN_TEST(testGCPersistentRootedOutlivesRuntime)
+{
+    JSContext* cx2 = JS_NewContext(rt, 8192);
+    CHECK(cx2);
+
+    sLongLived.init(cx2, JS_NewObject(cx, nullptr));
+    CHECK(sLongLived);
+
+    JS_DestroyContext(cx2);
+    CHECK(!sLongLived);
+
+    return true;
+}
+END_TEST(testGCPersistentRootedOutlivesRuntime)
+
+// Unlike the above, the following test is an example of an invalid usage: for
+// performance and simplicity reasons, PersistentRooted<Traceable> is not
+// allowed to outlive the container it belongs to. The following commented out
+// test can be used to verify that the relevant assertion fires as expected.
+static JS::PersistentRooted<MyContainer> sContainer;
+BEGIN_TEST(testGCPersistentRootedTraceableCannotOutliveRuntime)
+{
+    JS::Rooted<MyContainer> container(cx);
+    container.obj() = JS_NewObject(cx, nullptr);
+    container.str() = JS_NewStringCopyZ(cx, "Hello");
+    sContainer.init(rt, container);
+
+    // Commenting the following line will trigger an assertion that the
+    // PersistentRooted outlives the runtime it is attached to.
+    sContainer.reset();
+
+    return true;
+}
+END_TEST(testGCPersistentRootedTraceableCannotOutliveRuntime)
 
 using MyHashMap = js::GCHashMap<js::Shape*, JSObject*>;
 

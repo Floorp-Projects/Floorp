@@ -1169,6 +1169,12 @@ MacroAssembler::patchThunk(uint32_t callerOffset, uint32_t calleeOffset)
 }
 
 void
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t callerOffset, uint32_t calleeOffset)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 MacroAssembler::call(wasm::SymbolicAddress target)
 {
     movePtr(target, CallReg);

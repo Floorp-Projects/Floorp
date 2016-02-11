@@ -60,8 +60,12 @@ FileFace::FileFace(const char *filename)
     if (!TtfUtil::GetTableDirInfo(_header_tbl, tbl_offset, tbl_len)) return;
     _table_dir = (TtfUtil::Sfnt::OffsetSubTable::Entry*)gralloc<char>(tbl_len);
     if (fseek(_file, tbl_offset, SEEK_SET)) return;
-    if (_table_dir)
-        if (fread(_table_dir, 1, tbl_len, _file) != tbl_len) return;
+    if (_table_dir && fread(_table_dir, 1, tbl_len, _file) != tbl_len)
+    {
+        free(_table_dir);
+        _table_dir = NULL;
+    }
+    return;
 }
 
 FileFace::~FileFace()
