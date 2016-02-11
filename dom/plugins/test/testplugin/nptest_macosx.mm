@@ -275,7 +275,7 @@ int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
   case EDGE_BOTTOM:
     return w->y + w->height;
   }
-  return NPTEST_INT32_ERROR;
+  MOZ_CRASH("Unexpected RectEdge?!");
 }
 
 int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
@@ -304,7 +304,7 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
   case EDGE_BOTTOM:
     return w->clipRect.bottom + COCOA_TITLEBAR_HEIGHT;
   }
-  return NPTEST_INT32_ERROR;
+  MOZ_CRASH("Unexpected RectEdge?!");
 }
 
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
