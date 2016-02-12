@@ -112,25 +112,29 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
 
   uint32_t numOfDeltas = 0;
   uint32_t totalDeltas = 0;
-  uint32_t currentItem = aPrefixes[0];
+  uint32_t previousItem = aPrefixes[0];
   for (uint32_t i = 1; i < aLength; i++) {
     if ((numOfDeltas >= DELTAS_LIMIT) ||
-          (aPrefixes[i] - currentItem >= MAX_INDEX_DIFF)) {
+          (aPrefixes[i] - previousItem >= MAX_INDEX_DIFF)) {
+      // Compact the previous element.
+      // Note there is always at least one element when we get here,
+      // because we created the first element before the loop.
+      mIndexDeltas.LastElement().Compact();
       mIndexDeltas.AppendElement();
-      mIndexDeltas[mIndexDeltas.Length() - 1].Compact();
       mIndexPrefixes.AppendElement(aPrefixes[i]);
       numOfDeltas = 0;
     } else {
-      uint16_t delta = aPrefixes[i] - currentItem;
-      mIndexDeltas[mIndexDeltas.Length() - 1].AppendElement(delta);
+      uint16_t delta = aPrefixes[i] - previousItem;
+      mIndexDeltas.LastElement().AppendElement(delta);
       numOfDeltas++;
       totalDeltas++;
     }
-    currentItem = aPrefixes[i];
+    previousItem = aPrefixes[i];
   }
 
-  mIndexPrefixes.Compact();
+  mIndexDeltas.LastElement().Compact();
   mIndexDeltas.Compact();
+  mIndexPrefixes.Compact();
 
   LOG(("Total number of indices: %d", aLength));
   LOG(("Total number of deltas: %d", totalDeltas));
