@@ -28,7 +28,6 @@ ClientTiledPaintedLayer::ClientTiledPaintedLayer(ClientLayerManager* const aMana
                                                ClientLayerManager::PaintedLayerCreationHint aCreationHint)
   : PaintedLayer(aManager, static_cast<ClientLayer*>(this), aCreationHint)
   , mContentClient()
-  , mHaveSingleTiledContentClient(false)
 {
   MOZ_COUNT_CTOR(ClientTiledPaintedLayer);
   mPaintData.mLastScrollOffset = ParentLayerPoint(0, 0);
@@ -412,26 +411,18 @@ ClientTiledPaintedLayer::RenderLayer()
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
   IntSize layerSize = mVisibleRegion.ToUnknownRegion().GetBounds().Size();
-  IntSize tileSize(gfxPlatform::GetPlatform()->GetTileWidth(),
-                   gfxPlatform::GetPlatform()->GetTileHeight());
-
-  bool wantSingleTiledContentClient =
-      (mCreationHint == LayerManager::NONE || layerSize <= tileSize) &&
-      SingleTiledContentClient::ClientSupportsLayerSize(layerSize, ClientManager()) &&
-      gfxPrefs::LayersSingleTileEnabled();
-
-  if (mContentClient && mHaveSingleTiledContentClient && !wantSingleTiledContentClient) {
+  if (mContentClient && !mContentClient->SupportsLayerSize(layerSize, ClientManager())) {
     mContentClient = nullptr;
     mValidRegion.SetEmpty();
   }
 
   if (!mContentClient) {
-    if (wantSingleTiledContentClient) {
+    if (mCreationHint == LayerManager::NONE &&
+        SingleTiledContentClient::ClientSupportsLayerSize(layerSize, ClientManager()) &&
+        gfxPrefs::LayersSingleTileEnabled()) {
       mContentClient = new SingleTiledContentClient(this, ClientManager());
-      mHaveSingleTiledContentClient = true;
     } else {
       mContentClient = new MultiTiledContentClient(this, ClientManager());
-      mHaveSingleTiledContentClient = false;
     }
 
     mContentClient->Connect();

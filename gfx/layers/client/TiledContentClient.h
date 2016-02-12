@@ -628,6 +628,9 @@ public:
   };
   virtual void UpdatedBuffer(TiledBufferType aType) = 0;
 
+  virtual bool SupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager) const
+  { return true; }
+
 private:
   const char* mName;
 };

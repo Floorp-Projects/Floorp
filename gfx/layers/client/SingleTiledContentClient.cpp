@@ -46,6 +46,12 @@ SingleTiledContentClient::ClientSupportsLayerSize(const gfx::IntSize& aSize, Cli
   return aSize.width <= maxTextureSize && aSize.height <= maxTextureSize;
 }
 
+bool
+SingleTiledContentClient::SupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager) const
+{
+  return ClientSupportsLayerSize(aSize, aManager);
+}
+
 ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
                                                            CompositableClient* aCompositableClient,
                                                            ClientLayerManager* aManager)
