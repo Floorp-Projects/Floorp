@@ -245,6 +245,13 @@ class Sig
     }
 };
 
+struct SigHashPolicy
+{
+    typedef const Sig& Lookup;
+    static HashNumber hash(Lookup sig) { return sig.hash(); }
+    static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
+};
+
 // A "declared" signature is a Sig object that is created and owned by the
 // ModuleGenerator. These signature objects are read-only and have the same
 // lifetime as the ModuleGenerator. This type is useful since some uses of Sig
