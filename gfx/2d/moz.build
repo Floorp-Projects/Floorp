@@ -66,6 +66,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
+        'DrawTargetD2D.cpp',
         'DrawTargetD2D1.cpp',
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
@@ -76,7 +77,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'RadialGradientEffectD2D1.cpp',
         'ScaledFontDWrite.cpp',
         'ScaledFontWin.cpp',
+        'SourceSurfaceD2D.cpp',
         'SourceSurfaceD2D1.cpp',
+        'SourceSurfaceD2DTarget.cpp',
     ]
     DEFINES['WIN32'] = True
 

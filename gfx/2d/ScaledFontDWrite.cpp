@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DrawTargetD2D1.h"
+#include "DrawTargetD2D.h"
 #include "ScaledFontDWrite.h"
 #include "PathD2D.h"
 
@@ -120,7 +120,7 @@ ScaledFontDWrite::GetSkTypeface()
 {
   MOZ_ASSERT(mFont);
   if (!mTypeface) {
-    IDWriteFactory *factory = DrawTargetD2D1::GetDWriteFactory();
+    IDWriteFactory *factory = DrawTargetD2D::GetDWriteFactory();
     mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mFont, mFontFamily);
   }
   return mTypeface;

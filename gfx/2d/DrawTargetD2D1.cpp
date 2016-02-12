@@ -5,32 +5,24 @@
 
 #include <initguid.h>
 #include "DrawTargetD2D1.h"
+#include "DrawTargetD2D.h"
 #include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
 #include "SourceSurfaceD2D1.h"
+#include "SourceSurfaceD2D.h"
 #include "RadialGradientEffectD2D1.h"
 
 #include "HelpersD2D.h"
 #include "FilterNodeD2D1.h"
-#include "ExtendInputEffectD2D1.h"
 #include "Tools.h"
 
 using namespace std;
-
-// decltype is not usable for overloaded functions.
-typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
-    D2D1_FACTORY_TYPE factoryType,
-    REFIID iid,
-    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
-    void **factory
-);
 
 namespace mozilla {
 namespace gfx {
 
 uint64_t DrawTargetD2D1::mVRAMUsageDT;
 uint64_t DrawTargetD2D1::mVRAMUsageSS;
-IDWriteFactory *DrawTargetD2D1::mDWriteFactory;
 ID2D1Factory1* DrawTargetD2D1::mFactory = nullptr;
 
 ID2D1Factory1 *D2DFactory1()
@@ -612,7 +604,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
                                     DWRITE_MEASURING_MODE_NATURAL, &userRect);
 
         RefPtr<ID2D1PathGeometry> path;
-        factory()->CreatePathGeometry(getter_AddRefs(path));
+        D2DFactory()->CreatePathGeometry(getter_AddRefs(path));
         RefPtr<ID2D1GeometrySink> sink;
         path->Open(getter_AddRefs(sink));
         AddRectToSink(sink, userRect);
@@ -1068,71 +1060,20 @@ DrawTargetD2D1::factory()
     return mFactory;
   }
 
-  RefPtr<ID2D1Factory> factory;
-  D2D1CreateFactoryFunc createD2DFactory;
-  HMODULE d2dModule = LoadLibraryW(L"d2d1.dll");
-  createD2DFactory = (D2D1CreateFactoryFunc)
-      GetProcAddress(d2dModule, "D2D1CreateFactory");
-
-  if (!createD2DFactory) {
-    gfxWarning() << "Failed to locate D2D1CreateFactory function.";
+  ID2D1Factory* d2dFactory = D2DFactory();
+  if (!d2dFactory) {
     return nullptr;
   }
 
-  D2D1_FACTORY_OPTIONS options;
-#ifdef _DEBUG
-  options.debugLevel = D2D1_DEBUG_LEVEL_WARNING;
-#else
-  options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
-#endif
-  //options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
+  HRESULT hr = d2dFactory->QueryInterface((ID2D1Factory1**)&mFactory);
 
-  HRESULT hr = createD2DFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
-                                __uuidof(ID2D1Factory),
-                                &options,
-                                getter_AddRefs(factory));
-
-  if (FAILED(hr) || !factory) {
-    gfxWarning() << "Failed to create Direct2D factory.";
+  if (FAILED(hr)) {
     return nullptr;
   }
 
-  hr = factory->QueryInterface((ID2D1Factory1**)&mFactory);
-  if (FAILED(hr) || !mFactory) {
-    return nullptr;
-  }
-
-  ExtendInputEffectD2D1::Register(mFactory);
   RadialGradientEffectD2D1::Register(mFactory);
 
   return mFactory;
-}
-
-IDWriteFactory*
-DrawTargetD2D1::GetDWriteFactory()
-{
-  if (mDWriteFactory) {
-    return mDWriteFactory;
-  }
-
-  decltype(DWriteCreateFactory)* createDWriteFactory;
-  HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
-  createDWriteFactory = (decltype(DWriteCreateFactory)*)
-    GetProcAddress(dwriteModule, "DWriteCreateFactory");
-
-  if (!createDWriteFactory) {
-    gfxWarning() << "Failed to locate DWriteCreateFactory function.";
-    return nullptr;
-  }
-
-  HRESULT hr = createDWriteFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-                                   reinterpret_cast<IUnknown**>(&mDWriteFactory));
-
-  if (FAILED(hr)) {
-    gfxWarning() << "Failed to create DWrite Factory.";
-  }
-
-  return mDWriteFactory;
 }
 
 void
@@ -1140,7 +1081,6 @@ DrawTargetD2D1::CleanupD2D()
 {
   if (mFactory) {
     RadialGradientEffectD2D1::Unregister(mFactory);
-    ExtendInputEffectD2D1::Unregister(mFactory);
     mFactory->Release();
     mFactory = nullptr;
   }
