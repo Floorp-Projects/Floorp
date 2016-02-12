@@ -6,7 +6,7 @@
 
 const { Cu } = require("chrome");
 Cu.import("resource://gre/modules/Services.jsm");
-const { gDevTools } = require("resource://devtools/client/framework/gDevTools.jsm");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 const { defaultTools, defaultThemes } = require("devtools/client/definitions");
 

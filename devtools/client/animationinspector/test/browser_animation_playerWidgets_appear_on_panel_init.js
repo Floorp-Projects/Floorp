@@ -7,11 +7,41 @@
 // Test that player widgets are displayed right when the animation panel is
 // initialized, if the selected node (<body> by default) is animated.
 
+const { ANIMATION_TYPES } = require("devtools/server/actors/animation");
+
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_body_animation.html");
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.animations-api.core.enabled", true]
+    ]}, resolve);
+  });
+
+  yield addTab(TEST_URL_ROOT + "doc_multiple_animation_types.html");
 
   let {panel} = yield openAnimationInspector();
-  is(panel.animationsTimelineComponent.animations.length, 1,
-    "One animation is handled by the timeline after init");
-  assertAnimationsDisplayed(panel, 1, "One animation is displayed after init");
+  is(panel.animationsTimelineComponent.animations.length, 3,
+    "Three animations are handled by the timeline after init");
+  assertAnimationsDisplayed(panel, 3,
+    "Three animations are displayed after init");
+  is(
+    panel.animationsTimelineComponent
+         .animationsEl
+         .querySelectorAll(`.animation.${ANIMATION_TYPES.SCRIPT_ANIMATION}`)
+         .length,
+    1,
+    "One script-generated animation is displayed");
+  is(
+    panel.animationsTimelineComponent
+         .animationsEl
+         .querySelectorAll(`.animation.${ANIMATION_TYPES.CSS_ANIMATION}`)
+         .length,
+    1,
+    "One CSS animation is displayed");
+  is(
+    panel.animationsTimelineComponent
+         .animationsEl
+         .querySelectorAll(`.animation.${ANIMATION_TYPES.CSS_TRANSITION}`)
+         .length,
+    1,
+    "One CSS transition is displayed");
 });
