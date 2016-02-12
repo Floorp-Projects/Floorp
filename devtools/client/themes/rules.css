@@ -319,7 +319,7 @@
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
   padding: 0;
-  margin: -1px;
+  margin: -1px -3px -1px -1px;
 }
 
 .ruleview-property {
