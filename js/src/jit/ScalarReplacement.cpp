@@ -780,10 +780,11 @@ IndexOf(MDefinition* ins, int32_t* res)
         indexDef = indexDef->toBoundsCheck()->index();
     if (indexDef->isToInt32())
         indexDef = indexDef->toToInt32()->getOperand(0);
-    if (!indexDef->isConstantValue())
+    MConstant* indexDefConst = indexDef->maybeConstantValue();
+    if (!indexDefConst)
         return false;
 
-    Value index = indexDef->constantValue();
+    Value index = indexDefConst->value();
     if (!index.isInt32())
         return false;
     *res = index.toInt32();
@@ -1258,7 +1259,7 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins)
         return;
     }
 
-    int32_t initLengthValue = ins->index()->constantValue().toInt32() + 1;
+    int32_t initLengthValue = ins->index()->maybeConstantValue()->value().toInt32() + 1;
     MConstant* initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
     ins->block()->insertBefore(ins, initLength);
     ins->block()->insertBefore(ins, state_);
