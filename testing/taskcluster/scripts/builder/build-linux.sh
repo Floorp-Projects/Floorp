@@ -45,9 +45,11 @@ if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 
 cleanup() {
+    local rv=$?
     if [ -n "$xvfb_pid" ]; then
         kill $xvfb_pid || true
     fi
+    exit $rv
 }
 trap cleanup EXIT INT
 
