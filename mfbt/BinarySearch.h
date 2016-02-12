@@ -47,7 +47,7 @@ namespace mozilla {
  *   struct Comparator {
  *     int operator()(int val) const {
  *       if (mTarget < val) return -1;
- *       if (mValue > val) return 1;
+ *       if (mTarget > val) return 1;
  *       return 0;
  *     }
  *     Comparator(int target) : mTarget(target) {}
