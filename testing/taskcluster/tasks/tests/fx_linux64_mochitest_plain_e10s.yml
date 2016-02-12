@@ -14,7 +14,7 @@ task:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   metadata:
-    name: '[TC] Linux64 mochitest-plain e10s {{chunk}}'
+    name: '[TC] Linux64 mochitest-plain-e10s-{{chunk}}'
     description: Mochitest plain e10s run {{chunk}}
   extra:
     chunks:
