@@ -74,15 +74,17 @@ public:
   NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
+  virtual bool IsKilled() override;
 
   NS_IMETHOD OnMetadataRead(nsresult aResult) override;
   NS_IMETHOD OnMetadataWritten(nsresult aResult) override;
 
-  NS_IMETHOD OpenInputStream(nsIInputStream **_retval);
+  NS_IMETHOD OpenInputStream(nsICacheEntry *aCacheEntryHandle, nsIInputStream **_retval);
   NS_IMETHOD OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputStream **_retval);
   NS_IMETHOD SetMemoryOnly();
   NS_IMETHOD Doom(CacheFileListener *aCallback);
 
+  void Kill() { mKill = true; }
   nsresult   ThrowMemoryCachedData();
 
   // metadata forwarders
@@ -198,6 +200,7 @@ private:
   RefPtr<CacheFileMetadata>    mMetadata;
   nsCOMPtr<CacheFileListener>  mListener;
   nsCOMPtr<CacheFileIOListener>   mDoomAfterOpenListener;
+  Atomic<bool, Relaxed>        mKill;
 
   nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mChunks;
   nsClassHashtable<nsUint32HashKey, ChunkListeners> mChunkListeners;

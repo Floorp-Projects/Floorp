@@ -42,7 +42,7 @@ NS_INTERFACE_MAP_BEGIN(CacheFileInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileInputStream::CacheFileInputStream(CacheFile *aFile)
+CacheFileInputStream::CacheFileInputStream(CacheFile *aFile, nsISupports *aEntry)
   : mFile(aFile)
   , mPos(0)
   , mClosed(false)
@@ -50,6 +50,7 @@ CacheFileInputStream::CacheFileInputStream(CacheFile *aFile)
   , mWaitingForUpdate(false)
   , mListeningForChunk(-1)
   , mCallbackFlags(0)
+  , mCacheEntryHandle(aEntry)
 {
   LOG(("CacheFileInputStream::CacheFileInputStream() [this=%p]", this));
   MOZ_COUNT_CTOR(CacheFileInputStream);
@@ -239,6 +240,8 @@ CacheFileInputStream::CloseWithStatusLocked(nsresult aStatus)
   // TODO propagate error from input stream to other streams ???
 
   MaybeNotifyListener();
+
+  mFile->ReleaseOutsideLock(mCacheEntryHandle.forget());
 
   return NS_OK;
 }

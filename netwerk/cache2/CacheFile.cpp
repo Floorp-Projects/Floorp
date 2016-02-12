@@ -194,6 +194,7 @@ CacheFile::CacheFile()
   , mPreloadChunkCount(0)
   , mStatus(NS_OK)
   , mDataSize(-1)
+  , mKill(false)
   , mOutput(nullptr)
 {
   LOG(("CacheFile::CacheFile() [this=%p]", this));
@@ -204,7 +205,7 @@ CacheFile::~CacheFile()
   LOG(("CacheFile::~CacheFile() [this=%p]", this));
 
   MutexAutoLock lock(mLock);
-  if (!mMemoryOnly && mReady) {
+  if (!mMemoryOnly && mReady && !mKill) {
     // mReady flag indicates we have metadata plus in a valid state.
     WriteMetadataIfNeededLocked(true);
   }
@@ -703,8 +704,18 @@ CacheFile::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
   return NS_ERROR_UNEXPECTED;
 }
 
+bool CacheFile::IsKilled()
+{
+  bool killed = mKill;
+  if (killed) {
+    LOG(("CacheFile is killed, this=%p", this));
+  }
+
+  return killed;
+}
+
 nsresult
-CacheFile::OpenInputStream(nsIInputStream **_retval)
+CacheFile::OpenInputStream(nsICacheEntry *aEntryHandle, nsIInputStream **_retval)
 {
   CacheFileAutoLock lock(this);
 
@@ -735,7 +746,7 @@ CacheFile::OpenInputStream(nsIInputStream **_retval)
   // the last input stream is closed.
   mPreloadWithoutInputStreams = false;
 
-  CacheFileInputStream *input = new CacheFileInputStream(this);
+  CacheFileInputStream *input = new CacheFileInputStream(this, aEntryHandle);
 
   LOG(("CacheFile::OpenInputStream() - Creating new input stream %p [this=%p]",
        input, this));
@@ -907,6 +918,9 @@ nsresult
 CacheFile::SetElement(const char *aKey, const char *aValue)
 {
   CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::SetElement() this=%p", this));
+
   MOZ_ASSERT(mMetadata);
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
@@ -941,6 +955,10 @@ nsresult
 CacheFile::SetExpirationTime(uint32_t aExpirationTime)
 {
   CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::SetExpirationTime() this=%p, expiration=%u",
+       this, aExpirationTime));
+
   MOZ_ASSERT(mMetadata);
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
@@ -966,6 +984,10 @@ nsresult
 CacheFile::SetFrecency(uint32_t aFrecency)
 {
   CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::SetFrecency() this=%p, frecency=%u",
+       this, aFrecency));
+
   MOZ_ASSERT(mMetadata);
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
@@ -1021,6 +1043,9 @@ nsresult
 CacheFile::OnFetched()
 {
   CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::OnFetched() this=%p", this));
+
   MOZ_ASSERT(mMetadata);
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
