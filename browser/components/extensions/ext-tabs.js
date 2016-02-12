@@ -646,6 +646,25 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
         return Promise.resolve(tabsMoved.map(tab => TabManager.convert(extension, tab)));
       },
+
+      duplicate: function(tabId) {
+        let tab = TabManager.getTab(tabId);
+        if (!tab) {
+          return Promise.reject({message: `Invalid tab ID: ${tabId}`});
+        }
+
+        let gBrowser = tab.ownerDocument.defaultView.gBrowser;
+        let newTab = gBrowser.duplicateTab(tab);
+        gBrowser.moveTabTo(newTab, tab._tPos + 1);
+        gBrowser.selectTabAtIndex(newTab._tPos);
+
+        return new Promise(resolve => {
+          newTab.addEventListener("SSTabRestored", function listener() {
+            newTab.removeEventListener("SSTabRestored", listener);
+            return resolve(TabManager.convert(extension, newTab));
+          });
+        });
+      },
     },
   };
   return self;

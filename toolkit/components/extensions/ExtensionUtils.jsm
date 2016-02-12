@@ -204,7 +204,7 @@ class BaseContext {
    * function for the promise, and no promise is returned. In this case,
    * the callback is called when the promise resolves or rejects. In the
    * latter case, `lastError` is set to the rejection value, and the
-   * callback funciton must check `browser.runtime.lastError` or
+   * callback function must check `browser.runtime.lastError` or
    * `extension.runtime.lastError` in order to prevent it being reported
    * to the console.
    *
