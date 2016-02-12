@@ -111,9 +111,7 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         return getTree(id, false);
       },
 
-      search: function(query) {
-        return Bookmarks.search(query).then(result => result.map(convert));
-      },
+      // search
 
       create: function(bookmark) {
         let info = {
