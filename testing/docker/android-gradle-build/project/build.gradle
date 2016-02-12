@@ -1,0 +1,73 @@
+buildscript {
+  repositories {
+    maven {
+        url 'http://localhost:8081/nexus/content/repositories/central/'
+    }
+
+    maven {
+        url 'https://jitpack.io'
+    }
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:1.3.0'
+    classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.4') {
+        // Without these, we get errors linting.
+        exclude module: 'guava'
+    }
+
+    // See
+    // https://github.com/JakeWharton/sdk-manager-plugin/issues/73#issuecomment-106747867
+    // and
+    // https://github.com/JakeWharton/sdk-manager-plugin/issues/99#issuecomment-166438751.
+    classpath 'com.github.JakeWharton:sdk-manager-plugin:220bf7a88a7072df3ed16dc8466fb144f2817070'
+  }
+}
+
+allprojects {
+    repositories {
+        maven {
+            url 'http://localhost:8081/nexus/content/repositories/central/'
+        }
+    }
+}
+
+apply plugin: 'android-sdk-manager'
+
+// Optionally, require an emulator.
+// sdkManager {
+//   emulatorVersion 'android-19'
+//   emulatorArchitecture 'armeabi-v7a' // Optional, defaults to ARM.
+// }
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        targetSdkVersion 23
+        minSdkVersion 15
+    }
+}
+
+// These are extracted from mobile/android/**/*.gradle.
+dependencies {
+    compile 'com.android.support:appcompat-v7:23.0.1'
+    compile 'com.android.support:design:23.0.1'
+    compile 'com.android.support:mediarouter-v7:23.0.1'
+    compile 'com.android.support:recyclerview-v7:23.0.1'
+    compile 'com.android.support:support-v4:23.0.1'
+    compile 'com.google.android.gms:play-services-base:8.1.0'
+    compile 'com.google.android.gms:play-services-basement:8.1.0'
+    compile 'com.google.android.gms:play-services-cast:8.1.0'
+    compile 'com.google.android.gms:play-services-gcm:8.1.0'
+    compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
+    compile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'org.simpleframework:simple-http:6.0.1'
+    androidTestCompile 'com.jayway.android.robotium:robotium-solo:4.3.1'
+}
