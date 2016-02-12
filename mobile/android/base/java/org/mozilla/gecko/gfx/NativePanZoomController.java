@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -14,6 +16,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.json.JSONObject;
 
 import android.graphics.PointF;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,12 +26,22 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private final LayerView mView;
     private boolean mDestroyed;
     private Overscroll mOverscroll;
+    boolean mNegateWheelScroll;
+    private float mPointerScrollFactor;
+    private final PrefsHelper.PrefHandler mPrefsObserver;
+    private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
     @WrapForJNI
     private native boolean handleMotionEvent(
             int action, int actionIndex, long time, int metaState,
             int pointerId[], float x[], float y[], float orientation[], float pressure[],
             float toolMajor[], float toolMinor[]);
+
+    @WrapForJNI
+    private native boolean handleScrollEvent(
+            long time, int metaState,
+            float x, float y,
+            float hScroll, float vScroll);
 
     private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
         if (mDestroyed) {
@@ -78,9 +91,50 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
                 toolMajor, toolMinor);
     }
 
+    private boolean handleScrollEvent(MotionEvent event) {
+        if (mDestroyed) {
+            return false;
+        }
+
+        final int count = event.getPointerCount();
+
+        if (count <= 0) {
+            return false;
+        }
+
+        final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+        event.getPointerCoords(0, coords);
+        final float x = coords.x;
+        final float y = coords.y;
+
+        final float flipFactor = mNegateWheelScroll ? -1.0f : 1.0f;
+        final float hScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL) * flipFactor * mPointerScrollFactor;
+        final float vScroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL) * flipFactor * mPointerScrollFactor;
+
+        return handleScrollEvent(event.getEventTime(), event.getMetaState(), x, y, hScroll, vScroll);
+    }
+
+
     NativePanZoomController(PanZoomTarget target, View view) {
         mTarget = target;
         mView = (LayerView) view;
+
+        String[] prefs = { "ui.scrolling.negate_wheel_scroll" };
+        mPrefsObserver = new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, boolean value) {
+                if (pref.equals("ui.scrolling.negate_wheel_scroll")) {
+                    mNegateWheelScroll = value;
+                }
+            }
+        };
+        PrefsHelper.addObserver(prefs, mPrefsObserver);
+
+        TypedValue outValue = new TypedValue();
+        if (view.getContext().getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
+            mPointerScrollFactor = outValue.getDimension(view.getContext().getResources().getDisplayMetrics());
+        } else {
+            mPointerScrollFactor = MAX_SCROLL;
+        }
     }
 
     @Override
@@ -90,8 +144,12 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override
     public boolean onMotionEvent(MotionEvent event) {
-        // FIXME implement this
-        return false;
+        final int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_SCROLL) {
+            return handleScrollEvent(event);
+        } else {
+            return false;
+        }
     }
 
     @Override
