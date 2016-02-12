@@ -331,24 +331,6 @@ var waitForSuccess = Task.async(function*(validatorFn, desc = "untitled") {
 });
 
 /**
- * Create a new style tag containing the given style text and append it to the
- * document's head node
- *
- * @param {Document} doc
- * @param {String} style
- * @return {DOMNode} The newly created style node
- */
-function addStyle(doc, style) {
-  info("Adding a new style tag to the document with style content: " +
-    style.substring(0, 50));
-  let node = doc.createElement("style");
-  node.setAttribute("type", "text/css");
-  node.textContent = style;
-  doc.getElementsByTagName("head")[0].appendChild(node);
-  return node;
-}
-
-/**
  * Get the dataURL for the font family tooltip.
  *
  * @param {String} font
