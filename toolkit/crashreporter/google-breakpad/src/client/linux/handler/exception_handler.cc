@@ -531,6 +531,21 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
     return false;
   }
 
+  if (child != 0) {
+    char *clonedMsg = "ExceptionHandler::GenerateDump cloned child ";
+    char pidMsg[32];
+
+    unsigned int pidLen = my_uint_len(child);
+    my_uitos(pidMsg, child, pidLen);
+
+    logger::write(clonedMsg, my_strlen(clonedMsg));
+    logger::write(pidMsg, pidLen);
+    logger::write("\n", 1);
+  } else {
+    char *childMsg = "ExceptionHandler::GenerateDump I'm the child\n";
+    logger::write(childMsg, my_strlen(childMsg));
+  }
+
   // Allow the child to ptrace us
   sys_prctl(PR_SET_PTRACER, child, 0, 0, 0);
   SendContinueSignalToChild();
@@ -565,6 +580,9 @@ void ExceptionHandler::SendContinueSignalToChild() {
     logger::write(strerror(errno), strlen(strerror(errno)));
     logger::write("\n", 1);
   }
+
+  const char* msg = "ExceptionHandler::SendContinueSignalToChild sent continue signal to child\n";
+  logger::write(msg, my_strlen(msg));
 }
 
 // This function runs in a compromised context: see the top of the file.
@@ -572,6 +590,10 @@ void ExceptionHandler::SendContinueSignalToChild() {
 void ExceptionHandler::WaitForContinueSignal() {
   int r;
   char receivedMessage;
+
+  const char* waitMsg = "ExceptionHandler::WaitForContinueSignal waiting for continue signal...\n";
+  logger::write(waitMsg, my_strlen(waitMsg));
+
   r = HANDLE_EINTR(sys_read(fdes[0], &receivedMessage, sizeof(char)));
   if (r == -1) {
     static const char msg[] = "ExceptionHandler::WaitForContinueSignal "
