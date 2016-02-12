@@ -607,8 +607,8 @@
   <string name="devtools_auth_scan_header">&devtools_auth_scan_header;</string>
 
   <string name="unsupported_sdk_version">&unsupported_sdk_version;</string>
-  <string name="eol_notification_title">&eol_notification_title;</string>
+  <string name="eol_notification_title">&eol_notification_title2;</string>
   <string name="eol_notification_summary">&eol_notification_summary;</string>
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/honeycomb -->
-  <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/honeycomb</string>
+  <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/unsupported-version</string>
 </resources>
