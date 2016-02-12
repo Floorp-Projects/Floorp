@@ -79,6 +79,7 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
       onCompleted: new WebNavigationEventManager(context, "onCompleted").api(),
       onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
       onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
+      onHistoryStateUpdated: new WebNavigationEventManager(context, "onHistoryStateUpdated").api(),
       onCreatedNavigationTarget: ignoreEvent(context, "webNavigation.onCreatedNavigationTarget"),
       getAllFrames(details) {
         let tab = TabManager.getTab(details.tabId);
