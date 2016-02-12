@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'WaveDecoder.h',
+    'WaveDemuxer.h',
     'WaveReader.h',
 ]
 

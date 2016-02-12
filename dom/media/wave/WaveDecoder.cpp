@@ -17,16 +17,13 @@ namespace mozilla {
 MediaDecoder*
 WaveDecoder::Clone(MediaDecoderOwner* aOwner)
 {
-  if (!IsEnabled())
-    return nullptr;
-
   return new WaveDecoder(aOwner);
 }
 
 MediaDecoderStateMachine*
 WaveDecoder::CreateStateMachine()
 {
-  if (Preferences::GetBool("media.wave.decoder.enabled")) {
+  if (Preferences::GetBool("media.wave.decoder.enabled", false)) {
     RefPtr<MediaDecoderReader> reader =
         new MediaFormatReader(this, new WAVDemuxer(GetResource()));
     return new MediaDecoderStateMachine(this, reader);
@@ -39,6 +36,10 @@ WaveDecoder::CreateStateMachine()
 bool
 WaveDecoder::IsEnabled()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!Preferences::GetBool("media.wave.decoder.enabled", false)) {
+    return false;
+  }
   PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"));
