@@ -32,7 +32,7 @@ ID2D1Factory1 *D2DFactory1()
 
 DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
-  , mPushedLayersSincePurge(0)
+  , mUsedCommandListsSincePurge(0)
 {
 }
 
@@ -97,14 +97,14 @@ static const uint32_t kPushedLayersBeforePurge = 25;
 void
 DrawTargetD2D1::Flush()
 {
-  if ((mPushedLayersSincePurge >= kPushedLayersBeforePurge) &&
+  if ((mUsedCommandListsSincePurge >= kPushedLayersBeforePurge) &&
       mPushedLayers.size() == 1) {
     // It's important to pop all clips as otherwise layers can forget about
     // their clip when doing an EndDraw. When we have layers pushed we cannot
     // easily pop all underlying clips to delay the purge until we have no
     // layers pushed.
     PopAllClips();
-    mPushedLayersSincePurge = 0;
+    mUsedCommandListsSincePurge = 0;
     mDC->EndDraw();
     mDC->BeginDraw();
   } else {
@@ -274,6 +274,7 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
   }
 
   RefPtr<ID2D1CommandList> list;
+  mUsedCommandListsSincePurge++;
   mDC->CreateCommandList(getter_AddRefs(list));
   mDC->SetTarget(list);
 
@@ -803,7 +804,7 @@ DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
 
   mDC->SetTarget(CurrentTarget());
 
-  mPushedLayersSincePurge++;
+  mUsedCommandListsSincePurge++;
 }
 
 void
@@ -1132,6 +1133,7 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   mDC->CreateCommandList(getter_AddRefs(mCommandList));
   mDC->SetTarget(mCommandList);
+  mUsedCommandListsSincePurge++;
 
   PushAllClips();
   FlushTransformToDC();

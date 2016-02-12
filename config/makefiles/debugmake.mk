@@ -58,6 +58,7 @@ endif
 	$(LOOP_OVER_DIRS)
 
 showbuild showhost: _DEPEND_CFLAGS=
+showbuild showhost: COMPILE_PDB_FLAG=
 showbuild:
 	$(call print_vars,\
 		MOZ_BUILD_ROOT \

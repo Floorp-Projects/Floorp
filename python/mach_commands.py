@@ -12,6 +12,7 @@ import platform
 import subprocess
 import sys
 import which
+from distutils.version import LooseVersion
 
 from mozbuild.base import (
     MachCommandBase,
@@ -34,7 +35,7 @@ and try again.
 '''.strip()
 
 NODE_NOT_FOUND_MESSAGE = '''
-nodejs is either not installed or is installed to a non-standard path.
+nodejs v4.2.3 is either not installed or is installed to a non-standard path.
 Please install nodejs from https://nodejs.org and try again.
 
 Valid installation paths:
@@ -161,6 +162,11 @@ class MachCommands(MachCommandBase):
     def eslint(self, setup, ext=None, binary=None, args=None):
         '''Run eslint.'''
 
+        # eslint requires at least node 4.2.3
+        nodePath = self.getNodeOrNpmPath("node", LooseVersion("4.2.3"))
+        if not nodePath:
+            return 1
+
         if setup:
             return self.eslint_setup()
 
@@ -208,11 +214,6 @@ class MachCommands(MachCommandBase):
         eslint for optimal use on Mozilla projects.
         """
         sys.path.append(os.path.dirname(__file__))
-
-        # At the very least we need node installed.
-        nodePath = self.getNodeOrNpmPath("node")
-        if not nodePath:
-            return 1
 
         npmPath = self.getNodeOrNpmPath("npm")
         if not npmPath:
@@ -275,7 +276,7 @@ class MachCommands(MachCommandBase):
             os.path.join(os.environ.get("PROGRAMFILES"), "nodejs")
         })
 
-    def getNodeOrNpmPath(self, filename):
+    def getNodeOrNpmPath(self, filename, minversion=None):
         """
         Return the nodejs or npm path.
         """
@@ -284,13 +285,15 @@ class MachCommands(MachCommandBase):
                 try:
                     nodeOrNpmPath = which.which(filename + ext,
                                                 path=self.getPossibleNodePathsWin())
-                    if self.is_valid(nodeOrNpmPath):
+                    if self.is_valid(nodeOrNpmPath, minversion):
                         return nodeOrNpmPath
                 except which.WhichError:
                     pass
         else:
             try:
-                return which.which(filename)
+                nodeOrNpmPath = which.which(filename)
+                if self.is_valid(nodeOrNpmPath, minversion):
+                    return nodeOrNpmPath
             except which.WhichError:
                 pass
 
@@ -311,10 +314,14 @@ class MachCommands(MachCommandBase):
 
         return None
 
-    def is_valid(self, path):
+    def is_valid(self, path, minversion = None):
         try:
-            with open(os.devnull, "w") as fnull:
-                subprocess.check_call([path, "--version"], stdout=fnull)
-                return True
+            version_str = subprocess.check_output([path, "--version"],
+                                                  stderr=subprocess.STDOUT)
+            if minversion:
+                # nodejs prefixes its version strings with "v"
+                version = LooseVersion(version_str.lstrip('v'))
+                return version >= minversion
+            return True
         except (subprocess.CalledProcessError, WindowsError):
             return False

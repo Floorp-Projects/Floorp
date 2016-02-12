@@ -1311,6 +1311,13 @@ public:
       mRegistration = swm->GetRegistration(mPrincipal, mScope);
 
       if (mRegistration) {
+        // If we are resurrecting an uninstalling registration, then persist
+        // it to disk again.  We preemptively removed it earlier during
+        // unregister so that closing the window by shutting down the browser
+        // results in the registration being gone on restart.
+        if (mRegistration->mPendingUninstall) {
+          swm->StoreRegistration(mPrincipal, mRegistration);
+        }
         mRegistration->mPendingUninstall = false;
         RefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
         if (newest && mScriptSpec.Equals(newest->ScriptSpec())) {
@@ -2467,7 +2474,12 @@ private:
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    // Could it be that we are shutting down.
+    // Note, we send the message to remove the registration from disk now even
+    // though we may only set the mPendingUninstall flag below.  This is
+    // necessary to ensure the registration is removed if the controlled
+    // clients are closed by shutting down the browser.  If the registration
+    // is resurrected by clearing mPendingUninstall then it should be saved
+    // to disk again.
     if (swm->mActor) {
       swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
     }

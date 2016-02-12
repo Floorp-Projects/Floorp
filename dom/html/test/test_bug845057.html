@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=845057
     return ((a+'').split(" ").sort()+'') == ((b+'').split(" ").sort()+'');
   }
 
-  ok(attr instanceof DOMSettableTokenList,
-     "Iframe sandbox attribute is instace of DOMSettableTokenList");
+  ok(attr instanceof DOMTokenList,
+     "Iframe sandbox attribute is instace of DOMTokenList");
   ok(eq(attr, "allow-scripts") &&
      eq(iframe.getAttribute("sandbox"), "allow-scripts"),
      "Stringyfied sandbox attribute is same as that of the DOM element");

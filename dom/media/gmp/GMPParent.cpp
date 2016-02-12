@@ -7,10 +7,6 @@
 #include "mozilla/Logging.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIInputStream.h"
-#include "nsILineInputStream.h"
-#include "nsNetUtil.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsThreadUtils.h"
 #include "nsIRunnable.h"
 #include "nsIWritablePropertyBag2.h"
@@ -734,27 +730,14 @@ GMPParent::DeallocPGMPTimerParent(PGMPTimerParent* aActor)
   return true;
 }
 
-nsresult
-ParseNextRecord(nsILineInputStream* aLineInputStream,
-                const nsCString& aPrefix,
-                nsCString& aResult,
-                bool& aMoreLines)
+bool
+ReadRequiredField(GMPInfoFileParser& aParser, const nsCString& aKey, nsACString& aOutValue)
 {
-  nsAutoCString record;
-  nsresult rv = aLineInputStream->ReadLine(record, &aMoreLines);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!aParser.Contains(aKey) || aParser.Get(aKey).IsEmpty()) {
+    return false;
   }
-
-  if (record.Length() <= aPrefix.Length() ||
-      !Substring(record, 0, aPrefix.Length()).Equals(aPrefix)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aResult = Substring(record, aPrefix.Length());
-  aResult.Trim("\b\t\r\n ");
-
-  return NS_OK;
+  aOutValue = aParser.Get(aKey);
+  return true;
 }
 
 nsresult
@@ -770,71 +753,22 @@ GMPParent::ReadGMPMetaData()
   }
   infoFile->AppendRelativePath(mName + NS_LITERAL_STRING(".info"));
 
-  nsCOMPtr<nsIInputStream> inputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), infoFile);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(inputStream, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCString value;
-  bool moreLines = false;
-
-  // 'Name:' record
-  nsCString prefix = NS_LITERAL_CSTRING("Name:");
-  rv = ParseNextRecord(lineInputStream, prefix, value, moreLines);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (value.IsEmpty()) {
-    // Not OK for name to be empty. Must have one non-whitespace character.
+  GMPInfoFileParser parser;
+  if (!parser.Init(infoFile)) {
     return NS_ERROR_FAILURE;
   }
-  mDisplayName = value;
 
-  // 'Description:' record
-  if (!moreLines) {
+  nsAutoCString apis;
+  if (!ReadRequiredField(parser, NS_LITERAL_CSTRING("name"), mDisplayName) ||
+      !ReadRequiredField(parser, NS_LITERAL_CSTRING("description"), mDescription) ||
+      !ReadRequiredField(parser, NS_LITERAL_CSTRING("version"), mVersion) ||
+      !ReadRequiredField(parser, NS_LITERAL_CSTRING("apis"), apis)) {
     return NS_ERROR_FAILURE;
   }
-  prefix = NS_LITERAL_CSTRING("Description:");
-  rv = ParseNextRecord(lineInputStream, prefix, value, moreLines);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  mDescription = value;
 
-  // 'Version:' record
-  if (!moreLines) {
-    return NS_ERROR_FAILURE;
-  }
-  prefix = NS_LITERAL_CSTRING("Version:");
-  rv = ParseNextRecord(lineInputStream, prefix, value, moreLines);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  mVersion = value;
-
-  // 'Capability:' record
-  if (!moreLines) {
-    return NS_ERROR_FAILURE;
-  }
-  prefix = NS_LITERAL_CSTRING("APIs:");
-  rv = ParseNextRecord(lineInputStream, prefix, value, moreLines);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCCharSeparatedTokenizer apiTokens(value, ',');
-  while (apiTokens.hasMoreTokens()) {
-    nsAutoCString api(apiTokens.nextToken());
-    api.StripWhitespace();
-    if (api.IsEmpty()) {
-      continue;
-    }
-
+  nsTArray<nsCString> apiTokens;
+  SplitAt(", ", apis, apiTokens);
+  for (nsCString api : apiTokens) {
     int32_t tagsStart = api.FindChar('[');
     if (tagsStart == 0) {
       // Not allowed to be the first character.
@@ -858,9 +792,9 @@ GMPParent::ReadGMPMetaData()
 
       if ((tagsEnd - tagsStart) > 1) {
         const nsDependentCSubstring ts(Substring(api, tagsStart + 1, tagsEnd - tagsStart - 1));
-        nsCCharSeparatedTokenizer tagTokens(ts, ':');
-        while (tagTokens.hasMoreTokens()) {
-          const nsDependentCSubstring tag(tagTokens.nextToken());
+        nsTArray<nsCString> tagTokens;
+        SplitAt(":", ts, tagTokens);
+        for (nsCString tag : tagTokens) {
           cap->mAPITags.AppendElement(tag);
         }
       }

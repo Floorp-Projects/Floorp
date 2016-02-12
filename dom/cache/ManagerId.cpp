@@ -62,10 +62,7 @@ ManagerId::~ManagerId()
 
   // The PBackground worker thread shouldn't be running after the main thread
   // is stopped.  So main thread is guaranteed to exist here.
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
-
-  NS_ProxyRelease(mainThread, mPrincipal.forget().take());
+  NS_ReleaseOnMainThread(mPrincipal.forget());
 }
 
 } // namespace cache

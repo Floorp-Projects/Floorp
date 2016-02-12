@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stack>
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
@@ -1512,7 +1513,20 @@ APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
                                GuidComparator aComparator)
 {
   mTreeLock.AssertCurrentThreadOwns();
-  RefPtr<HitTestingTreeNode> target = FindTargetNode(mRootNode, aGuid, aComparator);
+  RefPtr<HitTestingTreeNode> target = DepthFirstSearchPostOrder(mRootNode.get(),
+      [&aGuid, &aComparator](HitTestingTreeNode* node)
+      {
+        bool matches = false;
+        if (node->GetApzc()) {
+          if (aComparator) {
+            matches = aComparator(aGuid, node->GetApzc()->GetGuid());
+          } else {
+            matches = node->GetApzc()->Matches(aGuid);
+          }
+        }
+        return matches;
+      }
+  );
   return target.forget();
 }
 
@@ -1622,36 +1636,6 @@ APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
     NewRunnableFunction(GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
 }
 
-HitTestingTreeNode*
-APZCTreeManager::FindTargetNode(HitTestingTreeNode* aNode,
-                                const ScrollableLayerGuid& aGuid,
-                                GuidComparator aComparator)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  // This walks the tree in depth-first, reverse order, so that it encounters
-  // APZCs front-to-back on the screen.
-  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
-    HitTestingTreeNode* match = FindTargetNode(node->GetLastChild(), aGuid, aComparator);
-    if (match) {
-      return match;
-    }
-
-    bool matches = false;
-    if (node->GetApzc()) {
-      if (aComparator) {
-        matches = aComparator(aGuid, node->GetApzc()->GetGuid());
-      } else {
-        matches = node->GetApzc()->Matches(aGuid);
-      }
-    }
-    if (matches) {
-      return node;
-    }
-  }
-  return nullptr;
-}
-
 RefPtr<HitTestingTreeNode>
 APZCTreeManager::FindScrollNode(const AsyncDragMetrics& aDragMetrics)
 {
@@ -1672,51 +1656,60 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
-    if (node->IsOutsideClip(aHitTestPoint)) {
-      // If the point being tested is outside the clip region for this node
-      // then we don't need to test against this node or any of its children.
-      // Just skip it and move on.
-      APZCTM_LOG("Point %f %f outside clip for node %p\n",
-        aHitTestPoint.x, aHitTestPoint.y, node);
-      continue;
-    }
+  HitTestingTreeNode* resultNode;
+  HitTestingTreeNode* root = aNode;
+  std::stack<ParentLayerPoint> hitTestPoints;
+  hitTestPoints.push(aHitTestPoint);
 
-    AsyncPanZoomController* result = nullptr;
-
-    // First check the subtree rooted at this node, because deeper nodes
-    // are more "in front".
-    Maybe<LayerPoint> hitTestPointForChildLayers = node->Untransform(aHitTestPoint);
-    if (hitTestPointForChildLayers) {
-      ParentLayerPoint childPoint = ViewAs<ParentLayerPixel>(hitTestPointForChildLayers.ref(),
-        PixelCastJustification::MovingDownToChildren);
-      result = GetAPZCAtPoint(node->GetLastChild(), childPoint, aOutHitResult);
-    }
-
-    // If we didn't match anything in the subtree, check |node|.
-    if (*aOutHitResult == HitNothing) {
-      APZCTM_LOG("Testing ParentLayer point %s (Layer %s) against node %p\n",
-          Stringify(aHitTestPoint).c_str(),
-          hitTestPointForChildLayers ? Stringify(hitTestPointForChildLayers.ref()).c_str() : "nil",
-          node);
-      HitTestResult hitResult = node->HitTest(aHitTestPoint);
-      if (hitResult != HitTestResult::HitNothing) {
-        result = node->GetNearestContainingApzcWithSameLayersId();
-        if (!result) {
-          result = FindRootApzcForLayersId(node->GetLayersId());
-          MOZ_ASSERT(result);
+  ForEachNode(root,
+      [&hitTestPoints](HitTestingTreeNode* aNode) {
+        if (aNode->IsOutsideClip(hitTestPoints.top())) {
+          // If the point being tested is outside the clip region for this node
+          // then we don't need to test against this node or any of its children.
+          // Just skip it and move on.
+          APZCTM_LOG("Point %f %f outside clip for node %p\n",
+            hitTestPoints.top().x, hitTestPoints.top().y, aNode);
+          return TraversalFlag::Skip;
         }
-        APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
-             result, node, hitResult);
-        MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
-        // If event regions are disabled, *aOutHitResult will be HitLayer
-        *aOutHitResult = hitResult;
+        // First check the subtree rooted at this node, because deeper nodes
+        // are more "in front".
+        Maybe<LayerPoint> hitTestPointForChildLayers = aNode->Untransform(hitTestPoints.top());
+        APZCTM_LOG("Transformed ParentLayer point %s to layer %s\n",
+                Stringify(hitTestPoints.top()).c_str(),
+                hitTestPointForChildLayers ? Stringify(hitTestPointForChildLayers.ref()).c_str() : "nil");
+        if (!hitTestPointForChildLayers) {
+          return TraversalFlag::Skip;
+        }
+        hitTestPoints.push(ViewAs<ParentLayerPixel>(hitTestPointForChildLayers.ref(),
+            PixelCastJustification::MovingDownToChildren));
+        return TraversalFlag::Continue;
+      },
+      [&resultNode, &hitTestPoints, &aOutHitResult](HitTestingTreeNode* aNode) {
+        hitTestPoints.pop();
+        HitTestResult hitResult = aNode->HitTest(hitTestPoints.top());
+        APZCTM_LOG("Testing ParentLayer point %s against node %p\n",
+                Stringify(hitTestPoints.top()).c_str(), aNode);
+        if (hitResult != HitTestResult::HitNothing) {
+          resultNode = aNode;
+          MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
+          // If event regions are disabled, *aOutHitResult will be HitLayer
+          *aOutHitResult = hitResult;
+          return TraversalFlag::Abort;
+        }
+        return TraversalFlag::Continue;
       }
-    }
+  );
 
-    if (*aOutHitResult != HitNothing) {
+  if (*aOutHitResult != HitNothing) {
+      MOZ_ASSERT(resultNode);
+      AsyncPanZoomController* result = resultNode->GetNearestContainingApzcWithSameLayersId();
+      if (!result) {
+        result = FindRootApzcForLayersId(resultNode->GetLayersId());
+        MOZ_ASSERT(result);
+      }
+      APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
+          result, aNode, *aOutHitResult);
       return result;
-    }
   }
 
   return nullptr;

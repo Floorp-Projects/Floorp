@@ -281,7 +281,6 @@ UNIFIED_SOURCES += [
     'nsDOMNavigationTiming.cpp',
     'nsDOMScriptObjectFactory.cpp',
     'nsDOMSerializer.cpp',
-    'nsDOMSettableTokenList.cpp',
     'nsDOMTokenList.cpp',
     'nsDOMWindowList.cpp',
     'nsFocusManager.cpp',

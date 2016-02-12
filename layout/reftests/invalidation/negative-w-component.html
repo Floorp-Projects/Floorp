@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Change a layer's transform making negative w component.</title>
+
+<style>
+
+body {
+  background-color: white;
+  overflow: hidden;
+}
+
+#outer {
+  perspective: 500px;
+  perspective-origin: 350px 250px;
+  width: 700px;
+  height: 500px;
+  display: block;
+  top: 10px;
+  left: 10px;
+  position: absolute;
+  overflow: visible;
+}
+
+#container1 {
+  transform-style: preserve-3d;
+  transform: translateX(-50px) translateZ(350px) rotateY(-90deg);
+}
+
+#container2 {
+  transform-style: preserve-3d;
+  transform: translateY(-200px) translateX(50px) translateZ(350px) rotateY(90deg);
+}
+
+#scale {
+  transform-style: preserve-3d;
+}
+
+.negw {
+  transform: translateZ(1px);
+}
+
+.posw {
+  transform: translateZ(-500px);;
+}
+
+#dummy {
+  transform-style: preserve-3d;
+  transform: translateY(150px);
+}
+
+#square1, #square2 {
+  background-color: red;
+  width: 700px;
+  height: 200px;
+}
+
+</style>
+
+<body>
+
+<div id="outer">
+  <div id="scale" class="negw">
+    <div id="dummy">
+      <div id="container1">
+	<div id="square1"></div>
+      </div>
+      <div id="container2">
+	<div id="square2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+var scale = document.getElementById("scale");
+
+function doTest() {
+  scale.className = "posw";
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

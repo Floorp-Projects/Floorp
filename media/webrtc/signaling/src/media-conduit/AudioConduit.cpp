@@ -25,6 +25,7 @@
 
 #include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 
@@ -204,16 +205,20 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
 bool WebrtcAudioConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                              unsigned int* packetsSent,
                                              uint64_t* bytesSent) {
-  struct webrtc::SenderInfo senderInfo;
-  bool result = !mPtrRTP->GetRemoteRTCPSenderInfo(mChannel, &senderInfo);
-  if (result) {
-    *timestamp = NTPtoDOMHighResTimeStamp(senderInfo.NTP_timestamp_high,
-                                          senderInfo.NTP_timestamp_low);
-    *packetsSent = senderInfo.sender_packet_count;
-    *bytesSent = senderInfo.sender_octet_count;
-  }
-  return result;
-}
+  webrtc::RTCPSenderInfo senderInfo;
+  webrtc::RtpRtcp * rtpRtcpModule;
+  webrtc::RtpReceiver * rtp_receiver;
+  bool result =
+    !mPtrVoEVideoSync->GetRtpRtcp(mChannel,&rtpRtcpModule,&rtp_receiver) &&
+    !rtpRtcpModule->RemoteRTCPStat(&senderInfo);
+  if (result){
+    *timestamp = NTPtoDOMHighResTimeStamp(senderInfo.NTPseconds,
+                                          senderInfo.NTPfraction);
+    *packetsSent = senderInfo.sendPacketCount;
+    *bytesSent = senderInfo.sendOctetCount;
+   }
+   return result;
+ }
 
 /*
  * WebRTCAudioConduit Implementation

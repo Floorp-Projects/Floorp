@@ -460,6 +460,7 @@ CompositorD3D11::GetTextureFactoryIdentifier()
   ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LayersBackend::LAYERS_D3D11;
   ident.mSyncHandle = mAttachments->mSyncHandle;
+  ident.mSwapChain = mSwapChain;
   for (uint8_t op = 0; op < uint8_t(gfx::CompositionOp::OP_COUNT); op++) {
     if (BlendOpIsMixBlendMode(gfx::CompositionOp(op))) {
       ident.mSupportedBlendModes += gfx::CompositionOp(op);

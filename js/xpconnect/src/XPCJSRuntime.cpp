@@ -2160,10 +2160,10 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
             "Non-fixed object slots.");
     }
 
-    if (classInfo.objectsMallocHeapElementsNonAsmJS > 0) {
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/elements/non-asm.js"),
-            KIND_HEAP, classInfo.objectsMallocHeapElementsNonAsmJS,
-            "Non-asm.js indexed elements.");
+    if (classInfo.objectsMallocHeapElementsNormal > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/malloc-heap/elements/normal"),
+            KIND_HEAP, classInfo.objectsMallocHeapElementsNormal,
+            "Normal (non-asm.js) indexed elements.");
     }
 
     // asm.js arrays are heap-allocated on some platforms and
@@ -2186,10 +2186,18 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
             "the GC heap.");
     }
 
-    if (classInfo.objectsNonHeapElementsMapped > 0) {
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/elements/mapped"),
-            KIND_NONHEAP, classInfo.objectsNonHeapElementsMapped,
-            "Memory-mapped array buffer elements.");
+    if (classInfo.objectsNonHeapElementsNormal > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/elements/normal"),
+            KIND_NONHEAP, classInfo.objectsNonHeapElementsNormal,
+            "Memory-mapped non-shared array buffer elements.");
+    }
+
+    if (classInfo.objectsNonHeapElementsShared > 0) {
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("objects/non-heap/elements/shared"),
+            KIND_NONHEAP, classInfo.objectsNonHeapElementsShared,
+            "Memory-mapped shared array buffer elements. These elements are "
+            "shared between one or more runtimes; the reported size is divided "
+            "by the buffer's refcount.");
     }
 
     if (classInfo.objectsNonHeapCodeAsmJS > 0) {

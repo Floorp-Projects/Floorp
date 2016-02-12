@@ -64,7 +64,7 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
-  nsDOMSettableTokenList* HtmlFor();
+  nsDOMTokenList* HtmlFor();
   // nsGenericHTMLFormElement::GetForm is fine.
   void GetName(nsAString& aName)
   {
@@ -108,7 +108,7 @@ protected:
   ValueModeFlag                     mValueModeFlag;
   bool                              mIsDoneAddingChildren;
   nsString                          mDefaultValue;
-  RefPtr<nsDOMSettableTokenList>  mTokenList;
+  RefPtr<nsDOMTokenList>  mTokenList;
 };
 
 } // namespace dom

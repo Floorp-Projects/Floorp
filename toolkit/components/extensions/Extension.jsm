@@ -82,6 +82,8 @@ ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extensio
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
 
@@ -382,16 +384,23 @@ GlobalManager = {
         injectAPI(api, browserObj);
 
         let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
+        function findPath(path) {
+          let obj = schemaApi;
+          for (let elt of path) {
+            obj = obj[elt];
+          }
+          return obj;
+        }
         let schemaWrapper = {
           get cloneScope() {
             return context.cloneScope;
           },
 
-          callFunction(ns, name, args) {
-            return schemaApi[ns][name](...args);
+          callFunction(path, name, args) {
+            return findPath(path)[name](...args);
           },
 
-          callAsyncFunction(ns, name, args, callback) {
+          callAsyncFunction(path, name, args, callback) {
             // We pass an empty stub function as a default callback for
             // the `chrome` API, so promise objects are not returned,
             // and lastError values are reported immediately.
@@ -401,7 +410,7 @@ GlobalManager = {
 
             let promise;
             try {
-              promise = schemaApi[ns][name](...args);
+              promise = findPath(path)[name](...args);
             } catch (e) {
               if (e instanceof context.cloneScope.Error) {
                 promise = Promise.reject(e);
@@ -414,22 +423,22 @@ GlobalManager = {
             return context.wrapPromise(promise || Promise.resolve(), callback);
           },
 
-          getProperty(ns, name) {
-            return schemaApi[ns][name];
+          getProperty(path, name) {
+            return findPath(path)[name];
           },
 
-          setProperty(ns, name, value) {
-            schemaApi[ns][name] = value;
+          setProperty(path, name, value) {
+            findPath(path)[name] = value;
           },
 
-          addListener(ns, name, listener, args) {
-            return schemaApi[ns][name].addListener.call(null, listener, ...args);
+          addListener(path, name, listener, args) {
+            return findPath(path)[name].addListener.call(null, listener, ...args);
           },
-          removeListener(ns, name, listener) {
-            return schemaApi[ns][name].removeListener.call(null, listener);
+          removeListener(path, name, listener) {
+            return findPath(path)[name].removeListener.call(null, listener);
           },
-          hasListener(ns, name, listener) {
-            return schemaApi[ns][name].hasListener.call(null, listener);
+          hasListener(path, name, listener) {
+            return findPath(path)[name].hasListener.call(null, listener);
           },
         };
         Schemas.inject(browserObj, schemaWrapper);

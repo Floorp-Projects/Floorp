@@ -17,6 +17,8 @@ task:
         loopbackVideo: true
         loopbackAudio: true
     env:
+      GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
+      GECKO_HEAD_REV: '{{{head_rev}}}'
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
       GAIA_REF: '{{{gaia_ref}}}'

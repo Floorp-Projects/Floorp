@@ -6,7 +6,7 @@ task:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   metadata:
-    name: '[TC] Linux64 mochitest-plain {{chunk}}'
+    name: '[TC] Linux64 mochitest {{chunk}}'
     description: Mochitest plain run {{chunk}}
   payload:
     maxRunTime: 5400

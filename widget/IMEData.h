@@ -393,6 +393,18 @@ struct InputContextAction final
             (mCause == CAUSE_MOUSE || mCause == CAUSE_TOUCH));
   }
 
+  static bool IsUserAction(Cause aCause)
+  {
+    switch (aCause) {
+      case CAUSE_KEY:
+      case CAUSE_MOUSE:
+      case CAUSE_TOUCH:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   InputContextAction()
     : mCause(CAUSE_UNKNOWN)
     , mFocusChange(FOCUS_NOT_CHANGED)
