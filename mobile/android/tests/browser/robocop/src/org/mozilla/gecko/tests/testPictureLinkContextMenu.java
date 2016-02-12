@@ -22,7 +22,7 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
         PICTURE_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_PICTURE_LINK_URL);
         BLANK_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         loadAndPaint(PICTURE_PAGE_URL);
-        verifyUrlBarTitle(PICTURE_PAGE_URL);
+        verifyUrlInContentDescription(PICTURE_PAGE_URL);
 
         switchTabs(imageTitle);
         verifyContextMenuItems(photoMenuItems);
