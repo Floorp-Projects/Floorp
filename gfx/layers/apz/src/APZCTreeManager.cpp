@@ -1051,9 +1051,11 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-  if ((aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
-       aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE) &&
-      gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled())
+  if (gfxPrefs::SmoothScrollEnabled() &&
+      ((aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+        gfxPrefs::WheelSmoothScrollEnabled()) ||
+       (aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
+        gfxPrefs::PageSmoothScrollEnabled())))
   {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
   }
