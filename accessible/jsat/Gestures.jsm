@@ -79,6 +79,10 @@ const MOUSE_ID = 'mouse';
 const EDGE = 0.1;
 // Multiply timeouts by this constant, x2 works great too for slower users.
 const TIMEOUT_MULTIPLIER = 1;
+// A single pointer down/up sequence periodically precedes the tripple swipe
+// gesture on Android. This delay acounts for that.
+const IS_ANDROID = Utils.MozBuildApp === 'mobile/android' &&
+  Utils.AndroidSdkVersion >= 14;
 
 /**
  * A point object containing distance travelled data.
@@ -194,13 +198,13 @@ this.GestureTracker = { // jshint ignore:line
    * @param  {Number} aTimeStamp A new pointer event timeStamp.
    * @param  {Function} aGesture A gesture constructor (default: Tap).
    */
-  _init: function GestureTracker__init(aDetail, aTimeStamp, aGesture = Tap) {
+  _init: function GestureTracker__init(aDetail, aTimeStamp, aGesture) {
     // Only create a new gesture on |pointerdown| event.
     if (aDetail.type !== 'pointerdown') {
       return;
     }
     let points = aDetail.points;
-    let GestureConstructor = aGesture;
+    let GestureConstructor = aGesture || (IS_ANDROID ? DoubleTap : Tap);
     this._create(GestureConstructor);
     this._update(aDetail, aTimeStamp);
   },
