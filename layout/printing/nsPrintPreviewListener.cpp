@@ -112,7 +112,7 @@ static eEventAction
 GetActionForEvent(nsIDOMEvent* aEvent)
 {
   WidgetKeyboardEvent* keyEvent =
-    aEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    aEvent->WidgetEventPtr()->AsKeyboardEvent();
   if (!keyEvent) {
     return eEventAction_Suppress;
   }

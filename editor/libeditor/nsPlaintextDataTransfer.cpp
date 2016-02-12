@@ -184,7 +184,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   }
 
   if (nsContentUtils::CheckForSubFrameDrop(dragSession,
-        aDropEvent->GetInternalNSEvent()->AsDragEvent())) {
+        aDropEvent->WidgetEventPtr()->AsDragEvent())) {
     // Don't allow drags from subframe documents with different origins than
     // the drop destination.
     if (srcdomdoc && !IsSafeToInsertData(srcdomdoc))
