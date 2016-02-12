@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram('fileid', linkage=None, msvcrt='static')
-
 if CONFIG['OS_ARCH'] == 'Linux':
     USE_LIBS += [
         'breakpad_linux_common_s',
@@ -27,9 +25,4 @@ if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
     LOCAL_INCLUDES += [
         '/toolkit/crashreporter/google-breakpad/src',
     ]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += ['win_fileid.cpp']
-    OS_LIBS += ['dbghelp']
-
-NO_PGO = True
+    GeckoProgram('fileid', linkage=None)
