@@ -27,11 +27,10 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     if (!shiftValue)
         return;
 
-    Value shiftv = shiftValue->value();
-    if (!shiftv.isInt32() || !IsShiftInScaleRange(shiftv.toInt32()))
+    if (shiftValue->type() != MIRType_Int32 || !IsShiftInScaleRange(shiftValue->toInt32()))
         return;
 
-    Scale scale = ShiftToScale(shiftv.toInt32());
+    Scale scale = ShiftToScale(shiftValue->toInt32());
 
     int32_t displacement = 0;
     MInstruction* last = lsh;
@@ -51,7 +50,7 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
         MDefinition* other = add->getOperand(1 - add->indexOf(*use));
 
         if (MConstant* otherConst = other->maybeConstantValue()) {
-            displacement += otherConst->value().toInt32();
+            displacement += otherConst->toInt32();
         } else {
             if (base)
                 break;
@@ -85,7 +84,7 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
             return;
 
         uint32_t bitsClearedByShift = elemSize - 1;
-        uint32_t bitsClearedByMask = ~uint32_t(otherConst->value().toInt32());
+        uint32_t bitsClearedByMask = ~uint32_t(otherConst->toInt32());
         if ((bitsClearedByShift & bitsClearedByMask) != bitsClearedByMask)
             return;
 
@@ -143,7 +142,7 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
         // is always the address mode immediate. This also allows it to avoid
         // a situation where the sum of a constant pointer value and a non-zero
         // offset doesn't actually fit into the address mode immediate.
-        int32_t imm = ptr->toConstant()->value().toInt32();
+        int32_t imm = ptr->toConstant()->toInt32();
         if (imm != 0 && tryAddDisplacement(ins, imm)) {
             MInstruction* zero = MConstant::New(graph_.alloc(), Int32Value(0));
             ins->block()->insertBefore(ins, zero);
@@ -158,7 +157,7 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
         if (op0->isConstant())
             mozilla::Swap(op0, op1);
         if (op1->isConstant()) {
-            int32_t imm = op1->toConstant()->value().toInt32();
+            int32_t imm = op1->toConstant()->toInt32();
             if (tryAddDisplacement(ins, imm))
                 ins->replacePtr(op0);
         }

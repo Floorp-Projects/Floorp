@@ -136,7 +136,7 @@ BEGIN_TEST(testJitDCEinGVN_phi)
 
     // c1 should be deleted.
     for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-        CHECK(!ins->isConstant() || (ins->toConstant()->value().toNumber() != 1.0));
+        CHECK(!ins->isConstant() || (ins->toConstant()->toNumber() != 1.0));
     }
     return true;
 }

@@ -2702,11 +2702,8 @@ jit::ExtractLinearSum(MDefinition* ins)
     if (ins->type() != MIRType_Int32)
         return SimpleLinearSum(ins, 0);
 
-    if (ins->isConstant()) {
-        const Value& v = ins->toConstant()->value();
-        MOZ_ASSERT(v.isInt32());
-        return SimpleLinearSum(nullptr, v.toInt32());
-    }
+    if (ins->isConstant())
+        return SimpleLinearSum(nullptr, ins->toConstant()->toInt32());
 
     if (ins->isAdd() || ins->isSub()) {
         MDefinition* lhs = ins->getOperand(0);
@@ -3323,7 +3320,7 @@ LinearSum::add(MDefinition* term, int32_t scale)
         return true;
 
     if (MConstant* termConst = term->maybeConstantValue()) {
-        int32_t constant = termConst->value().toInt32();
+        int32_t constant = termConst->toInt32();
         if (!SafeMul(constant, scale, &constant))
             return false;
         return add(constant);
