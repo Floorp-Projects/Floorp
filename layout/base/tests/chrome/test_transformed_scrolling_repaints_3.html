@@ -12,9 +12,14 @@
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var root = getRootDirectory(window.location.href);
-window.open(root + "transformed_scrolling_repaints_3_window.html", "transformed_scrolling_repaints_3",
-            "chrome,width=300,height=400");
+SpecialPowers.pushPrefEnv(
+  {"set": [["layers.single-tile.enabled", false]]},
+  function() {
+    var root = getRootDirectory(window.location.href);
+    window.open(root + "transformed_scrolling_repaints_3_window.html", "transformed_scrolling_repaints_3",
+                "chrome,width=300,height=400");
+  }
+);
 </script>
 </pre>
 </body>
