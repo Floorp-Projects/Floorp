@@ -2658,6 +2658,9 @@ nsDocument::ApplySettingsFromCSP(bool aSpeculative)
         rv = csp->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
         NS_ENSURE_SUCCESS_VOID(rv);
       }
+      if (!mUpgradeInsecurePreloads) {
+        mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
+      }
     }
     return;
   }
