@@ -341,7 +341,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   mInitDone = true;
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
-  metadata->mTags = nullptr;
+  metadata->mTags = tags->Count() ? tags.release() : nullptr;
   mMetadataPromise.Resolve(metadata, __func__);
 }
 
