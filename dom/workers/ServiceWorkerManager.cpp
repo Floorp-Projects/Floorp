@@ -2472,16 +2472,6 @@ private:
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    // Note, we send the message to remove the registration from disk now even
-    // though we may only set the mPendingUninstall flag below.  This is
-    // necessary to ensure the registration is removed if the controlled
-    // clients are closed by shutting down the browser.  If the registration
-    // is resurrected by clearing mPendingUninstall then it should be saved
-    // to disk again.
-    if (swm->mActor) {
-      swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
-    }
-
     nsAutoCString scopeKey;
     nsresult rv = swm->PrincipalToScopeKey(mPrincipal, scopeKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2503,6 +2493,16 @@ private:
     }
 
     MOZ_ASSERT(registration);
+
+    // Note, we send the message to remove the registration from disk now even
+    // though we may only set the mPendingUninstall flag below.  This is
+    // necessary to ensure the registration is removed if the controlled
+    // clients are closed by shutting down the browser.  If the registration
+    // is resurrected by clearing mPendingUninstall then it should be saved
+    // to disk again.
+    if (!registration->mPendingUninstall && swm->mActor) {
+      swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+    }
 
     // "Set registration's uninstalling flag."
     registration->mPendingUninstall = true;
