@@ -104,11 +104,6 @@ public:
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;
     virtual double     GetDefaultScaleInternal() override; 
-    // Under Gtk, we manage windows using device pixels so no scaling is needed:
-    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final
-    {
-        return mozilla::DesktopToLayoutDeviceScale(1.0);
-    }
     virtual nsresult   SetParent(nsIWidget* aNewParent) override;
     NS_IMETHOD         SetModal(bool aModal) override;
     virtual bool       IsVisible() const override;
