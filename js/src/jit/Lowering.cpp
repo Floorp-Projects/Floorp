@@ -715,10 +715,12 @@ LIRGenerator::visitTest(MTest* test)
     MOZ_ASSERT(opd->type() != MIRType_String);
 
     // Testing a constant.
-    if (opd->maybeConstantValue() && !opd->maybeConstantValue()->value().isMagic()) {
-        bool result = opd->maybeConstantValue()->valueToBoolean();
-        add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
-        return;
+    if (MConstant* constant = opd->maybeConstantValue()) {
+        bool b;
+        if (constant->valueToBoolean(&b)) {
+            add(new(alloc()) LGoto(b ? ifTrue : ifFalse));
+            return;
+        }
     }
 
     if (opd->type() == MIRType_Value) {

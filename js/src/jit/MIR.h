@@ -1388,9 +1388,17 @@ class MConstant : public MNullaryInstruction
     const js::Value* vp() const {
         return &value_;
     }
-    bool valueToBoolean() const {
-        // A hack to avoid this wordy pattern everywhere in the JIT.
-        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+
+    // Try to convert this constant to boolean, similar to js::ToBoolean.
+    // Returns false if the type is MIRType_Magic*.
+    bool valueToBoolean(bool* res) const;
+
+    // Like valueToBoolean, but returns the result directly instead of using
+    // an outparam. Should not be used if this constant might be a magic value.
+    bool valueToBooleanInfallible() const {
+        bool res;
+        MOZ_ALWAYS_TRUE(valueToBoolean(&res));
+        return res;
     }
 
     void printOpcode(GenericPrinter& out) const override;
