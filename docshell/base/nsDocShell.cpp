@@ -5785,23 +5785,6 @@ nsDocShell::GetUnscaledDevicePixelsPerCSSPixel(double* aScale)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetDevicePixelsPerDesktopPixel(double* aScale)
-{
-  if (mParentWidget) {
-    *aScale = mParentWidget->GetDesktopToDeviceScale().scale;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIBaseWindow> ownerWindow(do_QueryInterface(mTreeOwner));
-  if (ownerWindow) {
-    return ownerWindow->GetDevicePixelsPerDesktopPixel(aScale);
-  }
-
-  *aScale = 1.0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetPosition(int32_t aX, int32_t aY)
 {
   mBounds.x = aX;

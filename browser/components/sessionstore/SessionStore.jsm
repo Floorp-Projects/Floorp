@@ -3476,15 +3476,15 @@ var SessionStoreInternal = {
     }
 
     // only modify those aspects which aren't correct yet
-    if (!isNaN(aLeft) && !isNaN(aTop) && (aLeft != win_("screenX") || aTop != win_("screenY"))) {
-      aWindow.moveTo(aLeft, aTop);
-    }
     if (aWidth && aHeight && (aWidth != win_("width") || aHeight != win_("height"))) {
       // Don't resize the window if it's currently maximized and we would
       // maximize it again shortly after.
       if (aSizeMode != "maximized" || win_("sizemode") != "maximized") {
         aWindow.resizeTo(aWidth, aHeight);
       }
+    }
+    if (!isNaN(aLeft) && !isNaN(aTop) && (aLeft != win_("screenX") || aTop != win_("screenY"))) {
+      aWindow.moveTo(aLeft, aTop);
     }
     if (aSizeMode && win_("sizemode") != aSizeMode)
     {

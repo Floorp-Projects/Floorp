@@ -1086,7 +1086,7 @@ nsWindow::Show(bool aState)
 NS_IMETHODIMP
 nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-    CSSToLayoutDeviceScale scale = BoundsUseDesktopPixels() ? GetDefaultScale()
+    CSSToLayoutDeviceScale scale = BoundsUseDisplayPixels() ? GetDefaultScale()
                                     : CSSToLayoutDeviceScale(1.0);
     int32_t width = NSToIntRound(scale.scale * aWidth);
     int32_t height = NSToIntRound(scale.scale * aHeight);
@@ -1118,7 +1118,7 @@ NS_IMETHODIMP
 nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                  bool aRepaint)
 {
-    CSSToLayoutDeviceScale scale = BoundsUseDesktopPixels() ? GetDefaultScale()
+    CSSToLayoutDeviceScale scale = BoundsUseDisplayPixels() ? GetDefaultScale()
                                     : CSSToLayoutDeviceScale(1.0);
     int32_t width = NSToIntRound(scale.scale * aWidth);
     int32_t height = NSToIntRound(scale.scale * aHeight);
@@ -1184,7 +1184,7 @@ nsWindow::Move(double aX, double aY)
     LOG(("nsWindow::Move [%p] %f %f\n", (void *)this,
          aX, aY));
 
-    CSSToLayoutDeviceScale scale = BoundsUseDesktopPixels() ? GetDefaultScale()
+    CSSToLayoutDeviceScale scale = BoundsUseDisplayPixels() ? GetDefaultScale()
                                    : CSSToLayoutDeviceScale(1.0);
     int32_t x = NSToIntRound(aX * scale.scale);
     int32_t y = NSToIntRound(aY * scale.scale);
@@ -3529,7 +3529,7 @@ nsWindow::Create(nsIWidget* aParent,
     nsGTKToolkit::GetToolkit();
 
     // initialize all the common bits of this class
-    BaseCreate(baseParent, aInitData);
+    BaseCreate(baseParent, aRect, aInitData);
 
     // Do we need to listen for resizes?
     bool listenForResizes = false;;

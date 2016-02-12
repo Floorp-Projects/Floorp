@@ -5033,30 +5033,25 @@ nsGlobalWindow::SetOuterHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             aValue, "outerHeight", aError);
 }
 
-DesktopIntPoint
+nsIntPoint
 nsGlobalWindow::GetScreenXY(ErrorResult& aError)
 {
   MOZ_ASSERT(IsOuterWindow());
 
   // When resisting fingerprinting, always return (0,0)
   if (nsContentUtils::ShouldResistFingerprinting(mDocShell)) {
-    return DesktopIntPoint(0, 0);
+    return nsIntPoint(0, 0);
   }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
-    return DesktopIntPoint(0, 0);
+    return nsIntPoint(0, 0);
   }
 
   int32_t x = 0, y = 0;
   aError = treeOwnerAsWin->GetPosition(&x, &y);
-
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
-                                            : DesktopToLayoutDeviceScale(1.0);
-  DesktopPoint pt = LayoutDeviceIntPoint(x, y) / scale;
-  return DesktopIntPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
+  return nsIntPoint(x, y);
 }
 
 int32_t
@@ -5064,7 +5059,7 @@ nsGlobalWindow::GetScreenXOuter(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  return GetScreenXY(aError).x;
+  return DevToCSSIntPixels(GetScreenXY(aError).x);
 }
 
 int32_t
@@ -5308,7 +5303,7 @@ nsGlobalWindow::GetScreenYOuter(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  return GetScreenXY(aError).y;
+  return DevToCSSIntPixels(GetScreenXY(aError).y);
 }
 
 int32_t
@@ -7016,15 +7011,13 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
     return;
   }
 
-  DesktopIntPoint pt(aXPos, aYPos);
-  CheckSecurityLeftAndTop(&pt.x, &pt.y, aCallerIsChrome);
+  // Mild abuse of a "size" object so we don't need more helper functions.
+  nsIntSize cssPos(aXPos, aYPos);
+  CheckSecurityLeftAndTop(&cssPos.width, &cssPos.height, aCallerIsChrome);
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
-                                            : DesktopToLayoutDeviceScale(1.0);
-  LayoutDevicePoint devPos = pt * scale;
+  nsIntSize devPos = CSSToDevIntPixels(cssPos);
 
-  aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
+  aError = treeOwnerAsWin->SetPosition(devPos.width, devPos.height);
 }
 
 void

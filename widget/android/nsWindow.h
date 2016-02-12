@@ -82,7 +82,6 @@ public:
     // nsIWidget
     //
 
-    using nsBaseWidget::Create; // for Create signature not overridden here
     NS_IMETHOD Create(nsIWidget* aParent,
                       nsNativeWidget aNativeParent,
                       const LayoutDeviceIntRect& aRect,

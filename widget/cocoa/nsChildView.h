@@ -390,10 +390,6 @@ public:
   // pixels" and the Cocoa "points" coordinate system.
   CGFloat                 BackingScaleFactor() const;
 
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
-    return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
-  }
-
   // Call if the window's backing scale factor changes - i.e., it is moved
   // between HiDPI and non-HiDPI screens
   void                    BackingScaleFactorChanged();

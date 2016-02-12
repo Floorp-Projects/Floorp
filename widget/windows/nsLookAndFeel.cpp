@@ -10,7 +10,7 @@
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 #include "gfxFont.h"
-#include "WinUtils.h"
+#include "gfxWindowsPlatform.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
 #include "gfxFontConstants.h"
@@ -584,7 +584,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   }
 
   // Get scaling factor from physical to logical pixels
-  double pixelScale = 1.0 / WinUtils::LogToPhysFactor(aHDC);
+  float pixelScale = 1.0f / gfxWindowsPlatform::GetPlatform()->GetDPIScale();
 
   // The lfHeight is in pixels, and it needs to be adjusted for the
   // device it will be displayed on.

@@ -332,7 +332,7 @@ nsWindow::Create(nsIWidget* aParent,
                  const LayoutDeviceIntRect& aRect,
                  nsWidgetInitData* aInitData)
 {
-    BaseCreate(aParent, aInitData);
+    BaseCreate(aParent, aRect, aInitData);
 
     nsCOMPtr<nsIScreen> screen;
 

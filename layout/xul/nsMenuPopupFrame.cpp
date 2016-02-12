@@ -1428,17 +1428,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
 
   // If a panel is being moved or has flip="none", don't constrain or flip it. But always do this for
   // content shells, so that the popup doesn't extend outside the containing frame.
-  if (mInContentShell || (mFlip != FlipType_None &&
-                          (!aIsMove || mPopupType != ePopupTypePanel))) {
-    int32_t appPerDev = presContext->AppUnitsPerDevPixel();
-    LayoutDeviceIntRect anchorRectDevPix =
-      LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRect, appPerDev);
-    LayoutDeviceIntRect rootScreenRectDevPix =
-      LayoutDeviceIntRect::FromAppUnitsToNearest(rootScreenRect, appPerDev);
-    LayoutDeviceIntRect screenRectDevPix =
-      GetConstraintRect(anchorRectDevPix, rootScreenRectDevPix, popupLevel);
-    nsRect screenRect =
-      LayoutDeviceIntRect::ToAppUnits(screenRectDevPix, appPerDev);
+  if (mInContentShell || (mFlip != FlipType_None && (!aIsMove || mPopupType != ePopupTypePanel))) {
+    nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect, popupLevel);
 
     // Ensure that anchorRect is on screen.
     anchorRect = anchorRect.Intersect(screenRect);
@@ -1536,12 +1527,13 @@ nsMenuPopupFrame::GetCurrentMenuItem()
   return mCurrentMenu;
 }
 
-LayoutDeviceIntRect
-nsMenuPopupFrame::GetConstraintRect(const LayoutDeviceIntRect& aAnchorRect,
-                                    const LayoutDeviceIntRect& aRootScreenRect,
+nsRect
+nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
+                                    const nsRect& aRootScreenRect,
                                     nsPopupLevel aPopupLevel)
 {
-  LayoutDeviceIntRect screenRectPixels;
+  nsIntRect screenRectPixels;
+  nsPresContext* presContext = PresContext();
 
   // determine the available screen space. It will be reduced by the OS chrome
   // such as menubars. It addition, for content shells, it will be the area of
@@ -1553,10 +1545,13 @@ nsMenuPopupFrame::GetConstraintRect(const LayoutDeviceIntRect& aAnchorRect,
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
     // anchor is located.
-    LayoutDeviceIntRect rect = mInContentShell ? aRootScreenRect : aAnchorRect;
-    int32_t width = std::max(1, rect.width);
-    int32_t height = std::max(1, rect.height);
-    sm->ScreenForRect(rect.x, rect.y, width, height, getter_AddRefs(screen));
+    nsRect rect = mInContentShell ? aRootScreenRect : aAnchorRect;
+    // nsIScreenManager::ScreenForRect wants the coordinates in CSS pixels
+    int32_t width = std::max(1, nsPresContext::AppUnitsToIntCSSPixels(rect.width));
+    int32_t height = std::max(1, nsPresContext::AppUnitsToIntCSSPixels(rect.height));
+    sm->ScreenForRect(nsPresContext::AppUnitsToIntCSSPixels(rect.x),
+                      nsPresContext::AppUnitsToIntCSSPixels(rect.y),
+                      width, height, getter_AddRefs(screen));
     if (screen) {
       // Non-top-level popups (which will always be panels)
       // should never overlap the OS bar:
@@ -1564,19 +1559,20 @@ nsMenuPopupFrame::GetConstraintRect(const LayoutDeviceIntRect& aAnchorRect,
       // get the total screen area if the popup is allowed to overlap it.
       if (!dontOverlapOSBar && mMenuCanOverlapOSBar && !mInContentShell)
         screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
-          &screenRectPixels.width, &screenRectPixels.height);
+                        &screenRectPixels.width, &screenRectPixels.height);
       else
         screen->GetAvailRect(&screenRectPixels.x, &screenRectPixels.y,
-          &screenRectPixels.width, &screenRectPixels.height);
+                             &screenRectPixels.width, &screenRectPixels.height);
     }
   }
 
+  nsRect screenRect = ToAppUnits(screenRectPixels, presContext->AppUnitsPerDevPixel());
   if (mInContentShell) {
     // for content shells, clip to the client area rather than the screen area
-    screenRectPixels.IntersectRect(screenRectPixels, aRootScreenRect);
+    screenRect.IntersectRect(screenRect, aRootScreenRect);
   }
 
-  return screenRectPixels;
+  return screenRect;
 }
 
 void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide,
