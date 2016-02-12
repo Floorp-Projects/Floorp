@@ -84,6 +84,10 @@ public:
   //  No event is fired and no action is performed on the sourcebuffers.
   void ClearSimple();
 
+#if defined(DEBUG)
+  void Dump(const char* aPath);
+#endif
+
 private:
   ~SourceBufferList();
 

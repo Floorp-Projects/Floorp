@@ -39,6 +39,27 @@ using media::TimeUnit;
 
 namespace dom {
 
+class BufferAppendRunnable : public nsRunnable {
+public:
+  BufferAppendRunnable(SourceBuffer* aSourceBuffer,
+                       uint32_t aUpdateID)
+  : mSourceBuffer(aSourceBuffer)
+  , mUpdateID(aUpdateID)
+  {
+  }
+
+  NS_IMETHOD Run() override final {
+
+    mSourceBuffer->BufferAppend(mUpdateID);
+
+    return NS_OK;
+  }
+
+private:
+  RefPtr<SourceBuffer> mSourceBuffer;
+  uint32_t mUpdateID;
+};
+
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
@@ -205,13 +226,10 @@ void
 SourceBuffer::AbortBufferAppend()
 {
   if (mUpdating) {
-    if (mPendingAppend.Exists()) {
-      mPendingAppend.Disconnect();
-      mContentManager->AbortAppendData();
-      // Some data may have been added by the Segment Parser Loop.
-      // Check if we need to update the duration.
-      CheckEndTime();
-    }
+    mPendingAppend.DisconnectIfExists();
+    // TODO: Abort stream append loop algorithms.
+    // cancel any pending buffer append.
+    mContentManager->AbortAppendData();
     AbortUpdating();
   }
 }
@@ -291,6 +309,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mMediaSource(aMediaSource)
   , mUpdating(false)
   , mActive(false)
+  , mUpdateID(0)
   , mType(aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -362,6 +381,7 @@ SourceBuffer::StartUpdating()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mUpdating);
   mUpdating = true;
+  mUpdateID++;
   QueueAsyncSimpleEvent("updatestart");
 }
 
@@ -370,8 +390,12 @@ SourceBuffer::StopUpdating()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mUpdating) {
-    // The buffer append or range removal algorithm  has been interrupted by
-    // abort().
+    // The buffer append algorithm has been interrupted by abort().
+    //
+    // If the sequence appendBuffer(), abort(), appendBuffer() occurs before
+    // the first StopUpdating() runnable runs, then a second StopUpdating()
+    // runnable will be scheduled, but still only one (the first) will queue
+    // events.
     return;
   }
   mUpdating = false;
@@ -383,6 +407,7 @@ void
 SourceBuffer::AbortUpdating()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mUpdating);
   mUpdating = false;
   QueueAsyncSimpleEvent("abort");
   QueueAsyncSimpleEvent("updateend");
@@ -413,13 +438,23 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   StartUpdating();
 
-  BufferAppend();
+  nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
+  NS_DispatchToMainThread(task);
 }
 
 void
-SourceBuffer::BufferAppend()
+SourceBuffer::BufferAppend(uint32_t aUpdateID)
 {
-  MOZ_ASSERT(mUpdating);
+  if (!mUpdating || aUpdateID != mUpdateID) {
+    // The buffer append algorithm has been interrupted by abort().
+    //
+    // If the sequence appendBuffer(), abort(), appendBuffer() occurs before
+    // the first StopUpdating() runnable runs, then a second StopUpdating()
+    // runnable will be scheduled, but still only one (the first) will queue
+    // events.
+    return;
+  }
+
   MOZ_ASSERT(mMediaSource);
   MOZ_ASSERT(!mPendingAppend.Exists());
 
@@ -432,8 +467,11 @@ SourceBuffer::BufferAppend()
 void
 SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
 {
-  MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    return;
+  }
 
   if (aHasActiveTracks) {
     if (!mActive) {
@@ -456,9 +494,7 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
 void
 SourceBuffer::AppendDataErrored(nsresult aError)
 {
-  MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
-
   switch (aError) {
     case NS_ERROR_ABORT:
       // Nothing further to do as the trackbuffer has been shutdown.
@@ -474,7 +510,10 @@ void
 SourceBuffer::AppendError(bool aDecoderError)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    return;
+  }
   mContentManager->ResetParserState();
 
   mUpdating = false;
@@ -585,6 +624,16 @@ SourceBuffer::Evict(double aStart, double aEnd)
   }
   mContentManager->EvictBefore(TimeUnit::FromSeconds(evictTime));
 }
+
+#if defined(DEBUG)
+void
+SourceBuffer::Dump(const char* aPath)
+{
+  if (mContentManager) {
+    mContentManager->Dump(aPath);
+  }
+}
+#endif
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)
 
