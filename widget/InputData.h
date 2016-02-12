@@ -537,7 +537,7 @@ public:
   enum ScrollDeltaType
   {
     // There are three kinds of scroll delta modes in Gecko: "page", "line" and
-    // "pixel". For apz, we currently only support the "line" and "pixel" modes.
+    // "pixel".
     SCROLLDELTA_LINE,
     SCROLLDELTA_PAGE,
     SCROLLDELTA_PIXEL
