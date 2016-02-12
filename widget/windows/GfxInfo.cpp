@@ -1272,12 +1272,14 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
     JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
-  gfx::FeatureStatus d2d = platform->GetD2D1Status();
+  gfx::FeatureStatus d2d = platform->GetD2DStatus();
   if (!InitFeatureObject(aCx, aObj, "d2d", d2d, &obj)) {
     return;
   }
   {
-    const char* version = "1.1";
+    const char* version = "1.0";
+    if (platform->GetD2D1Status() == gfx::FeatureStatus::Available)
+      version = "1.1";
     JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, version));
     JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
     JS_SetProperty(aCx, obj, "version", val);
