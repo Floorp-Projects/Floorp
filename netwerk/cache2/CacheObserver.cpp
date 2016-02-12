@@ -503,18 +503,13 @@ CacheObserver::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, "profile-before-change")) {
+  if (!strcmp(aTopic, "profile-change-net-teardown") ||
+      !strcmp(aTopic, "profile-before-change") ||
+      !strcmp(aTopic, "xpcom-shutdown")) {
     RefPtr<CacheStorageService> service = CacheStorageService::Self();
-    if (service)
+    if (service) {
       service->Shutdown();
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
-    RefPtr<CacheStorageService> service = CacheStorageService::Self();
-    if (service)
-      service->Shutdown();
+    }
 
     CacheFileIOManager::Shutdown();
     return NS_OK;
@@ -522,8 +517,9 @@ CacheObserver::Observe(nsISupports* aSubject,
 
   if (!strcmp(aTopic, "last-pb-context-exited")) {
     RefPtr<CacheStorageService> service = CacheStorageService::Self();
-    if (service)
+    if (service) {
       service->DropPrivateBrowsingEntries();
+    }
 
     return NS_OK;
   }
