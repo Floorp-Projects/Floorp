@@ -41,10 +41,14 @@ class _MozTestResult(_TestResult):
     def addError(self, test, err):
         _TestResult.addError(self, test, err)
         self.printFail(test, err)
+        self.stream.writeln("ERROR: {0}".format(self.getDescription(test)))
+        self.stream.writeln(self.errors[-1][1])
 
     def addFailure(self, test, err):
         _TestResult.addFailure(self, test, err)
         self.printFail(test,err)
+        self.stream.writeln("FAIL: {0}".format(self.getDescription(test)))
+        self.stream.writeln(self.failures[-1][1])
 
     def printFail(self, test, err):
         exctype, value, tb = err
@@ -57,11 +61,6 @@ class _MozTestResult(_TestResult):
         self.stream.writeln("TEST-UNEXPECTED-FAIL | {0} | line {1}, {2}: {3}" 
                             .format(_f, _ln, _t, value.message))
 
-    def printErrorList(self):
-        for test, err in self.errors:
-            self.stream.writeln("ERROR: {0}".format(self.getDescription(test)))
-            self.stream.writeln("{0}".format(err))
-
 
 class MozTestRunner(_TestRunner):
     def _makeResult(self):
@@ -69,7 +68,6 @@ class MozTestRunner(_TestRunner):
     def run(self, test):
         result = self._makeResult()
         test(result)
-        result.printErrorList()
         return result
 
 class MockedFile(StringIO):
