@@ -305,7 +305,7 @@ class Entry {
   // nothing. |context| is used to call the actual implementation
   // of a given function or event. It's an object with properties
   // callFunction, addListener, removeListener, and hasListener.
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
   }
 }
 
@@ -468,7 +468,7 @@ class StringType extends Type {
     return baseType == "string";
   }
 
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.enumeration) {
       let obj = Cu.createObjectIn(dest, {defineAs: name});
       for (let e of this.enumeration) {
@@ -623,6 +623,15 @@ class ObjectType extends Type {
   }
 }
 
+// This type is just a placeholder to be referred to by
+// SubModuleProperty. No value is ever expected to have this type.
+class SubModuleType extends Type {
+  constructor(functions) {
+    super();
+    this.functions = functions;
+  }
+}
+
 class NumberType extends Type {
   normalize(value, context) {
     let r = this.normalizeBase("number", value, context);
@@ -749,7 +758,7 @@ class ValueProperty extends Entry {
     this.value = value;
   }
 
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
     dest[name] = this.value;
   }
 }
@@ -769,14 +778,14 @@ class TypeProperty extends Entry {
     throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
   }
 
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
 
     let getStub = () => {
       this.checkDeprecated(context);
-      return context.getProperty(this.namespaceName, name);
+      return context.getProperty(path, name);
     };
 
     let desc = {
@@ -793,7 +802,7 @@ class TypeProperty extends Entry {
           this.throwError(context, normalized.error);
         }
 
-        context.setProperty(this.namespaceName, name, normalized.value);
+        context.setProperty(path, name, normalized.value);
       };
 
       desc.set = Cu.exportFunction(setStub, dest);
@@ -803,20 +812,57 @@ class TypeProperty extends Entry {
   }
 }
 
+class SubModuleProperty extends Entry {
+  // A SubModuleProperty represents a tree of objects and properties
+  // to expose to an extension. Currently we support only a limited
+  // form of sub-module properties, where "$ref" points to a
+  // SubModuleType containing a list of functions and "properties" is
+  // a list of additional simple properties.
+  //
+  // name: Name of the property stuff is being added to.
+  // namespaceName: Namespace in which the property lives.
+  // reference: Name of the type defining the functions to add to the property.
+  // properties: Additional properties to add to the module (unsupported).
+  constructor(name, namespaceName, reference, properties) {
+    super();
+    this.name = name;
+    this.namespaceName = namespaceName;
+    this.reference = reference;
+    this.properties = properties;
+  }
+
+  inject(path, name, dest, wrapperFuncs) {
+    let obj = Cu.createObjectIn(dest, {defineAs: name});
+
+    let ns = Schemas.namespaces.get(this.namespaceName);
+    let type = ns.get(this.reference);
+    if (!type || !(type instanceof SubModuleType)) {
+      throw new Error(`Internal error: ${this.namespaceName}.${this.reference} is not a sub-module`);
+    }
+
+    let functions = type.functions;
+    for (let fun of functions) {
+      fun.inject(path.concat(name), fun.name, obj, wrapperFuncs);
+    }
+
+    // TODO: Inject this.properties.
+  }
+}
+
 // This class is a base class for FunctionEntrys and Events. It takes
 // care of validating parameter lists (i.e., handling of optional
 // parameters and parameter type checking).
 class CallEntry extends Entry {
-  constructor(schema, namespaceName, name, parameters, allowAmbiguousOptionalArguments) {
+  constructor(schema, path, name, parameters, allowAmbiguousOptionalArguments) {
     super(schema);
-    this.namespaceName = namespaceName;
+    this.path = path;
     this.name = name;
     this.parameters = parameters;
     this.allowAmbiguousOptionalArguments = allowAmbiguousOptionalArguments;
   }
 
   throwError(context, msg) {
-    throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
+    throw context.makeError(`${msg} for ${this.path.join(".")}.${this.name}.`);
   }
 
   checkParameters(args, context) {
@@ -891,15 +937,15 @@ class CallEntry extends Entry {
 
 // Represents a "function" defined in a schema namespace.
 class FunctionEntry extends CallEntry {
-  constructor(schema, namespaceName, name, type, unsupported, allowAmbiguousOptionalArguments, returns) {
-    super(schema, namespaceName, name, type.parameters, allowAmbiguousOptionalArguments);
+  constructor(schema, path, name, type, unsupported, allowAmbiguousOptionalArguments, returns) {
+    super(schema, path, name, type.parameters, allowAmbiguousOptionalArguments);
     this.unsupported = unsupported;
     this.returns = returns;
 
     this.isAsync = type.isAsync;
   }
 
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -910,13 +956,13 @@ class FunctionEntry extends CallEntry {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
         let callback = actuals.pop();
-        return context.callAsyncFunction(this.namespaceName, name, actuals, callback);
+        return context.callAsyncFunction(path, name, actuals, callback);
       };
     } else {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return context.callFunction(this.namespaceName, name, actuals);
+        return context.callFunction(path, name, actuals);
       };
     }
     Cu.exportFunction(stub, dest, {defineAs: name});
@@ -925,8 +971,8 @@ class FunctionEntry extends CallEntry {
 
 // Represents an "event" defined in a schema namespace.
 class Event extends CallEntry {
-  constructor(schema, namespaceName, name, type, extraParameters, unsupported) {
-    super(schema, namespaceName, name, extraParameters);
+  constructor(schema, path, name, type, extraParameters, unsupported) {
+    super(schema, path, name, extraParameters);
     this.type = type;
     this.unsupported = unsupported;
   }
@@ -939,7 +985,7 @@ class Event extends CallEntry {
     return r.value;
   }
 
-  inject(name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -947,17 +993,17 @@ class Event extends CallEntry {
     let addStub = (listener, ...args) => {
       listener = this.checkListener(listener, context);
       let actuals = this.checkParameters(args, context);
-      return context.addListener(this.namespaceName, name, listener, actuals);
+      return context.addListener(this.path, name, listener, actuals);
     };
 
     let removeStub = (listener) => {
       listener = this.checkListener(listener, context);
-      return context.removeListener(this.namespaceName, name, listener);
+      return context.removeListener(this.path, name, listener);
     };
 
     let hasStub = (listener) => {
       listener = this.checkListener(listener, context);
-      return context.hasListener(this.namespaceName, name, listener);
+      return context.hasListener(this.path, name, listener);
     };
 
     let obj = Cu.createObjectIn(dest, {defineAs: name});
@@ -981,7 +1027,7 @@ this.Schemas = {
     ns.set(symbol, value);
   },
 
-  parseType(namespaceName, type, extraProperties = []) {
+  parseType(path, type, extraProperties = []) {
     let allowedProperties = new Set(extraProperties);
 
     // Do some simple validation of our own schemas.
@@ -989,7 +1035,7 @@ this.Schemas = {
       let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
-          throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
+          throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
         }
       }
     }
@@ -997,12 +1043,12 @@ this.Schemas = {
     if ("choices" in type) {
       checkTypeProperties("choices");
 
-      let choices = type.choices.map(t => this.parseType(namespaceName, t));
+      let choices = type.choices.map(t => this.parseType(path, t));
       return new ChoiceType(type, choices);
     } else if ("$ref" in type) {
       checkTypeProperties("$ref");
       let ref = type.$ref;
-      let ns = namespaceName;
+      let ns = path[0];
       if (ref.includes(".")) {
         [ns, ref] = ref.split(".");
       }
@@ -1054,10 +1100,17 @@ this.Schemas = {
                             type.maxLength || Infinity,
                             pattern,
                             format);
+    } else if (type.type == "object" && "functions" in type) {
+      checkTypeProperties("functions");
+
+      // The path we pass in here is only used for error messages.
+      let functions = type.functions.map(fun => this.parseFunction(path.concat(type.id), fun));
+
+      return new SubModuleType(functions);
     } else if (type.type == "object") {
       let parseProperty = (type, extraProps = []) => {
         return {
-          type: this.parseType(namespaceName, type,
+          type: this.parseType(path, type,
                                ["unsupported", ...extraProps]),
           optional: type.optional || false,
           unsupported: type.unsupported || false,
@@ -1086,7 +1139,7 @@ this.Schemas = {
 
       let additionalProperties = null;
       if (type.additionalProperties) {
-        additionalProperties = this.parseType(namespaceName, type.additionalProperties);
+        additionalProperties = this.parseType(path, type.additionalProperties);
       }
 
       if ("$extend" in type) {
@@ -1098,7 +1151,7 @@ this.Schemas = {
       return new ObjectType(type, properties, additionalProperties, patternProperties, type.isInstanceOf || null);
     } else if (type.type == "array") {
       checkTypeProperties("items", "minItems", "maxItems");
-      return new ArrayType(type, this.parseType(namespaceName, type.items),
+      return new ArrayType(type, this.parseType(path, type.items),
                            type.minItems || 0, type.maxItems || Infinity);
     } else if (type.type == "number") {
       checkTypeProperties();
@@ -1121,7 +1174,7 @@ this.Schemas = {
           let isCallback = isAsync && param.name == type.async;
 
           parameters.push({
-            type: this.parseType(namespaceName, param, ["name", "optional"]),
+            type: this.parseType(path, param, ["name", "optional"]),
             name: param.name,
             optional: param.optional == null ? isCallback : param.optional,
           });
@@ -1148,11 +1201,22 @@ this.Schemas = {
     }
   },
 
+  parseFunction(path, fun) {
+    let f = new FunctionEntry(fun, path, fun.name,
+                              this.parseType(path, fun,
+                                             ["name", "unsupported", "returns",
+                                              "allowAmbiguousOptionalArguments"]),
+                              fun.unsupported || false,
+                              fun.allowAmbiguousOptionalArguments || false,
+                              fun.returns || null);
+    return f;
+  },
+
   loadType(namespaceName, type) {
     if ("$extend" in type) {
       this.extendType(namespaceName, type);
     } else {
-      this.register(namespaceName, type.id, this.parseType(namespaceName, type, ["id"]));
+      this.register(namespaceName, type.id, this.parseType([namespaceName], type, ["id"]));
     }
   },
 
@@ -1169,7 +1233,7 @@ this.Schemas = {
       throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
     }
 
-    let parsed = this.parseType(namespaceName, type, ["$extend"]);
+    let parsed = this.parseType([namespaceName], type, ["$extend"]);
     if (parsed.constructor !== targetType.constructor) {
       throw new Error(`Internal error: Bad attempt to extend ${type.$extend}`);
     }
@@ -1178,24 +1242,23 @@ this.Schemas = {
   },
 
   loadProperty(namespaceName, name, prop) {
-    if ("value" in prop) {
+    if ("$ref" in prop) {
+      if (!prop.unsupported) {
+        this.register(namespaceName, name, new SubModuleProperty(name, namespaceName, prop.$ref,
+                                                                 prop.properties || {}));
+      }
+    } else if ("value" in prop) {
       this.register(namespaceName, name, new ValueProperty(prop, name, prop.value));
     } else {
       // We ignore the "optional" attribute on properties since we
       // don't inject anything here anyway.
-      let type = this.parseType(namespaceName, prop, ["optional", "writable"]);
+      let type = this.parseType([namespaceName], prop, ["optional", "writable"]);
       this.register(namespaceName, name, new TypeProperty(prop, namespaceName, name, type, prop.writable || false));
     }
   },
 
   loadFunction(namespaceName, fun) {
-    let f = new FunctionEntry(fun, namespaceName, fun.name,
-                              this.parseType(namespaceName, fun,
-                                             ["name", "unsupported", "returns",
-                                              "allowAmbiguousOptionalArguments"]),
-                              fun.unsupported || false,
-                              fun.allowAmbiguousOptionalArguments || false,
-                              fun.returns || null);
+    let f = this.parseFunction([namespaceName], fun);
     this.register(namespaceName, fun.name, f);
   },
 
@@ -1203,7 +1266,7 @@ this.Schemas = {
     let extras = event.extraParameters || [];
     extras = extras.map(param => {
       return {
-        type: this.parseType(namespaceName, param, ["name", "optional"]),
+        type: this.parseType([namespaceName], param, ["name", "optional"]),
         name: param.name,
         optional: param.optional || false,
       };
@@ -1215,11 +1278,11 @@ this.Schemas = {
     let filters = event.filters;
     /* eslint-enable no-unused-vars */
 
-    let type = this.parseType(namespaceName, event,
+    let type = this.parseType([namespaceName], event,
                               ["name", "unsupported",
                                "extraParameters", "returns", "filters"]);
 
-    let e = new Event(event, namespaceName, event.name, type, extras,
+    let e = new Event(event, [namespaceName], event.name, type, extras,
                       event.unsupported || false);
     this.register(namespaceName, event.name, e);
   },
@@ -1256,7 +1319,7 @@ this.Schemas = {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        entry.inject(name, obj, new Context(wrapperFuncs));
+        entry.inject([namespace], name, obj, new Context(wrapperFuncs));
       }
 
       if (!Object.keys(obj).length) {

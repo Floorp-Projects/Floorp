@@ -1863,6 +1863,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
             direction = NegateBranchDirection(direction);
             MBasicBlock* otherBlock = branch->branchSuccessor(direction);
             if (!otherBlock->isMarked()) {
+                if (!alloc().ensureBallast())
+                    return false;
                 iterationBound =
                     analyzeLoopIterationCount(header, branch, direction);
                 if (iterationBound)
@@ -2246,6 +2248,8 @@ RangeAnalysis::analyze()
 
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition* def = *iter;
+            if (!alloc().ensureBallast())
+                return false;
 
             def->computeRange(alloc());
             JitSpew(JitSpew_Range, "computing range on %d", def->id());
@@ -2311,6 +2315,8 @@ RangeAnalysis::addRangeAssertions()
             if (ins->isRecoveredOnBailout())
                 continue;
 
+            if (!alloc().ensureBallast())
+                return false;
             MAssertRange* guard = MAssertRange::New(alloc(), ins, new(alloc()) Range(r));
 
             // Beta nodes and interrupt checks are required to be located at the
@@ -2722,31 +2728,33 @@ MCompare::operandTruncateKind(size_t index) const
     return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
 }
 
-static void
+static bool
 TruncateTest(TempAllocator& alloc, MTest* test)
 {
     // If all possible inputs to the test are either int32 or boolean,
     // convert those inputs to int32 so that an int32 test can be performed.
 
     if (test->input()->type() != MIRType_Value)
-        return;
+        return true;
 
     if (!test->input()->isPhi() || !test->input()->hasOneDefUse() || test->input()->isImplicitlyUsed())
-        return;
+        return true;
 
     MPhi* phi = test->input()->toPhi();
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* def = phi->getOperand(i);
         if (!def->isBox())
-            return;
+            return true;
         MDefinition* inner = def->getOperand(0);
         if (inner->type() != MIRType_Boolean && inner->type() != MIRType_Int32)
-            return;
+            return true;
     }
 
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* inner = phi->getOperand(i)->getOperand(0);
         if (inner->type() != MIRType_Int32) {
+            if (!alloc.ensureBallast())
+                return false;
             MBasicBlock* block = inner->block();
             inner = MToInt32::New(alloc, inner);
             block->insertBefore(block->lastIns(), inner->toInstruction());
@@ -2756,6 +2764,7 @@ TruncateTest(TempAllocator& alloc, MTest* test)
     }
 
     phi->setResultType(MIRType_Int32);
+    return true;
 }
 
 // Truncating instruction result is an optimization which implies
@@ -2777,6 +2786,8 @@ CloneForDeadBranches(TempAllocator& alloc, MInstruction* candidate)
         return true;
 
     MOZ_ASSERT(candidate->canClone());
+    if (!alloc.ensureBallast())
+        return false;
 
     MDefinitionVector operands(alloc);
     size_t end = candidate->numOperands();
@@ -3007,8 +3018,10 @@ RangeAnalysis::truncate()
                 continue;
 
             if (iter->type() == MIRType_None) {
-                if (iter->isTest())
-                    TruncateTest(alloc(), iter->toTest());
+                if (iter->isTest()) {
+                    if (!TruncateTest(alloc(), iter->toTest()))
+                        return false;
+                }
                 continue;
             }
 
@@ -3088,6 +3101,8 @@ RangeAnalysis::truncate()
     // Update inputs/outputs of truncated instructions.
     JitSpew(JitSpew_Range, "Do graph type fixup (dequeue)");
     while (!worklist.empty()) {
+        if (!alloc().ensureBallast())
+            return false;
         MDefinition* def = worklist.popCopy();
         def->setNotInWorklist();
         RemoveTruncatesOnOutput(def);

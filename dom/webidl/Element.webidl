@@ -30,7 +30,7 @@ interface Element : Node {
            attribute DOMString id;
   [Pure]
            attribute DOMString className;
-  [Constant]
+  [Constant, PutForwards=value]
   readonly attribute DOMTokenList classList;
 
   [SameObject]

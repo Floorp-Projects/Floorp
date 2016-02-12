@@ -106,6 +106,8 @@ AllDoublePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         if (in->type() == MIRType_Double)
             continue;
 
+        if (!alloc.ensureBallast())
+            return false;
         MInstruction* replace = MToDouble::New(alloc, in);
 
         ins->block()->insertBefore(ins, replace);
@@ -886,8 +888,11 @@ CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
             return false;
     }
 
-    for (uint32_t i = 0; i < call->numStackArgs(); i++)
+    for (uint32_t i = 0; i < call->numStackArgs(); i++) {
+        if (!alloc.ensureBallast())
+            return false;
         EnsureOperandNotFloat32(alloc, call, MCall::IndexOfStackArg(i));
+    }
 
     return true;
 }

@@ -754,10 +754,10 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf m
 
     switch (buffer.bufferKind()) {
       case PLAIN:
-        info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
+        info->objectsMallocHeapElementsNormal += mallocSizeOf(buffer.dataPointer());
         break;
       case MAPPED:
-        info->objectsNonHeapElementsMapped += buffer.byteLength();
+        info->objectsNonHeapElementsNormal += buffer.byteLength();
         break;
       case WASM_MALLOCED:
         info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());

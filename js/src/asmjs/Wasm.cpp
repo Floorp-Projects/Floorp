@@ -347,6 +347,33 @@ DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType expected)
 }
 
 static bool
+DecodeLoadStoreAddress(FunctionDecoder &f)
+{
+    uint32_t offset, align;
+    return DecodeExpr(f, ExprType::I32) &&
+           f.d().readVarU32(&offset) &&
+           f.d().readVarU32(&align) &&
+           mozilla::IsPowerOfTwo(align) &&
+           (offset == 0 || f.fail("NYI: address offsets")) &&
+           f.fail("NYI: wasm loads and stores");
+}
+
+static bool
+DecodeLoad(FunctionDecoder& f, ExprType expected, ExprType type)
+{
+    return DecodeLoadStoreAddress(f) &&
+           CheckType(f, type, expected);
+}
+
+static bool
+DecodeStore(FunctionDecoder& f, ExprType expected, ExprType type)
+{
+    return DecodeLoadStoreAddress(f) &&
+           DecodeExpr(f, expected) &&
+           CheckType(f, type, expected);
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -539,6 +566,38 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
                DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I64);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::F32);
+      case Expr::I32LoadMem:
+      case Expr::I32LoadMem8S:
+      case Expr::I32LoadMem8U:
+      case Expr::I32LoadMem16S:
+      case Expr::I32LoadMem16U:
+        return DecodeLoad(f, expected, ExprType::I32);
+      case Expr::I64LoadMem:
+      case Expr::I64LoadMem8S:
+      case Expr::I64LoadMem8U:
+      case Expr::I64LoadMem16S:
+      case Expr::I64LoadMem16U:
+      case Expr::I64LoadMem32S:
+      case Expr::I64LoadMem32U:
+        return DecodeLoad(f, expected, ExprType::I64);
+      case Expr::F32LoadMem:
+        return DecodeLoad(f, expected, ExprType::F32);
+      case Expr::F64LoadMem:
+        return DecodeLoad(f, expected, ExprType::F64);
+      case Expr::I32StoreMem:
+      case Expr::I32StoreMem8:
+      case Expr::I32StoreMem16:
+        return DecodeStore(f, expected, ExprType::I32);
+      case Expr::I64StoreMem:
+      case Expr::I64StoreMem8:
+      case Expr::I64StoreMem16:
+      case Expr::I64StoreMem32:
+        return f.fail("NYI: i64") &&
+               DecodeStore(f, expected, ExprType::I64);
+      case Expr::F32StoreMem:
+        return DecodeStore(f, expected, ExprType::F32);
+      case Expr::F64StoreMem:
+        return DecodeStore(f, expected, ExprType::F64);
       default:
         break;
     }
@@ -586,6 +645,8 @@ typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
 /*****************************************************************************/
 // wasm decoding and generation
 
+typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
+
 static bool
 DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
@@ -604,6 +665,10 @@ DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         return Fail(cx, d, "too many signatures");
 
     if (!init->sigs.resize(numSigs))
+        return false;
+
+    SigSet dupSet(cx);
+    if (!dupSet.init())
         return false;
 
     for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
@@ -628,6 +693,13 @@ DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         }
 
         init->sigs[sigIndex] = Sig(Move(args), result);
+
+        SigSet::AddPtr p = dupSet.lookupForAdd(init->sigs[sigIndex]);
+        if (p)
+            return Fail(cx, d, "duplicate signature");
+
+        if (!dupSet.add(p, &init->sigs[sigIndex]))
+            return false;
     }
 
     if (!d.finishSection(sectionStart))
@@ -1172,26 +1244,13 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
     return true;
 }
 
-static bool
-WasmEval(JSContext* cx, unsigned argc, Value* vp)
+bool
+wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
+           HandleObject importObj, MutableHandleObject exportObj)
 {
     if (!CheckCompilerSupport(cx))
         return false;
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject callee(cx, &args.callee());
-
-    if (args.length() < 1 || args.length() > 2) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return false;
-    }
-
-    if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
-        ReportUsageError(cx, callee, "First argument must be an ArrayBuffer");
-        return false;
-    }
-
-    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
     const uint8_t* bytes = code->dataPointer();
     uint32_t length = code->byteLength();
 
@@ -1200,15 +1259,6 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         if (!copy.append(bytes, length))
             return false;
         bytes = copy.begin();
-    }
-
-    RootedObject importObj(cx);
-    if (!args.get(1).isUndefined()) {
-        if (!args.get(1).isObject()) {
-            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
-            return false;
-        }
-        importObj = &args[1].toObject();
     }
 
     UniqueChars file;
@@ -1229,8 +1279,42 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj))
+        return false;
+
+    return true;
+}
+
+
+static bool
+WasmEval(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() < 1 || args.length() > 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
+        ReportUsageError(cx, callee, "First argument must be an ArrayBuffer");
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
+
     RootedObject exportObj(cx);
-    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+    if (!Eval(cx, code, importObj, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);

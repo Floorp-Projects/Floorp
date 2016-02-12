@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript"
+    src="animation_utils.js"></script>
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translateX(0px) }
+      100% { transform: translateX(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var is = opener.is.bind(opener);
+    var ok = opener.ok.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+window.onload = function () {
+  // To avoid the effect that newly created element's styles are
+  // not updated immediately, we need to add an element without
+  // animation properties first.
+  var [ div ] = new_div("");
+  div.setAttribute("id", "bug1228137");
+
+  waitForPaints().then(function() {
+    var initialRect = div.getBoundingClientRect();
+
+    // Now we can set animation properties.
+    div.style.animation = "anim 100s linear forwards";
+
+    div.addEventListener("mousemove", function(event) {
+      is(event.target.id, "bug1228137",
+         "The target of the animation should receive the mouse move event " +
+         "on the position of the animation's effect end.");
+      done_div();
+      finish();
+    }, false);
+
+    var animation = div.getAnimations()[0];
+    animation.finish();
+
+    // Mouse over where the animation is positioned at finished state.
+    // We can't use synthesizeMouse here since synthesizeMouse causes
+    // layout flush. We need to check the position without explicit flushes.
+    synthesizeMouseAtPoint(initialRect.left + initialRect.width / 2 + 100,
+                           initialRect.top + initialRect.height / 2,
+                           { type: "mousemove" }, window);
+  });
+};
+</script>
+</body>
+</html>

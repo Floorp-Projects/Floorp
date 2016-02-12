@@ -169,15 +169,19 @@ GMPInfoFileParser::Init(nsIFile* aInfoFile)
   SplitAt("\r\n", info, lines);
 
   for (nsCString line : lines) {
-    nsTArray<nsCString> tokens;
-    SplitAt(":", line, tokens);
-    if (tokens.Length() < 2) {
+    // Field name is the string up to but not including the first ':'
+    // character on the line.
+    int32_t colon = line.FindChar(':');
+    if (colon <= 0) {
+      // Not allowed to be the first character.
+      // Info field name must be at least one character.
       continue;
     }
-    nsCString key = tokens[0];
+    nsAutoCString key(Substring(line, 0, colon));
     ToLowerCase(key);
     key.Trim(" ");
-    nsCString* value = new nsCString(tokens[1]);
+
+    nsCString* value = new nsCString(Substring(line, colon + 1));
     value->Trim(" ");
     mValues.Put(key, value); // Hashtable assumes ownership of value.
   }

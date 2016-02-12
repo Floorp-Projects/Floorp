@@ -281,11 +281,14 @@ class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
                                         public nsIGlobalObject
 {
   WorkerPrivate* mWorkerPrivate;
+  RefPtr<Console> mConsole;
 
 public:
   explicit WorkerDebuggerGlobalScope(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerDebuggerGlobalScope,
+                                                         DOMEventTargetHelper)
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
@@ -332,6 +335,9 @@ public:
 
   void
   ReportError(JSContext* aCx, const nsAString& aMessage);
+
+  Console*
+  GetConsole(ErrorResult& aRv);
 
   void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;

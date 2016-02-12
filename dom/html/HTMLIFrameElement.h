@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsDOMSettableTokenList.h"
+#include "nsDOMTokenList.h"
 
 namespace mozilla {
 namespace dom {
@@ -84,7 +84,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aError);
   }
-  nsDOMSettableTokenList* Sandbox()
+  nsDOMTokenList* Sandbox()
   {
     return GetTokenList(nsGkAtoms::sandbox);
   }

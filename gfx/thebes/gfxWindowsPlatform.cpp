@@ -2513,6 +2513,12 @@ gfxWindowsPlatform::InitializeD3D11()
       return;
     }
 
+    RefPtr<ID3D10Multithread> multi;
+    HRESULT hr = mD3D11Device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+    if (SUCCEEDED(hr) && multi) {
+      multi->SetMultithreadProtected(TRUE);
+    }
+
     // Either device creation function should have returned Available.
     MOZ_ASSERT(mD3D11Status == FeatureStatus::Available);
   } else {

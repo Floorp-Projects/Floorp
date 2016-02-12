@@ -529,8 +529,7 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      nsCOMPtr<nsIThread> main = do_GetMainThread();
-      NS_ProxyRelease(main, event);
+      NS_ReleaseOnMainThread(event.forget());
     }
   }
 
@@ -547,8 +546,7 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      nsCOMPtr<nsIThread> main = do_GetMainThread();
-      NS_ProxyRelease(main, event);
+      NS_ReleaseOnMainThread(event.forget());
     }
 
   }
@@ -749,8 +747,7 @@ public:
     if (!mResult) {
       return;
     }
-    nsCOMPtr<nsIThread> main = do_GetMainThread();
-    (void)NS_ProxyRelease(main, mResult);
+    NS_ReleaseOnMainThread(mResult.forget());
   }
 
 protected:
@@ -787,8 +784,7 @@ public:
     if (!mResult) {
       return;
     }
-    nsCOMPtr<nsIThread> main = do_GetMainThread();
-    (void)NS_ProxyRelease(main, mResult);
+    NS_ReleaseOnMainThread(mResult.forget());
   }
 
 protected:

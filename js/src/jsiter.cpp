@@ -804,7 +804,6 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
 
     // We should only call the enumerate trap for "for-in".
     // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
-    // In the future also for Reflect.enumerate.
     // JSITER_ENUMERATE is just an optimization and the same
     // as flags == 0 otherwise.
     if (flags == 0 || flags == JSITER_ENUMERATE) {

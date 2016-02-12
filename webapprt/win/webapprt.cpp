@@ -19,6 +19,7 @@
 #include "nsXPCOMPrivate.h"     // for MAXPATHLEN and XPCOM_DLL
 #include "nsXULAppAPI.h"
 #include "mozilla/AppData.h"
+#include "buildid.h"
 
 using namespace mozilla;
 

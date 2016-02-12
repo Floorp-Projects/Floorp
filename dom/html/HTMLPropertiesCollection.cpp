@@ -9,7 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "nsVariant.h"
-#include "nsDOMSettableTokenList.h"
+#include "nsDOMTokenList.h"
 #include "nsAttrValue.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/HTMLPropertiesCollectionBinding.h"

@@ -966,12 +966,9 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
  * dirty rect for preserve-3d children.
  *
  * @param aDirtyFrame is the frame to mark children extending context.
- * @param aDirtyRect is the same as the dirty rect of the root of the
- *                   current 3D context, but be translated relative to
- *                   the aDirtyFrame.
  */
 void
-nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect)
+nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame)
 {
   AutoTArray<nsIFrame::ChildList,4> childListArray;
   aDirtyFrame->GetChildLists(&childListArray);
@@ -982,10 +979,6 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, 
       nsIFrame *child = childFrames.get();
       if (child->Combines3DTransformWithAncestors()) {
         mFramesMarkedForDisplay.AppendElement(child);
-        nsRect dirty = aDirtyRect - child->GetOffsetTo(aDirtyFrame);
-        child->Properties().Set(nsDisplayListBuilder::Preserve3DDirtyRectProperty(),
-                           new nsRect(dirty));
-
         MarkFrameForDisplay(child, aDirtyFrame);
       }
     }

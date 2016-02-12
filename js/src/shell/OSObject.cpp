@@ -147,7 +147,7 @@ ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveM
     return JS_NewStringCopyZ(cx, buffer);
 }
 
-static JSObject*
+JSObject*
 FileAsTypedArray(JSContext* cx, const char* pathname)
 {
     FILE* file = fopen(pathname, "rb");

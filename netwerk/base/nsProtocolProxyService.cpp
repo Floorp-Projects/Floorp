@@ -128,31 +128,20 @@ private:
             // main thread to delete safely, but if this request had its
             // callbacks called normally they will all be null and this is a nop
 
-            nsCOMPtr<nsIThread> mainThread;
-            NS_GetMainThread(getter_AddRefs(mainThread));
-
             if (mChannel) {
-                nsIChannel *forgettable;
-                mChannel.forget(&forgettable);
-                NS_ProxyRelease(mainThread, forgettable, false);
+                NS_ReleaseOnMainThread(mChannel.forget());
             }
 
             if (mCallback) {
-                nsIProtocolProxyCallback *forgettable;
-                mCallback.forget(&forgettable);
-                NS_ProxyRelease(mainThread, forgettable, false);
+                NS_ReleaseOnMainThread(mCallback.forget());
             }
 
             if (mProxyInfo) {
-                nsIProxyInfo *forgettable;
-                mProxyInfo.forget(&forgettable);
-                NS_ProxyRelease(mainThread, forgettable, false);
+                NS_ReleaseOnMainThread(mProxyInfo.forget());
             }
 
             if (mXPComPPS) {
-                nsIProtocolProxyService *forgettable;
-                mXPComPPS.forget(&forgettable);
-                NS_ProxyRelease(mainThread, forgettable, false);
+                NS_ReleaseOnMainThread(mXPComPPS.forget());
             }
         }
     }

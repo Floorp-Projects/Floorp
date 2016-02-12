@@ -30,6 +30,7 @@ interface HTMLAreaElement : HTMLElement {
            attribute DOMString rel;
            [SetterThrows, Pref="network.http.enablePerElementReferrer"]
            attribute DOMString referrerPolicy;
+           [PutForwards=value]
   readonly attribute DOMTokenList relList;
 };
 

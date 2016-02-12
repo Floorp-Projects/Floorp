@@ -139,11 +139,11 @@ const trivialSigSection = sigSection([{args:[], ret:VoidCode}]);
 const trivialDeclSection = declSection([0]);
 const trivialCodeSection = codeSection([{locals:[], body:[0, 0]}]);
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: U32MAX_LEB, } ]))), Error, /too many signatures/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: [1, ...U32MAX_LEB], } ]))), Error, /too many arguments in signature/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: declSectionStr, body: U32MAX_LEB, }]))), Error, /too many functions/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: importSectionStr, body: U32MAX_LEB, }]))), Error, /too many imports/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: exportSectionStr, body: U32MAX_LEB, }]))), Error, /too many exports/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: U32MAX_LEB, } ]))), TypeError, /too many signatures/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: [1, ...U32MAX_LEB], } ]))), TypeError, /too many arguments in signature/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}, {args:[], ret:VoidCode}])]))), TypeError, /duplicate signature/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: importSectionStr, body: U32MAX_LEB, }]))), TypeError, /too many imports/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: exportSectionStr, body: U32MAX_LEB, }]))), TypeError, /too many exports/);
 
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1]}]))), TypeError);
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1, 1, 0]}]))), TypeError);

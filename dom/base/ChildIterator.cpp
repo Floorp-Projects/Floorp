@@ -190,7 +190,7 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
   }
 }
 
-void
+bool
 ExplicitChildIterator::Seek(nsIContent* aChildToFind)
 {
   if (aChildToFind->GetParent() == mParent &&
@@ -204,14 +204,14 @@ ExplicitChildIterator::Seek(nsIContent* aChildToFind)
     mShadowIterator = nullptr;
     mDefaultChild = nullptr;
     mIsFirst = false;
-    return;
+    return true;
   }
 
   // Can we add more fast paths here based on whether the parent of aChildToFind
   // is a shadow insertion point or content insertion point?
 
   // Slow path: just walk all our kids.
-  Seek(aChildToFind, nullptr);
+  return Seek(aChildToFind, nullptr);
 }
 
 nsIContent*
@@ -309,6 +309,37 @@ ExplicitChildIterator::GetPreviousChild()
   }
 
   return mChild;
+}
+
+bool
+AllChildrenIterator::Seek(nsIContent* aChildToFind)
+{
+  if (mPhase == eNeedBeforeKid) {
+    mPhase = eNeedExplicitKids;
+    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
+    if (frame) {
+      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
+      if (beforeFrame) {
+        if (beforeFrame->GetContent() == aChildToFind) {
+          return true;
+        }
+      }
+    }
+  }
+
+  if (mPhase == eNeedExplicitKids) {
+    if (ExplicitChildIterator::Seek(aChildToFind)) {
+      return true;
+    }
+    mPhase = eNeedAnonKids;
+  }
+
+  nsIContent* child = nullptr;
+  do {
+    child = GetNextChild();
+  } while (child && child != aChildToFind);
+
+  return child == aChildToFind;
 }
 
 nsIContent*

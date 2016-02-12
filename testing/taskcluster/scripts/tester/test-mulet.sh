@@ -15,6 +15,7 @@ echo "running as" $(id)
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
+: NEED_PULL_GAIA                ${NEED_PULL_GAIA:=false}
 : SKIP_MOZHARNESS_RUN           ${SKIP_MOZHARNESS_RUN:=false}
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 : mozharness args               "${@}"
@@ -79,6 +80,24 @@ if $NEED_XVFB; then
     if [ $xvfb_test == 255 ]; then exit 255; fi
 fi
 
+gaia_cmds=""
+if $NEED_PULL_GAIA; then
+    # test required parameters are supplied
+    if [[ -z ${GAIA_BASE_REPOSITORY} ]]; then exit 1; fi
+    if [[ -z ${GAIA_HEAD_REPOSITORY} ]]; then exit 1; fi
+    if [[ -z ${GAIA_REV} ]]; then exit 1; fi
+    if [[ -z ${GAIA_REF} ]]; then exit 1; fi
+
+    tc-vcs checkout \
+        ${WORKSPACE}/gaia \
+        ${GAIA_BASE_REPOSITORY} \
+        ${GAIA_HEAD_REPOSITORY} \
+        ${GAIA_REV} \
+        ${GAIA_REF}
+
+    gaia_cmds="--gaia-dir=${WORKSPACE}"
+fi
+
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
@@ -95,5 +114,5 @@ if [ ${SKIP_MOZHARNESS_RUN} == true ]; then
 else
   # run the given mozharness script and configs, but pass the rest of the
   # arguments in from our own invocation
-  python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"
+  python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} ${gaia_cmds} "${@}"
 fi

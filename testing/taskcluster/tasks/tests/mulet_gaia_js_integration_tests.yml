@@ -8,19 +8,19 @@ task:
     description: Mulet Gaia JS Integration Test run {{chunk}}
 
   payload:
+    env:
+      NEED_XVFB: true
+      NEED_PULL_GAIA: true
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/gaia_integration.py'
+      MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_gaia_integration.py'
     command:
-      - entrypoint # entrypoint ensures we are running in xvfb
-      - ./bin/pull_gaia.sh &&
-      - >
-        python ./mozharness/scripts/gaia_integration.py
-        --application firefox
-        --config-file b2g/taskcluster_gaia_integration.py
-        --installer-url {{build_url}}
-        --test-packages-url {{test_packages_url}}
-        --total-chunk {{total_chunks}}
-        --this-chunk {{chunk}}
-        --gaia-repo {{gaia_head_repository}}
-        --gaia-dir /home/worker
+      - bash
+      - /home/worker/bin/test.sh
+      - --application=firefox
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --total-chunk={{total_chunks}}
+      - --this-chunk={{chunk}}
     artifacts:
       'public/build':
         type: directory
