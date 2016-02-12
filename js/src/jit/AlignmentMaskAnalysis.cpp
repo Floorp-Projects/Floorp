@@ -59,8 +59,8 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
     if (!op1->isConstant())
         return;
 
-    uint32_t i = op1->toConstant()->value().toInt32();
-    uint32_t m = rhs->toConstant()->value().toInt32();
+    uint32_t i = op1->toConstant()->toInt32();
+    uint32_t m = rhs->toConstant()->toInt32();
     if (!IsAlignmentMask(m) || (i & m) != i)
         return;
 
