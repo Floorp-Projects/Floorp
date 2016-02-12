@@ -89,8 +89,9 @@ add_test(function test_telemetry_events() {
     ["event",   EVENT_TEST1, METHOD_NONE, [],                                              undefined],
   ]);
 
+  let clearMeasurements = false;
   let obs = getObserver();
-  let measurements = removeNonTestMeasurements(obs.getUIMeasurements());
+  let measurements = removeNonTestMeasurements(obs.getUIMeasurements(clearMeasurements));
 
   measurements.forEach(function (m, i) {
     if (m.type === "event") {
