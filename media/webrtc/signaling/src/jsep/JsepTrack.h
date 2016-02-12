@@ -5,6 +5,7 @@
 #ifndef _JSEPTRACK_H_
 #define _JSEPTRACK_H_
 
+#include <algorithm>
 #include <string>
 #include <map>
 #include <set>
@@ -138,6 +139,21 @@ public:
 
   virtual void PopulateCodecs(
       const std::vector<JsepCodecDescription*>& prototype);
+
+  template <class UnaryFunction>
+  void ForEachCodec(UnaryFunction& func)
+  {
+    std::for_each(mPrototypeCodecs.values.begin(),
+                  mPrototypeCodecs.values.end(), func);
+  }
+
+  template <class BinaryPredicate>
+  void SortCodecs(BinaryPredicate& sorter)
+  {
+    std::stable_sort(mPrototypeCodecs.values.begin(),
+                     mPrototypeCodecs.values.end(), sorter);
+  }
+
   virtual void AddToOffer(SdpMediaSection* offer) const;
   virtual void AddToAnswer(const SdpMediaSection& offer,
                            SdpMediaSection* answer) const;
