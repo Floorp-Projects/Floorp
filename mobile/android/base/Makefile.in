@@ -2,12 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# We call mach -> Make -> gradle -> mach, which races to find and
-# create .mozconfig files and to generate targets.
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-.NOTPARALLEL:
-endif
-
 MOZ_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 
 # Set the appropriate version code, based on the existance of the
@@ -207,21 +201,9 @@ endif # MOZ_INSTALL_TRACKING
 
 library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
 
-gradle_dir := $(topobjdir)/gradle/build/mobile/android
-
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-.gradle.deps: .aapt.deps FORCE
-	@$(TOUCH) $@
-	$(topsrcdir)/mach gradle --no-daemon --offline app:dexAutomationDebug app:assembleAutomationDebugAndroidTest -x lint
-
-classes.dex: .gradle.deps
-	$(REPORT_BUILD)
-	cp $(gradle_dir)/app/intermediates/dex/automation/debug/classes.dex $@
-else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex jars-proguarded
-endif
 
 ifdef MOZ_DISABLE_PROGUARD
   PROGUARD_PASSES=0
@@ -519,13 +501,8 @@ endef
 # .aapt.deps: $(all_resources)
 $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-.aapt.nodeps: FORCE
-	cp $(gradle_dir)/app/intermediates/res/resources-automation-debug.ap_ gecko-nodeps.ap_
-else
-# .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
-$(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
-endif
+# .aapt.nodeps: $(abspath $(CURDIR)/AndroidManifest.xml) FORCE
+$(eval $(call aapt_command,.aapt.nodeps,$(abspath $(CURDIR)/AndroidManifest.xml) FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -555,14 +532,7 @@ gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
 gradle-targets: $(abspath AndroidManifest.xml)
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
-ifndef MOZILLA_OFFICIAL
-# Local developers update omni.ja during their builds.  There's a
-# chicken-and-egg problem here.
-gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
-else
-# In automation, omni.ja is built only during packaging.
-gradle-omnijar:
-endif
+gradle-omnijar: $(ABS_DIST)/fennec/$(OMNIJAR_NAME)
 
 .PHONY: gradle-targets gradle-omnijar
 
@@ -573,8 +543,8 @@ endif
 
 # GeneratedJNIWrappers.cpp target also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
+libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
+	$(INSTALL) classes.dex $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && \
 	  diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
 	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
@@ -588,9 +558,3 @@ libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
 	  exit 1)
-endif
-
-libs:: $(CURDIR)/fennec_ids.txt
-
-libs:: classes.dex
-	$(INSTALL) classes.dex $(FINAL_TARGET)

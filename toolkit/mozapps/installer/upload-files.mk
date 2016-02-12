@@ -325,18 +325,13 @@ UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
 
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-robocop_apk := $(topobjdir)/mobile/android/tests/browser/robocop/robocop-debug-unsigned-unaligned.apk
-else
-robocop_apk := $(topobjdir)/gradle/build/mobile/android/app/outputs/apk/app-automation-debug-androidTest-unaligned.apk
-endif
-
+ROBOCOP_PATH = $(topobjdir)/mobile/android/tests/browser/robocop
 # Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
 # is used in a series of commands that run under a "cd something", while
 # $(NSINSTALL) is relative.
 INNER_ROBOCOP_PACKAGE= \
   cp $(GECKO_APP_AP_PATH)/fennec_ids.txt $(ABS_DIST) && \
-  $(call RELEASE_SIGN_ANDROID_APK,$(robocop_apk),$(ABS_DIST)/robocop.apk)
+  $(call RELEASE_SIGN_ANDROID_APK,$(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk,$(ABS_DIST)/robocop.apk)
 endif
 else
 INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
@@ -475,15 +470,6 @@ PKG_SUFFIX = .apk
 INNER_SZIP_LIBRARIES = \
   $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) true
 
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-INNER_CHECK_R_TXT=echo 'No R.txt checking for you!'
-else
-INNER_CHECK_R_TXT=\
-  ((test ! -f $(GECKO_APP_AP_PATH)/R.txt && echo "*** Warning: The R.txt that is being packaged might not agree with the R.txt that was built. This is normal during l10n repacks.") || \
-    diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
-    (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1))
-endif
-
 # Insert $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex into
 # $(ABS_DIST)/gecko.ap_, producing $(ABS_DIST)/gecko.apk.
 INNER_MAKE_APK = \
@@ -504,11 +490,13 @@ INNER_MAKE_APK = \
   $(ZIPALIGN) -f -v 4 $(ABS_DIST)/gecko.apk $(PACKAGE)
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-INNER_MAKE_PACKAGE = \
+INNER_MAKE_PACKAGE	= \
   $(INNER_SZIP_LIBRARIES) && \
   make -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
   cp $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ $(ABS_DIST)/gecko.ap_ && \
-  $(INNER_CHECK_R_TXT) && \
+  ( (test ! -f $(GECKO_APP_AP_PATH)/R.txt && echo "*** Warning: The R.txt that is being packaged might not agree with the R.txt that was built. This is normal during l10n repacks.") || \
+    diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
+    (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1)) && \
   $(INNER_MAKE_APK) && \
   $(INNER_ROBOCOP_PACKAGE) && \
   $(INNER_INSTALL_BOUNCER_PACKAGE) && \
@@ -517,7 +505,7 @@ INNER_MAKE_PACKAGE = \
 endif
 
 ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-INNER_MAKE_PACKAGE = \
+INNER_MAKE_PACKAGE	= \
   $(INNER_SZIP_LIBRARIES) && \
   cp $(topobjdir)/mobile/android/b2gdroid/app/classes.dex $(ABS_DIST)/classes.dex && \
   cp $(topobjdir)/mobile/android/b2gdroid/app/b2gdroid-unsigned-unaligned.apk $(ABS_DIST)/gecko.ap_ && \
