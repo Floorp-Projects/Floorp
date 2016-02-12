@@ -52,7 +52,11 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-warnings-as-errors
 
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
-ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk.token
+if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
+    ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk.token
+elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
+    ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk-beta.token
+fi
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 
 # Package js shell.
