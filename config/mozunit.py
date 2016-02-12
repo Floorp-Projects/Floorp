@@ -33,9 +33,10 @@ class _MozTestResult(_TestResult):
             return str(test)
 
     def printStatus(self, status, test, message=''):
-        line = "{status} | {file} | {test}{sep}{message}".format(
+        line = "{status} | {file} | {klass}.{test}{sep}{message}".format(
             status=status,
             file=inspect.getfile(test.__class__),
+            klass=test.__class__.__name__,
             test=test._testMethodName,
             sep=', ' if message else '',
             message=message,
