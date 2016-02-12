@@ -1,0 +1,41 @@
+  /* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* General */
+
+:root {
+  --net-border: #d7d7d7;
+  --net-font-family: monospace;
+  --net-font-size: 11px;
+}
+
+:root.theme-firebug {
+  --net-font-family: Lucida Grande, Tahoma, sans-serif;
+}
+
+:root.theme-dark {
+  --net-border: #5f7387;
+}
+
+/******************************************************************************/
+/* Network log */
+
+/* No background if a Net log is opened */
+.netRequest.message.opened,
+.netRequest.message.opened:hover {
+  background: transparent !important;
+}
+
+/******************************************************************************/
+/* Themes */
+
+.theme-dark .netRequest.opened:hover,
+.theme-dark .netRequest.opened {
+  background: transparent;
+}
+
+.theme-firebug .netRequest.message.opened:hover {
+  background-image: linear-gradient(rgba(214, 233, 246, 0.8), rgba(255, 255, 255, 1.6)) !important;
+}

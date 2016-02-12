@@ -50,7 +50,7 @@ define(function(require, exports, module) {
 
   function cropString(text, limit, alternativeText) {
     if (!alternativeText) {
-      alternativeText = "...";
+      alternativeText = "\u2026";
     }
 
     // Make sure it's a string.
