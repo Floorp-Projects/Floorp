@@ -134,8 +134,10 @@ static const char* const gWaveTypes[5] = {
   nullptr
 };
 
-static char const *const gWaveCodecs[2] = {
+static char const *const gWaveCodecs[4] = {
   "1", // Microsoft PCM Format
+  "6", // aLaw Encoding
+  "7", // uLaw Encoding
   nullptr
 };
 
