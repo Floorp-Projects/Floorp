@@ -70,7 +70,7 @@ int main() {
       for (int16_t i = 0; i < 10; i++) {
         int16_t* out = ap.Output();
         Zero(out, 441);
-        delete out;
+        delete[] out;
       }
     }
     // Simple test, with input/output buffer size aligned on the packet size,
@@ -85,7 +85,7 @@ int main() {
         ap.Input(b.Get(), 441);
         int16_t* out = ap.Output();
         IsSequence(out, 441 * channels, prevEnd);
-        delete out;
+        delete[] out;
       }
     }
     // Simple test, with input/output buffer size aligned on the packet size,
@@ -106,8 +106,8 @@ int main() {
         int16_t* out2 = ap.Output();
         IsSequence(out, 441 * channels, prevEnd0);
         IsSequence(out2, 441 * channels, prevEnd1);
-        delete out;
-        delete out2;
+        delete[] out;
+        delete[] out2;
       }
     }
     // Input/output buffer size not aligned on the packet size,
@@ -129,8 +129,8 @@ int main() {
         prevEnd += 441 * channels;
         IsSequence(out2, 441 * channels, prevEnd);
         prevEnd += 441 * channels;
-        delete out;
-        delete out2;
+        delete[] out;
+        delete[] out2;
       }
       printf("Available: %d\n", ap.PacketsAvailable());
     }
