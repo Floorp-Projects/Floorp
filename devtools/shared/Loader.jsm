@@ -444,7 +444,7 @@ DevToolsLoader.prototype = {
       setTimeout(() => {
         let { gBrowser } = window;
         let target = this.TargetFactory.forTab(gBrowser.selectedTab);
-        const { gDevTools } = this.require("resource://devtools/client/framework/gDevTools.jsm");
+        const { gDevTools } = require("devtools/client/framework/devtools");
         gDevTools.showToolbox(target);
       }, 1000);
     } else if (location.includes("/webide.xul")) {

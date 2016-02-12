@@ -8,7 +8,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 
 const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
@@ -23,6 +22,7 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 loader.lazyRequireGetter(this, "LineGraphWidget",
   "devtools/client/shared/widgets/LineGraphWidget");

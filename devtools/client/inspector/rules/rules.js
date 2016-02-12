@@ -24,11 +24,10 @@ const {RuleEditor} =
       require("devtools/client/inspector/rules/views/rule-editor");
 const {createChild, promiseWarn} =
       require("devtools/client/inspector/shared/utils");
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-loader.lazyGetter(this, "gDevTools", () =>
-  Cu.import("resource://devtools/client/framework/gDevTools.jsm", {}).gDevTools);
 loader.lazyRequireGetter(this, "overlays",
   "devtools/client/inspector/shared/style-inspector-overlays");
 loader.lazyRequireGetter(this, "EventEmitter",

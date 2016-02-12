@@ -10,9 +10,9 @@ function test() {
 
     let expectedIcon = testPath + "file_generic_favicon.ico";
 
-    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon before pushState.");
-    tab.linkedBrowser.contentWindow.history.pushState("page2", "page2", "page2");
-    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon after pushState.");
+    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon before hash change.");
+    tab.linkedBrowser.contentWindow.location.href += "#foo";
+    is(gBrowser.getIcon(tab), expectedIcon, "Correct icon after hash change.");
 
     gBrowser.removeTab(tab);
 

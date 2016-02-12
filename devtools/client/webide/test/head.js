@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+const {gDevTools} = require("devtools/client/framework/devtools");
 const promise = require("promise");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

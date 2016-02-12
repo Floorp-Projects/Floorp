@@ -5,14 +5,13 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
 DevToolsUtils.dumpn.wantLogging = true;
-DevToolsUtils.dumpv.wantLogging = true;
+DevToolsUtils.dumpv.wantVerbose = false;
 
 var { OS } = require("resource://gre/modules/osfile.jsm");
 var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");

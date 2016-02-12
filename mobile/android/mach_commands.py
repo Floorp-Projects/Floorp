@@ -21,16 +21,6 @@ from mach.decorators import (
     Command,
 )
 
-SUCCESS = '''
-You should be ready to build with Gradle and import into IntelliJ!  Test with
-
-    ./mach gradle build
-
-and in IntelliJ select File > Import project... and choose
-
-    {topobjdir}/mobile/android/gradle
-'''
-
 
 # NOTE python/mach/mach/commands/commandinfo.py references this function
 #      by name. If this function is renamed or removed, that file should
