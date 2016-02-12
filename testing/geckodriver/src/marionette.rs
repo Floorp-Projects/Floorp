@@ -9,7 +9,8 @@ use std::error::Error;
 use std::net::TcpStream;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use std::thread::sleep_ms;
+use std::thread::sleep;
+use std::time::Duration;
 use hyper::method::Method;
 use regex::Captures;
 use mozrunner::runner::{Runner, FirefoxRunner};
@@ -910,8 +911,8 @@ impl MarionetteConnection {
     }
 
     pub fn connect(&mut self) -> WebDriverResult<()> {
-        let timeout = 60 * 1000; // milliseconds
-        let poll_interval = 100; // milliseconds
+        let timeout = 60 * 1000;  // ms
+        let poll_interval = 100;  // ms
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
         loop {
@@ -924,7 +925,7 @@ impl MarionetteConnection {
                     debug!("{}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
                         poll_attempt += 1;
-                        sleep_ms(poll_interval);
+                        sleep(Duration::from_millis(poll_interval));
                     } else {
                         return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                                        e.description()));
