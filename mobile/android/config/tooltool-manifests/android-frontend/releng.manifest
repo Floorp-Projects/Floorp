@@ -22,5 +22,21 @@
 "algorithm": "sha512",
 "filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
 "unpack": true
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "jcentral.tar.xz",
+"unpack": true,
+"digest": "b5d85a917785e1c034318f7495fef27a6274b04d8640245726b0cf1331b7ac374f5757868901c3fadd930bf10603173a706be653d769dde8ddfdb8673b143363",
+"size": 38596168
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "gradle.tar.xz",
+"unpack": true,
+"digest": "ef1d0038da879cc6840fced87671f8f6a18c51375498804f64d21fa48d7089ded4da2be36bd06a1457083e9110e59c0884f1e074dc609d29617c131caea8f234",
+"size": 50542140
 }
 ]
