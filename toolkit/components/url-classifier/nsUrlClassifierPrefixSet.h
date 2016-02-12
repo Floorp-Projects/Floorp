@@ -44,7 +44,7 @@ public:
 private:
   virtual ~nsUrlClassifierPrefixSet();
 
-  static const uint32_t BUFFER_SIZE = 64 * 1024;
+  static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
   static const uint32_t DELTAS_LIMIT = 120;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
