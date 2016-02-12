@@ -283,8 +283,9 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
   }
 
   if (aPaintTableBackground) {
-    PaintTableFrame(aTableFrame, rowGroups[0], rowGroups[rowGroups.Length() - 1],
-                    aDeflate);
+    result &=
+      PaintTableFrame(aTableFrame, rowGroups[0], rowGroups[rowGroups.Length() - 1],
+                      aDeflate);
   }
 
   /*Set up column background/border data*/
