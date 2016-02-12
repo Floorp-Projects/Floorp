@@ -42,8 +42,8 @@ class MochitestB2G(MochitestBase):
         self.locations_file = locations
         self.preferences = []
         self.webapps = None
-        self.test_script = os.path.join(here, 'b2g_start_script.js')
-        self.test_script_args = [self.out_of_process]
+        self.start_script = os.path.join(here, 'start_b2g.js')
+        self.start_script_args = [self.out_of_process]
         self.product = 'b2g'
         self.remote_chrome_test_dir = None
         self.local_log = None
@@ -198,9 +198,9 @@ class MochitestB2G(MochitestBase):
             self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
             options.manifestFile = manifestFile
 
-            self.test_script_args.append(not options.emulator)
-            self.test_script_args.append(options.wifi)
-            self.test_script_args.append(options.chrome)
+            self.start_script_args.append(not options.emulator)
+            self.start_script_args.append(options.wifi)
+            self.start_script_args.append(options.chrome)
 
             self.runner.start(outputTimeout=timeout)
 
@@ -243,15 +243,7 @@ class MochitestB2G(MochitestBase):
                     (local, remote))
                 self.app_ctx.dm.pushDir(local, remote)
 
-            if os.path.isfile(self.test_script):
-                with open(self.test_script, 'r') as script:
-                    self.marionette.execute_script(
-                        script.read(),
-                        script_args=self.test_script_args)
-            else:
-                self.marionette.execute_script(
-                    self.test_script,
-                    script_args=self.test_script_args)
+            self.execute_start_script()
             status = self.runner.wait()
 
             if status is None:
@@ -362,7 +354,7 @@ class MochitestB2G(MochitestBase):
 
         if len(self.urlOpts) > 0:
             test_url += "?" + "&".join(self.urlOpts)
-        self.test_script_args.append(test_url)
+        self.start_script_args.append(test_url)
 
         options.profilePath = self.app_ctx.remote_profile
         options.logFile = self.local_log

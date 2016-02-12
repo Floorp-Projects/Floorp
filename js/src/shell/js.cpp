@@ -58,6 +58,7 @@
 #include "jswrapper.h"
 #include "shellmoduleloader.out.h"
 
+#include "asmjs/Wasm.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
@@ -4915,6 +4916,62 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+static bool
+WasmLoop(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() < 1 || args.length() > 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String");
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    RootedString givenPath(cx, args[0].toString());
+    RootedString str(cx, ResolvePath(cx, givenPath, RootRelative));
+    if (!str)
+        return false;
+
+    JSAutoByteString filename(cx, str);
+    if (!filename)
+        return false;
+
+    while (__AFL_LOOP(1000)) {
+        Rooted<JSObject*> ret(cx, FileAsTypedArray(cx, filename.ptr()));
+        if (!ret)
+            return false;
+
+        Rooted<TypedArrayObject*> typedArray(cx, &ret->as<TypedArrayObject>());
+        if (!TypedArrayObject::ensureHasBuffer(cx, typedArray))
+            return false;
+
+        Rooted<ArrayBufferObject*> arrayBuffer(cx, typedArray->bufferUnshared());
+        RootedObject exportObj(cx);
+        if (!wasm::Eval(cx, arrayBuffer, importObj, &exportObj)) {
+            // Clear any pending exceptions, we don't care about them
+            cx->clearPendingException();
+        }
+    }
+
+    return true;
+}
+#endif // __AFL_HAVE_MANUAL_CONTROL
+
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -5383,6 +5440,13 @@ TestAssertRecoveredOnBailout,
 "setARMHwCapFlags(\"flag1,flag2 flag3\")",
 "  On non-ARM, no-op. On ARM, set the hardware capabilities. The list of \n"
 "  flags is available by calling this function with \"help\" as the flag's name"),
+
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+    JS_FN_HELP("wasmLoop", WasmLoop, 2, 0,
+"wasmLoop(filename, imports)",
+"  Performs an AFL-style persistent loop reading data from the given file and passing it\n"
+"  to the 'wasmEval' function together with the specified imports object."),
+#endif
 
     JS_FS_HELP_END
 };

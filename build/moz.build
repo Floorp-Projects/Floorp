@@ -75,3 +75,5 @@ if CONFIG['MOZ_APP_BASENAME']:
     FINAL_TARGET_PP_FILES += ['application.ini']
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
+
+DEFINES['TOPOBJDIR'] = TOPOBJDIR

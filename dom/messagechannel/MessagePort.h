@@ -21,7 +21,6 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class DispatchEventRunnable;
 class MessagePortChild;
 class MessagePortIdentifier;
 class MessagePortMessage;
@@ -36,7 +35,6 @@ class MessagePort final : public DOMEventTargetHelper
                         , public nsIIPCBackgroundChildCreateCallback
                         , public nsIObserver
 {
-  friend class DispatchEventRunnable;
   friend class PostMessageRunnable;
 
 public:
@@ -166,7 +164,7 @@ private:
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
-  RefPtr<DispatchEventRunnable> mDispatchRunnable;
+  RefPtr<PostMessageRunnable> mPostMessageRunnable;
 
   RefPtr<MessagePortChild> mActor;
 

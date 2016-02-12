@@ -193,11 +193,16 @@ public:
     }
     rv = mChannel->SetChannelInfo(&channelInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      return NS_OK;
     }
 
-    mChannel->SynthesizeStatus(mInternalResponse->GetUnfilteredStatus(),
-                               mInternalResponse->GetUnfilteredStatusText());
+    rv = mChannel->SynthesizeStatus(mInternalResponse->GetUnfilteredStatus(),
+                                    mInternalResponse->GetUnfilteredStatusText());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      return NS_OK;
+    }
 
     AutoTArray<InternalHeaders::Entry, 5> entries;
     mInternalResponse->UnfilteredHeaders()->GetEntries(entries);
@@ -208,7 +213,10 @@ public:
     loadInfo->MaybeIncreaseTainting(mInternalResponse->GetTainting());
 
     rv = mChannel->FinishSynthesizedResponse(mResponseURLSpec);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to finish synthesized response");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      return NS_OK;
+    }
 
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (obsService) {

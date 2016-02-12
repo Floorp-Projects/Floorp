@@ -109,7 +109,7 @@ function checkHtmlForIDLAttribute(element)
   is(String(element.htmlFor), 'a b',
     "htmlFor IDL attribute should reflect the for content attribute");
 
-  // DOMSettableTokenList is tested in another bug so we just test assignation
+  // DOMTokenList is tested in another bug so we just test assignation
   element.htmlFor.value = 'a b c';
   is(String(element.htmlFor), 'a b c', "htmlFor should have changed");
 }

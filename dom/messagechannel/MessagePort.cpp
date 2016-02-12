@@ -45,46 +45,10 @@ using namespace mozilla::dom::workers;
 namespace mozilla {
 namespace dom {
 
-class DispatchEventRunnable final : public nsICancelableRunnable
+class PostMessageRunnable final : public nsICancelableRunnable
 {
   friend class MessagePort;
 
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit DispatchEventRunnable(MessagePort* aPort)
-    : mPort(aPort)
-  { }
-
-  NS_IMETHOD
-  Run() override
-  {
-    MOZ_ASSERT(mPort);
-    MOZ_ASSERT(mPort->mDispatchRunnable == this);
-    mPort->mDispatchRunnable = nullptr;
-    mPort->Dispatch();
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  Cancel() override
-  {
-    mPort = nullptr;
-    return NS_OK;
-  }
-
-private:
-  ~DispatchEventRunnable()
-  {}
-
-  RefPtr<MessagePort> mPort;
-};
-
-NS_IMPL_ISUPPORTS(DispatchEventRunnable, nsICancelableRunnable, nsIRunnable)
-
-class PostMessageRunnable final : public nsICancelableRunnable
-{
 public:
   NS_DECL_ISUPPORTS
 
@@ -98,6 +62,29 @@ public:
 
   NS_IMETHOD
   Run() override
+  {
+    MOZ_ASSERT(mPort);
+    MOZ_ASSERT(mPort->mPostMessageRunnable == this);
+
+    nsresult rv = DispatchMessage();
+
+    mPort->mPostMessageRunnable = nullptr;
+    mPort->Dispatch();
+
+    return rv;
+  }
+
+  NS_IMETHOD
+  Cancel() override
+  {
+    mPort = nullptr;
+    mData = nullptr;
+    return NS_OK;
+  }
+
+private:
+  nsresult
+  DispatchMessage() const
   {
     nsCOMPtr<nsIGlobalObject> globalObject;
 
@@ -157,14 +144,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD
-  Cancel() override
-  {
-    mPort = nullptr;
-    mData = nullptr;
-    return NS_OK;
-  }
-
 private:
   ~PostMessageRunnable()
   {}
@@ -179,8 +158,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MessagePort)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
                                                 DOMEventTargetHelper)
-  if (tmp->mDispatchRunnable) {
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDispatchRunnable->mPort);
+  if (tmp->mPostMessageRunnable) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mPostMessageRunnable->mPort);
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessages);
@@ -190,8 +169,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessagePort,
                                                   DOMEventTargetHelper)
-  if (tmp->mDispatchRunnable) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDispatchRunnable->mPort);
+  if (tmp->mPostMessageRunnable) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPostMessageRunnable->mPort);
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnshippedEntangledPort);
@@ -497,7 +476,7 @@ MessagePort::Start()
 void
 MessagePort::Dispatch()
 {
-  if (!mMessageQueueEnabled || mMessages.IsEmpty() || mDispatchRunnable) {
+  if (!mMessageQueueEnabled || mMessages.IsEmpty() || mPostMessageRunnable) {
     return;
   }
 
@@ -549,13 +528,9 @@ MessagePort::Dispatch()
   RefPtr<SharedMessagePortMessage> data = mMessages.ElementAt(0);
   mMessages.RemoveElementAt(0);
 
-  RefPtr<PostMessageRunnable> runnable = new PostMessageRunnable(this, data);
+  mPostMessageRunnable = new PostMessageRunnable(this, data);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
-
-  mDispatchRunnable = new DispatchEventRunnable(this);
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(mDispatchRunnable)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(mPostMessageRunnable)));
 }
 
 void

@@ -9,7 +9,6 @@
  */
 
 #include "nsDOMTokenList.h"
-
 #include "nsAttrValue.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -72,6 +71,16 @@ nsDOMTokenList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult)
   } else {
     aFound = false;
   }
+}
+
+void
+nsDOMTokenList::SetValue(const nsAString& aValue, mozilla::ErrorResult& rv)
+{
+  if (!mElement) {
+    return;
+  }
+
+  rv = mElement->SetAttr(kNameSpaceID_None, mAttrAtom, aValue, true);
 }
 
 nsresult

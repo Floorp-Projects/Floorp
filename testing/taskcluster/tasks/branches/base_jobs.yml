@@ -190,6 +190,10 @@ tests:
         task: tasks/tests/b2g_emulator_crashtest.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_crashtest.yml
+  crashtest-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_crashtest_e10s.yml
   gaia-build:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
@@ -218,6 +222,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_gtest.yml
+  jetpack:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_jetpack.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -226,6 +234,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_jsreftest.yml
+  jsreftest-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_jsreftest_e10s.yml
   marionette-webapi:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
@@ -250,6 +262,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_chrome.yml
+  mochitest-devtools-chrome:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_dt.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -266,6 +282,12 @@ tests:
         task: tasks/tests/b2g_emulator_reftest.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_reftest.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest.yml
+  reftest-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_e10s.yml
   web-platform-tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -278,7 +300,13 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_web_platform_tests_reftests.yml
+  web-platform-tests-reftests-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_web_platform_tests_reftests_e10s.yml
   xpcshell:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_xpcshell.yml

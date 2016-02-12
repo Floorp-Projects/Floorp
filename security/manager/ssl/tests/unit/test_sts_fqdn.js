@@ -44,10 +44,7 @@ function run_test() {
   // gracefully.
   uri = Services.io.newURI("https://../foo", null, null);
   equal(uri.host, "..");
-  try {
+  throws(() => {
     SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
-    ok(false); // this shouldn't run
-  } catch (e) {
-    equal(e.result, Cr.NS_ERROR_UNEXPECTED);
-  }
+  }, /NS_ERROR_UNEXPECTED/, "Malformed URI should be rejected");
 }

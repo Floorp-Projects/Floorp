@@ -20,7 +20,7 @@
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/ElementInlines.h"
 
-class nsDOMSettableTokenList;
+class nsDOMTokenList;
 class nsIDOMHTMLMenuElement;
 class nsIEditor;
 class nsIFormControlFrame;
@@ -104,7 +104,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::itemscope, aItemScope, aError);
   }
-  nsDOMSettableTokenList* ItemType()
+  nsDOMTokenList* ItemType()
   {
     return GetTokenList(nsGkAtoms::itemtype);
   }
@@ -116,11 +116,11 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::itemid, aItemID, aError);
   }
-  nsDOMSettableTokenList* ItemRef()
+  nsDOMTokenList* ItemRef()
   {
     return GetTokenList(nsGkAtoms::itemref);
   }
-  nsDOMSettableTokenList* ItemProp()
+  nsDOMTokenList* ItemProp()
   {
     return GetTokenList(nsGkAtoms::itemprop);
   }

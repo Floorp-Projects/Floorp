@@ -1027,6 +1027,17 @@ CountCharInReadable(const nsACString& aStr, char aChar)
 }
 
 bool
+StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring)
+{
+  nsAString::size_type src_len = aSource.Length(),
+                       sub_len = aSubstring.Length();
+  if (sub_len > src_len) {
+    return false;
+  }
+  return Substring(aSource, 0, sub_len).Equals(aSubstring);
+}
+
+bool
 StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
                  const nsStringComparator& aComparator)
 {
@@ -1036,6 +1047,17 @@ StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
     return false;
   }
   return Substring(aSource, 0, sub_len).Equals(aSubstring, aComparator);
+}
+
+bool
+StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring)
+{
+  nsACString::size_type src_len = aSource.Length(),
+                        sub_len = aSubstring.Length();
+  if (sub_len > src_len) {
+    return false;
+  }
+  return Substring(aSource, 0, sub_len).Equals(aSubstring);
 }
 
 bool
@@ -1051,6 +1073,17 @@ StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
 }
 
 bool
+StringEndsWith(const nsAString& aSource, const nsAString& aSubstring)
+{
+  nsAString::size_type src_len = aSource.Length(),
+                       sub_len = aSubstring.Length();
+  if (sub_len > src_len) {
+    return false;
+  }
+  return Substring(aSource, src_len - sub_len, sub_len).Equals(aSubstring);
+}
+
+bool
 StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
                const nsStringComparator& aComparator)
 {
@@ -1061,6 +1094,17 @@ StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
   }
   return Substring(aSource, src_len - sub_len, sub_len).Equals(aSubstring,
                                                                aComparator);
+}
+
+bool
+StringEndsWith(const nsACString& aSource, const nsACString& aSubstring)
+{
+  nsACString::size_type src_len = aSource.Length(),
+                        sub_len = aSubstring.Length();
+  if (sub_len > src_len) {
+    return false;
+  }
+  return Substring(aSource, src_len - sub_len, sub_len).Equals(aSubstring);
 }
 
 bool

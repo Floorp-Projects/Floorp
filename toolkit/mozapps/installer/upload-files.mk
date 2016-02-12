@@ -198,8 +198,8 @@ RPM_CMD = \
   --define 'moz_numeric_app_version $(MOZ_NUMERIC_APP_VERSION)' \
   --define 'moz_rpm_release $(MOZ_RPM_RELEASE)' \
   --define 'buildid $(BUILDID)' \
-  $(if $(MOZ_SOURCE_REPO),--define 'moz_source_repo $(MOZ_SOURCE_REPO)') \
-  --define 'moz_source_stamp $(MOZ_SOURCE_STAMP)' \
+  --define 'moz_source_repo $(shell awk '$$2 == "MOZ_SOURCE_REPO" {print $$3}' $(DEPTH)/source-repo.h)' \
+  --define 'moz_source_stamp $(shell awk '$$2 == "MOZ_SOURCE_STAMP" {print $$3}' $(DEPTH)/source-repo.h)' \
   --define 'moz_branding_directory $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)' \
   --define '_topdir $(RPMBUILD_TOPDIR)' \
   --define '_rpmdir $(RPMBUILD_RPMDIR)' \
