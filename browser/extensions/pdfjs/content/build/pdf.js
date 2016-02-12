@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.42';
-var pdfjsBuild = '4c59712';
+var pdfjsVersion = '1.4.64';
+var pdfjsBuild = '2f145d8';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -6258,9 +6258,9 @@ PDFJS.getDocument = function getDocument(src,
         throw new Error('Loading aborted');
       }
       var messageHandler = new MessageHandler(docId, workerId, worker.port);
-      messageHandler.send('Ready', null);
       var transport = new WorkerTransport(messageHandler, task, rangeTransport);
       task._transport = transport;
+      messageHandler.send('Ready', null);
     });
   }).catch(task._capability.reject);
 
@@ -7102,7 +7102,7 @@ var PDFWorker = (function PDFWorkerClosure() {
 
     _initialize: function PDFWorker_initialize() {
       // If worker support isn't disabled explicit and the browser has worker
-      // support, create a new web worker and test if it/the browser fullfills
+      // support, create a new web worker and test if it/the browser fulfills
       // all requirements to run parts of pdf.js in a web worker.
       // Right now, the requirement is, that an Uint8Array is still an
       // Uint8Array as it arrives on the worker. (Chrome added this with v.15.)
