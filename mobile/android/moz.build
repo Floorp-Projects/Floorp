@@ -31,9 +31,8 @@ if CONFIG['MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER']:
 
 DIRS += ['../../xulrunner/tools/redit']
 
-if not CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
-    TEST_DIRS += [
-        'tests',
-    ]
+TEST_DIRS += [
+    'tests',
+]
 
 SPHINX_TREES['fennec'] = 'docs'

@@ -14,12 +14,10 @@ include $(topsrcdir)/config/android-common.mk
 
 stage-package:
 	$(NSINSTALL) -D $(_DEST_DIR)
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 	$(call RELEASE_SIGN_ANDROID_APK,\
 		$(DEPTH)/mobile/android/tests/background/junit3/background-junit3-debug-unsigned-unaligned.apk,\
 		$(_DEST_DIR)/background-junit3.apk)
 	$(call RELEASE_SIGN_ANDROID_APK,\
 		$(DEPTH)/mobile/android/tests/browser/junit3/browser-junit3-debug-unsigned-unaligned.apk,\
 		$(_DEST_DIR)/browser-junit3.apk)
-endif
 	@(cd $(DEPTH)/_tests/ && tar $(TAR_CREATE_FLAGS) - instrumentation) | (cd $(PKG_STAGE) && tar -xf -)
