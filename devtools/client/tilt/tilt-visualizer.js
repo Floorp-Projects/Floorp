@@ -14,7 +14,7 @@ var {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/client/tilt/tilt-
 var {TargetFactory} = require("devtools/client/framework/target");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+var {gDevTools} = require("devtools/client/framework/devtools");
 
 const ELEMENT_MIN_SIZE = 4;
 const INVISIBLE_ELEMENTS = {

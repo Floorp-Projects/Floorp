@@ -1102,6 +1102,12 @@ var gBrowserInit = {
         // the original tab in the other window.
         let tabToOpen = uriToLoad;
 
+        // If this tab was passed as a window argument, clear the
+        // reference to it from the arguments array.
+        if (window.arguments[0] == tabToOpen) {
+          window.arguments[0] = null;
+        }
+
         // Stop the about:blank load
         gBrowser.stop();
         // make sure it has a docshell

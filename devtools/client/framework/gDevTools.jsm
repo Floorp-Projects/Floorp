@@ -9,17 +9,11 @@
  * Please now use the modules:
  * - devtools/client/framework/devtools for gDevTools
  * - devtools/client/framework/devtools-browser for gDevToolsBrowser
- *
- * We still do use gDevTools.jsm in our codebase,
- * bug 1245462 is going to ensure we no longer do that.
  */
 
 this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 const { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 

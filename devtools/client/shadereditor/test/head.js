@@ -11,10 +11,10 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var promise = require("promise");
+var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 var { WebGLFront } = require("devtools/server/actors/webgl");
