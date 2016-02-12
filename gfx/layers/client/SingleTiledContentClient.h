@@ -127,6 +127,8 @@ public:
   virtual ClientTiledLayerBuffer* GetTiledBuffer() override { return mTiledBuffer; }
   virtual ClientTiledLayerBuffer* GetLowPrecisionTiledBuffer() override { return nullptr; }
 
+  virtual bool SupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager) const override;
+
 private:
   RefPtr<ClientSingleTiledLayerBuffer> mTiledBuffer;
 };
