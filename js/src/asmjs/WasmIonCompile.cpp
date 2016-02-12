@@ -946,7 +946,7 @@ class FunctionCompiler
         MBasicBlock* body;
         if (!newBlock(curBlock_, &body))
             return false;
-        if (cond->isConstant() && cond->toConstant()->valueToBoolean()) {
+        if (cond->isConstant() && cond->toConstant()->valueToBooleanInfallible()) {
             *afterLoop = nullptr;
             curBlock_->end(MGoto::New(alloc(), body));
         } else {
@@ -1058,7 +1058,7 @@ class FunctionCompiler
         if (curBlock_) {
             MOZ_ASSERT(curBlock_->loopDepth() == loopStack_.length() + 1);
             if (cond->isConstant()) {
-                if (cond->toConstant()->valueToBoolean()) {
+                if (cond->toConstant()->valueToBooleanInfallible()) {
                     curBlock_->end(MGoto::New(alloc(), loopEntry));
                     if (!setLoopBackedge(loopEntry, curBlock_, nullptr))
                         return false;

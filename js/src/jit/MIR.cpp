@@ -25,6 +25,7 @@
 #include "js/Conversions.h"
 
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -369,9 +370,11 @@ MTest::foldsTo(TempAllocator& alloc)
         return MTest::New(alloc, op->toNot()->input(), ifFalse(), ifTrue());
     }
 
-    MConstant* opConst = op->maybeConstantValue();
-    if (opConst && !opConst->value().isMagic())
-        return MGoto::New(alloc, opConst->valueToBoolean() ? ifTrue() : ifFalse());
+    if (MConstant* opConst = op->maybeConstantValue()) {
+        bool b;
+        if (opConst->valueToBoolean(&b))
+            return MGoto::New(alloc, b ? ifTrue() : ifFalse());
+    }
 
     switch (op->type()) {
       case MIRType_Undefined:
@@ -876,6 +879,39 @@ MConstant::canProduceFloat32() const
     return true;
 }
 
+bool
+MConstant::valueToBoolean(bool* res) const
+{
+    switch (type()) {
+      case MIRType_Boolean:
+        *res = value_.toBoolean();
+        return true;
+      case MIRType_Int32:
+        *res = value_.toInt32() != 0;
+        return true;
+      case MIRType_Double:
+      case MIRType_Float32:
+        *res = !mozilla::IsNaN(value_.toDouble()) && value_.toDouble() != 0;
+        return true;
+      case MIRType_Null:
+      case MIRType_Undefined:
+        *res = false;
+        return true;
+      case MIRType_Symbol:
+        *res = true;
+        return true;
+      case MIRType_String:
+        *res = value_.toString()->length() != 0;
+        return true;
+      case MIRType_Object:
+        *res = !EmulatesUndefined(&value_.toObject());
+        return true;
+      default:
+        MOZ_ASSERT(IsMagicType(type()));
+        return false;
+    }
+}
+
 MDefinition*
 MSimdValueX4::foldsTo(TempAllocator& alloc)
 {
@@ -901,7 +937,7 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
           case MIRType_Bool32x4: {
             int32_t a[4];
             for (size_t i = 0; i < 4; ++i)
-                a[i] = getOperand(i)->toConstant()->valueToBoolean() ? -1 : 0;
+                a[i] = getOperand(i)->toConstant()->valueToBooleanInfallible() ? -1 : 0;
             cst = SimdConstant::CreateX4(a);
             break;
           }
@@ -941,7 +977,7 @@ MSimdSplatX4::foldsTo(TempAllocator& alloc)
     SimdConstant cst;
     switch (type()) {
       case MIRType_Bool32x4: {
-        int32_t v = op->toConstant()->valueToBoolean() ? -1 : 0;
+        int32_t v = op->toConstant()->valueToBooleanInfallible() ? -1 : 0;
         cst = SimdConstant::SplatX4(v);
         break;
       }
@@ -4054,13 +4090,13 @@ MDefinition*
 MNot::foldsTo(TempAllocator& alloc)
 {
     // Fold if the input is constant
-    if (input()->maybeConstantValue() && !input()->maybeConstantValue()->value().isMagic()) {
-        bool result = input()->maybeConstantValue()->valueToBoolean();
-        if (type() == MIRType_Int32)
-            return MConstant::New(alloc, Int32Value(!result));
-
-        // ToBoolean can't cause side effects, so this is safe.
-        return MConstant::New(alloc, BooleanValue(!result));
+    if (MConstant* inputConst = input()->maybeConstantValue()) {
+        bool b;
+        if (inputConst->valueToBoolean(&b)) {
+            if (type() == MIRType_Int32)
+                return MConstant::New(alloc, Int32Value(!b));
+            return MConstant::New(alloc, BooleanValue(!b));
+        }
     }
 
     // If the operand of the Not is itself a Not, they cancel out. But we can't
