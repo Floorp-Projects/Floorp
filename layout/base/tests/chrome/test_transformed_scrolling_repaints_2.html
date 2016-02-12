@@ -6,8 +6,7 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
-<!-- Need a timeout here to allow paint unsuppression before we start the test -->
-<body onload="setTimeout(startTest,0)">
+<body onload="setPrefAndStartTest()">
 <div id="t" style="-moz-transform: scale(1.1, 1.1); -moz-transform-origin:top left; width:200px; height:100px; background:yellow; overflow:hidden">
   <div style="height:40px;"></div>
   <div id="e" style="height:30px; background:lime"></div>
@@ -40,6 +39,15 @@ function startTest() {
       });
     });
   });
+}
+function setPrefAndStartTest() {
+  SpecialPowers.pushPrefEnv(
+    {"set": [["layers.single-tile.enabled", false]]},
+    // Need a timeout here to allow paint unsuppression before we start the test
+    function() {
+      setTimeout(startTest, 0);
+    }
+  );
 }
 </script>
 </pre>
