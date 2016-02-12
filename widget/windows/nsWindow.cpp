@@ -1439,16 +1439,16 @@ nsWindow::GetSizeConstraints()
   }
   scale /= mSizeConstraintsScale;
   SizeConstraints c = mSizeConstraints;
-  if (c.mMinSize.width != NS_MAXSIZE) {
+  if (c.mMinSize.width != NS_UNCONSTRAINEDSIZE) {
     c.mMinSize.width = NSToIntRound(c.mMinSize.width * scale);
   }
-  if (c.mMinSize.height != NS_MAXSIZE) {
+  if (c.mMinSize.height != NS_UNCONSTRAINEDSIZE) {
     c.mMinSize.height = NSToIntRound(c.mMinSize.height * scale);
   }
-  if (c.mMaxSize.width != NS_MAXSIZE) {
+  if (c.mMaxSize.width != NS_UNCONSTRAINEDSIZE) {
     c.mMaxSize.width = NSToIntRound(c.mMaxSize.width * scale);
   }
-  if (c.mMaxSize.height != NS_MAXSIZE) {
+  if (c.mMaxSize.height != NS_UNCONSTRAINEDSIZE) {
     c.mMaxSize.height = NSToIntRound(c.mMaxSize.height * scale);
   }
   return c;
