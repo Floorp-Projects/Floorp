@@ -1,0 +1,41 @@
+[
+{
+"version": "gcc 4.9.3",
+"size": 102421980,
+"visibility": "public",
+"digest": "f25292aa93dc449e0472eee511c0ac15b5f1a4272ab76cf53ce5d20dc57f29e83da49ae1a9d9e994192647f75e13ae60f75ba2ac3cb9d26d5f5d6cabf88de921",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": true
+},
+{
+"hg_id" : "ec7b7d2442e8",
+"algorithm" : "sha512",
+"digest" : "49627d734df52cb9e7319733da5a6be1812b9373355dc300ee5600b431122570e00d380d50c7c5b5003c462c2c2cb022494b42c4ad00f8eba01c2259cbe6e502",
+"filename" : "sixgill.tar.xz",
+"size" : 2628868,
+"unpack" : true
+},
+{
+"size": 12072532,
+"digest": "3915f8ec396c56a8a92e6f9695b70f09ce9d1582359d1258e37e3fd43a143bc974410e4cfc27f500e095f34a8956206e0ebf799b7287f0f38def0d5e34ed71c9",
+"algorithm": "sha512",
+"filename": "gtk3.tar.xz",
+"setup": "setup.sh",
+"unpack": true
+},
+{
+"size": 89319524,
+"digest": "5383d843c9f28abf0a6d254e9d975d96972d2c86d627ca836fa8e272a5d53230603b387d7d1499c49df7f84b1bb946946e800a85c88d968bdbe81c755fcb02e1",
+"algorithm": "sha512",
+"filename": "rustc.tar.xz",
+"unpack": true
+},
+{
+"size": 167175,
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2",
+"unpack": true
+}
+]
