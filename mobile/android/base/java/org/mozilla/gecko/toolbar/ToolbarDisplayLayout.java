@@ -27,8 +27,8 @@ import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.SystemClock;
+import android.support.annotation.Nullable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -37,9 +37,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ImageButton;
 
@@ -84,11 +81,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     }
 
     interface OnStopListener {
-        public Tab onStop();
+        Tab onStop();
     }
 
     interface OnTitleChangeListener {
-        public void onTitleChange(CharSequence title);
+        void onTitleChange(CharSequence title);
     }
 
     private final BrowserApp mActivity;
@@ -115,13 +112,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     // Security level constants, which map to the icons / levels defined in:
     // http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_level.xml
     // Default level (unverified pages) - globe icon:
-    private final int LEVEL_DEFAULT_GLOBE = 0;
+    private static final int LEVEL_DEFAULT_GLOBE = 0;
     // Levels for displaying Mixed Content state icons.
-    private final int LEVEL_WARNING_MINOR = 3;
-    private final int LEVEL_LOCK_DISABLED = 4;
+    private static final int LEVEL_WARNING_MINOR = 3;
+    private static final int LEVEL_LOCK_DISABLED = 4;
     // Levels for displaying Tracking Protection state icons.
-    private final int LEVEL_SHIELD_ENABLED = 5;
-    private final int LEVEL_SHIELD_DISABLED = 6;
+    private static final int LEVEL_SHIELD_ENABLED = 5;
+    private static final int LEVEL_SHIELD_DISABLED = 6;
 
     private final ForegroundColorSpan mUrlColor;
     private final ForegroundColorSpan mBlockedColor;
@@ -158,6 +155,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     @Override
     public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
         mIsAttached = true;
 
         mSiteSecurity.setOnClickListener(new Button.OnClickListener() {
@@ -354,13 +353,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTrackingProtectionEnabled = trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED;
     }
 
-    private void updateProgress(Tab tab) {
+    private void updateProgress(@Nullable Tab tab) {
         final boolean shouldShowThrobber = (tab != null &&
                                             tab.getState() == Tab.STATE_LOADING);
 
         updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY);
 
-        if (Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
+        if (tab != null && Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
             mActivity.showTrackingProtectionPromptIfApplicable();
         }
     }
