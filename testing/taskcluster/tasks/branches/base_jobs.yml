@@ -174,12 +174,6 @@ builds:
     types:
       opt:
         task: tasks/tests/eslint-gecko.yml
-  android-gradle-build-dependencies:
-    platforms:
-      - lint
-    types:
-      opt:
-        task: tasks/android-gradle-build-dependencies.yml
 
 tests:
   cppunit:
