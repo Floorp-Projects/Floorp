@@ -52,7 +52,10 @@ WaveDecoder::CanHandleMediaType(const nsACString& aType,
 {
   if (aType.EqualsASCII("audio/wave") || aType.EqualsASCII("audio/x-wav") ||
       aType.EqualsASCII("audio/wav")  || aType.EqualsASCII("audio/x-pn-wav")) {
-    return IsEnabled() && (aCodecs.IsEmpty() || aCodecs.EqualsASCII("1"));
+    return IsEnabled() && (aCodecs.IsEmpty() ||
+                           aCodecs.EqualsASCII("1") ||
+                           aCodecs.EqualsASCII("6") ||
+                           aCodecs.EqualsASCII("7"));
   }
 
   return false;
