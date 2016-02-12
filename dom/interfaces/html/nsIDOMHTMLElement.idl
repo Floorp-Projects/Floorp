@@ -32,7 +32,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
            attribute nsIVariant                     itemType;
            attribute DOMString                      itemId;
   readonly attribute nsISupports                    properties;
-  // The following attributes are really nsDOMSettableTokenList, which has
+  // The following attributes are really nsDOMTokenList, which has
   // PutForwards, so we express them as nsIVariants to deal with this.
            attribute nsIVariant                     itemValue;
            attribute nsIVariant                     itemProp;

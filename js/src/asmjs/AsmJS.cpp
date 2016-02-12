@@ -1568,13 +1568,6 @@ class MOZ_STACK_CLASS ModuleValidator
     };
 
   private:
-    struct SigHashPolicy
-    {
-        typedef const Sig& Lookup;
-        static HashNumber hash(Lookup sig) { return sig.hash(); }
-        static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
-    };
-    typedef HashMap<const DeclaredSig*, uint32_t, SigHashPolicy> SigMap;
     class NamedSig
     {
         PropertyName* name_;
@@ -1605,6 +1598,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
     };
     typedef HashMap<NamedSig, uint32_t, NamedSig> ImportMap;
+    typedef HashMap<const DeclaredSig*, uint32_t, SigHashPolicy> SigMap;
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;

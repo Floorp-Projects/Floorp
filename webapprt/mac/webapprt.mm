@@ -29,6 +29,7 @@
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 #include "mozilla/AppData.h"
+#include "buildid.h"
 
 using namespace mozilla;
 

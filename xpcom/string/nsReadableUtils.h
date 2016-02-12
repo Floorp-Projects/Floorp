@@ -386,18 +386,18 @@ uint32_t CountCharInReadable(const nsAString& aStr,
 uint32_t CountCharInReadable(const nsACString& aStr,
                              char aChar);
 
+bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring);
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
-                      const nsStringComparator& aComparator =
-                        nsDefaultStringComparator());
+                      const nsStringComparator& aComparator);
+bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring);
 bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
-                      const nsCStringComparator& aComparator =
-                        nsDefaultCStringComparator());
+                      const nsCStringComparator& aComparator);
+bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring);
 bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
-                    const nsStringComparator& aComparator =
-                      nsDefaultStringComparator());
+                    const nsStringComparator& aComparator);
+bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring);
 bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
-                    const nsCStringComparator& aComparator =
-                      nsDefaultCStringComparator());
+                    const nsCStringComparator& aComparator);
 
 const nsAFlatString& EmptyString();
 const nsAFlatCString& EmptyCString();

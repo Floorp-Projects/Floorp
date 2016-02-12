@@ -66,6 +66,23 @@ Tart.prototype = {
     }
   },
 
+  makeNewTabURLChangePromise: function(url) {
+    let promise = new Promise(resolve => {
+      Services.obs.addObserver(function observer(subject, topic, data) {
+        Services.obs.removeObserver(observer, topic);
+        if (data == url) {
+          resolve();
+        }
+      }, "newtab-url-changed", false);
+    });
+    if (url === "about:newtab") {
+      aboutNewTabService.resetNewTabURL();
+    } else {
+      aboutNewTabService.newTabURL = url;
+    }
+    return promise;
+  },
+
   // Same as customizeEnterDetector, but stops recording when the CSS animation ends
   // The detector then waits until customizationready
   customizeEnterCssDetector: {
@@ -474,81 +491,78 @@ Tart.prototype = {
 
     var subtests = {
       init: [ // This is called before each subtest, so it's safe to assume the following prefs:
-        function(){aboutNewTabService.newTabURL = "about:blank";
-                   Services.prefs.setBoolPref("browser.newtabpage.enabled", true); // preview images if using about:newtab
-                   Services.prefs.setBoolPref("browser.newtab.preload", false);
-                   //Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
-                   self.pinTart();
-                   //Services.prefs.setIntPref ("docshell.event_starvation_delay_hint", 1);
-                   next();
-        }
+        function(){
+          Services.prefs.setBoolPref("browser.newtabpage.enabled", true);
+          Services.prefs.setBoolPref("browser.newtab.preload", false);
+          self.pinTart();
+          self.makeNewTabURLChangePromise("about:blank").then(next);
+        },
       ],
 
       restore: [
         // Restore prefs which were modified during the test
-        function(){aboutNewTabService.resetNewTabURL();
-                   Services.prefs.setBoolPref("browser.newtabpage.enabled", origNewtabEnabled);
-                   Services.prefs.setBoolPref("browser.newtab.preload", origPreload);
-                   Services.prefs.setCharPref("layout.css.devPixelsPerPx", origDpi);
-                   if (origPinned) self.pinTart(); else self.unpinTart();
-                   //if (origStarveHint != -9999) Services.prefs.setIntPref("docshell.event_starvation_delay_hint", origStarveHint);
-                   next();
-        }
+        function(){
+          Services.prefs.setBoolPref("browser.newtabpage.enabled", origNewtabEnabled);
+          Services.prefs.setBoolPref("browser.newtab.preload", origPreload);
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", origDpi);
+          if (origPinned) self.pinTart(); else self.unpinTart();
+          self.makeNewTabURLChangePromise("about:newtab").then(next);
+        },
       ],
 
       simple: [
         function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1"); next();},
-
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
+
         function(){animate(rest, addTab, next, true, "simple-open-DPI1", tabRefDuration);},
         function(){animate(rest, closeCurrentTab, next, true, "simple-close-DPI1", tabRefDuration);}
       ],
 
       iconDpi1: [
-        function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
-
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1");
+          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+        },
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
+
         function(){animate(rest, addTab, next, true, "icon-open-DPI1", tabRefDuration);},
         function(){animate(rest, closeCurrentTab, next, true, "icon-close-DPI1", tabRefDuration);}
       ],
 
       iconDpi2: [
-        function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
-
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2");
+          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+        },
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
+
         function(){animate(rest, addTab, next, true, "icon-open-DPI2", tabRefDuration);},
         function(){animate(rest, closeCurrentTab, next, true, "icon-close-DPI2", tabRefDuration);}
       ],
 
       newtabNoPreload: [
-        function(){aboutNewTabService.resetNewTabURL();
-                   Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
-                   Services.prefs.setBoolPref("browser.newtab.preload", false);
-                   next();
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
+          Services.prefs.setBoolPref("browser.newtab.preload", false);
+          self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
-
         function(){animate(rest, addTab, next, true, "newtab-open-preload-no", tabRefDuration);},
-
         function(){animate(0, closeCurrentTab, next);}
       ],
 
       newtabYesPreload: [
-        function(){aboutNewTabService.resetNewTabURL();
-                   Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
-                   Services.prefs.setBoolPref("browser.newtab.preload", true);
-                   next();
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
+          Services.prefs.setBoolPref("browser.newtab.preload", true);
+          self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
-
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
 
         function(){animate(1000, addTab, next, true, "newtab-open-preload-yes", tabRefDuration);},
-
         function(){animate(0, closeCurrentTab, next);}
       ],
 
@@ -563,8 +577,10 @@ Tart.prototype = {
       ],
 
       multi: [
-        function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1.0"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1.0");
+          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+        },
 
         function(){animate(0, addTab, next);},
         function(){animate(0, addTab, next);},
@@ -593,7 +609,7 @@ Tart.prototype = {
       ],
 
       simpleFadeDpiCurrent: [
-        function(){aboutNewTabService.newTabURL = "about:blank"; next();},
+        function(){self.makeNewTabURLChangePromise("about:blank").then(next);},
 
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "simpleFade-close-DPIcurrent", tabRefDuration);},
@@ -602,7 +618,7 @@ Tart.prototype = {
       ],
 
       iconFadeDpiCurrent: [
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);},
 
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "iconFade-close-DPIcurrent", tabRefDuration);},
@@ -611,9 +627,10 @@ Tart.prototype = {
       ],
 
       iconFadeDpi2: [
-        function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
-
+        function(){
+          Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2");
+          self.makeNewTabURLChangePromise("chrome://tart/content/blank.icon.html").then(next);
+        },
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "iconFade-close-DPI2", tabRefDuration);},
         function(){animate(rest, fadein, next, true, "iconFade-open-DPI2", tabRefDuration);},

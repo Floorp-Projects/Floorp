@@ -28,7 +28,7 @@ if not options.version:
 # builds), but also so that newly-built older versions (e.g. beta build) aren't
 # considered "newer" than previously-built newer versions (e.g. a trunk nightly)
 
-buildid = open(options.buildid, 'r').read()
+define, MOZ_BUILDID, buildid = open(options.buildid, 'r').read().split()
 
 # extract only the major version (i.e. "14" from "14.0b1")
 majorVersion = re.match(r'^(\d+)[^\d].*', options.version).group(1)

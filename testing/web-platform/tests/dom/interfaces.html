@@ -283,7 +283,7 @@ interface Element : Node {
 
            attribute DOMString id;
            attribute DOMString className;
-  [SameObject] readonly attribute DOMTokenList classList;
+  [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
 
   boolean hasAttributes();
   [SameObject] readonly attribute NamedNodeMap attributes;
@@ -462,10 +462,6 @@ interface DOMTokenList {
   boolean toggle(DOMString token, optional boolean force);
   stringifier;
 //  iterable<DOMString>;
-};
-
-interface DOMSettableTokenList : DOMTokenList {
-            attribute DOMString value;
 };
 </script>
 <script>

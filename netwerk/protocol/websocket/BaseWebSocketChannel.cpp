@@ -360,11 +360,8 @@ BaseWebSocketChannel::ListenerAndContextContainer::~ListenerAndContextContainer(
 {
   MOZ_ASSERT(mListener);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  NS_ProxyRelease(mainThread, mListener, false);
-  NS_ProxyRelease(mainThread, mContext, false);
+  NS_ReleaseOnMainThread(mListener.forget());
+  NS_ReleaseOnMainThread(mContext.forget());
 }
 
 } // namespace net

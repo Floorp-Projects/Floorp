@@ -46,12 +46,6 @@ function run_test() {
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(libraryName);
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
-  let exceptionCaught = false;
-  try {
-    pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
-    ok(false, "addModule should have thrown an exception");
-  } catch (e) {
-    exceptionCaught = true;
-  }
-  ok(exceptionCaught, "addModule should have thrown an exception");
+  throws(() => pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0),
+         /NS_ERROR_FAILURE/, "addModule should throw when in safe mode");
 }
