@@ -9,7 +9,7 @@ const Services = require("Services");
 const promise = require("promise");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 exports.OptionsPanel = OptionsPanel;
 

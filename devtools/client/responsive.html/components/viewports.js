@@ -17,6 +17,7 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+    onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
 
@@ -24,6 +25,7 @@ module.exports = createClass({
     let {
       location,
       viewports,
+      onResizeViewport,
       onRotateViewport,
     } = this.props;
 
@@ -36,6 +38,8 @@ module.exports = createClass({
           key: viewport.id,
           location,
           viewport,
+          onResizeViewport: (width, height) =>
+            onResizeViewport(viewport.id, width, height),
           onRotateViewport: () => onRotateViewport(viewport.id),
         });
       })

@@ -39,6 +39,7 @@ const events = require("sdk/event/core");
 const ANIMATION_TYPES = {
   CSS_ANIMATION: "cssanimation",
   CSS_TRANSITION: "csstransition",
+  SCRIPT_ANIMATION: "scriptanimation",
   UNKNOWN: "unknown"
 };
 exports.ANIMATION_TYPES = ANIMATION_TYPES;
@@ -119,19 +120,28 @@ var AnimationPlayerActor = ActorClass({
     return data;
   },
 
-  isAnimation: function(player = this.player) {
+  isCssAnimation: function(player = this.player) {
     return player instanceof this.window.CSSAnimation;
   },
 
-  isTransition: function(player = this.player) {
+  isCssTransition: function(player = this.player) {
     return player instanceof this.window.CSSTransition;
   },
 
+  isScriptAnimation: function(player = this.player) {
+    return player instanceof this.window.Animation && !(
+      player instanceof this.window.CSSAnimation ||
+      player instanceof this.window.CSSTransition
+    );
+  },
+
   getType: function() {
-    if (this.isAnimation()) {
+    if (this.isCssAnimation()) {
       return ANIMATION_TYPES.CSS_ANIMATION;
-    } else if (this.isTransition()) {
+    } else if (this.isCssTransition()) {
       return ANIMATION_TYPES.CSS_TRANSITION;
+    } else if (this.isScriptAnimation()) {
+      return ANIMATION_TYPES.SCRIPT_ANIMATION;
     }
 
     return ANIMATION_TYPES.UNKNOWN;
@@ -146,9 +156,9 @@ var AnimationPlayerActor = ActorClass({
   getName: function() {
     if (this.player.id) {
       return this.player.id;
-    } else if (this.isAnimation()) {
+    } else if (this.isCssAnimation()) {
       return this.player.animationName;
-    } else if (this.isTransition()) {
+    } else if (this.isCssTransition()) {
       return this.player.transitionProperty;
     }
 
@@ -626,9 +636,9 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
         // a "removed" event for the one we already have.
         let index = this.actors.findIndex(a => {
           let isSameType = a.player.constructor === player.constructor;
-          let isSameName = (a.isAnimation() &&
+          let isSameName = (a.isCssAnimation() &&
                             a.player.animationName === player.animationName) ||
-                           (a.isTransition() &&
+                           (a.isCssTransition() &&
                             a.player.transitionProperty === player.transitionProperty);
           let isSameNode = a.player.effect.target === player.effect.target;
 

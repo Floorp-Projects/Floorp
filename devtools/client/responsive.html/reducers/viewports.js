@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { ADD_VIEWPORT, ROTATE_VIEWPORT } = require("../actions/index");
+const {
+  ADD_VIEWPORT,
+  RESIZE_VIEWPORT,
+  ROTATE_VIEWPORT,
+} = require("../actions/index");
 
 let nextViewportId = 0;
 
@@ -23,6 +27,19 @@ let reducers = {
       return viewports;
     }
     return [...viewports, Object.assign({}, INITIAL_VIEWPORT)];
+  },
+
+  [RESIZE_VIEWPORT](viewports, { id, width, height }) {
+    return viewports.map(viewport => {
+      if (viewport.id !== id) {
+        return viewport;
+      }
+
+      return Object.assign({}, viewport, {
+        width,
+        height,
+      });
+    });
   },
 
   [ROTATE_VIEWPORT](viewports, { id }) {

@@ -269,6 +269,57 @@ public class DateTimePicker extends FrameLayout {
             Log.d(LOGTAG, "screen width: " + mScreenWidth + " screen height: " + mScreenHeight);
         }
 
+        // Set the min / max attribute.
+        try {
+            if (minDateValue != null && !minDateValue.equals("")) {
+                mMinDate.setTime(new SimpleDateFormat(dateFormat).parse(minDateValue));
+            } else {
+                mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format sting: " + ex);
+            mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+        }
+
+        try {
+            if (maxDateValue != null && !maxDateValue.equals("")) {
+                mMaxDate.setTime(new SimpleDateFormat(dateFormat).parse(maxDateValue));
+            } else {
+                mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format string: " + ex);
+            mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+        }
+
+        // Find the initial date from the constructor arguments.
+        try {
+            if (!dateTimeValue.equals("")) {
+                mTempDate.setTime(new SimpleDateFormat(dateFormat).parse(dateTimeValue));
+            } else {
+                mTempDate.setTimeInMillis(System.currentTimeMillis());
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format string: " + ex);
+            mTempDate.setTimeInMillis(System.currentTimeMillis());
+        }
+
+        if (mMaxDate.before(mMinDate)) {
+            // If the input date range is illogical/garbage, we should not restrict the input range (i.e. allow the
+            // user to select any date). If we try to make any assumptions based on the illogical min/max date we could
+            // potentially prevent the user from selecting dates that are in the developers intended range, so it's best
+            // to allow anything.
+            mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+            mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+        }
+
+        // mTempDate will either be a site-supplied value, or today's date otherwise. CalendarView implementations can
+        // crash if they're supplied an invalid date (i.e. a date not in the specified range), hence we need to set
+        // a sensible default date here.
+        if (mTempDate.before(mMinDate) || mTempDate.after(mMaxDate)) {
+            mTempDate.setTimeInMillis(mMinDate.getTimeInMillis());
+        }
+
         // If we're displaying a date, the screen is wide enough
         // (and if we're using an SDK where the calendar view exists)
         // then display a calendar.
@@ -311,41 +362,6 @@ public class DateTimePicker extends FrameLayout {
             }
             mCalendar = null;
         }
-
-        // Find the initial date from the constructor arguments.
-        try {
-            if (!dateTimeValue.equals("")) {
-                mTempDate.setTime(new SimpleDateFormat(dateFormat).parse(dateTimeValue));
-            } else {
-                mTempDate.setTimeInMillis(System.currentTimeMillis());
-            }
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Error parsing format string: " + ex);
-            mTempDate.setTimeInMillis(System.currentTimeMillis());
-        }
-
-	// Set the min / max attribute.
-	try {
-	    if (minDateValue != null && !minDateValue.equals("")) {
-		mMinDate.setTime(new SimpleDateFormat(dateFormat).parse(minDateValue));
-	    } else {
-		mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
-	    }
-	} catch (Exception ex) {
-	    Log.e(LOGTAG, "Error parsing format sting: " + ex);
-	    mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
-	}
-
-	try {
-	    if (maxDateValue != null && !maxDateValue.equals("")) {
-		mMaxDate.setTime(new SimpleDateFormat(dateFormat).parse(maxDateValue));
-	    } else {
-		mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
-	    }
-	} catch (Exception ex) {
-	    Log.e(LOGTAG, "Error parsing format string: " + ex);
-	    mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
-	}
 
         // Initialize all spinners.
         mDaySpinner = setupSpinner(R.id.day, 1,
