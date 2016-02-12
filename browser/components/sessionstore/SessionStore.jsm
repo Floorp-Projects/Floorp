@@ -891,8 +891,9 @@ var SessionStoreInternal = {
         this.onTabAdd(win, target);
         break;
       case "TabClose":
-        // aEvent.detail determines if the tab was closed by moving to a different window
-        if (!aEvent.detail)
+        // `adoptedBy` will be set if the tab was closed because it is being
+        // moved to a new window.
+        if (!aEvent.detail.adoptedBy)
           this.onTabClose(win, target);
         this.onTabRemove(win, target);
         break;

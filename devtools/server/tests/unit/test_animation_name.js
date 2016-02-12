@@ -24,6 +24,9 @@ function run_test() {
     }
   };
 
+  window.CSSAnimation.prototype = Object.create(window.Animation.prototype);
+  window.CSSTransition.prototype = Object.create(window.Animation.prototype);
+
   // Helper to get a mock DOM node.
   function getMockNode() {
     return {
@@ -46,6 +49,11 @@ function run_test() {
     animation: new window.Animation(),
     props: { id: "animation-id" },
     expectedName: "animation-id"
+  }, {
+    desc: "Animation without an id",
+    animation: new window.Animation(),
+    props: {},
+    expectedName: ""
   }, {
     desc: "CSSTransition with an id",
     animation: new window.CSSTransition(),
