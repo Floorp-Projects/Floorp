@@ -659,7 +659,7 @@ ObjectMemoryView::visitLambda(MLambda* ins)
 static size_t
 GetOffsetOf(MDefinition* index, size_t width, int32_t baseOffset)
 {
-    int32_t idx = index->toConstant()->value().toInt32();
+    int32_t idx = index->toConstant()->toInt32();
     MOZ_ASSERT(idx >= 0);
     MOZ_ASSERT(baseOffset >= 0 && size_t(baseOffset) >= UnboxedPlainObject::offsetOfData());
     return idx * width + baseOffset - UnboxedPlainObject::offsetOfData();
@@ -781,13 +781,9 @@ IndexOf(MDefinition* ins, int32_t* res)
     if (indexDef->isToInt32())
         indexDef = indexDef->toToInt32()->getOperand(0);
     MConstant* indexDefConst = indexDef->maybeConstantValue();
-    if (!indexDefConst)
+    if (!indexDefConst || indexDefConst->type() != MIRType_Int32)
         return false;
-
-    Value index = indexDefConst->value();
-    if (!index.isInt32())
-        return false;
-    *res = index.toInt32();
+    *res = indexDefConst->toInt32();
     return true;
 }
 
@@ -1259,7 +1255,7 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins)
         return;
     }
 
-    int32_t initLengthValue = ins->index()->maybeConstantValue()->value().toInt32() + 1;
+    int32_t initLengthValue = ins->index()->maybeConstantValue()->toInt32() + 1;
     MConstant* initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
     ins->block()->insertBefore(ins, initLength);
     ins->block()->insertBefore(ins, state_);

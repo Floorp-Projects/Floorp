@@ -198,12 +198,12 @@ RangeAnalysis::addBetaNodes()
 
         MConstant* leftConst = left->maybeConstantValue();
         MConstant* rightConst = right->maybeConstantValue();
-        if (leftConst && leftConst->value().isNumber()) {
-            bound = leftConst->value().toNumber();
+        if (leftConst && leftConst->isNumber()) {
+            bound = leftConst->toNumber();
             val = right;
             jsop = ReverseCompareOp(jsop);
-        } else if (rightConst && rightConst->value().isNumber()) {
-            bound = rightConst->value().toNumber();
+        } else if (rightConst && rightConst->isNumber()) {
+            bound = rightConst->toNumber();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
             MDefinition* smaller = nullptr;
@@ -1291,11 +1291,11 @@ MBeta::computeRange(TempAllocator& alloc)
 void
 MConstant::computeRange(TempAllocator& alloc)
 {
-    if (value().isNumber()) {
-        double d = value().toNumber();
+    if (isNumber()) {
+        double d = toNumber();
         setRange(Range::NewDoubleSingletonRange(alloc, d));
-    } else if (value().isBoolean()) {
-        bool b = value().toBoolean();
+    } else if (type() == MIRType_Boolean) {
+        bool b = toBoolean();
         setRange(Range::NewInt32Range(alloc, b, b));
     }
 }
@@ -1364,7 +1364,7 @@ MLsh::computeRange(TempAllocator& alloc)
 
     MConstant* rhsConst = getOperand(1)->maybeConstantValue();
     if (rhsConst && rhsConst->type() == MIRType_Int32) {
-        int32_t c = rhsConst->value().toInt32();
+        int32_t c = rhsConst->toInt32();
         setRange(Range::lsh(alloc, &left, c));
         return;
     }
@@ -1382,7 +1382,7 @@ MRsh::computeRange(TempAllocator& alloc)
 
     MConstant* rhsConst = getOperand(1)->maybeConstantValue();
     if (rhsConst && rhsConst->type() == MIRType_Int32) {
-        int32_t c = rhsConst->value().toInt32();
+        int32_t c = rhsConst->toInt32();
         setRange(Range::rsh(alloc, &left, c));
         return;
     }
@@ -1407,7 +1407,7 @@ MUrsh::computeRange(TempAllocator& alloc)
 
     MConstant* rhsConst = getOperand(1)->maybeConstantValue();
     if (rhsConst && rhsConst->type() == MIRType_Int32) {
-        int32_t c = rhsConst->value().toInt32();
+        int32_t c = rhsConst->toInt32();
         setRange(Range::ursh(alloc, &left, c));
     } else {
         setRange(Range::ursh(alloc, &left, &right));
@@ -3358,13 +3358,13 @@ MBinaryBitwiseInstruction::collectRangeInfoPreTrunc()
     Range rhsRange(rhs());
 
     if (lhs()->isConstant() && lhs()->type() == MIRType_Int32 &&
-        DoesMaskMatchRange(lhs()->toConstant()->value().toInt32(), rhsRange))
+        DoesMaskMatchRange(lhs()->toConstant()->toInt32(), rhsRange))
     {
         maskMatchesRightRange = true;
     }
 
     if (rhs()->isConstant() && rhs()->type() == MIRType_Int32 &&
-        DoesMaskMatchRange(rhs()->toConstant()->value().toInt32(), lhsRange))
+        DoesMaskMatchRange(rhs()->toConstant()->toInt32(), lhsRange))
     {
         maskMatchesLeftRange = true;
     }
