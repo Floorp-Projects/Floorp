@@ -80,7 +80,7 @@ $(TOPOBJDIR)/%: FORCE
 # corresponding install manifests are named correspondingly, with forward
 # slashes replaced with underscores, and prefixed with `install_`. That is,
 # the install manifest for `dist/bin` would be `install_dist_bin`.
-$(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/buildid.h
+$(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(addprefix $(TOPOBJDIR)/,buildid.h source-repo.h)
 	@# For now, force preprocessed files to be reprocessed every time.
 	@# The overhead is not that big, and this avoids waiting for proper
 	@# support for defines tracking in process_install_manifest.
