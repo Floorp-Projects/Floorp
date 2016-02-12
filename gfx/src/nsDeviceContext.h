@@ -251,6 +251,8 @@ public:
      */
     bool IsPrinterSurface();
 
+    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale();
+
 private:
     // Private destructor, to discourage deletion outside of Release():
     ~nsDeviceContext();
