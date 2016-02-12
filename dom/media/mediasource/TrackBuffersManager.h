@@ -98,6 +98,10 @@ public:
                                            bool& aError);
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack);
 
+#if defined(DEBUG)
+  void Dump(const char* aPath) override;
+#endif
+
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
 private:
@@ -119,7 +123,9 @@ private:
   // media segment have been processed.
   RefPtr<CodedFrameProcessingPromise> CodedFrameProcessing();
   void CompleteCodedFrameProcessing();
-  // Called by ResetParserState.
+  // Called by ResetParserState. Complete parsing the input buffer for the
+  // current media segment.
+  void FinishCodedFrameProcessing();
   void CompleteResetParserState();
   RefPtr<RangeRemovalPromise>
     CodedFrameRemovalWithPromise(media::TimeInterval aInterval);
@@ -304,6 +310,10 @@ private:
   MozPromiseHolder<CodedFrameProcessingPromise> mProcessingPromise;
 
   MozPromiseHolder<AppendPromise> mAppendPromise;
+  // Set to true while SegmentParserLoop is running. This is used for diagnostic
+  // purposes only. We can't rely on mAppendPromise to be empty as it is only
+  // cleared in a follow up task.
+  bool mAppendRunning;
 
   // Trackbuffers definition.
   nsTArray<TrackData*> GetTracksList();
@@ -339,6 +349,11 @@ private:
   RefPtr<dom::SourceBufferAttributes> mSourceBufferAttributes;
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
 
+  // MediaSource duration mirrored from MediaDecoder on the main thread..
+  Mirror<Maybe<double>> mMediaSourceDuration;
+
+  // Set to true if abort was called.
+  Atomic<bool> mAbort;
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
 
@@ -348,13 +363,7 @@ private:
   Atomic<bool> mEvictionOccurred;
 
   // Monitor to protect following objects accessed across multipple threads.
-  // mMonitor is also notified if the value of mAppendRunning becomes false.
   mutable Monitor mMonitor;
-  // Set to true while SegmentParserLoop is running.
-  Atomic<bool> mAppendRunning;
-  // Set to true while SegmentParserLoop is running.
-  // This is for diagnostic only. Only accessed on the task queue.
-  bool mSegmentParserLoopRunning;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;

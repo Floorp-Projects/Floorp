@@ -487,6 +487,20 @@ MediaSource::NotifyEvicted(double aStart, double aEnd)
   mSourceBuffers->Evict(aStart, aEnd);
 }
 
+#if defined(DEBUG)
+void
+MediaSource::Dump(const char* aPath)
+{
+  char buf[255];
+  PR_snprintf(buf, sizeof(buf), "%s/mediasource-%p", aPath, this);
+  PR_MkDir(buf, 0700);
+
+  if (mSourceBuffers) {
+    mSourceBuffers->Dump(buf);
+  }
+}
+#endif
+
 void
 MediaSource::GetMozDebugReaderData(nsAString& aString)
 {
