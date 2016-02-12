@@ -24,6 +24,9 @@ function run_test() {
     }
   };
 
+  window.CSSAnimation.prototype = Object.create(window.Animation.prototype);
+  window.CSSTransition.prototype = Object.create(window.Animation.prototype);
+
   // Helper to get a mock DOM node.
   function getMockNode() {
     return {
@@ -47,6 +50,10 @@ function run_test() {
     desc: "Test CSSTransition type",
     animation: new window.CSSTransition(),
     expectedType: ANIMATION_TYPES.CSS_TRANSITION
+  }, {
+    desc: "Test ScriptAnimation type",
+    animation: new window.Animation(),
+    expectedType: ANIMATION_TYPES.SCRIPT_ANIMATION
   }, {
     desc: "Test unknown type",
     animation: {effect: {target: getMockNode()}},

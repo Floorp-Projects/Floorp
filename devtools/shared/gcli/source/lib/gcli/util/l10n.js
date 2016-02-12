@@ -71,7 +71,7 @@ exports.lookup = function(key) {
 };
 
 /** @see propertyLookup in lib/gcli/util/l10n.js */
-exports.propertyLookup = Proxy.create({
+exports.propertyLookup = new Proxy({}, {
   get: function(rcvr, name) {
     return exports.lookup(name);
   }
