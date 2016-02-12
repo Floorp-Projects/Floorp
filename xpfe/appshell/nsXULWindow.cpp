@@ -559,63 +559,19 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetDevicePixelsPerDesktopPixel(double *aScale)
-{
-  *aScale = mWindow ? mWindow->GetDesktopToDeviceScale().scale : 1.0;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsXULWindow::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
 {
   *aScale = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
   return NS_OK;
 }
 
-DesktopToLayoutDeviceScale
-nsXULWindow::GetScaleForDestinationPosition(int32_t aX, int32_t aY)
-{
-  DesktopToLayoutDeviceScale scale(nsIWidget::DefaultScaleOverride());
-  if (scale.scale <= 0.0) {
-    // The destination monitor may have the different dpi from the source.
-    nsCOMPtr<nsIScreenManager> screenMgr(do_GetService(
-                                         "@mozilla.org/gfx/screenmanager;1"));
-    if (screenMgr) {
-      int32_t width, height;
-      // Use current size, converted to desktop pixels
-      GetSize(&width, &height);
-      DesktopToLayoutDeviceScale curr = mWindow->GetDesktopToDeviceScale();
-      width /= curr.scale;
-      height /= curr.scale;
-      width = std::max(1, width);
-      height = std::max(1, height);
-      nsCOMPtr<nsIScreen> screen;
-      screenMgr->ScreenForRect(aX, aY, width, height,
-                               getter_AddRefs(screen));
-      if (screen) {
-        double contentsScaleFactor;
-        if (NS_SUCCEEDED(screen->GetContentsScaleFactor(
-                         &contentsScaleFactor))) {
-          scale = DesktopToLayoutDeviceScale(contentsScaleFactor);
-        } else {
-          // Fallback to the scale from the widget.
-          scale = mWindow->GetDesktopToDeviceScale();
-        }
-      }
-    } else {
-      // this fallback should never actually be needed
-      scale = mWindow->GetDesktopToDeviceScale();
-    }
-  }
-  return scale;
-}
-
 NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
 {
   // Don't reset the window's size mode here - platforms that don't want to move
   // maximized windows should reset it in their respective Move implementation.
-  DesktopToLayoutDeviceScale scale = GetScaleForDestinationPosition(aX, aY);
-  DesktopPoint pos = LayoutDeviceIntPoint(aX, aY) / scale;
-  nsresult rv = mWindow->Move(pos.x, pos.y);
+  CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+  double invScale = 1.0 / scale.scale;
+  nsresult rv = mWindow->Move(aX * invScale, aY * invScale);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
@@ -642,9 +598,9 @@ NS_IMETHODIMP nsXULWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
 
   mIntrinsicallySized = false;
 
-  DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
-  DesktopSize size = LayoutDeviceIntSize(aCX, aCY) / scale;
-  nsresult rv = mWindow->Resize(size.width, size.height, aRepaint);
+  CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+  double invScale = 1.0 / scale.scale;
+  nsresult rv = mWindow->Resize(aCX * invScale, aCY * invScale, aRepaint);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
@@ -675,9 +631,10 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
 
   mIntrinsicallySized = false;
 
-  DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
-  DesktopRect rect = LayoutDeviceIntRect(aX, aY, aCX, aCY) / scale;
-  nsresult rv = mWindow->Resize(rect.x, rect.y, rect.width, rect.height,
+  CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+  double invScale = 1.0 / scale.scale;
+  nsresult rv = mWindow->Resize(aX * invScale, aY * invScale,
+                                aCX * invScale, aCY * invScale,
                                 aRepaint);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   if (!mChromeLoaded) {
@@ -745,7 +702,8 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
       result = base->GetPositionAndSize(&left, &top, &width, &height);
       if (NS_SUCCEEDED(result)) {
         double scale;
-        if (NS_SUCCEEDED(base->GetDevicePixelsPerDesktopPixel(&scale))) {
+        if (NS_SUCCEEDED(base->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
+          // convert device-pixel coordinates to global display pixels
           left = NSToIntRound(left / scale);
           top = NSToIntRound(top / scale);
           width = NSToIntRound(width / scale);
@@ -782,28 +740,18 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
 
   if (screenCoordinates || windowCoordinates) {
     NS_ASSERTION(mWindow, "what, no window?");
-    double scale = mWindow->GetDesktopToDeviceScale().scale;
+    CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
     GetSize(&ourWidth, &ourHeight);
-    int32_t scaledWidth, scaledHeight;
-    scaledWidth = NSToIntRound(ourWidth / scale);
-    scaledHeight = NSToIntRound(ourHeight / scale);
-    left += (width - scaledWidth) / 2;
-    top += (height - scaledHeight) / (aAlert ? 3 : 2);
+    ourWidth = NSToIntRound(ourWidth / scale.scale);
+    ourHeight = NSToIntRound(ourHeight / scale.scale);
+    left += (width - ourWidth) / 2;
+    top += (height - ourHeight) / (aAlert ? 3 : 2);
     if (windowCoordinates) {
       mWindow->ConstrainPosition(false, &left, &top);
     }
-    SetPosition(left * scale, top * scale);
-
-    // If moving the window caused it to change size,
-    // re-do the centering.
-    int32_t newWidth, newHeight;
-    GetSize(&newWidth, &newHeight);
-    if (newWidth != ourWidth || newHeight != ourHeight) {
-      return Center(aRelative, aScreen, aAlert);
-    }
+    SetPosition(left * scale.scale, top * scale.scale);
     return NS_OK;
   }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -1068,19 +1016,6 @@ void nsXULWindow::OnChromeLoaded()
     mChromeLoaded = true;
     ApplyChromeFlags();
     SyncAttributesToWidget();
-
-    bool positionSet = !mIgnoreXULPosition;
-    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    // don't override WM placement on unix for independent, top-level windows
-    // (however, we think the benefits of intelligent dependent window placement
-    // trump that override.)
-    if (!parentWindow)
-      positionSet = false;
-#endif
-    if (positionSet)
-      positionSet = LoadPositionFromXUL();
-
     if (!mIgnoreXULSize)
       LoadSizeFromXUL();
     if (mIntrinsicallySized) {
@@ -1102,6 +1037,17 @@ void nsXULWindow::OnChromeLoaded()
       }
     }
 
+    bool positionSet = !mIgnoreXULPosition;
+    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    // don't override WM placement on unix for independent, top-level windows
+    // (however, we think the benefits of intelligent dependent window placement
+    // trump that override.)
+    if (!parentWindow)
+      positionSet = false;
+#endif
+    if (positionSet)
+      positionSet = LoadPositionFromXUL();
     LoadMiscPersistentAttributesFromXUL();
 
     if (mCenterAfterLoad && !positionSet)
@@ -1139,11 +1085,11 @@ bool nsXULWindow::LoadPositionFromXUL()
 
   // Convert to global display pixels for consistent window management across
   // screens with diverse resolutions
-  double scale = mWindow->GetDesktopToDeviceScale().scale;
-  currX = NSToIntRound(currX / scale);
-  currY = NSToIntRound(currY / scale);
-  currWidth = NSToIntRound(currWidth / scale);
-  currHeight = NSToIntRound(currHeight / scale);
+  CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+  currX = NSToIntRound(currX / scale.scale);
+  currY = NSToIntRound(currY / scale.scale);
+  currWidth = NSToIntRound(currWidth / scale.scale);
+  currHeight = NSToIntRound(currHeight / scale.scale);
 
   // Obtain the position information from the <xul:window> element.
   int32_t specX = currX;
@@ -1170,7 +1116,7 @@ bool nsXULWindow::LoadPositionFromXUL()
       int32_t parentX, parentY;
       if (NS_SUCCEEDED(parent->GetPosition(&parentX, &parentY))) {
         double scale;
-        if (NS_SUCCEEDED(parent->GetDevicePixelsPerDesktopPixel(&scale))) {
+        if (NS_SUCCEEDED(parent->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
           parentX = NSToIntRound(parentX / scale);
           parentY = NSToIntRound(parentY / scale);
         }
@@ -1184,10 +1130,8 @@ bool nsXULWindow::LoadPositionFromXUL()
   }
   mWindow->ConstrainPosition(false, &specX, &specY);
   if (specX != currX || specY != currY) {
-    DesktopToLayoutDeviceScale destScale =
-      GetScaleForDestinationPosition(specX, specY);
-    LayoutDevicePoint devPos = DesktopIntPoint(specX, specY) * destScale;
-    SetPosition(devPos.x, devPos.y);
+    CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+    SetPosition(specX * scale.scale, specY * scale.scale);
   }
 
   return gotPosition;
@@ -1212,12 +1156,11 @@ bool nsXULWindow::LoadSizeFromXUL()
 
   NS_ASSERTION(mWindow, "we expected to have a window already");
 
+  CSSToLayoutDeviceScale scale = mWindow ? mWindow->GetDefaultScale()
+                                         : CSSToLayoutDeviceScale(1.0);
   GetSize(&currWidth, &currHeight);
-  double displayToDevPx =
-    mWindow ? mWindow->GetDesktopToDeviceScale().scale : 1.0;
-  double cssToDevPx = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
-  currWidth = NSToIntRound(currWidth * displayToDevPx / cssToDevPx);
-  currHeight = NSToIntRound(currHeight * displayToDevPx / cssToDevPx);
+  currWidth = NSToIntRound(currWidth / scale.scale);
+  currHeight = NSToIntRound(currHeight / scale.scale);
 
   // Obtain the position and sizing information from the <xul:window> element.
   int32_t specWidth = currWidth;
@@ -1246,7 +1189,7 @@ bool nsXULWindow::LoadSizeFromXUL()
       if (screen) {
         int32_t screenWidth;
         int32_t screenHeight;
-        screen->GetAvailWidth(&screenWidth); // CSS pixels
+        screen->GetAvailWidth(&screenWidth);
         screen->GetAvailHeight(&screenHeight);
         if (specWidth > screenWidth)
           specWidth = screenWidth;
@@ -1257,7 +1200,8 @@ bool nsXULWindow::LoadSizeFromXUL()
 
     mIntrinsicallySized = false;
     if (specWidth != currWidth || specHeight != currHeight) {
-      SetSize(specWidth * cssToDevPx, specHeight * cssToDevPx, false);
+      CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
+      SetSize(specWidth * scale.scale, specHeight * scale.scale, false);
     }
   }
 
@@ -1549,9 +1493,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   LayoutDeviceIntRect rect;
   bool gotRestoredBounds = NS_SUCCEEDED(mWindow->GetRestoredBounds(rect));
 
-  // we use CSS pixels for size, but desktop pixels for position
-  CSSToLayoutDeviceScale sizeScale = mWindow->GetDefaultScale();
-  DesktopToLayoutDeviceScale posScale = mWindow->GetDesktopToDeviceScale();
+  CSSToLayoutDeviceScale scale = mWindow->GetDefaultScale();
 
   // make our position relative to our parent, if any
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
@@ -1579,8 +1521,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
     if (persistString.Find("screenX") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d",
-                  NSToIntRound(rect.x / posScale.scale));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.x / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1588,8 +1529,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("screenY") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d",
-                  NSToIntRound(rect.y / posScale.scale));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.y / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1600,8 +1540,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
     if (persistString.Find("width") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d",
-                  NSToIntRound(rect.width / sizeScale.scale));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.width / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1609,8 +1548,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("height") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d",
-                  NSToIntRound(rect.height / sizeScale.scale));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.height / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {

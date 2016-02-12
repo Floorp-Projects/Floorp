@@ -31,7 +31,7 @@
 #include "nsRegionFwd.h"
 
 #include "nsWinGesture.h"
-#include "WinUtils.h"
+
 #include "WindowHook.h"
 #include "TaskbarWindowPreview.h"
 
@@ -95,7 +95,6 @@ public:
   using nsWindowBase::DispatchPluginEvent;
 
   // nsIWidget interface
-  using nsWindowBase::Create; // for Create signature not overridden here
   NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
                                  const LayoutDeviceIntRect& aRect,
@@ -104,22 +103,11 @@ public:
   NS_IMETHOD              SetParent(nsIWidget *aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
-  double                  GetDefaultScaleInternal() final;
-  int32_t                 LogToPhys(double aValue) final;
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final
-  {
-    if (mozilla::widget::WinUtils::IsPerMonitorDPIAware()) {
-      return mozilla::DesktopToLayoutDeviceScale(1.0);
-    } else {
-      return mozilla::DesktopToLayoutDeviceScale(GetDefaultScaleInternal());
-    }
-  }
-
+  virtual double          GetDefaultScaleInternal() override;
   NS_IMETHOD              Show(bool bState) override;
   virtual bool            IsVisible() const override;
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
-  virtual const SizeConstraints GetSizeConstraints() override;
   NS_IMETHOD              Move(double aX, double aY) override;
   NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
@@ -412,8 +400,6 @@ protected:
   void                    OnWindowPosChanged(WINDOWPOS* wp);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
-  void                    OnDPIChanged(int32_t x, int32_t y,
-                                       int32_t width, int32_t height);
 
   /**
    * Function that registers when the user has been active (used for detecting
@@ -550,8 +536,6 @@ protected:
   // Height of the caption plus border
   int32_t               mCaptionHeight;
 
-  double                mDefaultScale;
-
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
@@ -629,8 +613,6 @@ protected:
   static void InitMouseWheelScrollData();
 
   CRITICAL_SECTION mPresentLock;
-
-  double mSizeConstraintsScale; // scale in effect when setting constraints
 };
 
 /**
