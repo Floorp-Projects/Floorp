@@ -32,6 +32,7 @@ if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 mkdir -p ~/artifacts/public
 
 cleanup() {
+    local rv=$?
     if [[ -s /home/worker/.xsession-errors ]]; then
       # To share X issues
       cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
@@ -41,6 +42,7 @@ cleanup() {
     if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] ; then
         kill $xvfb_pid || true
     fi
+    exit $rv
 }
 trap cleanup EXIT INT
 
