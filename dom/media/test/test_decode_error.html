@@ -20,24 +20,19 @@ function startTest(test, token) {
     ok(el.error, "Element 'error' attr expected to have a value");
     ok(el.error instanceof MediaError, "Element 'error' attr expected to be MediaError");
     is(el.error.code, MediaError.MEDIA_ERR_DECODE, "Expected a decode error");
-    is(el.networkState, HTMLMediaElement.NETWORK_EMPTY, "networkState should be EMPTY");
     el._sawError = true;
-  }, false);
-
-  v.addEventListener("emptied", function (event) {
-    var el = event.currentTarget;
-    is(el.networkState, HTMLMediaElement.NETWORK_EMPTY, "networkState should be EMPTY");
-    ok(el._sawError, "Expected error event");
     manager.finished(token);
   }, false);
 
-  v.addEventListener("loadedmetadata", function () {
-    ok(false, "Unexpected loadedmetadata event");
+  v.addEventListener("loadeddata", function () {
+    ok(false, "Unexpected loadeddata event");
+    manager.finished(token);
   }, false);
 
   v.autoplay = true;
   v.addEventListener("ended", function () {
     ok(false, "Unexpected ended event");
+    manager.finished(token);
   }, false);
 
   v.src = test.name; // implicitly starts a load.
