@@ -2558,7 +2558,8 @@ IonBuilder::processDoWhileCondEnd(CFGState& state)
 
     // Test for do {} while(false) and don't create a loop in that case.
     if (MConstant* vinsConst = vins->maybeConstantValue()) {
-        if (!IsMagicType(vinsConst->type()) && !vinsConst->valueToBoolean()) {
+        bool b;
+        if (vinsConst->valueToBoolean(&b) && !b) {
             current->end(MGoto::New(alloc(), successor));
             current = nullptr;
 

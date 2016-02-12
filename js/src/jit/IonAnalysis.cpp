@@ -462,7 +462,7 @@ jit::SplitCriticalEdges(MIRGraph& graph)
 
 // Return whether a block simply computes the specified constant value.
 static bool
-BlockComputesConstant(MBasicBlock* block, MDefinition* value)
+BlockComputesConstant(MBasicBlock* block, MDefinition* value, bool* constBool)
 {
     // Look for values with no uses. This is used to eliminate constant
     // computing blocks in condition statements, and the phi which used to
@@ -478,7 +478,7 @@ BlockComputesConstant(MBasicBlock* block, MDefinition* value)
         if (*iter != value || !iter->isGoto())
             return false;
     }
-    return true;
+    return value->toConstant()->valueToBoolean(constBool);
 }
 
 // Find phis that are redudant:
@@ -745,10 +745,9 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     // directly to successors of testBlock, rather than to testBlock itself.
 
     MBasicBlock* trueTarget = trueBranch;
-    if (BlockComputesConstant(trueBranch, trueResult)) {
-        trueTarget = trueResult->toConstant()->valueToBoolean()
-                     ? finalTest->ifTrue()
-                     : finalTest->ifFalse();
+    bool constBool;
+    if (BlockComputesConstant(trueBranch, trueResult, &constBool)) {
+        trueTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
         phiBlock->removePredecessor(trueBranch);
         graph.removeBlock(trueBranch);
     } else if (initialTest->input() == trueResult) {
@@ -759,10 +758,8 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     }
 
     MBasicBlock* falseTarget = falseBranch;
-    if (BlockComputesConstant(falseBranch, falseResult)) {
-        falseTarget = falseResult->toConstant()->valueToBoolean()
-                      ? finalTest->ifTrue()
-                      : finalTest->ifFalse();
+    if (BlockComputesConstant(falseBranch, falseResult, &constBool)) {
+        falseTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
         phiBlock->removePredecessor(falseBranch);
         graph.removeBlock(falseBranch);
     } else if (initialTest->input() == falseResult) {
