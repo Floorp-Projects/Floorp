@@ -352,6 +352,9 @@ private:
   mutable Monitor mMonitor;
   // Set to true while SegmentParserLoop is running.
   Atomic<bool> mAppendRunning;
+  // Set to true while SegmentParserLoop is running.
+  // This is for diagnostic only. Only accessed on the task queue.
+  bool mSegmentParserLoopRunning;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;
