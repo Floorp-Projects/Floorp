@@ -746,7 +746,7 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
 
     MBasicBlock* trueTarget = trueBranch;
     if (BlockComputesConstant(trueBranch, trueResult)) {
-        trueTarget = trueResult->constantToBoolean()
+        trueTarget = trueResult->toConstant()->valueToBoolean()
                      ? finalTest->ifTrue()
                      : finalTest->ifFalse();
         phiBlock->removePredecessor(trueBranch);
@@ -760,7 +760,7 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
 
     MBasicBlock* falseTarget = falseBranch;
     if (BlockComputesConstant(falseBranch, falseResult)) {
-        falseTarget = falseResult->constantToBoolean()
+        falseTarget = falseResult->toConstant()->valueToBoolean()
                       ? finalTest->ifTrue()
                       : finalTest->ifFalse();
         phiBlock->removePredecessor(falseBranch);
@@ -2705,11 +2705,13 @@ jit::ExtractLinearSum(MDefinition* ins)
     if (ins->type() != MIRType_Int32)
         return SimpleLinearSum(ins, 0);
 
-    if (ins->isConstantValue()) {
-        const Value& v = ins->constantValue();
+    if (ins->isConstant()) {
+        const Value& v = ins->toConstant()->value();
         MOZ_ASSERT(v.isInt32());
         return SimpleLinearSum(nullptr, v.toInt32());
-    } else if (ins->isAdd() || ins->isSub()) {
+    }
+
+    if (ins->isAdd() || ins->isSub()) {
         MDefinition* lhs = ins->getOperand(0);
         MDefinition* rhs = ins->getOperand(1);
         if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
@@ -2725,7 +2727,8 @@ jit::ExtractLinearSum(MDefinition* ins)
                 if (!SafeAdd(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
                 return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
-            } else if (lsum.term) {
+            }
+            if (lsum.term) {
                 int32_t constant;
                 if (!SafeSub(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
@@ -3322,8 +3325,8 @@ LinearSum::add(MDefinition* term, int32_t scale)
     if (scale == 0)
         return true;
 
-    if (term->isConstantValue()) {
-        int32_t constant = term->constantValue().toInt32();
+    if (MConstant* termConst = term->maybeConstantValue()) {
+        int32_t constant = termConst->value().toInt32();
         if (!SafeMul(constant, scale, &constant))
             return false;
         return add(constant);
@@ -3395,7 +3398,7 @@ jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block, const LinearSum&
 
     for (size_t i = 0; i < sum.numTerms(); i++) {
         LinearTerm term = sum.term(i);
-        MOZ_ASSERT(!term.term->isConstantValue());
+        MOZ_ASSERT(!term.term->isConstant());
         if (term.scale == 1) {
             if (def) {
                 def = MAdd::New(alloc, def, term.term);

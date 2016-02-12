@@ -466,10 +466,10 @@ LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
     LAllocation ptrAlloc;
 
     // For the ARM it is best to keep the 'ptr' in a register if a bounds check is needed.
-    if (ptr->isConstantValue() && !ins->needsBoundsCheck()) {
+    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
         // A bounds check is only skipped for a positive index.
-        MOZ_ASSERT(ptr->constantValue().toInt32() >= 0);
-        ptrAlloc = LAllocation(ptr->constantVp());
+        MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
+        ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else {
         ptrAlloc = useRegisterAtStart(ptr);
     }
@@ -484,9 +484,9 @@ LIRGeneratorARM::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
     LAllocation ptrAlloc;
 
-    if (ptr->isConstantValue() && !ins->needsBoundsCheck()) {
-        MOZ_ASSERT(ptr->constantValue().toInt32() >= 0);
-        ptrAlloc = LAllocation(ptr->constantVp());
+    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
+        MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
+        ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else {
         ptrAlloc = useRegisterAtStart(ptr);
     }
