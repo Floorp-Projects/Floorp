@@ -6858,7 +6858,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // Get the static global lexical scope of the target compartment. Static
     // scopes need to be fixed up below.
-    Rooted<StaticScope*> targetStaticGlobalLexicalScope(rt);
+    RootedObject targetStaticGlobalLexicalScope(rt);
     targetStaticGlobalLexicalScope = &target->maybeGlobal()->lexicalScope().staticBlock();
 
     for (ZoneCellIter iter(source->zone(), AllocKind::SCRIPT); !iter.done(); iter.next()) {
