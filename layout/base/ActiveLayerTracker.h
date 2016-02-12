@@ -10,6 +10,7 @@
 class nsIFrame;
 class nsIContent;
 class nsDisplayListBuilder;
+class nsDOMCSSDeclaration;
 
 namespace mozilla {
 
@@ -47,8 +48,12 @@ public:
   /**
    * Mark aFrame as being known to have an animation of aProperty.
    * Any such marking will time out after a short period.
+   * aNewValue and aDOMCSSDecl are used to determine whether the property's
+   * value has changed.
    */
-  static void NotifyAnimated(nsIFrame* aFrame, nsCSSProperty aProperty);
+  static void NotifyAnimated(nsIFrame* aFrame, nsCSSProperty aProperty,
+                             const nsAString& aNewValue,
+                             nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
    * Notify aFrame as being known to have an animation of aProperty through an
    * inline style modification during aScrollFrame's scroll event handler.
@@ -60,8 +65,12 @@ public:
    * has been modified.
    * This notification is incomplete --- not all modifications to inline
    * style will trigger this.
+   * aNewValue and aDOMCSSDecl are used to determine whether the property's
+   * value has changed.
    */
-  static void NotifyInlineStyleRuleModified(nsIFrame* aFrame, nsCSSProperty aProperty);
+  static void NotifyInlineStyleRuleModified(nsIFrame* aFrame, nsCSSProperty aProperty,
+                                            const nsAString& aNewValue,
+                                            nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
    * Return true if aFrame's aProperty style should be considered as being animated
    * for pre-rendering.

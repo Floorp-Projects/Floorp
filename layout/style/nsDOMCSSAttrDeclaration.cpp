@@ -186,7 +186,7 @@ nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
       aPropID == eCSSProperty_background_position) {
     nsIFrame* frame = mElement->GetPrimaryFrame();
     if (frame) {
-      ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID);
+      ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID, aValue, this);
     }
   }
   return nsDOMCSSDeclaration::SetPropertyValue(aPropID, aValue);
