@@ -812,6 +812,11 @@
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
+            <menuitem label="&recentBookmarks.label;"
+                      disabled="true"
+                      class="subviewbutton"/>
+            <vbox id="BMB_recentBookmarks"/>
+            <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
                   class="menu-iconic bookmark-item subviewbutton"
                   label="&personalbarCmd.label;"
