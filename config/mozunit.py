@@ -32,11 +32,31 @@ class _MozTestResult(_TestResult):
         else:
             return str(test)
 
+    def printStatus(self, status, test, message=''):
+        line = "{status} | {file} | {test}{sep}{message}".format(
+            status=status,
+            file=inspect.getfile(test.__class__),
+            test=test._testMethodName,
+            sep=', ' if message else '',
+            message=message,
+        )
+        self.stream.writeln(line)
+
     def addSuccess(self, test):
         _TestResult.addSuccess(self, test)
-        filename = inspect.getfile(test.__class__)
-        testname = test._testMethodName
-        self.stream.writeln("TEST-PASS | {0} | {1}".format(filename, testname))
+        self.printStatus('TEST-PASS', test)
+
+    def addSkip(self, test, reason):
+        _TestResult.addSkip(self, test, reason)
+        self.printStatus('TEST-SKIP', test)
+
+    def addExpectedFailure(self, test, err):
+        _TestResult.addExpectedFailure(self, test, err)
+        self.printStatus('TEST-KNOWN-FAIL', test)
+
+    def addUnexpectedSuccess(self, test):
+        _TestResult.addUnexpectedSuccess(self, test)
+        self.printStatus('TEST-UNEXPECTED-PASS', test)
 
     def addError(self, test, err):
         _TestResult.addError(self, test, err)
@@ -58,8 +78,8 @@ class _MozTestResult(_TestResult):
         if not tb:
             self.stream.writeln("TEST-UNEXPECTED-FAIL | NO TRACEBACK |")
         _f, _ln, _t = inspect.getframeinfo(tb)[:3]
-        self.stream.writeln("TEST-UNEXPECTED-FAIL | {0} | line {1}, {2}: {3}" 
-                            .format(_f, _ln, _t, value.message))
+        self.printStatus('TEST-UNEXPECTED-FAIL', test,
+                         'line {0}: {1}'.format(_ln, value.message))
 
 
 class MozTestRunner(_TestRunner):
