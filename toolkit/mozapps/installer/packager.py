@@ -367,7 +367,7 @@ def main():
 
     # shlibsign libraries
     if launcher.can_launch():
-        if not mozinfo.isMac:
+        if not mozinfo.isMac and buildconfig.substs.get('COMPILE_ENVIRONMENT'):
             for lib in SIGN_LIBS:
                 libbase = mozpath.join(respath, '%s%s') \
                     % (buildconfig.substs['DLL_PREFIX'], lib)
