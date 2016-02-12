@@ -973,13 +973,158 @@ class CompareCodecPriority {
     std::string mPreferredCodec;
 };
 
+#if !defined(MOZILLA_XPCOMRT_API)
+class ConfigureCodec {
+  public:
+    explicit ConfigureCodec(nsCOMPtr<nsIPrefBranch>& branch) :
+      mHardwareH264Enabled(false),
+      mHardwareH264Supported(false),
+      mSoftwareH264Enabled(false),
+      mH264Enabled(false),
+      mVP9Enabled(false),
+      mH264Level(13), // minimum suggested for WebRTC spec
+      mH264MaxBr(0), // Unlimited
+      mH264MaxMbps(0), // Unlimited
+      mVP8MaxFs(0),
+      mVP8MaxFr(0),
+      mUseTmmbr(false)
+    {
+#ifdef MOZ_WEBRTC_OMX
+      // Check to see if what HW codecs are available (not in use) at this moment.
+      // Note that streaming video decode can reserve a decoder
+
+      // XXX See bug 1018791 Implement W3 codec reservation policy
+      // Note that currently, OMXCodecReservation needs to be held by an sp<> because it puts
+      // 'this' into an sp<EventListener> to talk to the resource reservation code
+
+      // This pref is a misnomer; it is solely for h264 _hardware_ support.
+      branch->GetBoolPref("media.peerconnection.video.h264_enabled",
+          &mHardwareH264Enabled);
+
+      if (mHardwareH264Enabled) {
+        // Ok, it is preffed on. Can we actually do it?
+        android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
+        android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
+
+        // Currently we just check if they're available right now, which will fail if we're
+        // trying to call ourself, for example.  It will work for most real-world cases, like
+        // if we try to add a person to a 2-way call to make a 3-way mesh call
+        if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
+          CSFLogDebug( logTag, "%s: H264 hardware codec available", __FUNCTION__);
+          mHardwareH264Supported = true;
+        }
+      }
+
+#endif // MOZ_WEBRTC_OMX
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+      mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
+#else
+      // For unit-tests
+      mSoftwareH264Enabled = true;
+#endif
+
+      mH264Enabled = mHardwareH264Supported || mSoftwareH264Enabled;
+
+      branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
+      mH264Level &= 0xFF;
+
+      branch->GetIntPref("media.navigator.video.h264.max_br", &mH264MaxBr);
+
+#ifdef MOZ_WEBRTC_OMX
+      // Level 1.2; but let's allow CIF@30 or QVGA@30+ by default
+      mH264MaxMbps = 11880;
+#endif
+
+      branch->GetIntPref("media.navigator.video.h264.max_mbps", &mH264MaxMbps);
+
+      branch->GetBoolPref("media.peerconnection.video.vp9_enabled",
+          &mVP9Enabled);
+
+      branch->GetIntPref("media.navigator.video.max_fs", &mVP8MaxFs);
+      if (mVP8MaxFs <= 0) {
+        mVP8MaxFs = 12288; // We must specify something other than 0
+      }
+
+      branch->GetIntPref("media.navigator.video.max_fr", &mVP8MaxFr);
+      if (mVP8MaxFr <= 0) {
+        mVP8MaxFr = 60; // We must specify something other than 0
+      }
+
+      // TMMBR is enabled from a pref in about:config
+      branch->GetBoolPref("media.navigator.video.use_tmmbr", &mUseTmmbr);
+    }
+
+    void operator()(JsepCodecDescription* codec) const
+    {
+      switch (codec->mType) {
+        case SdpMediaSection::kAudio:
+          // Nothing to configure here, for now.
+          break;
+        case SdpMediaSection::kVideo:
+          {
+            JsepVideoCodecDescription& videoCodec =
+              static_cast<JsepVideoCodecDescription&>(*codec);
+
+            if (videoCodec.mName == "H264") {
+              // Override level
+              videoCodec.mProfileLevelId &= 0xFFFF00;
+              videoCodec.mProfileLevelId |= mH264Level;
+
+              videoCodec.mConstraints.maxBr = mH264MaxBr;
+
+              videoCodec.mConstraints.maxMbps = mH264MaxMbps;
+
+              // Might disable it, but we set up other params anyway
+              videoCodec.mEnabled = mH264Enabled;
+
+              if (videoCodec.mPacketizationMode == 0 && !mSoftwareH264Enabled) {
+                // We're assuming packetization mode 0 is unsupported by
+                // hardware.
+                videoCodec.mEnabled = false;
+              }
+
+              if (mHardwareH264Supported) {
+                videoCodec.mStronglyPreferred = true;
+              }
+            } else if (videoCodec.mName == "VP8" || videoCodec.mName == "VP9") {
+              if (videoCodec.mName == "VP9" && !mVP9Enabled) {
+                videoCodec.mEnabled = false;
+                break;
+              }
+              videoCodec.mConstraints.maxFs = mVP8MaxFs;
+              videoCodec.mConstraints.maxFps = mVP8MaxFr;
+            }
+
+            if (mUseTmmbr) {
+              videoCodec.EnableTmmbr();
+            }
+          }
+          break;
+        case SdpMediaSection::kText:
+        case SdpMediaSection::kApplication:
+        case SdpMediaSection::kMessage:
+          {} // Nothing to configure for these.
+      }
+    }
+
+  private:
+    bool mHardwareH264Enabled;
+    bool mHardwareH264Supported;
+    bool mSoftwareH264Enabled;
+    bool mH264Enabled;
+    bool mVP9Enabled;
+    int32_t mH264Level;
+    int32_t mH264MaxBr;
+    int32_t mH264MaxMbps;
+    int32_t mVP8MaxFs;
+    int32_t mVP8MaxFr;
+    bool mUseTmmbr;
+};
+#endif // !defined(MOZILLA_XPCOMRT_API)
+
 nsresult
 PeerConnectionImpl::ConfigureJsepSessionCodecs() {
-  if (mHaveConfiguredCodecs) {
-    return NS_OK;
-  }
-  mHaveConfiguredCodecs = true;
-
 #if !defined(MOZILLA_XPCOMRT_API)
   nsresult res;
   nsCOMPtr<nsIPrefService> prefs =
@@ -987,8 +1132,8 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: Couldn't get prefs service, res=%u",
-                        __FUNCTION__,
-                        static_cast<unsigned>(res));
+        __FUNCTION__,
+        static_cast<unsigned>(res));
     return res;
   }
 
@@ -998,137 +1143,11 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
     return NS_ERROR_FAILURE;
   }
 
-
-  bool hardwareH264Supported = false;
-
-#ifdef MOZ_WEBRTC_OMX
-  bool hardwareH264Enabled = false;
-
-  // Check to see if what HW codecs are available (not in use) at this moment.
-  // Note that streaming video decode can reserve a decoder
-
-  // XXX See bug 1018791 Implement W3 codec reservation policy
-  // Note that currently, OMXCodecReservation needs to be held by an sp<> because it puts
-  // 'this' into an sp<EventListener> to talk to the resource reservation code
-
-  // This pref is a misnomer; it is solely for h264 _hardware_ support.
-  branch->GetBoolPref("media.peerconnection.video.h264_enabled",
-                      &hardwareH264Enabled);
-
-  if (hardwareH264Enabled) {
-    // Ok, it is preffed on. Can we actually do it?
-    android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
-    android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
-
-    // Currently we just check if they're available right now, which will fail if we're
-    // trying to call ourself, for example.  It will work for most real-world cases, like
-    // if we try to add a person to a 2-way call to make a 3-way mesh call
-    if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
-      CSFLogDebug( logTag, "%s: H264 hardware codec available", __FUNCTION__);
-      hardwareH264Supported = true;
-    }
-  }
-
-#endif // MOZ_WEBRTC_OMX
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  bool softwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
-#else
-  // For unit-tests
-  bool softwareH264Enabled = true;
-#endif
-
-  bool h264Enabled = hardwareH264Supported || softwareH264Enabled;
-
-  bool vp9Enabled = false;
-  branch->GetBoolPref("media.peerconnection.video.vp9_enabled",
-                      &vp9Enabled);
-
-  auto& codecs = mJsepSession->Codecs();
+  ConfigureCodec configurer(branch);
+  mJsepSession->ForEachCodec(configurer);
 
   // We use this to sort the list of codecs once everything is configured
   CompareCodecPriority comparator;
-
-  // Set parameters
-  for (auto i = codecs.begin(); i != codecs.end(); ++i) {
-    auto &codec = **i;
-    switch (codec.mType) {
-      case SdpMediaSection::kAudio:
-        // Nothing to configure here, for now.
-        break;
-      case SdpMediaSection::kVideo:
-        {
-          JsepVideoCodecDescription& videoCodec =
-            static_cast<JsepVideoCodecDescription&>(codec);
-
-          if (videoCodec.mName == "H264") {
-            int32_t level = 13; // minimum suggested for WebRTC spec
-            branch->GetIntPref("media.navigator.video.h264.level", &level);
-            level &= 0xFF;
-            // Override level
-            videoCodec.mProfileLevelId &= 0xFFFF00;
-            videoCodec.mProfileLevelId |= level;
-
-            int32_t maxBr = 0; // Unlimited
-            branch->GetIntPref("media.navigator.video.h264.max_br", &maxBr);
-            videoCodec.mConstraints.maxBr = maxBr;
-
-            int32_t maxMbps = 0; // Unlimited
-#ifdef MOZ_WEBRTC_OMX
-            // Level 1.2; but let's allow CIF@30 or QVGA@30+ by default
-            maxMbps = 11880;
-#endif
-            branch->GetIntPref("media.navigator.video.h264.max_mbps", &maxMbps);
-            videoCodec.mConstraints.maxMbps = maxMbps;
-
-            // Might disable it, but we set up other params anyway
-            videoCodec.mEnabled = h264Enabled;
-
-            if (videoCodec.mPacketizationMode == 0 && !softwareH264Enabled) {
-              // We're assuming packetization mode 0 is unsupported by
-              // hardware.
-              videoCodec.mEnabled = false;
-            }
-
-            if (hardwareH264Supported) {
-              videoCodec.mStronglyPreferred = true;
-            }
-          } else if (codec.mName == "VP8" || codec.mName == "VP9") {
-            if (videoCodec.mName == "VP9" && !vp9Enabled) {
-              videoCodec.mEnabled = false;
-              break;
-            }
-            int32_t maxFs = 0;
-            branch->GetIntPref("media.navigator.video.max_fs", &maxFs);
-            if (maxFs <= 0) {
-              maxFs = 12288; // We must specify something other than 0
-            }
-            videoCodec.mConstraints.maxFs = maxFs;
-
-            int32_t maxFr = 0;
-            branch->GetIntPref("media.navigator.video.max_fr", &maxFr);
-            if (maxFr <= 0) {
-              maxFr = 60; // We must specify something other than 0
-            }
-            videoCodec.mConstraints.maxFps = maxFr;
-
-          }
-
-          // TMMBR is enabled from a pref in about:config
-          bool useTmmbr = false;
-          branch->GetBoolPref("media.navigator.video.use_tmmbr",
-            &useTmmbr);
-          if (useTmmbr) {
-            videoCodec.EnableTmmbr();
-          }
-        }
-        break;
-      case SdpMediaSection::kText:
-      case SdpMediaSection::kApplication:
-      case SdpMediaSection::kMessage:
-        {} // Nothing to configure for these.
-    }
-  }
 
   // Sort by priority
   int32_t preferredCodec = 0;
@@ -1139,7 +1158,7 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
     comparator.SetPreferredCodec(preferredCodec);
   }
 
-  std::stable_sort(codecs.begin(), codecs.end(), comparator);
+  mJsepSession->SortCodecs(comparator);
 #endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_OK;
 }
@@ -1260,17 +1279,6 @@ PeerConnectionImpl::AddTrackToJsepSession(SdpMediaSection::MediaType type,
                                           const std::string& streamId,
                                           const std::string& trackId)
 {
-  if (!PeerConnectionCtx::GetInstance()->isReady()) {
-    // We are not ready to configure codecs for this track. We need to defer.
-    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
-        WrapRunnableNM(DeferredAddTrackToJsepSession,
-                       mHandle,
-                       type,
-                       streamId,
-                       trackId));
-    return NS_OK;
-  }
-
   nsresult res = ConfigureJsepSessionCodecs();
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "Failed to configure codecs");
