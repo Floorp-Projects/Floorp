@@ -276,6 +276,35 @@ window.onload = Task.async(function* () {
       "-N:false",
       "--O:false",
     ], "After the RIGHT, K should be focused.");
+
+    // Check that keys are ignored if any modifier is present.
+    let keysWithModifier = [
+      { key: "ArrowDown", altKey: true },
+      { key: "ArrowDown", ctrlKey: true },
+      { key: "ArrowDown", metaKey: true },
+      { key: "ArrowDown", shiftKey: true },
+    ];
+    for (let key of keysWithModifier) {
+      Simulate.keyDown(document.querySelector(".tree"), key);
+      yield forceRender(tree);
+      isRenderedTree(document.body.textContent, [
+        "A:false",
+        "-B:false",
+        "--E:false",
+        "---K:true",
+        "---L:false",
+        "--F:false",
+        "--G:false",
+        "-C:false",
+        "--H:false",
+        "--I:false",
+        "-D:false",
+        "--J:false",
+        "M:false",
+        "-N:false",
+        "--O:false",
+      ], "After DOWN + (alt|ctrl|meta|shift), K should remain focused.");
+    }
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
