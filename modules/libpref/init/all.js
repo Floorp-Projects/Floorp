@@ -4643,6 +4643,7 @@ pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
 // 0 - disabled, 1 - enabled, 2 - autodetect
+// Autodetection is currently only supported on Windows and GTK3
 #if defined(XP_MACOSX)
 pref("dom.w3c_touch_events.enabled", 0);
 #elif defined(XP_WIN) && !defined(NIGHTLY_BUILD)

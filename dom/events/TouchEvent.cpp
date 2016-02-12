@@ -194,7 +194,6 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
       }
       prefValue = sIsTouchDeviceSupportPresent;
 #else
-      NS_WARNING("dom.w3c_touch_events.enabled=2 not implemented!");
       prefValue = false;
 #endif
     } else {
