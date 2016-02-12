@@ -145,6 +145,7 @@ private:
   static void MaybeDismissOnScreenKeyboard(nsWindow* aWindow);
   static bool WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
                                                const std::wstring& aNeedle);
+  static bool NeedOnScreenKeyboard();
   static bool IsKeyboardPresentOnSlate();
   static bool IsInTabletMode();
   static bool AutoInvokeOnScreenKeyboardInDesktopMode();

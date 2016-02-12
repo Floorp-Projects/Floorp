@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1228137
+-->
+<head>
+  <title>Test that mouse movement immediately after finish() should involve restyling for finished state(Bug 1228137)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1219236">Mozilla Bug 1228137</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { "set": [[ "dom.animations-api.core.enabled", true]] },
+  function() {
+    window.open("file_animations_styles_on_event.html");
+  });
+</script>
+</pre>
+</body>
+</html>

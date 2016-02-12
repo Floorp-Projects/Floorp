@@ -983,6 +983,20 @@
     "kind": "boolean",
     "description": "WebGL canvas used"
   },
+  "CANVAS_WEBGL_SUCCESS": {
+    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "WebGL1 creation success",
+    "bug_numbers": [1247327]
+  },
+  "CANVAS_WEBGL2_SUCCESS": {
+    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "WebGL2 creation success",
+    "bug_numbers": [1247327]
+  },
   "TOTAL_CONTENT_PAGE_LOAD_TIME": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
@@ -10148,5 +10162,20 @@
     "bug_numbers": [1241278],
     "kind": "boolean",
     "description": "Usage of the deprecated Notification.requestPermission() callback argument"
+  },
+  "VIDEO_FASTSEEK_USED": {
+    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
+    "expires_in_version": "55",
+    "bug_numbers": [1245982],
+    "kind": "count",
+    "description": "Uses of HTMLMediaElement.fastSeek"
+  },
+  "TAB_SWITCH_CACHE_POSITION": {
+    "expires_in_version": "55",
+    "bug_numbers": [1242013],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "description": "Position in (theoretical) tab cache of tab being switched to"
   }
 }

@@ -357,10 +357,8 @@ AsyncFaviconHelperBase::AsyncFaviconHelperBase(
 
 AsyncFaviconHelperBase::~AsyncFaviconHelperBase()
 {
-  nsCOMPtr<nsIThread> thread;
-  (void)NS_GetMainThread(getter_AddRefs(thread));
   if (mCallback) {
-    (void)NS_ProxyRelease(thread, mCallback, true);
+    NS_ReleaseOnMainThread(mCallback.forget(), true);
   }
 }
 

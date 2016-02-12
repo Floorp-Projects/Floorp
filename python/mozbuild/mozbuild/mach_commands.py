@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import errno
 import itertools
 import json
 import logging
@@ -495,8 +496,21 @@ class Build(MachCommandBase):
 
             telemetry_handler = getattr(self._mach_context,
                                         'telemetry_handler', None)
-            usage = monitor.record_resource_usage()
-            telemetry_handler(self._mach_context, usage)
+            telemetry_data = monitor.record_resource_usage()
+
+            # Record build configuration data. For now, we cherry pick
+            # items we need rather than grabbing everything, in order
+            # to avoid accidentally disclosing PII.
+            try:
+                moz_artifact_builds = self.substs.get('MOZ_ARTIFACT_BUILDS',
+                                                      False)
+                telemetry_data['substs'] = {
+                    'MOZ_ARTIFACT_BUILDS': moz_artifact_builds,
+                }
+            except BuildEnvironmentNotFoundException:
+                pass
+
+            telemetry_handler(self._mach_context, telemetry_data)
 
         # Only for full builds because incremental builders likely don't
         # need to be burdened with this.
@@ -1467,6 +1481,12 @@ class PackageFrontend(MachCommandBase):
 
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
+
+        try:
+            os.makedirs(cache_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
         import which
         if self._is_windows():

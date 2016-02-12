@@ -251,7 +251,7 @@
       waitForFocus(() => {
         // Focus the test window and start tests.
         waitForFocus(() => {
-          var Tester = new testWin.Tester(links, gDumper, testsFinished);
+          var Tester = new testWin.Tester(links, gDumper.structuredLogger, testsFinished);
           Tester.start();
         }, testWin);
       }, window);

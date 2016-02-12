@@ -15,6 +15,7 @@
 #include "nsIRunnable.h"
 #include "nsIAsyncShutdown.h"
 #include "Latency.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "GraphDriver.h"
 #include "AudioMixer.h"
@@ -80,7 +81,7 @@ protected:
 class MessageBlock
 {
 public:
-  nsTArray<nsAutoPtr<ControlMessage> > mMessages;
+  nsTArray<UniquePtr<ControlMessage>> mMessages;
 };
 
 /**
@@ -139,7 +140,7 @@ public:
    * Append a ControlMessage to the message queue. This queue is drained
    * during RunInStableState; the messages will run on the graph thread.
    */
-  void AppendMessage(ControlMessage* aMessage);
+  void AppendMessage(UniquePtr<ControlMessage> aMessage);
 
   // Shutdown helpers.
 
@@ -293,7 +294,7 @@ public:
    * Schedules |aMessage| to run after processing, at a time when graph state
    * can be changed.  Graph thread.
    */
-  void RunMessageAfterProcessing(nsAutoPtr<ControlMessage> aMessage);
+  void RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage);
 
   /**
    * Called when a suspend/resume/close operation has been completed, on the
@@ -748,7 +749,7 @@ public:
    * immediately because we want all messages between stable states to be
    * processed as an atomic batch.
    */
-  nsTArray<nsAutoPtr<ControlMessage> > mCurrentTaskMessageQueue;
+  nsTArray<UniquePtr<ControlMessage>> mCurrentTaskMessageQueue;
   /**
    * True when RunInStableState has determined that mLifecycleState is >
    * LIFECYCLE_RUNNING. Since only the main thread can reset mLifecycleState to

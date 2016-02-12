@@ -1106,6 +1106,8 @@
             }
 
             if (!this._previewMode) {
+              this._recordTabAccess(this.mCurrentTab);
+
               this.mCurrentTab.lastAccessed = Infinity;
               this.mCurrentTab.removeAttribute("unread");
               oldTab.lastAccessed = Date.now();
@@ -1295,6 +1297,45 @@
         }
 
         fm.setFocus(newBrowser, focusFlags);
+        ]]></body>
+      </method>
+
+      <!--
+        This function assumes we have an LRU cache of tabs (either
+        images of tab content or their layers). The goal is to find
+        out how far into the cache we need to look in order to find
+        aTab. We record this number in telemetry and also move aTab to
+        the front of the cache.
+
+        A newly created tab has position Infinity in the cache.
+        If a tab is closed, it has no effect on the position of other
+        tabs in the cache since we assume that closing a tab doesn't
+        cause us to load in any other tabs.
+
+        We ignore the effect of dragging tabs between windows.
+      -->
+      <method name="_recordTabAccess">
+	<parameter name="aTab"/>
+        <body><![CDATA[
+          if (!Services.telemetry.canRecordExtended) {
+            return;
+          }
+
+          let tabs = Array.from(this.visibleTabs);
+
+          let pos = aTab.cachePosition;
+          for (let i = 0; i < tabs.length; i++) {
+            // If aTab is moving to the front, everything that was
+            // previously in front of it is bumped up one position.
+            if (tabs[i].cachePosition < pos) {
+              tabs[i].cachePosition++;
+            }
+          }
+          aTab.cachePosition = 0;
+
+          if (isFinite(pos)) {
+            Services.telemetry.getHistogramById("TAB_SWITCH_CACHE_POSITION").add(pos);
+          }
         ]]></body>
       </method>
 
@@ -4265,6 +4306,7 @@
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab._fullyOpen = true;
           this.mCurrentTab.lastAccessed = Infinity;
+          this.mCurrentTab.cachePosition = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
           this._tabForBrowser.set(this.mCurrentBrowser, this.mCurrentTab);
 
@@ -6133,6 +6175,8 @@
           this._lastAccessed = val;
         </setter>
       </property>
+
+      <field name="cachePosition">Infinity</field>
 
       <field name="mOverCloseButton">false</field>
       <property name="_overPlayingIcon" readonly="true">
