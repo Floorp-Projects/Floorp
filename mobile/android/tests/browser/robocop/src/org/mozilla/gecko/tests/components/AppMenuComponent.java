@@ -10,6 +10,7 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
@@ -33,7 +34,7 @@ import com.jayway.android.robotium.solo.Solo;
  * A class representing any interactions that take place on the app menu.
  */
 public class AppMenuComponent extends BaseComponent {
-    private static final long MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 7500L;
+    private static final int MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 7500;
 
     public enum MenuItem {
         FORWARD(R.string.forward),
@@ -124,40 +125,43 @@ public class AppMenuComponent extends BaseComponent {
      *
      * This method is dependent on not having two views with equivalent contentDescription / text.
      */
-    private View findAppMenuItemView(String text) {
-        RobotiumHelper.waitForExactText(text, 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
+    private View findAppMenuItemView(final String text) {
+        return WaitHelper.waitFor(String.format("menu item view '%s'", text), new Callable<View>() {
+            @Override
+            public View call() throws Exception {
+                final List<View> views = mSolo.getViews();
 
-        final List<View> views = mSolo.getViews();
-
-        final List<MenuItemActionBar> menuItemActionBarList = RobotiumUtils.filterViews(MenuItemActionBar.class, views);
-        for (MenuItemActionBar menuItem : menuItemActionBarList) {
-            if (TextUtils.equals(menuItem.getContentDescription(), text)) {
-                return menuItem;
-            }
-        }
-
-        final List<MenuItemDefault> menuItemDefaultList = RobotiumUtils.filterViews(MenuItemDefault.class, views);
-        for (MenuItemDefault menuItem : menuItemDefaultList) {
-            if (TextUtils.equals(menuItem.getText(), text)) {
-                return menuItem;
-            }
-        }
-
-        // On Android 2.3, menu items may be instances of
-        // com.android.internal.view.menu.ListMenuItemView, each with a child
-        // android.widget.RelativeLayout which in turn has a child
-        // TextView with the appropriate text.
-        final List<TextView> textViewList = RobotiumUtils.filterViews(TextView.class, views);
-        for (TextView textView : textViewList) {
-            if (TextUtils.equals(textView.getText(), text)) {
-                View relativeLayout = (View) textView.getParent();
-                if (relativeLayout instanceof RelativeLayout) {
-                    View listMenuItemView = (View)relativeLayout.getParent();
-                    return listMenuItemView;
+                final List<MenuItemActionBar> menuItemActionBarList = RobotiumUtils.filterViews(MenuItemActionBar.class, views);
+                for (MenuItemActionBar menuItem : menuItemActionBarList) {
+                    if (TextUtils.equals(menuItem.getContentDescription(), text)) {
+                        return menuItem;
+                    }
                 }
+
+                final List<MenuItemDefault> menuItemDefaultList = RobotiumUtils.filterViews(MenuItemDefault.class, views);
+                for (MenuItemDefault menuItem : menuItemDefaultList) {
+                    if (TextUtils.equals(menuItem.getText(), text)) {
+                        return menuItem;
+                    }
+                }
+
+                // On Android 2.3, menu items may be instances of
+                // com.android.internal.view.menu.ListMenuItemView, each with a child
+                // android.widget.RelativeLayout which in turn has a child
+                // TextView with the appropriate text.
+                final List<TextView> textViewList = RobotiumUtils.filterViews(TextView.class, views);
+                for (TextView textView : textViewList) {
+                    if (TextUtils.equals(textView.getText(), text)) {
+                        View relativeLayout = (View) textView.getParent();
+                        if (relativeLayout instanceof RelativeLayout) {
+                            View listMenuItemView = (View)relativeLayout.getParent();
+                            return listMenuItemView;
+                        }
+                    }
+                }
+                return null;
             }
-        }
-        return null;
+        }, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
     }
 
     /**
