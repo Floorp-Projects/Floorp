@@ -13,7 +13,7 @@ task:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   metadata:
-    name: '[TC] Linux64 mochitest-e10s-browser-chrome'
+    name: '[TC] Linux64 mochitest-browser-chrome-e10s-{{chunk}}'
     description: Mochitest browser-chrome e10s run {{chunk}}
   extra:
     chunks:

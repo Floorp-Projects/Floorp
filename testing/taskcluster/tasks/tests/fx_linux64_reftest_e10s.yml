@@ -6,7 +6,7 @@ task:
     command:
       - --e10s
   metadata:
-    name: '[TC] Linux64 reftest e10s {{chunk}}'
+    name: '[TC] Linux64 reftest-e10s-{{chunk}}'
     description: Reftest e10s run {{chunk}}
   extra:
     chunks:

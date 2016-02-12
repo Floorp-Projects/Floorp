@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
   metadata:
-    name: '[TC] Linux64 jittest'
+    name: '[TC] Linux64 jittest-{{chunk}}'
     description: Jittests run {{chunk}}
   extra:
     chunks:
