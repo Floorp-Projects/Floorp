@@ -1207,13 +1207,8 @@
           if (window.PopupNotifications)
             PopupNotifications._swapBrowserNotifications(aOtherBrowser, this);
 
-          try {
-            this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-                .swapFrameLoaders(aOtherBrowser);
-          } catch(ex) {
-            // This may not be implemented for browser elements that are not
-            // attached to a BrowserDOMWindow.
-          }
+          this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+              .swapFrameLoaders(aOtherBrowser);
 
           // Before we swap the actual docShell property we need to detach the
           // form fill controller from those docShells.
@@ -1242,10 +1237,8 @@
             this._remoteWebNavigationImpl.swapBrowser(this);
             aOtherBrowser._remoteWebNavigationImpl.swapBrowser(aOtherBrowser);
 
-            if (this._remoteWebProgressManager && aOtherBrowser._remoteWebProgressManager) {
-              this._remoteWebProgressManager.swapBrowser(this);
-              aOtherBrowser._remoteWebProgressManager.swapBrowser(aOtherBrowser);
-            }
+            this._remoteWebProgressManager.swapBrowser(this);
+            aOtherBrowser._remoteWebProgressManager.swapBrowser(aOtherBrowser);
 
             if (this._remoteFinder)
               this._remoteFinder.swapBrowser(this);
