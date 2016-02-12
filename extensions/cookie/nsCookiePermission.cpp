@@ -119,7 +119,7 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
   if (PREF_CHANGED(kCookiesLifetimeDays) &&
       NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
     // save cookie lifetime in seconds instead of days
-    mCookiesLifetimeSec = val * 24 * 60 * 60;
+    mCookiesLifetimeSec = (int64_t)val * 24 * 60 * 60;
 }
 
 NS_IMETHODIMP
