@@ -1,7 +1,0 @@
-# if the naming changes please modify DEB_PKG_NAME in xulrunner/installer/Makefile.in as well
-#filter substitution
-xulrunner (@GRE_MILESTONE@-@GRE_BUILDID@)  unstable; urgency=low
-
-  * Mozilla Nightly (Closes: #nnnn)  <nnnn is the bug number of your ITP>
-
- -- Mozilla Runtime  <mobile-feedback@mozilla.com>  @MOZ_DEB_TIMESTAMP@

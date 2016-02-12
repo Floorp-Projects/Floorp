@@ -17,15 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 
 // How long to wait for an add-on to uninstall before aborting
 const MAX_UNINSTALL_TIME = 10000;
-
-// Start the tests after the window has been displayed
-window.addEventListener("load", function testOnLoad() {
-  window.removeEventListener("load", testOnLoad);
-  window.addEventListener("MozAfterPaint", function testOnMozAfterPaint() {
-    window.removeEventListener("MozAfterPaint", testOnMozAfterPaint);
-    setTimeout(testInit, 0);
-  });
-});
+setTimeout(testInit, 0);
 
 var sdkpath = null;
 

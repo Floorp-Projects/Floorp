@@ -329,16 +329,14 @@ TLSServerConnectionInfo::~TLSServerConnectionInfo()
     return;
   }
 
-  nsITLSServerSecurityObserver* observer;
+  RefPtr<nsITLSServerSecurityObserver> observer;
   {
     MutexAutoLock lock(mLock);
-    mSecurityObserver.forget(&observer);
+    observer = mSecurityObserver.forget();
   }
 
   if (observer) {
-    nsCOMPtr<nsIThread> mainThread;
-    NS_GetMainThread(getter_AddRefs(mainThread));
-    NS_ProxyRelease(mainThread, observer);
+    NS_ReleaseOnMainThread(observer.forget());
   }
 }
 

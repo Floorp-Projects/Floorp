@@ -38,7 +38,12 @@ import errno
 import hashlib
 import shutil
 from optparse import OptionParser
-from subprocess import check_call, check_output, STDOUT
+from subprocess import (
+    check_call,
+    check_output,
+    STDOUT,
+    CalledProcessError,
+)
 import redo
 
 def OptionalEnvironmentVariable(v):
@@ -93,7 +98,14 @@ def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     cmdline.extend(["%s@%s" % (user, host), command])
 
     with redo.retrying(check_output, sleeptime=10) as f:
-        output = f(cmdline, stderr=STDOUT).strip()
+        try:
+            output = f(cmdline, stderr=STDOUT).strip()
+        except CalledProcessError as e:
+            print "failed ssh command output:"
+            print '=' * 20
+            print e.output
+            print '=' * 20
+            raise
         return output
 
     raise Exception("Command %s returned non-zero exit code" % cmdline)

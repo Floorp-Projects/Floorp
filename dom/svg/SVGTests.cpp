@@ -15,8 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS0(SVGTests)
-
 nsIAtom** SVGTests::sStringListNames[3] =
 {
   &nsGkAtoms::requiredFeatures,
