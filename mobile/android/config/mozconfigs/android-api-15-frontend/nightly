@@ -11,6 +11,9 @@ MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
+ac_add_options --with-gradle="$topsrcdir/gradle/bin/gradle"
+export GRADLE_MAVEN_REPOSITORY="file://$topsrcdir/jcentral"
+
 ac_add_options --disable-compile-environment
 ac_add_options --disable-tests
 
