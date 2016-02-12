@@ -33,7 +33,6 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
-import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfigPrefsBackend;
 import org.mozilla.gecko.home.HomePager;
@@ -194,7 +193,7 @@ public class BrowserApp extends GeckoApp
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
-    private static final String HONEYCOMB_EOL_NOTIFIED = "honeycomb_eol_notified";
+    private static final String EOL_NOTIFIED = "eol_notified";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -798,11 +797,11 @@ public class BrowserApp extends GeckoApp
                 allowCallback);
     }
 
-    private void conditionallyNotifyHCEOL() {
+    private void conditionallyNotifyEOL() {
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
-            if (!prefs.getBoolean(HONEYCOMB_EOL_NOTIFIED, false)) {
+            if (!prefs.contains(EOL_NOTIFIED)) {
 
                 // Launch main App to load SUMO url on EOL notification.
                 final String link = getString(R.string.eol_notification_url,
@@ -824,12 +823,12 @@ public class BrowserApp extends GeckoApp
                         .build();
 
                 final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                final int notificationID = HONEYCOMB_EOL_NOTIFIED.hashCode();
+                final int notificationID = EOL_NOTIFIED.hashCode();
                 notificationManager.notify(notificationID, notification);
 
                 GeckoSharedPrefs.forProfile(this)
                                 .edit()
-                                .putBoolean(HONEYCOMB_EOL_NOTIFIED, true)
+                                .putBoolean(EOL_NOTIFIED, true)
                                 .apply();
             }
         } finally {
@@ -2518,8 +2517,8 @@ public class BrowserApp extends GeckoApp
             onCreateOptionsMenu(mMenu);
         }
 
-        if (!Versions.preHC && !Versions.feature14Plus) {
-            conditionallyNotifyHCEOL();
+        if (!Versions.feature14Plus) {
+            conditionallyNotifyEOL();
         }
     }
 
