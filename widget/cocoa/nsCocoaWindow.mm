@@ -190,7 +190,8 @@ FindTargetScreenForRect(const DesktopIntRect& aRect)
   int largestIntersectArea = 0;
   while (NSScreen *screen = [screenEnum nextObject]) {
     DesktopIntRect screenRect =
-      nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]);
+      DesktopIntRect::FromUnknownRect(
+        nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
     screenRect = screenRect.Intersect(aRect);
     int area = screenRect.width * screenRect.height;
     if (area > largestIntersectArea) {
@@ -211,8 +212,7 @@ FitRectToVisibleAreaForScreen(DesktopIntRect& aRect, NSScreen* aScreen)
     aScreen = FindTargetScreenForRect(aRect);
   }
 
-  DesktopIntRect screenBounds =
-    nsCocoaUtils::CocoaRectToGeckoRect([aScreen visibleFrame]);
+  nsIntRect screenBounds(nsCocoaUtils::CocoaRectToGeckoRect([aScreen visibleFrame]));
 
   if (aRect.width > screenBounds.width) {
     aRect.width = screenBounds.width;
@@ -281,7 +281,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent,
     return NS_OK;
 
   nsresult rv =
-    CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds),
+    CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds.ToUnknownRect()),
                        mBorderStyle, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1551,7 +1551,8 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
                                            [mWindow screen] : nullptr);
 
   // convert requested bounds into Cocoa coordinate system
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
+  NSRect newFrame =
+    nsCocoaUtils::GeckoRectToCocoaRect(newBounds.ToUnknownRect());
 
   NSRect frame = [mWindow frame];
   BOOL isMoving = newFrame.origin.x != frame.origin.x ||
@@ -1687,7 +1688,8 @@ GetBackingScaleFactor(NSWindow* aWindow)
 
   // Then identify the screen it belongs to, and return its scale factor.
   NSScreen *screen =
-    FindTargetScreenForRect(nsCocoaUtils::CocoaRectToGeckoRect(frame));
+    FindTargetScreenForRect(
+      DesktopIntRect::FromUnknownRect(nsCocoaUtils::CocoaRectToGeckoRect(frame)));
   return nsCocoaUtils::GetBackingScaleFactor(screen);
 }
 

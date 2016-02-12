@@ -210,17 +210,15 @@ public:
   // in the bottom-left of the primary screen. Both nsRect and NSRect
   // contain width/height info, with no difference in their use.
   // This function does no scaling, so the Gecko coordinates are
-  // expected to be desktop pixels, which are equal to Cocoa points
-  // (by definition).
-  static NSRect GeckoRectToCocoaRect(const mozilla::DesktopIntRect &geckoRect);
+  // expected to be CSS pixels, which we treat as equal to Cocoa points.
+  static NSRect GeckoRectToCocoaRect(const nsIntRect &geckoRect);
 
   // Converts aGeckoRect in dev pixels to points in Cocoa coordinates
-  static NSRect
-  GeckoRectToCocoaRectDevPix(const mozilla::LayoutDeviceIntRect &aGeckoRect,
-                             CGFloat aBackingScale);
+  static NSRect GeckoRectToCocoaRectDevPix(const nsIntRect &aGeckoRect,
+                                           CGFloat aBackingScale);
 
   // See explanation for geckoRectToCocoaRect, guess what this does...
-  static mozilla::DesktopIntRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
+  static nsIntRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
 
   static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(
     const NSRect& aCocoaRect, CGFloat aBackingScale);
