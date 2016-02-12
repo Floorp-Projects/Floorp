@@ -3758,7 +3758,6 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
-MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
@@ -5367,26 +5366,8 @@ if test -n "$MOZ_OMX_PLUGIN"; then
         dnl Only allow building OMX plugin on Gonk (B2G) or Android
         AC_DEFINE(MOZ_OMX_PLUGIN)
     else
-        dnl fail if we're not building on Gonk or Android
-        AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
-    fi
-fi
-
-dnl ========================================================
-dnl = Enable building mobile/android with Gradle
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gradle-mobile-android-builds,
-[  --enable-gradle-mobile-android-builds      Enable building mobile/android with Gradle],
-    MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=1,
-    MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=)
-
-if test -n "$MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE"; then
-    if test "$OS_TARGET" = "Android" -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
-        dnl Only allow building mobile/android with Gradle.
-        AC_DEFINE(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
-    else
-        dnl fail if we're not building mobile/android.
-        AC_MSG_ERROR([Can only build mobile/android with Gradle])
+       dnl fail if we're not building on Gonk or Android
+       AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
     fi
 fi
 
@@ -8926,7 +8907,6 @@ AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
-AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
 AC_SUBST(VPX_AS)
 AC_SUBST_LIST(VPX_ASFLAGS)

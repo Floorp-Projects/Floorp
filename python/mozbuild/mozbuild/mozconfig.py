@@ -107,7 +107,7 @@ class MozconfigLoader(ProcessExecutionMixin):
         if 'MOZ_MYCONFIG' in env:
             raise MozconfigFindException(MOZ_MYCONFIG_ERROR)
 
-        env_path = env.get('MOZCONFIG', None) or None
+        env_path = env.get('MOZCONFIG', None)
         if env_path is not None:
             if not os.path.isabs(env_path):
                 potential_roots = [self.topsrcdir, os.getcwd()]
