@@ -357,7 +357,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIEditor> kungFuDeathGrip = mEditor;
 
-  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   // Let's handle each event with the message of the internal event of the
   // coming event.  If the DOM event was created with improper interface,
@@ -641,7 +641,7 @@ nsEditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 
   // Now, ask the native key bindings to handle the event.
   WidgetKeyboardEvent* keyEvent =
-    aKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   MOZ_ASSERT(keyEvent,
              "DOM key event's internal event must be WidgetKeyboardEvent");
   nsIWidget* widget = keyEvent->widget;
@@ -1047,7 +1047,7 @@ nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
     return NS_OK;
   }
   WidgetCompositionEvent* compositionStart =
-    aCompositionEvent->GetInternalNSEvent()->AsCompositionEvent();
+    aCompositionEvent->WidgetEventPtr()->AsCompositionEvent();
   return mEditor->BeginIMEComposition(compositionStart);
 }
 

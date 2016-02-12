@@ -1665,7 +1665,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   }
 #endif
 
-  WidgetEvent* theEvent = aFocusEvent->GetInternalNSEvent();
+  WidgetEvent* theEvent = aFocusEvent->WidgetEventPtr();
   if (theEvent) {
     WidgetGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->mMessage,
                               nullptr);
@@ -1707,7 +1707,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 
   if (mInstance) {
     WidgetKeyboardEvent* keyEvent =
-      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+      aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
     if (keyEvent && keyEvent->mClass == eKeyboardEventClass) {
       nsEventStatus rv = ProcessEvent(*keyEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1742,7 +1742,7 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   WidgetMouseEvent* mouseEvent =
-    aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
+    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   if (mouseEvent && mouseEvent->mClass == eMouseEventClass) {
     mLastMouseDownButtonType = mouseEvent->button;
     nsEventStatus rv = ProcessEvent(*mouseEvent);
@@ -1767,7 +1767,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
     return NS_OK;
 
   WidgetMouseEvent* mouseEvent =
-    aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
+    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   if (mouseEvent && mouseEvent->mClass == eMouseEventClass) {
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1882,7 +1882,7 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   WidgetCompositionEvent* compositionEvent =
-    aEvent->GetInternalNSEvent()->AsCompositionEvent();
+    aEvent->WidgetEventPtr()->AsCompositionEvent();
   if (NS_WARN_IF(!compositionEvent)) {
       return NS_ERROR_INVALID_ARG;
   }
@@ -2025,7 +2025,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
-    WidgetEvent* ievent = aEvent->GetInternalNSEvent();
+    WidgetEvent* ievent = aEvent->WidgetEventPtr();
     if (ievent && ievent->mFlags.mIsTrusted &&
         ievent->mMessage != eDragEnter && ievent->mMessage != eDragOver) {
       aEvent->PreventDefault();

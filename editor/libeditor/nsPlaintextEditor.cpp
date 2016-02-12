@@ -362,7 +362,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   }
 
   WidgetKeyboardEvent* nativeKeyEvent =
-    aKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(nativeKeyEvent->mMessage == eKeyPress,
                "HandleKeyPressEvent gets non-keypress event");
@@ -848,7 +848,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   MOZ_ASSERT(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
 
   WidgetCompositionEvent* compositionChangeEvent =
-    aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();
+    aDOMTextEvent->WidgetEventPtr()->AsCompositionEvent();
   NS_ENSURE_TRUE(compositionChangeEvent, NS_ERROR_INVALID_ARG);
   MOZ_ASSERT(compositionChangeEvent->mMessage == eCompositionChange,
              "The internal event should be eCompositionChange");
