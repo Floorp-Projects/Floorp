@@ -258,6 +258,15 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
     return true;
   }
 
+  // When checking "audio/x-wav", CreateDecoder can cause a JNI ERROR by
+  // Accessing a stale local reference leading to a SIGSEGV crash.
+  // To avoid this we check for wav types here.
+  if (aMimeType.EqualsLiteral("audio/x-wav") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
+    return false;
+  }  
+
   return widget::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
       nsCString(TranslateMimeType(aMimeType)));
 }
