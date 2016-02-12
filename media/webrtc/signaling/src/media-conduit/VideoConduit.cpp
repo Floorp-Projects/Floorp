@@ -1005,10 +1005,12 @@ static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
 };
 
 void
-WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
-                                    unsigned short width,
-                                    unsigned short height,
-                                    mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths)
+WebrtcVideoConduit::SelectBitrates(unsigned short width,
+                                   unsigned short height,
+                                   mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths,
+                                   unsigned int& out_start,
+                                   unsigned int& out_min,
+                                   unsigned int& out_max)
 {
   // max bandwidth should be proportional (not linearly!) to resolution, and
   // proportional (perhaps linearly, or close) to current frame rate.
@@ -1020,9 +1022,9 @@ WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
 
   for (ResolutionAndBitrateLimits resAndLimits : kResolutionAndBitrateLimits) {
     if (fs > resAndLimits.resolution_in_mb) {
-      vie_codec.minBitrate = resAndLimits.min_bitrate;
-      vie_codec.startBitrate = resAndLimits.start_bitrate;
-      vie_codec.maxBitrate = resAndLimits.max_bitrate;
+      out_min = resAndLimits.min_bitrate;
+      out_start = resAndLimits.start_bitrate;
+      out_max = resAndLimits.max_bitrate;
       break;
     }
   }
@@ -1032,34 +1034,34 @@ WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
   MOZ_ASSERT(framerate > 0);
   // Now linear reduction/increase based on fps (max 60fps i.e. doubling)
   if (framerate >= 10) {
-    vie_codec.minBitrate = vie_codec.minBitrate * (framerate/30);
-    vie_codec.startBitrate = vie_codec.startBitrate * (framerate/30);
-    vie_codec.maxBitrate = vie_codec.maxBitrate * (framerate/30);
+    out_min = out_min * (framerate/30);
+    out_start = out_start * (framerate/30);
+    out_max = out_max * (framerate/30);
   } else {
     // At low framerates, don't reduce bandwidth as much - cut slope to 1/2.
     // Mostly this would be ultra-low-light situations/mobile or screensharing.
-    vie_codec.minBitrate = vie_codec.minBitrate * ((10-(framerate/2))/30);
-    vie_codec.startBitrate = vie_codec.startBitrate * ((10-(framerate/2))/30);
-    vie_codec.maxBitrate = vie_codec.maxBitrate * ((10-(framerate/2))/30);
+    out_min = out_min * ((10-(framerate/2))/30);
+    out_start = out_start * ((10-(framerate/2))/30);
+    out_max = out_max * ((10-(framerate/2))/30);
   }
 
-  if (mMinBitrate && mMinBitrate > vie_codec.minBitrate) {
-    vie_codec.minBitrate = mMinBitrate;
+  if (mMinBitrate && mMinBitrate > out_min) {
+    out_min = mMinBitrate;
   }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  vie_codec.minBitrate = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
-                                  vie_codec.minBitrate);
-  if (mStartBitrate && mStartBitrate > vie_codec.startBitrate) {
-    vie_codec.startBitrate = mStartBitrate;
+  out_min = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
+                                  out_min);
+  if (mStartBitrate && mStartBitrate > out_start) {
+    out_start = mStartBitrate;
   }
-  vie_codec.startBitrate = std::max(vie_codec.startBitrate, vie_codec.minBitrate);
+  out_start = std::max(out_start, out_min);
 
   // Note: mMaxBitrate is the max transport bitrate - it applies to a
   // single codec encoding, but should also apply to the sum of all
   // simulcast layers in this encoding!
   // So sum(layers.maxBitrate) <= mMaxBitrate
-  if (mMaxBitrate && mMaxBitrate > vie_codec.maxBitrate) {
-    vie_codec.maxBitrate = mMaxBitrate;
+  if (mMaxBitrate && mMaxBitrate > out_max) {
+    out_max = mMaxBitrate;
   }
 }
 
@@ -1276,7 +1278,11 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
     vie_codec.width = width;
     vie_codec.height = height;
     vie_codec.maxFramerate = mSendingFramerate;
-    SelectBandwidth(vie_codec, width, height, mLastFramerateTenths);
+    SelectBitrates(vie_codec.width, vie_codec.height,
+                   mLastFramerateTenths,
+                   vie_codec.startBitrate,
+                   vie_codec.minBitrate,
+                   vie_codec.maxBitrate);
 
     // TODO: If/when we begin supporting width/height constraints on simulcast
     // streams, for each such constraint we will need to choose a resolution
