@@ -226,6 +226,8 @@ HeapAnalysesClient.prototype.getDominatorTree = function (opts) {
  *          by greatest to least retained size.
  *        - {Number} maxCount
  *          The maximum number of children to return.
+ *        - {Number} maxRetainingPaths
+ *          The maximum number of retaining paths to find for each node.
  *
  * @returns {Promise<Object>}
  *          A promise of an object with the following properties:
