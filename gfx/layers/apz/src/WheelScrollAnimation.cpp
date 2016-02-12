@@ -13,11 +13,14 @@
 namespace mozilla {
 namespace layers {
 
-WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition)
+WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
+                                           const nsPoint& aInitialPosition,
+                                           ScrollWheelInput::ScrollDeltaType aDeltaType)
   : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZSmoothScrollRepaintInterval()))
   , AsyncScrollBase(aInitialPosition)
   , mApzc(aApzc)
   , mFinalDestination(aInitialPosition)
+  , mDeltaType(aDeltaType)
 {
 }
 
@@ -87,8 +90,21 @@ WheelScrollAnimation::InitPreferences(TimeStamp aTime)
     return;
   }
 
-  mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
-  mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+  switch (mDeltaType) {
+  case ScrollWheelInput::SCROLLDELTA_PAGE:
+    mOriginMaxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+    mOriginMinMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    break;
+  case ScrollWheelInput::SCROLLDELTA_PIXEL:
+    mOriginMaxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
+    mOriginMinMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    break;
+  case ScrollWheelInput::SCROLLDELTA_LINE:
+  default:
+    mOriginMaxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
+    mOriginMinMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
+    break;
+  }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   mIntervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
