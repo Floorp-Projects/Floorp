@@ -19,4 +19,6 @@ ac_add_options --enable-verify-mar
 # defines.sh during the beta cycle
 export BUILDING_RELEASE=1
 
+. "$topsrcdir/build/mozconfig.rust"
+
 . "$topsrcdir/build/mozconfig.common.override"
