@@ -8,10 +8,6 @@ HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
 JS_SRCDIR=$GECKO_DIR/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
 
-# Install the sixgill tool
-TOOLTOOL_MANIFEST=js/src/devtools/rootAnalysis/build/sixgill.manifest
-. install-packages.sh "$GECKO_DIR"
-
 export CC="$TOOLTOOL_DIR/gcc/bin/gcc"
 export CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 
