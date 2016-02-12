@@ -140,8 +140,12 @@ endif
 endif
 
 
+# Builds using the hybrid FasterMake/RecursiveMake backend will
+# fail to produce a langpack. See bug 1255096.
 libs::
+ifeq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	$(MAKE) -C $(DEPTH)/browser/locales langpack
+endif
 
 ifeq (WINNT,$(OS_ARCH))
 PKGCOMP_FIND_OPTS =
