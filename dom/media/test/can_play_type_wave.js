@@ -11,6 +11,8 @@ function check_wave(v, enabled) {
 
   // Supported Wave codecs
   check("audio/wave; codecs=1", "probably");
+  check("audio/wave; codecs=6", "probably");
+  check("audio/wave; codecs=7", "probably");
   // "no codecs" should be supported, I guess
   check("audio/wave; codecs=", "probably");
   check("audio/wave; codecs=\"\"", "probably");
