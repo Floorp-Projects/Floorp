@@ -23,6 +23,7 @@ const Services = require("Services");
 const { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
 const CensusUtils = require("devtools/shared/heapsnapshot/CensusUtils");
 const DominatorTreeNode = require("devtools/shared/heapsnapshot/DominatorTreeNode");
+const { deduplicatePaths } = require("devtools/shared/heapsnapshot/shortest-paths");
 const { LabelAndShallowSizeVisitor } = DominatorTreeNode;
 
 
@@ -374,4 +375,52 @@ function assertDominatorTreeNodeInsertion(tree, path, newChildren, moreChildrenA
   dumpn("Actual resulting tree: " + JSON.stringify(actual, null, 2));
 
   assertStructurallyEquivalent(actual, expected);
+}
+
+function assertDeduplicatedPaths({ target, paths, expectedNodes, expectedEdges }) {
+  dumpn("Deduplicating paths:");
+  dumpn("target = " + target);
+  dumpn("paths = " + JSON.stringify(paths, null, 2));
+  dumpn("expectedNodes = " + expectedNodes);
+  dumpn("expectedEdges = " + JSON.stringify(expectedEdges, null, 2));
+
+  const { nodes, edges } = deduplicatePaths(target, paths);
+
+  dumpn("Actual nodes = " + nodes);
+  dumpn("Actual edges = " + JSON.stringify(edges, null, 2));
+
+  equal(nodes.length, expectedNodes.length,
+        "actual number of nodes is equal to the expected number of nodes");
+
+  equal(edges.length, expectedEdges.length,
+        "actual number of edges is equal to the expected number of edges");
+
+  const expectedNodeSet = new Set(expectedNodes);
+  const nodeSet = new Set(nodes);
+  ok(nodeSet.size === nodes.length,
+     "each returned node should be unique");
+
+  for (let node of nodes) {
+    ok(expectedNodeSet.has(node), `the ${node} node was expected`);
+  }
+
+  for (let expectedEdge of expectedEdges) {
+    let count = 0;
+    for (let edge of edges) {
+      if (edge.from === expectedEdge.from &&
+          edge.to === expectedEdge.to &&
+          edge.name === expectedEdge.name) {
+        count++;
+      }
+    }
+    equal(count, 1,
+          "should have exactly one matching edge for the expected edge = " + JSON.stringify(edge));
+  }
+}
+
+/**
+ * Create a mock path entry for the given predecessor and edge.
+ */
+function pathEntry(predecessor, edge) {
+  return { predecessor, edge };
 }

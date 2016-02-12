@@ -60,6 +60,7 @@ const expected = {
   ],
   shallowSize: 10,
   retainedSize: 10,
+  shortestPaths: undefined,
   children: [
     {
       nodeId: 200,
@@ -70,6 +71,7 @@ const expected = {
       shallowSize: 10,
       retainedSize: 10,
       parentId: 100,
+      shortestPaths: undefined,
       children: [
         {
           nodeId: 500,
@@ -81,6 +83,7 @@ const expected = {
           retainedSize: 10,
           parentId: 200,
           moreChildrenAvailable: false,
+          shortestPaths: undefined,
           children: undefined
         },
         {
@@ -93,6 +96,7 @@ const expected = {
           retainedSize: 10,
           parentId: 200,
           moreChildrenAvailable: false,
+          shortestPaths: undefined,
           children: undefined
         }
       ],
@@ -107,6 +111,7 @@ const expected = {
       shallowSize: 10,
       retainedSize: 10,
       parentId: 100,
+      shortestPaths: undefined,
       children: [
         {
           nodeId: 800,
@@ -118,6 +123,7 @@ const expected = {
           retainedSize: 10,
           parentId: 300,
           moreChildrenAvailable: false,
+          shortestPaths: undefined,
           children: undefined
         },
         {
@@ -130,6 +136,7 @@ const expected = {
           retainedSize: 10,
           parentId: 300,
           moreChildrenAvailable: false,
+          shortestPaths: undefined,
           children: undefined
         }
       ],
