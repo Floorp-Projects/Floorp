@@ -78,6 +78,7 @@ requests/packages/urllib3/poolmanager.py
 requests/packages/urllib3/request.py
 requests/packages/urllib3/response.py
 requests/packages/urllib3/contrib/__init__.py
+requests/packages/urllib3/contrib/appengine.py
 requests/packages/urllib3/contrib/ntlmpool.py
 requests/packages/urllib3/contrib/pyopenssl.py
 requests/packages/urllib3/packages/__init__.py
