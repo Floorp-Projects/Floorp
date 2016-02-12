@@ -46,11 +46,10 @@ public:
     static nsEventStatus DispatchKeyInput(mozilla::WidgetKeyboardEvent& aEvent);
     static void DispatchTouchInput(mozilla::MultiTouchInput& aInput);
 
-    using nsBaseWidget::Create; // for Create signature not overridden here
     NS_IMETHOD Create(nsIWidget* aParent,
                       void* aNativeParent,
                       const LayoutDeviceIntRect& aRect,
-                      nsWidgetInitData* aInitData) override;
+                      nsWidgetInitData* aInitData);
     NS_IMETHOD Destroy(void);
 
     NS_IMETHOD Show(bool aState);

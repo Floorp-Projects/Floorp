@@ -105,7 +105,7 @@ PuppetWidget::Create(nsIWidget* aParent,
 {
   MOZ_ASSERT(!aNativeParent, "got a non-Puppet native parent");
 
-  BaseCreate(nullptr, aInitData);
+  BaseCreate(nullptr, aRect, aInitData);
 
   mBounds = aRect;
   mEnabled = true;

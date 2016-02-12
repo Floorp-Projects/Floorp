@@ -96,9 +96,6 @@ public:
                                    LRESULT *aRetValue);
 
 protected:
-  virtual int32_t LogToPhys(double aValue) = 0;
-  void ChangedDPI();
-
   static bool InitTouchInjection();
   bool InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint,
                         POINTER_FLAGS aFlags, uint32_t aPressure = 1024,

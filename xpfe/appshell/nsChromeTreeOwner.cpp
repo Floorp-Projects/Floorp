@@ -382,12 +382,6 @@ NS_IMETHODIMP nsChromeTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(double *aSca
    return mXULWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetDevicePixelsPerDesktopPixel(double *aScale)
-{
-   NS_ENSURE_STATE(mXULWindow);
-   return mXULWindow->GetDevicePixelsPerDesktopPixel(aScale);
-}
-
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(int32_t x, int32_t y)
 {
    NS_ENSURE_STATE(mXULWindow);

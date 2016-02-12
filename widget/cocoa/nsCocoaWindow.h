@@ -257,11 +257,6 @@ public:
 
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
-                                   const DesktopIntRect& aRect,
-                                   nsWidgetInitData* aInitData = nullptr) override;
-
-    NS_IMETHOD              Create(nsIWidget* aParent,
-                                   nsNativeWidget aNativeParent,
                                    const LayoutDeviceIntRect& aRect,
                                    nsWidgetInitData* aInitData = nullptr) override;
 
@@ -323,10 +318,6 @@ public:
     void                    BackingScaleFactorChanged();
     virtual double          GetDefaultScaleInternal() override;
     virtual int32_t         RoundsWidgetCoordinatesTo() override;
-
-    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
-      return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
-    }
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
 

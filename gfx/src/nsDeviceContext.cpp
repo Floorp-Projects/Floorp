@@ -658,8 +658,6 @@ nsDeviceContext::FindScreen(nsIScreen** outScreen)
         return;
     }
 
-    CheckDPIChange();
-
     if (mWidget->GetOwningTabChild()) {
         mScreenManager->ScreenForNativeWidget((void *)mWidget->GetOwningTabChild(),
                                               outScreen);

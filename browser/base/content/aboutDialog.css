@@ -4,10 +4,6 @@
 
 #aboutDialog {
   width: 620px;
-  /* Set an explicit line-height to avoid discrepancies in 'auto' spacing
-     across screens with different device DPI, which may cause font metrics
-     to round differently. */
-  line-height: 1.5;
 }
 
 #rightBox {

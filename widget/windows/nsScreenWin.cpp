@@ -5,10 +5,8 @@
 
 #include "nsScreenWin.h"
 #include "nsCoord.h"
+#include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
-#include "WinUtils.h"
-
-using namespace mozilla;
 
 static uint32_t sScreenId;
 
@@ -102,12 +100,12 @@ nsScreenWin::GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, 
   
 } // GetAvailRect
 
- double
-nsScreenWin::GetDPIScale()
+static double
+GetDPIScale()
 {
   double dpiScale= nsIWidget::DefaultScaleOverride();
   if (dpiScale <= 0.0) {
-    dpiScale = widget::WinUtils::LogToPhysFactor(mScreen);
+    dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale(); 
   }
   return dpiScale;
 }
@@ -116,10 +114,6 @@ NS_IMETHODIMP
 nsScreenWin::GetRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
                                int32_t *outWidth, int32_t *outHeight)
 {
-  if (widget::WinUtils::IsPerMonitorDPIAware()) {
-    // on per-monitor-dpi config, display pixels are device pixels
-    return GetRect(outLeft, outTop, outWidth, outHeight);
-  }
   int32_t left, top, width, height;
   nsresult rv = GetRect(&left, &top, &width, &height);
   if (NS_FAILED(rv)) {
@@ -137,10 +131,6 @@ NS_IMETHODIMP
 nsScreenWin::GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
                                     int32_t *outWidth, int32_t *outHeight)
 {
-  if (widget::WinUtils::IsPerMonitorDPIAware()) {
-    // on per-monitor-dpi config, display pixels are device pixels
-    return GetAvailRect(outLeft, outTop, outWidth, outHeight);
-  }
   int32_t left, top, width, height;
   nsresult rv = GetAvailRect(&left, &top, &width, &height);
   if (NS_FAILED(rv)) {
@@ -184,15 +174,4 @@ nsScreenWin::GetColorDepth(int32_t *aColorDepth)
 
 } // GetColorDepth
 
-
-NS_IMETHODIMP
-nsScreenWin::GetContentsScaleFactor(double *aContentsScaleFactor)
-{
-  if (widget::WinUtils::IsPerMonitorDPIAware()) {
-    *aContentsScaleFactor = 1.0;
-  } else {
-    *aContentsScaleFactor = widget::WinUtils::LogToPhysFactor(mScreen);
-  }
-  return NS_OK;
-}
 

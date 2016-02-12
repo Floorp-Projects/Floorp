@@ -167,6 +167,13 @@ public:
     HRESULT CreateDevice(RefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
 #endif
 
+    /**
+     * Return the resolution scaling factor to convert between "logical" or
+     * "screen" pixels as used by Windows (dependent on the DPI scaling option
+     * in the Display control panel) and actual device pixels.
+     */
+    double GetDPIScale();
+
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts) override;
