@@ -1316,13 +1316,6 @@ TabClient.prototype = {
   }),
 
   /**
-   * Bring the window to the front.
-   */
-  focus: DebuggerClient.requester({
-    type: "focus"
-  }, {}),
-
-  /**
    * Reload the page in this tab.
    *
    * @param [optional] object options
