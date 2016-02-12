@@ -1517,6 +1517,9 @@ constexpr char NativePanZoomController::DisposeNative_t::signature[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
 
+constexpr char NativePanZoomController::HandleScrollEvent_t::name[];
+constexpr char NativePanZoomController::HandleScrollEvent_t::signature[];
+
 constexpr char NativePanZoomController::AbortAnimation_t::name[];
 constexpr char NativePanZoomController::AbortAnimation_t::signature[];
 

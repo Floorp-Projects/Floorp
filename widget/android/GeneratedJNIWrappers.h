@@ -3588,6 +3588,25 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
+    struct HandleScrollEvent_t {
+        typedef NativePanZoomController Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int64_t,
+                int32_t,
+                float,
+                float,
+                float,
+                float> Args;
+        static constexpr char name[] = "handleScrollEvent";
+        static constexpr char signature[] =
+                "(JIFFFF)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct AbortAnimation_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;
