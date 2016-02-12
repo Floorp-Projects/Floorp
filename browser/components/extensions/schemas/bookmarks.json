@@ -234,6 +234,7 @@
       },
       {
         "name": "search",
+        "unsupported": true,
         "type": "function",
         "description": "Searches for BookmarkTreeNodes matching the given query. Queries specified with an object produce BookmarkTreeNodes matching all specified properties.",
         "async": "callback",
@@ -257,7 +258,6 @@
                   },
                   "url": {
                     "type": "string",
-                    "format": "url",
                     "optional": true,
                     "description": "The URL of the bookmark; matches verbatim. Note that folders have no URL."
                   },
