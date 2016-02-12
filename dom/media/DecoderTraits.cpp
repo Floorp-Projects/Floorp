@@ -13,9 +13,6 @@
 #include "OggDecoder.h"
 #include "OggReader.h"
 
-#include "WaveDecoder.h"
-#include "WaveReader.h"
-
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 
@@ -50,6 +47,9 @@
 
 #include "MP3Decoder.h"
 #include "MP3Demuxer.h"
+
+#include "WaveDecoder.h"
+#include "WaveDemuxer.h"
 
 #include "ADTSDecoder.h"
 #include "ADTSDemuxer.h"
@@ -331,6 +331,13 @@ IsAACSupportedType(const nsACString& aType,
                    const nsAString& aCodecs = EmptyString())
 {
   return ADTSDecoder::CanHandleMediaType(aType, aCodecs);
+}
+
+static bool
+IsWAVSupportedType(const nsACString& aType,
+                   const nsAString& aCodecs = EmptyString())
+{
+  return WaveDecoder::CanHandleMediaType(aType, aCodecs);
 }
 
 /* static */
@@ -618,6 +625,9 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsAACSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
   } else
+  if (IsWAVSupportedType(aType)) {
+    decoderReader = new MediaFormatReader(aDecoder, new WAVDemuxer(aDecoder->GetResource()));
+  }
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     decoderReader = new RawReader(aDecoder);
@@ -625,9 +635,6 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 #endif
   if (IsOggType(aType)) {
     decoderReader = new OggReader(aDecoder);
-  } else
-  if (IsWaveType(aType)) {
-    decoderReader = new WaveReader(aDecoder);
   } else
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(aType)) {
