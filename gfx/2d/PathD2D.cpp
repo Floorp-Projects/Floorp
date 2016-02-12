@@ -6,7 +6,7 @@
 #include "PathD2D.h"
 #include "HelpersD2D.h"
 #include <math.h>
-#include "DrawTargetD2D1.h"
+#include "DrawTargetD2D.h"
 #include "Logging.h"
 
 namespace mozilla {
@@ -351,7 +351,7 @@ already_AddRefed<PathBuilder>
 PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
   RefPtr<ID2D1PathGeometry> path;
-  HRESULT hr = DrawTargetD2D1::factory()->CreatePathGeometry(getter_AddRefs(path));
+  HRESULT hr = DrawTargetD2D::factory()->CreatePathGeometry(getter_AddRefs(path));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create PathGeometry. Code: " << hexa(hr);
