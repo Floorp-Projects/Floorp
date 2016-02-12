@@ -326,6 +326,10 @@ public:
    * return the frame that has the non-psuedoelement style context for
    * the content.
    * This is aPrimaryFrame itself except for tableOuter frames.
+   *
+   * Given a non-null input, this will return null if and only if its
+   * argument is a table outer frame that is mid-destruction (and its
+   * table frame has been destroyed).
    */
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
 
