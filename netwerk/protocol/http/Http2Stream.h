@@ -13,6 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsAHttpTransaction.h"
 #include "nsISupportsPriority.h"
+#include "SimpleBuffer.h"
 
 class nsStandardURL;
 class nsIInputStream;
@@ -325,10 +326,9 @@ private:
   // For Http2Push
   Http2PushedStream *mPushSource;
 
-  // A pipe used to store stream data when the transaction cannot keep up
+  // Used to store stream data when the transaction channel cannot keep up
   // and flow control has not yet kicked in.
-  nsCOMPtr<nsIInputStream> mInputBufferIn;
-  nsCOMPtr<nsIOutputStream> mInputBufferOut;
+  SimpleBuffer mSimpleBuffer;
 
 /// connect tunnels
 public:
