@@ -3154,6 +3154,12 @@ nsRange::Constructor(const GlobalObject& aGlobal,
   return window->GetDoc()->CreateRange(aRv);
 }
 
+static bool ExcludeIfNextToNonSelectable(nsIContent* aContent)
+{
+  return aContent->IsNodeOfType(nsINode::eTEXT) &&
+    aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE);
+}
+
 void
 nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
 {
@@ -3172,6 +3178,10 @@ nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
 
     bool added = false;
     bool seenSelectable = false;
+    // |firstNonSelectableContent| is the first node in a consecutive sequence
+    // of non-IsSelectable nodes.  When we find a selectable node after such
+    // a sequence we'll end the last nsRange, create a new one and restart
+    // the outer loop.
     nsIContent* firstNonSelectableContent = nullptr;
     while (true) {
       ErrorResult err;
@@ -3181,12 +3191,19 @@ nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
       nsIContent* content =
         node && node->IsContent() ? node->AsContent() : nullptr;
       if (content) {
-        nsIFrame* frame = content->GetPrimaryFrame();
-        for (nsIContent* p = content; !frame && (p = p->GetParent()); ) {
-          frame = p->GetPrimaryFrame();
+        if (firstNonSelectableContent && ExcludeIfNextToNonSelectable(content)) {
+          // Ignorable whitespace next to a sequence of non-selectable nodes
+          // counts as non-selectable (bug 1216001).
+          selectable = false;
         }
-        if (frame) {
-          frame->IsSelectable(&selectable, nullptr);
+        if (selectable) {
+          nsIFrame* frame = content->GetPrimaryFrame();
+          for (nsIContent* p = content; !frame && (p = p->GetParent()); ) {
+            frame = p->GetPrimaryFrame();
+          }
+          if (frame) {
+            frame->IsSelectable(&selectable, nullptr);
+          }
         }
       }
 
