@@ -1820,7 +1820,7 @@ HTTP(..) == 983985-2.html 983985-2-ref.html
 == 985303-1a.html 985303-1-ref.html
 == 985303-1b.html 985303-1-ref.html
 == 987680-1.html 987680-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,24) == 991046-1.html 991046-1-ref.html
+fuzzy-if(d2d,1,36) == 991046-1.html 991046-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
