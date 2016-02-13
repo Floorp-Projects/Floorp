@@ -36,13 +36,6 @@
 
 struct nsGlobalNameStruct
 {
-  struct ConstructorAlias
-  {
-    nsCID mCID;
-    nsString mProtoName;
-    nsGlobalNameStruct* mProto;    
-  };
-
   enum nametype {
     eTypeNotInitialized,
     eTypeNewDOMBinding,
@@ -54,7 +47,6 @@ struct nsGlobalNameStruct
     eTypeClassProto,
     eTypeExternalClassInfoCreator,
     eTypeExternalClassInfo,
-    eTypeExternalConstructorAlias
   } mType;
 
   // mChromeOnly is only used for structs that define non-WebIDL things
@@ -67,7 +59,6 @@ struct nsGlobalNameStruct
     int32_t mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeInterface, eTypeClassProto
     nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
-    ConstructorAlias* mAlias; // eTypeExternalConstructorAlias
     nsCID mCID; // All other types except eTypeNewDOMBinding
   };
 
@@ -151,8 +142,6 @@ public:
                              uint32_t aScriptableFlags,
                              bool aHasClassInterface,
                              const nsCID *aConstructorCID);
-
-  nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
 
   void RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,
