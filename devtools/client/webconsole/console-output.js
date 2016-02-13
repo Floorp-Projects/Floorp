@@ -27,7 +27,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
-const l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const MAX_STRING_GRIP_LENGTH = 36;
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;

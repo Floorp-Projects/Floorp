@@ -618,12 +618,11 @@ exports.Utils = WebConsoleUtils;
 // Localization
 //////////////////////////////////////////////////////////////////////////
 
-WebConsoleUtils.l10n = function WCU_l10n(aBundleURI)
-{
-  this._bundleUri = aBundleURI;
+WebConsoleUtils.L10n = function(bundleURI) {
+  this._bundleUri = bundleURI;
 };
 
-WebConsoleUtils.l10n.prototype = {
+WebConsoleUtils.L10n.prototype = {
   _stringBundle: null,
 
   get stringBundle()
