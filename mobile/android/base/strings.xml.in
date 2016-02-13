@@ -27,7 +27,7 @@
   <string name="content_authority_db_passwords">@ANDROID_PACKAGE_NAME@.db.passwords</string>
   <string name="content_authority_db_tabs">@ANDROID_PACKAGE_NAME@.db.tabs</string>
   <string name="content_authority_db_readinglist">@ANDROID_PACKAGE_NAME@.db.readinglist</string>
-  <string name="moz_android_shared_fxaccount_type">@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@</string>
+  <string name="moz_android_shared_fxaccount_type">@ANDROID_PACKAGE_NAME@_fxaccount</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
 
 #include ../search/strings/search_strings.xml.in
