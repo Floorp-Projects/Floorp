@@ -6,6 +6,8 @@
 
 DIRS += ['locales']
 
+CONFIGURE_SUBST_FILES += ['adjust_sdk_app_token']
+
 include('android-services.mozbuild')
 
 thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
@@ -985,4 +987,5 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
 
 FINAL_TARGET_PP_FILES += ['package-name.txt.in']
 
+DEFINES['OBJDIR'] = OBJDIR
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
