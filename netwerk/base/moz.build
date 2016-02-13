@@ -254,6 +254,7 @@ UNIFIED_SOURCES += [
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
     'SchedulingContextService.cpp',
+    'SimpleBuffer.cpp',
     'StreamingProtocolService.cpp',
     'Tickler.cpp',
     'TLSServerSocket.cpp',
