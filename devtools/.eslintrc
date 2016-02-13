@@ -301,8 +301,6 @@
     "space-after-function-name": 0,
     // Require a space after keywords.
     "space-after-keywords": [1, "always"],
-    // Deprecated, will be removed in 1.0.
-    "space-after-function-name": 0,
     // Require a space before the start brace of a block.
     "space-before-blocks": [1, "always"],
     // Deprecated, will be removed in 1.0.
