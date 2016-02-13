@@ -61,11 +61,17 @@ function iframeLoad() {
 SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
+// Authentication info is added twice here. In the non-e10s case, this does
+// nothing. In the e10s case, we need to add auth info in both the child process,
+// which the plugin checks for auth validity, and the parent process, which the
+// http network objects use.
+// TODO: Clean this up once HTTPAuthManager is made e10s compliant in bug 1249172
 var iframe = document.getElementById("iframe");
 var am = Cc["@mozilla.org/network/http-auth-manager;1"].
          getService(Ci.nsIHttpAuthManager);
 am.setAuthIdentity("http", "mochi.test", 8888, "basic", "testrealm", "", 
     "mochi.test", "user1", "password1");
+SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("file_authident.js"));
 iframe.onload = iframeLoad;
 iframe.src = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/" +
     "test/authenticate.sjs?user=user1&pass=password1&realm=testrealm&plugin=1";
