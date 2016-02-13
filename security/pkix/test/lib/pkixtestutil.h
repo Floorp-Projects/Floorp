@@ -39,6 +39,13 @@ typedef std::basic_string<uint8_t> ByteString;
 
 inline bool ENCODING_FAILED(const ByteString& bs) { return bs.empty(); }
 
+template <size_t L>
+inline ByteString
+BytesToByteString(const uint8_t (&bytes)[L])
+{
+  return ByteString(bytes, L);
+}
+
 // XXX: Ideally, we should define this instead:
 //
 //   template <typename T, std::size_t N>
