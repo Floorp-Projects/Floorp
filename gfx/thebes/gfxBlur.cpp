@@ -594,7 +594,7 @@ RepeatOrStretchSurface(DrawTarget& aDT, SourceSurface* aSurface,
 
   if ((!aDT.GetTransform().IsRectilinear() &&
        aDT.GetBackendType() != BackendType::CAIRO) ||
-      (aDT.GetBackendType() == BackendType::DIRECT2D)) {
+      (aDT.GetBackendType() == BackendType::DIRECT2D1_1)) {
     // Use stretching if possible, since it leads to less seams when the
     // destination is transformed. However, don't do this if we're using cairo,
     // because if cairo is using pixman it won't render anything for large
