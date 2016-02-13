@@ -123,7 +123,7 @@ NotifySubdocumentInvalidationRecursive(Layer* aLayer, NotifySubDocInvalidationFu
     NotifySubdocumentInvalidationRecursive(child, aCallback);
   }
 
-  aCallback(container, container->GetVisibleRegion().ToUnknownRegion());
+  aCallback(container, container->GetLocalVisibleRegion().ToUnknownRegion());
 }
 
 struct LayerPropertiesBase : public LayerProperties
@@ -233,7 +233,7 @@ struct LayerPropertiesBase : public LayerProperties
 
   virtual IntRect NewTransformedBounds()
   {
-    return TransformRect(mLayer->GetVisibleRegion().ToUnknownRegion().GetBounds(),
+    return TransformRect(mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
                          GetTransformForInvalidation(mLayer));
   }
 
@@ -345,7 +345,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
       }
       if (invalidateChildsCurrentArea) {
         aGeometryChanged = true;
-        AddTransformedRegion(result, child->GetVisibleRegion().ToUnknownRegion(),
+        AddTransformedRegion(result, child->GetLocalVisibleRegion().ToUnknownRegion(),
                              GetTransformForInvalidation(child));
         if (aCallback) {
           NotifySubdocumentInvalidationRecursive(child, aCallback);
@@ -477,7 +477,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
   {
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
     
-    if (!imageLayer->GetVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
+    if (!imageLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
       aGeometryChanged = true;
       IntRect result = NewTransformedBounds();
       result = result.Union(OldTransformedBounds());
@@ -619,7 +619,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
     } else {
       ClearInvalidations(aRoot);
     }
-    IntRect result = TransformRect(aRoot->GetVisibleRegion().ToUnknownRegion().GetBounds(),
+    IntRect result = TransformRect(aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
                                      aRoot->GetLocalTransform());
     result = result.Union(OldTransformedBounds());
     if (aGeometryChanged != nullptr) {
