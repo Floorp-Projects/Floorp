@@ -23,7 +23,8 @@ public:
     maxPps(0),
     maxMbps(0),
     maxCpb(0),
-    maxDpb(0)
+    maxDpb(0),
+    scaleDownBy(1.0)
   {}
 
   bool operator==(const EncodingConstraints& constraints) const
@@ -40,6 +41,7 @@ public:
   uint32_t maxMbps; // macroblocks per second
   uint32_t maxCpb; // coded picture buffer size
   uint32_t maxDpb; // decoded picture buffer size
+  double scaleDownBy; // To preserve resolution
 };
 } // namespace mozilla
 
