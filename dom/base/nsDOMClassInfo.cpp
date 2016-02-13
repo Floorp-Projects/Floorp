@@ -1204,8 +1204,6 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
     rv = NS_ERROR_NOT_AVAILABLE;
   } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     native = do_CreateInstance(name_struct->mCID, &rv);
-  } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    native = do_CreateInstance(name_struct->mAlias->mCID, &rv);
   } else {
     native = do_CreateInstance(*name_struct->mData->mConstructorCID, &rv);
   }
@@ -1352,8 +1350,7 @@ private:
        IsConstructable(&sClassInfoData[aNameStruct->mDOMClassInfoID])) ||
       (aNameStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo &&
        IsConstructable(aNameStruct->mData)) ||
-      aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructor ||
-      aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias;
+      aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructor;
   }
 
   const char16_t*   mClassName;
@@ -1514,8 +1511,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   }
 
   if (name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
-      name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo &&
-      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+      name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo) {
     // Doesn't have DOM interfaces.
     return NS_OK;
   }
@@ -1529,9 +1525,6 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  NS_ASSERTION(nameSpaceManager, "Can't get namespace manager?");
-
   const nsIID *class_iid;
   if (class_name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
       class_name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
@@ -1541,35 +1534,10 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
       sClassInfoData[class_name_struct->mDOMClassInfoID].mProtoChainInterface;
   } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
     class_iid = class_name_struct->mData->mProtoChainInterface;
-  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    const nsGlobalNameStruct* alias_struct =
-      nameSpaceManager->GetConstructorProto(class_name_struct);
-    if (!alias_struct) {
-      NS_ERROR("Couldn't get constructor prototype.");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      class_iid =
-        sClassInfoData[alias_struct->mDOMClassInfoID].mProtoChainInterface;
-    } else if (alias_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-      class_iid = alias_struct->mData->mProtoChainInterface;
-    } else {
-      NS_ERROR("Expected eTypeClassConstructor or eTypeExternalClassInfo.");
-      return NS_ERROR_UNEXPECTED;
-    }
   } else {
     *bp = false;
 
     return NS_OK;
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    name_struct = nameSpaceManager->GetConstructorProto(name_struct);
-    if (!name_struct) {
-      NS_ERROR("Couldn't get constructor prototype.");
-      return NS_ERROR_UNEXPECTED;
-    }
   }
 
   NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
@@ -2150,34 +2118,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // one.
     return ResolvePrototype(nsDOMClassInfo::sXPConnect, aWin, cx, obj,
                             class_name, nullptr,
-                            name_struct, nameSpaceManager, nullptr, desc);
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    const nsGlobalNameStruct *alias_struct =
-      nameSpaceManager->GetConstructorProto(name_struct);
-    NS_ENSURE_TRUE(alias_struct, NS_ERROR_UNEXPECTED);
-
-    // We need to use the XPConnect prototype for the DOM class that this
-    // constructor is an alias for (for example for Image we need the prototype
-    // for HTMLImageElement).
-    JS::Rooted<JSObject*> dot_prototype(cx);
-    rv = GetXPCProto(nsDOMClassInfo::sXPConnect, cx, aWin, alias_struct,
-                     &dot_prototype);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(dot_prototype);
-
-    const nsDOMClassInfoData *ci_data;
-    if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      ci_data = &sClassInfoData[alias_struct->mDOMClassInfoID];
-    } else if (alias_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-      ci_data = alias_struct->mData;
-    } else {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    return ResolvePrototype(nsDOMClassInfo::sXPConnect, aWin, cx, obj,
-                            class_name, ci_data,
                             name_struct, nameSpaceManager, nullptr, desc);
   }
 

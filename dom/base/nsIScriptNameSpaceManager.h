@@ -10,9 +10,6 @@
 #define JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY \
   "JavaScript-global-constructor"
 
-#define JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY \
-  "JavaScript-global-constructor-prototype-alias"
-
 #define JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY \
   "JavaScript-global-property"
 
