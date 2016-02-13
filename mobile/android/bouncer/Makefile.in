@@ -18,7 +18,6 @@ manifest_TARGET := export
 # Special 'cuz they are set in mobile/android/defs.mk.
 manifest_FLAGS += \
   -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
-  -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
   $(NULL)
 
 # Targets built very early during a Gradle build.

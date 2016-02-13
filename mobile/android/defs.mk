@@ -1,6 +1,4 @@
 MOZ_ANDROID_SHARED_ID = $(ANDROID_PACKAGE_NAME).sharedID
-# Firefox Accounts Account types are per-package.
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = $(ANDROID_PACKAGE_NAME)_fxaccount
 
 # We released these builds to the public with shared IDs and need to
 # keep them consistent.

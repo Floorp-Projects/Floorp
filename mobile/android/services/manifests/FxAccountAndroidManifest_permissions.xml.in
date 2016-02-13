@@ -11,8 +11,8 @@
     <!-- A signature level permission granted only to the Firefox
          channels sharing an Android Account type. -->
     <permission
-        android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE"
+        android:name="@ANDROID_PACKAGE_NAME@_fxaccount.permission.PER_ACCOUNT_TYPE"
         android:protectionLevel="signature">
     </permission>
 
-    <uses-permission android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE" />
+    <uses-permission android:name="@ANDROID_PACKAGE_NAME@_fxaccount.permission.PER_ACCOUNT_TYPE" />
