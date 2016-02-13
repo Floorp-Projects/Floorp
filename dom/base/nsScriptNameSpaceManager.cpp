@@ -73,9 +73,6 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     // Release our pointer to the helper.
     NS_IF_RELEASE(ci);
   }
-  else if (e->mGlobalName.mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    delete e->mGlobalName.mAlias;
-  }
 
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
@@ -149,21 +146,6 @@ nsScriptNameSpaceManager::RemoveFromHash(PLDHashTable *aTable,
                                          const nsAString *aKey)
 {
   aTable->Remove(aKey);
-}
-
-nsGlobalNameStruct*
-nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
-{
-  NS_ASSERTION(aStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias,
-               "This function only works on constructor aliases!");
-  if (!aStruct->mAlias->mProto) {
-    auto proto = static_cast<GlobalNameMapEntry*>
-                            (mGlobalNames.Search(&aStruct->mAlias->mProtoName));
-    if (proto) {
-      aStruct->mAlias->mProto = &proto->mGlobalName;
-    }
-  }
-  return aStruct->mAlias->mProto;
 }
 
 nsresult
@@ -590,31 +572,6 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   // to add cleanup code at every exit point from this function.
   nsCID cid = *cidPtr;
   free(cidPtr);
-
-  if (type == nsGlobalNameStruct::eTypeExternalConstructor) {
-    nsXPIDLCString constructorProto;
-    rv = aCategoryManager->GetCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
-                                            categoryEntry.get(),
-                                            getter_Copies(constructorProto));
-    if (NS_SUCCEEDED(rv)) {
-      nsGlobalNameStruct *s = AddToHash(&mGlobalNames, categoryEntry.get());
-      NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-      if (s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-          s->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
-        s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
-        s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
-        s->mChromeOnly = false;
-        s->mAlias->mCID = cid;
-        AppendASCIItoUTF16(constructorProto, s->mAlias->mProtoName);
-        s->mAlias->mProto = nullptr;
-      } else {
-        NS_WARNING("Global script name not overwritten!");
-      }
-
-      return NS_OK;
-    }
-  }
 
   nsGlobalNameStruct *s = AddToHash(table, categoryEntry.get());
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
