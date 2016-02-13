@@ -136,6 +136,7 @@ load 1230408-1.html
 load 1233135-1.html
 load 1233135-2.html
 load 1238660-1.html
+asserts(1) load 1247865-1.html # bug 1247865
 load border-image-visited-link.html
 load font-face-truncated-src.html 
 load large_border_image_width.html
