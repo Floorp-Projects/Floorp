@@ -198,6 +198,10 @@ public:
 
   bool MaybeReTunnel(nsAHttpTransaction *) override;
 
+  // overload of nsAHttpTransaction
+  nsresult ReadSegmentsAgain(nsAHttpSegmentReader *, uint32_t, uint32_t *, bool *) override final;
+  nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *, uint32_t , uint32_t *, bool *) override final;
+
 private:
 
   enum stateType {
