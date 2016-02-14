@@ -1595,8 +1595,8 @@ nsHttpConnection::OnSocketWritable()
 
             LOG(("  writing transaction request stream\n"));
             mProxyConnectInProgress = false;
-            rv = mTransaction->ReadSegments(this, nsIOService::gDefaultSegmentSize,
-                                            &transactionBytes);
+            rv = mTransaction->ReadSegmentsAgain(this, nsIOService::gDefaultSegmentSize,
+                                                 &transactionBytes, &again);
             mContentBytesWritten += transactionBytes;
         }
 
@@ -1765,7 +1765,8 @@ nsHttpConnection::OnSocketReadable()
             break;
         }
 
-        rv = mTransaction->WriteSegments(this, nsIOService::gDefaultSegmentSize, &n);
+        rv = mTransaction->
+            WriteSegmentsAgain(this, nsIOService::gDefaultSegmentSize, &n, &again);
         if (NS_FAILED(rv)) {
             // if the transaction didn't want to take any more data, then
             // wait for the transaction to call ResumeRecv.
