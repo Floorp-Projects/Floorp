@@ -4,15 +4,17 @@ $inherits:
     build_name: 'nexus-4-kk-ota'
     build_type: 'debug'
 task:
-  workerType: flame-kk
+  workerType: balrog
   metadata:
     name: '[TC] B2G Nexus 4 KK OTA (userdebug)'
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-4-kk-ota-debug'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-4-kk-ota-debug-objdir-gecko'
+    - 'docker-worker:feature:balrogVPNProxy'
 
   payload:
     features:
+      balrogVPNProxy: true
     cache:
       level-{{level}}-{{project}}-build-nexus-4-kk-ota-debug: /home/worker/workspace
       level-{{level}}-{{project}}-build-nexus-4-kk-ota-debug-objdir-gecko: /home/worker/objdir-gecko

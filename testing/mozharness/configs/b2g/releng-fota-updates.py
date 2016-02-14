@@ -14,7 +14,7 @@ config = {
         # bug 1222227 - temporarily disable for S3 migration
         # 'make-socorro-json',
         # 'upload-source-manifest',
-        # 'submit-to-balrog',
+        'submit-to-balrog',
     ],
     "upload": {
         "default": {
