@@ -11,6 +11,7 @@
 #include "AppProcessChecker.h"
 #include "ContentChild.h"
 #include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"

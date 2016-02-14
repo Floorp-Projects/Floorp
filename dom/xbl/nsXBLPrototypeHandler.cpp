@@ -36,7 +36,6 @@
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIXPConnect.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "mozilla/AddonPathService.h"
 #include "nsDOMCID.h"
 #include "nsUnicharUtils.h"
