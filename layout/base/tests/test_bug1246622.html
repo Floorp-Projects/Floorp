@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for Bug 1246622</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+  #grandparent {
+    position: absolute;
+    height: 100px;
+    width: 100px;
+    left: 400px;
+    transform-style: preserve-3d;
+  }
+
+  #parent {
+    transform: translateX(0px);
+  }
+
+  #child {
+    width: 100px;
+    height: 100px;
+    background-color: green;
+    transform-style: preserve-3d;
+  }
+  </style>
+</head>
+<body>
+<div id="grandparent">
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1246622 **/
+
+is(document.elementFromPoint(450,50), document.getElementById("child"), "Able to hit transformed object");
+
+</script>
+</pre>
+</body>
+</html>
