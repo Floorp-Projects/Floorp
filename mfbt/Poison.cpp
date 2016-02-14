@@ -192,9 +192,7 @@ ReservePoisonArea(uintptr_t rgnsize)
     return uintptr_t(result);
   }
 
-  // no usable poison region identified
-  MOZ_CRASH();
-  return 0;
+  MOZ_CRASH("no usable poison region identified");
 }
 
 void

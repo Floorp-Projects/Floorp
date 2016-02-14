@@ -19,6 +19,7 @@ struct mozilla::detail::VectorTesting
   static void testReserved();
   static void testConstRange();
   static void testEmplaceBack();
+  static void testReverse();
 };
 
 void
@@ -164,10 +165,68 @@ mozilla::detail::VectorTesting::testEmplaceBack()
   }
 }
 
+void
+mozilla::detail::VectorTesting::testReverse()
+{
+  // Use UniquePtr to make sure that reverse() can handler move-only types.
+  Vector<UniquePtr<uint8_t>, 0> vec;
+
+  // Reverse an odd number of elements.
+
+  for (uint8_t i = 0; i < 5; i++) {
+    auto p = MakeUnique<uint8_t>(i);
+    MOZ_RELEASE_ASSERT(p);
+    MOZ_RELEASE_ASSERT(vec.append(mozilla::Move(p)));
+  }
+
+  vec.reverse();
+
+  MOZ_RELEASE_ASSERT(*vec[0] == 4);
+  MOZ_RELEASE_ASSERT(*vec[1] == 3);
+  MOZ_RELEASE_ASSERT(*vec[2] == 2);
+  MOZ_RELEASE_ASSERT(*vec[3] == 1);
+  MOZ_RELEASE_ASSERT(*vec[4] == 0);
+
+  // Reverse an even number of elements.
+
+  vec.popBack();
+  vec.reverse();
+
+  MOZ_RELEASE_ASSERT(*vec[0] == 1);
+  MOZ_RELEASE_ASSERT(*vec[1] == 2);
+  MOZ_RELEASE_ASSERT(*vec[2] == 3);
+  MOZ_RELEASE_ASSERT(*vec[3] == 4);
+
+  // Reverse an empty vector.
+
+  vec.clear();
+  MOZ_RELEASE_ASSERT(vec.length() == 0);
+  vec.reverse();
+  MOZ_RELEASE_ASSERT(vec.length() == 0);
+
+  // Reverse a vector using only inline storage.
+
+  Vector<UniquePtr<uint8_t>, 5> vec2;
+  for (uint8_t i = 0; i < 5; i++) {
+    auto p = MakeUnique<uint8_t>(i);
+    MOZ_RELEASE_ASSERT(p);
+    MOZ_RELEASE_ASSERT(vec2.append(mozilla::Move(p)));
+  }
+
+  vec2.reverse();
+
+  MOZ_RELEASE_ASSERT(*vec2[0] == 4);
+  MOZ_RELEASE_ASSERT(*vec2[1] == 3);
+  MOZ_RELEASE_ASSERT(*vec2[2] == 2);
+  MOZ_RELEASE_ASSERT(*vec2[3] == 1);
+  MOZ_RELEASE_ASSERT(*vec2[4] == 0);
+}
+
 int
 main()
 {
   VectorTesting::testReserved();
   VectorTesting::testConstRange();
   VectorTesting::testEmplaceBack();
+  VectorTesting::testReverse();
 }

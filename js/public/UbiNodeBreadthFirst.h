@@ -134,7 +134,7 @@ struct BreadthFirst {
             for (; !range->empty(); range->popFront()) {
                 MOZ_ASSERT(!stopRequested);
 
-                const Edge& edge = range->front();
+                Edge& edge = range->front();
                 typename NodeMap::AddPtr a = visited.lookupForAdd(edge.referent);
                 bool first = !a;
 

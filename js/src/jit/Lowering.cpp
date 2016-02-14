@@ -695,7 +695,7 @@ ReorderComparison(JSOp op, MDefinition** lhsp, MDefinition** rhsp)
     MDefinition* lhs = *lhsp;
     MDefinition* rhs = *rhsp;
 
-    if (lhs->isConstantValue()) {
+    if (lhs->maybeConstantValue()) {
         *rhsp = lhs;
         *lhsp = rhs;
         return ReverseCompareOp(op);
@@ -715,10 +715,12 @@ LIRGenerator::visitTest(MTest* test)
     MOZ_ASSERT(opd->type() != MIRType_String);
 
     // Testing a constant.
-    if (opd->isConstantValue() && !opd->constantValue().isMagic()) {
-        bool result = opd->constantToBoolean();
-        add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
-        return;
+    if (MConstant* constant = opd->maybeConstantValue()) {
+        bool b;
+        if (constant->valueToBoolean(&b)) {
+            add(new(alloc()) LGoto(b ? ifTrue : ifFalse));
+            return;
+        }
     }
 
     if (opd->type() == MIRType_Value) {
@@ -1594,7 +1596,7 @@ LIRGenerator::visitMul(MMul* ins)
 
         // If our RHS is a constant -1 and we don't have to worry about
         // overflow, we can optimize to an LNegI.
-        if (!ins->fallible() && rhs->isConstantValue() && rhs->constantValue() == Int32Value(-1))
+        if (!ins->fallible() && rhs->isConstant() && rhs->toConstant()->toInt32() == -1)
             defineReuseInput(new(alloc()) LNegI(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerMulI(ins, lhs, rhs);
@@ -1603,7 +1605,7 @@ LIRGenerator::visitMul(MMul* ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // If our RHS is a constant -1.0, we can optimize to an LNegD.
-        if (rhs->isConstantValue() && rhs->constantValue() == DoubleValue(-1.0))
+        if (rhs->isConstant() && rhs->toConstant()->toDouble() == -1.0)
             defineReuseInput(new(alloc()) LNegD(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathD(JSOP_MUL), ins, lhs, rhs);
@@ -1612,7 +1614,7 @@ LIRGenerator::visitMul(MMul* ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // We apply the same optimizations as for doubles
-        if (rhs->isConstantValue() && rhs->constantValue() == Float32Value(-1.0f))
+        if (rhs->isConstant() && rhs->toConstant()->toFloat32() == -1.0f)
             defineReuseInput(new(alloc()) LNegF(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathF(JSOP_MUL), ins, lhs, rhs);
@@ -2482,7 +2484,7 @@ IsNonNurseryConstant(MDefinition* def)
 {
     if (!def->isConstant())
         return false;
-    Value v = def->toConstant()->value();
+    Value v = def->toConstant()->toJSValue();
     return !v.isMarkable() || !IsInsideNursery(v.toGCThing());
 }
 
@@ -2541,7 +2543,7 @@ LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins)
     // objects to a register.
     bool useConstantObject =
         ins->object()->isConstant() &&
-        !IsInsideNursery(&ins->object()->toConstant()->value().toObject());
+        !IsInsideNursery(&ins->object()->toConstant()->toObject());
 
     switch (ins->value()->type()) {
       case MIRType_Object:

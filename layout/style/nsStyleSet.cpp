@@ -1714,12 +1714,17 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
       flags |= eDoAnimation;
     }
     elementForAnimation = aElement;
-    NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-                 !elementForAnimation->GetPrimaryFrame() ||
-                 elementForAnimation->GetPrimaryFrame()->StyleContext()->
-                     GetPseudoType() ==
-                   nsCSSPseudoElements::ePseudo_NotPseudoElement,
-                 "aElement should be the element and not the pseudo-element");
+#ifdef DEBUG
+    {
+      nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(elementForAnimation);
+      NS_ASSERTION(pseudoType ==
+                     nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+                   !styleFrame ||
+                   styleFrame->StyleContext()->GetPseudoType() ==
+                     nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                   "aElement should be the element and not the pseudo-element");
+    }
+#endif
   }
 
   if (aElement && aElement->IsRootOfAnonymousSubtree()) {

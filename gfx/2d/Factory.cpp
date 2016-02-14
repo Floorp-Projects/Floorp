@@ -35,7 +35,6 @@
 #endif
 
 #ifdef WIN32
-#include "DrawTargetD2D.h"
 #include "DrawTargetD2D1.h"
 #include "ScaledFontDWrite.h"
 #include "NativeFontResourceDWrite.h"
@@ -161,7 +160,6 @@ int32_t LoggingPrefs::sGfxLogLevel =
                                      LOG_DEFAULT);
 
 #ifdef WIN32
-ID3D10Device1 *Factory::mD3D10Device;
 ID3D11Device *Factory::mD3D11Device;
 ID2D1Device *Factory::mD2D1Device;
 #endif
@@ -315,15 +313,6 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   RefPtr<DrawTarget> retVal;
   switch (aBackend) {
 #ifdef WIN32
-  case BackendType::DIRECT2D:
-    {
-      RefPtr<DrawTargetD2D> newTarget;
-      newTarget = new DrawTargetD2D();
-      if (newTarget->Init(aSize, aFormat)) {
-        retVal = newTarget;
-      }
-      break;
-    }
   case BackendType::DIRECT2D1_1:
     {
       RefPtr<DrawTargetD2D1> newTarget;
@@ -499,8 +488,6 @@ Factory::GetMaxSurfaceSize(BackendType aType)
     return DrawTargetSkia::GetMaxSurfaceSize();
 #endif
 #ifdef WIN32
-  case BackendType::DIRECT2D:
-    return DrawTargetD2D::GetMaxSurfaceSize();
   case BackendType::DIRECT2D1_1:
     return DrawTargetD2D1::GetMaxSurfaceSize();
 #endif
@@ -612,87 +599,6 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 
 #ifdef WIN32
 already_AddRefed<DrawTarget>
-Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat)
-{
-  MOZ_ASSERT(aTexture);
-
-  RefPtr<DrawTargetD2D> newTarget;
-
-  newTarget = new DrawTargetD2D();
-  if (newTarget->Init(aTexture, aFormat)) {
-    RefPtr<DrawTarget> retVal = newTarget;
-
-    if (mRecorder) {
-      retVal = new DrawTargetRecording(mRecorder, retVal, true);
-    }
-
-    return retVal.forget();
-  }
-
-  gfxWarning() << "Failed to create draw target for D3D10 texture.";
-
-  // Failed
-  return nullptr;
-}
-
-already_AddRefed<DrawTarget>
-Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
-                                              ID3D10Texture2D *aTextureB,
-                                              SurfaceFormat aFormat)
-{
-  MOZ_ASSERT(aTextureA && aTextureB);
-  RefPtr<DrawTargetD2D> newTargetA;
-  RefPtr<DrawTargetD2D> newTargetB;
-
-  newTargetA = new DrawTargetD2D();
-  if (!newTargetA->Init(aTextureA, aFormat)) {
-    gfxWarning() << "Failed to create dual draw target for D3D10 texture.";
-    return nullptr;
-  }
-
-  newTargetB = new DrawTargetD2D();
-  if (!newTargetB->Init(aTextureB, aFormat)) {
-    gfxWarning() << "Failed to create new draw target for D3D10 texture.";
-    return nullptr;
-  }
-
-  RefPtr<DrawTarget> newTarget =
-    new DrawTargetDual(newTargetA, newTargetB);
-
-  RefPtr<DrawTarget> retVal = newTarget;
-
-  if (mRecorder) {
-    retVal = new DrawTargetRecording(mRecorder, retVal);
-  }
-
-  return retVal.forget();
-}
-
-void
-Factory::SetDirect3D10Device(ID3D10Device1 *aDevice)
-{
-  // do not throw on failure; return error codes and disconnect the device
-  // On Windows 8 error codes are the default, but on Windows 7 the
-  // default is to throw (or perhaps only with some drivers?)
-  if (aDevice) {
-    aDevice->SetExceptionMode(0);
-  }
-  mD3D10Device = aDevice;
-}
-
-ID3D10Device1*
-Factory::GetDirect3D10Device()
-{
-#ifdef DEBUG
-  if (mD3D10Device) {
-    UINT mode = mD3D10Device->GetExceptionMode();
-    MOZ_ASSERT(0 == mode);
-  }
-#endif
-  return mD3D10Device;
-}
-
-already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aTexture);
@@ -767,13 +673,13 @@ Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
 uint64_t
 Factory::GetD2DVRAMUsageDrawTarget()
 {
-  return DrawTargetD2D::mVRAMUsageDT;
+  return DrawTargetD2D1::mVRAMUsageDT;
 }
 
 uint64_t
 Factory::GetD2DVRAMUsageSourceSurface()
 {
-  return DrawTargetD2D::mVRAMUsageSS;
+  return DrawTargetD2D1::mVRAMUsageSS;
 }
 
 void
@@ -784,7 +690,6 @@ Factory::D2DCleanup()
     mD2D1Device = nullptr;
   }
   DrawTargetD2D1::CleanupD2D();
-  DrawTargetD2D::CleanupD2D();
 }
 
 already_AddRefed<ScaledFont>

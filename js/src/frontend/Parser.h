@@ -295,7 +295,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
     StmtInfoPC* innermostNonLabelStmt() const { return stmtStack.innermostNonLabel(); }
-    StaticScope* innermostStaticScope() const {
+    JSObject* innermostStaticScope() const {
         if (StmtInfoPC* stmt = innermostScopeStmt())
             return stmt->staticScope;
         return sc->staticScope();
@@ -325,7 +325,9 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         if (sc->staticScope()->is<StaticEvalScope>()) {
             bool bl = !stmt->enclosing;
             MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
-            MOZ_ASSERT_IF(bl, stmt->staticScope->enclosingScope() == sc->staticScope());
+            MOZ_ASSERT_IF(bl, stmt->staticScope
+                                  ->template as<StaticBlockScope>()
+                                  .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
         return !stmt;
@@ -520,11 +522,11 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
-                                Handle<StaticScope*> enclosingStaticScope);
+                                JSObject* enclosingStaticScope);
 
     // Use when the funbox is the outermost.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
-                                GeneratorKind generatorKind, Handle<StaticScope*> enclosingStaticScope)
+                                GeneratorKind generatorKind, HandleObject enclosingStaticScope)
     {
         return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
                               enclosingStaticScope);
@@ -534,7 +536,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind)
     {
-        Rooted<StaticScope*> enclosing(context, outerpc->innermostStaticScope());
+        RootedObject enclosing(context, outerpc->innermostStaticScope());
         return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
     }
 
@@ -547,7 +549,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
                             HandleObject proto);
 
-    bool generateBlockId(StaticScope* staticScope, uint32_t* blockIdOut) {
+    bool generateBlockId(JSObject* staticScope, uint32_t* blockIdOut) {
         if (blockScopes.length() == StmtInfoPC::BlockIdLimit) {
             tokenStream.reportError(JSMSG_NEED_DIET, "program");
             return false;
@@ -613,7 +615,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node standaloneFunctionBody(HandleFunction fun, Handle<PropertyNameVector> formals,
                                 GeneratorKind generatorKind,
                                 Directives inheritedDirectives, Directives* newDirectives,
-                                Handle<StaticScope*> enclosingStaticScope);
+                                HandleObject enclosingStaticScope);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.

@@ -15,43 +15,45 @@ void
 WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
                                           GLenum internalformat, GLenum pname,
                                           JS::MutableHandleValue retval,
-                                          ErrorResult& rv)
+                                          ErrorResult& out_rv)
 {
-  if (IsContextLost())
-    return;
+    const char funcName[] = "getInternalfomratParameter";
+    if (IsContextLost())
+        return;
 
-  if (target != LOCAL_GL_RENDERBUFFER) {
-    return ErrorInvalidEnumInfo("getInternalfomratParameter: target must be "
-                                "RENDERBUFFER. Was:", target);
-  }
+    if (target != LOCAL_GL_RENDERBUFFER) {
+        ErrorInvalidEnum("%s: `target` must be RENDERBUFFER, was: 0x%04x.", funcName,
+                         target);
+        return;
+    }
 
-  // GL_INVALID_ENUM is generated if internalformat is not color-,
-  // depth-, or stencil-renderable.
-  // TODO: When format table queries lands.
+    // GL_INVALID_ENUM is generated if internalformat is not color-, depth-, or
+    // stencil-renderable.
+    // TODO: When format table queries lands.
 
-  if (pname != LOCAL_GL_SAMPLES) {
-    return ErrorInvalidEnumInfo("getInternalformatParameter: pname must be SAMPLES. "
-                                "Was:", pname);
-  }
+    if (pname != LOCAL_GL_SAMPLES) {
+        ErrorInvalidEnumInfo("%s: `pname` must be SAMPLES, was 0x%04x.", funcName, pname);
+        return;
+    }
 
-  GLint* samples = nullptr;
-  GLint sampleCount = 0;
-  gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
-                           LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
-  if (sampleCount > 0) {
-    samples = new GLint[sampleCount];
-    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat, LOCAL_GL_SAMPLES,
-                             sampleCount, samples);
-  }
+    GLint* samples = nullptr;
+    GLint sampleCount = 0;
+    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
+                             LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
+    if (sampleCount > 0) {
+        samples = new GLint[sampleCount];
+        gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat, LOCAL_GL_SAMPLES,
+                                 sampleCount, samples);
+    }
 
-  JSObject* obj = dom::Int32Array::Create(cx, this, sampleCount, samples);
-  if (!obj) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
+    JSObject* obj = dom::Int32Array::Create(cx, this, sampleCount, samples);
+    if (!obj) {
+        out_rv = NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  delete[] samples;
+    delete[] samples;
 
-  retval.setObjectOrNull(obj);
+    retval.setObjectOrNull(obj);
 }
 
 void
@@ -59,14 +61,11 @@ WebGL2Context::RenderbufferStorageMultisample(GLenum target, GLsizei samples,
                                               GLenum internalFormat,
                                               GLsizei width, GLsizei height)
 {
-  const char funcName[] = "renderbufferStorageMultisample";
-  if (IsContextLost())
-    return;
+    const char funcName[] = "renderbufferStorageMultisample";
+    if (IsContextLost())
+        return;
 
-  //RenderbufferStorage_base(funcName, target, samples, internalFormat, width, height);
-
-  ErrorInvalidOperation("%s: Multisampling is still under development, and is currently"
-                        " disabled.", funcName);
+    RenderbufferStorage_base(funcName, target, samples, internalFormat, width, height);
 }
 
 } // namespace mozilla
