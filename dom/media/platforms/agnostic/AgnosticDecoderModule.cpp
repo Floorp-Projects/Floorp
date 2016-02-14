@@ -8,6 +8,7 @@
 #include "OpusDecoder.h"
 #include "VorbisDecoder.h"
 #include "VPXDecoder.h"
+#include "WAVDecoder.h"
 
 namespace mozilla {
 
@@ -16,7 +17,8 @@ AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   return VPXDecoder::IsVPX(aMimeType) ||
     OpusDataDecoder::IsOpus(aMimeType) ||
-    VorbisDataDecoder::IsVorbis(aMimeType);
+    VorbisDataDecoder::IsVorbis(aMimeType) ||
+    WaveDataDecoder::IsWave(aMimeType);
 }
 
 already_AddRefed<MediaDataDecoder>
@@ -51,6 +53,10 @@ AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                               aCallback);
   } else if (OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
     m = new OpusDataDecoder(*aConfig.GetAsAudioInfo(),
+                            aAudioTaskQueue,
+                            aCallback);
+  } else if (WaveDataDecoder::IsWave(aConfig.mMimeType)) {
+    m = new WaveDataDecoder(*aConfig.GetAsAudioInfo(),
                             aAudioTaskQueue,
                             aCallback);
   }
