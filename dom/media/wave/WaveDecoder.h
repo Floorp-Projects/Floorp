@@ -8,30 +8,20 @@
 
 #include "MediaDecoder.h"
 
-/**
- * The decoder implementation is currently limited to Linear PCM encoded
- * audio data with one or two channels of 8- or 16-bit samples at sample
- * rates from 100 Hz to 96 kHz.  The number of channels is limited by what
- * the audio backend (via AudioStream) currently supports.  The supported
- * sample rate is artificially limited to arbitrarily selected sane values.
- * Support for additional channels (and other new features) would
- * require extending WaveDecoder to support parsing the newer
- * WAVE_FORMAT_EXTENSIBLE chunk format.
-**/
-
 namespace mozilla {
 
-class WaveDecoder : public MediaDecoder
-{
+class WaveDecoder : public MediaDecoder {
 public:
+  // MediaDecoder interface.
   explicit WaveDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
-    if (!IsWaveEnabled()) {
-      return nullptr;
-    }
-    return new WaveDecoder(aOwner);
-  }
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
+
+  // Returns true if the WAV backend is pref'ed on, and we're running on a
+  // platform that is likely to have decoders for the format.
+  static bool IsEnabled();
+  static bool CanHandleMediaType(const nsACString& aType,
+                                 const nsAString& aCodecs);
 };
 
 } // namespace mozilla
