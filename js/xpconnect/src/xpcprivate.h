@@ -425,7 +425,7 @@ private:
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
-    static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
+    static XPCJSRuntime* newXPCJSRuntime();
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
@@ -614,8 +614,9 @@ public:
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
 
 private:
-    XPCJSRuntime() = delete;
-    explicit XPCJSRuntime(nsXPConnect* aXPConnect);
+    XPCJSRuntime();
+
+    nsresult Initialize();
 
     void ReleaseIncrementally(nsTArray<nsISupports*>& array);
 
