@@ -54,6 +54,16 @@ parser/html/java/javaparser/
 .cproject
 .settings/
 
+# Ignore the files and directory that JetBrains IDEs create.
+/.idea/
+*.iml
+
+# Gradle cache.
+/.gradle/
+
+# Local Gradle configuration properties.
+/local.properties
+
 # Python virtualenv artifacts.
 python/psutil/**/*.so
 python/psutil/**/*.pyd
