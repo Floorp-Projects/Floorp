@@ -232,6 +232,10 @@ public:
   bool MaybeReTunnel(nsAHttpTransaction *) override;
   bool UseH2Deps() { return mUseH2Deps; }
 
+  // overload of nsAHttpTransaction
+  nsresult ReadSegmentsAgain(nsAHttpSegmentReader *, uint32_t, uint32_t *, bool *) override final;
+  nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *, uint32_t , uint32_t *, bool *) override final;
+
 private:
 
   // These internal states do not correspond to the states of the HTTP/2 specification
