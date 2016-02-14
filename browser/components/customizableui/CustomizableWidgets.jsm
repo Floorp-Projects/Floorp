@@ -184,8 +184,6 @@ const CustomizableWidgets = [
 
       let options = PlacesUtils.history.getNewQueryOptions();
       options.excludeQueries = true;
-      options.includeHidden = false;
-      options.resultType = options.RESULTS_AS_URI;
       options.queryType = options.QUERY_TYPE_HISTORY;
       options.sortingMode = options.SORT_BY_DATE_DESCENDING;
       options.maxResults = kMaxResults;
