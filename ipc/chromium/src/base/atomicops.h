@@ -144,6 +144,8 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 #include "base/atomicops_internals_arm64_gcc.h"
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_MIPS)
 #include "base/atomicops_internals_mips_gcc.h"
+#elif defined(COMPILER_GCC) && defined(ARCH_CPU_PPC_FAMILY)
+#include "base/atomicops_internals_ppc_gcc.h"
 #else
 #include "base/atomicops_internals_mutex.h"
 #endif
