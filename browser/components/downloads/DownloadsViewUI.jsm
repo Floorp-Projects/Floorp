@@ -167,7 +167,6 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    * Derived objects may call this to get the status text.
    */
   get rawStatusTextAndTip() {
-    const nsIDM = Ci.nsIDownloadManager;
     let s = DownloadsCommon.strings;
 
     let text = "";
@@ -238,5 +237,74 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
 
     return { text, tip: tip || text };
+  },
+
+  /**
+   * Returns the name of the default command to use for the current state of the
+   * download, when there is a double click or another default interaction. If
+   * there is no default command for the current state, returns an empty string.
+   * The commands are implemented as functions on this object or derived ones.
+   */
+  get currentDefaultCommandName() {
+    switch (DownloadsCommon.stateOfDownload(this.download)) {
+      case Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+        return "downloadsCmd_cancel";
+      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+        return "downloadsCmd_retry";
+      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+        return "downloadsCmd_pauseResume";
+      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+        return "downloadsCmd_open";
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
+      case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
+        return "downloadsCmd_openReferrer";
+    }
+    return "";
+  },
+
+  /**
+   * Returns true if the specified command can be invoked on the current item.
+   * The commands are implemented as functions on this object or derived ones.
+   *
+   * @param aCommand
+   *        Name of the command to check, for example "downloadsCmd_retry".
+   */
+  isCommandEnabled(aCommand) {
+    switch (aCommand) {
+      case "downloadsCmd_retry":
+        return this.download.canceled || this.download.error;
+      case "downloadsCmd_pauseResume":
+        return this.download.hasPartialData && !this.download.error;
+      case "downloadsCmd_openReferrer":
+        return !!this.download.source.referrer;
+      case "downloadsCmd_confirmBlock":
+      case "downloadsCmd_unblock":
+        return this.download.hasBlockedData;
+    }
+    return false;
+  },
+
+  downloadsCmd_cancel() {
+    // This is the correct way to avoid race conditions when cancelling.
+    this.download.cancel().catch(() => {});
+    this.download.removePartialData().catch(Cu.reportError);
+  },
+
+  downloadsCmd_retry() {
+    // Errors when retrying are already reported as download failures.
+    this.download.start().catch(() => {});
+  },
+
+  downloadsCmd_pauseResume() {
+    if (this.download.stopped) {
+      this.download.start();
+    } else {
+      this.download.cancel();
+    }
+  },
+
+  downloadsCmd_confirmBlock() {
+    this.download.confirmBlock().catch(Cu.reportError);
   },
 };
