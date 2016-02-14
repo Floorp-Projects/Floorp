@@ -5599,7 +5599,7 @@ nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBu
     }
 
     const nsIFrame* establisher; // Establisher of the 3D rendering context.
-    for (establisher = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
+    for (establisher = mFrame;
          establisher && establisher->Combines3DTransformWithAncestors();
          establisher = nsLayoutUtils::GetCrossDocParentFrame(establisher)) {
     }
