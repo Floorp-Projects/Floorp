@@ -68,11 +68,11 @@
     <dimen name="overlay_prompt_container_width">@dimen/match_parent</dimen>
 
     <!-- Site security icon -->
-    <dimen name="browser_toolbar_site_security_height">@dimen/match_parent</dimen>
-    <dimen name="browser_toolbar_site_security_width">12dp</dimen>
-    <dimen name="browser_toolbar_site_security_margin_right">4dp</dimen>
-    <dimen name="browser_toolbar_site_security_padding_vertical">0dp</dimen>
-    <dimen name="browser_toolbar_site_security_padding_horizontal">0dp</dimen>
+    <dimen name="browser_toolbar_site_security_height">32dp</dimen>
+    <dimen name="browser_toolbar_site_security_width">32dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_right">0dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_vertical">7dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_horizontal">7dp</dimen>
 
     <!-- If one of these values changes, they all should. -->
     <dimen name="browser_toolbar_site_security_margin_bottom">.5dp</dimen>
