@@ -29,4 +29,5 @@ skip-if(azureCairo) load 1229983-1.html
 load 1229932-1.html
 load 1233613.html
 load 1244850-1.html
+load 1246775-1.html
 load texImage2D.html

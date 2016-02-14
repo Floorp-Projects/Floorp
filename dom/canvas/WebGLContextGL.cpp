@@ -173,17 +173,13 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb)
     if (wrb && wrb->IsDeleted())
         return;
 
-    MakeContextCurrent();
+    // Usually, we would now call into glBindRenderbuffer. However, since we have to
+    // potentially emulate packed-depth-stencil, there's not a specific renderbuffer that
+    // we know we should bind here.
+    // Instead, we do all renderbuffer binding lazily.
 
-    // Sometimes we emulate renderbuffers (depth-stencil emu), so there's not
-    // always a 1-1 mapping from `wrb` to GL name. Just have `wrb` handle it.
     if (wrb) {
-        wrb->BindRenderbuffer();
-#ifdef ANDROID
-        wrb->mIsRB = true;
-#endif
-    } else {
-        gl->fBindRenderbuffer(target, 0);
+        wrb->mHasBeenBound = true;
     }
 
     mBoundRenderbuffer = wrb;
@@ -1068,16 +1064,7 @@ WebGLContext::IsRenderbuffer(WebGLRenderbuffer* rb)
     if (rb->IsDeleted())
         return false;
 
-#ifdef ANDROID
-    if (gl->WorkAroundDriverBugs() &&
-        gl->Renderer() == GLRenderer::AndroidEmulator)
-    {
-         return rb->mIsRB;
-    }
-#endif
-
-    MakeContextCurrent();
-    return gl->fIsRenderbuffer(rb->PrimaryGLName());
+    return rb->mHasBeenBound;
 }
 
 bool
@@ -1799,66 +1786,41 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
 
 void
 WebGLContext::RenderbufferStorage_base(const char* funcName, GLenum target,
-                                       GLsizei samples,
-                                       GLenum internalFormat, GLsizei width,
-                                       GLsizei height)
+                                       GLsizei samples, GLenum internalFormat,
+                                       GLsizei width, GLsizei height)
 {
     if (IsContextLost())
         return;
-
-    if (!mBoundRenderbuffer) {
-        ErrorInvalidOperation("%s: Called on renderbuffer 0.", funcName);
-        return;
-    }
 
     if (target != LOCAL_GL_RENDERBUFFER) {
         ErrorInvalidEnumInfo("`target`", funcName, target);
         return;
     }
 
-    if (samples < 0 || samples > mGLMaxSamples) {
-        ErrorInvalidValue("%s: `samples` is out of the valid range.", funcName);
+    if (!mBoundRenderbuffer) {
+        ErrorInvalidOperation("%s: Called on renderbuffer 0.", funcName);
+        return;
+    }
+
+    if (samples < 0) {
+        ErrorInvalidValue("%s: `samples` must be >= 0.", funcName);
         return;
     }
 
     if (width < 0 || height < 0) {
-        ErrorInvalidValue("%s: Width and height must be >= 0.", funcName);
+        ErrorInvalidValue("%s: `width` and `height` must be >= 0.", funcName);
         return;
     }
 
-    if (uint32_t(width) > mImplMaxRenderbufferSize ||
-        uint32_t(height) > mImplMaxRenderbufferSize)
-    {
-        ErrorInvalidValue("%s: Width or height exceeds maximum renderbuffer"
-                          " size.", funcName);
-        return;
-    }
-
-    const auto usage = mFormatUsage->GetRBUsage(internalFormat);
-    if (!usage) {
-        ErrorInvalidEnumInfo("`internalFormat`", funcName, internalFormat);
-        return;
-    }
-
-    // Validation complete.
-
-    MakeContextCurrent();
-
-    GetAndFlushUnderlyingGLErrors();
-    mBoundRenderbuffer->RenderbufferStorage(samples, usage, width, height);
-    GLenum error = GetAndFlushUnderlyingGLErrors();
-    if (error) {
-        GenerateWarning("%s generated error %s", funcName,
-                        ErrorName(error));
-        return;
-    }
+    mBoundRenderbuffer->RenderbufferStorage(funcName, uint32_t(samples), internalFormat,
+                                            uint32_t(width), uint32_t(height));
 }
 
 void
 WebGLContext::RenderbufferStorage(GLenum target, GLenum internalFormat, GLsizei width, GLsizei height)
 {
-    RenderbufferStorage_base("renderbufferStorage", target, 0,
-                             internalFormat, width, height);
+    RenderbufferStorage_base("renderbufferStorage", target, 0, internalFormat, width,
+                             height);
 }
 
 void
@@ -2323,6 +2285,8 @@ WebGLContext::CreateRenderbuffer()
 {
     if (IsContextLost())
         return nullptr;
+
+    MakeContextCurrent();
     RefPtr<WebGLRenderbuffer> globj = new WebGLRenderbuffer(this);
     return globj.forget();
 }

@@ -4675,8 +4675,6 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         script = fun->getOrCreateScript(cx);
-        if (!script)
-            return false;
     } else {
         script = obj->as<ModuleObject>().script();
     }
@@ -5522,7 +5520,7 @@ PrintHelp(JSContext* cx, HandleObject obj)
     if (!JS_GetProperty(cx, obj, "help", &help))
         return false;
 
-    if (usage.isUndefined() || help.isUndefined())
+    if (!usage.isString() || !help.isString())
         return true;
 
     return PrintHelpString(cx, usage) && PrintHelpString(cx, help);

@@ -42,7 +42,7 @@ BEGIN_TEST(testJitFoldsTo_DivReciprocal)
     CHECK(op->isMul());
     CHECK(op->getOperand(0) == left);
     CHECK(op->getOperand(1)->isConstant());
-    CHECK(op->getOperand(1)->toConstant()->value().toNumber() == 0.25);
+    CHECK(op->getOperand(1)->toConstant()->toNumber() == 0.25);
     return true;
 }
 END_TEST(testJitFoldsTo_DivReciprocal)
@@ -229,7 +229,7 @@ BEGIN_TEST(testJitFoldsTo_UnsignedDiv)
 
     // Test that the div got folded to 0.
     MConstant* op = ret->getOperand(0)->toConstant();
-    CHECK(mozilla::NumbersAreIdentical(op->value().toNumber(), 0.0));
+    CHECK(mozilla::NumbersAreIdentical(op->toNumber(), 0.0));
     return true;
 }
 END_TEST(testJitFoldsTo_UnsignedDiv)
@@ -254,7 +254,7 @@ BEGIN_TEST(testJitFoldsTo_UnsignedMod)
 
     // Test that the mod got folded to 1.
     MConstant* op = ret->getOperand(0)->toConstant();
-    CHECK(mozilla::NumbersAreIdentical(op->value().toNumber(), 1.0));
+    CHECK(mozilla::NumbersAreIdentical(op->toNumber(), 1.0));
     return true;
 }
 END_TEST(testJitFoldsTo_UnsignedMod)
