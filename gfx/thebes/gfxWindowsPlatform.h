@@ -17,9 +17,7 @@
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
 #include "gfxFont.h"
-#ifdef CAIRO_HAS_DWRITE_FONT
 #include "gfxDWriteFonts.h"
-#endif
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
 #include "gfxTypes.h"
@@ -33,9 +31,7 @@
 #include <windows.h>
 #include <objbase.h>
 
-#ifdef CAIRO_HAS_D2D_SURFACE
 #include <dxgi.h>
-#endif
 
 // This header is available in the June 2010 SDK and in the Win8 SDK
 #include <d3dcommon.h>
@@ -163,10 +159,6 @@ public:
      */
     void VerifyD2DDevice(bool aAttemptForce);
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-    HRESULT CreateDevice(RefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
-#endif
-
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts) override;
@@ -230,20 +222,16 @@ public:
 
     void SetupClearTypeParams();
 
-#ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
     inline bool DWriteEnabled() { return !!mDWriteFactory; }
     inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
 
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
-#else
-    inline bool DWriteEnabled() { return false; }
-#endif
+
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
-    ID3D10Device1 *GetD3D10Device() { return mD3D10Device; }
     ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
     ID3D11Device* GetD3D11DeviceForCurrentThread();
@@ -281,7 +269,6 @@ public:
     // initialization has not been attempted, this returns
     // FeatureStatus::Unused.
     mozilla::gfx::FeatureStatus GetD3D11Status() const;
-    mozilla::gfx::FeatureStatus GetD2DStatus() const;
     mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
@@ -319,14 +306,12 @@ private:
     void InitializeDevices();
     void InitializeD3D11();
     void InitializeD2D();
-    void InitializeD2D1();
     bool InitDWriteSupport();
 
     void DisableD2D();
 
     mozilla::gfx::FeatureStatus CheckAccelerationSupport();
     mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
-    mozilla::gfx::FeatureStatus CheckD2DSupport();
     mozilla::gfx::FeatureStatus CheckD2D1Support();
 
     mozilla::gfx::FeatureStatus AttemptD3D11DeviceCreation();
@@ -352,14 +337,12 @@ private:
     IDXGIAdapter1 *GetDXGIAdapter();
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
 
-#ifdef CAIRO_HAS_DWRITE_FONT
     RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
-#endif
+
     RefPtr<IDXGIAdapter1> mAdapter;
     RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
-    RefPtr<ID3D10Device1> mD3D10Device;
     RefPtr<ID3D11Device> mD3D11Device;
     RefPtr<ID3D11Device> mD3D11ContentDevice;
     RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
@@ -374,7 +357,6 @@ private:
     // accessors instead.
     mozilla::gfx::FeatureStatus mAcceleration;
     mozilla::gfx::FeatureStatus mD3D11Status;
-    mozilla::gfx::FeatureStatus mD2DStatus;
     mozilla::gfx::FeatureStatus mD2D1Status;
 
     nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;

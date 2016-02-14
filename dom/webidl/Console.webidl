@@ -52,10 +52,7 @@ dictionary ConsoleEvent {
   DOMString functionName = "";
   double timeStamp = 0;
   sequence<any> arguments;
-
-  // This array will only hold strings or null elements.
-  sequence<any> styles;
-
+  sequence<DOMString?> styles;
   boolean private = false;
   // stacktrace is handled via a getter in some cases so we can construct it
   // lazily.  Note that we're not making this whole thing an interface because

@@ -6,7 +6,6 @@
         document.write("<h5 id='dynamic'>document.written content</h5>");
         document.close();
         window.history.go(-1);
-        opener.setTimeout("isTestDynamic()", 2500);
       }
 
       function start() {
@@ -14,6 +13,15 @@
           setTimeout(run, 0);
         }
       }
+
+      window.addEventListener("pageshow",
+        function() {
+          ++opener.file_document_write_1_loadCount;
+          if (opener.file_document_write_1_loadCount == 2) {
+            opener.setTimeout("isTestDynamic()", 0);
+          }
+          opener.ok(opener.file_document_write_1_loadCount <= 2);
+        });
     </script>
   </head>
   <body onload="start();">

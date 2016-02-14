@@ -100,12 +100,6 @@ public:
   // that were evicted are provided.
   void NotifyEvicted(double aStart, double aEnd);
 
-#if defined(DEBUG)
-  // Dump the contents of each SourceBuffer to a series of files under aPath.
-  // aPath must exist.  Debug only, invoke from your favourite debugger.
-  void Dump(const char* aPath);
-#endif
-
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
   void GetMozDebugReaderData(nsAString& aString);

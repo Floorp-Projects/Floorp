@@ -2680,14 +2680,10 @@ public:
    * displayport yet (as tracked by |aBuilder|), calculate and set a
    * displayport.
    *
-   * If this function creates a displayport, it computes margins and stores
-   * |aDisplayPortBase| as the base rect.
-   *
    * This is intended to be called during display list building.
    */
   static void MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                     nsIFrame* aScrollFrame,
-                                     nsRect aDisplayPortBase);
+                                     nsIFrame* aScrollFrame);
 
   static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
 

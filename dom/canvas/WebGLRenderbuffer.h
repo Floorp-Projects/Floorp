@@ -26,7 +26,26 @@ class WebGLRenderbuffer final
     , public WebGLContextBoundObject
     , public WebGLFramebufferAttachable
 {
+    friend class WebGLContext;
+    friend class WebGLFramebuffer;
+    friend class WebGLFBAttachPoint;
+
 public:
+    const GLuint mPrimaryRB;
+protected:
+    const bool mEmulatePackedDepthStencil;
+    GLuint mSecondaryRB;
+    const webgl::FormatUsageInfo* mFormat;
+    GLsizei mSamples;
+
+    WebGLImageDataStatus mImageDataStatus;
+
+    bool mHasBeenBound;
+
+public:
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
+
     explicit WebGLRenderbuffer(WebGLContext* webgl);
 
     void Delete();
@@ -46,8 +65,6 @@ public:
 
     GLsizei Samples() const { return mSamples; }
 
-    GLuint PrimaryGLName() const { return mPrimaryRB; }
-
     const webgl::FormatUsageInfo* Format() const { return mFormat; }
 
     int64_t MemoryUsage() const;
@@ -56,41 +73,21 @@ public:
         return mContext;
     }
 
-    void BindRenderbuffer() const;
-    void RenderbufferStorage(GLsizei samples, const webgl::FormatUsageInfo* format,
-                             GLsizei width, GLsizei height);
-    void FramebufferRenderbuffer(GLenum attachment) const;
+    void RenderbufferStorage(const char* funcName, uint32_t samples,
+                             GLenum internalFormat, uint32_t width, uint32_t height);
     // Only handles a subset of `pname`s.
     GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
-
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
 
 protected:
     ~WebGLRenderbuffer() {
         DeleteOnce();
     }
 
-    GLuint mPrimaryRB;
-    GLuint mSecondaryRB;
-    const webgl::FormatUsageInfo* mFormat;
-    WebGLImageDataStatus mImageDataStatus;
-    GLsizei mSamples;
-    bool mIsUsingSecondary;
-#ifdef ANDROID
-    // Bug 1140459: Some drivers (including our test slaves!) don't
-    // give reasonable answers for IsRenderbuffer, maybe others.
-    // This shows up on Android 2.3 emulator.
-    //
-    // So we track the `is a Renderbuffer` state ourselves.
-    bool mIsRB;
-#endif
-
-    friend class WebGLContext;
-    friend class WebGLFramebuffer;
-    friend class WebGLFBAttachPoint;
+    void DoFramebufferRenderbuffer(GLenum attachment) const;
+    GLenum DoRenderbufferStorage(uint32_t samples, const webgl::FormatUsageInfo* format,
+                                 uint32_t width, uint32_t height);
 };
 
 } // namespace mozilla

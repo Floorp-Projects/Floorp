@@ -4359,6 +4359,12 @@ extern JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinJSString(JSContext* cx, JS::HandleString str);
 
 extern JS_PUBLIC_API(JSString*)
+JS_AtomizeStringN(JSContext* cx, const char* s, size_t length);
+
+extern JS_PUBLIC_API(JSString*)
+JS_AtomizeString(JSContext* cx, const char* s);
+
+extern JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinStringN(JSContext* cx, const char* s, size_t length);
 
 extern JS_PUBLIC_API(JSString*)
@@ -4372,6 +4378,12 @@ JS_NewUCStringCopyN(JSContext* cx, const char16_t* s, size_t n);
 
 extern JS_PUBLIC_API(JSString*)
 JS_NewUCStringCopyZ(JSContext* cx, const char16_t* s);
+
+extern JS_PUBLIC_API(JSString*)
+JS_AtomizeUCStringN(JSContext* cx, const char16_t* s, size_t length);
+
+extern JS_PUBLIC_API(JSString*)
+JS_AtomizeUCString(JSContext* cx, const char16_t* s);
 
 extern JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinUCStringN(JSContext* cx, const char16_t* s, size_t length);

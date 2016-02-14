@@ -169,7 +169,7 @@ private:
   bool
   ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
                    Sequence<JS::Value>& aSequence,
-                   Sequence<JS::Value>& aStyles) const;
+                   Sequence<nsString>& aStyles) const;
 
   void
   MakeFormatString(nsCString& aFormat, int32_t aInteger, int32_t aMantissa,
