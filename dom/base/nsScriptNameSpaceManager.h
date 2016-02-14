@@ -39,14 +39,11 @@ struct nsGlobalNameStruct
   enum nametype {
     eTypeNotInitialized,
     eTypeNewDOMBinding,
-    eTypeInterface,
     eTypeProperty,
     eTypeNavigatorProperty,
     eTypeExternalConstructor,
     eTypeClassConstructor,
     eTypeClassProto,
-    eTypeExternalClassInfoCreator,
-    eTypeExternalClassInfo,
   } mType;
 
   // mChromeOnly is only used for structs that define non-WebIDL things
@@ -57,8 +54,7 @@ struct nsGlobalNameStruct
 
   union {
     int32_t mDOMClassInfoID; // eTypeClassConstructor
-    nsIID mIID; // eTypeInterface, eTypeClassProto
-    nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
+    nsIID mIID; // eTypeClassProto
     nsCID mCID; // All other types except eTypeNewDOMBinding
   };
 
@@ -127,21 +123,6 @@ public:
   nsresult RegisterClassProto(const char *aClassName,
                               const nsIID *aConstructorProtoIID,
                               bool *aFoundOld);
-
-  nsresult RegisterExternalInterfaces(bool aAsProto);
-
-  nsresult RegisterExternalClassName(const char *aClassName,
-                                     nsCID& aCID);
-
-  // Register the info for an external class. aName must be static
-  // data, it will not be deleted by the DOM code.
-  nsresult RegisterDOMCIData(const char *aName,
-                             nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
-                             const nsIID *aProtoChainInterface,
-                             const nsIID **aInterfaces,
-                             uint32_t aScriptableFlags,
-                             bool aHasClassInterface,
-                             const nsCID *aConstructorCID);
 
   void RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,

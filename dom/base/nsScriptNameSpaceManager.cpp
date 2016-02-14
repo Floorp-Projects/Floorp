@@ -61,18 +61,6 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   // An entry is being cleared, let the key (nsString) do its own
   // cleanup.
   e->mKey.~nsString();
-  if (e->mGlobalName.mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-    nsIClassInfo* ci = GET_CLEAN_CI_PTR(e->mGlobalName.mData->mCachedClassInfo);
-
-    // If we constructed an internal helper, we'll let the helper delete 
-    // the nsDOMClassInfoData structure, if not we do it here.
-    if (!ci || e->mGlobalName.mData->u.mExternalConstructorFptr) {
-      delete e->mGlobalName.mData;
-    }
-
-    // Release our pointer to the helper.
-    NS_IF_RELEASE(ci);
-  }
 
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
@@ -170,124 +158,11 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
 
 
 nsresult
-nsScriptNameSpaceManager::RegisterExternalInterfaces(bool aAsProto)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> cm =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInterfaceInfoManager>
-    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = cm->EnumerateCategory(JAVASCRIPT_DOM_INTERFACE,
-                             getter_AddRefs(enumerator));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLCString IID_string;
-  nsAutoCString category_entry;
-  const char* if_name;
-  nsCOMPtr<nsISupports> entry;
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  bool found_old, dom_prefix;
-
-  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsCString> category(do_QueryInterface(entry));
-
-    if (!category) {
-      NS_WARNING("Category entry not an nsISupportsCString!");
-
-      continue;
-    }
-
-    rv = category->GetData(category_entry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = cm->GetCategoryEntry(JAVASCRIPT_DOM_INTERFACE, category_entry.get(),
-                              getter_Copies(IID_string));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIID primary_IID;
-    if (!primary_IID.Parse(IID_string) ||
-        primary_IID.Equals(NS_GET_IID(nsISupports))) {
-      NS_ERROR("Invalid IID registered with the script namespace manager!");
-      continue;
-    }
-
-    iim->GetInfoForIID(&primary_IID, getter_AddRefs(if_info));
-
-    while (if_info) {
-      const nsIID *iid;
-      if_info->GetIIDShared(&iid);
-      NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
-
-      if (iid->Equals(NS_GET_IID(nsISupports))) {
-        break;
-      }
-
-      if_info->GetNameShared(&if_name);
-      dom_prefix = (strncmp(if_name, NS_DOM_INTERFACE_PREFIX,
-                            sizeof(NS_DOM_INTERFACE_PREFIX) - 1) == 0);
-
-      const char* name;
-      if (dom_prefix) {
-        name = if_name + sizeof(NS_DOM_INTERFACE_PREFIX) - 1;
-      } else {
-        name = if_name + sizeof(NS_INTERFACE_PREFIX) - 1;
-      }
-
-      if (aAsProto) {
-        RegisterClassProto(name, iid, &found_old);
-      } else {
-        RegisterInterface(name, iid, &found_old);
-      }
-
-      if (found_old) {
-        break;
-      }
-
-      nsCOMPtr<nsIInterfaceInfo> tmp(if_info);
-      tmp->GetParent(getter_AddRefs(if_info));
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsScriptNameSpaceManager::RegisterInterface(const char* aIfName,
-                                            const nsIID *aIfIID,
-                                            bool* aFoundOld)
-{
-  *aFoundOld = false;
-
-  nsGlobalNameStruct *s = AddToHash(&mGlobalNames, aIfName);
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
-      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding) {
-    *aFoundOld = true;
-
-    return NS_OK;
-  }
-
-  s->mType = nsGlobalNameStruct::eTypeInterface;
-  s->mIID = *aIfIID;
-
-  return NS_OK;
-}
-
-nsresult
 nsScriptNameSpaceManager::Init()
 {
   RegisterWeakMemoryReporter(this);
 
   nsresult rv = NS_OK;
-
-  rv = RegisterExternalInterfaces(false);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICategoryManager> cm =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
@@ -371,8 +246,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   }
 
   NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
-               s->mType == nsGlobalNameStruct::eTypeInterface,
+               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding,
                "Whaaa, JS environment name clash!");
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
@@ -396,8 +270,7 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
-      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding &&
-      s->mType != nsGlobalNameStruct::eTypeInterface) {
+      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding) {
     *aFoundOld = true;
 
     return NS_OK;
@@ -405,77 +278,6 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
 
   s->mType = nsGlobalNameStruct::eTypeClassProto;
   s->mIID = *aConstructorProtoIID;
-
-  return NS_OK;
-}
-
-nsresult
-nsScriptNameSpaceManager::RegisterExternalClassName(const char *aClassName,
-                                                    nsCID& aCID)
-{
-  nsGlobalNameStruct *s = AddToHash(&mGlobalNames, aClassName);
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  // If an external constructor is already defined with aClassName we
-  // won't overwrite it.
-
-  if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
-               s->mType == nsGlobalNameStruct::eTypeInterface,
-               "Whaaa, JS environment name clash!");
-
-  s->mType = nsGlobalNameStruct::eTypeExternalClassInfoCreator;
-  s->mCID = aCID;
-
-  return NS_OK;
-}
-
-nsresult
-nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
-                                            nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
-                                            const nsIID *aProtoChainInterface,
-                                            const nsIID **aInterfaces,
-                                            uint32_t aScriptableFlags,
-                                            bool aHasClassInterface,
-                                            const nsCID *aConstructorCID)
-{
-  const char16_t* className;
-  nsGlobalNameStruct *s = AddToHash(&mGlobalNames, aName, &className);
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  // If an external constructor is already defined with aClassName we
-  // won't overwrite it.
-
-  if (s->mType == nsGlobalNameStruct::eTypeClassConstructor ||
-      s->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-    return NS_OK;
-  }
-
-  // XXX Should we bail out here?
-  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
-               s->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator,
-               "Someone tries to register classinfo data for a class that isn't new or external!");
-
-  s->mData = new nsExternalDOMClassInfoData;
-  s->mType = nsGlobalNameStruct::eTypeExternalClassInfo;
-  s->mData->mName = aName;
-  s->mData->mNameUTF16 = className;
-  if (aConstructorFptr)
-    s->mData->u.mExternalConstructorFptr = aConstructorFptr;
-  else
-    // null constructor will cause us to use nsDOMGenericSH::doCreate
-    s->mData->u.mExternalConstructorFptr = nullptr;
-  s->mData->mCachedClassInfo = nullptr;
-  s->mData->mProtoChainInterface = aProtoChainInterface;
-  s->mData->mInterfaces = aInterfaces;
-  s->mData->mScriptableFlags = aScriptableFlags;
-  s->mData->mHasClassInterface = aHasClassInterface;
-  s->mData->mConstructorCID = aConstructorCID;
 
   return NS_OK;
 }
