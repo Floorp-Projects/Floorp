@@ -31,8 +31,9 @@ ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 1
 
 
-def memberReservedSlot(member):
-    return "(DOM_INSTANCE_RESERVED_SLOTS + %d)" % member.slotIndex
+def memberReservedSlot(member, descriptor):
+    return ("(DOM_INSTANCE_RESERVED_SLOTS + %d)" %
+            member.slotIndices[descriptor.interface.identifier.name])
 
 
 def toStringBool(arg):
@@ -2149,7 +2150,7 @@ def clearableCachedAttrs(descriptor):
             m.isAttr() and
             # Constants should never need clearing!
             m.dependsOn != "Nothing" and
-            m.slotIndex is not None)
+            m.slotIndices is not None)
 
 
 def MakeClearCachedValueNativeName(member):
@@ -3805,8 +3806,6 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                     }
                     // Getter handled setting our reserved slots
                     """,
-                    slot=memberReservedSlot(m),
-                    interface=self.descriptor.interface.identifier.name,
                     member=m.identifier.name)
 
         body += "\nreturn true;\n"
@@ -3828,7 +3827,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
         CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
 
     def definition_body(self):
-        slotIndex = memberReservedSlot(self.member)
+        slotIndex = memberReservedSlot(self.member, self.descriptor)
         if self.member.getExtendedAttribute("StoreInSlot"):
             # We have to root things and save the old value in case
             # regetting fails, so we can restore it.
@@ -7371,7 +7370,7 @@ class CGPerSignatureCall(CGThing):
                               "NewObject implies that we need to keep the object alive with a strong reference.");
                 """)
 
-        setSlot = self.idlNode.isAttr() and self.idlNode.slotIndex is not None
+        setSlot = self.idlNode.isAttr() and self.idlNode.slotIndices is not None
         if setSlot:
             # For attributes in slots, we want to do some
             # post-processing once we've wrapped them.
@@ -7418,7 +7417,7 @@ class CGPerSignatureCall(CGThing):
                                               "args.rval().isObject()")
                 postSteps += freezeValue.define()
             postSteps += ("js::SetReservedSlot(reflector, %s, args.rval());\n" %
-                          memberReservedSlot(self.idlNode))
+                          memberReservedSlot(self.idlNode, self.descriptor))
             # For the case of Cached attributes, go ahead and preserve our
             # wrapper if needed.  We need to do this because otherwise the
             # wrapper could get garbage-collected and the cached value would
@@ -8003,7 +8002,7 @@ class CGSetterCall(CGPerSignatureCall):
 
     def wrap_return_value(self):
         attr = self.idlNode
-        if self.descriptor.wrapperCache and attr.slotIndex is not None:
+        if self.descriptor.wrapperCache and attr.slotIndices is not None:
             if attr.getExtendedAttribute("StoreInSlot"):
                 args = "cx, self"
             else:
@@ -8550,7 +8549,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             return getMaplikeOrSetlikeSizeGetterBody(self.descriptor, self.attr)
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        if self.attr.slotIndex is not None:
+        if self.attr.slotIndices is not None:
             if self.descriptor.hasXPConnectImpls:
                 raise TypeError("Interface '%s' has XPConnect impls, so we "
                                 "can't use our slot for property '%s'!" %
@@ -8576,7 +8575,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 }
 
                 """,
-                slot=memberReservedSlot(self.attr),
+                slot=memberReservedSlot(self.attr, self.descriptor),
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
@@ -8827,10 +8826,13 @@ class CGMemberJITInfo(CGThing):
                 slotIndex=slotIndex)
             return initializer.rstrip()
 
-        slotAssert = dedent(
+        slotAssert = fill(
             """
-            static_assert(%s <= JSJitInfo::maxSlotIndex, "We won't fit");
-            """ % slotIndex)
+            static_assert(${slotIndex} <= JSJitInfo::maxSlotIndex, "We won't fit");
+            static_assert(${slotIndex} < ${classReservedSlots}, "There is no slot for us");
+            """,
+            slotIndex=slotIndex,
+            classReservedSlots=INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots)
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
@@ -8878,10 +8880,10 @@ class CGMemberJITInfo(CGThing):
 
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             isAlwaysInSlot = self.member.getExtendedAttribute("StoreInSlot")
-            if self.member.slotIndex is not None:
+            if self.member.slotIndices is not None:
                 assert isAlwaysInSlot or self.member.getExtendedAttribute("Cached")
                 isLazilyCachedInSlot = not isAlwaysInSlot
-                slotIndex = memberReservedSlot(self.member)
+                slotIndex = memberReservedSlot(self.member, self.descriptor)
                 # We'll statically assert that this is not too big in
                 # CGUpdateMemberSlotsMethod, in the case when
                 # isAlwaysInSlot is true.
@@ -15328,7 +15330,7 @@ def getMaplikeOrSetlikeBackingObject(descriptor, maplikeOrSetlike, helperImpl=No
           PreserveWrapper<${selfType}>(self);
         }
         """,
-        slot=memberReservedSlot(maplikeOrSetlike),
+        slot=memberReservedSlot(maplikeOrSetlike, descriptor),
         func_prefix=func_prefix,
         errorReturn=getMaplikeOrSetlikeErrorReturn(helperImpl),
         selfType=descriptor.nativeType)

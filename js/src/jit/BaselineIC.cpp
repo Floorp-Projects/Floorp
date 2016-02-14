@@ -1396,7 +1396,7 @@ TryAttachNativeGetAccessorElemStub(JSContext* cx, HandleScript script, jsbytecod
     RootedObject baseHolder(cx);
     if (!EffectlesslyLookupProperty(cx, obj, id, &baseHolder, &shape))
         return false;
-    if (!baseHolder || baseHolder->isNative())
+    if (!baseHolder || !baseHolder->isNative())
         return true;
 
     HandleNativeObject holder = baseHolder.as<NativeObject>();

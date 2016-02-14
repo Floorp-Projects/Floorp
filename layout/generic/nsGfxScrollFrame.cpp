@@ -3357,6 +3357,8 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
     wasUsingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
 
     if (aAllowCreateDisplayPort) {
+      nsLayoutUtils::MaybeCreateDisplayPort(*aBuilder, mOuter);
+
       nsRect displayportBase = *aDirtyRect;
       nsPresContext* pc = mOuter->PresContext();
       if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
@@ -3392,9 +3394,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
         displayportBase -= mScrollPort.TopLeft();
       }
 
-      // Provide the value of the display port base rect, and possibly create a
-      // display port if there isn't one already.
-      nsLayoutUtils::MaybeCreateDisplayPort(*aBuilder, mOuter, displayportBase);
+      nsLayoutUtils::SetDisplayPortBase(mOuter->GetContent(), displayportBase);
     }
 
     // If we don't have aAllowCreateDisplayPort == true then should have already

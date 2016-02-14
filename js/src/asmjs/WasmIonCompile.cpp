@@ -946,7 +946,7 @@ class FunctionCompiler
         MBasicBlock* body;
         if (!newBlock(curBlock_, &body))
             return false;
-        if (cond->isConstant() && cond->toConstant()->valueToBoolean()) {
+        if (cond->isConstant() && cond->toConstant()->valueToBooleanInfallible()) {
             *afterLoop = nullptr;
             curBlock_->end(MGoto::New(alloc(), body));
         } else {
@@ -1058,7 +1058,7 @@ class FunctionCompiler
         if (curBlock_) {
             MOZ_ASSERT(curBlock_->loopDepth() == loopStack_.length() + 1);
             if (cond->isConstant()) {
-                if (cond->toConstant()->valueToBoolean()) {
+                if (cond->toConstant()->valueToBooleanInfallible()) {
                     curBlock_->end(MGoto::New(alloc(), loopEntry));
                     if (!setLoopBackedge(loopEntry, curBlock_, nullptr))
                         return false;
@@ -1802,7 +1802,7 @@ EmitExtractLane(FunctionCompiler& f, ExprType type, MDefinition** def)
     }
 
     MOZ_ASSERT(laneDef->isConstant());
-    int32_t laneLit = laneDef->toConstant()->value().toInt32();
+    int32_t laneLit = laneDef->toConstant()->toInt32();
     MOZ_ASSERT(laneLit < 4);
     SimdLane lane = SimdLane(laneLit);
 
@@ -1837,7 +1837,7 @@ EmitSimdReplaceLane(FunctionCompiler& f, ExprType simdType, MDefinition** def)
     SimdLane lane;
     if (laneDef) {
         MOZ_ASSERT(laneDef->isConstant());
-        int32_t laneLit = laneDef->toConstant()->value().toInt32();
+        int32_t laneLit = laneDef->toConstant()->toInt32();
         MOZ_ASSERT(laneLit < 4);
         lane = SimdLane(laneLit);
     } else {

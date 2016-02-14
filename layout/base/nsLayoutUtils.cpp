@@ -3104,17 +3104,12 @@ nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFram
 
 void
 nsLayoutUtils::MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                      nsIFrame* aScrollFrame,
-                                      nsRect aDisplayPortBase) {
+                                      nsIFrame* aScrollFrame) {
   nsIContent* content = aScrollFrame->GetContent();
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
   if (!content || !scrollableFrame) {
     return;
   }
-
-  // Set the base rect. Note that this will not influence 'haveDisplayPort',
-  // which is based on either the whole rect or margins being set.
-  SetDisplayPortBase(content, aDisplayPortBase);
 
   bool haveDisplayPort = HasDisplayPort(content);
 

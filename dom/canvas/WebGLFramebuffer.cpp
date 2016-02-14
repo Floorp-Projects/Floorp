@@ -69,6 +69,17 @@ WebGLFBAttachPoint::Format() const
     return nullptr;
 }
 
+uint32_t
+WebGLFBAttachPoint::Samples() const
+{
+    MOZ_ASSERT(IsDefined());
+
+    if (mRenderbufferPtr)
+        return mRenderbufferPtr->Samples();
+
+    return 0;
+}
+
 bool
 WebGLFBAttachPoint::HasAlpha() const
 {
@@ -394,11 +405,11 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
             }
             break;
         }
-        return ;
+        return;
     }
 
     if (Renderbuffer()) {
-        Renderbuffer()->FramebufferRenderbuffer(attachment);
+        Renderbuffer()->DoFramebufferRenderbuffer(attachment);
         return;
     }
 
@@ -790,28 +801,6 @@ WebGLFramebuffer::HasIncompleteAttachments(nsCString* const out_info) const
     return hasIncomplete;
 }
 
-static bool
-MatchOrReplaceSize(const WebGLFBAttachPoint& cur, uint32_t* const out_width,
-                   uint32_t* const out_height)
-{
-    if (!cur.HasImage())
-        return true;
-
-    uint32_t width;
-    uint32_t height;
-    cur.Size(&width, &height);
-
-    if (!*out_width) {
-        MOZ_ASSERT(!*out_height);
-        *out_width = width;
-        *out_height = height;
-        return true;
-    }
-
-    return (width == *out_width &&
-            height == *out_height);
-}
-
 bool
 WebGLFramebuffer::AllImageRectsMatch() const
 {
@@ -819,20 +808,84 @@ WebGLFramebuffer::AllImageRectsMatch() const
     DebugOnly<nsCString> fbStatusInfo;
     MOZ_ASSERT(!HasIncompleteAttachments(&fbStatusInfo));
 
+    bool needsInit = true;
     uint32_t width = 0;
     uint32_t height = 0;
-    bool imageRectsMatch = true;
 
-    imageRectsMatch &= MatchOrReplaceSize(mColorAttachment0,       &width, &height);
-    imageRectsMatch &= MatchOrReplaceSize(mDepthAttachment,        &width, &height);
-    imageRectsMatch &= MatchOrReplaceSize(mStencilAttachment,      &width, &height);
-    imageRectsMatch &= MatchOrReplaceSize(mDepthStencilAttachment, &width, &height);
+    const auto fnInitializeOrMatch = [&needsInit, &width,
+                                      &height](const WebGLFBAttachPoint& attach)
+    {
+        if (!attach.HasImage())
+            return true;
+
+        uint32_t curWidth;
+        uint32_t curHeight;
+        attach.Size(&curWidth, &curHeight);
+
+        if (needsInit) {
+            needsInit = false;
+            width = curWidth;
+            height = curHeight;
+            return true;
+        }
+
+        return (curWidth == width &&
+                curHeight == height);
+    };
+
+    bool matches = true;
+
+    matches &= fnInitializeOrMatch(mColorAttachment0      );
+    matches &= fnInitializeOrMatch(mDepthAttachment       );
+    matches &= fnInitializeOrMatch(mStencilAttachment     );
+    matches &= fnInitializeOrMatch(mDepthStencilAttachment);
 
     for (const auto& cur : mMoreColorAttachments) {
-        imageRectsMatch &= MatchOrReplaceSize(cur, &width, &height);
+        matches &= fnInitializeOrMatch(cur);
     }
 
-    return imageRectsMatch;
+    return matches;
+}
+
+bool
+WebGLFramebuffer::AllImageSamplesMatch() const
+{
+    MOZ_ASSERT(HasDefinedAttachments());
+    DebugOnly<nsCString> fbStatusInfo;
+    MOZ_ASSERT(!HasIncompleteAttachments(&fbStatusInfo));
+
+    bool needsInit = true;
+    uint32_t samples = 0;
+
+    const auto fnInitializeOrMatch = [&needsInit,
+                                      &samples](const WebGLFBAttachPoint& attach)
+    {
+        if (!attach.HasImage())
+          return true;
+
+        const uint32_t curSamples = attach.Samples();
+
+        if (needsInit) {
+            needsInit = false;
+            samples = curSamples;
+            return true;
+        }
+
+        return (curSamples == samples);
+    };
+
+    bool matches = true;
+
+    matches &= fnInitializeOrMatch(mColorAttachment0      );
+    matches &= fnInitializeOrMatch(mDepthAttachment       );
+    matches &= fnInitializeOrMatch(mStencilAttachment     );
+    matches &= fnInitializeOrMatch(mDepthStencilAttachment);
+
+    for (const auto& cur : mMoreColorAttachments) {
+        matches &= fnInitializeOrMatch(cur);
+    }
+
+    return matches;
 }
 
 FBStatus
@@ -850,7 +903,11 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
     if (!AllImageRectsMatch())
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS; // Inconsistent sizes
 
+    if (!AllImageSamplesMatch())
+        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE; // Inconsistent samples
+
     if (!mContext->IsWebGL2()) {
+        // INCOMPLETE_DIMENSIONS doesn't exist in GLES3.
         const auto depthOrStencilCount = int(mDepthAttachment.IsDefined()) +
                                          int(mStencilAttachment.IsDefined()) +
                                          int(mDepthStencilAttachment.IsDefined());

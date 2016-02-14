@@ -422,8 +422,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       js::ProfileEntry::Category::GRAPHICS);
 
     DrawTarget* destDrawTarget = aContext->GetDrawTarget();
-    if ((destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1) ||
-        (destDrawTarget->GetBackendType() == BackendType::DIRECT2D)) {
+    if (destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1) {
       return nullptr;
     }
 
