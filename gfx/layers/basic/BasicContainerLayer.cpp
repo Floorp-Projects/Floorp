@@ -109,7 +109,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect)
     return false;
 
   nsIntPoint offset(int32_t(transform._31), int32_t(transform._32));
-  gfx::IntRect rect = aInRect.Intersect(GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds() + offset);
+  gfx::IntRect rect = aInRect.Intersect(GetLocalVisibleRegion().ToUnknownRegion().GetBounds() + offset);
   nsIntRegion covered;
 
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
@@ -121,7 +121,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect)
         ThebesMatrix(childTransform).HasNonIntegerTranslation() ||
         l->GetEffectiveOpacity() != 1.0)
       return false;
-    nsIntRegion childRegion = l->GetEffectiveVisibleRegion().ToUnknownRegion();
+    nsIntRegion childRegion = l->GetLocalVisibleRegion().ToUnknownRegion();
     childRegion.MoveBy(int32_t(childTransform._31), int32_t(childTransform._32));
     childRegion.And(childRegion, rect);
     if (l->GetClipRect()) {
