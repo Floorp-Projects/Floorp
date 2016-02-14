@@ -33758,7 +33758,16 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "html/semantics/embedded-content/the-img-element/update-media.html": [
+          {
+            "path": "html/semantics/embedded-content/the-img-element/update-media.html",
+            "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
