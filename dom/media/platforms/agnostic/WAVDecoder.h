@@ -1,0 +1,48 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#if !defined(WaveDecoder_h_)
+#define WaveDecoder_h_
+
+#include "PlatformDecoderModule.h"
+#include "mp4_demuxer/ByteReader.h"
+
+namespace mozilla {
+
+class WaveDataDecoder : public MediaDataDecoder
+{
+public:
+  WaveDataDecoder(const AudioInfo& aConfig,
+                  FlushableTaskQueue* aTaskQueue,
+                  MediaDataDecoderCallback* aCallback);
+
+  RefPtr<InitPromise> Init() override;
+  nsresult Input(MediaRawData* aSample) override;
+  nsresult Flush() override;
+  nsresult Drain() override;
+  nsresult Shutdown() override;
+  const char* GetDescriptionName() const override
+  {
+    return "wave audio decoder";
+  }
+
+  // Return true if mimetype is Wave
+  static bool IsWave(const nsACString& aMimeType);
+
+private:
+  void Decode (MediaRawData* aSample);
+  bool DoDecode (MediaRawData* aSample);
+  void DoDrain ();
+
+  const AudioInfo& mInfo;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
+  MediaDataDecoderCallback* mCallback;
+
+  int64_t mFrames;
+};
+
+} // namespace mozilla
+#endif
