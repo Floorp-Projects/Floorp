@@ -11,13 +11,15 @@ const defaultSetNames = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "Li
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
-Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
+                                  "resource://testing-common/BrowserTestUtils.jsm");
 
 Cu.import("chrome://mozscreenshots/content/Screenshot.jsm");
 
@@ -42,6 +44,7 @@ this.TestRunner = {
   _libDir: null,
 
   init(extensionPath) {
+    log.info("init");
     this._extensionPath = extensionPath;
   },
 
