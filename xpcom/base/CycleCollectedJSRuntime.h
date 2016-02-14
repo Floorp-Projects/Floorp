@@ -134,10 +134,12 @@ class CycleCollectedJSRuntime
   friend class JSZoneParticipant;
   friend class IncrementalFinalizeRunnable;
 protected:
-  CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
-                          uint32_t aMaxBytes,
-                          uint32_t aMaxNurseryBytes);
+  CycleCollectedJSRuntime();
   virtual ~CycleCollectedJSRuntime();
+
+  nsresult Initialize(JSRuntime* aParentRuntime,
+                      uint32_t aMaxBytes,
+                      uint32_t aMaxNurseryBytes);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
