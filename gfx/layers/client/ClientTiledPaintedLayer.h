@@ -133,6 +133,9 @@ private:
   void EndPaint();
 
   RefPtr<TiledContentClient> mContentClient;
+  // Flag to indicate if mContentClient is a SingleTiledContentClient. This is
+  // only valid when mContentClient is non-null.
+  bool mHaveSingleTiledContentClient;
   nsIntRegion mLowPrecisionValidRegion;
   BasicTiledLayerPaintData mPaintData;
 };

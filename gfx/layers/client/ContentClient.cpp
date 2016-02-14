@@ -73,7 +73,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
 #ifdef XP_WIN
   if (backend == LayersBackend::LAYERS_D3D11) {
-    useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+    useDoubleBuffering = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   } else
 #endif
 #ifdef MOZ_WIDGET_GTK

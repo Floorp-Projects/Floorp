@@ -229,10 +229,10 @@ class SharedContext
     // GlobalSharedContexts are stack allocated and thus may use RootedObject
     // for the static scope. FunctionBoxes are LifoAlloc'd and need to
     // manually trace their static scope.
-    virtual StaticScope* staticScope() const = 0;
-    void computeAllowSyntax(StaticScope* staticScope);
-    void computeInWith(StaticScope* staticScope);
-    void computeThisBinding(StaticScope* staticScope);
+    virtual JSObject* staticScope() const = 0;
+    void computeAllowSyntax(JSObject* staticScope);
+    void computeInWith(JSObject* staticScope);
+    void computeThisBinding(JSObject* staticScope);
 
     virtual ObjectBox* toObjectBox() { return nullptr; }
     bool isObjectBox() { return toObjectBox() != nullptr; }
@@ -300,19 +300,19 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
         // non-function scope, so we have to compute our ThisBinding based on
         // the actual callee.
         if (maybeEvalCaller)
-            computeThisBinding(maybeEvalCaller->nonLazyScript()->staticScope());
+            computeThisBinding(maybeEvalCaller);
         else
             computeThisBinding(staticScope);
     }
 
-    StaticScope* staticScope() const override { return staticScope_; }
+    JSObject* staticScope() const override { return staticScope_; }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings        bindings;               /* bindings for this function */
-    StaticFunctionScope* staticScope_;
+    JSObject*       enclosingStaticScope_;
     uint32_t        bufStart;
     uint32_t        bufEnd;
     uint32_t        startLine;
@@ -335,15 +335,13 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     template <typename ParseHandler>
     FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
-                ParseContext<ParseHandler>* pc, Directives directives, bool extraWarnings,
-                GeneratorKind generatorKind);
-
-    bool initStaticScope(Handle<StaticScope*> enclosingScope);
+                JSObject* enclosingStaticScope, ParseContext<ParseHandler>* pc,
+                Directives directives, bool extraWarnings, GeneratorKind generatorKind);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
-    StaticFunctionScope* staticScope() const override { return staticScope_; }
-    StaticScope* enclosingStaticScope() const { return staticScope_->enclosingScope(); }
+    JSObject* staticScope() const override { return function(); }
+    JSObject* enclosingStaticScope() const { return enclosingStaticScope_; }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
     bool isGenerator() const { return generatorKind() != NotGenerator; }
@@ -429,7 +427,7 @@ class ModuleBox : public ObjectBox, public SharedContext
 
     ObjectBox* toObjectBox() override { return this; }
     ModuleObject* module() const { return &object->as<ModuleObject>(); }
-    StaticModuleScope* staticScope() const override { return module()->staticScope(); }
+    JSObject* staticScope() const override { return module(); }
 
     void trace(JSTracer* trc) override;
 };

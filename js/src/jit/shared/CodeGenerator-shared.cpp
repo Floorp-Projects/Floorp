@@ -414,7 +414,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         if (mir->isLambda()) {
             MConstant* constant = mir->toLambda()->functionOperand();
             uint32_t cstIndex;
-            masm.propagateOOM(graph.addConstantToPool(constant->value(), &cstIndex));
+            masm.propagateOOM(graph.addConstantToPool(constant->toJSValue(), &cstIndex));
             alloc = RValueAllocation::RecoverInstruction(index, cstIndex);
             break;
         }
@@ -440,7 +440,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         if (payload->isConstant()) {
             MConstant* constant = mir->toConstant();
             uint32_t index;
-            masm.propagateOOM(graph.addConstantToPool(constant->value(), &index));
+            masm.propagateOOM(graph.addConstantToPool(constant->toJSValue(), &index));
             alloc = RValueAllocation::ConstantPool(index);
             break;
         }
@@ -466,7 +466,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         if (payload->isConstant()) {
             MConstant* constant = mir->toConstant();
             uint32_t index;
-            masm.propagateOOM(graph.addConstantToPool(constant->value(), &index));
+            masm.propagateOOM(graph.addConstantToPool(constant->toJSValue(), &index));
             alloc = RValueAllocation::ConstantPool(index);
             break;
         }

@@ -520,6 +520,11 @@ public:
   /* mutators */
 
   /**
+   * Reverse the order of the elements in the vector in place.
+   */
+  void reverse();
+
+  /**
    * Given that the vector is empty and has no inline storage, grow to
    * |capacity|.
    */
@@ -786,6 +791,18 @@ Vector<T, N, AP>::~Vector()
   Impl::destroy(beginNoCheck(), endNoCheck());
   if (!usingInlineStorage()) {
     this->free_(beginNoCheck());
+  }
+}
+
+template<typename T, size_t N, class AP>
+MOZ_ALWAYS_INLINE void
+Vector<T, N, AP>::reverse() {
+  MOZ_REENTRANCY_GUARD_ET_AL;
+  T* elems = mBegin;
+  size_t len = mLength;
+  size_t mid = len / 2;
+  for (size_t i = 0; i < mid; i++) {
+    Swap(elems[i], elems[len - i - 1]);
   }
 }
 

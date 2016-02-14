@@ -978,7 +978,9 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                  (member.getExtendedAttribute("StoreInSlot") or
                   member.getExtendedAttribute("Cached"))) or
                 member.isMaplikeOrSetlike()):
-                member.slotIndex = self.totalMembersInSlots
+                if member.slotIndices is None:
+                    member.slotIndices = dict()
+                member.slotIndices[self.identifier.name] = self.totalMembersInSlots
                 self.totalMembersInSlots += 1
                 if member.getExtendedAttribute("StoreInSlot"):
                     self._ownMembersInSlots += 1
@@ -3599,7 +3601,7 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
         IDLMaplikeOrSetlikeOrIterableBase.__init__(self, location, identifier, maplikeOrSetlikeType,
                                                    keyType, valueType, IDLInterfaceMember.Tags.MaplikeOrSetlike)
         self.readonly = readonly
-        self.slotIndex = None
+        self.slotIndices = None
 
         # When generating JSAPI access code, we need to know the backing object
         # type prefix to create the correct function. Generate here for reuse.
@@ -3793,7 +3795,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.stringifier = stringifier
         self.enforceRange = False
         self.clamp = False
-        self.slotIndex = None
+        self.slotIndices = None
         assert maplikeOrSetlike is None or isinstance(maplikeOrSetlike, IDLMaplikeOrSetlike)
         self.maplikeOrSetlike = maplikeOrSetlike
         self.dependsOn = "Everything"

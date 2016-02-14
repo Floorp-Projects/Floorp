@@ -844,7 +844,8 @@ class Edge {
     // false as the wantNames parameter.
     //
     // The storage is owned by this Edge, and will be freed when this Edge is
-    // destructed.
+    // destructed. You may take ownership of the name by `mozilla::Move`ing it
+    // out of the edge; it is just a UniquePtr.
     //
     // (In real life we'll want a better representation for names, to avoid
     // creating tons of strings when the names follow a pattern; and we'll need

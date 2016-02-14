@@ -16,7 +16,7 @@ from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser
 
-import devicemanager
+import mozdevice
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -170,7 +170,7 @@ class MochiRemote(MochitestDesktop):
             try:
                 self._dm.pushDir(options.testingModulesDir, self.remoteModulesDir)
                 self._dm.chmodDir(self.remoteModulesDir)
-            except devicemanager.DMError:
+            except mozdevice.DMError:
                 self.log.error(
                     "Automation Error: Unable to copy test modules to device.")
                 raise
@@ -187,7 +187,7 @@ class MochiRemote(MochitestDesktop):
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
             self._dm.chmodDir(self.remoteProfile)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")
             raise
@@ -222,7 +222,7 @@ class MochiRemote(MochitestDesktop):
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
             self._dm.chmodDir(self.remoteProfile)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")
             raise
@@ -263,7 +263,7 @@ class MochiRemote(MochitestDesktop):
                 else:
                     self.log.info("  %s: %s" % (category, devinfo[category]))
             self.log.info("Test root: %s" % self._dm.deviceRoot)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             self.log.warning("Error getting device information")
 
     def getGMPPluginPath(self, options):
@@ -373,7 +373,7 @@ def run_test_harness(options):
         mochitest.stopServers()
         try:
             mochitest.cleanup(options)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             # device error cleaning up... oh well!
             pass
         retVal = 1
