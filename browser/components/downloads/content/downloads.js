@@ -1072,22 +1072,14 @@ DownloadsViewItem.prototype = {
         let partFile = new FileUtils.File(this.download.target.partFilePath);
         return partFile.exists();
       }
-      case "downloadsCmd_pauseResume":
-        return this.download.hasPartialData && !this.download.error;
-      case "downloadsCmd_retry":
-        return this.download.canceled || this.download.error;
-      case "downloadsCmd_openReferrer":
-        return !!this.download.source.referrer;
       case "cmd_delete":
       case "downloadsCmd_cancel":
       case "downloadsCmd_copyLocation":
       case "downloadsCmd_doDefault":
         return true;
-      case "downloadsCmd_unblock":
-      case "downloadsCmd_confirmBlock":
-        return this.download.hasBlockedData;
     }
-    return false;
+    return DownloadsViewUI.DownloadElementShell.prototype
+                          .isCommandEnabled.call(this, aCommand);
   },
 
   doCommand(aCommand) {
@@ -1105,11 +1097,6 @@ DownloadsViewItem.prototype = {
                            NetUtil.newURI(this.download.source.url));
   },
 
-  downloadsCmd_cancel() {
-    this.download.cancel().catch(() => {});
-    this.download.removePartialData().catch(Cu.reportError);
-  },
-
   downloadsCmd_unblock() {
     DownloadsPanel.hidePanel();
     DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
@@ -1118,10 +1105,6 @@ DownloadsViewItem.prototype = {
         return this.download.unblock();
       }
     }).catch(Cu.reportError);
-  },
-
-  downloadsCmd_confirmBlock() {
-    this.download.confirmBlock().catch(Cu.reportError);
   },
 
   downloadsCmd_open() {
@@ -1147,18 +1130,6 @@ DownloadsViewItem.prototype = {
     DownloadsPanel.hidePanel();
   },
 
-  downloadsCmd_pauseResume() {
-    if (this.download.stopped) {
-      this.download.start();
-    } else {
-      this.download.cancel();
-    }
-  },
-
-  downloadsCmd_retry() {
-    this.download.start().catch(() => {});
-  },
-
   downloadsCmd_openReferrer() {
     openURL(this.download.source.referrer);
   },
@@ -1170,24 +1141,7 @@ DownloadsViewItem.prototype = {
   },
 
   downloadsCmd_doDefault() {
-    const nsIDM = Ci.nsIDownloadManager;
-
-    // Determine the default command for the current item.
-    let defaultCommand = function () {
-      switch (DownloadsCommon.stateOfDownload(this.download)) {
-        case nsIDM.DOWNLOAD_NOTSTARTED:       return "downloadsCmd_cancel";
-        case nsIDM.DOWNLOAD_FINISHED:         return "downloadsCmd_open";
-        case nsIDM.DOWNLOAD_FAILED:           return "downloadsCmd_retry";
-        case nsIDM.DOWNLOAD_CANCELED:         return "downloadsCmd_retry";
-        case nsIDM.DOWNLOAD_PAUSED:           return "downloadsCmd_pauseResume";
-        case nsIDM.DOWNLOAD_QUEUED:           return "downloadsCmd_cancel";
-        case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: return "downloadsCmd_openReferrer";
-        case nsIDM.DOWNLOAD_SCANNING:         return "downloadsCmd_show";
-        case nsIDM.DOWNLOAD_DIRTY:            return "downloadsCmd_openReferrer";
-        case nsIDM.DOWNLOAD_BLOCKED_POLICY:   return "downloadsCmd_openReferrer";
-      }
-      return "";
-    }.apply(this);
+    let defaultCommand = this.currentDefaultCommandName;
     if (defaultCommand && this.isCommandEnabled(defaultCommand)) {
       this.doCommand(defaultCommand);
     }
