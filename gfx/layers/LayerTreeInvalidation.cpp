@@ -131,7 +131,7 @@ struct LayerPropertiesBase : public LayerProperties
   explicit LayerPropertiesBase(Layer* aLayer)
     : mLayer(aLayer)
     , mMaskLayer(nullptr)
-    , mVisibleRegion(mLayer->GetEffectiveVisibleRegion().ToUnknownRegion())
+    , mVisibleRegion(mLayer->GetLocalVisibleRegion().ToUnknownRegion())
     , mInvalidRegion(aLayer->GetInvalidRegion())
     , mPostXScale(aLayer->GetPostXScale())
     , mPostYScale(aLayer->GetPostYScale())
