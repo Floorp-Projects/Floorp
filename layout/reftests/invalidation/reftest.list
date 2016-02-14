@@ -51,7 +51,7 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 != clipped-animated-transform-1.html about:blank
 != paintedlayer-recycling-1.html about:blank
 != paintedlayer-recycling-2.html about:blank
-!= paintedlayer-recycling-3.html about:blank
+pref(layers.single-tile.enabled,false) != paintedlayer-recycling-3.html about:blank
 != paintedlayer-recycling-4.html about:blank
 != paintedlayer-recycling-5.html about:blank
 != paintedlayer-recycling-6.html about:blank
@@ -67,7 +67,7 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 != layer-splitting-7.html about:blank
 fuzzy-if(gtkWidget,2,4) fuzzy-if(asyncPan,2,3955) fuzzy-if(OSX,179,30) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
 != image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
-!= fast-scrolling.html about:blank
+pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 != fractional-transform-1.html about:blank
 != fractional-transform-2.html about:blank
 != fractional-transform-3.html about:blank

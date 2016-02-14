@@ -133,9 +133,15 @@ nsScreen::GetRect(nsRect& aRect)
   }
 
   context->GetRect(aRect);
+  LayoutDevicePoint screenTopLeftDev =
+    LayoutDevicePixel::FromAppUnits(aRect.TopLeft(),
+                                    context->AppUnitsPerDevPixel());
+  DesktopPoint screenTopLeftDesk =
+    screenTopLeftDev / context->GetDesktopToDeviceScale();
 
-  aRect.x = nsPresContext::AppUnitsToIntCSSPixels(aRect.x);
-  aRect.y = nsPresContext::AppUnitsToIntCSSPixels(aRect.y);
+  aRect.x = NSToIntRound(screenTopLeftDesk.x);
+  aRect.y = NSToIntRound(screenTopLeftDesk.y);
+
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 
@@ -156,10 +162,21 @@ nsScreen::GetAvailRect(nsRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
+  nsRect r;
+  context->GetRect(r);
+  LayoutDevicePoint screenTopLeftDev =
+    LayoutDevicePixel::FromAppUnits(r.TopLeft(),
+                                    context->AppUnitsPerDevPixel());
+  DesktopPoint screenTopLeftDesk =
+    screenTopLeftDev / context->GetDesktopToDeviceScale();
+
   context->GetClientRect(aRect);
 
-  aRect.x = nsPresContext::AppUnitsToIntCSSPixels(aRect.x);
-  aRect.y = nsPresContext::AppUnitsToIntCSSPixels(aRect.y);
+  aRect.x = NSToIntRound(screenTopLeftDesk.x) +
+            nsPresContext::AppUnitsToIntCSSPixels(aRect.x - r.x);
+  aRect.y = NSToIntRound(screenTopLeftDesk.y) +
+            nsPresContext::AppUnitsToIntCSSPixels(aRect.y - r.y);
+
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 

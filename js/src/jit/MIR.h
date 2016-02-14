@@ -851,12 +851,7 @@ class MDefinition : public MNode
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
 
-    bool isConstantValue() const {
-        return isConstant() || (isBox() && getOperand(0)->isConstant());
-    }
-    const Value& constantValue();
-    const Value* constantVp();
-    bool constantToBoolean();
+    inline MConstant* maybeConstantValue();
 
     inline MInstruction* toInstruction();
     inline const MInstruction* toInstruction() const;
@@ -1387,15 +1382,16 @@ class MConstant : public MNullaryInstruction
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
 
-    const js::Value& value() const {
-        return value_;
-    }
-    const js::Value* vp() const {
-        return &value_;
-    }
-    bool valueToBoolean() const {
-        // A hack to avoid this wordy pattern everywhere in the JIT.
-        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+    // Try to convert this constant to boolean, similar to js::ToBoolean.
+    // Returns false if the type is MIRType_Magic*.
+    bool valueToBoolean(bool* res) const;
+
+    // Like valueToBoolean, but returns the result directly instead of using
+    // an outparam. Should not be used if this constant might be a magic value.
+    bool valueToBooleanInfallible() const {
+        bool res;
+        MOZ_ALWAYS_TRUE(valueToBoolean(&res));
+        return res;
     }
 
     void printOpcode(GenericPrinter& out) const override;
@@ -1425,6 +1421,65 @@ class MConstant : public MNullaryInstruction
     bool canProduceFloat32() const override;
 
     ALLOW_CLONE(MConstant)
+
+    bool equals(const MConstant* other) {
+        return value_ == other->value_;
+    }
+
+    bool toBoolean() const {
+        MOZ_ASSERT(type() == MIRType_Boolean);
+        return value_.toBoolean();
+    }
+    int32_t toInt32() const {
+        MOZ_ASSERT(type() == MIRType_Int32);
+        return value_.toInt32();
+    }
+    bool isInt32(int32_t i) const {
+        return type() == MIRType_Int32 && value_.toInt32() == i;
+    }
+    double toDouble() const {
+        MOZ_ASSERT(type() == MIRType_Double);
+        return value_.toDouble();
+    }
+    float toFloat32() const {
+        MOZ_ASSERT(type() == MIRType_Float32);
+        return value_.toDouble();
+    }
+    JSString* toString() const {
+        MOZ_ASSERT(type() == MIRType_String);
+        return value_.toString();
+    }
+    JS::Symbol* toSymbol() const {
+        MOZ_ASSERT(type() == MIRType_Symbol);
+        return value_.toSymbol();
+    }
+    JSObject& toObject() const {
+        MOZ_ASSERT(type() == MIRType_Object);
+        return value_.toObject();
+    }
+    JSObject* toObjectOrNull() const {
+        if (type() == MIRType_Object)
+            return &value_.toObject();
+        MOZ_ASSERT(type() == MIRType_Null);
+        return nullptr;
+    }
+
+    bool isNumber() const {
+        return IsNumberType(type());
+    }
+    double toNumber() const {
+        if (type() == MIRType_Int32)
+            return toInt32();
+        if (type() == MIRType_Double)
+            return toDouble();
+        MOZ_ASSERT(type() == MIRType_Float32);
+        return toFloat32();
+    }
+
+    // Convert this constant to a js::Value. Float32 constants will be stored
+    // as DoubleValue and NaNs are canonicalized. Callers must be careful: not
+    // all constants can be represented by js::Value (wasm supports int64).
+    Value toJSValue() const;
 };
 
 // Generic constructor of SIMD valuesX4.
@@ -3087,7 +3142,7 @@ class MNewArray
     }
 
     JSObject* templateObject() const {
-        return getOperand(0)->toConstant()->value().toObjectOrNull();
+        return getOperand(0)->toConstant()->toObjectOrNull();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3235,7 +3290,7 @@ class MNewObject
         // making it emittedAtUses, we do not produce register allocations for
         // it and inline its content inside the code produced by the
         // CodeGenerator.
-        if (templateConst->toConstant()->value().isObject())
+        if (templateConst->toConstant()->type() == MIRType_Object)
             templateConst->setEmittedAtUses();
     }
 
@@ -3258,7 +3313,7 @@ class MNewObject
     }
 
     JSObject* templateObject() const {
-        return getOperand(0)->toConstant()->value().toObjectOrNull();
+        return getOperand(0)->toConstant()->toObjectOrNull();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -4808,7 +4863,7 @@ class MCreateThisWithTemplate
 
     // Template for |this|, provided by TI.
     JSObject* templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject();
+        return &getOperand(0)->toConstant()->toObject();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -6930,7 +6985,7 @@ class MStringSplit
         return getOperand(1);
     }
     JSObject* templateObject() const {
-        return &getOperand(2)->toConstant()->value().toObject();
+        return &getOperand(2)->toConstant()->toObject();
     }
     ObjectGroup* group() const {
         return templateObject()->group();
@@ -7928,7 +7983,7 @@ class MLambda
     const LambdaFunctionInfo info_;
 
     MLambda(CompilerConstraintList* constraints, MDefinition* scopeChain, MConstant* cst)
-      : MBinaryInstruction(scopeChain, cst), info_(&cst->value().toObject().as<JSFunction>())
+      : MBinaryInstruction(scopeChain, cst), info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType_Object);
         if (!info().fun->isSingleton() && !ObjectGroup::useSingletonForClone(info().fun))
@@ -14267,33 +14322,50 @@ void MUse::releaseProducer()
 
 // Implement cast functions now that the compiler can see the inheritance.
 
-MDefinition* MNode::toDefinition()
+MDefinition*
+MNode::toDefinition()
 {
     MOZ_ASSERT(isDefinition());
     return (MDefinition*)this;
 }
 
-MResumePoint* MNode::toResumePoint()
+MResumePoint*
+MNode::toResumePoint()
 {
     MOZ_ASSERT(isResumePoint());
     return (MResumePoint*)this;
 }
 
-MInstruction* MDefinition::toInstruction()
+MInstruction*
+MDefinition::toInstruction()
 {
     MOZ_ASSERT(!isPhi());
     return (MInstruction*)this;
 }
 
-const MInstruction* MDefinition::toInstruction() const
+const MInstruction*
+MDefinition::toInstruction() const
 {
     MOZ_ASSERT(!isPhi());
     return (const MInstruction*)this;
 }
 
-MControlInstruction* MDefinition::toControlInstruction() {
+MControlInstruction*
+MDefinition::toControlInstruction()
+{
     MOZ_ASSERT(isControlInstruction());
     return (MControlInstruction*)this;
+}
+
+MConstant*
+MDefinition::maybeConstantValue()
+{
+    MDefinition* op = this;
+    if (op->isBox())
+        op = op->toBox()->input();
+    if (op->isConstant())
+        return op->toConstant();
+    return nullptr;
 }
 
 // Helper functions used to decide how to build MIR.
