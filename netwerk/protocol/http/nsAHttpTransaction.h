@@ -76,6 +76,20 @@ public:
     virtual nsresult WriteSegments(nsAHttpSegmentWriter *writer,
                                    uint32_t count, uint32_t *countWritten) = 0;
 
+    // These versions of the functions allow the overloader to specify whether or
+    // not it is safe to call *Segments() in a loop while they return OK.
+    // The callee should turn again to false if it is not, otherwise leave untouched
+    virtual nsresult ReadSegmentsAgain(nsAHttpSegmentReader *reader,
+                                       uint32_t count, uint32_t *countRead, bool *again)
+    {
+        return ReadSegments(reader, count, countRead);
+    }
+    virtual nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
+                                   uint32_t count, uint32_t *countWritten, bool *again)
+    {
+        return WriteSegments(writer, count, countWritten);
+    }
+
     // called to close the transaction
     virtual void Close(nsresult reason) = 0;
 
