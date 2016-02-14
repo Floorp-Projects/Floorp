@@ -8,9 +8,9 @@
 #define nsDOMClassInfo_h___
 
 #include "mozilla/Attributes.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "js/Id.h"
 #include "nsIXPConnect.h"
 
@@ -32,13 +32,9 @@ struct nsDOMClassInfoData
 {
   const char *mName;
   const char16_t *mNameUTF16;
-  union {
-    nsDOMClassInfoConstructorFnc mConstructorFptr;
-    nsDOMClassInfoExternalConstructorFnc mExternalConstructorFptr;
-  } u;
+  nsDOMClassInfoConstructorFnc mConstructorFptr;
 
-  nsIClassInfo *mCachedClassInfo; // low bit is set to 1 if external,
-                                  // so be sure to mask if necessary!
+  nsIClassInfo *mCachedClassInfo;
   const nsIID *mProtoChainInterface;
   const nsIID **mInterfaces;
   uint32_t mScriptableFlags : 31; // flags must not use more than 31 bits!
@@ -51,19 +47,6 @@ struct nsDOMClassInfoData
 #endif
 };
 
-struct nsExternalDOMClassInfoData : public nsDOMClassInfoData
-{
-  const nsCID *mConstructorCID;
-};
-
-
-// To be used with the nsDOMClassInfoData::mCachedClassInfo pointer.
-// The low bit is set when we created a generic helper for an external
-// (which holds on to the nsDOMClassInfoData).
-#define GET_CLEAN_CI_PTR(_ptr) (nsIClassInfo*)(uintptr_t(_ptr) & ~0x1)
-#define MARK_EXTERNAL(_ptr) (nsIClassInfo*)(uintptr_t(_ptr) | 0x1)
-#define IS_EXTERNAL(_ptr) (uintptr_t(_ptr) & 0x1)
-
 class nsWindowSH;
 
 class nsDOMClassInfo : public nsXPCClassInfo
@@ -71,7 +54,7 @@ class nsDOMClassInfo : public nsXPCClassInfo
   friend class nsWindowSH;
 
 protected:
-  virtual ~nsDOMClassInfo();
+  virtual ~nsDOMClassInfo() {};
 
 public:
   explicit nsDOMClassInfo(nsDOMClassInfoData* aData);
@@ -81,17 +64,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSICLASSINFO
-
-  // Helper method that returns a *non* refcounted pointer to a
-  // helper. So please note, don't release this pointer, if you do,
-  // you better make sure you've addreffed before release.
-  //
-  // Whaaaaa! I wanted to name this method GetClassInfo, but nooo,
-  // some of Microsoft devstudio's headers #defines GetClassInfo to
-  // GetClassInfoA so I can't, those $%#@^! bastards!!! What gives
-  // them the right to do that?
-
-  static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoData* aData);
 
   static nsresult Init();
   static void ShutDown();
@@ -134,7 +106,6 @@ protected:
   }
 
   static nsresult RegisterClassProtos(int32_t aDOMClassInfoID);
-  static nsresult RegisterExternalClasses();
 
   static nsIXPConnect *sXPConnect;
 

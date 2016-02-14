@@ -20,10 +20,4 @@
 #define JAVASCRIPT_NAVIGATOR_PROPERTY_CATEGORY \
   "JavaScript-navigator-property"
 
-#define JAVASCRIPT_DOM_CLASS \
-  "JavaScript-DOM-class"
-
-#define JAVASCRIPT_DOM_INTERFACE \
-  "JavaScript-DOM-interface"
-
 #endif /* nsIScriptNameSpaceManager_h__ */
