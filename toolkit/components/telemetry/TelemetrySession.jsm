@@ -1244,7 +1244,9 @@ var Impl = {
       }
 
       payloadObj.addonDetails = protect(() => AddonManagerPrivate.getTelemetryDetails());
-      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements());
+
+      let clearUIsession = !(reason == REASON_GATHER_PAYLOAD || reason == REASON_GATHER_SUBSESSION_PAYLOAD);
+      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements(clearUIsession));
 
       if (this._slowSQLStartup &&
           Object.keys(this._slowSQLStartup).length != 0 &&

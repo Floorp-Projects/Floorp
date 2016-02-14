@@ -8,7 +8,7 @@ config = {
         'build-symbols',
         'make-updates',
         'prep-upload',
-        #'submit-to-balrog'
+        'submit-to-balrog'
     ],
     "balrog_credentials_file": "balrog_credentials",
     "nightly_build": True,

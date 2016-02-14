@@ -169,7 +169,7 @@ this.UITelemetry = {
   },
 
   /**
-   * Called by TelemetryController to populate the simple measurement
+   * Called by TelemetrySession to populate the simple measurement
    * blob. This function will iterate over all functions added
    * via addSimpleMeasureFunction and return an object with the
    * results of those functions.
@@ -215,11 +215,21 @@ this.UITelemetry = {
     delete this._simpleMeasureFunctions[aName];
   },
 
-  getUIMeasurements: function() {
+  /**
+   * Called by TelemetrySession to populate the UI measurement
+   * blob.
+   *
+   * Optionally clears the set of measurements based on aClear.
+   */
+  getUIMeasurements: function(aClear) {
     if (!this.enabled) {
       return [];
     }
 
-    return this._measurements.slice();
+    let measurements = this._measurements.slice();
+    if (aClear) {
+      this._measurements = [];
+    }
+    return measurements;
   }
 };

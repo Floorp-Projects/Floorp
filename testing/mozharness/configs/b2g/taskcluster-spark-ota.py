@@ -9,6 +9,7 @@ config = {
         'make-updates',
         'prep-upload'
     ],
+    "balrog_credentials_file": "balrog_credentials",
     "nightly_build": True,
     "env": {
         "GAIA_OPTIMIZE": "1",

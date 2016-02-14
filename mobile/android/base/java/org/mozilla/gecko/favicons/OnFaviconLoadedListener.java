@@ -10,5 +10,8 @@ import android.graphics.Bitmap;
  * Interface to be implemented by objects wishing to listen for favicon load completion events.
  */
 public interface OnFaviconLoadedListener {
+    /**
+     * Called when favicon loading is complete. This will be run on the UI thread.
+     */
     void onFaviconLoaded(String url, String faviconURL, Bitmap favicon);
 }
