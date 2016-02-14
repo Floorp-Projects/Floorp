@@ -185,6 +185,7 @@ function check_test_1(installSyncGUID) {
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_eq(getStartupReason(), ADDON_INSTALL);
@@ -291,6 +292,7 @@ function run_test_4() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_ENABLE);
@@ -333,6 +335,7 @@ function run_test_5() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     do_check_false(isExtensionInAddonsList(profileDir, b1.id));
 
     do_check_bootstrappedPref(run_test_6);
@@ -376,6 +379,7 @@ function check_test_6() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
     BootstrapMonitor.checkAddonStarted(ID1, "2.0");
     do_check_eq(getStartupReason(), ADDON_UPGRADE);
@@ -446,6 +450,7 @@ function run_test_8() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
@@ -516,6 +521,7 @@ function check_test_10_pt1() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
     BootstrapMonitor.checkAddonStarted(ID1, "2.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
@@ -560,6 +566,7 @@ function check_test_10_pt2() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_DOWNGRADE);
@@ -626,6 +633,7 @@ function run_test_12() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
@@ -754,6 +762,7 @@ function run_test_15() {
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
@@ -826,6 +835,7 @@ function run_test_16() {
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
       do_check_eq(b1.iconURL, "chrome://foo/skin/icon.png");
       do_check_eq(b1.aboutURL, "chrome://foo/content/about.xul");
       do_check_eq(b1.optionsURL, "chrome://foo/content/options.xul");
@@ -883,6 +893,7 @@ function run_test_17() {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
 
     do_check_bootstrappedPref(run_test_18);
   });
@@ -899,6 +910,7 @@ function run_test_18() {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "2.0");
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
 
       do_check_eq(getShutdownReason(), ADDON_UPGRADE);
       do_check_eq(getUninstallReason(), ADDON_UPGRADE);
@@ -941,6 +953,7 @@ function check_test_19() {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
 
     // TODO these reasons really should be ADDON_DOWNGRADE (bug 607818)
     do_check_eq(getShutdownReason(), ADDON_UNINSTALL);
@@ -974,6 +987,7 @@ function run_test_20() {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
 
     do_check_eq(getShutdownReason(), APP_SHUTDOWN);
     do_check_eq(getUninstallReason(), ADDON_UPGRADE);
@@ -1008,6 +1022,7 @@ function run_test_21() {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
 
     // This won't be set as the bootstrap script was gone so we couldn't
     // uninstall it properly
@@ -1051,6 +1066,7 @@ function run_test_22() {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
+    do_check_false(b1.isSystem);
 
     shutdownManager();
 
@@ -1071,6 +1087,7 @@ function run_test_22() {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "2.0");
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
 
       // This won't be set as the bootstrap script was gone so we couldn't
       // uninstall it properly
@@ -1150,6 +1167,7 @@ function check_test_23() {
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_eq(getStartupReason(), ADDON_INSTALL);
@@ -1238,6 +1256,7 @@ function run_test_25() {
           do_check_neq(b1, null);
           do_check_eq(b1.version, "1.0");
           do_check_true(b1.isActive);
+          do_check_false(b1.isSystem);
           do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
 
           restartManager();
@@ -1251,6 +1270,7 @@ function run_test_25() {
             do_check_neq(b1, null);
             do_check_eq(b1.version, "4.0");
             do_check_true(b1.isActive);
+            do_check_false(b1.isSystem);
             do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
 
             do_check_bootstrappedPref(run_test_26);
@@ -1275,6 +1295,7 @@ function run_test_26() {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "4.0");
       do_check_true(b1.isActive);
+      do_check_false(b1.isSystem);
       do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
 
       restartManager();
@@ -1288,6 +1309,7 @@ function run_test_26() {
         do_check_neq(b1, null);
         do_check_eq(b1.version, "1.0");
         do_check_true(b1.isActive);
+        do_check_false(b1.isSystem);
         do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_bootstrappedPref(run_test_27);
@@ -1368,6 +1390,7 @@ function run_test_28() {
         b1.userDisabled = false;
         do_check_eq(b1.version, "1.0");
         do_check_true(b1.isActive);
+        do_check_false(b1.isSystem);
         do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
         BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
         BootstrapMonitor.checkAddonStarted(ID1, "1.0");
