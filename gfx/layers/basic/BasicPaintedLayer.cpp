@@ -63,7 +63,7 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
     mValidRegion.SetEmpty();
     mContentClient->Clear();
 
-    nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion().ToUnknownRegion(), aContext);
+    nsIntRegion toDraw = IntersectWithClip(GetLocalVisibleRegion().ToUnknownRegion(), aContext);
 
     RenderTraceInvalidateStart(this, "FFFF00", toDraw.GetBounds());
 
@@ -169,7 +169,7 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     // from RGB to RGBA, because we might need to repaint with
     // subpixel AA)
     state.mRegionToInvalidate.And(state.mRegionToInvalidate,
-                                  GetEffectiveVisibleRegion().ToUnknownRegion());
+                                  GetLocalVisibleRegion().ToUnknownRegion());
     SetAntialiasingFlags(this, target);
 
     RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());

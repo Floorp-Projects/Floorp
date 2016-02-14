@@ -1485,7 +1485,7 @@ public:
   // values that should be used when drawing this layer to screen,
   // accounting for this layer possibly being a shadow.
   const Maybe<ParentLayerIntRect>& GetEffectiveClipRect();
-  const LayerIntRegion& GetEffectiveVisibleRegion();
+  const LayerIntRegion& GetLocalVisibleRegion();
 
   bool Extend3DContext() {
     return GetContentFlags() & CONTENT_EXTEND_3D_CONTEXT;
@@ -1507,7 +1507,7 @@ public:
     // For containers extending 3D context, visible region
     // is meaningless, since they are just intermediate result of
     // content.
-    return !GetEffectiveVisibleRegion().IsEmpty() || Extend3DContext();
+    return !GetLocalVisibleRegion().IsEmpty() || Extend3DContext();
   }
 
   /**
@@ -2100,7 +2100,7 @@ public:
   RenderTargetIntRect GetIntermediateSurfaceRect()
   {
     NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
-    return RenderTargetIntRect::FromUnknownRect(GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
+    return RenderTargetIntRect::FromUnknownRect(GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
   }
 
   /**

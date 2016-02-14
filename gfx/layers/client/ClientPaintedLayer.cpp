@@ -75,7 +75,7 @@ ClientPaintedLayer::PaintThebes()
   // from RGB to RGBA, because we might need to repaint with
   // subpixel AA)
   state.mRegionToInvalidate.And(state.mRegionToInvalidate,
-                                GetEffectiveVisibleRegion().ToUnknownRegion());
+                                GetLocalVisibleRegion().ToUnknownRegion());
 
   bool didUpdate = false;
   RotatedContentBuffer::DrawIterator iter;
