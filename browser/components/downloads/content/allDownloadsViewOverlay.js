@@ -331,22 +331,14 @@ HistoryDownloadElementShell.prototype = {
 
         // This property is false if the download did not succeed.
         return this.download.target.exists;
-      case "downloadsCmd_pauseResume":
-        return this.download.hasPartialData && !this.download.error;
-      case "downloadsCmd_retry":
-        return this.download.canceled || this.download.error;
-      case "downloadsCmd_openReferrer":
-        return !!this.download.source.referrer;
       case "cmd_delete":
         // We don't want in-progress downloads to be removed accidentally.
         return this.download.stopped;
       case "downloadsCmd_cancel":
         return !!this._sessionDownload;
-      case "downloadsCmd_confirmBlock":
-      case "downloadsCmd_unblock":
-        return this.download.hasBlockedData;
     }
-    return false;
+    return DownloadsViewUI.DownloadElementShell.prototype
+                          .isCommandEnabled.call(this, aCommand);
   },
 
   doCommand(aCommand) {
@@ -369,11 +361,6 @@ HistoryDownloadElementShell.prototype = {
     openURL(this.download.source.referrer);
   },
 
-  downloadsCmd_cancel() {
-    this.download.cancel().catch(() => {});
-    this.download.removePartialData().catch(Cu.reportError);
-  },
-
   cmd_delete() {
     if (this._sessionDownload) {
       DownloadsCommon.removeAndFinalizeDownload(this.download);
@@ -384,20 +371,6 @@ HistoryDownloadElementShell.prototype = {
     }
   },
 
-  downloadsCmd_retry() {
-    // Errors when retrying are already reported as download failures.
-    this.download.start().catch(() => {});
-  },
-
-  downloadsCmd_pauseResume() {
-    // This command is only enabled for session downloads.
-    if (this.download.stopped) {
-      this.download.start();
-    } else {
-      this.download.cancel();
-    }
-  },
-
   downloadsCmd_unblock() {
     DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
                                            window).then((confirmed) => {
@@ -405,10 +378,6 @@ HistoryDownloadElementShell.prototype = {
         return this.download.unblock();
       }
     }).catch(Cu.reportError);
-  },
-
-  downloadsCmd_confirmBlock() {
-    this.download.confirmBlock().catch(Cu.reportError);
   },
 
   // Returns whether or not the download handled by this shell should
@@ -426,29 +395,7 @@ HistoryDownloadElementShell.prototype = {
   // Handles return keypress on the element (the keypress listener is
   // set in the DownloadsPlacesView object).
   doDefaultCommand() {
-    function getDefaultCommandForState(aState) {
-      switch (aState) {
-        case nsIDM.DOWNLOAD_FINISHED:
-          return "downloadsCmd_open";
-        case nsIDM.DOWNLOAD_PAUSED:
-          return "downloadsCmd_pauseResume";
-        case nsIDM.DOWNLOAD_NOTSTARTED:
-        case nsIDM.DOWNLOAD_QUEUED:
-          return "downloadsCmd_cancel";
-        case nsIDM.DOWNLOAD_FAILED:
-        case nsIDM.DOWNLOAD_CANCELED:
-          return "downloadsCmd_retry";
-        case nsIDM.DOWNLOAD_SCANNING:
-          return "downloadsCmd_show";
-        case nsIDM.DOWNLOAD_BLOCKED_PARENTAL:
-        case nsIDM.DOWNLOAD_DIRTY:
-        case nsIDM.DOWNLOAD_BLOCKED_POLICY:
-          return "downloadsCmd_openReferrer";
-      }
-      return "";
-    }
-    let state = DownloadsCommon.stateOfDownload(this.download);
-    let command = getDefaultCommandForState(state);
+    let command = this.currentDefaultCommandName;
     if (command && this.isCommandEnabled(command)) {
       this.doCommand(command);
     }
