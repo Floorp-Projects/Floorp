@@ -312,7 +312,7 @@ private:
 
     nsTArray<RefPtr<CacheEntry> > mFrecencyArray;
     nsTArray<RefPtr<CacheEntry> > mExpirationArray;
-    mozilla::Atomic<uint32_t> mMemorySize;
+    Atomic<uint32_t, Relaxed> mMemorySize;
 
     bool OnMemoryConsumptionChange(uint32_t aSavedMemorySize,
                                    uint32_t aCurrentMemoryConsumption);
@@ -331,6 +331,7 @@ private:
 
   MemoryPool mDiskPool;
   MemoryPool mMemoryPool;
+  TimeStamp mLastPurgeTime;
   MemoryPool& Pool(bool aUsingDisk)
   {
     return aUsingDisk ? mDiskPool : mMemoryPool;
