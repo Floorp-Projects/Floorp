@@ -1,1 +1,1 @@
-var active = true;
+active = true;

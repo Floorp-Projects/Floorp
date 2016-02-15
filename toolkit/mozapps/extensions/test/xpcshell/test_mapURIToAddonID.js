@@ -33,7 +33,7 @@ TestProvider.prototype = {
     if (aURI.spec === this.uri.spec) {
       return this.id;
     }
-    throw Components.Exception("Not mapped", this.result);
+    throw Components.Exception("Not mapped", result);
   }
 };
 

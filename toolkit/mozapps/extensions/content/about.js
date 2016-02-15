@@ -6,8 +6,6 @@
 
 "use strict";
 
-/* import-globals-from ../../../content/contentAreaUtils.js */
-
 var Cu = Components.utils;
 Cu.import("resource://gre/modules/AddonManager.jsm");
 

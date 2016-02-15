@@ -11,7 +11,6 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
-/*globals AddonManagerPrivate*/
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -429,8 +428,7 @@ AddonSearchResult.prototype = {
   toJSON: function() {
     let json = {};
 
-    for (let property of Object.keys(this)) {
-      let value = this[property];
+    for (let [property, value] of Iterator(this)) {
       if (property.startsWith("_") ||
           typeof(value) === "function")
         continue;
@@ -453,8 +451,7 @@ AddonSearchResult.prototype = {
       }
     }
 
-    for (let property of Object.keys(this._unsupportedProperties)) {
-      let value = this._unsupportedProperties[property];
+    for (let [property, value] of Iterator(this._unsupportedProperties)) {
       if (!property.startsWith("_"))
         json[property] = value;
     }
@@ -1836,7 +1833,7 @@ var AddonDatabase = {
 
     let addon = new AddonSearchResult(id);
 
-    for (let expectedProperty of Object.keys(AddonSearchResult.prototype)) {
+    for (let [expectedProperty,] of Iterator(AddonSearchResult.prototype)) {
       if (!(expectedProperty in aObj) ||
           typeof(aObj[expectedProperty]) === "function")
         continue;
@@ -1884,8 +1881,8 @@ var AddonDatabase = {
 
           case "icons":
             if (!addon.icons) addon.icons = {};
-            for (let size of Object.keys(aObj.icons)) {
-              addon.icons[size] = aObj.icons[size];
+            for (let [size, url] of Iterator(aObj.icons)) {
+              addon.icons[size] = url;
             }
             break;
 
