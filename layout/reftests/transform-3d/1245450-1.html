@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+  .scene {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+  }
+
+  .card {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    width: 100px;
+    height: 100px;
+  }
+
+  .front {
+    transform: rotateY(0deg);
+    background-color: #00FF00;
+  }
+
+  .back {
+    transform: rotateY(180deg);
+    background-color: #FF0000;
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="card front"></div>
+    <div class="card back"></div>
+  </div>
+</body>
+</html>
