@@ -46,10 +46,9 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
 };
 
 
-// Bug 1211783 Implement KeyframeEffect constructor
-// [Constructor (Animatable? target,
-//               object? frames,
-//               optional (unrestricted double or KeyframeEffectOptions) options)]
+[Constructor ((Element or CSSPseudoElement)? target,
+              object? frames,
+              optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffect : KeyframeEffectReadOnly {
   // Bug 1067769 - Allow setting KeyframeEffect.target
   // inherit attribute Animatable?                 target;
