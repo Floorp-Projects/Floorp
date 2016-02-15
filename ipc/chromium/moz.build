@@ -35,7 +35,6 @@ UNIFIED_SOURCES += [
     'src/chrome/common/chrome_switches.cc',
     'src/chrome/common/ipc_channel.cc',
     'src/chrome/common/ipc_message.cc',
-    'src/chrome/common/message_router.cc',
     'src/chrome/common/notification_service.cc',
 ]
 
