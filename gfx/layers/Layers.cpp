@@ -602,7 +602,7 @@ Layer::GetEffectiveClipRect()
 }
 
 const LayerIntRegion&
-Layer::GetEffectiveVisibleRegion()
+Layer::GetLocalVisibleRegion()
 {
   if (LayerComposite* shadow = AsLayerComposite()) {
     return shadow->GetShadowVisibleRegion();
@@ -1017,7 +1017,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
   }
 
   IntPoint offset;
-  aResult = GetEffectiveVisibleRegion().ToUnknownRegion();
+  aResult = GetLocalVisibleRegion().ToUnknownRegion();
   for (Layer* layer = this; layer; layer = layer->GetParent()) {
     gfx::Matrix matrix;
     if (!layer->GetLocalTransform().Is2D(&matrix) ||
@@ -1054,7 +1054,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
       // Retreive the translation from sibling to |layer|. The accumulated
       // visible region is currently oriented with |layer|.
       IntPoint siblingOffset = RoundedToInt(siblingMatrix.GetTranslation());
-      nsIntRegion siblingVisibleRegion(sibling->GetEffectiveVisibleRegion().ToUnknownRegion());
+      nsIntRegion siblingVisibleRegion(sibling->GetLocalVisibleRegion().ToUnknownRegion());
       // Translate the siblings region to |layer|'s origin.
       siblingVisibleRegion.MoveBy(-siblingOffset.x, -siblingOffset.y);
       // Apply the sibling's clip.
@@ -1443,7 +1443,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     // transform while 2D is expected.
     idealTransform.ProjectTo2D();
   }
-  mUseIntermediateSurface = useIntermediateSurface && !GetEffectiveVisibleRegion().IsEmpty();
+  mUseIntermediateSurface = useIntermediateSurface && !GetLocalVisibleRegion().IsEmpty();
   if (useIntermediateSurface) {
     ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
   } else {
@@ -1473,7 +1473,7 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
   bool needsSurfaceCopy = false;
   CompositionOp blendMode = GetEffectiveMixBlendMode();
   if (UseIntermediateSurface()) {
-    if (GetEffectiveVisibleRegion().GetNumRects() == 1 &&
+    if (GetLocalVisibleRegion().GetNumRects() == 1 &&
         (GetContentFlags() & Layer::CONTENT_OPAQUE))
     {
       mSupportsComponentAlphaChildren = true;

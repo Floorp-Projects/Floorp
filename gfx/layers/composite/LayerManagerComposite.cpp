@@ -1207,7 +1207,7 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   }
 
   // See if there's any incomplete rendering
-  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
+  nsIntRegion incompleteRegion = aLayer->GetLocalVisibleRegion().ToUnknownRegion();
   incompleteRegion.Sub(incompleteRegion, paintedLayer->GetValidRegion());
 
   if (!incompleteRegion.IsEmpty()) {
