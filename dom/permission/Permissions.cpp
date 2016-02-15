@@ -121,58 +121,5 @@ Permissions::Query(JSContext* aCx,
   return promise.forget();
 }
 
-already_AddRefed<Promise>
-Permissions::Revoke(JSContext* aCx,
-                    JS::Handle<JSObject*> aPermission,
-                    ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  if (!global) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  PermissionDescriptor permission;
-  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
-  if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
-
-  nsCOMPtr<nsIDocument> document = mWindow->GetExtantDoc();
-  if (!document) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (NS_WARN_IF(!permMgr)) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    return promise.forget();
-  }
-
-  nsresult rv = permMgr->RemoveFromPrincipal(document->NodePrincipal(), PermissionNameToType(permission.mName));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
-
-  RefPtr<PermissionStatus> status =
-    CreatePermissionStatus(aCx, aPermission, mWindow, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    MOZ_ASSERT(!status);
-    promise->MaybeReject(aRv);
-  } else {
-    MOZ_ASSERT(status);
-    promise->MaybeResolve(status);
-  }
-  return promise.forget();
-}
-
 } // namespace dom
 } // namespace mozilla
