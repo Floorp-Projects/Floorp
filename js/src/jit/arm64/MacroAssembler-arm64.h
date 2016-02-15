@@ -1641,6 +1641,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Cmp(ARMRegister(value.valueReg(), 64), Operand(scratch64));
         B(label, cond);
     }
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        branchTestPtr(cond, lhs.reg, rhs.reg, label);
+    }
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         Fcmp(ARMFPRegister(lhs, 64), ARMFPRegister(rhs, 64));

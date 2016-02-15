@@ -579,6 +579,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        branchTestPtr(cond, lhs.reg, rhs.reg, label);
+    }
+
     void movePtr(Register src, Register dest) {
         movq(src, dest);
     }
