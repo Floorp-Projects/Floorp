@@ -194,17 +194,6 @@ MacroAssemblerMIPSCompat::convertFloat32ToDouble(FloatRegister src, FloatRegiste
 }
 
 void
-MacroAssemblerMIPSCompat::branchTruncateFloat32(FloatRegister src, Register dest,
-                                          Label* fail)
-{
-    Label test, success;
-    as_truncws(ScratchFloat32Reg, src);
-    as_mfc1(dest, ScratchFloat32Reg);
-
-    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
-}
-
-void
 MacroAssemblerMIPSCompat::convertInt32ToFloat32(Register src, FloatRegister dest)
 {
     as_mtc1(src, dest);

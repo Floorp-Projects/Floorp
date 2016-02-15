@@ -633,21 +633,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         And(dest64, dest64, Operand(0xffffffff));
     }
 
-    void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-
-        ARMFPRegister src32(src, 32);
-        ARMRegister dest64(dest, 64);
-
-        MOZ_ASSERT(!scratch64.Is(dest64));
-
-        Fcvtzs(dest64, src32);
-        Add(scratch64, dest64, Operand(0x7fffffffffffffff));
-        Cmn(scratch64, 3);
-        B(fail, Assembler::Above);
-        And(dest64, dest64, Operand(0xffffffff));
-    }
     void floor(FloatRegister input, Register output, Label* bail) {
         Label handleZero;
         //Label handleNeg;
