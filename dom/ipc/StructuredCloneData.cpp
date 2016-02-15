@@ -41,6 +41,8 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
     NS_ENSURE_TRUE(mSharedData, false);
   }
 
+  PortIdentifiers().AppendElements(aData.PortIdentifiers());
+
   MOZ_ASSERT(BlobImpls().IsEmpty());
   BlobImpls().AppendElements(aData.BlobImpls());
 
