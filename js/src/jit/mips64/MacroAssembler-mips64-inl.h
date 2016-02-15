@@ -177,6 +177,19 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     ma_dsrl(dest.reg, dest.reg, imm);
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    if (rhs != ScratchRegister)
+        movePtr(rhs, ScratchRegister);
+    // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
+    rshiftPtr(Imm32(1), ScratchRegister);
+    branchPtr(cond, lhs, ScratchRegister, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
