@@ -284,27 +284,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             type_(type)
         { }
 
-        void emit(MacroAssembler& masm) {
-            MOZ_ASSERT(isInitialized());
-            MIRType mirType = MIRType_None;
-
-            if (type_.isPrimitive()) {
-                if (type_.isMagicArguments())
-                    mirType = MIRType_MagicOptimizedArguments;
-                else
-                    mirType = MIRTypeFromValueType(type_.primitive());
-            } else if (type_.isAnyObject()) {
-                mirType = MIRType_Object;
-            } else {
-                MOZ_CRASH("Unknown conversion to mirtype");
-            }
-
-            if (mirType == MIRType_Double)
-                masm.branchTestNumber(cond(), reg(), jump());
-            else
-                masm.branchTestMIRType(cond(), reg(), mirType, jump());
-        }
-
+        void emit(MacroAssembler& masm);
     };
 
     /*
@@ -866,6 +846,55 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
                              Label* label) PER_ARCH;
 
+    // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
+    template <class L>
+    inline void branchIfFalseBool(Register reg, L label);
+
+    // Branches to |label| if |reg| is true. |reg| should be a C++ bool.
+    inline void branchIfTrueBool(Register reg, Label* label);
+
+    inline void branchIfRope(Register str, Label* label);
+
+    inline void branchLatin1String(Register string, Label* label);
+    inline void branchTwoByteString(Register string, Label* label);
+
+    inline void branchIfFunctionHasNoScript(Register fun, Label* label);
+    inline void branchIfInterpreted(Register fun, Label* label);
+
+    inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
+                                   Register scratch, Label* label);
+
+    void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
+
+    inline void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
+                                   Label* label);
+    inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
+    inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
+    inline void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label);
+    inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
+
+    inline void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
+                                       Label* slowCheck, Label* checked);
+
+    inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
+
+    inline void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label);
+
+    inline void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
+                                             const void* handlerp, Label* label);
+
+    template <typename Value>
+    inline void branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label);
+
+    // Emit type case branch on tag matching if the type tag in the definition
+    // might actually be that type.
+    void branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
+
+    template <typename T>
+    inline void branchKey(Condition cond, const T& length, const Int32Key& key, Label* label);
+
+    inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
+
     //}}} check_macroassembler_style
   public:
 
@@ -893,40 +922,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadObjGroup(objReg, dest);
         loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
     }
-    inline void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
-                                   Label* label);
-    inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
-    inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
-    inline void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label);
-    inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
-    inline void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
-                                             const void* handlerp, Label* label);
-
-    template <typename Value>
-    void branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label) {
-        switch (type) {
-          case MIRType_Null:      return branchTestNull(cond, val, label);
-          case MIRType_Undefined: return branchTestUndefined(cond, val, label);
-          case MIRType_Boolean:   return branchTestBoolean(cond, val, label);
-          case MIRType_Int32:     return branchTestInt32(cond, val, label);
-          case MIRType_String:    return branchTestString(cond, val, label);
-          case MIRType_Symbol:    return branchTestSymbol(cond, val, label);
-          case MIRType_Object:    return branchTestObject(cond, val, label);
-          case MIRType_Double:    return branchTestDouble(cond, val, label);
-          case MIRType_MagicOptimizedArguments: // Fall through.
-          case MIRType_MagicIsConstructing:
-          case MIRType_MagicHole: return branchTestMagic(cond, val, label);
-          default:
-            MOZ_CRASH("Bad MIRType");
-        }
-    }
-
-    // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
-    template <class L>
-    inline void branchIfFalseBool(Register reg, L label);
-
-    // Branches to |label| if |reg| is true. |reg| should be a C++ bool.
-    inline void branchIfTrueBool(Register reg, Label* label);
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, NativeObject::getPrivateDataOffset(nfixed)), dest);
@@ -943,11 +938,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadStringChars(Register str, Register dest);
     void loadStringChar(Register str, Register index, Register output);
-
-    inline void branchIfRope(Register str, Label* label);
-
-    inline void branchLatin1String(Register string, Label* label);
-    inline void branchTwoByteString(Register string, Label* label);
 
     void loadJSContext(Register dest) {
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
@@ -1066,11 +1056,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         return extractObject(source, scratch);
     }
 
-    inline void branchIfFunctionHasNoScript(Register fun, Label* label);
-    inline void branchIfInterpreted(Register fun, Label* label);
-
-    void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
-
     inline void bumpKey(Int32Key* key, int diff);
 
     void storeKey(const Int32Key& key, const Address& dest) {
@@ -1079,16 +1064,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         else
             store32(Imm32(key.constant()), dest);
     }
-
-    template<typename T>
-    void branchKey(Condition cond, const T& length, const Int32Key& key, Label* label) {
-        if (key.isRegister())
-            branch32(cond, length, key.reg(), label);
-        else
-            branch32(cond, length, Imm32(key.constant()), label);
-    }
-
-    inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
     template <typename T>
     void callPreBarrier(const T& address, MIRType type) {
@@ -1221,10 +1196,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
-    // Emit type case branch on tag matching if the type tag in the definition
-    // might actually be that type.
-    void branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
-
     // Inline allocation.
   private:
     void checkAllocatorState(Label* fail);
@@ -1266,16 +1237,6 @@ class MacroAssembler : public MacroAssemblerSpecific
   public:
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
-
-    inline void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
-                                       Label* slowCheck, Label* checked);
-
-    inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
-
-    inline void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label);
-
-    inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
-                                   Register scratch, Label* label);
 
   public:
 #ifndef JS_CODEGEN_ARM64

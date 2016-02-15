@@ -317,8 +317,8 @@ MacroAssembler::addPtr(ImmPtr imm, Register dest)
     addPtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 
-//}}} check_macroassembler_style
 // ===============================================================
+// Branch functions
 
 template <class L>
 void
@@ -382,46 +382,6 @@ MacroAssembler::branchIfInterpreted(Register fun, Label* label)
 }
 
 void
-MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
-{
-    MOZ_ASSERT(cond == Zero || cond == NonZero);
-    CompileZone* zone = GetJitContext()->compartment->zone();
-    AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
-    branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
-}
-
-void
-MacroAssembler::branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
-                                       Label* slowCheck, Label* checked)
-{
-    // The branches to out-of-line code here implement a conservative version
-    // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
-    // of the branches are taken, we can check class flags directly.
-    loadObjClass(objReg, scratch);
-    Address flags(scratch, Class::offsetOfFlags());
-
-    branchTestClassIsProxy(true, scratch, slowCheck);
-
-    Condition cond = truthy ? Assembler::Zero : Assembler::NonZero;
-    branchTest32(cond, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), checked);
-}
-
-void
-MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp, Label* label)
-{
-    branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
-                 Address(clasp, Class::offsetOfFlags()),
-                 Imm32(JSCLASS_IS_PROXY), label);
-}
-
-void
-MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label)
-{
-    loadObjClass(object, scratch);
-    branchTestClassIsProxy(proxy, scratch, label);
-}
-
-void
 MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
                                    Register scratch, Label* label)
 {
@@ -470,6 +430,37 @@ MacroAssembler::branchTestObjGroup(Condition cond, Register obj, Register group,
 }
 
 void
+MacroAssembler::branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
+                                       Label* slowCheck, Label* checked)
+{
+    // The branches to out-of-line code here implement a conservative version
+    // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
+    // of the branches are taken, we can check class flags directly.
+    loadObjClass(objReg, scratch);
+    Address flags(scratch, Class::offsetOfFlags());
+
+    branchTestClassIsProxy(true, scratch, slowCheck);
+
+    Condition cond = truthy ? Assembler::Zero : Assembler::NonZero;
+    branchTest32(cond, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), checked);
+}
+
+void
+MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp, Label* label)
+{
+    branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
+                 Address(clasp, Class::offsetOfFlags()),
+                 Imm32(JSCLASS_IS_PROXY), label);
+}
+
+void
+MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label)
+{
+    loadObjClass(object, scratch);
+    branchTestClassIsProxy(proxy, scratch, label);
+}
+
+void
 MacroAssembler::branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
                                              const void* handlerp, Label* label)
 {
@@ -478,6 +469,49 @@ MacroAssembler::branchTestProxyHandlerFamily(Condition cond, Register proxy, Reg
     Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
     branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
 }
+
+template <typename Value>
+void
+MacroAssembler::branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label)
+{
+    switch (type) {
+      case MIRType_Null:      return branchTestNull(cond, val, label);
+      case MIRType_Undefined: return branchTestUndefined(cond, val, label);
+      case MIRType_Boolean:   return branchTestBoolean(cond, val, label);
+      case MIRType_Int32:     return branchTestInt32(cond, val, label);
+      case MIRType_String:    return branchTestString(cond, val, label);
+      case MIRType_Symbol:    return branchTestSymbol(cond, val, label);
+      case MIRType_Object:    return branchTestObject(cond, val, label);
+      case MIRType_Double:    return branchTestDouble(cond, val, label);
+      case MIRType_MagicOptimizedArguments: // Fall through.
+      case MIRType_MagicIsConstructing:
+      case MIRType_MagicHole: return branchTestMagic(cond, val, label);
+      default:
+        MOZ_CRASH("Bad MIRType");
+    }
+}
+
+template <typename T>
+void
+MacroAssembler::branchKey(Condition cond, const T& length, const Int32Key& key, Label* label)
+{
+    if (key.isRegister())
+        branch32(cond, length, key.reg(), label);
+    else
+        branch32(cond, length, Imm32(key.constant()), label);
+}
+
+void
+MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero);
+    CompileZone* zone = GetJitContext()->compartment->zone();
+    AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
+    branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
+}
+
+//}}} check_macroassembler_style
+// ===============================================================
 
 #ifndef JS_CODEGEN_ARM64
 
