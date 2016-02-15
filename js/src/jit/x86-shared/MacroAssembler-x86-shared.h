@@ -568,38 +568,6 @@ class MacroAssemblerX86Shared : public Assembler
         cmpw(rhs, lhs);
         j(cond, label);
     }
-    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
-        cmp32(Operand(lhs), imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const BaseIndex& lhs, Register rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const BaseIndex& lhs, Imm32 imm, Label* label) {
-        cmp32(Operand(lhs), imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        cmp32(lhs, imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
     void branchTest16(Condition cond, Register lhs, Register rhs, Label* label) {
         testw(rhs, lhs);
         j(cond, label);

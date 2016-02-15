@@ -774,50 +774,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testBoolean(cond, t);
         ma_b(label, c);
     }
-    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
-        ma_cmp(lhs, rhs);
-        ma_b(label, cond);
-    }
-    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        ma_cmp(lhs, imm);
-        ma_b(label, cond);
-    }
-    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
-        if (lhs.getTag() == Operand::OP2) {
-            branch32(cond, lhs.toReg(), rhs, label);
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            ma_ldr(lhs.toAddress(), scratch);
-            branch32(cond, scratch, rhs, label);
-        }
-    }
-    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
-        if (lhs.getTag() == Operand::OP2) {
-            branch32(cond, lhs.toReg(), rhs, label);
-        } else {
-            // branch32 will use ScratchRegister.
-            AutoRegisterScope scratch(asMasm(), secondScratchReg_);
-            ma_ldr(lhs.toAddress(), scratch);
-            branch32(cond, scratch, rhs, label);
-        }
-    }
-    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        load32(lhs, scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) {
-        // branch32 will use ScratchRegister.
-        AutoRegisterScope scratch(asMasm(), secondScratchReg_);
-        load32(lhs, scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-    void branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label) {
-        // branch32 will use ScratchRegister.
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        load32(lhs, scratch2);
-        branch32(cond, scratch2, rhs, label);
-    }
 
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label* label) {
@@ -941,24 +897,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(addr, scratch2);
         ma_cmp(scratch2, ptr);
         return jumpWithPatch(label, cond);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
-        ma_cmp(scratch2, rhs);
-        ma_b(label, cond);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
-        ma_cmp(scratch2, rhs);
-        ma_b(label, cond);
-    }
-    void branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        loadPtr(addr, scratch);
-        ma_cmp(scratch, imm);
-        ma_b(label, cond);
     }
 
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {

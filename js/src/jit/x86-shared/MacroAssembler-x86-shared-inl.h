@@ -184,6 +184,62 @@ MacroAssembler::negateDouble(FloatRegister reg)
 // Branch instructions
 
 void
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Register rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    j(cond, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
     cmpPtr(lhs, rhs);

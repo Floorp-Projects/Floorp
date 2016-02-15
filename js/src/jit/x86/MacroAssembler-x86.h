@@ -50,7 +50,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void setupABICall(uint32_t args);
 
   public:
-    using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
@@ -552,18 +551,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
-        cmpl(rhs, lhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
     void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
         test32(Operand(address), imm);
         j(cond, label);

@@ -223,6 +223,37 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    if (X86Encoding::IsAddressImmediate(lhs.addr)) {
+        branch32(cond, Operand(lhs), rhs, label);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        mov(ImmPtr(lhs.addr), scratch);
+        branch32(cond, Address(scratch, 0), rhs, label);
+    }
+}
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    if (X86Encoding::IsAddressImmediate(lhs.addr)) {
+        branch32(cond, Operand(lhs), rhs, label);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        mov(ImmPtr(lhs.addr), scratch);
+        branch32(cond, Address(scratch, 0), rhs, label);
+    }
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    mov(lhs, scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
 {
     ScratchRegisterScope scratch(*this);
