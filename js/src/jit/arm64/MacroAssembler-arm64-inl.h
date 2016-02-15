@@ -439,6 +439,96 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm, Label* label)
+{
+    cmp32(lhs, imm);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    MOZ_ASSERT(scratch != rhs);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Imm32 imm, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    load32(lhs, scratch);
+    branch32(cond, scratch, imm, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(ImmPtr(lhs.addr), scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(ImmPtr(lhs.addr), scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.base);
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.index);
+    doBaseIndex(scratch32, lhs, vixl::LDR_w);
+    branch32(cond, scratch32.asUnsized(), rhs, label);
+}
+
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
+{
+    // since rhs is an operand, do the compare backwards
+    Cmp(ARMRegister(rhs, 32), lhs);
+    B(label, Assembler::InvertCmpCondition(cond));
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
+{
+    ARMRegister l = lhs.reg();
+    Cmp(l, Operand(rhs.value));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(lhs, scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
     Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
