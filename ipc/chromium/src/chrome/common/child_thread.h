@@ -6,7 +6,6 @@
 #define CHROME_COMMON_CHILD_THREAD_H_
 
 #include "base/thread.h"
-#include "chrome/common/ipc_sync_channel.h"
 #include "chrome/common/message_router.h"
 #include "mozilla/UniquePtr.h"
 
