@@ -2539,8 +2539,8 @@ MacroAssemblerMIPS64Compat::branchPtrInNurseryRange(Condition cond, Register ptr
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
     asMasm().addPtr(ptr, SecondScratchReg);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              SecondScratchReg, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 void
@@ -2555,8 +2555,8 @@ MacroAssemblerMIPS64Compat::branchValueIsNurseryObject(Condition cond, ValueOper
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
     asMasm().addPtr(value.valueReg(), SecondScratchReg);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              SecondScratchReg, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 void

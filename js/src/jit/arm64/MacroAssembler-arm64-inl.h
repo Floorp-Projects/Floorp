@@ -439,6 +439,118 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs);
+    movePtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch1_64 = temps.AcquireX();
+    const ARMRegister scratch2_64 = temps.AcquireX();
+    MOZ_ASSERT(scratch1_64.asUnsized() != lhs.base);
+    MOZ_ASSERT(scratch2_64.asUnsized() != lhs.base);
+
+    movePtr(rhs, scratch1_64.asUnsized());
+    loadPtr(lhs, scratch2_64.asUnsized());
+    branchPtr(cond, scratch2_64.asUnsized(), scratch1_64.asUnsized(), label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
     vixl::UseScratchRegisterScope temps(this);
@@ -494,6 +606,20 @@ void
 MacroAssemblerCompat::andStackPtrTo(T t)
 {
     asMasm().andPtr(getStackPointer(), t);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchStackPtr(Condition cond, T rhs, Label* label)
+{
+    asMasm().branchPtr(cond, getStackPointer(), rhs, label);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchStackPtrRhs(Condition cond, T lhs, Label* label)
+{
+    asMasm().branchPtr(cond, lhs, getStackPointer(), label);
 }
 
 } // namespace jit

@@ -818,9 +818,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         load32(lhs, scratch2);
         branch32(cond, scratch2, rhs, label);
     }
-    void branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        branch32(cond, lhs, rhs, label);
-    }
 
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label* label) {
@@ -921,28 +918,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
         branchTest32(cond, lhs, imm, label);
     }
-    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
-        branch32(cond, lhs, rhs, label);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        movePtr(ptr, scratch);
-        branchPtr(cond, lhs, scratch, label);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmWord imm, Label* label) {
-        branch32(cond, lhs, Imm32(imm.value), label);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label* label) {
-        branchPtr(cond, lhs, ImmWord(uintptr_t(imm.value)), label);
-    }
-    void branchPtr(Condition cond, Register lhs, wasm::SymbolicAddress imm, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        movePtr(imm, scratch);
-        branchPtr(cond, lhs, scratch, label);
-    }
-    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        branch32(cond, lhs, imm, label);
-    }
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_sub(imm, lhs, SetCC);
         as_b(label, cond);
@@ -966,39 +941,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(addr, scratch2);
         ma_cmp(scratch2, ptr);
         return jumpWithPatch(label, cond);
-    }
-    void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label* label) {
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        ma_ldr(addr, scratch2);
-        ma_cmp(scratch2, ptr);
-        ma_b(label, cond);
-    }
-    void branchPtr(Condition cond, Address addr, ImmWord ptr, Label* label) {
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        ma_ldr(addr, scratch2);
-        ma_cmp(scratch2, ptr);
-        ma_b(label, cond);
-    }
-    void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label* label) {
-        branchPtr(cond, addr, ImmWord(uintptr_t(ptr.value)), label);
-    }
-    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        loadPtr(addr, scratch);
-        ma_cmp(scratch, ptr);
-        ma_b(label, cond);
-    }
-    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        loadPtr(addr, scratch);
-        ma_cmp(scratch, ptr);
-        ma_b(label, cond);
-    }
-    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        loadPtr(addr, scratch);
-        ma_cmp(scratch, ptr);
-        ma_b(label, cond);
     }
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         AutoRegisterScope scratch2(asMasm(), secondScratchReg_);

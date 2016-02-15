@@ -415,10 +415,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         load32(lhs, SecondScratchReg);
         ma_b(SecondScratchReg, rhs, label, cond);
     }
-    void branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        loadPtr(lhs, SecondScratchReg);
-        ma_b(SecondScratchReg, rhs, label, cond);
-    }
 
     void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
     void branchTestDouble(Condition cond, Register tag, Label* label);
@@ -513,25 +509,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
     void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
                       Label* label);
-    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
-        ma_b(lhs, rhs, label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label* label) {
-        ma_b(lhs, ptr, label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmWord imm, Label* label) {
-        ma_b(lhs, imm, label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label* label) {
-        ma_b(lhs, imm, label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, wasm::SymbolicAddress imm, Label* label) {
-        movePtr(imm, SecondScratchReg);
-        ma_b(lhs, SecondScratchReg, label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        ma_b(lhs, imm, label, cond);
-    }
     inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
 
     // higher level tag testing code
@@ -573,31 +550,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         CodeOffsetJump off = jumpWithPatch(label);
         bind(&skipJump);
         return off;
-    }
-    void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
-    }
-
-    void branchPtr(Condition cond, Address addr, ImmWord ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
-    }
-    void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
-    }
-    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
-    }
-    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
-    }
-    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
-        loadPtr(addr, SecondScratchReg);
-        ma_b(SecondScratchReg, ptr, label, cond);
     }
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         load32(lhs, SecondScratchReg);
