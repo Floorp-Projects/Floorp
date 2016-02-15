@@ -865,16 +865,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadConstantInt32x4(const SimdConstant& v, FloatRegister dest);
     void loadConstantFloat32x4(const SimdConstant& v, FloatRegister dest);
 
-    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail) {
-        vcvttsd2si(src, dest);
-
-        // vcvttsd2si returns 0x80000000 on failure. Test for it by
-        // subtracting 1 and testing overflow (this permits the use of a
-        // smaller immediate field).
-        cmp32(dest, Imm32(1));
-        j(Assembler::Overflow, fail);
-    }
-
     Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
         test32(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
