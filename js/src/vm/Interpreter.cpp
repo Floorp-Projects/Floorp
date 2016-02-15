@@ -4082,6 +4082,10 @@ js::GetScopeName(JSContext* cx, HandleObject scopeChain, HandlePropertyName name
     if (!GetProperty(cx, obj, obj, name, vp))
         return false;
 
+    // We do our own explicit checking for |this|
+    if (name == cx->names().dotThis)
+        return true;
+
     // See note in FetchName.
     return CheckUninitializedLexical(cx, name, vp);
 }
@@ -4879,16 +4883,29 @@ js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
 bool
 js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
 {
-    RootedFunction fun(cx, frame.callee());
-
-    const char* name = "anonymous";
-    JSAutoByteString str;
-    if (fun->atom()) {
-        if (!AtomToPrintableString(cx, fun->atom(), &str))
-            return false;
-        name = str.ptr();
+    RootedFunction fun(cx);
+    if (frame.isFunctionFrame()) {
+        fun = frame.callee();
+    } else {
+        MOZ_ASSERT(frame.isEvalFrame());
+        MOZ_ASSERT(frame.script()->isDirectEvalInFunction());
+        fun = frame.script()->getCallerFunction();
     }
 
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+    if (fun->isDerivedClassConstructor()) {
+        const char* name = "anonymous";
+        JSAutoByteString str;
+        if (fun->atom()) {
+            if (!AtomToPrintableString(cx, fun->atom(), &str))
+                return false;
+            name = str.ptr();
+        }
+
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+        return false;
+    }
+
+    MOZ_ASSERT(fun->isArrow());
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
     return false;
 }

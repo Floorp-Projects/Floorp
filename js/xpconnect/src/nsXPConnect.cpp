@@ -60,7 +60,10 @@ nsXPConnect::nsXPConnect()
     :   mRuntime(nullptr),
         mShuttingDown(false)
 {
-    mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
+    mRuntime = XPCJSRuntime::newXPCJSRuntime();
+    if (!mRuntime) {
+        NS_RUNTIMEABORT("Couldn't create XPCJSRuntime.");
+    }
 
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if (reportableEnv && *reportableEnv)
