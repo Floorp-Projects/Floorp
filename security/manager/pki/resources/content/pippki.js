@@ -134,7 +134,7 @@ function exportToFile(parent, cert)
     var fos = Components.classes["@mozilla.org/network/file-output-stream;1"].
               createInstance(Components.interfaces.nsIFileOutputStream);
     // flags: PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-    fos.init(file, 0x02 | 0x08 | 0x20, 00644, 0);
+    fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
     written = fos.write(content, content.length);
     fos.close();
   }

@@ -79,7 +79,7 @@ MozFileLogger.init = function(path) {
   MozFileLogger._file.initWithPath(path);
   MozFileLogger._foStream = Cc[FOSTREAM_CID].createInstance(Ci.nsIFileOutputStream);
   MozFileLogger._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
-                                   0664, 0);
+                                   0o664, 0);
 }
 
 MozFileLogger.getLogCallback = function() {

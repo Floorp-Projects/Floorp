@@ -289,7 +289,7 @@ HelperAppLauncherDialog.prototype = {
           aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
         }
       }
-      aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     }
     catch (e) {
       dump("*** exception in validateLeafName: " + e + "\n");
@@ -300,7 +300,7 @@ HelperAppLauncherDialog.prototype = {
       if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
         aLocalFile.append("unnamed");
         if (aLocalFile.exists())
-          aLocalFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          aLocalFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
       }
     }
   },
