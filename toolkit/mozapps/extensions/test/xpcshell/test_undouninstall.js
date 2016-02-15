@@ -350,7 +350,7 @@ add_task(function* cancelUninstallOfRestartless() {
   yield promiseInstallAllFiles([do_get_addon("test_undouninstall1")]);
   ensure_test_completed();
 
-  let a1 = yield promiseAddonByID(ID);
+  a1 = yield promiseAddonByID(ID);
 
   do_check_neq(a1, null);
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");

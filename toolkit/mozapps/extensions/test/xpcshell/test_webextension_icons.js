@@ -48,7 +48,7 @@ add_task(function*() {
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
-  let addon = yield promiseAddonByID(ID);
+  addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
 
   function check_icons(addon) {

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var gWindowWatcher = null;
+gWindowWatcher = null;
 
 function test() {
   Harness.installConfirmCallback = confirm_install;

@@ -4,12 +4,6 @@
 
 "use strict";
 
-// These are injected from XPIProvider.jsm
-/*globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
-          AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
-          isUsableAddon, recordAddonTelemetry, applyBlocklistChanges,
-          flushStartupCache, canRunInSafeMode*/
-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
@@ -18,7 +12,6 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-/*globals AddonManagerPrivate*/
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",

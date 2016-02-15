@@ -141,7 +141,6 @@ function run_test() {
   });
 }
 
-var gLastEvent;
 function onGenericEvent(event) {
   gLastEvent = event.type;
 }
