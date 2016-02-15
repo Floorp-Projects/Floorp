@@ -391,8 +391,6 @@ class MacroAssemblerNone : public Assembler
     void convertFloat32ToDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void convertUInt64ToDouble(Register64, Register, FloatRegister) { MOZ_CRASH(); }
 
-    void branchTruncateDouble(FloatRegister, Register, Label*) { MOZ_CRASH(); }
-
     void boolValueToDouble(ValueOperand, FloatRegister) { MOZ_CRASH(); }
     void boolValueToFloat32(ValueOperand, FloatRegister) { MOZ_CRASH(); }
     void int32ValueToDouble(ValueOperand, FloatRegister) { MOZ_CRASH(); }
