@@ -19,6 +19,15 @@
 
 namespace mozilla {
 
+/*
+ * A container class to make it easier to pass the playback info all the
+ * way to DecodedStreamGraphListener from DecodedStream.
+ */
+struct PlaybackInfoInit {
+  int64_t mStartTime;
+  MediaInfo mInfo;
+};
+
 class DecodedStreamGraphListener : public MediaStreamListener {
   typedef MediaStreamListener::MediaStreamGraphEvent MediaStreamGraphEvent;
 public:
@@ -108,6 +117,7 @@ UpdateStreamSuspended(MediaStream* aStream, bool aBlocking)
 class DecodedStreamData {
 public:
   DecodedStreamData(OutputStreamManager* aOutputStreamManager,
+                    PlaybackInfoInit&& aInit,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
   int64_t GetPosition() const;
@@ -127,9 +137,6 @@ public:
   // the image.
   RefPtr<layers::Image> mLastVideoImage;
   gfx::IntSize mLastVideoImageDisplaySize;
-  // This is set to true when the stream is initialized (audio and
-  // video tracks added).
-  bool mStreamInitialized;
   bool mHaveSentFinish;
   bool mHaveSentFinishAudio;
   bool mHaveSentFinishVideo;
@@ -146,11 +153,11 @@ public:
 };
 
 DecodedStreamData::DecodedStreamData(OutputStreamManager* aOutputStreamManager,
+                                     PlaybackInfoInit&& aInit,
                                      MozPromiseHolder<GenericPromise>&& aPromise)
   : mAudioFramesWritten(0)
-  , mNextVideoTime(-1)
-  , mNextAudioTime(-1)
-  , mStreamInitialized(false)
+  , mNextVideoTime(aInit.mStartTime)
+  , mNextAudioTime(aInit.mStartTime)
   , mHaveSentFinish(false)
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
@@ -165,6 +172,16 @@ DecodedStreamData::DecodedStreamData(OutputStreamManager* aOutputStreamManager,
 {
   mStream->AddListener(mListener);
   mOutputStreamManager->Connect(mStream);
+
+  // Initialize tracks.
+  if (aInit.mInfo.HasAudio()) {
+    mStream->AddAudioTrack(aInit.mInfo.mAudio.mTrackId,
+                           aInit.mInfo.mAudio.mRate,
+                           0, new AudioSegment());
+  }
+  if (aInit.mInfo.HasVideo()) {
+    mStream->AddTrack(aInit.mInfo.mVideo.mTrackId, 0, new VideoSegment());
+  }
 }
 
 DecodedStreamData::~DecodedStreamData()
@@ -252,27 +269,31 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
 
   class R : public nsRunnable {
     typedef MozPromiseHolder<GenericPromise> Promise;
-    typedef void(DecodedStream::*Method)(Promise&&);
+    typedef decltype(&DecodedStream::CreateData) Method;
   public:
-    R(DecodedStream* aThis, Method aMethod, Promise&& aPromise)
-      : mThis(aThis), mMethod(aMethod)
+    R(DecodedStream* aThis, Method aMethod, PlaybackInfoInit&& aInit, Promise&& aPromise)
+      : mThis(aThis), mMethod(aMethod), mInit(Move(aInit))
     {
       mPromise = Move(aPromise);
     }
     NS_IMETHOD Run() override
     {
-      (mThis->*mMethod)(Move(mPromise));
+      (mThis->*mMethod)(Move(mInit), Move(mPromise));
       return NS_OK;
     }
   private:
     RefPtr<DecodedStream> mThis;
     Method mMethod;
+    PlaybackInfoInit mInit;
     Promise mPromise;
   };
 
   MozPromiseHolder<GenericPromise> promise;
   mFinishPromise = promise.Ensure(__func__);
-  nsCOMPtr<nsIRunnable> r = new R(this, &DecodedStream::CreateData, Move(promise));
+  PlaybackInfoInit init {
+    aStartTime, aInfo
+  };
+  nsCOMPtr<nsIRunnable> r = new R(this, &DecodedStream::CreateData, Move(init), Move(promise));
   AbstractThread::MainThread()->Dispatch(r.forget());
 }
 
@@ -322,7 +343,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
 }
 
 void
-DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
+DecodedStream::CreateData(PlaybackInfoInit&& aInit, MozPromiseHolder<GenericPromise>&& aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -334,7 +355,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
     return;
   }
 
-  auto data = new DecodedStreamData(mOutputStreamManager, Move(aPromise));
+  auto data = new DecodedStreamData(mOutputStreamManager, Move(aInit), Move(aPromise));
 
   class R : public nsRunnable {
     typedef void(DecodedStream::*Method)(UniquePtr<DecodedStreamData>);
@@ -427,37 +448,6 @@ DecodedStream::SetPreservesPitch(bool aPreservesPitch)
 {
   AssertOwnerThread();
   mParams.mPreservesPitch = aPreservesPitch;
-}
-
-void
-DecodedStream::InitTracks()
-{
-  AssertOwnerThread();
-
-  if (mData->mStreamInitialized) {
-    return;
-  }
-
-  SourceMediaStream* sourceStream = mData->mStream;
-
-  if (mInfo.HasAudio()) {
-    TrackID audioTrackId = mInfo.mAudio.mTrackId;
-    AudioSegment* audio = new AudioSegment();
-    sourceStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio,
-                                SourceMediaStream::ADDTRACK_QUEUED);
-    mData->mNextAudioTime = mStartTime.ref();
-  }
-
-  if (mInfo.HasVideo()) {
-    TrackID videoTrackId = mInfo.mVideo.mTrackId;
-    VideoSegment* video = new VideoSegment();
-    sourceStream->AddTrack(videoTrackId, 0, video,
-                           SourceMediaStream::ADDTRACK_QUEUED);
-    mData->mNextVideoTime = mStartTime.ref();
-  }
-
-  sourceStream->FinishAddTracks();
-  mData->mStreamInitialized = true;
 }
 
 static void
@@ -692,7 +682,6 @@ DecodedStream::SendData()
     return;
   }
 
-  InitTracks();
   SendAudio(mParams.mVolume, mSameOrigin);
   SendVideo(mSameOrigin);
   AdvanceTracks();
