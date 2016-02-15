@@ -259,6 +259,27 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    cmp32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    cmpl(rhs, lhs);
+    j(cond, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
 {
     branchPtrImpl(cond, lhs, rhs, label);

@@ -394,6 +394,98 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    ma_cmp(lhs, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    ma_cmp(lhs, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    // branch32 will use ScratchRegister.
+    AutoRegisterScope scratch(*this, secondScratchReg_);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
+    ma_cmp(scratch2, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
+    ma_cmp(scratch2, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label)
+{
+    // branch32 will use ScratchRegister.
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    load32(lhs, scratch2);
+    branch32(cond, scratch2, rhs, label);
+}
+
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
+{
+    if (lhs.getTag() == Operand::OP2) {
+        branch32(cond, lhs.toReg(), rhs, label);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        ma_ldr(lhs.toAddress(), scratch);
+        branch32(cond, scratch, rhs, label);
+    }
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
+{
+    if (lhs.getTag() == Operand::OP2) {
+        branch32(cond, lhs.toReg(), rhs, label);
+    } else {
+        // branch32 will use ScratchRegister.
+        AutoRegisterScope scratch(*this, secondScratchReg_);
+        ma_ldr(lhs.toAddress(), scratch);
+        branch32(cond, scratch, rhs, label);
+    }
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
     branch32(cond, lhs, rhs, label);
