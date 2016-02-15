@@ -242,9 +242,7 @@ MediaSystemResourceManager::AcquireSyncNoWait(MediaSystemResourceClient* aClient
       HandleAcquireResult(aClient->mId, false);
       return false;
     }
-    if (!aClient ||
-        !client ||
-        client != aClient) {
+    if (!client || client != aClient) {
       HandleAcquireResult(aClient->mId, false);
       return false;
     }
