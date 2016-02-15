@@ -841,6 +841,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
 
+    template <class L>
+    inline void branchTest32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTest32(Condition cond, Register lhs, Imm32 rhs, L label) PER_SHARED_ARCH;
+    inline void branchTest32(Condition cond, const Address& lhs, Imm32 rhh, Label* label) PER_SHARED_ARCH;
+    inline void branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
     inline void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
@@ -905,16 +913,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
     template <class L>
-    void branchIfFalseBool(Register reg, L label) {
-        // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
-        branchTest32(Assembler::Zero, reg, Imm32(0xFF), label);
-    }
+    inline void branchIfFalseBool(Register reg, L label);
 
     // Branches to |label| if |reg| is true. |reg| should be a C++ bool.
-    void branchIfTrueBool(Register reg, Label* label) {
-        // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
-        branchTest32(Assembler::NonZero, reg, Imm32(0xFF), label);
-    }
+    inline void branchIfTrueBool(Register reg, Label* label);
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, NativeObject::getPrivateDataOffset(nfixed)), dest);
@@ -932,20 +934,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadStringChars(Register str, Register dest);
     void loadStringChar(Register str, Register index, Register output);
 
-    void branchIfRope(Register str, Label* label) {
-        Address flags(str, JSString::offsetOfFlags());
-        static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
-        branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
-    }
+    inline void branchIfRope(Register str, Label* label);
 
-    void branchLatin1String(Register string, Label* label) {
-        branchTest32(Assembler::NonZero, Address(string, JSString::offsetOfFlags()),
-                     Imm32(JSString::LATIN1_CHARS_BIT), label);
-    }
-    void branchTwoByteString(Register string, Label* label) {
-        branchTest32(Assembler::Zero, Address(string, JSString::offsetOfFlags()),
-                     Imm32(JSString::LATIN1_CHARS_BIT), label);
-    }
+    inline void branchLatin1String(Register string, Label* label);
+    inline void branchTwoByteString(Register string, Label* label);
 
     void loadJSContext(Register dest) {
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
@@ -1064,24 +1056,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         return extractObject(source, scratch);
     }
 
-    void branchIfFunctionHasNoScript(Register fun, Label* label) {
-        // 16-bit loads are slow and unaligned 32-bit loads may be too so
-        // perform an aligned 32-bit load and adjust the bitmask accordingly.
-        MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
-        MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
-        Address address(fun, JSFunction::offsetOfNargs());
-        int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
-        branchTest32(Assembler::Zero, address, Imm32(bit), label);
-    }
-    void branchIfInterpreted(Register fun, Label* label) {
-        // 16-bit loads are slow and unaligned 32-bit loads may be too so
-        // perform an aligned 32-bit load and adjust the bitmask accordingly.
-        MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
-        MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
-        Address address(fun, JSFunction::offsetOfNargs());
-        int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
-        branchTest32(Assembler::NonZero, address, Imm32(bit), label);
-    }
+    inline void branchIfFunctionHasNoScript(Register fun, Label* label);
+    inline void branchIfInterpreted(Register fun, Label* label);
 
     void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
 
@@ -1102,12 +1078,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             branch32(cond, length, Imm32(key.constant()), label);
     }
 
-    void branchTestNeedsIncrementalBarrier(Condition cond, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero);
-        CompileZone* zone = GetJitContext()->compartment->zone();
-        AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
-        branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
-    }
+    inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
     template <typename T>
     void callPreBarrier(const T& address, MIRType type) {
@@ -1296,33 +1267,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
 
-    void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
-                                Label* slowCheck, Label* checked)
-    {
-        // The branches to out-of-line code here implement a conservative version
-        // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
-        // of the branches are taken, we can check class flags directly.
-        loadObjClass(objReg, scratch);
-        Address flags(scratch, Class::offsetOfFlags());
+    inline void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
+                                       Label* slowCheck, Label* checked);
 
-        branchTestClassIsProxy(true, scratch, slowCheck);
+    inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
-        Condition cond = truthy ? Assembler::Zero : Assembler::NonZero;
-        branchTest32(cond, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), checked);
-    }
-
-    void branchTestClassIsProxy(bool proxy, Register clasp, Label* label)
-    {
-        branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
-                     Address(clasp, Class::offsetOfFlags()),
-                     Imm32(JSCLASS_IS_PROXY), label);
-    }
-
-    void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label)
-    {
-        loadObjClass(object, scratch);
-        branchTestClassIsProxy(proxy, scratch, label);
-    }
+    inline void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label);
 
     inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
                                    Register scratch, Label* label);
