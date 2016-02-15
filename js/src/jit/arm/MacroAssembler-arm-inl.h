@@ -610,6 +610,30 @@ MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* f
     ma_b(fail, Assembler::Equal);
 }
 
+void
+MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label)
+{
+    compareDouble(lhs, rhs);
+
+    if (cond == DoubleNotEqual) {
+        // Force the unordered cases not to jump.
+        Label unordered;
+        ma_b(&unordered, VFP_Unordered);
+        ma_b(label, VFP_NotEqualOrUnordered);
+        bind(&unordered);
+        return;
+    }
+
+    if (cond == DoubleEqualOrUnordered) {
+        ma_b(label, VFP_Unordered);
+        ma_b(label, VFP_Equal);
+        return;
+    }
+
+    ma_b(label, ConditionFromDoubleCondition(cond));
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
