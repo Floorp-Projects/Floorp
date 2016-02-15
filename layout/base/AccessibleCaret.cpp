@@ -7,6 +7,7 @@
 #include "AccessibleCaret.h"
 
 #include "AccessibleCaretLogger.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ToString.h"
 #include "nsCanvasFrame.h"
@@ -116,6 +117,7 @@ AccessibleCaret::SetAppearance(Appearance aAppearance)
   // Need to reset rect since the cached rect will be compared in SetPosition.
   if (mAppearance == Appearance::None) {
     mImaginaryCaretRect = nsRect();
+    mZoomLevel = 0.0f;
   }
 }
 
@@ -255,25 +257,29 @@ AccessibleCaret::SetPosition(nsIFrame* aFrame, int32_t aOffset)
   if (imaginaryCaretRectInFrame.IsEmpty()) {
     // Don't bother to set the caret position since it's invisible.
     mImaginaryCaretRect = nsRect();
+    mZoomLevel = 0.0f;
     return PositionChangedResult::Invisible;
   }
 
   nsRect imaginaryCaretRect = imaginaryCaretRectInFrame;
   nsLayoutUtils::TransformRect(aFrame, RootFrame(), imaginaryCaretRect);
+  float zoomLevel = GetZoomLevel();
 
-  if (imaginaryCaretRect.IsEqualEdges(mImaginaryCaretRect)) {
+  if (imaginaryCaretRect.IsEqualEdges(mImaginaryCaretRect) &&
+      FuzzyEqualsMultiplicative(zoomLevel, mZoomLevel)) {
     return PositionChangedResult::NotChanged;
   }
 
   mImaginaryCaretRect = imaginaryCaretRect;
+  mZoomLevel = zoomLevel;
 
   // SetCaretElementStyle() and SetSelectionBarElementStyle() require the
   // input rect relative to container frame.
   nsRect imaginaryCaretRectInContainerFrame = imaginaryCaretRectInFrame;
   nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
                                imaginaryCaretRectInContainerFrame);
-  SetCaretElementStyle(imaginaryCaretRectInContainerFrame);
-  SetSelectionBarElementStyle(imaginaryCaretRectInContainerFrame);
+  SetCaretElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
+  SetSelectionBarElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
 
   return PositionChangedResult::Changed;
 }
@@ -288,7 +294,7 @@ AccessibleCaret::CustomContentContainerFrame() const
 }
 
 void
-AccessibleCaret::SetCaretElementStyle(const nsRect& aRect)
+AccessibleCaret::SetCaretElementStyle(const nsRect& aRect, float aZoomLevel)
 {
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
@@ -297,11 +303,10 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect)
                         nsPresContext::AppUnitsToIntCSSPixels(position.y),
                         nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
 
-  float zoomLevel = GetZoomLevel();
   styleStr.AppendPrintf(" width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
-                        sWidth / zoomLevel,
-                        sHeight / zoomLevel,
-                        sMarginLeft / zoomLevel);
+                        sWidth / aZoomLevel,
+                        sHeight / aZoomLevel,
+                        sMarginLeft / aZoomLevel);
 
   ErrorResult rv;
   CaretElement()->SetAttribute(NS_LITERAL_STRING("style"), styleStr, rv);
@@ -311,15 +316,15 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect)
 }
 
 void
-AccessibleCaret::SetSelectionBarElementStyle(const nsRect& aRect)
+AccessibleCaret::SetSelectionBarElementStyle(const nsRect& aRect,
+                                             float aZoomLevel)
 {
   int32_t height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   nsAutoString barStyleStr;
   barStyleStr.AppendPrintf("margin-top: -%dpx; height: %dpx;",
                            height, height);
 
-  float zoomLevel = GetZoomLevel();
-  barStyleStr.AppendPrintf(" width: %.2fpx;", sBarWidth / zoomLevel);
+  barStyleStr.AppendPrintf(" width: %.2fpx;", sBarWidth / aZoomLevel);
 
   ErrorResult rv;
   SelectionBarElement()->SetAttribute(NS_LITERAL_STRING("style"), barStyleStr, rv);
@@ -334,7 +339,7 @@ AccessibleCaret::GetZoomLevel()
   // Full zoom on desktop.
   float fullZoom = mPresShell->GetPresContext()->GetFullZoom();
 
-  // Pinch-zoom on B2G.
+  // Pinch-zoom on B2G or fennec.
   float resolution = mPresShell->GetCumulativeResolution();
 
   return fullZoom * resolution;
