@@ -652,6 +652,48 @@ MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rh
     branchPtr(cond, lhs, scratch, label);
 }
 
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    // x86 prefers |test foo, foo| to |cmp foo, #0|.
+    // Convert the former to the latter for ARM.
+    if (lhs == rhs && (cond == Zero || cond == NonZero))
+        cmp32(lhs, Imm32(0));
+    else
+        test32(lhs, rhs);
+    B(label, cond);
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    test32(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    load32(lhs, scratch);
+    branchTest32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    load32(lhs, scratch);
+    branchTest32(cond, scratch, rhs, label);
+}
+
 void
 MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {

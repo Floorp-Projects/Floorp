@@ -294,6 +294,32 @@ MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    test32(lhs, rhs);
+    j(cond, label);
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    test32(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    test32(Operand(lhs), rhs);
+    j(cond, label);
+}
+
 void
 MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
 {
@@ -317,6 +343,19 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerX86Shared::clampIntToUint8(Register reg)
+{
+    Label inRange;
+    asMasm().branchTest32(Assembler::Zero, reg, Imm32(0xffffff00), &inRange);
+    {
+        sarl(Imm32(31), reg);
+        notl(reg);
+        andl(Imm32(255), reg);
+    }
+    bind(&inRange);
+}
 
 } // namespace jit
 } // namespace js
