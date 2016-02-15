@@ -798,6 +798,26 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Branch functions
 
+    inline void branch32(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+
+    inline void branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    inline void branch32(Condition cond, const BaseIndex& lhs, Register rhs, Label* label)
+        DEFINED_ON(x86_shared);
+    inline void branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+
+    inline void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+
+    inline void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
     inline void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
