@@ -1726,8 +1726,9 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (userContextId)
+            if (userContextId) {
               b.setAttribute("usercontextid", userContextId);
+            }
 
             if (remote)
               b.setAttribute("remote", "true");
@@ -6272,8 +6273,13 @@
         <parameter name="aUserContextId"/>
         <body>
         <![CDATA[
-          this.linkedBrowser.setAttribute("usercontextid", aUserContextId);
-          this.setAttribute("usercontextid", aUserContextId);
+          if (aUserContextId) {
+            this.linkedBrowser.setAttribute("usercontextid", aUserContextId);
+            this.setAttribute("usercontextid", aUserContextId);
+          } else {
+            this.linkedBrowser.removeAttribute("usercontextid");
+            this.removeAttribute("usercontextid");
+          }
         ]]>
         </body>
       </method>

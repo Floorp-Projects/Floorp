@@ -983,7 +983,7 @@ nsContextMenu.prototype = {
 
     let params = this._openLinkInParameters({
       allowMixedContent: persistAllowMixedContentInChildTab,
-      userContextId: event.target.getAttribute('usercontextid'),
+      userContextId: parseInt(event.target.getAttribute('usercontextid')),
     });
     openLinkIn(this.linkURL, "tab", params);
   },
