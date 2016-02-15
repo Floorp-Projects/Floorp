@@ -85,7 +85,7 @@ describe("loop.panel", function() {
       GetHasEncryptionKey: true,
       GetUserProfile: null,
       GetDoNotDisturb: false,
-      "GetLoopPref|gettingStarted.latestFTUVersion": 1,
+      "GetLoopPref|gettingStarted.latestFTUVersion": 2,
       "GetLoopPref|legal.ToS_url": "",
       "GetLoopPref|legal.privacy_url": "",
       "GetLoopPref|remote.autostart": false,

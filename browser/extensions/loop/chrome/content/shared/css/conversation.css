@@ -181,43 +181,6 @@ html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:h
   width: 100%;
 }
 
-.call-action-group > .invite-button {
-  cursor: pointer;
-  margin: 0 4px;
-  position: relative;
-}
-
-.call-action-group > .invite-button > img {
-  background-color: #00a9dc;
-  border-radius: 100%;
-  height: 28px;
-  width: 28px;
-}
-
-.call-action-group > .invite-button:hover > img {
-  background-color: #5cccee;
-}
-
-.call-action-group > .invite-button.triggered > img {
-  background-color: #56b397;
-}
-
-.call-action-group > .invite-button > p {
-  display: none;
-  /* Position the text under the button while centering it without impacting the
-   * rest of the layout */
-  left: -10rem;
-  margin: .5rem 0 0;
-  position: absolute;
-  right: -10rem;
-  font-size: 0.8rem;
-}
-
-.call-action-group > .invite-button.triggered > p,
-.call-action-group > .invite-button:hover > p {
-  display: block;
-}
-
 .room-failure {
   /* This flex allows us to not calculate the height of the logo area
      versus the buttons */
@@ -443,20 +406,131 @@ html, .fx-embedded, #main,
   height: 100%;
   right: 0;
   left: 0;
-  text-align: center;
   color: #000;
   z-index: 1010;
   display: flex;
   flex-flow: column nowrap;
-  justify-content: center;
   align-items: stretch;
 }
 
 .room-invitation-content {
   display: flex;
   flex-flow: column nowrap;
+  margin: 12px 0;
+  font-size: 1.4rem;
+}
+
+.room-invitation-content > * {
+  width: 100%;
+  margin: 0 15px;
+}
+
+.room-context-header {
+  font-weight: bold;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Input Button Combo group */
+.input-button-content {
+  margin: 0 15px 10px 15px;
+  min-width: 64px;
+  border-radius: 4px;
+  border: 1px solid #d2cece;;
+}
+
+.input-button-group-label {
+  color: #898a8a;
+  margin: 0 15px;
+  margin-bottom: 2px;
+  font-size: 1.2rem;
+}
+
+.input-button-content > * {
+  width: 100%;
+  padding: 0 4px;
+}
+
+.input-button-content > .input-group input {
+  font-size: 1.4rem;
+  padding: 0.7rem;
+  width: 100%;
+  border: 0;
+}
+
+.input-button-content > .group-item-top {
+  border-radius: 4px 4px 0 0;
+}
+
+.input-button-content > .group-item-bottom {
+  border-radius: 0 0 4px 4px;
+}
+
+.input-button-content > .input-group {
+  background: #FFF;
+}
+
+.input-button-content > .invite-button {
+  background: #00a9dc;
+  height: 34px;
+  text-align: center;
+  display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
+}
+
+.input-button-content > .invite-button.triggered {
+  background-color: #00a9dc;
+}
+
+.input-button-content > .invite-button:hover {
+  background-color: #008ACB;
+}
+
+.share-action-group {
+  display: flex;
+  padding: 0 15px;
+  width: 100%;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.share-action-group > .invite-button {
+  cursor: pointer;
+  height: 34px;
+  border-radius: 4px;
+  background-color: #ebebeb;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  margin-right: 20px;
+}
+
+.share-action-group > .invite-button:last-child {
+  margin-right: 0;
+}
+
+.share-action-group > .invite-button:hover {
+  background-color: #d4d4d4;
+}
+
+.share-action-group > .invite-button.triggered {
+  background-color: #d4d4d4;
+}
+
+.share-action-group > .invite-button > img {
+  height: 28px;
+  width: 28px;
+}
+
+.share-action-group > .invite-button > div {
+  display: inline;
+  color: #4a4a4a;
 }
 
 .share-service-dropdown {
@@ -498,17 +572,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .context-url-view-wrapper > .context-content {
   margin: 0 1rem 1.5rem 1rem;
-}
-
-.room-invitation-content {
-  color: #333;
-  font-size: 1rem;
-  margin: 1rem auto;
-}
-
-.room-invitation-content > p {
-  margin-left: 10px;
-  margin-right: 10px;
 }
 
 .media-layout {
@@ -796,7 +859,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 .text-chat-view > .text-chat-entries {
   width: 100%;
   overflow: auto;
-  padding-top: .6rem;
+  padding-top: 15px;
   /* 40px is the height of .text-chat-box. */
   height: calc(100% - 40px);
 }

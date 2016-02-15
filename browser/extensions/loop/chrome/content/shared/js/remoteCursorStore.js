@@ -5,6 +5,9 @@
 var loop = loop || {};
 loop.store = loop.store || {};
 
+/**
+ *  Manages the different cursors' events being exchanged between the parts.
+ */
 loop.store.RemoteCursorStore = (function() {
   "use strict";
 
@@ -15,6 +18,7 @@ loop.store.RemoteCursorStore = (function() {
    */
   var RemoteCursorStore = loop.store.createStore({
     actions: [
+      "sendCursorData",
       "receivedCursorData",
       "videoDimensionsChanged",
       "videoScreenStreamChanged"
@@ -36,7 +40,9 @@ loop.store.RemoteCursorStore = (function() {
       }
 
       this._sdkDriver = options.sdkDriver;
-      loop.subscribe("CursorPositionChange", this._cursorPositionChangeListener.bind(this));
+
+      loop.subscribe("CursorPositionChange",
+                     this._cursorPositionChangeListener.bind(this));
     },
 
     /**
@@ -52,13 +58,13 @@ loop.store.RemoteCursorStore = (function() {
     /**
      * Sends cursor position through the sdk.
      *
-     * @param {Object} event An object containing the cursor position and stream dimensions
-     *                       It should contains:
+     * @param {Object} event An object containing the cursor position and
+     *                       stream dimensions. It should contain:
      *                       - ratioX: Left position. Number between 0 and 1.
      *                       - ratioY: Top position. Number between 0 and 1.
      */
     _cursorPositionChangeListener: function(event) {
-      this._sdkDriver.sendCursorMessage({
+      this.sendCursorData({
         ratioX: event.ratioX,
         ratioY: event.ratioY,
         type: CURSOR_MESSAGE_TYPES.POSITION
@@ -66,14 +72,32 @@ loop.store.RemoteCursorStore = (function() {
     },
 
     /**
-     * Receives cursor data.
+     * Sends the cursor data to the SDK for broadcasting.
+     *
+     * @param {sharedActions.SendCursorData}
+     *  actionData Contains the updated information for the cursor's position
+     *      {
+     *       ratioX {[0-1]} Cursor's position on the X axis
+     *       ratioY {[0-1]} Cursor's position on the Y axis
+     *       type   {String} Type of the data being sent
+     *      }
+     */
+    sendCursorData: function(actionData) {
+      switch (actionData.type) {
+        case CURSOR_MESSAGE_TYPES.POSITION:
+          this._sdkDriver.sendCursorMessage(actionData);
+          break;
+      }
+    },
+
+    /**
+     * Receives cursor data and updates the store.
      *
      * @param {sharedActions.receivedCursorData} actionData
      */
     receivedCursorData: function(actionData) {
       switch (actionData.type) {
         case CURSOR_MESSAGE_TYPES.POSITION:
-          // TODO: handle cursor position if it's desktop instead of standalone
           this.setStoreState({
             remoteCursorPosition: {
               ratioX: actionData.ratioX,
@@ -103,8 +127,10 @@ loop.store.RemoteCursorStore = (function() {
     },
 
     /**
-     * Listen to screen stream changes.
-     *
+     * Listen to screen stream changes. Because the cursor's position is likely
+     * to be different respect to the new screen size, it's better to delete the
+     * previous position and keep waiting for the next one.
+
      * @param {sharedActions.VideoScreenStreamChanged} actionData
      */
     videoScreenStreamChanged: function(actionData) {
