@@ -841,6 +841,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
 
+    inline void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                            Label* label) PER_SHARED_ARCH;
+
     template <class L>
     inline void branchTest32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     template <class L>
@@ -1122,12 +1125,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&notNaN);
     }
 
-    void canonicalizeFloat(FloatRegister reg) {
-        Label notNaN;
-        branchFloat(DoubleOrdered, reg, reg, &notNaN);
-        loadConstantFloat32(float(JS::GenericNaN()), reg);
-        bind(&notNaN);
-    }
+    inline void canonicalizeFloat(FloatRegister reg);
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegister dest, Register temp, Label* fail,
