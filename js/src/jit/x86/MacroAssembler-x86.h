@@ -594,6 +594,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void branchPrivatePtr(Condition cond, const Address& lhs, ImmPtr ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, const Address& lhs, Register ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
     template <typename T, typename S>
     void branchPtr(Condition cond, T lhs, S ptr, RepatchLabel* label) {
         cmpPtr(Operand(lhs), ptr);

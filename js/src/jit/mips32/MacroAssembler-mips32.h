@@ -420,6 +420,18 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_b(SecondScratchReg, rhs, label, cond);
     }
 
+    void branchPrivatePtr(Condition cond, const Address& lhs, ImmPtr ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, const Address& lhs, Register ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
     void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
     void branchTestDouble(Condition cond, Register tag, Label* label);
     void branchTestDouble(Condition cond, const Address& address, Label* label);
