@@ -572,6 +572,28 @@ class MacroAssemblerX86Shared : public Assembler
         testw(rhs, lhs);
         j(cond, label);
     }
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        test32(lhs, rhs);
+        j(cond, label);
+    }
+    template <class L>
+    void branchTest32(Condition cond, Register lhs, Imm32 imm, L label) {
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        test32(lhs, imm);
+        j(cond, label);
+    }
+    void branchTest32(Condition cond, const Address& address, Imm32 imm, Label* label) {
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        test32(Operand(address), imm);
+        j(cond, label);
+    }
+    void branchTest32(Condition cond, const Operand& lhs, Imm32 imm, Label* label) {
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        test32(lhs, imm);
+        j(cond, label);
+    }
 
     void jump(Label* label) {
         jmp(label);
@@ -1261,7 +1283,16 @@ class MacroAssemblerX86Shared : public Assembler
         j(Assembler::NotEqual, fail);
     }
 
-    inline void clampIntToUint8(Register reg);
+    void clampIntToUint8(Register reg) {
+        Label inRange;
+        branchTest32(Assembler::Zero, reg, Imm32(0xffffff00), &inRange);
+        {
+            sarl(Imm32(31), reg);
+            notl(reg);
+            andl(Imm32(255), reg);
+        }
+        bind(&inRange);
+    }
 
     bool maybeInlineDouble(double d, FloatRegister dest) {
         uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
