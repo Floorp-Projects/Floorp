@@ -681,7 +681,6 @@ var gMetadataTests = [
   { name:"wave_metadata_bad_len.wav", tags: {
       name:"Track Title",
       artist:"Artist Name",
-      comments:"Comments",
     }
   },
   { name:"wave_metadata_bad_no_null.wav", tags: {
