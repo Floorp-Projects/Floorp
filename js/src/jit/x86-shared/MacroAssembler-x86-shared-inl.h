@@ -294,6 +294,27 @@ MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    testPtr(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    testPtr(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    testPtr(Operand(lhs), rhs);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

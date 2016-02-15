@@ -653,6 +653,30 @@ MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rh
 }
 
 void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    Tst(ARMRegister(lhs, 64), Operand(rhs.value));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchTestPtr(cond, scratch, rhs, label);
+}
+
+void
 MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
                              Label* label)
 {
@@ -717,6 +741,13 @@ void
 MacroAssemblerCompat::branchStackPtrRhs(Condition cond, T lhs, Label* label)
 {
     asMasm().branchPtr(cond, lhs, getStackPointer(), label);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchTestStackPtr(Condition cond, T t, Label* label)
+{
+    asMasm().branchTestPtr(cond, getStackPointer(), t, label);
 }
 
 } // namespace jit

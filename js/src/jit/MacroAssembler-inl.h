@@ -382,6 +382,13 @@ MacroAssembler::branchTestProxyHandlerFamily(Condition cond, Register proxy, Reg
 
 template <typename T>
 void
+MacroAssembler::branchTestStackPtr(Condition cond, T t, Label* label)
+{
+    branchTestPtr(cond, getStackPointer(), t, label);
+}
+
+template <typename T>
+void
 MacroAssembler::branchStackPtr(Condition cond, T rhs, Label* label)
 {
     branchPtr(cond, getStackPointer(), rhs, label);
@@ -408,6 +415,19 @@ MacroAssembler::addStackPtrTo(T t)
 
 #endif // !JS_CODEGEN_ARM64
 
+template <typename T>
+void
+MacroAssembler::storeObjectOrNull(Register src, const T& dest)
+{
+    Label notNull, done;
+    branchTestPtr(Assembler::NonZero, src, src, &notNull);
+    storeValue(NullValue(), dest);
+    jump(&done);
+    bind(&notNull);
+    storeValue(JSVAL_TYPE_OBJECT, src, dest);
+    bind(&done);
+}
+
 void
 MacroAssembler::bumpKey(Int32Key* key, int diff)
 {
@@ -415,6 +435,35 @@ MacroAssembler::bumpKey(Int32Key* key, int diff)
         add32(Imm32(diff), key->reg());
     else
         key->bumpConstant(diff);
+}
+
+void
+MacroAssembler::assertStackAlignment(uint32_t alignment, int32_t offset /* = 0 */)
+{
+#ifdef DEBUG
+    Label ok, bad;
+    MOZ_ASSERT(IsPowerOfTwo(alignment));
+
+    // Wrap around the offset to be a non-negative number.
+    offset %= alignment;
+    if (offset < 0)
+        offset += alignment;
+
+    // Test if each bit from offset is set.
+    uint32_t off = offset;
+    while (off) {
+        uint32_t lowestBit = 1 << mozilla::CountTrailingZeroes32(off);
+        branchTestStackPtr(Assembler::Zero, Imm32(lowestBit), &bad);
+        off ^= lowestBit;
+    }
+
+    // Check that all remaining bits are zero.
+    branchTestStackPtr(Assembler::Zero, Imm32((alignment - 1) ^ offset), &ok);
+
+    bind(&bad);
+    breakpoint();
+    bind(&ok);
+#endif
 }
 
 } // namespace jit
