@@ -48,28 +48,14 @@ addTab = function(url) {
  * view is visible and ready
  */
 function openRuleView() {
-  return openInspectorSidebarTab("ruleview").then(({toolbox, inspector}) => {
+  return openInspectorSidebarTab("ruleview").then(data => {
     return {
-      toolbox,
-      inspector,
-      view: inspector.ruleview.view
+      toolbox: data.toolbox,
+      inspector: data.inspector,
+      testActor: data.testActor,
+      view: data.inspector.ruleview.view
     };
   });
-}
-
-/**
- * Simple DOM node accesor function that takes either a node or a string css
- * selector as argument and returns the corresponding node
- *
- * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
- * doesn't implement *all* of the DOMNode's properties
- */
-function getNode(nodeOrSelector) {
-  info("Getting the node for '" + nodeOrSelector + "'");
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
 }
 
 /**
@@ -205,6 +191,21 @@ function* getComputedStyleProperty(selector, pseudo, propName) {
                                 {selector,
                                 pseudo,
                                 name: propName});
+}
+
+/**
+ * Get an element's inline style property value.
+ * @param {TestActor} testActor
+ * @param {String} selector
+ *        The selector used to obtain the element.
+ * @param {String} name
+ *        name of the property.
+ */
+function getStyle(testActor, selector, propName) {
+  return testActor.eval(`
+    content.document.querySelector("${selector}")
+                    .style.getPropertyValue("${propName}");
+  `);
 }
 
 /**
@@ -577,6 +578,105 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
     view.element.children[childrenIndex].childNodes[nodeIndex]._ruleEditor :
     view.element.children[childrenIndex]._ruleEditor;
 }
+
+/**
+ * Simulate adding a new property in an existing rule in the rule-view.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {Number} ruleIndex
+ *        The index of the rule to use. Note that if ruleIndex is 0, you might
+ *        want to also listen to markupmutation events in your test since
+ *        that's going to change the style attribute of the selected node.
+ * @param {String} name
+ *        The name for the new property
+ * @param {String} value
+ *        The value for the new property
+ * @return {TextProperty} The instance of the TextProperty that was added
+ */
+var addProperty = Task.async(function*(view, ruleIndex, name, value) {
+  info("Adding new property " + name + ":" + value + " to rule " + ruleIndex);
+
+  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
+
+  info("Adding name " + name);
+  editor.input.value = name;
+  let onNameAdded = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  yield onNameAdded;
+
+  // Focus has moved to the value inplace-editor automatically.
+  editor = inplaceEditor(view.styleDocument.activeElement);
+  let textProps = ruleEditor.rule.textProps;
+  let textProp = textProps[textProps.length - 1];
+
+  info("Adding value " + value);
+  editor.input.value = value;
+  let onValueAdded = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  yield onValueAdded;
+
+  // Blur the new property field that was focused by default.
+  view.styleDocument.activeElement.blur();
+  return textProp;
+});
+
+/**
+ * Simulate changing the value of a property in a rule in the rule-view.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {TextProperty} textProp
+ *        The instance of the TextProperty to be changed
+ * @param {String} value
+ *        The new value to be used
+ */
+var setProperty = Task.async(function*(view, textProp, value) {
+  let editor = yield focusEditableField(view, textProp.editor.valueSpan);
+
+  let onRuleViewRefreshed = view.once("ruleview-changed");
+  editor.input.value = value;
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  yield onRuleViewRefreshed;
+
+  view.styleDocument.activeElement.blur();
+});
+
+/**
+ * Simulate removing a property from an existing rule in the rule-view.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {TextProperty} textProp
+ *        The instance of the TextProperty to be removed
+ */
+var removeProperty = Task.async(function*(view, textProp) {
+  yield focusEditableField(view, textProp.editor.nameSpan);
+
+  let onModifications = view.once("ruleview-changed");
+  info("Deleting the property name now");
+  EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  yield onModifications;
+
+  // Blur the new property field that was focused by default.
+  view.styleDocument.activeElement.blur();
+});
+
+/**
+ * Simulate clicking the enable/disable checkbox next to a property in a rule.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {TextProperty} textProp
+ *        The instance of the TextProperty to be enabled/disabled
+ */
+var togglePropStatus = Task.async(function*(view, textProp) {
+  let onRuleViewRefreshed = view.once("ruleview-changed");
+  textProp.editor.enable.click();
+  yield onRuleViewRefreshed;
+});
 
 /**
  * Click on a rule-view's close brace to focus a new property name editor
