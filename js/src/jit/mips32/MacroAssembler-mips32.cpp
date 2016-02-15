@@ -1485,11 +1485,11 @@ MacroAssemblerMIPSCompat::branchTestValue(Condition cond, const Address& valaddr
 
     // Load tag.
     ma_lw(ScratchRegister, Address(valaddr.base, valaddr.offset + TAG_OFFSET));
-    asMasm().branchPtr(cond, ScratchRegister, value.typeReg(), label);
+    branchPtr(cond, ScratchRegister, value.typeReg(), label);
 
     // Load payload
     ma_lw(ScratchRegister, Address(valaddr.base, valaddr.offset + PAYLOAD_OFFSET));
-    asMasm().branchPtr(cond, ScratchRegister, value.payloadReg(), label);
+    branchPtr(cond, ScratchRegister, value.payloadReg(), label);
 }
 
 // unboxing code
@@ -2382,8 +2382,8 @@ MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
     asMasm().addPtr(ptr, SecondScratchReg);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 void

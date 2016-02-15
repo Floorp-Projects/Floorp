@@ -2963,18 +2963,18 @@ MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address& valaddr,
     // Check payload before tag, since payload is more likely to differ.
     if (cond == NotEqual) {
         ma_ldr(ToPayload(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), label);
+        branchPtr(NotEqual, scratch, value.payloadReg(), label);
 
         ma_ldr(ToType(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.typeReg(), label);
+        branchPtr(NotEqual, scratch, value.typeReg(), label);
     } else {
         Label fallthrough;
 
         ma_ldr(ToPayload(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), &fallthrough);
+        branchPtr(NotEqual, scratch, value.payloadReg(), &fallthrough);
 
         ma_ldr(ToType(valaddr), scratch);
-        asMasm().branchPtr(Equal, scratch, value.typeReg(), label);
+        branchPtr(Equal, scratch, value.typeReg(), label);
 
         bind(&fallthrough);
     }
