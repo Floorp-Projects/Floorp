@@ -56,7 +56,7 @@ module.exports = function(context) {
         }
         return false;
       });
-      if (!someCpowFound && helpers.getIsGlobalScope(context.getAncestors())) {
+      if (!someCpowFound && helpers.getIsGlobalScope(context)) {
         if (/^content\./.test(expression)) {
           showError(node, expression);
           return;
