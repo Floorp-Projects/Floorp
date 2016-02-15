@@ -526,6 +526,12 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
     // getCurrentPosition requests serviced by the cache
     // will now be owned by the RequestSendLocationEvent
     Update(lastPosition.position);
+
+    // After Update is called, getCurrentPosition finishes it's job.
+    if (!mIsWatchPositionRequest) {
+      return NS_OK;
+    }
+
   } else {
     // if it is not a watch request and timeout is 0,
     // invoke the errorCallback (if present) with TIMEOUT code
@@ -534,14 +540,15 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
       return NS_OK;
     }
 
-    // Kick off the geo device, if it isn't already running
-    nsresult rv = gs->StartDevice(GetPrincipal());
+  }
 
-    if (NS_FAILED(rv)) {
-      // Location provider error
-      NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
-      return NS_OK;
-    }
+  // Kick off the geo device, if it isn't already running
+  nsresult rv = gs->StartDevice(GetPrincipal());
+
+  if (NS_FAILED(rv)) {
+    // Location provider error
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    return NS_OK;
   }
 
   if (mLocator->ContainsRequest(this)) {
