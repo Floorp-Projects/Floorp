@@ -38,10 +38,9 @@ var ActionBarHandler = {
     if (!this._selectionID && e.collapsed) {
       switch (e.reason) {
         case 'longpressonemptycontent':
-        // case 'taponcaret':
-          // Show ActionBar when long pressing on an empty input.
-          // XXX: If we ever want to show ActionBar when single tapping on the
-          // caret, uncomment the above case 'taponcaret'.
+        case 'taponcaret':
+          // Show ActionBar when long pressing on an empty input or single
+          // tapping on the caret.
           this._init();
           break;
 
