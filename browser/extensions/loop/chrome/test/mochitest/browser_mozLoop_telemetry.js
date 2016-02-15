@@ -132,3 +132,106 @@ add_task(function* test_mozLoop_telemetryAdd_roomSessionWithChat() {
     Assert.strictEqual(snapshot.counts[0], i);
   }
 });
+
+// Skip until bug 1208416 has landed.
+/*
+add_task(function* test_mozLoop_telemetryAdd_infobarActionButtons() {
+  let histogramId = "LOOP_INFOBAR_ACTION_BUTTONS";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gConstants.SHARING_SCREEN;
+
+  histogram.clear();
+
+  for (let value of [ACTION_TYPES.PAUSED,
+                     ACTION_TYPES.PAUSED,
+                     ACTION_TYPES.RESUMED]) {
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
+  }
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.RESUMED], 1,
+    "SHARING_SCREEN.RESUMED");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.PAUSED], 2,
+    "SHARING_SCREEN.PAUSED");
+});
+
+add_task(function* test_mozLoop_telemetryAdd_loopMauType_buckets() {
+  let histogramId = "LOOP_MAU";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gConstants.LOOP_MAU_TYPE;
+
+  histogram.clear();
+
+  for (let value of [ACTION_TYPES.OPEN_PANEL,
+                     ACTION_TYPES.OPEN_CONVERSATION,
+                     ACTION_TYPES.ROOM_OPEN,
+                     ACTION_TYPES.ROOM_SHARE,
+                     ACTION_TYPES.ROOM_DELETE]) {
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
+  }
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_PANEL], 1,
+    "LOOP_MAU_TYPE.OPEN_PANEL");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_CONVERSATION], 1,
+    "LOOP_MAU_TYPE.OPEN_CONVERSATION");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.ROOM_OPEN], 1,
+    "LOOP_MAU_TYPE.ROOM_OPEN");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.ROOM_SHARE], 1,
+    "LOOP_MAU_TYPE.ROOM_SHARE");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.ROOM_DELETE], 1,
+    "LOOP_MAU_TYPE.ROOM_DELETE");
+});
+*/
+/**
+ * Tests that only one event is sent every 30 days
+ */
+// Skip until bug 1208416 has landed.
+/*
+add_task(function* test_mozLoop_telemetryAdd_loopMau_more_than_30_days() {
+  let histogramId = "LOOP_MAU";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gConstants.LOOP_MAU_TYPE;
+
+  histogram.clear();
+  gHandlers.TelemetryAddValue({ data: [histogramId, ACTION_TYPES.OPEN_PANEL] }, () => {});
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_PANEL], 1,
+    "LOOP_MAU_TYPE.OPEN_PANEL");
+
+  // Let's be sure that the last event was sent a month ago
+  let timestamp = (Math.floor(Date.now() / 1000)) - 2593000;
+  Services.prefs.setIntPref("loop.mau.openPanel", timestamp);
+
+  gHandlers.TelemetryAddValue({ data: [histogramId, ACTION_TYPES.OPEN_PANEL] }, () => {});
+  snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_PANEL], 2,
+    "LOOP_MAU_TYPE.OPEN_PANEL");
+
+  Services.prefs.clearUserPref("loop.mau.openPanel");
+});
+
+add_task.skip(function* test_mozLoop_telemetryAdd_loopMau_less_than_30_days() {
+  let histogramId = "LOOP_MAU";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gConstants.LOOP_MAU_TYPE;
+
+  histogram.clear();
+  gHandlers.TelemetryAddValue({ data: [histogramId, ACTION_TYPES.OPEN_PANEL] }, () => {});
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_PANEL], 1,
+    "LOOP_MAU_TYPE.OPEN_PANEL");
+
+  let timestamp = (Math.floor(Date.now() / 1000)) - 1000;
+  Services.prefs.setIntPref("loop.mau.openPanel", timestamp);
+
+  gHandlers.TelemetryAddValue({ data: [histogramId, ACTION_TYPES.OPEN_PANEL] }, () => {});
+  snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.OPEN_PANEL], 1,
+    "LOOP_MAU_TYPE.OPEN_PANEL");
+
+  Services.prefs.clearUserPref("loop.mau.openPanel");
+});
+*/
