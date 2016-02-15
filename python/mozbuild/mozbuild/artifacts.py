@@ -689,7 +689,7 @@ class Artifacts(object):
             return 'macosx64'
         raise Exception('Cannot determine default job for |mach artifact|!')
 
-    def _find_pushheads(self, parent):
+    def _find_pushheads(self):
         # Return an ordered dict associating revisions that are pushheads with
         # trees they are known to be in (starting with the first tree they're
         # known to be in).
@@ -698,8 +698,8 @@ class Artifacts(object):
             output = subprocess.check_output([
                 self._hg, 'log',
                 '--template', '{node},{join(trees, ",")}\n',
-                '-r', 'last(pushhead({tree}) and ::{parent}, {num})'.format(
-                    tree=self._tree or '', parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)
+                '-r', 'last(pushhead({tree}) and ::., {num})'.format(
+                    tree=self._tree or '', num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)
             ])
         except subprocess.CalledProcessError:
             # We probably don't have the mozext extension installed.
@@ -733,6 +733,11 @@ class Artifacts(object):
         known_trees = set(tree_cache.artifact_trees(pushhead, trees))
         if not known_trees:
             return None
+        if not trees:
+            # Accept artifacts from any tree where they are available.
+            trees = list(known_trees)
+            trees.sort()
+
         # If we ever find a rev that's a pushhead on multiple trees, we want
         # the most recent one.
         for tree in reversed(trees):
@@ -801,18 +806,14 @@ class Artifacts(object):
             filename = artifact_cache.fetch(url)
         return self.install_from_file(filename, distdir)
 
-    def install_from_hg(self, revset, distdir):
-        if not revset:
-            revset = '.'
-        rev_pushheads = self._find_pushheads(revset)
+    def _install_from_pushheads(self, rev_pushheads, distdir):
         urls = None
         # with blocks handle handle persistence.
         with self._task_cache as task_cache, self._tree_cache as tree_cache:
-            while rev_pushheads:
-                rev, trees = rev_pushheads.popitem(last=False)
+            for rev, trees in rev_pushheads.items():
                 self.log(logging.DEBUG, 'artifact',
-                    {'rev': rev},
-                    'Trying to find artifacts for pushhead {rev}.')
+                         {'rev': rev},
+                         'Trying to find artifacts for pushhead {rev}.')
                 urls = self.find_pushhead_artifacts(task_cache, tree_cache,
                                                     self._job, rev, trees)
                 if urls:
@@ -821,9 +822,26 @@ class Artifacts(object):
                             return 1
                     return 0
         self.log(logging.ERROR, 'artifact',
-                 {'revset': revset},
-                 'No built artifacts for {revset} found.')
+                 {'count': len(rev_pushheads)},
+                 'Tried {count} pushheads, no built artifacts found.')
         return 1
+
+    def install_from_recent(self, distdir):
+        rev_pushheads = self._find_pushheads()
+        return self._install_from_pushheads(rev_pushheads, distdir)
+
+    def install_from_revset(self, revset, distdir):
+        revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
+                                            '-r', revset]).strip()
+        if len(revision.split('\n')) != 1:
+            raise ValueError('hg revision specification must resolve to exactly one commit')
+        rev_pushheads = {revision: None}
+        self.log(logging.INFO, 'artifact',
+                 {'revset': revset,
+                  'revision': revision},
+                 'Will only accept artifacts from a pushhead at {revision} '
+                 '(matched revset "{revset}").')
+        return self._install_from_pushheads(rev_pushheads, distdir)
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
@@ -833,7 +851,14 @@ class Artifacts(object):
         elif source and urlparse.urlparse(source).scheme:
             return self.install_from_url(source, distdir)
         else:
-            return self.install_from_hg(source, distdir)
+            if source is None and 'MOZ_ARTIFACT_REVISION' in os.environ:
+                source = os.environ['MOZ_ARTIFACT_REVISION']
+
+            if source:
+                return self.install_from_revset(source, distdir)
+
+            return self.install_from_recent(distdir)
+
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',
