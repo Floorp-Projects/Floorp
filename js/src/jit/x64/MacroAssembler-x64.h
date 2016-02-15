@@ -42,7 +42,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void bindOffsets(const MacroAssemblerX86Shared::UsesVector&);
 
   public:
-    using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
@@ -528,29 +527,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
-        if (X86Encoding::IsAddressImmediate(lhs.addr)) {
-            branch32(cond, Operand(lhs), rhs, label);
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            mov(ImmPtr(lhs.addr), scratch);
-            branch32(cond, Address(scratch, 0), rhs, label);
-        }
-    }
-    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        mov(lhs, scratch);
-        branch32(cond, Address(scratch, 0), rhs, label);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
-        if (X86Encoding::IsAddressImmediate(lhs.addr)) {
-            branch32(cond, Operand(lhs), rhs, label);
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            mov(ImmPtr(lhs.addr), scratch);
-            branch32(cond, Address(scratch, 0), rhs, label);
-        }
-    }
     void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             test32(Operand(address), imm);

@@ -1357,66 +1357,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         addPendingJump(loc, ImmPtr(target->raw()), Relocation::JITCODE);
     }
 
-    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
-        // since rhs is an operand, do the compare backwards
-        Cmp(ARMRegister(rhs, 32), lhs);
-        B(label, Assembler::InvertCmpCondition(cond));
-    }
-    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
-        ARMRegister l = lhs.reg();
-        Cmp(l, Operand(rhs.value));
-        B(label, cond);
-    }
-    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
-        cmp32(lhs, rhs);
-        B(label, cond);
-    }
-    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        cmp32(lhs, imm);
-        B(label, cond);
-    }
-    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != lhs.base);
-        MOZ_ASSERT(scratch != rhs);
-        load32(lhs, scratch);
-        branch32(cond, scratch, rhs, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != lhs.base);
-        load32(lhs, scratch);
-        branch32(cond, scratch, imm, label);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        movePtr(ImmPtr(lhs.addr), scratch);
-        branch32(cond, Address(scratch, 0), rhs, label);
-    }
-    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        movePtr(ImmPtr(lhs.addr), scratch);
-        branch32(cond, Address(scratch, 0), rhs, label);
-    }
-    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        movePtr(lhs, scratch);
-        branch32(cond, Address(scratch, 0), rhs, label);
-    }
-    void branch32(Condition cond, BaseIndex lhs, Imm32 rhs, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch32 = temps.AcquireW();
-        MOZ_ASSERT(scratch32.asUnsized() != lhs.base);
-        MOZ_ASSERT(scratch32.asUnsized() != lhs.index);
-        doBaseIndex(scratch32, lhs, vixl::LDR_w);
-        branch32(cond, scratch32.asUnsized(), rhs, label);
-    }
-
     template <class L>
     void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
