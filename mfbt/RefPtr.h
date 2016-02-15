@@ -19,6 +19,24 @@ class nsCOMPtr_helper;
 
 namespace mozilla {
 template<class T> class OwningNonNull;
+
+// Traditionally, RefPtr supports automatic refcounting of any pointer type
+// with AddRef() and Release() methods that follow the traditional semantics.
+//
+// This traits class can be specialized to operate on other pointer types. For
+// example, we specialize this trait for opaque FFI types that represent
+// refcounted objects in Rust.
+template<class U>
+struct RefPtrTraits
+{
+  static void AddRef(U* aPtr) {
+    aPtr->AddRef();
+  }
+  static void Release(U* aPtr) {
+    aPtr->Release();
+  }
+};
+
 } // namespace mozilla
 
 template <class T>
@@ -336,21 +354,6 @@ public:
     return reinterpret_cast<T**>(&mRawPtr);
   }
 private:
-  // Because some classes make their AddRef/Release implementations private
-  // and then friend RefPtr to make them visible, we redirect AddRefTraits's
-  // calls to static helper functions in RefPtr so we don't have to figure
-  // out how to make AddRefTraits visible to *those* classes.
-  static MOZ_ALWAYS_INLINE void
-  AddRefTraitsAddRefHelper(typename mozilla::RemoveConst<T>::Type* aPtr)
-  {
-    aPtr->AddRef();
-  }
-  static MOZ_ALWAYS_INLINE void
-  AddRefTraitsReleaseHelper(typename mozilla::RemoveConst<T>::Type* aPtr)
-  {
-    aPtr->Release();
-  }
-
   // This helper class makes |RefPtr<const T>| possible by casting away
   // the constness from the pointer when calling AddRef() and Release().
   //
@@ -365,20 +368,20 @@ private:
   struct ConstRemovingRefPtrTraits
   {
     static void AddRef(U* aPtr) {
-      RefPtr<T>::AddRefTraitsAddRefHelper(aPtr);
+      mozilla::RefPtrTraits<U>::AddRef(aPtr);
     }
     static void Release(U* aPtr) {
-      RefPtr<T>::AddRefTraitsReleaseHelper(aPtr);
+      mozilla::RefPtrTraits<U>::Release(aPtr);
     }
   };
   template<class U>
   struct ConstRemovingRefPtrTraits<const U>
   {
     static void AddRef(const U* aPtr) {
-      RefPtr<T>::AddRefTraitsAddRefHelper(const_cast<U*>(aPtr));
+      mozilla::RefPtrTraits<typename mozilla::RemoveConst<U>::Type>::AddRef(const_cast<U*>(aPtr));
     }
     static void Release(const U* aPtr) {
-      RefPtr<T>::AddRefTraitsReleaseHelper(const_cast<U*>(aPtr));
+      mozilla::RefPtrTraits<typename mozilla::RemoveConst<U>::Type>::Release(const_cast<U*>(aPtr));
     }
   };
 };
