@@ -935,6 +935,7 @@ public:
   PaintedLayerData* FindPaintedLayerFor(AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                         const nsIntRect& aVisibleRect,
                                         bool aForceOwnLayer,
+                                        bool aAvoidCreatingNewLayer,
                                         NewPaintedLayerCallbackType aNewPaintedLayerCallback);
 
   /**
@@ -986,6 +987,12 @@ protected:
    * ancestor geometry roots. Return the node for aAnimatedGeometryRoot.
    */
   PaintedLayerDataNode* EnsureNodeFor(AnimatedGeometryRoot* aAnimatedGeometryRoot);
+
+  /**
+   * Find the node for the nearest ancestor geometry root of
+   * aAnimatedGeometryRoot which already exists in the tree.
+   */
+  PaintedLayerDataNode* FindNodeForNearestAncestor(AnimatedGeometryRoot* aAnimatedGeometryRoot);
 
   /**
    * Find an existing node in the tree for an ancestor of aAnimatedGeometryRoot.
@@ -2801,11 +2808,19 @@ PaintedLayerData*
 PaintedLayerDataTree::FindPaintedLayerFor(AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                           const nsIntRect& aVisibleRect,
                                           bool aForceOwnLayer,
+                                          bool aAvoidCreatingNewLayer,
                                           NewPaintedLayerCallbackType aNewPaintedLayerCallback)
 {
   const nsIntRect* bounds = aForceOwnLayer ? nullptr : &aVisibleRect;
   FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, bounds);
-  PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
+  PaintedLayerDataNode* node = nullptr;
+  if (aAvoidCreatingNewLayer) {
+    node = FindNodeForNearestAncestor(aAnimatedGeometryRoot);
+  }
+  if (!node) {
+    node = EnsureNodeFor(aAnimatedGeometryRoot);
+  }
+
   if (aForceOwnLayer) {
     node->SetAllDrawingAbove();
   }
@@ -2886,6 +2901,21 @@ PaintedLayerDataTree::EnsureNodeFor(AnimatedGeometryRoot* aAnimatedGeometryRoot)
   MOZ_ASSERT(node);
   mNodes.Put(aAnimatedGeometryRoot, node);
   return node;
+}
+
+PaintedLayerDataNode*
+PaintedLayerDataTree::FindNodeForNearestAncestor(AnimatedGeometryRoot* aAnimatedGeometryRoot)
+{
+  if (aAnimatedGeometryRoot) {
+    PaintedLayerDataNode* node = mNodes.Get(aAnimatedGeometryRoot);
+    if (node) {
+      return node;
+    }
+
+    return FindNodeForNearestAncestor(aAnimatedGeometryRoot->mParentAGR);
+  }
+
+  return nullptr;
 }
 
 bool
@@ -4118,9 +4148,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                                          topLeft, nullptr);
     } else {
       bool forceOwnLayer = shouldFixToViewport || IsCaretWithCustomClip(item, itemType);
+      bool avoidCreatingLayer = (maxLayers != -1 && layerCount >= maxLayers);
       PaintedLayerData* paintedLayerData =
         mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemVisibleRect,
-                                                  forceOwnLayer, [&]() {
+                                                  forceOwnLayer, avoidCreatingLayer,
+                                                  [&]() {
+          layerCount++;
           return NewPaintedLayerData(item, itemVisibleRect, animatedGeometryRoot,
                                      animatedGeometryRootForScrollMetadata,
                                      topLeft, shouldFixToViewport);
