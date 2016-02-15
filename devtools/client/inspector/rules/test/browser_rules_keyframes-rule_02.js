@@ -19,7 +19,7 @@ add_task(function*() {
 function* testPacman(inspector, view) {
   info("Test content in the keyframes rule of #pacman");
 
-  let {rules} = yield getKeyframeRules("#pacman", inspector, view);
+  let rules = yield getKeyframeRules("#pacman", inspector, view);
 
   info("Test text properties for Keyframes #pacman");
 
@@ -53,7 +53,7 @@ function* testPacman(inspector, view) {
 function* testBoxy(inspector, view) {
   info("Test content in the keyframes rule of #boxy");
 
-  let {rules} = yield getKeyframeRules("#boxy", inspector, view);
+  let rules = yield getKeyframeRules("#boxy", inspector, view);
 
   info("Test text properties for Keyframes #boxy");
 
@@ -78,8 +78,6 @@ function convertTextPropsToString(textProps) {
 }
 
 function* getKeyframeRules(selector, inspector, view) {
-  let element = getNode(selector);
-
   yield selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
 
@@ -88,5 +86,5 @@ function* getKeyframeRules(selector, inspector, view) {
     keyframeRules: elementStyle.rules.filter(rule => rule.keyframes)
   };
 
-  return {rules, element, elementStyle};
+  return rules;
 }

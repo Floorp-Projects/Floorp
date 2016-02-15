@@ -27,7 +27,7 @@ add_task(function*() {
 
 function* testTopLeft(inspector, view) {
   let selector = "#topleft";
-  let {rules} = yield assertPseudoElementRulesNumbers(selector,
+  let rules = yield assertPseudoElementRulesNumbers(selector,
     inspector, view, {
       elementRulesNb: 4,
       firstLineRulesNb: 2,
@@ -155,7 +155,7 @@ function* testBottomLeft(inspector, view) {
 }
 
 function* testParagraph(inspector, view) {
-  let {rules} = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
+  let rules = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
     elementRulesNb: 3,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
@@ -192,14 +192,13 @@ function convertTextPropsToString(textProps) {
 }
 
 function* testNode(selector, inspector, view) {
-  let element = getNode(selector);
   yield selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
-  return {element: element, elementStyle: elementStyle};
+  return elementStyle;
 }
 
 function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
-  let {element, elementStyle} = yield testNode(selector, inspector, view);
+  let elementStyle = yield testNode(selector, inspector, view);
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
@@ -220,7 +219,7 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
   is(rules.selectionRules.length, ruleNbs.selectionRulesNb,
      selector + " has the correct number of :selection rules");
 
-  return {rules, element, elementStyle};
+  return rules;
 }
 
 function getGutters(view) {
