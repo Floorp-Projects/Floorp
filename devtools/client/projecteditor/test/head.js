@@ -284,6 +284,46 @@ function* getFileData(file) {
   return def.promise;
 }
 
+/**
+ * Rename the resource of the provided container using the context menu.
+ *
+ * @param {ProjectEditor} projecteditor the current project editor instance
+ * @param {Shell} container for the resource to rename
+ * @param {String} newName the name to use for renaming the resource
+ * @return {Promise} a promise that resolves when the resource has been renamed
+ */
+var renameWithContextMenu = Task.async(function* (projecteditor,
+                                                  container, newName) {
+  let popup = projecteditor.contextMenuPopup;
+  let resource = container.resource;
+  info("Going to attempt renaming for: " + resource.path);
+
+  let waitForPopupShow = onPopupShow(popup);
+  openContextMenu(container.label);
+  yield waitForPopupShow;
+
+  let renameCommand = popup.querySelector("[command=cmd-rename]");
+  ok(renameCommand, "Rename command exists in popup");
+  is(renameCommand.getAttribute("hidden"), "", "Rename command is visible");
+  is(renameCommand.getAttribute("disabled"), "", "Rename command is enabled");
+
+  renameCommand.click();
+  popup.hidePopup();
+  let input = container.elt.childNodes[0].childNodes[1];
+  input.value = resource.basename + newName;
+
+  let waitForProjectRefresh = onceProjectRefreshed(projecteditor);
+  EventUtils.synthesizeKey("VK_RETURN", {}, projecteditor.window);
+  yield waitForProjectRefresh;
+
+  try {
+    yield OS.File.stat(resource.path + newName);
+    ok(true, "File is renamed");
+  } catch (e) {
+    ok(false, "Failed to rename file");
+  }
+});
+
 function onceEditorCreated(projecteditor) {
   let def = promise.defer();
   projecteditor.once("onEditorCreated", (editor) => {
@@ -316,6 +356,15 @@ function onceEditorSave(projecteditor) {
   return def.promise;
 }
 
+function onceProjectRefreshed(projecteditor) {
+  return new Promise(resolve => {
+    projecteditor.project.on("refresh-complete", function refreshComplete() {
+      projecteditor.project.off("refresh-complete", refreshComplete);
+      resolve();
+    });
+  });
+}
+
 function onPopupShow(menu) {
   let defer = promise.defer();
   menu.addEventListener("popupshown", function onpopupshown() {
@@ -332,4 +381,12 @@ function onPopupHidden(menu) {
     defer.resolve();
   });
   return defer.promise;
+}
+
+function openContextMenu(node) {
+  EventUtils.synthesizeMouseAtCenter(
+    node,
+    {button: 2, type: "contextmenu"},
+    node.ownerDocument.defaultView
+  );
 }
