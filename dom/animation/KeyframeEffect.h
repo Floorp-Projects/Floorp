@@ -384,6 +384,19 @@ private:
   static const TimeDuration OverflowRegionRefreshInterval();
 };
 
+class KeyframeEffect : public KeyframeEffectReadOnly
+{
+public:
+  KeyframeEffect(nsIDocument* aDocument,
+                 Element* aTarget,
+                 nsCSSPseudoElements::Type aPseudoType,
+                 const TimingParams& aTiming)
+    : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming) { }
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+};
+
 } // namespace dom
 } // namespace mozilla
 

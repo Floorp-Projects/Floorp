@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://w3c.github.io/web-animations/#the-keyframeeffect-interfaces
+ * https://w3c.github.io/web-animations/#the-keyframeeffect-interfaces
  *
  * Copyright © 2015 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -43,4 +43,22 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   // We use object instead of ComputedKeyframe so that we can put the
   // property-value pairs on the object.
   [Throws] sequence<object> getFrames();
+};
+
+
+// Bug 1211783 Implement KeyframeEffect constructor
+// [Constructor (Animatable? target,
+//               object? frames,
+//               optional (unrestricted double or KeyframeEffectOptions) options)]
+interface KeyframeEffect : KeyframeEffectReadOnly {
+  // Bug 1067769 - Allow setting KeyframeEffect.target
+  // inherit attribute Animatable?                 target;
+  // Bug 1216843 - implement animation composition
+  // inherit attribute IterationCompositeOperation iterationComposite;
+  // Bug 1216844 - implement additive animation
+  // inherit attribute CompositeOperation          composite;
+  // Bug 1244590 - implement spacing modes
+  // inherit attribute DOMString                   spacing;
+  // Bug 1244591 - implement setFrames
+  // void setFrames (object? frames);
 };
