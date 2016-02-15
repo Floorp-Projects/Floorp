@@ -865,6 +865,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         load32(address, scratch2);
         branchTest32(cond, scratch2, imm, label);
     }
+    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
+        branchTest32(cond, lhs, rhs, label);
+    }
+    void branchTestPtr(Condition cond, Register lhs, const Imm32 rhs, Label* label) {
+        branchTest32(cond, lhs, rhs, label);
+    }
+    void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
+        branchTest32(cond, lhs, imm, label);
+    }
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_sub(imm, lhs, SetCC);
         as_b(label, cond);

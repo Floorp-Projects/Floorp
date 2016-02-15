@@ -590,6 +590,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpPtr(lhs, rhs);
         j(cond, label);
     }
+    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
+        testPtr(lhs, rhs);
+        j(cond, label);
+    }
+    void branchTestPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
+        testPtr(lhs, imm);
+        j(cond, label);
+    }
+    void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
+        testPtr(Operand(lhs), imm);
+        j(cond, label);
+    }
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         subl(imm, lhs);
         j(cond, label);
