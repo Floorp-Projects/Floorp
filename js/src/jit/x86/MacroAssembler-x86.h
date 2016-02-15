@@ -607,18 +607,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
-        if (cond == Assembler::Zero) {
-            MOZ_ASSERT(lhs.low == rhs.low);
-            MOZ_ASSERT(lhs.high == rhs.high);
-            movl(lhs.low, temp);
-            orl(lhs.high, temp);
-            branchTestPtr(cond, temp, temp, label);
-        } else {
-            MOZ_CRASH("Unsupported condition");
-        }
-    }
-
     void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
     }
