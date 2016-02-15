@@ -652,6 +652,29 @@ MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rh
     branchPtr(cond, lhs, scratch, label);
 }
 
+void
+MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                            Label* label)
+{
+    compareFloat(cond, lhs, rhs);
+    switch (cond) {
+      case DoubleNotEqual: {
+        Label unordered;
+        // not equal *and* ordered
+        branch(Overflow, &unordered);
+        branch(NotEqual, label);
+        bind(&unordered);
+        break;
+      }
+      case DoubleEqualOrUnordered:
+        branch(Overflow, label);
+        branch(Equal, label);
+        break;
+      default:
+        branch(Condition(cond), label);
+    }
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
