@@ -4,7 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    # Each test is in it's own directory so it gets run in a clean profile with
+    # run-by-dir.
+    'browser.ini',
+    'devtools/browser.ini',
+    'preferences/browser.ini',
+    'primaryUI/browser.ini',
+]
 
 TEST_DIRS += [
     'mozscreenshots/extension',
