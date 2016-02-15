@@ -2523,7 +2523,6 @@ private:
       }
 
       // "Invoke [[Clear Registration]]..."
-      registration->Clear();
       swm->RemoveRegistration(registration);
     }
 
@@ -3401,7 +3400,6 @@ ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aR
   aRegistration->StopControllingADocument();
   if (!aRegistration->IsControllingDocuments()) {
     if (aRegistration->mPendingUninstall) {
-      aRegistration->Clear();
       RemoveRegistration(aRegistration);
     } else {
       // If the registration has an active worker that is running
@@ -4302,46 +4300,35 @@ ServiceWorkerManager::MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRe
   MOZ_ASSERT(aRegistration);
   RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
   if (!newest && HasScope(aRegistration->mPrincipal, aRegistration->mScope)) {
-    aRegistration->Clear();
     RemoveRegistration(aRegistration);
   }
 }
 
 void
-ServiceWorkerManager::RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration)
-{
-  MOZ_ASSERT(aRegistration);
-  MOZ_ASSERT(!aRegistration->IsControllingDocuments());
-
-  if (mShuttingDown) {
-    return;
-  }
-
-  // All callers should be either from a job in which case the actor is
-  // available, or from MaybeStopControlling(), in which case, this will only be
-  // called if a valid registration is found. If a valid registration exists,
-  // it means the actor is available since the original map of registrations is
-  // populated by it, and any new registrations wait until the actor is
-  // available before proceeding (See ServiceWorkerRegisterJob::Start).
-  MOZ_ASSERT(mActor);
-
-  PrincipalInfo principalInfo;
-  if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(aRegistration->mPrincipal,
-                                                    &principalInfo)))) {
-    //XXXnsm I can't think of any other reason a stored principal would fail to
-    //convert.
-    NS_WARNING("Unable to unregister serviceworker due to possible OOM");
-    return;
-  }
-
-  mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(aRegistration->mScope));
-}
-
-void
 ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  RemoveRegistrationInternal(aRegistration);
+  // Note, we do not need to call mActor->SendUnregister() here.  There are a few
+  // ways we can get here:
+  // 1) Through a normal unregister which calls SendUnregister() in the unregister
+  //    job Start() method.
+  // 2) Through origin storage being purged.  These result in ForceUnregister()
+  //    starting unregister jobs which in turn call SendUnregister().
+  // 3) Through the failure to install a new service worker.  Since we don't store
+  //    the registration until install succeeds, we do not need to call
+  //    SendUnregister here.
+  // Assert these conditions by testing for pending uninstall (cases 1 and 2) or
+  // null workers (case 3).
+#ifdef DEBUG
+  RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
+  MOZ_ASSERT(aRegistration->mPendingUninstall || !newest);
+#endif
+
   MOZ_ASSERT(HasScope(aRegistration->mPrincipal, aRegistration->mScope));
+
+  // When a registration is removed, we must clear its contents since the DOM
+  // object may be held by content script.
+  aRegistration->Clear();
+
   RemoveScopeAndRegistration(aRegistration);
 }
 
