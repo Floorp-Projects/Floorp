@@ -22,12 +22,15 @@ function test() {
     hud = hudConsole;
     ok(hud, "browser console opened");
 
-    let button = content.document.querySelector("button");
-    ok(button, "button element found");
+    // On e10s, the exception is triggered in child process
+    // and is ignored by test harness
+    if (!Services.appinfo.browserTabsRemoteAutostart) {
+      expectUncaughtException();
+    }
 
     info("generate exception and wait for the message");
-    executeSoon(() => {
-      expectUncaughtException();
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+      let button = content.document.querySelector("button");
       button.click();
     });
 
