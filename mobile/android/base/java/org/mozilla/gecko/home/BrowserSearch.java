@@ -823,6 +823,8 @@ public class BrowserSearch extends HomeFragment
         // Pref observer in gecko will also set prompted = true
         PrefsHelper.setPref("browser.search.suggest.enabled", enabled);
 
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, (enabled ? "suggestions_optin_yes" : "suggestions_optin_no"));
+
         TranslateAnimation slideAnimation = new TranslateAnimation(0, mSuggestionsOptInPrompt.getWidth(), 0, 0);
         slideAnimation.setDuration(ANIMATION_DURATION);
         slideAnimation.setInterpolator(new AccelerateInterpolator());
