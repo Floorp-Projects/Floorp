@@ -1257,6 +1257,13 @@ MacroAssemblerMIPS64Compat::branchDouble(DoubleCondition cond, FloatRegister lhs
 }
 
 void
+MacroAssemblerMIPS64Compat::branchFloat(DoubleCondition cond, FloatRegister lhs,
+                                        FloatRegister rhs, Label* label)
+{
+    ma_bc1s(lhs, rhs, label, cond);
+}
+
+void
 MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const Address& address, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
