@@ -10853,6 +10853,24 @@ nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
   }
 }
 
+already_AddRefed<nsIURI>
+nsIDocument::GetMozDocumentURIIfNotForErrorPages()
+{
+  if (mFailedChannel) {
+    nsCOMPtr<nsIURI> failedURI;
+    if (NS_SUCCEEDED(mFailedChannel->GetURI(getter_AddRefs(failedURI)))) {
+      return failedURI.forget();
+    }
+  }
+
+  nsCOMPtr<nsIURI> uri = GetDocumentURIObject();
+  if (!uri) {
+    return nullptr;
+  }
+
+  return uri.forget();
+}
+
 nsIHTMLCollection*
 nsIDocument::Children()
 {
