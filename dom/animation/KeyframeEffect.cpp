@@ -76,14 +76,24 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   Element* aTarget,
   nsCSSPseudoElements::Type aPseudoType,
   const TimingParams& aTiming)
+  : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
+                           new AnimationEffectTimingReadOnly(aTiming))
+{
+}
+
+KeyframeEffectReadOnly::KeyframeEffectReadOnly(
+  nsIDocument* aDocument,
+  Element* aTarget,
+  nsCSSPseudoElements::Type aPseudoType,
+  AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
+  , mTiming(*aTiming)
   , mPseudoType(aPseudoType)
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
+  MOZ_ASSERT(aTiming);
   MOZ_ASSERT(aTarget, "null animation target is not yet supported");
-
-  mTiming = new AnimationEffectTimingReadOnly(aTiming);
 }
 
 JSObject*
@@ -594,6 +604,72 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
 KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
 }
+
+template <class KeyframeEffectType>
+/* static */ already_AddRefed<KeyframeEffectType>
+KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                                                const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                                                JS::Handle<JSObject*> aFrames,
+                                                const TimingParams& aTiming,
+                                                ErrorResult& aRv)
+{
+  if (aTarget.IsNull()) {
+    // We don't support null targets yet.
+    aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
+    return nullptr;
+  }
+
+  const ElementOrCSSPseudoElement& target = aTarget.Value();
+  MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
+             "Uninitialized target");
+
+  RefPtr<Element> targetElement;
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  if (target.IsElement()) {
+    targetElement = &target.GetAsElement();
+  } else {
+    targetElement = target.GetAsCSSPseudoElement().ParentElement();
+    pseudoType = target.GetAsCSSPseudoElement().GetType();
+  }
+
+  if (!targetElement->GetComposedDoc()) {
+    aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
+    return nullptr;
+  }
+
+  InfallibleTArray<AnimationProperty> animationProperties;
+  BuildAnimationPropertyList(aGlobal.Context(), targetElement, pseudoType,
+                             aFrames, animationProperties, aRv);
+
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<KeyframeEffectType> effect =
+    new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
+                           pseudoType, aTiming);
+  effect->mProperties = Move(animationProperties);
+  return effect.forget();
+}
+
+// Explicit instantiations to avoid linker errors.
+
+template
+already_AddRefed<KeyframeEffectReadOnly>
+KeyframeEffectReadOnly::ConstructKeyframeEffect<>(const GlobalObject& aGlobal,
+                                                  const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                                                  JS::Handle<JSObject*> aFrames,
+                                                  const TimingParams& aTiming,
+                                                  ErrorResult& aRv);
+
+template
+already_AddRefed<KeyframeEffect>
+KeyframeEffectReadOnly::ConstructKeyframeEffect<>(const GlobalObject& aGlobal,
+                                                  const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                                                  JS::Handle<JSObject*> aFrames,
+                                                  const TimingParams& aTiming,
+                                                  ErrorResult& aRv);
 
 void
 KeyframeEffectReadOnly::ResetIsRunningOnCompositor()
@@ -1635,55 +1711,6 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
   }
 }
 
-/* static */ already_AddRefed<KeyframeEffectReadOnly>
-KeyframeEffectReadOnly::Constructor(
-    const GlobalObject& aGlobal,
-    const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
-    const TimingParams& aTiming,
-    ErrorResult& aRv)
-{
-  if (aTarget.IsNull()) {
-    // We don't support null targets yet.
-    aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
-    return nullptr;
-  }
-
-  const ElementOrCSSPseudoElement& target = aTarget.Value();
-  MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
-             "Uninitialized target");
-
-  RefPtr<Element> targetElement;
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
-  if (target.IsElement()) {
-    targetElement = &target.GetAsElement();
-  } else {
-    targetElement = target.GetAsCSSPseudoElement().ParentElement();
-    pseudoType = target.GetAsCSSPseudoElement().GetType();
-  }
-
-  if (!targetElement->GetCurrentDoc()) {
-    // Bug 1245748: We don't support targets that are not in a document yet.
-    aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
-    return nullptr;
-  }
-
-  InfallibleTArray<AnimationProperty> animationProperties;
-  BuildAnimationPropertyList(aGlobal.Context(), targetElement, pseudoType,
-                             aFrames, animationProperties, aRv);
-
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  RefPtr<KeyframeEffectReadOnly> effect =
-    new KeyframeEffectReadOnly(targetElement->OwnerDoc(), targetElement,
-                               pseudoType, aTiming);
-  effect->mProperties = Move(animationProperties);
-  return effect.forget();
-}
-
 void
 KeyframeEffectReadOnly::GetTarget(
     Nullable<OwningElementOrCSSPseudoElement>& aRv) const
@@ -2089,6 +2116,21 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
   }
 
   return false;
+}
+
+//---------------------------------------------------------------------
+//
+// KeyframeEffect
+//
+//---------------------------------------------------------------------
+
+KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
+                               Element* aTarget,
+                               nsCSSPseudoElements::Type aPseudoType,
+                               const TimingParams& aTiming)
+  : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
+                           new AnimationEffectTiming(aTiming))
+{
 }
 
 JSObject*
