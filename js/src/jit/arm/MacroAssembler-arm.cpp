@@ -2492,30 +2492,6 @@ MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 }
 
 void
-MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, FloatRegister lhs,
-                                      FloatRegister rhs, Label* label)
-{
-    compareDouble(lhs, rhs);
-
-    if (cond == DoubleNotEqual) {
-        // Force the unordered cases not to jump.
-        Label unordered;
-        ma_b(&unordered, VFP_Unordered);
-        ma_b(label, VFP_NotEqualOrUnordered);
-        bind(&unordered);
-        return;
-    }
-
-    if (cond == DoubleEqualOrUnordered) {
-        ma_b(label, VFP_Unordered);
-        ma_b(label, VFP_Equal);
-        return;
-    }
-
-    ma_b(label, ConditionFromDoubleCondition(cond));
-}
-
-void
 MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.

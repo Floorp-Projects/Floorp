@@ -1239,13 +1239,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchDouble(DoubleCondition cond, FloatRegister lhs,
-                                         FloatRegister rhs, Label* label)
-{
-    ma_bc1d(lhs, rhs, label, cond);
-}
-
-void
 MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const Address& address, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
