@@ -107,7 +107,7 @@ UpdateStreamSuspended(MediaStream* aStream, bool aBlocking)
  */
 class DecodedStreamData {
 public:
-  DecodedStreamData(SourceMediaStream* aStream,
+  DecodedStreamData(OutputStreamManager* aOutputStreamManager,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
   int64_t GetPosition() const;
@@ -136,14 +136,16 @@ public:
 
   // The decoder is responsible for calling Destroy() on this stream.
   const RefPtr<SourceMediaStream> mStream;
-  RefPtr<DecodedStreamGraphListener> mListener;
+  const RefPtr<DecodedStreamGraphListener> mListener;
   bool mPlaying;
   // True if we need to send a compensation video frame to ensure the
   // StreamTime going forward.
   bool mEOSVideoCompensation;
+
+  const RefPtr<OutputStreamManager> mOutputStreamManager;
 };
 
-DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream,
+DecodedStreamData::DecodedStreamData(OutputStreamManager* aOutputStreamManager,
                                      MozPromiseHolder<GenericPromise>&& aPromise)
   : mAudioFramesWritten(0)
   , mNextVideoTime(-1)
@@ -152,20 +154,22 @@ DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream,
   , mHaveSentFinish(false)
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
-  , mStream(aStream)
-  , mPlaying(true)
-  , mEOSVideoCompensation(false)
-{
+  , mStream(aOutputStreamManager->Graph()->CreateSourceStream(nullptr))
   // DecodedStreamGraphListener will resolve this promise.
-  mListener = new DecodedStreamGraphListener(mStream, Move(aPromise));
-  mStream->AddListener(mListener);
-
+  , mListener(new DecodedStreamGraphListener(mStream, Move(aPromise)))
   // mPlaying is initially true because MDSM won't start playback until playing
   // becomes true. This is consistent with the settings of AudioSink.
+  , mPlaying(true)
+  , mEOSVideoCompensation(false)
+  , mOutputStreamManager(aOutputStreamManager)
+{
+  mStream->AddListener(mListener);
+  mOutputStreamManager->Connect(mStream);
 }
 
 DecodedStreamData::~DecodedStreamData()
 {
+  mOutputStreamManager->Disconnect();
   mListener->Forget();
   mStream->Destroy();
 }
@@ -311,9 +315,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   }
 
   DecodedStreamData* data = aData.release();
-  RefPtr<DecodedStream> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    self->mOutputStreamManager->Disconnect();
     delete data;
   });
   AbstractThread::MainThread()->Dispatch(r.forget());
@@ -332,9 +334,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
     return;
   }
 
-  auto source = mOutputStreamManager->Graph()->CreateSourceStream(nullptr);
-  auto data = new DecodedStreamData(source, Move(aPromise));
-  mOutputStreamManager->Connect(data->mStream);
+  auto data = new DecodedStreamData(mOutputStreamManager, Move(aPromise));
 
   class R : public nsRunnable {
     typedef void(DecodedStream::*Method)(UniquePtr<DecodedStreamData>);
@@ -354,9 +354,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
       // properly on the main thread.
       if (mData) {
         DecodedStreamData* data = mData.release();
-        RefPtr<DecodedStream> self = mThis.forget();
         nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-          self->mOutputStreamManager->Disconnect();
           delete data;
         });
         // We are in tail dispatching phase. Don't call
