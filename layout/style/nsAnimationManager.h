@@ -284,18 +284,15 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsAnimationManager)
 
   /**
-   * Return the style rule that RulesMatching should add for
-   * aStyleContext.  This might be different from what RulesMatching
-   * actually added during aStyleContext's construction because the
-   * element's animation-name may have changed.  (However, this does
-   * return null during the non-animation restyling phase, as
-   * RulesMatching does.)
+   * Update the set of animations on |aElement| based on |aStyleContext|.
+   * If necessary, this will notify the corresponding EffectCompositor so
+   * that it can update its animation rule.
    *
    * aStyleContext may be a style context for aElement or for its
    * :before or :after pseudo-element.
    */
-  nsIStyleRule* CheckAnimationRule(nsStyleContext* aStyleContext,
-                                   mozilla::dom::Element* aElement);
+  void UpdateAnimations(nsStyleContext* aStyleContext,
+                        mozilla::dom::Element* aElement);
 
   /**
    * Add a pending event.
