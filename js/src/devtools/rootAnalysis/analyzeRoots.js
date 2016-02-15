@@ -721,6 +721,11 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var data = xdb.read_entry(name);
     xdb.free_string(name);
     var json = data.readString();
-    process(functionName, json);
+    try {
+        process(functionName, json);
+    } catch (e) {
+        printErr("Exception caught while handling " + functionName);
+        throw(e);
+    }
     xdb.free_string(data);
 }

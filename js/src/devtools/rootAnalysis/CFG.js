@@ -69,6 +69,8 @@ function allRAIIGuardedCallPoints(body, isConstructor)
         assert(variable.Kind == "Func");
         if (!isConstructor(variable.Name[0]))
             continue;
+        if (!("PEdgeCallInstance" in edge))
+            continue;
         if (edge.PEdgeCallInstance.Exp.Kind != "Var")
             continue;
 
