@@ -25,6 +25,7 @@ WEBIDL_FILES = [
     'Animatable.webidl',
     'Animation.webidl',
     'AnimationEffectReadOnly.webidl',
+    'AnimationEffectTiming.webidl',
     'AnimationEffectTimingReadOnly.webidl',
     'AnimationEvent.webidl',
     'AnimationTimeline.webidl',
