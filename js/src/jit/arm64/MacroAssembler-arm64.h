@@ -1057,9 +1057,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // StackPointer testing functions.
     template <typename T>
-    void branchTestStackPtr(Condition cond, T t, Label* label) {
-        branchTestPtr(cond, getStackPointer(), t, label);
-    }
+    inline void branchTestStackPtr(Condition cond, T t, Label* label);
     template <typename T>
     void branchStackPtr(Condition cond, T rhs, Label* label);
     template <typename T>
@@ -1433,22 +1431,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             cmpPtr(scratch, ptr);
         }
         return jumpWithPatch(label, cond);
-    }
-
-    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
-        Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
-        B(label, cond);
-    }
-    void branchTestPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        Tst(ARMRegister(lhs, 64), Operand(imm.value));
-        B(label, cond);
-    }
-    void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != lhs.base);
-        loadPtr(lhs, scratch);
-        branchTestPtr(cond, scratch, imm, label);
     }
 
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {

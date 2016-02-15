@@ -841,6 +841,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
 
+    inline void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+
     inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
                              Label* label) PER_ARCH;
 
@@ -989,15 +993,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template <typename T>
-    void storeObjectOrNull(Register src, const T& dest) {
-        Label notNull, done;
-        branchTestPtr(Assembler::NonZero, src, src, &notNull);
-        storeValue(NullValue(), dest);
-        jump(&done);
-        bind(&notNull);
-        storeValue(JSVAL_TYPE_OBJECT, src, dest);
-        bind(&done);
-    }
+    inline void storeObjectOrNull(Register src, const T& dest);
 
     template <typename T>
     void storeConstantOrRegister(ConstantOrRegister src, const T& dest) {
@@ -1363,9 +1359,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // On ARM64, sp can function as the zero register depending on context.
     // Code shared across platforms must use these functions to be valid.
     template <typename T>
-    void branchTestStackPtr(Condition cond, T t, Label* label) {
-        branchTestPtr(cond, getStackPointer(), t, label);
-    }
+    inline void branchTestStackPtr(Condition cond, T t, Label* label);
     template <typename T>
     inline void branchStackPtr(Condition cond, T rhs, Label* label);
     template <typename T>
@@ -1697,32 +1691,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void alignJitStackBasedOnNArgs(Register nargs);
     void alignJitStackBasedOnNArgs(uint32_t nargs);
 
-    void assertStackAlignment(uint32_t alignment, int32_t offset = 0) {
-#ifdef DEBUG
-        Label ok, bad;
-        MOZ_ASSERT(IsPowerOfTwo(alignment));
-
-        // Wrap around the offset to be a non-negative number.
-        offset %= alignment;
-        if (offset < 0)
-            offset += alignment;
-
-        // Test if each bit from offset is set.
-        uint32_t off = offset;
-        while (off) {
-            uint32_t lowestBit = 1 << mozilla::CountTrailingZeroes32(off);
-            branchTestStackPtr(Assembler::Zero, Imm32(lowestBit), &bad);
-            off ^= lowestBit;
-        }
-
-        // Check that all remaining bits are zero.
-        branchTestStackPtr(Assembler::Zero, Imm32((alignment - 1) ^ offset), &ok);
-
-        bind(&bad);
-        breakpoint();
-        bind(&ok);
-#endif
-    }
+    inline void assertStackAlignment(uint32_t alignment, int32_t offset = 0);
 };
 
 static inline Assembler::DoubleCondition

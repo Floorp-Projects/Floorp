@@ -345,6 +345,32 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, SecondScratchReg, rhs, label);
 }
 
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    if (lhs == rhs) {
+        ma_b(lhs, rhs, label, cond);
+    } else {
+        as_and(ScratchRegister, lhs, rhs);
+        ma_b(ScratchRegister, ScratchRegister, label, cond);
+    }
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    ma_li(ScratchRegister, rhs);
+    branchTestPtr(cond, lhs, ScratchRegister, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchTestPtr(cond, SecondScratchReg, rhs, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
