@@ -41,7 +41,7 @@ function* checkFxA401() {
 }
 
 add_task(function* setup() {
-  Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 1);
+  Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 2);
   MozLoopServiceInternal.mocks.pushHandler = mockPushHandler;
   // Normally the same pushUrl would be registered but we change it in the test
   // to be able to check for success on the second registration.

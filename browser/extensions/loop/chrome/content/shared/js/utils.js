@@ -6,7 +6,19 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-var inChrome = typeof Components != "undefined" && "utils" in Components;
+var inChrome = typeof Components != "undefined" &&
+  "utils" in Components;
+
+// The slideshow is special, and currently loads with chrome privs, but
+// needs to use this module like the rest of the content does.  Once we make
+// it load remotely, this can go away.
+if (inChrome) {
+  if (typeof window != "undefined" &&
+    window.location.href === "chrome://loop/content/panels/slideshow.html") {
+
+    inChrome = false;
+  }
+}
 
 (function() {
   "use strict";
@@ -189,6 +201,13 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
     if (/BlackBerry/i.test(platform)) {
       return "blackberry";
+    }
+
+    // Checks if the platform is Android. Due to the difficulties of detecting an
+    // android device, we need to rely on window.navigator.userAgent instead of
+    // using window.navigator.platform.
+    if (rootNavigator.userAgent.toLowerCase().indexOf("android") > -1) {
+      return "android";
     }
 
     return null;

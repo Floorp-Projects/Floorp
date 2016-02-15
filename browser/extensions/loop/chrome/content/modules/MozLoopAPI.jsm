@@ -138,6 +138,12 @@ const kMessageName = "Loop:Message";
 const kPushMessageName = "Loop:Message:Push";
 const kPushSubscription = "pushSubscription";
 const kRoomsPushPrefix = "Rooms:";
+const kMauPrefMap = new Map(
+  Object.getOwnPropertyNames(LOOP_MAU_TYPE).map(name => {
+    let parts = name.toLowerCase().split("_");
+    return [LOOP_MAU_TYPE[name], parts[0] + parts[1].charAt(0).toUpperCase() + parts[1].substr(1)];
+  })
+);
 const kMessageHandlers = {
   /**
    * Start browser sharing, which basically means to start listening for tab
@@ -182,6 +188,30 @@ const kMessageHandlers = {
 
     gBrowserSharingWindows.add(Cu.getWeakReference(win));
     gBrowserSharingListeners.add(windowId);
+    reply();
+  },
+
+  /**
+   * Creates a layout for the remote cursor on the browser chrome,
+   * and positions it on the received coordinates.
+   *
+   * @param {Object}  message Message meant for the handler function, containing
+   *                          the following parameters in its 'data' property:
+   *                          {
+   *                            ratioX: cursor's X position (between 0-1)
+   *                            ratioY: cursor's Y position (between 0-1)
+   *                          }
+   *
+   * @param {Function} reply  Callback function, invoked with the result of the
+   *                          message handler. The result will be sent back to
+   *                          the senders' channel.
+   */
+  AddRemoteCursorOverlay: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win) {
+      win.LoopUI.addRemoteCursor(message.data[0]);
+    }
+
     reply();
   },
 
@@ -366,9 +396,11 @@ const kMessageHandlers = {
   GetAllConstants: function(message, reply) {
     reply({
       LOOP_SESSION_TYPE: LOOP_SESSION_TYPE,
+      LOOP_MAU_TYPE: LOOP_MAU_TYPE,
       ROOM_CREATE: ROOM_CREATE,
       ROOM_DELETE: ROOM_DELETE,
       SHARING_ROOM_URL: SHARING_ROOM_URL,
+      SHARING_SCREEN: SHARING_SCREEN,
       TWO_WAY_MEDIA_CONN_LENGTH: TWO_WAY_MEDIA_CONN_LENGTH
     });
   },
@@ -779,16 +811,13 @@ const kMessageHandlers = {
    *
    * @param {Object}   message Message meant for the handler function, containing
    *                           the following parameters in its `data` property:
-   *                           [
-   *                             {String} src Origin that starts or resumes the tour
-   *                           ]
+   *                           []
    * @param {Function} reply   Callback function, invoked with the result of this
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
    */
   OpenGettingStartedTour: function(message, reply) {
-    var src = message.data[0];
-    MozLoopService.openGettingStartedTour(src);
+    MozLoopService.openGettingStartedTour();
     reply();
   },
 
@@ -1001,7 +1030,30 @@ const kMessageHandlers = {
    */
   TelemetryAddValue: function(message, reply) {
     let [histogramId, value] = message.data;
-    Services.telemetry.getHistogramById(histogramId).add(value);
+
+    if (histogramId === "LOOP_MAU") {
+      let pref = "mau." + kMauPrefMap.get(value);
+      let prefDate = MozLoopService.getLoopPref(pref) * 1000;
+      let delta = Date.now() - prefDate;
+
+      // Send telemetry event if period (30 days) passed.
+      // 0 is default value for pref.
+      // 2592000 seconds in 30 days
+      if (pref === 0 || delta >= 2592000 * 1000) {
+        try {
+          Services.telemetry.getHistogramById(histogramId).add(value);
+        } catch (ex) {
+          MozLoopService.log.error("TelemetryAddValue failed for histogram '" + histogramId + "'", ex);
+        }
+        MozLoopService.setLoopPref(pref, Math.floor(Date.now() / 1000));
+      }
+    } else {
+      try {
+        Services.telemetry.getHistogramById(histogramId).add(value);
+      } catch (ex) {
+        MozLoopService.log.error("TelemetryAddValue failed for histogram '" + histogramId + "'", ex);
+      }
+    }
     reply();
   }
 };
@@ -1020,7 +1072,11 @@ const LoopAPIInternal = {
 
     Cu.import("resource://gre/modules/RemotePageManager.jsm");
 
-    gPageListeners = [new RemotePages("about:looppanel"), new RemotePages("about:loopconversation")];
+    gPageListeners = [new RemotePages("about:looppanel"),
+      new RemotePages("about:loopconversation"),
+      // Slideshow added here to expose the loop api to make L10n work.
+      // XXX Can remove once slideshow is made remote.
+      new RemotePages("chrome://loop/content/panels/slideshow.html")];
     for (let page of gPageListeners) {
       page.addMessageListener(kMessageName, this.handleMessage.bind(this));
     }
