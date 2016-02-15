@@ -846,6 +846,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    inline void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label) PER_SHARED_ARCH;
+
     template <class L>
     inline void branchTest32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     template <class L>
@@ -1120,12 +1123,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
-    void canonicalizeDouble(FloatRegister reg) {
-        Label notNaN;
-        branchDouble(DoubleOrdered, reg, reg, &notNaN);
-        loadConstantDouble(JS::GenericNaN(), reg);
-        bind(&notNaN);
-    }
+    inline void canonicalizeDouble(FloatRegister reg);
 
     inline void canonicalizeFloat(FloatRegister reg);
 

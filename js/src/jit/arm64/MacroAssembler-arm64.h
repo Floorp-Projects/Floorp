@@ -1582,25 +1582,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         Fcmp(ARMFPRegister(lhs, 64), ARMFPRegister(rhs, 64));
     }
-    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label* label) {
-        compareDouble(cond, lhs, rhs);
-        switch (cond) {
-          case DoubleNotEqual: {
-            Label unordered;
-            // not equal *and* ordered
-            branch(Overflow, &unordered);
-            branch(NotEqual, label);
-            bind(&unordered);
-            break;
-          }
-          case DoubleEqualOrUnordered:
-            branch(Overflow, label);
-            branch(Equal, label);
-            break;
-          default:
-            branch(Condition(cond), label);
-        }
-    }
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         Fcmp(ARMFPRegister(lhs, 32), ARMFPRegister(rhs, 32));

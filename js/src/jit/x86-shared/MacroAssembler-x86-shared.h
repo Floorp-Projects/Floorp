@@ -109,26 +109,6 @@ class MacroAssemblerX86Shared : public Assembler
         else
             vucomisd(rhs, lhs);
     }
-    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label* label)
-    {
-        compareDouble(cond, lhs, rhs);
-
-        if (cond == DoubleEqual) {
-            Label unordered;
-            j(Parity, &unordered);
-            j(Equal, label);
-            bind(&unordered);
-            return;
-        }
-        if (cond == DoubleNotEqualOrUnordered) {
-            j(NotEqual, label);
-            j(Parity, label);
-            return;
-        }
-
-        MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
-        j(ConditionFromDoubleCondition(cond), label);
-    }
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)

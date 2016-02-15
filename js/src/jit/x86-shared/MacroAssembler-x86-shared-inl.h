@@ -318,6 +318,29 @@ MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegist
     j(ConditionFromDoubleCondition(cond), label);
 }
 
+void
+MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label)
+{
+    compareDouble(cond, lhs, rhs);
+
+    if (cond == DoubleEqual) {
+        Label unordered;
+        j(Parity, &unordered);
+        j(Equal, label);
+        bind(&unordered);
+        return;
+    }
+    if (cond == DoubleNotEqualOrUnordered) {
+        j(NotEqual, label);
+        j(Parity, label);
+        return;
+    }
+
+    MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
+    j(ConditionFromDoubleCondition(cond), label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)

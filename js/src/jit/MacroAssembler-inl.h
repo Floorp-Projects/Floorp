@@ -525,6 +525,15 @@ MacroAssembler::canonicalizeFloat(FloatRegister reg)
     bind(&notNaN);
 }
 
+void
+MacroAssembler::canonicalizeDouble(FloatRegister reg)
+{
+    Label notNaN;
+    branchDouble(DoubleOrdered, reg, reg, &notNaN);
+    loadConstantDouble(JS::GenericNaN(), reg);
+    bind(&notNaN);
+}
+
 template <typename T>
 void
 MacroAssembler::storeObjectOrNull(Register src, const T& dest)
