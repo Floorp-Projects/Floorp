@@ -3339,9 +3339,8 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::PrepareForWrapping
 };
 
-XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
-   : CycleCollectedJSRuntime(nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryBytes),
-   mJSContextStack(new XPCJSContextStack(this)),
+XPCJSRuntime::XPCJSRuntime()
+ : mJSContextStack(new XPCJSContextStack(this)),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
    mResolveName(JSID_VOID),
@@ -3362,17 +3361,30 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(this)),
-   mUnprivilegedJunkScope(this->Runtime(), nullptr),
-   mPrivilegedJunkScope(this->Runtime(), nullptr),
-   mCompilationScope(this->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
    mSlowScriptSecondHalf(false)
 {
-    // these jsids filled in later when we have a JSContext to work with.
-    mStrIDs[0] = JSID_VOID;
+}
+
+nsresult
+XPCJSRuntime::Initialize()
+{
+    nsresult rv = CycleCollectedJSRuntime::Initialize(nullptr,
+                                                      JS::DefaultHeapMaxBytes,
+                                                      JS::DefaultNurseryBytes);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     MOZ_ASSERT(Runtime());
     JSRuntime* runtime = Runtime();
+
+    mUnprivilegedJunkScope.init(runtime, nullptr);
+    mPrivilegedJunkScope.init(runtime, nullptr);
+    mCompilationScope.init(runtime, nullptr);
+
+    // these jsids filled in later when we have a JSContext to work with.
+    mStrIDs[0] = JSID_VOID;
 
     auto rtPrivate = new PerThreadAtomCache();
     memset(rtPrivate, 0, sizeof(PerThreadAtomCache));
@@ -3520,18 +3532,23 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // Watch for the JS boolean options.
     ReloadPrefsCallback(nullptr, this);
     Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
+
+    return NS_OK;
 }
 
 // static
 XPCJSRuntime*
-XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
+XPCJSRuntime::newXPCJSRuntime()
 {
-    NS_PRECONDITION(aXPConnect,"bad param");
+    XPCJSRuntime* self = new XPCJSRuntime();
+    nsresult rv = self->Initialize();
+    if (NS_FAILED(rv)) {
+        NS_RUNTIMEABORT("new XPCJSRuntime failed to initialize.");
+        delete self;
+        return nullptr;
+    }
 
-    XPCJSRuntime* self = new XPCJSRuntime(aXPConnect);
-
-    if (self                                    &&
-        self->Runtime()                         &&
+    if (self->Runtime()                         &&
         self->GetMultiCompartmentWrappedJSMap() &&
         self->GetWrappedJSClassMap()            &&
         self->GetIID2NativeInterfaceMap()       &&
