@@ -281,6 +281,18 @@ let json = [
      },
    ],
   },
+  {
+    namespace: "inject",
+    properties: {
+      PROP1: {value: "should inject"},
+    },
+  },
+  {
+    namespace: "do-not-inject",
+    properties: {
+      PROP1: {value: "should not inject"},
+    },
+  },
 ];
 
 let tallied = null;
@@ -322,6 +334,11 @@ let wrapper = {
     tally("call", ns, name, args);
   },
 
+  shouldInject(path) {
+    let ns = path.join(".");
+    return ns != "do-not-inject";
+  },
+
   getProperty(path, name) {
     let ns = path.join(".");
     tally("get", ns, name);
@@ -357,6 +374,9 @@ add_task(function* () {
   do_check_eq(root.testing.PROP1, 20, "simple value property");
   do_check_eq(root.testing.type1.VALUE1, "value1", "enum type");
   do_check_eq(root.testing.type1.VALUE2, "value2", "enum type");
+
+  do_check_eq("inject" in root, true, "namespace 'inject' should be injected");
+  do_check_eq("do-not-inject" in root, false, "namespace 'do-not-inject' should not be injected");
 
   root.testing.foo(11, true);
   verify("call", "testing", "foo", [11, true]);
