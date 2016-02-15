@@ -798,6 +798,13 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
 
+    // ===============================================================
+    // Branch functions
+
+    // This function compares a Value (lhs) which is having a private pointer
+    // boxed inside a js::Value, with a raw pointer (rhs).
+    inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
