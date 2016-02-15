@@ -778,7 +778,7 @@ else
 fi
 
 if test -z "$COMPILE_ENVIRONMENT"; then
-    NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
+    NSINSTALL_BIN='$(PYTHON) $(MOZILLA_DIR)/config/nsinstall.py'
 fi
 AC_SUBST(NSINSTALL_BIN)
 
