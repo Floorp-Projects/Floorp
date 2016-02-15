@@ -1451,8 +1451,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void simulatorStop(const char* msg);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
-    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
-                      Label* label);
 
     void compareFloat(FloatRegister lhs, FloatRegister rhs);
 

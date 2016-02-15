@@ -1084,9 +1084,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void breakpoint();
 
-    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
-                      Label* label);
-
     void checkStackAlignment();
 
     static void calculateAlignedStackPointer(void** stackPointer);

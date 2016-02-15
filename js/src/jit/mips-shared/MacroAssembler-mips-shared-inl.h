@@ -362,6 +362,13 @@ MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* f
     ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
 }
 
+void
+MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label)
+{
+    ma_bc1d(lhs, rhs, label, cond);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)

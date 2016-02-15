@@ -105,7 +105,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
         zeroDouble(scratchDouble);
 
         // If reg is non-zero, jump to nonZero.
-        branchDouble(DoubleNotEqual, reg, scratchDouble, &nonZero);
+        asMasm().branchDouble(DoubleNotEqual, reg, scratchDouble, &nonZero);
     }
     // Input register is either zero or negative zero. Retrieve sign of input.
     vmovmskpd(reg, scratch);
