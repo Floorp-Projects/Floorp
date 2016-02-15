@@ -32,7 +32,7 @@ loop.store.ROOM_STATES = {
     CLOSING: "room-closing"
 };
 
-loop.store.ActiveRoomStore = (function() {
+loop.store.ActiveRoomStore = (function(mozL10n) {
   "use strict";
 
   var sharedActions = loop.shared.actions;
@@ -693,7 +693,8 @@ loop.store.ActiveRoomStore = (function() {
     gotMediaPermission: function() {
       this.setStoreState({ roomState: ROOM_STATES.JOINING });
 
-      loop.request("Rooms:Join", this._storeState.roomToken).then(function(result) {
+      loop.request("Rooms:Join", this._storeState.roomToken,
+                   mozL10n.get("display_name_guest")).then(function(result) {
         if (result.isError) {
           this.dispatchAction(new sharedActions.RoomFailure({
             error: result,
@@ -1243,4 +1244,4 @@ loop.store.ActiveRoomStore = (function() {
   });
 
   return ActiveRoomStore;
-})();
+})(navigator.mozL10n || document.mozL10n);
