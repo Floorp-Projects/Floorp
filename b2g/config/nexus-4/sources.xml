@@ -29,7 +29,7 @@
   <project name="platform_system_libpdu" path="system/libpdu" remote="b2g" revision="ac4e539dbd73522c466ebffba53edea61702082f"/>
   <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3618678c472320de386f5ddc27897992d0e148a8"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="660169a3d7e034a892359e39135e8c2785a6ad6f">
+  <project name="platform_build" path="build" remote="b2g" revision="8df1b0580ade1786bc1bf05a6abc06bcd62c2d6b">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
