@@ -7,6 +7,8 @@
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 const CHAT_URL = "https://example.com/browser/browser/base/content/test/chat/chat.html";
 
+requestLongerTimeout(2);
+
 // Is the currently opened tab focused?
 function isTabFocused() {
   let tabb = gBrowser.getBrowserForTab(gBrowser.selectedTab);
