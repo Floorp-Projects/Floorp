@@ -43,7 +43,7 @@ toolkit.jar:
    content/global/browser-child.js
    content/global/browser-content.js
 *   content/global/buildconfig.html
-   content/global/contentAreaUtils.js
+*  content/global/contentAreaUtils.js
 #ifndef MOZ_FENNEC
    content/global/customizeToolbar.css
    content/global/customizeToolbar.js

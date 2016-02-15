@@ -1,6 +1,5 @@
 /**
- * @fileoverview Marks all var declarations that are not at the top level
- *               invalid.
+ * @fileoverview Marks "this.var = x" as top-level definition of "var".
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,18 +15,18 @@
 var helpers = require("../helpers");
 
 module.exports = function(context) {
+
   // ---------------------------------------------------------------------------
   // Public
   //  --------------------------------------------------------------------------
 
   return {
-    "VariableDeclaration": function(node) {
-      if (node.kind === "var") {
-        if (helpers.getIsGlobalScope(context)) {
-          return;
-        }
-
-        context.report(node, "Unexpected var, use let or const instead.");
+    "AssignmentExpression": function(node) {
+      if (helpers.getIsGlobalScope(context) &&
+          node.left.type === "MemberExpression" &&
+          node.left.object.type === "ThisExpression" &&
+          node.left.property.type === "Identifier") {
+        helpers.addGlobals([node.left.property.name], context);
       }
     }
   };
