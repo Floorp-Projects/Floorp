@@ -236,6 +236,15 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     as_srl(dest.high, dest.high, imm.value);
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    branchPtr(cond, lhs, rhs, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
