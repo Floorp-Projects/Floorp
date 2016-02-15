@@ -478,27 +478,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void branchTestBooleanTruthy(bool b, const ValueOperand& operand, Label* label);
 
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        if (lhs == rhs) {
-            ma_b(lhs, rhs, label, cond);
-        } else {
-            as_and(ScratchRegister, lhs, rhs);
-            ma_b(ScratchRegister, ScratchRegister, label, cond);
-        }
-    }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        ma_li(ScratchRegister, imm);
-        branchTest32(cond, lhs, ScratchRegister, label);
-    }
-    void branchTest32(Condition cond, const Address& address, Imm32 imm, Label* label) {
-        load32(address, SecondScratchReg);
-        branchTest32(cond, SecondScratchReg, imm, label);
-    }
-    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
-        load32(address, ScratchRegister);
-        branchTest32(cond, ScratchRegister, imm, label);
-    }
     inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
 
     // higher level tag testing code

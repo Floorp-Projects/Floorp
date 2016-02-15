@@ -112,7 +112,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
 
     // If reg is 1 or 3, input is negative zero.
     // If reg is 0 or 2, input is a normal zero.
-    branchTest32(NonZero, scratch, Imm32(1), label);
+    asMasm().branchTest32(NonZero, scratch, Imm32(1), label);
 
     bind(&nonZero);
 #elif defined(JS_CODEGEN_X64)

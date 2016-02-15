@@ -1355,36 +1355,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         addPendingJump(loc, ImmPtr(target->raw()), Relocation::JITCODE);
     }
 
-    template <class L>
-    void branchTest32(Condition cond, Register lhs, Register rhs, L label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        // x86 prefers |test foo, foo| to |cmp foo, #0|.
-        // Convert the former to the latter for ARM.
-        if (lhs == rhs && (cond == Zero || cond == NonZero))
-            cmp32(lhs, Imm32(0));
-        else
-            test32(lhs, rhs);
-        B(label, cond);
-    }
-    template <class L>
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, L label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        test32(lhs, imm);
-        B(label, cond);
-    }
-    void branchTest32(Condition cond, const Address& address, Imm32 imm, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != address.base);
-        load32(address, scratch);
-        branchTest32(cond, scratch, imm, label);
-    }
-    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        loadPtr(address, scratch);
-        branchTest32(cond, scratch, imm, label);
-    }
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
                                  Label* documentation = nullptr)
     {
