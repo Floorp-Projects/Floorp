@@ -22,9 +22,6 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   const { EventEmitter } = Cu.import("resource://devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
-XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
-  return Services.strings.createBundle("chrome://loop/locale/loop.properties");
-});
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRoomsCache",
   "chrome://loop/content/modules/LoopRoomsCache.jsm");
@@ -772,19 +769,13 @@ var LoopRoomsInternal = {
    * Joins a room. The sessionToken that is returned by the server will be stored
    * locally, for future use.
    *
-   * @param {String} roomToken  The room token.
-   * @param {Function} callback Function that will be invoked once the operation
-   *                            finished. The first argument passed will be an
-   *                            `Error` object or `null`.
+   * @param {String} roomToken   The room token.
+   * @param {String} displayName The user's display name.
+   * @param {Function} callback  Function that will be invoked once the operation
+   *                             finished. The first argument passed will be an
+   *                             `Error` object or `null`.
    */
-  join: function(roomToken, callback) {
-    let displayName;
-    if (MozLoopService.userProfile && MozLoopService.userProfile.email) {
-      displayName = MozLoopService.userProfile.email;
-    } else {
-      displayName = gLoopBundle.GetStringFromName("display_name_guest");
-    }
-
+  join: function(roomToken, displayName, callback) {
     this._postToRoom(roomToken, {
       action: "join",
       displayName: displayName,
@@ -1067,8 +1058,8 @@ this.LoopRooms = {
     return LoopRoomsInternal.delete(roomToken, callback);
   },
 
-  join: function(roomToken, callback) {
-    return LoopRoomsInternal.join(roomToken, callback);
+  join: function(roomToken, displayName, callback) {
+    return LoopRoomsInternal.join(roomToken, displayName, callback);
   },
 
   refreshMembership: function(roomToken, sessionToken, callback) {
