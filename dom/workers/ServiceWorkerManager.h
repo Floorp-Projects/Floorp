@@ -641,14 +641,6 @@ private:
   void
   MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
-  // Does all cleanup except removing the registration from
-  // mServiceWorkerRegistrationInfos. This is useful when we clear
-  // registrations via remove()/removeAll() since we are iterating over the
-  // hashtable and can cleanly remove within the hashtable enumeration
-  // function.
-  void
-  RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
-
   // Removes all service worker registrations that matches the given pattern.
   void
   RemoveAllRegistrations(OriginAttributesPattern* aPattern);
