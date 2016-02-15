@@ -1078,6 +1078,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                       Label* label);
 
+    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                     Label* label);
+
     void checkStackAlignment();
 
     void alignStackPointer();
