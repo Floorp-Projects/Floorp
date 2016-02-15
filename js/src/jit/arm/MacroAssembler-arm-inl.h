@@ -599,17 +599,6 @@ MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegist
     ma_b(label, ConditionFromDoubleCondition(cond));
 }
 
-void
-MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
-{
-    ScratchFloat32Scope scratch(*this);
-    ma_vcvt_F32_I32(src, scratch.sintOverlay());
-    ma_vxfer(scratch, dest);
-    ma_cmp(dest, Imm32(0x7fffffff));
-    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
-    ma_b(fail, Assembler::Equal);
-}
-
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)

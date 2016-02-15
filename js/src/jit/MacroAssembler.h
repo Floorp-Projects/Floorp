@@ -843,8 +843,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                             Label* label) PER_SHARED_ARCH;
-    inline void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     template <class L>
     inline void branchTest32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
