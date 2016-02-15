@@ -2005,6 +2005,8 @@ AutoDisableCompactingGC::AutoDisableCompactingGC(JSRuntime* rt)
   : gc(rt->gc)
 {
     gc.disableCompactingGC();
+    if (gc.isIncrementalGCInProgress() && gc.isCompactingGc())
+        AutoFinishGC finishGC(rt);
 }
 
 AutoDisableCompactingGC::~AutoDisableCompactingGC()
