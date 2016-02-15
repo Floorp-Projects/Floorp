@@ -360,9 +360,12 @@ public:
     void GetUniformIndices(WebGLProgram* program,
                            const dom::Sequence<nsString>& uniformNames,
                            dom::Nullable< nsTArray<GLuint> >& retval);
-    void GetActiveUniforms(WebGLProgram* program,
-                           const dom::Sequence<GLuint>& uniformIndices, GLenum pname,
-                           dom::Nullable< nsTArray<GLint> >& retval);
+    void GetActiveUniforms(JSContext* cx,
+                           WebGLProgram* program,
+                           const dom::Sequence<GLuint>& uniformIndices,
+                           GLenum pname,
+                           JS::MutableHandleValue retval);
+
     GLuint GetUniformBlockIndex(WebGLProgram* program, const nsAString& uniformBlockName);
     void GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program,
                                         GLuint uniformBlockIndex, GLenum pname,
