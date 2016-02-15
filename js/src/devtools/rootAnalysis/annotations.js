@@ -311,13 +311,16 @@ function isUnsafeStorage(typeName)
     return typeName.startsWith('UniquePtr<');
 }
 
-function isSuppressConstructor(name)
+function isSuppressConstructor(varName)
 {
-    return name.indexOf("::AutoSuppressGC") != -1
-        || name.indexOf("::AutoAssertGCCallback") != -1
-        || name.indexOf("::AutoEnterAnalysis") != -1
-        || name.indexOf("::AutoSuppressGCAnalysis") != -1
-        || name.indexOf("::AutoIgnoreRootingHazards") != -1;
+    // varName[1] contains the unqualified name
+    return [
+        "AutoSuppressGC",
+        "AutoAssertGCCallback",
+        "AutoEnterAnalysis",
+        "AutoSuppressGCAnalysis",
+        "AutoIgnoreRootingHazards"
+    ].indexOf(varName[1]) != -1;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden
