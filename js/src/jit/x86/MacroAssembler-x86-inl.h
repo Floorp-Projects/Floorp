@@ -305,6 +305,18 @@ MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rh
 }
 
 void
+MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+{
+    vcvttss2si(src, dest);
+
+    // vcvttss2si returns 0x80000000 on failure. Test for it by
+    // subtracting 1 and testing overflow (this permits the use of a
+    // smaller immediate field).
+    cmp32(dest, Imm32(1));
+    j(Assembler::Overflow, fail);
+}
+
+void
 MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
 {
     test32(Operand(lhs), rhs);
