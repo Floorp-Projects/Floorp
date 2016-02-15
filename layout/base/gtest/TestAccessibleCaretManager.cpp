@@ -93,6 +93,8 @@ public:
 
     virtual void UpdateCaretsForTilt() override {}
 
+    virtual bool IsTerminated() const override { return false; }
+
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
     MOCK_CONST_METHOD1(DispatchCaretStateChangedEvent,
                        void(CaretChangedReason aReason));
