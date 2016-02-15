@@ -320,6 +320,107 @@ MacroAssembler::addPtr(ImmPtr imm, Register dest)
 //}}} check_macroassembler_style
 // ===============================================================
 
+template <class L>
+void
+MacroAssembler::branchIfFalseBool(Register reg, L label)
+{
+    // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
+    branchTest32(Assembler::Zero, reg, Imm32(0xFF), label);
+}
+
+void
+MacroAssembler::branchIfTrueBool(Register reg, Label* label)
+{
+    // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
+    branchTest32(Assembler::NonZero, reg, Imm32(0xFF), label);
+}
+
+void
+MacroAssembler::branchIfRope(Register str, Label* label)
+{
+    Address flags(str, JSString::offsetOfFlags());
+    static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
+    branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
+}
+
+void
+MacroAssembler::branchLatin1String(Register string, Label* label)
+{
+    branchTest32(Assembler::NonZero, Address(string, JSString::offsetOfFlags()),
+                 Imm32(JSString::LATIN1_CHARS_BIT), label);
+}
+
+void
+MacroAssembler::branchTwoByteString(Register string, Label* label)
+{
+    branchTest32(Assembler::Zero, Address(string, JSString::offsetOfFlags()),
+                 Imm32(JSString::LATIN1_CHARS_BIT), label);
+}
+
+void
+MacroAssembler::branchIfFunctionHasNoScript(Register fun, Label* label)
+{
+    // 16-bit loads are slow and unaligned 32-bit loads may be too so
+    // perform an aligned 32-bit load and adjust the bitmask accordingly.
+    MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
+    MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+    Address address(fun, JSFunction::offsetOfNargs());
+    int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
+    branchTest32(Assembler::Zero, address, Imm32(bit), label);
+}
+
+void
+MacroAssembler::branchIfInterpreted(Register fun, Label* label)
+{
+    // 16-bit loads are slow and unaligned 32-bit loads may be too so
+    // perform an aligned 32-bit load and adjust the bitmask accordingly.
+    MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
+    MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+    Address address(fun, JSFunction::offsetOfNargs());
+    int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
+    branchTest32(Assembler::NonZero, address, Imm32(bit), label);
+}
+
+void
+MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero);
+    CompileZone* zone = GetJitContext()->compartment->zone();
+    AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
+    branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
+}
+
+void
+MacroAssembler::branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
+                                       Label* slowCheck, Label* checked)
+{
+    // The branches to out-of-line code here implement a conservative version
+    // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
+    // of the branches are taken, we can check class flags directly.
+    loadObjClass(objReg, scratch);
+    Address flags(scratch, Class::offsetOfFlags());
+
+    branchTestClassIsProxy(true, scratch, slowCheck);
+
+    Condition cond = truthy ? Assembler::Zero : Assembler::NonZero;
+    branchTest32(cond, flags, Imm32(JSCLASS_EMULATES_UNDEFINED), checked);
+}
+
+void
+MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp, Label* label)
+{
+    branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
+                 Address(clasp, Class::offsetOfFlags()),
+                 Imm32(JSCLASS_IS_PROXY), label);
+}
+
+void
+MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label)
+{
+    loadObjClass(object, scratch);
+    branchTestClassIsProxy(proxy, scratch, label);
+}
+
 void
 MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
                                    Register scratch, Label* label)
