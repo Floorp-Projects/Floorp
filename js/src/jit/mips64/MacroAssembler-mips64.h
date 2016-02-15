@@ -516,6 +516,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         loadPtr(lhs, SecondScratchReg);
         branchTestPtr(cond, SecondScratchReg, imm, label);
     }
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                      Label* label) {
+        branchTestPtr(cond, lhs.reg, rhs.reg, label);
+    }
     inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
 
     // higher level tag testing code

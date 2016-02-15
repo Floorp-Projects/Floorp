@@ -878,6 +878,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_sub(imm, lhs, SetCC);
         as_b(label, cond);
     }
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label);
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
