@@ -275,7 +275,7 @@ void
 MacroAssemblerMIPSCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
 {
     asMasm().subPtr(imm, lhs);
-    branchPtr(cond, lhs, Imm32(0), label);
+    asMasm().branchPtr(cond, lhs, Imm32(0), label);
 }
 
 } // namespace jit

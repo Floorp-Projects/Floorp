@@ -200,22 +200,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (src.valueReg() != dest.valueReg())
             movq(src.valueReg(), dest.valueReg());
     }
-    void boxValue(JSValueType type, Register src, Register dest) {
-        MOZ_ASSERT(src != dest);
-
-        JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
-#ifdef DEBUG
-        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
-            Label upper32BitsZeroed;
-            movePtr(ImmWord(UINT32_MAX), dest);
-            branchPtr(Assembler::BelowOrEqual, src, dest, &upper32BitsZeroed);
-            breakpoint();
-            bind(&upper32BitsZeroed);
-        }
-#endif
-        mov(ImmShiftedTag(tag), dest);
-        orq(src, dest);
-    }
+    void boxValue(JSValueType type, Register src, Register dest);
 
     Condition testUndefined(Condition cond, Register tag) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
@@ -577,38 +562,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    // Specialization for AbsoluteAddress.
-    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        MOZ_ASSERT(ptr != scratch);
-        if (X86Encoding::IsAddressImmediate(addr.addr)) {
-            branchPtr(cond, Operand(addr), ptr, label);
-        } else {
-            mov(ImmPtr(addr.addr), scratch);
-            branchPtr(cond, Operand(scratch, 0x0), ptr, label);
-        }
-    }
-    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label* label) {
-        if (X86Encoding::IsAddressImmediate(addr.addr)) {
-            branchPtr(cond, Operand(addr), ptr, label);
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            mov(ImmPtr(addr.addr), scratch);
-            branchPtr(cond, Operand(scratch, 0x0), ptr, label);
-        }
-    }
-    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        MOZ_ASSERT(ptr != scratch);
-        mov(addr, scratch);
-        branchPtr(cond, Operand(scratch, 0x0), ptr, label);
-    }
-
     template <typename T, typename S>
-    void branchPtr(Condition cond, const T& lhs, const S& ptr, Label* label) {
-        cmpPtr(Operand(lhs), ptr);
-        j(cond, label);
-    }
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         JmpSrc src = jmpSrc(label);
@@ -630,10 +585,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel* label) {
         cmpPtr(lhs, ptr);
         return jumpWithPatch(label, cond);
-    }
-    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
-        cmpPtr(lhs, rhs);
-        j(cond, label);
     }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         testPtr(lhs, rhs);
@@ -998,12 +949,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpPtr(value.valueReg(), scratch);
         j(cond, label);
     }
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchPtr(cond, valaddr, value.valueReg(), label);
-    }
+    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
+                                Label* label);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);

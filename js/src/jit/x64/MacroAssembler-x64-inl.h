@@ -223,6 +223,40 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(rhs != scratch);
+    if (X86Encoding::IsAddressImmediate(lhs.addr)) {
+        branchPtrImpl(cond, Operand(lhs), rhs, label);
+    } else {
+        mov(ImmPtr(lhs.addr), scratch);
+        branchPtrImpl(cond, Operand(scratch, 0x0), rhs, label);
+    }
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    if (X86Encoding::IsAddressImmediate(lhs.addr)) {
+        branchPtrImpl(cond, Operand(lhs), rhs, label);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        mov(ImmPtr(lhs.addr), scratch);
+        branchPtrImpl(cond, Operand(scratch, 0x0), rhs, label);
+    }
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(rhs != scratch);
+    mov(lhs, scratch);
+    branchPtrImpl(cond, Operand(scratch, 0x0), rhs, label);
+}
+
+void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
     ScratchRegisterScope scratch(*this);
@@ -240,6 +274,22 @@ void
 MacroAssemblerX64::incrementInt32Value(const Address& addr)
 {
     asMasm().addPtr(Imm32(1), addr);
+}
+
+void
+MacroAssemblerX64::branchTestValue(Condition cond, const Address& valaddr, const
+                                   ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    asMasm().branchPtr(cond, valaddr, value.valueReg(), label);
+}
+
+template <typename T, typename S>
+void
+MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+{
+    cmpPtr(Operand(lhs), rhs);
+    j(cond, label);
 }
 
 } // namespace jit
