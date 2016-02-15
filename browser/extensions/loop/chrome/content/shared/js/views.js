@@ -47,14 +47,14 @@ loop.shared.views = function (_, mozL10n) {
    * - {String}   scope   Media scope, can be "local" or "remote".
    * - {String}   type    Media type, can be "audio" or "video".
    * - {Function} action  Function to be executed on click.
-   * - {Enabled}  enabled Stream activation status (default: true).
+   * - {Bool} muted Stream activation status (default: false).
    */
   var MediaControlButton = React.createClass({
     displayName: "MediaControlButton",
 
     propTypes: {
       action: React.PropTypes.func.isRequired,
-      enabled: React.PropTypes.bool.isRequired,
+      muted: React.PropTypes.bool.isRequired,
       scope: React.PropTypes.string.isRequired,
       title: React.PropTypes.string,
       type: React.PropTypes.string.isRequired,
@@ -62,7 +62,7 @@ loop.shared.views = function (_, mozL10n) {
     },
 
     getDefaultProps: function () {
-      return { enabled: true, visible: true };
+      return { muted: false, visible: true };
     },
 
     handleClick: function () {
@@ -77,7 +77,7 @@ loop.shared.views = function (_, mozL10n) {
         "media-control": true,
         "transparent-button": true,
         "local-media": this.props.scope === "local",
-        "muted": !this.props.enabled,
+        "muted": this.props.muted,
         "hide": !this.props.visible
       };
       classesObj["btn-mute-" + this.props.type] = true;
@@ -89,7 +89,7 @@ loop.shared.views = function (_, mozL10n) {
         return this.props.title;
       }
 
-      var prefix = this.props.enabled ? "mute" : "unmute";
+      var prefix = this.props.muted ? "unmute" : "mute";
       var suffix = this.props.type === "video" ? "button_title2" : "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
       return mozL10n.get(msgId);
@@ -126,21 +126,12 @@ loop.shared.views = function (_, mozL10n) {
       audio: React.PropTypes.object.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       hangup: React.PropTypes.func.isRequired,
-      publishStream: React.PropTypes.func.isRequired,
       showHangup: React.PropTypes.bool,
       video: React.PropTypes.object.isRequired
     },
 
     handleClickHangup: function () {
       this.props.hangup();
-    },
-
-    handleToggleVideo: function () {
-      this.props.publishStream("video", !this.props.video.enabled);
-    },
-
-    handleToggleAudio: function () {
-      this.props.publishStream("audio", !this.props.audio.enabled);
     },
 
     componentDidMount: function () {
@@ -230,17 +221,53 @@ loop.shared.views = function (_, mozL10n) {
           React.createElement(
             "div",
             { className: mediaButtonGroupCssClasses },
-            React.createElement(MediaControlButton, { action: this.handleToggleVideo,
-              enabled: this.props.video.enabled,
-              scope: "local", type: "video",
-              visible: this.props.video.visible }),
-            React.createElement(MediaControlButton, { action: this.handleToggleAudio,
-              enabled: this.props.audio.enabled,
-              scope: "local", type: "audio",
-              visible: this.props.audio.visible })
+            React.createElement(VideoMuteButton, { dispatcher: this.props.dispatcher,
+              muted: !this.props.video.enabled }),
+            React.createElement(AudioMuteButton, { dispatcher: this.props.dispatcher,
+              muted: !this.props.audio.enabled })
           )
         )
       );
+    }
+  });
+
+  var AudioMuteButton = React.createClass({
+    displayName: "AudioMuteButton",
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
+      muted: React.PropTypes.bool.isRequired
+    },
+
+    toggleAudio: function () {
+      this.props.dispatcher.dispatch(new sharedActions.SetMute({ type: "audio", enabled: this.props.muted }));
+    },
+
+    render: function () {
+      return React.createElement(MediaControlButton, { action: this.toggleAudio,
+        muted: this.props.muted,
+        scope: "local",
+        type: "audio" });
+    }
+  });
+
+  var VideoMuteButton = React.createClass({
+    displayName: "VideoMuteButton",
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
+      muted: React.PropTypes.bool.isRequired
+    },
+
+    toggleVideo: function () {
+      this.props.dispatcher.dispatch(new sharedActions.SetMute({ type: "video", enabled: this.props.muted }));
+    },
+
+    render: function () {
+      return React.createElement(MediaControlButton, { action: this.toggleVideo,
+        muted: this.props.muted,
+        scope: "local",
+        type: "video" });
     }
   });
 
@@ -633,11 +660,13 @@ loop.shared.views = function (_, mozL10n) {
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
+      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore),
+      dispatcher: React.PropTypes.object,
       displayAvatar: React.PropTypes.bool.isRequired,
       isLoading: React.PropTypes.bool.isRequired,
       mediaType: React.PropTypes.string.isRequired,
       posterUrl: React.PropTypes.string,
-      shouldRenderRemoteCursor: React.PropTypes.bool,
+      shareCursor: React.PropTypes.bool,
       // Expecting "local" or "remote".
       srcMediaElement: React.PropTypes.object
     },
@@ -653,7 +682,7 @@ loop.shared.views = function (_, mozL10n) {
         this.attachVideo(this.props.srcMediaElement);
       }
 
-      if (this.props.shouldRenderRemoteCursor) {
+      if (this.props.shareCursor) {
         this.handleVideoDimensions();
         window.addEventListener("resize", this.handleVideoDimensions);
       }
@@ -661,12 +690,13 @@ loop.shared.views = function (_, mozL10n) {
 
     componentWillUnmount: function () {
       var videoElement = this.getDOMNode().querySelector("video");
-      if (!this.props.shouldRenderRemoteCursor || !videoElement) {
+      if (!this.props.shareCursor || !videoElement) {
         return;
       }
 
       window.removeEventListener("resize", this.handleVideoDimensions);
       videoElement.removeEventListener("loadeddata", this.handleVideoDimensions);
+      videoElement.removeEventListener("mousemove", this.handleMousemove);
     },
 
     componentDidUpdate: function () {
@@ -689,6 +719,42 @@ loop.shared.views = function (_, mozL10n) {
       });
     },
 
+    MIN_CURSOR_DELTA: 3,
+    MIN_CURSOR_INTERVAL: 100,
+    lastCursorTime: 0,
+    lastCursorX: -1,
+    lastCursorY: -1,
+
+    handleMouseMove: function (event) {
+      // Only update every so often.
+      var now = Date.now();
+      if (now - this.lastCursorTime < this.MIN_CURSOR_INTERVAL) {
+        return;
+      }
+      this.lastCursorTime = now;
+
+      var storeState = this.props.cursorStore.getStoreState();
+
+      var deltaX = event.clientX - storeState.videoLetterboxing.left;
+      var deltaY = event.clientY - storeState.videoLetterboxing.top;
+
+      // Skip the update if cursor is out of bounds
+      if (deltaX < 0 || deltaX > storeState.streamVideoWidth || deltaY < 0 || deltaY > storeState.streamVideoHeight ||
+      // or the cursor didn't move the minimum.
+      Math.abs(deltaX - this.lastCursorX) < this.MIN_CURSOR_DELTA && Math.abs(deltaY - this.lastCursorY) < this.MIN_CURSOR_DELTA) {
+        return;
+      }
+
+      this.lastCursorX = deltaX;
+      this.lastCursorY = deltaY;
+
+      this.props.dispatcher.dispatch(new sharedActions.SendCursorData({
+        ratioX: deltaX / storeState.streamVideoWidth,
+        ratioY: deltaY / storeState.streamVideoHeight,
+        type: loop.shared.utils.CURSOR_MESSAGE_TYPES.POSITION
+      }));
+    },
+
     /**
      * Attaches a video stream from a donor video element to this component's
      * video element if the component is displaying one.
@@ -706,14 +772,14 @@ loop.shared.views = function (_, mozL10n) {
       }
 
       var videoElement = this.getDOMNode().querySelector("video");
-
-      if (this.props.shouldRenderRemoteCursor) {
-        videoElement.addEventListener("loadeddata", this.handleVideoDimensions);
-      }
-
       if (!videoElement || videoElement.tagName.toLowerCase() !== "video") {
         // Must be displaying the avatar view, so don't try and attach video.
         return;
+      }
+
+      if (this.props.shareCursor) {
+        videoElement.addEventListener("loadeddata", this.handleVideoDimensions);
+        videoElement.addEventListener("mousemove", this.handleMouseMove);
       }
 
       // Set the src of our video element
@@ -736,6 +802,7 @@ loop.shared.views = function (_, mozL10n) {
       if (videoElement[attrName] !== srcMediaElement[attrName]) {
         videoElement[attrName] = srcMediaElement[attrName];
       }
+
       videoElement.play();
     },
 
@@ -769,7 +836,7 @@ loop.shared.views = function (_, mozL10n) {
       return React.createElement(
         "div",
         { className: "remote-video-box" },
-        this.state.videoElementSize && this.props.shouldRenderRemoteCursor ? React.createElement(RemoteCursorView, {
+        this.state.videoElementSize && this.props.shareCursor ? React.createElement(RemoteCursorView, {
           videoElementSize: this.state.videoElementSize }) : null,
         React.createElement("video", _extends({}, optionalProps, {
           className: this.props.mediaType + "-video",
@@ -783,6 +850,7 @@ loop.shared.views = function (_, mozL10n) {
 
     propTypes: {
       children: React.PropTypes.node,
+      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       displayScreenShare: React.PropTypes.bool.isRequired,
       isLocalLoading: React.PropTypes.bool.isRequired,
@@ -903,11 +971,13 @@ loop.shared.views = function (_, mozL10n) {
             "div",
             { className: screenShareStreamClasses },
             React.createElement(MediaView, {
+              cursorStore: this.props.cursorStore,
+              dispatcher: this.props.dispatcher,
               displayAvatar: false,
               isLoading: this.props.isScreenShareLoading,
               mediaType: "screen-share",
               posterUrl: this.props.screenSharePosterUrl,
-              shouldRenderRemoteCursor: true,
+              shareCursor: true,
               srcMediaElement: this.props.screenShareMediaElement }),
             this.props.displayScreenShare ? this.props.children : null
           ),
@@ -931,10 +1001,7 @@ loop.shared.views = function (_, mozL10n) {
     },
 
     getInitialState: function () {
-      return {
-        realVideoSize: null,
-        videoLetterboxing: null
-      };
+      return this.getStoreState();
     },
 
     componentWillMount: function () {
@@ -963,7 +1030,7 @@ loop.shared.views = function (_, mozL10n) {
       if (!this.state.videoLetterboxing) {
         // If this is the first time we receive the event, we must calculate the
         // video letterboxing.
-        this._calculateVideoLetterboxing();
+        this._calculateVideoLetterboxing(nextState.realVideoSize);
         return;
       }
 
@@ -992,7 +1059,7 @@ loop.shared.views = function (_, mozL10n) {
       var streamVideoHeight = isWider ? clientHeight : clientWidth / realVideoRatio;
       var streamVideoWidth = isWider ? clientHeight * realVideoRatio : clientWidth;
 
-      this.setState({
+      this.getStore().setStoreState({
         videoLetterboxing: {
           left: (clientWidth - streamVideoWidth) / 2,
           top: (clientHeight - streamVideoHeight) / 2
@@ -1028,17 +1095,20 @@ loop.shared.views = function (_, mozL10n) {
   });
 
   return {
+    AudioMuteButton: AudioMuteButton,
     AvatarView: AvatarView,
     Button: Button,
     ButtonGroup: ButtonGroup,
     Checkbox: Checkbox,
     ContextUrlView: ContextUrlView,
     ConversationToolbar: ConversationToolbar,
+    HangUpControlButton: HangUpControlButton,
     MediaControlButton: MediaControlButton,
     MediaLayoutView: MediaLayoutView,
     MediaView: MediaView,
     LoadingView: LoadingView,
     NotificationListView: NotificationListView,
-    RemoteCursorView: RemoteCursorView
+    RemoteCursorView: RemoteCursorView,
+    VideoMuteButton: VideoMuteButton
   };
 }(_, navigator.mozL10n || document.mozL10n);
