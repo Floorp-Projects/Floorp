@@ -336,63 +336,7 @@ MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind
     branch32(cond, scratch, Imm32(bit), label);
 }
 
-void
-MacroAssembler::branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
-                                   Label* label)
-{
-    loadObjGroup(obj, scratch);
-    branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
-}
-
-void
-MacroAssembler::branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label)
-{
-    branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
-}
-
-void
-MacroAssembler::branchTestObjShape(Condition cond, Register obj, Register shape, Label* label)
-{
-    branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
-}
-
-void
-MacroAssembler::branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label)
-{
-    branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group), label);
-}
-
-void
-MacroAssembler::branchTestObjGroup(Condition cond, Register obj, Register group, Label* label)
-{
-    branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), group, label);
-}
-
-void
-MacroAssembler::branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
-                                             const void* handlerp, Label* label)
-{
-    Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
-    loadPtr(handlerAddr, scratch);
-    Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
-    branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
-}
-
 #ifndef JS_CODEGEN_ARM64
-
-template <typename T>
-void
-MacroAssembler::branchStackPtr(Condition cond, T rhs, Label* label)
-{
-    branchPtr(cond, getStackPointer(), rhs, label);
-}
-
-template <typename T>
-void
-MacroAssembler::branchStackPtrRhs(Condition cond, T lhs, Label* label)
-{
-    branchPtr(cond, lhs, getStackPointer(), label);
-}
 
 template <typename T> void
 MacroAssembler::addToStackPtr(T t)

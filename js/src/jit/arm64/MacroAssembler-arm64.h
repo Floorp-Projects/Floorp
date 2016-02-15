@@ -1061,9 +1061,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         branchTestPtr(cond, getStackPointer(), t, label);
     }
     template <typename T>
-    void branchStackPtr(Condition cond, T rhs, Label* label);
+    void branchStackPtr(Condition cond, T rhs, Label* label) {
+        branchPtr(cond, getStackPointer(), rhs, label);
+    }
     template <typename T>
-    void branchStackPtrRhs(Condition cond, T lhs, Label* label);
+    void branchStackPtrRhs(Condition cond, T lhs, Label* label) {
+        branchPtr(cond, lhs, getStackPointer(), label);
+    }
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
@@ -1493,6 +1497,85 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             cmpPtr(scratch, ptr);
         }
         return jumpWithPatch(label, cond);
+    }
+
+    void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != rhs);
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, rhs, label);
+    }
+    void branchPtr(Condition cond, Address lhs, ImmWord ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != lhs.base);
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, ptr, label);
+    }
+    void branchPtr(Condition cond, Address lhs, ImmPtr ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != lhs.base);
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, ptr, label);
+    }
+    void branchPtr(Condition cond, Address lhs, Register ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != lhs.base);
+        MOZ_ASSERT(scratch != ptr);
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, ptr, label);
+    }
+    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
+        cmpPtr(lhs, imm);
+        B(label, cond);
+    }
+    void branchPtr(Condition cond, Register lhs, ImmWord ptr, Label* label) {
+        cmpPtr(lhs, ptr);
+        B(label, cond);
+    }
+    void branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label) {
+        cmpPtr(lhs, rhs);
+        B(label, cond);
+    }
+    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != lhs);
+        movePtr(ptr, scratch);
+        branchPtr(cond, lhs, scratch, label);
+    }
+    void branchPtr(Condition cond, Address lhs, ImmGCPtr ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch1_64 = temps.AcquireX();
+        const ARMRegister scratch2_64 = temps.AcquireX();
+        MOZ_ASSERT(scratch1_64.asUnsized() != lhs.base);
+        MOZ_ASSERT(scratch2_64.asUnsized() != lhs.base);
+
+        movePtr(ptr, scratch1_64.asUnsized());
+        loadPtr(lhs, scratch2_64.asUnsized());
+        cmp(scratch2_64, scratch1_64);
+        B(cond, label);
+
+    }
+    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
+        Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
+        B(label, cond);
+    }
+    void branchPtr(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != rhs);
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, rhs, label);
+    }
+    void branchPtr(Condition cond, AbsoluteAddress lhs, ImmWord ptr, Label* label) {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        loadPtr(lhs, scratch);
+        branchPtr(cond, scratch, ptr, label);
     }
 
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
