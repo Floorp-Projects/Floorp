@@ -424,6 +424,38 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void branchTestBoolean(Condition cond, const Address& address, Label* label);
     void branchTestBoolean(Condition cond, const BaseIndex& src, Label* label);
 
+    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
+        ma_b(lhs, rhs, label, cond);
+    }
+    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
+        ma_b(lhs, imm, label, cond);
+    }
+    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
+        if (lhs.getTag() == Operand::REG) {
+            ma_b(lhs.toReg(), rhs, label, cond);
+        } else {
+            branch32(cond, lhs.toAddress(), rhs, label);
+        }
+    }
+    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
+        if (lhs.getTag() == Operand::REG) {
+            ma_b(lhs.toReg(), rhs, label, cond);
+        } else {
+            branch32(cond, lhs.toAddress(), rhs, label);
+        }
+    }
+    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
+    void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
+    void branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
 
     void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
     void branchTestDouble(Condition cond, Register tag, Label* label);
@@ -551,6 +583,18 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         CodeOffsetJump off = jumpWithPatch(label);
         bind(&skipJump);
         return off;
+    }
+    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
+    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
+    void branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, Label* label) {
+        load32(addr, SecondScratchReg);
+        ma_b(SecondScratchReg, imm, label, cond);
     }
 
     template <typename T>
