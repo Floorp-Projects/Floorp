@@ -369,6 +369,21 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
     ma_bc1d(lhs, rhs, label, cond);
 }
 
+// Convert the floating point value to an integer, if it did not fit, then it
+// was clamped to INT32_MIN/INT32_MAX, and we can test it.
+// NOTE: if the value really was supposed to be INT32_MAX / INT32_MIN then it
+// will be wrong.
+void
+MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
+{
+    Label test, success;
+    as_truncwd(ScratchDoubleReg, src);
+    as_mfc1(dest, ScratchDoubleReg);
+
+    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
+    ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
