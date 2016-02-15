@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <Windows.h>
+#include <windows.h>
 #include <dbghelp.h>
 
 const DWORD CV_SIGNATURE_RSDS = 0x53445352; // 'SDSR'
