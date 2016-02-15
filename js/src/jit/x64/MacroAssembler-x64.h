@@ -42,7 +42,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void bindOffsets(const MacroAssemblerX86Shared::UsesVector&);
 
   public:
-    using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
 
@@ -526,17 +525,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
-
-    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
-        if (X86Encoding::IsAddressImmediate(address.addr)) {
-            test32(Operand(address), imm);
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            mov(ImmPtr(address.addr), scratch);
-            test32(Operand(scratch, 0), imm);
-        }
-        j(cond, label);
-    }
 
     template <typename T, typename S>
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
