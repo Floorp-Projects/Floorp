@@ -890,7 +890,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // might actually be that type.
     void branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
 
-    template<typename T>
+    template <typename T>
     inline void branchKey(Condition cond, const T& length, const Int32Key& key, Label* label);
 
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
