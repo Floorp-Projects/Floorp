@@ -364,6 +364,14 @@
     "n_buckets": 50,
     "description": "Time spent running JS GC sweep phase (ms)"
   },
+  "GC_COMPACT_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC compact phase (ms)"
+  },
   "GC_MARK_ROOTS_MS": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
