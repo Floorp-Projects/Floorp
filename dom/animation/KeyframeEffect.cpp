@@ -2091,5 +2091,12 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
   return false;
 }
 
+JSObject*
+KeyframeEffect::WrapObject(JSContext* aCx,
+                           JS::Handle<JSObject*> aGivenProto)
+{
+  return KeyframeEffectBinding::Wrap(aCx, this, aGivenProto);
+}
+
 } // namespace dom
 } // namespace mozilla
