@@ -1620,25 +1620,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         Fcmp(ARMFPRegister(lhs, 32), ARMFPRegister(rhs, 32));
     }
-    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label* label) {
-        compareFloat(cond, lhs, rhs);
-        switch (cond) {
-          case DoubleNotEqual: {
-            Label unordered;
-            // not equal *and* ordered
-            branch(Overflow, &unordered);
-            branch(NotEqual, label);
-            bind(&unordered);
-            break;
-          }
-          case DoubleEqualOrUnordered:
-            branch(Overflow, label);
-            branch(Equal, label);
-            break;
-          default:
-            branch(Condition(cond), label);
-        }
-    }
 
     void branchNegativeZero(FloatRegister reg, Register scratch, Label* label) {
         MOZ_CRASH("branchNegativeZero");
