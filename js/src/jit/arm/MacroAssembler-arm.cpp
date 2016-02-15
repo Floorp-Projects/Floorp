@@ -3589,13 +3589,11 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     Label bailout;
 
     ma_ldr(Address(sp, offsetof(ResumeFromException, kind)), r0);
-    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME),
-                      &entryFrame);
-    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
-    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN),
-                      &return_);
-    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
 
     breakpoint(); // Invalid kind.
 
@@ -3646,8 +3644,7 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
         Label skipProfilingInstrumentation;
         // Test if profiler enabled.
         AbsoluteAddress addressOfEnabled(GetJitContext()->runtime->spsProfiler().addressOfEnabled());
-        asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
-                          &skipProfilingInstrumentation);
+        branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
         profilerExitFrame();
         bind(&skipProfilingInstrumentation);
     }
@@ -4122,8 +4119,8 @@ MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, R
 
     ma_mov(Imm32(startChunk), scratch2);
     as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
-    asMasm().branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                      scratch2, Imm32(nursery.numChunks()), label);
+    branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              scratch2, Imm32(nursery.numChunks()), label);
 }
 
 void
