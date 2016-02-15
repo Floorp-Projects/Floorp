@@ -258,7 +258,7 @@ function run_test() {
   startupManager();
 
   AddonManager.getAddonsByIDs(addonIDs, function(addons) {
-    for (let addon of addons) {
+    for (addon of addons) {
       do_check_eq(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
     }
     run_test_1();

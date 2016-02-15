@@ -18,7 +18,6 @@ const { ADDON_SIGNING, REQUIRE_SIGNING } = CONSTANTS
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-/*globals AddonManagerPrivate*/
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
@@ -277,7 +276,6 @@ const LOGGER_ID = "addons.xpi";
 var logger = Log.repository.getLogger(LOGGER_ID);
 
 const LAZY_OBJECTS = ["XPIDatabase", "XPIDatabaseReconcile"];
-/*globals XPIDatabase, XPIDatabaseReconcile*/
 
 var gLazyObjectsLoaded = false;
 
@@ -576,7 +574,7 @@ SafeInstallOperation.prototype = {
     while (this._installedFiles.length > 0) {
       let move = this._installedFiles.pop();
       if (move.isMoveTo) {
-        move.newFile.moveTo(move.oldDir.parent, move.oldDir.leafName);
+        move.newFile.moveTo(oldDir.parent, oldDir.leafName);
       }
       else if (move.newFile.isDirectory()) {
         let oldDir = move.oldFile.parent.clone();
@@ -3635,8 +3633,8 @@ this.XPIProvider = {
 
         // When upgrading remove the old extensions cache to force older
         // versions to rescan the entire list of extensions
-        let oldCache = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_CACHE], true);
         try {
+          let oldCache = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_CACHE], true);
           if (oldCache.exists())
             oldCache.remove(true);
         }

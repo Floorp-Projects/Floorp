@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on through a navigation. Should be
 // blocked since the referer is not whitelisted even though the target is.
-var url = TESTROOT2 + "navigate.html?" + encodeURIComponent(TESTROOT + "unsigned.xpi");
+var URL = TESTROOT2 + "navigate.html?" + encodeURIComponent(TESTROOT + "unsigned.xpi");
 
 function test() {
   Harness.installBlockedCallback = allow_blocked;
@@ -12,7 +12,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI(url);
+  gBrowser.loadURI(URL);
 }
 
 function allow_blocked(installInfo) {

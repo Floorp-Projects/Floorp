@@ -22,7 +22,7 @@ const ORIGIN_BOTTOM_LEFT = 2;
 
 this.LightweightThemeImageOptimizer = {
   optimize: function(aThemeData, aScreen) {
-    let data = Object.assign({}, aThemeData);
+    let data = Utils.createCopy(aThemeData);
     if (!data.headerURL) {
       return data;
     }
@@ -178,3 +178,12 @@ var ImageTools = {
 XPCOMUtils.defineLazyServiceGetter(ImageTools, "_imgTools",
   "@mozilla.org/image/tools;1", "imgITools");
 
+var Utils = {
+  createCopy: function(aData) {
+    let copy = {};
+    for (let [k, v] in Iterator(aData)) {
+      copy[k] = v;
+    }
+    return copy;
+  }
+};

@@ -19,7 +19,6 @@ try {
   // process. We're used in the child process (for now), so guard against
   // this.
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
-  /*globals AddonManagerPrivate*/
 } catch (e) {
 }
 
