@@ -5065,9 +5065,7 @@ nsGlobalWindow::GetScreenXY(ErrorResult& aError)
   LayoutDeviceRect screenRectDev =
     LayoutDevicePixel::FromAppUnits(screenRect, dc->AppUnitsPerDevPixel());
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
-                                            : DesktopToLayoutDeviceScale(1.0);
+  DesktopToLayoutDeviceScale scale = dc->GetDesktopToDeviceScale();
   DesktopRect screenRectDesk = screenRectDev / scale;
 
   CSSPoint cssPt =
