@@ -311,6 +311,20 @@ MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* f
 }
 
 void
+MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
+{
+    vcvttsd2sq(src, dest);
+
+    // vcvttsd2sq returns 0x8000000000000000 on failure. Test for it by
+    // subtracting 1 and testing overflow (this avoids the need to
+    // materialize that value in a register).
+    cmpPtr(dest, Imm32(1));
+    j(Assembler::Overflow, fail);
+
+    movl(dest, dest); // Zero upper 32-bits.
+}
+
+void
 MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
 {
     if (X86Encoding::IsAddressImmediate(lhs.addr)) {
