@@ -468,22 +468,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
 
     void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        // Check payload before tag, since payload is more likely to differ.
-        if (cond == NotEqual) {
-            branchPtr(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
-            branchPtr(NotEqual, tagOf(valaddr), value.typeReg(), label);
-
-        } else {
-            Label fallthrough;
-            branchPtr(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
-            branchPtr(Equal, tagOf(valaddr), value.typeReg(), label);
-            bind(&fallthrough);
-        }
-    }
+    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
+                                Label* label);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
@@ -583,22 +569,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register ptr, Label* label) {
-        cmpl(ptr, lhs);
-        j(cond, label);
-    }
-
-    template <typename T, typename S>
-    void branchPtr(Condition cond, T lhs, S ptr, Label* label) {
-        cmpPtr(Operand(lhs), ptr);
-        j(cond, label);
-    }
-
     template <typename T, typename S>
     void branchPtr(Condition cond, T lhs, S ptr, RepatchLabel* label) {
         cmpPtr(Operand(lhs), ptr);
         j(cond, label);
     }
+
+    template <typename T, typename S>
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         jump(label);
@@ -622,10 +600,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return CodeOffsetJump(size());
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, RepatchLabel* label) {
-        cmpPtr(lhs, rhs);
-        j(cond, label);
-    }
-    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         cmpPtr(lhs, rhs);
         j(cond, label);
     }

@@ -180,6 +180,64 @@ MacroAssembler::negateDouble(FloatRegister reg)
     vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
 }
 
+// ===============================================================
+// Branch instructions
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

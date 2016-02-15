@@ -325,10 +325,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             ptr_(ptr)
         { }
 
-        void emit(MacroAssembler& masm) {
-            MOZ_ASSERT(isInitialized());
-            masm.branchPtr(cond(), reg(), ptr_, jump());
-        }
+        void emit(MacroAssembler& masm);
     };
 
     mozilla::Maybe<AutoRooter> autoRooter_;
@@ -801,6 +798,25 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Branch functions
 
+    inline void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label) PER_SHARED_ARCH;
+
+    inline void branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label) PER_SHARED_ARCH;
+    inline void branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label) PER_SHARED_ARCH;
+
+    inline void branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    inline void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
     // This function compares a Value (lhs) which is having a private pointer
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
@@ -832,30 +848,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadObjGroup(objReg, dest);
         loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
     }
-    void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
-                            Label* label) {
-        loadObjGroup(obj, scratch);
-        branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
-    }
-    void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label) {
-        branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
-    }
-    void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label) {
-        branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
-    }
-    void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label) {
-        branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group), label);
-    }
-    void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label) {
-        branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), group, label);
-    }
-    void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
-                                      const void* handlerp, Label* label) {
-        Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
-        loadPtr(handlerAddr, scratch);
-        Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
-        branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
-    }
+    inline void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
+                                   Label* label);
+    inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
+    inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
+    inline void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label);
+    inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
+    inline void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
+                                             const void* handlerp, Label* label);
 
     template <typename Value>
     void branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label) {
@@ -1344,13 +1344,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTestPtr(cond, getStackPointer(), t, label);
     }
     template <typename T>
-    void branchStackPtr(Condition cond, T rhs, Label* label) {
-        branchPtr(cond, getStackPointer(), rhs, label);
-    }
+    inline void branchStackPtr(Condition cond, T rhs, Label* label);
     template <typename T>
-    void branchStackPtrRhs(Condition cond, T lhs, Label* label) {
-        branchPtr(cond, lhs, getStackPointer(), label);
-    }
+    inline void branchStackPtrRhs(Condition cond, T lhs, Label* label);
 #endif // !JS_CODEGEN_ARM64
 
   public:

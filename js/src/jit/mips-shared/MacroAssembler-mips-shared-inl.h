@@ -191,6 +191,88 @@ MacroAssembler::negateDouble(FloatRegister reg)
     as_negd(reg, reg);
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    ma_b(lhs, rhs, label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    ma_b(lhs, rhs, label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label)
+{
+    ma_b(lhs, rhs, label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label)
+{
+    ma_b(lhs, rhs, label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label)
+{
+    ma_b(lhs, rhs, label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    branchPtr(cond, SecondScratchReg, rhs, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
