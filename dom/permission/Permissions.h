@@ -38,10 +38,6 @@ public:
                                   JS::Handle<JSObject*> aPermission,
                                   ErrorResult& aRv);
 
-  already_AddRefed<Promise> Revoke(JSContext* aCx,
-                                   JS::Handle<JSObject*> aPermission,
-                                   ErrorResult& aRv);
-
 private:
   ~Permissions();
 
