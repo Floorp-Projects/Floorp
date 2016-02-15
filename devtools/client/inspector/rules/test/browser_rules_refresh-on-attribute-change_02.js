@@ -15,18 +15,17 @@ const TEST_URI = `
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  let testElement = getNode("#testid");
+  let {inspector, view, testActor} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
   yield testPropertyChanges(inspector, view);
-  yield testPropertyChange0(inspector, view, testElement);
-  yield testPropertyChange1(inspector, view, testElement);
-  yield testPropertyChange2(inspector, view, testElement);
-  yield testPropertyChange3(inspector, view, testElement);
-  yield testPropertyChange4(inspector, view, testElement);
-  yield testPropertyChange5(inspector, view, testElement);
-  yield testPropertyChange6(inspector, view, testElement);
+  yield testPropertyChange0(inspector, view, "#testid", testActor);
+  yield testPropertyChange1(inspector, view, "#testid", testActor);
+  yield testPropertyChange2(inspector, view, "#testid", testActor);
+  yield testPropertyChange3(inspector, view, "#testid", testActor);
+  yield testPropertyChange4(inspector, view, "#testid", testActor);
+  yield testPropertyChange5(inspector, view, "#testid", testActor);
+  yield testPropertyChange6(inspector, view, "#testid", testActor);
 });
 
 function* testPropertyChanges(inspector, ruleView) {
@@ -41,9 +40,9 @@ function* testPropertyChanges(inspector, ruleView) {
     "Original margin property active");
 }
 
-function* testPropertyChange0(inspector, ruleView, testElement) {
-  yield changeElementStyle(testElement, "margin-top: 1px; padding-top: 5px",
-    inspector);
+function* testPropertyChange0(inspector, ruleView, selector, testActor) {
+  yield changeElementStyle(selector, "margin-top: 1px; padding-top: 5px",
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3,
@@ -54,10 +53,10 @@ function* testPropertyChange0(inspector, ruleView, testElement) {
     "Second margin property disabled");
 }
 
-function* testPropertyChange1(inspector, ruleView, testElement) {
+function* testPropertyChange1(inspector, ruleView, selector, testActor) {
   info("Now set it back to 5px, the 5px value should be re-enabled.");
-  yield changeElementStyle(testElement, "margin-top: 5px; padding-top: 5px;",
-    inspector);
+  yield changeElementStyle(selector, "margin-top: 5px; padding-top: 5px;",
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3,
@@ -68,11 +67,11 @@ function* testPropertyChange1(inspector, ruleView, testElement) {
     "Second margin property disabled");
 }
 
-function* testPropertyChange2(inspector, ruleView, testElement) {
+function* testPropertyChange2(inspector, ruleView, selector, testActor) {
   info("Set the margin property to a value that doesn't exist in the editor.");
   info("Should reuse the currently-enabled element (the second one.)");
-  yield changeElementStyle(testElement, "margin-top: 15px; padding-top: 5px;",
-    inspector);
+  yield changeElementStyle(selector, "margin-top: 15px; padding-top: 5px;",
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3,
@@ -83,10 +82,10 @@ function* testPropertyChange2(inspector, ruleView, testElement) {
     "Second margin property disabled");
 }
 
-function* testPropertyChange3(inspector, ruleView, testElement) {
+function* testPropertyChange3(inspector, ruleView, selector, testActor) {
   info("Remove the padding-top attribute. Should disable the padding " +
     "property but not remove it.");
-  yield changeElementStyle(testElement, "margin-top: 5px;", inspector);
+  yield changeElementStyle(selector, "margin-top: 5px;", inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3,
@@ -95,11 +94,11 @@ function* testPropertyChange3(inspector, ruleView, testElement) {
     "Padding property disabled");
 }
 
-function* testPropertyChange4(inspector, ruleView, testElement) {
+function* testPropertyChange4(inspector, ruleView, selector, testActor) {
   info("Put the padding-top attribute back in, should re-enable the " +
     "padding property.");
-  yield changeElementStyle(testElement, "margin-top: 5px; padding-top: 25px",
-    inspector);
+  yield changeElementStyle(selector, "margin-top: 5px; padding-top: 25px",
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3,
@@ -108,10 +107,11 @@ function* testPropertyChange4(inspector, ruleView, testElement) {
     "Padding property enabled");
 }
 
-function* testPropertyChange5(inspector, ruleView, testElement) {
+function* testPropertyChange5(inspector, ruleView, selector, testActor) {
   info("Add an entirely new property");
-  yield changeElementStyle(testElement,
-    "margin-top: 5px; padding-top: 25px; padding-left: 20px;", inspector);
+  yield changeElementStyle(selector,
+    "margin-top: 5px; padding-top: 25px; padding-left: 20px;",
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 4,
@@ -120,11 +120,11 @@ function* testPropertyChange5(inspector, ruleView, testElement) {
     "Padding property enabled");
 }
 
-function* testPropertyChange6(inspector, ruleView, testElement) {
+function* testPropertyChange6(inspector, ruleView, selector, testActor) {
   info("Add an entirely new property again");
-  yield changeElementStyle(testElement, "background: red " +
+  yield changeElementStyle(selector, "background: red " +
     "url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0%",
-    inspector);
+    inspector, testActor);
 
   let rule = ruleView._elementStyle.rules[0];
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 5,
@@ -134,9 +134,9 @@ function* testPropertyChange6(inspector, ruleView, testElement) {
                    "shortcut property correctly set");
 }
 
-function* changeElementStyle(testElement, style, inspector) {
+function* changeElementStyle(selector, style, inspector, testActor) {
   let onRefreshed = inspector.once("rule-view-refreshed");
-  testElement.setAttribute("style", style);
+  yield testActor.setAttribute(selector, "style", style);
   yield onRefreshed;
 }
 
