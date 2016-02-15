@@ -26,7 +26,6 @@ var definitions = [
   /^Object\.defineProperty\(this, "(\w+)"/,
   /^Reflect\.defineProperty\(this, "(\w+)"/,
   /^this\.__defineGetter__\("(\w+)"/,
-  /^this\.(\w+) =/
 ];
 
 var imports = [
@@ -84,70 +83,8 @@ module.exports = {
         return "function() {}";
       case "ArrowFunctionExpression":
         return "() => {}";
-      case "AssignmentExpression":
-        return this.getASTSource(node.left) + " = " + this.getASTSource(node.right);
       default:
         throw new Error("getASTSource unsupported node type: " + node.type);
-    }
-  },
-
-  /**
-   * This walks an AST in a manner similar to ESLint passing node and comment
-   * events to the listener. The listener is expected to be a simple function
-   * which accepts node type, node and parents arguments.
-   *
-   * @param  {Object} ast
-   *         The AST to walk.
-   * @param  {Function} listener
-   *         A callback function to call for the nodes. Passed three arguments,
-   *         event type, node and an array of parent nodes for the current node.
-   */
-  walkAST(ast, listener) {
-    let parents = [];
-
-    let seenComments = new Set();
-    function sendCommentEvents(comments) {
-      if (!comments) {
-        return;
-      }
-
-      for (let comment of comments) {
-        if (seenComments.has(comment)) {
-          return;
-        }
-        seenComments.add(comment);
-
-        listener(comment.type + "Comment", comment, parents);
-      }
-    }
-
-    estraverse.traverse(ast, {
-      enter(node, parent) {
-        // Comments are held in node.comments for empty programs
-        let leadingComments = node.leadingComments;
-        if (node.type === "Program" && node.body.length == 0) {
-          leadingComments = node.comments;
-        }
-
-        sendCommentEvents(leadingComments);
-        listener(node.type, node, parents);
-        sendCommentEvents(node.trailingComments);
-
-        parents.push(node);
-      },
-
-      leave(node, parent) {
-        // TODO send comment exit events
-        listener(node.type + ":exit", node, parents);
-
-        if (parents.length == 0) {
-          throw new Error("Left more nodes than entered.");
-        }
-        parents.pop();
-      }
-    });
-    if (parents.length) {
-      throw new Error("Entered more nodes than left.");
     }
   },
 
@@ -157,8 +94,6 @@ module.exports = {
    *
    * @param  {Object} node
    *         The AST node to convert.
-   * @param  {boolean} isGlobal
-   *         True if the current node is in the global scope
    *
    * @return {String or null}
    *         The variable name defined.
@@ -199,28 +134,89 @@ module.exports = {
   },
 
   /**
+   * Walks over an AST and calls a callback for every ExpressionStatement found.
+   *
+   * @param  {Object} ast
+   *         The AST to traverse.
+   *
+   * @return {Function}
+   *         The callback to call for each ExpressionStatement.
+   */
+  expressionTraverse: function(ast, callback) {
+    var helpers = this;
+    var parents = new Map();
+
+    // Walk the parents of a node to see if any are functions
+    function isGlobal(node) {
+      var parent = parents.get(node);
+      while (parent) {
+        if (parent.type == "FunctionExpression" ||
+            parent.type == "FunctionDeclaration") {
+          return false;
+        }
+        parent = parents.get(parent);
+      }
+      return true;
+    }
+
+    estraverse.traverse(ast, {
+      enter: function(node, parent) {
+        parents.set(node, parent);
+
+        if (node.type == "ExpressionStatement") {
+          callback(node, isGlobal(node));
+        }
+      }
+    });
+  },
+
+  /**
+   * Get an array of globals from an AST.
+   *
+   * @param  {Object} ast
+   *         The AST for which the globals are to be returned.
+   *
+   * @return {Array}
+   *         An array of variable names.
+   */
+  getGlobals: function(ast) {
+    var scopeManager = escope.analyze(ast);
+    var globalScope = scopeManager.acquire(ast);
+    var result = [];
+
+    for (var variable in globalScope.variables) {
+      var name = globalScope.variables[variable].name;
+      result.push(name);
+    }
+
+    var helpers = this;
+    this.expressionTraverse(ast, function(node, isGlobal) {
+      var name = helpers.convertExpressionToGlobal(node, isGlobal);
+
+      if (name) {
+        result.push(name);
+      }
+    });
+
+    return result;
+  },
+
+  /**
    * Add a variable to the current scope.
    * HACK: This relies on eslint internals so it could break at any time.
    *
    * @param {String} name
-   *        The variable name to add to the scope.
-   * @param {ASTScope} scope
-   *        The scope to add to.
-   * @param {boolean} writable
-   *        Whether the global can be overwritten.
+   *        The variable name to add to the current scope.
+   * @param {ASTContext} context
+   *        The current context.
    */
-  addVarToScope: function(name, scope, writable) {
-    // If the variable is already defined then skip it
-    if (scope.set && scope.set.has(name)) {
-      return;
-    }
-
-    writable = writable === undefined ? true : writable;
+  addVarToScope: function(name, context) {
+    var scope = context.getScope();
     var variables = scope.variables;
     var variable = new escope.Variable(name, scope);
 
     variable.eslintExplicitGlobal = false;
-    variable.writeable = writable;
+    variable.writeable = true;
     variables.push(variable);
 
     // Since eslint 1.10.3, scope variables are now duplicated in the scope.set
@@ -231,16 +227,88 @@ module.exports = {
     }
   },
 
+  // Caches globals found in a file so we only have to parse a file once.
+  globalCache: new Map(),
+
   /**
-   * Adds a set of globals to a scope.
+   * Finds all the globals defined in a given file.
+   *
+   * @param {String} fileName
+   *        The file to parse for globals.
+   */
+  getGlobalsForFile: function(fileName) {
+    // If the file can't be found, let the error go up to the caller so it can
+    // be logged as an error in the current file.
+    var content = fs.readFileSync(fileName, "utf8");
+
+    if (this.globalCache.has(fileName)) {
+      return this.globalCache.get(fileName);
+    }
+
+    // Parse the content and get the globals from the ast.
+    var ast = this.getAST(content);
+    var globalVars = this.getGlobals(ast);
+    this.globalCache.set(fileName, globalVars);
+
+    return globalVars;
+  },
+
+  /**
+   * Adds a set of globals to a context.
    *
    * @param {Array} globalVars
    *        An array of global variable names.
-   * @param {ASTScope} scope
-   *        The scope.
+   * @param {ASTContext} context
+   *        The current context.
    */
-  addGlobals: function(globalVars, scope) {
-    globalVars.forEach(v => this.addVarToScope(v.name, scope, v.writable));
+  addGlobals: function(globalVars, context) {
+    for (var i = 0; i < globalVars.length; i++) {
+      var varName = globalVars[i];
+      this.addVarToScope(varName, context);
+    }
+  },
+
+  /**
+   * Process comments looking for import-globals-from statements.  Add globals
+   * from those files, if any.
+   *
+   * @param {String} currentFilePath
+   *        Absolute path to the file containing the comments.
+   * @param {Array} comments
+   *        The comments to be processed.
+   * @param {Object} node
+   *        The AST node for error reporting.
+   * @param {ASTContext} context
+   *        The current context.
+   */
+  addGlobalsFromComments: function(currentFilePath, comments, node, context) {
+    comments.forEach(comment => {
+      var value = comment.value.trim();
+      var match = /^import-globals-from\s+(.*)$/.exec(value);
+
+      if (match) {
+        var filePath = match[1];
+
+        if (!path.isAbsolute(filePath)) {
+          var dirName = path.dirname(currentFilePath);
+          filePath = path.resolve(dirName, filePath);
+        }
+
+        try {
+          let globals = this.getGlobalsForFile(filePath);
+          this.addGlobals(globals, context);
+        } catch (e) {
+          context.report(
+            node,
+            "Could not load globals from file {{filePath}}: {{error}}",
+            {
+              filePath: filePath,
+              error: e
+            }
+          );
+        }
+      }
+    });
   },
 
   /**
@@ -253,7 +321,6 @@ module.exports = {
   getPermissiveConfig: function() {
     return {
       comment: true,
-      attachComment: true,
       range: true,
       loc: true,
       tolerant: true,
@@ -287,52 +354,21 @@ module.exports = {
   /**
    * Check whether the context is the global scope.
    *
-   * @param {Array} ancestors
-   *        The parents of the current node.
+   * @param {ASTContext} context
+   *        The current context.
    *
    * @return {Boolean}
    *         True or false
    */
-  getIsGlobalScope: function(ancestors) {
-    for (let parent of ancestors) {
-      if (parent.type == "FunctionExpression" ||
-          parent.type == "FunctionDeclaration") {
-        return false;
-      }
+  getIsGlobalScope: function(context) {
+    var ancestors = context.getAncestors();
+    var parent = ancestors.pop();
+
+    if (parent.type == "ExpressionStatement") {
+      parent = ancestors.pop();
     }
-    return true;
-  },
 
-  /**
-   * Check whether we might be in a test head file.
-   *
-   * @param  {RuleContext} scope
-   *         You should pass this from within a rule
-   *         e.g. helpers.getIsHeadFile(this)
-   *
-   * @return {Boolean}
-   *         True or false
-   */
-  getIsHeadFile: function(scope) {
-    var pathAndFilename = scope.getFilename();
-
-    return /.*[\\/]head(_.+)?\.js$/.test(pathAndFilename);
-  },
-
-  /**
-   * Check whether we might be in an xpcshell test.
-   *
-   * @param  {RuleContext} scope
-   *         You should pass this from within a rule
-   *         e.g. helpers.getIsXpcshellTest(this)
-   *
-   * @return {Boolean}
-   *         True or false
-   */
-  getIsXpcshellTest: function(scope) {
-    var pathAndFilename = scope.getFilename();
-
-    return /.*[\\/]test_.+\.js$/.test(pathAndFilename);
+    return parent.type == "Program";
   },
 
   /**
@@ -364,7 +400,7 @@ module.exports = {
   getIsTest: function(scope) {
     var pathAndFilename = scope.getFilename();
 
-    if (this.getIsXpcshellTest(scope)) {
+    if (/.*[\\/]test_.+\.js$/.test(pathAndFilename)) {
       return true;
     }
 

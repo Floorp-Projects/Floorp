@@ -192,15 +192,5 @@
 
     // Only check typeof against valid results
     "valid-typeof": 2,
-  },
-  "env": {
-    "es6": true,
-    "browser": true,
-  },
-  "globals": {
-    "Components": false,
-    "dump": true,
-    "openDialog": false,
-    "sizeToContent": false,
   }
 }
