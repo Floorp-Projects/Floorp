@@ -164,6 +164,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void convertUInt32ToDouble(Register src, FloatRegister dest);
     void convertUInt32ToFloat32(Register src, FloatRegister dest);
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
+    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail);
     void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                               bool negativeZeroCheck = true);
     void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
