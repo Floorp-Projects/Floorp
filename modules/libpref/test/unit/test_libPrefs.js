@@ -311,7 +311,7 @@ function run_test() {
   savePrefFile.append("savePref.js");
   if (savePrefFile.exists())
     savePrefFile.remove(false);
-  savePrefFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  savePrefFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   ps.savePrefFile(savePrefFile);
   ps.resetPrefs();
 

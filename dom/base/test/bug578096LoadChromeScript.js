@@ -6,7 +6,7 @@ addMessageListener("file.create", function (message) {
              .getService(Components.interfaces.nsIProperties)
              .get("TmpD", Components.interfaces.nsIFile);
   file.append("foo.txt");
-  file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
+  file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
   sendAsyncMessage("file.created", new File(file));
 });
 
