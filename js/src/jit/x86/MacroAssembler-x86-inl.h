@@ -259,6 +259,25 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    branchPtrImpl(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    cmpl(rhs, lhs);
+    j(cond, label);
+}
+
+void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
     branchPtr(cond, lhs, rhs, label);
@@ -288,6 +307,31 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
     convertUInt32ToDouble(src, dest);
     convertDoubleToFloat32(dest, dest);
+}
+
+void
+MacroAssemblerX86::branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
+                                   Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    // Check payload before tag, since payload is more likely to differ.
+    if (cond == NotEqual) {
+        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
+        branchPtrImpl(NotEqual, tagOf(valaddr), value.typeReg(), label);
+    } else {
+        Label fallthrough;
+        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
+        branchPtrImpl(Equal, tagOf(valaddr), value.typeReg(), label);
+        bind(&fallthrough);
+    }
+}
+
+template <typename T, typename S>
+void
+MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+{
+    cmpPtr(Operand(lhs), rhs);
+    j(cond, label);
 }
 
 } // namespace jit

@@ -120,6 +120,26 @@ MacroAssemblerX64::finish()
     MacroAssemblerX86Shared::finish();
 }
 
+
+void
+MacroAssemblerX64::boxValue(JSValueType type, Register src, Register dest)
+{
+    MOZ_ASSERT(src != dest);
+
+    JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
+#ifdef DEBUG
+    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+        Label upper32BitsZeroed;
+        movePtr(ImmWord(UINT32_MAX), dest);
+        asMasm().branchPtr(Assembler::BelowOrEqual, src, dest, &upper32BitsZeroed);
+        breakpoint();
+        bind(&upper32BitsZeroed);
+    }
+#endif
+    mov(ImmShiftedTag(tag), dest);
+    orq(src, dest);
+}
+
 void
 MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
 {
@@ -256,8 +276,8 @@ MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), scratch);
     asMasm().addPtr(ptr, scratch);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              scratch, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       scratch, Imm32(nursery.nurserySize()), label);
 }
 
 void
@@ -278,8 +298,8 @@ MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value
     ScratchRegisterScope scratch(asMasm());
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), scratch);
     asMasm().addPtr(value.valueReg(), scratch);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              scratch, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       scratch, Imm32(nursery.nurserySize()), label);
 }
 
 void

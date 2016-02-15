@@ -2538,6 +2538,13 @@ MacroAssembler::linkSelfReference(JitCode* code)
 
 //}}} check_macroassembler_style
 
+void
+MacroAssembler::BranchGCPtr::emit(MacroAssembler& masm)
+{
+    MOZ_ASSERT(isInitialized());
+    masm.branchPtr(cond(), reg(), ptr_, jump());
+}
+
 namespace js {
 namespace jit {
 
