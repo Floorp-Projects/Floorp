@@ -564,23 +564,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         MOZ_CRASH("NYI");
     }
 
-    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-
-        // An out of range integer will be saturated to the destination size.
-        ARMFPRegister src64(src, 64);
-        ARMRegister dest64(dest, 64);
-
-        MOZ_ASSERT(!scratch64.Is(dest64));
-
-        //breakpoint();
-        Fcvtzs(dest64, src64);
-        Add(scratch64, dest64, Operand(0x7fffffffffffffff));
-        Cmn(scratch64, 3);
-        B(fail, Assembler::Above);
-        And(dest64, dest64, Operand(0xffffffff));
-    }
     void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                               bool negativeZeroCheck = true)
     {

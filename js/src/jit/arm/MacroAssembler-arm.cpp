@@ -118,27 +118,6 @@ void MacroAssemblerARM::convertDoubleToFloat32(FloatRegister src, FloatRegister 
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src), false, c);
 }
 
-// There are two options for implementing emitTruncateDouble:
-//
-// 1. Convert the floating point value to an integer, if it did not fit, then it
-// was clamped to INT_MIN/INT_MAX, and we can test it. NOTE: if the value
-// really was supposed to be INT_MAX / INT_MIN then it will be wrong.
-//
-// 2. Convert the floating point value to an integer, if it did not fit, then it
-// set one or two bits in the fpcsr. Check those.
-void
-MacroAssemblerARM::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
-{
-    ScratchDoubleScope scratch(asMasm());
-    FloatRegister scratchSIntReg = scratch.sintOverlay();
-
-    ma_vcvt_F64_I32(src, scratchSIntReg);
-    ma_vxfer(scratchSIntReg, dest);
-    ma_cmp(dest, Imm32(0x7fffffff));
-    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
-    ma_b(fail, Assembler::Equal);
-}
-
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
