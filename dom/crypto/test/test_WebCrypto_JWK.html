@@ -250,6 +250,58 @@ TestArray.addTest(
       );
   }
 );
+
+// --------
+TestArray.addTest(
+  "Check JWK parameters on generated ECDSA key pair",
+  function() {
+    crypto.subtle.generateKey({name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign', 'verify'])
+      .then(pair => Promise.all([
+         crypto.subtle.exportKey('jwk', pair.privateKey),
+         crypto.subtle.exportKey('jwk', pair.publicKey)
+      ]))
+      .then(
+        complete(this, function(x) {
+          var priv = x[0];
+          var pub = x[1];
+          var pubIsSubsetOfPriv = Object.keys(pub)
+            .filter(k => k !== 'key_ops') // key_ops is the only complex attr
+            .reduce((all, k) => all && pub[k] === priv[k], true);
+          // Can't use hasBaseJwkFields() because EC keys don't get "alg":
+          // "alg" matches curve to hash, but WebCrypto keys are more flexible.
+          return hasFields(pub, ['kty', 'crv', 'key_ops', 'ext']) &&
+            pub.kty === 'EC' &&
+            pub.crv === 'P-256' &&
+            pub.ext &&
+            typeof(pub.x) === 'string' &&
+            typeof(pub.y) === 'string' &&
+            shallowArrayEquals(pub.key_ops, ['verify']) &&
+            pubIsSubsetOfPriv &&
+            shallowArrayEquals(priv.key_ops, ['sign']) &&
+            typeof(priv.d) === 'string';
+        }),
+        error(this));
+  }
+);
+
+// --------
+TestArray.addTest(
+  "Check key_ops parameter on an unusable RSA public key",
+  function() {
+    var parameters = {
+      name: 'RSASSA-PKCS1-v1_5',
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256'
+    };
+    // The public key generated here will have no usages and will therefore
+    // have an empty key_ops list.
+    crypto.subtle.generateKey(parameters, true, ['sign'])
+      .then(pair => crypto.subtle.exportKey('jwk', pair.publicKey))
+      .then(complete(this, x => x.key_ops.length === 0),
+            error(this));
+  }
+);
 /*]]>*/</script>
 </head>
 
