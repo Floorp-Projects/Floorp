@@ -516,6 +516,15 @@ MacroAssembler::addStackPtrTo(T t)
 
 #endif // !JS_CODEGEN_ARM64
 
+void
+MacroAssembler::canonicalizeFloat(FloatRegister reg)
+{
+    Label notNaN;
+    branchFloat(DoubleOrdered, reg, reg, &notNaN);
+    loadConstantFloat32(float(JS::GenericNaN()), reg);
+    bind(&notNaN);
+}
+
 template <typename T>
 void
 MacroAssembler::storeObjectOrNull(Register src, const T& dest)

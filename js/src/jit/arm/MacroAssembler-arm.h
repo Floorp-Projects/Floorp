@@ -1456,8 +1456,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
                       Label* label);
 
     void compareFloat(FloatRegister lhs, FloatRegister rhs);
-    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
-                     Label* label);
 
     void checkStackAlignment();
 
