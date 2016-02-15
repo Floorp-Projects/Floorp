@@ -822,6 +822,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branch32(cond, lhs, rhs, label);
     }
 
+    void branchPrivatePtr(Condition cond, const Address& lhs, ImmPtr ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, const Address& lhs, Register ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label* label) {
         Condition c = testDouble(cond, t);

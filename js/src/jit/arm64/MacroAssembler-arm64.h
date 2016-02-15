@@ -1593,6 +1593,17 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         loadPtr(lhs, scratch);
         branchTestPtr(cond, scratch, imm, label);
     }
+    void branchPrivatePtr(Condition cond, const Address& lhs, ImmPtr ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, const Address& lhs, Register ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
+    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label* label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
 
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(imm.value));
