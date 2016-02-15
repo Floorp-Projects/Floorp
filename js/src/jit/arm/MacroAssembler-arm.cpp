@@ -3235,22 +3235,6 @@ template void
 MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
                                            const BaseIndex& dest, MIRType slotType);
 
-
-void
-MacroAssemblerARMCompat::branchTest64(Condition cond, Register64 lhs, Register64 rhs,
-                                      Register temp, Label* label)
-{
-    if (cond == Assembler::Zero) {
-        MOZ_ASSERT(lhs.low == rhs.low);
-        MOZ_ASSERT(lhs.high == rhs.high);
-        mov(lhs.low, ScratchRegister);
-        asMasm().or32(lhs.high, ScratchRegister);
-        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
-    } else {
-        MOZ_CRASH("Unsupported condition");
-    }
-}
-
 void
 MacroAssemblerARMCompat::moveValue(const Value& val, Register type, Register data)
 {

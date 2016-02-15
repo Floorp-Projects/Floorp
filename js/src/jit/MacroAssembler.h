@@ -841,6 +841,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
 
+    inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                             Label* label) PER_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
