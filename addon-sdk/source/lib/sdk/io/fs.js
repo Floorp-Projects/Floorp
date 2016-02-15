@@ -121,8 +121,8 @@ function remove(path, recursive) {
 /**
  * Utility function to convert either an octal number or string
  * into an octal number
- * 0777 => 0777
- * "0644" => 0644
+ * 0777 => 0o777
+ * "0644" => 0o644
  */
 function Mode(mode, fallback) {
   return isString(mode) ? parseInt(mode, 8) : mode || fallback;

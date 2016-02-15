@@ -9,7 +9,7 @@ function run_test() {
     var targetFile = testDir.clone();
     targetFile.append("target.txt");
     if (!targetFile.exists())
-      targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+      targetFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 
     var link = testDir.clone();
     link.append("link");

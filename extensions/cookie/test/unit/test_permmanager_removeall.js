@@ -17,7 +17,7 @@ function run_test() {
   // corrupt the file
   var ostream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, 0x02, 0666, 0);
+  ostream.init(file, 0x02, 0o666, 0);
   var conv = Cc["@mozilla.org/intl/converter-output-stream;1"].
              createInstance(Ci.nsIConverterOutputStream);
   conv.init(ostream, "UTF-8", 0, 0);
@@ -28,7 +28,7 @@ function run_test() {
   // prepare an empty hostperm.1 file so that it can be used for importing
   var hostperm = dir.clone();
   hostperm.append("hostperm.1");
-  ostream.init(hostperm, 0x02 | 0x08, 0666, 0);
+  ostream.init(hostperm, 0x02 | 0x08, 0o666, 0);
   ostream.close();
 
   // remove all should not throw

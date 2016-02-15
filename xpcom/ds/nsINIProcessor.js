@@ -144,7 +144,7 @@ INIProcessor.prototype = {
         let safeStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
                          createInstance(Ci.nsIFileOutputStream);
         safeStream.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE,
-                        0600, null);
+                        0o600, null);
 
         var outputStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
                            createInstance(Ci.nsIBufferedOutputStream);

@@ -22,11 +22,11 @@ function create_file(fileName)
 {
     var outFile = getTempDir();
     outFile.append(fileName);
-    outFile.createUnique(outFile.NORMAL_FILE_TYPE, 0600);
+    outFile.createUnique(outFile.NORMAL_FILE_TYPE, 0o600);
 
     var stream = Cc["@mozilla.org/network/file-output-stream;1"]
 	.createInstance(Ci.nsIFileOutputStream);
-    stream.init(outFile, 0x02 | 0x08 | 0x20, 0600, 0);
+    stream.init(outFile, 0x02 | 0x08 | 0x20, 0o600, 0);
     stream.write("foo", 3);
     stream.close();
 

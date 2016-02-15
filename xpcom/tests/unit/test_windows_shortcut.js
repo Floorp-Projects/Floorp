@@ -23,7 +23,7 @@ function run_test()
 
     let tempDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
     tempDir.append("shortcutTesting");
-    tempDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0666);
+    tempDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o666);
 
     test_create_noargs(tempDir);
     test_create_notarget(tempDir);
@@ -43,7 +43,7 @@ function test_create_noargs(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("shouldNeverExist.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -63,7 +63,7 @@ function test_create_notarget(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("shouldNeverExist2.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -86,11 +86,11 @@ function test_create_targetonly(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -104,11 +104,11 @@ function test_create_normal(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -125,11 +125,11 @@ function test_create_unicode(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("ṩhогТϾừ†Target.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -146,11 +146,11 @@ function test_update_noargs(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -169,11 +169,11 @@ function test_update_notarget(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -195,11 +195,11 @@ function test_update_targetonly(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -210,7 +210,7 @@ function test_update_targetonly(tempDir)
 
   let newTargetFile = tempDir.clone();
   newTargetFile.append("shortcutTarget.exe");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   win.setShortcut(newTargetFile);
 
@@ -222,11 +222,11 @@ function test_update_normal(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -237,7 +237,7 @@ function test_update_normal(tempDir)
 
   let newTargetFile = tempDir.clone();
   newTargetFile.append("shortcutTarget.exe");
-  newTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  newTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   win.setShortcut(newTargetFile,
                   do_get_profile(),
@@ -252,11 +252,11 @@ function test_update_unicode(tempDir)
 {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let targetFile = tempDir.clone();
   targetFile.append("shortcutTarget.exe");
-  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
@@ -267,7 +267,7 @@ function test_update_unicode(tempDir)
 
   let newTargetFile = tempDir.clone();
   newTargetFile.append("ṩhогТϾừ†Target.exe");
-  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   win.setShortcut(newTargetFile,
                   do_get_profile(), // XXX: This should probably be unicode

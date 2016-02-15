@@ -118,7 +118,7 @@ function run_test()
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
   ostream.init(tempFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-               0666, 0);
+               0o666, 0);
   let newData = "abcdefghijklmnopqrstuvwxyz";
   ostream.write(newData, newData.length);
   ostream.close();
@@ -499,12 +499,12 @@ function create_temp_file(data) {
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append("fileinputstream-test-file.tmp");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
   ostream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
-               0666, 0);
+               0o666, 0);
   do_check_eq(ostream.write(data, data.length), data.length);
   ostream.close();
 

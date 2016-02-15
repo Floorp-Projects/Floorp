@@ -12,7 +12,7 @@ outputDir.initWithFile(workingDir);
 outputDir.append(outputName);
 
 if (!outputDir.exists()) {
-  outputDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+  outputDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o777);
 } else if (!outputDir.isDirectory()) {
   do_throw(outputName + " is not a directory?")
 }
@@ -83,10 +83,10 @@ function testOutputStreams() {
     var jsonFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     jsonFile.initWithFile(outputDir);
     jsonFile.append("test.json");
-    jsonFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    jsonFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
     try {
-      stream.init(jsonFile, 0x04 | 0x08 | 0x20, 0600, 0); // write, create, truncate
+      stream.init(jsonFile, 0x04 | 0x08 | 0x20, 0o600, 0); // write, create, truncate
       nativeJSON.encodeToStream(stream, charset, writeBOM, obj);
     } finally {
       stream.close();

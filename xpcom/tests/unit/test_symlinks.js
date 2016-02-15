@@ -69,13 +69,13 @@ function setupTestDir(testDir, relative) {
   }
   do_check_true(!testDir.exists());
 
-  testDir.create(nsIFile.DIRECTORY_TYPE, 0777);
+  testDir.create(nsIFile.DIRECTORY_TYPE, 0o777);
 
-  targetDir.create(nsIFile.DIRECTORY_TYPE, 0777);
+  targetDir.create(nsIFile.DIRECTORY_TYPE, 0o777);
 
   var targetFile = testDir.clone();
   targetFile.append(FILE_TARGET);
-  targetFile.create(nsIFile.NORMAL_FILE_TYPE, 0666);
+  targetFile.create(nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   var imaginary = testDir.clone();
   imaginary.append(DOES_NOT_EXIST);
