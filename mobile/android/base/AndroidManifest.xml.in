@@ -293,6 +293,11 @@
                   android:exported="false"
                   android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
+        <provider android:name="org.mozilla.gecko.db.LoginsProvider"
+                  android:label="@string/sync_configure_engines_title_passwords"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.logins"
+                  android:exported="false"/>
+
         <provider android:name="org.mozilla.gecko.db.FormHistoryProvider"
                   android:label="@string/sync_configure_engines_title_history"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"

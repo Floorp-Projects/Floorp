@@ -227,6 +227,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/LocalTabsAccessor.java',
     'db/LocalUrlAnnotations.java',
     'db/LocalURLMetadata.java',
+    'db/LoginsProvider.java',
     'db/PasswordsProvider.java',
     'db/PerProfileDatabaseProvider.java',
     'db/PerProfileDatabases.java',
