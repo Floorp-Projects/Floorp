@@ -165,6 +165,17 @@ DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
 }
 
 static bool
+DecodeCallWithSig(FunctionDecoder& f, const Sig& sig, ExprType expected)
+{
+    for (ValType argType : sig.args()) {
+        if (!DecodeExpr(f, ToExprType(argType)))
+            return false;
+    }
+
+    return CheckType(f, sig.ret(), expected);
+}
+
+static bool
 DecodeCall(FunctionDecoder& f, ExprType expected)
 {
     uint32_t funcIndex;
@@ -174,14 +185,7 @@ DecodeCall(FunctionDecoder& f, ExprType expected)
     if (funcIndex >= f.mg().numFuncSigs())
         return f.fail("callee index out of range");
 
-    const DeclaredSig& sig = f.mg().funcSig(funcIndex);
-
-    for (ValType argType : sig.args()) {
-        if (!DecodeExpr(f, ToExprType(argType)))
-            return false;
-    }
-
-    return CheckType(f, sig.ret(), expected);
+    return DecodeCallWithSig(f, f.mg().funcSig(funcIndex), expected);
 }
 
 static bool
@@ -194,14 +198,23 @@ DecodeCallImport(FunctionDecoder& f, ExprType expected)
     if (importIndex >= f.mg().numImports())
         return f.fail("import index out of range");
 
-    const DeclaredSig& sig = *f.mg().import(importIndex).sig;
+    return DecodeCallWithSig(f, *f.mg().import(importIndex).sig, expected);
+}
 
-    for (ValType argType : sig.args()) {
-        if (!DecodeExpr(f, ToExprType(argType)))
-            return false;
-    }
+static bool
+DecodeCallIndirect(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t sigIndex;
+    if (!f.d().readU32(&sigIndex))
+        return f.fail("unable to read indirect call signature index");
 
-    return CheckType(f, sig.ret(), expected);
+    if (sigIndex >= f.mg().numSigs())
+        return f.fail("signature index out of range");
+
+    if (!DecodeExpr(f, ExprType::I32))
+        return false;
+
+    return DecodeCallWithSig(f, f.mg().sig(sigIndex), expected);
 }
 
 static bool
@@ -387,6 +400,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeCall(f, expected);
       case Expr::CallImport:
         return DecodeCallImport(f, expected);
+      case Expr::CallIndirect:
+        return DecodeCallIndirect(f, expected);
       case Expr::I32Const:
         return DecodeConstI32(f, expected);
       case Expr::I64Const:
@@ -757,6 +772,66 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
+DecodeTableSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+{
+    if (!d.readCStringIf(TableSection))
+        return true;
+
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected table section byte size");
+
+    if (!d.readVarU32(&init->numTableElems))
+        return Fail(cx, d, "expected number of table elems");
+
+    if (init->numTableElems > MaxTableElems)
+        return Fail(cx, d, "too many table elements");
+
+    Uint32Vector elems;
+    if (!elems.resize(init->numTableElems))
+        return false;
+
+    for (uint32_t i = 0; i < init->numTableElems; i++) {
+        uint32_t funcIndex;
+        if (!d.readVarU32(&funcIndex))
+            return Fail(cx, d, "expected table element");
+
+        if (funcIndex >= init->funcSigs.length())
+            return Fail(cx, d, "table element out of range");
+
+        elems[i] = funcIndex;
+    }
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "table section byte size mismatch");
+
+    // Convert the single (heterogeneous) indirect function table into an
+    // internal set of asm.js-like homogeneous tables indexed by signature.
+    // Every element in the heterogeneous table is present in only one
+    // homogeneous table (as determined by its signature). An element's index in
+    // the heterogeneous table is the same as its index in its homogeneous table
+    // and all other homogeneous tables are given an entry that will fault if
+    // called for at that element's index.
+
+    for (uint32_t elemIndex = 0; elemIndex < elems.length(); elemIndex++) {
+        uint32_t funcIndex = elems[elemIndex];
+        TableModuleGeneratorData& table = init->sigToTable[init->funcSigIndex(funcIndex)];
+        if (table.numElems == 0) {
+            table.numElems = elems.length();
+            if (!table.elemFuncIndices.appendN(ModuleGenerator::BadIndirectCall, elems.length()))
+                return false;
+        }
+    }
+
+    for (uint32_t elemIndex = 0; elemIndex < elems.length(); elemIndex++) {
+        uint32_t funcIndex = elems[elemIndex];
+        init->sigToTable[init->funcSigIndex(funcIndex)].elemFuncIndices[elemIndex] = funcIndex;
+    }
+
+    return true;
+}
+
+static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     if (!d.readCStringIf(FuncSubsection))
@@ -1014,7 +1089,7 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
     }
 
     if (funcIndex != mg.numFuncSigs())
-        return Fail(cx, d, "fewer function definitions than declarations");
+        return Fail(cx, d, "different number of definitions than declarations");
 
     if (!mg.finishFuncDefs())
         return false;
@@ -1087,7 +1162,8 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
         !strcmp(sectionName.get(), DeclSection) ||
         !strcmp(sectionName.get(), ExportSection) ||
         !strcmp(sectionName.get(), CodeSection) ||
-        !strcmp(sectionName.get(), DataSection))
+        !strcmp(sectionName.get(), DataSection) ||
+        !strcmp(sectionName.get(), TableSection))
     {
         return Fail(cx, d, "known section out of order");
     }
@@ -1123,6 +1199,9 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
         return false;
 
     if (!DecodeDeclarationSection(cx, d, init.get()))
+        return false;
+
+    if (!DecodeTableSection(cx, d, init.get()))
         return false;
 
     ModuleGenerator mg(cx);

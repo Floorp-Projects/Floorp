@@ -1783,7 +1783,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #undef ADDSTDLIBSIMDOPNAME
 
-        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>();
+        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
@@ -1800,7 +1800,7 @@ class MOZ_STACK_CLASS ModuleValidator
                 return false;
         }
 
-        return mg_.init(Move(genData), Move(filename), ModuleKind::AsmJS);
+        return mg_.init(Move(genData), Move(filename));
     }
 
     ExclusiveContext* cx() const             { return cx_; }

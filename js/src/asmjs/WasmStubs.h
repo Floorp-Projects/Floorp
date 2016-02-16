@@ -36,6 +36,9 @@ GenerateJitExit(jit::MacroAssembler& masm, const Import& import, bool usesHeap);
 extern Offsets
 GenerateJumpTarget(jit::MacroAssembler& masm, JumpTarget target);
 
+extern ProfilingOffsets
+GenerateBadIndirectCallExit(jit::MacroAssembler& masm);
+
 extern Offsets
 GenerateInterruptStub(jit::MacroAssembler& masm);
 

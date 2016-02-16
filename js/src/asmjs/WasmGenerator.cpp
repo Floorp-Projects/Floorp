@@ -36,6 +36,8 @@ using mozilla::MakeEnumeratedRange;
 static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
+const unsigned ModuleGenerator::BadIndirectCall;
+
 ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
   : cx_(cx),
     jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
@@ -108,7 +110,7 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, ModuleKind kind)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename)
 {
     if (!funcIndexToExport_.init())
         return false;
@@ -119,7 +121,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
 
     module_->globalBytes = InitialGlobalDataBytes;
     module_->compileArgs = CompileArgs(cx_);
-    module_->kind = kind;
+    module_->kind = shared->kind;
     module_->heapUsage = HeapUsage::None;
     module_->filename = Move(filename);
 
@@ -127,21 +129,35 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
     if (!exportMap_)
         return false;
 
+    shared_ = Move(shared);
+
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
     // and will be initialized in a linear order via init* functions as the
     // module is generated. For wasm, the Vectors are correctly-sized and
     // already initialized.
-    shared_ = Move(shared);
-    if (kind == ModuleKind::Wasm) {
+
+    if (module_->kind == ModuleKind::Wasm) {
         numSigs_ = shared_->sigs.length();
         module_->numFuncs = shared_->funcSigs.length();
         module_->globalBytes = AlignBytes(module_->globalBytes, sizeof(void*));
+
         for (ImportModuleGeneratorData& import : shared_->imports) {
             MOZ_ASSERT(!import.globalDataOffset);
             import.globalDataOffset = module_->globalBytes;
             module_->globalBytes += Module::SizeOfImportExit;
             if (!addImport(*import.sig, import.globalDataOffset))
                 return false;
+        }
+
+        MOZ_ASSERT(module_->globalBytes % sizeof(void*) == 0);
+
+        for (TableModuleGeneratorData& table : shared_->sigToTable) {
+            MOZ_ASSERT(table.numElems == table.elemFuncIndices.length());
+            if (!table.numElems)
+                continue;
+            MOZ_ASSERT(!table.globalDataOffset);
+            table.globalDataOffset = module_->globalBytes;
+            module_->globalBytes += table.numElems * sizeof(void*);
         }
     }
 
@@ -346,6 +362,7 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
     Vector<ProfilingOffsets> interpExits(cx_);
     Vector<ProfilingOffsets> jitExits(cx_);
     EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
+    ProfilingOffsets badIndirectCallExit;
     Offsets interruptExit;
 
     {
@@ -372,6 +389,7 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
             jumpTargets[target] = GenerateJumpTarget(masm, target);
 
+        badIndirectCallExit = GenerateBadIndirectCallExit(masm);
         interruptExit = GenerateInterruptStub(masm);
 
         if (masm.oom() || !masm_.asmMergeWith(masm))
@@ -406,14 +424,39 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
             return false;
     }
 
+    badIndirectCallExit.offsetBy(offsetInWhole);
+    if (!module_->codeRanges.emplaceBack(CodeRange::ErrorExit, badIndirectCallExit))
+        return false;
+
     interruptExit.offsetBy(offsetInWhole);
     if (!module_->codeRanges.emplaceBack(CodeRange::Inline, interruptExit))
         return false;
 
-    // The signal handler redirects PC to the out-of-bounds and interrupt stubs.
+    // Fill in StaticLinkData with the offsets of these stubs.
 
     link->pod.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
     link->pod.interruptOffset = interruptExit.begin;
+
+    for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
+        const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
+        if (table.elemFuncIndices.empty())
+            continue;
+
+        Uint32Vector elemOffsets;
+        if (!elemOffsets.resize(table.elemFuncIndices.length()))
+            return false;
+
+        for (size_t i = 0; i < table.elemFuncIndices.length(); i++) {
+            uint32_t funcIndex = table.elemFuncIndices[i];
+            if (funcIndex == BadIndirectCall)
+                elemOffsets[i] = badIndirectCallExit.begin;
+            else
+                elemOffsets[i] = funcEntry(funcIndex);
+        }
+
+        if (!link->funcPtrTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
+            return false;
+    }
 
     // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
     // emit new jumps to JumpTargets has finished.
@@ -502,24 +545,6 @@ ModuleGenerator::finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticL
         masm_.patchAsmJSGlobalAccess(a.patchAt, code, globalData, a.globalDataOffset);
     }
 #endif
-
-    // Convert the function pointer table elements from function-indices to code
-    // offsets that static linking will convert to absolute addresses.
-    for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
-        const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
-        if (table.elemFuncIndices.empty())
-            continue;
-
-        Uint32Vector elemOffsets;
-        if (!elemOffsets.resize(table.elemFuncIndices.length()))
-            return false;
-
-        for (size_t i = 0; i < table.elemFuncIndices.length(); i++)
-            elemOffsets[i] = funcEntry(table.elemFuncIndices[i]);
-
-        if (!link->funcPtrTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
-            return false;
-    }
 
     return true;
 }
@@ -790,8 +815,7 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
                                      Move(fg->locals_),
                                      fg->lineOrBytecode_,
                                      Move(fg->callSiteLineNums_),
-                                     generateTime,
-                                     module_->kind);
+                                     generateTime);
     if (!func)
         return false;
 
