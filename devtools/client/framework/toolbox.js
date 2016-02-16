@@ -28,8 +28,6 @@ Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-loader.lazyImporter(this, "CommandUtils",
-  "resource://devtools/client/shared/DeveloperToolbar.jsm");
 loader.lazyGetter(this, "toolboxStrings", () => {
   const properties = "chrome://devtools/locale/toolbox.properties";
   const bundle = Services.strings.createBundle(properties);
@@ -45,6 +43,8 @@ loader.lazyGetter(this, "toolboxStrings", () => {
     }
   };
 });
+loader.lazyRequireGetter(this, "CommandUtils",
+  "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "Hosts",

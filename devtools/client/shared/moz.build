@@ -21,7 +21,7 @@ DevToolsModules(
     'css-parsing-utils.js',
     'Curl.jsm',
     'demangle.js',
-    'DeveloperToolbar.jsm',
+    'developer-toolbar.js',
     'devices.js',
     'DOMHelpers.jsm',
     'doorhanger.js',
