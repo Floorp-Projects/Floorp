@@ -344,14 +344,6 @@ IsWAVSupportedType(const nsACString& aType,
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
 {
-  if (IsWaveType(nsDependentCString(aMIMEType))) {
-    // We should not return true for Wave types, since there are some
-    // Wave codecs actually in use in the wild that we don't support, and
-    // we should allow those to be handled by plugins or helper apps.
-    // Furthermore people can play Wave files on most platforms by other
-    // means.
-    return false;
-  }
   return CanHandleMediaType(aMIMEType, false, EmptyString()) != CANPLAY_NO;
 }
 
@@ -694,6 +686,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
     IsMP3SupportedType(aType) ||
     IsAACSupportedType(aType) ||
+    IsWAVSupportedType(aType) ||
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
 #endif
