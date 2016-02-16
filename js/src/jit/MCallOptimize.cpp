@@ -3288,10 +3288,12 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
             defVal = constant(Int32Value(0));
         } else if (laneType == MIRType_Boolean) {
             defVal = constant(BooleanValue(false));
-        } else {
-            MOZ_ASSERT(IsFloatingPointType(laneType));
+        } else if (laneType == MIRType_Double) {
             defVal = constant(DoubleNaNValue());
-            defVal->setResultType(laneType);
+        } else {
+            MOZ_ASSERT(laneType == MIRType_Float32);
+            defVal = MConstant::NewFloat32(alloc(), GenericNaN());
+            current->add(defVal);
         }
     }
 

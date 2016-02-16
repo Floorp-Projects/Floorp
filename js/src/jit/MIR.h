@@ -1367,18 +1367,41 @@ class MLimitedTruncate
 // A constant js::Value.
 class MConstant : public MNullaryInstruction
 {
-    Value value_;
+    struct Payload {
+        union {
+            bool b;
+            int32_t i32;
+            float f;
+            double d;
+            JSString* str;
+            JS::Symbol* sym;
+            JSObject* obj;
+            uint64_t asBits;
+        };
+        Payload() : asBits(0) {}
+    };
+
+    Payload payload_;
+
+    static_assert(sizeof(Payload) == sizeof(uint64_t),
+                  "asBits must be big enough for all payload bits");
+
+#ifdef DEBUG
+    void assertInitializedPayload() const;
+#else
+    void assertInitializedPayload() const {}
+#endif
 
   protected:
     MConstant(const Value& v, CompilerConstraintList* constraints);
     explicit MConstant(JSObject* obj);
+    explicit MConstant(float f);
 
   public:
     INSTRUCTION_HEADER(Constant)
     static MConstant* New(TempAllocator& alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
-    static MConstant* NewTypedValue(TempAllocator& alloc, const Value& v, MIRType type,
-                                    CompilerConstraintList* constraints = nullptr);
+    static MConstant* NewFloat32(TempAllocator& alloc, double d);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
 
@@ -1422,44 +1445,45 @@ class MConstant : public MNullaryInstruction
 
     ALLOW_CLONE(MConstant)
 
-    bool equals(const MConstant* other) {
-        return value_ == other->value_;
+    bool equals(const MConstant* other) const {
+        assertInitializedPayload();
+        return type() == other->type() && payload_.asBits == other->payload_.asBits;
     }
 
     bool toBoolean() const {
         MOZ_ASSERT(type() == MIRType_Boolean);
-        return value_.toBoolean();
+        return payload_.b;
     }
     int32_t toInt32() const {
         MOZ_ASSERT(type() == MIRType_Int32);
-        return value_.toInt32();
+        return payload_.i32;
     }
     bool isInt32(int32_t i) const {
-        return type() == MIRType_Int32 && value_.toInt32() == i;
+        return type() == MIRType_Int32 && payload_.i32 == i;
     }
     double toDouble() const {
         MOZ_ASSERT(type() == MIRType_Double);
-        return value_.toDouble();
+        return payload_.d;
     }
     float toFloat32() const {
         MOZ_ASSERT(type() == MIRType_Float32);
-        return value_.toDouble();
+        return payload_.f;
     }
     JSString* toString() const {
         MOZ_ASSERT(type() == MIRType_String);
-        return value_.toString();
+        return payload_.str;
     }
     JS::Symbol* toSymbol() const {
         MOZ_ASSERT(type() == MIRType_Symbol);
-        return value_.toSymbol();
+        return payload_.sym;
     }
     JSObject& toObject() const {
         MOZ_ASSERT(type() == MIRType_Object);
-        return value_.toObject();
+        return *payload_.obj;
     }
     JSObject* toObjectOrNull() const {
         if (type() == MIRType_Object)
-            return &value_.toObject();
+            return payload_.obj;
         MOZ_ASSERT(type() == MIRType_Null);
         return nullptr;
     }
