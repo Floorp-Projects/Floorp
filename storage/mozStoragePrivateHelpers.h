@@ -104,7 +104,7 @@ DoGetBlobAsString(T* aThis, uint32_t aIndex, V& aValue)
     aThis->GetBlob(aIndex, &size, reinterpret_cast<uint8_t**>(&blob));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aValue.Adopt(blob, size / sizeof(char_type));
+  aValue.Assign(blob, size / sizeof(char_type));
   return NS_OK;
 }
 
