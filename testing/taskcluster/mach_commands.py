@@ -153,7 +153,7 @@ def query_vcs_info(repository, revision):
         sys.stderr.write('cannot query vcs info because vcs info not provided\n')
         return None
 
-    PushInfo = namedtuple('PushInfo', ['pushid', 'pushdate'])
+    VCSInfo = namedtuple('VCSInfo', ['pushid', 'pushdate'])
 
     try:
         import requests
@@ -176,11 +176,11 @@ def query_vcs_info(repository, revision):
         # out the 'date' field.
         pushid = contents.iterkeys().next()
         pushdate = contents[pushid]['date']
-        return PushInfo(pushid, pushdate)
+        return VCSInfo(pushid, pushdate)
 
     except Exception:
         sys.stderr.write(
-            "Error querying pushinfo for repository '%s' revision '%s'\n" % (
+            "Error querying VCS info for '%s' revision '%s'\n" % (
                 repository, revision,
             )
         )
@@ -330,9 +330,9 @@ class Graph(object):
 
         # Default to current time if querying the head rev fails
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
-        pushinfo = query_vcs_info(params['head_repository'], params['head_rev'])
-        if pushinfo:
-            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
+        vcs_info = query_vcs_info(params['head_repository'], params['head_rev'])
+        if vcs_info:
+            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
 
         # Template parameters used when expanding the graph
         seen_images = {}
@@ -633,9 +633,9 @@ class CIBuild(object):
 
         # Default to current time if querying the head rev fails
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
-        pushinfo = query_vcs_info(params['head_repository'], params['head_rev'])
-        if pushinfo:
-            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
+        vcs_info = query_vcs_info(params['head_repository'], params['head_rev'])
+        if vcs_info:
+            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
 
         from taskcluster_graph.from_now import (
             json_time_from_now,
