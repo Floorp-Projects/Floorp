@@ -1,12 +1,21 @@
 #!/bin/bash -ex
 
-HAZARD_SHELL_OBJDIR=$MOZ_OBJDIR/obj-haz-shell
+[ -n "$WORKSPACE" ]
+[ -n "$MOZ_OBJDIR" ]
+[ -n "$GECKO_DIR" ]
+
+HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
 JS_SRCDIR=$GECKO_DIR/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
 
 # Install the sixgill tool
 TOOLTOOL_MANIFEST=js/src/devtools/rootAnalysis/build/sixgill.manifest
 . install-packages.sh "$GECKO_DIR"
+
+PYTHON=python2.7
+if ! which $PYTHON; then
+    PYTHON=python
+fi
 
 export CC="$GECKO_DIR/gcc/bin/gcc"
 export CXX="$GECKO_DIR/gcc/bin/g++"
@@ -45,7 +54,7 @@ function run_analysis () {
 
     (
         cd "$analysis_dir"
-        python "$ANALYSIS_SRCDIR/analyze.py" --buildcommand="$GECKO_DIR/testing/mozharness/scripts/spidermonkey/build.${build_type}"
+        $PYTHON "$ANALYSIS_SRCDIR/analyze.py" --buildcommand="$GECKO_DIR/testing/mozharness/scripts/spidermonkey/build.${build_type}"
     )
 }
 
@@ -59,13 +68,16 @@ function grab_artifacts () {
         cd "$analysis_dir"
         ls -lah
 
+        # Do not error out if no files found
+        shopt -s nullglob
+        set +e
         for f in *.txt *.lst; do
             gzip -9 -c "$f" > "${artifacts}/$f.gz"
         done
 
         # Check whether the user requested .xdb file upload in the top commit comment
 
-        if hg --cwd "$GECKO_DIR" log -l1 --template '{desc}\n' | grep -q 'haz: --upload-xdbs'; then
+        if hg --cwd "$GECKO_DIR" log -l1 --template '{desc}\n' | grep -q -- '--upload-xdbs'; then
             for f in *.xdb; do
                 bzip2 -c "$f" > "${artifacts}/$f.bz2"
             done
@@ -74,8 +86,19 @@ function grab_artifacts () {
 }
 
 function check_hazards () {
-    if grep 'Function.*has unrooted.*live across GC call' "$1"/rootingHazards.txt; then
-        echo "TEST-UNEXPECTED-FAIL hazards detected" >&2
+    (
+    set +e
+    NUM_HAZARDS=$(grep -c 'Function.*has unrooted.*live across GC call' "$1"/rootingHazards.txt)
+    NUM_UNSAFE=$(grep -c '^Function.*takes unsafe address of unrooted' "$1"/refs.txt)
+    NUM_UNNECESSARY=$(grep -c '^Function.* has unnecessary root' "$1"/unnecessary.txt)
+
+    echo "TinderboxPrint: $NUM_HAZARDS rooting hazards"
+    echo "TinderboxPrint: $NUM_UNSAFE unsafe references to unrooted GC pointers"
+    echo "TinderboxPrint: $NUM_UNSAFE unnecessary roots"
+
+    if [ $NUM_HAZARDS -gt 0 ]; then
+        echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS hazards detected" >&2
         exit 1
     fi
+    )
 }
