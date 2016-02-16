@@ -9981,6 +9981,13 @@
     "kind": "count",
     "description": "Number of times the D3D11 compositor failed to get a texture sync handle."
   },
+  "GFX_CONTENT_FAILED_TO_ACQUIRE_DEVICE": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "6",
+    "description": "Failed to create a gfx content device. 0=content d3d11, 1=image d3d11, 2=d2d1."
+  },
   "GFX_CRASH": {
     "expires_in_version": "never",
     "kind": "enumerated",
