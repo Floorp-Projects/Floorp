@@ -9,9 +9,7 @@ const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kBrowserSharingNotificationId = "loop-sharing-notification";
-
-const MIN_CURSOR_DELTA = 3;
-const MIN_CURSOR_INTERVAL = 100;
+const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -95,14 +93,16 @@ var WindowListener = {
        *
        * @param {DOMEvent} [event] Optional event that triggered the call to this
        *                           function.
+       * @param {String}   [tabId] Optional name of the tab to select after the panel
+       *                           has opened. Does nothing when the panel is hidden.
        * @return {Promise}
        */
-      togglePanel: function(event) {
+      togglePanel: function(event, tabId = null) {
         if (!this.panel) {
           // We're on the hidden window! What fun!
           let obs = win => {
             Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
-            win.LoopUI.togglePanel(event);
+            win.LoopUI.togglePanel(event, tabId);
           };
           Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
           return window.OpenBrowserWindow();
@@ -114,10 +114,9 @@ var WindowListener = {
           });
         }
 
-        return this.openPanel(event).then(mm => {
-          if (mm) {
-            mm.sendAsyncMessage("Social:EnsureFocusElement");
-          }
+        return this.openCallPanel(event, tabId).then(doc => {
+          let fm = Services.focus;
+          fm.moveFocus(doc.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
         }).catch(err => {
           Cu.reportError(err);
         });
@@ -128,19 +127,49 @@ var WindowListener = {
        *
        * @param {event}  event   The event opening the panel, used to anchor
        *                         the panel to the button which triggers it.
+       * @param {String} [tabId] Identifier of the tab to select when the panel is
+       *                         opened. Example: 'rooms', 'contacts', etc.
        * @return {Promise}
        */
-      openPanel: function(event) {
+      openCallPanel: function(event, tabId = null) {
         return new Promise((resolve) => {
           let callback = iframe => {
-            let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-            if (!("messageManager" in iframe)) {
-              iframe.messageManager = mm;
-            }
-            this.hookWindowCloseForPanelClose(iframe);
+            // Helper function to show a specific tab view in the panel.
+            function showTab() {
+              if (!tabId) {
+                resolve(LoopUI.promiseDocumentVisible(iframe.contentDocument));
+                return;
+              }
 
-            mm.sendAsyncMessage("Social:WaitForDocumentVisible");
-            mm.addMessageListener("Social:DocumentVisible", () => resolve(mm));
+              let win = iframe.contentWindow;
+              let ev = new win.CustomEvent("UIAction", Cu.cloneInto({
+                detail: {
+                  action: "selectTab",
+                  tab: tabId
+                }
+              }, win));
+              win.dispatchEvent(ev);
+              resolve(LoopUI.promiseDocumentVisible(iframe.contentDocument));
+            }
+
+            // If the panel has been opened and initialized before, we can skip waiting
+            // for the content to load - because it's already there.
+            if (("contentWindow" in iframe) && iframe.contentWindow.document.readyState == "complete") {
+              showTab();
+              return;
+            }
+
+            let documentDOMLoaded = () => {
+              iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
+              // Handle window.close correctly on the panel.
+              this.hookWindowCloseForPanelClose(iframe.contentWindow);
+              iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
+                iframe.contentWindow.removeEventListener("loopPanelInitialized",
+                  loopPanelInitialized);
+                showTab();
+              });
+            };
+            iframe.addEventListener("DOMContentLoaded", documentDOMLoaded, true);
           };
 
           // Used to clear the temporary "login" state from the button.
@@ -152,20 +181,21 @@ var WindowListener = {
               // have resumed the tour as soon as the visitor joined if it was (and
               // the pref would have been set to false already.
               this.MozLoopService.resumeTour("waiting");
-              resolve(null);
+              resolve();
               return;
             }
 
             this.LoopAPI.initialize();
 
             let anchor = event ? event.target : this.toolbarButton.anchor;
-            this.PanelFrame.showPopup(
-              window,
-              anchor,
-              "loop", // Notification Panel Type
-              null,   // Origin
-              "about:looppanel", // Source
-              null, // Size
+            let setHeight = 410;
+            if (gBrowser.selectedBrowser.getAttribute("remote") === "true") {
+              setHeight = 262;
+            }
+            this.PanelFrame.showPopup(window, anchor,
+              "loop", null, "about:looppanel",
+              // Loop wants a fixed size for the panel. This also stops it dynamically resizing.
+              { width: 330, height: setHeight },
               callback);
           });
         });
@@ -416,7 +446,7 @@ var WindowListener = {
               options.onclick();
             } else {
               // Open the Loop panel as a default action.
-              this.openPanel(null, options.selectTab || null);
+              this.openCallPanel(null, options.selectTab || null);
             }
           }, 0);
         });
@@ -456,10 +486,6 @@ var WindowListener = {
           // metadata about the page is available when this event fires.
           gBrowser.addEventListener("DOMTitleChanged", this);
           this._browserSharePaused = false;
-
-          // Add this event to the parent gBrowser to avoid adding and removing
-          // it for each individual tab's browsers.
-          gBrowser.addEventListener("mousemove", this);
         }
 
         this._maybeShowBrowserSharingInfoBar();
@@ -480,7 +506,6 @@ var WindowListener = {
         this._hideBrowserSharingInfoBar();
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
         gBrowser.removeEventListener("DOMTitleChanged", this);
-        gBrowser.removeEventListener("mousemove", this);
         this._listeningToTabSelect = false;
         this._browserSharePaused = false;
       },
@@ -508,44 +533,50 @@ var WindowListener = {
       _maybeShowBrowserSharingInfoBar: function() {
         this._hideBrowserSharingInfoBar();
 
+        // Don't show the infobar if it's been permanently disabled from the menu.
+        if (!this.MozLoopService.getLoopPref(kPrefBrowserSharingInfoBar)) {
+          return;
+        }
+
         let box = gBrowser.getNotificationBox();
-        // Pre-load strings
-        let pausedStrings = {
-          label: this._getString("infobar_button_restart_label2"),
-          accesskey: this._getString("infobar_button_restart_accesskey"),
-          message: this._getString("infobar_screenshare_stop_sharing_message")
-        };
-        let unpausedStrings = {
-          label: this._getString("infobar_button_stop_label2"),
-          accesskey: this._getString("infobar_button_stop_accesskey"),
-          message: this._getString("infobar_screenshare_browser_message2")
-        };
-        let initStrings = this._browserSharePaused ? pausedStrings : unpausedStrings;
+        let pauseButtonLabel = this._getString(this._browserSharePaused ?
+                                               "infobar_button_resume_label" :
+                                               "infobar_button_pause_label");
+        let pauseButtonAccessKey = this._getString(this._browserSharePaused ?
+                                                   "infobar_button_resume_accesskey" :
+                                                   "infobar_button_pause_accesskey");
+        let barLabel = this._getString(this._browserSharePaused ?
+                                       "infobar_screenshare_paused_browser_message" :
+                                       "infobar_screenshare_browser_message2");
         let bar = box.appendNotification(
-          initStrings.message,
+          barLabel,
           kBrowserSharingNotificationId,
           // Icon is defined in browser theme CSS.
           null,
           box.PRIORITY_WARNING_LOW,
           [{
-            label: initStrings.label,
-            accessKey: initStrings.accessKey,
+            label: pauseButtonLabel,
+            accessKey: pauseButtonAccessKey,
             isDefault: false,
             callback: (event, buttonInfo, buttonNode) => {
               this._browserSharePaused = !this._browserSharePaused;
-              let stringObj = this._browserSharePaused ? pausedStrings : unpausedStrings;
-              bar.label = stringObj.message;
+              bar.label = this._getString(this._browserSharePaused ?
+                                          "infobar_screenshare_paused_browser_message" :
+                                          "infobar_screenshare_browser_message2");
               bar.classList.toggle("paused", this._browserSharePaused);
-              buttonNode.label = stringObj.label;
-              buttonNode.accessKey = stringObj.accesskey;
-              LoopUI.MozLoopService.toggleBrowserSharing(this._browserSharePaused);
+              buttonNode.label = this._getString(this._browserSharePaused ?
+                                                 "infobar_button_resume_label" :
+                                                 "infobar_button_pause_label");
+              buttonNode.accessKey = this._getString(this._browserSharePaused ?
+                                                     "infobar_button_resume_accesskey" :
+                                                     "infobar_button_pause_accesskey");
               return true;
             },
             type: "pause"
           },
           {
-            label: this._getString("infobar_button_disconnect_label"),
-            accessKey: this._getString("infobar_button_disconnect_accesskey"),
+            label: this._getString("infobar_button_stop_label"),
+            accessKey: this._getString("infobar_button_stop_accesskey"),
             isDefault: true,
             callback: () => {
               this._hideBrowserSharingInfoBar();
@@ -565,12 +596,11 @@ var WindowListener = {
       /**
        * Hides the infobar, permanantly if requested.
        *
-       * @param   {Object}  browser Optional link to the browser we want to
-       *                    remove the infobar from. If not present, defaults
-       *                    to current browser instance.
-       * @return  {Boolean} |true| if the infobar was hidden here.
+       * @param {Boolean} permanently Flag that determines if the infobar will never
+       *                              been shown again. Defaults to `false`.
+       * @return {Boolean} |true| if the infobar was hidden here.
        */
-      _hideBrowserSharingInfoBar: function(browser) {
+      _hideBrowserSharingInfoBar: function(permanently = false, browser) {
         browser = browser || gBrowser.selectedBrowser;
         let box = gBrowser.getNotificationBox(browser);
         let notification = box.getNotificationWithValue(kBrowserSharingNotificationId);
@@ -580,13 +610,17 @@ var WindowListener = {
           removed = true;
         }
 
+        if (permanently) {
+          this.MozLoopService.setLoopPref(kPrefBrowserSharingInfoBar, false);
+        }
+
         return removed;
       },
 
       /**
        * Broadcast 'BrowserSwitch' event.
-       */
-      _notifyBrowserSwitch: function() {
+      */
+      _notifyBrowserSwitch() {
          // Get the first window Id for the listener.
         this.LoopAPI.broadcastPushMessage("BrowserSwitch",
           gBrowser.selectedBrowser.outerWindowID);
@@ -605,7 +639,7 @@ var WindowListener = {
             let wasVisible = false;
             // Hide the infobar from the previous tab.
             if (event.detail.previousTab) {
-              wasVisible = this._hideBrowserSharingInfoBar(event.detail.previousTab.linkedBrowser);
+              wasVisible = this._hideBrowserSharingInfoBar(false, event.detail.previousTab.linkedBrowser);
             }
 
             // We've changed the tab, so get the new window id.
@@ -617,47 +651,7 @@ var WindowListener = {
               this._maybeShowBrowserSharingInfoBar();
             }
             break;
-          case "mousemove":
-            this.handleMousemove(event);
-            break;
           }
-      },
-
-      /**
-       * Handles mousemove events from gBrowser and send a broadcast message
-       * with all the data needed for sending link generator cursor position
-       * through the sdk.
-       */
-      handleMousemove: function(event) {
-        // We want to stop sending events if sharing is paused.
-        if (this._browserSharePaused) {
-          return;
-        }
-
-        // Only update every so often.
-        let now = Date.now();
-        if (now - this.lastCursorTime < MIN_CURSOR_INTERVAL) {
-          return;
-        }
-        this.lastCursorTime = now;
-
-        // Skip the update if cursor is out of bounds or didn't move much.
-        let browserBox = gBrowser.selectedBrowser.boxObject;
-        let deltaX = event.screenX - browserBox.screenX;
-        let deltaY = event.screenY - browserBox.screenY;
-        if (deltaX < 0 || deltaX > browserBox.width ||
-            deltaY < 0 || deltaY > browserBox.height ||
-            (Math.abs(deltaX - this.lastCursorX) < MIN_CURSOR_DELTA &&
-             Math.abs(deltaY - this.lastCursorY) < MIN_CURSOR_DELTA)) {
-          return;
-        }
-        this.lastCursorX = deltaX;
-        this.lastCursorY = deltaY;
-
-        this.LoopAPI.broadcastPushMessage("CursorPositionChange", {
-          ratioX: deltaX / browserBox.width,
-          ratioY: deltaY / browserBox.height
-        });
       },
 
       /**
