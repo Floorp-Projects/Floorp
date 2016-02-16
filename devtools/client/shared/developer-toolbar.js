@@ -4,16 +4,13 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "DeveloperToolbar", "CommandUtils" ];
-
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { Cc, Ci, Cu } = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { TargetFactory } = require("devtools/client/framework/target");
 const promise = require("promise");
 
@@ -233,7 +230,7 @@ var CommandUtils = {
   },
 };
 
-this.CommandUtils = CommandUtils;
+exports.CommandUtils = CommandUtils;
 
 /**
  * Due to a number of panel bugs we need a way to check if we are running on
@@ -257,7 +254,7 @@ XPCOMUtils.defineLazyGetter(this, "OS", function() {
  * @param aChromeWindow The browser window to which this toolbar is attached
  * @param aToolbarElement See browser.xul:<toolbar id="developer-toolbar">
  */
-this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement)
+function DeveloperToolbar(aChromeWindow, aToolbarElement)
 {
   this._chromeWindow = aChromeWindow;
 
@@ -278,6 +275,7 @@ this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement
 
   EventEmitter.decorate(this);
 }
+exports.DeveloperToolbar = DeveloperToolbar;
 
 /**
  * Inspector notifications dispatched through the nsIObserverService
