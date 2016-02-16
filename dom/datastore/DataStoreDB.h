@@ -18,14 +18,11 @@
 namespace mozilla {
 namespace dom {
 
-namespace indexedDB {
+class DataStoreDBCallback;
 class IDBDatabase;
 class IDBFactory;
 class IDBOpenDBRequest;
 class IDBTransaction;
-} // namespace indexedDB
-
-class DataStoreDBCallback;
 
 class DataStoreDB final : public nsIDOMEventListener
 {
@@ -39,7 +36,7 @@ public:
 
   nsresult Delete();
 
-  indexedDB::IDBTransaction* Transaction() const;
+  IDBTransaction* Transaction() const;
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
@@ -59,10 +56,10 @@ private:
 
   nsString mDatabaseName;
 
-  RefPtr<indexedDB::IDBFactory> mFactory;
-  RefPtr<indexedDB::IDBOpenDBRequest> mRequest;
-  RefPtr<indexedDB::IDBDatabase> mDatabase;
-  RefPtr<indexedDB::IDBTransaction> mTransaction;
+  RefPtr<IDBFactory> mFactory;
+  RefPtr<IDBOpenDBRequest> mRequest;
+  RefPtr<IDBDatabase> mDatabase;
+  RefPtr<IDBTransaction> mTransaction;
 
   RefPtr<DataStoreDBCallback> mCallback;
 

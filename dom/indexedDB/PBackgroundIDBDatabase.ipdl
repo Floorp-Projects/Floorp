@@ -18,8 +18,8 @@ include "mozilla/dom/indexedDB/SerializationHelpers.h";
 using struct mozilla::null_t
   from "ipc/IPCMessageUtils.h";
 
-using mozilla::dom::indexedDB::IDBTransaction::Mode
-  from "mozilla/dom/indexedDB/IDBTransaction.h";
+using mozilla::dom::IDBTransaction::Mode
+  from "mozilla/dom/IDBTransaction.h";
 
 namespace mozilla {
 namespace dom {

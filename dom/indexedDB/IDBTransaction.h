@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbtransaction_h__
-#define mozilla_dom_indexeddb_idbtransaction_h__
+#ifndef mozilla_dom_idbtransaction_h__
+#define mozilla_dom_idbtransaction_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+#include "mozilla/dom/IDBWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIRunnable.h"
@@ -27,28 +27,28 @@ namespace dom {
 
 class DOMError;
 class DOMStringList;
-
-namespace indexedDB {
-
-class BackgroundCursorChild;
-class BackgroundRequestChild;
-class BackgroundTransactionChild;
-class BackgroundVersionChangeTransactionChild;
 class IDBDatabase;
 class IDBObjectStore;
 class IDBOpenDBRequest;
 class IDBRequest;
+
+namespace indexedDB {
+class BackgroundCursorChild;
+class BackgroundRequestChild;
+class BackgroundTransactionChild;
+class BackgroundVersionChangeTransactionChild;
 class IndexMetadata;
 class ObjectStoreSpec;
 class OpenCursorParams;
 class RequestParams;
+}
 
 class IDBTransaction final
   : public IDBWrapperCache
   , public nsIRunnable
 {
-  friend class BackgroundCursorChild;
-  friend class BackgroundRequestChild;
+  friend class indexedDB::BackgroundCursorChild;
+  friend class indexedDB::BackgroundRequestChild;
 
   class WorkerFeature;
   friend class WorkerFeature;
@@ -85,8 +85,8 @@ private:
   // a BackgroundVersionChangeTransactionChild. Otherwise it will be a
   // BackgroundTransactionChild.
   union {
-    BackgroundTransactionChild* mNormalBackgroundActor;
-    BackgroundVersionChangeTransactionChild* mVersionChangeBackgroundActor;
+    indexedDB::BackgroundTransactionChild* mNormalBackgroundActor;
+    indexedDB::BackgroundVersionChangeTransactionChild* mVersionChangeBackgroundActor;
   } mBackgroundActor;
 
   const int64_t mLoggingSerialNumber;
@@ -117,7 +117,7 @@ private:
 public:
   static already_AddRefed<IDBTransaction>
   CreateVersionChange(IDBDatabase* aDatabase,
-                      BackgroundVersionChangeTransactionChild* aActor,
+                      indexedDB::BackgroundVersionChangeTransactionChild* aActor,
                       IDBOpenDBRequest* aOpenRequest,
                       int64_t aNextObjectStoreId,
                       int64_t aNextIndexId);
@@ -139,7 +139,7 @@ public:
 #endif
 
   void
-  SetBackgroundActor(BackgroundTransactionChild* aBackgroundActor);
+  SetBackgroundActor(indexedDB::BackgroundTransactionChild* aBackgroundActor);
 
   void
   ClearBackgroundActor()
@@ -153,12 +153,12 @@ public:
     }
   }
 
-  BackgroundRequestChild*
-  StartRequest(IDBRequest* aRequest, const RequestParams& aParams);
+  indexedDB::BackgroundRequestChild*
+  StartRequest(IDBRequest* aRequest, const indexedDB::RequestParams& aParams);
 
   void
-  OpenCursor(BackgroundCursorChild* aBackgroundActor,
-             const OpenCursorParams& aParams);
+  OpenCursor(indexedDB::BackgroundCursorChild* aBackgroundActor,
+             const indexedDB::OpenCursorParams& aParams);
 
   void
   RefreshSpec(bool aMayDelete);
@@ -238,13 +238,13 @@ public:
   }
 
   already_AddRefed<IDBObjectStore>
-  CreateObjectStore(const ObjectStoreSpec& aSpec);
+  CreateObjectStore(const indexedDB::ObjectStoreSpec& aSpec);
 
   void
   DeleteObjectStore(int64_t aObjectStoreId);
 
   void
-  CreateIndex(IDBObjectStore* aObjectStore, const IndexMetadata& aMetadata);
+  CreateIndex(IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
 
   void
   DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId);
@@ -330,8 +330,7 @@ private:
   OnRequestFinished(bool aActorDestroyedNormally);
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbtransaction_h__
+#endif // mozilla_dom_idbtransaction_h__

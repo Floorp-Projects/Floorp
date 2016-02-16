@@ -54,7 +54,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
 using namespace mozilla::dom::quota;
 using namespace mozilla::dom::workers;
@@ -2274,7 +2273,7 @@ IDBObjectStore::AutoIncrement() const
   return mSpec->metadata().autoIncrement();
 }
 
-const KeyPath&
+const indexedDB::KeyPath&
 IDBObjectStore::GetKeyPath() const
 {
   AssertIsOnOwningThread();
@@ -2292,6 +2291,5 @@ IDBObjectStore::HasValidKeyPath() const
   return GetKeyPath().IsValid();
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

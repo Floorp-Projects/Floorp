@@ -7,7 +7,7 @@
 #ifndef IndexedDatabaseInlines_h
 #define IndexedDatabaseInlines_h
 
-#ifndef mozilla_dom_indexeddb_indexeddatabase_h__
+#ifndef mozilla_dom_indexeddatabase_h__
 #error Must include IndexedDatabase.h first
 #endif
 
