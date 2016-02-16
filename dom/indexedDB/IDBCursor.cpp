@@ -24,7 +24,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
+
+using namespace indexedDB;
 
 IDBCursor::IDBCursor(Type aType,
                      BackgroundCursorChild* aBackgroundActor,
@@ -896,6 +897,5 @@ IDBCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   }
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

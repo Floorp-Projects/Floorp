@@ -21,7 +21,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
+
+using namespace mozilla::dom::indexedDB;
 
 IDBFileRequest::IDBFileRequest(nsPIDOMWindowInner* aWindow,
                                IDBFileHandle* aFileHandle,
@@ -152,6 +153,5 @@ IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
   DispatchTrustedEvent(event);
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

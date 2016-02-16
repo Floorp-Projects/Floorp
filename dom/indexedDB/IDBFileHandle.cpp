@@ -17,7 +17,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
+
+using namespace mozilla::dom::indexedDB;
 
 IDBFileHandle::IDBFileHandle(FileMode aMode,
                              IDBMutableFile* aMutableFile)
@@ -194,6 +195,5 @@ IDBFileHandle::GenerateFileRequest()
                                 /* aWrapAsDOMRequest */ false);
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

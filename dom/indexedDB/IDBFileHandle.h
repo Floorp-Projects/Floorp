@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbfilehandle_h__
-#define mozilla_dom_indexeddb_idbfilehandle_h__
+#ifndef mozilla_dom_idbfilehandle_h__
+#define mozilla_dom_idbfilehandle_h__
 
 #include "IDBFileRequest.h"
 #include "js/TypeDecls.h"
@@ -22,9 +22,6 @@ namespace mozilla {
 namespace dom {
 
 struct IDBFileMetadataParameters;
-
-namespace indexedDB {
-
 class IDBFileRequest;
 class IDBMutableFile;
 
@@ -146,8 +143,7 @@ private:
   GenerateFileRequest() override;
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbfilehandle_h__
+#endif // mozilla_dom_idbfilehandle_h__

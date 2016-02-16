@@ -9,15 +9,13 @@
 #include "DataStoreCallbacks.h"
 #include "DataStoreService.h"
 #include "mozilla/dom/DataStoreBinding.h"
+#include "mozilla/dom/IDBObjectStore.h"
+#include "mozilla/dom/IDBRequest.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "nsIDOMEvent.h"
 
 namespace mozilla {
 namespace dom {
-
-using namespace indexedDB;
 
 NS_IMPL_ISUPPORTS(DataStoreRevision, nsIDOMEventListener)
 

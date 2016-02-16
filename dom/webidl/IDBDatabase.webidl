@@ -35,7 +35,7 @@ interface IDBDatabase : EventTarget {
 };
 
 partial interface IDBDatabase {
-    [Func="mozilla::dom::indexedDB::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
     readonly    attribute StorageType        storage;
 
     [Exposed=Window, Throws]
