@@ -1981,8 +1981,9 @@ class MochitestDesktop(MochitestBase):
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
+            port_timeout = marionette_args.pop('port_timeout')
             self.marionette = Marionette(**marionette_args)
-            self.marionette.start_session()
+            self.marionette.start_session(timeout=port_timeout)
 
             # install specialpowers and mochikit as temporary addons
             addons = Addons(self.marionette)
@@ -2333,6 +2334,8 @@ class MochitestDesktop(MochitestBase):
             self.start_script_args.append(self.getTestFlavor(options))
             marionette_args = {
                 'symbols_path': options.symbolsPath,
+                'socket_timeout': options.marionette_socket_timeout,
+                'port_timeout': options.marionette_port_timeout,
             }
 
             if options.marionette:
