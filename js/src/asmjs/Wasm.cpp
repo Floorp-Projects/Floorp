@@ -666,6 +666,8 @@ DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 
     if (!init->sigs.resize(numSigs))
         return false;
+    if (!init->sigToTable.resize(numSigs))
+        return false;
 
     SigSet dupSet(cx);
     if (!dupSet.init())

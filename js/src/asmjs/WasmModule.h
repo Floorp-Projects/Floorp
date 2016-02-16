@@ -66,19 +66,20 @@ struct StaticLinkData
     };
     typedef Vector<InternalLink, 0, SystemAllocPolicy> InternalLinkVector;
 
-    typedef Vector<uint32_t, 0, SystemAllocPolicy> OffsetVector;
-    struct SymbolicLinkArray : EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, OffsetVector> {
+    struct SymbolicLinkArray : EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, Uint32Vector> {
         WASM_DECLARE_SERIALIZABLE(SymbolicLinkArray)
     };
 
     struct FuncPtrTable {
         uint32_t globalDataOffset;
-        OffsetVector elemOffsets;
-        explicit FuncPtrTable(uint32_t globalDataOffset) : globalDataOffset(globalDataOffset) {}
-        FuncPtrTable() = default;
+        Uint32Vector elemOffsets;
+        FuncPtrTable(uint32_t globalDataOffset, Uint32Vector&& elemOffsets)
+          : globalDataOffset(globalDataOffset), elemOffsets(Move(elemOffsets))
+        {}
         FuncPtrTable(FuncPtrTable&& rhs)
           : globalDataOffset(rhs.globalDataOffset), elemOffsets(Move(rhs.elemOffsets))
         {}
+        FuncPtrTable() = default;
         WASM_DECLARE_SERIALIZABLE(FuncPtrTable)
     };
     typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
