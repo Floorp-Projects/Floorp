@@ -1,9 +1,6 @@
-#!/bin/sh
+#!/bin/bash -ex
 
-set -e
-set -x
-
-[ -d $ANALYZED_OBJDIR ] || mkdir $ANALYZED_OBJDIR
-cd $ANALYZED_OBJDIR
-$SOURCE/js/src/configure --enable-debug --enable-optimize --enable-stdcxx-compat --enable-ctypes --with-system-nspr
+mkdir -p "$MOZ_OBJDIR"
+cd "$MOZ_OBJDIR"
+"$GECKO_DIR"/js/src/configure --enable-debug --enable-optimize --enable-stdcxx-compat --enable-ctypes --enable-nspr-build
 make -j12 -s
