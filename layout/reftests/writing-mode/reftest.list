@@ -69,7 +69,7 @@ skip-if(Android||B2G||Mulet||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.osc
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android||B2G||Mulet) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,5) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
@@ -111,8 +111,8 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-r
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
 fails-if(B2G||Mulet) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) fuzzy-if(winWidget,255,163) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) fuzzy-if(winWidget,255,221) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(Mulet) fuzzy-if(winWidget,255,58) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
 != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html

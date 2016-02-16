@@ -14,7 +14,7 @@ fails-if(Android||B2G||Mulet) == boxshadow-fileupload.html boxshadow-fileupload-
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) fuzzy-if(B2G,12,18) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
-skip-if((B2G&&browserIsRemote)||Mulet) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
@@ -33,8 +33,8 @@ fuzzy(26,3610) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 121126
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
 fails-if(B2G||Mulet) == 611574-1.html 611574-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(B2G||Mulet) == 611574-2.html 611574-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(winWidget,5,30) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
-fuzzy-if(winWidget,5,30) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
 fuzzy(159,2) fails-if(!d2d) == 1212823-1.html 1212823-1-ref.html

@@ -19,18 +19,18 @@
 
 # percent units
 == percent-1.html percent-1-ref.html
-== percent-2.html percent-2-ref.html
-== percent-3.html percent-3-ref.html
+fuzzy-if(skiaContent,1,342) == percent-2.html percent-2-ref.html
+fuzzy-if(skiaContent,1,343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
 == border-circle-2.html border-circle-2-ref.xhtml
-fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
+fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) fuzzy-if(skiaContent,52,80) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
 == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
 fuzzy-if(gtkWidget,23,5) fuzzy-if(winWidget&&!d2d,23,5) fuzzy-if(d2d,32,8) fuzzy-if(Android||B2G,10,8) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
-fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) == corner-3.html corner-3-ref.svg
-== corner-4.html corner-4-ref.svg
+fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) fuzzy-if(skiaContent,1,100) == corner-3.html corner-3-ref.svg
+fuzzy-if(skiaContent,1,2728) == corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
 == border-reduce-height.html border-reduce-height-ref.html
@@ -39,26 +39,26 @@ fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzz
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-== clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
 fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android&&browserIsRemote,7,169) fuzzy-if(Android&&!browserIsRemote,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
 fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-image.html clipping-4-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-overflow-hidden.html clipping-4-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
-fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-overflow-hidden.html clipping-5-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
-fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(skiaContent,1,77) == clipping-5-overflow-hidden.html clipping-5-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,77) == clipping-5-refi.html clipping-5-ref.html
+fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
 fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
-fuzzy-if(true,2,29) fuzzy-if(Android&&AndroidVersion<15,12,81) fuzzy-if(Android&&AndroidVersion>=15,255,586) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
+fuzzy-if(true,2,29) fuzzy-if(Android&&AndroidVersion<15,12,81) fuzzy-if(Android&&AndroidVersion>=15,255,586) fuzzy-if(skiaContent,16,27) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
-fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,440) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
+fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
+fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,440) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit
@@ -67,18 +67,18 @@ fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemot
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) == invalidate-1a.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) == invalidate-1b.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # test that border-radius is reduced for scrollbars
-skip-if(B2G||Mulet||((browserIsRemote&&winWidget))) fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet||((browserIsRemote&&winWidget))) fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(skiaContent,1,50) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-fuzzy(255,20) skip-if(B2G||Mulet) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy(255,20) skip-if(B2G||Mulet) random-if(winWidget) fuzzy-if(skiaContent,255,610) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 
-skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,400) fails-if(Android&&AndroidVersion==15) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,400) fails-if(Android&&AndroidVersion==15) fuzzy-if(skiaContent,64,70) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == transforms-1.html transforms-1-ref.html
 
@@ -87,7 +87,7 @@ skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windo
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G||skiaContent,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
 

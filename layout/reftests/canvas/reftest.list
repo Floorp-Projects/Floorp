@@ -94,7 +94,7 @@ fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alp
 == 726951-shadow-clips.html 726951-shadow-clips-ref.html
 
 == transformed-clip.html transformed-clip-ref.html
-fuzzy-if(azureSkia,1,15) == transformed-gradient.html transformed-gradient-ref.html
+fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html transformed-gradient-ref.html
 == transformed-path.html transformed-path.html
 
 == 749467-1.html 749467-1-ref.html

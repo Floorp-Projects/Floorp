@@ -79,7 +79,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1css.svg  anim-standard-ref.svg
 == anim-fillopacity-1xml.svg  anim-standard-ref.svg
 
-== anim-opacity-01.svg lime.svg
+fuzzy-if(skiaContent,1,3600) == anim-opacity-01.svg lime.svg
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
@@ -112,7 +112,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-pathLength-01.svg anim-pathLength-01-ref.svg
 
 # animate some <number-optional-number> attributes:
-== anim-feGaussianBlur-01.svg lime.svg
+fuzzy-if(skiaContent,1,600) == anim-feGaussianBlur-01.svg lime.svg
 
 # animate some <integer> attributes:
 == anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg
