@@ -240,7 +240,7 @@ fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
-fails-if(B2G||Android||(OSX==1006&&skiaContent)) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
+fails-if(B2G||Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
 == menclose-3-default.html menclose-3-default-ref.html
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
