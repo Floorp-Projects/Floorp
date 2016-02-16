@@ -1309,6 +1309,12 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
+#ifdef NIGHTLY_BUILD
+pref("services.sync.syncedTabsUIRefresh", true);
+#else
+pref("services.sync.syncedTabsUIRefresh", false);
+#endif
+
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
 sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
@@ -1638,3 +1644,5 @@ pref("toolkit.pageThumbs.minHeight", 190);
 // Enable speech synthesis, only Nightly for now
 pref("media.webspeech.synth.enabled", true);
 #endif
+
+pref("browser.esedbreader.loglevel", "Error");

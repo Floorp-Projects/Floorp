@@ -591,3 +591,19 @@ html[dir="rtl"] .context-wrapper > .context-preview {
 .clicks-allowed.context-wrapper:hover > .context-info > .context-url {
   text-decoration: underline;
 }
+
+.remote-video-box {
+  height: 100%;
+  width: 100%;
+}
+
+.remote-video-box > .remote-cursor {
+  background: url('../img/cursor.svg#orange') no-repeat;
+  height: 20px;
+  /* Svg cursor has a white outline so we need to offset it to ensure that the
+   * cursor points at a more precise position with the negative margin. */
+  margin: -2px;
+  position: absolute;
+  width: 15px;
+  z-index: 65534;
+}

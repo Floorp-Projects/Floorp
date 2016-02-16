@@ -576,10 +576,10 @@ loop.shared.views = function (_, mozL10n) {
     },
 
     render: function () {
-      var hostname;
-
+      // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
+      // Try catch to not produce output if invalid url
       try {
-        hostname = new URL(this.props.url).hostname;
+        var sanitizeURL = loop.shared.utils.formatURL(this.props.url, true).hostname;
       } catch (ex) {
         return null;
       }
@@ -613,7 +613,7 @@ loop.shared.views = function (_, mozL10n) {
             React.createElement(
               "span",
               { className: "context-url" },
-              hostname
+              sanitizeURL
             )
           )
         )
@@ -637,20 +637,56 @@ loop.shared.views = function (_, mozL10n) {
       isLoading: React.PropTypes.bool.isRequired,
       mediaType: React.PropTypes.string.isRequired,
       posterUrl: React.PropTypes.string,
+      shouldRenderRemoteCursor: React.PropTypes.bool,
       // Expecting "local" or "remote".
       srcMediaElement: React.PropTypes.object
+    },
+
+    getInitialState: function () {
+      return {
+        videoElementSize: null
+      };
     },
 
     componentDidMount: function () {
       if (!this.props.displayAvatar) {
         this.attachVideo(this.props.srcMediaElement);
       }
+
+      if (this.props.shouldRenderRemoteCursor) {
+        this.handleVideoDimensions();
+        window.addEventListener("resize", this.handleVideoDimensions);
+      }
+    },
+
+    componentWillUnmount: function () {
+      var videoElement = this.getDOMNode().querySelector("video");
+      if (!this.props.shouldRenderRemoteCursor || !videoElement) {
+        return;
+      }
+
+      window.removeEventListener("resize", this.handleVideoDimensions);
+      videoElement.removeEventListener("loadeddata", this.handleVideoDimensions);
     },
 
     componentDidUpdate: function () {
       if (!this.props.displayAvatar) {
         this.attachVideo(this.props.srcMediaElement);
       }
+    },
+
+    handleVideoDimensions: function () {
+      var videoElement = this.getDOMNode().querySelector("video");
+      if (!videoElement) {
+        return;
+      }
+
+      this.setState({
+        videoElementSize: {
+          clientWidth: videoElement.clientWidth,
+          clientHeight: videoElement.clientHeight
+        }
+      });
     },
 
     /**
@@ -669,9 +705,13 @@ loop.shared.views = function (_, mozL10n) {
         return;
       }
 
-      var videoElement = this.getDOMNode();
+      var videoElement = this.getDOMNode().querySelector("video");
 
-      if (videoElement.tagName.toLowerCase() !== "video") {
+      if (this.props.shouldRenderRemoteCursor) {
+        videoElement.addEventListener("loadeddata", this.handleVideoDimensions);
+      }
+
+      if (!videoElement || videoElement.tagName.toLowerCase() !== "video") {
         // Must be displaying the avatar view, so don't try and attach video.
         return;
       }
@@ -712,9 +752,9 @@ loop.shared.views = function (_, mozL10n) {
         return React.createElement("div", { className: "no-video" });
       }
 
-      var optionalPoster = {};
+      var optionalProps = {};
       if (this.props.posterUrl) {
-        optionalPoster.poster = this.props.posterUrl;
+        optionalProps.poster = this.props.posterUrl;
       }
 
       // For now, always mute media. For local media, we should be muted anyway,
@@ -726,9 +766,15 @@ loop.shared.views = function (_, mozL10n) {
       // dom element in the sdk driver to play the audio.
       // We might want to consider changing this if we add UI controls relating
       // to the remote audio at some stage in the future.
-      return React.createElement("video", _extends({}, optionalPoster, {
-        className: this.props.mediaType + "-video",
-        muted: true }));
+      return React.createElement(
+        "div",
+        { className: "remote-video-box" },
+        this.state.videoElementSize && this.props.shouldRenderRemoteCursor ? React.createElement(RemoteCursorView, {
+          videoElementSize: this.state.videoElementSize }) : null,
+        React.createElement("video", _extends({}, optionalProps, {
+          className: this.props.mediaType + "-video",
+          muted: true }))
+      );
     }
   });
 
@@ -803,7 +849,8 @@ loop.shared.views = function (_, mozL10n) {
       return React.createElement(
         "div",
         { className: "local" },
-        React.createElement(MediaView, { displayAvatar: this.props.localVideoMuted,
+        React.createElement(MediaView, {
+          displayAvatar: this.props.localVideoMuted,
           isLoading: this.props.isLocalLoading,
           mediaType: "local",
           posterUrl: this.props.localPosterUrl,
@@ -843,7 +890,8 @@ loop.shared.views = function (_, mozL10n) {
           React.createElement(
             "div",
             { className: remoteStreamClasses },
-            React.createElement(MediaView, { displayAvatar: !this.props.renderRemoteVideo,
+            React.createElement(MediaView, {
+              displayAvatar: !this.props.renderRemoteVideo,
               isLoading: this.props.isRemoteLoading,
               mediaType: "remote",
               posterUrl: this.props.remotePosterUrl,
@@ -854,10 +902,12 @@ loop.shared.views = function (_, mozL10n) {
           React.createElement(
             "div",
             { className: screenShareStreamClasses },
-            React.createElement(MediaView, { displayAvatar: false,
+            React.createElement(MediaView, {
+              displayAvatar: false,
               isLoading: this.props.isScreenShareLoading,
               mediaType: "screen-share",
               posterUrl: this.props.screenSharePosterUrl,
+              shouldRenderRemoteCursor: true,
               srcMediaElement: this.props.screenShareMediaElement }),
             this.props.displayScreenShare ? this.props.children : null
           ),
@@ -868,6 +918,112 @@ loop.shared.views = function (_, mozL10n) {
           this.state.localMediaAboslutelyPositioned ? null : this.renderLocalVideo()
         )
       );
+    }
+  });
+
+  var RemoteCursorView = React.createClass({
+    displayName: "RemoteCursorView",
+
+    mixins: [React.addons.PureRenderMixin, loop.store.StoreMixin("remoteCursorStore")],
+
+    propTypes: {
+      videoElementSize: React.PropTypes.object
+    },
+
+    getInitialState: function () {
+      return {
+        realVideoSize: null,
+        videoLetterboxing: null
+      };
+    },
+
+    componentWillMount: function () {
+      if (!this.state.realVideoSize) {
+        return;
+      }
+
+      this._calculateVideoLetterboxing();
+    },
+
+    componentWillReceiveProps: function (nextProps) {
+      if (!this.state.realVideoSize) {
+        return;
+      }
+
+      // In this case link generator or link clicker have resized their windows
+      // so we need to recalculate the video letterboxing.
+      this._calculateVideoLetterboxing(this.state.realVideoSize, nextProps.videoElementSize);
+    },
+
+    componentWillUpdate: function (nextProps, nextState) {
+      if (!this.state.realVideoSize || !nextState.realVideoSize) {
+        return;
+      }
+
+      if (!this.state.videoLetterboxing) {
+        // If this is the first time we receive the event, we must calculate the
+        // video letterboxing.
+        this._calculateVideoLetterboxing();
+        return;
+      }
+
+      if (nextState.realVideoSize.width !== this.state.realVideoSize.width || nextState.realVideoSize.height !== this.state.realVideoSize.height) {
+        // In this case link generator has resized his window so we need to
+        // recalculate the video letterboxing.
+        this._calculateVideoLetterboxing(nextState.realVideoSize);
+      }
+    },
+
+    _calculateVideoLetterboxing: function (realVideoSize, videoElementSize) {
+      realVideoSize = realVideoSize || this.state.realVideoSize;
+      videoElementSize = videoElementSize || this.props.videoElementSize;
+
+      var clientWidth = videoElementSize.clientWidth;
+      var clientHeight = videoElementSize.clientHeight;
+      var clientRatio = clientWidth / clientHeight;
+      var realVideoWidth = realVideoSize.width;
+      var realVideoHeight = realVideoSize.height;
+      var realVideoRatio = realVideoWidth / realVideoHeight;
+
+      // If the video element ratio is "wider" than the video content, then the
+      // full client height will be used and letterbox will be on the sides.
+      // E.g., video element is 3:2 and stream is 1:1, so we end up with 2:2.
+      var isWider = clientRatio > realVideoRatio;
+      var streamVideoHeight = isWider ? clientHeight : clientWidth / realVideoRatio;
+      var streamVideoWidth = isWider ? clientHeight * realVideoRatio : clientWidth;
+
+      this.setState({
+        videoLetterboxing: {
+          left: (clientWidth - streamVideoWidth) / 2,
+          top: (clientHeight - streamVideoHeight) / 2
+        },
+        streamVideoHeight: streamVideoHeight,
+        streamVideoWidth: streamVideoWidth
+      });
+    },
+
+    calculateCursorPosition: function () {
+      // We need to calculate the cursor postion based on the current video
+      // stream dimensions.
+      var remoteCursorPosition = this.state.remoteCursorPosition;
+      var ratioX = remoteCursorPosition.ratioX;
+      var ratioY = remoteCursorPosition.ratioY;
+
+      var cursorPositionX = this.state.streamVideoWidth * ratioX;
+      var cursorPositionY = this.state.streamVideoHeight * ratioY;
+
+      return {
+        left: cursorPositionX + this.state.videoLetterboxing.left,
+        top: cursorPositionY + this.state.videoLetterboxing.top
+      };
+    },
+
+    render: function () {
+      if (!this.state.remoteCursorPosition || !this.state.videoLetterboxing) {
+        return null;
+      }
+
+      return React.createElement("div", { className: "remote-cursor", style: this.calculateCursorPosition() });
     }
   });
 
@@ -882,6 +1038,7 @@ loop.shared.views = function (_, mozL10n) {
     MediaLayoutView: MediaLayoutView,
     MediaView: MediaView,
     LoadingView: LoadingView,
-    NotificationListView: NotificationListView
+    NotificationListView: NotificationListView,
+    RemoteCursorView: RemoteCursorView
   };
 }(_, navigator.mozL10n || document.mozL10n);

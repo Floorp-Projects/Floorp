@@ -766,6 +766,9 @@ pref("layout.imagevisibility.numscrollportheights", 1);
 
 pref("layers.enable-tiles", true);
 
+// Speculative 'fix' to work around OOM issues
+pref("layers.tiles.adjust", false);
+
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
 

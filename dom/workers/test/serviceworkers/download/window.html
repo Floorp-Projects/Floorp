@@ -1,0 +1,46 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+</head>
+<body>
+<script type="text/javascript">
+
+function wait_until_controlled() {
+  return new Promise(function(resolve) {
+    if (navigator.serviceWorker.controller) {
+      return resolve();
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', function onController() {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.removeEventListener('controllerchange', onController);
+        return resolve();
+      }
+    });
+  });
+}
+addEventListener('load', function(event) {
+  var registration;
+  navigator.serviceWorker.register('worker.js').then(function(swr) {
+    registration = swr;
+
+    // While the iframe below is a navigation, we still wait until we are
+    // controlled here.  We want an active client to hold the service worker
+    // alive since it calls unregister() on itself.
+    return wait_until_controlled();
+
+  }).then(function() {
+    var frame = document.createElement('iframe');
+    document.body.appendChild(frame);
+    frame.src = 'fake_download';
+
+    // The service worker is unregistered in the fetch event.  The window and
+    // frame are cleaned up from the browser chrome script.
+  });
+});
+</script>
+</body>
+</html>

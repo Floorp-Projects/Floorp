@@ -10,14 +10,12 @@ JAR_MANIFESTS += ['jar.mn']
 
 XPIDL_SOURCES += [
     'nsIBrowserProfileMigrator.idl',
-    'nsIEdgeReadingListExtractor.idl',
 ]
 
 XPIDL_MODULE = 'migration'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
-        'nsEdgeReadingListExtractor.cpp',
         'nsIEHistoryEnumerator.cpp',
     ]
 
@@ -59,6 +57,7 @@ EXTRA_PP_JS_MODULES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXTRA_JS_MODULES += [
+        'ESEDBReader.jsm',
         'MSMigrationUtils.jsm',
     ]
 

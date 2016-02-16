@@ -58,6 +58,8 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.TelemetryConstants;
+import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -155,6 +157,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.Vector;
 
 public class BrowserApp extends GeckoApp
@@ -957,7 +960,8 @@ public class BrowserApp extends GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (getProfile().inGuestMode()) {
+                final GeckoProfile profile = getProfile();
+                if (profile.inGuestMode()) {
                     GuestSession.showNotification(BrowserApp.this);
                 } else {
                     // If we're restarting, we won't destroy the activity.
@@ -965,6 +969,15 @@ public class BrowserApp extends GeckoApp
                     // have been shown.
                     GuestSession.hideNotification(BrowserApp.this);
                 }
+
+                // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
+                // and it's possible the system will never free the Activity from memory.
+                //
+                // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
+                // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
+                //
+                // So we're left with onStart/onStop.
+                uploadTelemetry(profile);
             }
         });
     }
@@ -1176,6 +1189,15 @@ public class BrowserApp extends GeckoApp
                 loadUrlOrKeywordSearch(text);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU);
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "pasteandgo");
+            }
+            return true;
+        }
+
+        if (itemId == R.id.site_settings) {
+            // This can be selected from either the browser menu or the contextmenu, depending on the size and version (v11+) of the phone.
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+            if (Versions.preHC) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "site_settings");
             }
             return true;
         }
@@ -1682,7 +1704,7 @@ public class BrowserApp extends GeckoApp
             final BrowserDB db = getProfile().getDB();
             final ContentResolver cr = getContentResolver();
             Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
-            Telemetry.addToHistogram("PLACES_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
+            Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
             Telemetry.addToHistogram("FENNEC_FAVICONS_COUNT", db.getCount(cr, "favicons"));
             Telemetry.addToHistogram("FENNEC_THUMBNAILS_COUNT", db.getCount(cr, "thumbnails"));
             Telemetry.addToHistogram("FENNEC_READING_LIST_COUNT", db.getReadingListAccessor().getCount(cr));
@@ -3053,6 +3075,7 @@ public class BrowserApp extends GeckoApp
             }
             MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, false);
             MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.site_settings, false);
             MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, false);
 
             return true;
@@ -3140,6 +3163,7 @@ public class BrowserApp extends GeckoApp
         }
         MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, tab.hasFeeds());
         MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, tab.hasOpenSearch());
+        MenuUtils.safeSetEnabled(aMenu, R.id.site_settings, !isAboutHome(tab));
         MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, !isAboutHome(tab));
 
         // Action providers are available only ICS+.
@@ -3844,6 +3868,26 @@ public class BrowserApp extends GeckoApp
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
+    }
+
+    private void uploadTelemetry(final GeckoProfile profile) {
+        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(this, profile)) {
+            return;
+        }
+
+        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(this, profile.getName());
+        final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
+
+        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
+        i.setClass(this, TelemetryUploadService.class);
+        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().toString());
+        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
+        startService(i);
+
+        // Intent redelivery will ensure this value gets used - see TelemetryUploadService class comments for details.
+        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
     }
 
     public static interface Refreshable {
