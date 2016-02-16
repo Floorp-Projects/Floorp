@@ -3228,7 +3228,7 @@ EncodeModule(WasmAstModule& module)
 
     for (WasmAstFunc* func : module.funcs()) {
         if (!EncodeFunctionSection(e, *func))
-            return false;
+            return nullptr;
     }
 
     if (!EncodeDataSection(e, module))
