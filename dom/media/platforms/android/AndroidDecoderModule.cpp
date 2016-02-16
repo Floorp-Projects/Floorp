@@ -413,7 +413,7 @@ MediaCodecDataDecoder::WaitForInput()
 }
 
 
-MediaRawData*
+already_AddRefed<MediaRawData>
 MediaCodecDataDecoder::PeekNextSample()
 {
   MonitorAutoLock lock(mMonitor);
@@ -434,7 +434,7 @@ MediaCodecDataDecoder::PeekNextSample()
   }
 
   // We're not stopping or flushing, so try to get a sample.
-  return mQueue.front();
+  return RefPtr<MediaRawData>(mQueue.front()).forget();
 }
 
 nsresult
@@ -552,12 +552,11 @@ MediaCodecDataDecoder::DecoderLoop()
 {
   bool isOutputDone = false;
   AutoLocalJNIFrame frame(jni::GetEnvForThread(), 1);
-  RefPtr<MediaRawData> sample;
   MediaFormat::LocalRef outputFormat(frame.GetEnv());
   nsresult res = NS_OK;
 
   while (WaitForInput()) {
-    sample = PeekNextSample();
+    RefPtr<MediaRawData> sample = PeekNextSample();
 
     {
       MonitorAutoLock lock(mMonitor);
@@ -573,6 +572,7 @@ MediaCodecDataDecoder::DecoderLoop()
       if (NS_SUCCEEDED(res)) {
         // We've fed this into the decoder, so remove it from the queue.
         MonitorAutoLock lock(mMonitor);
+        MOZ_RELEASE_ASSERT(mQueue.size(), "Queue may not be empty");
         mQueue.pop();
         isOutputDone = false;
       }
