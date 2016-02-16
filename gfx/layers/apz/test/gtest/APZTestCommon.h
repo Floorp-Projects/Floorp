@@ -68,6 +68,11 @@ private:
     &(gfxPrefs::Set##prefBase), \
     prefValue)
 
+static TimeStamp GetStartupTime() {
+  static TimeStamp sStartupTime = TimeStamp::Now();
+  return sStartupTime;
+}
+
 class MockContentController : public GeckoContentController {
 public:
   MOCK_METHOD1(RequestContentRepaint, void(const FrameMetrics&));
@@ -84,7 +89,7 @@ public:
 class MockContentControllerDelayed : public MockContentController {
 public:
   MockContentControllerDelayed()
-    : mTime(TimeStamp::Now())
+    : mTime(GetStartupTime())
   {
   }
 
@@ -256,11 +261,6 @@ public:
     mWaitForMainThread = true;
   }
 
-  static TimeStamp GetStartupTime() {
-    static TimeStamp sStartupTime = TimeStamp::Now();
-    return sStartupTime;
-  }
-
 private:
   bool mWaitForMainThread;
   MockContentControllerDelayed* mcc;
@@ -291,7 +291,7 @@ TestFrameMetrics()
 uint32_t
 MillisecondsSinceStartup(TimeStamp aTime)
 {
-  return (aTime - TestAsyncPanZoomController::GetStartupTime()).ToMilliseconds();
+  return (aTime - GetStartupTime()).ToMilliseconds();
 }
 
 #endif // mozilla_layers_APZTestCommon_h
