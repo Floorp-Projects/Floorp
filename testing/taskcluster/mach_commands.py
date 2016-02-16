@@ -149,6 +149,10 @@ def query_vcs_info(repository, revision):
     This is intended to be used on hg.mozilla.org/mozilla-central and
     similar. It may or may not work for other hg repositories.
     """
+    if not repository or not revision:
+        sys.stderr.write('cannot query vcs info because vcs info not provided\n')
+        return None
+
     PushInfo = namedtuple('PushInfo', ['pushid', 'pushdate'])
 
     try:
