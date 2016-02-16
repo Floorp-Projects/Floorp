@@ -779,7 +779,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Branch functions
 
     inline void branch32(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
-    inline void branch32(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branch32(Condition cond, Register lhs, Imm32 rhs, L label) PER_SHARED_ARCH;
     inline void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 

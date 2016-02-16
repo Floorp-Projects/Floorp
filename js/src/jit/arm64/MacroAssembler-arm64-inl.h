@@ -445,8 +445,9 @@ MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* labe
     B(label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm, Label* label)
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm, L label)
 {
     cmp32(lhs, imm);
     B(label, cond);

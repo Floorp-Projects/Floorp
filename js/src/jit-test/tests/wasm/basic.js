@@ -288,3 +288,49 @@ assertEq(wasmEvalText(code.replace('BODY', '(call_import 0)'), imports)(), 1);
 assertEq(wasmEvalText(code.replace('BODY', '(call_import 1)'), imports)(), 2);
 assertEq(wasmEvalText(code.replace('BODY', '(call 0)'), imports)(), 3);
 assertEq(wasmEvalText(code.replace('BODY', '(call 1)'), imports)(), 4);
+
+var {v2i, i2i, i2v} = wasmEvalText(`(module
+    (type (func (result i32)))
+    (type (func (param i32) (result i32)))
+    (type (func (param i32)))
+    (func (type 0) (i32.const 13))
+    (func (type 0) (i32.const 42))
+    (func (type 1) (i32.add (get_local 0) (i32.const 1)))
+    (func (type 1) (i32.add (get_local 0) (i32.const 2)))
+    (func (type 1) (i32.add (get_local 0) (i32.const 3)))
+    (func (type 1) (i32.add (get_local 0) (i32.const 4)))
+    (table 0 1 2 3 4 5)
+    (func (param i32) (result i32) (call_indirect 0 (get_local 0)))
+    (func (param i32) (param i32) (result i32) (call_indirect 1 (get_local 0) (get_local 1)))
+    (func (param i32) (call_indirect 2 (get_local 0) (i32.const 0)))
+    (export "v2i" 6)
+    (export "i2i" 7)
+    (export "i2v" 8)
+)`);
+
+assertEq(v2i(0), 13);
+assertEq(v2i(1), 42);
+assertErrorMessage(() => v2i(2), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => v2i(3), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => v2i(4), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => v2i(5), Error, /wasm indirect call signature mismatch/);
+
+assertErrorMessage(() => i2i(0), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2i(1), Error, /wasm indirect call signature mismatch/);
+assertEq(i2i(2, 100), 101);
+assertEq(i2i(3, 100), 102);
+assertEq(i2i(4, 100), 103);
+assertEq(i2i(5, 100), 104);
+
+assertErrorMessage(() => i2v(0), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(1), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(2), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(3), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(4), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(5), Error, /wasm indirect call signature mismatch/);
+
+for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math.pow(2,32)-2, Math.pow(2,32)-1]) {
+    assertThrowsInstanceOf(() => v2i(bad), RangeError);
+    assertThrowsInstanceOf(() => i2i(bad, 0), RangeError);
+    assertThrowsInstanceOf(() => i2v(bad, 0), RangeError);
+}

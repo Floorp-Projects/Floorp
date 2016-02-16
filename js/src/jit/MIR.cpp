@@ -4591,6 +4591,9 @@ HashNumber
 MAsmJSLoadFuncPtr::valueHash() const
 {
     HashNumber hash = MDefinition::valueHash();
+    hash = addU32ToHash(hash, hasLimit_);
+    hash = addU32ToHash(hash, limit_);
+    hash = addU32ToHash(hash, alwaysThrow_);
     hash = addU32ToHash(hash, globalDataOffset_);
     return hash;
 }
@@ -4600,7 +4603,10 @@ MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
 {
     if (ins->isAsmJSLoadFuncPtr()) {
         const MAsmJSLoadFuncPtr* load = ins->toAsmJSLoadFuncPtr();
-        return globalDataOffset_ == load->globalDataOffset_;
+        return hasLimit_ == load->hasLimit_ &&
+               limit_ == load->limit_ &&
+               alwaysThrow_ == load->alwaysThrow_ &&
+               globalDataOffset_ == load->globalDataOffset_;
     }
     return false;
 }

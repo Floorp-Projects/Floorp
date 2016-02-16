@@ -830,12 +830,33 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
         return GenerateErrorStub(masm, SymbolicAddress::OnImpreciseConversion);
       case JumpTarget::OutOfBounds:
         return GenerateErrorStub(masm, SymbolicAddress::OnOutOfBounds);
+      case JumpTarget::BadIndirectCall:
+        return GenerateErrorStub(masm, SymbolicAddress::BadIndirectCall);
       case JumpTarget::Throw:
         return GenerateThrow(masm);
       case JumpTarget::Limit:
         break;
     }
     MOZ_CRASH("bad JumpTarget");
+}
+
+ProfilingOffsets
+wasm::GenerateBadIndirectCallExit(MacroAssembler& masm)
+{
+    MIRTypeVector args;
+    unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
+
+    ProfilingOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::Error, &offsets);
+
+    AssertStackAlignment(masm, ABIStackAlignment);
+    masm.call(SymbolicAddress::BadIndirectCall);
+    masm.jump(JumpTarget::Throw);
+
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Error, &offsets);
+
+    offsets.end = masm.currentOffset();
+    return offsets;
 }
 
 static const LiveRegisterSet AllRegsExceptSP(

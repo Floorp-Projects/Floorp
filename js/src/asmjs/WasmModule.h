@@ -212,7 +212,7 @@ class CodeRange
     void assertValid();
 
   public:
-    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline, CallThunk };
+    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, ErrorExit, Inline, CallThunk };
 
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);

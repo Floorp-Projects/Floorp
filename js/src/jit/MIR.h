@@ -14093,25 +14093,39 @@ class MAsmJSLoadFuncPtr
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmJSLoadFuncPtr(unsigned globalDataOffset, MDefinition* index)
-      : MUnaryInstruction(index), globalDataOffset_(globalDataOffset)
+    MAsmJSLoadFuncPtr(MDefinition* index, bool hasLimit, uint32_t limit, bool alwaysThrow,
+                      unsigned globalDataOffset)
+      : MUnaryInstruction(index), hasLimit_(hasLimit), limit_(limit), alwaysThrow_(alwaysThrow),
+        globalDataOffset_(globalDataOffset)
     {
         setResultType(MIRType_Pointer);
     }
 
+    bool hasLimit_;
+    uint32_t limit_;
+    bool alwaysThrow_;
     unsigned globalDataOffset_;
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadFuncPtr)
 
-    static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, unsigned globalDataOffset,
-                                  MDefinition* index)
+    static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index, uint32_t limit,
+                                  bool alwaysThrow, unsigned globalDataOffset)
     {
-        return new(alloc) MAsmJSLoadFuncPtr(globalDataOffset, index);
+        return new(alloc) MAsmJSLoadFuncPtr(index, true, limit, alwaysThrow, globalDataOffset);
     }
 
-    unsigned globalDataOffset() const { return globalDataOffset_; }
+    static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index,
+                                  unsigned globalDataOffset)
+    {
+        return new(alloc) MAsmJSLoadFuncPtr(index, false, 0, false, globalDataOffset);
+    }
+
     MDefinition* index() const { return getOperand(0); }
+    bool hasLimit() const { return hasLimit_; }
+    uint32_t limit() const { MOZ_ASSERT(hasLimit_); return limit_; }
+    bool alwaysThrow() const { return alwaysThrow_; }
+    unsigned globalDataOffset() const { return globalDataOffset_; }
 
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
