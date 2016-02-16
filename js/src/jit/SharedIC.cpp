@@ -674,6 +674,8 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, JitCode* stubCode, ICStub* firstMoni
   : ICStub(kind, ICStub::Monitored, stubCode),
     firstMonitorStub_(firstMonitorStub)
 {
+    // In order to silence Coverity - null pointer dereference checker
+    MOZ_ASSERT(firstMonitorStub_);
     // If the first monitored stub is a ICTypeMonitor_Fallback stub, then
     // double check that _its_ firstMonitorStub is the same as this one.
     MOZ_ASSERT_IF(firstMonitorStub_->isTypeMonitor_Fallback(),
