@@ -2768,22 +2768,27 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     AddLoadFlags(mChannel, nsIChannel::LOAD_EXPLICIT_CREDENTIALS);
   }
 
-  // When we are sync loading, we need to bypass the local cache when it would
-  // otherwise block us waiting for exclusive access to the cache.  If we don't
-  // do this, then we could dead lock in some cases (see bug 309424).
-  //
-  // Also don't block on the cache entry on async if it is busy - favoring parallelism
-  // over cache hit rate for xhr. This does not disable the cache everywhere -
-  // only in cases where more than one channel for the same URI is accessed
-  // simultanously.
+  // Bypass the network cache in cases where it makes no sense:
+  // POST responses are always unique, and we provide no API that would
+  // allow our consumers to specify a "cache key" to access old POST
+  // responses, so they are not worth caching.
+  if (method.EqualsLiteral("POST")) {
+    AddLoadFlags(mChannel,
+                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE |
+                 nsIRequest::INHIBIT_CACHING);
+  } else {
+    // When we are sync loading, we need to bypass the local cache when it would
+    // otherwise block us waiting for exclusive access to the cache.  If we don't
+    // do this, then we could dead lock in some cases (see bug 309424).
+    //
+    // Also don't block on the cache entry on async if it is busy - favoring parallelism
+    // over cache hit rate for xhr. This does not disable the cache everywhere -
+    // only in cases where more than one channel for the same URI is accessed
+    // simultanously.
 
-  AddLoadFlags(mChannel,
-               nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-
-  // While it would be optimal to bypass the cache in case of POST requests
-  // since they are never cached, our ServiceWorker interception implementation
-  // on single-process systems is implemented via the HTTP cache, so DO NOT
-  // bypass the cache based on method!
+    AddLoadFlags(mChannel,
+                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+  }
 
   // Since we expect XML data, set the type hint accordingly
   // if the channel doesn't know any content type.
