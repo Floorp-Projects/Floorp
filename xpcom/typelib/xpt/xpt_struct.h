@@ -37,6 +37,7 @@ typedef struct XPTTypeDescriptor XPTTypeDescriptor;
 typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
 typedef struct XPTString XPTString;
 typedef struct XPTAnnotation XPTAnnotation;
+
 #ifndef nsID_h__
 /*
  * We can't include nsID.h, because it's full of C++ goop and we're not doing
@@ -52,20 +53,6 @@ struct nsID {
 
 typedef struct nsID nsID;
 #endif
-
-#define XPT_COPY_IID(to, from)                                                \
-  (to).m0 = (from).m0;                                                        \
-  (to).m1 = (from).m1;                                                        \
-  (to).m2 = (from).m2;                                                        \
-  (to).m3[0] = (from).m3[0];                                                  \
-  (to).m3[1] = (from).m3[1];                                                  \
-  (to).m3[2] = (from).m3[2];                                                  \
-  (to).m3[3] = (from).m3[3];                                                  \
-  (to).m3[4] = (from).m3[4];                                                  \
-  (to).m3[5] = (from).m3[5];                                                  \
-  (to).m3[6] = (from).m3[6];                                                  \
-  (to).m3[7] = (from).m3[7];
-
 
 /*
  * Every XPCOM typelib file begins with a header.
@@ -100,78 +87,6 @@ struct XPTHeader {
 #define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
 
 /*
- * The "[-t version number]" cmd line parameter to the XPIDL compiler and XPT
- * linker specifies the major and minor version number of the output 
- * type library.
- * 
- * The goal is for the compiler to check that the input IDL file only uses 
- * constructs that are supported in the version specified. The linker will
- * check that all typelib files it reads are of the version specified or
- * below.
- * 
- * Both the compiler and the linker will report errors and abort if these
- * checks fail.
- * 
- * When you rev up major or minor versions of the type library in the future,
- * think about the new stuff that you added to the type library and add checks
- * to make sure that occurrences of that new "stuff" will get caught when [-t
- * version number] is used with the compiler. Here's what you'll probably
- * have to do each time you rev up major/minor versions:
- * 
- *   1) Add the current version number string (before your change) to the
- *   XPT_TYPELIB_VERSIONS list.
- * 
- *   2) Do your changes add new features to XPIDL? Ensure that those new
- *   features are rejected by the XPIDL compiler when any version number in
- *   the XPT_TYPELIB_VERSIONS list is specified on the command line. The
- *   one place that currently does this kind of error checking is the function
- *   verify_type_fits_version() in xpidl_util.c. It currently checks
- *   attribute types, parameter types, and return types. You'll probably have
- *   to add to it or generalize it further based on what kind of changes you
- *   are making.
- *
- *   3) You will probably NOT need to make any changes to the error checking
- *   in the linker.
- */
-  
-#define XPT_VERSION_UNKNOWN     0
-#define XPT_VERSION_UNSUPPORTED 1
-#define XPT_VERSION_OLD         2
-#define XPT_VERSION_CURRENT     3
-
-typedef struct {
-    const char* str;
-    uint8_t     major;
-    uint8_t     minor;
-    uint16_t    code;
-} XPT_TYPELIB_VERSIONS_STRUCT; 
-
-/* Currently accepted list of versions for typelibs */
-#define XPT_TYPELIB_VERSIONS {                                                \
-    {"1.0", 1, 0, XPT_VERSION_UNSUPPORTED},                                   \
-    {"1.1", 1, 1, XPT_VERSION_OLD},                                           \
-    {"1.2", 1, 2, XPT_VERSION_CURRENT}                                        \
-}
-
-extern XPT_PUBLIC_API(uint16_t)
-XPT_ParseVersionString(const char* str, uint8_t* major, uint8_t* minor);
-
-extern XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(XPTArena *arena, uint16_t num_interfaces, 
-              uint8_t major_version, uint8_t minor_version);
-
-extern XPT_PUBLIC_API(void)
-XPT_FreeHeader(XPTArena *arena, XPTHeader* aHeader);
-
-/* size of header and annotations */
-extern XPT_PUBLIC_API(uint32_t)
-XPT_SizeOfHeader(XPTHeader *header);
-
-/* size of header and annotations and InterfaceDirectoryEntries */
-extern XPT_PUBLIC_API(uint32_t)
-XPT_SizeOfHeaderBlock(XPTHeader *header);
-
-/*
  * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
  * the byte offset identified by the interface_directory field in the file 
  * header.  The array is used to quickly locate an interface description 
@@ -182,23 +97,7 @@ struct XPTInterfaceDirectoryEntry {
     char                   *name;
     char                   *name_space;
     XPTInterfaceDescriptor *interface_descriptor;
-
-#if 0 /* not yet */
-    /* not stored on disk */
-    uint32_t                 offset; /* the offset for an ID still to be read */
-#endif
 };
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_FillInterfaceDirectoryEntry(XPTArena *arena, 
-                                XPTInterfaceDirectoryEntry *ide,
-                                nsID *iid, const char *name,
-                                const char *name_space,
-                                XPTInterfaceDescriptor *descriptor);
-
-extern XPT_PUBLIC_API(void)
-XPT_DestroyInterfaceDirectoryEntry(XPTArena *arena, 
-                                   XPTInterfaceDirectoryEntry* ide);
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
@@ -232,7 +131,6 @@ struct XPTInterfaceDescriptor {
     *  them to be of fixed size. This additional_types scheme is here to allow 
     *  for that.
     */
-
     uint16_t                num_additional_types;
 };
 
@@ -248,29 +146,8 @@ struct XPTInterfaceDescriptor {
 #define XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(flags) (!!(flags & XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY))
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            uint16_t num_interfaces, const char *name,
-                            uint16_t *indexp);
-
-extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
-XPT_NewInterfaceDescriptor(XPTArena *arena, 
-                           uint16_t parent_interface, uint16_t num_methods,
-                           uint16_t num_constants, uint8_t flags);
-
-extern XPT_PUBLIC_API(void)
-XPT_FreeInterfaceDescriptor(XPTArena *arena, XPTInterfaceDescriptor* id);
-
-extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
                                 uint16_t num);
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddMethods(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                  uint16_t num);
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddConsts(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                 uint16_t num);
 
 /*
  * This is our special string struct with a length value associated with it,
@@ -280,12 +157,6 @@ struct XPTString {
     uint16_t length;
     char   *bytes;
 };
-
-extern XPT_PUBLIC_API(XPTString *)
-XPT_NewString(XPTArena *arena, uint16_t length, const char *bytes);
-
-extern XPT_PUBLIC_API(XPTString *)
-XPT_NewStringZ(XPTArena *arena, const char *bytes);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -366,12 +237,6 @@ struct XPTTypeDescriptor {
     } type;
 };
 
-#define XPT_COPY_TYPE(to, from)                                               \
-  (to).prefix.flags = (from).prefix.flags;                                    \
-  (to).argnum = (from).argnum;                                                \
-  (to).argnum2 = (from).argnum2;                                              \
-  (to).type.additional_type = (from).type.additional_type;
-
 /*
  * A ConstDescriptor is a variable-size record that records the name and 
  * value of a scoped interface constant. 
@@ -440,11 +305,6 @@ struct XPTParamDescriptor {
 #define XPT_PD_IS_DIPPER(flags) (flags & XPT_PD_DIPPER)
 #define XPT_PD_IS_OPTIONAL(flags) (flags & XPT_PD_OPTIONAL)
 
-extern XPT_PUBLIC_API(PRBool)
-XPT_FillParamDescriptor(XPTArena *arena, 
-                        XPTParamDescriptor *pd, uint8_t flags,
-                        XPTTypeDescriptor *type);
-
 /*
  * A MethodDescriptor is a variable-size record used to describe a single 
  * interface method.
@@ -474,11 +334,6 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_HIDDEN(flags)      (flags & XPT_MD_HIDDEN)
 #define XPT_MD_WANTS_OPT_ARGC(flags) (flags & XPT_MD_OPT_ARGC)
 #define XPT_MD_WANTS_CONTEXT(flags)  (flags & XPT_MD_CONTEXT)
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_FillMethodDescriptor(XPTArena *arena,
-                         XPTMethodDescriptor *meth, uint8_t flags,
-                         const char *name, uint8_t num_args);
 
 /*
  * Annotation records are variable-size records used to store secondary 
@@ -511,10 +366,6 @@ struct XPTAnnotation {
 #define XPT_ANN_IS_LAST(flags)          (flags & XPT_ANN_LAST)
 #define XPT_ANN_PRIVATE                 0x40
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
-
-extern XPT_PUBLIC_API(XPTAnnotation *)
-XPT_NewAnnotation(XPTArena *arena, uint8_t flags, XPTString *creator, 
-                  XPTString *private_data);
 
 }
 

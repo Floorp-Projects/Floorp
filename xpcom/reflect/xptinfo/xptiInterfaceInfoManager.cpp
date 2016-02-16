@@ -99,7 +99,7 @@ XPTInterfaceInfoManager::InitMemoryReporter()
 void
 XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
 {
-    XPTState *state = XPT_NewXDRState(XPT_DECODE, buf, length);
+    XPTState *state = XPT_NewXDRState(buf, length);
     if (!state)
         return;
 
