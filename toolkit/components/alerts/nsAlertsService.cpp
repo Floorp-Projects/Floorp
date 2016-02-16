@@ -84,6 +84,8 @@ NS_IMPL_ISUPPORTS(IconCallback, nsIFaviconDataCallback)
 
 #endif // MOZ_PLACES
 
+#ifndef MOZ_WIDGET_ANDROID
+
 nsresult
 ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
                     nsIObserver* aAlertListener)
@@ -131,6 +133,8 @@ ShowWithBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
   // If the backend doesn't support favicons, show the alert without one.
   return aBackend->ShowAlert(aAlert, aAlertListener);
 }
+
+#endif // MOZ_WIDGET_ANDROID
 
 } // anonymous namespace
 
