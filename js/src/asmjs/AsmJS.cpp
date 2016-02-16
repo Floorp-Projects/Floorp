@@ -1659,6 +1659,14 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         return standardLibrarySimdOpNames_.putNew(atom->asPropertyName(), op);
     }
+    bool newSig(Sig&& sig, uint32_t* sigIndex) {
+        if (mg_.numSigs() >= MaxSigs)
+            return failCurrentOffset("too many signatures");
+
+        *sigIndex = mg_.numSigs();
+        mg_.initSig(*sigIndex, Move(sig));
+        return true;
+    }
     bool declareSig(Sig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);
         if (p) {
@@ -1667,12 +1675,8 @@ class MOZ_STACK_CLASS ModuleValidator
             return true;
         }
 
-        *sigIndex = sigMap_.count();
-        if (*sigIndex >= MaxSigs)
-            return failCurrentOffset("too many unique signatures");
-
-        mg_.initSig(*sigIndex, Move(sig));
-        return sigMap_.add(p, &mg_.sig(*sigIndex), *sigIndex);
+        return newSig(Move(sig), sigIndex) &&
+               sigMap_.add(p, &mg_.sig(*sigIndex), *sigIndex);
     }
 
   public:
@@ -1783,7 +1787,8 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
-            !genData->imports.resize(MaxImports))
+            !genData->imports.resize(MaxImports) ||
+            !genData->sigToTable.resize(MaxSigs))
         {
             return false;
         }
@@ -2040,27 +2045,28 @@ class MOZ_STACK_CLASS ModuleValidator
     bool declareFuncPtrTable(Sig&& sig, PropertyName* name, uint32_t firstUse, uint32_t mask,
                              uint32_t* index)
     {
-        if (!mg_.declareFuncPtrTable(/* numElems = */ mask + 1, index))
+        if (mask > MaxTableElems)
+            return failCurrentOffset("function pointer table too big");
+        uint32_t sigIndex;
+        if (!newSig(Move(sig), &sigIndex))
             return false;
-        MOZ_ASSERT(*index == numFuncPtrTables());
+        if (!mg_.initSigTableLength(sigIndex, mask + 1))
+            return false;
         Global* global = validationLifo_.new_<Global>(Global::FuncPtrTable);
         if (!global)
             return false;
-        global->u.funcPtrTableIndex_ = *index;
+        global->u.funcPtrTableIndex_ = *index = funcPtrTables_.length();
         if (!globalMap_.putNew(name, global))
-            return false;
-        uint32_t sigIndex;
-        if (!declareSig(Move(sig), &sigIndex))
             return false;
         FuncPtrTable* t = validationLifo_.new_<FuncPtrTable>(sigIndex, name, firstUse, mask);
         return t && funcPtrTables_.append(t);
     }
-    bool defineFuncPtrTable(uint32_t funcPtrTableIndex, const Vector<uint32_t>& elems) {
+    bool defineFuncPtrTable(uint32_t funcPtrTableIndex, Uint32Vector&& elems) {
         FuncPtrTable& table = *funcPtrTables_[funcPtrTableIndex];
         if (table.defined())
             return false;
         table.define();
-        mg_.defineFuncPtrTable(funcPtrTableIndex, elems);
+        mg_.initSigTableElems(table.sigIndex(), Move(elems));
         return true;
     }
     bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* importIndex) {
@@ -4441,7 +4447,7 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyN
         return false;
 
     if (!m.declareFuncPtrTable(Move(sig), name, usepn->pn_pos.begin, mask, funcPtrTableIndex))
-        return m.fail(usepn, "table too big");
+        return false;
 
     return true;
 }
@@ -4476,15 +4482,6 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
     if (!f.writeCall(callNode, Expr::CallIndirect))
         return false;
 
-    // Table's mask
-    if (!f.writeU32(mask))
-        return false;
-
-    // Global data offset
-    size_t globalDataOffsetAt;
-    if (!f.temp32(&globalDataOffsetAt))
-        return false;
-
     // Call signature
     size_t sigIndexAt;
     if (!f.temp32(&sigIndexAt))
@@ -4507,7 +4504,6 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
     if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &tableIndex))
         return false;
 
-    f.patch32(globalDataOffsetAt, f.m().mg().funcPtrTableGlobalDataOffset(tableIndex));
     f.patch32(sigIndexAt, f.m().funcPtrTable(tableIndex).sigIndex());
 
     *type = Type::ret(ret);
@@ -6753,7 +6749,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
 
     unsigned mask = length - 1;
 
-    Vector<uint32_t> elemFuncIndices(m.cx());
+    Uint32Vector elemFuncIndices;
     const Sig* sig = nullptr;
     for (ParseNode* elem = ListHead(arrayLiteral); elem; elem = NextNode(elem)) {
         if (!elem->isKind(PNK_NAME))
@@ -6784,7 +6780,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
     if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), Move(copy), mask, &tableIndex))
         return false;
 
-    if (!m.defineFuncPtrTable(tableIndex, elemFuncIndices))
+    if (!m.defineFuncPtrTable(tableIndex, Move(elemFuncIndices)))
         return m.fail(var, "duplicate function-pointer definition");
 
     return true;

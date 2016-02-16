@@ -140,7 +140,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
         numSigs_ = shared_->sigs.length();
         module_->numFuncs = shared_->funcSigs.length();
         module_->globalBytes = AlignBytes(module_->globalBytes, sizeof(void*));
-        for (ModuleImportGeneratorData& import : shared_->imports) {
+        for (ImportModuleGeneratorData& import : shared_->imports) {
             MOZ_ASSERT(!import.globalDataOffset);
             import.globalDataOffset = module_->globalBytes;
             module_->globalBytes += Module::SizeOfImportExit;
@@ -566,7 +566,7 @@ ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex)
     if (!addImport(sig(sigIndex), globalDataOffset))
         return false;
 
-    ModuleImportGeneratorData& import = shared_->imports[importIndex];
+    ImportModuleGeneratorData& import = shared_->imports[importIndex];
     MOZ_ASSERT(!import.sig);
     import.sig = &shared_->sigs[sigIndex];
     import.globalDataOffset = globalDataOffset;
@@ -579,7 +579,7 @@ ModuleGenerator::numImports() const
     return module_->imports.length();
 }
 
-const ModuleImportGeneratorData&
+const ImportModuleGeneratorData&
 ModuleGenerator::import(uint32_t index) const
 {
     MOZ_ASSERT(shared_->imports[index].sig);
@@ -755,51 +755,34 @@ ModuleGenerator::finishFuncDefs()
 }
 
 bool
-ModuleGenerator::declareFuncPtrTable(uint32_t numElems, uint32_t* index)
+ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t numElems)
 {
-    // Here just add an uninitialized FuncPtrTable and claim space in the global
-    // data section. Later, 'defineFuncPtrTable' will be called with function
-    // indices for all the elements of the table.
-
-    // Avoid easy way to OOM the process.
-    if (numElems > 1024 * 1024)
-        return false;
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(numElems != 0);
+    MOZ_ASSERT(numElems <= MaxTableElems);
 
     uint32_t globalDataOffset;
     if (!allocateGlobalBytes(numElems * sizeof(void*), sizeof(void*), &globalDataOffset))
         return false;
 
-    StaticLinkData::FuncPtrTableVector& tables = link_->funcPtrTables;
-
-    *index = tables.length();
-    if (!tables.emplaceBack(globalDataOffset))
-        return false;
-
-    if (!tables.back().elemOffsets.resize(numElems))
-        return false;
-
+    TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
+    MOZ_ASSERT(table.numElems == 0);
+    table.numElems = numElems;
+    table.globalDataOffset = globalDataOffset;
     return true;
 }
 
-uint32_t
-ModuleGenerator::funcPtrTableGlobalDataOffset(uint32_t index) const
-{
-    return link_->funcPtrTables[index].globalDataOffset;
-}
-
 void
-ModuleGenerator::defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elemFuncIndices)
+ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices)
 {
-    MOZ_ASSERT(finishedFuncs_);
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(!elemFuncIndices.empty());
 
-    StaticLinkData::FuncPtrTable& table = link_->funcPtrTables[index];
-    MOZ_ASSERT(table.elemOffsets.length() == elemFuncIndices.length());
+    TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
+    MOZ_ASSERT(table.numElems == elemFuncIndices.length());
 
-    for (size_t i = 0; i < elemFuncIndices.length(); i++) {
-        uint32_t funcIndex = elemFuncIndices[i];
-        MOZ_ASSERT(funcIsDefined(funcIndex));
-        table.elemOffsets[i] = funcEntry(funcIndex);
-    }
+    MOZ_ASSERT(table.elemFuncIndices.empty());
+    table.elemFuncIndices = Move(elemFuncIndices);
 }
 
 bool
@@ -910,6 +893,24 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
         masm_.patchAsmJSGlobalAccess(a.patchAt, code, globalData, a.globalDataOffset);
     }
 #endif
+
+    // Convert the function pointer table elements from function-indices to code
+    // offsets that static linking will convert to absolute addresses.
+    for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
+        const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
+        if (table.elemFuncIndices.empty())
+            continue;
+
+        Uint32Vector elemOffsets;
+        if (!elemOffsets.resize(table.elemFuncIndices.length()))
+            return false;
+
+        for (size_t i = 0; i < table.elemFuncIndices.length(); i++)
+            elemOffsets[i] = funcEntry(table.elemFuncIndices[i]);
+
+        if (!link_->funcPtrTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
+            return false;
+    }
 
     *module = Move(module_);
     *linkData = Move(link_);

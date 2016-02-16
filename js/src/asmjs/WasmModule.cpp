@@ -111,7 +111,7 @@ size_t
 StaticLinkData::SymbolicLinkArray::serializedSize() const
 {
     size_t size = 0;
-    for (const OffsetVector& offsets : *this)
+    for (const Uint32Vector& offsets : *this)
         size += SerializedPodVectorSize(offsets);
     return size;
 }
@@ -119,7 +119,7 @@ StaticLinkData::SymbolicLinkArray::serializedSize() const
 uint8_t*
 StaticLinkData::SymbolicLinkArray::serialize(uint8_t* cursor) const
 {
-    for (const OffsetVector& offsets : *this)
+    for (const Uint32Vector& offsets : *this)
         cursor = SerializePodVector(cursor, offsets);
     return cursor;
 }
@@ -127,7 +127,7 @@ StaticLinkData::SymbolicLinkArray::serialize(uint8_t* cursor) const
 const uint8_t*
 StaticLinkData::SymbolicLinkArray::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    for (OffsetVector& offsets : *this) {
+    for (Uint32Vector& offsets : *this) {
         cursor = DeserializePodVector(cx, cursor, &offsets);
         if (!cursor)
             return nullptr;
@@ -149,7 +149,7 @@ size_t
 StaticLinkData::SymbolicLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t size = 0;
-    for (const OffsetVector& offsets : *this)
+    for (const Uint32Vector& offsets : *this)
         size += offsets.sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
@@ -235,7 +235,7 @@ StaticLinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
                   symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
                   SizeOfVectorExcludingThis(funcPtrTables, mallocSizeOf);
 
-    for (const OffsetVector& offsets : symbolicLinks)
+    for (const Uint32Vector& offsets : symbolicLinks)
         size += offsets.sizeOfExcludingThis(mallocSizeOf);
 
     return size;
@@ -847,7 +847,7 @@ Module::clone(JSContext* cx, const StaticLinkData& link, Module* out) const
     // in Module::staticallyLink are valid.
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
         void* callee = AddressOf(imm, cx);
-        const StaticLinkData::OffsetVector& offsets = link.symbolicLinks[imm];
+        const Uint32Vector& offsets = link.symbolicLinks[imm];
         for (uint32_t offset : offsets) {
             jit::Assembler::PatchDataWithValueCheck(jit::CodeLocationLabel(out->code() + offset),
                                                     jit::PatchedImmPtr((void*)-1),
@@ -1040,7 +1040,7 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
     }
 
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
-        const StaticLinkData::OffsetVector& offsets = linkData.symbolicLinks[imm];
+        const Uint32Vector& offsets = linkData.symbolicLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
             uint8_t* patchAt = code() + offsets[i];
             void* target = AddressOf(imm, cx);
