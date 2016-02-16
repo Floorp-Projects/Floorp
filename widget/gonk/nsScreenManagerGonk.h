@@ -220,6 +220,7 @@ protected:
     RefPtr<nsRunnable> mScreenOffEvent;
 
 #if ANDROID_VERSION >= 19
+    bool mDisplayEnabled;
     RefPtr<mozilla::layers::CompositorVsyncScheduler> mCompositorVsyncScheduler;
 #endif
 };
