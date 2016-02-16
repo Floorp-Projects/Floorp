@@ -857,7 +857,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
-      aStyleContext->GetPseudoType() == nsCSSPseudoElements::ePseudo_XULTree
+      aStyleContext->GetPseudoType() == CSSPseudoElementType::XULTree
 #else
       false
 #endif

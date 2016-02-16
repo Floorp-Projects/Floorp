@@ -35,12 +35,36 @@
 // Is content prevented from parsing selectors containing this pseudo-element?
 #define CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY               (1<<4)
 
+namespace mozilla {
+
+// The total count of CSSPseudoElement is less than 256,
+// so use uint8_t as its underlying type.
+enum class CSSPseudoElementType : uint8_t {
+  // If the actual pseudo-elements stop being first here, change
+  // GetPseudoType.
+#define CSS_PSEUDO_ELEMENT(_name, _value_, _flags) \
+  _name,
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
+  Count,
+  AnonBox = Count,
+#ifdef MOZ_XUL
+  XULTree,
+#endif
+  NotPseudo,
+  MAX
+};
+
+} // namespace mozilla
+
 // Empty class derived from nsIAtom so that function signatures can
 // require an atom from this atom list.
 class nsICSSPseudoElement : public nsIAtom {};
 
 class nsCSSPseudoElements {
 public:
+  // FIXME: Remove this in later patch
+  using Type = mozilla::CSSPseudoElementType;
 
   static void AddRefAtoms();
 
@@ -53,25 +77,9 @@ public:
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-  enum Type {
-    // If the actual pseudo-elements stop being first here, change
-    // GetPseudoType.
-#define CSS_PSEUDO_ELEMENT(_name, _value_, _flags) \
-    ePseudo_##_name,
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
-    ePseudo_PseudoElementCount,
-    ePseudo_AnonBox = ePseudo_PseudoElementCount,
-#ifdef MOZ_XUL
-    ePseudo_XULTree,
-#endif
-    ePseudo_NotPseudoElement,
-    ePseudo_MAX
-  };
-
   static Type GetPseudoType(nsIAtom* aAtom);
 
-  // Get the atom for a given Type.  aType must be < ePseudo_PseudoElementCount
+  // Get the atom for a given Type.  aType must be < Type::Count
   static nsIAtom* GetPseudoAtom(Type aType);
 
   static bool PseudoElementContainsElements(const Type aType) {
@@ -79,14 +87,14 @@ public:
   }
 
   static bool PseudoElementSupportsStyleAttribute(const Type aType) {
-    MOZ_ASSERT(aType < ePseudo_PseudoElementCount);
+    MOZ_ASSERT(aType < Type::Count);
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
   }
 
   static bool PseudoElementSupportsUserActionState(const Type aType);
 
   static bool PseudoElementIsUASheetOnly(const Type aType) {
-    MOZ_ASSERT(aType < ePseudo_PseudoElementCount);
+    MOZ_ASSERT(aType < Type::Count);
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY);
   }
 

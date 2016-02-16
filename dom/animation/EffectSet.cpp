@@ -155,13 +155,13 @@ EffectSet::GetEffectSetPropertyAtoms()
 EffectSet::GetEffectSetPropertyAtom(nsCSSPseudoElements::Type aPseudoType)
 {
   switch (aPseudoType) {
-    case nsCSSPseudoElements::ePseudo_NotPseudoElement:
+    case CSSPseudoElementType::NotPseudo:
       return nsGkAtoms::animationEffectsProperty;
 
-    case nsCSSPseudoElements::ePseudo_before:
+    case CSSPseudoElementType::before:
       return nsGkAtoms::animationEffectsForBeforeProperty;
 
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::after:
       return nsGkAtoms::animationEffectsForAfterProperty;
 
     default:

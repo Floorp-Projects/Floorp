@@ -262,15 +262,15 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // common case: no transitions specified or running.
   const nsStyleDisplay *disp = newStyleContext->StyleDisplay();
   nsCSSPseudoElements::Type pseudoType = newStyleContext->GetPseudoType();
-  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    if (pseudoType != nsCSSPseudoElements::ePseudo_before &&
-        pseudoType != nsCSSPseudoElements::ePseudo_after) {
+  if (pseudoType != CSSPseudoElementType::NotPseudo) {
+    if (pseudoType != CSSPseudoElementType::before &&
+        pseudoType != CSSPseudoElementType::after) {
       return;
     }
 
-    NS_ASSERTION((pseudoType == nsCSSPseudoElements::ePseudo_before &&
+    NS_ASSERTION((pseudoType == CSSPseudoElementType::before &&
                   aElement->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore) ||
-                 (pseudoType == nsCSSPseudoElements::ePseudo_after &&
+                 (pseudoType == CSSPseudoElementType::after &&
                   aElement->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter),
                  "Unexpected aElement coming through");
 

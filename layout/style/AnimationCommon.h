@@ -177,14 +177,14 @@ public:
   nsCSSPseudoElements::Type PseudoElementType() const
   {
     if (IsForElement()) {
-      return nsCSSPseudoElements::ePseudo_NotPseudoElement;
+      return CSSPseudoElementType::NotPseudo;
     }
     if (IsForBeforePseudo()) {
-      return nsCSSPseudoElements::ePseudo_before;
+      return CSSPseudoElementType::before;
     }
     MOZ_ASSERT(IsForAfterPseudo(),
                "::before & ::after should be the only pseudo-elements here");
-    return nsCSSPseudoElements::ePseudo_after;
+    return CSSPseudoElementType::after;
   }
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
@@ -235,7 +235,7 @@ class OwningElementRef final
 public:
   OwningElementRef()
     : mElement(nullptr)
-    , mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
+    , mPseudoType(CSSPseudoElementType::NotPseudo)
   { }
 
   OwningElementRef(dom::Element& aElement,
@@ -259,9 +259,9 @@ public:
       return nsContentUtils::PositionIsBefore(mElement, aOther.mElement);
     }
 
-    return mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-          (mPseudoType == nsCSSPseudoElements::ePseudo_before &&
-           aOther.mPseudoType == nsCSSPseudoElements::ePseudo_after);
+    return mPseudoType == CSSPseudoElementType::NotPseudo ||
+          (mPseudoType == CSSPseudoElementType::before &&
+           aOther.mPseudoType == CSSPseudoElementType::after);
   }
 
   bool IsSet() const { return !!mElement; }
