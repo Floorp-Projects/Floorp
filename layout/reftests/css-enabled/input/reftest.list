@@ -1,9 +1,9 @@
 == input-fieldset-1.html input-fieldset-ref.html
 == input-fieldset-2.html input-fieldset-ref.html
-== input-fieldset-3.html input-fieldset-ref.html
-== input-fieldset-4.html input-fieldset-ref.html
+fuzzy-if(skiaContent,1,7) == input-fieldset-3.html input-fieldset-ref.html
+fuzzy-if(skiaContent,1,7) == input-fieldset-4.html input-fieldset-ref.html
 == input-fieldset-legend-1.html input-fieldset-legend-ref-1.html
-== input-fieldset-legend-2.html input-fieldset-legend-ref-2.html
-== input-fieldset-legend-3.html input-fieldset-legend-ref-3.html
-== input-fieldset-legend-4.html input-fieldset-legend-ref-4.html
-== input-fieldset-legend-5.html input-fieldset-legend-ref-5.html
+fuzzy-if(skiaContent,2,4) == input-fieldset-legend-2.html input-fieldset-legend-ref-2.html
+fuzzy-if(skiaContent,2,5) == input-fieldset-legend-3.html input-fieldset-legend-ref-3.html
+fuzzy-if(skiaContent,2,9) == input-fieldset-legend-4.html input-fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,2,5) == input-fieldset-legend-5.html input-fieldset-legend-ref-5.html

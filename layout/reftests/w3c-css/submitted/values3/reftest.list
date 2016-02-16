@@ -23,7 +23,7 @@ skip-if(B2G||Mulet) == calc-height-table-1.html calc-height-table-1-ref.html # I
 == calc-padding-block-1.html calc-padding-block-1-ref.html
 == calc-text-indent-1.html calc-text-indent-1-ref.html
 == calc-text-indent-intrinsic-1.html calc-text-indent-intrinsic-1-ref.html
-== calc-transform-origin-1.html calc-transform-origin-1-ref.html
+fuzzy-if(skiaContent,1,11) == calc-transform-origin-1.html calc-transform-origin-1-ref.html
 == calc-vertical-align-1.html calc-vertical-align-1-ref.html
 == calc-width-block-1.html calc-width-block-1-ref.html
 == calc-width-block-intrinsic-1.html calc-width-block-intrinsic-1-ref.html

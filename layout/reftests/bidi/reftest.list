@@ -38,7 +38,7 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 fails == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html # bug 712600
 fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html # bug 712600
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fuzzy-if(skiaContent,104,32) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
 == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
 == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
 == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
@@ -76,8 +76,8 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 263359-2.html 263359-2-ref.html
 == 263359-3.html 263359-3-ref.html
 == 263359-4.html 263359-4-ref.html
-random-if(winWidget) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
-== 267459-2.html 267459-2-ref.html
+random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
+fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
 random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
 == 332655-1.html 332655-1-ref.html
@@ -119,7 +119,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 662288-1.html 662288-1-ref.html
 == 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
-skip-if(B2G||Mulet) == 698291-1.html 698291-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
 == 712600-1.html 712600-1-ref.html

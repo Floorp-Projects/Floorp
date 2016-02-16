@@ -1,5 +1,5 @@
 == input-valid.html input-ref.html
-fuzzy(11,4) == input-customerror.html input-ref.html
+fuzzy(11,4) fuzzy-if(skiaContent,2,10) == input-customerror.html input-ref.html
 skip-if(B2G||Mulet) == input-disabled.html input-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == input-dyn-disabled.html input-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == input-dyn-not-disabled.html input-ref.html
@@ -24,12 +24,12 @@ fuzzy(11,4) == input-type-invalid.html input-ref.html
 == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html
 == input-radio-required.html input-radio-ref.html
-== input-radio-customerror.html input-radio-ref.html
-== input-radio-dyn-valid-1.html input-radio-checked-ref.html
-== input-radio-dyn-valid-2.html input-radio-ref.html
-== input-radio-nogroup-required-valid.html input-radio-ref.html
-== input-radio-nogroup-required-invalid.html input-radio-checked-ref.html
-== input-radio-focus-click.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-customerror.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-dyn-valid-1.html input-radio-checked-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-dyn-valid-2.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-nogroup-required-valid.html input-radio-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-nogroup-required-invalid.html input-radio-checked-ref.html
+fuzzy-if(skiaContent,2,10) == input-radio-focus-click.html input-radio-ref.html
 == input-submit.html input-submit-ref.html
 == input-image.html input-image-ref.html
 # input type='hidden' shouldn't show

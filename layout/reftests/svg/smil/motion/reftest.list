@@ -9,11 +9,11 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.te
 == animateMotion-indefinite-to-2.svg lime.svg
 == animateMotion-rotate-1a.svg lime.svg
 == animateMotion-rotate-1b.svg lime.svg
-== animateMotion-rotate-2.svg  lime.svg
+fuzzy-if(skiaContent,1,40) == animateMotion-rotate-2.svg  lime.svg
 == animateMotion-to-overridden-1.svg lime.svg
 == animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg
 == animateMotion-values-paced-1a.svg animateMotion-values-paced-1-ref.svg
-== animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
+fuzzy-if(skiaContent,1,30) == animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
 
 # Tests involving <mpath> sub-element
 == animateMotion-mpath-pathLength-1.svg lime.svg

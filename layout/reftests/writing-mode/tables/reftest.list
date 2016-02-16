@@ -1,7 +1,7 @@
 == vertical-table-1a.html vertical-table-1-ref.html
 == vertical-table-1b.html vertical-table-1-ref.html
 == vertical-table-2a.html vertical-table-2-ref.html
-== vertical-table-2b.html vertical-table-2-ref.html
+fuzzy-if(skiaContent,3,750) == vertical-table-2b.html vertical-table-2-ref.html
 == vertical-table-rowspan-1.html vertical-table-rowspan-1-ref.html
 == vertical-table-rowspan-2.html vertical-table-rowspan-2-ref.html
 == vertical-table-colspan-1.html vertical-table-colspan-1-ref.html
@@ -24,11 +24,11 @@ fuzzy-if(B2G,5,1) == fixed-table-layout-012-vlr.html fixed-table-layout-012-ref.
 == fixed-table-layout-014-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-016-vlr.html fixed-table-layout-002-ref.html
-== fixed-table-layout-017-vlr.html fixed-table-layout-017-ref.html
-== fixed-table-layout-018-vlr.html fixed-table-layout-017-ref.html
-== fixed-table-layout-021-vlr.html fixed-table-layout-021-ref.html
-== fixed-table-layout-022-vlr.html fixed-table-layout-022-ref.html
-== fixed-table-layout-023-vlr.html fixed-table-layout-023-ref.html
+fuzzy-if(skiaContent,1,50) == fixed-table-layout-017-vlr.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) == fixed-table-layout-018-vlr.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-021-vlr.html fixed-table-layout-021-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-022-vlr.html fixed-table-layout-022-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-023-vlr.html fixed-table-layout-023-ref.html
 == fixed-table-layout-025-vlr.html fixed-table-layout-025-ref.html
 == fixed-table-layout-026-vlr.html fixed-table-layout-025-ref.html
 == fixed-table-layout-027-vlr.html fixed-table-layout-025-ref.html
@@ -50,11 +50,11 @@ fuzzy-if(B2G,5,1) == fixed-table-layout-012-vrl.html fixed-table-layout-012-ref.
 == fixed-table-layout-014-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-016-vrl.html fixed-table-layout-002-ref.html
-== fixed-table-layout-017-vrl.html fixed-table-layout-017-ref.html
-== fixed-table-layout-018-vrl.html fixed-table-layout-017-ref.html
-== fixed-table-layout-021-vrl.html fixed-table-layout-021-ref.html
-== fixed-table-layout-022-vrl.html fixed-table-layout-022-ref.html
-== fixed-table-layout-023-vrl.html fixed-table-layout-023-ref.html
+fuzzy-if(skiaContent,1,50) == fixed-table-layout-017-vrl.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) == fixed-table-layout-018-vrl.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-021-vrl.html fixed-table-layout-021-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-022-vrl.html fixed-table-layout-022-ref.html
+fuzzy-if(skiaContent,1,90) == fixed-table-layout-023-vrl.html fixed-table-layout-023-ref.html
 == fixed-table-layout-025-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-026-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-027-vrl.html fixed-table-layout-025-ref.html

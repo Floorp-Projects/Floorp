@@ -43,8 +43,8 @@ skip-if(B2G||Mulet) == canvas-drawImage-scale-1c.html lime100x100-ref.html # Ini
 
 # Fails on Android versions where we apply a zoom by default, because the
 # resolution of a canvas element is fixed regardless of zoom level.
-fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
-fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
 fuzzy-if(winWidget&&!d2d,1,10000) fuzzy-if(azureSkia,1,10000) fuzzy-if(Android||B2G,1,10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
 #Same as scale-2a but with globalAlpha:
@@ -59,9 +59,9 @@ skip-if(B2G||Mulet) == canvas-drawImage-slice-1a.html lime100x100-ref.html # Ini
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-== img-simple-3.html  img-simple-3-ref.html
+fuzzy-if(skiaContent,255,150) == img-simple-3.html  img-simple-3-ref.html
 == img-simple-4.html  lime100x100-ref.html
-== img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,255,50) == img-simple-5.html  img-simple-5-ref.html
 skip-if(B2G||Mulet) == img-simple-6.html  lime100x100-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == img-simple-7.html  img-simple-7-ref.html
 
@@ -116,8 +116,8 @@ skip-if(Mulet) == img-display-none-1.html about:blank # MULET: Bug 1144079: Re-e
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
 == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
 == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
-== img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
-== img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,255,10) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
 # with with a fragmentIdentifier viewBox
 skip-if(B2G||Mulet) == img-fragment-1a.html  img-fragment-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop

@@ -6,44 +6,44 @@
 # 'color' property, from/to/by with named colors & hex values
 == anim-css-color-1-by-ident-hex.svg         anim-css-fill-1-ref.svg
 == anim-css-color-1-from-by-hex-hex.svg      anim-css-fill-1-ref.svg
-== anim-css-color-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
-== anim-css-color-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
-== anim-css-color-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
-== anim-css-color-1-to-ident-hex.svg         anim-css-fill-1-ref.svg
-== anim-css-color-1-to-ident-ident.svg       anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-to-ident-hex.svg         anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-to-ident-ident.svg       anim-css-fill-1-ref.svg
 
 # 'color' property, paced calcMode
 == anim-css-color-2-paced-rgb.svg            anim-css-fill-2-ref.svg
 
 # 'color' property, animating *by* a named color
-== anim-css-color-3-by-ident-ident.svg       anim-css-fill-3-ref.svg
-== anim-css-color-3-from-by-ident-ident.svg  anim-css-fill-3-ref.svg
-== anim-css-color-3-from-by-rgb-ident.svg    anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-color-3-by-ident-ident.svg       anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-color-3-from-by-ident-ident.svg  anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-color-3-from-by-rgb-ident.svg    anim-css-fill-3-ref.svg
 
 # 'fill' property, from/to/by with named colors & hex values
-== anim-css-fill-1-by-ident-hex.svg         anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-by-hex-hex.svg      anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
-== anim-css-fill-1-to-ident-hex.svg         anim-css-fill-1-ref.svg
-== anim-css-fill-1-to-ident-ident.svg       anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-by-ident-hex.svg         anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-hex-hex.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-to-ident-hex.svg         anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-to-ident-ident.svg       anim-css-fill-1-ref.svg
 
 # 'fill' property, from/to/by, with 'currentColor' keyword
-== anim-css-fill-1-by-ident-curcol.svg      anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-by-curcol-hex.svg   anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-by-hex-curcol.svg   anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-to-curcol-hex.svg   anim-css-fill-1-ref.svg
-== anim-css-fill-1-from-to-hex-curcol.svg   anim-css-fill-1-ref.svg
-== anim-css-fill-1-to-ident-curcol.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-by-ident-curcol.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-curcol-hex.svg   anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-hex-curcol.svg   anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-curcol-hex.svg   anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-hex-curcol.svg   anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fill-1-to-ident-curcol.svg      anim-css-fill-1-ref.svg
 
 # 'fill' property, paced calcMode
 == anim-css-fill-2-paced-rgb.svg            anim-css-fill-2-ref.svg
 
 # 'fill' property, animating *by* a named color
-== anim-css-fill-3-by-ident-ident.svg       anim-css-fill-3-ref.svg
-== anim-css-fill-3-from-by-ident-ident.svg  anim-css-fill-3-ref.svg
-== anim-css-fill-3-from-by-rgb-ident.svg    anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-fill-3-by-ident-ident.svg       anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-ident-ident.svg  anim-css-fill-3-ref.svg
+fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-rgb-ident.svg    anim-css-fill-3-ref.svg
 
 # check handling of overflowing color values
 # NOTE: The second test fails because we compute "from + by" as the animation
@@ -55,13 +55,13 @@
 fails == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
 
 # 'fill-opacity' property
-== anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
-== anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
+fuzzy-if(skiaContent,1,885) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
+fuzzy-if(skiaContent,1,210) == anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
 == anim-css-fillopacity-1-from-to.svg       anim-css-fillopacity-1-ref.svg
-== anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
 == anim-css-fillopacity-2-paced.svg         anim-css-fillopacity-2-ref.svg
 fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg # bug 501188
-== anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
+fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
 == anim-css-font-1.svg  anim-css-font-1-ref.svg
@@ -143,14 +143,14 @@ fails == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.s
 == anim-css-strokewidth-2-values-em-em.svg    anim-css-strokewidth-2-ref.svg
 == anim-css-strokewidth-2-values-em-px.svg    anim-css-strokewidth-2-ref.svg
 == anim-css-strokewidth-2-values-px-em.svg    anim-css-strokewidth-2-ref.svg
-== anim-css-strokewidth-2-values-px-px.svg    anim-css-strokewidth-2-ref.svg
+fuzzy-if(skiaContent,1,360) == anim-css-strokewidth-2-values-px-px.svg    anim-css-strokewidth-2-ref.svg
 == anim-css-strokewidth-3-paced.svg           anim-css-strokewidth-3-ref.svg
 
 # 'stroke-width' property, negative addition
 == anim-css-strokewidth-4-from-by-px-px.svg   anim-css-strokewidth-4-ref.svg
 == anim-css-strokewidth-4-from-by-px-em.svg   anim-css-strokewidth-4-ref.svg
 == anim-css-strokewidth-4-from-by-em-em.svg   anim-css-strokewidth-4-ref.svg
-== anim-css-strokewidth-4-from-by-no-no.svg   anim-css-strokewidth-4-ref.svg
+fuzzy-if(skiaContent,1,170) == anim-css-strokewidth-4-from-by-no-no.svg   anim-css-strokewidth-4-ref.svg
 
 # check correct handling of "!important" values
 == important-set-1.svg  anim-standard-ref.svg

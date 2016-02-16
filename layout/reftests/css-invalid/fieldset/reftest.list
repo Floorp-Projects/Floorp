@@ -26,4 +26,4 @@
 == fieldset-nested-invalid.html about:blank
 == fieldset-div-invalid.html about:blank
 == fieldset-nested-valid-invalid.html fieldset-nested-valid-invalid-ref.html
-== fieldset-nested-barred.html fieldset-nested-barred-ref.html
+fuzzy-if(skiaContent,1,5) == fieldset-nested-barred.html fieldset-nested-barred-ref.html

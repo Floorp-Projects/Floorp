@@ -130,7 +130,7 @@ random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
-== scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
+fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 != stretchy-1.html stretchy-1-ref.html
@@ -202,7 +202,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-random-if((B2G&&browserIsRemote)||Mulet) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
+random-if((B2G&&browserIsRemote)||Mulet) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,80) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
@@ -229,7 +229,7 @@ fails-if(B2G) == menclose-2-box.html menclose-2-box-ref.html # B2G slight thickn
 == menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike-ref.html
 == menclose-2-horizontalstrike.html menclose-2-horizontalstrike-ref.html
 fails-if(B2G) == menclose-2-left.html menclose-2-left-ref.html # B2G slight thickness variation
-== menclose-2-longdiv.html menclose-2-longdiv-ref.html
+fuzzy-if(skiaContent,80,5) == menclose-2-longdiv.html menclose-2-longdiv-ref.html
 == menclose-2-right.html menclose-2-right-ref.html
 fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
 fails-if(B2G) == menclose-2-top.html menclose-2-top-ref.html # B2G slight thickness variation
@@ -240,7 +240,7 @@ fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
-fails-if(B2G||Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
+fails-if(B2G||Android||(OSX==1006&&skiaContent)) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
 == menclose-3-default.html menclose-3-default-ref.html
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
@@ -249,7 +249,7 @@ fails-if(B2G||Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-
 == menclose-5-actuarial.html menclose-5-actuarial-ref.html
 == menclose-5-bottom.html menclose-5-bottom-ref.html
 == menclose-5-box.html menclose-5-box-ref.html
-fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
+fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,2) == menclose-5-circle.html menclose-5-circle-ref.html
 fuzzy-if(d2d,7,1) == menclose-5-downdiagonalstrike.html menclose-5-downdiagonalstrike-ref.html
 == menclose-5-horizontalstrike.html menclose-5-horizontalstrike-ref.html
 == menclose-5-left.html menclose-5-left-ref.html
@@ -257,7 +257,7 @@ fuzzy-if(d2d,7,1) == menclose-5-downdiagonalstrike.html menclose-5-downdiagonals
 == menclose-5-madruwb.html menclose-5-madruwb-ref.html
 == menclose-5-radical.html menclose-5-radical-ref.html
 == menclose-5-right.html menclose-5-right-ref.html
-== menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
+fuzzy-if(skiaContent,5,5) == menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
 == menclose-5-top.html menclose-5-top-ref.html
 == menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
 fuzzy-if(d2d,7,1) == menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike-ref.html
@@ -266,7 +266,7 @@ fuzzy-if(d2d,7,1) == menclose-5-updiagonalstrike.html menclose-5-updiagonalstrik
 == menclose-6-actuarial.html menclose-6-ref.html
 == menclose-6-bottom.html menclose-6-ref.html
 == menclose-6-box.html menclose-6-ref.html
-== menclose-6-circle.html menclose-6-ref.html
+fuzzy-if(skiaContent,1,2) == menclose-6-circle.html menclose-6-ref.html
 fuzzy-if(d2d,7,1) == menclose-6-downdiagonalstrike.html menclose-6-ref.html
 == menclose-6-horizontalstrike.html menclose-6-ref.html
 == menclose-6-left.html menclose-6-ref.html
@@ -274,7 +274,7 @@ fuzzy-if(d2d,7,1) == menclose-6-downdiagonalstrike.html menclose-6-ref.html
 == menclose-6-madruwb.html menclose-6-ref.html
 == menclose-6-radical.html menclose-6-ref.html
 == menclose-6-right.html menclose-6-ref.html
-== menclose-6-roundedbox.html menclose-6-ref.html
+fuzzy-if(skiaContent,2,3) == menclose-6-roundedbox.html menclose-6-ref.html
 == menclose-6-top.html menclose-6-ref.html
 == menclose-6-updiagonalarrow.html menclose-6-ref.html
 fuzzy-if(d2d,7,1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
@@ -355,11 +355,11 @@ fails-if(winWidget) == mfrac-B-3.html mfrac-B-2-3-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
 == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
-fuzzy-if(OSX,1,100) == mfrac-C-1.html mfrac-C-1-ref.html
+fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-C-1.html mfrac-C-1-ref.html
 fails-if(winWidget) == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-C-3.html mfrac-C-3-ref.html
 == mfrac-C-4.html mfrac-C-4-ref.html
-fuzzy-if(OSX,1,100) == mfrac-D-1.html mfrac-D-1-ref.html
+fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-D-1.html mfrac-D-1-ref.html
 fails-if(winWidget) == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-D-3.html mfrac-D-3-ref.html
 == mfrac-D-4.html mfrac-D-4-ref.html

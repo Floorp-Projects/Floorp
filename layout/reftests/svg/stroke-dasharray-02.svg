@@ -42,7 +42,7 @@
   <!-- Sanity test to check that two circles cover circle element dashes (i.e. that the previous check didn't pass because the stroke was solid) -->
   <circle cx="0" cy="0" r=".0008" fill="none" stroke="red" stroke-width=".0001" stroke-dasharray=".0001 .0005 .0001 100"
           transform="translate(180, 300) scale(1e5, 1e5)"/>
-  <circle cx="260" cy="305" r="11" fill="lime"/>
-  <circle cx="235" cy="358" r="11" fill="lime"/>
+  <circle cx="260" cy="305" r="14" fill="lime"/>
+  <circle cx="235" cy="358" r="14" fill="lime"/>
 
 </svg>

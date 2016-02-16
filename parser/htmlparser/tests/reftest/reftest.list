@@ -3,18 +3,18 @@
 == bug566280-1.html bug566280-1-ref.html
 == bug577418-1.html bug577418-1-ref.html
 == bug582788-1.html bug582788-1-ref.html
-skip-if(B2G) == bug582940-1.html bug582940-1-ref.html
+skip-if(B2G) fuzzy-if(skiaContent,2,5) == bug582940-1.html bug582940-1-ref.html
 == bug592656-1.html bug592656-1-ref.html
-== bug599320-1.html bug599320-1-ref.html
-== bug608373-1.html bug608373-1-ref.html
+fuzzy-if(skiaContent,1,5) == bug599320-1.html bug599320-1-ref.html
+fuzzy-if(skiaContent,2,5) == bug608373-1.html bug608373-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == view-source:bug482921-1.html bug482921-1-ref.html
 == view-source:bug482921-2.xhtml bug482921-2-ref.html
-== bug659763-1.html bug659763-1-ref.html
-== bug659763-2.html bug659763-2-ref.html
-== bug659763-3.html bug659763-3-ref.html
-== bug659763-4.html bug659763-4-ref.html
-== bug659763-5.html bug659763-5-ref.html
-== bug659763-6.html bug659763-6-ref.html
+fuzzy-if(skiaContent,2,5) == bug659763-1.html bug659763-1-ref.html
+fuzzy-if(skiaContent,1,5) == bug659763-2.html bug659763-2-ref.html
+fuzzy-if(skiaContent,1,5) == bug659763-3.html bug659763-3-ref.html
+fuzzy-if(skiaContent,2,3) == bug659763-4.html bug659763-4-ref.html
+fuzzy-if(skiaContent,1,5) == bug659763-5.html bug659763-5-ref.html
+fuzzy-if(skiaContent,1,5) == bug659763-6.html bug659763-6-ref.html
 skip-if(B2G) == view-source:bug673094-1.html view-source:bug673094-1-ref.html
 == bug696651-1.html bug696651-1-ref.html
 skip-if(B2G) == bug696651-2.html bug696651-2-ref.html

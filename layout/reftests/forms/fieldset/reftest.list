@@ -1,4 +1,4 @@
-== dynamic-legend-scroll-1.html dynamic-legend-scroll-1-ref.html
+fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll-1-ref.html
 == fieldset-hidden-1.html fieldset-hidden-1-ref.html
 == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1-ref.html
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
@@ -9,7 +9,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,102,221) == positioned-container-1.htm
 == relpos-legend-1.html relpos-legend-1-ref.html
 == relpos-legend-2.html relpos-legend-2-ref.html
 test-pref(layout.css.sticky.enabled,true) skip-if((B2G&&browserIsRemote)||Mulet) == sticky-legend-1.html sticky-legend-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
+fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
 == fieldset-grid-001.html fieldset-grid-001-ref.html

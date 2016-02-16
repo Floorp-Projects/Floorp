@@ -9,6 +9,6 @@ default-preferences pref(dom.forms.color,true)
 fails-if(B2G||Mulet||Android) == margin-padding-1.html margin-padding-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == block-invalidate-1.html block-invalidate-1-ref.html
 == block-invalidate-2.html block-invalidate-2-ref.html
-fuzzy-if(gtkWidget,8,33) fails-if(B2G||Mulet||Android) == transformations-1.html transformations-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(gtkWidget,8,33) fuzzy-if(skiaContent,8,35) fails-if(B2G||Mulet||Android) == transformations-1.html transformations-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(B2G||Mulet||Android) == custom-style-1.html custom-style-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(B2G||Mulet||Android) == custom-style-2.html custom-style-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

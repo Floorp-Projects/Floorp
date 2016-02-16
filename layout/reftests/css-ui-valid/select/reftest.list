@@ -1,18 +1,18 @@
 needs-focus == select-valid.html select-ref.html
-needs-focus == select-valid-reset.html select-required-ref.html
-needs-focus == select-invalid.html select-ref.html
-needs-focus == select-disabled.html select-disabled-ref.html
-needs-focus == select-dyn-disabled.html select-disabled-ref.html
-needs-focus == select-dyn-not-disabled.html select-ref.html
-needs-focus == select-required-invalid.html select-required-ref.html
-needs-focus == select-required-valid-1.html select-required-ref.html
-needs-focus == select-required-valid-2.html select-required-ref.html
-needs-focus == select-required-valid-changed-1.html select-required-ref.html
-needs-focus == select-required-valid-changed-2.html select-required-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-valid-reset.html select-required-ref.html
+fuzzy-if(skiaContent,1,3) needs-focus == select-invalid.html select-ref.html
+fuzzy-if(skiaContent,2,4) needs-focus == select-disabled.html select-disabled-ref.html
+fuzzy-if(skiaContent,2,4) needs-focus == select-dyn-disabled.html select-disabled-ref.html
+fuzzy-if(skiaContent,1,3) needs-focus == select-dyn-not-disabled.html select-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-required-invalid.html select-required-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-required-valid-1.html select-required-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-required-valid-2.html select-required-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-required-valid-changed-1.html select-required-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-required-valid-changed-2.html select-required-ref.html
 needs-focus == select-required-multiple-invalid.html select-required-multiple-ref.html
 needs-focus == select-required-multiple-valid.html select-required-multiple-ref.html
-fuzzy(64,4) fuzzy-if(asyncPan&&layersGPUAccelerated,84,77) needs-focus == select-required-multiple-valid-changed.html select-required-multiple-ref.html
+fuzzy(64,4) fuzzy-if(asyncPan&&layersGPUAccelerated,84,77) fuzzy-if(skiaContent,1,1000) needs-focus == select-required-multiple-valid-changed.html select-required-multiple-ref.html
 fails-if(Android||B2G||Mulet) needs-focus == select-disabled-fieldset-1.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-needs-focus == select-fieldset-legend.html select-fieldset-legend-ref.html
-needs-focus == select-novalidate.html select-required-ref.html
+fails-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,10) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(skiaContent,2,10) needs-focus == select-fieldset-legend.html select-fieldset-legend-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus == select-novalidate.html select-required-ref.html
