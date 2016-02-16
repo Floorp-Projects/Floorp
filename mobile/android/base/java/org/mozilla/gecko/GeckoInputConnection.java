@@ -53,167 +53,6 @@ class GeckoInputConnection
 
     private static Handler sBackgroundHandler;
 
-    private static class InputThreadUtils {
-        // We only want one UI editable around to keep synchronization simple,
-        // so we make InputThreadUtils a singleton
-        public static final InputThreadUtils sInstance = new InputThreadUtils();
-
-        private Editable mUiEditable;
-        private Object mUiEditableReturn;
-        private Exception mUiEditableException;
-        private final SynchronousQueue<Runnable> mIcRunnableSync;
-        private final Runnable mIcSignalRunnable;
-
-        private InputThreadUtils() {
-            mIcRunnableSync = new SynchronousQueue<Runnable>();
-            mIcSignalRunnable = new Runnable() {
-                @Override public void run() {
-                }
-            };
-        }
-
-        private void runOnIcThread(Handler icHandler, final Runnable runnable) {
-            if (DEBUG) {
-                ThreadUtils.assertOnUiThread();
-                Log.d(LOGTAG, "runOnIcThread() on thread " +
-                              icHandler.getLooper().getThread().getName());
-            }
-            Runnable runner = new Runnable() {
-                @Override public void run() {
-                    try {
-                        Runnable queuedRunnable = mIcRunnableSync.take();
-                        if (DEBUG && queuedRunnable != runnable) {
-                            throw new IllegalThreadStateException("sync error");
-                        }
-                        queuedRunnable.run();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            };
-            try {
-                // if we are not inside waitForUiThread(), runner will call the runnable
-                icHandler.post(runner);
-                // runnable will be called by either runner from above or waitForUiThread()
-                mIcRunnableSync.put(runnable);
-            } catch (InterruptedException e) {
-            } finally {
-                // if waitForUiThread() already called runnable, runner should not call it again
-                icHandler.removeCallbacks(runner);
-            }
-        }
-
-        public void endWaitForUiThread() {
-            if (DEBUG) {
-                ThreadUtils.assertOnUiThread();
-                Log.d(LOGTAG, "endWaitForUiThread()");
-            }
-            try {
-                mIcRunnableSync.put(mIcSignalRunnable);
-            } catch (InterruptedException e) {
-            }
-        }
-
-        public void waitForUiThread(Handler icHandler) {
-            if (DEBUG) {
-                ThreadUtils.assertOnThread(icHandler.getLooper().getThread(), AssertBehavior.THROW);
-                Log.d(LOGTAG, "waitForUiThread() blocking on thread " +
-                              icHandler.getLooper().getThread().getName());
-            }
-            try {
-                Runnable runnable = null;
-                do {
-                    runnable = mIcRunnableSync.take();
-                    runnable.run();
-                } while (runnable != mIcSignalRunnable);
-            } catch (InterruptedException e) {
-            }
-        }
-
-        public void runOnIcThread(final Handler uiHandler,
-                                  final GeckoEditableClient client,
-                                  final Runnable runnable) {
-            final Handler icHandler = client.getInputConnectionHandler();
-            if (icHandler.getLooper() == uiHandler.getLooper()) {
-                // IC thread is UI thread; safe to run directly
-                runnable.run();
-                return;
-            }
-            runOnIcThread(icHandler, runnable);
-        }
-
-        public void sendKeyEventFromUiThread(final Handler uiHandler,
-                                             final GeckoEditableClient client,
-                                             final KeyEvent event,
-                                             final int action,
-                                             final int metaState) {
-            runOnIcThread(uiHandler, client, new Runnable() {
-                @Override public void run() {
-                    client.sendKeyEvent(event, action, metaState);
-                }
-            });
-        }
-
-        public Editable getEditableForUiThread(final Handler uiHandler,
-                                               final GeckoEditableClient client) {
-            if (DEBUG) {
-                ThreadUtils.assertOnThread(uiHandler.getLooper().getThread(), AssertBehavior.THROW);
-            }
-            final Handler icHandler = client.getInputConnectionHandler();
-            if (icHandler.getLooper() == uiHandler.getLooper()) {
-                // IC thread is UI thread; safe to use Editable directly
-                return client.getEditable();
-            }
-            // IC thread is not UI thread; we need to return a proxy Editable in order
-            // to safely use the Editable from the UI thread
-            if (mUiEditable != null) {
-                return mUiEditable;
-            }
-            final InvocationHandler invokeEditable = new InvocationHandler() {
-                @Override public Object invoke(final Object proxy,
-                                               final Method method,
-                                               final Object[] args) throws Throwable {
-                    if (DEBUG) {
-                        ThreadUtils.assertOnThread(uiHandler.getLooper().getThread(), AssertBehavior.THROW);
-                        Log.d(LOGTAG, "UiEditable." + method.getName() + "() blocking");
-                    }
-                    synchronized (icHandler) {
-                        // Now we are on UI thread
-                        mUiEditableReturn = null;
-                        mUiEditableException = null;
-                        // Post a Runnable that calls the real Editable and saves any
-                        // result/exception. Then wait on the Runnable to finish
-                        runOnIcThread(icHandler, new Runnable() {
-                            @Override public void run() {
-                                synchronized (icHandler) {
-                                    try {
-                                        mUiEditableReturn = method.invoke(
-                                            client.getEditable(), args);
-                                    } catch (Exception e) {
-                                        mUiEditableException = e;
-                                    }
-                                    if (DEBUG) {
-                                        Log.d(LOGTAG, "UiEditable." + method.getName() +
-                                                      "() returning");
-                                    }
-                                    icHandler.notify();
-                                }
-                            }
-                        });
-                        // let InterruptedException propagate
-                        icHandler.wait();
-                        if (mUiEditableException != null) {
-                            throw mUiEditableException;
-                        }
-                        return mUiEditableReturn;
-                    }
-                }
-            };
-            mUiEditable = (Editable) Proxy.newProxyInstance(Editable.class.getClassLoader(),
-                new Class<?>[] { Editable.class }, invokeEditable);
-            return mUiEditable;
-        }
-    }
-
     // Managed only by notifyIMEContext; see comments in notifyIMEContext
     private int mIMEState;
     private String mIMETypeHint = "";
@@ -863,70 +702,37 @@ class GeckoInputConnection
                 }
                 break;
         }
+
+        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
+            return GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
+        }
+
         return event;
     }
 
-    private boolean processKey(int keyCode, KeyEvent event, boolean down) {
-        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
-            event = GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
-            keyCode = event.getKeyCode();
-        }
+    private boolean processKey(final int action, final int keyCode, final KeyEvent event) {
 
-        if (keyCode > KeyEvent.getMaxKeyCode() ||
-            !shouldProcessKey(keyCode, event)) {
+        if (keyCode > KeyEvent.getMaxKeyCode() || !shouldProcessKey(keyCode, event)) {
             return false;
         }
-        final int action = down ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP;
-        event = translateKey(keyCode, event);
-        keyCode = event.getKeyCode();
 
-        View view = getView();
-        if (view == null) {
-            InputThreadUtils.sInstance.sendKeyEventFromUiThread(
-                    ThreadUtils.getUiHandler(), mEditableClient, event, action, /* metaState */ 0);
-            return true;
-        }
-
-        // KeyListener returns true if it handled the event for us. KeyListener is only
-        // safe to use on the UI thread; therefore we need to pass a proxy Editable to it
-        KeyListener keyListener = TextKeyListener.getInstance();
-        Handler uiHandler = view.getRootView().getHandler();
-        Editable uiEditable = InputThreadUtils.sInstance.
-            getEditableForUiThread(uiHandler, mEditableClient);
-        boolean skip = shouldSkipKeyListener(keyCode, event);
-
-        if (down) {
-            mEditableClient.setSuppressKeyUp(true);
-        }
-        if (skip ||
-            (down && !keyListener.onKeyDown(view, uiEditable, keyCode, event)) ||
-            (!down && !keyListener.onKeyUp(view, uiEditable, keyCode, event))) {
-
-            InputThreadUtils.sInstance.sendKeyEventFromUiThread(
-                    uiHandler, mEditableClient,
-                    event, action, TextKeyListener.getMetaState(uiEditable));
-
-            if (skip && down) {
-                // Usually, the down key listener call above adjusts meta states for us.
-                // However, if we skip that call above, we have to manually adjust meta
-                // states so the meta states remain consistent
-                TextKeyListener.adjustMetaAfterKeypress(uiEditable);
+        mEditableClient.postToInputConnection(new Runnable() {
+            @Override
+            public void run() {
+                sendKeyEvent(action, event);
             }
-        }
-        if (down) {
-            mEditableClient.setSuppressKeyUp(false);
-        }
+        });
         return true;
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return processKey(keyCode, event, true);
+        return processKey(KeyEvent.ACTION_DOWN, keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return processKey(keyCode, event, false);
+        return processKey(KeyEvent.ACTION_UP, keyCode, event);
     }
 
     /**
@@ -955,8 +761,8 @@ class GeckoInputConnection
             final String str = event.getCharacters();
             for (int i = 0; i < str.length(); i++) {
                 final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
-                if (!processKey(KeyEvent.KEYCODE_UNKNOWN, charEvent, /* down */ true) ||
-                    !processKey(KeyEvent.KEYCODE_UNKNOWN, charEvent, /* down */ false)) {
+                if (!processKey(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_UNKNOWN, charEvent) ||
+                    !processKey(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_UNKNOWN, charEvent)) {
                     return false;
                 }
             }
@@ -964,8 +770,8 @@ class GeckoInputConnection
         }
 
         while ((repeatCount--) != 0) {
-            if (!processKey(keyCode, event, /* down */ true) ||
-                !processKey(keyCode, event, /* down */ false)) {
+            if (!processKey(KeyEvent.ACTION_DOWN, keyCode, event) ||
+                !processKey(KeyEvent.ACTION_UP, keyCode, event)) {
                 return false;
             }
         }
