@@ -46,7 +46,7 @@ Structure::
         addons: <string>, // obsolete, use ``environment.addons``
       },
 
-      childPayloads: {...}, // only present with e10s; a reduced payload from content processes, null on failure
+      childPayloads: [...], // only present with e10s; reduced payloads from content processes, null on failure
       simpleMeasurements: {...},
 
       // The following properties may all be null if we fail to collect them.
@@ -60,7 +60,7 @@ Structure::
       lateWrites: {...},
       addonDetails: {...},
       addonHistograms: {...},
-      UIMeasurements: {...},
+      UIMeasurements: [...],
       slowSQL: {...},
       slowSQLstartup: {...},
     }
