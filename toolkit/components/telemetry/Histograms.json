@@ -7790,6 +7790,14 @@
     "n_values": 10,
     "description": "How often would blocked mixed content be allowed if HSTS upgrades were allowed? 0=display/no-HSTS, 1=display/HSTS, 2=active/no-HSTS, 3=active/HSTS"
   },
+  "MIXED_CONTENT_OBJECT_SUBREQUEST": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "bug_numbers": [1244116],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"
+  },
   "COOKIE_SCHEME_SECURITY": {
     "alert_emails": ["seceng@mozilla.org"],
     "expires_in_version": "50",
