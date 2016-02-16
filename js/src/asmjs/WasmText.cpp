@@ -73,6 +73,10 @@ class WasmAstSig : public WasmAstBase
     ExprType ret_;
 
   public:
+    explicit WasmAstSig(LifoAlloc& lifo)
+      : args_(lifo),
+        ret_(ExprType::Void)
+    {}
     WasmAstSig(WasmAstValTypeVector&& args, ExprType ret)
       : args_(Move(args)),
         ret_(ret)
@@ -81,6 +85,10 @@ class WasmAstSig : public WasmAstBase
       : args_(Move(rhs.args_)),
         ret_(rhs.ret_)
     {}
+    void operator=(WasmAstSig&& rhs) {
+        args_ = Move(rhs.args_);
+        ret_ = rhs.ret_;
+    }
     const WasmAstValTypeVector& args() const {
         return args_;
     }
@@ -437,6 +445,13 @@ class WasmAstModule : public WasmAstNode
         return sigs_.append(new (lifo_) WasmAstSig(Move(sig))) &&
                sigMap_.add(p, sigs_.back(), *sigIndex);
     }
+    bool append(WasmAstSig* sig) {
+        uint32_t sigIndex = sigs_.length();
+        if (!sigs_.append(sig))
+            return false;
+        SigMap::AddPtr p = sigMap_.lookupForAdd(*sig);
+        return p || sigMap_.add(p, sig, sigIndex);
+    }
     const SigVector& sigs() const {
         return sigs_;
     }
@@ -584,6 +599,7 @@ class WasmToken
         SetLocal,
         Store,
         Text,
+        Type,
         UnaryOpcode,
         ValueType
     };
@@ -1616,6 +1632,11 @@ WasmToken WasmTokenStream::next()
             return WasmToken(WasmToken::Segment, begin, cur_);
         break;
 
+      case 't':
+        if (consume(MOZ_UTF16("type")))
+            return WasmToken(WasmToken::Type, begin, cur_);
+        break;
+
       default:
         break;
     }
@@ -2332,6 +2353,53 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
     return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), maybeBody);
 }
 
+static bool
+ParseFuncType(WasmParseContext& c, WasmAstSig* sig)
+{
+    WasmAstValTypeVector args(c.lifo);
+    ExprType result = ExprType::Void;
+
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmToken token = c.ts.get();
+        switch (token.kind()) {
+          case WasmToken::Param:
+            if (!ParseValueType(c, &args))
+                return false;
+            break;
+          case WasmToken::Result:
+            if (!ParseResult(c, &result))
+                return false;
+            break;
+          default:
+            c.ts.generateError(token, c.error);
+            return false;
+        }
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+    }
+
+    *sig = WasmAstSig(Move(args), result);
+    return true;
+}
+
+static WasmAstSig*
+ParseTypeDef(WasmParseContext& c)
+{
+    if (!c.ts.match(WasmToken::Func, c.error))
+        return nullptr;
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+
+    WasmAstSig sig(c.lifo);
+    if (!ParseFuncType(c, &sig))
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    return new(c.lifo) WasmAstSig(Move(sig));
+}
+
 static WasmAstSegment*
 ParseSegment(WasmParseContext& c)
 {
@@ -2379,30 +2447,12 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
     if (!c.ts.match(WasmToken::Text, &funcName, c.error))
         return nullptr;
 
-    WasmAstValTypeVector args(c.lifo);
-    ExprType result = ExprType::Void;
-
-    while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmToken token = c.ts.get();
-        switch (token.kind()) {
-          case WasmToken::Param:
-            if (!ParseValueType(c, &args))
-                return nullptr;
-            break;
-          case WasmToken::Result:
-            if (!ParseResult(c, &result))
-                return nullptr;
-            break;
-          default:
-            c.ts.generateError(token, c.error);
-            return nullptr;
-        }
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
-            return nullptr;
-    }
+    WasmAstSig sig(c.lifo);
+    if (!ParseFuncType(c, &sig))
+        return nullptr;
 
     uint32_t sigIndex;
-    if (!module->declare(WasmAstSig(Move(args), result), &sigIndex))
+    if (!module->declare(Move(sig), &sigIndex))
         return nullptr;
 
     return new(c.lifo) WasmAstImport(moduleName.text(), funcName.text(), sigIndex);
@@ -2448,6 +2498,12 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
         WasmToken section = c.ts.get();
 
         switch (section.kind()) {
+          case WasmToken::Type: {
+            WasmAstSig* sig = ParseTypeDef(c);
+            if (!sig || !module->append(sig))
+                return nullptr;
+            break;
+          }
           case WasmToken::Memory: {
             WasmAstMemory* memory = ParseMemory(c);
             if (!memory)
