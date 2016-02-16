@@ -79,6 +79,8 @@ interface nsIBrowserHistory : nsISupports
      *        Microseconds from epoch, representing the final time.
      *
      * @note The removal happens in a batch.
+     *
+     * @deprecated Please use PlacesUtils.history.removeVisitsByFilter instead
      */
     void removeVisitsByTimeframe(in PRTime aBeginTime,
                                  in PRTime aEndTime);
