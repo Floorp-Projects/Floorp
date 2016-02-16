@@ -432,8 +432,11 @@ public class GeckoEvent {
             break;
 
         case Sensor.TYPE_ROTATION_VECTOR:
+        case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
             event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_ROTATION_VECTOR;
+            event.mFlags = (sensor_type == Sensor.TYPE_ROTATION_VECTOR ?
+                    GeckoHalDefines.SENSOR_ROTATION_VECTOR :
+                    GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
             event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
             event.mY = s.values[1];
@@ -447,17 +450,6 @@ public class GeckoEvent {
                 event.mW = 1 - s.values[0]*s.values[0] - s.values[1]*s.values[1] - s.values[2]*s.values[2];
                 event.mW = (event.mW > 0.0) ? Math.sqrt(event.mW) : 0.0;
             }
-            break;
-
-        // case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
-        case 15:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = s.values[1];
-            event.mZ = s.values[2];
-            event.mW = s.values[3];
             break;
         }
         return event;
