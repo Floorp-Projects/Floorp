@@ -640,7 +640,7 @@ BufferTextureHost::GetAsSurface()
       return nullptr;
     }
   } else {
-    RefPtr<gfx::DataSourceSurface> surf =
+    result =
       gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
         ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
         mSize, mFormat);
