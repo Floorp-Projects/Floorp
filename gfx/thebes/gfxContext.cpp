@@ -863,11 +863,13 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
     gfxRect clipRect = GetRoundOutDeviceClipExtents(this);
     clipExtents = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   }
+
+  RefPtr<SourceSurface> source;
   if ((mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
        mDT->GetOpaqueRect().Contains(clipExtents)) &&
-      !mDT->GetUserData(&sDontUseAsSourceKey)) {
+      !mDT->GetUserData(&sDontUseAsSourceKey) &&
+      (source = mDT->Snapshot())) {
     DrawTarget *oldDT = mDT;
-    RefPtr<SourceSurface> source = mDT->Snapshot();
     Point oldDeviceOffset = CurrentState().deviceOffset;
 
     PushNewDT(gfxContentType::COLOR);
