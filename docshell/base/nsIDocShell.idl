@@ -769,6 +769,15 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isApp;
 
   /**
+   * The type of iframe that this docshell lives.
+   */
+  const unsigned long FRAME_TYPE_REGULAR = 0;
+  const unsigned long FRAME_TYPE_BROWSER = 1;
+  const unsigned long FRAME_TYPE_APP     = 2;
+
+  [infallible] attribute unsigned long frameType;
+
+  /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser> or
    * <iframe mozapp>.  <xul:browser> returns false here.
    */
@@ -813,48 +822,14 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [infallible] readonly attribute boolean isInMozBrowserOrApp;
 
-   /**
-    * Indicate that this docshell corresponds to an app with the given app id.
-    *
-    * You may pass NO_APP_ID or UNKNOWN_APP_ID for containingAppId.  If you
-    * pass NO_APP_ID, then this docshell will return NO_APP_ID for appId.  If
-    * you pass UNKNOWN_APP_ID, then this docshell will search its hiearchy for
-    * an app frame and use that frame's appId.
-    *
-    * You can call this method more than once, but there's no guarantee that
-    * other components will update their view of the world if you change a
-    * docshell's app id, so tread lightly.
-    *
-    * If you call this method after calling setIsBrowserInsideApp, this
-    * docshell will forget the fact that it was a browser.
-    */
-   void setIsApp(in unsigned long ownAppId);
-
-   /**
-    * Indicate that this docshell corresponds to a browser inside an app with
-    * the given ID.  As with setIsApp, you may pass NO_APP_ID or
-    * UNKNOWN_APP_ID.
-    *
-    * As with setIsApp, you may call this more than once, but it's kind of a
-    * hack, so be careful.
-    */
-   void setIsBrowserInsideApp(in unsigned long containingAppId);
-
-   /**
-    * Indicate that this docshell corresponds to a signed package with
-    * the given packageId.
-    */
-   void setIsSignedPackage(in AString packageId);
-
   /**
    * Returns the id of the app associated with this docshell.  If this docshell
    * is an <iframe mozbrowser> inside an <iframe mozapp>, we return the app's
    * appId.
    *
    * We compute this value by walking up the docshell hierarchy until we find a
-   * docshell on which setIsApp(x) or setIsBrowserInsideApp(x) was called
-   * (ignoring those docshells where x == UNKNOWN_APP_ID).  We return the app
-   * id x.
+   * docshell on which origin attributes was set. (ignoring those docshells
+   * where x == UNKNOWN_APP_ID).  We return the app id x.
    *
    * If we don't find a docshell with an associated app id in our hierarchy, we
    * return NO_APP_ID.  We never return UNKNOWN_APP_ID.
@@ -1105,11 +1080,15 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Sets/gets the current scroll restoration mode.
    * @see https://html.spec.whatwg.org/#dom-history-scroll-restoration
-  */
+   */
   attribute boolean currentScrollRestorationIsManual;
 
-  /*
-   * Sets the user context ID for this docshell.
+  /**
+   * Setter and getter for the origin attributes living on this docshell.
    */
-  void setUserContextId(in unsigned long aUserContextId);
+  [implicit_jscontext]
+  jsval getOriginAttributes();
+
+  [implicit_jscontext]
+  void setOriginAttributes(in jsval aAttrs);
 };
