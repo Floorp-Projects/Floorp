@@ -78,7 +78,7 @@ loop.shared.views.LinkifiedTextView = function () {
       var elements = [];
       var result = loop.shared.urlRegExps.fullUrlMatch.exec(s);
       var reactElementsCounter = 0; // For giving keys to each ReactElement.
-
+      var sanitizeURL;
       while (result) {
         // If there's text preceding the first link, push it onto the array
         // and update the string pointer.
@@ -88,12 +88,18 @@ loop.shared.views.LinkifiedTextView = function () {
         }
 
         // Push the first link itself, and advance the string pointer again.
-        elements.push(React.createElement(
-          "a",
-          _extends({}, this._generateLinkAttributes(result[0]), {
-            key: reactElementsCounter++ }),
-          result[0]
-        ));
+        // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
+        sanitizeURL = loop.shared.utils.formatURL(result[0]);
+        if (sanitizeURL && sanitizeURL.location) {
+          elements.push(React.createElement(
+            "a",
+            _extends({}, this._generateLinkAttributes(sanitizeURL.location), {
+              key: reactElementsCounter++ }),
+            sanitizeURL.location
+          ));
+        } else {
+          elements.push(result[0]);
+        }
         s = s.substr(result[0].length);
 
         // Check for another link, and perhaps continue...

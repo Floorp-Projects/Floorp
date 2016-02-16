@@ -25,17 +25,13 @@ body {
   overflow: hidden;
   font: menu;
   background-color: #fbfbfb;
-  height: 410px;
   width: 330px;
 }
 
-/* Panel container flexbox */
+/* Panel container */
 .panel-content {
-  height: 410px;
   width: 330px;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: flex-start;
+  display: block;
 }
 
 .panel-content > .beta-ribbon {
@@ -148,26 +144,18 @@ body {
 /* Rooms CSS */
 
 .room-list-loading {
-  position: relative;
   text-align: center;
-  /* makes sure that buttons are anchored above footer */
-  flex: 1;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .room-list-loading > img {
   width: 66px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
-
 
 /* Rooms */
 .rooms {
-  flex: 1;
-  display: flex;
-  flex-flow: column nowrap;
+  display: block;
   width: 100%;
 }
 
@@ -207,21 +195,54 @@ body {
 }
 
 .room-list {
-  /* xxx  not sure why flex needs the 3 value setting
-    but setting flex to just 1, the whole tab including the new room is scrollable.
-    seems to not like the 0% of the default setting - may be FF bug */
-  flex: 1 1 0;
   overflow-y: auto;
   overflow-x: hidden;
-  display: flex;
   flex-flow: column nowrap;
   width: 100%;
+  /* max number of rooms shown @ 28px */
+  max-height: calc(5 * 28px);
+  /* min-height because there is a browser min-height on panel */
+  min-height: 53px;
+  padding-top: 4px;
+}
+
+.room-list-empty {
+  display: inline-block;
+  /* min height so empty empty room list panel is same height as loading and
+  room-list panels */
+  min-height: 80px;
+}
+
+
+/* Adds blur to bottom of room-list to indicate more items in list */
+.room-list-blur {
+  /* height of room-list item */
+  height: 2.4rem;
+  /* -15px for scrollbar */
+  width: calc(100% - 15px);
+  /* At same DOM level as room-list, positioned after and moved to bottom of room-list */
+  position: absolute;
+  margin-top: -2.4rem;
+  /* starts gradient at about the 50% mark on the text, eyeballed the percentages */
+  background: linear-gradient(
+    to bottom,
+    rgba(251, 251, 251, 0) 0%,
+    rgba(251, 251, 251, 0) 38%, /* Because of padding and lineheight, start gradient at 38% */
+    rgba(251, 251, 251, 1) 65%, /* and end around 65% */
+    rgba(251, 251, 251, 1) 100%
+  );
+  pointer-events: none;
 }
 
 .room-list > .room-entry {
   padding: .2rem 15px;
   /* Always show the default pointer, even over the text part of the entry. */
   cursor: default;
+}
+
+/* Adds margin to the last room-entry to make gradient fade disappear for last item */
+.room-list-add-space > .room-entry:last-child {
+  margin-bottom: 8px;
 }
 
 .room-list > .room-entry > h2 {
@@ -622,6 +643,7 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   padding: 2rem 0 0;
   display: flex;
   flex-direction: column;
+  height: 553px;
 }
 
 .fte-title {
