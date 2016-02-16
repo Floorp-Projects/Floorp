@@ -2997,29 +2997,8 @@ WebSocketChannel::AsyncOnChannelRedirect(
     // Even if redirects configured off, still allow them for HTTP Strict
     // Transport Security (from ws://FOO to https://FOO (mapped to wss://FOO)
 
-    nsCOMPtr<nsIURI> clonedNewURI;
-    rv = newuri->Clone(getter_AddRefs(clonedNewURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = clonedNewURI->SetScheme(NS_LITERAL_CSTRING("ws"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> currentURI;
-    rv = GetURI(getter_AddRefs(currentURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // currentURI is expected to be ws or wss
-    bool currentIsHttps = false;
-    rv = currentURI->SchemeIs("wss", &currentIsHttps);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool uriEqual = false;
-    rv = clonedNewURI->Equals(currentURI, &uriEqual);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // It's only a HSTS redirect if we started with non-secure, are going to
-    // secure, and the new URI is otherwise the same as the old one.
-    if (!(!currentIsHttps && newuriIsHttps && uriEqual)) {
+    if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                   nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
       nsAutoCString newSpec;
       rv = newuri->GetSpec(newSpec);
       NS_ENSURE_SUCCESS(rv, rv);
