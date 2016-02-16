@@ -2138,6 +2138,13 @@ ArrayShiftDenseKernel(JSContext* cx, JSObject* obj, Value* rval)
     if (ObjectMayHaveExtraIndexedProperties(obj))
         return DenseElementResult::Incomplete;
 
+    ObjectGroup* group = obj->getGroup(cx);
+    if (MOZ_UNLIKELY(!group))
+        return DenseElementResult::Failure;
+
+    if (MOZ_UNLIKELY(group->hasAllFlags(OBJECT_FLAG_ITERATED)))
+        return DenseElementResult::Incomplete;
+
     size_t initlen = GetBoxedOrUnboxedInitializedLength<Type>(obj);
     if (initlen == 0)
         return DenseElementResult::Incomplete;
@@ -2195,13 +2202,7 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
         if (result == DenseElementResult::Failure)
             return false;
 
-        if (!SetLengthProperty(cx, obj, newlen))
-            return false;
-
-        RootedId id(cx);
-        if (!IndexToId(cx, newlen, &id))
-            return false;
-        return SuppressDeletedProperty(cx, obj, id);
+        return SetLengthProperty(cx, obj, newlen);
     }
 
     /* Steps 5, 10. */
