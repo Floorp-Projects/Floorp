@@ -99,7 +99,7 @@ var api = context => {
         }
 
         let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
-        context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
+        return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
       },
     },
 
