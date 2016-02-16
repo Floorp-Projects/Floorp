@@ -744,8 +744,7 @@ final class GeckoEditable extends JNIObject
     @Override
     public void setSuppressKeyUp(boolean suppress) {
         if (DEBUG) {
-            // only used by key event handler
-            ThreadUtils.assertOnUiThread();
+            assertOnIcThread();
         }
         // Suppress key up event generated as a result of
         // translating characters to key events
