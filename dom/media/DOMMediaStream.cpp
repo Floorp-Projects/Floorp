@@ -19,6 +19,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/MediaStreamError.h"
+#include "mozilla/dom/Promise.h"
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"

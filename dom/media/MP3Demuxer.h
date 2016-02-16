@@ -10,6 +10,7 @@
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
 #include "mp4_demuxer/ByteReader.h"
+#include <vector>
 
 namespace mozilla {
 namespace mp3 {
