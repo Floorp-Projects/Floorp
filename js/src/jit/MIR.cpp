@@ -175,8 +175,12 @@ EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins)
 
     Value ret;
     ret.setDouble(1.0 / (double) num);
-    MConstant* foldedRhs = MConstant::New(alloc, ret);
-    foldedRhs->setResultType(ins->type());
+    MConstant* foldedRhs;
+    if (ins->type() == MIRType_Float32)
+        foldedRhs = MConstant::NewFloat32(alloc, ret.toDouble());
+    else
+        foldedRhs = MConstant::New(alloc, ret);
+    MOZ_ASSERT(foldedRhs->type() == ins->type());
     ins->block()->insertBefore(ins, foldedRhs);
 
     MMul* mul = MMul::New(alloc, left, foldedRhs, ins->type());
@@ -660,23 +664,20 @@ MConstant::New(TempAllocator& alloc, const Value& v, CompilerConstraintList* con
 }
 
 MConstant*
-MConstant::NewTypedValue(TempAllocator& alloc, const Value& v, MIRType type,
-                         CompilerConstraintList* constraints)
+MConstant::NewFloat32(TempAllocator& alloc, double d)
 {
-    MOZ_ASSERT(!IsSimdType(type));
-    MOZ_ASSERT_IF(type == MIRType_Float32,
-                  IsNaN(v.toDouble()) || v.toDouble() == double(float(v.toDouble())));
-    MConstant* constant = new(alloc) MConstant(v, constraints);
-    constant->setResultType(type);
-    return constant;
+    MOZ_ASSERT(IsNaN(d) || d == double(float(d)));
+    return new(alloc) MConstant(float(d));
 }
 
 MConstant*
 MConstant::NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type)
 {
     if (type == MIRType_Float32)
-        return NewTypedValue(alloc, Float32Value(v.toNumber()), type);
-    return NewTypedValue(alloc, v, type);
+        return NewFloat32(alloc, v.toNumber());
+    MConstant* res = New(alloc, v);
+    MOZ_ASSERT(res->type() == type);
+    return res;
 }
 
 MConstant*
@@ -739,16 +740,44 @@ jit::IonCompilationCanUseNurseryPointers()
 #endif // DEBUG
 
 MConstant::MConstant(const js::Value& vp, CompilerConstraintList* constraints)
-  : value_(vp)
 {
     setResultType(MIRTypeFromValue(vp));
-    if (vp.isObject()) {
+
+    MOZ_ASSERT(payload_.asBits == 0);
+
+    switch (type()) {
+      case MIRType_Undefined:
+      case MIRType_Null:
+        break;
+      case MIRType_Boolean:
+        payload_.b = vp.toBoolean();
+        break;
+      case MIRType_Int32:
+        payload_.i32 = vp.toInt32();
+        break;
+      case MIRType_Double:
+        payload_.d = vp.toDouble();
+        break;
+      case MIRType_String:
+        MOZ_ASSERT(vp.toString()->isAtom());
+        payload_.str = vp.toString();
+        break;
+      case MIRType_Symbol:
+        payload_.sym = vp.toSymbol();
+        break;
+      case MIRType_Object:
+        payload_.obj = &vp.toObject();
         // Create a singleton type set for the object. This isn't necessary for
         // other types as the result type encodes all needed information.
         MOZ_ASSERT_IF(IsInsideNursery(&vp.toObject()), IonCompilationCanUseNurseryPointers());
         setResultTypeSet(MakeSingletonTypeSet(constraints, &vp.toObject()));
-    }
-    if (vp.isMagic() && vp.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+        break;
+      case MIRType_MagicOptimizedArguments:
+      case MIRType_MagicOptimizedOut:
+      case MIRType_MagicHole:
+      case MIRType_MagicIsConstructing:
+        break;
+      case MIRType_MagicUninitializedLexical:
         // JS_UNINITIALIZED_LEXICAL does not escape to script and is not
         // observed in type sets. However, it may flow around freely during
         // Ion compilation. Give it an unknown typeset to poison any type sets
@@ -757,38 +786,84 @@ MConstant::MConstant(const js::Value& vp, CompilerConstraintList* constraints)
         // TODO We could track uninitialized lexicals more precisely by tracking
         // them in type sets.
         setResultTypeSet(MakeUnknownTypeSet());
+        break;
+      default:
+        MOZ_CRASH("Unexpected type");
     }
-
-    MOZ_ASSERT_IF(vp.isString(), vp.toString()->isAtom());
 
     setMovable();
 }
 
 MConstant::MConstant(JSObject* obj)
-  : value_(ObjectValue(*obj))
 {
     MOZ_ASSERT_IF(IsInsideNursery(obj), IonCompilationCanUseNurseryPointers());
     setResultType(MIRType_Object);
+    payload_.obj = obj;
     setMovable();
 }
+
+MConstant::MConstant(float f)
+{
+    setResultType(MIRType_Float32);
+    payload_.f = f;
+    setMovable();
+}
+
+#ifdef DEBUG
+void
+MConstant::assertInitializedPayload() const
+{
+    // valueHash() and equals() expect the unused payload bits to be
+    // initialized to zero. Assert this in debug builds.
+
+    switch (type()) {
+      case MIRType_Int32:
+      case MIRType_Float32:
+        MOZ_ASSERT((payload_.asBits >> 32) == 0);
+        break;
+      case MIRType_Boolean:
+        MOZ_ASSERT((payload_.asBits >> 1) == 0);
+        break;
+      case MIRType_Double:
+        break;
+      case MIRType_String:
+      case MIRType_Object:
+      case MIRType_Symbol:
+        MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits >> 32) == 0);
+        break;
+      default:
+        MOZ_ASSERT(IsNullOrUndefined(type()) || IsMagicType(type()));
+        MOZ_ASSERT(payload_.asBits == 0);
+        break;
+    }
+}
+#endif
 
 HashNumber
 MConstant::valueHash() const
 {
+    static_assert(sizeof(Payload) == sizeof(uint64_t),
+                  "Code below assumes payload fits in 64 bits");
+
+    assertInitializedPayload();
+
+    // Build a 64-bit value holding both the payload and the type.
+    static const size_t TypeBits = 8;
+    static const size_t TypeShift = 64 - TypeBits;
+    MOZ_ASSERT(uintptr_t(type()) <= (1 << TypeBits) - 1);
+    uint64_t bits = (uint64_t(type()) << TypeShift) ^ payload_.asBits;
+
     // Fold all 64 bits into the 32-bit result. It's tempting to just discard
     // half of the bits, as this is just a hash, however there are many common
     // patterns of values where only the low or the high bits vary, so
     // discarding either side would lead to excessive hash collisions.
-    uint64_t bits = JSVAL_TO_IMPL(value_).asBits;
     return (HashNumber)bits ^ (HashNumber)(bits >> 32);
 }
 
 bool
 MConstant::congruentTo(const MDefinition* ins) const
 {
-    if (!ins->isConstant())
-        return false;
-    return ins->toConstant()->value_ == value_;
+    return ins->isConstant() && equals(ins->toConstant());
 }
 
 void
@@ -880,7 +955,42 @@ MConstant::canProduceFloat32() const
 Value
 MConstant::toJSValue() const
 {
-    return value_;
+    // Wasm has types like int64 that cannot be stored as js::Value. It also
+    // doesn't want the NaN canonicalization enforced by js::Value.
+    MOZ_ASSERT(!IsCompilingAsmJS());
+
+    switch (type()) {
+      case MIRType_Undefined:
+        return UndefinedValue();
+      case MIRType_Null:
+        return NullValue();
+      case MIRType_Boolean:
+        return BooleanValue(toBoolean());
+      case MIRType_Int32:
+        return Int32Value(toInt32());
+      case MIRType_Double:
+        return DoubleValue(toDouble());
+      case MIRType_Float32:
+        return Float32Value(toFloat32());
+      case MIRType_String:
+        return StringValue(toString());
+      case MIRType_Symbol:
+        return SymbolValue(toSymbol());
+      case MIRType_Object:
+        return ObjectValue(toObject());
+      case MIRType_MagicOptimizedArguments:
+        return MagicValue(JS_OPTIMIZED_ARGUMENTS);
+      case MIRType_MagicOptimizedOut:
+        return MagicValue(JS_OPTIMIZED_OUT);
+      case MIRType_MagicHole:
+        return MagicValue(JS_ELEMENTS_HOLE);
+      case MIRType_MagicIsConstructing:
+        return MagicValue(JS_IS_CONSTRUCTING);
+      case MIRType_MagicUninitializedLexical:
+        return MagicValue(JS_UNINITIALIZED_LEXICAL);
+      default:
+        MOZ_CRASH("Unexpected type");
+    }
 }
 
 bool
@@ -888,14 +998,16 @@ MConstant::valueToBoolean(bool* res) const
 {
     switch (type()) {
       case MIRType_Boolean:
-        *res = value_.toBoolean();
+        *res = toBoolean();
         return true;
       case MIRType_Int32:
-        *res = value_.toInt32() != 0;
+        *res = toInt32() != 0;
         return true;
       case MIRType_Double:
+        *res = !mozilla::IsNaN(toDouble()) && toDouble() != 0.0;
+        return true;
       case MIRType_Float32:
-        *res = !mozilla::IsNaN(value_.toDouble()) && value_.toDouble() != 0;
+        *res = !mozilla::IsNaN(toFloat32()) && toFloat32() != 0.0f;
         return true;
       case MIRType_Null:
       case MIRType_Undefined:
@@ -905,10 +1017,10 @@ MConstant::valueToBoolean(bool* res) const
         *res = true;
         return true;
       case MIRType_String:
-        *res = value_.toString()->length() != 0;
+        *res = toString()->length() != 0;
         return true;
       case MIRType_Object:
-        *res = !EmulatesUndefined(&value_.toObject());
+        *res = !EmulatesUndefined(&toObject());
         return true;
       default:
         MOZ_ASSERT(IsMagicType(type()));
@@ -1402,7 +1514,7 @@ MMathFunction::foldsTo(TempAllocator& alloc)
     }
 
     if (input->type() == MIRType_Float32)
-        return MConstant::NewTypedValue(alloc, DoubleValue(out), MIRType_Float32);
+        return MConstant::NewFloat32(alloc, out);
     return MConstant::New(alloc, DoubleValue(out));
 }
 
@@ -2697,12 +2809,11 @@ MMinMax::foldsTo(TempAllocator& alloc)
             int32_t cast;
             if (mozilla::NumberEqualsInt32(result, &cast))
                 return MConstant::New(alloc, Int32Value(cast));
+        } else if (type() == MIRType_Float32) {
+            return MConstant::NewFloat32(alloc, result);
         } else {
-            MOZ_ASSERT(IsFloatingPointType(type()));
-            MConstant* constant = MConstant::New(alloc, DoubleValue(result));
-            if (type() == MIRType_Float32)
-                constant->setResultType(MIRType_Float32);
-            return constant;
+            MOZ_ASSERT(type() == MIRType_Double);
+            return MConstant::New(alloc, DoubleValue(result));
         }
     }
 
@@ -3592,12 +3703,9 @@ MToFloat32::foldsTo(TempAllocator& alloc)
     if (input->isToDouble() && input->toToDouble()->input()->type() == MIRType_Float32)
         return input->toToDouble()->input();
 
-    if (input->isConstant() && input->toConstant()->isNumber()) {
-        float out = float(input->toConstant()->toNumber());
-        MConstant* c = MConstant::New(alloc, DoubleValue(out));
-        c->setResultType(MIRType_Float32);
-        return c;
-    }
+    if (input->isConstant() && input->toConstant()->isNumber())
+        return MConstant::NewFloat32(alloc, float(input->toConstant()->toNumber()));
+
     return this;
 }
 
