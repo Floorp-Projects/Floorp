@@ -73,17 +73,11 @@ function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
 }
 
-function sectionLength(length) {
-    var i32 = new Uint32Array(1);
-    i32[0] = length;
-    return new Uint8Array(i32.buffer);
-}
-
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
         bytes.push(...cstring(section.name));
-        bytes.push(...sectionLength(section.body.length));
+        bytes.push(...varU32(section.body.length));
         bytes.push(...section.body);
     }
     bytes.push(0);
@@ -118,7 +112,7 @@ function codeSection(funcs) {
         var locals = varU32(func.locals.length);
         for (let local of func.locals)
             locals.push(...varU32(local));
-        body.push(...sectionLength(locals.length + func.body.length));
+        body.push(...varU32(locals.length + func.body.length));
         body = body.concat(locals, func.body);
     }
     return { name: codeSectionStr, body };
@@ -148,7 +142,7 @@ const v2vSig = {args:[], ret:VoidCode};
 const i2vSig = {args:[I32Code], ret:VoidCode};
 const trivialSigSection = sigSection([v2vSig]);
 const trivialDeclSection = declSection([0]);
-const nopFunc = {locals:[], body:[0, 0]};
+const nopFunc = {locals:[], body:[0]};
 const trivialCodeSection = codeSection([nopFunc]);
 
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: U32MAX_LEB, } ]))), TypeError, /too many signatures/);

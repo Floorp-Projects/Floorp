@@ -179,7 +179,7 @@ static bool
 DecodeCall(FunctionDecoder& f, ExprType expected)
 {
     uint32_t funcIndex;
-    if (!f.d().readU32(&funcIndex))
+    if (!f.d().readVarU32(&funcIndex))
         return f.fail("unable to read import index");
 
     if (funcIndex >= f.mg().numFuncSigs())
@@ -192,7 +192,7 @@ static bool
 DecodeCallImport(FunctionDecoder& f, ExprType expected)
 {
     uint32_t importIndex;
-    if (!f.d().readU32(&importIndex))
+    if (!f.d().readVarU32(&importIndex))
         return f.fail("unable to read import index");
 
     if (importIndex >= f.mg().numImports())
@@ -205,7 +205,7 @@ static bool
 DecodeCallIndirect(FunctionDecoder& f, ExprType expected)
 {
     uint32_t sigIndex;
-    if (!f.d().readU32(&sigIndex))
+    if (!f.d().readVarU32(&sigIndex))
         return f.fail("unable to read indirect call signature index");
 
     if (sigIndex >= f.mg().numSigs())
@@ -239,7 +239,7 @@ static bool
 DecodeConstF32(FunctionDecoder& f, ExprType expected)
 {
     float value;
-    if (!f.d().readF32(&value))
+    if (!f.d().readFixedF32(&value))
         return f.fail("unable to read f32.const immediate");
     if (IsNaN(value)) {
         const float jsNaN = (float)JS::GenericNaN();
@@ -254,7 +254,7 @@ static bool
 DecodeConstF64(FunctionDecoder& f, ExprType expected)
 {
     double value;
-    if (!f.d().readF64(&value))
+    if (!f.d().readFixedF64(&value))
         return f.fail("unable to read f64.const immediate");
     if (IsNaN(value)) {
         const double jsNaN = JS::GenericNaN();
@@ -897,9 +897,6 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
     if (!d.startSection(&sectionStart))
         return Fail(cx, d, "expected memory section byte size");
 
-    if (!d.readCStringIf(FieldInitial))
-        return Fail(cx, d, "expected memory section initial field");
-
     uint32_t initialHeapSize;
     if (!d.readVarU32(&initialHeapSize))
         return Fail(cx, d, "expected initial memory size");
@@ -1137,7 +1134,7 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
             return Fail(cx, d, "data segment does not fit in memory");
 
         const uint8_t* src;
-        if (!d.readData(numBytes, &src))
+        if (!d.readRawData(numBytes, &src))
             return Fail(cx, d, "data segment shorter than declared");
 
         memcpy(heapBase + dstOffset, src, numBytes);
@@ -1182,10 +1179,10 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     Decoder d(bytes, bytes + length);
 
     uint32_t u32;
-    if (!d.readU32(&u32) || u32 != MagicNumber)
+    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
         return Fail(cx, d, "failed to match magic number");
 
-    if (!d.readU32(&u32) || u32 != EncodingVersion)
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
         return Fail(cx, d, "failed to match binary version");
 
     UniqueModuleGeneratorData init = MakeUnique<ModuleGeneratorData>();
@@ -1365,7 +1362,6 @@ wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
 
     return true;
 }
-
 
 static bool
 WasmEval(JSContext* cx, unsigned argc, Value* vp)
