@@ -198,6 +198,8 @@ BrowserToolboxProcess.prototype = {
 
     if (this._options.addonID) {
       xulURI += "?addonID=" + this._options.addonID;
+    } else if (this._options.testScript) {
+      xulURI += "?testScript=" + encodeURIComponent(this._options.testScript);
     }
 
     dumpn("Running chrome debugging process.");
