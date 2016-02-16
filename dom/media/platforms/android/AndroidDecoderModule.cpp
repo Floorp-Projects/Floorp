@@ -662,17 +662,21 @@ MediaCodecDataDecoder::State(ModuleState aState)
   mState = aState;
 }
 
+template<typename T>
+void
+Clear(T& aCont)
+{
+  T aEmpty = T();
+  swap(aCont, aEmpty);
+}
+
 void
 MediaCodecDataDecoder::ClearQueue()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  while (!mQueue.empty()) {
-    mQueue.pop();
-  }
-  while (!mDurations.empty()) {
-    mDurations.pop();
-  }
+  Clear(mQueue);
+  Clear(mDurations);
 }
 
 nsresult
