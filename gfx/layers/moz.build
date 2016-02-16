@@ -113,6 +113,7 @@ EXPORTS.mozilla.layers += [
     'apz/util/ChromeProcessController.h',
     'apz/util/DoubleTapToZoom.h',
     'apz/util/InputAPZContext.h',
+    'apz/util/ScrollInputMethods.h',
     'apz/util/ScrollLinkedEffectDetector.h',
     'AsyncCanvasRenderer.h',
     'AtomicRefCountedWithFinalize.h',
