@@ -2703,6 +2703,8 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 NS_IMETHODIMP
 nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
+  PLACES_WARN_DEPRECATED();
+
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   nsresult rv;
