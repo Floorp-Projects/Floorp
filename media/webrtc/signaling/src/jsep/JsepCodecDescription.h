@@ -62,11 +62,11 @@ class JsepCodecDescription {
           && (mChannels == entry->channels)) {
         return ParametersMatch(fmt, remoteMsection);
       }
-    } else if (fmt.compare("9") && mName == "G722") {
+    } else if (!fmt.compare("9") && mName == "G722") {
       return true;
-    } else if (fmt.compare("0") && mName == "PCMU") {
+    } else if (!fmt.compare("0") && mName == "PCMU") {
       return true;
-    } else if (fmt.compare("8") && mName == "PCMA") {
+    } else if (!fmt.compare("8") && mName == "PCMA") {
       return true;
     }
     return false;

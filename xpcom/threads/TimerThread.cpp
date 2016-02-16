@@ -127,10 +127,23 @@ public:
 
 } // namespace
 
-class nsTimerEvent : public nsRunnable
+// This is a nsICancelableRunnable because we can dispatch it to Workers and
+// those can be shut down at any time, and in these cases, Cancel() is called
+// instead of Run().
+class nsTimerEvent : public nsCancelableRunnable
 {
 public:
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
+
+  NS_IMETHOD Cancel() override
+  {
+    // Since nsTimerImpl is not thread-safe, we should release |mTimer|
+    // here in the target thread to avoid race condition. Otherwise,
+    // ~nsTimerEvent() which calls nsTimerImpl::Release() could run in the
+    // timer thread and result in race condition.
+    mTimer = nullptr;
+    return NS_OK;
+  }
 
   nsTimerEvent()
     : mTimer()
@@ -253,6 +266,8 @@ nsTimerEvent::DeleteAllocatorIfNeeded()
 NS_IMETHODIMP
 nsTimerEvent::Run()
 {
+  MOZ_ASSERT(mTimer);
+
   if (mGeneration != mTimer->GetGeneration()) {
     return NS_OK;
   }
@@ -265,13 +280,10 @@ nsTimerEvent::Run()
   }
 
   mTimer->Fire();
-  // Since nsTimerImpl is not thread-safe, we should release |mTimer|
-  // here in the target thread to avoid race condition. Otherwise,
-  // ~nsTimerEvent() which calls nsTimerImpl::Release() could run in the
-  // timer thread and result in race condition.
-  mTimer = nullptr;
 
-  return NS_OK;
+  // We call Cancel() to correctly release mTimer.
+  // Read more in the Cancel() implementation.
+  return Cancel();
 }
 
 nsresult

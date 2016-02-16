@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1453757503000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1455058759000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -3387,6 +3387,10 @@
                   <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.549" maxVersion="11.2.202.554" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
+      <pluginItem  blockID="p1120">
+                  <match name="filename" exp="(Silverlight\.plugin|npctrl\.dll)" />                      <versionRange  minVersion="5.1.20125" maxVersion="5.1.41105.0" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://www.microsoft.com/getsilverlight</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -3483,7 +3487,7 @@
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1057">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1068">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1068">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3491,7 +3495,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1851</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1069">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1069">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3499,7 +3503,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1855</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1070">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1070">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3507,7 +3511,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1872</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1071">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1071">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3515,7 +3519,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1883</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1072">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1072">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3523,7 +3527,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1892</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1073">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1073">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>

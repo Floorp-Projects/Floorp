@@ -3306,7 +3306,7 @@ nsHtml5TreeBuilder::clearStackBackTo(int32_t eltPos)
 {
   int32_t eltGroup = stack[eltPos]->getGroup();
   while (currentPtr > eltPos) {
-    if (stack[currentPtr]->ns == kNameSpaceID_XHTML && stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE && (eltGroup == NS_HTML5TREE_BUILDER_TABLE || eltGroup == NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT || eltGroup == NS_HTML5TREE_BUILDER_TR || eltGroup == NS_HTML5TREE_BUILDER_HTML)) {
+    if (stack[currentPtr]->ns == kNameSpaceID_XHTML && stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE && (eltGroup == NS_HTML5TREE_BUILDER_TABLE || eltGroup == NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT || eltGroup == NS_HTML5TREE_BUILDER_TR || !eltPos)) {
       return;
     }
     pop();

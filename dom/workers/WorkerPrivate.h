@@ -191,6 +191,8 @@ private:
   WorkerType mWorkerType;
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
+  TimeStamp mNowBaseTimeStamp;
+  DOMHighResTimeStamp mNowBaseTimeHighRes;
 
 protected:
   // The worker is owned by its thread, which is represented here.  This is set
@@ -550,6 +552,16 @@ public:
   DOMHighResTimeStamp CreationTime() const
   {
     return mCreationTimeHighRes;
+  }
+
+  TimeStamp NowBaseTimeStamp() const
+  {
+    return mNowBaseTimeStamp;
+  }
+
+  DOMHighResTimeStamp NowBaseTime() const
+  {
+    return mNowBaseTimeHighRes;
   }
 
   nsIPrincipal*
@@ -914,6 +926,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
 
   nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
   nsCOMPtr<nsITimer> mGCTimer;
   nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;

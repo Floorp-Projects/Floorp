@@ -25,6 +25,7 @@ public:
   }
   virtual void NetworkError() override {}
   virtual void DecodeError() override {}
+  bool HasError() const override { return false; }
   virtual void LoadAborted() override {}
   virtual void PlaybackEnded() override {}
   virtual void SeekStarted() override {}

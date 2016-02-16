@@ -536,6 +536,7 @@ public:
   ShutdownEvent(mozilla::Mutex *aLock, mozilla::CondVar *aCondVar)
     : mLock(aLock)
     , mCondVar(aCondVar)
+    , mPrepare(true)
   {
     MOZ_COUNT_CTOR(ShutdownEvent);
   }
@@ -549,6 +550,21 @@ protected:
 public:
   NS_IMETHOD Run()
   {
+    if (mPrepare) {
+      MOZ_ASSERT(CacheFileIOManager::gInstance->mIOThread->IsCurrentThread());
+
+      mPrepare = false;
+
+      // This event is first posted to the XPCOM level (executed ASAP) of the IO thread
+      // and sets the timestamp of the shutdown start.  This will cause some operations
+      // to be bypassed when due (actually leak most of the open files).
+      CacheFileIOManager::gInstance->mShutdownDemandedTime = TimeStamp::NowLoRes();
+
+      // Redispatch to the right level to proceed with shutdown.
+      CacheFileIOManager::gInstance->mIOThread->Dispatch(this, CacheIOThread::CLOSE);
+      return NS_OK;
+    }
+
     MutexAutoLock lock(*mLock);
 
     CacheFileIOManager::gInstance->ShutdownInternal();
@@ -560,6 +576,7 @@ public:
 protected:
   mozilla::Mutex   *mLock;
   mozilla::CondVar *mCondVar;
+  bool              mPrepare;
 };
 
 class OpenFileEvent : public nsRunnable {
@@ -697,7 +714,13 @@ public:
     nsresult rv;
 
     if (mHandle->IsClosed()) {
-      rv = NS_ERROR_NOT_INITIALIZED;
+      // We usually get here only after the internal shutdown
+      // (i.e. mShuttingDown == true).  Pretend write has succeeded
+      // to avoid any past-shutdown file dooming.
+      rv = (CacheFileIOManager::gInstance->IsPastShutdownIOLag() ||
+            CacheFileIOManager::gInstance->mShuttingDown)
+        ? NS_OK
+        : NS_ERROR_NOT_INITIALIZED;
     } else {
       rv = CacheFileIOManager::gInstance->WriteInternal(
           mHandle, mOffset, mBuf, mCount, mValidate, mTruncate);
@@ -1148,7 +1171,9 @@ CacheFileIOManager::Shutdown()
     MutexAutoLock autoLock(lock);
     RefPtr<ShutdownEvent> ev = new ShutdownEvent(&lock, &condVar);
     DebugOnly<nsresult> rv;
-    rv = gInstance->mIOThread->Dispatch(ev, CacheIOThread::CLOSE);
+    nsCOMPtr<nsIEventTarget> ioTarget = gInstance->mIOThread->Target();
+    MOZ_ASSERT(ioTarget);
+    rv = ioTarget->Dispatch(ev, nsIEventTarget::DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     condVar.Wait();
   }
@@ -1238,6 +1263,26 @@ CacheFileIOManager::ShutdownInternal()
   }
 
   return NS_OK;
+}
+
+bool
+CacheFileIOManager::IsPastShutdownIOLag()
+{
+#ifdef DEBUG
+  return false;
+#endif
+
+  if (mShutdownDemandedTime.IsNull()) {
+    return false;
+  }
+
+  TimeDuration const& preferredIOLag = CacheObserver::MaxShutdownIOLag();
+  if (preferredIOLag < TimeDuration(0)) {
+    return false;
+  }
+
+  TimeDuration currentIOLag = TimeStamp::NowLoRes() - mShutdownDemandedTime;
+  return currentIOLag > preferredIOLag;
 }
 
 // static
@@ -1925,6 +1970,13 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
 
   nsresult rv;
 
+  if (IsPastShutdownIOLag()) {
+    LOG(("  past the shutdown I/O lag, nothing written"));
+    // Pretend the write has succeeded, otherwise upper layers will doom
+    // the file and we end up with I/O anyway.
+    return NS_OK;
+  }
+
   if (!aHandle->mFileExists) {
     rv = CreateFile(aHandle);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2082,7 +2134,7 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle,
   if (aHandle->mFileExists) {
     // we need to move the current file to the doomed directory
     if (aHandle->mFD) {
-      ReleaseNSPRHandleInternal(aHandle);
+      ReleaseNSPRHandleInternal(aHandle, true);
     }
 
     // find unused filename
@@ -2229,7 +2281,8 @@ CacheFileIOManager::ReleaseNSPRHandle(CacheFileHandle *aHandle)
 }
 
 nsresult
-CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle)
+CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
+                                              bool aIgnoreShutdownLag)
 {
   LOG(("CacheFileIOManager::ReleaseNSPRHandleInternal() [handle=%p]", aHandle));
 
@@ -2240,7 +2293,17 @@ CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle)
   found = mHandlesByLastUsed.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 
-  PR_Close(aHandle->mFD);
+  if (aIgnoreShutdownLag || !IsPastShutdownIOLag()) {
+    PR_Close(aHandle->mFD);
+  } else {
+    // Pretend this file has been validated (the metadata has been written)
+    // to prevent removal I/O on this apparently used file.  The entry will
+    // never be used, since it doesn't have correct metadata, thus we don't
+    // need to worry about removing it.
+    aHandle->mInvalid = false;
+    LOG(("  past the shutdown I/O lag, leaking file handle"));
+  }
+
   aHandle->mFD = nullptr;
 
   return NS_OK;
@@ -2538,7 +2601,7 @@ CacheFileIOManager::RenameFileInternal(CacheFileHandle *aHandle,
   }
 
   if (aHandle->mFD) {
-    ReleaseNSPRHandleInternal(aHandle);
+    ReleaseNSPRHandleInternal(aHandle, true);
   }
 
   rv = aHandle->mFile->MoveToNative(nullptr, aNewName);
@@ -3731,7 +3794,7 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
 
   if (mHandlesByLastUsed.Length() == kOpenHandlesLimit) {
     // close handle that hasn't been used for the longest time
-    rv = ReleaseNSPRHandleInternal(mHandlesByLastUsed[0]);
+    rv = ReleaseNSPRHandleInternal(mHandlesByLastUsed[0], true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -3500,6 +3500,11 @@ void HTMLMediaElement::DecodeError()
   }
 }
 
+bool HTMLMediaElement::HasError() const
+{
+  return GetError();
+}
+
 void HTMLMediaElement::LoadAborted()
 {
   Error(nsIDOMMediaError::MEDIA_ERR_ABORTED);

@@ -1,0 +1,36 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1246011",
+    title: "Offer with dynamic PT but missing rtpmap"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    // we want Opus to get selected and 101 to be ignored
+    options.opus = true;
+    test = new PeerConnectionTest(options);
+    test.chain.insertBefore("PC_REMOTE_GET_OFFER", [
+      function PC_LOCAL_REDUCE_MLINE_REMOVE_RTPMAPS(test) {
+        test.originalOffer.sdp =
+          sdputils.reduceAudioMLineToDynamicPtAndOpus(test.originalOffer.sdp);
+        test.originalOffer.sdp =
+          sdputils.removeAllRtpMaps(test.originalOffer.sdp);
+        test.originalOffer.sdp = test.originalOffer.sdp + "a=rtpmap:109 opus/48000/2\r\n";
+        info("SDP with dyn PT and no Rtpmap: " + JSON.stringify(test.originalOffer));
+      }
+    ]);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

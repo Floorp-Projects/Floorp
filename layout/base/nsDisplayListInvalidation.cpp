@@ -63,7 +63,6 @@ nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImag
   : nsDisplayItemGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
   , mPositioningArea(aItem->GetPositioningArea())
-  , mDestArea(aItem->GetDestArea())
 {}
 
 void
@@ -71,7 +70,6 @@ nsDisplayBackgroundGeometry::MoveBy(const nsPoint& aOffset)
 {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mPositioningArea.MoveBy(aOffset);
-  mDestArea.MoveBy(aOffset);
 }
 
 nsDisplayThemedBackgroundGeometry::nsDisplayThemedBackgroundGeometry(nsDisplayThemedBackground* aItem,

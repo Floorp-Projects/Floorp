@@ -221,7 +221,10 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {
-  ~PeerConnectionMedia() {}
+  ~PeerConnectionMedia()
+  {
+    MOZ_RELEASE_ASSERT(!mMainThread);
+  }
 
  public:
   explicit PeerConnectionMedia(PeerConnectionImpl *parent);

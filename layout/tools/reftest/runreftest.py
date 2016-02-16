@@ -278,6 +278,8 @@ class RefTest(object):
         # injection
         prefs["extensions.enabledScopes"] = 5
         prefs["extensions.autoDisableScopes"] = 0
+        # Don't constantly try to autodetect touch event support
+        prefs["dom.w3c_touch_events.enabled"] = 1
         # Allow unsigned add-ons
         prefs['xpinstall.signatures.required'] = False
 

@@ -7,7 +7,7 @@
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    bug: "796892",
+    bug: "1221837",
     title: "Only offer PCMA and PMCU in mline (no rtpmaps)"
   });
 
@@ -23,6 +23,11 @@
         test.originalOffer.sdp =
           sdputils.removeAllRtpMaps(test.originalOffer.sdp);
         info("SDP without Rtpmaps: " + JSON.stringify(test.originalOffer));
+      }
+    ]);
+    test.chain.insertAfter("PC_REMOTE_SANE_LOCAL_SDP", [
+      function PC_REMOTE_VERIFY_PCMU(test) {
+        ok(test._remote_answer.sdp.includes("a=rtpmap:0 PCMU/8000"), "PCMU codec is present in SDP");
       }
     ]);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);

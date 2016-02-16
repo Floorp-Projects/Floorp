@@ -12,11 +12,78 @@ Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ESEDBReader",
+                                  "resource:///modules/ESEDBReader.jsm");
 
 const kEdgeRegistryRoot = "SOFTWARE\\Classes\\Local Settings\\Software\\" +
   "Microsoft\\Windows\\CurrentVersion\\AppContainer\\Storage\\" +
   "microsoft.microsoftedge_8wekyb3d8bbwe\\MicrosoftEdge";
-const kEdgeReadingListPath = "AC\\MicrosoftEdge\\User\\Default\\DataStore\\Data\\";
+const kEdgeDatabasePath = "AC\\MicrosoftEdge\\User\\Default\\DataStore\\Data\\";
+
+XPCOMUtils.defineLazyGetter(this, "gEdgeDatabase", function() {
+  let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
+  if (!edgeDir) {
+    return null;
+  }
+  edgeDir.appendRelativePath(kEdgeDatabasePath);
+  if (!edgeDir.exists() || !edgeDir.isReadable() || !edgeDir.isDirectory()) {
+    return null;
+  }
+  let expectedLocation = edgeDir.clone();
+  expectedLocation.appendRelativePath("nouser1\\120712-0049\\DBStore\\spartan.edb");
+  if (expectedLocation.exists() && expectedLocation.isReadable() && expectedLocation.isFile()) {
+    return expectedLocation;
+  }
+  // We used to recurse into arbitrary subdirectories here, but that code
+  // went unused, so it likely isn't necessary, even if we don't understand
+  // where the magic folders above come from, they seem to be the same for
+  // everyone. Just return null if they're not there:
+  return null;
+});
+
+/**
+ * Get rows from a table in the Edge DB as an array of JS objects.
+ *
+ * @param {String}            tableName the name of the table to read.
+ * @param {String[]|function} columns   a list of column specifiers
+ *                                      (see ESEDBReader.jsm) or a function that
+ *                                      generates them based on the database
+ *                                      reference once opened.
+ * @param {function}          filterFn  a function that is called for each row.
+ *                                      Only rows for which it returns a truthy
+ *                                      value are included in the result.
+ * @returns {Array} An array of row objects.
+ */
+function readTableFromEdgeDB(tableName, columns, filterFn) {
+  let database;
+  let rows = [];
+  try {
+    let logFile = gEdgeDatabase.parent;
+    logFile.append("LogFiles");
+    database = ESEDBReader.openDB(gEdgeDatabase.parent, gEdgeDatabase, logFile);
+
+    if (typeof columns == "function") {
+      columns = columns(database);
+    }
+
+    let tableReader = database.tableItems(tableName, columns);
+    for (let row of tableReader) {
+      if (filterFn(row)) {
+        rows.push(row);
+      }
+    }
+  } catch (ex) {
+    Cu.reportError("Failed to extract items from table " + tableName + " in Edge database at " +
+                   gEdgeDatabase.path + " due to the following error: " + ex);
+    // Deliberately make this fail so we expose failure in the UI:
+    throw ex;
+  } finally {
+    if (database) {
+      ESEDBReader.closeDB(database);
+    }
+  }
+  return rows;
+}
 
 function EdgeTypedURLMigrator() {
 }
@@ -88,7 +155,7 @@ EdgeReadingListMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
   get exists() {
-    return !!MSMigrationUtils.getEdgeLocalDataFolder();
+    return !!gEdgeDatabase;
   },
 
   migrate(callback) {
@@ -102,78 +169,45 @@ EdgeReadingListMigrator.prototype = {
   },
 
   _migrateReadingList: Task.async(function*(parentGuid) {
-    let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
-    if (!edgeDir) {
-      return;
-    }
-    this._readingListExtractor = Cc["@mozilla.org/profile/migrator/edgereadinglistextractor;1"].
-                                 createInstance(Ci.nsIEdgeReadingListExtractor);
-    edgeDir.appendRelativePath(kEdgeReadingListPath);
-    let errorProduced = null;
-    if (edgeDir.exists() && edgeDir.isReadable() && edgeDir.isDirectory()) {
-      let expectedDir = edgeDir.clone();
-      expectedDir.appendRelativePath("nouser1\\120712-0049");
-      if (expectedDir.exists() && expectedDir.isReadable() && expectedDir.isDirectory()) {
-        yield this._migrateReadingListDB(expectedDir, parentGuid).catch(ex => {
-          if (!errorProduced)
-            errorProduced = ex;
-        });
-      } else {
-        let getSubdirs = someDir => {
-          let subdirs = someDir.directoryEntries;
-          let rv = [];
-          while (subdirs.hasMoreElements()) {
-            let subdir = subdirs.getNext().QueryInterface(Ci.nsIFile);
-            if (subdir.isDirectory() && subdir.isReadable()) {
-              rv.push(subdir);
-            }
-          }
-          return rv;
-        };
-        let dirs = getSubdirs(edgeDir).map(getSubdirs);
-        for (let dir of dirs) {
-          yield this._migrateReadingListDB(dir, parentGuid).catch(ex => {
-            if (!errorProduced)
-              errorProduced = ex;
-          });
-        }
-      }
-    }
-    if (errorProduced) {
-      throw errorProduced;
-    }
-  }),
-  _migrateReadingListDB: Task.async(function*(dbFile, parentGuid) {
-    dbFile.appendRelativePath("DBStore\\spartan.edb");
+    let columnFn = db => {
+      let columns = [
+        {name: "URL", type: "string"},
+        {name: "Title", type: "string"},
+        {name: "AddedDate", type: "date"}
+      ];
 
-    if (!dbFile.exists() || !dbFile.isReadable() || !dbFile.isFile()) {
-      return;
-    }
-    let readingListItems;
-    try {
-      readingListItems = this._readingListExtractor.extract(dbFile.path);
-    } catch (ex) {
-      Cu.reportError("Failed to extract Edge reading list information from " +
-                     "the database at " + dbFile.path + " due to the following error: " + ex);
-      // Deliberately make this fail so we expose failure in the UI:
-      throw ex;
-      return;
-    }
+      // Later versions have an IsDeleted column:
+      let isDeletedColumn = db.checkForColumn("ReadingList", "IsDeleted");
+      if (isDeletedColumn && isDeletedColumn.dbType == ESEDBReader.COLUMN_TYPES.JET_coltypBit) {
+        columns.push({name: "IsDeleted", type: "boolean"});
+      }
+      return columns;
+    };
+
+    let filterFn = row => {
+      return !row.IsDeleted;
+    };
+
+    let readingListItems = readTableFromEdgeDB("ReadingList", columnFn, filterFn);
     if (!readingListItems.length) {
       return;
     }
+
     let destFolderGuid = yield this._ensureReadingListFolder(parentGuid);
-    for (let i = 0; i < readingListItems.length; i++) {
-      let readingListItem = readingListItems.queryElementAt(i, Ci.nsIPropertyBag2);
-      let url = readingListItem.get("uri");
-      let title = readingListItem.get("title");
-      let time = readingListItem.get("time");
-      // time is a PRTime, which is microseconds (since unix epoch), or null.
-      // We need milliseconds for the date constructor, so divide by 1000:
-      let dateAdded = time ? new Date(time / 1000) : new Date();
+    let exceptionThrown;
+    for (let item of readingListItems) {
+      let dateAdded = item.AddedDate || new Date();
       yield PlacesUtils.bookmarks.insert({
-        parentGuid: destFolderGuid, url: url, title, dateAdded
+        parentGuid: destFolderGuid, url: item.URL, title: item.Title, dateAdded
+      }).catch(ex => {
+        if (!exceptionThrown) {
+          exceptionThrown = ex;
+        }
+        Cu.reportError(ex);
       });
+    }
+    if (exceptionThrown) {
+      throw exceptionThrown;
     }
   }),
 
@@ -187,14 +221,184 @@ EdgeReadingListMigrator.prototype = {
   }),
 };
 
+function EdgeBookmarksMigrator() {
+}
+
+EdgeBookmarksMigrator.prototype = {
+  type: MigrationUtils.resourceTypes.BOOKMARKS,
+
+  get TABLE_NAME() { return "Favorites" },
+
+  get exists() {
+    if ("_exists" in this) {
+      return this._exists;
+    }
+    return this._exists = (!!gEdgeDatabase && this._checkTableExists());
+  },
+
+  _checkTableExists() {
+    let database;
+    let rv;
+    try {
+      let logFile = gEdgeDatabase.parent;
+      logFile.append("LogFiles");
+      database = ESEDBReader.openDB(gEdgeDatabase.parent, gEdgeDatabase, logFile);
+
+      rv = database.tableExists(this.TABLE_NAME);
+    } catch (ex) {
+      Cu.reportError("Failed to check for table " + tableName + " in Edge database at " +
+                     gEdgeDatabase.path + " due to the following error: " + ex);
+      return false;
+    } finally {
+      if (database) {
+        ESEDBReader.closeDB(database);
+      }
+    }
+    return rv;
+  },
+
+  migrate(callback) {
+    this._migrateBookmarks(PlacesUtils.bookmarks.menuGuid).then(
+      () => callback(true),
+      ex => {
+        Cu.reportError(ex);
+        callback(false);
+      }
+    );
+  },
+
+  _migrateBookmarks: Task.async(function*(rootGuid) {
+    let {bookmarks, folderMap} = this._fetchBookmarksFromDB();
+    if (!bookmarks.length) {
+      return;
+    }
+    yield this._importBookmarks(bookmarks, folderMap, rootGuid);
+  }),
+
+  _importBookmarks: Task.async(function*(bookmarks, folderMap, rootGuid) {
+    if (!MigrationUtils.isStartupMigration) {
+      rootGuid =
+        yield MigrationUtils.createImportedBookmarksFolder("Edge", rootGuid);
+    }
+
+    let exceptionThrown;
+    for (let bookmark of bookmarks) {
+      // If this is a folder, we might have created it already to put other bookmarks in.
+      if (bookmark.IsFolder && bookmark._guid) {
+        continue;
+      }
+
+      // If this is a folder, just create folders up to and including that folder.
+      // Otherwise, create folders until we have a parent for this bookmark.
+      // This avoids duplicating logic for the bookmarks bar.
+      let folderId = bookmark.IsFolder ? bookmark.ItemId : bookmark.ParentId;
+      let parentGuid = yield this._getGuidForFolder(folderId, folderMap, rootGuid).catch(ex => {
+        if (!exceptionThrown) {
+          exceptionThrown = ex;
+        }
+        Cu.reportError(ex);
+      });
+
+      // If this was a folder, we're done with this item
+      if (bookmark.IsFolder) {
+        continue;
+      }
+
+      if (!parentGuid) {
+        // If we couldn't sort out a parent, fall back to importing on the root:
+        parentGuid = rootGuid;
+      }
+      let placesInfo = {
+        parentGuid,
+        url: bookmark.URL,
+        dateAdded: bookmark.DateUpdated || new Date(),
+        title: bookmark.Title,
+      }
+
+      yield PlacesUtils.bookmarks.insert(placesInfo).catch(ex => {
+        if (!exceptionThrown) {
+          exceptionThrown = ex;
+        }
+        Cu.reportError(ex);
+      });
+    }
+
+    if (exceptionThrown) {
+      throw exceptionThrown;
+    }
+  }),
+
+  _fetchBookmarksFromDB() {
+    let folderMap = new Map();
+    let columns = [
+      {name: "URL", type: "string"},
+      {name: "Title", type: "string"},
+      {name: "DateUpdated", type: "date"},
+      {name: "IsFolder", type: "boolean"},
+      {name: "IsDeleted", type: "boolean"},
+      {name: "ParentId", type: "guid"},
+      {name: "ItemId", type: "guid"}
+    ];
+    let filterFn = row => {
+      if (row.IsDeleted) {
+        return false;
+      }
+      if (row.IsFolder) {
+        folderMap.set(row.ItemId, row);
+      }
+      return true;
+    }
+    let bookmarks = readTableFromEdgeDB(this.TABLE_NAME, columns, filterFn);
+    return {bookmarks, folderMap};
+  },
+
+  _getGuidForFolder: Task.async(function*(folderId, folderMap, rootGuid) {
+    // If the folderId is not known as a folder in the folder map, we assume
+    // we just need the root
+    if (!folderMap.has(folderId)) {
+      return rootGuid;
+    }
+    let folder = folderMap.get(folderId);
+    // If the folder already has a places guid, just return that.
+    if (folder._guid) {
+      return folder._guid;
+    }
+
+    // Hacks! The bookmarks bar is special:
+    if (folder.Title == "_Favorites_Bar_") {
+      let toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
+      if (!MigrationUtils.isStartupMigration) {
+        toolbarGuid =
+          yield MigrationUtils.createImportedBookmarksFolder("Edge", toolbarGuid);
+      }
+      return folder._guid = toolbarGuid;
+    }
+    // Otherwise, get the right parent guid recursively:
+    let parentGuid = yield this._getGuidForFolder(folder.ParentId, folderMap, rootGuid);
+    let folderInfo = {
+      title: folder.Title,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      dateAdded: folder.DateUpdated || new Date(),
+      parentGuid,
+    };
+    // and add ourselves as a kid, and return the guid we got.
+    let parentBM = yield PlacesUtils.bookmarks.insert(folderInfo);
+    return folder._guid = parentBM.guid;
+  }),
+}
+
 function EdgeProfileMigrator() {
 }
 
 EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 EdgeProfileMigrator.prototype.getResources = function() {
+  let bookmarksMigrator = new EdgeBookmarksMigrator();
+  if (!bookmarksMigrator.exists) {
+    bookmarksMigrator = MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE);
+  }
   let resources = [
-    MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
+    bookmarksMigrator,
     MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
     new EdgeTypedURLMigrator(),
     new EdgeReadingListMigrator(),
@@ -215,6 +419,12 @@ EdgeProfileMigrator.prototype.__defineGetter__("sourceProfiles", function() {
   let isWin10OrHigher = AppConstants.isPlatformAndVersionAtLeast("win", "10");
   return isWin10OrHigher ? null : [];
 });
+
+EdgeProfileMigrator.prototype.__defineGetter__("sourceLocked", function() {
+    // There is an exclusive lock on some databases. Assume they are locked for now.
+    return true;
+});
+
 
 EdgeProfileMigrator.prototype.classDescription = "Edge Profile Migrator";
 EdgeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=edge";

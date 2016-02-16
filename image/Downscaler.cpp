@@ -99,10 +99,20 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
                                0, mTargetSize.width,
                                mXFilter.get());
 
+  if (mXFilter->max_filter() <= 0 || mXFilter->num_values() != mTargetSize.width) {
+    NS_WARNING("Failed to compute filters for image downscaling");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   skia::resize::ComputeFilters(resizeMethod,
                                mOriginalSize.height, mTargetSize.height,
                                0, mTargetSize.height,
                                mYFilter.get());
+
+  if (mYFilter->max_filter() <= 0 || mYFilter->num_values() != mTargetSize.height) {
+    NS_WARNING("Failed to compute filters for image downscaling");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Allocate the buffer, which contains scanlines of the original image.
   // pad by 15 to handle overreads by the simd code

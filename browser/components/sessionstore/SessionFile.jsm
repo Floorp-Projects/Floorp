@@ -39,6 +39,8 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
@@ -179,6 +181,10 @@ var SessionFileInternal = {
   // Used for error-reporting.
   _hasWriteEverSucceeded: false,
 
+  // Resolved once initialization is complete.
+  // The promise never rejects.
+  _deferredInitialized: PromiseUtils.defer(),
+
   // The ID of the latest version of Gecko for which we have an upgrade backup
   // or |undefined| if no upgrade backup was ever written.
   get latestUpgradeBackupID() {
@@ -255,11 +261,13 @@ var SessionFileInternal = {
 
     // Initialize the worker to let it handle backups and also
     // as a workaround for bug 964531.
-    SessionWorker.post("init", [result.origin, this.Paths, {
+    let initialized = SessionWorker.post("init", [result.origin, this.Paths, {
       maxUpgradeBackups: Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3),
       maxSerializeBack: Preferences.get(PREF_MAX_SERIALIZE_BACK, 10),
       maxSerializeForward: Preferences.get(PREF_MAX_SERIALIZE_FWD, -1)
     }]);
+
+    initialized.catch(Promise.reject).then(() => this._deferredInitialized.resolve());
 
     return result;
   }),
@@ -281,7 +289,7 @@ var SessionFileInternal = {
       !sessionStartup.isAutomaticRestoreEnabled();
 
     let options = {isFinalWrite, performShutdownCleanup};
-    let promise = SessionWorker.post("write", [aData, options]);
+    let promise = this._deferredInitialized.promise.then(() => SessionWorker.post("write", [aData, options]));
 
     // Wait until the write is done.
     promise = promise.then(msg => {
@@ -328,7 +336,7 @@ var SessionFileInternal = {
   },
 
   wipe: function () {
-    return SessionWorker.post("wipe");
+    return this._deferredInitialized.promise.then(() => SessionWorker.post("wipe"));
   },
 
   _recordTelemetry: function(telemetry) {

@@ -930,7 +930,7 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   nsCOMPtr<nsIBrowserDOMWindow> browserDOMWindow =
     mRemoteBrowser->GetBrowserDOMWindow();
 
-  if (!otherBrowserDOMWindow || !browserDOMWindow) {
+  if (!!otherBrowserDOMWindow != !!browserDOMWindow) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

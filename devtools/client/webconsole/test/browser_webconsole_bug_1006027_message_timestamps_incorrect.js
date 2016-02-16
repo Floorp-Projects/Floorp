@@ -38,7 +38,7 @@ function test() {
 
     let minTimestamp = Math.min.apply(null, aTimestampMilliseconds);
     let maxTimestamp = Math.max.apply(null, aTimestampMilliseconds);
-    ok(Math.abs(maxTimestamp - minTimestamp) < 1000,
-       "console.log message timestamp spread < 1000ms confirmed");
+    ok(Math.abs(maxTimestamp - minTimestamp) < 2000,
+       "console.log message timestamp spread < 2000ms confirmed");
   }
 }

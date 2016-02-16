@@ -27,6 +27,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1215072
     is(ex, "bah (2d)", "Should have thrown an exception.");
   }
 
+  var gl2;
+  try {
+    gl2 = document.createElement("canvas").getContext("webgl", false);
+    gl2 = document.createElement("canvas").getContext("webgl", 123);
+    gl2 = document.createElement("canvas").getContext("webgl", "");
+    gl2 = document.createElement("canvas").getContext("webgl", undefined);
+    gl2 = document.createElement("canvas").getContext("webgl", null);
+    ok(true, "Shouldn't have thrown an exception!");
+  } catch(ex) {
+    ok(false, "Shouldn't have thrown an exception " + ex);
+  }
+
+  var c2;
+  try {
+    c2 = document.createElement("canvas").getContext("2d", false);
+    is(c2.getImageData(1, 1, 1, 1).data[0], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[1], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[2], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[3], 0);
+
+    c2 = document.createElement("canvas").getContext("2d", 123);
+    c2 = document.createElement("canvas").getContext("2d", "");
+    c2 = document.createElement("canvas").getContext("2d", undefined);
+    c2 = document.createElement("canvas").getContext("2d", null);
+    ok(true, "Shouldn't have thrown an exception!");
+
+    c2 = document.createElement("canvas").getContext("2d", { alpha: false });
+    is(c2.getImageData(1, 1, 1, 1).data[0], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[1], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[2], 0);
+    is(c2.getImageData(1, 1, 1, 1).data[3], 255);
+  } catch(ex) {
+    ok(false, "Shouldn't have thrown an exception " + ex);
+  }
+
   </script>
 </head>
 <body>

@@ -46,7 +46,6 @@ bool IMEHandler::sPluginHasFocus = false;
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
-bool IMEHandler::sShowingOnScreenKeyboard = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -153,6 +152,13 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                            WPARAM& aWParam, LPARAM& aLParam,
                            MSGResult& aResult)
 {
+  if (aMessage == MOZ_WM_DISMISS_ONSCREEN_KEYBOARD) {
+    if (!sFocusedWindow) {
+      DismissOnScreenKeyboard();
+    }
+    return true;
+  }
+
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     TSFTextStore::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
@@ -254,7 +260,7 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
       }
       case NOTIFY_IME_OF_BLUR:
         sFocusedWindow = nullptr;
-        IMEHandler::MaybeDismissOnScreenKeyboard();
+        IMEHandler::MaybeDismissOnScreenKeyboard(aWindow);
         IMMHandler::OnFocusChange(false, aWindow);
         return TSFTextStore::OnFocusChange(false, aWindow,
                                            aWindow->GetInputContext());
@@ -303,11 +309,13 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return IMMHandler::OnMouseButtonEvent(aWindow, aIMENotification);
     case NOTIFY_IME_OF_FOCUS:
+      sFocusedWindow = aWindow;
       IMMHandler::OnFocusChange(true, aWindow);
       IMEHandler::MaybeShowOnScreenKeyboard();
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
-      IMEHandler::MaybeDismissOnScreenKeyboard();
+      sFocusedWindow = nullptr;
+      IMEHandler::MaybeDismissOnScreenKeyboard(aWindow);
       IMMHandler::OnFocusChange(false, aWindow);
 #ifdef NS_ENABLE_TSF
       // If a plugin gets focus while TSF has focus, we need to notify TSF of
@@ -385,7 +393,7 @@ IMEHandler::OnDestroyWindow(nsWindow* aWindow)
   if (!sIsInTSFMode) {
     // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
     // SetInputScopes API. Use an empty string to do this.
-    SetInputScopeForIMM32(aWindow, EmptyString());
+    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString());
   }
 #endif // #ifdef NS_ENABLE_TSF
   AssociateIMEContext(aWindow, true);
@@ -436,7 +444,8 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
     }
   } else {
     // Set at least InputScope even when TextStore is not available.
-    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType);
+    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
+                          aInputContext.mHTMLInputInputmode);
   }
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -509,7 +518,8 @@ IMEHandler::CurrentKeyboardLayoutHasIME()
 // static
 void
 IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
-                                  const nsAString& aHTMLInputType)
+                                  const nsAString& aHTMLInputType,
+                                  const nsAString& aHTMLInputInputmode)
 {
   if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
     return;
@@ -518,9 +528,28 @@ IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
   const InputScope* scopes = nullptr;
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
-    static const InputScope inputScopes[] = { IS_DEFAULT };
-    scopes = &inputScopes[0];
-    arraySize = ArrayLength(inputScopes);
+    if (aHTMLInputInputmode.EqualsLiteral("url")) {
+      static const InputScope inputScopes[] = { IS_URL };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("email")) {
+      static const InputScope inputScopes[] = { IS_EMAIL_SMTPEMAILADDRESS };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("tel")) {
+      static const InputScope inputScopes[] =
+        {IS_TELEPHONE_LOCALNUMBER, IS_TELEPHONE_FULLTELEPHONENUMBER};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("numeric")) {
+      static const InputScope inputScopes[] = { IS_NUMBER };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else {
+      static const InputScope inputScopes[] = { IS_DEFAULT };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    }
   } else if (aHTMLInputType.EqualsLiteral("url")) {
     static const InputScope inputScopes[] = { IS_URL };
     scopes = &inputScopes[0];
@@ -576,7 +605,7 @@ IMEHandler::MaybeShowOnScreenKeyboard()
   if (sPluginHasFocus ||
       !IsWin8OrLater() ||
       !Preferences::GetBool(kOskEnabled, true) ||
-      sShowingOnScreenKeyboard ||
+      GetOnScreenKeyboardWindow() ||
       IMEHandler::IsKeyboardPresentOnSlate()) {
     return;
   }
@@ -598,15 +627,15 @@ IMEHandler::MaybeShowOnScreenKeyboard()
 
 // static
 void
-IMEHandler::MaybeDismissOnScreenKeyboard()
+IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow)
 {
   if (sPluginHasFocus ||
-      !IsWin8OrLater() ||
-      !sShowingOnScreenKeyboard) {
+      !IsWin8OrLater()) {
     return;
   }
 
-  IMEHandler::DismissOnScreenKeyboard();
+  ::PostMessage(aWindow->GetWindowHandle(), MOZ_WM_DISMISS_ONSCREEN_KEYBOARD,
+                0, 0);
 }
 
 // static
@@ -930,7 +959,6 @@ IMEHandler::ShowOnScreenKeyboard()
                 nullptr,
                 nullptr,
                 SW_SHOW);
-  sShowingOnScreenKeyboard = true;
 }
 
 // Based on DismissVirtualKeyboard() in Chromium's base/win/win_util.cc.
@@ -938,15 +966,23 @@ IMEHandler::ShowOnScreenKeyboard()
 void
 IMEHandler::DismissOnScreenKeyboard()
 {
-  sShowingOnScreenKeyboard = false;
+  // Dismiss the virtual keyboard if it's open
+  HWND osk = GetOnScreenKeyboardWindow();
+  if (osk) {
+    ::PostMessage(osk, WM_SYSCOMMAND, SC_CLOSE, 0);
+  }
+}
 
-  // Dismiss the virtual keyboard by generating the ESC keystroke
-  // programmatically.
+// static
+HWND
+IMEHandler::GetOnScreenKeyboardWindow()
+{
   const wchar_t kOSKClassName[] = L"IPTip_Main_Window";
   HWND osk = ::FindWindowW(kOSKClassName, nullptr);
   if (::IsWindow(osk) && ::IsWindowEnabled(osk)) {
-    ::PostMessage(osk, WM_SYSCOMMAND, SC_CLOSE, 0);
+    return osk;
   }
+  return nullptr;
 }
 
 } // namespace widget

@@ -97,7 +97,7 @@ class JarManifestParser(object):
     ignore = re.compile('\s*(\#.*)?$')
     jarline = re.compile('''
         (?:
-            (?:\[(?P<base>[\w\d.\-\_\\\/{}]+)\]\s*)? # optional [base/path]
+            (?:\[(?P<base>[\w\d.\-\_\\\/{}@]+)\]\s*)? # optional [base/path]
             (?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:    # filename.jar:
         |
             (?:\s*(\#.*)?)                           # comment
