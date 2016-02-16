@@ -10,6 +10,7 @@ loop.OTSdkDriver = (function() {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var CURSOR_MESSAGE_TYPES = loop.shared.utils.CURSOR_MESSAGE_TYPES;
 
   /**
    * This is a wrapper for the OT sdk. It is used to translate the SDK events into
@@ -41,7 +42,8 @@ loop.OTSdkDriver = (function() {
 
     this.dispatcher.register(this, [
       "setupStreamElements",
-      "setMute"
+      "setMute",
+      "toggleBrowserSharing"
     ]);
 
     // Set loop.debug.twoWayMediaTelemetry to true in the browser
@@ -97,7 +99,10 @@ loop.OTSdkDriver = (function() {
           // We use a single channel for text. To make things simpler, we
           // always send on the publisher channel, and receive on the subscriber
           // channel.
-          text: {}
+          text: {},
+          cursor: {
+            reliable: true
+          }
         }
       };
     },
@@ -190,8 +195,6 @@ loop.OTSdkDriver = (function() {
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenSharePublishError.bind(this));
       this.screenshare.on("streamCreated", this._onScreenShareStreamCreated.bind(this));
-
-      this._noteSharingState(options.videoSource, true);
     },
 
     /**
@@ -226,9 +229,18 @@ loop.OTSdkDriver = (function() {
       this.screenshare.destroy();
       delete this.screenshare;
       delete this._mockScreenSharePreviewEl;
-      this._noteSharingState(this._windowId ? "browser" : "window", false);
       delete this._windowId;
       return true;
+    },
+
+    /**
+     * Paused or resumes an active screenshare session as appropriate.
+     *
+     * @param {sharedActions.ToggleBrowserSharing} actionData The data associated with the
+     *                                             action. See action.js.
+     */
+    toggleBrowserSharing: function(actionData) {
+      this.screenshare.publishVideo(actionData.enabled);
     },
 
     /**
@@ -673,36 +685,58 @@ loop.OTSdkDriver = (function() {
         }
       });
 
-      sdkSubscriberObject._.getDataChannel("text", {}, function(err, channel) {
-        // Sends will queue until the channel is fully open.
-        if (err) {
-          console.error(err);
-          this._notifyMetricsEvent("sdk.datachannel.sub." + err.message);
-          return;
-        }
+      // Set up data channels with a given type and message/channel handlers.
+      var dataChannels = [
+        ["text",
+         function(message) {
+           // Append the timestamp. This is the time that gets shown.
+           message.receivedTimestamp = (new Date()).toISOString();
+           this.dispatcher.dispatch(new sharedActions.ReceivedTextChatMessage(message));
+         }.bind(this),
+         function(channel) {
+           this._subscriberChannel = channel;
+           this._checkDataChannelsAvailable();
+         }.bind(this)],
+        ["cursor",
+         function(message) {
+           switch (message.type) {
+             case CURSOR_MESSAGE_TYPES.POSITION:
+               this.dispatcher.dispatch(new sharedActions.ReceivedCursorData(message));
+               break;
+           }
+         }.bind(this),
+         function(channel) {
+           this._subscriberCursorChannel = channel;
+         }.bind(this)]
+      ];
 
-        channel.on({
-          message: function(ev) {
-            try {
-              var message = JSON.parse(ev.data);
-              /* Append the timestamp. This is the time that gets shown. */
-              message.receivedTimestamp = (new Date()).toISOString();
-
-              this.dispatcher.dispatch(
-                new sharedActions.ReceivedTextChatMessage(message));
-            } catch (ex) {
-              console.error("Failed to process incoming chat message", ex);
-            }
-          }.bind(this),
-
-          close: function() {
-            // XXX We probably want to dispatch and handle this somehow.
-            console.log("Subscribed data channel closed!");
+      dataChannels.forEach(function(args) {
+        var type = args[0], onMessage = args[1], onChannel = args[2];
+        sdkSubscriberObject._.getDataChannel(type, {}, function(err, channel) {
+          // Sends will queue until the channel is fully open.
+          if (err) {
+            console.error(err);
+            this._notifyMetricsEvent("sdk.datachannel.sub." + type + "." + err.message);
+            return;
           }
-        });
 
-        this._subscriberChannel = channel;
-        this._checkDataChannelsAvailable();
+          channel.on({
+            message: function(ev) {
+              try {
+                var message = JSON.parse(ev.data);
+                onMessage(message);
+              } catch (ex) {
+                console.error("Failed to process incoming chat message", ex);
+              }
+            },
+
+            close: function() {
+              // XXX We probably want to dispatch and handle this somehow.
+              console.log("Subscribed " + type + " data channel closed!");
+            }
+          });
+          onChannel(channel);
+        }.bind(this));
       }.bind(this));
     },
 
@@ -722,24 +756,37 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
+      // Set up data channels with a given type and channel handler.
+      var dataChannels = [
+        ["text",
+         function(channel) {
+           this._publisherChannel = channel;
+           this._checkDataChannelsAvailable();
+         }.bind(this)],
+         ["cursor",
+          function(channel) {
+            this._publisherCursorChannel = channel;
+          }.bind(this)]
+        ];
+
       // This won't work until a subscriber exists for this publisher
-      this.publisher._.getDataChannel("text", {}, function(err, channel) {
-        if (err) {
-          console.error(err);
-          this._notifyMetricsEvent("sdk.datachannel.pub." + err.message);
-          return;
-        }
-
-        this._publisherChannel = channel;
-
-        channel.on({
-          close: function() {
-            // XXX We probably want to dispatch and handle this somehow.
-            console.log("Published data channel closed!");
+      dataChannels.forEach(function(args) {
+        var type = args[0], onChannel = args[1];
+        this.publisher._.getDataChannel(type, {}, function(err, channel) {
+          if (err) {
+            console.error(err);
+            this._notifyMetricsEvent("sdk.datachannel.pub." + type + "." + err.message);
+            return;
           }
-        });
 
-        this._checkDataChannelsAvailable();
+          channel.on({
+            close: function() {
+              // XXX We probably want to dispatch and handle this somehow.
+              console.log("Published " + type + " data channel closed!");
+            }
+          });
+          onChannel(channel);
+        }.bind(this));
       }.bind(this));
     },
 
@@ -762,6 +809,20 @@ loop.OTSdkDriver = (function() {
      */
     sendTextChatMessage: function(message) {
       this._publisherChannel.send(JSON.stringify(message));
+    },
+
+    /**
+     * Sends the cursor position on the data channel.
+     *
+     * @param {String} message The message to send.
+     */
+    sendCursorMessage: function(message) {
+      if (!this._publisherCursorChannel || !this._subscriberCursorChannel) {
+        return;
+      }
+
+      message.userID = this.session.sessionId;
+      this._publisherCursorChannel.send(JSON.stringify(message));
     },
 
     /**
@@ -1185,27 +1246,7 @@ loop.OTSdkDriver = (function() {
      * If set to true, make it easy to test/verify 2-way media connection
      * telemetry code operation by viewing the logs.
      */
-    _debugTwoWayMediaTelemetry: false,
-
-    /**
-     * Note the sharing state.
-     *
-     * @param  {String}  type    Type of sharing that was flipped. May be 'window'
-     *                           or 'browser'.
-     * @param  {Boolean} enabled Flag that tells us if the feature was flipped on
-     *                           or off.
-     * @private
-     */
-    _noteSharingState: function(type, enabled) {
-      var bucket = this._constants.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
-        (enabled ? "ENABLED" : "DISABLED")];
-      if (typeof bucket === "undefined") {
-        console.error("No sharing state bucket found for '" + type + "'");
-        return;
-      }
-
-      loop.request("TelemetryAddValue", "LOOP_SHARING_STATE_CHANGE_1", bucket);
-    }
+    _debugTwoWayMediaTelemetry: false
   };
 
   return OTSdkDriver;
