@@ -309,21 +309,36 @@ IonBuilder::inlineNativeGetter(CallInfo& callInfo, JSFunction* target)
     if (!optimizationInfo().inlineNative())
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* thisTypes = callInfo.thisArg()->resultTypeSet();
+    MDefinition* thisArg = callInfo.thisArg();
+    TemporaryTypeSet* thisTypes = thisArg->resultTypeSet();
     MOZ_ASSERT(callInfo.argc() == 0);
 
-    // Try to optimize typed array lengths.
-    if (thisTypes) {
-        Scalar::Type type;
+    if (!thisTypes)
+        return InliningStatus_NotInlined;
 
-        type = thisTypes->getTypedArrayType(constraints());
-        if (type != Scalar::MaxTypedArrayViewType &&
-            TypedArrayObject::isOriginalLengthGetter(native))
-        {
-            MInstruction* length = addTypedArrayLength(callInfo.thisArg());
-            current->push(length);
-            return InliningStatus_Inlined;
-        }
+    // Try to optimize typed array lengths.
+    if (TypedArrayObject::isOriginalLengthGetter(native)) {
+        Scalar::Type type = thisTypes->getTypedArrayType(constraints());
+        if (type == Scalar::MaxTypedArrayViewType)
+            return InliningStatus_NotInlined;
+
+        MInstruction* length = addTypedArrayLength(thisArg);
+        current->push(length);
+        return InliningStatus_Inlined;
+    }
+
+    // Try to optimize RegExp getters.
+    unsigned slot = 0;
+    if (RegExpObject::isOriginalFlagGetter(native, &slot)) {
+        const Class* clasp = thisTypes->getKnownClass(constraints());
+        if (clasp != &RegExpObject::class_)
+            return InliningStatus_NotInlined;
+
+        MLoadFixedSlot* load = MLoadFixedSlot::New(alloc(), thisArg, slot);
+        current->add(load);
+        current->push(load);
+        load->setResultType(MIRType_Boolean);
+        return InliningStatus_Inlined;
     }
 
     return InliningStatus_NotInlined;
