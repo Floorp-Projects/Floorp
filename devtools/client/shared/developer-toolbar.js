@@ -4,60 +4,31 @@
 
 "use strict";
 
+const { Cc, Ci, Cu } = require("chrome");
+const promise = require("promise");
+const Services = require("Services");
+const { TargetFactory } = require("devtools/client/framework/target");
+const Telemetry = require("devtools/client/shared/telemetry");
+
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const { Cc, Ci, Cu } = require("chrome");
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
-const { TargetFactory } = require("devtools/client/framework/target");
-const promise = require("promise");
-
 const Node = Ci.nsIDOMNode;
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
+loader.lazyImporter(this, "console", "resource://gre/modules/Console.jsm");
+loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+loader.lazyImporter(this, "EventEmitter", "resource://devtools/shared/event-emitter.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://devtools/shared/event-emitter.js");
-
-XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefService);
-  return prefService.getBranch(null)
+loader.lazyGetter(this, "prefBranch", function() {
+  return Services.prefs.getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch2);
 });
-
-XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
+loader.lazyGetter(this, "toolboxStrings", function () {
   return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
 });
 
-const Telemetry = require("devtools/client/shared/telemetry");
-
-XPCOMUtils.defineLazyGetter(this, "gcliInit", function() {
-  try {
-    return require("devtools/shared/gcli/commands/index");
-  }
-  catch (ex) {
-    console.log(ex);
-  }
-});
-
-XPCOMUtils.defineLazyGetter(this, "util", () => {
-  return require("gcli/util/util");
-});
-
-Object.defineProperty(this, "ConsoleServiceListener", {
-  get: function() {
-    return require("devtools/shared/webconsole/utils").ConsoleServiceListener;
-  },
-  configurable: true,
-  enumerable: true
-});
+loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
+loader.lazyRequireGetter(this, "util", "gcli/util/util");
+loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/shared/webconsole/utils", true);
 
 /**
  * A collection of utilities to help working with commands
@@ -239,11 +210,11 @@ exports.CommandUtils = CommandUtils;
  * When bug 780102 is fixed all isLinux checks can be removed and we can revert
  * to using panels.
  */
-XPCOMUtils.defineLazyGetter(this, "isLinux", function() {
+loader.lazyGetter(this, "isLinux", function() {
   return OS == "Linux";
 });
 
-XPCOMUtils.defineLazyGetter(this, "OS", function() {
+loader.lazyGetter(this, "OS", function() {
   let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
   return os;
 });
