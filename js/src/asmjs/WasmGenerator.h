@@ -54,16 +54,33 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 // element is written to Bytecode sent to a ModuleGeneratorThreadView thread.
 // Once created, the Vectors are never resized.
 
-struct ModuleImportGeneratorData
+struct TableModuleGeneratorData
+{
+    uint32_t globalDataOffset;
+    uint32_t numElems;
+    Uint32Vector elemFuncIndices;
+
+    TableModuleGeneratorData()
+      : globalDataOffset(0), numElems(0)
+    {}
+    TableModuleGeneratorData(TableModuleGeneratorData&& rhs)
+      : globalDataOffset(rhs.globalDataOffset), numElems(rhs.numElems),
+        elemFuncIndices(Move(rhs.elemFuncIndices))
+    {}
+};
+
+typedef Vector<TableModuleGeneratorData, 0, SystemAllocPolicy> TableModuleGeneratorDataVector;
+
+struct ImportModuleGeneratorData
 {
     const DeclaredSig* sig;
     uint32_t globalDataOffset;
 
-    ModuleImportGeneratorData() : sig(nullptr), globalDataOffset(0) {}
-    explicit ModuleImportGeneratorData(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
+    ImportModuleGeneratorData() : sig(nullptr), globalDataOffset(0) {}
+    explicit ImportModuleGeneratorData(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
 };
 
-typedef Vector<ModuleImportGeneratorData, 0, SystemAllocPolicy> ModuleImportGeneratorDataVector;
+typedef Vector<ImportModuleGeneratorData, 0, SystemAllocPolicy> ImportModuleGeneratorDataVector;
 
 struct AsmJSGlobalVariable
 {
@@ -80,8 +97,9 @@ typedef Vector<AsmJSGlobalVariable, 0, SystemAllocPolicy> AsmJSGlobalVariableVec
 struct ModuleGeneratorData
 {
     DeclaredSigVector               sigs;
+    TableModuleGeneratorDataVector  sigToTable;
     DeclaredSigPtrVector            funcSigs;
-    ModuleImportGeneratorDataVector imports;
+    ImportModuleGeneratorDataVector imports;
     AsmJSGlobalVariableVector       globals;
 };
 
@@ -103,11 +121,15 @@ class ModuleGeneratorThreadView
     const DeclaredSig& sig(uint32_t sigIndex) const {
         return shared_.sigs[sigIndex];
     }
+    const TableModuleGeneratorData& sigToTable(uint32_t sigIndex) const {
+        MOZ_ASSERT(shared_.sigToTable[sigIndex].numElems != 0);
+        return shared_.sigToTable[sigIndex];
+    }
     const DeclaredSig& funcSig(uint32_t funcIndex) const {
         MOZ_ASSERT(shared_.funcSigs[funcIndex]);
         return *shared_.funcSigs[funcIndex];
     }
-    const ModuleImportGeneratorData& import(uint32_t importIndex) const {
+    const ImportModuleGeneratorData& import(uint32_t importIndex) const {
         MOZ_ASSERT(shared_.imports[importIndex].sig);
         return shared_.imports[importIndex];
     }
@@ -200,7 +222,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Imports:
     bool initImport(uint32_t importIndex, uint32_t sigIndex);
     uint32_t numImports() const;
-    const ModuleImportGeneratorData& import(uint32_t index) const;
+    const ImportModuleGeneratorData& import(uint32_t index) const;
 
     // Exports:
     bool declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex = nullptr);
@@ -214,9 +236,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishFuncDefs();
 
     // Function-pointer tables:
-    bool declareFuncPtrTable(uint32_t numElems, uint32_t* index);
-    uint32_t funcPtrTableGlobalDataOffset(uint32_t index) const;
-    void defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elemFuncIndices);
+    bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
+    void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of

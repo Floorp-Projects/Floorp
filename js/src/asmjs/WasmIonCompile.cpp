@@ -1596,17 +1596,15 @@ EmitCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 }
 
 static bool
-EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitCallIndirect(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-    uint32_t mask = f.readU32();
-    uint32_t globalDataOffset = f.readU32();
     uint32_t sigIndex = f.readU32();
 
     const Sig& sig = f.mg().sig(sigIndex);
     MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Void, sig.ret() == ret);
 
-    MDefinition *index;
+    MDefinition* index;
     if (!EmitExpr(f, ExprType::I32, &index))
         return false;
 
@@ -1614,7 +1612,12 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
-    return f.funcPtrCall(sig, mask, globalDataOffset, index, call, def);
+    const TableModuleGeneratorData& table = f.mg().sigToTable(sigIndex);
+    uint32_t length = table.numElems;
+    MOZ_ASSERT(IsPowerOfTwo(length));
+    uint32_t mask = length - 1;
+
+    return f.funcPtrCall(sig, mask, table.globalDataOffset, index, call, def);
 }
 
 static bool
@@ -1623,7 +1626,7 @@ EmitCallImport(FunctionCompiler& f, ExprType ret, MDefinition** def)
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
     uint32_t importIndex = f.readU32();
 
-    const ModuleImportGeneratorData& import = f.mg().import(importIndex);
+    const ImportModuleGeneratorData& import = f.mg().import(importIndex);
     const Sig& sig = *import.sig;
     MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Void, sig.ret() == ret);
 
@@ -2673,7 +2676,7 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::Call:
         return EmitCall(f, type, def);
       case Expr::CallIndirect:
-        return EmitFuncPtrCall(f, type, def);
+        return EmitCallIndirect(f, type, def);
       case Expr::CallImport:
         return EmitCallImport(f, type, def);
       case Expr::AtomicsFence:
