@@ -766,11 +766,9 @@ GenerateStackOverflow(MacroAssembler& masm)
     return offsets;
 }
 
-// Generate a stub that is jumped to from an out-of-bounds heap access when
-// there are throwing semantics. This stub calls a C++ function to report an
-// error and then jumps to the throw stub to pop the activation.
+// Generate a stub that is jumped to from function bodies to throw an exception.
 static Offsets
-GenerateConversionError(MacroAssembler& masm)
+GenerateErrorStub(MacroAssembler& masm, SymbolicAddress address)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -781,33 +779,8 @@ GenerateConversionError(MacroAssembler& masm)
     // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
 
-    // OnImpreciseConversion always throws.
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OnImpreciseConversion);
-    masm.jump(JumpTarget::Throw);
-
-    offsets.end = masm.currentOffset();
-    return offsets;
-}
-
-// Generate a stub that is jumped to from an out-of-bounds heap access when
-// there are throwing semantics. This stub calls a C++ function to report an
-// error and then jumps to the throw stub to pop the activation.
-static Offsets
-GenerateOutOfBounds(MacroAssembler& masm)
-{
-    masm.haltingAlign(CodeAlignment);
-
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-
-    // sp can be anything at this point, so ensure it is aligned when calling
-    // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
-    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-
-    // OnOutOfBounds always throws.
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OnOutOfBounds);
+    masm.call(address);
     masm.jump(JumpTarget::Throw);
 
     offsets.end = masm.currentOffset();
@@ -851,11 +824,16 @@ Offsets
 wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
 {
     switch (target) {
-      case JumpTarget::StackOverflow: return GenerateStackOverflow(masm);
-      case JumpTarget::ConversionError: return GenerateConversionError(masm);
-      case JumpTarget::OutOfBounds: return GenerateOutOfBounds(masm);
-      case JumpTarget::Throw: return GenerateThrow(masm);
-      case JumpTarget::Limit: break;
+      case JumpTarget::StackOverflow:
+        return GenerateStackOverflow(masm);
+      case JumpTarget::ConversionError:
+        return GenerateErrorStub(masm, SymbolicAddress::OnImpreciseConversion);
+      case JumpTarget::OutOfBounds:
+        return GenerateErrorStub(masm, SymbolicAddress::OnOutOfBounds);
+      case JumpTarget::Throw:
+        return GenerateThrow(masm);
+      case JumpTarget::Limit:
+        break;
     }
     MOZ_CRASH("bad JumpTarget");
 }
