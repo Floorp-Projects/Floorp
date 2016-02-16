@@ -6,10 +6,9 @@ describe("loop.conversation", function() {
   "use strict";
 
   var FeedbackView = loop.feedbackViews.FeedbackView;
-  var expect = chai.expect;
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
-  var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet, remoteCursorStore, dispatcher;
+  var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
@@ -77,14 +76,6 @@ describe("loop.conversation", function() {
       getStrings: function() { return JSON.stringify({ textContent: "fakeText" }); },
       locale: "en_US"
     });
-
-    dispatcher = new loop.Dispatcher();
-
-    remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
-      sdkDriver: {}
-    });
-
-    loop.store.StoreMixin.register({ remoteCursorStore: remoteCursorStore });
   });
 
   afterEach(function() {
@@ -147,7 +138,7 @@ describe("loop.conversation", function() {
   });
 
   describe("AppControllerView", function() {
-    var activeRoomStore, ccView;
+    var activeRoomStore, ccView, dispatcher;
     var conversationAppStore, roomStore, feedbackPeriodMs = 15770000000;
     var ROOM_STATES = loop.store.ROOM_STATES;
 
@@ -160,6 +151,8 @@ describe("loop.conversation", function() {
     }
 
     beforeEach(function() {
+      dispatcher = new loop.Dispatcher();
+
       activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
         mozLoop: {},
         sdkDriver: {}
@@ -172,8 +165,7 @@ describe("loop.conversation", function() {
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
         feedbackPeriod: 42,
-        feedbackTimestamp: 42,
-        facebookEnabled: false
+        feedbackTimestamp: 42
       });
 
       loop.store.StoreMixin.register({
@@ -191,27 +183,9 @@ describe("loop.conversation", function() {
 
       ccView = mountTestComponent();
 
-      var desktopRoom = TestUtils.findRenderedComponentWithType(ccView,
+      TestUtils.findRenderedComponentWithType(ccView,
         loop.roomViews.DesktopRoomConversationView);
-
-      expect(desktopRoom.props.facebookEnabled).to.eql(false);
     });
-
-    it("should pass the correct value of facebookEnabled to DesktopRoomConversationView",
-      function() {
-        conversationAppStore.setStoreState({
-          windowType: "room",
-          facebookEnabled: true
-        });
-        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
-
-        ccView = mountTestComponent();
-
-        var desktopRoom = TestUtils.findRenderedComponentWithType(ccView,
-            loop.roomViews.DesktopRoomConversationView);
-
-        expect(desktopRoom.props.facebookEnabled).to.eql(true);
-      });
 
     it("should display the RoomFailureView for failures", function() {
       conversationAppStore.setStoreState({
