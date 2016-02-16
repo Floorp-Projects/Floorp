@@ -2892,7 +2892,7 @@ EncodeSignatureSection(Encoder& e, WasmAstModule& module)
     if (module.sigs().empty())
         return true;
 
-    if (!e.writeCString(SigSection))
+    if (!e.writeCString(SigLabel))
         return false;
 
     size_t offset;
@@ -2925,7 +2925,7 @@ EncodeDeclarationSection(Encoder& e, WasmAstModule& module)
     if (module.funcs().empty())
         return true;
 
-    if (!e.writeCString(DeclSection))
+    if (!e.writeCString(DeclLabel))
         return false;
 
     size_t offset;
@@ -2954,9 +2954,6 @@ EncodeCString(Encoder& e, TwoByteChars twoByteChars)
 static bool
 EncodeImport(Encoder& e, WasmAstImport& imp)
 {
-    if (!e.writeCString(FuncSubsection))
-        return false;
-
     if (!e.writeVarU32(imp.sigIndex()))
         return false;
 
@@ -2975,20 +2972,22 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
     if (module.imports().empty())
         return true;
 
-    if (!e.writeCString(ImportSection))
+    if (!e.writeCString(ImportLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(module.imports().length()))
-        return false;
-
     for (WasmAstImport* imp : module.imports()) {
+        if (!e.writeCString(FuncLabel))
+            return false;
         if (!EncodeImport(e, *imp))
             return false;
     }
+
+    if (!e.writeCString(EndLabel))
+        return false;
 
     e.finishSection(offset);
     return true;
@@ -3000,7 +2999,7 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
     if (!module.maybeMemory())
         return true;
 
-    if (!e.writeCString(MemorySection))
+    if (!e.writeCString(MemoryLabel))
         return false;
 
     size_t offset;
@@ -3009,10 +3008,13 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 
     WasmAstMemory& memory = *module.maybeMemory();
 
-    if (!e.writeCString(FieldInitial))
+    if (!e.writeCString(InitialLabel))
         return false;
 
     if (!e.writeVarU32(memory.initialSize()))
+        return false;
+
+    if (!e.writeCString(EndLabel))
         return false;
 
     e.finishSection(offset);
@@ -3022,9 +3024,6 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 static bool
 EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 {
-    if (!e.writeCString(FuncSubsection))
-        return false;
-
     if (!e.writeVarU32(exp.funcIndex()))
         return false;
 
@@ -3037,9 +3036,6 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 static bool
 EncodeMemoryExport(Encoder& e, WasmAstExport& exp)
 {
-    if (!e.writeCString(MemorySubsection))
-        return false;
-
     if (!EncodeCString(e, exp.name()))
         return false;
 
@@ -3052,28 +3048,32 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
     if (module.exports().empty())
         return true;
 
-    if (!e.writeCString(ExportSection))
+    if (!e.writeCString(ExportLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(module.exports().length()))
-        return false;
-
     for (WasmAstExport* exp : module.exports()) {
         switch (exp->kind()) {
           case WasmAstExportKind::Func:
+            if (!e.writeCString(FuncLabel))
+                return false;
             if (!EncodeFunctionExport(e, *exp))
                 return false;
             break;
           case WasmAstExportKind::Memory:
+            if (!e.writeCString(MemoryLabel))
+                return false;
             if (!EncodeMemoryExport(e, *exp))
                 return false;
             break;
         }
     }
+
+    if (!e.writeCString(EndLabel))
+        return false;
 
     e.finishSection(offset);
     return true;
@@ -3085,7 +3085,7 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
     if (!module.maybeTable())
         return true;
 
-    if (!e.writeCString(TableSection))
+    if (!e.writeCString(TableLabel))
         return false;
 
     size_t offset;
@@ -3105,9 +3105,9 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunc(Encoder& e, WasmAstFunc& func)
+EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
 {
-    if (!e.writeCString(FuncSubsection))
+    if (!e.writeCString(FuncLabel))
         return false;
 
     size_t offset;
@@ -3136,36 +3136,8 @@ EncodeFunc(Encoder& e, WasmAstFunc& func)
 }
 
 static bool
-EncodeCodeSection(Encoder& e, WasmAstModule& module)
-{
-    if (module.funcs().empty())
-        return true;
-
-    if (!e.writeCString(CodeSection))
-        return false;
-
-    size_t offset;
-    if (!e.startSection(&offset))
-        return false;
-
-    if (!e.writeVarU32(module.funcs().length()))
-        return false;
-
-    for (WasmAstFunc* func : module.funcs()) {
-        if (!EncodeFunc(e, *func))
-            return false;
-    }
-
-    e.finishSection(offset);
-    return true;
-}
-
-static bool
 EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
 {
-    if (!e.writeCString(SegmentSubsection))
-        return false;
-
     if (!e.writeVarU32(segment.offset()))
         return false;
 
@@ -3200,20 +3172,22 @@ EncodeDataSection(Encoder& e, WasmAstModule& module)
 
     const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
 
-    if (!e.writeCString(DataSection))
+    if (!e.writeCString(DataLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(segments.length()))
-        return false;
-
     for (WasmAstSegment* segment : segments) {
+        if (!e.writeCString(SegmentLabel))
+            return false;
         if (!EncodeDataSegment(e, *segment))
             return false;
     }
+
+    if (!e.writeCString(EndLabel))
+        return false;
 
     e.finishSection(offset);
     return true;
@@ -3252,13 +3226,15 @@ EncodeModule(WasmAstModule& module)
     if (!EncodeExportSection(e, module))
         return nullptr;
 
-    if (!EncodeCodeSection(e, module))
-        return nullptr;
+    for (WasmAstFunc* func : module.funcs()) {
+        if (!EncodeFunctionSection(e, *func))
+            return false;
+    }
 
     if (!EncodeDataSection(e, module))
         return nullptr;
 
-    if (!e.writeCString(EndSection))
+    if (!e.writeCString(EndLabel))
         return nullptr;
 
     return Move(bytecode);

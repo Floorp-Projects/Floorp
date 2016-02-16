@@ -42,21 +42,18 @@ static const unsigned MaxArgsPerFunc  =   4 * 1024;
 static const uint32_t MagicNumber     = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion = -1;     // experimental
 
-// Module section names:
-static const char SigSection[]        = "sig";
-static const char ImportSection[]     = "import";
-static const char DeclSection[]       = "decl";
-static const char TableSection[]      = "table";
-static const char MemorySection[]     = "memory";
-static const char ExportSection[]     = "export";
-static const char CodeSection[]       = "code";
-static const char DataSection[]       = "data";
-static const char EndSection[]        = "";
-
-// Subsection names:
-static const char FuncSubsection[]    = "func";
-static const char MemorySubsection[]  = "memory";
-static const char SegmentSubsection[] = "segment";
+// Names:
+static const char SigLabel[]          = "sig";
+static const char ImportLabel[]       = "import";
+static const char DeclLabel[]         = "decl";
+static const char TableLabel[]        = "table";
+static const char MemoryLabel[]       = "memory";
+static const char ExportLabel[]       = "export";
+static const char FuncLabel[]         = "func";
+static const char DataLabel[]         = "data";
+static const char SegmentLabel[]      = "segment";
+static const char InitialLabel[]      = "initial";
+static const char EndLabel[]          = "";
 
 enum class Expr : uint16_t
 {
