@@ -45,10 +45,10 @@ function CountingSort(array, len, signed) {
 
 // For sorting small arrays.
 function InsertionSort(array, from, to, comparefn) {
-    var item, swap;
-    for (var i = from + 1; i <= to; i++) {
+    let item, swap, i, j;
+    for (i = from + 1; i <= to; i++) {
         item = array[i];
-        for (var j = i - 1; j >= from; j--) {
+        for (j = i - 1; j >= from; j--) {
             swap = array[j];
             if (comparefn(swap, item) <= 0)
                 break;
