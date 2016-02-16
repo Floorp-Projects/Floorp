@@ -154,7 +154,6 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Data handed back to the caller in finish()
     UniqueModuleData                module_;
-    UniqueStaticLinkData            link_;
     UniqueExportMap                 exportMap_;
     SlowFunctionVector              slowFuncs_;
 
@@ -186,7 +185,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t funcEntry(uint32_t funcIndex) const;
     bool convertOutOfRangeBranchesToThunks();
     bool finishTask(IonCompileTask* task);
-    bool finishCodegen();
+    bool finishCodegen(StaticLinkData* link);
+    bool finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
     bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);

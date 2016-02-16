@@ -123,10 +123,6 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
     module_->heapUsage = HeapUsage::None;
     module_->filename = Move(filename);
 
-    link_ = MakeUnique<StaticLinkData>();
-    if (!link_)
-        return false;
-
     exportMap_ = MakeUnique<ExportMap>();
     if (!exportMap_)
         return false;
@@ -338,7 +334,7 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 }
 
 bool
-ModuleGenerator::finishCodegen()
+ModuleGenerator::finishCodegen(StaticLinkData* link)
 {
     uint32_t offsetInWhole = masm_.size();
 
@@ -416,8 +412,8 @@ ModuleGenerator::finishCodegen()
 
     // The signal handler redirects PC to the out-of-bounds and interrupt stubs.
 
-    link_->pod.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
-    link_->pod.interruptOffset = interruptExit.begin;
+    link->pod.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
+    link->pod.interruptOffset = interruptExit.begin;
 
     // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
     // emit new jumps to JumpTargets has finished.
@@ -442,6 +438,90 @@ ModuleGenerator::finishCodegen()
 
     masm_.finish();
     return !masm_.oom();
+}
+
+bool
+ModuleGenerator::finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link)
+{
+    // Add links to absolute addresses identified symbolically.
+    StaticLinkData::SymbolicLinkArray& symbolicLinks = link->symbolicLinks;
+    for (size_t i = 0; i < masm_.numAsmJSAbsoluteAddresses(); i++) {
+        AsmJSAbsoluteAddress src = masm_.asmJSAbsoluteAddress(i);
+        if (!symbolicLinks[src.target].append(src.patchAt.offset()))
+            return false;
+    }
+
+    // Relative link metadata: absolute addresses that refer to another point within
+    // the asm.js module.
+
+    // CodeLabels are used for switch cases and loads from floating-point /
+    // SIMD values in the constant pool.
+    for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
+        CodeLabel cl = masm_.codeLabel(i);
+        StaticLinkData::InternalLink inLink(StaticLinkData::InternalLink::CodeLabel);
+        inLink.patchAtOffset = masm_.labelToPatchOffset(*cl.patchAt());
+        inLink.targetOffset = cl.target()->offset();
+        if (!link->internalLinks.append(inLink))
+            return false;
+    }
+
+#if defined(JS_CODEGEN_X86)
+    // Global data accesses in x86 need to be patched with the absolute
+    // address of the global. Globals are allocated sequentially after the
+    // code section so we can just use an InternalLink.
+    for (size_t i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
+        StaticLinkData::InternalLink inLink(StaticLinkData::InternalLink::RawPointer);
+        inLink.patchAtOffset = masm_.labelToPatchOffset(a.patchAt);
+        inLink.targetOffset = codeBytes + a.globalDataOffset;
+        if (!link->internalLinks.append(inLink))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    // On MIPS we need to update all the long jumps because they contain an
+    // absolute adress. The values are correctly patched for the current address
+    // space, but not after serialization or profiling-mode toggling.
+    for (size_t i = 0; i < masm_.numLongJumps(); i++) {
+        size_t off = masm_.longJump(i);
+        StaticLinkData::InternalLink inLink(StaticLinkData::InternalLink::InstructionImmediate);
+        inLink.patchAtOffset = off;
+        inLink.targetOffset = Assembler::ExtractInstructionImmediate(code + off) - uintptr_t(code);
+        if (!link->internalLinks.append(inLink))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_X64)
+    // Global data accesses on x64 use rip-relative addressing and thus do
+    // not need patching after deserialization.
+    uint8_t* globalData = code + codeBytes;
+    for (size_t i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
+        masm_.patchAsmJSGlobalAccess(a.patchAt, code, globalData, a.globalDataOffset);
+    }
+#endif
+
+    // Convert the function pointer table elements from function-indices to code
+    // offsets that static linking will convert to absolute addresses.
+    for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
+        const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
+        if (table.elemFuncIndices.empty())
+            continue;
+
+        Uint32Vector elemOffsets;
+        if (!elemOffsets.resize(table.elemFuncIndices.length()))
+            return false;
+
+        for (size_t i = 0; i < table.elemFuncIndices.length(); i++)
+            elemOffsets[i] = funcEntry(table.elemFuncIndices[i]);
+
+        if (!link->funcPtrTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
+            return false;
+    }
+
+    return true;
 }
 
 bool
@@ -795,7 +875,11 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(finishedFuncs_);
 
-    if (!finishCodegen())
+    UniqueStaticLinkData link = MakeUnique<StaticLinkData>();
+    if (!link)
+        return false;
+
+    if (!finishCodegen(link.get()))
         return false;
 
     module_->prettyFuncNames = Move(prettyFuncNames);
@@ -817,8 +901,7 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     // Delay flushing until Module::dynamicallyLink. The flush-inhibited range
     // is set by executableCopy.
     AutoFlushICache afc("ModuleGenerator::finish", /* inhibit = */ true);
-    uint8_t* code = module_->code.get();
-    masm_.executableCopy(code);
+    masm_.executableCopy(module_->code.get());
 
     // c.f. JitCode::copyFrom
     MOZ_ASSERT(masm_.jumpRelocationTableBytes() == 0);
@@ -834,86 +917,11 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     // The MacroAssembler has accumulated all the heap accesses during codegen.
     module_->heapAccesses = masm_.extractHeapAccesses();
 
-    // Add links to absolute addresses identified symbolically.
-    StaticLinkData::SymbolicLinkArray& symbolicLinks = link_->symbolicLinks;
-    for (size_t i = 0; i < masm_.numAsmJSAbsoluteAddresses(); i++) {
-        AsmJSAbsoluteAddress src = masm_.asmJSAbsoluteAddress(i);
-        if (!symbolicLinks[src.target].append(src.patchAt.offset()))
-            return false;
-    }
-
-    // Relative link metadata: absolute addresses that refer to another point within
-    // the asm.js module.
-
-    // CodeLabels are used for switch cases and loads from floating-point /
-    // SIMD values in the constant pool.
-    for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
-        CodeLabel cl = masm_.codeLabel(i);
-        StaticLinkData::InternalLink link(StaticLinkData::InternalLink::CodeLabel);
-        link.patchAtOffset = masm_.labelToPatchOffset(*cl.patchAt());
-        link.targetOffset = cl.target()->offset();
-        if (!link_->internalLinks.append(link))
-            return false;
-    }
-
-#if defined(JS_CODEGEN_X86)
-    // Global data accesses in x86 need to be patched with the absolute
-    // address of the global. Globals are allocated sequentially after the
-    // code section so we can just use an InternalLink.
-    for (size_t i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
-        AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
-        StaticLinkData::InternalLink link(StaticLinkData::InternalLink::RawPointer);
-        link.patchAtOffset = masm_.labelToPatchOffset(a.patchAt);
-        link.targetOffset = module_->codeBytes + a.globalDataOffset;
-        if (!link_->internalLinks.append(link))
-            return false;
-    }
-#endif
-
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    // On MIPS we need to update all the long jumps because they contain an
-    // absolute adress. The values are correctly patched for the current address
-    // space, but not after serialization or profiling-mode toggling.
-    for (size_t i = 0; i < masm_.numLongJumps(); i++) {
-        size_t off = masm_.longJump(i);
-        StaticLinkData::InternalLink link(StaticLinkData::InternalLink::InstructionImmediate);
-        link.patchAtOffset = off;
-        link.targetOffset = Assembler::ExtractInstructionImmediate(code + off) - uintptr_t(code);
-        if (!link_->internalLinks.append(link))
-            return false;
-    }
-#endif
-
-#if defined(JS_CODEGEN_X64)
-    // Global data accesses on x64 use rip-relative addressing and thus do
-    // not need patching after deserialization.
-    uint8_t* globalData = code + module_->codeBytes;
-    for (size_t i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
-        AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
-        masm_.patchAsmJSGlobalAccess(a.patchAt, code, globalData, a.globalDataOffset);
-    }
-#endif
-
-    // Convert the function pointer table elements from function-indices to code
-    // offsets that static linking will convert to absolute addresses.
-    for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
-        const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
-        if (table.elemFuncIndices.empty())
-            continue;
-
-        Uint32Vector elemOffsets;
-        if (!elemOffsets.resize(table.elemFuncIndices.length()))
-            return false;
-
-        for (size_t i = 0; i < table.elemFuncIndices.length(); i++)
-            elemOffsets[i] = funcEntry(table.elemFuncIndices[i]);
-
-        if (!link_->funcPtrTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
-            return false;
-    }
+    if (!finishStaticLinkData(module_->code.get(), module_->codeBytes, link.get()))
+        return false;
 
     *module = Move(module_);
-    *linkData = Move(link_);
+    *linkData = Move(link);
     *exportMap = Move(exportMap_);
     *slowFuncs = Move(slowFuncs_);
     return true;
