@@ -930,6 +930,11 @@ pref("layout.accessiblecaret.enabled", true);
 pref("layout.accessiblecaret.enabled", false);
 #endif
 
+// AccessibleCaret CSS for the Android L style assets.
+pref("layout.accessiblecaret.width", "22.0");
+pref("layout.accessiblecaret.height", "22.0");
+pref("layout.accessiblecaret.margin-left", "-11.5");
+
 // Android hides the selection bars at the two ends of the selection highlight.
 pref("layout.accessiblecaret.bar.enabled", false);
 
