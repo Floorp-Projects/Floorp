@@ -118,8 +118,8 @@ add_task(function* test_loopRooms_webchannel_checkWillOpenRoom() {
 
 add_task(function* test_loopRooms_webchannel_openRoom() {
   let openedUrl;
-  Chat.open = function(contentWindow, options) {
-    openedUrl = options.url;
+  Chat.open = function(contentWindow, origin, title, url) {
+    openedUrl = url;
   };
 
   MozLoopServiceInternal.mocks.isChatWindowOpen = false;

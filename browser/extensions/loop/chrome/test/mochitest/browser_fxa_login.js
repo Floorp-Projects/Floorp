@@ -47,7 +47,7 @@ add_task(function* setup() {
   // to be able to check for success on the second registration.
 
   LoopAPI.stubMessageHandlers({
-    IsMultiProcessActive: function(message, reply) {
+    IsMultiProcessEnabled: function(message, reply) {
       reply(false);
     }
   });

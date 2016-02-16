@@ -242,17 +242,6 @@ function attachToWindow(provider, targetWindow) {
 }
 
 function hookWindowCloseForPanelClose(targetWindow) {
-  let _mozSocialDOMWindowClose;
-
-  if ("messageManager" in targetWindow) {
-    let mm = targetWindow.messageManager;
-    mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
-    mm.addMessageListener("DOMWindowClose", _mozSocialDOMWindowClose = function() {
-      closePanel(targetWindow);
-    });
-    return;
-  }
-
   // We allow window.close() to close the panel, so add an event handler for
   // this, then cancel the event (so the window itself doesn't die) and
   // close the panel instead.
@@ -262,12 +251,21 @@ function hookWindowCloseForPanelClose(targetWindow) {
                         .getInterface(Ci.nsIDOMWindowUtils);
   dwu.allowScriptsToClose();
 
-  targetWindow.addEventListener("DOMWindowClose", _mozSocialDOMWindowClose = function(evt) {
+  targetWindow.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
     let elt = targetWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIWebNavigation)
                 .QueryInterface(Ci.nsIDocShell)
                 .chromeEventHandler;
-    closePanel(elt);
+    while (elt) {
+      if (elt.localName == "panel") {
+        elt.hidePopup();
+        break;
+      } else if (elt.localName == "chatbox") {
+        elt.close();
+        break;
+      }
+      elt = elt.parentNode;
+    }
     // preventDefault stops the default window.close() function being called,
     // which doesn't actually close anything but causes things to get into
     // a bad state (an internal 'closed' flag is set and debug builds start
@@ -277,19 +275,6 @@ function hookWindowCloseForPanelClose(targetWindow) {
     // the default close from doing anything.
     evt.preventDefault();
   }, true);
-}
-
-function closePanel(elt) {
-  while (elt) {
-    if (elt.localName == "panel") {
-      elt.hidePopup();
-      break;
-    } else if (elt.localName == "chatbox") {
-      elt.close();
-      break;
-    }
-    elt = elt.parentNode;
-  }
 }
 
 function schedule(callback) {
@@ -313,15 +298,11 @@ this.openChatWindow =
     return;
   }
 
-  let chatbox = Chat.open(contentWindow, {
-    origin: provider.origin,
-    title: provider.name,
-    url: fullURI.spec,
-    mode: mode
-  });
+  let chatbox = Chat.open(contentWindow, provider.origin, provider.name,
+                          fullURI.spec, mode);
   if (callback) {
     chatbox.promiseChatLoaded.then(() => {
-      callback(chatbox);
+      callback(chatbox.contentWindow);
     });
   }
 }
