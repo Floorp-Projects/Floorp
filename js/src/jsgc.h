@@ -306,6 +306,7 @@ struct SortedArenaListSegment
     void append(ArenaHeader* aheader) {
         MOZ_ASSERT(aheader);
         MOZ_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
+        MOZ_RELEASE_ASSERT(uintptr_t(aheader) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
         *tailp = aheader;
         tailp = &aheader->next;
     }
@@ -316,6 +317,7 @@ struct SortedArenaListSegment
     // description of ArenaList), but from the perspective of a SortedArenaList
     // this makes no difference.
     void linkTo(ArenaHeader* aheader) {
+        MOZ_RELEASE_ASSERT(uintptr_t(aheader) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
         *tailp = aheader;
     }
 };
@@ -544,6 +546,7 @@ class SortedArenaList
     void extractEmpty(ArenaHeader** empty) {
         SortedArenaListSegment& segment = segments[thingsPerArena_];
         if (segment.head) {
+            MOZ_RELEASE_ASSERT(uintptr_t(*empty) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
             *segment.tailp = *empty;
             *empty = segment.head;
             segment.clear();
