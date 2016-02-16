@@ -80,6 +80,12 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::image;
 
+enum class TelemetryDeviceCode : uint32_t {
+  Content = 0,
+  Image = 1,
+  D2D1 = 2
+};
+
 DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
 {
   mDC = nullptr;
@@ -2135,6 +2141,20 @@ gfxWindowsPlatform::ContentAdapterIsParentAdapter(ID3D11Device* device)
   return true;
 }
 
+static void
+RecordContentDeviceFailure(TelemetryDeviceCode aDevice)
+{
+  // If the parent process fails to acquire a device, we record this
+  // normally as part of the environment. The exceptional case we're
+  // looking for here is when the parent process successfully acquires
+  // a device, but the content process fails to acquire the same device.
+  // This would not normally be displayed in about:support.
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  Telemetry::Accumulate(Telemetry::GFX_CONTENT_FAILED_TO_ACQUIRE_DEVICE, uint32_t(aDevice));
+}
+
 bool
 gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
   IDXGIAdapter1* aAdapter, HRESULT& aResOut)
@@ -2166,10 +2186,14 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
 
   HRESULT hr;
   if (!AttemptD3D11ContentDeviceCreationHelper(adapter, hr)) {
+    gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
+    RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::Crashed;
   }
 
   if (FAILED(hr) || !mD3D11ContentDevice) {
+    gfxCriticalNote << "Failed to create a D3D11 content device: " << hexa(hr);
+    RecordContentDeviceFailure(TelemetryDeviceCode::Content);
     return FeatureStatus::Failed;
   }
 
@@ -2199,21 +2223,36 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
   return FeatureStatus::Available;
 }
 
-FeatureStatus
-gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
+bool
+gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreationHelper(
+  IDXGIAdapter1* aAdapter,
+  HRESULT& aResOut)
 {
-  HRESULT hr = E_INVALIDARG;
-  MOZ_SEH_TRY{
-    hr =
+  MOZ_SEH_TRY {
+    aResOut =
       sD3D11CreateDeviceFn(GetDXGIAdapter(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                            mFeatureLevels.Elements(), mFeatureLevels.Length(),
                            D3D11_SDK_VERSION, getter_AddRefs(mD3D11ImageBridgeDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    return false;
+  }
+  return true;
+}
+
+FeatureStatus
+gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
+{
+  HRESULT hr;
+  if (!AttemptD3D11ImageBridgeDeviceCreationHelper(GetDXGIAdapter(), hr)) {
+    gfxCriticalNote << "Recovered from crash while creating a D3D11 image bridge device";
+    RecordContentDeviceFailure(TelemetryDeviceCode::Image);
     return FeatureStatus::Crashed;
   }
 
   if (FAILED(hr) || !mD3D11ImageBridgeDevice) {
+    gfxCriticalNote << "Failed to create a content image bridge device: " << hexa(hr);
+    RecordContentDeviceFailure(TelemetryDeviceCode::Image);
     return FeatureStatus::Failed;
   }
 
@@ -2487,6 +2526,9 @@ gfxWindowsPlatform::InitializeD2D()
 
   mD2D1Status = CheckD2D1Support();
   if (IsFeatureStatusFailure(mD2D1Status)) {
+    if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {
+      RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
+    }
     return;
   }
 
