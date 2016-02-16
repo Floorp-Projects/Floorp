@@ -152,10 +152,10 @@ def query_vcs_info(repository, revision):
     PushInfo = namedtuple('PushInfo', ['pushid', 'pushdate'])
 
     try:
-        import urllib2
+        import requests
         url = '%s/json-pushes?changeset=%s' % (repository, revision)
         sys.stderr.write("Querying URL for pushdate: %s\n" % url)
-        contents = json.load(urllib2.urlopen(url))
+        contents = requests.get(url).json()
 
         # The contents should be something like:
         # {
