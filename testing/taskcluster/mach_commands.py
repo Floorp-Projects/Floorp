@@ -144,7 +144,7 @@ def remove_caches_from_task(task):
     except KeyError:
         pass
 
-def query_pushinfo(repository, revision):
+def query_vcs_info(repository, revision):
     """Query the pushdate and pushid of a repository/revision.
     This is intended to be used on hg.mozilla.org/mozilla-central and
     similar. It may or may not work for other hg repositories.
@@ -326,7 +326,7 @@ class Graph(object):
 
         # Default to current time if querying the head rev fails
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
-        pushinfo = query_pushinfo(params['head_repository'], params['head_rev'])
+        pushinfo = query_vcs_info(params['head_repository'], params['head_rev'])
         if pushinfo:
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
@@ -629,7 +629,7 @@ class CIBuild(object):
 
         # Default to current time if querying the head rev fails
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
-        pushinfo = query_pushinfo(params['head_repository'], params['head_rev'])
+        pushinfo = query_vcs_info(params['head_repository'], params['head_rev'])
         if pushinfo:
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
