@@ -2720,7 +2720,7 @@ EncodeCall(Encoder& e, WasmAstCall& c)
     if (!e.writeExpr(c.expr()))
         return false;
 
-    if (!e.writeU32(c.index()))
+    if (!e.writeVarU32(c.index()))
         return false;
 
     if (!EncodeArgs(e, c.args()))
@@ -2735,7 +2735,7 @@ EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
     if (!e.writeExpr(Expr::CallIndirect))
         return false;
 
-    if (!e.writeU32(c.sigIndex()))
+    if (!e.writeVarU32(c.sigIndex()))
         return false;
 
     if (!EncodeExpr(e, *c.index()))
@@ -2759,10 +2759,10 @@ EncodeConst(Encoder& e, WasmAstConst& c)
                e.writeVarU64(c.val().i64());
       case ValType::F32:
         return e.writeExpr(Expr::F32Const) &&
-               e.writeF32(c.val().f32());
+               e.writeFixedF32(c.val().f32());
       case ValType::F64:
         return e.writeExpr(Expr::F64Const) &&
-               e.writeF64(c.val().f64());
+               e.writeFixedF64(c.val().f64());
       default:
         break;
     }
@@ -3186,7 +3186,7 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
     if (!e.writeVarU32(bytes.length()))
         return false;
 
-    if (!e.writeData(bytes.begin(), bytes.length()))
+    if (!e.writeRawData(bytes.begin(), bytes.length()))
         return false;
 
     return true;
@@ -3228,10 +3228,10 @@ EncodeModule(WasmAstModule& module)
 
     Encoder e(*bytecode);
 
-    if (!e.writeU32(MagicNumber))
+    if (!e.writeFixedU32(MagicNumber))
         return nullptr;
 
-    if (!e.writeU32(EncodingVersion))
+    if (!e.writeFixedU32(EncodingVersion))
         return nullptr;
 
     if (!EncodeSignatureSection(e, module))
