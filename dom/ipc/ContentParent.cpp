@@ -5764,6 +5764,18 @@ ContentParent::RecvGetGraphicsDeviceInitData(DeviceInitData* aOut)
 }
 
 bool
+ContentParent::RecvGraphicsError(const nsCString& aError)
+{
+  gfx::LogForwarder* lf = gfx::Factory::GetLogForwarder();
+  if (lf) {
+    std::stringstream message;
+    message << "CP+" << aError.get();
+    lf->UpdateStringsVector(message.str());
+  }
+  return true;
+}
+
+bool
 ContentParent::RecvBeginDriverCrashGuard(const uint32_t& aGuardType, bool* aOutCrashed)
 {
   // Only one driver crash guard should be active at a time, per-process.
