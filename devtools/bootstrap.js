@@ -79,11 +79,59 @@ function reload(event) {
 
   // Ask the loader to update itself and reopen the toolbox if needed
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  devtools.reload(reloadToolbox);
+  devtools.reload();
 
-  // Also tells gDevTools to reload its dependencies
-  const {gDevTools} = devtools.require("devtools/client/framework/devtools");
-  gDevTools.reload();
+  // Go over all top level windows to reload all devtools related things
+  let windowsEnum = Services.wm.getEnumerator(null);
+  while (windowsEnum.hasMoreElements()) {
+    let window = windowsEnum.getNext();
+    let windowtype = window.document.documentElement.getAttribute("windowtype");
+    if (windowtype == "navigator:browser" && window.gBrowser) {
+      // Enumerate tabs on firefox windows
+      for (let tab of window.gBrowser.tabs) {
+        let browser = tab.linkedBrowser;
+        let location = browser.documentURI.spec;
+        let mm = browser.messageManager;
+        // To reload JSON-View tabs and any devtools document
+        if (location.startsWith("about:debugging") ||
+            location.startsWith("chrome://devtools/")) {
+          browser.reload();
+        }
+        // We have to use a frame script to query "baseURI"
+        mm.loadFrameScript("data:text/javascript,new " + function () {
+          let isJSONView = content.document.baseURI.startsWith("resource://devtools/");
+          if (isJSONView) {
+            content.location.reload();
+          }
+        }, false);
+      }
+    } else if (windowtype === "devtools:webide") {
+      window.location.reload();
+    } else if (windowtype === "devtools:webconsole") {
+      // Browser console document can't just be reloaded.
+      // HUDService is going to close it on unload.
+      // Instead we have to manually toggle it.
+      let HUDService = devtools.require("devtools/client/webconsole/hudservice");
+      HUDService.toggleBrowserConsole()
+        .then(() => {
+          HUDService.toggleBrowserConsole();
+        });
+    }
+  }
+
+  if (reloadToolbox) {
+    // Reopen the toolbox automatically if we are reloading from toolbox shortcut
+    // and are on a browser window.
+    // Wait for a second before opening the toolbox to avoid races
+    // between the old and the new one.
+    let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+    setTimeout(() => {
+      let { TargetFactory } = devtools.require("devtools/client/framework/target");
+      let { gDevTools } = devtools.require("devtools/client/framework/devtools");
+      let target = TargetFactory.forTab(top.gBrowser.selectedTab);
+      gDevTools.showToolbox(target);
+    }, 1000);
+  }
 }
 
 let listener;
