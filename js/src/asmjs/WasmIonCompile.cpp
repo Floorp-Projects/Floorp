@@ -752,7 +752,7 @@ class FunctionCompiler
         return callPrivate(MAsmJSCall::Callee(AsmJSInternalCallee(funcIndex)), call, sig.ret(), def);
     }
 
-    bool funcPtrCall(const Sig& sig, uint32_t maskLit, uint32_t globalDataOffset, MDefinition* index,
+    bool funcPtrCall(const Sig& sig, uint32_t length, uint32_t globalDataOffset, MDefinition* index,
                      const Call& call, MDefinition** def)
     {
         if (inDeadCode()) {
@@ -760,12 +760,28 @@ class FunctionCompiler
             return true;
         }
 
-        MConstant* mask = MConstant::New(alloc(), Int32Value(maskLit));
-        curBlock_->add(mask);
-        MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask);
-        curBlock_->add(maskedIndex);
-        MAsmJSLoadFuncPtr* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), globalDataOffset, maskedIndex);
-        curBlock_->add(ptrFun);
+        MAsmJSLoadFuncPtr* ptrFun;
+        if (mg().isAsmJS()) {
+            MOZ_ASSERT(IsPowerOfTwo(length));
+            MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
+            curBlock_->add(mask);
+            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask);
+            curBlock_->add(maskedIndex);
+            ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
+            curBlock_->add(ptrFun);
+        } else {
+            // For wasm code, as a space optimization, the ModuleGenerator does not allocate a
+            // table for signatures which do not contain any indirectly-callable functions.
+            // However, these signatures may still be called (it is not a validation error)
+            // so we instead have a flag alwaysThrow which throws an exception instead of loading
+            // the function pointer from the (non-existant) array.
+            MOZ_ASSERT(!length || length == mg_.numTableElems());
+            bool alwaysThrow = !length;
+
+            ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, mg_.numTableElems(), alwaysThrow,
+                                            globalDataOffset);
+            curBlock_->add(ptrFun);
+        }
 
         return callPrivate(MAsmJSCall::Callee(ptrFun), call, sig.ret(), def);
     }
@@ -1613,11 +1629,7 @@ EmitCallIndirect(FunctionCompiler& f, ExprType ret, MDefinition** def)
         return false;
 
     const TableModuleGeneratorData& table = f.mg().sigToTable(sigIndex);
-    uint32_t length = table.numElems;
-    MOZ_ASSERT(IsPowerOfTwo(length));
-    uint32_t mask = length - 1;
-
-    return f.funcPtrCall(sig, mask, table.globalDataOffset, index, call, def);
+    return f.funcPtrCall(sig, table.numElems, table.globalDataOffset, index, call, def);
 }
 
 static bool
@@ -3006,7 +3018,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
             return false;
 
         MDefinition* last = nullptr;
-        if (func.isAsmJS()) {
+        if (f.mg().isAsmJS()) {
             while (!f.done()) {
                 if (!EmitExprStmt(f, &last))
                     return false;

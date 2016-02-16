@@ -96,11 +96,22 @@ typedef Vector<AsmJSGlobalVariable, 0, SystemAllocPolicy> AsmJSGlobalVariableVec
 
 struct ModuleGeneratorData
 {
+    ModuleKind                      kind;
+    uint32_t                        numTableElems;
+
     DeclaredSigVector               sigs;
     TableModuleGeneratorDataVector  sigToTable;
     DeclaredSigPtrVector            funcSigs;
     ImportModuleGeneratorDataVector imports;
     AsmJSGlobalVariableVector       globals;
+
+    uint32_t funcSigIndex(uint32_t funcIndex) const {
+        return funcSigs[funcIndex] - sigs.begin();
+    }
+
+    explicit ModuleGeneratorData(ModuleKind kind = ModuleKind::Wasm)
+      : kind(kind), numTableElems(0)
+    {}
 };
 
 typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
@@ -118,11 +129,17 @@ class ModuleGeneratorThreadView
     explicit ModuleGeneratorThreadView(const ModuleGeneratorData& shared)
       : shared_(shared)
     {}
+    bool isAsmJS() const {
+        return shared_.kind == ModuleKind::AsmJS;
+    }
+    uint32_t numTableElems() const {
+        MOZ_ASSERT(!isAsmJS());
+        return shared_.numTableElems;
+    }
     const DeclaredSig& sig(uint32_t sigIndex) const {
         return shared_.sigs[sigIndex];
     }
     const TableModuleGeneratorData& sigToTable(uint32_t sigIndex) const {
-        MOZ_ASSERT(shared_.sigToTable[sigIndex].numElems != 0);
         return shared_.sigToTable[sigIndex];
     }
     const DeclaredSig& funcSig(uint32_t funcIndex) const {
@@ -195,32 +212,25 @@ class MOZ_STACK_CLASS ModuleGenerator
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init(UniqueModuleGeneratorData shared, UniqueChars filename, ModuleKind = ModuleKind::Wasm);
+    bool init(UniqueModuleGeneratorData shared, UniqueChars filename);
 
     bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
-
-    // asm.js global variables:
-    bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
-    const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
 
     // Heap usage:
     void initHeapUsage(HeapUsage heapUsage);
     bool usesHeap() const;
 
     // Signatures:
-    void initSig(uint32_t sigIndex, Sig&& sig);
     uint32_t numSigs() const { return numSigs_; }
     const DeclaredSig& sig(uint32_t sigIndex) const;
 
     // Function declarations:
-    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
     uint32_t numFuncSigs() const { return module_->numFuncs; }
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Imports:
-    bool initImport(uint32_t importIndex, uint32_t sigIndex);
     uint32_t numImports() const;
     const ImportModuleGeneratorData& import(uint32_t index) const;
 
@@ -236,8 +246,18 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishFuncDefs();
 
     // Function-pointer tables:
+    static const uint32_t BadIndirectCall = UINT32_MAX;
+
+    // asm.js lazy initialization:
+    void initSig(uint32_t sigIndex, Sig&& sig);
+    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
+    bool initImport(uint32_t importIndex, uint32_t sigIndex);
     bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
     void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
+
+    // asm.js global variables:
+    bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
+    const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of

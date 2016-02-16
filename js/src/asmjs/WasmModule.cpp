@@ -375,7 +375,7 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
 
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit);
+    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit || u.kind_ == ErrorExit);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
@@ -875,6 +875,14 @@ Module::Module(UniqueModuleData module)
 {
     *(double*)(globalData() + NaN64GlobalDataOffset) = GenericNaN();
     *(float*)(globalData() + NaN32GlobalDataOffset) = GenericNaN();
+
+#ifdef DEBUG
+    uint32_t lastEnd = 0;
+    for (const CodeRange& cr : module_->codeRanges) {
+        MOZ_ASSERT(cr.begin() >= lastEnd);
+        lastEnd = cr.end();
+    }
+#endif
 }
 
 Module::~Module()

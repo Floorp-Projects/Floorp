@@ -400,8 +400,9 @@ MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* labe
     ma_b(label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::branch32(Condition cond, Register lhs, Imm32 rhs, Label* label)
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 rhs, L label)
 {
     ma_cmp(lhs, rhs);
     ma_b(label, cond);
