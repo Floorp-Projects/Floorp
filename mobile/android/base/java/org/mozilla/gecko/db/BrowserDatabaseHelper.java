@@ -44,7 +44,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 29; // Bug 760956
+    public static final int DATABASE_VERSION = 30; // Bug 946857
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -56,6 +56,9 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
     static final String TABLE_TABS = TabsProvider.TABLE_TABS;
     static final String TABLE_CLIENTS = TabsProvider.TABLE_CLIENTS;
+    static final String TABLE_LOGINS = BrowserContract.Logins.TABLE_LOGINS;
+    static final String TABLE_DELETED_LOGINS = BrowserContract.DeletedLogins.TABLE_DELETED_LOGINS;
+    static final String TABLE_DISABLED_HOSTS = BrowserContract.LoginsDisabledHosts.TABLE_DISABLED_HOSTS;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -329,6 +332,62 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     }
 
+    private void createLoginsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating logins.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each login.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.Logins._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.Logins.HOSTNAME + " TEXT NOT NULL," +
+                BrowserContract.Logins.HTTP_REALM + " TEXT," +
+                BrowserContract.Logins.FORM_SUBMIT_URL + " TEXT," +
+                BrowserContract.Logins.USERNAME_FIELD + " TEXT NOT NULL," +
+                BrowserContract.Logins.PASSWORD_FIELD + " TEXT NOT NULL," +
+                BrowserContract.Logins.ENCRYPTED_USERNAME + " TEXT NOT NULL," +
+                BrowserContract.Logins.ENCRYPTED_PASSWORD + " TEXT NOT NULL," +
+                BrowserContract.Logins.GUID + " TEXT UNIQUE NOT NULL," +
+                BrowserContract.Logins.ENC_TYPE + " INTEGER NOT NULL, " +
+                BrowserContract.Logins.TIME_CREATED + " INTEGER," +
+                BrowserContract.Logins.TIME_LAST_USED + " INTEGER," +
+                BrowserContract.Logins.TIME_PASSWORD_CHANGED + " INTEGER," +
+                BrowserContract.Logins.TIMES_USED + " INTEGER" +
+                ");");
+    }
+
+    private void createLoginsTableIndices(SQLiteDatabase db, final String tableName) {
+        // No need to create an index on GUID, it is an unique column.
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + ")");
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME_FORM_SUBMIT_URL +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + "," + BrowserContract.Logins.FORM_SUBMIT_URL + ")");
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME_HTTP_REALM +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + "," + BrowserContract.Logins.HTTP_REALM + ")");
+    }
+
+    private void createDeletedLoginsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating deleted_logins.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each deleted login.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.DeletedLogins._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.DeletedLogins.GUID + " TEXT UNIQUE NOT NULL," +
+                BrowserContract.DeletedLogins.TIME_DELETED + " INTEGER NOT NULL" +
+                ");");
+    }
+
+    private void createDisabledHostsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating disabled_hosts.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each disabled host.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.LoginsDisabledHosts._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.LoginsDisabledHosts.HOSTNAME + " TEXT UNIQUE NOT NULL ON CONFLICT REPLACE" +
+                ");");
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         debug("Creating browser.db: " + db.getPath());
@@ -360,6 +419,11 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createReadingListIndices(db, TABLE_READING_LIST);
         createUrlAnnotationsTable(db);
         createNumbersTable(db);
+
+        createDeletedLoginsTable(db, TABLE_DELETED_LOGINS);
+        createDisabledHostsTable(db, TABLE_DISABLED_HOSTS);
+        createLoginsTable(db, TABLE_LOGINS);
+        createLoginsTableIndices(db, TABLE_LOGINS);
     }
 
     /**
@@ -1066,6 +1130,14 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createNumbersTable(db);
     }
 
+    private void upgradeDatabaseFrom29to30(final SQLiteDatabase db) {
+        debug("creating logins table");
+        createDeletedLoginsTable(db, TABLE_DELETED_LOGINS);
+        createDisabledHostsTable(db, TABLE_DISABLED_HOSTS);
+        createLoginsTable(db, TABLE_LOGINS);
+        createLoginsTableIndices(db, TABLE_LOGINS);
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1156,6 +1228,11 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 29:
                     upgradeDatabaseFrom28to29(db);
+                    break;
+
+                case 30:
+                    upgradeDatabaseFrom29to30(db);
+                    break;
             }
         }
 
