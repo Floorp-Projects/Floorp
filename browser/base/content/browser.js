@@ -830,10 +830,16 @@ function _loadURIWithFlags(browser, uri, params) {
     browser.userTypedClear++;
   }
 
+  let wasRemote = browser.isRemoteBrowser;
+
   let process = browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
                                         : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
   let mustChangeProcess = gMultiProcessBrowser &&
                           !E10SUtils.canLoadURIInProcess(uri, process);
+  if ((!wasRemote && !mustChangeProcess) ||
+      (wasRemote && mustChangeProcess)) {
+    browser.inLoadURI = true;
+  }
   try {
     if (!mustChangeProcess) {
       browser.webNavigation.loadURIWithOptions(uri, flags,
@@ -867,6 +873,10 @@ function _loadURIWithFlags(browser, uri, params) {
       throw e;
     }
   } finally {
+    if ((!wasRemote && !mustChangeProcess) ||
+        (wasRemote && mustChangeProcess)) {
+      browser.inLoadURI = false;
+    }
     if (browser.userTypedClear) {
       browser.userTypedClear--;
     }
