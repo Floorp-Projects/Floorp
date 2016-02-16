@@ -240,7 +240,7 @@ class SavedStacks {
 
         bool needsSweep() {
             MOZ_ASSERT(source);
-            return !IsAboutToBeFinalized(&source);
+            return IsAboutToBeFinalized(&source);
         }
 
         RelocatablePtrAtom source;
