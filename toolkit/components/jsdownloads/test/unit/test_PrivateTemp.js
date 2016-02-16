@@ -19,6 +19,6 @@ add_task(function* test_private_temp() {
   var targetFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
   targetFile.initWithPath(download.target.path);
 
-  // 488 is the decimal value of 0700.
+  // 488 is the decimal value of 0o700.
   equal(targetFile.parent.permissions, 448);
 });

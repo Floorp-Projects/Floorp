@@ -300,7 +300,7 @@ IsCrossCompartmentWrapper(JSObject* obj);
 void
 NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper);
 
-bool
+void
 RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
 
 JS_FRIEND_API(bool)

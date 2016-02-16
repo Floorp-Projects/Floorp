@@ -159,7 +159,7 @@ PostMessageEvent::Run()
     presContext = shell->GetPresContext();
 
   event->SetTrusted(mTrustedCaller);
-  WidgetEvent* internalEvent = event->GetInternalNSEvent();
+  WidgetEvent* internalEvent = event->WidgetEventPtr();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(window,

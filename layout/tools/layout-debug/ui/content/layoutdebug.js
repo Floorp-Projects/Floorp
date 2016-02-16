@@ -382,7 +382,7 @@ RTestURLList.prototype = {
     var data = this.mCurrentURL.dir.clone();
     data.append( this.mIsBaseline ? "baseline" : "verify");
     if (!data.exists())
-      data.create(nsIFile.DIRECTORY_TYPE, 0777)
+      data.create(nsIFile.DIRECTORY_TYPE, 0o777)
     data.append(basename);
 
     dump("Writing regression data to " +

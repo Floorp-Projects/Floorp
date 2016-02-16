@@ -61,6 +61,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gAboutNewTabService",
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
+XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
+                                  "resource://gre/modules/AddonWatcher.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -1347,6 +1349,9 @@ var gBrowserInit = {
       RestoreLastSessionObserver.init();
 
       SocialUI.init();
+
+      // Start monitoring slow add-ons
+      AddonWatcher.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -3980,7 +3985,7 @@ function updateEditUIVisibility()
 function openNewUserContextTab(event)
 {
   openUILinkIn(BROWSER_NEW_TAB_URL, "tab", {
-    userContextId: event.target.getAttribute('usercontextid'),
+    userContextId: parseInt(event.target.getAttribute('usercontextid')),
   });
 }
 

@@ -1165,6 +1165,12 @@ nsIFrame::Combines3DTransformWithAncestors() const
 }
 
 bool
+nsIFrame::In3DContextAndBackfaceIsHidden() const
+{
+  return Combines3DTransformWithAncestors() && StyleDisplay()->BackfaceIsHidden();
+}
+
+bool
 nsIFrame::HasPerspective() const
 {
   if (!IsTransformed()) {
@@ -2106,8 +2112,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-  nsDisplayListBuilder::AutoSaveRestorePerspectiveIndex perspectiveIndex(aBuilder, this);
-
   if (isTransformed || useBlendMode || usingSVGEffects || useFixedPosition || useStickyPosition) {
     // We don't need to pass ancestor clipping down to our children;
     // everything goes inside a display item's child list, and the display
@@ -2126,6 +2130,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
+    nsDisplayListBuilder::AutoSaveRestorePerspectiveIndex
+      perspectiveIndex(aBuilder, this);
+
     CheckForApzAwareEventHandlers(aBuilder, this);
 
     nsRect clipPropClip;

@@ -28,7 +28,7 @@ function run_test() {
   // Assuming we're working with a clean slate, the file shouldn't exist
   // until we create it.
   ok(!stateFile.exists());
-  stateFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0x1a4); // 0x1a4 == 0644
+  stateFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0x1a4); // 0x1a4 == 0o644
   ok(stateFile.exists());
   // Initialize nsISiteSecurityService after do_get_profile() so it
   // can read the state file.

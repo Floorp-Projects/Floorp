@@ -90,7 +90,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
                         uint32_t aCharCode,
                         const IgnoreModifierState& aIgnoreModifierState)
 {
-  WidgetEvent* event = aKeyEvent->AsEvent()->GetInternalNSEvent();
+  WidgetEvent* event = aKeyEvent->AsEvent()->WidgetEventPtr();
   nsCOMPtr<EventTarget> target = aKeyEvent->AsEvent()->InternalDOMEvent()->GetCurrentTarget();
 
   bool executed = false;
