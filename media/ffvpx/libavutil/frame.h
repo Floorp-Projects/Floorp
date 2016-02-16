@@ -106,12 +106,22 @@ enum AVFrameSideDataType {
      * @endcode
      */
     AV_FRAME_DATA_SKIP_SAMPLES,
-
     /**
      * This side data must be associated with an audio frame and corresponds to
      * enum AVAudioServiceType defined in avcodec.h.
      */
     AV_FRAME_DATA_AUDIO_SERVICE_TYPE,
+    /**
+     * Mastering display metadata associated with a video frame. The payload is
+     * an AVMasteringDisplayMetadata type and contains information about the
+     * mastering display color volume.
+     */
+    AV_FRAME_DATA_MASTERING_DISPLAY_METADATA,
+    /**
+     * The GOP timecode in 25 bit timecode format. Data format is 64-bit integer.
+     * This is set on the first frame of a GOP that has a temporal reference of 0.
+     */
+    AV_FRAME_DATA_GOP_TIMECODE
 };
 
 enum AVActiveFormatDescription {
