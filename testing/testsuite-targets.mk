@@ -16,10 +16,6 @@ include $(topsrcdir)/build/binary-location.mk
 
 SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
-# Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
-MOCHITESTS := mochitest-plain mochitest-chrome mochitest-devtools mochitest-a11y
-mochitest:: $(MOCHITESTS)
-
 ifndef TEST_PACKAGE_NAME
 TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
 endif
@@ -38,47 +34,6 @@ ifneq (browser,$(MOZ_BUILD_APP))
 BUILD_GTEST=
 endif
 
-RUN_MOCHITEST_B2G_DESKTOP = \
-  rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsb2g.py \
-    --log-tbpl=./$@.log \
-    --desktop --profile ${GAIA_PROFILE_DIR} \
-    --failure-file=$(abspath _tests/testing/mochitest/makefailures.json) \
-    $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
-
-RUN_MOCHITEST = \
-  rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtests.py \
-    --log-tbpl=./$@.log \
-    --failure-file=$(abspath _tests/testing/mochitest/makefailures.json) \
-    --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
-
-RERUN_MOCHITEST = \
-  rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtests.py \
-    --log-tbpl=./$@.log \
-    --run-only-tests=makefailures.json \
-    --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
-
-RUN_MOCHITEST_REMOTE = \
-  rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsremote.py \
-    --log-tbpl=./$@.log $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
-    --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    --testing-modules-dir=$(abspath _tests/modules) \
-    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
-
-RUN_MOCHITEST_ROBOCOP = \
-  rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runrobocop.py \
-    --robocop-apk=$(DEPTH)/mobile/android/tests/browser/robocop/robocop-debug.apk \
-    --robocop-ini=_tests/testing/mochitest/robocop.ini \
-    --log-tbpl=./$@.log $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
-    --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(TEST_PATH_ARG)
-
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
   @errors=`grep 'TEST-UNEXPECTED-' $@.log` ;\
@@ -91,92 +46,6 @@ define check_test_error_internal
 endef
 CHECK_TEST_ERROR = $(call check_test_error_internal)
 CHECK_TEST_ERROR_RERUN = $(call check_test_error_internal,'To rerun your failures please run "make $@-rerun-failures"')
-endif
-
-mochitest-remote: DM_TRANS?=adb
-mochitest-remote:
-	@if [ '${MOZ_HOST_BIN}' = '' ]; then \
-        echo 'environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell'; \
-    elif [ ! -d ${MOZ_HOST_BIN} ]; then \
-        echo 'MOZ_HOST_BIN does not specify a directory'; \
-    elif [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
-        echo 'xpcshell not found in MOZ_HOST_BIN'; \
-    elif [ '${TEST_DEVICE}' = '' -a '$(DM_TRANS)' != 'adb' ]; then \
-        echo 'please prepare your host with the environment variable TEST_DEVICE'; \
-    else \
-        $(RUN_MOCHITEST_REMOTE); \
-    fi
-
-mochitest-robotium: mochitest-robocop
-	@echo 'mochitest-robotium is deprecated -- please use mochitest-robocop'
-
-mochitest-robocop: DM_TRANS?=adb
-mochitest-robocop:
-	@if [ '${MOZ_HOST_BIN}' = '' ]; then \
-        echo 'environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell'; \
-    elif [ ! -d ${MOZ_HOST_BIN} ]; then \
-        echo 'MOZ_HOST_BIN does not specify a directory'; \
-    elif [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
-        echo 'xpcshell not found in MOZ_HOST_BIN'; \
-    elif [ '${TEST_DEVICE}' = '' -a '$(DM_TRANS)' != 'adb' ]; then \
-        echo 'please prepare your host with the environment variable TEST_DEVICE'; \
-    else \
-        $(RUN_MOCHITEST_ROBOCOP); \
-    fi
-
-ifdef MOZ_B2G
-mochitest-plain:
-	@if [ '${GAIA_PROFILE_DIR}'  = '' ]; then \
-        echo 'please specify the GAIA_PROFILE_DIR env variable'; \
-    else \
-        $(RUN_MOCHITEST_B2G_DESKTOP); \
-        $(CHECK_TEST_ERROR_RERUN); \
-    fi
-else
-mochitest-plain:
-	$(RUN_MOCHITEST)
-	$(CHECK_TEST_ERROR_RERUN)
-endif
-
-mochitest-plain-rerun-failures:
-	$(RERUN_MOCHITEST)
-	$(CHECK_TEST_ERROR_RERUN)
-
-# Allow mochitest-1 ... mochitest-5 for developer ease
-mochitest-1 mochitest-2 mochitest-3 mochitest-4 mochitest-5: mochitest-%:
-	echo 'mochitest: $* / 5'
-	$(RUN_MOCHITEST) --chunk-by-dir=4 --total-chunks=5 --this-chunk=$*
-	$(CHECK_TEST_ERROR)
-
-mochitest-chrome:
-	$(RUN_MOCHITEST) --chrome
-	$(CHECK_TEST_ERROR)
-
-mochitest-devtools:
-	$(RUN_MOCHITEST) --subsuite=devtools
-	$(CHECK_TEST_ERROR)
-
-mochitest-a11y:
-	$(RUN_MOCHITEST) --a11y
-	$(CHECK_TEST_ERROR)
-
-ifeq ($(OS_ARCH),Darwin)
-webapprt_stub_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/webapprt-stub$(BIN_SUFFIX)
-endif
-ifeq ($(OS_ARCH),WINNT)
-webapprt_stub_path = $(TARGET_DIST)/bin/webapprt-stub$(BIN_SUFFIX)
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-webapprt_stub_path = $(TARGET_DIST)/bin/webapprt-stub$(BIN_SUFFIX)
-endif
-
-ifdef webapprt_stub_path
-webapprt-test-content:
-	$(RUN_MOCHITEST) --webapprt-content --appname $(webapprt_stub_path)
-	$(CHECK_TEST_ERROR)
-webapprt-test-chrome:
-	$(RUN_MOCHITEST) --webapprt-chrome --appname $(webapprt_stub_path) --browser-arg -test-mode
-	$(CHECK_TEST_ERROR)
 endif
 
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
@@ -588,11 +457,6 @@ stage-extensions: make-stage-dir
 	@$(foreach ext,$(TEST_EXTENSIONS), cp -RL $(DIST)/xpi-stage/$(ext) $(PKG_STAGE)/extensions;)
 
 .PHONY: \
-  mochitest \
-  mochitest-plain \
-  mochitest-chrome \
-  mochitest-devtools \
-  mochitest-a11y \
   reftest \
   crashtest \
   xpcshell-tests \
