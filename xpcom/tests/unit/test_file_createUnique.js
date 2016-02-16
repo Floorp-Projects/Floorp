@@ -19,7 +19,7 @@ function run_test()
   tempFile.append("test.txt");
 
   try {
-    tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     do_throw("Creating an item in a folder with a very long name should throw");
   }
   catch (e if (e instanceof Ci.nsIException &&

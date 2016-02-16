@@ -3519,7 +3519,7 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
   data.mAnimatedGeometryRootOffset = aTopLeft;
   data.mReferenceFrame = aItem->ReferenceFrame();
   data.mSingleItemFixedToViewport = aShouldFixToViewport;
-  data.mBackfaceHidden = aItem->Frame()->BackfaceIsHidden();
+  data.mBackfaceHidden = aItem->Frame()->In3DContextAndBackfaceIsHidden();
   data.mIsCaret = aItem->GetType() == nsDisplayItem::TYPE_CARET;
 
   data.mNewChildLayersIndex = mNewChildLayers.Length();
@@ -4138,7 +4138,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       PaintedLayerData* paintedLayerData =
         mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, agrScrollClip,
                                                   itemVisibleRect, false,
-                                                  item->Frame()->BackfaceIsHidden(),
+                                                  item->Frame()->In3DContextAndBackfaceIsHidden(),
                                                   avoidCreatingLayer,
                                                   [&]() {
           layerCount++;

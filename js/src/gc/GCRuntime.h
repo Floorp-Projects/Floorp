@@ -793,6 +793,7 @@ class GCRuntime
 
     bool isIncrementalGc() const { return isIncremental; }
     bool isFullGc() const { return isFull; }
+    bool isCompactingGc() const { return isCompacting; }
 
     bool shouldCleanUpEverything() { return cleanUpEverything; }
 

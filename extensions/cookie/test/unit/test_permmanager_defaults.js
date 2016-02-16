@@ -30,7 +30,7 @@ add_task(function* do_test() {
   // write our test data to it.
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, 0666, 0);
+  ostream.init(file, -1, 0o666, 0);
   let conv = Cc["@mozilla.org/intl/converter-output-stream;1"].
              createInstance(Ci.nsIConverterOutputStream);
   conv.init(ostream, "UTF-8", 0, 0);

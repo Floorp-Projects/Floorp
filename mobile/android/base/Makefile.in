@@ -333,25 +333,6 @@ preprocessed_PATH := generated/preprocessed/org/mozilla/gecko
 preprocessed_KEEP_PATH := 1
 preprocessed_FLAGS := --marker='//\\\#'
 
-ifdef MOZ_INSTALL_TRACKING
-ifdef MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
-# The value of MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN is sensitive: we don't
-# want to expose it in build logs.  Following the model set by
-# toolkit/components/urlformatter/Makefile.in, we expose it to AppConstants.java
-# quietly here.  Be aware that the included line's marker needs to agree with
-# --marker above.
-
-adjust_sdk_app_token:
-	@echo '//#define MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN $(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)' > $@
-
-export:: adjust_sdk_app_token
-
-preprocessed_FLAGS += -I adjust_sdk_app_token
-endif # MOZ_INSTALL_TRACKING
-endif # MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
-
-GARBAGE += adjust_sdk_app_token
-
 PP_TARGETS += preprocessed
 
 include $(topsrcdir)/config/rules.mk

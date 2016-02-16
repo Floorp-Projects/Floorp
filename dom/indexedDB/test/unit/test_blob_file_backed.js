@@ -12,7 +12,7 @@ function testSteps()
   const fileIOFlags = 0x02 | // PR_WRONLY
                       0x08 | // PR_CREATEFILE
                       0x20;  // PR_TRUNCATE
-  const filePerms = 0664;
+  const filePerms = 0o664;
   const fileData = "abcdefghijklmnopqrstuvwxyz";
   const fileType = "text/plain";
 

@@ -219,7 +219,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       bool hasAccessKeyCandidates = charCode != 0;
       if (!hasAccessKeyCandidates) {
         WidgetKeyboardEvent* nativeKeyEvent =
-          aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+          aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
         if (nativeKeyEvent) {
           AutoTArray<uint32_t, 10> keys;
           nsContentUtils::GetAccessKeyCandidates(nativeKeyEvent, keys);
@@ -294,7 +294,7 @@ Modifiers
 nsMenuBarListener::GetModifiersForAccessKey(nsIDOMKeyEvent* aKeyEvent)
 {
   WidgetInputEvent* inputEvent =
-    aKeyEvent->AsEvent()->GetInternalNSEvent()->AsInputEvent();
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsInputEvent();
   MOZ_ASSERT(inputEvent);
 
   static const Modifiers kPossibleModifiersForAccessKey =

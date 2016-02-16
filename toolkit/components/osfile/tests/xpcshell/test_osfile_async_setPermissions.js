@@ -14,7 +14,7 @@
 /**
  * Helper function for test logging: prints a POSIX file permission mode as an
  * octal number, with a leading '0' per C (not JS) convention.  When the
- * numeric value is 0777 or lower, it is padded on the left with zeroes to
+ * numeric value is 0o777 or lower, it is padded on the left with zeroes to
  * four digits wide.
  * Sample outputs:  0022, 0644, 04755.
  */

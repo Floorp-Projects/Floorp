@@ -32,10 +32,7 @@ protected:
   virtual ~CSSPseudoElement();
 
 public:
-  ParentObject GetParentObject() const
-  {
-    return mParentElement->GetParentObject();
-  }
+  ParentObject GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

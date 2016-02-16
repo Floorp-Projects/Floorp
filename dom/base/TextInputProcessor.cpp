@@ -344,7 +344,7 @@ TextInputProcessor::PrepareKeyboardEventForComposition(
 
   aKeyboardEvent =
     aOptionalArgc && aDOMKeyEvent ?
-      aDOMKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent() : nullptr;
+      aDOMKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent() : nullptr;
   if (!aKeyboardEvent || aOptionalArgc < 2) {
     aKeyFlags = 0;
   }
@@ -769,7 +769,7 @@ TextInputProcessor::Keydown(nsIDOMKeyEvent* aDOMKeyEvent,
     return NS_ERROR_INVALID_ARG;
   }
   WidgetKeyboardEvent* originalKeyEvent =
-    aDOMKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
+    aDOMKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   if (NS_WARN_IF(!originalKeyEvent)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -875,7 +875,7 @@ TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
     return NS_ERROR_INVALID_ARG;
   }
   WidgetKeyboardEvent* originalKeyEvent =
-    aDOMKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
+    aDOMKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   if (NS_WARN_IF(!originalKeyEvent)) {
     return NS_ERROR_INVALID_ARG;
   }

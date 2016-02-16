@@ -30,7 +30,7 @@ function test() {
   let dir2 = ds.get("TmpD", Ci.nsIFile);
   let file = dir2.clone();
   file.append("pbtest.file");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   const kPrefName = "browser.open.lastDir";
 

@@ -29,6 +29,13 @@ if CONFIG['OS_ARCH'] == 'Linux':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_Linux_x86.s']
     elif CONFIG['CPU_ARCH'] == 'ppc':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_Linux_ppc.s']
+elif CONFIG['OS_TARGET'] in ('FreeBSD', 'OpenBSD', 'NetBSD'):
+    DEFINES.update(
+        HAVE_BSD_FLOCK=True,
+        HAVE_SOCKLEN_T=True,
+    )
+    DEFINES[CONFIG['OS_TARGET'].upper()] = True
+    SOURCES += ['/nsprpub/pr/src/md/unix/%s.c' % CONFIG['OS_TARGET'].lower()]
 elif CONFIG['OS_TARGET'] == 'Darwin':
     DEFINES.update(
         DARWIN=True,
@@ -210,7 +217,10 @@ EXPORTS.nspr += [
 
 EXPORTS.nspr.md += [
     '/nsprpub/pr/include/md/_darwin.cfg',
+    '/nsprpub/pr/include/md/_freebsd.cfg',
     '/nsprpub/pr/include/md/_linux.cfg',
+    '/nsprpub/pr/include/md/_netbsd.cfg',
+    '/nsprpub/pr/include/md/_openbsd.cfg',
     '/nsprpub/pr/include/md/_win95.cfg',
 ]
 

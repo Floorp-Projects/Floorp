@@ -1849,6 +1849,13 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
       continue;
     }
 
+    if (mCurrentRemoteDescription->GetMediaSection(i).GetMediaType() !=
+        description.GetMediaSection(i).GetMediaType()) {
+      JSEP_SET_ERROR("Remote description changes the media type of m-line "
+                     << i);
+      return NS_ERROR_INVALID_ARG;
+    }
+
     const SdpAttributeList& newAttrs(
         description.GetMediaSection(i).GetAttributeList());
     const SdpAttributeList& oldAttrs(

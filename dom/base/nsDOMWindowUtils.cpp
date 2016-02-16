@@ -1773,7 +1773,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
 {
   NS_ENSURE_STATE(aEvent);
   aEvent->SetTrusted(aTrusted);
-  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   NS_ENSURE_STATE(internalEvent);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(content);
@@ -3456,7 +3456,7 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
 {
   *aRetVal = false;
   NS_ENSURE_STATE(aTarget && aEvent);
-  aEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   aTarget->DispatchEvent(aEvent, aRetVal);
   return NS_OK;
 }

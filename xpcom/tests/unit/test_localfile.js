@@ -68,7 +68,7 @@ function test_file_modification_time()
     file.remove(true);
 
   var now = Date.now();
-  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
   do_check_true(file.exists());
 
   // Modification time may be out by up to 2 seconds on FAT filesystems. Test
@@ -108,7 +108,7 @@ function test_directory_modification_time()
     dir.remove(true);
 
   var now = Date.now();
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   do_check_true(dir.exists());
 
   // Modification time may be out by up to 2 seconds on FAT filesystems. Test
@@ -142,7 +142,7 @@ function test_diskSpaceAvailable()
   file.append("testfile");
   if (file.exists())
     file.remove(true);
-  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("644", 8));
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 
   bytes = file.diskSpaceAvailable;
   do_check_true(bytes > 0);

@@ -1209,7 +1209,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
     CaretStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
 
   event->SetTrusted(true);
-  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   AC_LOG("%s: reason %d, collapsed %d, caretVisible %d", __FUNCTION__,
          init.mReason, init.mCollapsed, init.mCaretVisible);
