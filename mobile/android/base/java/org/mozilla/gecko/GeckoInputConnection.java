@@ -17,6 +17,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -438,17 +439,26 @@ class GeckoInputConnection
         return false;
     }
 
+    private boolean isPhysicalKeyboardPresent() {
+        final View v = getView();
+        if (v == null) {
+            return false;
+        }
+        final Configuration config = v.getContext().getResources().getConfiguration();
+        return config.keyboard != Configuration.KEYBOARD_NOKEYS;
+    }
+
     @Override
     public Handler getHandler(Handler defHandler) {
         if (!canReturnCustomHandler()) {
             return defHandler;
         }
-        final Handler newHandler = getBackgroundHandler();
-        if (mEditableClient.setInputConnectionHandler(newHandler)) {
-            return newHandler;
+
+        if (isPhysicalKeyboardPresent()) {
+            return mEditableClient.setInputConnectionHandler(defHandler);
         }
-        // Setting new IC handler failed; return old IC handler
-        return mEditableClient.getInputConnectionHandler();
+
+        return mEditableClient.setInputConnectionHandler(getBackgroundHandler());
     }
 
     @Override
