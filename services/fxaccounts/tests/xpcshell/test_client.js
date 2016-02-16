@@ -173,13 +173,9 @@ add_task(function* test_signUp() {
   let errorMessage = JSON.stringify({code: 400, errno: 101, error: "account exists"});
   let created = false;
 
-  // Note these strings must be unicode and not already utf-8 encoded.
-  let unicodeUsername = "andr\xe9@example.org"; // 'andré@example.org'
-  let unicodePassword = "p\xe4ssw\xf6rd"; // 'pässwörd'
   let server = httpd_setup({
     "/account/create": function(request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
-      body = CommonUtils.decodeUTF8(body);
       let jsonBody = JSON.parse(body);
 
       // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-test-vectors
@@ -191,7 +187,7 @@ add_task(function* test_signUp() {
         return;
       }
 
-      if (jsonBody.email == unicodeUsername) {
+      if (jsonBody.email == "andré@example.org") {
         do_check_eq("", request._queryString);
         do_check_eq(jsonBody.authPW, "247b675ffb4c46310bc87e26d712153abe5e1c90ef00a4784594f97ef54f2375");
 
@@ -211,15 +207,12 @@ add_task(function* test_signUp() {
                                         creationMessage_withKey.length);
         return;
       }
-      // just throwing here doesn't make any log noise, so have an assertion
-      // fail instead.
-      do_check_true(false, "unexpected email: " + jsonBody.email);
     },
   });
 
   // Try to create an account without retrieving optional keys.
   let client = new FxAccountsClient(server.baseURI);
-  let result = yield client.signUp(unicodeUsername, unicodePassword);
+  let result = yield client.signUp('andré@example.org', 'pässwörd');
   do_check_eq("uid", result.uid);
   do_check_eq("sessionToken", result.sessionToken);
   do_check_eq(undefined, result.keyFetchToken);
@@ -236,7 +229,7 @@ add_task(function* test_signUp() {
 
   // Try to create an existing account.  Triggers error path.
   try {
-    result = yield client.signUp(unicodeUsername, unicodePassword);
+    result = yield client.signUp('andré@example.org', 'pässwörd');
     do_throw("Expected to catch an exception");
   } catch(expectedError) {
     do_check_eq(101, expectedError.errno);
@@ -265,15 +258,12 @@ add_task(function* test_signIn() {
     email: "you@example.com"
   });
 
-  // Note this strings must be unicode and not already utf-8 encoded.
-  let unicodeUsername = "m\xe9@example.com" // 'mé@example.com'
   let server = httpd_setup({
     "/account/login": function(request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
-      body = CommonUtils.decodeUTF8(body);
       let jsonBody = JSON.parse(body);
 
-      if (jsonBody.email == unicodeUsername) {
+      if (jsonBody.email == "mé@example.com") {
         do_check_eq("", request._queryString);
         do_check_eq(jsonBody.authPW, "08b9d111196b8408e8ed92439da49206c8ecfbf343df0ae1ecefcd1e0174a8b6");
         response.setStatusLine(request.httpVersion, 200, "OK");
@@ -308,7 +298,7 @@ add_task(function* test_signIn() {
 
   // Login without retrieving optional keys
   let client = new FxAccountsClient(server.baseURI);
-  let result = yield client.signIn(unicodeUsername, 'bigsecret');
+  let result = yield client.signIn('mé@example.com', 'bigsecret');
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "c076ec3f4af123a615157154c6e1d0d6293e514fd7b0221e32d50517ecf002b8");
