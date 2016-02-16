@@ -271,50 +271,12 @@ function NetworkResponseListener(owner, httpActivity) {
   this.receivedData = "";
   this.httpActivity = httpActivity;
   this.bodySize = 0;
-  let channel = this.httpActivity.channel;
-  this._wrappedNotificationCallbacks = channel.notificationCallbacks;
-  channel.notificationCallbacks = this;
 }
 
 NetworkResponseListener.prototype = {
   QueryInterface:
     XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                           Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor,
-                           Ci.nsISupports]),
-
-  // nsIInterfaceRequestor implementation
-
-  /**
-   * This object implements nsIProgressEventSink, but also needs to forward
-   * interface requests to the notification callbacks of other objects.
-   */
-  getInterface(iid) {
-    if (iid.equals(Ci.nsIProgressEventSink)) {
-      return this;
-    }
-    if (this._wrappedNotificationCallbacks) {
-      return this._wrappedNotificationCallbacks.getInterface(iid);
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  /**
-   * Forward notifications for interfaces this object implements, in case other
-   * objects also implemented them.
-   */
-  _forwardNotification(iid, method, args) {
-    if (!this._wrappedNotificationCallbacks) {
-      return;
-    }
-    try {
-      let impl = this._wrappedNotificationCallbacks.getInterface(iid);
-      impl[method].apply(impl, args);
-    } catch (e) {
-      if (e.result != Cr.NS_ERROR_NO_INTERFACE) {
-        throw e;
-      }
-    }
-  },
+                           Ci.nsIRequestObserver, Ci.nsISupports]),
 
   /**
    * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
@@ -322,12 +284,6 @@ NetworkResponseListener.prototype = {
    * @private
    */
   _foundOpenResponse: false,
-
-  /**
-   * If the channel already had notificationCallbacks, hold them here internally
-   * so that we can forward getInterface requests to that object.
-   */
-  _wrappedNotificationCallbacks: null,
 
   /**
    * The response listener owner.
@@ -425,9 +381,6 @@ NetworkResponseListener.prototype = {
     this.request = request;
     this._getSecurityInfo();
     this._findOpenResponse();
-    // We need to track the offset for the onDataAvailable calls where
-    // we pass the data from our pipe to the coverter.
-    this.offset = 0;
 
     // In the multi-process mode, the conversion happens on the child
     // side while we can only monitor the channel on the parent
@@ -494,23 +447,6 @@ NetworkResponseListener.prototype = {
   onStopRequest: function () {
     this._findOpenResponse();
     this.sink.outputStream.close();
-  },
-
-  // nsIProgressEventSink implementation
-
-  /**
-   * Handle progress event as data is transferred.  This is used to record the
-   * size on the wire, which may be compressed / encoded.
-   */
-  onProgress: function (request, context, progress, progressMax) {
-    this.transferredSize = progress;
-    // Need to forward as well to keep things like Download Manager's progress
-    // bar working properly.
-    this._forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
-  },
-
-  onStatus: function () {
-    this._forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
   },
 
   /**
@@ -620,7 +556,6 @@ NetworkResponseListener.prototype = {
       this.httpActivity.discardResponseBody
     );
 
-    this._wrappedNotificationCallbacks = null;
     this.httpActivity.channel = null;
     this.httpActivity.owner = null;
     this.httpActivity = null;
@@ -653,20 +588,23 @@ NetworkResponseListener.prototype = {
     }
 
     if (available != -1) {
+      if (this.transferredSize === null) {
+        this.transferredSize = 0;
+      }
+
       if (available != 0) {
         if (this.converter) {
           this.converter.onDataAvailable(this.request, null, stream,
-                                         this.offset, available);
+                                         this.transferredSize, available);
         } else {
-          this.onDataAvailable(this.request, null, stream, this.offset,
+          this.onDataAvailable(this.request, null, stream, this.transferredSize,
                                available);
         }
       }
-      this.offset += available;
+      this.transferredSize += available;
       this.setAsyncListener(stream, this);
     } else {
       this.onStreamClose();
-      this.offset = 0;
     }
   },
 };
