@@ -16,16 +16,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_IMGCONVERT_H
-#define AVCODEC_IMGCONVERT_H
+#include "config.h"
 
-#include <stdint.h>
+#include "libavutil/attributes.h"
+#include "libavutil/cpu.h"
+#include "libavutil/fixed_dsp.h"
+#include "cpu.h"
 
-#include "version.h"
+void ff_butterflies_fixed_sse2(int *src0, int *src1, int len);
 
-/* 1/2^n downscaling functions */
-void ff_shrink22(uint8_t *dst, int dst_wrap, const uint8_t *src, int src_wrap, int width, int height);
-void ff_shrink44(uint8_t *dst, int dst_wrap, const uint8_t *src, int src_wrap, int width, int height);
-void ff_shrink88(uint8_t *dst, int dst_wrap, const uint8_t *src, int src_wrap, int width, int height);
+av_cold void ff_fixed_dsp_init_x86(AVFixedDSPContext *fdsp)
+{
+    int cpu_flags = av_get_cpu_flags();
 
-#endif /* AVCODEC_IMGCONVERT_H */
+    if (EXTERNAL_SSE2(cpu_flags)) {
+        fdsp->butterflies_fixed = ff_butterflies_fixed_sse2;
+    }
+}
