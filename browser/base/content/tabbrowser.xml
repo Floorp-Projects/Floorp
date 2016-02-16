@@ -684,8 +684,10 @@
 
                     this.mBrowser.userTypedValue = null;
 
-                    if (this.mTab.selected && gURLBar)
+                    let inLoadURI = this.mBrowser.inLoadURI;
+                    if (this.mTab.selected && gURLBar && !inLoadURI) {
                       URLBarSetURI();
+                    }
                   } else {
                     // The document is done loading, we no longer want the
                     // value cleared.
@@ -1320,7 +1322,7 @@
         We ignore the effect of dragging tabs between windows.
       -->
       <method name="_recordTabAccess">
-	<parameter name="aTab"/>
+        <parameter name="aTab"/>
         <body><![CDATA[
           if (!Services.telemetry.canRecordExtended) {
             return;
