@@ -92,7 +92,7 @@ this.FxAccountsClient.prototype = {
     return Credentials.setup(email, password).then((creds) => {
       let data = {
         authPW: CommonUtils.bytesAsHex(creds.authPW),
-        email: email,
+        email: creds.emailUTF8,
       };
       let keys = getKeys ? "?keys=true" : "";
 
