@@ -3,12 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test() {
-
-  // Will need to be changed if Google isn't the default search engine.
-  // Note: geoSpecificDefaults are disabled for mochitests, so this is the
-  // non-US en-US default.
-  let histogramKey = "google.contextmenu";
+  let engine = yield promiseNewEngine("testEngine.xml");
+  let histogramKey = "other-" + engine.name + ".contextmenu";
   let numSearchesBefore = 0;
+
   try {
     let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
     if (histogramKey in hs) {
@@ -19,7 +17,7 @@ add_task(function* test() {
   }
 
   let tabs = [];
-  let tabsLoadedDeferred = Promise.defer();
+  let tabsLoadedDeferred = new Deferred();
 
   function tabAdded(event) {
     let tab = event.target;
@@ -54,3 +52,10 @@ add_task(function* test() {
   Assert.equal(hs[histogramKey].sum, numSearchesBefore + 2,
                "The histogram must contain the correct search count");
 });
+
+function Deferred() {
+  this.promise = new Promise((resolve, reject) => {
+    this.resolve = resolve;
+    this.reject = reject;
+  });
+}
