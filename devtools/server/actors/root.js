@@ -210,6 +210,9 @@ RootActor.prototype = {
     if (this._parameters.workerList) {
       this._parameters.workerList.onListChanged = null;
     }
+    if (this._parameters.serviceWorkerRegistrationList) {
+      this._parameters.serviceWorkerRegistrationList.onListChanged = null;
+    }
     if (typeof this._parameters.onShutdown === 'function') {
       this._parameters.onShutdown();
     }

@@ -994,7 +994,7 @@ nsBMPDecoder::ReadRLEDelta(const char* aData)
   if (mDownscaler) {
     // Clear the skipped pixels. (This clears to the end of the row,
     // which is perfect if there's a Y delta and harmless if not).
-    mDownscaler->ClearRow(/* aStartingAtCol = */ mCurrentPos);
+    mDownscaler->ClearRestOfRow(/* aStartingAtCol = */ mCurrentPos);
   }
 
   // Handle the XDelta.

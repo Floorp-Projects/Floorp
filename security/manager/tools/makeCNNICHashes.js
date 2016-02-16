@@ -252,7 +252,7 @@ certs.sort(compareCertificatesByHash);
 // Write the output file.
 var outFile = relativePathToFile("CNNICHashWhitelist.inc");
 if (!outFile.exists()) {
-  outFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  outFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 }
 var outStream = Cc["@mozilla.org/network/file-output-stream;1"]
                   .createInstance(Ci.nsIFileOutputStream);

@@ -355,6 +355,9 @@ include unicode/reftest.list
 
 include view-source/reftest.list
 
+# web-animations
+include web-animations/reftest.list
+
 # webcomponents/
 include webcomponents/reftest.list
 

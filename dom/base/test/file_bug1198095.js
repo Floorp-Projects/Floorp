@@ -8,7 +8,7 @@ function createFileWithData(message) {
 
   var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                 0666, 0);
+                 0o666, 0);
 
   outStream.write(message, message.length);
   outStream.close();

@@ -584,7 +584,7 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   }
 
   WidgetMouseEvent* internalEvent =
-    aMouseEvent->AsEvent()->GetInternalNSEvent()->AsMouseEvent();
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
   if (NS_WARN_IF(!internalEvent)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "

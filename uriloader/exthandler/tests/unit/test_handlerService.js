@@ -68,7 +68,7 @@ function run_test() {
   // XXX We could, of course, create an actual executable in the directory:
   //executable.append("localhandler");
   //if (!executable.exists())
-  //  executable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0755);
+  //  executable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o755);
 
   var localHandler = {
     name: "Local Handler",
