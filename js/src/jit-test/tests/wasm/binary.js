@@ -13,14 +13,13 @@ const ver2 = 0xff;
 const ver3 = 0xff;
 
 // Section names
-const sigSectionStr = "sig";
-const declSectionStr = "decl";
-const importSectionStr = "import";
-const exportSectionStr = "export";
-const codeSectionStr = "code";
-const dataSectionStr = "data";
-const funcSubsectionStr = "func";
-const tableStr = "table";
+const sigLabel = "sig";
+const declLabel = "decl";
+const tableLabel = "table";
+const importLabel = "import";
+const exportLabel = "export";
+const funcLabel = "func";
+const dataLabel = "data";
 
 const magicError = /failed to match magic number/;
 const versionError = /failed to match binary version/;
@@ -93,7 +92,7 @@ function sigSection(sigs) {
         for (let arg of sig.args)
             body.push(...varU32(arg));
     }
-    return { name: sigSectionStr, body };
+    return { name: sigLabel, body };
 }
 
 function declSection(decls) {
@@ -101,33 +100,28 @@ function declSection(decls) {
     body.push(...varU32(decls.length));
     for (let decl of decls)
         body.push(...varU32(decl));
-    return { name: declSectionStr, body };
+    return { name: declLabel, body };
 }
 
-function codeSection(funcs) {
+function funcSection(func) {
     var body = [];
-    body.push(...varU32(funcs.length));
-    for (let func of funcs) {
-        body.push(...cstring(funcSubsectionStr));
-        var locals = varU32(func.locals.length);
-        for (let local of func.locals)
-            locals.push(...varU32(local));
-        body.push(...varU32(locals.length + func.body.length));
-        body = body.concat(locals, func.body);
-    }
-    return { name: codeSectionStr, body };
+    var locals = varU32(func.locals.length);
+    for (let local of func.locals)
+        locals.push(...varU32(local));
+    body = body.concat(locals, func.body);
+    return { name: funcLabel, body };
 }
 
 function importSection(imports) {
     var body = [];
-    body.push(...varU32(imports.length));
     for (let imp of imports) {
-        body.push(...cstring(funcSubsectionStr));
+        body.push(...cstring(funcLabel));
         body.push(...varU32(imp.sigIndex));
         body.push(...cstring(imp.module));
         body.push(...cstring(imp.func));
     }
-    return { name: importSectionStr, body };
+    body.push(0);
+    return { name: importLabel, body };
 }
 
 function tableSection(elems) {
@@ -135,24 +129,19 @@ function tableSection(elems) {
     body.push(...varU32(elems.length));
     for (let i of elems)
         body.push(...varU32(i));
-    return { name: tableStr, body };
+    return { name: tableLabel, body };
 }
 
 const v2vSig = {args:[], ret:VoidCode};
 const i2vSig = {args:[I32Code], ret:VoidCode};
-const trivialSigSection = sigSection([v2vSig]);
-const trivialDeclSection = declSection([0]);
-const nopFunc = {locals:[], body:[0]};
-const trivialCodeSection = codeSection([nopFunc]);
+const v2vFunc = funcSection({locals:[], body:[0]});
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: U32MAX_LEB, } ]))), TypeError, /too many signatures/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigSectionStr, body: [1, ...U32MAX_LEB], } ]))), TypeError, /too many arguments in signature/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigLabel, body: U32MAX_LEB, } ]))), TypeError, /too many signatures/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigLabel, body: [1, ...U32MAX_LEB], } ]))), TypeError, /too many arguments in signature/);
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}, {args:[], ret:VoidCode}])]))), TypeError, /duplicate signature/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: importSectionStr, body: U32MAX_LEB, }]))), TypeError, /too many imports/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: exportSectionStr, body: U32MAX_LEB, }]))), TypeError, /too many exports/);
 
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1]}]))), TypeError);
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1, 1, 0]}]))), TypeError);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigLabel, body: [1]}]))), TypeError);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigLabel, body: [1, 1, 0]}]))), TypeError);
 
 wasmEval(toBuf(moduleWithSections([sigSection([])])));
 wasmEval(toBuf(moduleWithSections([sigSection([v2vSig])])));
@@ -163,28 +152,28 @@ assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[]
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), TypeError, /bad value type/);
 
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), TypeError, /signature index out of range/);
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, declSection([1])]))), TypeError, /signature index out of range/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, declSection([0])]))), TypeError, /different number of definitions than declarations/);
-wasmEval(toBuf(moduleWithSections([trivialSigSection, trivialDeclSection, trivialCodeSection])));
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([1])]))), TypeError, /signature index out of range/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0])]))), TypeError, /fewer function definitions than declarations/);
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), v2vFunc])));
 
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, {name: importSectionStr, body:[]}]))), TypeError);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), {name: importLabel, body:[]}]))), TypeError);
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([importSection([{sigIndex:0, module:"a", func:"b"}])]))), TypeError, /signature index out of range/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([{sigIndex:1, module:"a", func:"b"}])]))), TypeError, /signature index out of range/);
-wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([])])));
-wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([{sigIndex:0, module:"a", func:""}])])), {a:()=>{}});
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), importSection([{sigIndex:1, module:"a", func:"b"}])]))), TypeError, /signature index out of range/);
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), importSection([])])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), importSection([{sigIndex:0, module:"a", func:""}])])), {a:()=>{}});
 
 wasmEval(toBuf(moduleWithSections([
-    trivialSigSection,
+    sigSection([v2vSig]),
     importSection([{sigIndex:0, module:"a", func:""}]),
-    trivialDeclSection,
-    trivialCodeSection])), {a:()=>{}});
+    declSection([0]),
+    v2vFunc])), {a:()=>{}});
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: dataSectionStr, body: [], } ]))), TypeError, /data section requires a memory section/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: dataLabel, body: [], } ]))), TypeError, /data section requires a memory section/);
 
 wasmEval(toBuf(moduleWithSections([tableSection([])])));
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([tableSection([0])]))), TypeError, /table element out of range/);
-wasmEval(toBuf(moduleWithSections([trivialSigSection, trivialDeclSection, tableSection([0]), trivialCodeSection])));
-wasmEval(toBuf(moduleWithSections([trivialSigSection, trivialDeclSection, tableSection([0,0]), trivialCodeSection])));
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, trivialDeclSection, tableSection([0,1]), trivialCodeSection]))), TypeError, /table element out of range/);
-wasmEval(toBuf(moduleWithSections([trivialSigSection, declSection([0,0,0]), tableSection([0,1,0,2]), codeSection([nopFunc,nopFunc,nopFunc])])));
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), codeSection([nopFunc,nopFunc,nopFunc])])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0]), v2vFunc])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,0]), v2vFunc])));
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,1]), v2vFunc]))), TypeError, /table element out of range/);
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection([0,1,0,2]), v2vFunc, v2vFunc, v2vFunc])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), v2vFunc, v2vFunc, v2vFunc])));
