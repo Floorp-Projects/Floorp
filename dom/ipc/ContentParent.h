@@ -1025,6 +1025,8 @@ private:
                                             int32_t* aStatus,
                                             bool* aSuccess) override;
 
+  virtual bool RecvGraphicsError(const nsCString& aError) override;
+
   virtual bool
   RecvBeginDriverCrashGuard(const uint32_t& aGuardType,
                             bool* aOutCrashed) override;
