@@ -327,6 +327,12 @@ class Graph(object):
         if vcs_info:
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
 
+            sys.stderr.write('%d commits influencing task scheduling:\n' %
+                             len(vcs_info.changesets))
+            for c in vcs_info.changesets:
+                sys.stderr.write('%s %s\n' % (
+                    c['node'][0:12], c['desc'].splitlines()[0]))
+
         # Template parameters used when expanding the graph
         seen_images = {}
         parameters = dict(gaia_info().items() + {
