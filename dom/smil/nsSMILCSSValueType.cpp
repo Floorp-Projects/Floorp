@@ -360,14 +360,13 @@ ValueFromStringHelper(nsCSSProperty aPropID,
     }
   }
   nsDependentSubstring subString(aString, subStringBegin);
-  if (!StyleAnimationValue::ComputeValue(
-        aPropID,
-        aTargetElement,
-        nsCSSPseudoElements::ePseudo_NotPseudoElement,
-        subString,
-        true,
-        aStyleAnimValue,
-        aIsContextSensitive)) {
+  if (!StyleAnimationValue::ComputeValue(aPropID,
+                                         aTargetElement,
+                                         CSSPseudoElementType::NotPseudo,
+                                         subString,
+                                         true,
+                                         aStyleAnimValue,
+                                         aIsContextSensitive)) {
     return false;
   }
   if (isNegative) {

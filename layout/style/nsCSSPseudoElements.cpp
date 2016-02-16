@@ -73,7 +73,7 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
   return result;
 }
 
-/* static */ nsCSSPseudoElements::Type
+/* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 {
   for (uint32_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
@@ -85,22 +85,22 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
   if (nsCSSAnonBoxes::IsAnonBox(aAtom)) {
 #ifdef MOZ_XUL
     if (nsCSSAnonBoxes::IsTreePseudoElement(aAtom)) {
-      return ePseudo_XULTree;
+      return Type::XULTree;
     }
 #endif
 
-    return ePseudo_AnonBox;
+    return Type::AnonBox;
   }
 
-  return ePseudo_NotPseudoElement;
+  return Type::NotPseudo;
 }
 
 /* static */ nsIAtom*
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
-  NS_ASSERTION(aType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
+  NS_ASSERTION(aType < Type::Count,
                "Unexpected type");
-  return *CSSPseudoElements_info[aType].mAtom;
+  return *CSSPseudoElements_info[static_cast<uint8_t>(aType)].mAtom;
 }
 
 /* static */ uint32_t

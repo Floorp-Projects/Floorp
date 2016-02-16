@@ -478,8 +478,7 @@ struct MOZ_STACK_CLASS PseudoElementRuleProcessorData :
       mPseudoType(aPseudoType),
       mPseudoElement(aPseudoElement)
   {
-    NS_PRECONDITION(aPseudoType <
-                      nsCSSPseudoElements::ePseudo_PseudoElementCount,
+    NS_PRECONDITION(aPseudoType < mozilla::CSSPseudoElementType::Count,
                     "invalid aPseudoType value");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
     NS_PRECONDITION(aRuleWalker, "Must have rule walker");

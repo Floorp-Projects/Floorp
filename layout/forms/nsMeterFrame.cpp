@@ -66,7 +66,7 @@ nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-meter-bar pseudo-element to the anonymous child.
-  nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozMeterBar;
+  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::mozMeterBar;
   RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mBarDiv->AsElement());
@@ -283,7 +283,7 @@ nsMeterFrame::ShouldUseNativeStyle() const
 Element*
 nsMeterFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
-  if (aType == nsCSSPseudoElements::ePseudo_mozMeterBar) {
+  if (aType == CSSPseudoElementType::mozMeterBar) {
     return mBarDiv;
   }
 

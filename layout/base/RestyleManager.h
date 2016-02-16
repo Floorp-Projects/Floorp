@@ -192,12 +192,12 @@ public:
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
       nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
-      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mElementContexts.Put(aContent, aStyleContext);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+      } else if (pseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         mBeforePseudoContexts.Put(aContent->GetParent(), aStyleContext);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+      } else if (pseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterPseudoContexts.Put(aContent->GetParent(), aStyleContext);
       }
@@ -206,14 +206,14 @@ public:
     nsStyleContext* Get(nsIContent* aContent,
                         nsCSSPseudoElements::Type aPseudoType) {
       MOZ_ASSERT(aContent);
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      if (aPseudoType == CSSPseudoElementType::NotPseudo) {
         return mElementContexts.GetWeak(aContent);
       }
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+      if (aPseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         return mBeforePseudoContexts.GetWeak(aContent->GetParent());
       }
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+      if (aPseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         return mAfterPseudoContexts.GetWeak(aContent->GetParent());
       }
@@ -270,12 +270,12 @@ public:
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
       nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
-      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mContents.AppendElement(aContent);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+      } else if (pseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         mBeforeContents.AppendElement(aContent->GetParent());
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+      } else if (pseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterContents.AppendElement(aContent->GetParent());
       }

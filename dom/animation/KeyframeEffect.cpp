@@ -624,8 +624,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
              "Uninitialized target");
 
   RefPtr<Element> targetElement;
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::NotPseudo;
   if (target.IsElement()) {
     targetElement = &target.GetAsElement();
   } else {
@@ -1721,13 +1720,13 @@ KeyframeEffectReadOnly::GetTarget(
   }
 
   switch (mPseudoType) {
-    case nsCSSPseudoElements::ePseudo_before:
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::before:
+    case CSSPseudoElementType::after:
       aRv.SetValue().SetAsCSSPseudoElement() =
         CSSPseudoElement::GetCSSPseudoElement(mTarget, mPseudoType);
       break;
 
-    case nsCSSPseudoElements::ePseudo_NotPseudoElement:
+    case CSSPseudoElementType::NotPseudo:
       aRv.SetValue().SetAsElement() = mTarget;
       break;
 
@@ -1975,12 +1974,12 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
     return nullptr;
   }
 
-  if (mPseudoType == nsCSSPseudoElements::ePseudo_before) {
+  if (mPseudoType == CSSPseudoElementType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(frame);
-  } else if (mPseudoType == nsCSSPseudoElements::ePseudo_after) {
+  } else if (mPseudoType == CSSPseudoElementType::after) {
     frame = nsLayoutUtils::GetAfterFrame(frame);
   } else {
-    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+    MOZ_ASSERT(mPseudoType == CSSPseudoElementType::NotPseudo,
                "unknown mPseudoType");
   }
   if (!frame) {

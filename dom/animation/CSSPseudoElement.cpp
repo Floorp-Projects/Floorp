@@ -22,8 +22,8 @@ CSSPseudoElement::CSSPseudoElement(Element* aElement,
   , mPseudoType(aType)
 {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aType == nsCSSPseudoElements::ePseudo_after ||
-             aType == nsCSSPseudoElements::ePseudo_before,
+  MOZ_ASSERT(aType == CSSPseudoElementType::after ||
+             aType == CSSPseudoElementType::before,
              "Unexpected Pseudo Type");
 }
 
@@ -100,10 +100,10 @@ CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
     nsCSSPseudoElements::Type aType)
 {
   switch (aType) {
-    case nsCSSPseudoElements::ePseudo_before:
+    case CSSPseudoElementType::before:
       return nsGkAtoms::cssPseudoElementBeforeProperty;
 
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::after:
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
     default:

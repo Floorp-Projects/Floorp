@@ -178,7 +178,7 @@ public:
                 bool aAppend = false) const;
 
   bool IsRestrictedSelector() const {
-    return PseudoType() == nsCSSPseudoElements::ePseudo_NotPseudoElement;
+    return PseudoType() == mozilla::CSSPseudoElementType::NotPseudo;
   }
 
 #ifdef DEBUG

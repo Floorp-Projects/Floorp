@@ -489,7 +489,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
     nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
-    if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+    if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);

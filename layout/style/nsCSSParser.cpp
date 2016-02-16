@@ -5875,7 +5875,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
 
   if (!AgentRulesEnabled() &&
-      ((pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+      ((pseudoElementType < CSSPseudoElementType::Count &&
         nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
         nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)))) {
@@ -5887,17 +5887,17 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
   // be a bit stricter regarding the pseudo-element parsing rules.
-  if (pseudoElementType == nsCSSPseudoElements::ePseudo_mozPlaceholder &&
+  if (pseudoElementType == CSSPseudoElementType::mozPlaceholder &&
       pseudoClassType == nsCSSPseudoClasses::ePseudoClass_mozPlaceholder) {
     if (parsingPseudoElement) {
       pseudoClassType = nsCSSPseudoClasses::ePseudoClass_NotPseudoClass;
     } else {
-      pseudoElementType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
+      pseudoElementType = CSSPseudoElementType::NotPseudo;
     }
   }
 
 #ifdef MOZ_XUL
-  isTreePseudo = (pseudoElementType == nsCSSPseudoElements::ePseudo_XULTree);
+  isTreePseudo = (pseudoElementType == CSSPseudoElementType::XULTree);
   // If a tree pseudo-element is using the function syntax, it will
   // get isTree set here and will pass the check below that only
   // allows functions if they are in our list of things allowed to be
@@ -5907,18 +5907,17 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   // desired.
   bool isTree = (eCSSToken_Function == mToken.mType) && isTreePseudo;
 #endif
-  bool isPseudoElement =
-    (pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount);
+  bool isPseudoElement = (pseudoElementType < CSSPseudoElementType::Count);
   // anonymous boxes are only allowed if they're the tree boxes or we have
   // enabled agent rules
   bool isAnonBox = isTreePseudo ||
-    (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox &&
+    (pseudoElementType == CSSPseudoElementType::AnonBox &&
      AgentRulesEnabled());
   bool isPseudoClass =
     (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
 
   NS_ASSERTION(!isPseudoClass ||
-               pseudoElementType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+               pseudoElementType == CSSPseudoElementType::NotPseudo,
                "Why is this atom both a pseudo-class and a pseudo-element?");
   NS_ASSERTION(isPseudoClass + isPseudoElement + isAnonBox <= 1,
                "Shouldn't be more than one of these");
@@ -6413,8 +6412,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   nsCSSSelector* selector = aList->AddSelector(aPrevCombinator);
   nsCOMPtr<nsIAtom> pseudoElement;
   nsAutoPtr<nsAtomList> pseudoElementArgs;
-  nsCSSPseudoElements::Type pseudoElementType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  nsCSSPseudoElements::Type pseudoElementType = CSSPseudoElementType::NotPseudo;
 
   int32_t dataMask = 0;
   nsSelectorParsingStatus parsingStatus =
@@ -6433,7 +6431,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
                                           getter_Transfers(pseudoElementArgs),
                                           &pseudoElementType);
       if (pseudoElement &&
-          pseudoElementType != nsCSSPseudoElements::ePseudo_AnonBox) {
+          pseudoElementType != CSSPseudoElementType::AnonBox) {
         // Pseudo-elements other than anonymous boxes are represented with
         // a special ':' combinator.
 
@@ -6481,7 +6479,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     return false;
   }
 
-  if (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox) {
+  if (pseudoElementType == CSSPseudoElementType::AnonBox) {
     // We got an anonymous box pseudo-element; it must be the only
     // thing in this selector group.
     if (selector->mNext || !IsUniversalSelector(*selector)) {
