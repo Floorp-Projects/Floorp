@@ -1341,7 +1341,7 @@ var BookmarkingUI = {
     });
   },
 
-  _updateRecentBookmarks: function(container, extraCSSClass = "") {
+  _updateRecentBookmarks: function(aHeaderItem, extraCSSClass = "") {
     const kMaxResults = 5;
 
     let options = PlacesUtils.history.getNewQueryOptions();
@@ -1351,8 +1351,9 @@ var BookmarkingUI = {
     options.maxResults = kMaxResults;
     let query = PlacesUtils.history.getNewQuery();
 
-    while (container.firstChild) {
-      container.firstChild.remove();
+    while (aHeaderItem.nextSibling &&
+           aHeaderItem.nextSibling.localName == "menuitem") {
+      aHeaderItem.nextSibling.remove();
     }
 
     PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
@@ -1385,7 +1386,7 @@ var BookmarkingUI = {
           }
           fragment.appendChild(item);
         }
-        container.appendChild(fragment);
+        aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
       },
       handleError: function (aError) {
         Cu.reportError("Error while attempting to show recent bookmarks: " + aError);
