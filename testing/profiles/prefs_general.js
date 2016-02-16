@@ -346,3 +346,4 @@ user_pref("dom.audiochannel.mutedByDefault", false);
 
 user_pref("webextensions.tests", true);
 user_pref("startup.homepage_welcome_url", "about:blank");
+user_pref("browser.usedOnWindows10.introURL", "");
