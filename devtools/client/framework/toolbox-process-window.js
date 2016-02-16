@@ -111,9 +111,26 @@ function openToolbox({ form, chrome, isTabActor }) {
 }
 
 function onNewToolbox(toolbox) {
-   gToolbox = toolbox;
-   bindToolboxHandlers();
-   raise();
+  gToolbox = toolbox;
+  bindToolboxHandlers();
+  raise();
+  let testScript = getParameterByName("testScript");
+  if (testScript) {
+    // Only allow executing random chrome scripts when a special
+    // test-only pref is set
+    let prefName = "devtools.browser-toolbox.allow-unsafe-script";
+    if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+        Services.prefs.getBoolPref(prefName) === true) {
+      evaluateTestScript(testScript, toolbox);
+    }
+  }
+}
+
+function evaluateTestScript(script, toolbox) {
+  let sandbox = Cu.Sandbox(window);
+  sandbox.window = window;
+  sandbox.toolbox = toolbox;
+  Cu.evalInSandbox(script, sandbox);
 }
 
 function bindToolboxHandlers() {
