@@ -1680,6 +1680,9 @@ function shouldVerifySignedState(aAddon) {
   return ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
 }
 
+let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
+              .getService(Ci.nsIX509CertDB);
+
 /**
  * Verifies that a zip file's contents are all correctly signed by an
  * AMO-issued certificate
@@ -1694,15 +1697,12 @@ function verifyZipSignedState(aFile, aAddon) {
   if (!shouldVerifySignedState(aAddon))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-               .getService(Ci.nsIX509CertDB);
-
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
   if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
-    certDB.openSignedAppFileAsync(root, aFile, (aRv, aZipReader, aCert) => {
+    gCertDB.openSignedAppFileAsync(root, aFile, (aRv, aZipReader, aCert) => {
       if (aZipReader)
         aZipReader.close();
       resolve(getSignedStatus(aRv, aCert, aAddon.id));
@@ -1724,15 +1724,12 @@ function verifyDirSignedState(aDir, aAddon) {
   if (!shouldVerifySignedState(aAddon))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-               .getService(Ci.nsIX509CertDB);
-
   let root = Ci.nsIX509CertDB.AddonsPublicRoot;
   if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
-    certDB.verifySignedDirectoryAsync(root, aDir, (aRv, aCert) => {
+    gCertDB.verifySignedDirectoryAsync(root, aDir, (aRv, aCert) => {
       resolve(getSignedStatus(aRv, aCert, aAddon.id));
     });
   });
