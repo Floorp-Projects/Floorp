@@ -772,29 +772,49 @@ class GeckoInputConnection
         return super.setSelection(start, end);
     }
 
+    /* package */ void sendKeyEvent(final int action, KeyEvent event) {
+        final Editable editable = getEditable();
+        if (editable == null) {
+            return;
+        }
+
+        final KeyListener keyListener = TextKeyListener.getInstance();
+        event = translateKey(event.getKeyCode(), event);
+
+        // We only let TextKeyListener do UI things on the UI thread.
+        final View v = ThreadUtils.isOnUiThread() ? getView() : null;
+        final int keyCode = event.getKeyCode();
+        final boolean handled;
+
+        if (shouldSkipKeyListener(keyCode, event)) {
+            handled = false;
+        } else if (action == KeyEvent.ACTION_DOWN) {
+            mEditableClient.setSuppressKeyUp(true);
+            handled = keyListener.onKeyDown(v, editable, keyCode, event);
+        } else if (action == KeyEvent.ACTION_UP) {
+            handled = keyListener.onKeyUp(v, editable, keyCode, event);
+        } else {
+            handled = keyListener.onKeyOther(v, editable, event);
+        }
+
+        if (!handled) {
+            mEditableClient.sendKeyEvent(event, action, TextKeyListener.getMetaState(editable));
+        }
+
+        if (action == KeyEvent.ACTION_DOWN) {
+            if (!handled) {
+                // Usually, the down key listener call above adjusts meta states for us.
+                // However, if the call didn't handle the event, we have to manually
+                // adjust meta states so the meta states remain consistent.
+                TextKeyListener.adjustMetaAfterKeypress(editable);
+            }
+            mEditableClient.setSuppressKeyUp(false);
+        }
+    }
+
     @Override
     public boolean sendKeyEvent(KeyEvent event) {
-        // BaseInputConnection.sendKeyEvent() dispatches the key event to the main thread.
-        // In order to ensure events are processed in the proper order, we must block the
-        // IC thread until the main thread finishes processing the key event
-        super.sendKeyEvent(event);
-        final View v = getView();
-        if (v == null) {
-            return false;
-        }
-        final Handler icHandler = mEditableClient.getInputConnectionHandler();
-        final Handler mainHandler = v.getRootView().getHandler();
-        if (icHandler.getLooper() != mainHandler.getLooper()) {
-            // We are on separate IC thread but the event is queued on the main thread;
-            // wait on IC thread until the main thread processes our posted Runnable. At
-            // that point the key event has already been processed.
-            mainHandler.post(new Runnable() {
-                @Override public void run() {
-                    InputThreadUtils.sInstance.endWaitForUiThread();
-                }
-            });
-            InputThreadUtils.sInstance.waitForUiThread(icHandler);
-        }
+        sendKeyEvent(event.getAction(), event);
         return false; // seems to always return false
     }
 
