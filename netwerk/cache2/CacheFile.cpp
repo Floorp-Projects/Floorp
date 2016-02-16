@@ -1146,7 +1146,7 @@ CacheFile::GetChunkLocked(uint32_t aIndex, ECallerType aCaller,
     return NS_OK;
   }
 
-  int64_t off = aIndex * kChunkSize;
+  int64_t off = aIndex * static_cast<int64_t>(kChunkSize);
 
   if (off < mDataSize) {
     // We cannot be here if this is memory only entry since the chunk must exist
@@ -1288,7 +1288,7 @@ CacheFile::PreloadChunks(uint32_t aIndex)
   uint32_t limit = aIndex + mPreloadChunkCount;
 
   for (uint32_t i = aIndex; i < limit; ++i) {
-    int64_t off = i * kChunkSize;
+    int64_t off = i * static_cast<int64_t>(kChunkSize);
 
     if (off >= mDataSize) {
       // This chunk is beyond EOF.
