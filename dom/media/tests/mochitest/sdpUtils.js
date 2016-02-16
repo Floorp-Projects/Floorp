@@ -53,6 +53,10 @@ removeAllRtpMaps: function(sdp) {
   return sdp.replace(/a=rtpmap:.*\r\n/g, "");
 },
 
+reduceAudioMLineToDynamicPtAndOpus: function(sdp) {
+  return sdp.replace(/m=audio .*\r\n/g, "m=audio 9 UDP/TLS/RTP/SAVPF 101 109\r\n");
+},
+
 verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
                     testOptions) {
   info("Examining this SessionDescription: " + JSON.stringify(desc));

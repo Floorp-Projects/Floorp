@@ -538,8 +538,8 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   height: 150px;
 }
 
-.media-wrapper > .local > .local-video,
-.media-wrapper > .focus-stream > .local > .local-video {
+.media-wrapper > .local .local-video,
+.media-wrapper > .focus-stream > .local .local-video {
   width: 100%;
   height: 100%;
   /* Transform is to make the local video act like a mirror, as is the
@@ -555,13 +555,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   overflow: hidden;
 }
 
-.media-wrapper > .remote > .remote-video {
+.media-wrapper > .remote .remote-video {
   object-fit: cover;
   width: 100%;
   height: 100%;
 }
 
-.media-wrapper > .screen > .screen-share-video {
+.media-wrapper > .screen .screen-share-video {
   width: 100%;
   height: 100%;
 }
@@ -690,7 +690,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     max-width: 50%;
   }
 
-  .media-wrapper.receiving-screen-share > .remote > .remote-video {
+  .media-wrapper.receiving-screen-share > .remote .remote-video {
       /* Reset the object-fit for this. */
     object-fit: contain;
   }

@@ -7,7 +7,7 @@
 interface nsIDOMElement;
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(1b9d7d8a-6dd0-11dc-8314-0800200c9a66)]
+[scriptable, uuid(bd3c2662-a988-41ab-8c94-c15ed0e6ac7d)]
 interface nsIAutoCompletePopup : nsISupports
 {
   /*
@@ -47,9 +47,18 @@ interface nsIAutoCompletePopup : nsISupports
   /*
    * Instruct the result view to repaint itself to reflect the most current
    * underlying data
+   *
+   * @param reason - The reason the popup needs to be invalidated, one of the
+   *        INVALIDATE_REASON consts.
    */
-  void invalidate();
-    
+  void invalidate(in unsigned short reason);
+
+  /*
+   * Possible values of invalidate()'s 'reason' argument.
+   */
+  const unsigned short INVALIDATE_REASON_NEW_RESULT = 0;
+  const unsigned short INVALIDATE_REASON_DELETE = 1;
+
   /*
    * Change the selection relative to the current selection and make sure
    * the newly selected row is visible

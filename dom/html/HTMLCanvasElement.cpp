@@ -881,7 +881,8 @@ HTMLCanvasElement::GetContext(JSContext* aCx,
   }
 
   return CanvasRenderingContextHelper::GetContext(aCx, aContextId,
-                                                  aContextOptions, aRv);
+    aContextOptions.isObject() ? aContextOptions : JS::NullHandleValue,
+    aRv);
 }
 
 NS_IMETHODIMP

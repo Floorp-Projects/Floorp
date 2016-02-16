@@ -4,6 +4,7 @@
 /**
  * Tests that the overview graphs share the exact same width and scaling.
  */
+const TIMES_TO_UPDATE = 2;
 function* spawnTest() {
   // This test seems to take a long time to cleanup on Ubuntu VMs.
   requestLongerTimeout(2);
@@ -23,7 +24,7 @@ function* spawnTest() {
   yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
   yield waitUntil(() => PerformanceController.getCurrentRecording().getMemory().length);
   yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
-  yield waitUntil(() => updated > 10);
+  yield waitUntil(() => updated > TIMES_TO_UPDATE);
 
   yield stopRecording(panel);
 

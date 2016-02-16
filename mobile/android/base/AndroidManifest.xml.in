@@ -499,6 +499,9 @@
             android:name="org.mozilla.gecko.dlc.DownloadContentService">
         </service>
 
+        <service
+          android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
+          android:exported="false"/>
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in

@@ -207,9 +207,9 @@ class nsScanner {
        *  
        *  @update  gess 5/12/98
        *  @param   aCopyBuffer is where the scanner buffer will be copied to
-       *  @return  nada
+       *  @return  true if OK or false on OOM
        */
-      void CopyUnusedData(nsString& aCopyBuffer);
+      bool CopyUnusedData(nsString& aCopyBuffer);
 
       /**
        *  Retrieve the name of the file that the scanner is reading from.

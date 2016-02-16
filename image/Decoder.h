@@ -283,9 +283,14 @@ protected:
   /*
    * Internal hooks. Decoder implementations may override these and
    * only these methods.
+   *
+   * BeforeFinishInternal() can be used to detect if decoding is in an
+   * incomplete state, e.g. due to file truncation, in which case it should
+   * call PostDataError().
    */
   virtual void InitInternal();
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) = 0;
+  virtual void BeforeFinishInternal();
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();
 

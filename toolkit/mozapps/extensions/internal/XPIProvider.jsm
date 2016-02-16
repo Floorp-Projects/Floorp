@@ -2649,16 +2649,20 @@ this.XPIProvider = {
       if (!REQUIRE_SIGNING)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this, false);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
-      if (Cu.isModuleLoaded("resource://devtools/client/framework/ToolboxProcess.jsm")) {
-        // If BrowserToolboxProcess is already loaded, set the boolean to true
-        // and do whatever is needed
-        this._toolboxProcessLoaded = true;
-        BrowserToolboxProcess.on("connectionchange",
-                                 this.onDebugConnectionChange.bind(this));
-      }
-      else {
-        // Else, wait for it to load
-        Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+
+      // Cu.isModuleLoaded can fail here for external XUL apps where there is
+      // no chrome.manifest that defines resource://devtools.
+      if (ResProtocolHandler.hasSubstitution("devtools")) {
+        if (Cu.isModuleLoaded("resource://devtools/client/framework/ToolboxProcess.jsm")) {
+          // If BrowserToolboxProcess is already loaded, set the boolean to true
+          // and do whatever is needed
+          this._toolboxProcessLoaded = true;
+          BrowserToolboxProcess.on("connectionchange",
+                                   this.onDebugConnectionChange.bind(this));
+        } else {
+          // Else, wait for it to load
+          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+        }
       }
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
@@ -6538,6 +6542,7 @@ AddonInternal.prototype = {
   sourceURI: null,
   releaseNotesURI: null,
   foreignInstall: false,
+  seen: true,
   skinnable: false,
 
   get selectedLocale() {
@@ -6820,6 +6825,15 @@ function AddonWrapper(aAddon) {
 AddonWrapper.prototype = {
   get __AddonInternal__() {
     return AppConstants.DEBUG ? addonFor(this) : undefined;
+  },
+
+  get seen() {
+    return addonFor(this).seen;
+  },
+
+  markAsSeen: function() {
+    addonFor(this).seen = true;
+    XPIDatabase.saveChanges();
   },
 
   get type() {
