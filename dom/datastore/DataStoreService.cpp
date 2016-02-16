@@ -21,10 +21,10 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMError.h"
-#include "mozilla/dom/indexedDB/IDBCursor.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/IDBCursor.h"
+#include "mozilla/dom/IDBObjectStore.h"
+#include "mozilla/dom/IDBRequest.h"
+#include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/unused.h"
@@ -62,8 +62,6 @@ using mozilla::PrincipalOriginAttributes;
 
 namespace mozilla {
 namespace dom {
-
-using namespace indexedDB;
 
 // This class contains all the information about a DataStore.
 class DataStoreInfo

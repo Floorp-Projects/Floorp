@@ -56,7 +56,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
@@ -1484,6 +1483,5 @@ Observer::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
