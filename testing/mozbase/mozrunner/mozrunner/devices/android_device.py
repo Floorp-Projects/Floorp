@@ -733,9 +733,7 @@ def _get_device_platform(substs):
         pie = '-pie'
     if substs['TARGET_CPU'].startswith('arm'):
         return 'arm%s' % pie
-    if sdk_level and sdk_level >= 21:
-        _log_warning("PIE gdbserver is not yet available for x86: you may not be able to debug on this platform")
-    return 'x86'
+    return 'x86%s' % pie
 
 def _update_gdbinit(substs, path):
     if os.path.exists(path):
