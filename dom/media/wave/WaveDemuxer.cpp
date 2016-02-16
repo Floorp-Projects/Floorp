@@ -143,6 +143,9 @@ WAVTrackDemuxer::Init()
   mSamplesPerSecond = mFmtParser.FmtChunk().SampleRate();
   mChannels = mFmtParser.FmtChunk().Channels();
   mSampleFormat = mFmtParser.FmtChunk().SampleFormat();
+  if (!mSamplesPerSecond || !mChannels || !mSampleFormat) {
+    return false;
+  }
   mSamplesPerChunk = DATA_CHUNK_SIZE * 8 / mChannels / mSampleFormat;
 
   mInfo->mRate = mSamplesPerSecond;
