@@ -20,6 +20,7 @@ add_task(function*() {
   yield testRgbIncrements(view);
   yield testShorthandIncrements(view);
   yield testOddCases(view);
+  yield testZeroValueIncrements(view);
 });
 
 function createDocument() {
@@ -30,6 +31,9 @@ function createDocument() {
     "    padding-top: 0px;" +
     "    color:#000000;" +
     "    background-color: #000000;" +
+    "    background: none;" +
+    "    transition: initial;" +
+    "    z-index: 0;" +
     "  }" +
     "</style>" +
     "<div id=\"test\"></div>";
@@ -49,7 +53,9 @@ function* testMarginIncrements(view) {
     5: {down: true, start: "0px", end: "-1px", selectAll: true},
     6: {down: true, shift: true, start: "0px", end: "-10px", selectAll: true},
     7: {pageUp: true, shift: true, start: "0px", end: "100px", selectAll: true},
-    8: {pageDown: true, shift: true, start: "0px", end: "-100px", selectAll: true}
+    8: {pageDown: true, shift: true, start: "0px", end: "-100px", selectAll: true},
+    9: {start: "0", end: "1px", selectAll: true},
+    10: {down: true, start: "0", end: "-1px", selectAll: true},
   });
 }
 
@@ -68,7 +74,9 @@ function* testVariousUnitIncrements(view) {
     6: {start: "0in", end: "1in", selectAll: true},
     7: {start: "0cm", end: "1cm", selectAll: true},
     8: {start: "0mm", end: "1mm", selectAll: true},
-    9: {start: "0ex", end: "1ex", selectAll: true}
+    9: {start: "0ex", end: "1ex", selectAll: true},
+    10: {start: "0", end: "1px", selectAll: true},
+    11: {down: true, start: "0", end: "-1px", selectAll: true},
   });
 }
 
@@ -132,8 +140,8 @@ function* testOddCases(view) {
   yield runIncrementTest(marginPropEditor, view, {
     1: {start: "98.7%", end: "99.7%", selection: [3, 3]},
     2: {alt: true, start: "98.7%", end: "98.8%", selection: [3, 3]},
-    3: {start: "0", end: "1"},
-    4: {down: true, start: "0", end: "-1"},
+    3: {start: "0", end: "1px"},
+    4: {down: true, start: "0", end: "-1px"},
     5: {start: "'a=-1'", end: "'a=0'", selection: [4, 4]},
     6: {start: "0 -1px", end: "0 0px", selection: [2, 2]},
     7: {start: "url(-1)", end: "url(-1)", selection: [4, 4]},
@@ -143,7 +151,42 @@ function* testOddCases(view) {
     11: {down: true, start: "url('test-1.png')", end: "url('test-2.png')", selection: [9, 11]},
     12: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11, 12]},
     13: {down: true, alt: true, start: "url('test-0.png')", end: "url('test--0.1.png')", selection: [10, 11]},
-    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')", selection: [10, 14]}
+    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')", selection: [10, 14]},
+  });
+}
+
+function* testZeroValueIncrements(view) {
+  info("Testing a valid unit is added when incrementing from 0");
+
+  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  let backgroundPropEditor = idRuleEditor.rule.textProps[4].editor;
+  yield runIncrementTest(backgroundPropEditor, view, {
+    1: { start: "url(test-0.png) no-repeat 0 0",
+         end: "url(test-0.png) no-repeat 1px 0", selection: [26, 26] },
+    2: { start: "url(test-0.png) no-repeat 0 0",
+         end: "url(test-0.png) no-repeat 0 1px", selection: [28, 28] },
+    3: { start: "url(test-0.png) no-repeat center/0",
+         end: "url(test-0.png) no-repeat center/1px", selection: [34, 34] },
+    4: { start: "url(test-0.png) no-repeat 0 0",
+         end: "url(test-1.png) no-repeat 0 0", selection: [10, 10] },
+    5: { start: "linear-gradient(0, red 0, blue 0)",
+         end: "linear-gradient(1deg, red 0, blue 0)", selection: [17, 17] },
+    6: { start: "linear-gradient(1deg, red 0, blue 0)",
+         end: "linear-gradient(1deg, red 1px, blue 0)", selection: [27, 27] },
+    7: { start: "linear-gradient(1deg, red 0, blue 0)",
+         end: "linear-gradient(1deg, red 0, blue 1px)", selection: [35, 35] },
+  });
+
+  let transitionPropEditor = idRuleEditor.rule.textProps[5].editor;
+  yield runIncrementTest(transitionPropEditor, view, {
+    1: { start: "all 0 ease-out", end: "all 1s ease-out", selection: [5, 5] },
+    2: { start: "margin 4s, color 0",
+         end: "margin 4s, color 1s", selection: [18, 18] },
+  });
+
+  let zIndexPropEditor = idRuleEditor.rule.textProps[6].editor;
+  yield runIncrementTest(zIndexPropEditor, view, {
+    1: {start: "0", end: "1", selection: [1, 1]},
   });
 }
 
