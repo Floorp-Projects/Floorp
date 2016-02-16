@@ -1,9 +1,9 @@
-== button-fieldset-1.html button-fieldset-ref.html
+fuzzy-if(skiaContent,1,3) == button-fieldset-1.html button-fieldset-ref.html
 fails-if(B2G||Mulet) == button-fieldset-2.html button-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) == button-fieldset-3.html button-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== button-fieldset-4.html button-fieldset-ref.html
+fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,7) == button-fieldset-3.html button-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(skiaContent,1,7) == button-fieldset-4.html button-fieldset-ref.html
 == button-fieldset-legend-1.html button-fieldset-legend-ref-1.html
-fails-if(B2G||Mulet) == button-fieldset-legend-2.html button-fieldset-legend-ref-2.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) == button-fieldset-legend-3.html button-fieldset-legend-ref-3.html # Initial mulet triage: parity with B2G/B2G Desktop
-== button-fieldset-legend-4.html button-fieldset-legend-ref-4.html
-== button-fieldset-legend-5.html button-fieldset-legend-ref-5.html
+fails-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) == button-fieldset-legend-2.html button-fieldset-legend-ref-2.html # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) == button-fieldset-legend-3.html button-fieldset-legend-ref-3.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(skiaContent,2,9) == button-fieldset-legend-4.html button-fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,2,5) == button-fieldset-legend-5.html button-fieldset-legend-ref-5.html

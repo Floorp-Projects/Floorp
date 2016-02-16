@@ -2,10 +2,10 @@
 == fieldset-disabled.html fieldset-ref.html
 == fieldset-fieldset-1.html fieldset-fieldset-ref.html
 == fieldset-fieldset-2.html fieldset-fieldset-ref.html
-== fieldset-fieldset-3.html fieldset-fieldset-ref.html
-== fieldset-fieldset-4.html fieldset-fieldset-ref.html
+fuzzy-if(skiaContent,1,11) == fieldset-fieldset-3.html fieldset-fieldset-ref.html
+fuzzy-if(skiaContent,1,11) == fieldset-fieldset-4.html fieldset-fieldset-ref.html
 == fieldset-legend-1.html fieldset-legend-ref-1.html
-== fieldset-legend-2.html fieldset-legend-ref-2.html
-== fieldset-legend-3.html fieldset-legend-ref-3.html
-== fieldset-legend-4.html fieldset-legend-ref-4.html
-== fieldset-legend-5.html fieldset-legend-ref-5.html
+fuzzy-if(skiaContent,1,2) == fieldset-legend-2.html fieldset-legend-ref-2.html
+fuzzy-if(skiaContent,2,5) == fieldset-legend-3.html fieldset-legend-ref-3.html
+fuzzy-if(skiaContent,2,9) == fieldset-legend-4.html fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,2,5) == fieldset-legend-5.html fieldset-legend-ref-5.html

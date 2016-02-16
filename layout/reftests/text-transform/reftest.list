@@ -18,8 +18,8 @@ HTTP(..) != graphite-small-caps-1.html graphite-small-caps-1-notref.html
 == uppercase-szlig-1.html uppercase-szlig-ref.html
 # these use DejaVu Sans via @font-face for consistency of results
 skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,250,15) HTTP(..) == all-upper.html all-upper-ref.html # bug 773482, 1140292 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,250,15) HTTP(..) == all-lower.html all-lower-ref.html # bug 773482, 1140292 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) HTTP(..) == all-title.html all-title-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,250,15) fuzzy-if(skiaContent,1,1800) HTTP(..) == all-lower.html all-lower-ref.html # bug 773482, 1140292 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,80) HTTP(..) == all-title.html all-title-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == smtp-upper.html smtp-upper-ref.html
 == smtp-lower.html smtp-lower-ref.html
 == smtp-title.html smtp-title-ref.html

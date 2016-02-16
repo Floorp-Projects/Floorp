@@ -58,11 +58,11 @@ random == rotate-1f.html rotate-1-ref.html
 # equivalent values.
 == percent-1a.html percent-1-ref.html
 == percent-1b.html percent-1-ref.html
-== percent-1c.html percent-1-ref.html
-== percent-1d.html percent-1-ref.html
-== percent-1e.html percent-1-ref.html
-== percent-1f.html percent-1-ref.html
-== percent-1g.html percent-1-ref.html
+fuzzy-if(skiaContent,1,80) == percent-1c.html percent-1-ref.html
+fuzzy-if(skiaContent,1,80) == percent-1d.html percent-1-ref.html
+fuzzy-if(skiaContent,1,80) == percent-1e.html percent-1-ref.html
+fuzzy-if(skiaContent,1,80) == percent-1f.html percent-1-ref.html
+fuzzy-if(skiaContent,1,80) == percent-1g.html percent-1-ref.html
 # Transformed elements are abs-pos and fixed-pos containing blocks.
 == abspos-1a.html abspos-1-ref.html
 == abspos-1b.html abspos-1-ref.html
@@ -76,31 +76,31 @@ random == rotate-1f.html rotate-1-ref.html
 == origin-name-1b.html origin-name-1-ref.html
 == origin-name-2a.html origin-name-2-ref.html
 == origin-name-2b.html origin-name-2-ref.html
-== origin-name-2c.html origin-name-2-ref.html
+fuzzy-if(skiaContent,1,350) == origin-name-2c.html origin-name-2-ref.html
 == origin-name-3a.html origin-name-3-ref.html
 == origin-name-3b.html origin-name-3-ref.html
 # Snapping still applies after 90 degree rotations.
 == snapping-1.html snapping-1-ref.html
 # SVG effects should work on transforms.
 == transform-svg-1a.xhtml transform-svg-1-ref.xhtml
-== transform-svg-2a.xhtml transform-svg-2-ref.xhtml
+fuzzy-if(skiaContent,2,500) == transform-svg-2a.xhtml transform-svg-2-ref.xhtml
 != transform-svg-2a.xhtml transform-svg-2-fail.xhtml
 # skew should allow a mix of one and two parameters.
 == skew-1a.html skew-1-ref.html
-== skew-1b.html skew-1-ref.html
+fuzzy-if(skiaContent,1,80) == skew-1b.html skew-1-ref.html
 == skew-2a.html skew-2-ref.html
 # matrix with values equal to other transforms should behave indistinguishably
 == matrix-1a.html matrix-1-ref.html
 == matrix-2a.html matrix-2-ref.html
 == matrix-3a.html matrix-3-ref.html
 == matrix-4a.html matrix-4-ref.html
-== matrix-5a.html matrix-5-ref.html
-== matrix-6a.html matrix-6-ref.html
+fuzzy-if(skiaContent,1,120) == matrix-5a.html matrix-5-ref.html
+fuzzy-if(skiaContent,1,110) == matrix-6a.html matrix-6-ref.html
 == matrix-7a.html matrix-7-ref.html
 # ensure matrix 3d does not break us - should do nothing
 == matrix3d-1.html matrix3d-1-ref.html
 # Test that complex transform can be reversed
-skip-if(B2G||Mulet) == stresstest-1.html stresstest-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) == stresstest-1.html stresstest-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 # Test scale transforms
 == scalex-1.html scalex-1-ref.html
 == scaley-1.html scaley-1-ref.html

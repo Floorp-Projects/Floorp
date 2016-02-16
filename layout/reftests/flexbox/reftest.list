@@ -101,7 +101,7 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox in an iframe that gets resized.
-skip-if(B2G||Mulet) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 
 # Tests for flexbox styling on things that don't support it
 == flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg

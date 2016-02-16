@@ -12,9 +12,9 @@
 # The following tests will fail if the platform does not have native
 # theme support (which all platforms should have).
 fails-if(!nativeThemePref) != text-input-native.html text-input-nonnative.html
-== text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
+fuzzy-if(skiaContent,2,88) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != textarea-native.html textarea-nonnative.html
-== textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+fuzzy-if(skiaContent,2,53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != button-native.html button-nonnative.html
 == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref&&!Android) != combobox-native.html combobox-nonnative.html
