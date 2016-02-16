@@ -23,6 +23,9 @@ const ExtensionIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
+const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
+const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
+
 exports.AddonsTab = React.createClass({
   displayName: "AddonsTab",
 
@@ -35,15 +38,21 @@ exports.AddonsTab = React.createClass({
 
   componentDidMount() {
     AddonManager.addAddonListener(this);
-    Services.prefs.addObserver("devtools.chrome.enabled",
+
+    Services.prefs.addObserver(CHROME_ENABLED_PREF,
       this.updateDebugStatus, false);
+    Services.prefs.addObserver(REMOTE_ENABLED_PREF,
+      this.updateDebugStatus, false);
+
     this.updateDebugStatus();
     this.updateAddonsList();
   },
 
   componentWillUnmount() {
     AddonManager.removeAddonListener(this);
-    Services.prefs.removeObserver("devtools.chrome.enabled",
+    Services.prefs.removeObserver(CHROME_ENABLED_PREF,
+      this.updateDebugStatus);
+    Services.prefs.removeObserver(REMOTE_ENABLED_PREF,
       this.updateDebugStatus);
   },
 
@@ -68,9 +77,11 @@ exports.AddonsTab = React.createClass({
   },
 
   updateDebugStatus() {
-    this.setState({
-      debugDisabled: !Services.prefs.getBoolPref("devtools.chrome.enabled")
-    });
+    let debugDisabled =
+      !Services.prefs.getBoolPref(CHROME_ENABLED_PREF) ||
+      !Services.prefs.getBoolPref(REMOTE_ENABLED_PREF);
+
+    this.setState({ debugDisabled });
   },
 
   updateAddonsList() {
