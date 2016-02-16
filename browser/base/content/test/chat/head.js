@@ -28,7 +28,13 @@ function promiseOpenChat(url, mode, focus, buttonSet = null) {
       deferred.resolve(chatbox);
     }, true);
   }
-  let chatbox = Chat.open(null, origin, title, url, mode, focus, callback);
+  let chatbox = Chat.open(null, {
+    origin: origin,
+    title: title,
+    url: url,
+    mode: mode,
+    focus: focus
+  }, callback);
   if (buttonSet) {
     chatbox.setAttribute("buttonSet", buttonSet);
   }
@@ -42,7 +48,12 @@ function promiseOpenChatCallback(url, mode) {
   let title = origin;
   let deferred = Promise.defer();
   let callback = deferred.resolve;
-  Chat.open(null, origin, title, url, mode, undefined, callback);
+  Chat.open(null, {
+    origin: origin,
+    title: title,
+    url: url,
+    mode: mode
+  }, callback);
   return deferred.promise;
 }
 
