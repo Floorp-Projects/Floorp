@@ -17,7 +17,6 @@ interface GeckoEditableClient {
     Editable getEditable();
     void setBatchMode(boolean isBatchMode);
     void setSuppressKeyUp(boolean suppress);
-    Handler getInputConnectionHandler();
-    boolean setInputConnectionHandler(Handler handler);
+    Handler setInputConnectionHandler(Handler handler);
     void postToInputConnection(Runnable runnable);
 }
