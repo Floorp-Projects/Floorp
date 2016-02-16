@@ -63,7 +63,7 @@ nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
-  nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozProgressBar;
+  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::mozProgressBar;
   RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mBarDiv->AsElement());
@@ -289,7 +289,7 @@ nsProgressFrame::ShouldUseNativeStyle() const
 Element*
 nsProgressFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
-  if (aType == nsCSSPseudoElements::ePseudo_mozProgressBar) {
+  if (aType == CSSPseudoElementType::mozProgressBar) {
     return mBarDiv;
   }
 

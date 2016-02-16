@@ -334,7 +334,7 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
   // non-pseudo-element anonymous children, then we'll need to add a branch
   // that calls ResolveStyleFor((*aResult)->AsElement(), aParentContext)") to
   // set newStyleContext.
-  NS_ASSERTION(aPseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement,
+  NS_ASSERTION(aPseudoType != CSSPseudoElementType::NotPseudo,
                "Expecting anonymous children to all be pseudo-elements");
   // Associate the pseudo-element with the anonymous child
   RefPtr<nsStyleContext> newStyleContext =
@@ -347,8 +347,8 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown ||
-      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+  if (aPseudoType == CSSPseudoElementType::mozNumberSpinDown ||
+      aPseudoType == CSSPseudoElementType::mozNumberSpinUp) {
     resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
                            NS_LITERAL_STRING("button"), false);
   }
@@ -380,7 +380,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = MakeAnonymousElement(getter_AddRefs(mOuterWrapper),
                             aElements,
                             nsGkAtoms::div,
-                            nsCSSPseudoElements::ePseudo_mozNumberWrapper,
+                            CSSPseudoElementType::mozNumberWrapper,
                             mStyleContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -390,7 +390,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = MakeAnonymousElement(getter_AddRefs(mTextField),
                             outerWrapperCI.mChildren,
                             nsGkAtoms::input,
-                            nsCSSPseudoElements::ePseudo_mozNumberText,
+                            CSSPseudoElementType::mozNumberText,
                             outerWrapperCI.mStyleContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -438,7 +438,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = MakeAnonymousElement(getter_AddRefs(mSpinBox),
                             outerWrapperCI.mChildren,
                             nsGkAtoms::div,
-                            nsCSSPseudoElements::ePseudo_mozNumberSpinBox,
+                            CSSPseudoElementType::mozNumberSpinBox,
                             outerWrapperCI.mStyleContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -448,7 +448,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = MakeAnonymousElement(getter_AddRefs(mSpinUp),
                             spinBoxCI.mChildren,
                             nsGkAtoms::div,
-                            nsCSSPseudoElements::ePseudo_mozNumberSpinUp,
+                            CSSPseudoElementType::mozNumberSpinUp,
                             spinBoxCI.mStyleContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -456,7 +456,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = MakeAnonymousElement(getter_AddRefs(mSpinDown),
                             spinBoxCI.mChildren,
                             nsGkAtoms::div,
-                            nsCSSPseudoElements::ePseudo_mozNumberSpinDown,
+                            CSSPseudoElementType::mozNumberSpinDown,
                             spinBoxCI.mStyleContext);
 
   SyncDisabledState();
@@ -826,25 +826,25 @@ nsNumberControlFrame::AnonTextControlIsEmpty()
 Element*
 nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
-  if (aType == nsCSSPseudoElements::ePseudo_mozNumberWrapper) {
+  if (aType == CSSPseudoElementType::mozNumberWrapper) {
     return mOuterWrapper;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozNumberText) {
+  if (aType == CSSPseudoElementType::mozNumberText) {
     return mTextField;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox) {
+  if (aType == CSSPseudoElementType::mozNumberSpinBox) {
     // Might be null.
     return mSpinBox;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+  if (aType == CSSPseudoElementType::mozNumberSpinUp) {
     // Might be null.
     return mSpinUp;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown) {
+  if (aType == CSSPseudoElementType::mozNumberSpinDown) {
     // Might be null.
     return mSpinDown;
   }

@@ -241,7 +241,7 @@ nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
   // If the animation targets a pseudo-element, we don't dispatch
   // notifications for it.  (In the future we will have PseudoElement
   // objects we can use as the target of the notifications.)
-  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+  if (pseudoType != CSSPseudoElementType::NotPseudo) {
     return nullptr;
   }
 

@@ -891,7 +891,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 {
   NS_PRECONDITION((!aPseudoTag &&
                    aPseudoType ==
-                     nsCSSPseudoElements::ePseudo_NotPseudoElement) ||
+                     CSSPseudoElementType::NotPseudo) ||
                   (aPseudoTag &&
                    nsCSSPseudoElements::GetPseudoType(aPseudoTag) ==
                      aPseudoType),
@@ -1016,7 +1016,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
 
   if (aElementForAnimation &&
       aElementForAnimation->IsHTMLElement(nsGkAtoms::body) &&
-      aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement &&
+      aPseudoType == CSSPseudoElementType::NotPseudo &&
       PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
     nsIDocument* doc = aElementForAnimation->GetCurrentDoc();
     if (doc && doc->GetBodyElement() == aElementForAnimation) {
@@ -1395,7 +1395,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   }
 
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
-                    nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                    nullptr, CSSPseudoElementType::NotPseudo,
                     aElement, flags);
 }
 
@@ -1414,7 +1414,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
-                    nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                    nullptr, CSSPseudoElementType::NotPseudo,
                     nullptr, eNoFlags);
 }
 
@@ -1510,7 +1510,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   MOZ_ASSERT(!aPseudoElement ==
-             (aPseudoType >= nsCSSPseudoElements::ePseudo_PseudoElementCount ||
+             (aPseudoType >= CSSPseudoElementType::Count ||
               !(nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(aPseudoType) ||
                 nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudoType))),
              "should have aPseudoElement only for certain pseudo elements");
@@ -1565,9 +1565,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
     if (doReplace) {
       switch (level->mLevel) {
         case SheetType::Animation: {
-          if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-              aPseudoType == nsCSSPseudoElements::ePseudo_before ||
-              aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+          if (aPseudoType == CSSPseudoElementType::NotPseudo ||
+              aPseudoType == CSSPseudoElementType::before ||
+              aPseudoType == CSSPseudoElementType::after) {
             nsIStyleRule* rule = PresContext()->EffectCompositor()->
               GetAnimationRule(aElement, aPseudoType,
                                EffectCompositor::CascadeLevel::Animations);
@@ -1579,9 +1579,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case SheetType::Transition: {
-          if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-              aPseudoType == nsCSSPseudoElements::ePseudo_before ||
-              aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+          if (aPseudoType == CSSPseudoElementType::NotPseudo ||
+              aPseudoType == CSSPseudoElementType::before ||
+              aPseudoType == CSSPseudoElementType::after) {
             nsIStyleRule* rule = PresContext()->EffectCompositor()->
               GetAnimationRule(aElement, aPseudoType,
                                EffectCompositor::CascadeLevel::Transitions);
@@ -1597,7 +1597,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
             static_cast<SVGAttrAnimationRuleProcessor*>(
               mRuleProcessors[SheetType::SVGAttrAnimation].get());
           if (ruleProcessor &&
-              aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+              aPseudoType == CSSPseudoElementType::NotPseudo) {
             ruleProcessor->ElementRulesMatching(aElement, &ruleWalker);
           }
           break;
@@ -1611,12 +1611,12 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
             if (ruleProcessor) {
               lastScopedRN = ruleWalker.CurrentNode();
               if (aPseudoType ==
-                    nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+                    CSSPseudoElementType::NotPseudo) {
                 ruleProcessor->ElementRulesMatching(PresContext(),
                                                     aElement,
                                                     &ruleWalker);
               } else if (aPseudoType <
-                           nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+                           CSSPseudoElementType::Count &&
                          nsCSSPseudoElements::
                            PseudoElementSupportsStyleAttribute(aPseudoType)) {
                 ruleProcessor->PseudoElementRulesMatching(aPseudoElement,
@@ -1709,9 +1709,9 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
   nsCSSPseudoElements::Type pseudoType = aOldStyleContext->GetPseudoType();
   Element* elementForAnimation = nullptr;
   if (!(aFlags & eSkipStartingAnimations) &&
-      (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-       pseudoType == nsCSSPseudoElements::ePseudo_before ||
-       pseudoType == nsCSSPseudoElements::ePseudo_after)) {
+      (pseudoType == CSSPseudoElementType::NotPseudo ||
+       pseudoType == CSSPseudoElementType::before ||
+       pseudoType == CSSPseudoElementType::after)) {
     // We want to compute a correct elementForAnimation to pass in
     // because at this point the parameter is more than just the element
     // for animation; it's also used for the SetBodyTextColor call when
@@ -1728,11 +1728,10 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
 #ifdef DEBUG
     {
       nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(elementForAnimation);
-      NS_ASSERTION(pseudoType ==
-                     nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+      NS_ASSERTION(pseudoType == CSSPseudoElementType::NotPseudo ||
                    !styleFrame ||
                    styleFrame->StyleContext()->GetPseudoType() ==
-                     nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                     CSSPseudoElementType::NotPseudo,
                    "aElement should be the element and not the pseudo-element");
     }
 #endif
@@ -1759,9 +1758,9 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
 #ifdef DEBUG
   nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
 #endif
-  MOZ_ASSERT(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-             pseudoType == nsCSSPseudoElements::ePseudo_before ||
-             pseudoType == nsCSSPseudoElements::ePseudo_after,
+  MOZ_ASSERT(pseudoType == CSSPseudoElementType::NotPseudo ||
+             pseudoType == CSSPseudoElementType::before ||
+             pseudoType == CSSPseudoElementType::after,
              "unexpected type for animations");
   RestyleManager* restyleManager = PresContext()->RestyleManager();
 
@@ -1783,7 +1782,7 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
                     nsCSSAnonBoxes::mozNonElement,
-                    nsCSSPseudoElements::ePseudo_AnonBox, nullptr,
+                    CSSPseudoElementType::AnonBox, nullptr,
                     eNoFlags);
 }
 
@@ -1793,11 +1792,11 @@ nsStyleSet::WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
 {
   // This needs to match GetPseudoRestriction in nsRuleNode.cpp.
   aRuleWalker->SetLevel(SheetType::Agent, false, false);
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_firstLetter)
+  if (aPseudoType == CSSPseudoElementType::firstLetter)
     aRuleWalker->Forward(mFirstLetterRule);
-  else if (aPseudoType == nsCSSPseudoElements::ePseudo_firstLine)
+  else if (aPseudoType == CSSPseudoElementType::firstLine)
     aRuleWalker->Forward(mFirstLineRule);
-  else if (aPseudoType == nsCSSPseudoElements::ePseudo_mozPlaceholder)
+  else if (aPseudoType == CSSPseudoElementType::mozPlaceholder)
     aRuleWalker->Forward(mPlaceholderRule);
 }
 
@@ -1817,7 +1816,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
-  NS_ASSERTION(aType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
+  NS_ASSERTION(aType < CSSPseudoElementType::Count,
                "must have pseudo element type");
   NS_ASSERTION(aParentElement, "Must have parent element");
 
@@ -1847,8 +1846,8 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   // For pseudos, |data.IsLink()| being true means that
   // our parent node is a link.
   uint32_t flags = eNoFlags;
-  if (aType == nsCSSPseudoElements::ePseudo_before ||
-      aType == nsCSSPseudoElements::ePseudo_after) {
+  if (aType == CSSPseudoElementType::before ||
+      aType == CSSPseudoElementType::after) {
     flags |= eDoAnimation;
   } else {
     // Flex and grid containers don't expect to have any pseudo-element children
@@ -1884,7 +1883,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
-  NS_ASSERTION(aType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
+  NS_ASSERTION(aType < CSSPseudoElementType::Count,
                "must have pseudo element type");
   NS_ASSERTION(aParentElement, "aParentElement must not be null");
 
@@ -1919,8 +1918,8 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   // For pseudos, |data.IsLink()| being true means that
   // our parent node is a link.
   uint32_t flags = eNoFlags;
-  if (aType == nsCSSPseudoElements::ePseudo_before ||
-      aType == nsCSSPseudoElements::ePseudo_after) {
+  if (aType == CSSPseudoElementType::before ||
+      aType == CSSPseudoElementType::after) {
     flags |= eDoAnimation;
   } else {
     // Flex and grid containers don't expect to have any pseudo-element children
@@ -1995,7 +1994,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
-                    aPseudoTag, nsCSSPseudoElements::ePseudo_AnonBox,
+                    aPseudoTag, CSSPseudoElementType::AnonBox,
                     nullptr, aFlags);
 }
 
@@ -2035,7 +2034,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
                     // For pseudos, |data.IsLink()| being true means that
                     // our parent node is a link.
-                    aPseudoTag, nsCSSPseudoElements::ePseudo_XULTree,
+                    aPseudoTag, CSSPseudoElementType::XULTree,
                     nullptr, eNoFlags);
 }
 #endif
@@ -2294,9 +2293,9 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
     }
   }
 
-  if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-      pseudoType == nsCSSPseudoElements::ePseudo_before ||
-      pseudoType == nsCSSPseudoElements::ePseudo_after) {
+  if (pseudoType == CSSPseudoElementType::NotPseudo ||
+      pseudoType == CSSPseudoElementType::before ||
+      pseudoType == CSSPseudoElementType::after) {
     flags |= eDoAnimation;
   }
 

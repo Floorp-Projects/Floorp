@@ -315,10 +315,10 @@ nsCSSSelector::nsCSSSelector(void)
     mNext(nullptr),
     mNameSpace(kNameSpaceID_Unknown),
     mOperator(0),
-    mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
+    mPseudoType(static_cast<int16_t>(CSSPseudoElementType::NotPseudo))
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
-  static_assert(nsCSSPseudoElements::ePseudo_MAX < INT16_MAX,
+  static_assert(static_cast<int16_t>(CSSPseudoElementType::MAX) < INT16_MAX,
                 "nsCSSPseudoElements::Type values overflow mPseudoType");
 }
 
@@ -492,7 +492,7 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
 
 #ifdef MOZ_XUL
   MOZ_ASSERT(!(IsPseudoElement() &&
-               PseudoType() != nsCSSPseudoElements::ePseudo_XULTree &&
+               PseudoType() != CSSPseudoElementType::XULTree &&
                mClassList),
              "If non-XUL-tree pseudo-elements can have class selectors "
              "after them, specificity calculation must be updated");
@@ -517,7 +517,7 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
 #ifdef MOZ_XUL
   // XUL tree pseudo-elements abuse mClassList to store some private
   // data; ignore that.
-  if (PseudoType() == nsCSSPseudoElements::ePseudo_XULTree) {
+  if (PseudoType() == CSSPseudoElementType::XULTree) {
     list = nullptr;
   }
 #endif

@@ -2535,7 +2535,7 @@ LookupStyleContext(dom::Element* aElement,
   }
 
   nsIAtom* pseudo =
-    aPseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount ?
+    aPseudoType < CSSPseudoElementType::Count ?
     nsCSSPseudoElements::GetPseudoAtom(aPseudoType) : nullptr;
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, pseudo, shell);
 }

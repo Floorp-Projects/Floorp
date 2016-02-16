@@ -6897,9 +6897,9 @@ nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
 {
   nsIPresShell* shell = PresContext()->PresShell();
 
-  nsCSSPseudoElements::Type pseudoType = aCreateBulletList ?
-    nsCSSPseudoElements::ePseudo_mozListBullet :
-    nsCSSPseudoElements::ePseudo_mozListNumber;
+  CSSPseudoElementType pseudoType = aCreateBulletList ?
+    CSSPseudoElementType::mozListBullet :
+    CSSPseudoElementType::mozListNumber;
 
   nsStyleContext* parentStyle =
     CorrectStyleParentFrame(this,
