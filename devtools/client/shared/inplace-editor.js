@@ -448,11 +448,19 @@ InplaceEditor.prototype = {
   _incrementCSSValue: function(value, increment, selStart, selEnd) {
     let range = this._parseCSSValue(value, selStart);
     let type = (range && range.type) || "";
-    let rawValue = (range ? value.substring(range.start, range.end) : "");
-    let incrementedValue = null, selection;
+    let rawValue = range ? value.substring(range.start, range.end) : "";
+    let preRawValue = range ? value.substr(0, range.start) : "";
+    let postRawValue = range ? value.substr(range.end) : "";
+    let info;
 
+    let incrementedValue = null, selection;
     if (type === "num") {
-      let newValue = this._incrementRawValue(rawValue, increment);
+      if (rawValue == "0") {
+        info = {};
+        info.units = this._findCompatibleUnit(preRawValue, postRawValue);
+      }
+
+      let newValue = this._incrementRawValue(rawValue, increment, info);
       if (newValue !== null) {
         incrementedValue = newValue;
         selection = [0, incrementedValue.length];
@@ -467,7 +475,6 @@ InplaceEditor.prototype = {
         selection = newValue.selection;
       }
     } else {
-      let info;
       if (type === "rgb" || type === "hsl") {
         info = {};
         let part = value.substring(range.start, selStart).split(",").length - 1;
@@ -496,14 +503,40 @@ InplaceEditor.prototype = {
       return null;
     }
 
-    let preRawValue = value.substr(0, range.start);
-    let postRawValue = value.substr(range.end);
-
     return {
       value: preRawValue + incrementedValue + postRawValue,
       start: range.start + selection[0],
       end: range.start + selection[1]
     };
+  },
+
+  /**
+   * Find a compatible unit to use for a CSS number value inserted between the
+   * provided beforeValue and afterValue. The compatible unit will be picked
+   * from a selection of default units corresponding to supported CSS value
+   * dimensions (distance, angle, duration).
+   *
+   * @param {String} beforeValue
+   *        The string preceeding the number value in the current property
+   *        value.
+   * @param {String} afterValue
+   *        The string following the number value in the current property value.
+   * @return {String} a valid unit that can be used for this number value or
+   *         empty string if no match could be found.
+   */
+  _findCompatibleUnit: function(beforeValue, afterValue) {
+    if (!this.property || !this.property.name) {
+      return "";
+    }
+
+    let units = ["px", "deg", "s"];
+    for (let unit of units) {
+      let value = beforeValue + "1" + unit + afterValue;
+      if (domUtils.cssPropertyIsValid(this.property.name, value)) {
+        return unit;
+      }
+    }
+    return "";
   },
 
   /**
@@ -641,7 +674,11 @@ InplaceEditor.prototype = {
     }
 
     let number = /\d+(\.\d+)?/.exec(rawValue);
+
     let units = rawValue.substr(number.index + number[0].length);
+    if (info && "units" in info) {
+      units = info.units;
+    }
 
     // avoid rounding errors
     let newValue = Math.round((num + increment) * 1000) / 1000;

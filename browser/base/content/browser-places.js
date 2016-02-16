@@ -1347,7 +1347,7 @@ var BookmarkingUI = {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.excludeQueries = true;
     options.queryType = options.QUERY_TYPE_BOOKMARKS;
-    options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+    options.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
     options.maxResults = kMaxResults;
     let query = PlacesUtils.history.getNewQuery();
 
@@ -1605,6 +1605,10 @@ var BookmarkingUI = {
   },
 
   onMainMenuPopupShowing: function BUI_onMainMenuPopupShowing(event) {
+    // Don't handle events for submenus.
+    if (event.target != event.currentTarget)
+      return;
+
     this._updateBookmarkPageMenuItem();
     PlacesCommandHook.updateBookmarkAllTabsCommand();
     this._updateRecentBookmarks(document.getElementById("menu_recentBookmarks"));
