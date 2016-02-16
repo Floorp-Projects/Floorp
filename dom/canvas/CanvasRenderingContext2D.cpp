@@ -4913,6 +4913,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+  EnsureTarget();
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
