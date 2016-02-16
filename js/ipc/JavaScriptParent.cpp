@@ -15,6 +15,7 @@
 #include "js/HeapAPI.h"
 #include "xpcprivate.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Telemetry.h"
 
 using namespace js;
 using namespace JS;
@@ -74,6 +75,7 @@ JavaScriptParent::allowMessage(JSContext* cx)
         if (jsGlobal) {
             JSAutoCompartment ac(cx, jsGlobal);
             if (!JS::AddonIdOfObject(jsGlobal) && !xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
+                Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
                 JS_ReportError(cx, "unsafe CPOW usage forbidden");
                 return false;
             }

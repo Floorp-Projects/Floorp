@@ -34,6 +34,14 @@
     "keyed": true,
     "description": "Reasons why add-on shims were used, keyed by add-on ID."
   },
+  "BROWSER_SHIM_USAGE_BLOCKED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Counts the number of times a CPOW shim was blocked from being created by browser code.",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1245901],
+    "alert_emails": ["benjamin@smedbergs.us"]
+  },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
     "expires_in_version": "never",
     "kind": "boolean",
