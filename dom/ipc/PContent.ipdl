@@ -1020,6 +1020,9 @@ parent:
 
     sync GetGraphicsFeatureStatus(int32_t aFeature) returns (int32_t aStatus, bool aSuccess);
 
+    // Graphics errors
+    async GraphicsError(nsCString aError);
+
     // Driver crash guards. aGuardType must be a member of CrashGuardType.
     sync BeginDriverCrashGuard(uint32_t aGuardType) returns (bool crashDetected);
     sync EndDriverCrashGuard(uint32_t aGuardType);
