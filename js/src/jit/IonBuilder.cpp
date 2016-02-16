@@ -4862,6 +4862,10 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
     if (actualOp == JSOP_POS)
         return true;
 
+    // FIXME: The JSOP_BITNOT path doesn't track optimizations yet.
+    if (actualOp != JSOP_BITNOT)
+        trackOptimizationAttempt(TrackedStrategy::BinaryArith_SharedCache);
+
     MInstruction* stub = nullptr;
     switch (actualOp) {
       case JSOP_NEG:
@@ -4877,7 +4881,6 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
-        trackOptimizationAttempt(TrackedStrategy::BinaryArith_SharedCache);
         stub = MBinarySharedStub::New(alloc(), left, right);
         break;
       default:
