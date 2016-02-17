@@ -199,9 +199,10 @@ function setPassword()
     success = true;
   }
 
-  if (success && params)
+  if (success && params) {
     // Return value 1 means "successfully executed ok"
     params.SetInt(1, 1);
+  }
 
   // Terminate dialog
   return success;
