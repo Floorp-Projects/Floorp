@@ -435,6 +435,380 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     rshiftPtr(imm, dest.reg);
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    cmp32(lhs, rhs);
+    B(label, cond);
+}
+
+template <class L>
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm, L label)
+{
+    cmp32(lhs, imm);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    MOZ_ASSERT(scratch != rhs);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Imm32 imm, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    load32(lhs, scratch);
+    branch32(cond, scratch, imm, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(ImmPtr(lhs.addr), scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(ImmPtr(lhs.addr), scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.base);
+    MOZ_ASSERT(scratch32.asUnsized() != lhs.index);
+    doBaseIndex(scratch32, lhs, vixl::LDR_w);
+    branch32(cond, scratch32.asUnsized(), rhs, label);
+}
+
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
+{
+    // since rhs is an operand, do the compare backwards
+    Cmp(ARMRegister(rhs, 32), lhs);
+    B(label, Assembler::InvertCmpCondition(cond));
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
+{
+    ARMRegister l = lhs.reg();
+    Cmp(l, Operand(rhs.value));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    movePtr(lhs, scratch);
+    branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs);
+    movePtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label)
+{
+    cmpPtr(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch1_64 = temps.AcquireX();
+    const ARMRegister scratch2_64 = temps.AcquireX();
+    MOZ_ASSERT(scratch1_64.asUnsized() != lhs.base);
+    MOZ_ASSERT(scratch2_64.asUnsized() != lhs.base);
+
+    movePtr(rhs, scratch1_64.asUnsized());
+    loadPtr(lhs, scratch2_64.asUnsized());
+    branchPtr(cond, scratch2_64.asUnsized(), scratch1_64.asUnsized(), label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != rhs);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    if (rhs != scratch)
+        movePtr(rhs, scratch);
+    // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
+    rshiftPtr(Imm32(1), scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
+MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                            Label* label)
+{
+    compareFloat(cond, lhs, rhs);
+    switch (cond) {
+      case DoubleNotEqual: {
+        Label unordered;
+        // not equal *and* ordered
+        branch(Overflow, &unordered);
+        branch(NotEqual, label);
+        bind(&unordered);
+        break;
+      }
+      case DoubleEqualOrUnordered:
+        branch(Overflow, label);
+        branch(Equal, label);
+        break;
+      default:
+        branch(Condition(cond), label);
+    }
+}
+
+void
+MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+
+    ARMFPRegister src32(src, 32);
+    ARMRegister dest64(dest, 64);
+
+    MOZ_ASSERT(!scratch64.Is(dest64));
+
+    Fcvtzs(dest64, src32);
+    Add(scratch64, dest64, Operand(0x7fffffffffffffff));
+    Cmn(scratch64, 3);
+    B(fail, Assembler::Above);
+    And(dest64, dest64, Operand(0xffffffff));
+}
+
+void
+MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label)
+{
+    compareDouble(cond, lhs, rhs);
+    switch (cond) {
+      case DoubleNotEqual: {
+        Label unordered;
+        // not equal *and* ordered
+        branch(Overflow, &unordered);
+        branch(NotEqual, label);
+        bind(&unordered);
+        break;
+      }
+      case DoubleEqualOrUnordered:
+        branch(Overflow, label);
+        branch(Equal, label);
+        break;
+      default:
+        branch(Condition(cond), label);
+    }
+}
+
+void
+MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+
+    // An out of range integer will be saturated to the destination size.
+    ARMFPRegister src64(src, 64);
+    ARMRegister dest64(dest, 64);
+
+    MOZ_ASSERT(!scratch64.Is(dest64));
+
+    Fcvtzs(dest64, src64);
+    Add(scratch64, dest64, Operand(0x7fffffffffffffff));
+    Cmn(scratch64, 3);
+    B(fail, Assembler::Above);
+    And(dest64, dest64, Operand(0xffffffff));
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    // x86 prefers |test foo, foo| to |cmp foo, #0|.
+    // Convert the former to the latter for ARM.
+    if (lhs == rhs && (cond == Zero || cond == NonZero))
+        cmp32(lhs, Imm32(0));
+    else
+        test32(lhs, rhs);
+    B(label, cond);
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    test32(lhs, rhs);
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    load32(lhs, scratch);
+    branchTest32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    load32(lhs, scratch);
+    branchTest32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    Tst(ARMRegister(lhs, 64), Operand(rhs.value));
+    B(label, cond);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(scratch != lhs.base);
+    loadPtr(lhs, scratch);
+    branchTestPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                             Label* label)
+{
+    branchTestPtr(cond, lhs.reg, rhs.reg, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -479,6 +853,27 @@ void
 MacroAssemblerCompat::andStackPtrTo(T t)
 {
     asMasm().andPtr(getStackPointer(), t);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchStackPtr(Condition cond, T rhs, Label* label)
+{
+    asMasm().branchPtr(cond, getStackPointer(), rhs, label);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchStackPtrRhs(Condition cond, T lhs, Label* label)
+{
+    asMasm().branchPtr(cond, lhs, getStackPointer(), label);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::branchTestStackPtr(Condition cond, T t, Label* label)
+{
+    asMasm().branchTestPtr(cond, getStackPointer(), t, label);
 }
 
 } // namespace jit

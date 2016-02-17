@@ -66,6 +66,7 @@ interface nsISelectionController : nsISelectionDisplay
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
    const short SCROLL_CENTER_VERTICALLY = 1<<4;
    const short SCROLL_OVERFLOW_HIDDEN = 1<<5;
+   const short SCROLL_FOR_CARET_MOVE = 1<<6;
 
    /**
    * ScrollSelectionIntoView scrolls a region of the selection,
@@ -81,6 +82,9 @@ interface nsISelectionController : nsISelectionDisplay
    * into view.
    * SCROLL_OVERFLOW_HIDDEN: if set, scrolls even if the overflow is specified
    * as hidden.
+   * SCROLL_FOR_CARET_MOVE: set to indicate whether scrolling is in response
+   * to the caret being moved. Does not affect behavior (used for telemetry
+   * purposes only).
    *
    * Note that if isSynchronous is true, then this might flush the pending
    * reflow. It's dangerous for some objects. See bug 418470 comment 12.
@@ -106,7 +110,7 @@ interface nsISelectionController : nsISelectionDisplay
 
    /**
    * Set the caret readonly or not. An readonly caret will
-   * draw but not blink when made visible. 
+   * draw but not blink when made visible.
    * @param aReadOnly PR_TRUE to enable caret.  PR_FALSE to disable.
    * @return always NS_OK
    */
@@ -126,7 +130,7 @@ interface nsISelectionController : nsISelectionDisplay
     * blink cycle.
     */
     readonly attribute boolean caretVisible;
-    
+
    /**
    * Show the caret even in selections. By default the caret is hidden unless the
    * selection is collapsed. Use this function to show the caret even in selections.
@@ -137,7 +141,7 @@ interface nsISelectionController : nsISelectionDisplay
 
    /** CharacterMove will move the selection one character forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -147,9 +151,9 @@ interface nsISelectionController : nsISelectionDisplay
    /** PhysicalMove will move the selection one "unit" in a given direction
    *  within the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
-   *  @param aDirection 
+   *  @param aDirection
    *  @param aAmount    character/line; word/lineBoundary
    *  @param aExtend    should it collapse the selection of extend it?
    */
@@ -181,7 +185,7 @@ interface nsISelectionController : nsISelectionDisplay
 
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -197,7 +201,7 @@ interface nsISelectionController : nsISelectionDisplay
 
     /** LineMove will move the selection one line forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -207,7 +211,7 @@ interface nsISelectionController : nsISelectionDisplay
   /** IntraLineMove will move the selection to the front of the line or end of the line
    *  in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -216,7 +220,7 @@ interface nsISelectionController : nsISelectionDisplay
 
   /** PageMove will move the selection one page forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -230,7 +234,7 @@ interface nsISelectionController : nsISelectionDisplay
 
   /** CompleteMove will move page view to the top or bottom of the document
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
-   *  the "point" of selection that is extended is considered the "focus" point. 
+   *  the "point" of selection that is extended is considered the "focus" point.
    *  or the last point adjusted by the selection.
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
@@ -257,7 +261,7 @@ interface nsISelectionController : nsISelectionDisplay
    */
     void selectAll();
 
-  /** CheckVisibility will return true if textnode and offsets are actually rendered 
+  /** CheckVisibility will return true if textnode and offsets are actually rendered
    *  in the current precontext.
    *  @param aNode textNode to test
    *  @param aStartOffset  offset in dom to first char of textnode to test

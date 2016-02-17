@@ -322,6 +322,8 @@ private:
     bool AttemptWARPDeviceCreationHelper(
         mozilla::ScopedGfxFeatureReporter& aReporterWARP, HRESULT& aResOut);
 
+    bool AttemptD3D11ImageBridgeDeviceCreationHelper(
+        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
     mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
 
     mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();

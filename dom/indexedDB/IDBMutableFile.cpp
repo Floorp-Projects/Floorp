@@ -34,8 +34,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
+using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 
 IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
@@ -279,6 +279,5 @@ IDBMutableFile::CreateFileFor(BlobImpl* aBlobImpl,
   return file.forget();
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

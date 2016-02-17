@@ -6,14 +6,14 @@ skip-if(B2G||Mulet) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-r
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
-fuzzy-if(Android,9,600000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
-== viewport-translucent-color-2.html viewport-translucent-color-ref.html
-== viewport-translucent-color-3.html viewport-translucent-color-ref.html
+fuzzy-if(Android,9,600000) fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
+fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
+fuzzy-if(skiaContent,1,5000) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
 != viewport-translucent-color-ref.html about:blank
-== iframe-translucent-color-1.html iframe-translucent-color-ref.html
-== translucent-color-1.html translucent-color-ref.html
-== translucent-color-2.html translucent-color-ref.html
-== translucent-color-3.html translucent-color-ref.html
+fuzzy-if(skiaContent,1,10000) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
+fuzzy-if(skiaContent,1,1024) == translucent-color-1.html translucent-color-ref.html
+fuzzy-if(skiaContent,1,1024) == translucent-color-2.html translucent-color-ref.html
+fuzzy-if(skiaContent,1,1024) == translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
 skip-if(B2G||Mulet) == root-element-display-none-1.html root-element-display-none-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == continuous-inline-1a.html continuous-inline-1ab-ref.html
@@ -149,19 +149,19 @@ HTTP == background-referrer.html background-referrer-ref.html
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
 == attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
-== attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
-== attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
+fuzzy-if(skiaContent,1,300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
+fuzzy-if(skiaContent,1,400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
 fuzzy(50,500) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
 == attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-image-3.html attachment-local-clipping-image-3-ref.html
 # The next three tests are fuzzy due to bug 1128229.
-fuzzy(16,69) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
-fuzzy(16,69) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
+fuzzy(16,69) fuzzy-if(skiaContent,64,1300) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
+fuzzy(16,69) fuzzy-if(skiaContent,64,1300) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
 fuzzy(80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
 
-== background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
+fuzzy-if(skiaContent,1,8) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 == background-repeat-large-area.html background-repeat-large-area-ref.html
 
-fuzzy(30,474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
+fuzzy(30,474) fuzzy-if(skiaContent,31,474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html

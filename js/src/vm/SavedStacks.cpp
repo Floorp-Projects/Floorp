@@ -1040,10 +1040,10 @@ SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString
 }
 
 void
-SavedStacks::sweep(JSRuntime* rt)
+SavedStacks::sweep()
 {
     frames.sweep();
-    sweepPCLocationMap();
+    pcLocationMap.sweep();
 }
 
 void
@@ -1314,24 +1314,6 @@ SavedStacks::createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup looku
         return nullptr;
 
     return frame;
-}
-
-/*
- * Remove entries from the table whose JSScript is being collected.
- */
-void
-SavedStacks::sweepPCLocationMap()
-{
-    for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
-        PCKey key = e.front().key();
-        JSScript* script = key.script.get();
-        if (IsAboutToBeFinalizedUnbarriered(&script)) {
-            e.removeFront();
-        } else if (script != key.script.get()) {
-            key.script = script;
-            e.rekeyFront(key);
-        }
-    }
 }
 
 bool

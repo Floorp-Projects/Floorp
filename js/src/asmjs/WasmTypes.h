@@ -553,6 +553,7 @@ enum class SymbolicAddress
     ReportOverRecursed,
     OnOutOfBounds,
     OnImpreciseConversion,
+    BadIndirectCall,
     HandleExecutionInterrupt,
     InvokeImport_Void,
     InvokeImport_I32,
@@ -575,6 +576,7 @@ enum class JumpTarget
     StackOverflow,
     OutOfBounds,
     ConversionError,
+    BadIndirectCall,
     Throw,
     Limit
 };

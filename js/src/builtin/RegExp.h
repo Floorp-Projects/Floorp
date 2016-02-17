@@ -98,6 +98,18 @@ extern const JSPropertySpec regexp_static_props[];
 extern const JSPropertySpec regexp_properties[];
 extern const JSFunctionSpec regexp_methods[];
 
+// Used in RegExpObject::isOriginalFlagGetter.
+extern bool
+regexp_global(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_ignoreCase(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_multiline(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_sticky(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp);
+
 } /* namespace js */
 
 #endif /* builtin_RegExp_h */

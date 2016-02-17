@@ -20,9 +20,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 if CONFIG['ENABLE_INTL_API']:
     MOCHITEST_MANIFESTS += ['test/mochitest-intl-api.ini']
 
-EXPORTS.mozilla.dom.indexedDB += [
-    'ActorsParent.h',
-    'FileSnapshot.h',
+EXPORTS.mozilla.dom += [
     'IDBCursor.h',
     'IDBDatabase.h',
     'IDBEvents.h',
@@ -38,6 +36,11 @@ EXPORTS.mozilla.dom.indexedDB += [
     'IDBWrapperCache.h',
     'IndexedDatabase.h',
     'IndexedDatabaseManager.h',
+]
+
+EXPORTS.mozilla.dom.indexedDB += [
+    'ActorsParent.h',
+    'FileSnapshot.h',
     'Key.h',
     'KeyPath.h',
     'SerializationHelpers.h',

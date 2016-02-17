@@ -53,13 +53,13 @@ function is(a, b, msg) {
 function enterFullscreen(element, callback) {
   addFullscreenChangeContinuation("enter", callback);
   element.focus();
-  element.mozRequestFullScreen();
+  element.requestFullscreen();
 }
 
 function revertFullscreen(doc, callback) {
-  ok(doc.mozFullScreenElement != null, "Should only exit fullscreen on a fullscreen doc");
+  ok(doc.fullscreenElement != null, "Should only exit fullscreen on a fullscreen doc");
   addFullscreenChangeContinuation("exit", callback, doc);
-  doc.mozCancelFullScreen();
+  doc.exitFullscreen();
 }
 
 function e(id) {
@@ -68,7 +68,7 @@ function e(id) {
 
 function requestFullscreen(element) {
   element.focus();
-  element.mozRequestFullScreen();
+  element.requestFullscreen();
 }
 
 function begin() {
@@ -76,49 +76,49 @@ function begin() {
 }
 
 function change1() {
-  is(document.mozFullScreenElement, e("fse"), "Body should be FSE");
+  is(document.fullscreenElement, e("fse"), "Body should be FSE");
   // Request full-screen from element not descendent from current FSE.
   addFullscreenErrorContinuation(error1);
   requestFullscreen(e("non-fse"));
 }
 
 function error1() {
-  is(document.mozFullScreenElement, e("fse"), "FSE should not change");
+  is(document.fullscreenElement, e("fse"), "FSE should not change");
   var iframe = e("subdoc");
   enterFullscreen(iframe.contentDocument.body, change2);
 }
 
 function change2() {
   var iframe = e("subdoc");
-  is(document.mozFullScreenElement, iframe, "Subdoc container should be FSE.");
-  is(iframe.contentDocument.mozFullScreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
+  is(document.fullscreenElement, iframe, "Subdoc container should be FSE.");
+  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
   revertFullscreen(document, change3);
 }
 
 function change3() {
-  is(document.mozFullScreenElement, e("fse"), "FSE should rollback to FSE.");
+  is(document.fullscreenElement, e("fse"), "FSE should rollback to FSE.");
   revertFullscreen(document, change4);
 }
 
 function change4() {
-  is(document.mozFullScreenElement, null, "Should have left full-screen entirely");
+  is(document.fullscreenElement, null, "Should have left full-screen entirely");
   enterFullscreen(e("fse"), change5);
 }
 
 function change5() {
-  is(document.mozFullScreenElement, e("fse"), "FSE should be e('fse')");
+  is(document.fullscreenElement, e("fse"), "FSE should be e('fse')");
   enterFullscreen(e("fse-inner"), change6);
 }
 
 function change6() {
   addFullscreenChangeContinuation("exit", change7);
   var element = e('fse-inner');
-  is(document.mozFullScreenElement, element, "FSE should be e('fse-inner')");
+  is(document.fullscreenElement, element, "FSE should be e('fse-inner')");
   element.parentNode.removeChild(element);
 }
 
 function change7() {
-  is(document.mozFullScreenElement, null, "Should have fully exited full-screen mode when removed FSE from doc");
+  is(document.fullscreenElement, null, "Should have fully exited full-screen mode when removed FSE from doc");
   opener.nextTest();
 }
 

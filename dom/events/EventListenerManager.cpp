@@ -1127,7 +1127,14 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
     }
   }
 
-  return aEventMessage;
+  switch (aEventMessage) {
+    case eFullscreenChange:
+      return eMozFullscreenChange;
+    case eFullscreenError:
+      return eMozFullscreenError;
+    default:
+      return aEventMessage;
+  }
 }
 
 nsIDocShell*
@@ -1192,6 +1199,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   }
 
   bool hasListener = false;
+  bool hasListenerForCurrentGroup = false;
   bool usingLegacyMessage = false;
   EventMessage eventMessage = aEvent->mMessage;
 
@@ -1207,6 +1215,8 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
       // Handle only trusted events, except when listener permits untrusted events.
       if (ListenerCanHandle(listener, aEvent, eventMessage)) {
         hasListener = true;
+        hasListenerForCurrentGroup = hasListenerForCurrentGroup ||
+          listener->mFlags.mInSystemGroup == aEvent->mFlags.mInSystemGroup;
         if (listener->IsListening(aEvent) &&
             (aEvent->mFlags.mIsTrusted ||
              listener->mFlags.mAllowUntrustedEvents)) {
@@ -1271,7 +1281,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     // If we didn't find any matching listeners, and our event has a legacy
     // version, we'll now switch to looking for that legacy version and we'll
     // recheck our listeners.
-    if (hasListener || usingLegacyMessage) {
+    if (hasListenerForCurrentGroup || usingLegacyMessage) {
       // (No need to recheck listeners, because we already found a match, or we
       // already rechecked them.)
       break;

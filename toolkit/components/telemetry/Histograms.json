@@ -9981,6 +9981,13 @@
     "kind": "count",
     "description": "Number of times the D3D11 compositor failed to get a texture sync handle."
   },
+  "GFX_CONTENT_FAILED_TO_ACQUIRE_DEVICE": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "6",
+    "description": "Failed to create a gfx content device. 0=content d3d11, 1=image d3d11, 2=d2d1."
+  },
   "GFX_CRASH": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -10002,6 +10009,14 @@
     "expires_in_version": "50",
     "kind": "boolean",
     "description": "Attempt to determine prevalence of scroll-linked effects on the web."
+  },
+  "SCROLL_INPUT_METHODS": {
+    "alert_emails": ["botond@mozilla.com"],
+    "bug_numbers": [1238137],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "Count of scroll actions triggered by different input methods. See gfx/layers/apz/util/ScrollInputMethods.h for a list of possible values and their meanings."
   },
   "WEB_NOTIFICATION_CLICKED": {
     "alert_emails": ["firefox-dev@mozilla.org"],

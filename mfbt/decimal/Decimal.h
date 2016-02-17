@@ -30,8 +30,8 @@
 
 /**
  * Imported from:
- * http://src.chromium.org/viewvc/blink/trunk/Source/core/platform/Decimal.h
- * Check hg log for the svn rev of the last update from Blink core.
+ * https://chromium.googlesource.com/chromium/src.git/+/master/third_party/WebKit/Source/platform/Decimal.h
+ * Check UPSTREAM-GIT-SHA for the commit ID of the last update from Blink core.
  */
 
 #ifndef Decimal_h
@@ -48,25 +48,33 @@
 #define ASSERT MOZ_ASSERT
 #endif
 
-// To use WTF_MAKE_FAST_ALLOCATED we'd need:
-// http://src.chromium.org/viewvc/blink/trunk/Source/wtf/FastMalloc.h
+#define PLATFORM_EXPORT
+
+// To use USING_FAST_MALLOC we'd need:
+// https://chromium.googlesource.com/chromium/src.git/+/master/third_party/WebKit/Source/wtf/Allocator.h
 // Since we don't allocate Decimal objects, no need.
-#define WTF_MAKE_FAST_ALLOCATED \
+#define USING_FAST_MALLOC(type) \
   void ignore_this_dummy_method() = delete
 
-namespace WebCore {
+#define DISALLOW_NEW()                                          \
+    private:                                                    \
+        void* operator new(size_t) = delete;                    \
+        void* operator new(size_t, void*) = delete;             \
+    public:
+
+namespace blink {
 
 namespace DecimalPrivate {
 class SpecialValueHandler;
-} // namespace DecimalPrivate
+}
 
 // This class represents decimal base floating point number.
 //
 // FIXME: Once all C++ compiler support decimal type, we should replace this
 // class to compiler supported one. See below URI for current status of decimal
 // type for C++: // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1977.html
-class Decimal {
-    WTF_MAKE_FAST_ALLOCATED;
+class PLATFORM_EXPORT Decimal {
+    USING_FAST_MALLOC(Decimal);
 public:
     enum Sign {
         Positive,
@@ -75,6 +83,7 @@ public:
 
     // You should not use EncodedData other than unit testing.
     class EncodedData {
+        DISALLOW_NEW();
         // For accessing FormatClass.
         friend class Decimal;
         friend class DecimalPrivate::SpecialValueHandler;
@@ -93,7 +102,7 @@ public:
         bool isSpecial() const { return m_formatClass == ClassInfinity || m_formatClass == ClassNaN; }
         bool isZero() const { return m_formatClass == ClassZero; }
         Sign sign() const { return m_sign; }
-        void setSign(Sign aSign) { m_sign = aSign; }
+        void setSign(Sign sign) { m_sign = sign; }
 
     private:
         enum FormatClass {
@@ -151,7 +160,7 @@ public:
     bool isZero() const { return m_data.isZero(); }
 
     MFBT_API Decimal abs() const;
-    MFBT_API Decimal ceiling() const;
+    MFBT_API Decimal ceil() const;
     MFBT_API Decimal floor() const;
     MFBT_API Decimal remainder(const Decimal&) const;
     MFBT_API Decimal round() const;
@@ -196,13 +205,13 @@ private:
     EncodedData m_data;
 };
 
-} // namespace WebCore
+} // namespace blink
 
 namespace mozilla {
-  typedef WebCore::Decimal Decimal;
+typedef blink::Decimal Decimal;
 } // namespace mozilla
 
-#undef WTF_MAKE_FAST_ALLOCATED
+#undef USING_FAST_MALLOC
 
 #ifdef DEFINED_ASSERT_FOR_DECIMAL_H
 #undef DEFINED_ASSERT_FOR_DECIMAL_H
@@ -210,4 +219,3 @@ namespace mozilla {
 #endif
 
 #endif // Decimal_h
-

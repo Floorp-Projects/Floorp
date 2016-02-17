@@ -14,7 +14,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
+
+using namespace mozilla::dom::indexedDB;
 
 namespace {
 
@@ -447,6 +448,5 @@ IDBLocaleAwareKeyRange::Bound(const GlobalObject& aGlobal,
   return keyRange.forget();
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

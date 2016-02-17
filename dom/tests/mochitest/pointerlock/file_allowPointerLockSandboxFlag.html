@@ -46,7 +46,7 @@
         }
 
         function resetIframe () {
-          contentDocument.mozCancelFullScreen();
+          contentDocument.exitFullscreen();
 
           // remove allow-pointer-lock sandbox flag
           iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
@@ -66,17 +66,17 @@
           contentDocument.addEventListener("mozpointerlockchange", function () {
             if (contentDocument.mozPointerLockElement === iframeDiv) {
               pointerLocked++;
-              contentDocument.mozCancelFullScreen();
+              contentDocument.exitFullscreen();
             }
           });
 
           contentDocument.addEventListener("mozpointerlockerror", function () {
-            contentDocument.mozCancelFullScreen();
+            contentDocument.exitFullscreen();
           });
 
-          contentDocument.addEventListener("mozfullscreenchange", function () {
-            if (contentDocument.mozFullScreen) {
-              ok(contentDocument.mozFullScreenElement === iframeDiv,
+          contentDocument.addEventListener("fullscreenchange", function () {
+            if (contentDocument.fullscreenElement) {
+              ok(contentDocument.fullscreenElement === iframeDiv,
                  "Fullscreen element can only be iframe div");
               // during second run iframe won't have allow-pointer-lock flag and
               // mozRequestPointerLock will fail, mozpointerlockerror should be fired
@@ -88,7 +88,7 @@
             }
           });
 
-        iframeDiv.mozRequestFullScreen();
+        iframeDiv.requestFullscreen();
       }
       </script>
     </pre>

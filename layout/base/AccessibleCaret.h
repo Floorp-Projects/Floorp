@@ -199,9 +199,9 @@ protected:
 
   bool mSelectionBarEnabled = false;
 
-  // AccessibleCaretManager owns us. When it's destroyed by
+  // AccessibleCaretManager owns us by a UniquePtr. When it's terminated by
   // AccessibleCaretEventHub::Terminate() which is called in
-  // PresShell::Destroy(), it frees us automatically. No need to worry we
+  // PresShell::Destroy(), it frees us automatically. No need to worry if we
   // outlive mPresShell.
   nsIPresShell* MOZ_NON_OWNING_REF const mPresShell = nullptr;
 

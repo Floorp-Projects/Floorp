@@ -9,15 +9,15 @@
 #include "DataStoreCallbacks.h"
 #include "jsapi.h"
 #include "mozilla/dom/IDBDatabaseBinding.h"
+#include "mozilla/dom/IDBDatabase.h"
+#include "mozilla/dom/IDBEvents.h"
+#include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/IDBIndex.h"
+#include "mozilla/dom/IDBObjectStore.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
-#include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/IDBEvents.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
-#include "mozilla/dom/indexedDB/IDBIndex.h"
-#include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/IDBRequest.h"
+#include "mozilla/dom/IDBTransaction.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEvent.h"
@@ -354,7 +354,7 @@ DataStoreDB::Delete()
   return NS_OK;
 }
 
-indexedDB::IDBTransaction*
+IDBTransaction*
 DataStoreDB::Transaction() const
 {
   MOZ_ASSERT(mTransaction);

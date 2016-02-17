@@ -38,8 +38,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
+using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
@@ -660,6 +660,5 @@ WorkerFeature::Notify(JSContext* aCx, Status aStatus)
   return true;
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

@@ -1093,7 +1093,7 @@ DrawTargetD2D1::factory()
                                 getter_AddRefs(factory));
 
   if (FAILED(hr) || !factory) {
-    gfxWarning() << "Failed to create Direct2D factory.";
+    gfxCriticalNote << "Failed to create a D2D1 content device: " << hexa(hr);
     return nullptr;
   }
 

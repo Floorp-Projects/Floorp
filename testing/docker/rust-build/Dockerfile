@@ -15,7 +15,7 @@ ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py 
 RUN chmod +rx /build/tooltool.py
 
 # Add build scripts.
-ADD             fetch_rust.sh build_rust.sh /build/
+ADD             fetch_rust.sh build_rust.sh upload_rust.sh /build/
 RUN             chmod +x /build/*
 
 # Create user for doing the build.
@@ -29,4 +29,4 @@ WORKDIR ${HOME}
 
 # Invoke our build scripts by default, but allow other commands.
 USER ${USER}
-ENTRYPOINT /build/fetch_rust.sh && /build/build_rust.sh
+ENTRYPOINT /build/fetch_rust.sh && /build/build_rust.sh && /build/upload_rust.sh

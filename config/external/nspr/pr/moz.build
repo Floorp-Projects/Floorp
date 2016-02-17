@@ -37,6 +37,7 @@ elif CONFIG['OS_TARGET'] in ('FreeBSD', 'OpenBSD', 'NetBSD'):
     DEFINES[CONFIG['OS_TARGET'].upper()] = True
     SOURCES += ['/nsprpub/pr/src/md/unix/%s.c' % CONFIG['OS_TARGET'].lower()]
 elif CONFIG['OS_TARGET'] == 'Darwin':
+    OS_LIBS += ['-framework CoreServices']
     DEFINES.update(
         DARWIN=True,
         HAVE_BSD_FLOCK=True,
