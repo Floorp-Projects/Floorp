@@ -11,7 +11,7 @@ const kKeyList = [
 function frameScript() {
   let doc = content.document;
   addMessageListener("Test:RequestFullscreen", () => {
-    doc.body.mozRequestFullScreen();
+    doc.body.requestFullscreen();
   });
   addMessageListener("Test:DispatchUntrustedKeyEvents", msg => {
     var evt = new content.CustomEvent("Test:DispatchKeyEvents", {
@@ -20,8 +20,8 @@ function frameScript() {
     content.dispatchEvent(evt);
   });
 
-  doc.addEventListener("mozfullscreenchange", () => {
-    sendAsyncMessage("Test:FullscreenChanged", !!doc.mozFullScreenElement);
+  doc.addEventListener("fullscreenchange", () => {
+    sendAsyncMessage("Test:FullscreenChanged", !!doc.fullscreenElement);
   });
 
   function keyHandler(evt) {
@@ -142,7 +142,7 @@ add_task(function* () {
       gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
       let state = yield promiseOneMessage("Test:FullscreenChanged");
       ok(state, "The content should have entered fullscreen");
-      ok(document.mozFullScreenElement,
+      ok(document.fullscreenElement,
          "The chrome should also be in fullscreen");
     });
 
@@ -162,7 +162,7 @@ add_task(function* () {
         yield promiseExpectedKeyEvents;
         let state = yield promiseOneMessage("Test:FullscreenChanged");
         ok(!state, "The content should have exited fullscreen");
-        ok(!document.mozFullScreenElement,
+        ok(!document.fullscreenElement,
            "The chrome should also have exited fullscreen");
       });
     });

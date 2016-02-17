@@ -31,18 +31,18 @@ function begin()
 {
   frameWin = document.getElementById("f").contentWindow;
   e1 = frameWin.document.body;
-  document.addEventListener("mozfullscreenchange", function onfullscreen() {
-    document.removeEventListener("mozfullscreenchange", onfullscreen, false);
-    opener.ok(document.mozFullScreen, "[navigation] Request should be granted");
+  document.addEventListener("fullscreenchange", function onfullscreen() {
+    document.removeEventListener("fullscreenchange", onfullscreen, false);
+    opener.ok(document.fullscreenElement, "[navigation] Request should be granted");
     frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
   }, false);
 
-  e1.mozRequestFullScreen();
+  e1.requestFullscreen();
 }
 
 function b2()
 {
-  opener.ok(!document.mozFullScreen, "[navigation] Should have left full-screen due to navigation.");
+  opener.ok(!document.fullscreenElement, "[navigation] Should have left full-screen due to navigation.");
   opener.nextTest();
 }
 

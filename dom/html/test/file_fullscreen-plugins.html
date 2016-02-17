@@ -22,7 +22,7 @@ Test plugins with DOM full-screen API:
   </script>
   <script type="application/javascript" src="file_fullscreen-utils.js"></script>
   <style>
-  body:-moz-full-screen, div:-moz-full-screen {
+  body:fullscreen, div:fullscreen {
     background-color: red;
   }
   </style>
@@ -80,8 +80,8 @@ function begin() {
 }
 
 function startTest() {
-  ok(!document.mozFullScreen, "Should not be in full-screen mode initially");
-  document.body.mozRequestFullScreen();
+  ok(!document.fullscreenElement, "Should not be in full-screen mode initially");
+  document.body.requestFullscreen();
 
   // Focus the windowed plugin. On MacOS we should still enter full-screen mode,
   // on windows the pending request for full-screen should be denied.
@@ -89,7 +89,7 @@ function startTest() {
   
   if (isMacOs) {
     // Running on MacOS, all plugins are effectively windowless, request for full-screen should be granted.
-    // Continue test in the (mac-specific) "mozfullscreenchange" handler.
+    // Continue test in the (mac-specific) "fullscreenchange" handler.
     addFullscreenChangeContinuation("enter", macFullScreenChange1);
   } else {
     // Non-MacOS, request should be denied, carry on the test after receiving error event.
@@ -98,23 +98,23 @@ function startTest() {
 }
 
 function nonMacTest() {
-  ok(!document.mozFullScreen, "Request for full-screen with focused windowed plugin should be denied.");
+  ok(!document.fullscreenElement, "Request for full-screen with focused windowed plugin should be denied.");
 
   // Focus a regular html element, and re-request full-screen, request should be granted.
   e("windowless-plugin").focus();
   addFullscreenChangeContinuation("enter", nonMacTest2);
-  document.body.mozRequestFullScreen();
+  document.body.requestFullscreen();
 }
 
 function nonMacTest2() {
-  ok(document.mozFullScreen, "Request for full-screen with non-plugin focused should be granted.");
+  ok(document.fullscreenElement, "Request for full-screen with non-plugin focused should be granted.");
   // Focus a windowed plugin, full-screen should be revoked.
   addFullscreenChangeContinuation("exit", nonMacTest3);
   e("windowed-plugin").focus();
 }
 
 function nonMacTest3() {
-  ok(!document.mozFullScreen, "Full-screen should have been revoked when windowed-plugin was focused.");
+  ok(!document.fullscreenElement, "Full-screen should have been revoked when windowed-plugin was focused.");
   // Remove windowed plugins before closing the window
   // to work around bug 1237853.
   removeElement(e("windowed-plugin"));
@@ -132,7 +132,7 @@ function createWindowedPlugin() {
 }
 
 function macFullScreenChange1(event) {
-  ok(document.mozFullScreen, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
+  ok(document.fullscreenElement, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
   
   // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS.
   windowedPlugin = createWindowedPlugin();
@@ -143,14 +143,14 @@ function macFullScreenChange1(event) {
   
   setTimeout(
     function() {
-      ok(document.mozFullScreen, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
+      ok(document.fullscreenElement, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
       addFullscreenChangeContinuation("exit", macFullScreenChange2);
-      document.mozCancelFullScreen();
+      document.exitFullscreen();
     }, 0);
 }
 
 function macFullScreenChange2(event) {
-  ok(!document.mozFullScreen, "Should have left full-screen mode after calling document.mozCancelFullScreen().");
+  ok(!document.fullscreenElement, "Should have left full-screen mode after calling document.exitFullscreen().");
   opener.nextTest();
 }
 

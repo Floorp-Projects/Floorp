@@ -49,22 +49,22 @@
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === parentDiv) {
           parentDivLocked = true;
-          childDiv.mozRequestFullScreen();
+          childDiv.requestFullscreen();
         }
       }, false);
 
-      document.addEventListener("mozfullscreenchange", function() {
-        if (document.mozFullScreenElement === parentDiv) {
+      document.addEventListener("fullscreenchange", function() {
+        if (document.fullscreenElement === parentDiv) {
           if (parentDivFullScreen === true) {
-            document.mozCancelFullScreen();
+            document.exitFullscreen();
           } else {
             parentDivFullScreen = true;
             parentDiv.mozRequestPointerLock();
           }
         }
-        else if (document.mozFullScreenElement === childDiv) {
+        else if (document.fullscreenElement === childDiv) {
           pointerLocked = !!document.mozPointerLockElement;
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         }
         else {
           runTests();
@@ -73,7 +73,7 @@
       }, false);
 
       function start() {
-        parentDiv.mozRequestFullScreen();
+        parentDiv.requestFullscreen();
       }
     </script>
   </body>

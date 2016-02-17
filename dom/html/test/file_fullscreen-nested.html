@@ -94,9 +94,9 @@ function nextStep() {
   var [[action, target], [fsOuter, fsInner]] = gTestSteps[gTestIndex++];
 
   function checkAndNext() {
-    is(document.mozFullScreenElement, fsOuter,
+    is(document.fullscreenElement, fsOuter,
        `Fullscreen element of outer doc should match after step ${index}`);
-    is(gInnerDoc.mozFullScreenElement, fsInner,
+    is(gInnerDoc.fullscreenElement, fsInner,
        `Fullscreen element of inner doc should match after step ${index}`);
     nextStep();
   }
@@ -106,11 +106,11 @@ function nextStep() {
     // For "enter" action, the target is the element
     var doc = target.ownerDocument;
     addFullscreenChangeContinuation("enter", checkAndNext, doc);
-    target.mozRequestFullScreen();
+    target.requestFullscreen();
   } else if (action == "exit") {
     // For "exit" action, the target is the document
     addFullscreenChangeContinuation("exit", checkAndNext, target);
-    target.mozCancelFullScreen();
+    target.exitFullscreen();
   } else {
     ok(false, `Unknown action ${action}`);
   }

@@ -42,7 +42,7 @@ function begin() {
   info("The default background of window should be white");
   assertWindowPureColor(window, "white");
   addFullscreenChangeContinuation("enter", enterFullscreen);
-  gFullscreen.mozRequestFullScreen();
+  gFullscreen.requestFullscreen();
 }
 
 function setBackdropStyle(style) {
@@ -78,7 +78,7 @@ function enterFullscreen() {
   assertWindowPureColor(window, "white");
 
   addFullscreenChangeContinuation("exit", exitFullscreen);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exitFullscreen() {

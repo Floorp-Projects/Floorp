@@ -4,20 +4,20 @@ var gMessageManager;
 
 function frameScript() {
   addMessageListener("Test:RequestFullscreen", () => {
-    content.document.body.mozRequestFullScreen();
+    content.document.body.requestFullscreen();
   });
   addMessageListener("Test:ExitFullscreen", () => {
-    content.document.mozCancelFullScreen();
+    content.document.exitFullscreen();
   });
   addMessageListener("Test:QueryFullscreenState", () => {
     sendAsyncMessage("Test:FullscreenState", {
-      inDOMFullscreen: content.document.mozFullScreen,
+      inDOMFullscreen: !!content.document.fullscreenElement,
       inFullscreen: content.fullScreen
     });
   });
-  content.document.addEventListener("mozfullscreenchange", () => {
+  content.document.addEventListener("fullscreenchange", () => {
     sendAsyncMessage("Test:FullscreenChanged", {
-      inDOMFullscreen: content.document.mozFullScreen,
+      inDOMFullscreen: !!content.document.fullscreenElement,
       inFullscreen: content.fullScreen
     });
   });
@@ -130,7 +130,7 @@ function checkState(expectedStates, contentStates) {
   //      that on the chrome window below.
   // is(contentStates.inFullscreen, expectedStates.inFullscreen,
   //    "The fullscreen state of the content should match");
-  is(document.mozFullScreen, expectedStates.inDOMFullscreen,
+  is(!!document.fullscreenElement, expectedStates.inDOMFullscreen,
      "The DOM fullscreen state of the chrome should match");
   is(window.fullScreen, expectedStates.inFullscreen,
      "The fullscreen state of the chrome should match");
