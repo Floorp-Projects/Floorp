@@ -590,7 +590,7 @@ var expectedAugment = [
   //{ name: "aNameUndef", value: "undefined" },
 ];
 
-function checkMPSubmission(sub, expected, test) {
+function checkMPSubmission(sub, expected, test, isFormData = false) {
   function getPropCount(o) {
     var x, l = 0;
     for (x in o) ++l;
@@ -625,7 +625,7 @@ function checkMPSubmission(sub, expected, test) {
     else {
       is(sub[i].headers["Content-Disposition"],
          "form-data; name=\"" + mpquote(expected[i].name) + "\"; filename=\"" +
-           mpquote(expected[i].fileName) + "\"",
+           mpquote(expected[i].fileName != "" || !isFormData ? expected[i].fileName : "blob") + "\"",
          "Correct name in " + test);
       is(sub[i].headers["Content-Type"],
          expected[i].contentType,
@@ -782,14 +782,14 @@ function runTest() {
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
   yield undefined; // Wait for XHR load
-  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData", true);
   
   // Send disabled form using XHR and FormData
   setDisabled(document.querySelectorAll("input, select, textarea"), true);
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
   yield undefined;
-  checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
+  checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData", true);
   setDisabled(document.querySelectorAll("input, select, textarea"), false);
   
   // Send FormData
@@ -804,7 +804,7 @@ function runTest() {
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(fd);
   yield undefined;
-  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment, "send FormData");
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment, "send FormData", true);
 
   // Augment <form> using FormData
   fd = new FormData(form);
@@ -813,7 +813,7 @@ function runTest() {
   xhr.send(fd);
   yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText),
-                    expectedSub.concat(expectedAugment), "send augmented FormData");
+                    expectedSub.concat(expectedAugment), "send augmented FormData", true);
 
   SimpleTest.finish();
   yield undefined;
