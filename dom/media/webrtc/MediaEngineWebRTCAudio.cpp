@@ -220,7 +220,8 @@ uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
 nsresult
 MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                             const MediaEnginePrefs &aPrefs,
-                                            const nsString& aDeviceId)
+                                            const nsString& aDeviceId,
+                                            const nsACString& aOrigin)
 {
   AssertIsOnOwningThread();
   if (mState == kReleased) {
