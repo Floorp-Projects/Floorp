@@ -39,11 +39,11 @@ function* runTest(options) {
 
     browser.test.log(`Test color ${options.color} at fullZoom=${options.fullZoom}`);
 
-    promiseTabs.query({ currentWindow: true, active: true }).then(([tab]) => {
+    promiseTabs.query({currentWindow: true, active: true}).then(([tab]) => {
       return Promise.all([
-        promiseTabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 95 }),
-        promiseTabs.captureVisibleTab(tab.windowId, { format: "png", quality: 95 }),
-        promiseTabs.captureVisibleTab(tab.windowId, { quality: 95 }),
+        promiseTabs.captureVisibleTab(tab.windowId, {format: "jpeg", quality: 95}),
+        promiseTabs.captureVisibleTab(tab.windowId, {format: "png", quality: 95}),
+        promiseTabs.captureVisibleTab(tab.windowId, {quality: 95}),
         promiseTabs.captureVisibleTab(tab.windowId),
       ]).then(([jpeg, png, ...pngs]) => {
         browser.test.assertTrue(pngs.every(url => url == png), "All PNGs are identical");
@@ -60,7 +60,7 @@ function* runTest(options) {
       }).then(([jpeg, png]) => {
         let tabDims = `${tab.width}\u00d7${tab.height}`;
 
-        let images = { jpeg, png };
+        let images = {jpeg, png};
         for (let format of Object.keys(images)) {
           let img = images[format];
 
@@ -78,17 +78,17 @@ function* runTest(options) {
           // Check the colors of the first and last pixels of the image, to make
           // sure we capture the entire frame, and scale it correctly.
           let coords = [
-            { x: 0, y: 0,
-              color: options.color },
-            { x: img.width - 1,
-              y: img.height - 1,
-              color: options.color },
-            { x: img.width / 2 | 0,
-              y: img.height / 2 | 0,
-              color: options.neutral },
+            {x: 0, y: 0,
+             color: options.color},
+            {x: img.width - 1,
+             y: img.height - 1,
+             color: options.color},
+            {x: img.width / 2 | 0,
+             y: img.height / 2 | 0,
+             color: options.neutral},
           ];
 
-          for (let { x, y, color } of coords) {
+          for (let {x, y, color} of coords) {
             let imageData = ctx.getImageData(x, y, 1, 1).data;
 
             if (format == "png") {
@@ -133,13 +133,13 @@ function* runTest(options) {
 }
 
 add_task(function* testCaptureVisibleTab() {
-  yield runTest({ color: [0, 0, 0], fullZoom: 1 });
+  yield runTest({color: [0, 0, 0], fullZoom: 1});
 
-  yield runTest({ color: [0, 0, 0], fullZoom: 2 });
+  yield runTest({color: [0, 0, 0], fullZoom: 2});
 
-  yield runTest({ color: [0, 0, 0], fullZoom: 0.5 });
+  yield runTest({color: [0, 0, 0], fullZoom: 0.5});
 
-  yield runTest({ color: [255, 255, 255], fullZoom: 1 });
+  yield runTest({color: [255, 255, 255], fullZoom: 1});
 });
 
 add_task(function* testCaptureVisibleTabPermissions() {
@@ -149,7 +149,7 @@ add_task(function* testCaptureVisibleTabPermissions() {
     },
 
     background: function(x) {
-      browser.tabs.query({ currentWindow: true, active: true }, tab => {
+      browser.tabs.query({currentWindow: true, active: true}, tab => {
         browser.tabs.captureVisibleTab(tab.windowId).then(
           () => {
             browser.test.notifyFail("captureVisibleTabPermissions");

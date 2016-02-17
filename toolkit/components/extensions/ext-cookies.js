@@ -1,6 +1,6 @@
 "use strict";
 
-const { interfaces: Ci, utils: Cu } = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -280,7 +280,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         let expiry = isSession ? 0 : details.expirationDate;
         // Ignore storeID.
 
-        let cookieAttrs = { host: details.domain, path: path, isSecure: secure };
+        let cookieAttrs = {host: details.domain, path: path, isSecure: secure};
         if (!checkSetCookiePermissions(extension, uri, cookieAttrs)) {
           return Promise.reject({message: `Permission denied to set cookie ${JSON.stringify(details)}`});
         }

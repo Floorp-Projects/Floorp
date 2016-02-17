@@ -332,12 +332,11 @@ pref("devtools.fontinspector.enabled", true);
 // version for each user.
 pref("devtools.telemetry.tools.opened.version", "{}");
 
-// Enable the JSON View tool (an inspector for application/json documents) on
-// Nightly and Dev. Edition.
-#ifdef RELEASE_BUILD
-pref("devtools.jsonview.enabled", false);
+// Enable the JSON View tool (an inspector for application/json documents)
+#ifdef MOZ_DEV_EDITION
+  pref("devtools.jsonview.enabled", true);
 #else
-pref("devtools.jsonview.enabled", true);
+  pref("devtools.jsonview.enabled", false);
 #endif
 
 // Disable the HTML responsive design tool by default.  Currently disabled until

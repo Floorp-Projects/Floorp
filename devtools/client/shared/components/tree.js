@@ -405,6 +405,11 @@ const Tree = module.exports = createClass({
       return;
     }
 
+    // Allow parent nodes to use navigation arrows with modifiers.
+    if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+      return;
+    }
+
     // Prevent scrolling when pressing navigation keys. Guard against mocked
     // events received when testing.
     if (e.nativeEvent && e.nativeEvent.preventDefault) {
