@@ -75,12 +75,6 @@ public interface BrowserDB {
     /**
      * @return a cursor over top sites (high-ranking bookmarks and history).
      * Can return <code>null</code>.
-     */
-    public abstract Cursor getTopSites(ContentResolver cr, int limit);
-
-    /**
-     * @return a cursor over top sites (high-ranking bookmarks and history).
-     * Can return <code>null</code>.
      * Returns no more than <code>limit</code> results.
      * Suggested sites will be limited to being within the first <code>suggestedRangeLimit</code> results.
      */
@@ -171,7 +165,6 @@ public interface BrowserDB {
             String faviconUrl, String faviconGuid, byte[] data);
 
 
-    public abstract Cursor getPinnedSites(ContentResolver cr, int limit);
     public abstract void pinSite(ContentResolver cr, String url, String title, int position);
     public abstract void unpinSite(ContentResolver cr, int position);
 
