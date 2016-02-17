@@ -35,6 +35,8 @@ public:
   static ChildDNSService* GetSingleton();
 
   void NotifyRequestDone(DNSRequestChild *aDnsRequest);
+
+  bool GetOffline() const;
 private:
   virtual ~ChildDNSService();
 
@@ -45,7 +47,6 @@ private:
                                              nsACString &aHashKey);
 
   bool mFirstTime;
-  bool mOffline;
   bool mDisablePrefetch;
 
   // We need to remember pending dns requests to be able to cancel them.

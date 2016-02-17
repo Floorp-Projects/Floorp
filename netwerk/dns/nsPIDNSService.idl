@@ -10,7 +10,7 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(6b16fb1f-5709-4c94-a89f-a22be873c54d)]
+[scriptable, uuid(24e598fd-7b1a-436c-9154-14d8b38df8a5)]
 interface nsPIDNSService : nsIDNSService
 {
     /**
@@ -31,9 +31,4 @@ interface nsPIDNSService : nsIDNSService
      * Whether or not DNS prefetching (aka RESOLVE_SPECULATE) is enabled
      */
     attribute boolean prefetchEnabled;
-
-    /**
-     * @return whether the DNS service is offline.
-     */
-    attribute boolean offline;
 };
