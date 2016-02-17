@@ -955,6 +955,7 @@ MediaStreamGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
   MonitorAutoLock mon(mMonitor);
   if (mLifecycleState == LIFECYCLE_RUNNING) {
     AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+    driver->SetInputListener(aListener);
     CurrentDriver()->SwitchAtNextIteration(driver);
   }
 }
@@ -994,7 +995,10 @@ MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
 {
   mInputDeviceID = nullptr;
   mInputWanted = false;
-  CurrentDriver()->RemoveInputListener(aListener);
+  AudioCallbackDriver *driver = CurrentDriver()->AsAudioCallbackDriver();
+  if (driver) {
+    driver->RemoveInputListener(aListener);
+  }
   mAudioInputs.RemoveElement(aListener);
 
   // Switch Drivers since we're adding or removing an input (to nothing/system or output only)
