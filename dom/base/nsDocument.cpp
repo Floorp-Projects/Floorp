@@ -11558,6 +11558,48 @@ ReleaseVRDeviceProxyRef(void *, nsIAtom*, void *aPropertyValue, void *)
   }
 }
 
+static bool
+HasFullScreenSubDocument(nsIDocument* aDoc)
+{
+  uint32_t count = CountFullscreenSubDocuments(aDoc);
+  NS_ASSERTION(count <= 1, "Fullscreen docs should have at most 1 fullscreen child!");
+  return count >= 1;
+}
+
+// Returns nullptr if a request for Fullscreen API is currently enabled
+// in the given document. Returns a static string indicates the reason
+// why it is not enabled otherwise.
+static const char*
+GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
+{
+  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
+    // Chrome code can always use the full-screen API, provided it's not
+    // explicitly disabled. Note IsCallerChrome() returns true when running
+    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
+    // nsRunnable!
+    return nullptr;
+  }
+
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    return "FullScreenDeniedDisabled";
+  }
+  if (!aDoc->IsVisible()) {
+    return "FullScreenDeniedHidden";
+  }
+  if (HasFullScreenSubDocument(aDoc)) {
+    return "FullScreenDeniedSubDocFullScreen";
+  }
+
+  // Ensure that all containing elements are <iframe> and have
+  // allowfullscreen attribute set.
+  nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
+  if (!docShell || !docShell->GetFullscreenAllowed()) {
+    return "FullScreenDeniedContainerNotAllowed";
+  }
+
+  return nullptr;
+}
+
 bool
 nsDocument::FullscreenElementReadyCheck(Element* aElement,
                                         bool aWasCallerChrome)
@@ -11579,8 +11621,8 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
     LogFullScreenDenied(true, "FullScreenDeniedLostWindow", this);
     return false;
   }
-  if (!IsFullScreenEnabled(aWasCallerChrome, true)) {
-    // IsFullScreenEnabled calls LogFullScreenDenied, no need to log.
+  if (const char* msg = GetFullscreenError(this, aWasCallerChrome)) {
+    LogFullScreenDenied(true, msg, this);
     return false;
   }
   if (GetFullscreenElement() &&
@@ -11989,50 +12031,7 @@ nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 bool
 nsDocument::FullscreenEnabled()
 {
-  return IsFullScreenEnabled(nsContentUtils::IsCallerChrome(), false);
-}
-
-static bool
-HasFullScreenSubDocument(nsIDocument* aDoc)
-{
-  uint32_t count = CountFullscreenSubDocuments(aDoc);
-  NS_ASSERTION(count <= 1, "Fullscreen docs should have at most 1 fullscreen child!");
-  return count >= 1;
-}
-
-bool
-nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
-{
-  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
-    // Chrome code can always use the full-screen API, provided it's not
-    // explicitly disabled. Note IsCallerChrome() returns true when running
-    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
-    // nsRunnable!
-    return true;
-  }
-
-  if (!nsContentUtils::IsFullScreenApiEnabled()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
-    return false;
-  }
-  if (!IsVisible()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedHidden", this);
-    return false;
-  }
-  if (HasFullScreenSubDocument(this)) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedSubDocFullScreen", this);
-    return false;
-  }
-
-  // Ensure that all containing elements are <iframe> and have
-  // allowfullscreen attribute set.
-  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-  if (!docShell || !docShell->GetFullscreenAllowed()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedContainerNotAllowed", this);
-    return false;
-  }
-
-  return true;
+  return !GetFullscreenError(this, nsContentUtils::IsCallerChrome());
 }
 
 uint16_t
