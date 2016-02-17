@@ -1783,7 +1783,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #undef ADDSTDLIBSIMDOPNAME
 
-        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
+        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(cx_, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
