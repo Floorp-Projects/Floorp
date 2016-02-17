@@ -234,8 +234,6 @@ typedef enum {
     ssl_signature_algorithms_xtn     = 13,
     ssl_use_srtp_xtn                 = 14,
     ssl_app_layer_protocol_xtn       = 16,
-    /* signed_certificate_timestamp extension, RFC 6962 */
-    ssl_signed_cert_timestamp_xtn    = 18,
     ssl_padding_xtn                  = 21,
     ssl_extended_master_secret_xtn   = 23,
     ssl_session_ticket_xtn           = 35,
@@ -244,7 +242,7 @@ typedef enum {
     ssl_tls13_draft_version_xtn      = 0xff02   /* experimental number */
 } SSLExtensionType;
 
-#define SSL_MAX_EXTENSIONS             13 /* doesn't include ssl_padding_xtn. */
+#define SSL_MAX_EXTENSIONS             12 /* doesn't include ssl_padding_xtn. */
 
 typedef enum {
     ssl_dhe_group_none = 0,

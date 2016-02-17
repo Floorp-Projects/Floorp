@@ -110,7 +110,6 @@ void printSecurityInfo(PRFileDesc *fd)
 {
     CERTCertificate * cert;
     const SECItemArray *csa;
-    const SECItem *scts;
     SSL3Statistics * ssl3stats = SSL_GetStatistics();
     SECStatus result;
     SSLChannelInfo    channel;
@@ -163,11 +162,6 @@ void printSecurityInfo(PRFileDesc *fd)
         fprintf(stderr, "Received %d Cert Status items (OCSP stapled data)\n",
                 csa->len);
     }
-    scts = SSL_PeerSignedCertTimestamps(fd);
-    if (scts && scts->len) {
-        fprintf(stderr, "Received a Signed Certificate Timestamp of length"
-                " %u\n", scts->len);
-    }
 }
 
 void
@@ -190,7 +184,7 @@ static void PrintUsageHeader(const char *progName)
 "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
                     "[-D | -d certdir] [-C] [-b | -R root-module] \n"
 		    "[-n nickname] [-Bafosvx] [-c ciphers] [-Y]\n"
-                    "[-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
+                    "[-V [min-version]:[max-version]] [-K] [-T]\n"
                     "[-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n", 
             progName);
 }
@@ -238,7 +232,6 @@ static void PrintParameterUsage(void)
     fprintf(stderr, "%-20s Enable compression.\n", "-z");
     fprintf(stderr, "%-20s Enable false start.\n", "-g");
     fprintf(stderr, "%-20s Enable the cert_status extension (OCSP stapling).\n", "-T");
-    fprintf(stderr, "%-20s Enable the signed_certificate_timestamp extension.\n", "-U");
     fprintf(stderr, "%-20s Enable the extended master secret extension (session hash).\n", "-G");
     fprintf(stderr, "%-20s Require fresh revocation info from side channel.\n"
                     "%-20s -F once means: require for server cert only\n"
@@ -257,7 +250,6 @@ static void PrintParameterUsage(void)
     fprintf(stderr, "%-20s Enforce using an IPv4 destination address\n", "-4");
     fprintf(stderr, "%-20s Enforce using an IPv6 destination address\n", "-6");
     fprintf(stderr, "%-20s (Options -4 and -6 cannot be combined.)\n", "");
-    fprintf(stderr, "%-20s Enable the extended master secret extension [RFC7627]\n", "-G");
 }
 
 static void Usage(const char *progName)
@@ -928,7 +920,6 @@ int main(int argc, char **argv)
     int                enableCompression = 0;
     int                enableFalseStart = 0;
     int                enableCertStatus = 0;
-    int                enableSignedCertTimestamps = 0;
     int                forceFallbackSCSV = 0;
     int                enableExtendedMasterSecret = 0;
     PRSocketOptionData opt;
@@ -968,7 +959,7 @@ int main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    tmp = PR_GetEnvSecure("NSS_DEBUG_TIMEOUT");
+    tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
     if (tmp && tmp[0]) {
        int sec = PORT_Atoi(tmp);
        if (sec > 0) {
@@ -979,7 +970,7 @@ int main(int argc, char **argv)
     SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "46BCDFGKM:OR:STUV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
+                                 "46BCDFGKM:OR:STV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -1031,8 +1022,6 @@ int main(int argc, char **argv)
           case 'S': skipProtoHeader = PR_TRUE;                 break;
 
           case 'T': enableCertStatus = 1;               break;
-
-          case 'U': enableSignedCertTimestamps = 1;               break;
 
           case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
                             enabledVersions, enableSSL2,
@@ -1409,14 +1398,6 @@ int main(int argc, char **argv)
             SECU_PrintError(progName, "error enabling extended master secret");
             return 1;
 	}
-    }
-
-    /* enable Signed Certificate Timestamps. */
-    rv = SSL_OptionSet(s, SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
-              enableSignedCertTimestamps);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "error enabling signed cert timestamps");
-        return 1;
     }
 
     SSL_SetPKCS11PinArg(s, &pwdata);

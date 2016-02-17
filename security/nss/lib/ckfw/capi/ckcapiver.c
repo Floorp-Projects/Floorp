@@ -14,4 +14,5 @@
 /*
  * Version information
  */
-const char __nss_ckcapi_version[] = "Version: NSS Access to Microsoft Certificate Store " NSS_CKCAPI_LIBRARY_VERSION _DEBUG_STRING;
+const char __nss_ckcapi_version[] = "Version: NSS Access to Microsoft Certificate Store "
+        NSS_CKCAPI_LIBRARY_VERSION _DEBUG_STRING;

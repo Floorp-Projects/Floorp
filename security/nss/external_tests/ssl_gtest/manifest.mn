@@ -15,6 +15,7 @@ CPPSRCS = \
       ssl_agent_unittest.cc \
       ssl_loopback_unittest.cc \
       ssl_extension_unittest.cc \
+      ssl_prf_unittest.cc \
       ssl_skip_unittest.cc \
       ssl_gtest.cc \
       test_io.cc \

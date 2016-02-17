@@ -1268,11 +1268,11 @@ main(int argc, char **argv)
 	}
     }
 
-    tmp = PR_GetEnvSecure("TMP");
+    tmp = getenv("TMP");
     if (!tmp)
-	tmp = PR_GetEnvSecure("TMPDIR");
+	tmp = getenv("TMPDIR");
     if (!tmp)
-	tmp = PR_GetEnvSecure("TEMP");
+	tmp = getenv("TEMP");
     /* we're an ordinary single process server. */
     listen_sock = getBoundListenSocket(port);
     prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);

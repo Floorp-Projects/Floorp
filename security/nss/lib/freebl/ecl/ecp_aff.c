@@ -280,8 +280,8 @@ ec_GFp_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group)
 		group->meth->field_enc(px, &pxt, group->meth);
 		group->meth->field_enc(py, &pyt, group->meth);
 	} else {
-		MP_CHECKOK( mp_copy(px, &pxt) );
-		MP_CHECKOK( mp_copy(py, &pyt) );
+		mp_copy(px, &pxt);
+		mp_copy(py, &pyt);
 	}
 	/* left-hand side: y^2  */
 	MP_CHECKOK( group->meth->field_sqr(&pyt, &accl, group->meth) );

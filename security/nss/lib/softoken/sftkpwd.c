@@ -277,8 +277,7 @@ sftkdb_EncryptAttribute(PLArenaPool *arena, SECItem *passKey,
     cipherValue.salt.data = saltData;
     RNG_GenerateGlobalRandomBytes(saltData,cipherValue.salt.len);
 
-    param = nsspkcs5_NewParam(cipherValue.alg, HASH_AlgSHA1, &cipherValue.salt,
-                              1);
+    param = nsspkcs5_NewParam(cipherValue.alg, &cipherValue.salt, 1);
     if (param == NULL) {
 	rv = SECFailure;
 	goto loser;
@@ -450,7 +449,7 @@ sftkdb_SignAttribute(PLArenaPool *arena, SECItem *passKey,
     RNG_GenerateGlobalRandomBytes(saltData,prfLength);
 
     /* initialize our pkcs5 parameter */
-    param = nsspkcs5_NewParam(signValue.alg, HASH_AlgSHA1, &signValue.salt, 1);
+    param = nsspkcs5_NewParam(signValue.alg, &signValue.salt, 1);
     if (param == NULL) {
 	rv = SECFailure;
 	goto loser;

@@ -37,7 +37,6 @@
 #define PASS 0
 #define FAIL 1
 static int debug_mode = 0;
-static int failed_already = 0;
 
 static int _iterations = 1000;
 static int _clients = 1;
@@ -91,7 +90,6 @@ static void Test_Result (int result)
 			break;
 		case FAIL:
 			printf ("FAIL\n");
-			failed_already = 1;
 			break;
 		default:
 			break;
@@ -248,23 +246,12 @@ PRFileDesc *
 ServerSetup(void)
 {
     PRFileDesc *listenSocket;
-    PRSocketOptionData sockOpt;
     PRNetAddr serverAddr;
     PRThread *WorkerThread;
 
-    if ((listenSocket = PR_NewTCPSocket()) == NULL) {
+    if ( (listenSocket = PR_NewTCPSocket()) == NULL) {
         if (debug_mode) printf("\tServer error creating listen socket\n");
 		else Test_Result(FAIL);
-        return NULL;
-    }
-
-    sockOpt.option = PR_SockOpt_Reuseaddr;
-    sockOpt.value.reuse_addr = PR_TRUE;
-    if (PR_SetSocketOption(listenSocket, &sockOpt) != PR_SUCCESS) {
-        if (debug_mode) printf("\tServer error setting socket option: OS error %d\n",
-                PR_GetOSError());
-        else Test_Result(FAIL);
-        PR_Close(listenSocket);
         return NULL;
     }
 
@@ -273,7 +260,7 @@ ServerSetup(void)
     serverAddr.inet.port = PR_htons(PORT);
     serverAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
 
-    if (PR_Bind(listenSocket, &serverAddr) != PR_SUCCESS) {
+    if ( PR_Bind(listenSocket, &serverAddr) == PR_FAILURE) {
         if (debug_mode) printf("\tServer error binding to server address: OS error %d\n",
                 PR_GetOSError());
 		else Test_Result(FAIL);
@@ -281,7 +268,7 @@ ServerSetup(void)
         return NULL;
     }
 
-    if (PR_Listen(listenSocket, 128) != PR_SUCCESS) {
+    if ( PR_Listen(listenSocket, 128) == PR_FAILURE) {
         if (debug_mode) printf("\tServer error listening to server socket\n");
 		else Test_Result(FAIL);
         PR_Close(listenSocket);
@@ -561,7 +548,7 @@ int main(int argc, char **argv)
 	Usage: test_name -d
 	*/
 	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "d");
+	PLOptState *opt = PL_CreateOptState(argc, argv, "d:");
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
 		if (PL_OPT_BAD == os) continue;
@@ -619,5 +606,5 @@ int main(int argc, char **argv)
 
     PR_Cleanup();
 
-    return failed_already;
+    return 0;
 }

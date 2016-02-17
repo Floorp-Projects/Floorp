@@ -305,10 +305,10 @@ static const SEC_ASN1Template smime_capability_template[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(smime_capability) },
     { SEC_ASN1_OBJECT_ID,
-	  offsetof(smime_capability,capabilityID) },
+	  offsetof(smime_capability,capabilityID), },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_ANY,
-	  offsetof(smime_capability,parameters) },
-    { 0 }
+	  offsetof(smime_capability,parameters), },
+    { 0, }
 };
 
 static const SEC_ASN1Template smime_capabilities_template[] = {

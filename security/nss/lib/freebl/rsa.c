@@ -747,7 +747,8 @@ RSA_PopulatePrivateKey(RSAPrivateKey *key)
     }
     /* if we have the modulus and one prime, calculate the second. */
     if ((prime_count == 1) && (hasModulus)) {
-	if (mp_div(&n,&p,&q,&r) != MP_OKAY || mp_cmp_z(&r) != 0) {
+	mp_div(&n,&p,&q,&r);
+	if (mp_cmp_z(&r) != 0) {
 	   /* p is not a factor or n, fail */
 	   err = MP_BADARG;
 	   goto cleanup;
@@ -1095,7 +1096,9 @@ init_blinding_params(RSABlindingParams *rsabp, RSAPrivateKey *key,
     rsabp->free = bp;
 
     /* List elements are keyed using the modulus */
-    return SECITEM_CopyItem(NULL, &rsabp->modulus, &key->modulus);
+    SECITEM_CopyItem(NULL, &rsabp->modulus, &key->modulus);
+
+    return SECSuccess;
 }
 
 static SECStatus

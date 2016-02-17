@@ -18,16 +18,16 @@
  * NSS_EXTERN, NSS_IMPLEMENT, NSS_EXTERN_DATA, NSS_IMPLEMENT_DATA
  *
  * NSS has its own versions of these NSPR macros, in a form which
- * does not confuse ctags and other related utilities.  NSPR
+ * does not confuse ctags and other related utilities.  NSPR 
  * defines these macros to take the type as an argument, because
  * of certain OS requirements on platforms not supported by NSS.
  */
 
-#define DUMMY /* dummy */
-#define NSS_EXTERN extern
-#define NSS_EXTERN_DATA extern
-#define NSS_IMPLEMENT
-#define NSS_IMPLEMENT_DATA
+#define DUMMY	/* dummy */
+#define NSS_EXTERN         extern
+#define NSS_EXTERN_DATA    extern
+#define NSS_IMPLEMENT      
+#define NSS_IMPLEMENT_DATA 
 
 PR_BEGIN_EXTERN_C
 
@@ -36,7 +36,7 @@ PR_BEGIN_EXTERN_C
  *
  * Calls to NSS routines may result in one or more errors being placed
  * on the calling thread's "error stack."  Every possible error that
- * may be returned from a function is declared where the function is
+ * may be returned from a function is declared where the function is 
  * prototyped.  All errors are of the following type.
  */
 
@@ -47,7 +47,7 @@ typedef PRInt32 NSSError;
  *
  * Arenas are logical sets of heap memory, from which memory may be
  * allocated.  When an arena is destroyed, all memory allocated within
- * that arena is implicitly freed.  These arenas are thread-safe:
+ * that arena is implicitly freed.  These arenas are thread-safe: 
  * an arena pointer may be used by multiple threads simultaneously.
  * However, as they are not backed by shared memory, they may only be
  * used within one process.
@@ -64,10 +64,11 @@ typedef struct NSSArenaStr NSSArena;
  */
 
 struct NSSItemStr {
-    void *data;
-    PRUint32 size;
+  void *data;
+  PRUint32 size;
 };
 typedef struct NSSItemStr NSSItem;
+
 
 /*
  * NSSBER

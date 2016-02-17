@@ -77,8 +77,7 @@ nsspkcs5_AlgidToParam(SECAlgorithmID *algid);
  * keyDB which only support PKCS 5 v1, PFX, and PKCS 12.
  */
 NSSPKCS5PBEParameter *
-nsspkcs5_NewParam(SECOidTag alg, HASH_HashType hashType, SECItem *salt,
-                  int iterationCount);
+nsspkcs5_NewParam(SECOidTag alg, SECItem *salt, int iterator);
 
 
 /* Encrypt/Decrypt data using password based encryption.  

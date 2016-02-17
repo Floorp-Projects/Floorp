@@ -5,10 +5,10 @@
 /*
  * libc.c
  *
- * This file contains our wrappers/reimplementations for "standard"
- * libc functions.  Things like "memcpy."  We add to this as we need
- * it.  Oh, and let's keep it in alphabetical order, should it ever
- * get large.  Most string/character stuff should be in utf8.c, not
+ * This file contains our wrappers/reimplementations for "standard" 
+ * libc functions.  Things like "memcpy."  We add to this as we need 
+ * it.  Oh, and let's keep it in alphabetical order, should it ever 
+ * get large.  Most string/character stuff should be in utf8.c, not 
  * here.  This file (and maybe utf8.c) should be the only ones in
  * NSS to include files with angle brackets.
  */
@@ -38,16 +38,21 @@
  */
 
 NSS_IMPLEMENT void *
-nsslibc_memcpy(void *dest, const void *source, PRUint32 n)
+nsslibc_memcpy
+(
+  void *dest,
+  const void *source,
+  PRUint32 n
+)
 {
 #ifdef NSSDEBUG
-    if (((void *)NULL == dest) || ((const void *)NULL == source)) {
-        nss_SetError(NSS_ERROR_INVALID_POINTER);
-        return (void *)NULL;
-    }
+  if( ((void *)NULL == dest) || ((const void *)NULL == source) ) {
+    nss_SetError(NSS_ERROR_INVALID_POINTER);
+    return (void *)NULL;
+  }
 #endif /* NSSDEBUG */
 
-    return memcpy(dest, source, (size_t)n);
+  return memcpy(dest, source, (size_t)n);
 }
 
 /*
@@ -62,16 +67,21 @@ nsslibc_memcpy(void *dest, const void *source, PRUint32 n)
  */
 
 NSS_IMPLEMENT void *
-nsslibc_memset(void *dest, PRUint8 byte, PRUint32 n)
+nsslibc_memset
+(
+  void *dest,
+  PRUint8 byte,
+  PRUint32 n
+)
 {
 #ifdef NSSDEBUG
-    if (((void *)NULL == dest)) {
-        nss_SetError(NSS_ERROR_INVALID_POINTER);
-        return (void *)NULL;
-    }
+  if( ((void *)NULL == dest) ) {
+    nss_SetError(NSS_ERROR_INVALID_POINTER);
+    return (void *)NULL;
+  }
 #endif /* NSSDEBUG */
 
-    return memset(dest, (int)byte, (size_t)n);
+  return memset(dest, (int)byte, (size_t)n);
 }
 
 /*
@@ -87,29 +97,33 @@ nsslibc_memset(void *dest, PRUint8 byte, PRUint32 n)
  */
 
 NSS_IMPLEMENT PRBool
-nsslibc_memequal(const void *a, const void *b, PRUint32 len,
-                 PRStatus *statusOpt)
+nsslibc_memequal
+(
+  const void *a,
+  const void *b,
+  PRUint32 len,
+  PRStatus *statusOpt
+)
 {
 #ifdef NSSDEBUG
-    if ((((void *)NULL == a) || ((void *)NULL == b))) {
-        nss_SetError(NSS_ERROR_INVALID_POINTER);
-        if ((PRStatus *)NULL != statusOpt) {
-            *statusOpt = PR_FAILURE;
-        }
-        return PR_FALSE;
+  if( (((void *)NULL == a) || ((void *)NULL == b)) ) {
+    nss_SetError(NSS_ERROR_INVALID_POINTER);
+    if( (PRStatus *)NULL != statusOpt ) {
+      *statusOpt = PR_FAILURE;
     }
+    return PR_FALSE;
+  }
 #endif /* NSSDEBUG */
 
-    if ((PRStatus *)NULL != statusOpt) {
-        *statusOpt = PR_SUCCESS;
-    }
+  if( (PRStatus *)NULL != statusOpt ) {
+    *statusOpt = PR_SUCCESS;
+  }
 
-    if (0 == memcmp(a, b, len)) {
-        return PR_TRUE;
-    }
-    else {
-        return PR_FALSE;
-    }
+  if( 0 == memcmp(a, b, len) ) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
 }
 
 /*
@@ -117,26 +131,32 @@ nsslibc_memequal(const void *a, const void *b, PRUint32 len,
  */
 
 NSS_IMPLEMENT PRInt32
-nsslibc_memcmp(const void *a, const void *b, PRUint32 len, PRStatus *statusOpt)
+nsslibc_memcmp
+(
+  const void *a,
+  const void *b,
+  PRUint32 len,
+  PRStatus *statusOpt
+)
 {
-    int v;
+  int v;
 
 #ifdef NSSDEBUG
-    if ((((void *)NULL == a) || ((void *)NULL == b))) {
-        nss_SetError(NSS_ERROR_INVALID_POINTER);
-        if ((PRStatus *)NULL != statusOpt) {
-            *statusOpt = PR_FAILURE;
-        }
-        return -2;
+  if( (((void *)NULL == a) || ((void *)NULL == b)) ) {
+    nss_SetError(NSS_ERROR_INVALID_POINTER);
+    if( (PRStatus *)NULL != statusOpt ) {
+      *statusOpt = PR_FAILURE;
     }
+    return -2;
+  }
 #endif /* NSSDEBUG */
 
-    if ((PRStatus *)NULL != statusOpt) {
-        *statusOpt = PR_SUCCESS;
-    }
+  if( (PRStatus *)NULL != statusOpt ) {
+    *statusOpt = PR_SUCCESS;
+  }
 
-    v = memcmp(a, b, len);
-    return (PRInt32)v;
+  v = memcmp(a, b, len);
+  return (PRInt32)v;
 }
 
 /*

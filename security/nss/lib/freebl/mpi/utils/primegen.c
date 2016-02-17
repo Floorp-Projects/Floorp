@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
   /* We'll just use the C library's rand() for now, although this
      won't be good enough for cryptographic purposes */
-  if((out = PR_GetEnvSecure("SEED")) == NULL) {
+  if((out = getenv("SEED")) == NULL) {
     srand((unsigned int)time(NULL));
   } else {
     srand((unsigned int)atoi(out));

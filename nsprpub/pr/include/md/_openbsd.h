@@ -192,7 +192,7 @@ struct _MDCPU {
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
-#define _PR_HAVE_CLOCK_MONOTONIC
+#define _MD_INTERVAL_USE_GTOD
 
 /*
  * We wrapped the select() call.  _MD_SELECT refers to the built-in,

@@ -12,16 +12,15 @@
 char ** NSSUTIL_DoModuleDBFunction(unsigned long function,char *parameters, void *args);
 
 /* parsing functions */
-char *NSSUTIL_ArgFetchValue(const char *string, int *pcount);
-const char *NSSUTIL_ArgStrip(const char *c);
-char *NSSUTIL_ArgGetParamValue(const char *paramName,const char *parameters);
-const char *NSSUTIL_ArgSkipParameter(const char *string);
-char *NSSUTIL_ArgGetLabel(const char *inString, int *next);
-long NSSUTIL_ArgDecodeNumber(const char *num);
+char *NSSUTIL_ArgFetchValue(char *string, int *pcount);
+char *NSSUTIL_ArgStrip(char *c);
+char *NSSUTIL_ArgGetParamValue(char *paramName,char *parameters);
+char *NSSUTIL_ArgSkipParameter(char *string);
+char *NSSUTIL_ArgGetLabel(char *inString, int *next);
+long NSSUTIL_ArgDecodeNumber(char *num);
 PRBool NSSUTIL_ArgIsBlank(char c);
-PRBool NSSUTIL_ArgHasFlag(const char *label, const char *flag,
-			  const char *parameters);
-long NSSUTIL_ArgReadLong(const char *label,const char *params, long defValue,
+PRBool NSSUTIL_ArgHasFlag(char *label, char *flag, char *parameters);
+long NSSUTIL_ArgReadLong(char *label,char *params, long defValue, 
 			 PRBool *isdefault);
 
 /* quoting functions */
@@ -32,22 +31,21 @@ char *NSSUTIL_Quote(const char *string, char quote);
 int NSSUTIL_DoubleEscapeSize(const char *string, char quote1, char quote2);
 char *NSSUTIL_DoubleEscape(const char *string, char quote1, char quote2);
 
-unsigned long NSSUTIL_ArgParseSlotFlags(const char *label,const char *params);
+unsigned long NSSUTIL_ArgParseSlotFlags(char *label,char *params);
 struct NSSUTILPreSlotInfoStr *NSSUTIL_ArgParseSlotInfo(PLArenaPool *arena,
-				const char *slotParams, int *retCount);
+					 char *slotParams, int *retCount);
 char * NSSUTIL_MkSlotString(unsigned long slotID, unsigned long defaultFlags,
                   unsigned long timeout, unsigned char askpw_in,
                   PRBool hasRootCerts, PRBool hasRootTrust);
-SECStatus NSSUTIL_ArgParseModuleSpec(const char *modulespec, char **lib,
-		 char **mod, char **parameters, char **nss);
-SECStatus NSSUTIL_ArgParseModuleSpecEx(const char *modulespec, char **lib,
-		 char **mod, char **parameters, char **nss, char **config);
+SECStatus NSSUTIL_ArgParseModuleSpec(char *modulespec, char **lib, char **mod,
+                                        char **parameters, char **nss);
+SECStatus NSSUTIL_ArgParseModuleSpecEx(char *modulespec, char **lib, char **mod,
+                                        char **parameters, char **nss, char **config);
 char *NSSUTIL_MkModuleSpec(char *dllName, char *commonName, 
 					char *parameters, char *NSS);
 char *NSSUTIL_MkModuleSpecEx(char *dllName, char *commonName, 
 				char *parameters, char *NSS, char *config);
-void NSSUTIL_ArgParseCipherFlags(unsigned long *newCiphers,
-			         const char *cipherList);
+void NSSUTIL_ArgParseCipherFlags(unsigned long *newCiphers,char *cipherList);
 char * NSSUTIL_MkNSSString(char **slotStrings, int slotCount, PRBool internal,
           PRBool isFIPS, PRBool isModuleDB,  PRBool isModuleDBOnly,
           PRBool isCritical, unsigned long trustOrder,
@@ -56,8 +54,7 @@ char * NSSUTIL_MkNSSString(char **slotStrings, int slotCount, PRBool internal,
 /*
  * private functions for softoken.
  */
-char * _NSSUTIL_GetSecmodName(const char *param, NSSDBType *dbType,
-			      char **appName, char **filename,PRBool *rw);
+char * _NSSUTIL_GetSecmodName(char *param, NSSDBType *dbType, char **appName, char **filename,PRBool *rw);
 const char *_NSSUTIL_EvaluateConfigDir(const char *configdir, NSSDBType *dbType, char **app);
 
 #endif /* _UTILPARS_H_ */

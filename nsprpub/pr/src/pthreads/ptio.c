@@ -3765,7 +3765,7 @@ static PRInt32 _pr_poll_with_poll(
      * We use these variables to figure out how much time has
      * elapsed and how much of the timeout still remains.
      */
-    PRIntervalTime start = 0, elapsed, remaining;
+    PRIntervalTime start, elapsed, remaining;
 
     if (pt_TestAbort()) return -1;
 
@@ -4019,7 +4019,7 @@ static PRInt32 _pr_poll_with_select(
      * We use these variables to figure out how much time has
      * elapsed and how much of the timeout still remains.
      */
-    PRIntervalTime start = 0, elapsed, remaining;
+    PRIntervalTime start, elapsed, remaining;
 
     if (pt_TestAbort()) return -1;
 
@@ -4919,7 +4919,7 @@ PR_IMPLEMENT(PRInt32) PR_Select(
      * We use these variables to figure out how much time has elapsed
      * and how much of the timeout still remains.
      */
-    PRIntervalTime start = 0, elapsed, remaining;
+    PRIntervalTime start, elapsed, remaining;
 
     static PRBool unwarned = PR_TRUE;
     if (unwarned) unwarned = _PR_Obsolete( "PR_Select", "PR_Poll");

@@ -6,12 +6,12 @@
  * dbm/anchor.c
  *
  * This file "anchors" the actual cryptoki entry points in this module's
- * shared library, which is required for dynamic loading.  See the
+ * shared library, which is required for dynamic loading.  See the 
  * comments in nssck.api for more information.
  */
 
 #include "ckdbm.h"
 
 #define MODULE_NAME dbm
-#define INSTANCE_NAME (NSSCKMDInstance *) & nss_dbm_mdInstance
+#define INSTANCE_NAME (NSSCKMDInstance *)&nss_dbm_mdInstance
 #include "nssck.api"

@@ -21,46 +21,52 @@
 #endif /* CKT_H */
 
 struct builtinsInternalObjectStr {
-    CK_ULONG n;
-    const CK_ATTRIBUTE_TYPE *types;
-    const NSSItem *items;
-    NSSCKMDObject mdObject;
+  CK_ULONG n;
+  const CK_ATTRIBUTE_TYPE *types;
+  const NSSItem *items;
+  NSSCKMDObject mdObject;
 };
 typedef struct builtinsInternalObjectStr builtinsInternalObject;
 
-extern builtinsInternalObject nss_builtins_data[];
-extern const PRUint32 nss_builtins_nObjects;
+extern       builtinsInternalObject nss_builtins_data[];
+extern const PRUint32               nss_builtins_nObjects;
 
-extern const CK_VERSION nss_builtins_CryptokiVersion;
-extern const CK_VERSION nss_builtins_LibraryVersion;
-extern const CK_VERSION nss_builtins_HardwareVersion;
-extern const CK_VERSION nss_builtins_FirmwareVersion;
+extern const CK_VERSION   nss_builtins_CryptokiVersion;
+extern const CK_VERSION   nss_builtins_LibraryVersion;
+extern const CK_VERSION   nss_builtins_HardwareVersion;
+extern const CK_VERSION   nss_builtins_FirmwareVersion;
 
-extern const NSSUTF8 nss_builtins_ManufacturerID[];
-extern const NSSUTF8 nss_builtins_LibraryDescription[];
-extern const NSSUTF8 nss_builtins_SlotDescription[];
-extern const NSSUTF8 nss_builtins_TokenLabel[];
-extern const NSSUTF8 nss_builtins_TokenModel[];
-extern const NSSUTF8 nss_builtins_TokenSerialNumber[];
+extern const NSSUTF8      nss_builtins_ManufacturerID[];
+extern const NSSUTF8      nss_builtins_LibraryDescription[];
+extern const NSSUTF8      nss_builtins_SlotDescription[];
+extern const NSSUTF8      nss_builtins_TokenLabel[];
+extern const NSSUTF8      nss_builtins_TokenModel[];
+extern const NSSUTF8      nss_builtins_TokenSerialNumber[];
 
 extern const NSSCKMDInstance nss_builtins_mdInstance;
-extern const NSSCKMDSlot nss_builtins_mdSlot;
-extern const NSSCKMDToken nss_builtins_mdToken;
+extern const NSSCKMDSlot     nss_builtins_mdSlot;
+extern const NSSCKMDToken    nss_builtins_mdToken;
 
 NSS_EXTERN NSSCKMDSession *
-nss_builtins_CreateSession(
-    NSSCKFWSession *fwSession,
-    CK_RV *pError);
+nss_builtins_CreateSession
+(
+  NSSCKFWSession *fwSession,
+  CK_RV *pError
+);
 
 NSS_EXTERN NSSCKMDFindObjects *
-nss_builtins_FindObjectsInit(
-    NSSCKFWSession *fwSession,
-    CK_ATTRIBUTE_PTR pTemplate,
-    CK_ULONG ulAttributeCount,
-    CK_RV *pError);
+nss_builtins_FindObjectsInit
+(
+  NSSCKFWSession *fwSession,
+  CK_ATTRIBUTE_PTR pTemplate,
+  CK_ULONG ulAttributeCount,
+  CK_RV *pError
+);
 
 NSS_EXTERN NSSCKMDObject *
-nss_builtins_CreateMDObject(
-    NSSArena *arena,
-    builtinsInternalObject *io,
-    CK_RV *pError);
+nss_builtins_CreateMDObject
+(
+  NSSArena *arena,
+  builtinsInternalObject *io,
+  CK_RV *pError
+);

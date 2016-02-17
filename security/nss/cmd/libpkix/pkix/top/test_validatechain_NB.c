@@ -249,7 +249,7 @@ int test_validatechain_NB(int argc, char *argv[]){
                 chainCerts,
                 plContext);
 
-        ldapName = PR_GetEnvSecure("LDAP");
+        ldapName = PR_GetEnv("LDAP");
         /* Is LDAP set in the environment? */
         if ((ldapName == NULL) || (*ldapName == '\0')) {
                 testError("LDAP not set in environment");
@@ -276,7 +276,7 @@ int test_validatechain_NB(int argc, char *argv[]){
 
         testSetupCertStore(valParams, ldapName);
 
-        logging = PR_GetEnvSecure("LOGGING");
+        logging = PR_GetEnv("LOGGING");
         /* Is LOGGING set in the environment? */
         if ((logging != NULL) && (*logging != '\0')) {
 

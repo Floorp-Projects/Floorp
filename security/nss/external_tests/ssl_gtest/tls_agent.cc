@@ -40,9 +40,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea
     error_code_(0),
     send_ctr_(0),
     recv_ctr_(0),
-    expected_read_error_(false),
-    handshake_callback_(),
-    auth_certificate_callback_() {
+    expected_read_error_(false) {
 
   memset(&info_, 0, sizeof(info_));
   memset(&csinfo_, 0, sizeof(csinfo_));

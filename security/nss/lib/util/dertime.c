@@ -19,10 +19,10 @@
     p += 2; \
 }
 
-static const PRTime January1st1     = PR_INT64(0xff23400100d44000);
-static const PRTime January1st1950  = PR_INT64(0xfffdc1f8793da000);
-static const PRTime January1st2050  = PR_INT64(0x0008f81e1b098000);
-static const PRTime January1st10000 = PR_INT64(0x0384440ccc736000);
+static const PRTime January1st1     = (PRTime) LL_INIT(0xff234001U, 0x00d44000U);
+static const PRTime January1st1950  = (PRTime) LL_INIT(0xfffdc1f8U, 0x793da000U);
+static const PRTime January1st2050  = LL_INIT(0x0008f81e, 0x1b098000);
+static const PRTime January1st10000 = LL_INIT(0x0384440c, 0xcc736000);
 
 /* gmttime must contains UTC time in micro-seconds unit */
 SECStatus

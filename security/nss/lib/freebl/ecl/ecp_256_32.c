@@ -1302,23 +1302,23 @@ static mp_err to_montgomery(felem out, const mp_int *in, const ECGroup *group)
     int i;
     mp_err res;
 
-    MP_CHECKOK(mp_init(&in_shifted));
-    MP_CHECKOK(s_mp_pad(&in_shifted, MP_USED(in) + MP_DIGITS_IN_256_BITS));
+    mp_init(&in_shifted);
+    s_mp_pad(&in_shifted, MP_USED(in) + MP_DIGITS_IN_256_BITS);
     memcpy(&MP_DIGIT(&in_shifted, MP_DIGITS_IN_256_BITS),
 	   MP_DIGITS(in),
 	   MP_USED(in)*sizeof(mp_digit));
-    MP_CHECKOK(mp_mul_2(&in_shifted, &in_shifted));
+    mp_mul_2(&in_shifted, &in_shifted);
     MP_CHECKOK(group->meth->field_mod(&in_shifted, &in_shifted, group->meth));
 
     for (i = 0;; i++) {
 	out[i] = MP_DIGIT(&in_shifted, 0) & kBottom29Bits;
-	MP_CHECKOK(mp_div_d(&in_shifted, kTwo29, &in_shifted, NULL));
+	mp_div_d(&in_shifted, kTwo29, &in_shifted, NULL);
 
 	i++;
 	if (i == NLIMBS)
 	    break;
 	out[i] = MP_DIGIT(&in_shifted, 0) & kBottom28Bits;
-	MP_CHECKOK(mp_div_d(&in_shifted, kTwo28, &in_shifted, NULL));
+	mp_div_d(&in_shifted, kTwo28, &in_shifted, NULL);
     }
 
 CLEANUP:
@@ -1334,8 +1334,8 @@ static mp_err from_montgomery(mp_int *out, const felem in,
     mp_err res;
     int i;
 
-    MP_CHECKOK(mp_init(&result));
-    MP_CHECKOK(mp_init(&tmp));
+    mp_init(&result);
+    mp_init(&tmp);
 
     MP_CHECKOK(mp_add_d(&tmp, in[NLIMBS-1], &result));
     for (i = NLIMBS-2; i >= 0; i--) {

@@ -18,6 +18,6 @@
 struct nssCKFWHashStr;
 typedef struct nssCKFWHashStr nssCKFWHash;
 
-typedef void(PR_CALLBACK *nssCKFWHashIterator)(const void *key, void *value, void *closure);
+typedef void (PR_CALLBACK *nssCKFWHashIterator)(const void *key, void *value, void *closure);
 
 #endif /* CKFWTM_H */
