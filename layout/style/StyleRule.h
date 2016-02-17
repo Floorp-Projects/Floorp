@@ -25,6 +25,7 @@ class nsIAtom;
 struct nsCSSSelectorList;
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 class CSSStyleSheet;
 } // namespace mozilla
 
@@ -208,11 +209,9 @@ private:
 
 public:
   // Get and set the selector's pseudo type
-  mozilla::CSSPseudoElementType PseudoType() const {
-    return static_cast<mozilla::CSSPseudoElementType>(mPseudoType);
-  }
+  mozilla::CSSPseudoElementType PseudoType() const { return mPseudoType; }
   void SetPseudoType(mozilla::CSSPseudoElementType aType) {
-    mPseudoType = static_cast<int16_t>(aType);
+    mPseudoType = aType;
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -233,8 +232,9 @@ public:
   int32_t         mNameSpace;
   char16_t       mOperator;
 private:
-  // int16_t to make sure it packs well with mOperator
-  int16_t        mPseudoType;
+  // The underlying type of CSSPseudoElementType is uint8_t and
+  // it packs well with mOperator. (char16_t + uint8_t is less than 32bits.)
+  mozilla::CSSPseudoElementType mPseudoType;
 
   nsCSSSelector(const nsCSSSelector& aCopy) = delete;
   nsCSSSelector& operator=(const nsCSSSelector& aCopy) = delete;
