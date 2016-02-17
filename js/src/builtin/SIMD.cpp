@@ -95,6 +95,18 @@ js::IsVectorObject(HandleValue v)
 FOR_EACH_SIMD(InstantiateIsVectorObject_)
 #undef InstantiateIsVectorObject_
 
+const char*
+js::SimdTypeToString(SimdType type)
+{
+    switch (type) {
+#define RETSTR_(TYPE) case SimdType::TYPE: return #TYPE;
+      FOR_EACH_SIMD(RETSTR_)
+#undef RETSTR_
+      case SimdType::Count: break;
+    }
+    return "<bad SimdType>";
+}
+
 static inline bool
 ErrorBadArgs(JSContext* cx)
 {
