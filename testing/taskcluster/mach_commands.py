@@ -274,8 +274,13 @@ class Graph(object):
     @CommandArgument('--dry-run',
         action='store_true', default=False,
         help="Stub out taskIds and date fields from the task definitions.")
+    @CommandArgument('--ignore-conditions',
+        action='store_true',
+        help='Run tasks even if their conditions are not met')
     def create_graph(self, **params):
         from functools import partial
+
+        from mozpack.path import match as mozpackmatch
 
         from slugid import nice as slugid
 
@@ -324,6 +329,7 @@ class Graph(object):
         # Default to current time if querying the head rev fails
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
         vcs_info = query_vcs_info(params['head_repository'], params['head_rev'])
+        changed_files = set()
         if vcs_info:
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
 
@@ -332,6 +338,8 @@ class Graph(object):
             for c in vcs_info.changesets:
                 sys.stderr.write('%s %s\n' % (
                     c['node'][0:12], c['desc'].splitlines()[0]))
+
+                changed_files |= set(c['files'])
 
         # Template parameters used when expanding the graph
         seen_images = {}
@@ -389,6 +397,41 @@ class Graph(object):
             'description': 'Task graph generated via ./mach taskcluster-graph',
             'name': 'task graph local'
         }
+
+        # Filter the job graph according to conditions met by this invocation run.
+        def should_run(task):
+            # Old style build or test task that doesn't define conditions. Always runs.
+            if 'when' not in task:
+                return True
+
+            # Command line override to not filter.
+            if params['ignore_conditions']:
+                return True
+
+            when = task['when']
+
+            # If the task defines file patterns and we have a set of changed
+            # files to compare against, only run if a file pattern matches one
+            # of the changed files.
+            file_patterns = when.get('file_patterns', None)
+            if file_patterns and changed_files:
+                for pattern in file_patterns:
+                    for path in changed_files:
+                        if mozpackmatch(path, pattern):
+                            sys.stderr.write('scheduling %s because pattern %s '
+                                             'matches %s\n' % (task['task'],
+                                                               pattern,
+                                                               path))
+                            return True
+
+                # No file patterns matched. Discard task.
+                sys.stderr.write('discarding %s because no relevant files changed\n' %
+                                 task['task'])
+                return False
+
+            return True
+
+        job_graph = filter(should_run, job_graph)
 
         all_routes = {}
 

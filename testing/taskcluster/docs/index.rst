@@ -171,6 +171,31 @@ additional-parameters
    *optional* Dictionary of additional parameters to pass to template
    expansion.
 
+when
+   *optional* Dictionary of conditions that must be met for this task
+   to run. See the section below for more details.
+
+Conditional Execution
+---------------------
+
+The ``when`` generic task dictionary entry can declare conditions that
+must be true for a task to run. Valid entries in this dictionary are
+described below.
+
+file_patterns
+   List of path patterns that will be matched against all files changed.
+
+   The set of changed files is obtained from version control. If the changed
+   files could not be determined, this condition is ignored and no filtering
+   occurs.
+
+   Values use the ``mozpack`` matching code. ``*`` is a wildcard for
+   all path characters except ``/``. ``**`` matches all directories. To
+   e.g. match against all ``.js`` files, one would use ``**/*.js``.
+
+   If a single pattern matches a single changed file, the task will be
+   scheduled.
+
 Developing
 ==========
 

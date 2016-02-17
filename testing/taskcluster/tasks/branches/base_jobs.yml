@@ -310,3 +310,18 @@ tasks:
   eslint-gecko:
     task: tasks/tests/eslint-gecko.yml
     root: true
+    when:
+      file_patterns:
+        # Files that are likely audited.
+        - '**/*.js'
+        - '**/*.jsm'
+        - '**/*.jsx'
+        - '**/*.html'
+        - '**/*.xml'
+        # Run when eslint policies change.
+        - '**/.eslintignore'
+        - '**/*eslintrc*'
+        # The plugin implementing custom checks.
+        - 'testing/eslint-plugin-mozilla/**'
+        # Other misc lint related files.
+        - 'tools/lint/**'
