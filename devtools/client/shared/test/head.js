@@ -168,7 +168,7 @@ function checkTelemetryResults(Telemetry) {
     if (histId.endsWith("OPENED_PER_USER_FLAG")) {
       ok(value.length === 1 && value[0] === true,
          "Per user value " + histId + " has a single value of true");
-    } else if (histId.endsWith("OPENED_BOOLEAN")) {
+    } else if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
       let okay = value.every(function(element) {
