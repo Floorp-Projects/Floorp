@@ -922,14 +922,14 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                               ChannelCount);
+                               mSampleRate, ChannelCount);
 
   // Process mic data if any/needed -- after inserting far-end data for AEC!
   if (aInputBuffer) {
     if (mAudioInput) { // for this specific input-only or full-duplex stream
       mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
                                    static_cast<size_t>(aFrames),
-                                   ChannelCount);
+                                   mSampleRate, ChannelCount);
     }
   }
 
