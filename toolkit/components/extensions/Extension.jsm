@@ -416,7 +416,7 @@ GlobalManager = {
                 promise = Promise.reject(e);
               } else {
                 Cu.reportError(e);
-                promise = Promise.reject({ message: "An unexpected error occurred" });
+                promise = Promise.reject({message: "An unexpected error occurred"});
               }
             }
 
@@ -451,7 +451,7 @@ GlobalManager = {
     let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
 
     // We don't inject privileged APIs into sub-frames of a UI page.
-    const { FULL_PRIVILEGES } = ExtensionManagement.API_LEVELS;
+    const {FULL_PRIVILEGES} = ExtensionManagement.API_LEVELS;
     if (ExtensionManagement.getAPILevelForWindow(contentWindow, id) !== FULL_PRIVILEGES) {
       return;
     }
@@ -611,7 +611,7 @@ ExtensionData.prototype = {
         }
         try {
           let text = NetUtil.readInputStreamToString(inputStream, inputStream.available(),
-                                                     { charset: "utf-8" });
+                                                     {charset: "utf-8"});
           resolve(JSON.parse(text));
         } catch (e) {
           reject(e);
@@ -768,7 +768,7 @@ ExtensionData.prototype = {
 
     let promises = [this.readLocaleFile(locale)];
 
-    let { defaultLocale } = this;
+    let {defaultLocale} = this;
     if (locale != defaultLocale && !this.localeData.has(defaultLocale)) {
       promises.push(this.readLocaleFile(defaultLocale));
     }
@@ -1100,7 +1100,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       let locales = yield this.promiseLocales();
 
       let localeList = Array.from(locales.keys(), locale => {
-        return { name: locale, locales: [locale] };
+        return {name: locale, locales: [locale]};
       });
 
       let match = Locale.findClosestLocale(localeList);
@@ -1193,7 +1193,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
     Services.ppmm.broadcastAsyncMessage("Extension:Shutdown", {id: this.id});
 
-    MessageChannel.abortResponses({ extensionId: this.id });
+    MessageChannel.abortResponses({extensionId: this.id});
 
     ExtensionManagement.shutdownExtension(this.uuid);
 

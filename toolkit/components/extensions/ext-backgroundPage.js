@@ -1,6 +1,6 @@
 "use strict";
 
-var { interfaces: Ci, utils: Cu } = Components;
+var {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

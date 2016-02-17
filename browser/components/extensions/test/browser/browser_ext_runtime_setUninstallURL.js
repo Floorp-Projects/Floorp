@@ -1,7 +1,7 @@
 "use strict";
 
-let { AddonManager } = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
-let { Extension } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+let {AddonManager} = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
+let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
 function install(url) {
   return new Promise((resolve, reject) => {
@@ -78,7 +78,7 @@ add_task(function* test_setuninstallurl_badargs() {
 add_task(function* test_setuninstall_empty_url() {
   function backgroundScript() {
     browser.runtime.setUninstallURL("")
-      .then(() => browser.tabs.create({ url: "http://example.com/addon_loaded" }));
+      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl2@tests.mozilla.org",
@@ -95,7 +95,7 @@ add_task(function* test_setuninstall_empty_url() {
 add_task(function* test_setuninstallurl() {
   function backgroundScript() {
     browser.runtime.setUninstallURL("http://example.com/addon_uninstalled")
-      .then(() => browser.tabs.create({ url: "http://example.com/addon_loaded" }));
+      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl@tests.mozilla.org",
