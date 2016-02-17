@@ -168,7 +168,7 @@ DB * rdbopen(const char *appName, const char *prefix,
     }
 
     /* couldn't find the entry point, unload the library and fail */
-    disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
+    disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
     if (!disableUnload) {
         PR_UnloadLibrary(lib);
     }
