@@ -378,6 +378,10 @@ public class StubBrowserDB implements BrowserDB {
     public void setSuggestedSites(SuggestedSites suggestedSites) {
     }
 
+    public SuggestedSites getSuggestedSites() {
+        return null;
+    }
+
     public boolean hasSuggestedImageUrl(String url) {
         return false;
     }
