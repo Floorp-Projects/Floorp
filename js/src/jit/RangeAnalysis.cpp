@@ -1912,6 +1912,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
             for (MDefinitionIterator iter(block); iter; iter++) {
                 MDefinition* def = *iter;
                 if (def->isBoundsCheck() && def->isMovable()) {
+                    if (!alloc().ensureBallast())
+                        return false;
                     if (tryHoistBoundsCheck(header, def->toBoundsCheck())) {
                         if (!hoistedChecks.append(def->toBoundsCheck()))
                             return false;
