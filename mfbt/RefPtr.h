@@ -26,6 +26,9 @@ template<class T> class OwningNonNull;
 // This traits class can be specialized to operate on other pointer types. For
 // example, we specialize this trait for opaque FFI types that represent
 // refcounted objects in Rust.
+//
+// Given the use of ConstRemovingRefPtrTraits below, U should not be a const-
+// qualified type.
 template<class U>
 struct RefPtrTraits
 {
