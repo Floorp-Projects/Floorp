@@ -20,7 +20,7 @@ add_task(function* () {
         let tab = tabs[0];
         browser.tabs.move(tab.id, {index: 0});
         browser.tabs.query(
-          { lastFocusedWindow: true },
+          {lastFocusedWindow: true},
           tabs => {
             browser.test.assertEq(tabs[0].url, tab.url, "should be first tab");
             browser.test.notifyPass("tabs.move.single");
@@ -40,12 +40,12 @@ add_task(function* () {
 
     background: function() {
       browser.tabs.query(
-        { lastFocusedWindow: true },
+        {lastFocusedWindow: true},
         tabs => {
           tabs.sort(function(a, b) { return a.url > b.url; });
           browser.tabs.move(tabs.map(tab => tab.id), {index: 0});
           browser.tabs.query(
-            { lastFocusedWindow: true },
+            {lastFocusedWindow: true},
             tabs => {
               browser.test.assertEq(tabs[0].url, "about:blank", "should be first tab");
               browser.test.assertEq(tabs[1].url, "about:config", "should be second tab");
@@ -67,13 +67,13 @@ add_task(function* () {
 
     background: function() {
       browser.tabs.query(
-        { lastFocusedWindow: true },
+        {lastFocusedWindow: true},
         tabs => {
           let tab = tabs[0];
           // Assuming that tab.id of 12345 does not exist.
           browser.tabs.move([12345, tab.id], {index: 0});
           browser.tabs.query(
-            { lastFocusedWindow: true },
+            {lastFocusedWindow: true},
             tabs => {
               browser.test.assertEq(tabs[0].url, tab.url, "should be first tab");
               browser.test.notifyPass("tabs.move.invalid");
@@ -93,12 +93,12 @@ add_task(function* () {
 
     background: function() {
       browser.tabs.query(
-        { lastFocusedWindow: true },
+        {lastFocusedWindow: true},
         tabs => {
           let tab = tabs[0];
           browser.tabs.move(tab.id, {index: -1});
           browser.tabs.query(
-            { lastFocusedWindow: true },
+            {lastFocusedWindow: true},
             tabs => {
               browser.test.assertEq(tabs[2].url, tab.url, "should be last tab");
               browser.test.notifyPass("tabs.move.last");

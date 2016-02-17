@@ -386,6 +386,8 @@ InplaceEditor.prototype = {
       // If the editor is empty use a width corresponding to 1 character.
       this.input.style.width = "1ch";
     } else {
+      // Add 2 pixels to ensure the caret will be visible
+      width = width + 2;
       this.input.style.width = width + "px";
     }
   },

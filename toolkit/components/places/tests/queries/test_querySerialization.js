@@ -165,18 +165,13 @@ const querySwitches = [
   // hasUri
   {
     flag:        "hasUri",
-    subswitches: ["uri", "uriIsPrefix"],
+    subswitches: ["uri"],
     desc:        "nsINavHistoryQuery.hasUri",
     matches:     flagSwitchMatches,
     runs:        [
       function (aQuery, aQueryOptions) {
         aQuery.uri = uri("http://mozilla.com");
-        aQuery.uriIsPrefix = false;
       },
-      function (aQuery, aQueryOptions) {
-        aQuery.uri = uri("http://mozilla.com");
-        aQuery.uriIsPrefix = true;
-      }
     ]
   },
   // hasAnnotation

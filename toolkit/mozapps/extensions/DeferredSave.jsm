@@ -9,6 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/osfile.jsm");
+/*globals OS*/
 Cu.import("resource://gre/modules/Promise.jsm");
 
 // Make it possible to mock out timers for testing

@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { assert } = require("devtools/shared/DevToolsUtils");
+const { appinfo } = require("Services");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { breakdowns, diffingState, viewState } = require("./constants");
@@ -53,6 +54,17 @@ const MemoryApp = createClass({
     return {};
   },
 
+  componentDidMount() {
+    // Attach the keydown listener directly to the window. When an element that
+    // has the focus (such as a tree node) is removed from the DOM, the focus
+    // falls back to the body.
+    window.addEventListener("keydown", this.onKeyDown);
+  },
+
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.onKeyDown);
+  },
+
   childContextTypes: {
     front: PropTypes.any,
     heapWorker: PropTypes.any,
@@ -65,6 +77,27 @@ const MemoryApp = createClass({
       heapWorker: this.props.heapWorker,
       toolbox: this.props.toolbox,
     };
+  },
+
+  onKeyDown(e) {
+    let { snapshots, dispatch, heapWorker } = this.props;
+    const selectedSnapshot = snapshots.find(s => s.selected);
+    const selectedIndex = snapshots.indexOf(selectedSnapshot);
+
+    let isOSX = appinfo.OS == "Darwin";
+    let isAccelKey = (isOSX && e.metaKey) || (!isOSX && e.ctrlKey);
+    // On ACCEL+UP, select previous snapshot.
+    if (isAccelKey && e.key === "ArrowUp") {
+      let previousIndex = Math.max(0, selectedIndex - 1);
+      let previousSnapshotId = snapshots[previousIndex].id;
+      dispatch(selectSnapshotAndRefresh(heapWorker, previousSnapshotId));
+    }
+    // On ACCEL+DOWN, select next snapshot.
+    if (isAccelKey && e.key === "ArrowDown") {
+      let nextIndex = Math.min(snapshots.length - 1, selectedIndex + 1);
+      let nextSnapshotId = snapshots[nextIndex].id;
+      dispatch(selectSnapshotAndRefresh(heapWorker, nextSnapshotId));
+    }
   },
 
   render() {

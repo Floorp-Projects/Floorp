@@ -453,8 +453,8 @@
                 key="bookmarkAllTabsKb"/>
       <menuseparator/>
       <menuitem label="&recentBookmarks.label;"
+                id="menu_recentBookmarks"
                 disabled="true"/>
-      <vbox id="menu_recentBookmarks"/>
       <menuseparator id="bookmarksToolbarSeparator"/>
       <menu id="bookmarksToolbarFolderMenu"
             class="menu-iconic bookmark-item"

@@ -6,7 +6,6 @@
 
 <!DOCTYPE window []>
 
-<?xml-stylesheet href="chrome://devtools/skin/common.css"?>
 <?xml-stylesheet href="chrome://devtools/skin/eyedropper.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
