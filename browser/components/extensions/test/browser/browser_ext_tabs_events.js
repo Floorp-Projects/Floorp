@@ -21,10 +21,6 @@ add_task(function* testTabEvents() {
       events.push(Object.assign({type: "onRemoved", tabId}, info));
     });
 
-    browser.tabs.onMoved.addListener((tabId, info) => {
-      events.push(Object.assign({type: "onMoved", tabId}, info));
-    });
-
     function expectEvents(names) {
       browser.test.log(`Expecting events: ${names.join(", ")}`);
 
@@ -53,14 +49,12 @@ add_task(function* testTabEvents() {
         initialTab = created.tab;
 
         browser.test.log("Create tab in window 1");
-        return browser.tabs.create({windowId, index: 0});
+        return browser.tabs.create({windowId});
       }).then(tab => {
         let oldIndex = tab.index;
-        browser.test.assertEq(0, oldIndex, "Tab has the expected index");
 
         return expectEvents(["onCreated"]).then(([created]) => {
           browser.test.assertEq(tab.id, created.tab.id, "Got expected tab ID");
-          browser.test.assertEq(oldIndex, created.tab.index, "Got expected tab index");
 
           browser.test.log("Move tab to window 2");
           return browser.tabs.move([tab.id], {windowId: otherWindowId, index: 0});
@@ -72,18 +66,6 @@ add_task(function* testTabEvents() {
 
           browser.test.assertEq(0, attached.newPosition, "Expected new index");
           browser.test.assertEq(otherWindowId, attached.newWindowId, "Expected new window ID");
-
-          browser.test.log("Move tab within the same window");
-          return browser.tabs.move([tab.id], {index: 1});
-        }).then(([moved]) => {
-          browser.test.assertEq(1, moved.index, "Expected new index");
-
-          return expectEvents(["onMoved"]);
-        }).then(([moved]) => {
-          browser.test.assertEq(tab.id, moved.tabId, "Expected tab ID");
-          browser.test.assertEq(0, moved.fromIndex, "Expected old index");
-          browser.test.assertEq(1, moved.toIndex, "Expected new index");
-          browser.test.assertEq(otherWindowId, moved.windowId, "Expected window ID");
 
           browser.test.log("Remove tab");
           return browser.tabs.remove(tab.id);
