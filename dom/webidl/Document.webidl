@@ -225,7 +225,6 @@ partial interface Document {
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions hve it uppercase.
   readonly attribute boolean mozFullScreenEnabled;
-  [Throws]
   readonly attribute Element? mozFullScreenElement;
 
   //(Renamed?)void exitFullscreen();
