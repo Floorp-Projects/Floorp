@@ -3248,8 +3248,8 @@ GetFullScreenError(nsIDocument* aDoc)
 }
 
 void
-Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
-                              ErrorResult& aError)
+Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
+                           ErrorResult& aError)
 {
   MOZ_ASSERT_IF(!aCx, aOptions.isNullOrUndefined());
   // Only grant full-screen requests if this is called from inside a trusted

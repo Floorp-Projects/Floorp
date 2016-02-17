@@ -1666,7 +1666,7 @@ nsPresContext::UpdateViewportScrollbarStylesOverride()
     GetPropagatedScrollbarStylesForViewport(this, &mViewportStyleScrollbar);
 
   nsIDocument* document = Document();
-  if (Element* fullscreenElement = document->GetFullScreenElement()) {
+  if (Element* fullscreenElement = document->GetFullscreenElement()) {
     // If the document is in fullscreen, but the fullscreen element is
     // not the root element, we should explicitly suppress the scrollbar
     // here. Note that, we still need to return the original element

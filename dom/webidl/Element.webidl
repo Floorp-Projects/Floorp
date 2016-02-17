@@ -124,17 +124,6 @@ interface Element : Node {
   void releaseCapture();
 
   // Mozilla extensions
-  /**
-   * Requests that this element be made the full-screen element, as per the DOM
-   * full-screen api.
-   *
-   * The options parameter is non-standard. In Gecko, it can be:
-   *  a RequestFullscreenOptions object
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  [Throws, UnsafeInPrerendering]
-  void mozRequestFullScreen(optional any options);
 
   /**
    * Requests that this element be made the pointer-locked element, as per the DOM
@@ -252,9 +241,21 @@ Element implements ParentNode;
 Element implements Animatable;
 Element implements GeometryUtils;
 
-// non-standard: allows passing options to Element.requestFullScreen
+// non-standard: allows passing options to Element.requestFullscreen
 dictionary RequestFullscreenOptions {
   // Which HMDVRDevice to go full screen on; also enables VR rendering.
   // If null, normal fullscreen is entered.
   HMDVRDevice? vrDisplay = null;
+};
+
+// https://fullscreen.spec.whatwg.org/#api
+partial interface Element {
+  /**
+   * The options parameter is non-standard. In Gecko, it can be:
+   *  a RequestFullscreenOptions object
+   */
+  [Throws, UnsafeInPrerendering]
+  void requestFullscreen(optional any options);
+  [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen", Deprecated="PrefixedFullscreenAPI"]
+  void mozRequestFullScreen(optional any options);
 };
