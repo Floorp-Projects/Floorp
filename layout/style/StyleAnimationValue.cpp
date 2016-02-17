@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/UniquePtr.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
@@ -1781,6 +1782,45 @@ AddPositions(double aCoeff1, const nsCSSValue& aPos1,
   }
 }
 
+static UniquePtr<nsCSSValuePair>
+AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
+                double aCoeff1, const nsCSSValuePair* aPair1,
+                double aCoeff2, const nsCSSValuePair* aPair2)
+{
+  MOZ_ASSERT(aPair1, "expected pair");
+  MOZ_ASSERT(aPair2, "expected pair");
+
+  UniquePtr<nsCSSValuePair> result;
+  nsCSSUnit unit[2];
+  unit[0] = GetCommonUnit(aProperty, aPair1->mXValue.GetUnit(),
+                          aPair2->mXValue.GetUnit());
+  unit[1] = GetCommonUnit(aProperty, aPair1->mYValue.GetUnit(),
+                          aPair2->mYValue.GetUnit());
+  if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+      unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
+    return result; // nullptr (returning |result| for RVO)
+  }
+
+  result.reset(new nsCSSValuePair);
+
+  static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
+    &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
+  };
+  for (uint32_t i = 0; i < 2; ++i) {
+    nsCSSValue nsCSSValuePair::*member = pairValues[i];
+    if (!AddCSSValuePixelPercentCalc(aRestrictions, unit[i],
+                                     aCoeff1, aPair1->*member,
+                                     aCoeff2, aPair2->*member,
+                                     result.get()->*member) ) {
+      MOZ_ASSERT(false, "unexpected unit");
+      result.reset();
+      return result; // nullptr (returning |result| for RVO)
+    }
+  }
+
+  return result;
+}
+
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                   double aCoeff2, const nsCSSValueList* aList2)
@@ -2106,35 +2146,16 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_CSSValuePair: {
-      const nsCSSValuePair *pair1 = aValue1.GetCSSValuePairValue();
-      const nsCSSValuePair *pair2 = aValue2.GetCSSValuePairValue();
-      nsCSSUnit unit[2];
-      unit[0] = GetCommonUnit(aProperty, pair1->mXValue.GetUnit(),
-                              pair2->mXValue.GetUnit());
-      unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
-                              pair2->mYValue.GetUnit());
-      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
+      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+      UniquePtr<nsCSSValuePair> result(
+        AddCSSValuePair(aProperty, restrictions,
+                        aCoeff1, aValue1.GetCSSValuePairValue(),
+                        aCoeff2, aValue2.GetCSSValuePairValue()));
+      if (!result) {
         return false;
       }
 
-      nsAutoPtr<nsCSSValuePair> result(new nsCSSValuePair);
-      static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
-        &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
-      };
-      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
-      for (uint32_t i = 0; i < 2; ++i) {
-        nsCSSValue nsCSSValuePair::*member = pairValues[i];
-        if (!AddCSSValuePixelPercentCalc(restrictions, unit[i],
-                                         aCoeff1, pair1->*member,
-                                         aCoeff2, pair2->*member,
-                                         result->*member) ) {
-          MOZ_ASSERT(false, "unexpected unit");
-          return false;
-        }
-      }
-
-      aResultValue.SetAndAdoptCSSValuePairValue(result.forget(),
+      aResultValue.SetAndAdoptCSSValuePairValue(result.release(),
                                                 eUnit_CSSValuePair);
       return true;
     }
