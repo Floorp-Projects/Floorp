@@ -167,20 +167,11 @@
     // No unnecessary comparisons
     "no-self-compare": 2,
 
-    // No declaring variables from an outer scope
-    "no-shadow": 1,
-
-    // No declaring variables that hide things like arguments
-    "no-shadow-restricted-names": 2,
-
     // No spaces between function name and parentheses
     "no-spaced-func": 1,
 
     // No trailing whitespace
     "no-trailing-spaces": 2,
-
-    // No using undeclared variables
-    "no-undef": 2,
 
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": 2,
@@ -202,9 +193,6 @@
 
     // Always require semicolon at end of statement
     "semi": [2, "always"],
-
-    // Require space after keywords
-    "space-after-keywords": 2,
 
     // Require space before blocks
     "space-before-blocks": 2,
@@ -491,9 +479,6 @@
 
     // Disallow labels that share a name with a variable
     "no-label-var": 2,
-
-    // Disallow negation of the left operand of an in expression
-    "no-negated-in-lhs": 2,
 
     // Disallow creating new instances of String, Number, and Boolean
     "no-new-wrappers": 2,
