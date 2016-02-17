@@ -441,10 +441,35 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, 
     asMasm().ma_b(lhs, ImmWord(uintptr_t(imm.value)), l, c, jumpKind);
 }
 
+template <typename T>
+void
+MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::JumpTarget target, Condition c,
+                               JumpKind jumpKind)
+{
+    Label label;
+    ma_b(lhs, rhs, &label, c, jumpKind);
+    bindLater(&label, target);
+}
+
+template void MacroAssemblerMIPSShared::ma_b<Register>(Register lhs, Register rhs,
+                                                       wasm::JumpTarget target, Condition c,
+                                                       JumpKind jumpKind);
+template void MacroAssemblerMIPSShared::ma_b<ImmTag>(Register lhs, ImmTag rhs,
+                                                       wasm::JumpTarget target, Condition c,
+                                                       JumpKind jumpKind);
+
 void
 MacroAssemblerMIPSShared::ma_b(Label* label, JumpKind jumpKind)
 {
     asMasm().branchWithCode(getBranchCode(BranchIsJump), label, jumpKind);
+}
+
+void
+MacroAssemblerMIPSShared::ma_b(wasm::JumpTarget target, JumpKind jumpKind)
+{
+    Label label;
+    asMasm().branchWithCode(getBranchCode(BranchIsJump), &label, jumpKind);
+    bindLater(&label, target);
 }
 
 Assembler::Condition
