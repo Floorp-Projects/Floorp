@@ -210,11 +210,16 @@ enum XPTTypeDescriptorTags {
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
-    uint8_t argnum;                 /* used for iid_is and size_is */
-    uint8_t argnum2;                /* used for length_is */
-    union {                         
-        uint16_t iface;             /* used for TD_INTERFACE_TYPE */
-        uint16_t additional_type;   /* used for TD_ARRAY */
+    uint8_t argnum;               // used for TD_ARRAY, TD_PSTRING_SIZE_IS,
+                                  // TD_PWSTRING_SIZE_IS, TD_INTERFACE_IS_TYPE
+
+    // This field exists (for the appropriate types) in the on-disk format. But
+    // it isn't used so we don't allocated space for it in memory.
+    //uint8_t argnum2;
+
+    union {
+        uint16_t iface;           // used for TD_INTERFACE_TYPE
+        uint16_t additional_type; // used for TD_ARRAY
     } type;
 };
 
