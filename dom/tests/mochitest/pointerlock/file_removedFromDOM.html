@@ -51,12 +51,12 @@ function checkPointerLockElement(elem) {
 }
 
 function start() {
-  listenOneDocEvent("mozfullscreenchange", enteredFullscreen);
-  document.documentElement.mozRequestFullScreen();
+  listenOneDocEvent("fullscreenchange", enteredFullscreen);
+  document.documentElement.requestFullscreen();
 }
 
 function enteredFullscreen() {
-  is(document.mozFullScreenElement, document.documentElement,
+  is(document.fullscreenElement, document.documentElement,
      "Root element should have entered fullscreen");
   listenOneDocEvent("mozpointerlockchange", lockedPointerOnDiv);
   div.mozRequestPointerLock();
@@ -82,8 +82,8 @@ function lockedPointerOnInner() {
 
 function unlockedPointerFromInner() {
   checkPointerLockElement(null);
-  listenOneDocEvent("mozfullscreenchange", exitedFullscreen);
-  document.mozCancelFullScreen();
+  listenOneDocEvent("fullscreenchange", exitedFullscreen);
+  document.exitFullscreen();
 }
 
 function exitedFullscreen() {

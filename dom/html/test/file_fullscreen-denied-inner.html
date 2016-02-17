@@ -7,17 +7,17 @@
 <script>
 function doRequestFullscreen() {
   function handler(evt) {
-    document.removeEventListener("mozfullscreenchange", handler);
-    document.removeEventListener("mozfullscreenerror", handler);
-    parent.is(evt.type, "mozfullscreenerror", "Request from " +
+    document.removeEventListener("fullscreenchange", handler);
+    document.removeEventListener("fullscreenerror", handler);
+    parent.is(evt.type, "fullscreenerror", "Request from " +
               `document inside ${parent.testTargetName} should be denied`);
     parent.continueTest();
   }
-  parent.ok(!document.mozFullScreenEnabled, "Fullscreen " +
+  parent.ok(!document.fullscreenEnabled, "Fullscreen " +
             `should not be enabled in ${parent.testTargetName}`);
-  document.addEventListener("mozfullscreenchange", handler);
-  document.addEventListener("mozfullscreenerror", handler);
-  document.documentElement.mozRequestFullScreen();
+  document.addEventListener("fullscreenchange", handler);
+  document.addEventListener("fullscreenerror", handler);
+  document.documentElement.requestFullscreen();
 }
 </script>
 </body>
