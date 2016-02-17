@@ -6,6 +6,7 @@
 
 SOURCES += [
     'DataStorageTest.cpp',
+    'DeserializeCertTest.cpp',
     'OCSPCacheTest.cpp',
     'TLSIntoleranceTest.cpp',
 ]
