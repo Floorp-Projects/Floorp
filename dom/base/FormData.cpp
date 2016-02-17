@@ -23,21 +23,39 @@ FormData::FormData(nsISupports* aOwner)
 
 namespace {
 
-already_AddRefed<Blob>
-GetBlobForFormDataStorage(Blob& aBlob, const Optional<nsAString>& aFilename,
-                          ErrorResult& aRv)
+already_AddRefed<File>
+GetOrCreateFileCalledBlob(Blob& aBlob, ErrorResult& aRv)
 {
-  if (!aFilename.WasPassed()) {
-    RefPtr<Blob> blob = &aBlob;
-    return blob.forget();
+  // If this is file, we can just use it
+  RefPtr<File> file = aBlob.ToFile();
+  if (file) {
+    return file.forget();
   }
 
-  RefPtr<File> file = aBlob.ToFile(aFilename.Value(), aRv);
+  // Forcing 'blob' as filename
+  file = aBlob.ToFile(NS_LITERAL_STRING("blob"), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   return file.forget();
+}
+
+already_AddRefed<File>
+GetBlobForFormDataStorage(Blob& aBlob, const Optional<nsAString>& aFilename,
+                          ErrorResult& aRv)
+{
+  // Forcing a filename
+  if (aFilename.WasPassed()) {
+    RefPtr<File> file = aBlob.ToFile(aFilename.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    return file.forget();
+  }
+
+  return GetOrCreateFileCalledBlob(aBlob, aRv);
 }
 
 } // namespace
@@ -102,12 +120,12 @@ FormData::Append(const nsAString& aName, Blob& aBlob,
                  const Optional<nsAString>& aFilename,
                  ErrorResult& aRv)
 {
-  RefPtr<Blob> blob = GetBlobForFormDataStorage(aBlob, aFilename, aRv);
+  RefPtr<File> file = GetBlobForFormDataStorage(aBlob, aFilename, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  AddNameBlobPair(aName, blob);
+  AddNameBlobPair(aName, file);
 }
 
 void
@@ -165,8 +183,14 @@ FormData::AddNameBlobPair(const nsAString& aName, Blob* aBlob)
 {
   MOZ_ASSERT(aBlob);
 
+  ErrorResult rv;
+  RefPtr<File> file = GetOrCreateFileCalledBlob(*aBlob, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
   FormDataTuple* data = mFormData.AppendElement();
-  SetNameBlobPair(data, aName, aBlob);
+  SetNameFilePair(data, aName, file);
   return NS_OK;
 }
 
@@ -199,12 +223,12 @@ FormData::Set(const nsAString& aName, Blob& aBlob,
 {
   FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
   if (tuple) {
-    RefPtr<Blob> blob = GetBlobForFormDataStorage(aBlob, aFilename, aRv);
+    RefPtr<File> file = GetBlobForFormDataStorage(aBlob, aFilename, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
 
-    SetNameBlobPair(tuple, aName, blob);
+    SetNameFilePair(tuple, aName, file);
   } else {
     Append(aName, aBlob, aFilename, aRv);
   }
@@ -253,15 +277,15 @@ FormData::SetNameValuePair(FormDataTuple* aData,
 }
 
 void
-FormData::SetNameBlobPair(FormDataTuple* aData,
+FormData::SetNameFilePair(FormDataTuple* aData,
                           const nsAString& aName,
-                          Blob* aBlob)
+                          File* aFile)
 {
   MOZ_ASSERT(aData);
-  MOZ_ASSERT(aBlob);
+  MOZ_ASSERT(aFile);
 
   aData->name = aName;
-  aData->value.SetAsBlob() = aBlob;
+  aData->value.SetAsBlob() = aFile;
 }
 
 // -------------------------------------------------------------------------

@@ -47,9 +47,9 @@ private:
                         const nsAString& aName,
                         const nsAString& aValue);
 
-  void SetNameBlobPair(FormDataTuple* aData,
+  void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
-                       Blob* aBlob);
+                       File* aFile);
 
 public:
   explicit FormData(nsISupports* aOwner = nullptr);
