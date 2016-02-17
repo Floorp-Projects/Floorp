@@ -217,10 +217,6 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
-    public Cursor getTopSites(ContentResolver cr, int limit) {
-        return null;
-    }
-
     public void updateVisitedHistory(ContentResolver cr, String uri) {
     }
 
@@ -362,10 +358,6 @@ public class StubBrowserDB implements BrowserDB {
     }
 
     public void pinSite(ContentResolver cr, String url, String title, int position) {
-    }
-
-    public Cursor getPinnedSites(ContentResolver cr, int limit) {
-        return null;
     }
 
     public void unpinSite(ContentResolver cr, int position) {
