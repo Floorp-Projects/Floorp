@@ -1023,7 +1023,7 @@ alert_loser:
     (void)SSL3_SendAlert(ss, alert_fatal, desc);
 
 loser:
-    ssl_MapLowLevelError(errCode);
+    errCode = ssl_MapLowLevelError(errCode);
     return SECFailure;
 }
 

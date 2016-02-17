@@ -18,7 +18,7 @@
 #define NSS_CKCAPI_CRYPTOKI_VERSION_MAJOR 2
 #define NSS_CKCAPI_CRYPTOKI_VERSION_MINOR 20
 
-/* These version numbers detail the changes
+/* These version numbers detail the changes 
  * to the list of trusted certificates.
  *
  * NSS_CKCAPI_LIBRARY_VERSION_MINOR is a CK_BYTE.  It's not clear
@@ -33,7 +33,7 @@
 #define NSS_CKCAPI_HARDWARE_VERSION_MAJOR 1
 #define NSS_CKCAPI_HARDWARE_VERSION_MINOR 0
 
-/* These version numbers detail the semantic changes to ckbi itself
+/* These version numbers detail the semantic changes to ckbi itself 
  * (new PKCS #11 objects), etc. */
 #define NSS_CKCAPI_FIRMWARE_VERSION_MAJOR 1
 #define NSS_CKCAPI_FIRMWARE_VERSION_MINOR 0

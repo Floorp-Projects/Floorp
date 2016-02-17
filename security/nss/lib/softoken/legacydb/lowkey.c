@@ -47,7 +47,7 @@ const SEC_ASN1Template lg_nsslowkey_PQGParamsTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(PQGParams,prime) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,base) },
-    { 0 }
+    { 0, }
 };
 
 const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate[] = {
@@ -87,7 +87,7 @@ const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPrivateKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dsa.publicValue) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dsa.privateValue) },
-    { 0 }
+    { 0, }
 };
 
 const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[] = {
@@ -96,7 +96,7 @@ const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dh.privateValue) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dh.base) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPrivateKey,u.dh.prime) },
-    { 0 }
+    { 0, }
 };
 
 #ifndef NSS_DISABLE_ECC
@@ -110,7 +110,7 @@ const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[] = {
 const SEC_ASN1Template lg_nsslowkey_ECParamsTemplate[] = {
     { SEC_ASN1_CHOICE, offsetof(ECParams,type), NULL, sizeof(ECParams) },
     { SEC_ASN1_OBJECT_ID, offsetof(ECParams,curveOID), NULL, ec_params_named },
-    { 0 }
+    { 0, }
 };
 
 
@@ -145,7 +145,7 @@ const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[] = {
       SEC_ASN1_XTRN | 1, 
       offsetof(NSSLOWKEYPrivateKey,u.ec.publicValue),
       SEC_ASN1_SUB(SEC_BitStringTemplate) }, 
-    { 0 }
+    { 0, }
 };
 
 

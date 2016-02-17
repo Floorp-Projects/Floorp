@@ -39,10 +39,10 @@ const SEC_ASN1Template SECOID_AlgorithmIDTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(SECAlgorithmID) },
     { SEC_ASN1_OBJECT_ID,
-	  offsetof(SECAlgorithmID,algorithm) },
+	  offsetof(SECAlgorithmID,algorithm), },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_ANY,
-	  offsetof(SECAlgorithmID,parameters) },
-    { 0 }
+	  offsetof(SECAlgorithmID,parameters), },
+    { 0, }
 }; */
 
 /* --Private-HttpCertStoreContext-Object Functions----------------------- */

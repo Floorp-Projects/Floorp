@@ -85,8 +85,7 @@ static sslOptions ssl_defaults = {
     PR_TRUE,    /* reuseServerECDHEKey */
     PR_FALSE,   /* enableFallbackSCSV */
     PR_TRUE,    /* enableServerDhe */
-    PR_FALSE,   /* enableExtendedMS    */
-    PR_FALSE,   /* enableSignedCertTimestamps */
+    PR_FALSE    /* enableExtendedMS    */
 };
 
 /*
@@ -105,12 +104,6 @@ static SSLVersionRange versions_defaults_datagram = {
 #define VERSIONS_DEFAULTS(variant) \
     (variant == ssl_variant_stream ? &versions_defaults_stream : \
                                      &versions_defaults_datagram)
-#define VERSIONS_POLICY_MIN(variant) \
-    (variant == ssl_variant_stream ? NSS_TLS_VERSION_MIN_POLICY : \
-                                     NSS_DTLS_VERSION_MIN_POLICY)
-#define VERSIONS_POLICY_MAX(variant) \
-    (variant == ssl_variant_stream ? NSS_TLS_VERSION_MAX_POLICY : \
-                                     NSS_DTLS_VERSION_MAX_POLICY)
 
 sslSessionIDLookupFunc  ssl_sid_lookup;
 sslSessionIDCacheFunc   ssl_sid_cache;
@@ -407,9 +400,6 @@ ssl_DestroySocketContents(sslSocket *ss)
             SECITEM_FreeArray(ss->certStatusArray[i], PR_TRUE);
             ss->certStatusArray[i] = NULL;
         }
-        if (ss->signedCertTimestamps[i].data) {
-            SECITEM_FreeItem(&ss->signedCertTimestamps[i], PR_FALSE);
-        }
     }
     if (ss->stepDownKeyPair) {
         ssl3_FreeKeyPair(ss->stepDownKeyPair);
@@ -539,22 +529,12 @@ static PRStatus SSL_BypassSetup(void)
 #endif
 }
 
-static PRBool ssl_VersionIsSupportedByPolicy(
-        SSLProtocolVariant protocolVariant, SSL3ProtocolVersion version);
-
 /* Implements the semantics for SSL_OptionSet(SSL_ENABLE_TLS, on) described in
  * ssl.h in the section "SSL version range setting API".
  */
 static void
 ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
 {
-   if (on) {
-        /* don't turn it on if tls1.0 disallowed by by policy */
-        if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                            SSL_LIBRARY_VERSION_TLS_1_0)) {
-            return;
-        }
-   }
     if (SSL3_ALL_VERSIONS_DISABLED(vrange)) {
         if (on) {
             vrange->min = SSL_LIBRARY_VERSION_TLS_1_0;
@@ -585,13 +565,6 @@ ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
 static void
 ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
 {
-   if (on) {
-        /* don't turn it on if ssl3 disallowed by by policy */
-        if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                            SSL_LIBRARY_VERSION_3_0)) {
-            return;
-        }
-   }
    if (SSL3_ALL_VERSIONS_DISABLED(vrange)) {
         if (on) {
             vrange->min = SSL_LIBRARY_VERSION_3_0;
@@ -716,13 +689,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
                 rv = SECFailure; /* not allowed */
             }
             break;
-        }
-        if (on) {
-            /* don't turn it on if ssl2 disallowed by by policy */
-            if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                            SSL_LIBRARY_VERSION_2)) {
-                 break;
-            }
         }
         ss->opt.enableSSL2       = on;
         if (on) {
@@ -864,10 +830,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
         ss->opt.enableExtendedMS = on;
         break;
 
-      case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-        ss->opt.enableSignedCertTimestamps = on;
-        break;
-
       default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
@@ -946,9 +908,6 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_SERVER_DHE:   on = ss->opt.enableServerDhe; break;
     case SSL_ENABLE_EXTENDED_MASTER_SECRET:
                                   on = ss->opt.enableExtendedMS; break;
-    case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-        on = ss->opt.enableSignedCertTimestamps;
-        break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1024,9 +983,6 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_EXTENDED_MASTER_SECRET:
        on = ssl_defaults.enableExtendedMS;
        break;
-    case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-       on = ssl_defaults.enableSignedCertTimestamps;
-       break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1101,13 +1057,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
         break;
 
       case SSL_ENABLE_SSL2:
-        if (on) {
-            /* don't turn it on if ssl2 disallowed by by policy */
-            if (!ssl_VersionIsSupportedByPolicy(ssl_variant_stream,
-                                            SSL_LIBRARY_VERSION_2)) {
-                 break;
-            }
-        }
         ssl_defaults.enableSSL2 = on;
         if (on) {
             ssl_defaults.v2CompatibleHello = on;
@@ -1225,10 +1174,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
         ssl_defaults.enableExtendedMS = on;
         break;
 
-      case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
-        ssl_defaults.enableSignedCertTimestamps = on;
-        break;
-
       default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -1270,9 +1215,13 @@ SSL_SetPolicy(long which, int policy)
 }
 
 SECStatus
-ssl_CipherPolicySet(PRInt32 which, PRInt32 policy)
+SSL_CipherPolicySet(PRInt32 which, PRInt32 policy)
 {
-    SECStatus rv = SECSuccess;
+    SECStatus rv = ssl_Init();
+
+    if (rv != SECSuccess) {
+        return rv;
+    }
 
     if (ssl_IsRemovedCipherSuite(which)) {
         rv = SECSuccess;
@@ -1282,16 +1231,6 @@ ssl_CipherPolicySet(PRInt32 which, PRInt32 policy)
         rv = ssl3_SetPolicy((ssl3CipherSuite)which, policy);
     }
     return rv;
-}
-SECStatus
-SSL_CipherPolicySet(PRInt32 which, PRInt32 policy)
-{
-    SECStatus rv = ssl_Init();
-
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    return ssl_CipherPolicySet(which, policy);
 }
 
 SECStatus
@@ -1335,9 +1274,13 @@ SSL_EnableCipher(long which, PRBool enabled)
 }
 
 SECStatus
-ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
+SSL_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
-    SECStatus rv = SECSuccess;
+    SECStatus rv = ssl_Init();
+
+    if (rv != SECSuccess) {
+        return rv;
+    }
 
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;
@@ -1351,17 +1294,6 @@ ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
         rv = ssl3_CipherPrefSetDefault((ssl3CipherSuite)which, enabled);
     }
     return rv;
-}
-
-SECStatus
-SSL_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
-{
-    SECStatus rv = ssl_Init();
-
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    return ssl_CipherPrefSetDefault(which, enabled);
 }
 
 SECStatus
@@ -1439,14 +1371,6 @@ NSS_SetDomesticPolicy(void)
 {
     SECStatus      status = SECSuccess;
     const PRUint16 *cipher;
-    SECStatus rv;
-    PRUint32 policy;
-
-    /* If we've already defined some policy oids, skip changing them */
-    rv = NSS_GetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, &policy);
-    if ((rv == SECSuccess) && (policy & NSS_USE_POLICY_IN_SSL)) {
-        return ssl_Init(); /* make sure the policies have bee loaded */
-    }
 
     for (cipher = SSL_ImplementedCiphers; *cipher != 0; ++cipher) {
         status = SSL_SetPolicy(*cipher, SSL_ALLOWED);
@@ -1998,16 +1922,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
                 if (!ss->certStatusArray[i])
                     goto loser;
             }
-            if (sm->signedCertTimestamps[i].data) {
-                if (ss->signedCertTimestamps[i].data) {
-                    SECITEM_FreeItem(&ss->signedCertTimestamps[i], PR_FALSE);
-                }
-                if (SECITEM_CopyItem(NULL,
-                        &ss->signedCertTimestamps[i],
-                        &sm->signedCertTimestamps[i]) != SECSuccess) {
-                    goto loser;
-                }
-            }
         }
         if (mc->serverKeyPair) {
             if (sc->serverKeyPair) {
@@ -2068,106 +1982,10 @@ loser:
     return NULL;
 }
 
-/*
- * Get the user supplied range
- */
-static SECStatus
-ssl3_GetRangePolicy(SSLProtocolVariant protocolVariant, SSLVersionRange *prange)
-{
-    SECStatus rv;
-    PRUint32 policy;
-    PRInt32 option;
-
-    /* only use policy constraints if we've set the apply ssl policy bit */
-    rv = NSS_GetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, &policy);
-    if ((rv != SECSuccess) || !(policy & NSS_USE_POLICY_IN_SSL)) {
-        return SECFailure;
-    }
-    rv=NSS_OptionGet(VERSIONS_POLICY_MIN(protocolVariant),&option);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    prange->min = (PRUint16) option;
-    rv=NSS_OptionGet(VERSIONS_POLICY_MAX(protocolVariant),&option);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    prange->max = (PRUint16) option;
-    if (prange->max < prange->min) {
-        return SECFailure; /* don't accept an invalid policy */
-    }
-    return SECSuccess;
-}
-
-/*
- * Constrain a single protocol variant's range based on the user policy
- */
-static SECStatus
-ssl3_ConstrainVariantRangeByPolicy(SSLProtocolVariant protocolVariant)
-{
-    SSLVersionRange vrange;
-    SSLVersionRange pvrange;
-    SECStatus rv;
-
-    vrange = *VERSIONS_DEFAULTS(protocolVariant);
-    rv = ssl3_GetRangePolicy(protocolVariant, &pvrange);
-    if (rv != SECSuccess) {
-       return SECSuccess; /* we don't have any policy */
-    }
-    vrange.min = PR_MAX(vrange.min, pvrange.min);
-    vrange.max = PR_MIN(vrange.max, pvrange.max);
-    if (vrange.max >= vrange.min) {
-        *VERSIONS_DEFAULTS(protocolVariant) = vrange;
-    } else {
-         /* there was no overlap, turn off range altogether */
-         pvrange.min = pvrange.max = SSL_LIBRARY_VERSION_NONE;
-         *VERSIONS_DEFAULTS(protocolVariant) = pvrange;
-    }
-    return SECSuccess;
-}
-
-static PRBool
-ssl_VersionIsSupportedByPolicy(SSLProtocolVariant protocolVariant,
-                               SSL3ProtocolVersion version)
-{
-    SSLVersionRange pvrange;
-    SECStatus rv;
-
-    rv = ssl3_GetRangePolicy(protocolVariant, &pvrange);
-    if (rv == SECSuccess) {
-        if ((version > pvrange.max) || (version < pvrange.min)) {
-            return PR_FALSE; /* disallowed by policy */
-        }
-    }
-    return PR_TRUE;
-}
-
-/*
- *  This is called at SSL init time to constrain the existing range based
- *  on user supplied policy.
- */
-SECStatus
-ssl3_ConstrainRangeByPolicy(void)
-{
-    SECStatus rv;
-    rv = ssl3_ConstrainVariantRangeByPolicy(ssl_variant_stream);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    rv = ssl3_ConstrainVariantRangeByPolicy(ssl_variant_datagram);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    return SECSuccess;
-}
-
 PRBool
 ssl3_VersionIsSupported(SSLProtocolVariant protocolVariant,
                         SSL3ProtocolVersion version)
 {
-    if (!ssl_VersionIsSupportedByPolicy(protocolVariant, version)) {
-        return PR_FALSE;
-    }
     switch (protocolVariant) {
     case ssl_variant_stream:
         return (version >= SSL_LIBRARY_VERSION_3_0 &&
@@ -2193,29 +2011,6 @@ ssl3_VersionRangeIsValid(SSLProtocolVariant protocolVariant,
            vrange->min <= vrange->max &&
            ssl3_VersionIsSupported(protocolVariant, vrange->min) &&
            ssl3_VersionIsSupported(protocolVariant, vrange->max);
-}
-
-const SECItem *
-SSL_PeerSignedCertTimestamps(PRFileDesc *fd)
-{
-    sslSocket *ss = ssl_FindSocket(fd);
-
-    if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_PeerSignedCertTimestamps",
-            SSL_GETPID(), fd));
-        return NULL;
-    }
-
-    if (!ss->sec.ci.sid) {
-        PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
-        return NULL;
-    }
-
-    if (ss->sec.ci.sid->version < SSL_LIBRARY_VERSION_3_0) {
-        PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
-        return NULL;
-    }
-    return &ss->sec.ci.sid->u.ssl3.signedCertTimestamps;
 }
 
 SECStatus
@@ -2694,7 +2489,7 @@ SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
     }
 
     if ( kea <= 0 || kea >= kt_kea_size) {
-        SSL_DBG(("%d: SSL[%d]: invalid key type in SSL_SetStapledOCSPResponses",
+        SSL_DBG(("%d: SSL[%d]: invalid key in SSL_SetStapledOCSPResponses",
                  SSL_GETPID(), fd));
         return SECFailure;
     }
@@ -2707,35 +2502,6 @@ SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
         ss->certStatusArray[kea] = SECITEM_DupArray(NULL, responses);
     }
     return (ss->certStatusArray[kea] || !responses) ? SECSuccess : SECFailure;
-}
-
-SECStatus
-SSL_SetSignedCertTimestamps(PRFileDesc *fd, const SECItem *scts, SSLKEAType kea)
-{
-    sslSocket *ss;
-
-    ss = ssl_FindSocket(fd);
-    if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetSignedCertTimestamps",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (kea <= 0 || kea >= kt_kea_size) {
-        SSL_DBG(("%d: SSL[%d]: invalid key type in SSL_SetSignedCertTimestamps",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (ss->signedCertTimestamps[kea].data) {
-        SECITEM_FreeItem(&ss->signedCertTimestamps[kea], PR_FALSE);
-    }
-
-    if (!scts) {
-        return SECSuccess;
-    }
-
-    return SECITEM_CopyItem(NULL, &ss->signedCertTimestamps[kea], scts);
 }
 
 SECStatus
@@ -3332,7 +3098,7 @@ ssl_SetDefaultsFromEnvironment(void)
         char * ev;
         firsttime = 0;
 #ifdef DEBUG
-        ev = PR_GetEnvSecure("SSLDEBUGFILE");
+        ev = getenv("SSLDEBUGFILE");
         if (ev && ev[0]) {
             ssl_trace_iob = fopen(ev, "w");
         }
@@ -3340,19 +3106,19 @@ ssl_SetDefaultsFromEnvironment(void)
             ssl_trace_iob = stderr;
         }
 #ifdef TRACE
-        ev = PR_GetEnvSecure("SSLTRACE");
+        ev = getenv("SSLTRACE");
         if (ev && ev[0]) {
             ssl_trace = atoi(ev);
             SSL_TRACE(("SSL: tracing set to %d", ssl_trace));
         }
 #endif /* TRACE */
-        ev = PR_GetEnvSecure("SSLDEBUG");
+        ev = getenv("SSLDEBUG");
         if (ev && ev[0]) {
             ssl_debug = atoi(ev);
             SSL_TRACE(("SSL: debugging set to %d", ssl_debug));
         }
 #endif /* DEBUG */
-        ev = PR_GetEnvSecure("SSLKEYLOGFILE");
+        ev = getenv("SSLKEYLOGFILE");
         if (ev && ev[0]) {
             ssl_keylog_iob = fopen(ev, "a");
             if (!ssl_keylog_iob) {
@@ -3366,21 +3132,21 @@ ssl_SetDefaultsFromEnvironment(void)
             }
         }
 #ifndef NO_PKCS11_BYPASS
-        ev = PR_GetEnvSecure("SSLBYPASS");
+        ev = getenv("SSLBYPASS");
         if (ev && ev[0]) {
             ssl_defaults.bypassPKCS11 = (ev[0] == '1');
             SSL_TRACE(("SSL: bypass default set to %d", \
                       ssl_defaults.bypassPKCS11));
         }
 #endif /* NO_PKCS11_BYPASS */
-        ev = PR_GetEnvSecure("SSLFORCELOCKS");
+        ev = getenv("SSLFORCELOCKS");
         if (ev && ev[0] == '1') {
             ssl_force_locks = PR_TRUE;
             ssl_defaults.noLocks = 0;
             strcpy(lockStatus + LOCKSTATUS_OFFSET, "FORCED.  ");
             SSL_TRACE(("SSL: force_locks set to %d", ssl_force_locks));
         }
-        ev = PR_GetEnvSecure("NSS_SSL_ENABLE_RENEGOTIATION");
+        ev = getenv("NSS_SSL_ENABLE_RENEGOTIATION");
         if (ev) {
             if (ev[0] == '1' || LOWER(ev[0]) == 'u')
                 ssl_defaults.enableRenegotiation = SSL_RENEGOTIATE_UNRESTRICTED;
@@ -3393,13 +3159,13 @@ ssl_SetDefaultsFromEnvironment(void)
             SSL_TRACE(("SSL: enableRenegotiation set to %d",
                        ssl_defaults.enableRenegotiation));
         }
-        ev = PR_GetEnvSecure("NSS_SSL_REQUIRE_SAFE_NEGOTIATION");
+        ev = getenv("NSS_SSL_REQUIRE_SAFE_NEGOTIATION");
         if (ev && ev[0] == '1') {
             ssl_defaults.requireSafeNegotiation = PR_TRUE;
             SSL_TRACE(("SSL: requireSafeNegotiation set to %d",
                         PR_TRUE));
         }
-        ev = PR_GetEnvSecure("NSS_SSL_CBC_RANDOM_IV");
+        ev = getenv("NSS_SSL_CBC_RANDOM_IV");
         if (ev && ev[0] == '0') {
             ssl_defaults.cbcRandomIV = PR_FALSE;
             SSL_TRACE(("SSL: cbcRandomIV set to 0"));

@@ -90,6 +90,8 @@ ssl_gtest_init()
     ssl_gtest_certs
   fi
 
+  REQF=${QADIR}/ssl/sslreq.dat
+
   cd "${SSLGTESTDIR}"
 }
 
@@ -108,7 +110,7 @@ ssl_gtest_start()
   SSLGTESTREPORT="${SSLGTESTDIR}/report.xml"
   ${BINDIR}/ssl_gtest -d "${SSLGTESTDIR}" --gtest_output=xml:"${SSLGTESTREPORT}"
   html_msg $? 0 "ssl_gtest run successfully"
-  sed -f ${COMMON}/parsegtestreport.sed "${SSLGTESTREPORT}" | \
+  sed -f ${QADIR}/ssl_gtests/parsereport.sed "${SSLGTESTREPORT}" | \
   while read result name; do
     if [ "$result" = "notrun" ]; then
       echo "$name" SKIPPED

@@ -31,7 +31,7 @@
  */
 
 struct NSSCKFWMutexStr {
-    PRLock *lock;
+  PRLock *lock;
 };
 
 #ifdef DEBUG
@@ -47,24 +47,30 @@ struct NSSCKFWMutexStr {
  */
 
 static CK_RV
-mutex_add_pointer(
-    const NSSCKFWMutex *fwMutex)
+mutex_add_pointer
+(
+  const NSSCKFWMutex *fwMutex
+)
 {
-    return CKR_OK;
+  return CKR_OK;
 }
 
 static CK_RV
-mutex_remove_pointer(
-    const NSSCKFWMutex *fwMutex)
+mutex_remove_pointer
+(
+  const NSSCKFWMutex *fwMutex
+)
 {
-    return CKR_OK;
+  return CKR_OK;
 }
 
 NSS_IMPLEMENT CK_RV
-nssCKFWMutex_verifyPointer(
-    const NSSCKFWMutex *fwMutex)
+nssCKFWMutex_verifyPointer
+(
+  const NSSCKFWMutex *fwMutex
+)
 {
-    return CKR_OK;
+  return CKR_OK;
 }
 
 #endif /* DEBUG */
@@ -74,74 +80,78 @@ nssCKFWMutex_verifyPointer(
  *
  */
 NSS_EXTERN NSSCKFWMutex *
-nssCKFWMutex_Create(
-    CK_C_INITIALIZE_ARGS_PTR pInitArgs,
-    CryptokiLockingState LockingState,
-    NSSArena *arena,
-    CK_RV *pError)
+nssCKFWMutex_Create
+(
+  CK_C_INITIALIZE_ARGS_PTR pInitArgs,
+  CryptokiLockingState LockingState,
+  NSSArena *arena,
+  CK_RV *pError
+)
 {
-    NSSCKFWMutex *mutex;
-
-    mutex = nss_ZNEW(arena, NSSCKFWMutex);
-    if (!mutex) {
-        *pError = CKR_HOST_MEMORY;
-        return (NSSCKFWMutex *)NULL;
+  NSSCKFWMutex *mutex;
+  
+  mutex = nss_ZNEW(arena, NSSCKFWMutex);
+  if (!mutex) {
+    *pError = CKR_HOST_MEMORY;
+    return (NSSCKFWMutex *)NULL;
+  }
+  *pError = CKR_OK;
+  mutex->lock = NULL;
+  if (LockingState == MultiThreaded) {
+    mutex->lock = PR_NewLock();
+    if (!mutex->lock) {
+      *pError = CKR_HOST_MEMORY; /* we couldn't get the resource */
     }
-    *pError = CKR_OK;
-    mutex->lock = NULL;
-    if (LockingState == MultiThreaded) {
-        mutex->lock = PR_NewLock();
-        if (!mutex->lock) {
-            *pError = CKR_HOST_MEMORY; /* we couldn't get the resource */
-        }
-    }
-
-    if (CKR_OK != *pError) {
-        (void)nss_ZFreeIf(mutex);
-        return (NSSCKFWMutex *)NULL;
-    }
+  }
+    
+  if( CKR_OK != *pError ) {
+    (void)nss_ZFreeIf(mutex);
+    return (NSSCKFWMutex *)NULL;
+  }
 
 #ifdef DEBUG
-    *pError = mutex_add_pointer(mutex);
-    if (CKR_OK != *pError) {
-        if (mutex->lock) {
-            PR_DestroyLock(mutex->lock);
-        }
-        (void)nss_ZFreeIf(mutex);
-        return (NSSCKFWMutex *)NULL;
+  *pError = mutex_add_pointer(mutex);
+  if( CKR_OK != *pError ) {
+    if (mutex->lock) {
+      PR_DestroyLock(mutex->lock);
     }
+    (void)nss_ZFreeIf(mutex);
+    return (NSSCKFWMutex *)NULL;
+  }
 #endif /* DEBUG */
 
-    return mutex;
-}
+  return mutex;
+}  
 
 /*
  * nssCKFWMutex_Destroy
  *
  */
 NSS_EXTERN CK_RV
-nssCKFWMutex_Destroy(
-    NSSCKFWMutex *mutex)
+nssCKFWMutex_Destroy
+(
+  NSSCKFWMutex *mutex
+)
 {
-    CK_RV rv = CKR_OK;
+  CK_RV rv = CKR_OK;
 
 #ifdef NSSDEBUG
-    rv = nssCKFWMutex_verifyPointer(mutex);
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  rv = nssCKFWMutex_verifyPointer(mutex);
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* NSSDEBUG */
-
-    if (mutex->lock) {
-        PR_DestroyLock(mutex->lock);
-    }
+ 
+  if (mutex->lock) {
+    PR_DestroyLock(mutex->lock);
+  } 
 
 #ifdef DEBUG
-    (void)mutex_remove_pointer(mutex);
+  (void)mutex_remove_pointer(mutex);
 #endif /* DEBUG */
 
-    (void)nss_ZFreeIf(mutex);
-    return rv;
+  (void)nss_ZFreeIf(mutex);
+  return rv;
 }
 
 /*
@@ -149,20 +159,22 @@ nssCKFWMutex_Destroy(
  *
  */
 NSS_EXTERN CK_RV
-nssCKFWMutex_Lock(
-    NSSCKFWMutex *mutex)
+nssCKFWMutex_Lock
+(
+  NSSCKFWMutex *mutex
+)
 {
 #ifdef NSSDEBUG
-    CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* NSSDEBUG */
-    if (mutex->lock) {
-        PR_Lock(mutex->lock);
-    }
-
-    return CKR_OK;
+  if (mutex->lock) {
+    PR_Lock(mutex->lock);
+  }
+  
+  return CKR_OK;
 }
 
 /*
@@ -170,27 +182,29 @@ nssCKFWMutex_Lock(
  *
  */
 NSS_EXTERN CK_RV
-nssCKFWMutex_Unlock(
-    NSSCKFWMutex *mutex)
+nssCKFWMutex_Unlock
+(
+  NSSCKFWMutex *mutex
+)
 {
-    PRStatus nrv;
+  PRStatus nrv;
 #ifdef NSSDEBUG
-    CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+  CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
 
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* NSSDEBUG */
 
-    if (!mutex->lock)
-        return CKR_OK;
+  if (!mutex->lock) 
+    return CKR_OK;
 
-    nrv = PR_Unlock(mutex->lock);
+  nrv =  PR_Unlock(mutex->lock);
 
-    /* if unlock fails, either we have a programming error, or we have
-     * some sort of hardware failure... in either case return CKR_DEVICE_ERROR.
-     */
-    return nrv == PR_SUCCESS ? CKR_OK : CKR_DEVICE_ERROR;
+  /* if unlock fails, either we have a programming error, or we have
+   * some sort of hardware failure... in either case return CKR_DEVICE_ERROR.
+   */
+  return nrv == PR_SUCCESS ? CKR_OK : CKR_DEVICE_ERROR;
 }
 
 /*
@@ -198,17 +212,19 @@ nssCKFWMutex_Unlock(
  *
  */
 NSS_EXTERN CK_RV
-NSSCKFWMutex_Destroy(
-    NSSCKFWMutex *mutex)
+NSSCKFWMutex_Destroy
+(
+  NSSCKFWMutex *mutex
+)
 {
 #ifdef DEBUG
-    CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* DEBUG */
-
-    return nssCKFWMutex_Destroy(mutex);
+  
+  return nssCKFWMutex_Destroy(mutex);
 }
 
 /*
@@ -216,17 +232,19 @@ NSSCKFWMutex_Destroy(
  *
  */
 NSS_EXTERN CK_RV
-NSSCKFWMutex_Lock(
-    NSSCKFWMutex *mutex)
+NSSCKFWMutex_Lock
+(
+  NSSCKFWMutex *mutex
+)
 {
 #ifdef DEBUG
-    CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* DEBUG */
-
-    return nssCKFWMutex_Lock(mutex);
+  
+  return nssCKFWMutex_Lock(mutex);
 }
 
 /*
@@ -234,15 +252,18 @@ NSSCKFWMutex_Lock(
  *
  */
 NSS_EXTERN CK_RV
-NSSCKFWMutex_Unlock(
-    NSSCKFWMutex *mutex)
+NSSCKFWMutex_Unlock
+(
+  NSSCKFWMutex *mutex
+)
 {
 #ifdef DEBUG
-    CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
-    if (CKR_OK != rv) {
-        return rv;
-    }
+  CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+  if( CKR_OK != rv ) {
+    return rv;
+  }
 #endif /* DEBUG */
 
-    return nssCKFWMutex_Unlock(mutex);
+  return nssCKFWMutex_Unlock(mutex);
 }
+

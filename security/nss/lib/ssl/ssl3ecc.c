@@ -162,18 +162,11 @@ SECStatus
 ssl3_ECName2Params(PLArenaPool * arena, ECName curve, SECKEYECParams * params)
 {
     SECOidData *oidData = NULL;
-    PRUint32 policyFlags = 0;
 
     if ((curve <= ec_noName) || (curve >= ec_pastLastName) ||
         ((oidData = SECOID_FindOIDByTag(ecName2OIDTag[curve])) == NULL)) {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
         return SECFailure;
-    }
-
-    if ( (NSS_GetAlgorithmPolicy(ecName2OIDTag[curve], &policyFlags) 
-		== SECSuccess) && !(policyFlags & NSS_USE_ALG_IN_SSL_KX)) {
-        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-	return SECFailure;
     }
 
     SECITEM_AllocItem(arena, params, (2 + oidData->oid.len));
@@ -194,7 +187,6 @@ params2ecName(SECKEYECParams * params)
 {
     SECItem oid = { siBuffer, NULL, 0};
     SECOidData *oidData = NULL;
-    PRUint32 policyFlags = 0;
     ECName i;
 
     /*
@@ -206,10 +198,6 @@ params2ecName(SECKEYECParams * params)
     oid.len = params->len - 2;
     oid.data = params->data + 2;
     if ((oidData = SECOID_FindOID(&oid)) == NULL) return ec_noName;
-    if ((NSS_GetAlgorithmPolicy(oidData->offset, &policyFlags)
-		== SECSuccess) && !(policyFlags & NSS_USE_ALG_IN_SSL_KX)) {
-	return ec_noName;
-    }
     for (i = ec_noName + 1; i < ec_pastLastName; i++) {
         if (ecName2OIDTag[i] == oidData->offset)
             return i;
@@ -1069,25 +1057,31 @@ ssl3_IsECCEnabled(sslSocket * ss)
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers only 3 curves, the Suite B curves, 23-25
  */
-static const PRUint8 suiteBECList[] = {
-    23, 24, 25
+static const PRUint8 suiteBECList[12] = {
+    BE(10),         /* Extension type */
+    BE( 8),         /* octets that follow ( 3 pairs + 1 length pair) */
+    BE( 6),         /* octets that follow ( 3 pairs) */
+    BE(23), BE(24), BE(25)
 };
 
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers curves 1-25.
  */
-static const PRUint8 tlsECList[] = {
-     1,  2,  3,  4,  5,  6,  7,  8,
-     9, 10, 11, 12, 13, 14, 15, 16,
-    17, 18, 19, 20, 21, 22, 23, 24,
-    25
+static const PRUint8 tlsECList[56] = {
+    BE(10),         /* Extension type */
+    BE(52),         /* octets that follow (25 pairs + 1 length pair) */
+    BE(50),         /* octets that follow (25 pairs) */
+            BE( 1), BE( 2), BE( 3), BE( 4), BE( 5), BE( 6), BE( 7),
+    BE( 8), BE( 9), BE(10), BE(11), BE(12), BE(13), BE(14), BE(15),
+    BE(16), BE(17), BE(18), BE(19), BE(20), BE(21), BE(22), BE(23),
+    BE(24), BE(25)
 };
 
 static const PRUint8 ecPtFmt[6] = {
     BE(11),         /* Extension type */
     BE( 2),         /* octets that follow */
-         1,         /* octets that follow */
-         0          /* uncompressed type only */
+             1,     /* octets that follow */
+                 0  /* uncompressed type only */
 };
 
 /* This function already presumes we can do ECC, ssl3_IsECCEnabled must be
@@ -1114,13 +1108,6 @@ ssl3_SuiteBOnly(sslSocket *ss)
     return PR_FALSE;
 }
 
-#define APPEND_CURVE(CURVE_ID) \
-    if ((NSS_GetAlgorithmPolicy(ecName2OIDTag[CURVE_ID], &policy) \
-	       == SECFailure) || (policy & NSS_USE_ALG_IN_SSL_KX)) { \
-    	enabledCurves[pos++] = 0; \
-    	enabledCurves[pos++] = CURVE_ID; \
-    }
-
 /* Send our "canned" (precompiled) Supported Elliptic Curves extension,
  * which says that we support all TLS-defined named curves.
  */
@@ -1130,85 +1117,43 @@ ssl3_SendSupportedCurvesXtn(
                         PRBool      append,
                         PRUint32    maxBytes)
 {
-    unsigned char enabledCurves[64];
-    PRUint32 policy;
-    PRInt32 extension_length;
     PRInt32 ecListSize = 0;
-    unsigned int pos = 0;
-    unsigned int i;
+    const PRUint8 *ecList = NULL;
 
     if (!ss || !ssl3_IsECCEnabled(ss))
         return 0;
 
-    PORT_Assert(sizeof(enabledCurves) > sizeof(tlsECList)*2);
     if (ssl3_SuiteBOnly(ss)) {
-	for (i=0; i < sizeof(suiteBECList); i++) {
-	    APPEND_CURVE(suiteBECList[i]);
-	}
-        ecListSize = pos;
+        ecListSize = sizeof suiteBECList;
+        ecList = suiteBECList;
     } else {
-	for (i=0; i < sizeof(tlsECList); i++) {
-	    APPEND_CURVE(tlsECList[i]);
-	}
-        ecListSize = pos;
+        ecListSize = sizeof tlsECList;
+        ecList = tlsECList;
     }
-    extension_length =
-	2 /* extension type */ +
-	2 /* extension length */ +
-	2 /* elliptic curves length */ +
-	ecListSize;
 
-
-    if (maxBytes < (PRUint32)extension_length) {
+    if (maxBytes < (PRUint32)ecListSize) {
         return 0;
     }
- 
     if (append) {
-	SECStatus rv;
-	rv = ssl3_AppendHandshakeNumber(ss, ssl_elliptic_curves_xtn, 2);
- 	if (rv != SECSuccess)
-	    return -1;
-	rv = ssl3_AppendHandshakeNumber(ss, extension_length - 4, 2);
- 	if (rv != SECSuccess)
-	    return -1;
-	rv = ssl3_AppendHandshakeVariable(ss, enabledCurves,ecListSize, 2);
-	if (rv != SECSuccess)
-	    return -1;
+        SECStatus rv = ssl3_AppendHandshake(ss, ecList, ecListSize);
+        if (rv != SECSuccess)
+            return -1;
         if (!ss->sec.isServer) {
             TLSExtensionData *xtnData = &ss->xtnData;
             xtnData->advertised[xtnData->numAdvertised++] =
                 ssl_elliptic_curves_xtn;
         }
     }
-    return extension_length;
+    return ecListSize;
 }
 
 PRUint32
 ssl3_GetSupportedECCurveMask(sslSocket *ss)
 {
-    int i;
-    PRUint32 curves  = 0;
-    PRUint32 policyFlags = 0;
-
-    PORT_Assert(ec_pastLastName < sizeof(PRUint32)*8);
-   
     if (ssl3_SuiteBOnly(ss)) {
-        curves = SSL3_SUITE_B_SUPPORTED_CURVES_MASK;
-    } else {
-	curves = SSL3_ALL_SUPPORTED_CURVES_MASK;
+        return SSL3_SUITE_B_SUPPORTED_CURVES_MASK;
     }
-
-    for (i= ec_noName+1; i < ec_pastLastName; i++) {
-	PRUint32 curve_bit = (1U << i);
-	if ((curves & curve_bit) &&
-	   (NSS_GetAlgorithmPolicy(ecName2OIDTag[i], &policyFlags) 
-		== SECSuccess) &&
-	   !(policyFlags & NSS_USE_ALG_IN_SSL_KX)) {
-		curves &= ~curve_bit;
-	}
-    }
-    return curves;
-	
+    return SSL3_ALL_SUPPORTED_CURVES_MASK;
 }
 
 /* Send our "canned" (precompiled) Supported Point Formats extension,

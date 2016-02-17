@@ -1336,7 +1336,7 @@ mp_err mp_sqrt(const mp_int *a, mp_int *b)
   }
 
   /* Copy result to output parameter */
-  MP_CHECKOK(mp_sub_d(&x, 1, &x));
+  mp_sub_d(&x, 1, &x);
   s_mp_exch(&x, b);
 
  CLEANUP:
@@ -2959,12 +2959,8 @@ mp_err   s_mp_mul_2d(mp_int *mp, mp_digit d)
   dshift = d / MP_DIGIT_BIT;
   bshift = d % MP_DIGIT_BIT;
   /* bits to be shifted out of the top word */
-  if (bshift) {
-    mask = (mp_digit)~0 << (MP_DIGIT_BIT - bshift);
-    mask &= MP_DIGIT(mp, MP_USED(mp) - 1);
-  } else {
-    mask = 0;
-  }
+  mask   = ((mp_digit)~0 << (MP_DIGIT_BIT - bshift)); 
+  mask  &= MP_DIGIT(mp, MP_USED(mp) - 1);
 
   if (MP_OKAY != (res = s_mp_pad(mp, MP_USED(mp) + dshift + (mask != 0) )))
     return res;

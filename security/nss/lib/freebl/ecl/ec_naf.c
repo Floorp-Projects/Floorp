@@ -48,14 +48,14 @@ ec_compute_wNAF(signed char *out, int bitsize, const mp_int *in, int w)
 			/* Subtract off out[i].  Note mp_sub_d only works with
 			 * unsigned digits */
 			if (out[i] >= 0) {
-				MP_CHECKOK(mp_sub_d(&k, out[i], &k));
+				mp_sub_d(&k, out[i], &k);
 			} else {
-				MP_CHECKOK(mp_add_d(&k, -(out[i]), &k));
+				mp_add_d(&k, -(out[i]), &k);
 			}
 		} else {
 			out[i] = 0;
 		}
-		MP_CHECKOK(mp_div_2(&k, &k));
+		mp_div_2(&k, &k);
 		i++;
 	}
 	/* Zero out the remaining elements of the out array. */

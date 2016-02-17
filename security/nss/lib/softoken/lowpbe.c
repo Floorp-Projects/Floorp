@@ -53,7 +53,9 @@ struct nsspkcs5V2PBEParameterStr {
 };
 
 typedef struct nsspkcs5V2PBEParameterStr nsspkcs5V2PBEParameter;
+#define PBKDF2
 
+#ifdef PBKDF2
 static const SEC_ASN1Template NSSPKCS5V2PBES2ParameterTemplate[] =
 {   
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(nsspkcs5V2PBEParameter) },
@@ -79,6 +81,7 @@ static const SEC_ASN1Template NSSPKCS5V2PBEParameterTemplate[] =
         SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
     { 0 }
 };
+#endif
 
 SECStatus
 nsspkcs5_HashBuf(const SECHashObject *hashObj, unsigned char *dest,
@@ -298,6 +301,8 @@ nsspkcs5_PBKDF1Extended(const SECHashObject *hashObj,
     return newHash;
 }
 
+#ifdef PBKDF2
+
 /*
  * PBDKDF2 is PKCS #5 v2.0 it's currently not used by NSS
  */
@@ -408,6 +413,7 @@ loser:
 
     return result;
 }
+#endif
 
 #define HMAC_BUFFER 64
 #define NSSPBE_ROUNDUP(x,y) ((((x)+((y)-1))/(y))*(y))
@@ -594,12 +600,14 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
 	} 
 	
     	break;
+#ifdef PBKDF2
     case NSSPKCS5_PBKDF2:
 	hash = nsspkcs5_PBKDF2(hashObj,pbe_param,pwitem);
 	if (getIV) {
 	    PORT_Memcpy(iv->data, pbe_param->ivData, iv->len);
 	}
     	break;
+#endif
     case NSSPKCS5_PKCS12_V2:
 	if (getIV) {
 	    hash = nsspkcs5_PKCS12PBE(hashObj,pbe_param,pwitem,
@@ -643,14 +651,13 @@ loser:
 }
 
 static SECStatus
-nsspkcs5_FillInParam(SECOidTag algorithm, HASH_HashType hashType,
-                     NSSPKCS5PBEParameter *pbe_param)
+nsspkcs5_FillInParam(SECOidTag algorithm, NSSPKCS5PBEParameter *pbe_param)
 {
     PRBool skipType = PR_FALSE;
 
     pbe_param->keyLen = 5;
     pbe_param->ivLen = 8;
-    pbe_param->hashType = hashType;
+    pbe_param->hashType = HASH_AlgSHA1;
     pbe_param->pbeType = NSSPKCS5_PBKDF1;
     pbe_param->encAlg = SEC_OID_RC2_CBC;
     pbe_param->is2KeyDES = PR_FALSE;
@@ -710,6 +717,7 @@ finish_des:
         pbe_param->encAlg =  SEC_OID_RC4;
         break;
 
+#ifdef PBKDF2
     case SEC_OID_PKCS5_PBKDF2:
     case SEC_OID_PKCS5_PBES2:
     case SEC_OID_PKCS5_PBMAC1:
@@ -719,6 +727,7 @@ finish_des:
         pbe_param->encAlg =  SEC_OID_PKCS5_PBKDF2;
 	pbe_param->keyLen = 0; /* needs to be set by caller after return */
 	break;
+#endif
 
     default:
         return SECFailure;
@@ -730,8 +739,7 @@ finish_des:
 /* decode the algid and generate a PKCS 5 parameter from it
  */
 NSSPKCS5PBEParameter *
-nsspkcs5_NewParam(SECOidTag alg, HASH_HashType hashType, SECItem *salt,
-                  int iterationCount)
+nsspkcs5_NewParam(SECOidTag alg, SECItem *salt, int iterator)
 {
     PLArenaPool *arena = NULL;
     NSSPKCS5PBEParameter *pbe_param = NULL;
@@ -751,12 +759,12 @@ nsspkcs5_NewParam(SECOidTag alg, HASH_HashType hashType, SECItem *salt,
 
     pbe_param->poolp = arena;
 
-    rv = nsspkcs5_FillInParam(alg, hashType, pbe_param);
+    rv = nsspkcs5_FillInParam(alg, pbe_param);
     if (rv != SECSuccess) {
 	goto loser;
     }
 
-    pbe_param->iter = iterationCount;
+    pbe_param->iter = iterator;
     if (salt) {
 	rv = SECITEM_CopyItem(arena,&pbe_param->salt,salt);
     }
@@ -815,7 +823,7 @@ nsspkcs5_AlgidToParam(SECAlgorithmID *algid)
 	goto loser;
     }
 
-    pbe_param = nsspkcs5_NewParam(algorithm, HASH_AlgSHA1, NULL, 1);
+    pbe_param = nsspkcs5_NewParam(algorithm, NULL, 1);
     if (pbe_param == NULL) {
 	goto loser;
     }
@@ -831,6 +839,7 @@ nsspkcs5_AlgidToParam(SECAlgorithmID *algid)
 	rv = SEC_ASN1DecodeItem(pbe_param->poolp, pbe_param, 
 		NSSPKCS5PKCS12V2PBEParameterTemplate, &algid->parameters);
 	break;
+#ifdef PBKDF2
     case NSSPKCS5_PBKDF2:
 	PORT_Memset(&pbev2_param,0, sizeof(pbev2_param));
 	/* just the PBE */
@@ -865,6 +874,7 @@ nsspkcs5_AlgidToParam(SECAlgorithmID *algid)
 	    rv = SECFailure;
 	}
 	break;
+#endif
     }
 
 loser:
@@ -1306,6 +1316,7 @@ nsspkcs5_CreateAlgorithmID(PLArenaPool *arena, SECOidTag algorithm,
 	dummy = SEC_ASN1EncodeItem(arena, &der_param, pbe_param,
 	    				NSSPKCS5PKCS12V2PBEParameterTemplate);
 	break;
+#ifdef PBKDF2
     case NSSPKCS5_PBKDF2:
         if (pbe_param->keyLength.data == NULL) {
 	    dummy = SEC_ASN1EncodeInteger(pbe_param->poolp,
@@ -1336,6 +1347,7 @@ nsspkcs5_CreateAlgorithmID(PLArenaPool *arena, SECOidTag algorithm,
 	dummy = SEC_ASN1EncodeItem(arena,  &der_param, &pkcs5v2_param,
 	    				NSSPKCS5V2PBES2ParameterTemplate);
 	break;
+#endif
     default:
 	break;
     }

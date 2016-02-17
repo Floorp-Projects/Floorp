@@ -51,16 +51,9 @@ class DataBuffer {
   void Assign(const DataBuffer& other) {
     Assign(other.data(), other.len());
   }
-
   void Assign(const uint8_t* data, size_t len) {
-    if (data) {
-      Allocate(len);
-      memcpy(static_cast<void *>(data_), static_cast<const void *>(data), len);
-    } else {
-      assert(len == 0);
-      data_ = nullptr;
-      len_ = 0;
-    }
+    Allocate(len);
+    memcpy(static_cast<void *>(data_), static_cast<const void *>(data), len);
   }
 
   // Write will do a new allocation and expand the size of the buffer if needed.
@@ -171,15 +164,6 @@ inline std::ostream& operator<<(std::ostream& stream, const DataBuffer& buf) {
   }
   stream << std::dec;
   return stream;
-}
-
-inline bool operator==(const DataBuffer& a, const DataBuffer& b) {
-  return (a.empty() && b.empty()) ||
-    (a.len() == b.len() && 0 == memcmp(a.data(), b.data(), a.len()));
-}
-
-inline bool operator!=(const DataBuffer& a, const DataBuffer& b) {
-  return !(a == b);
 }
 
 } // namespace nss_test

@@ -10,21 +10,27 @@ typedef struct CERTAltNameEncodedContextStr {
     SECItem **encodedGenName;
 } CERTAltNameEncodedContext;
 
+
+
 SEC_BEGIN_PROTOS
 
-extern SECStatus CERT_EncodePrivateKeyUsagePeriod(PLArenaPool *arena,
-                                                  CERTPrivKeyUsagePeriod *pkup,
-                                                  SECItem *encodedValue);
+extern SECStatus
+CERT_EncodePrivateKeyUsagePeriod(PLArenaPool *arena,
+                                CERTPrivKeyUsagePeriod *pkup,
+				SECItem *encodedValue);
 
-extern SECStatus CERT_EncodeNameConstraintsExtension(PLArenaPool *arena,
-                                                     CERTNameConstraints *value,
-                                                     SECItem *encodedValue);
+extern SECStatus
+CERT_EncodeNameConstraintsExtension(PLArenaPool *arena,
+                                    CERTNameConstraints  *value,
+			            SECItem *encodedValue);
 
-extern SECStatus CERT_EncodeIA5TypeExtension(PLArenaPool *arena, char *value,
-                                             SECItem *encodedValue);
+extern SECStatus 
+CERT_EncodeIA5TypeExtension(PLArenaPool *arena, char *value,
+                            SECItem *encodedValue);
 
-SECStatus cert_EncodeAuthInfoAccessExtension(PLArenaPool *arena,
-                                             CERTAuthInfoAccess **info,
-                                             SECItem *dest);
+SECStatus
+cert_EncodeAuthInfoAccessExtension(PLArenaPool *arena,
+				   CERTAuthInfoAccess **info,
+				   SECItem *dest);
 SEC_END_PROTOS
 #endif

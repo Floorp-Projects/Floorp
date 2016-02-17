@@ -9,17 +9,17 @@
 
 void
 crmf_encoder_out(void *arg, const char *buf, unsigned long len,
-                 int depth, SEC_ASN1EncodingPart data_kind)
+		 int depth, SEC_ASN1EncodingPart data_kind)
 {
     struct crmfEncoderOutput *output;
 
-    output = (struct crmfEncoderOutput *)arg;
-    output->fn(output->outputArg, buf, len);
+    output = (struct crmfEncoderOutput*) arg;
+    output->fn (output->outputArg, buf, len);
 }
 
 SECStatus
 cmmf_user_encode(void *src, CRMFEncoderOutputCallback inCallback, void *inArg,
-                 const SEC_ASN1Template *inTemplate)
+		 const SEC_ASN1Template *inTemplate)
 {
     struct crmfEncoderOutput output;
 
@@ -27,7 +27,8 @@ cmmf_user_encode(void *src, CRMFEncoderOutputCallback inCallback, void *inArg,
     if (src == NULL) {
         return SECFailure;
     }
-    output.fn = inCallback;
+    output.fn        = inCallback;
     output.outputArg = inArg;
-    return SEC_ASN1Encode(src, inTemplate, crmf_encoder_out, &output);
+    return SEC_ASN1Encode(src, inTemplate, crmf_encoder_out, &output);    
 }
+

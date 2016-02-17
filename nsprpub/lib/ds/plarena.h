@@ -96,11 +96,11 @@ struct PLArenaPool {
 
 /* These definitions are usually provided through the
  * sanitizer/asan_interface.h header installed by ASan.
- * See https://github.com/google/sanitizers/wiki/AddressSanitizerManualPoisoning
+ * See https://code.google.com/p/address-sanitizer/wiki/ManualPoisoning
  */
 
-PR_IMPORT(void) __asan_poison_memory_region(void const volatile *addr, size_t size);
-PR_IMPORT(void) __asan_unpoison_memory_region(void const volatile *addr, size_t size);
+void __asan_poison_memory_region(void const volatile *addr, size_t size);
+void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
 
 #define PL_MAKE_MEM_NOACCESS(addr, size) \
     __asan_poison_memory_region((addr), (size))

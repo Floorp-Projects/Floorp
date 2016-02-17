@@ -165,7 +165,7 @@ char *_NSSUTIL_GetOldSecmodName(const char *dbname,const char *filename)
 static SECStatus nssutil_AddSecmodDBEntry(const char *appName,
                                           const char *filename,
                                           const char *dbname,
-                                          const char *module, PRBool rw);
+                                          char *module, PRBool rw);
 
 enum lfopen_mode { lfopen_truncate, lfopen_append };
 
@@ -210,7 +210,7 @@ nssutil_ReadSecmodDB(const char *appName,
     char *paramsValue=NULL;
     PRBool failed = PR_TRUE;
 
-    moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char *));
+    moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char **));
     if (moduleList == NULL) return NULL;
 
     if (dbname == NULL) {
@@ -387,7 +387,7 @@ done:
 	status = PR_Access(olddbname, PR_ACCESS_EXISTS);
 	if (status == PR_SUCCESS) {
 	    PR_smprintf_free(olddbname);
-	    PORT_ZFree(moduleList, useCount*sizeof(char *));
+	    PORT_ZFree(moduleList, useCount*sizeof(char **));
 	    PORT_SetError(SEC_ERROR_LEGACY_DATABASE);
 	    return NULL;
 	}
@@ -469,7 +469,7 @@ static SECStatus
 nssutil_DeleteSecmodDBEntry(const char *appName,
                             const char *filename,
                             const char *dbname,
-                            const char *args,
+                            char *args,
                             PRBool rw)
 {
     /* SHDB_FIXME implement */
@@ -610,7 +610,7 @@ loser:
 static SECStatus
 nssutil_AddSecmodDBEntry(const char *appName,
                         const char *filename, const char *dbname,
-                        const char *module, PRBool rw)
+                         char *module, PRBool rw)
 {
     os_stat_type stat_existing;
     os_open_permissions_type file_mode;

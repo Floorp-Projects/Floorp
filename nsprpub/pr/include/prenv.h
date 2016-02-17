@@ -91,20 +91,6 @@ PR_BEGIN_EXTERN_C
 NSPR_API(char*) PR_GetEnv(const char *var);
 
 /*
-** PR_GetEnvSecure() -- get a security-sensitive environment variable
-**
-** Description:
-**
-** PR_GetEnvSecure() is similar to PR_GetEnv(), but it returns NULL if
-** the program was run with elevated privilege (e.g., setuid or setgid
-** on Unix).  This can be used for cases like log file paths which
-** could otherwise be used for privilege escalation.  Note that some
-** platforms may have platform-specific privilege elevation mechanisms
-** not recognized by this function; see the implementation for details.
-*/
-NSPR_API(char*) PR_GetEnvSecure(const char *var);
-
-/*
 ** PR_SetEnv() -- set, unset or change an environment variable
 ** 
 ** Description:

@@ -154,7 +154,7 @@ testFunctionRef testFnRefTable[] = {
     {"test_mutex3",                    test_mutex3},
     {"test_object",                    test_object},
     {"test_oid",                       test_oid},
-/*  {"test_rwlock",                    test_rwlock }*/
+/*  {"test_rwlock",                    test_rwlock, }*/
     {"test_string",                    test_string},
     {"test_string2",                   test_string2},
     {"build_chain",                    build_chain},

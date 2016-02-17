@@ -225,7 +225,6 @@ PrintParameterUsage()
 "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
 "-c Restrict ciphers\n"
 "-Y prints cipher values allowed for parameter -c and exits\n"
-"-G enables the extended master secret extension [RFC7627]\n"
     , stderr);
 }
 
@@ -2459,12 +2458,12 @@ main(int argc, char **argv)
             testBulkBuf[i] = i;
     }
 
-    envString = PR_GetEnvSecure(envVarName);
-    tmp = PR_GetEnvSecure("TMP");
+    envString = getenv(envVarName);
+    tmp = getenv("TMP");
     if (!tmp)
-	tmp = PR_GetEnvSecure("TMPDIR");
+	tmp = getenv("TMPDIR");
     if (!tmp)
-	tmp = PR_GetEnvSecure("TEMP");
+	tmp = getenv("TEMP");
     if (envString) {
 	/* we're one of the children in a multi-process server. */
 	listen_sock = PR_GetInheritedFD(inheritableSockName);

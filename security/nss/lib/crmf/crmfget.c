@@ -8,6 +8,7 @@
 #include "keyhi.h"
 #include "secder.h"
 
+
 CRMFPOPChoice
 CRMF_CertReqMsgGetPOPType(CRMFCertReqMsg *inCertReqMsg)
 {
@@ -21,51 +22,50 @@ CRMF_CertReqMsgGetPOPType(CRMFCertReqMsg *inCertReqMsg)
 static SECStatus
 crmf_destroy_validity(CRMFOptionalValidity *inValidity, PRBool freeit)
 {
-    if (inValidity != NULL) {
+    if (inValidity != NULL){
         if (inValidity->notBefore.data != NULL) {
-            PORT_Free(inValidity->notBefore.data);
-        }
-        if (inValidity->notAfter.data != NULL) {
-            PORT_Free(inValidity->notAfter.data);
-        }
-        if (freeit) {
-            PORT_Free(inValidity);
-        }
+	    PORT_Free(inValidity->notBefore.data);
+	}
+	if (inValidity->notAfter.data != NULL) {
+	    PORT_Free(inValidity->notAfter.data);
+	}
+	if (freeit) {
+	    PORT_Free(inValidity);
+	}
     }
     return SECSuccess;
 }
 
-static SECStatus
-crmf_copy_cert_request_validity(PLArenaPool *poolp,
-                                CRMFOptionalValidity **destValidity,
-                                CRMFOptionalValidity *srcValidity)
+static SECStatus 
+crmf_copy_cert_request_validity(PLArenaPool           *poolp,
+				CRMFOptionalValidity **destValidity,
+				CRMFOptionalValidity  *srcValidity)
 {
     CRMFOptionalValidity *myValidity = NULL;
-    SECStatus rv;
+    SECStatus             rv;
 
     *destValidity = myValidity = (poolp == NULL) ?
-                                                 PORT_ZNew(CRMFOptionalValidity)
-                                                 :
-                                                 PORT_ArenaZNew(poolp, CRMFOptionalValidity);
+                                  PORT_ZNew(CRMFOptionalValidity) :
+                                  PORT_ArenaZNew(poolp, CRMFOptionalValidity);
     if (myValidity == NULL) {
         goto loser;
     }
     if (srcValidity->notBefore.data != NULL) {
-        rv = SECITEM_CopyItem(poolp, &myValidity->notBefore,
-                              &srcValidity->notBefore);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+        rv = SECITEM_CopyItem(poolp, &myValidity->notBefore, 
+			      &srcValidity->notBefore);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcValidity->notAfter.data != NULL) {
-        rv = SECITEM_CopyItem(poolp, &myValidity->notAfter,
-                              &srcValidity->notAfter);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+        rv = SECITEM_CopyItem(poolp, &myValidity->notAfter, 
+			      &srcValidity->notAfter);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     return SECSuccess;
-loser:
+ loser:
     if (myValidity != NULL && poolp == NULL) {
         crmf_destroy_validity(myValidity, PR_TRUE);
     }
@@ -73,11 +73,11 @@ loser:
 }
 
 static SECStatus
-crmf_copy_extensions(PLArenaPool *poolp,
-                     CRMFCertTemplate *destTemplate,
-                     CRMFCertExtension **srcExt)
+crmf_copy_extensions(PLArenaPool        *poolp,
+		     CRMFCertTemplate   *destTemplate,
+		     CRMFCertExtension **srcExt)
 {
-    int numExt = 0, i;
+    int       numExt = 0, i;
     CRMFCertExtension **myExtArray = NULL;
 
     while (srcExt[numExt] != NULL) {
@@ -86,32 +86,32 @@ crmf_copy_extensions(PLArenaPool *poolp,
     if (numExt == 0) {
         /*No extensions to copy.*/
         destTemplate->extensions = NULL;
-        destTemplate->numExtensions = 0;
+	destTemplate->numExtensions = 0;
         return SECSuccess;
     }
-    destTemplate->extensions = myExtArray =
-        PORT_NewArray(CRMFCertExtension *, numExt + 1);
+    destTemplate->extensions = myExtArray = 
+                           PORT_NewArray(CRMFCertExtension*, numExt+1);
     if (myExtArray == NULL) {
         goto loser;
     }
-
-    for (i = 0; i < numExt; i++) {
+     
+    for (i=0; i<numExt; i++) {
         myExtArray[i] = crmf_copy_cert_extension(poolp, srcExt[i]);
-        if (myExtArray[i] == NULL) {
-            goto loser;
-        }
+	if (myExtArray[i] == NULL) {
+	    goto loser;
+	}
     }
     destTemplate->numExtensions = numExt;
     myExtArray[numExt] = NULL;
     return SECSuccess;
-loser:
+ loser:
     if (myExtArray != NULL) {
         if (poolp == NULL) {
-            for (i = 0; myExtArray[i] != NULL; i++) {
-                CRMF_DestroyCertExtension(myExtArray[i]);
-            }
-        }
-        PORT_Free(myExtArray);
+	    for (i=0; myExtArray[i] != NULL; i++) {
+	        CRMF_DestroyCertExtension(myExtArray[i]);
+	    }
+	}
+	PORT_Free(myExtArray);
     }
     destTemplate->extensions = NULL;
     destTemplate->numExtensions = 0;
@@ -119,95 +119,95 @@ loser:
 }
 
 static SECStatus
-crmf_copy_cert_request_template(PLArenaPool *poolp,
-                                CRMFCertTemplate *destTemplate,
-                                CRMFCertTemplate *srcTemplate)
+crmf_copy_cert_request_template(PLArenaPool      *poolp,
+				CRMFCertTemplate *destTemplate,
+				CRMFCertTemplate *srcTemplate)
 {
     SECStatus rv;
 
     if (srcTemplate->version.data != NULL) {
-        rv = SECITEM_CopyItem(poolp, &destTemplate->version,
-                              &srcTemplate->version);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+        rv = SECITEM_CopyItem(poolp, &destTemplate->version, 
+			      &srcTemplate->version);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->serialNumber.data != NULL) {
         rv = SECITEM_CopyItem(poolp, &destTemplate->serialNumber,
-                              &srcTemplate->serialNumber);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+			      &srcTemplate->serialNumber);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->signingAlg != NULL) {
         rv = crmf_template_copy_secalg(poolp, &destTemplate->signingAlg,
-                                       srcTemplate->signingAlg);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+				       srcTemplate->signingAlg);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->issuer != NULL) {
         rv = crmf_copy_cert_name(poolp, &destTemplate->issuer,
-                                 srcTemplate->issuer);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+				 srcTemplate->issuer);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->validity != NULL) {
         rv = crmf_copy_cert_request_validity(poolp, &destTemplate->validity,
-                                             srcTemplate->validity);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+					     srcTemplate->validity);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->subject != NULL) {
-        rv = crmf_copy_cert_name(poolp, &destTemplate->subject,
-                                 srcTemplate->subject);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+        rv = crmf_copy_cert_name(poolp, &destTemplate->subject, 
+				 srcTemplate->subject);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->publicKey != NULL) {
         rv = crmf_template_add_public_key(poolp, &destTemplate->publicKey,
-                                          srcTemplate->publicKey);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+					  srcTemplate->publicKey);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->issuerUID.data != NULL) {
         rv = crmf_make_bitstring_copy(poolp, &destTemplate->issuerUID,
-                                      &srcTemplate->issuerUID);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+				      &srcTemplate->issuerUID);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->subjectUID.data != NULL) {
         rv = crmf_make_bitstring_copy(poolp, &destTemplate->subjectUID,
-                                      &srcTemplate->subjectUID);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+				      &srcTemplate->subjectUID);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     if (srcTemplate->extensions != NULL) {
         rv = crmf_copy_extensions(poolp, destTemplate,
-                                  srcTemplate->extensions);
-        if (rv != SECSuccess) {
-            goto loser;
-        }
+				  srcTemplate->extensions);
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
     return SECSuccess;
-loser:
+ loser:
     return SECFailure;
 }
 
-static CRMFControl *
+static CRMFControl*
 crmf_copy_control(PLArenaPool *poolp, CRMFControl *srcControl)
 {
     CRMFControl *newControl;
-    SECStatus rv;
+    SECStatus    rv;
 
     newControl = (poolp == NULL) ? PORT_ZNew(CRMFControl) :
-                                 PORT_ArenaZNew(poolp, CRMFControl);
+                                   PORT_ArenaZNew(poolp, CRMFControl);
     if (newControl == NULL) {
         goto loser;
     }
@@ -225,20 +225,20 @@ crmf_copy_control(PLArenaPool *poolp, CRMFControl *srcControl)
      * then they need to be handled here as well.
      */
     switch (newControl->tag) {
-        case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
-            rv = crmf_copy_pkiarchiveoptions(poolp,
-                                             &newControl->value.archiveOptions,
-                                             &srcControl->value.archiveOptions);
-            break;
-        default:
-            rv = SECSuccess;
+    case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
+        rv = crmf_copy_pkiarchiveoptions(poolp, 
+					 &newControl->value.archiveOptions,
+					 &srcControl->value.archiveOptions);
+      break;
+    default:
+        rv = SECSuccess;
     }
     if (rv != SECSuccess) {
         goto loser;
     }
     return newControl;
 
-loser:
+ loser:
     if (poolp == NULL && newControl != NULL) {
         CRMF_DestroyControl(newControl);
     }
@@ -246,11 +246,11 @@ loser:
 }
 
 static SECStatus
-crmf_copy_cert_request_controls(PLArenaPool *poolp,
-                                CRMFCertRequest *destReq,
-                                CRMFCertRequest *srcReq)
+crmf_copy_cert_request_controls(PLArenaPool     *poolp,
+				CRMFCertRequest *destReq, 
+				CRMFCertRequest *srcReq)
 {
-    int numControls, i;
+    int           numControls, i;
     CRMFControl **myControls = NULL;
 
     numControls = CRMF_CertRequestGetNumControls(srcReq);
@@ -258,42 +258,43 @@ crmf_copy_cert_request_controls(PLArenaPool *poolp,
         /* No Controls To Copy*/
         return SECSuccess;
     }
-    myControls = destReq->controls = PORT_NewArray(CRMFControl *,
-                                                   numControls + 1);
+    myControls = destReq->controls = PORT_NewArray(CRMFControl*, 
+						   numControls+1);
     if (myControls == NULL) {
         goto loser;
     }
-    for (i = 0; i < numControls; i++) {
+    for (i=0; i<numControls; i++) {
         myControls[i] = crmf_copy_control(poolp, srcReq->controls[i]);
-        if (myControls[i] == NULL) {
-            goto loser;
-        }
+	if (myControls[i] == NULL) {
+	    goto loser;
+	}
     }
     myControls[numControls] = NULL;
     return SECSuccess;
-loser:
+ loser:
     if (myControls != NULL) {
         if (poolp == NULL) {
-            for (i = 0; myControls[i] != NULL; i++) {
-                CRMF_DestroyControl(myControls[i]);
-            }
-        }
-        PORT_Free(myControls);
+	    for (i=0; myControls[i] != NULL; i++) {
+	        CRMF_DestroyControl(myControls[i]);
+	    }
+	}
+	PORT_Free(myControls);
     }
     return SECFailure;
 }
 
-CRMFCertRequest *
+
+CRMFCertRequest*
 crmf_copy_cert_request(PLArenaPool *poolp, CRMFCertRequest *srcReq)
 {
     CRMFCertRequest *newReq = NULL;
-    SECStatus rv;
+    SECStatus        rv;
 
     if (srcReq == NULL) {
         return NULL;
     }
     newReq = (poolp == NULL) ? PORT_ZNew(CRMFCertRequest) :
-                             PORT_ArenaZNew(poolp, CRMFCertRequest);
+                               PORT_ArenaZNew(poolp, CRMFCertRequest);
     if (newReq == NULL) {
         goto loser;
     }
@@ -301,8 +302,8 @@ crmf_copy_cert_request(PLArenaPool *poolp, CRMFCertRequest *srcReq)
     if (rv != SECSuccess) {
         goto loser;
     }
-    rv = crmf_copy_cert_request_template(poolp, &newReq->certTemplate,
-                                         &srcReq->certTemplate);
+    rv = crmf_copy_cert_request_template(poolp, &newReq->certTemplate, 
+					 &srcReq->certTemplate);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -311,7 +312,7 @@ crmf_copy_cert_request(PLArenaPool *poolp, CRMFCertRequest *srcReq)
         goto loser;
     }
     return newReq;
-loser:
+ loser:
     if (newReq != NULL && poolp == NULL) {
         CRMF_DestroyCertRequest(newReq);
         PORT_Free(newReq);
@@ -319,19 +320,19 @@ loser:
     return NULL;
 }
 
-SECStatus
+SECStatus 
 CRMF_DestroyGetValidity(CRMFGetValidity *inValidity)
 {
     PORT_Assert(inValidity != NULL);
     if (inValidity != NULL) {
         if (inValidity->notAfter) {
-            PORT_Free(inValidity->notAfter);
-            inValidity->notAfter = NULL;
-        }
-        if (inValidity->notBefore) {
-            PORT_Free(inValidity->notBefore);
-            inValidity->notBefore = NULL;
-        }
+	    PORT_Free(inValidity->notAfter);
+	    inValidity->notAfter = NULL;
+	}
+	if (inValidity->notBefore) {
+	    PORT_Free(inValidity->notBefore);
+	    inValidity->notBefore = NULL;
+	}
     }
     return SECSuccess;
 }
@@ -345,7 +346,7 @@ crmf_make_bitstring_copy(PLArenaPool *arena, SECItem *dest, SECItem *src)
 
     origLenBits = src->len;
     bytesToCopy = CRMF_BITS_TO_BYTES(origLenBits);
-    src->len = bytesToCopy;
+    src->len = bytesToCopy;         
     rv = SECITEM_CopyItem(arena, dest, src);
     src->len = origLenBits;
     if (rv != SECSuccess) {
@@ -360,11 +361,11 @@ CRMF_CertRequestGetNumberOfExtensions(CRMFCertRequest *inCertReq)
 {
     CRMFCertTemplate *certTemplate;
     int count = 0;
-
+    
     certTemplate = &inCertReq->certTemplate;
     if (certTemplate->extensions) {
         while (certTemplate->extensions[count] != NULL)
-            count++;
+	    count++;
     }
     return count;
 }
@@ -389,16 +390,17 @@ CRMF_CertExtensionGetIsCritical(CRMFCertExtension *inExt)
     return inExt->critical.data != NULL;
 }
 
-SECItem *
+SECItem*
 CRMF_CertExtensionGetValue(CRMFCertExtension *inExtension)
 {
     PORT_Assert(inExtension != NULL);
     if (inExtension == NULL) {
         return NULL;
     }
-
+    
     return SECITEM_DupItem(&inExtension->value);
 }
+			  
 
 SECStatus
 CRMF_DestroyPOPOSigningKey(CRMFPOPOSigningKey *inKey)
@@ -406,15 +408,15 @@ CRMF_DestroyPOPOSigningKey(CRMFPOPOSigningKey *inKey)
     PORT_Assert(inKey != NULL);
     if (inKey != NULL) {
         if (inKey->derInput.data != NULL) {
-            SECITEM_FreeItem(&inKey->derInput, PR_FALSE);
-        }
-        if (inKey->algorithmIdentifier != NULL) {
-            SECOID_DestroyAlgorithmID(inKey->algorithmIdentifier, PR_TRUE);
-        }
-        if (inKey->signature.data != NULL) {
-            SECITEM_FreeItem(&inKey->signature, PR_FALSE);
-        }
-        PORT_Free(inKey);
+	    SECITEM_FreeItem(&inKey->derInput, PR_FALSE);
+	}
+	if (inKey->algorithmIdentifier != NULL) {
+	    SECOID_DestroyAlgorithmID(inKey->algorithmIdentifier, PR_TRUE);
+	}
+	if (inKey->signature.data != NULL) {
+	    SECITEM_FreeItem(&inKey->signature, PR_FALSE);
+	}
+	PORT_Free(inKey);
     }
     return SECSuccess;
 }
@@ -425,7 +427,7 @@ CRMF_DestroyPOPOPrivKey(CRMFPOPOPrivKey *inPrivKey)
     PORT_Assert(inPrivKey != NULL);
     if (inPrivKey != NULL) {
         SECITEM_FreeItem(&inPrivKey->message.thisMessage, PR_FALSE);
-        PORT_Free(inPrivKey);
+	PORT_Free(inPrivKey);
     }
     return SECSuccess;
 }
@@ -433,7 +435,7 @@ CRMF_DestroyPOPOPrivKey(CRMFPOPOPrivKey *inPrivKey)
 int
 CRMF_CertRequestGetNumControls(CRMFCertRequest *inCertReq)
 {
-    int count = 0;
+    int              count = 0;
 
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
@@ -441,7 +443,8 @@ CRMF_CertRequestGetNumControls(CRMFCertRequest *inCertReq)
     }
     if (inCertReq->controls) {
         while (inCertReq->controls[count] != NULL)
-            count++;
+	    count++;
     }
     return count;
 }
+

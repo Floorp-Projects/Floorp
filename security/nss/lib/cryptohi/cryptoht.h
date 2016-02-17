@@ -11,4 +11,5 @@
 typedef struct SGNContextStr SGNContext;
 typedef struct VFYContextStr VFYContext;
 
+
 #endif /* _CRYPTOHT_H_ */
