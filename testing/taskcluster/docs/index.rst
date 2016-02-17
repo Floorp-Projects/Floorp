@@ -145,6 +145,32 @@ chunk
 total_chunks
    Total number of chunks
 
+Generic Tasks
+=============
+
+Generic tasks are neither build tasks nor test tasks. They are intended for
+tasks that don't fit into either category.
+
+.. important::
+
+   Generic tasks are a new feature and still under development. The
+   conventions will likely change significantly.
+
+Generic tasks are defined under a top-level ``tasks`` dictionary in the
+YAML. Keys in the dictionary are the unique task name. Values are
+dictionaries of task attributes. The following attributes can be defined:
+
+task
+   *required* Path to the YAML file declaring the task.
+
+root
+   *optional* Boolean indicating whether this is a *root* task. Root
+   tasks are scheduled immediately, if scheduled to run.
+
+additional-parameters
+   *optional* Dictionary of additional parameters to pass to template
+   expansion.
+
 Developing
 ==========
 
