@@ -46,7 +46,6 @@ const { OS } = Services.appinfo;
 // order to initialize a CodeMirror instance.
 
 const CM_STYLES = [
-  "chrome://devtools/skin/common.css",
   "chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css",
   "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css",
   "chrome://devtools/content/sourceeditor/codemirror/mozilla.css"

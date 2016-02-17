@@ -7,7 +7,6 @@
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 
 const testToolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                "<?xml-stylesheet href='chrome://devtools/skin/common.css' type='text/css'?>" +
                 "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
                 "<hbox flex='1'><description flex='1'>test tool</description>" +
                 "<splitter class='devtools-side-splitter'/>" +
