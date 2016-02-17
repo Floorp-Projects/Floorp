@@ -2454,21 +2454,10 @@ nsPresContext::NotifyInvalidation(uint32_t aFlags)
 void
 nsPresContext::NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags)
 {
-  // Prevent values from overflow after DevPixelsToAppUnits().
-  //
-  // DevPixelsTopAppUnits() will multiple a factor (60) to the value,
-  // it may make the result value over the edge (overflow) of max or
-  // min value of int32_t. Compute the max sized dev pixel rect that
-  // we can support and intersect with it.
-  nsIntRect clampedRect = nsIntRect::MaxIntRect();
-  clampedRect.ScaleInverseRoundIn(AppUnitsPerDevPixel());
-
-  clampedRect = clampedRect.Intersect(aRect);
-
-  nsRect rect(DevPixelsToAppUnits(clampedRect.x),
-              DevPixelsToAppUnits(clampedRect.y),
-              DevPixelsToAppUnits(clampedRect.width),
-              DevPixelsToAppUnits(clampedRect.height));
+  nsRect rect(DevPixelsToAppUnits(aRect.x),
+              DevPixelsToAppUnits(aRect.y),
+              DevPixelsToAppUnits(aRect.width),
+              DevPixelsToAppUnits(aRect.height));
   NotifyInvalidation(rect, aFlags);
 }
 
