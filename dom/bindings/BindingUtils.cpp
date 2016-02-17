@@ -30,7 +30,7 @@
 #include "xpcprivate.h"
 #include "XrayWrapper.h"
 #include "nsPrintfCString.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsGlobalWindow.h"
 
 #include "mozilla/dom/ScriptSettings.h"
@@ -2424,13 +2424,13 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       // 20 digits, plus one more for the null terminator.
       char index[21];
       static_assert(sizeof(size_t) <= 8, "index array too small");
-      PR_snprintf(index, sizeof(index), "%d", badCharIndex);
+      snprintf_literal(index, "%d", badCharIndex);
       // A char16_t is 16 bits long.  The biggest unsigned 16 bit
       // number (65,535) has 5 digits, plus one more for the null
       // terminator.
       char badCharArray[6];
       static_assert(sizeof(char16_t) <= 2, "badCharArray too small");
-      PR_snprintf(badCharArray, sizeof(badCharArray), "%d", badChar);
+      snprintf_literal(badCharArray, "%d", badChar);
       ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badCharArray);
       return false;
     }
