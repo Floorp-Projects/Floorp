@@ -882,13 +882,19 @@ WindowsGamepadService::Cleanup()
     mXInputPollTimer->Cancel();
   }
   mGamepads.Clear();
+  if (mObserver) {
+    mObserver->Stop();
+    mObserver = nullptr;
+  }
 }
 
 void
 WindowsGamepadService::DevicesChanged(DeviceChangeType type)
 {
   if (type == DeviceChangeNotification) {
-    mObserver->SetDeviceChangeTimer();
+    if (mObserver) {
+      mObserver->SetDeviceChangeTimer();
+    }
   } else if (type == DeviceChangeStable) {
     ScanForDevices();
   }
