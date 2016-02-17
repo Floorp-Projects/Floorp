@@ -71,6 +71,10 @@ XPCOMUtils.defineLazyGetter(loaderModules, "CSS", () => {
   return Cu.Sandbox(this, {wantGlobalProperties: ["CSS"]}).CSS;
 });
 
+XPCOMUtils.defineLazyGetter(loaderModules, "URL", () => {
+  return Cu.Sandbox(this, {wantGlobalProperties: ["URL"]}).URL;
+});
+
 var sharedGlobalBlocklist = ["sdk/indexed-db"];
 
 /**
