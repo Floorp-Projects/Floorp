@@ -12,6 +12,8 @@
 #include "nssbaset.h"
 #endif /* NSSBASET_H */
 
+/* clang-format off */
+
 const NSSError NSS_ERROR_NO_ERROR                       =  0;
 const NSSError NSS_ERROR_INTERNAL_ERROR                 =  1;
 const NSSError NSS_ERROR_NO_MEMORY                      =  2;
@@ -60,3 +62,4 @@ const NSSError NSS_ERROR_ALREADY_INITIALIZED            = 37;
 
 const NSSError NSS_ERROR_PKCS11                         = 38;
 
+/* clang-format on */

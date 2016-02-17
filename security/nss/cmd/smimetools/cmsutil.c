@@ -1069,9 +1069,9 @@ main(int argc, char **argv)
     PRBool      batch = PR_FALSE;
 
 #ifdef NISCC_TEST
-    const char *ev = PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST");
+    const char *ev = PR_GetEnvSecure("NSS_DISABLE_ARENA_FREE_LIST");
     PORT_Assert(ev); 
-    ev = PR_GetEnv("NSS_STRICT_SHUTDOWN");
+    ev = PR_GetEnvSecure("NSS_STRICT_SHUTDOWN");
     PORT_Assert(ev); 
 #endif 
 

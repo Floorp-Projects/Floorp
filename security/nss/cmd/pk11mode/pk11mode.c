@@ -754,7 +754,7 @@ cleanup:
 #ifdef _WIN32
     FreeLibrary(hModule);
 #else
-    disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
+    disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
     if (!disableUnload) {
         PR_UnloadLibrary(lib);
     }

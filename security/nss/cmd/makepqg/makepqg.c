@@ -28,7 +28,7 @@ const SEC_ASN1Template seckey_PQGParamsTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,prime) },
     { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,subPrime) },
     { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,base) },
-    { 0, }
+    { 0 }
 };
 
 

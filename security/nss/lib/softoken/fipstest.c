@@ -1512,8 +1512,8 @@ sftk_fips_RSA_PowerUpSelfTest( void )
     NSSLOWKEYPrivateKey * rsa_private_key;
     SECStatus             rsa_status;
 
-    NSSLOWKEYPublicKey    low_public_key   = { NULL, NSSLOWKEYRSAKey, };
-    NSSLOWKEYPrivateKey   low_private_key  = { NULL, NSSLOWKEYRSAKey, };
+    NSSLOWKEYPublicKey    low_public_key   = { NULL, NSSLOWKEYRSAKey };
+    NSSLOWKEYPrivateKey   low_private_key  = { NULL, NSSLOWKEYRSAKey };
     PRUint8               rsa_computed_ciphertext[FIPS_RSA_ENCRYPT_LENGTH];
     PRUint8               rsa_computed_plaintext[FIPS_RSA_DECRYPT_LENGTH];
 

@@ -443,6 +443,42 @@ typedef enum {
     /* The 'name' attribute type in X.520 */
     SEC_OID_AVA_NAME                        = 317,
 
+
+    SEC_OID_AES_128_GCM        		    = 318,
+    SEC_OID_AES_192_GCM 		    = 319,
+    SEC_OID_AES_256_GCM 		    = 320,
+    SEC_OID_IDEA_CBC 			    = 321,
+
+    /* pseudo - OIDs */
+
+    SEC_OID_RC2_40_CBC 			    = 322,
+    SEC_OID_DES_40_CBC 			    = 323,
+    SEC_OID_RC4_40 			    = 324,
+    SEC_OID_RC4_56 			    = 325,
+    SEC_OID_NULL_CIPHER                     = 326,
+
+    SEC_OID_HMAC_MD5                        = 327,
+
+    SEC_OID_TLS_RSA                         = 328,
+    SEC_OID_TLS_DHE_RSA                     = 329,
+    SEC_OID_TLS_DHE_DSS                     = 330,
+    SEC_OID_TLS_DH_RSA                      = 331,
+    SEC_OID_TLS_DH_DSS                      = 332,
+    SEC_OID_TLS_DH_ANON                     = 333,
+    SEC_OID_TLS_ECDHE_ECDSA                 = 334,
+    SEC_OID_TLS_ECDHE_RSA                   = 335,
+    SEC_OID_TLS_ECDH_ECDSA                  = 336,
+    SEC_OID_TLS_ECDH_RSA                    = 337,
+    SEC_OID_TLS_ECDH_ANON                   = 338,
+    SEC_OID_TLS_RSA_EXPORT                  = 339,
+
+    SEC_OID_TLS_DHE_RSA_EXPORT         = 340,
+    SEC_OID_TLS_DHE_DSS_EXPORT         = 341,
+    SEC_OID_TLS_DH_RSA_EXPORT          = 342,
+    SEC_OID_TLS_DH_DSS_EXPORT          = 343,
+    SEC_OID_TLS_DH_ANON_EXPORT         = 344,
+    SEC_OID_APPLY_SSL_POLICY           = 345,
+
     SEC_OID_TOTAL
 } SECOidTag;
 
@@ -477,6 +513,8 @@ struct SECOidDataStr {
 #define NSS_USE_ALG_IN_CERT_SIGNATURE  0x00000001  /* CRLs and OCSP, too */
 #define NSS_USE_ALG_IN_CMS_SIGNATURE   0x00000002  /* used in S/MIME */
 #define NSS_USE_ALG_IN_SSL_KX          0x00000004  /* used in SSL key exchange */
+#define NSS_USE_ALG_IN_SSL             0x00000008  /* used in SSL record protocol */
+#define NSS_USE_POLICY_IN_SSL          0x00000010  /* enable policy in SSL protocol */
 #define NSS_USE_ALG_RESERVED           0xfffffffc  /* may be used in future */
 
 /* Code MUST NOT SET or CLEAR reserved bits, and must NOT depend on them

@@ -1,0 +1,174 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file enables policy testing
+#
+# The policy string is set to the config= line in the pkcs11.txt
+# it currently has 2 keywords:
+#
+# disallow= turn off the use of this algorithm by policy.
+# allow= allow this algorithm to by used if selected by policy.
+#
+# The syntax is disallow=algorithm{/uses}:algorithm{/uses}
+# where {} signifies an optional element
+#
+# valid algorithms are:
+# ECC curves:
+#	PRIME192V1
+#	PRIME192V2
+#	PRIME192V3
+#	PRIME239V1
+#	PRIME239V2
+#	PRIME239V3
+#	PRIME256V1
+#	SECP112R1
+#	SECP112R2
+#	SECP128R1
+#	SECP128R2
+#	SECP160K1
+#	SECP160R1
+#	SECP160R2
+#	SECP192K1
+#	SECP192R1
+#	SECP224K1
+#	SECP256K1
+#	SECP256R1
+#	SECP384R1
+#	SECP521R1
+#	C2PNB163V1
+#	C2PNB163V2
+#	C2PNB163V3
+#	C2PNB176V1
+#	C2TNB191V1
+#	C2TNB191V2
+#	C2TNB191V3
+#	C2ONB191V4
+#	C2ONB191V5
+#	C2PNB208W1
+#	C2TNB239V1
+#	C2TNB239V2
+#	C2TNB239V3
+#	C2ONB239V4
+#	C2ONB239V5
+#	C2PNB272W1
+#	C2PNB304W1
+#	C2TNB359V1
+#	C2PNB368W1
+#	C2TNB431R1
+#	SECT113R1
+#	SECT131R1
+#	SECT131R1
+#	SECT131R2
+#	SECT163K1
+#	SECT163R1
+#	SECT163R2
+#	SECT193R1
+#	SECT193R2
+#	SECT233K1
+#	SECT233R1
+#	SECT239K1
+#	SECT283K1
+#	SECT283R1
+#	SECT409K1
+#	SECT409R1
+#	SECT571K1
+#	SECT571R1
+# Hashes:
+#	MD2
+#	MD4
+#	MD5
+#	SHA1
+#	SHA224
+#	SHA256
+#	SHA384
+#	SHA512
+# MACs:
+#	HMAC-SHA1
+#	HMAC-SHA224
+#	HMAC-SHA256
+#	HMAC-SHA384
+#	HMAC-SHA512
+#	HMAC-MD5
+# Ciphers:
+#	AES128-CBC
+#	AES192-CBC
+#	AES256-CBC
+#	AES128-GCM
+#	AES192-GCM
+#	AES256-GCM
+#	CAMELLIA128-CBC
+#	CAMELLIA192-CBC
+#	CAMELLIA256-CBC
+#	SEED-CBC
+#	DES-EDE3-CBC
+#	DES-40-CBC
+#	DES-CBC
+#	NULL-CIPHER
+#	RC2
+#	RC4
+#	IDEA
+# Key exchange
+#	RSA
+#	RSA-EXPORT
+#	DHE-RSA
+#	DHE-DSS
+#	DH-RSA
+#	DH-DSS
+#	ECDHE-ECDSA
+#	ECDHE-RSA
+#	ECDH-ECDSA
+#	ECDH-RSA
+# SSL Versions
+#	SSL2.0
+#	SSL3.0
+#	TLS1.0
+#	TLS1.1
+#	TLS1.2
+#	DTLS1.1
+#	DTLS1.2
+# Include all of the above:
+#       ALL
+#-----------------------------------------------
+# Uses are:
+#    ssl
+#    ssl-key-exchange
+#    key-exchange (includes ssl-key-exchange)
+#    cert-signature
+#    signature (includes cert-signature)
+#    all (includes all of the above)
+#-----------------------------------------------
+# In addition there are the following options:
+#     min-rsa
+#     min-dh
+#     min-dsa
+#  they have the following syntax:
+#  allow=min-rsa=512:min-dh=1024
+#
+# Exp Enable Enable Cipher Config Policy      Test Name
+# Ret  EC     TLS
+# turn on single cipher 
+  0 noECC  SSL3   d    disallow=all_allow=hmac-sha1:sha256:rsa:des-ede3-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Allowed by Narrow Policy
+  0 noECC  SSL3   d    disallow=all_allow=hmac-sha1/ssl,ssl-key-exchange:sha256/cert-signature:rsa/ssl-key-exchange:des-ede3-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Allowed by Strict Policy
+  0 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=ssl2.0:tls-version-max=tls1.2 Allow All Explicitly
+  1 noECC  SSL3   d    disallow=all Disallow All Explicitly.
+# turn off signature only
+  1 noECC  SSL3   d    disallow=sha256 Disallow SHA256 Signatures Explicitly.
+  1 noECC  SSL3   d    disallow=all_allow=hmac-sha1:rsa/ssl-key-exchange:des-ede3-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Disallow SHA256 Signatures Implicitly Narrow.
+  1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=ssl2.0:tls-version-max=tls1.2 Disallow SHA256 Signatures Implicitly.
+# turn off single cipher 
+  1 noECC  SSL3   d    disallow=des-ede3-cbc Disallow Cipher Explicitly
+  1 noECC  SSL3   d    disallow=all_allow=hmac-sha1:sha256:rsa:des-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Disallow Cipher Implicitly Narrow.
+  1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=ssl2.0:tls-verion-max=tls1.2 Disallow Cipher Implicitly.
+# turn off H-Mac
+  1 noECC  SSL3   d    disallow=hmac-sha1 Disallow HMAC Explicitly
+  1 noECC  SSL3   d    disallow=all_allow=md5:sha256:rsa:des-ede3-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Disallow HMAC Implicitly Narrow.
+  1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=ssl2.0:tls-version-max=tls1.2 Disallow HMAC Signatures Implicitly.
+# turn off key exchange 
+  1 noECC  SSL3   d    disallow=rsa/ssl-key-exchange Disallow Key Exchange Explicitly.
+  1 noECC  SSL3   d    disallow=all_allow=hmac-sha1:sha256:dh-dss:des-ede3-cbc:tls-version-min=ssl3.0:tls-version-max=ssl3.0 Disallow Key Exchange Implicitly Narrow.
+  1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=ssl2.0:tls-version-max=tls1.2 Disallow Key Exchnage Signatures Implicitly.
+# turn off  version
+  1 noECC  SSL3   d    allow=tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Exlicitly
+  1 noECC  SSL3   d    disallow=all_allow=hmac-sha1:sha256:rsa:des-ede3-cbc:tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Implicitly Narrow.
+  1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Implicitly.
