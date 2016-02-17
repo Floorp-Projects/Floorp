@@ -441,6 +441,27 @@ const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
 };
 
 /**
+ * Delete a snapshot
+ *
+ * @param {HeapAnalysesClient} heapWorker
+ * @param {snapshotModel} snapshot
+ */
+const deleteSnapshot = exports.deleteSnapshot = function (heapWorker, snapshot) {
+  return function*(dispatch, getState) {
+    dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids: [snapshot.id] });
+
+    try {
+      yield heapWorker.deleteHeapSnapshot(snapshot.path);
+    } catch (error) {
+      reportException("deleteSnapshot", error);
+      dispatch({ type: actions.SNAPSHOT_ERROR, id: snapshot.id, error });
+    }
+
+    dispatch({ type: actions.DELETE_SNAPSHOTS_END, ids: [snapshot.id] });
+  };
+};
+
+/**
  * Expand the given node in the snapshot's census report.
  *
  * @param {CensusTreeNode} node
