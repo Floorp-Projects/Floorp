@@ -176,6 +176,7 @@ public interface BrowserDB {
 
     public abstract boolean hideSuggestedSite(String url);
     public abstract void setSuggestedSites(SuggestedSites suggestedSites);
+    public abstract SuggestedSites getSuggestedSites();
     public abstract boolean hasSuggestedImageUrl(String url);
     public abstract String getSuggestedImageUrlForUrl(String url);
     public abstract int getSuggestedBackgroundColorForUrl(String url);
