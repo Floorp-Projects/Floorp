@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
 <script type="application/javascript;version=1.7">
 
 // Scroll the mouse wheel over |element|.
-function scrollWheelOver(element) {
+function scrollWheelOver(element, waitForScroll = true) {
   var x = 10;
   var y = 10;
   // Move the mouse to the desired wheel location.
@@ -65,7 +65,11 @@ function scrollWheelOver(element) {
   // wheel event, otherwise there is a chance they might get reordered, and
   // we have the transaction problem again.
   synthesizeNativeMouseMoveAndWaitForMoveEvent(element, x, y, function() {
-    synthesizeNativeWheelAndWaitForScrollEvent(element, x, y, 0, -10, driveTest);
+    if (waitForScroll) {
+      synthesizeNativeWheelAndWaitForScrollEvent(element, x, y, 0, -10, driveTest);
+    } else {
+      synthesizeNativeWheelAndWaitForWheelEvent(element, x, y, 0, -10, driveTest);
+    }
   });
 }
 
@@ -179,7 +183,10 @@ function* runTest() {
   // Scroll on inner3. inner3 isn't layerized, and this will cause it to
   // get layerized, but it will also trigger displayport expiration for inner3
   // which will eventually trigger displayport expiration on inner3 and outer3.
-  yield scrollWheelOver(document.getElementById('outer3').contentDocument.getElementById('inner3'));
+  // Note that the displayport expiration might actually happen before the wheel
+  // input is processed in the compositor (see bug 1246480 comment 3), and so
+  // we make sure not to wait for a scroll event here, since it may never fire.
+  yield scrollWheelOver(document.getElementById('outer3').contentDocument.getElementById('inner3'), false);
   yield waitForAllPaints(function() {
     flushApzRepaints(driveTest);
   });
