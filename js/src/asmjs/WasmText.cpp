@@ -338,17 +338,17 @@ class WasmAstFunc : public WasmAstNode
 {
     const uint32_t sigIndex_;
     WasmAstValTypeVector varTypes_;
-    WasmAstExpr* const maybeBody_;
+    WasmAstExprVector body_;
 
   public:
-    WasmAstFunc(uint32_t sigIndex, WasmAstValTypeVector&& varTypes, WasmAstExpr* maybeBody)
+    WasmAstFunc(uint32_t sigIndex, WasmAstValTypeVector&& varTypes, WasmAstExprVector&& body)
       : sigIndex_(sigIndex),
         varTypes_(Move(varTypes)),
-        maybeBody_(maybeBody)
+        body_(Move(body))
     {}
     uint32_t sigIndex() const { return sigIndex_; }
     const WasmAstValTypeVector& varTypes() const { return varTypes_; }
-    WasmAstExpr* maybeBody() const { return maybeBody_; }
+    const WasmAstExprVector& body() const { return body_; }
 };
 
 class WasmAstImport : public WasmAstNode
@@ -2422,9 +2422,9 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
         }
     }
 
-    WasmAstExpr* maybeBody = nullptr;
+    WasmAstExprVector body(c.lifo);
 
-    while (c.ts.getIf(WasmToken::OpenParen) && !maybeBody) {
+    while (c.ts.getIf(WasmToken::OpenParen)) {
         WasmToken token = c.ts.get();
         switch (token.kind()) {
           case WasmToken::Local:
@@ -2441,8 +2441,8 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
             break;
           default:
             c.ts.unget(token);
-            maybeBody = ParseExprInsideParens(c);
-            if (!maybeBody)
+            WasmAstExpr* expr = ParseExprInsideParens(c);
+            if (!expr || !body.append(expr))
                 return nullptr;
             break;
         }
@@ -2455,7 +2455,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), maybeBody);
+    return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), Move(body));
 }
 
 static bool
@@ -3123,11 +3123,11 @@ EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
             return false;
     }
 
-    if (func.maybeBody()) {
-        if (!EncodeExpr(e, *func.maybeBody()))
-            return false;
-    } else {
-        if (!e.writeExpr(Expr::Nop))
+    if (!e.writeVarU32(func.body().length()))
+        return false;
+
+    for (WasmAstExpr* expr : func.body()) {
+        if (!EncodeExpr(e, *expr))
             return false;
     }
 

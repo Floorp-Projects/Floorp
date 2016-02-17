@@ -3021,17 +3021,17 @@ wasm::IonCompileFunction(IonCompileTask* task)
             return false;
 
         MDefinition* last = nullptr;
-        if (f.mg().isAsmJS()) {
-            while (!f.done()) {
-                if (!EmitExprStmt(f, &last))
+        if (uint32_t numExprs = f.readVarU32()) {
+            for (uint32_t i = 0; i < numExprs - 1; i++) {
+                if (!EmitExpr(f, ExprType::Void, &last))
                     return false;
             }
-        } else {
+
             if (!EmitExpr(f, f.sig().ret(), &last))
                 return false;
-            MOZ_ASSERT(f.done());
         }
 
+        MOZ_ASSERT(f.done());
         MOZ_ASSERT(IsVoid(f.sig().ret()) || f.inDeadCode() || last);
 
         if (IsVoid(f.sig().ret()))

@@ -627,8 +627,23 @@ DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator
     const uint8_t* bodyBegin = d.currentPosition();
 
     FunctionDecoder f(cx, d, mg, fg, funcIndex);
-    if (!DecodeExpr(f, f.ret()))
-        return false;
+
+    uint32_t numExprs;
+    if (!d.readVarU32(&numExprs))
+        return Fail(cx, d, "expected number of function body expressions");
+
+    if (numExprs) {
+        for (size_t i = 0; i < numExprs - 1; i++) {
+            if (!DecodeExpr(f, ExprType::Void))
+                return false;
+        }
+
+        if (!DecodeExpr(f, f.ret()))
+            return false;
+    } else {
+        if (!CheckType(f, ExprType::Void, f.ret()))
+            return false;
+    }
 
     const uint8_t* bodyEnd = d.currentPosition();
     uintptr_t bodyLength = bodyEnd - bodyBegin;
