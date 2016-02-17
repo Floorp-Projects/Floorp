@@ -6083,26 +6083,6 @@ enum class InterruptCheckPosition {
 };
 
 static bool
-MaybeAddInterruptCheck(FunctionValidator& f, InterruptCheckPosition pos, ParseNode* pn)
-{
-    if (f.m().mg().args().useSignalHandlersForInterrupt)
-        return true;
-
-    switch (pos) {
-      case InterruptCheckPosition::Head:
-        if (!f.encoder().writeExpr(Expr::InterruptCheckHead))
-            return false;
-        break;
-      case InterruptCheckPosition::Loop:
-        if (!f.encoder().writeExpr(Expr::InterruptCheckLoop))
-            return false;
-        break;
-    }
-
-    return true;
-}
-
-static bool
 CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
 {
     MOZ_ASSERT(whileStmt->isKind(PNK_WHILE));
@@ -6118,8 +6098,7 @@ CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
-    return MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, whileStmt) &&
-           CheckStatement(f, body);
+    return CheckStatement(f, body);
 }
 
 static bool
@@ -6154,9 +6133,6 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt)
         return false;
     }
 
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, forStmt))
-        return false;
-
     if (!CheckStatement(f, body))
         return false;
 
@@ -6174,9 +6150,6 @@ CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt)
     ParseNode* cond = BinaryRight(whileStmt);
 
     if (!f.encoder().writeExpr(Expr::DoWhile))
-        return false;
-
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, cond))
         return false;
 
     if (!CheckStatement(f, body))
@@ -6624,9 +6597,6 @@ CheckFunction(ModuleValidator& m)
 
     ValTypeVector args;
     if (!CheckArguments(f, &stmtIter, &args))
-        return false;
-
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Head, fn))
         return false;
 
     if (!CheckVariables(f, &stmtIter))
