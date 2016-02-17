@@ -286,7 +286,7 @@ BrowserElementParent.prototype = {
     if (!this._window._browserElementParents) {
       this._window._browserElementParents = new WeakMap();
       let handler = handleWindowEvent.bind(this._window);
-      let windowEvents = ['visibilitychange', 'mozfullscreenchange'];
+      let windowEvents = ['visibilitychange', 'fullscreenchange'];
       let els = Cc["@mozilla.org/eventlistenerservice;1"]
                   .getService(Ci.nsIEventListenerService);
       for (let event of windowEvents) {
@@ -1253,8 +1253,8 @@ BrowserElementParent.prototype = {
       case 'visibilitychange':
         this._ownerVisibilityChange();
         break;
-      case 'mozfullscreenchange':
-        if (!this._window.document.mozFullScreen) {
+      case 'fullscreenchange':
+        if (!this._window.document.fullscreenElement) {
           this._sendAsyncMsg('exit-fullscreen');
         } else if (this._pendingDOMFullscreen) {
           this._pendingDOMFullscreen = false;

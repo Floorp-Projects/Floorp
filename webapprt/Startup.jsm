@@ -160,7 +160,7 @@ this.startup = function(window) {
       appBrowser.addEventListener("load", function onLoad() {
         appBrowser.removeEventListener("load", onLoad, true);
         appBrowser.contentDocument.
-          documentElement.mozRequestFullScreen();
+          documentElement.requestFullscreen();
       }, true);
     }
 
