@@ -7,7 +7,8 @@
  */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 
 var URIs = [
   "http://example.org",
@@ -26,14 +27,10 @@ LoadContext.prototype = {
 
 function getChannels() {
   for (let u of URIs) {
-    yield Services.io.newChannel2(u,
-                                  null,
-                                  null,
-                                  null,      // aLoadingNode
-                                  Services.scriptSecurityManager.getSystemPrincipal(),
-                                  null,      // aTriggeringPrincipal
-                                  Ci.nsILoadInfo.SEC_NORMAL,
-                                  Ci.nsIContentPolicy.TYPE_OTHER);
+    yield NetUtil.newChannel({
+      uri: u,
+      loadUsingSystemPrincipal: true
+    });
   }
 }
 
