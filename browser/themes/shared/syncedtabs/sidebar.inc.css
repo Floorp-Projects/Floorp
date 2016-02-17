@@ -123,6 +123,11 @@ body {
 
 .tabsFilter {
   flex: 1;
+  /* min-width of anything to override the implicit "-moz-min-content" value.
+     0px is safe as the sidebar itself has a constrained size meaning we will
+     never actually hit this minimum
+  */
+  min-width: 0px;
 }
 
 .sync-state > p {

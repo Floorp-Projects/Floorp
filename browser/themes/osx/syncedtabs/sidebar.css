@@ -71,14 +71,9 @@ html {
 }
 
 .search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
-  width: 11px;
-  height: 11px;
-  background-image: url(chrome://global/skin/icons/searchfield-small-cancel.png);
+  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
   background-repeat: no-repeat;
-}
-
-.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:active:hover {
-  background-position: 11px 0;
+  background-size: 11px 11px;
 }
 
 .search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
