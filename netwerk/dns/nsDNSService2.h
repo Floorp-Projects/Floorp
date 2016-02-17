@@ -36,6 +36,8 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+    bool GetOffline() const;
+
 private:
     ~nsDNSService();
 
@@ -62,7 +64,6 @@ private:
     bool                                      mDisablePrefetch;
     bool                                      mBlockDotOnion;
     bool                                      mFirstTime;
-    bool                                      mOffline;
     bool                                      mNotifyResolution;
     bool                                      mOfflineLocalhost;
     nsTHashtable<nsCStringHashKey>            mLocalDomains;
