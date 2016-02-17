@@ -61,11 +61,11 @@ enum class CSSPseudoElementType : uint8_t {
 // require an atom from this atom list.
 class nsICSSPseudoElement : public nsIAtom {};
 
-class nsCSSPseudoElements {
-public:
-  // FIXME: Remove this in later patch
-  using Type = mozilla::CSSPseudoElementType;
+class nsCSSPseudoElements
+{
+  typedef mozilla::CSSPseudoElementType Type;
 
+public:
   static void AddRefAtoms();
 
   static bool IsPseudoElement(nsIAtom *aAtom);
@@ -79,7 +79,7 @@ public:
 
   static Type GetPseudoType(nsIAtom* aAtom);
 
-  // Get the atom for a given Type.  aType must be < Type::Count
+  // Get the atom for a given Type.  aType must be < CSSPseudoElementType::Count
   static nsIAtom* GetPseudoAtom(Type aType);
 
   static bool PseudoElementContainsElements(const Type aType) {
@@ -88,7 +88,8 @@ public:
 
   static bool PseudoElementSupportsStyleAttribute(const Type aType) {
     MOZ_ASSERT(aType < Type::Count);
-    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
+    return PseudoElementHasFlags(aType,
+                                 CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
   }
 
   static bool PseudoElementSupportsUserActionState(const Type aType);

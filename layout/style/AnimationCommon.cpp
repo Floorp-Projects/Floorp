@@ -68,7 +68,7 @@ CommonAnimationManager::RemoveAllElementCollections()
 
 AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
-                                               nsCSSPseudoElements::Type
+                                               CSSPseudoElementType
                                                  aPseudoType,
                                                bool aCreateIfNeeded)
 {
@@ -117,7 +117,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
 AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
 {
-  Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>> pseudoElement =
+  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (!pseudoElement) {
     return nullptr;
@@ -152,7 +152,7 @@ CommonAnimationManager::ExtractComputedValueForTransition(
 }
 
 /*static*/ nsString
-AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
+AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
 {
   switch (aPseudoType) {
     case CSSPseudoElementType::before:

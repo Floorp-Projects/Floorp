@@ -23,7 +23,6 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsNameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTArray.h"
@@ -319,7 +318,7 @@ nsCSSSelector::nsCSSSelector(void)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
   static_assert(static_cast<int16_t>(CSSPseudoElementType::MAX) < INT16_MAX,
-                "nsCSSPseudoElements::Type values overflow mPseudoType");
+                "CSSPseudoElementType values overflow mPseudoType");
 }
 
 nsCSSSelector*

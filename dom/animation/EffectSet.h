@@ -12,7 +12,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
-#include "nsCSSPseudoElements.h" // For nsCSSPseudoElements::Type
 #include "nsHashKeys.h" // For nsPtrHashKey
 #include "nsTHashtable.h" // For nsTHashtable
 
@@ -24,6 +23,8 @@ namespace dom {
 class Element;
 class KeyframeEffectReadOnly;
 } // namespace dom
+
+enum class CSSPseudoElementType : uint8_t;
 
 // A wrapper around a hashset of AnimationEffect objects to handle
 // storing the set as a property of an element.
@@ -57,12 +58,12 @@ public:
   void Traverse(nsCycleCollectionTraversalCallback& aCallback);
 
   static EffectSet* GetEffectSet(dom::Element* aElement,
-                                 nsCSSPseudoElements::Type aPseudoType);
+                                 CSSPseudoElementType aPseudoType);
   static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
-                                         nsCSSPseudoElements::Type aPseudoType);
+                                         CSSPseudoElementType aPseudoType);
   static void DestroyEffectSet(dom::Element* aElement,
-                               nsCSSPseudoElements::Type aPseudoType);
+                               CSSPseudoElementType aPseudoType);
 
   void AddEffect(dom::KeyframeEffectReadOnly& aEffect);
   void RemoveEffect(dom::KeyframeEffectReadOnly& aEffect);
@@ -182,8 +183,7 @@ public:
   static nsIAtom** GetEffectSetPropertyAtoms();
 
 private:
-  static nsIAtom* GetEffectSetPropertyAtom(nsCSSPseudoElements::Type
-                                             aPseudoType);
+  static nsIAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
 
   OwningEffectSet mEffects;
 

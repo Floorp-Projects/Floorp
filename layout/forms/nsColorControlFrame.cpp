@@ -8,6 +8,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -72,7 +73,7 @@ nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsresult rv = UpdateColor();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::mozColorSwatch;
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::mozColorSwatch;
   RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mColorContent->AsElement());
@@ -135,7 +136,7 @@ nsColorControlFrame::GetContentInsertionFrame()
 }
 
 Element*
-nsColorControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsColorControlFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::mozColorSwatch) {
     return mColorContent;

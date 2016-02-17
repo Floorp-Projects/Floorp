@@ -11,6 +11,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsFormControlFrame.h"
 #include "nsIContent.h"
@@ -110,7 +111,7 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 nsresult
 nsRangeFrame::MakeAnonymousDiv(Element** aResult,
-                               nsCSSPseudoElements::Type aPseudoType,
+                               CSSPseudoElementType aPseudoType,
                                nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
@@ -894,7 +895,7 @@ nsRangeFrame::ShouldUseNativeStyle() const
 }
 
 Element*
-nsRangeFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsRangeFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::mozRangeTrack) {
     return mTrackDiv;

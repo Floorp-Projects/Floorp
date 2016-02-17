@@ -1107,7 +1107,7 @@ Animation::PostUpdate()
   }
 
   Element* targetElement;
-  nsCSSPseudoElements::Type targetPseudoType;
+  CSSPseudoElementType targetPseudoType;
   mEffect->GetTarget(targetElement, targetPseudoType);
   if (!targetElement) {
     return;

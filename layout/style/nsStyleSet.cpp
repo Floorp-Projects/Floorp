@@ -885,7 +885,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                        // should be used.)
                        nsRuleNode* aVisitedRuleNode,
                        nsIAtom* aPseudoTag,
-                       nsCSSPseudoElements::Type aPseudoType,
+                       CSSPseudoElementType aPseudoType,
                        Element* aElementForAnimation,
                        uint32_t aFlags)
 {
@@ -1504,7 +1504,7 @@ nsRuleNode*
 nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                     Element* aPseudoElement,
                                     nsRuleNode* aOldRuleNode,
-                                    nsCSSPseudoElements::Type aPseudoType,
+                                    CSSPseudoElementType aPseudoType,
                                     nsRestyleHint aReplacements)
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
@@ -1706,7 +1706,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     }
   }
 
-  nsCSSPseudoElements::Type pseudoType = aOldStyleContext->GetPseudoType();
+  CSSPseudoElementType pseudoType = aOldStyleContext->GetPseudoType();
   Element* elementForAnimation = nullptr;
   if (!(aFlags & eSkipStartingAnimations) &&
       (pseudoType == CSSPseudoElementType::NotPseudo ||
@@ -1756,7 +1756,7 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
                                          nsRestyleHint aWhichToRemove)
 {
 #ifdef DEBUG
-  nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+  CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
 #endif
   MOZ_ASSERT(pseudoType == CSSPseudoElementType::NotPseudo ||
              pseudoType == CSSPseudoElementType::before ||
@@ -1787,7 +1787,7 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 }
 
 void
-nsStyleSet::WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
+nsStyleSet::WalkRestrictionRule(CSSPseudoElementType aPseudoType,
                                 nsRuleWalker* aRuleWalker)
 {
   // This needs to match GetPseudoRestriction in nsRuleNode.cpp.
@@ -1810,7 +1810,7 @@ nsStyleSet::WalkDisableTextZoomRule(Element* aElement, nsRuleWalker* aRuleWalker
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
-                                      nsCSSPseudoElements::Type aType,
+                                      CSSPseudoElementType aType,
                                       nsStyleContext* aParentContext,
                                       Element* aPseudoElement)
 {
@@ -1864,7 +1864,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
-                                    nsCSSPseudoElements::Type aType,
+                                    CSSPseudoElementType aType,
                                     nsStyleContext* aParentContext)
 {
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
@@ -1876,7 +1876,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
-                                    nsCSSPseudoElements::Type aType,
+                                    CSSPseudoElementType aType,
                                     nsStyleContext* aParentContext,
                                     TreeMatchContext& aTreeMatchContext,
                                     Element* aPseudoElement)
@@ -2265,7 +2265,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   }
 
   nsIAtom* pseudoTag = aStyleContext->GetPseudo();
-  nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+  CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
   nsRuleNode* ruleNode = aStyleContext->RuleNode();
 
   NS_ASSERTION(!PresContext()->RestyleManager()->SkipAnimationRules(),
@@ -2324,7 +2324,7 @@ struct MOZ_STACK_CLASS StatefulData : public StateRuleProcessorData {
 
 struct MOZ_STACK_CLASS StatefulPseudoElementData : public PseudoElementStateRuleProcessorData {
   StatefulPseudoElementData(nsPresContext* aPresContext, Element* aElement,
-               EventStates aStateMask, nsCSSPseudoElements::Type aPseudoType,
+               EventStates aStateMask, CSSPseudoElementType aPseudoType,
                TreeMatchContext& aTreeMatchContext, Element* aPseudoElement)
     : PseudoElementStateRuleProcessorData(aPresContext, aElement, aStateMask,
                                           aPseudoType, aTreeMatchContext,
@@ -2395,7 +2395,7 @@ nsStyleSet::HasStateDependentStyle(Element*             aElement,
 
 nsRestyleHint
 nsStyleSet::HasStateDependentStyle(Element* aElement,
-                                   nsCSSPseudoElements::Type aPseudoType,
+                                   CSSPseudoElementType aPseudoType,
                                    Element* aPseudoElement,
                                    EventStates aStateMask)
 {

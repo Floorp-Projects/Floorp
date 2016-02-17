@@ -28,6 +28,7 @@
 #include "Layers.h"
 #include "FrameLayerBuilder.h"
 #include "nsCSSProps.h"
+#include "nsCSSPseudoElements.h"
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
@@ -129,7 +130,7 @@ CSSTransition::QueueEvents()
   }
 
   dom::Element* owningElement;
-  nsCSSPseudoElements::Type owningPseudoType;
+  CSSPseudoElementType owningPseudoType;
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
@@ -261,7 +262,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // Return sooner (before the startedAny check below) for the most
   // common case: no transitions specified or running.
   const nsStyleDisplay *disp = newStyleContext->StyleDisplay();
-  nsCSSPseudoElements::Type pseudoType = newStyleContext->GetPseudoType();
+  CSSPseudoElementType pseudoType = newStyleContext->GetPseudoType();
   if (pseudoType != CSSPseudoElementType::NotPseudo) {
     if (pseudoType != CSSPseudoElementType::before &&
         pseudoType != CSSPseudoElementType::after) {
@@ -734,8 +735,7 @@ nsTransitionManager::ConsiderStartingTransition(
 
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
-                                               nsCSSPseudoElements::Type
-                                                 aPseudoType,
+                                               CSSPseudoElementType aPseudoType,
                                                nsStyleContext* aNewStyleContext)
 {
   AnimationCollection* collection =

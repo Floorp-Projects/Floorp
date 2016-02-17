@@ -9,7 +9,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsCSSPseudoElements.h"
 #include "nsIDocument.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
@@ -38,6 +37,7 @@ namespace mozilla {
 
 struct AnimationCollection;
 class AnimValuesStyleRule;
+enum class CSSPseudoElementType : uint8_t;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -172,7 +172,7 @@ class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 public:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          Element* aTarget,
-                         nsCSSPseudoElements::Type aPseudoType,
+                         CSSPseudoElementType aPseudoType,
                          const TimingParams& aTiming);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -209,7 +209,7 @@ public:
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).
   void GetTarget(Element*& aTarget,
-                 nsCSSPseudoElements::Type& aPseudoType) const {
+                 CSSPseudoElementType& aPseudoType) const {
     aTarget = mTarget;
     aPseudoType = mPseudoType;
   }
@@ -322,7 +322,7 @@ public:
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          Element* aTarget,
-                         nsCSSPseudoElements::Type aPseudoType,
+                         CSSPseudoElementType aPseudoType,
                          AnimationEffectTimingReadOnly* aTiming);
 
   virtual ~KeyframeEffectReadOnly();
@@ -351,7 +351,7 @@ protected:
   static void BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv);
@@ -360,7 +360,7 @@ protected:
   RefPtr<Animation> mAnimation;
 
   OwningNonNull<AnimationEffectTimingReadOnly> mTiming;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 
   InfallibleTArray<AnimationProperty> mProperties;
 
@@ -395,7 +395,7 @@ class KeyframeEffect : public KeyframeEffectReadOnly
 public:
   KeyframeEffect(nsIDocument* aDocument,
                  Element* aTarget,
-                 nsCSSPseudoElements::Type aPseudoType,
+                 CSSPseudoElementType aPseudoType,
                  const TimingParams& aTiming);
 
   JSObject* WrapObject(JSContext* aCx,

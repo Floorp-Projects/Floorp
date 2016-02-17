@@ -18,7 +18,6 @@
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 #include "nsRefPtrHashtable.h"
-#include "nsCSSPseudoElements.h"
 #include "nsTransitionManager.h"
 
 class nsIFrame;
@@ -26,6 +25,7 @@ class nsStyleChangeList;
 struct TreeMatchContext;
 
 namespace mozilla {
+  enum class CSSPseudoElementType : uint8_t;
   class EventStates;
   struct UndisplayedNode;
 
@@ -191,7 +191,7 @@ public:
 
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
-      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+      CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
       if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mElementContexts.Put(aContent, aStyleContext);
       } else if (pseudoType == CSSPseudoElementType::before) {
@@ -204,7 +204,7 @@ public:
     }
 
     nsStyleContext* Get(nsIContent* aContent,
-                        nsCSSPseudoElements::Type aPseudoType) {
+                        CSSPseudoElementType aPseudoType) {
       MOZ_ASSERT(aContent);
       if (aPseudoType == CSSPseudoElementType::NotPseudo) {
         return mElementContexts.GetWeak(aContent);
@@ -269,7 +269,7 @@ public:
     // the real element.
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
-      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+      CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
       if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mContents.AppendElement(aContent);
       } else if (pseudoType == CSSPseudoElementType::before) {
@@ -285,7 +285,7 @@ public:
 
   private:
     void StopAnimationsWithoutFrame(nsTArray<RefPtr<nsIContent>>& aArray,
-                                    nsCSSPseudoElements::Type aPseudoType);
+                                    CSSPseudoElementType aPseudoType);
 
     RestyleManager* mRestyleManager;
     AutoRestore<AnimationsWithDestroyedFrame*> mRestorePointer;
@@ -792,7 +792,7 @@ private:
                                const uint8_t    aDisplay);
   void MaybeReframeForBeforePseudo();
   void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
-  void MaybeReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+  void MaybeReframeForPseudo(CSSPseudoElementType aPseudoType,
                              nsIFrame* aGenConParentFrame,
                              nsIFrame* aFrame,
                              nsIContent* aContent,
@@ -801,7 +801,7 @@ private:
   bool MustReframeForBeforePseudo();
   bool MustReframeForAfterPseudo(nsIFrame* aFrame);
 #endif
-  bool MustReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+  bool MustReframeForPseudo(CSSPseudoElementType aPseudoType,
                             nsIFrame* aGenConParentFrame,
                             nsIFrame* aFrame,
                             nsIContent* aContent,
