@@ -322,7 +322,7 @@ add_task(function* test_Links_execute_query() {
       last_visit_date:  aRow.getResultByName("last_visit_date"),
       frecency:         aRow.getResultByName("frecency")
     });
-  };
+  }
   yield provider.executePlacesQuery(
         "select url, title, last_visit_date, frecency from moz_places " +
         "order by frecency DESC, last_visit_date DESC, url DESC",
