@@ -202,7 +202,7 @@ AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
     UpdateCaretsForCursorMode(aHint);
     break;
   case CaretMode::Selection:
-    UpdateCaretsForSelectionMode(aHint);
+    UpdateCaretsForSelectionMode();
     break;
   }
 }
@@ -316,7 +316,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
+AccessibleCaretManager::UpdateCaretsForSelectionMode()
 {
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
@@ -332,8 +332,8 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
     return;
   }
 
-  auto updateSingleCaret = [aHint](AccessibleCaret* aCaret, nsIFrame* aFrame,
-                                   int32_t aOffset) -> PositionChangedResult
+  auto updateSingleCaret = [](AccessibleCaret* aCaret, nsIFrame* aFrame,
+                              int32_t aOffset) -> PositionChangedResult
   {
     PositionChangedResult result = aCaret->SetPosition(aFrame, aOffset);
     aCaret->SetSelectionBarEnabled(sSelectionBarEnabled);
@@ -344,16 +344,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
         break;
 
       case PositionChangedResult::Changed:
-        switch (aHint) {
-          case UpdateCaretsHint::Default:
-            aCaret->SetAppearance(Appearance::Normal);
-            break;
-
-          case UpdateCaretsHint::RespectOldAppearance:
-            // Do nothing to preserve the appearance of the caret set by the
-            // caller.
-            break;
-        }
+        aCaret->SetAppearance(Appearance::Normal);
         break;
 
       case PositionChangedResult::Invisible:
@@ -374,11 +365,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
     FlushLayout();
   }
 
-  if (aHint == UpdateCaretsHint::Default) {
-    // Only check for tilt carets with default update hint. Otherwise we might
-    // override the appearance set by the caller.
-    UpdateCaretsForTilt();
-  }
+  UpdateCaretsForTilt();
 
   if (!mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
@@ -573,8 +560,9 @@ AccessibleCaretManager::OnScrollStart()
 {
   AC_LOG("%s", __FUNCTION__);
 
-  mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
-  mSecondCaretAppearanceOnScrollStart = mSecondCaret->GetAppearance();
+  if (GetCaretMode() == CaretMode::Cursor) {
+    mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
+  }
 
   // Hide the carets. (Extended visibility makes them "NormalNotShown").
   if (sCaretsExtendedVisibility) {
@@ -591,18 +579,11 @@ AccessibleCaretManager::OnScrollEnd()
     return;
   }
 
-  mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
-  mSecondCaret->SetAppearance(mSecondCaretAppearanceOnScrollStart);
-
-  // Flush layout to make the carets intersection correct since we turn the
-  // appearance of the carets from None or NormalNotShown into something
-  // visible.
-  FlushLayout();
-
   if (GetCaretMode() == CaretMode::Cursor) {
+    mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
     if (!mFirstCaret->IsLogicallyVisible()) {
-      // If the caret is hidden (Appearance::None) due to timeout or blur, no
-      // need to update it.
+      // If the caret is hide (Appearance::None) due to timeout or blur, no need
+      // to update it.
       return;
     }
   }

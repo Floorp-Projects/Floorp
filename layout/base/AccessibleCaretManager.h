@@ -135,7 +135,7 @@ protected:
   void DoNotShowCarets();
 
   void UpdateCaretsForCursorMode(UpdateCaretsHint aHint);
-  void UpdateCaretsForSelectionMode(UpdateCaretsHint aHint);
+  void UpdateCaretsForSelectionMode();
 
   // Provide haptic / touch feedback, primarily for select on longpress.
   void ProvideHapticFeedback();
@@ -234,11 +234,9 @@ protected:
   // The caret mode since last update carets.
   CaretMode mLastUpdateCaretMode = CaretMode::None;
 
-  // Store the appearance of the carets when calling OnScrollStart() so that it
-  // can be restored in OnScrollEnd().
+  // Store the appearance of the first caret when calling OnScrollStart so that
+  // it can be restored in OnScrollEnd.
   AccessibleCaret::Appearance mFirstCaretAppearanceOnScrollStart =
-                                 AccessibleCaret::Appearance::None;
-  AccessibleCaret::Appearance mSecondCaretAppearanceOnScrollStart =
                                  AccessibleCaret::Appearance::None;
 
   static const int32_t kAutoScrollTimerDelay = 30;
@@ -260,7 +258,7 @@ protected:
   static bool sCaretShownWhenLongTappingOnEmptyContent;
 
   // Android specific visibility extensions correct compatibility issues
-  // with ActionBar visibility during page scroll.
+  // with caret-drag and ActionBar visibility during page scroll.
   static bool sCaretsExtendedVisibility;
 
   // By default, javascript content selection changes closes AccessibleCarets and
