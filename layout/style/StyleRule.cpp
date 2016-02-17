@@ -314,11 +314,9 @@ nsCSSSelector::nsCSSSelector(void)
     mNext(nullptr),
     mNameSpace(kNameSpaceID_Unknown),
     mOperator(0),
-    mPseudoType(static_cast<int16_t>(CSSPseudoElementType::NotPseudo))
+    mPseudoType(CSSPseudoElementType::NotPseudo)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
-  static_assert(static_cast<int16_t>(CSSPseudoElementType::MAX) < INT16_MAX,
-                "CSSPseudoElementType values overflow mPseudoType");
 }
 
 nsCSSSelector*
@@ -333,7 +331,7 @@ nsCSSSelector::Clone(bool aDeepNext, bool aDeepNegations) const
   result->mCasedTag = mCasedTag;
   result->mOperator = mOperator;
   result->mPseudoType = mPseudoType;
-  
+
   NS_IF_CLONE(mIDList);
   NS_IF_CLONE(mClassList);
   NS_IF_CLONE(mPseudoClassList);
