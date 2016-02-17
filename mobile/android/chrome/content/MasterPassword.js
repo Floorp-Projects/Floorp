@@ -63,7 +63,7 @@ var MasterPassword = {
     } catch(e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
-    Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_SHORT);
+    Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_LONG);
     return false;
   }
 };
