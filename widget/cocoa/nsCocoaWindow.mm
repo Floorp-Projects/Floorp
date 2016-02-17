@@ -174,7 +174,7 @@ nsCocoaWindow::~nsCocoaWindow()
   if (mModal) {
     NS_WARNING("Widget destroyed while running modal!");
     --gXULModalLevel;
-    NS_ASSERTION(gXULModalLevel >= 0, "Wierdness setting modality!");
+    NS_ASSERTION(gXULModalLevel >= 0, "Weirdness setting modality!");
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
