@@ -1319,9 +1319,7 @@ this.Schemas = {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (wrapperFuncs.shouldInject([namespace], name)) {
-          entry.inject([namespace], name, obj, new Context(wrapperFuncs));
-        }
+        entry.inject([namespace], name, obj, new Context(wrapperFuncs));
       }
 
       if (!Object.keys(obj).length) {
