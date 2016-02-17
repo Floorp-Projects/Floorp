@@ -1195,7 +1195,6 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) override;
 
-  virtual Element* GetFullScreenElement() override;
   virtual nsTArray<Element*> GetFullscreenStack() const override;
   virtual void AsyncRequestFullScreen(
     mozilla::UniquePtr<FullscreenRequest>&& aRequest) override;
@@ -1261,8 +1260,8 @@ public:
   Element* FullScreenStackTop();
 
   // DOM-exposed fullscreen API
-  virtual bool MozFullScreenEnabled() override;
-  Element* GetMozFullScreenElement() override { return GetFullScreenElement(); }
+  bool FullscreenEnabled() override;
+  Element* GetFullscreenElement() override;
 
   void RequestPointerLock(Element* aElement) override;
   bool ShouldLockPointer(Element* aElement, Element* aCurrentLock,

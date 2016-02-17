@@ -220,18 +220,24 @@ partial interface Document {
 
 };
 
-// http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#api
+// https://fullscreen.spec.whatwg.org/#api
 partial interface Document {
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions hve it uppercase.
+  readonly attribute boolean fullscreenEnabled;
+  [BinaryName="fullscreenEnabled", Deprecated="PrefixedFullscreenAPI"]
   readonly attribute boolean mozFullScreenEnabled;
+  readonly attribute Element? fullscreenElement;
+  [BinaryName="fullscreenElement", Deprecated="PrefixedFullscreenAPI"]
   readonly attribute Element? mozFullScreenElement;
 
-  //(Renamed?)void exitFullscreen();
+  void exitFullscreen();
+  [BinaryName="exitFullscreen", Deprecated="PrefixedFullscreenAPI"]
+  void mozCancelFullScreen();
 
   // Gecko-specific fullscreen bits
+  [Deprecated="PrefixedFullscreenAPI"]
   readonly attribute boolean mozFullScreen;
-  void mozCancelFullScreen();
 };
 
 // http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
