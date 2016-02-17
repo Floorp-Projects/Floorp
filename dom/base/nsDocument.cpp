@@ -11354,20 +11354,17 @@ nsDocument::AsyncRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   NS_DispatchToCurrentThread(event);
 }
 
-static void
-LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
+void
+nsIDocument::DispatchFullscreenError(const char* aMessage)
 {
-  if (!aLogFailure) {
-    return;
-  }
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(aDoc,
+    new AsyncEventDispatcher(this,
                              NS_LITERAL_STRING("mozfullscreenerror"),
                              true,
                              false);
   asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"), aDoc,
+                                  NS_LITERAL_CSTRING("DOM"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aMessage);
 }
@@ -11610,30 +11607,30 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   if (!aElement->IsInDoc()) {
-    LogFullScreenDenied(true, "FullScreenDeniedNotInDocument", this);
+    DispatchFullscreenError("FullScreenDeniedNotInDocument");
     return false;
   }
   if (aElement->OwnerDoc() != this) {
-    LogFullScreenDenied(true, "FullScreenDeniedMovedDocument", this);
+    DispatchFullscreenError("FullScreenDeniedMovedDocument");
     return false;
   }
   if (!GetWindow()) {
-    LogFullScreenDenied(true, "FullScreenDeniedLostWindow", this);
+    DispatchFullscreenError("FullScreenDeniedLostWindow");
     return false;
   }
   if (const char* msg = GetFullscreenError(this, aWasCallerChrome)) {
-    LogFullScreenDenied(true, msg, this);
+    DispatchFullscreenError(msg);
     return false;
   }
   if (GetFullscreenElement() &&
       !nsContentUtils::ContentIsDescendantOf(aElement, GetFullscreenElement())) {
     // If this document is full-screen, only grant full-screen requests from
     // a descendant of the current full-screen element.
-    LogFullScreenDenied(true, "FullScreenDeniedNotDescendant", this);
+    DispatchFullscreenError("FullScreenDeniedNotDescendant");
     return false;
   }
   if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
-    LogFullScreenDenied(true, "FullScreenDeniedNotFocusedTab", this);
+    DispatchFullscreenError("FullScreenDeniedNotFocusedTab");
     return false;
   }
   // Deny requests when a windowed plugin is focused.
@@ -11647,7 +11644,7 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
   if (focusedElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
     if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(content)) {
-      LogFullScreenDenied(true, "FullScreenDeniedFocusedPlugin", this);
+      DispatchFullscreenError("FullScreenDeniedFocusedPlugin");
       return false;
     }
   }
