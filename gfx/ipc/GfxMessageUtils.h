@@ -788,28 +788,17 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSyncHandle);
-#ifdef XP_WIN
-    WriteParam(aMsg, (void*)aParam.mSwapChain);
-#endif
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     uint32_t supportedBlendModes = 0;
-    IDXGISwapChain* swapChain = nullptr;
     bool result = ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
                   ReadParam(aMsg, aIter, &supportedBlendModes) &&
                   ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
-                  ReadParam(aMsg, aIter, &aResult->mSyncHandle)
-#ifdef XP_WIN
-                  && ReadParam(aMsg, aIter, (void**)&swapChain)
-#endif
-      ;
-    if (XRE_IsParentProcess()) {
-      aResult->SetSwapChain(swapChain);
-    }
+                  ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     aResult->mSupportedBlendModes.deserialize(supportedBlendModes);
     return result;
   }
