@@ -21,7 +21,7 @@ ifndef WARNING_CFLAGS
     #    and fixing this would require rearchitecture
     WARNING_CFLAGS += -Qunused-arguments
     # -Wno-parentheses-equality : because clang warns about macro expansions
-    WARNING_CFLAGS += $(call disable_warning,parentheses-equality)
+    OS_CFLAGS += $(call disable_warning,parentheses-equality)
     ifdef BUILD_OPT
       # clang is unable to handle glib's expansion of strcmp and similar for optimized
       # builds, so ignore the resulting errors.

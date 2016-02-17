@@ -8,7 +8,7 @@
 /*
  * base.h
  *
- * This header file contains basic prototypes and preprocessor
+ * This header file contains basic prototypes and preprocessor 
  * definitions used throughout nss but not available publicly.
  */
 
@@ -64,7 +64,7 @@ PR_BEGIN_EXTERN_C
  * nssArena_Create
  *
  * This routine creates a new memory arena.  This routine may return
- * NULL upon error, in which case it will have set an error on the
+ * NULL upon error, in which case it will have set an error on the 
  * error stack.
  *
  * The error may be one of the following values:
@@ -83,7 +83,11 @@ PR_BEGIN_EXTERN_C
  * call (NSSArena_Create) have it too?
  */
 
-NSS_EXTERN NSSArena *nssArena_Create(void);
+NSS_EXTERN NSSArena *
+nssArena_Create
+(
+  void
+);
 
 extern const NSSError NSS_ERROR_NO_MEMORY;
 
@@ -91,7 +95,7 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  * nssArena_Destroy
  *
  * This routine will destroy the specified arena, freeing all memory
- * allocated from it.  This routine returns a PRStatus value; if
+ * allocated from it.  This routine returns a PRStatus value; if 
  * successful, it will return PR_SUCCESS.  If unsuccessful, it will
  * set an error on the error stack and return PR_FAILURE.
  *
@@ -103,7 +107,11 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nssArena_Destroy(NSSArena *arena);
+NSS_EXTERN PRStatus
+nssArena_Destroy
+(
+  NSSArena *arena
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 
@@ -113,9 +121,9 @@ extern const NSSError NSS_ERROR_INVALID_ARENA;
  * This routine "marks" the current state of an arena.  Space
  * allocated after the arena has been marked can be freed by
  * releasing the arena back to the mark with nssArena_Release,
- * or committed by calling nssArena_Unmark.  When successful,
- * this routine returns a valid nssArenaMark pointer.  This
- * routine may return NULL upon error, in which case it will
+ * or committed by calling nssArena_Unmark.  When successful, 
+ * this routine returns a valid nssArenaMark pointer.  This 
+ * routine may return NULL upon error, in which case it will 
  * have set an error on the error stack.
  *
  * The error may be one of the following values:
@@ -128,7 +136,11 @@ extern const NSSError NSS_ERROR_INVALID_ARENA;
  *  An nssArenaMark pointer upon success
  */
 
-NSS_EXTERN nssArenaMark *nssArena_Mark(NSSArena *arena);
+NSS_EXTERN nssArenaMark *
+nssArena_Mark
+(
+  NSSArena *arena
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_NO_MEMORY;
@@ -153,7 +165,12 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nssArena_Release(NSSArena *arena, nssArenaMark *arenaMark);
+NSS_EXTERN PRStatus
+nssArena_Release
+(
+  NSSArena *arena,
+  nssArenaMark *arenaMark
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_INVALID_ARENA_MARK;
@@ -180,7 +197,12 @@ extern const NSSError NSS_ERROR_INVALID_ARENA_MARK;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nssArena_Unmark(NSSArena *arena, nssArenaMark *arenaMark);
+NSS_EXTERN PRStatus
+nssArena_Unmark
+(
+  NSSArena *arena,
+  nssArenaMark *arenaMark
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_INVALID_ARENA_MARK;
@@ -200,9 +222,9 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  * arena, but it may not allocate or cause to be allocated any
  * memory.  This callback facility was included to support our
  * debug-version pointer-tracker feature; overuse runs counter to
- * the the original intent of arenas.  This routine returns a
- * PRStatus value; if successful, it will return PR_SUCCESS.  If
- * unsuccessful, it will set an error on the error stack and
+ * the the original intent of arenas.  This routine returns a 
+ * PRStatus value; if successful, it will return PR_SUCCESS.  If 
+ * unsuccessful, it will set an error on the error stack and 
  * return PR_FAILURE.
  *
  * The error may be one of the following values:
@@ -214,8 +236,13 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nssArena_registerDestructor(
-    NSSArena *arena, void (*destructor)(void *argument), void *arg);
+NSS_EXTERN PRStatus
+nssArena_registerDestructor
+(
+  NSSArena *arena,
+  void (*destructor)(void *argument),
+  void *arg
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_NO_MEMORY;
@@ -226,8 +253,8 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  * This routine will remove the first destructor in the specified
  * arena which has the specified destructor and argument values.
  * The destructor will not be called.  This routine returns a
- * PRStatus value; if successful, it will return PR_SUCCESS.  If
- * unsuccessful, it will set an error on the error stack and
+ * PRStatus value; if successful, it will return PR_SUCCESS.  If 
+ * unsuccessful, it will set an error on the error stack and 
  * return PR_FAILURE.
  *
  * The error may be one of the following values:
@@ -239,8 +266,13 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nssArena_deregisterDestructor(
-    NSSArena *arena, void (*destructor)(void *argument), void *arg);
+NSS_EXTERN PRStatus
+nssArena_deregisterDestructor
+(
+  NSSArena *arena,
+  void (*destructor)(void *argument),
+  void *arg
+);
 
 extern const NSSError NSS_ERROR_INVALID_ITEM;
 extern const NSSError NSS_ERROR_INVALID_ARENA;
@@ -251,13 +283,13 @@ extern const NSSError NSS_ERROR_NOT_FOUND;
 /*
  * nss_ZAlloc
  *
- * This routine allocates and zeroes a section of memory of the
+ * This routine allocates and zeroes a section of memory of the 
  * size, and returns to the caller a pointer to that memory.  If
  * the optional arena argument is non-null, the memory will be
  * obtained from that arena; otherwise, the memory will be obtained
  * from the heap.  This routine may return NULL upon error, in
  * which case it will have set an error upon the error stack.  The
- * value specified for size may be zero; in which case a valid
+ * value specified for size may be zero; in which case a valid 
  * zero-length block of memory will be allocated.  This block may
  * be expanded by calling nss_ZRealloc.
  *
@@ -271,7 +303,12 @@ extern const NSSError NSS_ERROR_NOT_FOUND;
  *  A pointer to the new segment of zeroed memory
  */
 
-NSS_EXTERN void *nss_ZAlloc(NSSArena *arenaOpt, PRUint32 size);
+NSS_EXTERN void *
+nss_ZAlloc
+(
+  NSSArena *arenaOpt,
+  PRUint32 size
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_NO_MEMORY;
@@ -280,11 +317,11 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
 /*
  * nss_ZFreeIf
  *
- * If the specified pointer is non-null, then the region of memory
- * to which it points -- which must have been allocated with
- * nss_ZAlloc -- will be zeroed and released.  This routine
+ * If the specified pointer is non-null, then the region of memory 
+ * to which it points -- which must have been allocated with 
+ * nss_ZAlloc -- will be zeroed and released.  This routine 
  * returns a PRStatus value; if successful, it will return PR_SUCCESS.
- * If unsuccessful, it will set an error on the error stack and return
+ * If unsuccessful, it will set an error on the error stack and return 
  * PR_FAILURE.
  *
  * The error may be one of the following values:
@@ -295,7 +332,11 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  PR_FAILURE
  */
 
-NSS_EXTERN PRStatus nss_ZFreeIf(void *pointer);
+NSS_EXTERN PRStatus
+nss_ZFreeIf
+(
+  void *pointer
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 
@@ -303,10 +344,10 @@ extern const NSSError NSS_ERROR_INVALID_POINTER;
  * nss_ZRealloc
  *
  * This routine reallocates a block of memory obtained by calling
- * nss_ZAlloc or nss_ZRealloc.  The portion of memory
+ * nss_ZAlloc or nss_ZRealloc.  The portion of memory 
  * between the new and old sizes -- which is either being newly
- * obtained or released -- is in either case zeroed.  This routine
- * may return NULL upon failure, in which case it will have placed
+ * obtained or released -- is in either case zeroed.  This routine 
+ * may return NULL upon failure, in which case it will have placed 
  * an error on the error stack.
  *
  * The error may be one of the following values:
@@ -319,7 +360,12 @@ extern const NSSError NSS_ERROR_INVALID_POINTER;
  *  A pointer to the replacement segment of memory
  */
 
-NSS_EXTERN void *nss_ZRealloc(void *pointer, PRUint32 newSize);
+NSS_EXTERN void *
+nss_ZRealloc
+(
+  void *pointer,
+  PRUint32 newSize
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_NO_MEMORY;
@@ -330,10 +376,10 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *
  * This preprocessor macro will allocate memory for a new object
  * of the specified type with nss_ZAlloc, and will cast the
- * return value appropriately.  If the optional arena argument is
- * non-null, the memory will be obtained from that arena; otherwise,
- * the memory will be obtained from the heap.  This routine may
- * return NULL upon error, in which case it will have set an error
+ * return value appropriately.  If the optional arena argument is 
+ * non-null, the memory will be obtained from that arena; otherwise, 
+ * the memory will be obtained from the heap.  This routine may 
+ * return NULL upon error, in which case it will have set an error 
  * upon the error stack.
  *
  * The error may be one of the following values:
@@ -345,6 +391,7 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  A pointer to the new segment of zeroed memory
  */
 
+/* The following line exceeds 72 characters, but emacs screws up if I split it. */
 #define nss_ZNEW(arenaOpt, type) ((type *)nss_ZAlloc((arenaOpt), sizeof(type)))
 
 /*
@@ -352,10 +399,10 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *
  * This preprocessor macro will allocate memory for an array of
  * new objects, and will cast the return value appropriately.
- * If the optional arena argument is non-null, the memory will
- * be obtained from that arena; otherwise, the memory will be
- * obtained from the heap.  This routine may return NULL upon
- * error, in which case it will have set an error upon the error
+ * If the optional arena argument is non-null, the memory will 
+ * be obtained from that arena; otherwise, the memory will be 
+ * obtained from the heap.  This routine may return NULL upon 
+ * error, in which case it will have set an error upon the error 
  * stack.  The array size may be specified as zero.
  *
  * The error may be one of the following values:
@@ -367,15 +414,15 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  A pointer to the new segment of zeroed memory
  */
 
-#define nss_ZNEWARRAY(arenaOpt, type, quantity)                                \
-    ((type *)nss_ZAlloc((arenaOpt), sizeof(type) * (quantity)))
+/* The following line exceeds 72 characters, but emacs screws up if I split it. */
+#define nss_ZNEWARRAY(arenaOpt, type, quantity) ((type *)nss_ZAlloc((arenaOpt), sizeof(type) * (quantity)))
 
 /*
  * nss_ZREALLOCARRAY
  *
  * This preprocessor macro will reallocate memory for an array of
  * new objects, and will cast the return value appropriately.
- * This routine may return NULL upon error, in which case it will
+ * This routine may return NULL upon error, in which case it will 
  *  have set an error upon the error stack.
  *
  * The error may be one of the following values:
@@ -387,8 +434,7 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  NULL upon error
  *  A pointer to the replacement segment of memory
  */
-#define nss_ZREALLOCARRAY(p, type, quantity)                                   \
-    ((type *)nss_ZRealloc((p), sizeof(type) * (quantity)))
+#define nss_ZREALLOCARRAY(p, type, quantity) ((type *)nss_ZRealloc((p), sizeof(type) * (quantity)))
 
 /*
  * nssArena_verifyPointer
@@ -408,7 +454,11 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssArena_verifyPointer(const NSSArena *arena);
+NSS_EXTERN PRStatus
+nssArena_verifyPointer
+(
+  const NSSArena *arena
+);
 
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 #endif /* DEBUG */
@@ -429,16 +479,16 @@ extern const NSSError NSS_ERROR_INVALID_ARENA;
 #ifdef DEBUG
 #define nssArena_VERIFYPOINTER(p) nssArena_verifyPointer(p)
 #else /* DEBUG */
-
-#define nssArena_VERIFYPOINTER(p)                                              \
-    (((NSSArena *)NULL == (p)) ? PR_FAILURE : PR_SUCCESS)
+/* The following line exceeds 72 characters, but emacs screws up if I split it. */
+#define nssArena_VERIFYPOINTER(p) (((NSSArena *)NULL == (p))?PR_FAILURE:PR_SUCCESS)
 #endif /* DEBUG */
 
 /*
- * Private function to be called by NSS_Shutdown to cleanup nssArena
+ * Private function to be called by NSS_Shutdown to cleanup nssArena 
  * bookkeeping.
  */
-extern PRStatus nssArena_Shutdown(void);
+extern PRStatus
+nssArena_Shutdown(void);
 
 /*
  * nssArenaHashAllocOps
@@ -447,7 +497,7 @@ extern PRStatus nssArena_Shutdown(void);
  * use with the NSPL routine PL_NewHashTable.  For example:
  *
  *  NSSArena *hashTableArena = nssArena_Create();
- *  PLHashTable *t = PL_NewHashTable(n, hasher, key_compare,
+ *  PLHashTable *t = PL_NewHashTable(n, hasher, key_compare, 
  *    value_compare, nssArenaHashAllocOps, hashTableArena);
  */
 
@@ -465,12 +515,16 @@ NSS_EXTERN_DATA PLHashAllocOps nssArenaHashAllocOps;
 /*
  * nss_SetError
  *
- * This routine places a new error code on the top of the calling
+ * This routine places a new error code on the top of the calling 
  * thread's error stack.  Calling this routine wiht an error code
  * of zero will clear the error stack.
  */
 
-NSS_EXTERN void nss_SetError(PRUint32 error);
+NSS_EXTERN void
+nss_SetError
+(
+  PRUint32 error
+);
 
 /*
  * nss_ClearErrorStack
@@ -478,7 +532,11 @@ NSS_EXTERN void nss_SetError(PRUint32 error);
  * This routine clears the calling thread's error stack.
  */
 
-NSS_EXTERN void nss_ClearErrorStack(void);
+NSS_EXTERN void
+nss_ClearErrorStack
+(
+  void
+);
 
 /*
  * nss_DestroyErrorStack
@@ -486,7 +544,11 @@ NSS_EXTERN void nss_ClearErrorStack(void);
  * This routine frees the calling thread's error stack.
  */
 
-NSS_EXTERN void nss_DestroyErrorStack(void);
+NSS_EXTERN void
+nss_DestroyErrorStack
+(
+  void
+);
 
 /*
  * NSSItem
@@ -496,16 +558,36 @@ NSS_EXTERN void nss_DestroyErrorStack(void);
  * nssItem_Equal
  */
 
-NSS_EXTERN NSSItem *nssItem_Create(NSSArena *arenaOpt, NSSItem *rvOpt,
-                                   PRUint32 length, const void *data);
+NSS_EXTERN NSSItem *
+nssItem_Create
+(
+  NSSArena *arenaOpt,
+  NSSItem *rvOpt,
+  PRUint32 length,
+  const void *data
+);
 
-NSS_EXTERN void nssItem_Destroy(NSSItem *item);
+NSS_EXTERN void
+nssItem_Destroy
+(
+  NSSItem *item
+);
 
-NSS_EXTERN NSSItem *nssItem_Duplicate(NSSItem *obj, NSSArena *arenaOpt,
-                                      NSSItem *rvOpt);
+NSS_EXTERN NSSItem *
+nssItem_Duplicate
+(
+  NSSItem *obj,
+  NSSArena *arenaOpt,
+  NSSItem *rvOpt
+);
 
-NSS_EXTERN PRBool nssItem_Equal(const NSSItem *one, const NSSItem *two,
-                                PRStatus *statusOpt);
+NSS_EXTERN PRBool
+nssItem_Equal
+(
+  const NSSItem *one,
+  const NSSItem *two,
+  PRStatus *statusOpt
+);
 
 /*
  * NSSUTF8
@@ -519,8 +601,8 @@ NSS_EXTERN PRBool nssItem_Equal(const NSSItem *one, const NSSItem *two,
 
 /*
  * nssUTF8_CaseIgnoreMatch
- *
- * Returns true if the two UTF8-encoded strings pointed to by the
+ * 
+ * Returns true if the two UTF8-encoded strings pointed to by the 
  * two specified NSSUTF8 pointers differ only in typcase.
  *
  * The error may be one of the following values:
@@ -532,8 +614,13 @@ NSS_EXTERN PRBool nssItem_Equal(const NSSItem *one, const NSSItem *two,
  *  PR_FALSE upon error
  */
 
-NSS_EXTERN PRBool nssUTF8_CaseIgnoreMatch(const NSSUTF8 *a, const NSSUTF8 *b,
-                                          PRStatus *statusOpt);
+NSS_EXTERN PRBool
+nssUTF8_CaseIgnoreMatch
+(
+  const NSSUTF8 *a,
+  const NSSUTF8 *b,
+  PRStatus *statusOpt
+);
 
 /*
  * nssUTF8_Duplicate
@@ -543,7 +630,7 @@ NSS_EXTERN PRBool nssUTF8_CaseIgnoreMatch(const NSSUTF8 *a, const NSSUTF8 *b,
  * not null, the memory required will be obtained from that arena;
  * otherwise, the memory required will be obtained from the heap.
  * A pointer to the new string will be returned.  In case of error,
- * an error will be placed on the error stack and NULL will be
+ * an error will be placed on the error stack and NULL will be 
  * returned.
  *
  * The error may be one of the following values:
@@ -552,15 +639,20 @@ NSS_EXTERN PRBool nssUTF8_CaseIgnoreMatch(const NSSUTF8 *a, const NSSUTF8 *b,
  *  NSS_ERROR_NO_MEMORY
  */
 
-NSS_EXTERN NSSUTF8 *nssUTF8_Duplicate(const NSSUTF8 *s, NSSArena *arenaOpt);
+NSS_EXTERN NSSUTF8 *
+nssUTF8_Duplicate
+(
+  const NSSUTF8 *s,
+  NSSArena *arenaOpt
+);
 
 /*
  * nssUTF8_PrintableMatch
  *
- * Returns true if the two Printable strings pointed to by the
- * two specified NSSUTF8 pointers match when compared with the
- * rules for Printable String (leading and trailing spaces are
- * disregarded, extents of whitespace match irregardless of length,
+ * Returns true if the two Printable strings pointed to by the 
+ * two specified NSSUTF8 pointers match when compared with the 
+ * rules for Printable String (leading and trailing spaces are 
+ * disregarded, extents of whitespace match irregardless of length, 
  * and case is not significant), then PR_TRUE will be returned.
  * Otherwise, PR_FALSE will be returned.  Upon failure, PR_FALSE
  * will be returned.  If the optional statusOpt argument is not
@@ -576,8 +668,13 @@ NSS_EXTERN NSSUTF8 *nssUTF8_Duplicate(const NSSUTF8 *s, NSSArena *arenaOpt);
  *  PR_FALSE upon error
  */
 
-NSS_EXTERN PRBool nssUTF8_PrintableMatch(const NSSUTF8 *a, const NSSUTF8 *b,
-                                         PRStatus *statusOpt);
+NSS_EXTERN PRBool
+nssUTF8_PrintableMatch
+(
+  const NSSUTF8 *a,
+  const NSSUTF8 *b,
+  PRStatus *statusOpt
+);
 
 /*
  * nssUTF8_Size
@@ -595,7 +692,12 @@ NSS_EXTERN PRBool nssUTF8_PrintableMatch(const NSSUTF8 *a, const NSSUTF8 *b,
  *  0 on error
  */
 
-NSS_EXTERN PRUint32 nssUTF8_Size(const NSSUTF8 *s, PRStatus *statusOpt);
+NSS_EXTERN PRUint32
+nssUTF8_Size
+(
+  const NSSUTF8 *s,
+  PRStatus *statusOpt
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_VALUE_TOO_LARGE;
@@ -617,7 +719,12 @@ extern const NSSError NSS_ERROR_VALUE_TOO_LARGE;
  *  0 on error
  */
 
-NSS_EXTERN PRUint32 nssUTF8_Length(const NSSUTF8 *s, PRStatus *statusOpt);
+NSS_EXTERN PRUint32
+nssUTF8_Length
+(
+  const NSSUTF8 *s,
+  PRStatus *statusOpt
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_VALUE_TOO_LARGE;
@@ -646,24 +753,34 @@ extern const NSSError NSS_ERROR_INVALID_STRING;
  *  A non-null pointer to a new UTF8 string otherwise
  */
 
-NSS_EXTERN NSSUTF8 *nssUTF8_Create(NSSArena *arenaOpt, nssStringType type,
-                                   const void *inputString,
-                                   PRUint32 size /* in bytes, not characters */
-                                   );
+NSS_EXTERN NSSUTF8 *
+nssUTF8_Create
+(
+  NSSArena *arenaOpt,
+  nssStringType type,
+  const void *inputString,
+  PRUint32 size /* in bytes, not characters */
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_NO_MEMORY;
 extern const NSSError NSS_ERROR_UNSUPPORTED_TYPE;
 
-NSS_EXTERN NSSItem *nssUTF8_GetEncoding(NSSArena *arenaOpt, NSSItem *rvOpt,
-                                        nssStringType type, NSSUTF8 *string);
+NSS_EXTERN NSSItem *
+nssUTF8_GetEncoding
+(
+  NSSArena *arenaOpt,
+  NSSItem *rvOpt,
+  nssStringType type,
+  NSSUTF8 *string
+);
 
 /*
  * nssUTF8_CopyIntoFixedBuffer
  *
- * This will copy a UTF8 string into a fixed-length buffer, making
+ * This will copy a UTF8 string into a fixed-length buffer, making 
  * sure that the all characters are valid.  Any remaining space will
- * be padded with the specified ASCII character, typically either
+ * be padded with the specified ASCII character, typically either 
  * null or space.
  *
  * Blah, blah, blah.
@@ -672,16 +789,27 @@ NSS_EXTERN NSSItem *nssUTF8_GetEncoding(NSSArena *arenaOpt, NSSItem *rvOpt,
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_INVALID_ARGUMENT;
 
-NSS_EXTERN PRStatus nssUTF8_CopyIntoFixedBuffer(NSSUTF8 *string, char *buffer,
-                                                PRUint32 bufferSize, char pad);
+NSS_EXTERN PRStatus
+nssUTF8_CopyIntoFixedBuffer
+(
+  NSSUTF8 *string,
+  char *buffer,
+  PRUint32 bufferSize,
+  char pad
+);
 
 /*
  * nssUTF8_Equal
  *
  */
 
-NSS_EXTERN PRBool nssUTF8_Equal(const NSSUTF8 *a, const NSSUTF8 *b,
-                                PRStatus *statusOpt);
+NSS_EXTERN PRBool
+nssUTF8_Equal
+(
+  const NSSUTF8 *a,
+  const NSSUTF8 *b,
+  PRStatus *statusOpt
+);
 
 /*
  * nssList
@@ -698,15 +826,28 @@ NSS_EXTERN PRBool nssUTF8_Equal(const NSSUTF8 *a, const NSSUTF8 *b,
  * If threadsafe is true, the list will be locked during modifications
  * and traversals.
  */
-NSS_EXTERN nssList *nssList_Create(NSSArena *arenaOpt, PRBool threadSafe);
+NSS_EXTERN nssList *
+nssList_Create
+(
+  NSSArena *arenaOpt,
+  PRBool threadSafe
+);
 
 /*
  * nssList_Destroy
  */
-NSS_EXTERN PRStatus nssList_Destroy(nssList *list);
+NSS_EXTERN PRStatus
+nssList_Destroy
+(
+  nssList *list
+);
 
-NSS_EXTERN void nssList_Clear(nssList *list,
-                              nssListElementDestructorFunc destructor);
+NSS_EXTERN void
+nssList_Clear
+(
+  nssList *list, 
+  nssListElementDestructorFunc destructor
+);
 
 /*
  * nssList_SetCompareFunction
@@ -715,21 +856,34 @@ NSS_EXTERN void nssList_Clear(nssList *list,
  * data pointers.  By setting this function, the user can control
  * how elements are compared.
  */
-NSS_EXTERN void nssList_SetCompareFunction(nssList *list,
-                                           nssListCompareFunc compareFunc);
+NSS_EXTERN void
+nssList_SetCompareFunction
+(
+  nssList *list, 
+  nssListCompareFunc compareFunc
+);
 
 /*
  * nssList_SetSortFunction
  *
  * Sort function to use for an ordered list.
  */
-NSS_EXTERN void nssList_SetSortFunction(nssList *list,
-                                        nssListSortFunc sortFunc);
+NSS_EXTERN void
+nssList_SetSortFunction
+(
+  nssList *list, 
+  nssListSortFunc sortFunc
+);
 
 /*
  * nssList_Add
  */
-NSS_EXTERN PRStatus nssList_Add(nssList *list, void *data);
+NSS_EXTERN PRStatus
+nssList_Add
+(
+  nssList *list, 
+  void *data
+);
 
 /*
  * nssList_AddUnique
@@ -737,14 +891,20 @@ NSS_EXTERN PRStatus nssList_Add(nssList *list, void *data);
  * This will use the compare function to see if the element is already
  * in the list.
  */
-NSS_EXTERN PRStatus nssList_AddUnique(nssList *list, void *data);
+NSS_EXTERN PRStatus
+nssList_AddUnique
+(
+  nssList *list, 
+  void *data
+);
 
 /*
  * nssList_Remove
  *
  * Uses the compare function to locate the element and remove it.
  */
-NSS_EXTERN PRStatus nssList_Remove(nssList *list, void *data);
+NSS_EXTERN PRStatus
+nssList_Remove(nssList *list, void *data);
 
 /*
  * nssList_Get
@@ -752,12 +912,21 @@ NSS_EXTERN PRStatus nssList_Remove(nssList *list, void *data);
  * Uses the compare function to locate an element.  Also serves as
  * nssList_Exists.
  */
-NSS_EXTERN void *nssList_Get(nssList *list, void *data);
+NSS_EXTERN void *
+nssList_Get
+(
+  nssList *list, 
+  void *data
+);
 
 /*
  * nssList_Count
  */
-NSS_EXTERN PRUint32 nssList_Count(nssList *list);
+NSS_EXTERN PRUint32
+nssList_Count
+(
+  nssList *list
+);
 
 /*
  * nssList_GetArray
@@ -765,22 +934,39 @@ NSS_EXTERN PRUint32 nssList_Count(nssList *list);
  * Fill rvArray, up to maxElements, with elements in the list.  The
  * array is NULL-terminated, so its allocated size must be maxElements + 1.
  */
-NSS_EXTERN PRStatus nssList_GetArray(nssList *list, void **rvArray,
-                                     PRUint32 maxElements);
+NSS_EXTERN PRStatus
+nssList_GetArray
+(
+  nssList *list, 
+  void **rvArray, 
+  PRUint32 maxElements
+);
 
 /*
  * nssList_CreateIterator
  *
  * Create an iterator for list traversal.
  */
-NSS_EXTERN nssListIterator *nssList_CreateIterator(nssList *list);
+NSS_EXTERN nssListIterator *
+nssList_CreateIterator
+(
+  nssList *list
+);
 
-NSS_EXTERN nssList *nssList_Clone(nssList *list);
+NSS_EXTERN nssList *
+nssList_Clone
+(
+  nssList *list
+);
 
 /*
  * nssListIterator_Destroy
  */
-NSS_EXTERN void nssListIterator_Destroy(nssListIterator *iter);
+NSS_EXTERN void
+nssListIterator_Destroy
+(
+  nssListIterator *iter
+);
 
 /*
  * nssListIterator_Start
@@ -788,14 +974,22 @@ NSS_EXTERN void nssListIterator_Destroy(nssListIterator *iter);
  * Begin a list iteration.  After this call, if the list is threadSafe,
  * the list is *locked*.
  */
-NSS_EXTERN void *nssListIterator_Start(nssListIterator *iter);
+NSS_EXTERN void *
+nssListIterator_Start
+(
+  nssListIterator *iter
+);
 
 /*
  * nssListIterator_Next
  *
  * Continue a list iteration.
  */
-NSS_EXTERN void *nssListIterator_Next(nssListIterator *iter);
+NSS_EXTERN void *
+nssListIterator_Next
+(
+  nssListIterator *iter
+);
 
 /*
  * nssListIterator_Finish
@@ -803,7 +997,11 @@ NSS_EXTERN void *nssListIterator_Next(nssListIterator *iter);
  * Complete a list iteration.  This *must* be called in order for the
  * lock to be released.
  */
-NSS_EXTERN PRStatus nssListIterator_Finish(nssListIterator *iter);
+NSS_EXTERN PRStatus
+nssListIterator_Finish
+(
+  nssListIterator *iter
+);
 
 /*
  * nssHash
@@ -823,24 +1021,46 @@ NSS_EXTERN PRStatus nssListIterator_Finish(nssListIterator *iter);
  *
  */
 
-NSS_EXTERN nssHash *nssHash_Create(NSSArena *arenaOpt, PRUint32 numBuckets,
-                                   PLHashFunction keyHash,
-                                   PLHashComparator keyCompare,
-                                   PLHashComparator valueCompare);
+NSS_EXTERN nssHash *
+nssHash_Create
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets,
+  PLHashFunction keyHash,
+  PLHashComparator keyCompare,
+  PLHashComparator valueCompare
+);
 
-NSS_EXTERN nssHash *nssHash_CreatePointer(NSSArena *arenaOpt,
-                                          PRUint32 numBuckets);
+NSS_EXTERN nssHash *
+nssHash_CreatePointer
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
 
-NSS_EXTERN nssHash *nssHash_CreateString(NSSArena *arenaOpt,
-                                         PRUint32 numBuckets);
+NSS_EXTERN nssHash *
+nssHash_CreateString
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
 
-NSS_EXTERN nssHash *nssHash_CreateItem(NSSArena *arenaOpt, PRUint32 numBuckets);
+NSS_EXTERN nssHash *
+nssHash_CreateItem
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
 
 /*
  * nssHash_Destroy
  *
  */
-NSS_EXTERN void nssHash_Destroy(nssHash *hash);
+NSS_EXTERN void
+nssHash_Destroy
+(
+  nssHash *hash
+);
 
 /*
  * nssHash_Add
@@ -849,45 +1069,75 @@ NSS_EXTERN void nssHash_Destroy(nssHash *hash);
 
 extern const NSSError NSS_ERROR_HASH_COLLISION;
 
-NSS_EXTERN PRStatus nssHash_Add(nssHash *hash, const void *key,
-                                const void *value);
+NSS_EXTERN PRStatus
+nssHash_Add
+(
+  nssHash *hash,
+  const void *key,
+  const void *value
+);
 
 /*
  * nssHash_Remove
  *
  */
-NSS_EXTERN void nssHash_Remove(nssHash *hash, const void *it);
+NSS_EXTERN void
+nssHash_Remove
+(
+  nssHash *hash,
+  const void *it
+);
 
 /*
  * nssHash_Count
  *
  */
-NSS_EXTERN PRUint32 nssHash_Count(nssHash *hash);
+NSS_EXTERN PRUint32
+nssHash_Count
+(
+  nssHash *hash
+);
 
 /*
  * nssHash_Exists
  *
  */
-NSS_EXTERN PRBool nssHash_Exists(nssHash *hash, const void *it);
+NSS_EXTERN PRBool
+nssHash_Exists
+(
+  nssHash *hash,
+  const void *it
+);
 
 /*
  * nssHash_Lookup
  *
  */
-NSS_EXTERN void *nssHash_Lookup(nssHash *hash, const void *it);
+NSS_EXTERN void *
+nssHash_Lookup
+(
+  nssHash *hash,
+  const void *it
+);
 
 /*
  * nssHash_Iterate
  *
  */
-NSS_EXTERN void nssHash_Iterate(nssHash *hash, nssHashIterator fcn,
-                                void *closure);
+NSS_EXTERN void
+nssHash_Iterate
+(
+  nssHash *hash,
+  nssHashIterator fcn,
+  void *closure
+);
+
 
 /*
  * nssPointerTracker
  *
  * This type and these methods are only present in debug builds.
- *
+ * 
  * The nonpublic methods relating to this type are:
  *
  *  nssPointerTracker_initialize
@@ -901,13 +1151,13 @@ NSS_EXTERN void nssHash_Iterate(nssHash *hash, nssHashIterator fcn,
  * nssPointerTracker_initialize
  *
  * This method is only present in debug builds.
- *
+ * 
  * This routine initializes an nssPointerTracker object.  Note that
  * the object must have been declared *static* to guarantee that it
  * is in a zeroed state initially.  This routine is idempotent, and
- * may even be safely called by multiple threads simultaneously with
- * the same argument.  This routine returns a PRStatus value; if
- * successful, it will return PR_SUCCESS.  On failure it will set an
+ * may even be safely called by multiple threads simultaneously with 
+ * the same argument.  This routine returns a PRStatus value; if 
+ * successful, it will return PR_SUCCESS.  On failure it will set an 
  * error on the error stack and return PR_FAILURE.
  *
  * The error may be one of the following values:
@@ -919,7 +1169,11 @@ NSS_EXTERN void nssHash_Iterate(nssHash *hash, nssHashIterator fcn,
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssPointerTracker_initialize(nssPointerTracker *tracker);
+NSS_EXTERN PRStatus
+nssPointerTracker_initialize
+(
+  nssPointerTracker *tracker
+);
 
 extern const NSSError NSS_ERROR_NO_MEMORY;
 #endif /* DEBUG */
@@ -928,7 +1182,7 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  * nssPointerTracker_finalize
  *
  * This method is only present in debug builds.
- *
+ * 
  * This routine returns the nssPointerTracker object to the pre-
  * initialized state, releasing all resources used by the object.
  * It will *NOT* destroy the objects being tracked by the pointer
@@ -948,7 +1202,11 @@ extern const NSSError NSS_ERROR_NO_MEMORY;
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssPointerTracker_finalize(nssPointerTracker *tracker);
+NSS_EXTERN PRStatus
+nssPointerTracker_finalize
+(
+  nssPointerTracker *tracker
+);
 
 extern const NSSError NSS_ERROR_TRACKER_NOT_EMPTY;
 #endif /* DEBUG */
@@ -976,8 +1234,12 @@ extern const NSSError NSS_ERROR_TRACKER_NOT_EMPTY;
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssPointerTracker_add(nssPointerTracker *tracker,
-                                          const void *pointer);
+NSS_EXTERN PRStatus
+nssPointerTracker_add
+(
+  nssPointerTracker *tracker,
+  const void *pointer
+);
 
 extern const NSSError NSS_ERROR_NO_MEMORY;
 extern const NSSError NSS_ERROR_TRACKER_NOT_INITIALIZED;
@@ -989,12 +1251,12 @@ extern const NSSError NSS_ERROR_DUPLICATE_POINTER;
  *
  * This method is only present in debug builds.
  *
- * This routine removes the specified pointer from the
+ * This routine removes the specified pointer from the 
  * nssPointerTracker object.  It does not call any destructor for the
  * object; rather, this should be called from the object's destructor.
- * The nssPointerTracker is threadsafe, but this call is not
- * idempotent.  This routine returns a PRStatus value; if successful
- * it will return PR_SUCCESS.  On failure it will set an error on the
+ * The nssPointerTracker is threadsafe, but this call is not 
+ * idempotent.  This routine returns a PRStatus value; if successful 
+ * it will return PR_SUCCESS.  On failure it will set an error on the 
  * error stack and return PR_FAILURE.
  *
  * The error may be one of the following values:
@@ -1007,8 +1269,12 @@ extern const NSSError NSS_ERROR_DUPLICATE_POINTER;
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssPointerTracker_remove(nssPointerTracker *tracker,
-                                             const void *pointer);
+NSS_EXTERN PRStatus
+nssPointerTracker_remove
+(
+  nssPointerTracker *tracker,
+  const void *pointer
+);
 
 extern const NSSError NSS_ERROR_TRACKER_NOT_INITIALIZED;
 extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
@@ -1023,10 +1289,10 @@ extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
  * with the nssPointerTracker object.  The nssPointerTracker object is
  * threadsafe, and this call may be safely called from multiple threads
  * simultaneously with the same arguments.  This routine returns a
- * PRStatus value; if the pointer is registered this will return
- * PR_SUCCESS.  Otherwise it will set an error on the error stack and
- * return PR_FAILURE.  Although the error is suitable for leaving on
- * the stack, callers may wish to augment the information available by
+ * PRStatus value; if the pointer is registered this will return 
+ * PR_SUCCESS.  Otherwise it will set an error on the error stack and 
+ * return PR_FAILURE.  Although the error is suitable for leaving on 
+ * the stack, callers may wish to augment the information available by 
  * placing a more type-specific error on the stack.
  *
  * The error may be one of the following values:
@@ -1038,8 +1304,12 @@ extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
  */
 
 #ifdef DEBUG
-NSS_EXTERN PRStatus nssPointerTracker_verify(nssPointerTracker *tracker,
-                                             const void *pointer);
+NSS_EXTERN PRStatus
+nssPointerTracker_verify
+(
+  nssPointerTracker *tracker,
+  const void *pointer
+);
 
 extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
 #endif /* DEBUG */
@@ -1063,7 +1333,13 @@ extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
  *  The destination pointer on success
  */
 
-NSS_EXTERN void *nsslibc_memcpy(void *dest, const void *source, PRUint32 n);
+NSS_EXTERN void *
+nsslibc_memcpy
+(
+  void *dest,
+  const void *source,
+  PRUint32 n
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 
@@ -1078,7 +1354,13 @@ extern const NSSError NSS_ERROR_INVALID_POINTER;
  *  The destination pointer on success
  */
 
-NSS_EXTERN void *nsslibc_memset(void *dest, PRUint8 byte, PRUint32 n);
+NSS_EXTERN void *
+nsslibc_memset
+(
+  void *dest,
+  PRUint8 byte,
+  PRUint32 n
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 
@@ -1094,8 +1376,14 @@ extern const NSSError NSS_ERROR_INVALID_POINTER;
  *  PR_FALSE upon error
  */
 
-NSS_EXTERN PRBool nsslibc_memequal(const void *a, const void *b, PRUint32 len,
-                                   PRStatus *statusOpt);
+NSS_EXTERN PRBool
+nsslibc_memequal
+(
+  const void *a,
+  const void *b,
+  PRUint32 len,
+  PRStatus *statusOpt
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 

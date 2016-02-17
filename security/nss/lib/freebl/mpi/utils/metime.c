@@ -27,8 +27,8 @@ int main(int argc, char *argv[])
 
   mp_int     a, m, c;
 
-  if(PR_GetEnvSecure("SEED") != NULL)
-    seed = abs(atoi(PR_GetEnvSecure("SEED")));
+  if(getenv("SEED") != NULL)
+    seed = abs(atoi(getenv("SEED")));
   else 
     seed = (unsigned int)time(NULL);
 

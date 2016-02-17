@@ -421,9 +421,9 @@ class FormatEpochTimeInMillisAsIso8601Test : public Test {
   virtual void SetUp() {
     saved_tz_ = NULL;
 
-    GTEST_DISABLE_MSC_WARNINGS_PUSH_(4996 /* PR_GetEnvSecure, strdup: deprecated */)
-    if (PR_GetEnvSecure("TZ"))
-      saved_tz_ = strdup(PR_GetEnvSecure("TZ"));
+    GTEST_DISABLE_MSC_WARNINGS_PUSH_(4996 /* getenv, strdup: deprecated */)
+    if (getenv("TZ"))
+      saved_tz_ = strdup(getenv("TZ"));
     GTEST_DISABLE_MSC_WARNINGS_POP_()
 
     // Set up the time zone for FormatEpochTimeInMillisAsIso8601 to use.  We

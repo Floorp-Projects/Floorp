@@ -14,50 +14,51 @@
 #include "keyhi.h"
 
 static int
-cmmf_create_witness_and_challenge(PLArenaPool *poolp,
-                                  CMMFChallenge *challenge,
-                                  long inRandom,
-                                  SECItem *senderDER,
-                                  SECKEYPublicKey *inPubKey,
-                                  void *passwdArg)
+cmmf_create_witness_and_challenge(PLArenaPool     *poolp,
+				  CMMFChallenge   *challenge,
+				  long             inRandom,
+				  SECItem         *senderDER,
+				  SECKEYPublicKey *inPubKey,
+				  void            *passwdArg)
 {
-    SECItem *encodedRandNum;
-    SECItem encodedRandStr = { siBuffer, NULL, 0 };
-    SECItem *dummy;
-    unsigned char *randHash, *senderHash, *encChal = NULL;
-    unsigned modulusLen = 0;
-    SECStatus rv = SECFailure;
-    CMMFRand randStr = { { siBuffer, NULL, 0 }, { siBuffer, NULL, 0 } };
-    PK11SlotInfo *slot;
-    PK11SymKey *symKey = NULL;
+    SECItem       *encodedRandNum;
+    SECItem        encodedRandStr = {siBuffer, NULL, 0};
+    SECItem       *dummy;
+    unsigned char *randHash, *senderHash, *encChal=NULL;
+    unsigned       modulusLen = 0;
+    SECStatus      rv = SECFailure;
+    CMMFRand       randStr= { {siBuffer, NULL, 0}, {siBuffer, NULL, 0}};
+    PK11SlotInfo  *slot;
+    PK11SymKey    *symKey = NULL;
     CERTSubjectPublicKeyInfo *spki = NULL;
 
+    
     encodedRandNum = SEC_ASN1EncodeInteger(poolp, &challenge->randomNumber,
-                                           inRandom);
+					   inRandom);
     encodedRandNum = &challenge->randomNumber;
-    randHash = PORT_ArenaNewArray(poolp, unsigned char, SHA1_LENGTH);
+    randHash   = PORT_ArenaNewArray(poolp, unsigned char, SHA1_LENGTH);
     senderHash = PORT_ArenaNewArray(poolp, unsigned char, SHA1_LENGTH);
     if (randHash == NULL) {
         goto loser;
     }
-    rv = PK11_HashBuf(SEC_OID_SHA1, randHash, encodedRandNum->data,
-                      (PRUint32)encodedRandNum->len);
+    rv = PK11_HashBuf(SEC_OID_SHA1, randHash, encodedRandNum->data, 
+		      (PRUint32)encodedRandNum->len);
     if (rv != SECSuccess) {
         goto loser;
     }
     rv = PK11_HashBuf(SEC_OID_SHA1, senderHash, senderDER->data,
-                      (PRUint32)senderDER->len);
+		      (PRUint32)senderDER->len);
     if (rv != SECSuccess) {
         goto loser;
     }
     challenge->witness.data = randHash;
-    challenge->witness.len = SHA1_LENGTH;
+    challenge->witness.len  = SHA1_LENGTH;
 
-    randStr.integer = *encodedRandNum;
+    randStr.integer    = *encodedRandNum;
     randStr.senderHash.data = senderHash;
-    randStr.senderHash.len = SHA1_LENGTH;
-    dummy = SEC_ASN1EncodeItem(NULL, &encodedRandStr, &randStr,
-                               CMMFRandTemplate);
+    randStr.senderHash.len  = SHA1_LENGTH;
+    dummy = SEC_ASN1EncodeItem(NULL, &encodedRandStr, &randStr, 
+			       CMMFRandTemplate);
     if (dummy != &encodedRandStr) {
         rv = SECFailure;
         goto loser;
@@ -69,7 +70,7 @@ cmmf_create_witness_and_challenge(PLArenaPool *poolp,
         rv = SECFailure;
         goto loser;
     }
-    slot = PK11_GetBestSlotWithAttributes(CKM_RSA_PKCS, CKF_WRAP, 0, passwdArg);
+    slot =PK11_GetBestSlotWithAttributes(CKM_RSA_PKCS, CKF_WRAP, 0, passwdArg);
     if (slot == NULL) {
         rv = SECFailure;
         goto loser;
@@ -82,23 +83,23 @@ cmmf_create_witness_and_challenge(PLArenaPool *poolp,
      * the PK11 libraries depend on.
      */
     symKey = PK11_ImportSymKey(slot, CKM_RSA_PKCS, PK11_OriginGenerated,
-                               CKA_VALUE, &encodedRandStr, passwdArg);
+			       CKA_VALUE, &encodedRandStr, passwdArg);
     if (symKey == NULL) {
         rv = SECFailure;
-        goto loser;
+	goto loser;
     }
     challenge->challenge.data = encChal;
-    challenge->challenge.len = modulusLen;
-    rv = PK11_PubWrapSymKey(CKM_RSA_PKCS, inPubKey, symKey,
-                            &challenge->challenge);
+    challenge->challenge.len  = modulusLen;
+    rv = PK11_PubWrapSymKey(CKM_RSA_PKCS, inPubKey, symKey, 
+			    &challenge->challenge);
     PK11_FreeSlot(slot);
     if (rv != SECSuccess) {
-        goto loser;
+	goto loser;
     }
     rv = SECITEM_CopyItem(poolp, &challenge->senderDER, senderDER);
     crmf_get_public_value(inPubKey, &challenge->key);
     /* Fall through */
-loser:
+ loser:
     if (spki != NULL) {
         SECKEY_DestroySubjectPublicKeyInfo(spki);
     }
@@ -115,17 +116,17 @@ loser:
 }
 
 static SECStatus
-cmmf_create_first_challenge(CMMFPOPODecKeyChallContent *challContent,
-                            long inRandom,
-                            SECItem *senderDER,
-                            SECKEYPublicKey *inPubKey,
-                            void *passwdArg)
+cmmf_create_first_challenge(CMMFPOPODecKeyChallContent *challContent, 
+			    long                        inRandom, 
+			    SECItem                    *senderDER, 
+			    SECKEYPublicKey            *inPubKey,
+			    void                       *passwdArg)
 {
-    SECOidData *oidData;
-    CMMFChallenge *challenge;
+    SECOidData     *oidData;
+    CMMFChallenge  *challenge;
     SECAlgorithmID *algId;
-    PLArenaPool *poolp;
-    SECStatus rv;
+    PLArenaPool    *poolp;
+    SECStatus       rv;
 
     oidData = SECOID_FindOIDByTag(SEC_OID_SHA1);
     if (oidData == NULL) {
@@ -144,15 +145,15 @@ cmmf_create_first_challenge(CMMFPOPODecKeyChallContent *challContent,
     if (rv != SECSuccess) {
         return SECFailure;
     }
-    rv = cmmf_create_witness_and_challenge(poolp, challenge, inRandom,
-                                           senderDER, inPubKey, passwdArg);
+    rv = cmmf_create_witness_and_challenge(poolp, challenge, inRandom, 
+					   senderDER, inPubKey, passwdArg);
     challContent->challenges[0] = (rv == SECSuccess) ? challenge : NULL;
     challContent->numChallenges++;
-    return rv;
+    return rv ;
 }
 
-CMMFPOPODecKeyChallContent *
-CMMF_CreatePOPODecKeyChallContent(void)
+CMMFPOPODecKeyChallContent*
+CMMF_CreatePOPODecKeyChallContent (void)
 {
     PLArenaPool *poolp;
     CMMFPOPODecKeyChallContent *challContent;
@@ -164,31 +165,32 @@ CMMF_CreatePOPODecKeyChallContent(void)
     challContent = PORT_ArenaZNew(poolp, CMMFPOPODecKeyChallContent);
     if (challContent == NULL) {
         PORT_FreeArena(poolp, PR_FALSE);
-        return NULL;
+	return NULL;
     }
     challContent->poolp = poolp;
     return challContent;
 }
 
 SECStatus
-CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKeyChall,
-                                            long inRandom,
-                                            CERTGeneralName *inSender,
-                                            SECKEYPublicKey *inPubKey,
-                                            void *passwdArg)
+CMMF_POPODecKeyChallContentSetNextChallenge
+                                    (CMMFPOPODecKeyChallContent *inDecKeyChall,
+				     long                        inRandom,
+				     CERTGeneralName            *inSender,
+				     SECKEYPublicKey            *inPubKey,
+				     void                       *passwdArg)
 {
-    CMMFChallenge *curChallenge;
-    PLArenaPool *genNamePool = NULL, *poolp;
-    SECStatus rv;
-    SECItem *genNameDER;
-    void *mark;
+    CMMFChallenge               *curChallenge;
+    PLArenaPool                 *genNamePool = NULL, *poolp;
+    SECStatus                    rv;
+    SECItem                     *genNameDER;
+    void                        *mark;
 
-    PORT_Assert(inDecKeyChall != NULL &&
-                inSender != NULL &&
-                inPubKey != NULL);
+    PORT_Assert (inDecKeyChall != NULL &&
+		 inSender      != NULL &&
+		 inPubKey      != NULL);
 
-    if (inDecKeyChall == NULL ||
-        inSender == NULL || inPubKey == NULL) {
+    if (inDecKeyChall == NULL || 
+	inSender      == NULL || inPubKey == NULL) {
         return SECFailure;
     }
     poolp = inDecKeyChall->poolp;
@@ -202,8 +204,8 @@ CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKey
     }
     if (inDecKeyChall->challenges == NULL) {
         inDecKeyChall->challenges =
-            PORT_ArenaZNewArray(poolp, CMMFChallenge *, (CMMF_MAX_CHALLENGES + 1));
-        inDecKeyChall->numAllocated = CMMF_MAX_CHALLENGES;
+	    PORT_ArenaZNewArray(poolp, CMMFChallenge*,(CMMF_MAX_CHALLENGES+1));
+	inDecKeyChall->numAllocated = CMMF_MAX_CHALLENGES;
     }
 
     if (inDecKeyChall->numChallenges >= inDecKeyChall->numAllocated) {
@@ -212,23 +214,22 @@ CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKey
     }
 
     if (inDecKeyChall->numChallenges == 0) {
-        rv = cmmf_create_first_challenge(inDecKeyChall, inRandom,
-                                         genNameDER, inPubKey, passwdArg);
-    }
-    else {
+        rv = cmmf_create_first_challenge(inDecKeyChall, inRandom, 
+					 genNameDER, inPubKey, passwdArg);
+    } else {
         curChallenge = PORT_ArenaZNew(poolp, CMMFChallenge);
-        if (curChallenge == NULL) {
-            rv = SECFailure;
-            goto loser;
-        }
-        rv = cmmf_create_witness_and_challenge(poolp, curChallenge, inRandom,
-                                               genNameDER, inPubKey,
-                                               passwdArg);
-        if (rv == SECSuccess) {
-            inDecKeyChall->challenges[inDecKeyChall->numChallenges] =
-                curChallenge;
-            inDecKeyChall->numChallenges++;
-        }
+	if (curChallenge == NULL) {
+	    rv = SECFailure;
+	    goto loser;
+	}
+	rv = cmmf_create_witness_and_challenge(poolp, curChallenge, inRandom, 
+					       genNameDER, inPubKey, 
+					       passwdArg);
+	if (rv == SECSuccess) {
+	    inDecKeyChall->challenges[inDecKeyChall->numChallenges] =
+	        curChallenge;
+	    inDecKeyChall->numChallenges++;
+	}
     }
     if (rv != SECSuccess) {
         goto loser;
@@ -237,7 +238,7 @@ CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKey
     PORT_FreeArena(genNamePool, PR_FALSE);
     return SECSuccess;
 
-loser:
+ loser:
     PORT_ArenaRelease(poolp, mark);
     if (genNamePool != NULL) {
         PORT_FreeArena(genNamePool, PR_FALSE);
@@ -256,7 +257,7 @@ CMMF_DestroyPOPODecKeyRespContent(CMMFPOPODecKeyRespContent *inDecKeyResp)
     return SECSuccess;
 }
 
-int
+int 
 CMMF_POPODecKeyRespContentGetNumResponses(CMMFPOPODecKeyRespContent *inRespCont)
 {
     int numResponses = 0;
@@ -267,20 +268,20 @@ CMMF_POPODecKeyRespContentGetNumResponses(CMMFPOPODecKeyRespContent *inRespCont)
     }
 
     while (inRespCont->responses[numResponses] != NULL) {
-        numResponses++;
+        numResponses ++;
     }
     return numResponses;
 }
 
 SECStatus
-CMMF_POPODecKeyRespContentGetResponse(CMMFPOPODecKeyRespContent *inRespCont,
-                                      int inIndex,
-                                      long *inDest)
+CMMF_POPODecKeyRespContentGetResponse (CMMFPOPODecKeyRespContent *inRespCont,
+				       int                        inIndex,
+				       long                      *inDest)
 {
     PORT_Assert(inRespCont != NULL);
-
-    if (inRespCont == NULL || inIndex < 0 ||
-        inIndex >= CMMF_POPODecKeyRespContentGetNumResponses(inRespCont)) {
+    
+    if (inRespCont == NULL || inIndex < 0 || 
+	inIndex >= CMMF_POPODecKeyRespContentGetNumResponses(inRespCont)) {
         return SECFailure;
     }
     *inDest = DER_GetInteger(inRespCont->responses[inIndex]);

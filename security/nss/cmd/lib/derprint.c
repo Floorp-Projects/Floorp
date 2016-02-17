@@ -30,13 +30,6 @@ getInteger256(const unsigned char *data, unsigned int nb)
 	val = (data[0] << 16) | (data[1] << 8) | data[2];
 	break;
       case 4:
-	/* If the most significant bit of data[0] is 1, val would be negative.
-	 * Treat it as an error.
-	 */
-	if (data[0] & 0x80) {
-	    PORT_SetError(SEC_ERROR_BAD_DER);
-	    return -1;
-	}
 	val = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 	break;
       default:
@@ -239,10 +232,6 @@ prettyPrintObjectID(FILE *out, const unsigned char *data,
     if (rv < 0)
 	return rv;
 
-    if (len == 0) {
-	PORT_SetError(SEC_ERROR_BAD_DER);
-	return -1;
-    }
     val = data[0];
     i   = val % 40;
     val = val / 40;
@@ -293,17 +282,24 @@ prettyPrintObjectID(FILE *out, const unsigned char *data,
 	}
     }
 
-    rv = prettyNewline(out);
-    if (rv < 0)
-	return rv;
-
+    /*
+     * Finally, on a new line, print the raw bytes (if requested).
+     */
     if (raw) {
-	rv = prettyPrintLeaf(out, data, len, level);
-	if (rv < 0)
+	rv = prettyNewline(out);
+	if (rv < 0) {
+	    PORT_SetError(SEC_ERROR_IO);
 	    return rv;
+	}
+
+	for (i = 0; i < len; i++) {
+	    rv = prettyPrintByte(out, *data++, level);
+	    if (rv < 0)
+		return rv;
+	}
     }
 
-    return 0;
+    return prettyNewline(out);
 }
 
 static char *prettyTagType [32] = {
@@ -427,7 +423,6 @@ prettyPrintLength(FILE *out, const unsigned char *data, const unsigned char *end
     *indefinitep = PR_FALSE;
 
     lbyte = *data++;
-    lenLen = 1;
     if (lbyte >= 0x80) {
 	/* Multibyte length */
 	unsigned nb = (unsigned) (lbyte & 0x7f);
@@ -449,7 +444,7 @@ prettyPrintLength(FILE *out, const unsigned char *data, const unsigned char *end
 	    *lenp = 0;
 	    *indefinitep = PR_TRUE;
 	}
-	lenLen += nb;
+	lenLen = nb + 1;
 	if (raw) {
 	    unsigned int i;
 
@@ -464,6 +459,7 @@ prettyPrintLength(FILE *out, const unsigned char *data, const unsigned char *end
 	}
     } else {
 	*lenp = lbyte;
+	lenLen = 1;
 	if (raw) {
 	    rv = prettyPrintByte(out, lbyte, lv);
 	    if (rv < 0)

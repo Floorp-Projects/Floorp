@@ -19,7 +19,7 @@ typedef enum {
 } CMMFCertOrEncCertChoice;
 
 /*
- * This is the enumeration and the corresponding values used to
+ * This is the enumeration and the corresponding values used to 
  * represent the CMMF type PKIStatus
  */
 typedef enum {
@@ -51,19 +51,19 @@ typedef enum {
     cmmfNoFailureInfo = 9
 } CMMFPKIFailureInfo;
 
-typedef struct CMMFPKIStatusInfoStr CMMFPKIStatusInfo;
-typedef struct CMMFCertOrEncCertStr CMMFCertOrEncCert;
-typedef struct CMMFCertifiedKeyPairStr CMMFCertifiedKeyPair;
-typedef struct CMMFCertResponseStr CMMFCertResponse;
-typedef struct CMMFCertResponseSeqStr CMMFCertResponseSeq;
+typedef struct CMMFPKIStatusInfoStr          CMMFPKIStatusInfo;
+typedef struct CMMFCertOrEncCertStr          CMMFCertOrEncCert;
+typedef struct CMMFCertifiedKeyPairStr       CMMFCertifiedKeyPair;
+typedef struct CMMFCertResponseStr           CMMFCertResponse;
+typedef struct CMMFCertResponseSeqStr        CMMFCertResponseSeq;
 typedef struct CMMFPOPODecKeyChallContentStr CMMFPOPODecKeyChallContent;
-typedef struct CMMFChallengeStr CMMFChallenge;
-typedef struct CMMFRandStr CMMFRand;
-typedef struct CMMFPOPODecKeyRespContentStr CMMFPOPODecKeyRespContent;
-typedef struct CMMFKeyRecRepContentStr CMMFKeyRecRepContent;
-typedef struct CMMFCertRepContentStr CMMFCertRepContent;
+typedef struct CMMFChallengeStr              CMMFChallenge;
+typedef struct CMMFRandStr                   CMMFRand;
+typedef struct CMMFPOPODecKeyRespContentStr  CMMFPOPODecKeyRespContent;
+typedef struct CMMFKeyRecRepContentStr       CMMFKeyRecRepContent;
+typedef struct CMMFCertRepContentStr         CMMFCertRepContent;
 
-/* Export this so people can call SEC_ASN1EncodeItem instead of having to
+/* Export this so people can call SEC_ASN1EncodeItem instead of having to 
  * write callbacks that are passed in to the high level encode function
  * for CMMFCertRepContent.
  */

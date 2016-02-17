@@ -11,7 +11,6 @@
 #include "ssl.h"
 
 #include <iostream>
-#include <functional>
 
 #include "test_io.h"
 
@@ -28,16 +27,6 @@ enum SessionResumptionMode {
   RESUME_TICKET = 2,
   RESUME_BOTH = RESUME_SESSIONID | RESUME_TICKET
 };
-
-class TlsAgent;
-
-typedef
-  std::function<void(TlsAgent& agent, PRBool checksig, PRBool isServer)>
-  AuthCertificateCallbackFunction;
-
-typedef
-  std::function<void(TlsAgent& agent)>
-  HandshakeCallbackFunction;
 
 class TlsAgent : public PollTarget {
  public:
@@ -105,11 +94,7 @@ class TlsAgent : public PollTarget {
   void CheckExtendedMasterSecret(bool expected);
   void DisableRollbackDetection();
 
-  Role role() const { return role_; }
-
   State state() const { return state_; }
-
-  SSLKEAType kea() const { return kea_; }
 
   const char* state_str() const { return state_str(state()); }
 
@@ -146,15 +131,6 @@ class TlsAgent : public PollTarget {
   size_t received_bytes() const { return recv_ctr_; }
   int32_t error_code() const { return error_code_; }
 
-  void SetHandshakeCallback(HandshakeCallbackFunction handshake_callback) {
-    handshake_callback_ = handshake_callback;
-  }
-
-  void SetAuthCertificateCallback(
-      AuthCertificateCallbackFunction auth_certificate_callback) {
-    auth_certificate_callback_ = auth_certificate_callback;
-  }
-
  private:
   const static char* states[];
 
@@ -172,9 +148,6 @@ class TlsAgent : public PollTarget {
     TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
     agent->CheckPreliminaryInfo();
     agent->auth_certificate_hook_called_ = true;
-    if (agent->auth_certificate_callback_) {
-      agent->auth_certificate_callback_(*agent, checksig, isServer);
-    }
     return SECSuccess;
   }
 
@@ -184,9 +157,6 @@ class TlsAgent : public PollTarget {
     TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
     EXPECT_TRUE(agent->expect_client_auth_);
     EXPECT_TRUE(isServer);
-    if (agent->auth_certificate_callback_) {
-      agent->auth_certificate_callback_(*agent, checksig, isServer);
-    }
     return SECSuccess;
   }
 
@@ -238,9 +208,6 @@ class TlsAgent : public PollTarget {
     TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
     agent->CheckPreliminaryInfo();
     agent->handshake_callback_called_ = true;
-    if (agent->handshake_callback_) {
-      agent->handshake_callback_(*agent);
-    }
   }
 
   void CheckCallbacks() const;
@@ -270,8 +237,6 @@ class TlsAgent : public PollTarget {
   size_t send_ctr_;
   size_t recv_ctr_;
   bool expected_read_error_;
-  HandshakeCallbackFunction handshake_callback_;
-  AuthCertificateCallbackFunction auth_certificate_callback_;
 };
 
 class TlsAgentTestBase : public ::testing::Test {

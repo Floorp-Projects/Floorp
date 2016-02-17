@@ -5,6 +5,7 @@
 #ifndef _KEYI_H_
 #define _KEYI_H_
 
+
 SEC_BEGIN_PROTOS
 /* NSS private functions */
 /* map an oid to a keytype... actually this function and it's converse
@@ -15,7 +16,7 @@ KeyType seckey_GetKeyType(SECOidTag pubKeyOid);
  * algorithm, key and parameters (parameters is the parameters field
  * of a algorithm ID structure (SECAlgorithmID)*/
 SECStatus sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
-                           const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg);
+             const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg);
 
 SEC_END_PROTOS
 

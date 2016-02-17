@@ -25,8 +25,6 @@ SECItem *
 PK11_BlockData(SECItem *data,unsigned long size) {
     SECItem *newData;
 
-    if (size == 0u) return NULL;
-
     newData = (SECItem *)PORT_Alloc(sizeof(SECItem));
     if (newData == NULL) return NULL;
 
@@ -668,18 +666,6 @@ SECStatus
 PK11_Verify(SECKEYPublicKey *key, const SECItem *sig, const SECItem *hash,
 	    void *wincx)
 {
-    CK_MECHANISM_TYPE mech = PK11_MapSignKeyType(key->keyType);
-    return PK11_VerifyWithMechanism(key, mech, NULL, sig, hash, wincx);
-}
-
-/*
- * Verify a signature from its hash using the given algorithm.
- */
-SECStatus
-PK11_VerifyWithMechanism(SECKEYPublicKey *key, CK_MECHANISM_TYPE mechanism,
-                         const SECItem *param, const SECItem *sig,
-                         const SECItem *hash, void *wincx)
-{
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_OBJECT_HANDLE id = key->pkcs11ID;
     CK_MECHANISM mech = {0, NULL, 0 };
@@ -687,11 +673,7 @@ PK11_VerifyWithMechanism(SECKEYPublicKey *key, CK_MECHANISM_TYPE mechanism,
     CK_SESSION_HANDLE session;
     CK_RV crv;
 
-    mech.mechanism = mechanism;
-    if (param) {
-        mech.pParameter = param->data;
-        mech.ulParameterLen = param->len;
-    }
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (slot == NULL) {
 	unsigned int length =  0;
@@ -755,17 +737,6 @@ PK11_VerifyWithMechanism(SECKEYPublicKey *key, CK_MECHANISM_TYPE mechanism,
 SECStatus
 PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, const SECItem *hash)
 {
-    CK_MECHANISM_TYPE mech = PK11_MapSignKeyType(key->keyType);
-    return PK11_SignWithMechanism(key, mech, NULL, sig, hash);
-}
-
-/*
- * Sign a hash using the given algorithm.
- */
-SECStatus
-PK11_SignWithMechanism(SECKEYPrivateKey *key, CK_MECHANISM_TYPE mechanism,
-                       const SECItem *param, SECItem *sig, const SECItem *hash)
-{
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_MECHANISM mech = {0, NULL, 0 };
     PRBool owner = PR_TRUE;
@@ -774,11 +745,7 @@ PK11_SignWithMechanism(SECKEYPrivateKey *key, CK_MECHANISM_TYPE mechanism,
     CK_ULONG len;
     CK_RV crv;
 
-    mech.mechanism = mechanism;
-    if (param) {
-        mech.pParameter = param->data;
-        mech.ulParameterLen = param->len;
-    }
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot, key->wincx);

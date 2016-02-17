@@ -124,7 +124,7 @@ Pk11Install_ListIter_init(Pk11Install_ListIter* _this);
 Pk11Install_ListIter*
 Pk11Install_ListIter_new(const Pk11Install_ValueList* _list);
 void
-Pk11Install_ListIter_delete(Pk11Install_ListIter** _this);
+Pk11Install_ListIter_delete(Pk11Install_ListIter* _this);
 void
 Pk11Install_ListIter_reset(Pk11Install_ListIter* _this);
 Pk11Install_Value*

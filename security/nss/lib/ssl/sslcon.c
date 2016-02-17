@@ -51,21 +51,21 @@ typedef struct ssl2SpecsStr {
 
 static const ssl2Specs ssl_Specs[] = {
 /* NONE                                 */ 
-				{  0,  0, 0, 0 },
+				{  0,  0, 0, 0, },
 /* SSL_CK_RC4_128_WITH_MD5		*/ 
-				{  2, 16, 1, 0, CKM_RC4,       16,   0, 0 },
+				{  2, 16, 1, 0, CKM_RC4,       16,   0, 0, },
 /* SSL_CK_RC4_128_EXPORT40_WITH_MD5	*/ 
-				{  2, 16, 1, 0, CKM_RC4,       16,  11, 0 },
+				{  2, 16, 1, 0, CKM_RC4,       16,  11, 0, },
 /* SSL_CK_RC2_128_CBC_WITH_MD5		*/ 
-				{  2, 16, 8, 3, CKM_RC2_CBC,   16,   0, 8 },
+				{  2, 16, 8, 3, CKM_RC2_CBC,   16,   0, 8, },
 /* SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5	*/ 
-				{  2, 16, 8, 3, CKM_RC2_CBC,   16,  11, 8 },
+				{  2, 16, 8, 3, CKM_RC2_CBC,   16,  11, 8, },
 /* SSL_CK_IDEA_128_CBC_WITH_MD5		*/ 
-				{  0,  0, 0, 0 },
+				{  0,  0, 0, 0, },
 /* SSL_CK_DES_64_CBC_WITH_MD5		*/ 
-				{  1,  8, 8, 3, CKM_DES_CBC,    8,   0, 8 },
+				{  1,  8, 8, 3, CKM_DES_CBC,    8,   0, 8, },
 /* SSL_CK_DES_192_EDE3_CBC_WITH_MD5	*/ 
-				{  3, 24, 8, 3, CKM_DES3_CBC,  24,   0, 8 },
+				{  3, 24, 8, 3, CKM_DES3_CBC,  24,   0, 8, },
 };
 
 #define SET_ERROR_CODE	  /* reminder */

@@ -33,10 +33,10 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION  "3.22.1" _NSS_ECC_STRING _NSS_CUSTOMIZED
+#define NSS_VERSION  "3.21" _NSS_ECC_STRING _NSS_CUSTOMIZED
 #define NSS_VMAJOR   3
-#define NSS_VMINOR   22
-#define NSS_VPATCH   1
+#define NSS_VMINOR   21
+#define NSS_VPATCH   0
 #define NSS_VBUILD   0
 #define NSS_BETA     PR_FALSE
 
@@ -296,13 +296,9 @@ SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
 
 /* Available options for NSS_OptionSet() and NSS_OptionGet().
  */
-#define NSS_RSA_MIN_KEY_SIZE        0x001
-#define NSS_DH_MIN_KEY_SIZE         0x002
-#define NSS_DSA_MIN_KEY_SIZE        0x004
-#define NSS_TLS_VERSION_MIN_POLICY  0x008
-#define NSS_TLS_VERSION_MAX_POLICY  0x009
-#define NSS_DTLS_VERSION_MIN_POLICY 0x00a
-#define NSS_DTLS_VERSION_MAX_POLICY 0x00b
+#define NSS_RSA_MIN_KEY_SIZE (1<<0)
+#define NSS_DH_MIN_KEY_SIZE  (1<<1)
+#define NSS_DSA_MIN_KEY_SIZE (1<<2)
 
 /*
  * Set and get global options for the NSS library.

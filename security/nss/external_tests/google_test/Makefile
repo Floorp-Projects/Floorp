@@ -26,7 +26,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include ../common/gtest.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -42,3 +41,12 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
+
+MKSHLIB	= $(CCC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)
+ifeq (WINNT,$(OS_ARCH))
+    # -EHsc because gtest has exception handlers
+    OS_CFLAGS += -EHsc
+    # On windows, we need to create the parent directory
+    # Needed because we include files from a subdirectory
+    MAKE_OBJDIR = $(INSTALL) -D $(dir $@)
+endif

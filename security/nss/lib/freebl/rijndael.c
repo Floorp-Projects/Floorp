@@ -7,7 +7,6 @@
 #endif
 
 #include "prinit.h"
-#include "prenv.h"
 #include "prerr.h"
 #include "secerr.h"
 
@@ -31,9 +30,6 @@ static PRBool use_hw_aes = PR_FALSE;
 static int has_intel_avx = 0;
 static int has_intel_clmul = 0;
 static PRBool use_hw_gcm = PR_FALSE;
-#if defined(_MSC_VER) && !defined(_M_IX86)
-#include <intrin.h>  /* for _xgetbv() */
-#endif
 #endif
 #endif  /* USE_HW_AES */
 
@@ -1042,7 +1038,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 #ifdef USE_HW_AES
     if (has_intel_aes == 0) {
 	unsigned long eax, ebx, ecx, edx;
-	char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
+	char *disable_hw_aes = getenv("NSS_DISABLE_HW_AES");
 
 	if (disable_hw_aes == NULL) {
 	    freebl_cpuid(1, &eax, &ebx, &ecx, &edx);

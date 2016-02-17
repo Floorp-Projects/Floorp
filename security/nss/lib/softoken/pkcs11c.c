@@ -36,7 +36,6 @@
 #include "secerr.h"
 
 #include "prprf.h"
-#include "prenv.h"
 
 #define __PASTE(x,y)    x##y
 
@@ -2097,10 +2096,10 @@ static DERTemplate SECAlgorithmIDTemplate[] = {
     { DER_SEQUENCE,
 	  0, NULL, sizeof(SECAlgorithmID) },
     { DER_OBJECT_ID,
-	  offsetof(SECAlgorithmID,algorithm) },
+	  offsetof(SECAlgorithmID,algorithm), },
     { DER_OPTIONAL | DER_ANY,
-	  offsetof(SECAlgorithmID,parameters) },
-    { 0 }
+	  offsetof(SECAlgorithmID,parameters), },
+    { 0, }
 };
 
 /*
@@ -2112,10 +2111,10 @@ static DERTemplate SGNDigestInfoTemplate[] = {
 	  0, NULL, sizeof(SGNDigestInfo) },
     { DER_INLINE,
 	  offsetof(SGNDigestInfo,digestAlgorithm),
-	  SECAlgorithmIDTemplate },
+	  SECAlgorithmIDTemplate, },
     { DER_OCTET_STRING,
-	  offsetof(SGNDigestInfo,digest) },
-    { 0 }
+	  offsetof(SGNDigestInfo,digest), },
+    { 0, }
 };
 
 /*
@@ -3736,7 +3735,6 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
     SECOidData *oid;
     CK_PBE_PARAMS *pbe_params = NULL;
     NSSPKCS5PBEParameter *params = NULL;
-    HASH_HashType hashType = HASH_AlgSHA1;
     CK_PKCS5_PBKD2_PARAMS *pbkd2_params = NULL;
     SECItem salt;
     CK_ULONG iteration = 0;
@@ -3750,28 +3748,6 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
 
     if (pMechanism->mechanism == CKM_PKCS5_PBKD2) {
 	pbkd2_params = (CK_PKCS5_PBKD2_PARAMS *)pMechanism->pParameter;
-	if (pbkd2_params == NULL) {
-	    return CKR_MECHANISM_PARAM_INVALID;
-	}
-	switch (pbkd2_params->prf) {
-	case CKP_PKCS5_PBKD2_HMAC_SHA1:
-	    hashType = HASH_AlgSHA1;
-	    break;
-	case CKP_PKCS5_PBKD2_HMAC_SHA224:
-	    hashType = HASH_AlgSHA224;
-	    break;
-	case CKP_PKCS5_PBKD2_HMAC_SHA256:
-	    hashType = HASH_AlgSHA256;
-	    break;
-	case CKP_PKCS5_PBKD2_HMAC_SHA384:
-	    hashType = HASH_AlgSHA384;
-	    break;
-	case CKP_PKCS5_PBKD2_HMAC_SHA512:
-	    hashType = HASH_AlgSHA512;
-	    break;
-	default:
-	    return CKR_MECHANISM_PARAM_INVALID;
-	}
 	if (pbkd2_params->saltSource != CKZ_SALT_SPECIFIED) {
 	    return CKR_MECHANISM_PARAM_INVALID;
 	}
@@ -3784,7 +3760,7 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
 	salt.len = (unsigned int)pbe_params->ulSaltLen;
 	iteration = pbe_params->ulIteration;
     }
-    params=nsspkcs5_NewParam(oid->offset, hashType, &salt, iteration);
+    params=nsspkcs5_NewParam(oid->offset, &salt, iteration);
     if (params == NULL) {
 	return CKR_MECHANISM_INVALID;
     }
@@ -3807,6 +3783,14 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
 	*key_length = params->keyLen;
 	break;
     case SEC_OID_PKCS5_PBKDF2:
+	/* sigh, PKCS #11 currently only defines SHA1 for the KDF hash type. 
+	 * we do the check here because this where we would handle multiple
+	 * hash types in the future */
+	if (pbkd2_params == NULL || 
+		pbkd2_params->prf != CKP_PKCS5_PBKD2_HMAC_SHA1) {
+	    crv = CKR_MECHANISM_PARAM_INVALID;
+	    break;
+	}
 	/* key type must already be set */
 	if (*key_type == CKK_INVALID_KEY_TYPE) {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
@@ -4771,7 +4755,7 @@ dhgn_done:
 	    break;
 	}
 
-	if (PR_GetEnvSecure("NSS_USE_DECODED_CKA_EC_POINT")) {
+	if (getenv("NSS_USE_DECODED_CKA_EC_POINT")) {
 	    crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 
 				sftk_item_expand(&ecPriv->publicValue));
 	} else {

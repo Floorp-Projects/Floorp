@@ -7,6 +7,5 @@ DEPTH      = ..
 
 DIRS = \
 	google_test \
-        pk11_gtest \
         ssl_gtest \
 	$(NULL)

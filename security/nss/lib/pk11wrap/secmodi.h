@@ -76,8 +76,8 @@ void secmod_FreeConfigList(SECMODConfigList *conflist, int count);
  * secmod_FreeChildren */
 char *secmod_ParseModuleSpecForTokens(PRBool convert,
 				      PRBool isFIPS,
-				      const char *moduleSpec,
-				      char ***children,
+				      char *moduleSpec,
+				      char ***children, 
 				      CK_SLOT_ID **ids);
 void secmod_FreeChildren(char **children, CK_SLOT_ID *ids);
 char *secmod_MkAppendTokensList(PLArenaPool *arena, char *origModuleSpec,

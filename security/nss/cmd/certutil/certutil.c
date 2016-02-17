@@ -3496,9 +3496,6 @@ shutdown:
 	/* Allocated by a PL_strdup call in SECU_GetModulePassword. */
 	PL_strfree(pwdata.data);
     }
-    if (email) {
-	PL_strfree(email);
-    }
 
     /* Open the batch command file.
      *

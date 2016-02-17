@@ -765,7 +765,7 @@ pkix_pl_Socket_RegisterSelf(void *plContext)
 #ifdef PKIX_SOCKETTRACE
         {
                 char *val = NULL;
-                val = PR_GetEnvSecure("SOCKETTRACE");
+                val = PR_GetEnv("SOCKETTRACE");
                 /* Is SOCKETTRACE set in the environment? */
                 if ((val != NULL) && (*val != '\0')) {
                         socketTraceFlag =
