@@ -96,11 +96,11 @@ public:
   {}
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override
+                        TrackRate aRate, uint32_t aChannels) override
   {}
   void NotifyInputData(MediaStreamGraph* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override
+                       TrackRate aRate, uint32_t aChannels) override
   {}
   void NotifyPull(MediaStreamGraph* aGraph, SourceMediaStream* aSource,
                   TrackID aID, StreamTime aDesiredTime) override
@@ -380,15 +380,15 @@ public:
   // AudioDataListenerInterface methods
   virtual void NotifyOutputData(MediaStreamGraph* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
-                                uint32_t aChannels) override
+                                TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aChannels);
+    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
   }
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
-                               uint32_t aChannels) override
+                               TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aChannels);
+    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels);
   }
 
 private:
@@ -454,10 +454,10 @@ public:
   // AudioDataListenerInterface methods
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override;
+                        TrackRate aRate, uint32_t aChannels) override;
   void NotifyInputData(MediaStreamGraph* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override;
+                       TrackRate aRate, uint32_t aChannels) override;
 
   bool IsFake() override {
     return false;

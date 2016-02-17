@@ -140,11 +140,11 @@ public:
 
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override
+                        TrackRate aRate, uint32_t aChannels) override
   {}
   void NotifyInputData(MediaStreamGraph* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override
+                       TrackRate aRate, uint32_t aChannels) override
   {}
   bool IsFake() override {
     return true;
