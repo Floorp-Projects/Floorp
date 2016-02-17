@@ -243,7 +243,7 @@ class ExtensionContext extends BaseContext {
   constructor(extensionId, contentWindow, contextOptions = {}) {
     super();
 
-    let { isExtensionPage } = contextOptions;
+    let {isExtensionPage} = contextOptions;
 
     this.isExtensionPage = isExtensionPage;
     this.extension = ExtensionManager.get(extensionId);
@@ -341,8 +341,8 @@ class ExtensionContext extends BaseContext {
     // defined in the content window (See Bug 1214658 for rationale).
     if (this.isExtensionPage && !Cu.isDeadWrapper(this.contentWindow) &&
         Cu.waiveXrays(this.contentWindow).browser === this.chromeObj) {
-      Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
-      Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
+      Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
+      Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});
     }
     Cu.nukeSandbox(this.sandbox);
     this.sandbox = null;
@@ -404,7 +404,7 @@ var DocumentManager = {
 
       // Enable the content script APIs should be available in subframes' window
       // if it is recognized as a valid addon id (see Bug 1214658 for rationale).
-      const { CONTENTSCRIPT_PRIVILEGES } = ExtensionManagement.API_LEVELS;
+      const {CONTENTSCRIPT_PRIVILEGES} = ExtensionManagement.API_LEVELS;
       let extensionId = ExtensionManagement.getAddonIdForWindow(window);
 
       if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES &&
@@ -420,7 +420,7 @@ var DocumentManager = {
     } else if (topic == "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
-      MessageChannel.abortResponses({ innerWindowID: windowId });
+      MessageChannel.abortResponses({innerWindowID: windowId});
 
       // Close any existent content-script context for the destroyed window.
       if (this.contentScriptWindows.has(windowId)) {
@@ -506,7 +506,7 @@ var DocumentManager = {
 
     let context = this.extensionPageWindows.get(winId);
     if (!context) {
-      let context = new ExtensionContext(extensionId, window, { isExtensionPage: true });
+      let context = new ExtensionContext(extensionId, window, {isExtensionPage: true});
       this.extensionPageWindows.set(winId, context);
     }
 
@@ -553,7 +553,7 @@ var DocumentManager = {
       }
     }
 
-    MessageChannel.abortResponses({ extensionId });
+    MessageChannel.abortResponses({extensionId});
 
     this.extensionCount--;
     if (this.extensionCount == 0) {
@@ -681,11 +681,11 @@ class ExtensionGlobal {
                           .getInterface(Ci.nsIDOMWindowUtils)
                           .outerWindowID;
 
-    global.sendAsyncMessage("Extension:TopWindowID", { windowId: this.windowId });
+    global.sendAsyncMessage("Extension:TopWindowID", {windowId: this.windowId});
   }
 
   uninit() {
-    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", { windowId: this.windowId });
+    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId: this.windowId});
   }
 
   get messageFilter() {
@@ -697,7 +697,7 @@ class ExtensionGlobal {
     };
   }
 
-  receiveMessage({ target, messageName, recipient, data }) {
+  receiveMessage({target, messageName, recipient, data}) {
     switch (messageName) {
       case "Extension:Capture":
         return this.handleExtensionCapture(data.width, data.height, data.options);
@@ -734,12 +734,12 @@ class ExtensionGlobal {
   handleExtensionExecute(target, recipient, options) {
     let deferred = PromiseUtils.defer();
     let script = new Script(options, deferred);
-    let { extensionId } = recipient;
+    let {extensionId} = recipient;
     DocumentManager.executeScript(target, extensionId, script);
     return deferred.promise;
   }
 
-  handleWebNavigationGetFrame({ frameId }) {
+  handleWebNavigationGetFrame({frameId}) {
     return WebNavigationFrames.getFrame(this.global.docShell, frameId);
   }
 

@@ -1,3 +1,5 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -6,7 +8,6 @@ function test() {
   let {ToolSidebar} = require("devtools/client/framework/sidebar");
 
   const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                  "<?xml-stylesheet href='chrome://devtools/skin/common.css' type='text/css'?>" +
                   "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
                   "<hbox flex='1'><description flex='1'>foo</description><splitter class='devtools-side-splitter'/>" +
                   "<tabbox flex='1' id='sidebar' class='devtools-sidebar-tabs'><tabs/><tabpanels flex='1'/></tabbox>" +

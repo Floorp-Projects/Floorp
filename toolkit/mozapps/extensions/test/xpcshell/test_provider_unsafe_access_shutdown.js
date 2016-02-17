@@ -18,7 +18,7 @@ function mockAddonProvider(name) {
     },
     getAddonByID(id, callback) {
       if (this.hasShutdown) {
-        unsafeAccess = true;
+        this.unsafeAccess = true;
       }
       callback(null);
     },

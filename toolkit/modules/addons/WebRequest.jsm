@@ -432,7 +432,7 @@ HttpObserverManager = {
 
   onChannelReplaced(oldChannel, newChannel) {
     this.runChannelListener(oldChannel, this.getLoadContext(oldChannel),
-                            "onRedirect", { redirectUrl: newChannel.URI.spec });
+                            "onRedirect", {redirectUrl: newChannel.URI.spec});
   },
 
   onStartRequest(channel, loadContext) {

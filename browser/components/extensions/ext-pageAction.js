@@ -28,7 +28,7 @@ function PageAction(options, extension) {
   this.defaults = {
     show: false,
     title: title || extension.name,
-    icon: IconDetails.normalize({ path: options.default_icon }, extension,
+    icon: IconDetails.normalize({path: options.default_icon}, extension,
                                 null, true),
     popup: popup && extension.baseURI.resolve(popup),
   };

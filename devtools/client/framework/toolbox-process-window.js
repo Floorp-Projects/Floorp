@@ -1,6 +1,9 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
@@ -111,9 +114,26 @@ function openToolbox({ form, chrome, isTabActor }) {
 }
 
 function onNewToolbox(toolbox) {
-   gToolbox = toolbox;
-   bindToolboxHandlers();
-   raise();
+  gToolbox = toolbox;
+  bindToolboxHandlers();
+  raise();
+  let testScript = getParameterByName("testScript");
+  if (testScript) {
+    // Only allow executing random chrome scripts when a special
+    // test-only pref is set
+    let prefName = "devtools.browser-toolbox.allow-unsafe-script";
+    if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+        Services.prefs.getBoolPref(prefName) === true) {
+      evaluateTestScript(testScript, toolbox);
+    }
+  }
+}
+
+function evaluateTestScript(script, toolbox) {
+  let sandbox = Cu.Sandbox(window);
+  sandbox.window = window;
+  sandbox.toolbox = toolbox;
+  Cu.evalInSandbox(script, sandbox);
 }
 
 function bindToolboxHandlers() {
