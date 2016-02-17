@@ -3481,7 +3481,9 @@ class MSimdBox
         const MSimdBox* box = ins->toSimdBox();
         if (box->simdType() != simdType())
             return false;
-        MOZ_ASSERT(box->initialHeap() == initialHeap());
+        MOZ_ASSERT(box->templateObject() == templateObject());
+        if (box->initialHeap() != initialHeap())
+            return false;
         return true;
     }
 
