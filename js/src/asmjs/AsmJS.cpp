@@ -3407,7 +3407,7 @@ SetLocal(FunctionValidator& f, NumLit lit)
 }
 
 static bool
-CheckVariable(FunctionValidator& f, ParseNode* var)
+CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
 {
     if (!IsDefinition(var))
         return f.fail(var, "local variable names must not restate argument names");
@@ -3428,20 +3428,23 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
     if (!lit.valid())
         return f.failName(var, "var '%s' initializer out of range", name);
 
-    if (!lit.isZeroBits() && !SetLocal(f, lit))
-        return false;
+    if (!lit.isZeroBits()) {
+        ++*numStmts;
+        if (!SetLocal(f, lit))
+            return false;
+    }
 
     return f.addLocal(var, name, lit.type());
 }
 
 static bool
-CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
+CheckVariables(FunctionValidator& f, ParseNode** stmtIter, uint32_t* numStmts)
 {
     ParseNode* stmt = *stmtIter;
 
     for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode* var = VarListHead(stmt); var; var = NextNode(var)) {
-            if (!CheckVariable(f, var))
+            if (!CheckVariable(f, var, numStmts))
                 return false;
         }
     }
@@ -6599,19 +6602,27 @@ CheckFunction(ModuleValidator& m)
     if (!CheckArguments(f, &stmtIter, &args))
         return false;
 
-    if (!CheckVariables(f, &stmtIter))
+    uint32_t numStmts = 0;
+
+    size_t numStmtsAt;
+    if (!f.encoder().writePatchableVarU32(&numStmtsAt))
+        return false;
+
+    if (!CheckVariables(f, &stmtIter, &numStmts))
         return false;
 
     ParseNode* lastNonEmptyStmt = nullptr;
-    for (; stmtIter; stmtIter = NextNode(stmtIter)) {
+    for (; stmtIter; stmtIter = NextNonEmptyStatement(stmtIter)) {
+        numStmts++;
+        lastNonEmptyStmt = stmtIter;
         if (!CheckStatement(f, stmtIter))
             return false;
-        if (!IsEmptyStatement(stmtIter))
-            lastNonEmptyStmt = stmtIter;
     }
 
     if (!CheckFinalReturn(f, lastNonEmptyStmt))
         return false;
+
+    f.encoder().patchVarU32(numStmtsAt, numStmts);
 
     ModuleValidator::Func* func = nullptr;
     if (!CheckFunctionSignature(m, fn, Sig(Move(args), f.returnedType()), FunctionName(fn), &func))
