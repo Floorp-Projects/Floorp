@@ -375,14 +375,16 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
   }
+
+  // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
+  mAudioInput->StartRecording(aStream->Graph(), mListener);
+
   if (mVoEBase->StartSend(mChannel)) {
     return NS_ERROR_FAILURE;
   }
 
   // Attach external media processor, so this::Process will be called.
   mVoERender->RegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel, *this);
-
-  mAudioInput->StartRecording(aStream->Graph(), mListener);
 
   return NS_OK;
 }
