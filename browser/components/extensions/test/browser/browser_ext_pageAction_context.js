@@ -11,7 +11,7 @@ function* runTests(options) {
     // promise that resolves to an object containing them.
     function getDetails() {
       return new Promise(resolve => {
-        return browser.tabs.query({ active: true, currentWindow: true }, resolve);
+        return browser.tabs.query({active: true, currentWindow: true}, resolve);
       }).then(([tab]) => {
         let tabId = tab.id;
         browser.test.log(`Get details: tab={id: ${tabId}, url: ${JSON.stringify(tab.url)}}`);
@@ -19,8 +19,8 @@ function* runTests(options) {
           browser.pageAction.getTitle({tabId}),
           browser.pageAction.getPopup({tabId})]);
       }).then(details => {
-        return Promise.resolve({ title: details[0],
-                                 popup: details[1] });
+        return Promise.resolve({title: details[0],
+                                popup: details[1]});
       });
     }
 
@@ -59,7 +59,7 @@ function* runTests(options) {
       tabs = [];
       tests = getTests(tabs);
 
-      browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
+      browser.tabs.query({active: true, currentWindow: true}, resultTabs => {
         tabs[0] = resultTabs[0].id;
 
         nextTest();
@@ -163,18 +163,18 @@ add_task(function* testTabSwitchContext() {
 
     getTests(tabs) {
       let details = [
-        { "icon": browser.runtime.getURL("default.png"),
-          "popup": browser.runtime.getURL("default.html"),
-          "title": "Default Title \u263a" },
-        { "icon": browser.runtime.getURL("1.png"),
-          "popup": browser.runtime.getURL("default.html"),
-          "title": "Default Title \u263a" },
-        { "icon": browser.runtime.getURL("2.png"),
-          "popup": browser.runtime.getURL("2.html"),
-          "title": "Title 2" },
-        { "icon": browser.runtime.getURL("2.png"),
-          "popup": browser.runtime.getURL("2.html"),
-          "title": "Default Title \u263a" },
+        {"icon": browser.runtime.getURL("default.png"),
+         "popup": browser.runtime.getURL("default.html"),
+         "title": "Default Title \u263a"},
+        {"icon": browser.runtime.getURL("1.png"),
+         "popup": browser.runtime.getURL("default.html"),
+         "title": "Default Title \u263a"},
+        {"icon": browser.runtime.getURL("2.png"),
+         "popup": browser.runtime.getURL("2.html"),
+         "title": "Title 2"},
+        {"icon": browser.runtime.getURL("2.png"),
+         "popup": browser.runtime.getURL("2.html"),
+         "title": "Default Title \u263a"},
       ];
 
       let promiseTabLoad = details => {
@@ -201,13 +201,13 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Change the icon. Expect default properties excluding the icon.");
-          browser.pageAction.setIcon({ tabId: tabs[0], path: "1.png" });
+          browser.pageAction.setIcon({tabId: tabs[0], path: "1.png"});
           expect(details[1]);
         },
         expect => {
           browser.test.log("Create a new tab. No icon visible.");
-          browser.tabs.create({ active: true, url: "about:blank?0" }, tab => {
-            tabLoadPromise = promiseTabLoad({ url: "about:blank?0", id: tab.id });
+          browser.tabs.create({active: true, url: "about:blank?0"}, tab => {
+            tabLoadPromise = promiseTabLoad({url: "about:blank?0", id: tab.id});
             tabs.push(tab.id);
             expect(null);
           });
@@ -222,15 +222,15 @@ add_task(function* testTabSwitchContext() {
           browser.test.log("Change properties. Expect new properties.");
           let tabId = tabs[1];
           browser.pageAction.show(tabId);
-          browser.pageAction.setIcon({ tabId, path: "2.png" });
-          browser.pageAction.setPopup({ tabId, popup: "2.html" });
-          browser.pageAction.setTitle({ tabId, title: "Title 2" });
+          browser.pageAction.setIcon({tabId, path: "2.png"});
+          browser.pageAction.setPopup({tabId, popup: "2.html"});
+          browser.pageAction.setTitle({tabId, title: "Title 2"});
 
           expect(details[2]);
         },
         expect => {
           browser.test.log("Clear the title. Expect default title.");
-          browser.pageAction.setTitle({ tabId: tabs[1], title: "" });
+          browser.pageAction.setTitle({tabId: tabs[1], title: ""});
 
           expect(details[3]);
         },
@@ -239,11 +239,11 @@ add_task(function* testTabSwitchContext() {
 
           // TODO: This listener should not be necessary, but the |tabs.update|
           // callback currently fires too early in e10s windows.
-          promiseTabLoad({ id: tabs[1], url: "about:blank?1" }).then(() => {
+          promiseTabLoad({id: tabs[1], url: "about:blank?1"}).then(() => {
             expect(null);
           });
 
-          browser.tabs.update(tabs[1], { url: "about:blank?1" });
+          browser.tabs.update(tabs[1], {url: "about:blank?1"});
         },
         expect => {
           browser.test.log("Show the icon. Expect default properties again.");
@@ -252,14 +252,14 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Switch back to the first tab. Expect previously set properties.");
-          browser.tabs.update(tabs[0], { active: true }, () => {
+          browser.tabs.update(tabs[0], {active: true}, () => {
             expect(details[1]);
           });
         },
         expect => {
           browser.test.log("Hide the icon on tab 2. Switch back, expect hidden.");
           browser.pageAction.hide(tabs[1]);
-          browser.tabs.update(tabs[1], { active: true }, () => {
+          browser.tabs.update(tabs[1], {active: true}, () => {
             expect(null);
           });
         },
@@ -293,12 +293,12 @@ add_task(function* testDefaultTitle() {
 
     getTests(tabs) {
       let details = [
-        { "title": "Foo Extension",
-          "popup": "",
-          "icon": browser.runtime.getURL("icon.png") },
-        { "title": "Foo Title",
-          "popup": "",
-          "icon": browser.runtime.getURL("icon.png") },
+        {"title": "Foo Extension",
+         "popup": "",
+         "icon": browser.runtime.getURL("icon.png")},
+        {"title": "Foo Title",
+         "popup": "",
+         "icon": browser.runtime.getURL("icon.png")},
       ];
 
       return [
@@ -313,12 +313,12 @@ add_task(function* testDefaultTitle() {
         },
         expect => {
           browser.test.log("Change the title. Expect new title.");
-          browser.pageAction.setTitle({ tabId: tabs[0], title: "Foo Title" });
+          browser.pageAction.setTitle({tabId: tabs[0], title: "Foo Title"});
           expect(details[1]);
         },
         expect => {
           browser.test.log("Clear the title. Expect extension title.");
-          browser.pageAction.setTitle({ tabId: tabs[0], title: "" });
+          browser.pageAction.setTitle({tabId: tabs[0], title: ""});
           expect(details[0]);
         },
       ];

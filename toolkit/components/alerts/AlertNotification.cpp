@@ -118,6 +118,16 @@ AlertNotification::GetPrincipal(nsIPrincipal** aPrincipal)
 }
 
 NS_IMETHODIMP
+AlertNotification::GetURI(nsIURI** aURI)
+{
+  if (!nsAlertsUtils::IsActionablePrincipal(mPrincipal)) {
+    *aURI = nullptr;
+    return NS_OK;
+  }
+  return mPrincipal->GetURI(aURI);
+}
+
+NS_IMETHODIMP
 AlertNotification::GetInPrivateBrowsing(bool* aInPrivateBrowsing)
 {
   *aInPrivateBrowsing = mInPrivateBrowsing;

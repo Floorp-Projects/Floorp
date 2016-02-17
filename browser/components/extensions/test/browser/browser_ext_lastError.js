@@ -37,7 +37,7 @@ add_task(function* testLastError() {
       SimpleTest.monitorConsole(resolve, [{message: /Invalid extension ID/, forbid: true}]);
     });
 
-    yield sendMessage({ checkLastError: api });
+    yield sendMessage({checkLastError: api});
 
     SimpleTest.endMonitorConsole();
     yield waitForConsole;

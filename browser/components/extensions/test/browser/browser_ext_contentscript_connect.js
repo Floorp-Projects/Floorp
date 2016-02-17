@@ -43,7 +43,7 @@ add_task(function* () {
         });
       });
 
-      browser.tabs.executeScript({ file: "script.js" });
+      browser.tabs.executeScript({file: "script.js"});
     },
 
     files: {

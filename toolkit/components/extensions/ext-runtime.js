@@ -1,6 +1,6 @@
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
@@ -48,7 +48,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         let recipient = {extensionId: extensionId ? extensionId : extension.id};
 
         if (!GlobalManager.extensionMap.has(recipient.extensionId)) {
-          return context.wrapPromise(Promise.reject({ message: "Invalid extension ID" }),
+          return context.wrapPromise(Promise.reject({message: "Invalid extension ID"}),
                                      responseCallback);
         }
         return context.messenger.sendMessage(Services.cpmm, message, recipient, responseCallback);
@@ -95,11 +95,11 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         try {
           uri = NetUtil.newURI(url);
         } catch (e) {
-          return Promise.reject({ message: `Invalid URL: ${JSON.stringify(url)}` });
+          return Promise.reject({message: `Invalid URL: ${JSON.stringify(url)}`});
         }
 
         if (uri.scheme != "http" && uri.scheme != "https") {
-          return Promise.reject({ message: "url must have the scheme http or https" });
+          return Promise.reject({message: "url must have the scheme http or https"});
         }
 
         extension.uninstallURL = url;

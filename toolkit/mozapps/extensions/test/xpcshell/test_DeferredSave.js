@@ -303,7 +303,6 @@ add_task(function* dirty_while_writing() {
 // A write callback for the OS.File.writeAtomic mock that rejects write attempts
 function disabled_write_callback(aTester) {
   do_throw("Should not have written during clean flush");
-  deferred.reject(new Error("Write during supposedly clean flush"));
 }
 
 // special write callback that disables itself to make sure

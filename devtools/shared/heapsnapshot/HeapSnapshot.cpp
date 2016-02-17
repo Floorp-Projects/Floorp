@@ -14,6 +14,7 @@
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/UbiNodeCensus.h"
 #include "js/UbiNodeDominatorTree.h"
+#include "js/UbiNodeShortestPaths.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/devtools/AutoMemMap.h"
@@ -54,6 +55,7 @@ using ::google::protobuf::io::GzipInputStream;
 using ::google::protobuf::io::ZeroCopyInputStream;
 
 using JS::ubi::AtomOrTwoByteChars;
+using JS::ubi::ShortestPaths;
 
 MallocSizeOf
 GetCurrentThreadDebuggerMallocSizeOf()
@@ -572,7 +574,7 @@ HeapSnapshot::ComputeDominatorTree(ErrorResult& rv)
     maybeTree = JS::ubi::DominatorTree::Create(rt, nogc, getRoot());
   }
 
-  if (maybeTree.isNothing()) {
+  if (NS_WARN_IF(maybeTree.isNothing())) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
@@ -580,6 +582,142 @@ HeapSnapshot::ComputeDominatorTree(ErrorResult& rv)
   return MakeAndAddRef<DominatorTree>(Move(*maybeTree), this, mParent);
 }
 
+void
+HeapSnapshot::ComputeShortestPaths(JSContext*cx, uint64_t start,
+                                   const Sequence<uint64_t>& targets,
+                                   uint64_t maxNumPaths,
+                                   JS::MutableHandleObject results,
+                                   ErrorResult& rv)
+{
+  // First ensure that our inputs are valid.
+
+  if (NS_WARN_IF(maxNumPaths == 0)) {
+    rv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  Maybe<JS::ubi::Node> startNode = getNodeById(start);
+  if (NS_WARN_IF(startNode.isNothing())) {
+    rv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  if (NS_WARN_IF(targets.Length() == 0)) {
+    rv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  // Aggregate the targets into a set and make sure that they exist in the heap
+  // snapshot.
+
+  JS::ubi::NodeSet targetsSet;
+  if (NS_WARN_IF(!targetsSet.init())) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  for (const auto& target : targets) {
+    Maybe<JS::ubi::Node> targetNode = getNodeById(target);
+    if (NS_WARN_IF(targetNode.isNothing())) {
+      rv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+
+    if (NS_WARN_IF(!targetsSet.put(*targetNode))) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+  }
+
+  // Walk the heap graph and find the shortest paths.
+
+  Maybe<ShortestPaths> maybeShortestPaths;
+  {
+    auto ccrt = CycleCollectedJSRuntime::Get();
+    MOZ_ASSERT(ccrt);
+    auto rt = ccrt->Runtime();
+    MOZ_ASSERT(rt);
+    JS::AutoCheckCannotGC nogc(rt);
+    maybeShortestPaths = ShortestPaths::Create(rt, nogc, maxNumPaths, *startNode,
+                                               Move(targetsSet));
+  }
+
+  if (NS_WARN_IF(maybeShortestPaths.isNothing())) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  auto& shortestPaths = *maybeShortestPaths;
+
+  // Convert the results into a Map object mapping target node IDs to arrays of
+  // paths found.
+
+  RootedObject resultsMap(cx, JS::NewMapObject(cx));
+  if (NS_WARN_IF(!resultsMap)) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  for (auto range = shortestPaths.eachTarget(); !range.empty(); range.popFront()) {
+    JS::RootedValue key(cx, JS::NumberValue(range.front().identifier()));
+    JS::AutoValueVector paths(cx);
+
+    bool ok = shortestPaths.forEachPath(range.front(), [&](JS::ubi::Path& path) {
+      JS::AutoValueVector pathValues(cx);
+
+      for (JS::ubi::BackEdge* edge : path) {
+        JS::RootedObject pathPart(cx, JS_NewPlainObject(cx));
+        if (!pathPart) {
+          return false;
+        }
+
+        JS::RootedValue predecessor(cx, NumberValue(edge->predecessor().identifier()));
+        if (!JS_DefineProperty(cx, pathPart, "predecessor", predecessor, JSPROP_ENUMERATE)) {
+          return false;
+        }
+
+        RootedValue edgeNameVal(cx, NullValue());
+        if (edge->name()) {
+          RootedString edgeName(cx, JS_AtomizeUCString(cx, edge->name().get()));
+          if (!edgeName) {
+            return false;
+          }
+          edgeNameVal = StringValue(edgeName);
+        }
+
+        if (!JS_DefineProperty(cx, pathPart, "edge", edgeNameVal, JSPROP_ENUMERATE)) {
+          return false;
+        }
+
+        if (!pathValues.append(ObjectValue(*pathPart))) {
+          return false;
+        }
+      }
+
+      RootedObject pathObj(cx, JS_NewArrayObject(cx, pathValues));
+      return pathObj && paths.append(ObjectValue(*pathObj));
+    });
+
+    if (NS_WARN_IF(!ok)) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    JS::RootedObject pathsArray(cx, JS_NewArrayObject(cx, paths));
+    if (NS_WARN_IF(!pathsArray)) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    JS::RootedValue pathsVal(cx, ObjectValue(*pathsArray));
+    if (NS_WARN_IF(!JS::MapSet(cx, resultsMap, key, pathsVal))) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+  }
+
+  results.set(resultsMap);
+}
 
 /*** Saving Heap Snapshots ************************************************************************/
 

@@ -27,15 +27,15 @@ add_task(function* testPageActionPopup() {
 
     background: function() {
       let tabId;
-      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
         tabId = tabs[0].id;
         browser.pageAction.show(tabId);
         browser.test.sendMessage("ready");
       });
 
       browser.test.onMessage.addListener(() => {
-        browser.browserAction.setPopup({ popup: "/popup-a.html" });
-        browser.pageAction.setPopup({ tabId, popup: "popup-b.html" });
+        browser.browserAction.setPopup({popup: "/popup-a.html"});
+        browser.pageAction.setPopup({tabId, popup: "popup-b.html"});
 
         browser.test.sendMessage("ok");
       });

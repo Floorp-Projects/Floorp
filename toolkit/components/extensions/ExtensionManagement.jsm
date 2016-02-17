@@ -228,7 +228,7 @@ const API_LEVELS = Object.freeze({
 // Finds the API Level ("FULL_PRIVILEGES", "CONTENTSCRIPT_PRIVILEGES", "NO_PRIVILEGES")
 // with a given a window object.
 function getAPILevelForWindow(window, addonId) {
-  const { NO_PRIVILEGES, CONTENTSCRIPT_PRIVILEGES, FULL_PRIVILEGES } = API_LEVELS;
+  const {NO_PRIVILEGES, CONTENTSCRIPT_PRIVILEGES, FULL_PRIVILEGES} = API_LEVELS;
 
   // Non WebExtension URLs and WebExtension URLs from a different extension
   // has no access to APIs.

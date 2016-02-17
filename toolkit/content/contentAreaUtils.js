@@ -1,7 +1,6 @@
-# -*- indent-tabs-mode: nil; js-indent-level: 2 -*- 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -25,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 var ContentAreaUtils = {
 
@@ -351,7 +352,7 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  * @param aDocument
  *        The document to be saved
  * @param aDefaultFileName
- *        The caller-provided suggested filename if we don't 
+ *        The caller-provided suggested filename if we don't
  *        find a better one
  * @param aContentDisposition
  *        The caller-provided content-disposition header to use.
@@ -593,7 +594,7 @@ function AutoChosen(aFileAutoChosen, aUriAutoChosen) {
  * Structure for holding info about a URL and the target filename it should be
  * saved to. This structure is populated by initFileInfo(...).
  * @param aSuggestedFileName This is used by initFileInfo(...) when it
- *        cannot 'discover' the filename from the url 
+ *        cannot 'discover' the filename from the url
  * @param aFileName The target filename
  * @param aFileBaseName The filename without the file extension
  * @param aFileExt The extension of the filename
@@ -652,7 +653,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
   }
 }
 
-/** 
+/**
  * Given the Filepicker Parameters (aFpP), show the file picker dialog,
  * prompting the user to confirm (or change) the fileName.
  * @param aFpP
@@ -667,7 +668,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  *        is set, but ask for the target explicitly.
  * @param aRelatedURI
  *        An nsIURI associated with the download. The last used
- *        directory of the picker is retrieved from/stored in the 
+ *        directory of the picker is retrieved from/stored in the
  *        Content Pref Service using this URI.
  * @return Promise
  * @resolve a boolean. When true, it indicates that the file picker dialog
@@ -675,7 +676,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  */
 function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
 {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let downloadLastDir = new DownloadLastDir(window);
     let prefBranch = Services.prefs.getBranch("browser.download.");
     let useDownloadDir = prefBranch.getBoolPref("useDownloadDir");
@@ -693,7 +694,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
       dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
                                        aFpP.fileInfo.fileExt));
       aFpP.file = uniqueFile(dir);
-      throw new Task.Result(true);
+      return true;
     }
 
     // We must prompt for the file name explicitly.
@@ -748,7 +749,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
     });
     let result = yield deferComplete.promise;
     if (result == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
-      throw new Task.Result(false);
+      return false;
     }
 
     if (aFpP.saveMode != SAVEMODE_FILEONLY)
@@ -763,7 +764,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
     aFpP.file = fp.file;
     aFpP.fileURL = fp.fileURL;
 
-    throw new Task.Result(true);
+    return true;
   });
 }
 
@@ -795,7 +796,6 @@ function uniqueFile(aLocalFile)
   return aLocalFile;
 }
 
-#ifdef MOZ_JSDOWNLOADS
 /**
  * Download a URL using the new jsdownloads API.
  *
@@ -841,7 +841,6 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
     list.add(download);
   }).then(null, Components.utils.reportError);
 }
-#endif
 
 // We have no DOM, and can only save the URL as is.
 const SAVEMODE_FILEONLY      = 0x00;
@@ -1157,10 +1156,10 @@ function getNormalizedLeafName(aFile, aDefaultExtension)
   if (!aDefaultExtension)
     return aFile;
 
-#ifdef XP_WIN
-  // Remove trailing dots and spaces on windows
-  aFile = aFile.replace(/[\s.]+$/, "");
-#endif
+  if (AppConstants.platform == "win") {
+    // Remove trailing dots and spaces on windows
+    aFile = aFile.replace(/[\s.]+$/, "");
+  }
 
   // Remove leading dots
   aFile = aFile.replace(/^\.+/, "");

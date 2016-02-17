@@ -307,7 +307,7 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
+    "n_values": 100,
     "description": "Reason (enum value) for initiating a GC"
   },
   "GC_IS_COMPARTMENTAL": {
@@ -449,14 +449,14 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
+    "n_values": 100,
     "description": "Reason (enum value) for initiating a minor GC"
   },
   "GC_MINOR_REASON_LONG": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
+    "n_values": 100,
     "description": "Reason (enum value) that caused a long (>1ms) minor GC"
   },
   "GC_MINOR_US": {
@@ -3083,7 +3083,7 @@
   "STARTUP_MEASUREMENT_ERRORS": {
     "expires_in_version": "default",
     "kind": "enumerated",
-    "n_values": "mozilla::StartupTimeline::MAX_EVENT_ID",
+    "n_values": 16,
     "description": "Flags errors in startup calculation()"
   },
   "NETWORK_DISK_CACHE_OPEN": {

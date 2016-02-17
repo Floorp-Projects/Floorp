@@ -235,7 +235,7 @@ class BasePopup {
       };
       this.browser.addEventListener("load", loadListener, true);
     }).then(() => {
-      let { contentWindow } = this.browser;
+      let {contentWindow} = this.browser;
 
       contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils)
@@ -423,7 +423,7 @@ ExtensionTabManager.prototype = {
   convert(tab) {
     let window = tab.ownerDocument.defaultView;
 
-    let mutedInfo = { muted: tab.muted };
+    let mutedInfo = {muted: tab.muted};
     if (tab.muteReason === null) {
       mutedInfo.reason = "user";
     } else if (tab.muteReason) {

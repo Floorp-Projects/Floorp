@@ -75,4 +75,31 @@ interface HeapSnapshot {
    */
   [Throws]
   DominatorTree computeDominatorTree();
+
+  /**
+   * Find the shortest retaining paths from the node associated with the ID
+   * `start` to each node associated with the IDs in `targets`. Find at most
+   * `maxNumPaths` retaining paths for each target node.
+   *
+   * The return value is a Map object mapping from each target node ID to an
+   * array of retaining paths. The array may be empty if we did not find any
+   * retaining paths.
+   *
+   * A path is an array of objects of the form:
+   *
+   *     {
+   *         predecessor: <node ID>,
+   *         edge: <string or null>,
+   *     }
+   *
+   * The first `predecessor` will always be `start`. The last edge in the path
+   * leads to the `target` node that is mapped to the path; the `target` does
+   * not appear as a `predecessor` in the path.
+   *
+   * Throws when `start` or any of the elements of `targets` are not an ID of a
+   * node in the snapshot, or if we encounter an out of memory exception.
+   */
+  [Throws]
+  object computeShortestPaths(NodeId start, sequence<NodeId> targets,
+                              unsigned long long maxNumPaths);
 };
