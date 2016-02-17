@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248128
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248128</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.waitForFocus(function() {
+    var outer = document.querySelector("html");
+    ok(outer.scrollTop == 0, "scrollTop is zero: got " + outer.scrollTop);
+
+    var input = document.getElementById("testInput");
+    input.focus();
+
+    var scroll = outer.scrollTop;
+    ok(scroll > 0, "element has scrolled: new value " + scroll);
+
+    const kMoveLeft = "cmd_moveLeft";
+    var controller =
+      top.document.commandDispatcher.getControllerForCommand(kMoveLeft);
+    ok((controller && controller.isCommandEnabled(kMoveLeft)),
+       "have " + kMoveLeft + " command");
+
+    try {
+      controller.doCommand(kMoveLeft);
+	  ok(false, "should not be able to do kMoveLeft");
+    }
+	catch (e) {
+	  ok(true, "unable to perform kMoveLeft");
+	}
+
+    ok(outer.scrollTop == scroll,
+       "scroll is unchanged: got " + outer.scrollTop + ", expected " + scroll);
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248128">Mozilla Bug 1248128</a>
+<div style="height: 2000px;"></div>
+<input type="text" id="testInput"></input>
+<div style="height: 200px;"></div>
+</body>
+</html>
