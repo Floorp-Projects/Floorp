@@ -1635,6 +1635,11 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
+    public SuggestedSites getSuggestedSites() {
+        return mSuggestedSites;
+    }
+
+    @Override
     public boolean hasSuggestedImageUrl(String url) {
         if (mSuggestedSites == null) {
             return false;
