@@ -45,6 +45,11 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
             float x, float y,
             float hScroll, float vScroll);
 
+    @WrapForJNI
+    private native boolean handleHoverEvent(
+            int action, long time, int metaState,
+            float x, float y);
+
     private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
         if (mDestroyed) {
             return false;
@@ -122,6 +127,25 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         return handleScrollEvent(event.getEventTime(), event.getMetaState(), x, y, hScroll, vScroll);
     }
 
+    private boolean handleHoverEvent(MotionEvent event) {
+        if (mDestroyed) {
+            return false;
+        }
+
+        final int count = event.getPointerCount();
+
+        if (count <= 0) {
+            return false;
+        }
+
+        final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+        event.getPointerCoords(0, coords);
+        final float x = coords.x;
+        final float y = coords.y;
+
+        return handleHoverEvent(event.getActionMasked(), event.getEventTime(), event.getMetaState(), x, y);
+    }
+
 
     NativePanZoomController(PanZoomTarget target, View view) {
         mTarget = target;
@@ -156,9 +180,13 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         if (action == MotionEvent.ACTION_SCROLL && event.getDownTime() >= mLastDownTime) {
             mLastDownTime = event.getDownTime();
             return handleScrollEvent(event);
+        } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
+                   (action == MotionEvent.ACTION_HOVER_ENTER) ||
+                   (action == MotionEvent.ACTION_HOVER_EXIT)) {
+            return handleHoverEvent(event);
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     @Override

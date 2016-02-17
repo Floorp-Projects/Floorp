@@ -581,6 +581,78 @@ public:
         return true;
     }
 
+    bool HandleHoverEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
+                          float aX, float aY)
+    {
+        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+
+        MutexAutoLock lock(mWindowLock);
+        if (!mWindow) {
+            // We already shut down.
+            return false;
+        }
+
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        if (!controller) {
+            return false;
+        }
+
+        MouseInput::MouseType type = MouseInput::MOUSE_NONE;
+        switch (aAction) {
+            case AndroidMotionEvent::ACTION_HOVER_MOVE:
+                type = MouseInput::MOUSE_MOVE;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_ENTER:
+                type = MouseInput::MOUSE_WIDGET_ENTER;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_EXIT:
+                type = MouseInput::MOUSE_WIDGET_EXIT;
+                break;
+            default:
+                break;
+        }
+
+        if (type == MouseInput::MOUSE_NONE) {
+            return false;
+        }
+
+        ScreenIntPoint offset = ViewAs<ScreenPixel>(mWindow->WidgetToScreenOffset(), PixelCastJustification::LayoutDeviceIsScreenForBounds);
+        ScreenPoint origin = ScreenPoint(aX, aY) - offset;
+
+        MouseInput input(type, MouseInput::NONE, 0, origin, aTime, TimeStamp(), GetModifiers(aMetaState));
+
+        ScrollableLayerGuid guid;
+        uint64_t blockId;
+        nsEventStatus status = controller->ReceiveInputEvent(input, &guid, &blockId);
+
+        if (status == nsEventStatus_eConsumeNoDefault) {
+            return true;
+        }
+
+        NativePanZoomController::GlobalRef npzc = mNPZC;
+        nsAppShell::PostEvent([npzc, input, guid, blockId, status] {
+            MOZ_ASSERT(NS_IsMainThread());
+
+            JNIEnv* const env = jni::GetGeckoThreadEnv();
+            NPZCSupport* npzcSupport = GetNative(
+                    NativePanZoomController::LocalRef(env, npzc));
+
+            if (!npzcSupport || !npzcSupport->mWindow) {
+                // We already shut down.
+                env->ExceptionClear();
+                return;
+            }
+
+            nsWindow* const window = npzcSupport->mWindow;
+            window->UserActivity();
+            WidgetMouseEvent mouseEvent = input.ToWidgetMouseEvent(window);
+            window->ProcessUntransformedAPZEvent(&mouseEvent, guid,
+                                                 blockId, status);
+        });
+
+        return true;
+    }
+
     bool HandleMotionEvent(const NativePanZoomController::LocalRef& aInstance,
                            int32_t aAction, int32_t aActionIndex,
                            int64_t aTime, int32_t aMetaState,
