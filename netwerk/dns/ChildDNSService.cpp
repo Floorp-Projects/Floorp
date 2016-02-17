@@ -4,11 +4,13 @@
 
 #include "mozilla/net/ChildDNSService.h"
 #include "nsIDNSListener.h"
+#include "nsIIOService.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIPrefService.h"
 #include "nsIProtocolProxyService.h"
+#include "nsNetCID.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "nsServiceManagerUtils.h"
@@ -42,7 +44,6 @@ NS_IMPL_ISUPPORTS(ChildDNSService,
 
 ChildDNSService::ChildDNSService()
   : mFirstTime(true)
-  , mOffline(false)
   , mDisablePrefetch(false)
   , mPendingRequestsLock("DNSPendingRequestsLock")
 {
@@ -103,7 +104,7 @@ ChildDNSService::AsyncResolveExtended(const nsACString  &hostname,
 
   // Support apps being 'offline' even if parent is not: avoids DNS traffic by
   // apps that have been told they are offline.
-  if (mOffline) {
+  if (GetOffline()) {
     flags |= RESOLVE_OFFLINE;
   }
 
@@ -298,18 +299,15 @@ ChildDNSService::SetPrefetchEnabled(bool inVal)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ChildDNSService::GetOffline(bool* aResult)
+bool
+ChildDNSService::GetOffline() const
 {
-  *aResult = mOffline;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ChildDNSService::SetOffline(bool value)
-{
-  mOffline = value;
-  return NS_OK;
+  bool offline = false;
+  nsCOMPtr<nsIIOService> io = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (io) {
+    io->GetOffline(&offline);
+  }
+  return offline;
 }
 
 //-----------------------------------------------------------------------------

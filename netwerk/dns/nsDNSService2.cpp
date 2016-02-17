@@ -483,7 +483,6 @@ nsDNSService::nsDNSService()
     , mDisableIPv6(false)
     , mDisablePrefetch(false)
     , mFirstTime(true)
-    , mOffline(false)
     , mNotifyResolution(false)
     , mOfflineLocalhost(false)
 {
@@ -677,18 +676,15 @@ nsDNSService::Shutdown()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDNSService::GetOffline(bool *offline)
+bool
+nsDNSService::GetOffline() const
 {
-    *offline = mOffline;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDNSService::SetOffline(bool offline)
-{
-    mOffline = offline;
-    return NS_OK;
+    bool offline = false;
+    nsCOMPtr<nsIIOService> io = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (io) {
+        io->GetOffline(&offline);
+    }
+    return offline;
 }
 
 NS_IMETHODIMP
@@ -784,7 +780,7 @@ nsDNSService::AsyncResolveExtended(const nsACString  &aHostname,
         return rv;
     }
 
-    if (mOffline &&
+    if (GetOffline() &&
         (!mOfflineLocalhost || !hostname.LowerCaseEqualsASCII("localhost"))) {
         flags |= RESOLVE_OFFLINE;
     }
@@ -899,7 +895,7 @@ nsDNSService::Resolve(const nsACString &aHostname,
         return rv;
     }
 
-    if (mOffline &&
+    if (GetOffline() &&
         (!mOfflineLocalhost || !hostname.LowerCaseEqualsASCII("localhost"))) {
         flags |= RESOLVE_OFFLINE;
     }
