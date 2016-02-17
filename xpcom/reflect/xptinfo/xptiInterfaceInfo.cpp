@@ -60,11 +60,11 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
                                        xptiTypelibGuts* aTypelib)
     : mIID(iid)
     , mDescriptor(aDescriptor)
-    , mMethodBaseIndex(0)
-    , mConstantBaseIndex(0)
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
+    , mMethodBaseIndex(0)
+    , mConstantBaseIndex(0)
     , mFlags(0)
 {
     memcpy(mName, name, nameLength);
