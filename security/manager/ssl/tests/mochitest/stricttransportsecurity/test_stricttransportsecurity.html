@@ -43,8 +43,9 @@
   function endRound(round) {
     // remove all the iframes in the document
     document.body.removeChild(document.getElementById('ifr_bootstrap'));
-    for (var test in testframes)
+    for (let test in testframes) {
       document.body.removeChild(document.getElementById('ifr_' + test));
+    }
 
     // clean up the STS state
     SpecialPowers.cleanUpSTSData("http://example.com");
@@ -93,10 +94,11 @@
       roundsLeft--;
 
       // defer this so it doesn't muck with the stack too much.
-      if (roundsLeft == 1)
+      if (roundsLeft == 1) {
         setTimeout(function () {
           startRound("subdom");
         }, 0);
+      }
     }
 
     if (roundsLeft < 1) {
