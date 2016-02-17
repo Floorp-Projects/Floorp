@@ -53,15 +53,15 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // Additional bounds checking for heap accesses with constant offsets.
     class OffsetBoundsCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     {
-        Label* outOfBounds_;
+        Label* maybeOutOfBounds_;
         Register ptrReg_;
         int32_t offset_;
       public:
-        OffsetBoundsCheck(Label* outOfBounds, Register ptrReg, int32_t offset)
-          : outOfBounds_(outOfBounds), ptrReg_(ptrReg), offset_(offset)
+        OffsetBoundsCheck(Label* maybeOutOfBounds, Register ptrReg, int32_t offset)
+          : maybeOutOfBounds_(maybeOutOfBounds), ptrReg_(ptrReg), offset_(offset)
         {}
 
-        Label* outOfBounds() const { return outOfBounds_; }
+        Label* maybeOutOfBounds() const { return maybeOutOfBounds_; }
         Register ptrReg() const { return ptrReg_; }
         int32_t offset() const { return offset_; }
         void accept(CodeGeneratorX86Shared* codegen) {
@@ -91,10 +91,27 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         }
     };
 
-    // Functions for emitting bounds-checking code with branches.
-    MOZ_WARN_UNUSED_RESULT
-    uint32_t emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, const MInstruction* ins,
-                                        Register ptr, Label* fail);
+  private:
+    MOZ_WARN_UNUSED_RESULT uint32_t
+    emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, const MInstruction* ins,
+                               Register ptr, Label* fail);
+
+  public:
+    // For SIMD and atomic loads and stores (which throw on out-of-bounds):
+    MOZ_WARN_UNUSED_RESULT uint32_t
+    maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* mir, const MInstruction* ins,
+                                      const LAllocation* ptr);
+
+    // For asm.js plain and atomic loads that possibly require a bounds check:
+    MOZ_WARN_UNUSED_RESULT uint32_t
+    maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
+                                  OutOfLineLoadTypedArrayOutOfBounds** ool);
+
+    // For asm.js plain and atomic stores that possibly require a bounds check:
+    MOZ_WARN_UNUSED_RESULT uint32_t
+    maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins,
+                                   Label** rejoin);
+
     void cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, Register ptr);
 
     NonAssertingLabel deoptLabel_;

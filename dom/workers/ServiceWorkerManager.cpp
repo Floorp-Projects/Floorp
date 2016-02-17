@@ -38,8 +38,6 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NotificationEvent.h"
@@ -1311,6 +1309,13 @@ public:
       mRegistration = swm->GetRegistration(mPrincipal, mScope);
 
       if (mRegistration) {
+        // If we are resurrecting an uninstalling registration, then persist
+        // it to disk again.  We preemptively removed it earlier during
+        // unregister so that closing the window by shutting down the browser
+        // results in the registration being gone on restart.
+        if (mRegistration->mPendingUninstall) {
+          swm->StoreRegistration(mPrincipal, mRegistration);
+        }
         mRegistration->mPendingUninstall = false;
         RefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
         if (newest && mScriptSpec.Equals(newest->ScriptSpec())) {
@@ -2467,7 +2472,12 @@ private:
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    // Could it be that we are shutting down.
+    // Note, we send the message to remove the registration from disk now even
+    // though we may only set the mPendingUninstall flag below.  This is
+    // necessary to ensure the registration is removed if the controlled
+    // clients are closed by shutting down the browser.  If the registration
+    // is resurrected by clearing mPendingUninstall then it should be saved
+    // to disk again.
     if (swm->mActor) {
       swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
     }
@@ -3231,6 +3241,18 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   if (timer) {
     timer->Cancel();
     data->mUpdateTimers.Remove(aRegistration->mScope);
+  }
+
+  // The registration should generally only be removed if there are no controlled
+  // documents, but mControlledDocuments can contain references to potentially
+  // controlled docs.  This happens when the service worker is not active yet.
+  // We must purge these references since we are evicting the registration.
+  for (auto iter = swm->mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerRegistrationInfo* reg = iter.UserData();
+    MOZ_ASSERT(reg);
+    if (reg->mScope.Equals(aRegistration->mScope)) {
+      iter.Remove();
+    }
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> info;

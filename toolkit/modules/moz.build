@@ -19,6 +19,7 @@ EXTRA_JS_MODULES += [
     'addons/MatchPattern.jsm',
     'addons/WebNavigation.jsm',
     'addons/WebNavigationContent.js',
+    'addons/WebNavigationFrames.jsm',
     'addons/WebRequest.jsm',
     'addons/WebRequestCommon.jsm',
     'addons/WebRequestContent.js',
@@ -117,8 +118,7 @@ for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_WIDGET_TOOLKIT',
             'DLL_PREFIX',
             'DLL_SUFFIX',
-            'DEBUG_JS_MODULES',
-            'SOURCE_REV_URL'):
+            'DEBUG_JS_MODULES'):
             DEFINES[var] = CONFIG[var]
 
 for var in ('MOZ_TOOLKIT_SEARCH',
@@ -127,3 +127,5 @@ for var in ('MOZ_TOOLKIT_SEARCH',
             'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
+
+DEFINES['TOPOBJDIR'] = TOPOBJDIR

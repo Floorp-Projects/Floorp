@@ -4,12 +4,8 @@
 
 package org.mozilla.gecko.sync.stage;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import android.content.Context;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -43,7 +39,10 @@ import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
 
-import android.content.Context;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Fetch from a server collection into a local repository, encrypting
@@ -121,7 +120,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     }
   }
 
-  protected EngineSettings getEngineSettings() throws NonObjectJSONException, IOException, ParseException {
+  protected EngineSettings getEngineSettings() throws NonObjectJSONException, IOException {
     Integer version = getStorageVersion();
     if (version == null) {
       Logger.warn(LOG_TAG, "null storage version for " + this + "; using version 0.");
@@ -167,7 +166,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     return this.getCollection() + ".";
   }
 
-  protected SynchronizerConfiguration getConfig() throws NonObjectJSONException, IOException, ParseException {
+  protected SynchronizerConfiguration getConfig() throws NonObjectJSONException, IOException {
     return new SynchronizerConfiguration(session.config.getBranch(bundlePrefix()));
   }
 
@@ -175,7 +174,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     synchronizerConfiguration.persist(session.config.getBranch(bundlePrefix()));
   }
 
-  public Synchronizer getConfiguredSynchronizer(GlobalSession session) throws NoCollectionKeysSetException, URISyntaxException, NonObjectJSONException, IOException, ParseException {
+  public Synchronizer getConfiguredSynchronizer(GlobalSession session) throws NoCollectionKeysSetException, URISyntaxException, NonObjectJSONException, IOException {
     Repository remote = wrappedServerRepo();
 
     Synchronizer synchronizer = new ServerLocalSynchronizer();
@@ -549,7 +548,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     } catch (URISyntaxException e) {
       session.abort(e, "Invalid URI syntax for server repository.");
       return;
-    } catch (NonObjectJSONException | ParseException | IOException e) {
+    } catch (NonObjectJSONException | IOException e) {
       session.abort(e, "Invalid persisted JSON for config.");
       return;
     }

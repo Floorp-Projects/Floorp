@@ -90,7 +90,7 @@ public:
 };
 
 class ELFSymbolsToModuleTest32 : public ELFSymbolsToModuleTestFixture,
-                                 public TestWithParam<Endianness>  {
+                                   public TestWithParam<Endianness>  {
 public:
   ELFSymbolsToModuleTest32() : ELFSymbolsToModuleTestFixture(GetParam(), 4) {}
 

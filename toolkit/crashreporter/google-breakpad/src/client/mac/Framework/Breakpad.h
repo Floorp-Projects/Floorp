@@ -158,6 +158,11 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 //                                but pass as URL parameters when
 //                                uploading theminidump to the crash
 //                                server.
+//
+// BREAKPAD_IN_PROCESS            A boolean NSNumber value. If YES, Breakpad
+//                                will write the dump file in-process and then
+//                                launch the reporter executable as a child
+//                                process.
 //=============================================================================
 // The BREAKPAD_PRODUCT, BREAKPAD_VERSION and BREAKPAD_URL are
 // required to have non-NULL values.  By default, the BREAKPAD_PRODUCT

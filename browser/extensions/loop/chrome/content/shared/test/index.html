@@ -43,6 +43,7 @@
   <!-- App scripts -->
   <script src="/shared/js/loopapi-client.js"></script>
   <script src="/shared/js/utils.js"></script>
+  <script src="/shared/js/urlRegExps.js"></script>
   <script src="/shared/js/models.js"></script>
   <script src="/shared/js/mixins.js"></script>
   <script src="/shared/js/crypto.js"></script>
@@ -50,31 +51,33 @@
   <script src="/shared/js/actions.js"></script>
   <script src="/shared/js/dispatcher.js"></script>
   <script src="/shared/js/otSdkDriver.js"></script>
+
+  <!-- Stores need to be loaded before the views that uses them -->
   <script src="/shared/js/store.js"></script>
   <script src="/shared/js/activeRoomStore.js"></script>
-  <script src="/shared/js/views.js"></script>
   <script src="/shared/js/textChatStore.js"></script>
-  <script src="/shared/js/textChatView.js"></script>
-  <script src="/shared/js/urlRegExps.js"></script>
-  <script src="/shared/js/linkifiedTextView.js"></script>
   <script src="/shared/js/remoteCursorStore.js"></script>
 
+  <!-- Views -->
+  <script src="/shared/js/views.js"></script>
+  <script src="/shared/js/textChatView.js"></script>
+  <script src="/shared/js/linkifiedTextView.js"></script>
+
   <!-- Test scripts -->
-  <script src="models_test.js"></script>
   <script src="mixins_test.js"></script>
   <script src="utils_test.js"></script>
   <script src="crypto_test.js"></script>
-  <script src="views_test.js"></script>
   <script src="validate_test.js"></script>
   <script src="dispatcher_test.js"></script>
-  <script src="activeRoomStore_test.js"></script>
   <script src="otSdkDriver_test.js"></script>
   <script src="store_test.js"></script>
+  <script src="activeRoomStore_test.js"></script>
   <script src="textChatStore_test.js"></script>
+  <script src="remoteCursorStore_test.js"></script>
+  <script src="views_test.js"></script>
   <script src="textChatView_test.js"></script>
   <script src="linkifiedTextView_test.js"></script>
   <script src="loopapi-client_test.js"></script>
-  <script src="remoteCursorStore_test.js"></script>
 
   <script>
     LoopMochaUtils.addErrorCheckingTests();

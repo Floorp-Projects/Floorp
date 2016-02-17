@@ -17,23 +17,30 @@ module.exports = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+    onResizeViewport: PropTypes.func.isRequired,
+    onRotateViewport: PropTypes.func.isRequired,
   },
 
   render() {
     let {
       location,
       viewports,
+      onResizeViewport,
+      onRotateViewport,
     } = this.props;
 
     return dom.div(
       {
         id: "viewports",
       },
-      viewports.map((viewport, index) => {
+      viewports.map(viewport => {
         return Viewport({
-          key: index,
+          key: viewport.id,
           location,
           viewport,
+          onResizeViewport: (width, height) =>
+            onResizeViewport(viewport.id, width, height),
+          onRotateViewport: () => onRotateViewport(viewport.id),
         });
       })
     );

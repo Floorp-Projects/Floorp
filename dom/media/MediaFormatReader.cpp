@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "nsSize.h"
 #include "Layers.h"
@@ -341,7 +342,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   mInitDone = true;
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
-  metadata->mTags = nullptr;
+  metadata->mTags = tags->Count() ? tags.release() : nullptr;
   mMetadataPromise.Resolve(metadata, __func__);
 }
 
@@ -794,7 +795,7 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
   bool hasLastEnd;
   media::TimeUnit lastEnd = decoder.mTimeRanges.GetEnd(&hasLastEnd);
   if (hasLastEnd) {
-    if (decoder.mLastTimeRangesEnd && decoder.mLastTimeRangesEnd.ref() > lastEnd) {
+    if (decoder.mLastTimeRangesEnd && decoder.mLastTimeRangesEnd.ref() < lastEnd) {
       // New data was added after our previous end, we can clear the EOS flag.
       decoder.mDemuxEOS = false;
     }
@@ -1114,8 +1115,10 @@ MediaFormatReader::Update(TrackType aTrack)
               decoder.mLastSampleTime.ref().ToMicroseconds());
           InternalSeek(aTrack, InternalSeekTarget(decoder.mLastSampleTime.ref(), true));
         }
-        LOG("Rejecting %s promise: WAITING_FOR_DATA", TrackTypeToStr(aTrack));
-        decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+        if (!decoder.mReceivedNewData) {
+          LOG("Rejecting %s promise: WAITING_FOR_DATA", TrackTypeToStr(aTrack));
+          decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+        }
       }
       // Now that draining has completed, we check if we have received
       // new data again as the result may now be different from the earlier

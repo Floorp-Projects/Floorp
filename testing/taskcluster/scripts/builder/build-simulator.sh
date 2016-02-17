@@ -157,12 +157,12 @@ else
   echo "Unable to find application.ini file"
   exit
 fi
-MOZ_APP_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $APPLICATION_INI)
-echo "BUILDID $MOZ_APP_BUILDID -- VERSION $VERSION"
+MOZ_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $APPLICATION_INI)
+echo "BUILDID $MOZ_BUILDID -- VERSION $VERSION"
 
-XPI_NAME=fxos-simulator-$VERSION.$MOZ_APP_BUILDID-$PLATFORM.xpi
+XPI_NAME=fxos-simulator-$VERSION.$MOZ_BUILDID-$PLATFORM.xpi
 ADDON_ID=fxos_$(echo $VERSION | sed "s/\./_/")_simulator@mozilla.org
-ADDON_VERSION=$VERSION.$MOZ_APP_BUILDID
+ADDON_VERSION=$VERSION.$MOZ_BUILDID
 ADDON_NAME="Firefox OS $VERSION Simulator"
 ADDON_DESCRIPTION="a Firefox OS $VERSION Simulator"
 

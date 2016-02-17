@@ -21,35 +21,34 @@
 #endif
 
 typedef struct DIR_Struct {
-    void            * directoryPtr;
-    WIN32_FIND_DATA   data;
+    void* directoryPtr;
+    WIN32_FIND_DATA data;
 } DIR;
 
 #define _ST_FSTYPSZ 16
 
 #if !defined(__BORLANDC__) && !defined(__GNUC__)
- typedef unsigned long mode_t;
- typedef          long uid_t;
- typedef          long gid_t;
- typedef          long off_t;
- typedef unsigned long nlink_t;
-#endif 
+typedef unsigned long mode_t;
+typedef long uid_t;
+typedef long gid_t;
+typedef long off_t;
+typedef unsigned long nlink_t;
+#endif
 
 typedef struct timestruc {
-    time_t  tv_sec;         /* seconds */
-    long    tv_nsec;        /* and nanoseconds */
+    time_t tv_sec; /* seconds */
+    long tv_nsec;  /* and nanoseconds */
 } timestruc_t;
 
-
-struct dirent {                                 /* data from readdir() */
-        ino_t           d_ino;                  /* inode number of entry */
-        off_t           d_off;                  /* offset of disk direntory entry */
-        unsigned short  d_reclen;               /* length of this record */
-        char            d_name[_MAX_FNAME];     /* name of file */
+struct dirent {              /* data from readdir() */
+    ino_t d_ino;             /* inode number of entry */
+    off_t d_off;             /* offset of disk direntory entry */
+    unsigned short d_reclen; /* length of this record */
+    char d_name[_MAX_FNAME]; /* name of file */
 };
 
-#if !defined(__BORLANDC__) && !defined (__GNUC__)
-#define S_ISDIR(s)  ((s) & _S_IFDIR)
+#if !defined(__BORLANDC__) && !defined(__GNUC__)
+#define S_ISDIR(s) ((s)&_S_IFDIR)
 #endif
 
 #else /* _WIN32 */
@@ -59,43 +58,41 @@ struct dirent {                                 /* data from readdir() */
 #include <sys\stat.h>
 #include <dos.h>
 
-
-
 /*	Getting cocky to support multiple file systems */
-typedef struct	dirStruct_tag	{
-	struct _find_t	file_data;
-	char			c_checkdrive;
+typedef struct dirStruct_tag {
+    struct _find_t file_data;
+    char c_checkdrive;
 } dirStruct;
 
 typedef struct DIR_Struct {
-    void            * directoryPtr;
-    dirStruct         data;
+    void* directoryPtr;
+    dirStruct data;
 } DIR;
 
 #define _ST_FSTYPSZ 16
 typedef unsigned long mode_t;
-typedef          long uid_t;
-typedef          long gid_t;
-typedef          long off_t;
+typedef long uid_t;
+typedef long gid_t;
+typedef long off_t;
 typedef unsigned long nlink_t;
 
 typedef struct timestruc {
-    time_t  tv_sec;         /* seconds */
-    long    tv_nsec;        /* and nanoseconds */
+    time_t tv_sec; /* seconds */
+    long tv_nsec;  /* and nanoseconds */
 } timestruc_t;
 
-struct dirent {                             /* data from readdir() */
-        ino_t           d_ino;              /* inode number of entry */
-        off_t           d_off;              /* offset of disk direntory entry */
-        unsigned short  d_reclen;           /* length of this record */
+struct dirent {              /* data from readdir() */
+    ino_t d_ino;             /* inode number of entry */
+    off_t d_off;             /* offset of disk direntory entry */
+    unsigned short d_reclen; /* length of this record */
 #ifdef XP_WIN32
-        char            d_name[_MAX_FNAME]; /* name of file */
+    char d_name[_MAX_FNAME]; /* name of file */
 #else
-        char            d_name[20]; /* name of file */
+    char d_name[20]; /* name of file */
 #endif
 };
 
-#define S_ISDIR(s)  ((s) & _S_IFDIR)
+#define S_ISDIR(s) ((s)&_S_IFDIR)
 
 #endif /* 16-bit windows */
 

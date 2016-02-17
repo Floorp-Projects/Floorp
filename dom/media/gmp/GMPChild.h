@@ -13,6 +13,7 @@
 #include "gmp-async-shutdown.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {
@@ -32,7 +33,7 @@ public:
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
 #ifdef XP_WIN
-  bool PreLoadLibraries(const nsAString& aPluginPath);
+  bool PreLoadLibraries();
 #endif
   MessageLoop* GMPMessageLoop();
 
@@ -93,6 +94,7 @@ private:
   GMPLoader* mGMPLoader;
   nsTArray<uint8_t> mPluginVoucher;
   nsTArray<uint8_t> mSandboxVoucher;
+  GMPInfoFileParser mInfoParser;
 };
 
 } // namespace gmp

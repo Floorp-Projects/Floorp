@@ -151,6 +151,7 @@ public:
 
   virtual void WriteInternal(const char* aBuffer,
                              uint32_t aCount) override;
+  virtual void BeforeFinishInternal() override;
   virtual void FinishInternal() override;
 
 private:
@@ -164,6 +165,7 @@ private:
     BITFIELDS,
     COLOR_TABLE,
     GAP,
+    AFTER_GAP,
     PIXEL_ROW,
     RLE_SEGMENT,
     RLE_DELTA,
@@ -193,6 +195,7 @@ private:
   LexerTransition<State> ReadBitfields(const char* aData, size_t aLength);
   LexerTransition<State> ReadColorTable(const char* aData, size_t aLength);
   LexerTransition<State> SkipGap();
+  LexerTransition<State> AfterGap();
   LexerTransition<State> ReadPixelRow(const char* aData);
   LexerTransition<State> ReadRLESegment(const char* aData);
   LexerTransition<State> ReadRLEDelta(const char* aData);

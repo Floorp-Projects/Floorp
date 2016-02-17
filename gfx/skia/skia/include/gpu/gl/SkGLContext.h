@@ -17,9 +17,9 @@
  * This class is intended for Skia's testing needs and not for general
  * use.
  */
-class SK_API SkGLContext : public SkRefCnt {
+class SK_API SkGLContext : public SkNoncopyable {
 public:
-    ~SkGLContext() override;
+    virtual ~SkGLContext();
 
     bool isValid() const { return NULL != gl(); }
 
@@ -40,6 +40,11 @@ public:
     /** Used for testing EGLImage integration. Take a GL_TEXTURE_2D and wraps it in an EGL Image */
     virtual GrEGLImage texture2DToEGLImage(GrGLuint /*texID*/) const { return 0; }
     virtual void destroyEGLImage(GrEGLImage) const {}
+
+    /** Used for testing GL_TEXTURE_RECTANGLE integration. */
+    GrGLint createTextureRectangle(int width, int height, GrGLenum internalFormat,
+                                   GrGLenum externalFormat, GrGLenum externalType,
+                                   GrGLvoid* data);
 
     /**
      * Used for testing EGLImage integration. Takes a EGLImage and wraps it in a
@@ -106,8 +111,6 @@ private:
     SkAutoTUnref<const GrGLInterface> fGL;
 
     friend class GLFenceSync;  // For onPlatformGetProcAddress.
-
-    typedef SkRefCnt INHERITED;
 };
 
 /** Creates platform-dependent GL context object

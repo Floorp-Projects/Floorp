@@ -19,6 +19,7 @@ namespace dom {
 
 class Console;
 class Function;
+class IDBFactory;
 class Promise;
 class RequestOrUSVString;
 class ServiceWorkerRegistrationWorkerThread;
@@ -28,13 +29,6 @@ namespace cache {
 class CacheStorage;
 
 } // namespace cache
-
-namespace indexedDB {
-
-class IDBFactory;
-
-} // namespace indexedDB
-
 } // namespace dom
 } // namespace mozilla
 
@@ -50,7 +44,7 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
                           public nsIGlobalObject,
                           public nsSupportsWeakReference
 {
-  typedef mozilla::dom::indexedDB::IDBFactory IDBFactory;
+  typedef mozilla::dom::IDBFactory IDBFactory;
 
   RefPtr<Console> mConsole;
   RefPtr<WorkerLocation> mLocation;
@@ -281,11 +275,14 @@ class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
                                         public nsIGlobalObject
 {
   WorkerPrivate* mWorkerPrivate;
+  RefPtr<Console> mConsole;
 
 public:
   explicit WorkerDebuggerGlobalScope(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerDebuggerGlobalScope,
+                                                         DOMEventTargetHelper)
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
@@ -332,6 +329,9 @@ public:
 
   void
   ReportError(JSContext* aCx, const nsAString& aMessage);
+
+  Console*
+  GetConsole(ErrorResult& aRv);
 
   void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;

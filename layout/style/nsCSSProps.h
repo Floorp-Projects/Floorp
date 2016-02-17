@@ -726,7 +726,7 @@ public:
   static KTableEntry kDisplayKTable[];
   static const KTableEntry kElevationKTable[];
   static const KTableEntry kEmptyCellsKTable[];
-  // -- tables for the align-/justify-content/items/self properties --
+  // -- tables for parsing the {align,justify}-{content,items,self} properties --
   static const KTableEntry kAlignAllKeywords[];
   static const KTableEntry kAlignOverflowPosition[]; // <overflow-position>
   static const KTableEntry kAlignSelfPosition[];     // <self-position>
@@ -737,8 +737,10 @@ public:
   static const KTableEntry kAlignNormalBaseline[]; // 'normal/baseline/last-baseline'
   static const KTableEntry kAlignContentDistribution[]; // <content-distribution>
   static const KTableEntry kAlignContentPosition[]; // <content-position>
-  static const KTableEntry kAlignSelfKTable[];
-  static const KTableEntry kJustifyContentKTable[];
+  // -- tables for auto-completion of the {align,justify}-{content,items,self} properties --
+  static const KTableEntry kAutoCompletionAlignJustifySelf[];
+  static const KTableEntry kAutoCompletionAlignItems[];
+  static const KTableEntry kAutoCompletionAlignJustifyContent[];
   // ------------------------------------------------------------------
   static const KTableEntry kFlexDirectionKTable[];
   static const KTableEntry kFlexWrapKTable[];

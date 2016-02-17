@@ -183,8 +183,8 @@
 #include "prenv.h"
 #include "prprf.h"
 
+#include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/MessageChannel.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/Promise.h"
 
 #ifdef MOZ_GAMEPAD
@@ -266,7 +266,6 @@ using mozilla::PrincipalOriginAttributes;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 using mozilla::dom::cache::CacheStorage;
-using mozilla::dom::indexedDB::IDBFactory;
 
 static LazyLogModule gDOMLeakPRLog("DOMLeak");
 
@@ -4186,23 +4185,6 @@ nsGlobalWindow::IndexedGetter(uint32_t aIndex)
   MOZ_CRASH();
 }
 
-void
-nsGlobalWindow::GetSupportedNames(nsTArray<nsString>& aNames)
-{
-  FORWARD_TO_OUTER_VOID(GetSupportedNames, (aNames));
-
-  nsDOMWindowList* windows = GetWindowList();
-  if (windows) {
-    uint32_t length = windows->GetLength();
-    nsString* name = aNames.AppendElements(length);
-    for (uint32_t i = 0; i < length; ++i, ++name) {
-      nsCOMPtr<nsIDocShellTreeItem> item =
-        windows->GetDocShellTreeItemAt(i);
-      item->GetName(*name);
-    }
-  }
-}
-
 bool
 nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                           JS::Handle<jsid> aId,
@@ -5082,9 +5064,7 @@ nsGlobalWindow::GetScreenXY(ErrorResult& aError)
   LayoutDeviceRect screenRectDev =
     LayoutDevicePixel::FromAppUnits(screenRect, dc->AppUnitsPerDevPixel());
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
-                                            : DesktopToLayoutDeviceScale(1.0);
+  DesktopToLayoutDeviceScale scale = dc->GetDesktopToDeviceScale();
   DesktopRect screenRectDesk = screenRectDev / scale;
 
   CSSPoint cssPt =
@@ -5720,7 +5700,7 @@ nsGlobalWindow::DispatchResizeEvent(const CSSIntSize& aSize)
   }
 
   domEvent->SetTrusted(true);
-  domEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  domEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
   domEvent->SetTarget(target);
@@ -8515,7 +8495,7 @@ nsGlobalWindow::LeaveModalState()
     RefPtr<Event> event = NS_NewDOMEvent(inner, nullptr, nullptr);
     event->InitEvent(NS_LITERAL_STRING("endmodalstate"), true, false);
     event->SetTrusted(true);
-    event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+    event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
     bool dummy;
     topWin->DispatchEvent(event, &dummy);
   }
@@ -11129,7 +11109,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     newEvent->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      WidgetEvent* internalEvent = newEvent->GetInternalNSEvent();
+      WidgetEvent* internalEvent = newEvent->WidgetEventPtr();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
@@ -13262,7 +13242,7 @@ nsGlobalWindow::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
   }
 
   WidgetMouseEvent* mouseEvent =
-    aMouseDownEvent.GetInternalNSEvent()->AsMouseEvent();
+    aMouseDownEvent.WidgetEventPtr()->AsMouseEvent();
   if (!mouseEvent || mouseEvent->mClass != eMouseEventClass) {
     aError.Throw(NS_ERROR_FAILURE);
     return;

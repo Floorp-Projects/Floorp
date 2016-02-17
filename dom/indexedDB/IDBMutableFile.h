@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbmutablefile_h__
-#define mozilla_dom_indexeddb_idbmutablefile_h__
+#ifndef mozilla_dom_idbmutablefile_h__
+#define mozilla_dom_idbmutablefile_h__
 
 #include "js/TypeDecls.h"
 #include "mozilla/Atomics.h"
@@ -29,12 +29,12 @@ namespace dom {
 
 class DOMRequest;
 class File;
-
-namespace indexedDB {
-
-class BackgroundMutableFileChild;
 class IDBDatabase;
 class IDBFileHandle;
+
+namespace indexedDB {
+class BackgroundMutableFileChild;
+}
 
 class IDBMutableFile final
   : public DOMEventTargetHelper
@@ -51,7 +51,7 @@ class IDBMutableFile final
 
 public:
   IDBMutableFile(IDBDatabase* aDatabase,
-                 BackgroundMutableFileChild* aActor,
+                 indexedDB::BackgroundMutableFileChild* aActor,
                  const nsAString& aName,
                  const nsAString& aType);
 
@@ -134,8 +134,7 @@ private:
   ~IDBMutableFile();
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbmutablefile_h__
+#endif // mozilla_dom_idbmutablefile_h__

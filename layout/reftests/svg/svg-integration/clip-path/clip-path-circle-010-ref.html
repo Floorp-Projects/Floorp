@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Masking: Ref test for clip-path's circle function 010</title>
+  <link rel="author" title="Dirk Schulze" href="mailto:dschulze@adobe.com">
+</head>
+<body>
+  <p>The test passes if there is a green circle.</p>
+  <div style="padding: 100px; width: 200px; height: 200px; background-color: green; clip-path: url(#c1);"></div>
+  <svg>
+    <clipPath id="c1">
+      <circle cx="200" cy="200" r="100"/>
+    </clipPath>
+  </svg>
+</body>
+</html>

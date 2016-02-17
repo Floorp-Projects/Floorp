@@ -3,6 +3,7 @@ $inherits:
   from: 'tasks/tests/fx_desktop_generic.yml'
 task:
   payload:
+    maxRunTime: 5400
     command:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}

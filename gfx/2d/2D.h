@@ -36,8 +36,6 @@ typedef _cairo_surface cairo_surface_t;
 struct _cairo_scaled_font;
 typedef _cairo_scaled_font cairo_scaled_font_t;
 
-struct ID3D10Device1;
-struct ID3D10Texture2D;
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
@@ -1364,14 +1362,6 @@ public:
 #endif
 
 #ifdef WIN32
-  static already_AddRefed<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
-  static already_AddRefed<DrawTarget>
-    CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
-                                         ID3D10Texture2D *aTextureB,
-                                         SurfaceFormat aFormat);
-
-  static void SetDirect3D10Device(ID3D10Device1 *aDevice);
-  static ID3D10Device1 *GetDirect3D10Device();
   static already_AddRefed<DrawTarget> CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat);
 
   static void SetDirect3D11Device(ID3D11Device *aDevice);
@@ -1394,7 +1384,6 @@ public:
 
 private:
   static ID2D1Device *mD2D1Device;
-  static ID3D10Device1 *mD3D10Device;
   static ID3D11Device *mD3D11Device;
 #endif
 

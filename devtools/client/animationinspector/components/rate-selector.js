@@ -28,7 +28,10 @@ RateSelector.prototype = {
     this.selectEl = createNode({
       parent: containerEl,
       nodeType: "select",
-      attributes: {"class": "devtools-button"}
+      attributes: {
+        "class": "devtools-button",
+        "title": L10N.getStr("timeline.rateSelectorTooltip")
+      }
     });
 
     this.selectEl.addEventListener("change", this.onRateChanged);

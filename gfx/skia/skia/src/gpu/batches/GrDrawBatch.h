@@ -63,6 +63,11 @@ public:
         return this->pipeline()->getRenderTarget()->getUniqueID();
     }
 
+    GrRenderTarget* renderTarget() const final {
+        SkASSERT(fPipelineInstalled);
+        return this->pipeline()->getRenderTarget();
+    }
+
     SkString dumpInfo() const override {
         SkString string;
         string.appendf("RT: %d\n", this->renderTargetUniqueID());
@@ -78,7 +83,7 @@ public:
                            this->pipeline()->getCoverageFragmentProcessor(i).name(),
                            this->pipeline()->getCoverageFragmentProcessor(i).dumpInfo().c_str());
         }
-        string.appendf("XP: %s\n", this->pipeline()->getXferProcessor()->name());
+        string.appendf("XP: %s\n", this->pipeline()->getXferProcessor().name());
         return string;
     }
 

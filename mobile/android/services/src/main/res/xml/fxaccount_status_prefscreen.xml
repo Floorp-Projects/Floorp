@@ -114,20 +114,16 @@
     <PreferenceCategory
         android:key="legal_category"
         android:title="@string/fxaccount_status_legal" >
-        <Preference android:title="@string/fxaccount_status_linktos" >
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="@string/fxaccount_link_tos"
-                android:targetClass="@string/browser_intent_class"
-                android:targetPackage="@string/browser_intent_package" />
-        </Preference>
-        <Preference android:title="@string/fxaccount_status_linkprivacy" >
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="@string/fxaccount_link_pn"
-                android:targetClass="@string/browser_intent_class"
-                android:targetPackage="@string/browser_intent_package" />
-        </Preference>
+        <Preference
+            android:editable="false"
+            android:key="linktos"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_linktos" />
+        <Preference
+            android:editable="false"
+            android:key="linkprivacy"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_linkprivacy" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="debug_category" >

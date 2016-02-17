@@ -98,6 +98,29 @@ add_task(function test_authenticated_patch_request() {
   check_authenticated_request("PATCH");
 });
 
+add_task(function* test_extra_headers() {
+  let server = httpd_setup({"/foo": (request, response) => {
+      do_check_true(request.hasHeader("Authorization"));
+      do_check_true(request.hasHeader("myHeader"));
+      do_check_eq(request.getHeader("myHeader"), "fake");
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/json");
+      response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
+    }
+  });
+
+  let client = new HawkClient(server.baseURI);
+
+  let response = yield client.request("/foo", "POST", TEST_CREDS, {foo: "bar"},
+                                      {"myHeader": "fake"});
+  let result = JSON.parse(response.body);
+
+  do_check_eq("bar", result.foo);
+
+  yield deferredStop(server);
+});
+
 add_task(function* test_credentials_optional() {
   let method = "GET";
   let server = httpd_setup({

@@ -30,9 +30,6 @@ pref("network.predictor.enabled", true);
 // No AccessibleCaret
 pref("layout.accessiblecaret.enabled", false);
 
-pref("gfx.vsync.hw-vsync.enabled", true);
-pref("gfx.vsync.compositor", true);
-
 // To be removed once bug 942756 is fixed.
 pref("devtools.debugger.unix-domain-socket", "6000");
 

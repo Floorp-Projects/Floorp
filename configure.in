@@ -76,6 +76,7 @@ GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.10.2
+FONTCONFIG_VERSION=2.7.0
 
 MSMANIFEST_TOOL=
 
@@ -569,14 +570,7 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
-        # Disable SEH on clang-cl because it doesn't implement them yet.
-        if test -z "$CLANG_CL"; then
-            AC_DEFINE(HAVE_SEH_EXCEPTIONS)
-        else
-            # Send our CFLAGS to NSS
-            MOZ_CFLAGS_NSS=1
-            AC_DEFINE_UNQUOTED(GTEST_HAS_SEH, 0)
-        fi
+        AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
           if test ! -d "$WIN32_REDIST_DIR"; then
@@ -784,7 +778,7 @@ else
 fi
 
 if test -z "$COMPILE_ENVIRONMENT"; then
-    NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
+    NSINSTALL_BIN='$(PYTHON) $(MOZILLA_DIR)/config/nsinstall.py'
 fi
 AC_SUBST(NSINSTALL_BIN)
 
@@ -1445,57 +1439,7 @@ if test "$GNU_CC"; then
         fi
     fi
 
-    # Turn on gcc/clang warnings:
-    # https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
-
-    # -Wall - lots of useful warnings
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Wignored-qualifiers - catches return types with qualifiers like const
-    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
-    # -Wtype-limits - catches overflow bugs, few false positives
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wempty-body"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wignored-qualifiers"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wpointer-arith"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
-
-    # -Wclass-varargs - catches objects passed by value to variadic functions.
-    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wsometimes-initialized - catches some uninitialized values
-    # -Wunreachable-code-aggressive - catches lots of dead code
-    #
-    # XXX: at the time of writing, the version of clang used on the OS X test
-    # machines has a bug that causes it to reject some valid files if both
-    # -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
-    # specified. We work around this by instead using
-    # -Werror=non-literal-null-conversion, but we only do that when
-    # --enable-warnings-as-errors is specified so that no unexpected fatal
-    # warnings are produced.
-    MOZ_C_SUPPORTS_WARNING(-W, class-varargs, ac_c_has_wclass_varargs)
-
-    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
-        MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
-    fi
-    MOZ_C_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_c_has_sometimes_uninitialized)
-    MOZ_C_SUPPORTS_WARNING(-W, unreachable-code-aggressive, ac_c_has_wunreachable_code_aggressive)
-
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
-
-    # Turn off some non-useful warnings that -Wall turns on.
-
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
-    MOZ_C_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_c_has_wno_unused_local_typedef)
+    MOZ_SET_WARNINGS_CFLAGS
 
     _DEFINES_CFLAGS='-include $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1530,79 +1474,7 @@ if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
 
-    # Turn on gcc/clang warnings:
-    # https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
-
-    # -Wall - lots of useful warnings
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Wignored-qualifiers - catches return types with qualifiers like const
-    # -Woverloaded-virtual - function declaration hides virtual function from base class
-    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
-    # -Wtype-limits - catches overflow bugs, few false positives
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wempty-body"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wignored-qualifiers"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
-
-    # -Wclass-varargs - catches objects passed by value to variadic functions.
-    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wrange-loop-analysis - catches copies during range-based for loops.
-    # -Wsometimes-initialized - catches some uninitialized values
-    # -Wunreachable-code - catches some dead code
-    # -Wunreachable-code-return - catches dead code after return call
-    #
-    # XXX: at the time of writing, the version of clang used on the OS X test
-    # machines has a bug that causes it to reject some valid files if both
-    # -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
-    # specified. We work around this by instead using
-    # -Werror=non-literal-null-conversion, but we only do that when
-    # --enable-warnings-as-errors is specified so that no unexpected fatal
-    # warnings are produced.
-    MOZ_CXX_SUPPORTS_WARNING(-W, class-varargs, ac_cxx_has_wclass_varargs)
-
-    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
-        MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_non_literal_null_conversion)
-    fi
-    MOZ_CXX_SUPPORTS_WARNING(-W, range-loop-analysis, ac_cxx_has_range_loop_analysis)
-    MOZ_CXX_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_cxx_has_sometimes_uninitialized)
-    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code, ac_cxx_has_wunreachable_code)
-    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code-return, ac_cxx_has_wunreachable_code_return)
-
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
-
-    # Turn off some non-useful warnings that -Wall turns on.
-
-    # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
-
-    # -Wno-inline-new-delete - we inline 'new' and 'delete' in mozalloc
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
-    MOZ_CXX_SUPPORTS_WARNING(-Wno-, inline-new-delete, ac_cxx_has_wno_inline_new_delete)
-    MOZ_CXX_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_cxx_has_wno_unused_local_typedef)
-
-    # Recent clang and gcc support C++11 deleted functions without warnings if
-    # compiling with -std=c++0x or -std=gnu++0x (or c++11 or gnu++11 in very new
-    # versions).  We can't use -std=c++0x yet, so gcc's support must remain
-    # unused.  But clang's warning can be disabled, so when compiling with clang
-    # we use it to opt out of the warning, enabling (macro-encapsulated) use of
-    # deleted function syntax.
-    if test "$CLANG_CXX"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
-        MOZ_CXX_SUPPORTS_WARNING(-Wno-, extended-offsetof, ac_cxx_has_wno_extended_offsetof)
-    fi
+    MOZ_SET_WARNINGS_CXXFLAGS
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1846,11 +1718,6 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
-    case "$host" in
-    *mingw*)
-        PERL="/bin/sh ${_topsrcdir}/build/msys-perl-wrapper"
-        ;;
-    esac
 
     case "${host_cpu}" in
     i*86)
@@ -3770,6 +3637,7 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
+MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
@@ -4660,6 +4528,7 @@ dnl ========================================================
 
 MOZ_ANDROID_GOOGLE_PLAY_SERVICES
 MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING
+MOZ_ANDROID_INSTALL_TRACKING
 
 
 dnl ========================================================
@@ -5377,8 +5246,70 @@ if test -n "$MOZ_OMX_PLUGIN"; then
         dnl Only allow building OMX plugin on Gonk (B2G) or Android
         AC_DEFINE(MOZ_OMX_PLUGIN)
     else
-       dnl fail if we're not building on Gonk or Android
-       AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
+        dnl fail if we're not building on Gonk or Android
+        AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
+    fi
+fi
+
+dnl ========================================================
+dnl Gradle support
+dnl
+dnl If --with-gradle is specified, build mobile/android with Gradle.
+dnl
+dnl If no Gradle binary is specified, use the in tree Gradle wrapper.
+dnl The wrapper downloads and installs Gradle, which is good for local
+dnl developers but not good in automation.
+dnl ========================================================
+
+GRADLE=
+MOZ_ARG_WITH_STRING(gradle,
+[  --with-gradle=/path/to/bin/gradle
+                          Enable building mobile/android with Gradle (argument: location of binary or wrapper (gradle/gradlew))],
+    if test "$withval" = "no" ; then
+        dnl --without-gradle => use the wrapper in |mach gradle|, don't build
+        dnl with Gradle by default.
+        GRADLE=$srcdir/gradlew
+        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
+    elif test "$withval" = "yes" ; then
+        dnl --with-gradle => use the wrapper in |mach gradle|, build with
+        dnl Gradle by default.
+        GRADLE=$srcdir/gradlew
+        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=1
+    else
+        dnl --with-gradle=/path/to/gradle => use the given binary in |mach
+        dnl gradle|, build with Gradle by default.
+        GRADLE=$withval
+        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=1
+    fi
+    ,
+    dnl No --with{out}-gradle => use the wrapper in |mach gradle|, don't build
+    dnl with Gradle by default.
+    GRADLE=$srcdir/gradlew
+    MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
+    )
+
+if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk" ; then
+    if test -z "$GRADLE" -o ! -x "$GRADLE" ; then
+        AC_MSG_ERROR([The program gradlew/gradle was not found.  Use --with-gradle=/path/to/bin/gradle}])
+    fi
+fi
+AC_SUBST(GRADLE)
+
+dnl Path to Maven repository containing Gradle dependencies.  Automation will
+dnl set this to file:///path/to/local via the mozconfig.  Local developer
+dnl default is jcenter.
+if test -z "$GRADLE_MAVEN_REPOSITORY" ; then
+    GRADLE_MAVEN_REPOSITORY=https://jcenter.bintray.com/
+fi
+AC_SUBST(GRADLE_MAVEN_REPOSITORY)
+
+if test -n "$MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE"; then
+    if test "$OS_TARGET" = "Android" -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+        dnl Only allow building mobile/android with Gradle.
+        AC_DEFINE(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
+    else
+        dnl fail if we're not building mobile/android.
+        AC_MSG_ERROR([Can only build mobile/android with Gradle])
     fi
 fi
 
@@ -7000,26 +6931,6 @@ dnl = Disable treating compiler warnings as errors
 dnl ========================================================
 if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
-elif test "$GNU_CC"; then
-    # Prevent the following GCC warnings from being treated as errors:
-    # -Wmaybe-uninitialized - too many false positives
-    # -Wdeprecated-declarations - we don't want our builds held hostage when a
-    #   platform-specific API becomes deprecated.
-    # -Wfree-nonheap-object - false positives during PGO
-    # -Warray-bounds - false positives depending on optimization
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_c_has_noerror_maybe_uninitialized)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_cxx_has_noerror_maybe_uninitialized)
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_c_has_noerror_deprecated_declarations)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_cxx_has_noerror_deprecated_declarations)
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=array-bounds, ac_c_has_noerror_array_bounds)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=array-bounds, ac_cxx_has_noerror_array_bounds)
-
-    if test -n "$MOZ_PGO"; then
-        MOZ_C_SUPPORTS_WARNING(-W, no-error=coverage-mismatch, ac_c_has_noerror_coverage_mismatch)
-        MOZ_CXX_SUPPORTS_WARNING(-W, no-error=coverage-mismatch, ac_cxx_has_noerror_coverage_mismatch)
-        MOZ_C_SUPPORTS_WARNING(-W, no-error=free-nonheap-object, ac_c_has_noerror_free_nonheap_object)
-        MOZ_CXX_SUPPORTS_WARNING(-W, no-error=free-nonheap-object, ac_cxx_has_noerror_free_nonheap_object)
-    fi
 fi
 
 dnl ========================================================
@@ -8070,7 +7981,7 @@ if test "$USE_FC_FREETYPE"; then
         AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
     fi
 
-    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig,
+    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig >= $FONTCONFIG_VERSION,
     [
         if test "$MOZ_PANGO"; then
             MOZ_PANGO_CFLAGS="$MOZ_PANGO_CFLAGS $_FONTCONFIG_CFLAGS"
@@ -8735,15 +8646,8 @@ fi
 
 # External builds (specifically Ubuntu) may drop the hg repo information, so we allow to
 # explicitly set the repository and changeset information in.
-if test "$MOZILLA_OFFICIAL"; then
-    if test -z "$MOZ_SOURCE_REPO" && test -z "$MOZ_SOURCE_CHANGESET" && test -d ${_topsrcdir}/.hg; then
-        MOZ_SOURCE_CHANGESET=`cd $_topsrcdir && hg parent --template='{node}'`
-        MOZ_SOURCE_REPO=`cd $_topsrcdir && hg showconfig paths.default | sed -e 's|^ssh://|http://|' -e 's|/$||'`
-    fi
-    SOURCE_REV_URL=$MOZ_SOURCE_REPO/rev/$MOZ_SOURCE_CHANGESET
-fi
-AC_SUBST(SOURCE_REV_URL)
-
+AC_SUBST(MOZ_SOURCE_REPO)
+AC_SUBST(MOZ_SOURCE_CHANGESET)
 AC_SUBST(MOZ_INCLUDE_SOURCE_INFO)
 
 if test "$MOZ_TELEMETRY_REPORTING"; then
@@ -8918,6 +8822,7 @@ AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
+AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
 AC_SUBST(VPX_AS)
 AC_SUBST_LIST(VPX_ASFLAGS)

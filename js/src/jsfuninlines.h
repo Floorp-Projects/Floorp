@@ -92,7 +92,7 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
     RootedScript script(cx, fun->getOrCreateScript(cx));
     if (!script)
         return nullptr;
-    Rooted<StaticScope*> staticScope(cx, script->enclosingStaticScope());
+    RootedObject staticScope(cx, script->enclosingStaticScope());
     return CloneFunctionAndScript(cx, fun, parent, staticScope, kind, proto);
 }
 

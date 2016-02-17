@@ -129,9 +129,7 @@ nsFileCopyEvent::DoCopy()
 
     // Release the callback on the target thread to avoid destroying stuff on
     // the wrong thread.
-    nsIRunnable *doomed = nullptr;
-    mCallback.swap(doomed);
-    NS_ProxyRelease(mCallbackTarget, doomed);
+    NS_ProxyRelease(mCallbackTarget, mCallback.forget());
   }
 }
 

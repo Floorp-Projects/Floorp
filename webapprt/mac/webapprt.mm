@@ -29,6 +29,7 @@
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 #include "mozilla/AppData.h"
+#include "buildid.h"
 
 using namespace mozilla;
 
@@ -98,7 +99,7 @@ main(int argc, char **argv)
   NSString *alternateBinaryID = nil;
 
   //this is our version, to be compared with the version of the binary we are asked to use
-  NSString* myVersion = [NSString stringWithFormat:@"%s", NS_STRINGIFY(GRE_BUILDID)];
+  NSString* myVersion = [NSString stringWithFormat:@"%s", NS_STRINGIFY(MOZ_BUILDID)];
 
   NSLog(@"MY WEBAPPRT BUILDID: %@", myVersion);
 

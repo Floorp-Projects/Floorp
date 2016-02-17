@@ -1158,6 +1158,20 @@
             throw new Error("Can only swap docshells between browsers in the same process.");
 
           // Give others a chance to swap state.
+          // IMPORTANT: Since a swapDocShells call does not swap the messageManager
+          //            instances attached to a browser to aOtherBrowser, others
+          //            will need to add the message listeners to the new
+          //            messageManager.
+          //            This is not a bug in swapDocShells or the FrameLoader,
+          //            merely a design decision: If message managers were swapped,
+          //            so that no new listeners were needed, the new
+          //            aOtherBrowser.messageManager would have listeners pointing
+          //            to the JS global of the current browser, which would rather
+          //            easily create leaks while swapping.
+          // IMPORTANT2: When the current browser element is removed from DOM,
+          //             which is quite common after a swpDocShells call, its
+          //             frame loader is destroyed, and that destroys the relevant
+          //             message manager, which will remove the listeners.
           let event = new CustomEvent("SwapDocShells", {"detail": aOtherBrowser});
           this.dispatchEvent(event);
           event = new CustomEvent("SwapDocShells", {"detail": this});

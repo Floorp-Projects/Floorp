@@ -26,6 +26,9 @@ enum PathResolutionMode {
 JSString*
 ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode resolveMode);
 
+JSObject*
+FileAsTypedArray(JSContext* cx, const char* pathname);
+
 } // namespace shell
 } // namespace js
 

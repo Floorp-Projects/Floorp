@@ -137,12 +137,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           synthesizeMouseAtCenter(child, { type: "mousemove" }, window);
         }
         else {
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         }
       }, false);
 
-      document.addEventListener("mozfullscreenchange", function() {
-        if (document.mozFullScreenElement === parent) {
+      document.addEventListener("fullscreenchange", function() {
+        if (document.fullscreenElement === parent) {
           parent.mozRequestPointerLock();
         }
         else {
@@ -154,7 +154,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       function start() {
         parent = document.getElementById("parent");
         child = document.getElementById("child");
-        parent.mozRequestFullScreen();
+        parent.requestFullscreen();
       }
   </script>
 </body>

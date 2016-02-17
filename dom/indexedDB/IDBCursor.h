@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbcursor_h__
-#define mozilla_dom_indexeddb_idbcursor_h__
+#ifndef mozilla_dom_idbcursor_h__
+#define mozilla_dom_idbcursor_h__
 
 #include "IndexedDatabase.h"
 #include "js/RootingAPI.h"
@@ -24,21 +24,24 @@ class ErrorResult;
 
 namespace dom {
 
-class OwningIDBObjectStoreOrIDBIndex;
-
-namespace indexedDB {
-
-class BackgroundCursorChild;
 class IDBIndex;
 class IDBObjectStore;
 class IDBRequest;
 class IDBTransaction;
+class OwningIDBObjectStoreOrIDBIndex;
+
+namespace indexedDB {
+class BackgroundCursorChild;
+}
 
 class IDBCursor final
   : public nsISupports
   , public nsWrapperCache
 {
 public:
+  typedef indexedDB::Key Key;
+  typedef indexedDB::StructuredCloneReadInfo StructuredCloneReadInfo;
+
   enum Direction
   {
     NEXT = 0,
@@ -59,7 +62,7 @@ private:
     Type_IndexKey,
   };
 
-  BackgroundCursorChild* mBackgroundActor;
+  indexedDB::BackgroundCursorChild* mBackgroundActor;
 
   RefPtr<IDBRequest> mRequest;
   RefPtr<IDBObjectStore> mSourceObjectStore;
@@ -92,23 +95,23 @@ private:
 
 public:
   static already_AddRefed<IDBCursor>
-  Create(BackgroundCursorChild* aBackgroundActor,
+  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
          const Key& aKey,
          StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor>
-  Create(BackgroundCursorChild* aBackgroundActor,
+  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
          const Key& aKey);
 
   static already_AddRefed<IDBCursor>
-  Create(BackgroundCursorChild* aBackgroundActor,
+  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
          const Key& aKey,
          const Key& aSortKey,
          const Key& aPrimaryKey,
          StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor>
-  Create(BackgroundCursorChild* aBackgroundActor,
+  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
          const Key& aKey,
          const Key& aSortKey,
          const Key& aPrimaryKey);
@@ -194,7 +197,7 @@ public:
 
 private:
   IDBCursor(Type aType,
-            BackgroundCursorChild* aBackgroundActor,
+            indexedDB::BackgroundCursorChild* aBackgroundActor,
             const Key& aKey);
 
   ~IDBCursor();
@@ -212,8 +215,7 @@ private:
   IsSourceDeleted() const;
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbcursor_h__
+#endif // mozilla_dom_idbcursor_h__

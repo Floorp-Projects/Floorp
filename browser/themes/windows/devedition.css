@@ -262,7 +262,7 @@
 
 /* Disable dragging like in the default theme: */
 #main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme,
-#main-window[tabsintitlebar] #PlacesToolbarItems:-moz-lwtheme {
+#main-window[tabsintitlebar]:not([customizing]) #personal-bookmarks:-moz-lwtheme {
   -moz-window-dragging: no-drag;
 }
 

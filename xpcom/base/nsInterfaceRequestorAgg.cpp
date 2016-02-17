@@ -54,16 +54,8 @@ nsInterfaceRequestorAgg::GetInterface(const nsIID& aIID, void** aResult)
 
 nsInterfaceRequestorAgg::~nsInterfaceRequestorAgg()
 {
-  nsIInterfaceRequestor* iir = nullptr;
-  mFirst.swap(iir);
-  if (iir) {
-    NS_ProxyRelease(mConsumerTarget, iir);
-  }
-  iir = nullptr;
-  mSecond.swap(iir);
-  if (iir) {
-    NS_ProxyRelease(mConsumerTarget, iir);
-  }
+  NS_ProxyRelease(mConsumerTarget, mFirst.forget());
+  NS_ProxyRelease(mConsumerTarget, mSecond.forget());
 }
 
 nsresult

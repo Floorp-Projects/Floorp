@@ -32,7 +32,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsDocShell.h"
 #include "nsDOMCID.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
@@ -49,6 +48,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsSandboxFlags.h"
 #include "xpcpublic.h"
+#include "nsIFrame.h"
 
 namespace mozilla {
 
@@ -417,10 +417,7 @@ EventListenerManager::AddEventListenerInternal(
   }
 
   if (IsApzAwareEvent(aTypeAtom)) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-    if (node) {
-      node->SetMayHaveApzAwareListeners();
-    }
+    ProcessApzAwareEventListenerAdd();
   }
 
   if (aTypeAtom && mTarget) {
@@ -430,6 +427,44 @@ EventListenerManager::AddEventListenerInternal(
   if (mIsMainThreadELM && mTarget) {
     EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
                                                               aTypeAtom);
+  }
+}
+
+void
+EventListenerManager::ProcessApzAwareEventListenerAdd()
+{
+  // Mark the node as having apz aware listeners
+  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+  if (node) {
+    node->SetMayHaveApzAwareListeners();
+  }
+
+  // Schedule a paint so event regions on the layer tree gets updated
+  nsIDocument* doc = nullptr;
+  if (node) {
+    doc = node->OwnerDoc();
+  }
+  if (!doc) {
+    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
+      doc = window->GetExtantDoc();
+    }
+  }
+  if (!doc) {
+    if (nsCOMPtr<DOMEventTargetHelper> helper = do_QueryInterface(mTarget)) {
+      if (nsPIDOMWindowInner* window = helper->GetOwner()) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  }
+
+  if (doc) {
+    nsIPresShell* ps = doc->GetShell();
+    if (ps) {
+      nsIFrame* f = ps->GetRootFrame();
+      if (f) {
+        f->SchedulePaint();
+      }
+    }
   }
 }
 
@@ -1092,7 +1127,14 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
     }
   }
 
-  return aEventMessage;
+  switch (aEventMessage) {
+    case eFullscreenChange:
+      return eMozFullscreenChange;
+    case eFullscreenError:
+      return eMozFullscreenError;
+    default:
+      return aEventMessage;
+  }
 }
 
 nsIDocShell*
@@ -1157,6 +1199,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   }
 
   bool hasListener = false;
+  bool hasListenerForCurrentGroup = false;
   bool usingLegacyMessage = false;
   EventMessage eventMessage = aEvent->mMessage;
 
@@ -1172,6 +1215,8 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
       // Handle only trusted events, except when listener permits untrusted events.
       if (ListenerCanHandle(listener, aEvent, eventMessage)) {
         hasListener = true;
+        hasListenerForCurrentGroup = hasListenerForCurrentGroup ||
+          listener->mFlags.mInSystemGroup == aEvent->mFlags.mInSystemGroup;
         if (listener->IsListening(aEvent) &&
             (aEvent->mFlags.mIsTrusted ||
              listener->mFlags.mAllowUntrustedEvents)) {
@@ -1199,15 +1244,14 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
             // Maybe add a marker to the docshell's timeline, but only
             // bother with all the logic if some docshell is recording.
-            nsDocShell* docShell;
+            nsCOMPtr<nsIDocShell> docShell;
             RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
             bool needsEndEventMarker = false;
 
             if (mIsMainThreadELM &&
                 listener->mListenerType != Listener::eNativeListener) {
-              nsCOMPtr<nsIDocShell> docShellComPtr = GetDocShellForTarget();
-              if (docShellComPtr) {
-                docShell = static_cast<nsDocShell*>(docShellComPtr.get());
+              docShell = GetDocShellForTarget();
+              if (docShell) {
                 if (timelines && timelines->HasConsumer(docShell)) {
                   needsEndEventMarker = true;
                   nsAutoString typeStr;
@@ -1237,7 +1281,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     // If we didn't find any matching listeners, and our event has a legacy
     // version, we'll now switch to looking for that legacy version and we'll
     // recheck our listeners.
-    if (hasListener || usingLegacyMessage) {
+    if (hasListenerForCurrentGroup || usingLegacyMessage) {
       // (No need to recheck listeners, because we already found a match, or we
       // already rechecked them.)
       break;

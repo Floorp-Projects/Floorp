@@ -298,6 +298,10 @@ public:
                 mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
                 ::template Wrap<&Impl::HandleMotionEvent>),
 
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleScrollEvent_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::HandleScrollEvent_t, Impl>
+                ::template Wrap<&Impl::HandleScrollEvent>),
+
         mozilla::jni::MakeNativeMethod<NativePanZoomController::AbortAnimation_t>(
                 mozilla::jni::NativeStub<NativePanZoomController::AbortAnimation_t, Impl>
                 ::template Wrap<&Impl::AbortAnimation>),

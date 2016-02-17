@@ -7,7 +7,6 @@
 
 #include "GrAtlasTextBatch.h"
 
-#include "GrBatchFontCache.h"
 #include "GrBatchFlushState.h"
 #include "GrBatchTest.h"
 #include "GrResourceProvider.h"
@@ -17,6 +16,7 @@
 
 #include "effects/GrBitmapTextGeoProc.h"
 #include "effects/GrDistanceFieldGeoProc.h"
+#include "text/GrBatchFontCache.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // A large template to handle regenerating the vertices of a textblob with as few branches as
@@ -135,7 +135,7 @@ inline void GrAtlasTextBatch::regenBlob(Target* target, FlushInfo* flushInfo, Bl
     static_assert(!regenGlyphs || regenTexCoords, "must regenTexCoords along regenGlyphs");
     GrBatchTextStrike* strike = nullptr;
     if (regenTexCoords) {
-        info->fBulkUseToken.reset();
+        info->resetBulkUseToken();
 
         // We can reuse if we have a valid strike and our descriptors / typeface are the
         // same.  The override descriptor is only for the non distance field text within
@@ -151,14 +151,14 @@ inline void GrAtlasTextBatch::regenBlob(Target* target, FlushInfo* flushInfo, Bl
             *desc = newDesc;
             *cache = SkGlyphCache::DetachCache(run->fTypeface, *desc);
             *scaler = GrTextContext::GetGrFontScaler(*cache);
-            strike = info->fStrike;
+            strike = info->strike();
             *typeface = run->fTypeface;
         }
 
         if (regenGlyphs) {
             strike = fFontCache->getStrike(*scaler);
         } else {
-            strike = info->fStrike;
+            strike = info->strike();
         }
     }
 
@@ -166,7 +166,7 @@ inline void GrAtlasTextBatch::regenBlob(Target* target, FlushInfo* flushInfo, Bl
     for (int glyphIdx = 0; glyphIdx < glyphCount; glyphIdx++) {
         GrGlyph* glyph = nullptr;
         if (regenTexCoords) {
-            size_t glyphOffset = glyphIdx + info->fGlyphStartIndex;
+            size_t glyphOffset = glyphIdx + info->glyphStartIndex();
 
             if (regenGlyphs) {
                 // Get the id from the old glyph, and use the new strike to lookup
@@ -190,12 +190,12 @@ inline void GrAtlasTextBatch::regenBlob(Target* target, FlushInfo* flushInfo, Bl
                                                                     this->maskFormat());
                 SkASSERT(success);
             }
-            fFontCache->addGlyphToBulkAndSetUseToken(&info->fBulkUseToken, glyph,
+            fFontCache->addGlyphToBulkAndSetUseToken(info->bulkUseToken(), glyph,
                                                      target->currentToken());
         }
 
         intptr_t vertex = reinterpret_cast<intptr_t>(blob->fVertices);
-        vertex += info->fVertexStartIndex;
+        vertex += info->vertexStartIndex();
         vertex += vertexStride * glyphIdx * GrAtlasTextBatch::kVerticesPerGlyph;
         regen_vertices<regenPos, regenCol, regenTexCoords>(vertex, glyph, vertexStride,
                                                            this->usesDistanceFields(), transX,
@@ -203,14 +203,14 @@ inline void GrAtlasTextBatch::regenBlob(Target* target, FlushInfo* flushInfo, Bl
         flushInfo->fGlyphsToFlush++;
     }
 
-    // We my have changed the color so update it here
-    run->fColor = color;
+    // We may have changed the color so update it here
+    info->setColor(color);
     if (regenTexCoords) {
         if (regenGlyphs) {
-            info->fStrike.reset(SkRef(strike));
+            info->setStrike(strike);
         }
-        info->fAtlasGeneration = brokenRun ? GrBatchAtlas::kInvalidAtlasGeneration :
-                                             fFontCache->atlasGeneration(this->maskFormat());
+        info->setAtlasGeneration(brokenRun ? GrBatchAtlas::kInvalidAtlasGeneration :
+                                             fFontCache->atlasGeneration(this->maskFormat()));
     }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,12 +312,10 @@ void GrAtlasTextBatch::onPrepareDraws(Target* target) const {
         return;
     }
 
-    bool usesDistanceFields = this->usesDistanceFields();
     GrMaskFormat maskFormat = this->maskFormat();
-    bool isLCD = this->isLCD();
 
     SkAutoTUnref<const GrGeometryProcessor> gp;
-    if (usesDistanceFields) {
+    if (this->usesDistanceFields()) {
         gp.reset(this->setupDfProcessor(this->viewMatrix(), fFilteredColor, this->color(),
                                         texture));
     } else {
@@ -333,9 +331,7 @@ void GrAtlasTextBatch::onPrepareDraws(Target* target) const {
     FlushInfo flushInfo;
     flushInfo.fGlyphsToFlush = 0;
     size_t vertexStride = gp->getVertexStride();
-    SkASSERT(vertexStride == (usesDistanceFields ?
-                              GetVertexStrideDf(maskFormat, isLCD) :
-                              GetVertexStride(maskFormat)));
+    SkASSERT(vertexStride == GrAtlasTextBlob::GetVertexStride(maskFormat));
 
     target->initDraw(gp, this->pipeline());
 
@@ -378,17 +374,13 @@ void GrAtlasTextBatch::onPrepareDraws(Target* target) const {
         // new strike, we instead keep our ref to the old strike and use the packed ids from
         // it.  These ids will still be valid as long as we hold the ref.  When we are done
         // updating our cache of the GrGlyph*s, we drop our ref on the old strike
-        bool regenerateGlyphs = info.fStrike->isAbandoned();
-        bool regenerateTextureCoords = info.fAtlasGeneration != currentAtlasGen ||
+        bool regenerateGlyphs = info.strike()->isAbandoned();
+        bool regenerateTextureCoords = info.atlasGeneration() != currentAtlasGen ||
                                        regenerateGlyphs;
-        bool regenerateColors;
-        if (usesDistanceFields) {
-            regenerateColors = !isLCD && run.fColor != args.fColor;
-        } else {
-            regenerateColors = kA8_GrMaskFormat == maskFormat && run.fColor != args.fColor;
-        }
+        bool regenerateColors = kARGB_GrMaskFormat != maskFormat &&
+                                info.color() != args.fColor;
         bool regeneratePositions = args.fTransX != 0.f || args.fTransY != 0.f;
-        int glyphCount = info.fGlyphEndIndex - info.fGlyphStartIndex;
+        int glyphCount = info.glyphCount();
 
         uint32_t regenMaskBits = kNoRegen;
         regenMaskBits |= regeneratePositions ? kRegenPos : 0;
@@ -416,13 +408,14 @@ void GrAtlasTextBatch::onPrepareDraws(Target* target) const {
 
                 // set use tokens for all of the glyphs in our subrun.  This is only valid if we
                 // have a valid atlas generation
-                fFontCache->setUseTokenBulk(info.fBulkUseToken, target->currentToken(), maskFormat);
+                fFontCache->setUseTokenBulk(*info.bulkUseToken(), target->currentToken(),
+                                            maskFormat);
                 break;
         }
 
         // now copy all vertices
-        size_t byteCount = info.fVertexEndIndex - info.fVertexStartIndex;
-        memcpy(currVertex, blob->fVertices + info.fVertexStartIndex, byteCount);
+        size_t byteCount = info.byteCount();
+        memcpy(currVertex, blob->fVertices + info.vertexStartIndex(), byteCount);
 
         currVertex += byteCount;
     }
@@ -458,9 +451,7 @@ bool GrAtlasTextBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
     }
 
     if (!this->usesDistanceFields()) {
-        // TODO we can often batch across LCD text if we have dual source blending and don't
-        // have to use the blend constant
-        if (kGrayscaleCoverageMask_MaskType != fMaskType && this->color() != that->color()) {
+        if (kColorBitmapMask_MaskType == fMaskType && this->color() != that->color()) {
             return false;
         }
         if (this->usesLocalCoords() && !this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
@@ -476,11 +467,6 @@ bool GrAtlasTextBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
         }
 
         if (fUseBGR != that->fUseBGR) {
-            return false;
-        }
-
-        // TODO see note above
-        if (kLCDDistanceField_MaskType == fMaskType && this->color() != that->color()) {
             return false;
         }
     }
@@ -551,7 +537,6 @@ GrGeometryProcessor* GrAtlasTextBatch::setupDfProcessor(const SkMatrix& viewMatr
                                                      flags,
                                                      this->usesLocalCoords());
     } else {
-        flags |= kColorAttr_DistanceFieldEffectFlag;
 #ifdef SK_GAMMA_APPLY_TO_A8
         U8CPU lum = SkColorSpaceLuminance::computeLuminance(SK_GAMMA_EXPONENT, filteredColor);
         float correction = (*fDistanceAdjustTable)[lum >> kDistanceAdjustLumShift];

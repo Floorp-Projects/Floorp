@@ -29,9 +29,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PIBlobImplSnapshot, FILEIMPLSNAPSHOT_IID)
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
 class IDBFileHandle;
+
+namespace indexedDB {
 
 class BlobImplSnapshot final
   : public BlobImpl

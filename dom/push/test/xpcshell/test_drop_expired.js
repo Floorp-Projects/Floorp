@@ -12,13 +12,11 @@ var quotaURI;
 var permURI;
 
 function visitURI(uri, timestamp) {
-  return addVisit({
+  return PlacesTestUtils.addVisits({
     uri: uri,
     title: uri.spec,
-    visits: [{
-      visitDate: timestamp * 1000,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
-    }],
+    visitDate: timestamp * 1000,
+    transition: Ci.nsINavHistoryService.TRANSITION_LINK
   });
 }
 

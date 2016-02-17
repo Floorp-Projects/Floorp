@@ -2402,8 +2402,8 @@ public:
    * If the hostname for aURI is an IPv6 it encloses it in brackets,
    * otherwise it just outputs the hostname in aHost.
    */
-  static void GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost);
-  static void GetHostOrIPv6WithBrackets(nsIURI* aURI, nsCString& aHost);
+  static nsresult GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost);
+  static nsresult GetHostOrIPv6WithBrackets(nsIURI* aURI, nsCString& aHost);
 
   /*
    * Call the given callback on all remote children of the given top-level

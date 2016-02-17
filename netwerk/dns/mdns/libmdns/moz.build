@@ -10,6 +10,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'nsDNSServiceDiscovery.manifest',
     ]
 
+    EXTRA_JS_MODULES += [
+        'MulticastDNSAndroid.jsm',
+        'MulticastDNSFallback.jsm',
+    ]
+
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
         (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16'):
     UNIFIED_SOURCES += [

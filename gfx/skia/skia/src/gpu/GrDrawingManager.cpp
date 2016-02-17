@@ -5,21 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "GrAtlasTextContext.h"
 #include "GrDrawContext.h"
 #include "GrDrawingManager.h"
 #include "GrDrawTarget.h"
 #include "GrResourceProvider.h"
 #include "GrSoftwarePathRenderer.h"
-#include "GrStencilAndCoverTextContext.h"
 #include "SkTTopoSort.h"
 
+#include "text/GrAtlasTextContext.h"
+#include "text/GrStencilAndCoverTextContext.h"
 
 void GrDrawingManager::cleanup() {
     for (int i = 0; i < fDrawTargets.count(); ++i) {
         fDrawTargets[i]->makeClosed();  // no drawTarget should receive a new command after this
         fDrawTargets[i]->clearRT();
 
+        // We shouldn't need to do this, but it turns out some clients still hold onto drawtargets
+        // after a cleanup
+        fDrawTargets[i]->reset();
         fDrawTargets[i]->unref();
     }
 
@@ -64,6 +67,11 @@ void GrDrawingManager::reset() {
 }
 
 void GrDrawingManager::flush() {
+    if (fFlushing) {
+        return;
+    }
+    fFlushing = true;
+
     SkDEBUGCODE(bool result =) 
                         SkTTopoSort<GrDrawTarget, GrDrawTarget::TopoSortTraits>(&fDrawTargets);
     SkASSERT(result);
@@ -107,6 +115,7 @@ void GrDrawingManager::flush() {
 #endif
 
     fFlushState.reset();
+    fFlushing = false;
 }
 
 GrTextContext* GrDrawingManager::textContext(const SkSurfaceProps& props,
@@ -153,7 +162,7 @@ GrDrawTarget* GrDrawingManager::newDrawTarget(GrRenderTarget* rt) {
 #endif
 
     GrDrawTarget* dt = new GrDrawTarget(rt, fContext->getGpu(), fContext->resourceProvider(),
-                                        fOptionsForDrawTargets);
+                                        fContext->getAuditTrail(), fOptionsForDrawTargets);
 
     *fDrawTargets.append() = dt;
 
@@ -193,5 +202,5 @@ GrDrawContext* GrDrawingManager::drawContext(GrRenderTarget* rt,
         return nullptr;
     }
 
-    return new GrDrawContext(this, rt, surfaceProps);
+    return new GrDrawContext(this, rt, surfaceProps, fContext->getAuditTrail(), fSingleOwner);
 }

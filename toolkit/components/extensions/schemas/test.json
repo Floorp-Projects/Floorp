@@ -1,0 +1,161 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "test",
+    "description": "none",
+    "functions": [
+      {
+        "name": "notifyFail",
+        "type": "function",
+        "description": "Notifies the browser process that test code running in the extension failed.  This is only used for internal unit testing.",
+        "parameters": [
+          {"type": "string", "name": "message"}
+        ]
+      },
+      {
+        "name": "notifyPass",
+        "type": "function",
+        "description": "Notifies the browser process that test code running in the extension passed.  This is only used for internal unit testing.",
+        "parameters": [
+          {"type": "string", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "log",
+        "type": "function",
+        "description": "Logs a message during internal unit testing.",
+        "parameters": [
+          {"type": "string", "name": "message"}
+        ]
+      },
+      {
+        "name": "sendMessage",
+        "type": "function",
+        "description": "Sends a string message to the browser process, generating a Notification that C++ test code can wait for.",
+        "allowAmbiguousOptionalArguments": true,
+        "parameters": [
+          {"type": "any", "name": "arg1", "optional": true},
+          {"type": "any", "name": "arg2", "optional": true}
+        ]
+      },
+      {
+        "name": "fail",
+        "type": "function",
+        "parameters": [
+          {"type": "any", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "succeed",
+        "type": "function",
+        "parameters": [
+          {"type": "any", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "assertTrue",
+        "type": "function",
+        "allowAmbiguousOptionalArguments": true,
+        "parameters": [
+          {"name": "test", "type": "any", "optional": true},
+          {"type": "string", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "assertFalse",
+        "type": "function",
+        "allowAmbiguousOptionalArguments": true,
+        "parameters": [
+          {"name": "test", "type": "any", "optional": true},
+          {"type": "string", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "assertBool",
+        "type": "function",
+        "unsupported": true,
+        "parameters": [
+          {
+            "name": "test",
+            "choices": [
+              {"type": "string"},
+              {"type": "boolean"}
+            ]
+          },
+          {"type": "boolean", "name": "expected"},
+          {"type": "string", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "checkDeepEq",
+        "type": "function",
+        "unsupported": true,
+        "allowAmbiguousOptionalArguments": true,
+        "parameters": [
+          {"type": "any", "name": "expected"},
+          {"type": "any", "name": "actual"}
+        ]
+      },
+      {
+        "name": "assertEq",
+        "type": "function",
+        "allowAmbiguousOptionalArguments": true,
+        "parameters": [
+          {"type": "any", "name": "expected", "optional": true},
+          {"type": "any", "name": "actual", "optional": true},
+          {"type": "string", "name": "message", "optional": true}
+        ]
+      },
+      {
+        "name": "assertNoLastError",
+        "type": "function",
+        "unsupported": true,
+        "parameters": []
+      },
+      {
+        "name": "assertLastError",
+        "type": "function",
+        "unsupported": true,
+        "parameters": [
+          {"type": "string", "name": "expectedError"}
+        ]
+      },
+      {
+        "name": "assertThrows",
+        "type": "function",
+        "unsupported": true,
+        "parameters": [
+          {"type": "function", "name": "fn"},
+          {
+            "type": "object",
+            "name": "self",
+            "additionalProperties": {"type": "any"},
+            "optional": true
+          },
+          {"type": "array", "items": {"type": "any"}, "name": "args", "optional": true},
+          {"choices": [ {"type": "string"}, {"type": "object", "isInstanceOf": "RegExp"} ], "name": "message", "optional": true}
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onMessage",
+        "type": "function",
+        "description": "Used to test sending messages to extensions.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "message"
+          },
+          {
+            "type": "any",
+            "name": "argument"
+          }
+        ]
+      }
+    ]
+  }
+]

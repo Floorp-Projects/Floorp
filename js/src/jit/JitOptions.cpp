@@ -161,6 +161,10 @@ DefaultJitOptions::DefaultJitOptions()
     // The bytecode length limit for small function.
     SET_DEFAULT(smallFunctionMaxBytecodeLength_, 120);
 
+    // An artificial testing limit for the maximum supported offset of
+    // pc-relative jump and call instructions.
+    SET_DEFAULT(jumpThreshold, UINT32_MAX);
+
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
     // (i.e. OptimizationLevel_Normal)

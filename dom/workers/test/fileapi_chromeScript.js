@@ -11,7 +11,7 @@ function createFileWithData(fileData) {
   fileNum++;
   var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                 0666, 0);
+                 0o666, 0);
   if (willDelete) {
     fileData = "some irrelevant test data\n";
   }

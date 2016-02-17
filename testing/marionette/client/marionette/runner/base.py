@@ -16,7 +16,7 @@ import traceback
 import unittest
 import warnings
 import mozprofile
-import xml.dom.minidom as dom
+
 
 from manifestparser import TestManifest
 from manifestparser.filters import tags
@@ -341,8 +341,6 @@ class BaseMarionetteArguments(ArgumentParser):
                         type=int,
                         default=0,
                         help='number of times to repeat the test(s)')
-        self.add_argument('-x', '--xml-output',
-                        help='xml output')
         self.add_argument('--testvars',
                         action='append',
                         help='path to a json file with any test data required')
@@ -518,7 +516,7 @@ class BaseMarionetteTestRunner(object):
                  emulator_img=None, emulator_res='480x800', homedir=None,
                  app=None, app_args=None, binary=None, profile=None,
                  logger=None, no_window=False, logdir=None, logcat_stdout=False,
-                 xml_output=None, repeat=0, testvars=None, tree=None, type=None,
+                 repeat=0, testvars=None, tree=None, type=None,
                  device_serial=None, symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
@@ -544,7 +542,6 @@ class BaseMarionetteTestRunner(object):
         self.marionette = None
         self.logdir = logdir
         self.logcat_stdout = logcat_stdout
-        self.xml_output = xml_output
         self.repeat = repeat
         self.test_kwargs = kwargs
         self.tree = tree
@@ -640,8 +637,6 @@ class BaseMarionetteTestRunner(object):
         else:
             self.gecko_log = gecko_log
 
-        # for XML output
-        self.testvars['xml_output'] = self.xml_output
         self.results = []
 
     @property
@@ -925,13 +920,6 @@ setReq.onerror = function() {
         self.end_time = time.time()
         self.elapsedtime = self.end_time - self.start_time
 
-        if self.xml_output:
-            xml_dir = os.path.dirname(os.path.abspath(self.xml_output))
-            if not os.path.exists(xml_dir):
-                os.makedirs(xml_dir)
-            with open(self.xml_output, 'w') as f:
-                f.write(self.generate_xml(self.results))
-
         if self.marionette.instance:
             self.marionette.instance.close()
             self.marionette.instance = None
@@ -1121,92 +1109,3 @@ setReq.onerror = function() {
             self.marionette.cleanup()
 
     __del__ = cleanup
-
-    def generate_xml(self, results_list):
-
-        def _extract_xml_from_result(test_result, result='passed'):
-            _extract_xml(
-                test_name=unicode(test_result.name).split()[0],
-                test_class=test_result.test_class,
-                duration=test_result.duration,
-                result=result,
-                output='\n'.join(test_result.output))
-
-        def _extract_xml_from_skipped_manifest_test(test):
-            _extract_xml(
-                test_name=test['name'],
-                result='skipped',
-                output=test['disabled'])
-
-        def _extract_xml(test_name, test_class='', duration=0,
-                         result='passed', output=''):
-            testcase = doc.createElement('testcase')
-            testcase.setAttribute('classname', test_class)
-            testcase.setAttribute('name', test_name)
-            testcase.setAttribute('time', str(duration))
-            testsuite.appendChild(testcase)
-
-            if result in ['failure', 'error', 'skipped']:
-                f = doc.createElement(result)
-                f.setAttribute('message', 'test %s' % result)
-                f.appendChild(doc.createTextNode(output))
-                testcase.appendChild(f)
-
-        doc = dom.Document()
-
-        testsuite = doc.createElement('testsuite')
-        testsuite.setAttribute('name', 'Marionette')
-        testsuite.setAttribute('time', str(self.elapsedtime))
-        testsuite.setAttribute('tests', str(sum([results.testsRun for
-                                                 results in results_list])))
-
-        def failed_count(results):
-            count = len(results.failures)
-            if hasattr(results, 'unexpectedSuccesses'):
-                count += len(results.unexpectedSuccesses)
-            return count
-
-        testsuite.setAttribute('failures', str(sum([failed_count(results)
-                                               for results in results_list])))
-        testsuite.setAttribute('errors', str(sum([len(results.errors)
-                                             for results in results_list])))
-        testsuite.setAttribute(
-            'skips', str(sum([len(results.skipped) +
-                         len(results.expectedFailures)
-                         for results in results_list]) +
-                         len(self.manifest_skipped_tests)))
-
-        for results in results_list:
-
-            for result in results.errors:
-                _extract_xml_from_result(result, result='error')
-
-            for result in results.failures:
-                _extract_xml_from_result(result, result='failure')
-
-            if hasattr(results, 'unexpectedSuccesses'):
-                for test in results.unexpectedSuccesses:
-                    # unexpectedSuccesses is a list of Testcases only, no tuples
-                    _extract_xml_from_result(test, result='failure')
-
-            if hasattr(results, 'skipped'):
-                for result in results.skipped:
-                    _extract_xml_from_result(result, result='skipped')
-
-            if hasattr(results, 'expectedFailures'):
-                for result in results.expectedFailures:
-                    _extract_xml_from_result(result, result='skipped')
-
-            for result in results.tests_passed:
-                _extract_xml_from_result(result)
-
-        for test in self.manifest_skipped_tests:
-            _extract_xml_from_skipped_manifest_test(test)
-
-        doc.appendChild(testsuite)
-
-        # change default encoding to avoid encoding problem for page source
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
-
-        return doc.toprettyxml(encoding='utf-8')

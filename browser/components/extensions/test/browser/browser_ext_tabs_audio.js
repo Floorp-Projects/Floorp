@@ -49,7 +49,7 @@ add_task(function* () {
 
     let windowId;
     let tabIds;
-    promiseTabs.query({ lastFocusedWindow: true }).then(tabs => {
+    promiseTabs.query({lastFocusedWindow: true}).then(tabs => {
       browser.test.assertEq(tabs.length, 3, "We have three tabs");
 
       for (let tab of tabs) {
@@ -65,10 +65,10 @@ add_task(function* () {
 
       browser.test.log("Test initial queries for muted and audible return no tabs");
       return Promise.all([
-        promiseTabs.query({ windowId, audible: false }),
-        promiseTabs.query({ windowId, audible: true }),
-        promiseTabs.query({ windowId, muted: true }),
-        promiseTabs.query({ windowId, muted: false }),
+        promiseTabs.query({windowId, audible: false}),
+        promiseTabs.query({windowId, audible: true}),
+        promiseTabs.query({windowId, muted: true}),
+        promiseTabs.query({windowId, muted: false}),
       ]);
     }).then(([silent, audible, muted, nonMuted]) => {
       browser.test.assertEq(3, silent.length, "Three silent tabs");
@@ -95,10 +95,10 @@ add_task(function* () {
 
       browser.test.log("Re-check queries. Expect one audible and one muted tab");
       return Promise.all([
-        promiseTabs.query({ windowId, audible: false }),
-        promiseTabs.query({ windowId, audible: true }),
-        promiseTabs.query({ windowId, muted: true }),
-        promiseTabs.query({ windowId, muted: false }),
+        promiseTabs.query({windowId, audible: false}),
+        promiseTabs.query({windowId, audible: true}),
+        promiseTabs.query({windowId, muted: true}),
+        promiseTabs.query({windowId, muted: false}),
       ]);
     }).then(([silent, audible, muted, nonMuted]) => {
       browser.test.assertEq(2, silent.length, "Two silent tabs");
@@ -116,8 +116,8 @@ add_task(function* () {
       return Promise.all([
         promiseUpdated(tabIds[0], "mutedInfo"),
         promiseUpdated(tabIds[1], "mutedInfo"),
-        promiseTabs.update(tabIds[0], { muted: false }),
-        promiseTabs.update(tabIds[1], { muted: true }),
+        promiseTabs.update(tabIds[0], {muted: false}),
+        promiseTabs.update(tabIds[1], {muted: true}),
       ]);
     }).then(([unmuted, muted]) => {
       for (let obj of [unmuted.changeInfo, unmuted.tab]) {

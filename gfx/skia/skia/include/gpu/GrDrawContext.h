@@ -12,16 +12,17 @@
 #include "GrRenderTarget.h"
 #include "SkRefCnt.h"
 #include "SkSurfaceProps.h"
+#include "../private/GrSingleOwner.h"
 
+class GrAuditTrail;
 class GrClip;
 class GrContext;
 class GrDrawBatch;
+class GrDrawPathBatchBase;
 class GrDrawingManager;
 class GrDrawTarget;
 class GrPaint;
 class GrPathProcessor;
-class GrPathRange;
-class GrPathRangeDraw;
 class GrPipelineBuilder;
 class GrRenderTarget;
 class GrStrokeInfo;
@@ -62,17 +63,6 @@ public:
                       const SkMatrix& viewMatrix, const SkTextBlob*,
                       SkScalar x, SkScalar y,
                       SkDrawFilter*, const SkIRect& clipBounds);
-
-    // drawPathsFromRange is thanks to GrStencilAndCoverTextContext
-    // TODO: remove once path batches can be created external to GrDrawTarget.
-    void drawPathsFromRange(const GrPipelineBuilder*,
-                            const SkMatrix& viewMatrix,
-                            const SkMatrix& localMatrix,
-                            GrColor color,
-                            GrPathRange* range,
-                            GrPathRangeDraw* draw,
-                            int /*GrPathRendering::FillType*/ fill,
-                            const SkRect& bounds);
 
     /**
      * Provides a perfomance hint that the render target's contents are allowed
@@ -274,17 +264,32 @@ public:
      */
     void drawBatch(const GrClip&, const GrPaint&, GrDrawBatch*);
 
+    /**
+     * Draws a path batch. This needs to be separate from drawBatch because we install path stencil
+     * settings late.
+     *
+     * TODO: Figure out a better model that allows us to roll this method into drawBatch.
+     */
+    void drawPathBatch(const GrPipelineBuilder&, GrDrawPathBatchBase*);
+
     int width() const { return fRenderTarget->width(); }
     int height() const { return fRenderTarget->height(); }
     int numColorSamples() const { return fRenderTarget->numColorSamples(); }
 
+    GrRenderTarget* accessRenderTarget() { return fRenderTarget; }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // Functions intended for internal use only.
+    void internal_drawBatch(const GrPipelineBuilder& pipelineBuilder, GrDrawBatch* batch);
+
 private:
-    friend class GrAtlasTextContext; // for access to drawBatch
+    friend class GrAtlasTextBlob; // for access to drawBatch
     friend class GrDrawingManager; // for ctor
 
     SkDEBUGCODE(void validate() const;)
 
-    GrDrawContext(GrDrawingManager*, GrRenderTarget*, const SkSurfaceProps* surfaceProps);
+    GrDrawContext(GrDrawingManager*, GrRenderTarget*, const SkSurfaceProps* surfaceProps,
+                  GrAuditTrail*, GrSingleOwner*);
 
     void internalDrawPath(GrPipelineBuilder*,
                           const SkMatrix& viewMatrix,
@@ -308,6 +313,10 @@ private:
     GrTextContext*    fTextContext; // lazily gotten from GrContext::DrawingManager
 
     SkSurfaceProps    fSurfaceProps;
+    GrAuditTrail*     fAuditTrail;
+
+    // In debug builds we guard against improper thread handling
+    SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
 };
 
 #endif

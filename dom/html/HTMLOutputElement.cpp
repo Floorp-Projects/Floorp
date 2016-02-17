@@ -11,7 +11,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsContentUtils.h"
-#include "nsDOMSettableTokenList.h"
+#include "nsDOMTokenList.h"
 #include "nsFormSubmission.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Output)
@@ -166,11 +166,11 @@ HTMLOutputElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& 
   }
 }
 
-nsDOMSettableTokenList*
+nsDOMTokenList*
 HTMLOutputElement::HtmlFor()
 {
   if (!mTokenList) {
-    mTokenList = new nsDOMSettableTokenList(this, nsGkAtoms::_for);
+    mTokenList = new nsDOMTokenList(this, nsGkAtoms::_for);
   }
   return mTokenList;
 }

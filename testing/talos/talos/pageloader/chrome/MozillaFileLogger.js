@@ -52,7 +52,7 @@ MozillaFileLogger.init = function(path) {
   MozillaFileLogger._file.initWithPath(path);
   MozillaFileLogger._foStream = Cc[FOSTREAM_CID].createInstance(Ci.nsIFileOutputStream);
   MozillaFileLogger._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
-                                   0664, 0);
+                                   0o664, 0);
 }
 
 MozillaFileLogger.getLogCallback = function() {

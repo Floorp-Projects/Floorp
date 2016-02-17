@@ -180,7 +180,7 @@ function test_upload_file() {
   var file = do_get_file("../unit/data/test_readline6.txt"); // file to upload
   var dest = do_get_tempdir();      // file upload destination
   dest.append("junk.dat");
-  dest.createUnique(dest.NORMAL_FILE_TYPE, 0600);
+  dest.createUnique(dest.NORMAL_FILE_TYPE, 0o600);
 
   var uploadstream = new_file_input_stream(file, true);
 

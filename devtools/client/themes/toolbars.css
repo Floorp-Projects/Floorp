@@ -836,7 +836,7 @@
   -moz-box-align: center;
   min-width: 32px;
   min-height: 24px;
-  max-width: 110px;
+  max-width: 95px;
   margin: 0;
   padding: 0;
   border-style: solid;
@@ -887,8 +887,8 @@
 
 .devtools-tab > image {
   border: none;
-  -moz-margin-end: 0;
-  -moz-margin-start: 4px;
+  margin: 0;
+  margin-inline-start: 4px;
   opacity: 0.6;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
@@ -896,6 +896,7 @@
 
 .devtools-tab > label {
   white-space: nowrap;
+  margin: 0 4px;
 }
 
 .devtools-tab:hover > image {

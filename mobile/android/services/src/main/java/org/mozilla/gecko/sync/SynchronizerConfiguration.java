@@ -4,14 +4,13 @@
 
 package org.mozilla.gecko.sync;
 
-import java.io.IOException;
+import android.content.SharedPreferences.Editor;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.PrefsBranch;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
-import android.content.SharedPreferences.Editor;
+import java.io.IOException;
 
 public class SynchronizerConfiguration {
   private static final String LOG_TAG = "SynczrConfiguration";
@@ -20,7 +19,7 @@ public class SynchronizerConfiguration {
   public RepositorySessionBundle remoteBundle;
   public RepositorySessionBundle localBundle;
 
-  public SynchronizerConfiguration(PrefsBranch config) throws NonObjectJSONException, IOException, ParseException {
+  public SynchronizerConfiguration(PrefsBranch config) throws NonObjectJSONException, IOException {
     this.load(config);
   }
 
@@ -31,7 +30,7 @@ public class SynchronizerConfiguration {
   }
 
   // This should get partly shuffled back into SyncConfiguration, I think.
-  public void load(PrefsBranch config) throws NonObjectJSONException, IOException, ParseException {
+  public void load(PrefsBranch config) throws NonObjectJSONException, IOException {
     if (config == null) {
       throw new IllegalArgumentException("config cannot be null.");
     }

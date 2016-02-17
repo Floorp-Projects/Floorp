@@ -542,7 +542,7 @@ var pktApi = (function() {
                 usedTagsObjectArray.sort(function(usedTagA, usedTagB) {
                     var a = usedTagA.timestamp;
                     var b = usedTagB.timestamp;
-                    return a < b ? -1 : a > b ? 1 : 0;
+                    return a - b;
                 });
 
                 // Get all keys tags

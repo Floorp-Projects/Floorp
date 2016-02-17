@@ -9,6 +9,7 @@
 const {Cu} = require("chrome");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;

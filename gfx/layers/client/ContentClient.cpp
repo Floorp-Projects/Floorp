@@ -73,7 +73,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
 #ifdef XP_WIN
   if (backend == LayersBackend::LAYERS_D3D11) {
-    useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+    useDoubleBuffering = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   } else
 #endif
 #ifdef MOZ_WIDGET_GTK
@@ -352,7 +352,7 @@ ContentClientRemoteBuffer::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
     // changes and some changed buffer content isn't reflected in the
     // draw or invalidate region (on purpose!).  When this happens, we
     // need to read back the entire buffer too.
-    updatedRegion = aVisibleRegion;
+    updatedRegion = aVisibleRegion.GetBounds();
     mIsNewBuffer = false;
   } else {
     updatedRegion = aRegionToDraw;

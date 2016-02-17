@@ -166,7 +166,7 @@ public:
 
   void StopSharing();
 
-  void StopTrack(TrackID aID, bool aIsAudio);
+  void StopTrack(TrackID aID);
 
   typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
@@ -225,7 +225,7 @@ public:
 
   // implement in .cpp to avoid circular dependency with MediaOperationTask
   // Can be invoked from EITHER MainThread or MSG thread
-  void Invalidate();
+  void Stop();
 
   void
   AudioConfig(bool aEchoOn, uint32_t aEcho,
@@ -318,7 +318,7 @@ private:
   // MainThread only.
   bool mAudioStopped;
 
-  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mVideoDevice.
   // MainThread only.
   bool mVideoStopped;
 

@@ -1,0 +1,25 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <meta charset=utf-8>
+    <title>Bug 1246046</title>
+    <style>
+      div {
+        width: 0px;
+        height: 100px;
+        background: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div></div>
+    <script>
+      var target = document.querySelector("div");
+      var anim = target.animate(
+        [ { width: "0px" }, { width: "200px" } ], 2000);
+      anim.pause();
+      anim.currentTime = 1000;
+      document.documentElement.removeAttribute("class");
+    </script>
+  </body>
+</html>

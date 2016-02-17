@@ -4,19 +4,20 @@
 
 package org.mozilla.gecko.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Extend JSONObject to do little things, like, y'know, accessing members.
@@ -105,13 +106,17 @@ public class ExtendedJSONObject {
    * You should prefer the stream interface {@link #parseJSONArray(Reader)}.
    *
    * @param jsonString input.
-   * @throws ParseException
    * @throws IOException
-   * @throws NonArrayJSONException if the object is valid JSON, but not an array.
+   * @throws NonArrayJSONException if the object is invalid JSON or not an array.
    */
   public static JSONArray parseJSONArray(String jsonString)
-      throws IOException, ParseException, NonArrayJSONException {
-    Object o = parseRaw(jsonString);
+      throws IOException, NonArrayJSONException {
+    Object o = null;
+    try {
+      o = parseRaw(jsonString);
+    } catch (ParseException e) {
+      throw new NonArrayJSONException(e);
+    }
 
     if (o == null) {
       return null;
@@ -125,44 +130,15 @@ public class ExtendedJSONObject {
   }
 
   /**
-   * Helper method to get a JSON object from a stream.
-   *
-   * @param in input {@link Reader}.
-   * @throws ParseException
-   * @throws IOException
-   * @throws NonArrayJSONException if the object is valid JSON, but not an object.
-   */
-  public static ExtendedJSONObject parseJSONObject(Reader in)
-      throws IOException, ParseException, NonObjectJSONException {
-    return new ExtendedJSONObject(in);
-  }
-
-  /**
-   * Helper method to get a JSON object from a string.
-   * <p>
-   * You should prefer the stream interface {@link #parseJSONObject(Reader)}.
-   *
-   * @param jsonString input.
-   * @throws ParseException
-   * @throws IOException
-   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
-   */
-  public static ExtendedJSONObject parseJSONObject(String jsonString)
-      throws IOException, ParseException, NonObjectJSONException {
-    return new ExtendedJSONObject(jsonString);
-  }
-
-  /**
    * Helper method to get a JSON object from a UTF-8 byte array.
    *
    * @param in UTF-8 bytes.
-   * @throws ParseException
-   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
+   * @throws NonObjectJSONException if the object is not valid JSON or not an object.
    * @throws IOException
    */
   public static ExtendedJSONObject parseUTF8AsJSONObject(byte[] in)
-      throws ParseException, NonObjectJSONException, IOException {
-    return parseJSONObject(new String(in, "UTF-8"));
+      throws NonObjectJSONException, IOException {
+    return new ExtendedJSONObject(new String(in, "UTF-8"));
   }
 
   public ExtendedJSONObject() {
@@ -173,44 +149,19 @@ public class ExtendedJSONObject {
     this.object = o;
   }
 
-  public ExtendedJSONObject deepCopy() {
-    final ExtendedJSONObject out = new ExtendedJSONObject();
-    @SuppressWarnings("unchecked")
-    final Set<Map.Entry<String, Object>> entries = this.object.entrySet();
-    for (Map.Entry<String, Object> entry : entries) {
-      final String key = entry.getKey();
-      final Object value = entry.getValue();
-      if (value instanceof JSONArray) {
-        // Oh god.
-        try {
-          out.put(key, new JSONParser().parse(((JSONArray) value).toJSONString()));
-        } catch (ParseException e) {
-          // This should never occur, because we're round-tripping.
-        }
-        continue;
-      }
-      if (value instanceof JSONObject) {
-        out.put(key, new ExtendedJSONObject((JSONObject) value).deepCopy().object);
-        continue;
-      }
-      if (value instanceof ExtendedJSONObject) {
-        out.put(key, ((ExtendedJSONObject) value).deepCopy());
-        continue;
-      }
-      // Oh well.
-      out.put(key, value);
-    }
-
-    return out;
-  }
-
-  public ExtendedJSONObject(Reader in) throws IOException, ParseException, NonObjectJSONException {
+  public ExtendedJSONObject(Reader in) throws IOException, NonObjectJSONException {
     if (in == null) {
       this.object = new JSONObject();
       return;
     }
 
-    Object obj = parseRaw(in);
+    Object obj = null;
+    try {
+      obj = parseRaw(in);
+    } catch (ParseException e) {
+      throw new NonObjectJSONException(e);
+    }
+
     if (obj instanceof JSONObject) {
       this.object = ((JSONObject) obj);
     } else {
@@ -218,7 +169,7 @@ public class ExtendedJSONObject {
     }
   }
 
-  public ExtendedJSONObject(String jsonString) throws IOException, ParseException, NonObjectJSONException {
+  public ExtendedJSONObject(String jsonString) throws IOException, NonObjectJSONException {
     this(jsonString == null ? null : new StringReader(jsonString));
   }
 
@@ -319,15 +270,42 @@ public class ExtendedJSONObject {
     return this.object.toString();
   }
 
-  public void put(String key, Object value) {
+  protected void putRaw(String key, Object value) {
     @SuppressWarnings("unchecked")
     Map<Object, Object> map = this.object;
     map.put(key, value);
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public void putAll(Map map) {
-    this.object.putAll(map);
+  public void put(String key, String value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, boolean value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, long value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, int value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, ExtendedJSONObject value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, JSONArray value) {
+    this.putRaw(key, value);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void putArray(String key, List<String> value) {
+    // Frustratingly inefficient, but there you have it.
+    final JSONArray jsonArray = new JSONArray();
+    jsonArray.addAll(value);
+    this.putRaw(key, jsonArray);
   }
 
   /**

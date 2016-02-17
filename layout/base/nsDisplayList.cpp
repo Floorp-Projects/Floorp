@@ -349,7 +349,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(Maybe<ComputedTimingFunction> aCTF)
+ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 {
   if (aCTF.isNothing()) {
     return TimingFunction(null_t());
@@ -966,12 +966,9 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
  * dirty rect for preserve-3d children.
  *
  * @param aDirtyFrame is the frame to mark children extending context.
- * @param aDirtyRect is the same as the dirty rect of the root of the
- *                   current 3D context, but be translated relative to
- *                   the aDirtyFrame.
  */
 void
-nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect)
+nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame)
 {
   AutoTArray<nsIFrame::ChildList,4> childListArray;
   aDirtyFrame->GetChildLists(&childListArray);
@@ -982,10 +979,6 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, 
       nsIFrame *child = childFrames.get();
       if (child->Combines3DTransformWithAncestors()) {
         mFramesMarkedForDisplay.AppendElement(child);
-        nsRect dirty = aDirtyRect - child->GetOffsetTo(aDirtyFrame);
-        child->Properties().Set(nsDisplayListBuilder::Preserve3DDirtyRectProperty(),
-                           new nsRect(dirty));
-
         MarkFrameForDisplay(child, aDirtyFrame);
       }
     }
@@ -5756,7 +5749,7 @@ nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBu
     }
 
     const nsIFrame* establisher; // Establisher of the 3D rendering context.
-    for (establisher = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
+    for (establisher = mFrame;
          establisher && establisher->Combines3DTransformWithAncestors();
          establisher = nsLayoutUtils::GetCrossDocParentFrame(establisher)) {
     }
@@ -6615,6 +6608,14 @@ nsDisplaySVGEffects::PrintEffects(nsACString& aTo)
       aTo += ", ";
     }
     aTo += nsPrintfCString("clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
+    first = false;
+  }
+  const nsStyleSVGReset *style = mFrame->StyleSVGReset();
+  if (style->HasClipPath() && !clipPathFrame) {
+    if (!first) {
+      aTo += ", ";
+    }
+    aTo += "clip(basic-shape)";
     first = false;
   }
   if (effectProperties.HasValidFilter()) {

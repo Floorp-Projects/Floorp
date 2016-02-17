@@ -509,7 +509,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (aDOMEvent) {
-    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->WidgetEventPtr();
     NS_ASSERTION(innerEvent == aEvent,
                   "The inner event of aDOMEvent is not the same as aEvent!");
   }
@@ -698,7 +698,7 @@ EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
                                   nsEventStatus* aEventStatus)
 {
   if (aDOMEvent) {
-    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->WidgetEventPtr();
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
     bool dontResetTrusted = false;

@@ -469,8 +469,8 @@ size. -->
 <!ENTITY pref_scroll_title_bar2 "Full-screen browsing">
 <!ENTITY pref_scroll_title_bar_summary2 "Hide the &brandShortName; toolbar when scrolling down a page">
 
-<!ENTITY pref_tab_queue_title2 "Open multiple links">
-<!ENTITY pref_tab_queue_summary3 "Save them until the next time you open &brandShortName;">
+<!ENTITY pref_tab_queue_title3 "Tab queue">
+<!ENTITY pref_tab_queue_summary4 "Save links until the next time you open &brandShortName;">
 
 <!-- Localization note (page_removed): This string appears in a toast message when
      any page is removed frome about:home. This includes pages that are in history,
@@ -717,11 +717,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY remote_tabs_last_synced "Last synced: &formatS;">
 <!-- Localization note: Used when the sync has not happend yet, showed in place of a date -->
 <!ENTITY remote_tabs_never_synced "Last synced: never">
-
-<!-- Find-In-Page strings -->
-<!-- LOCALIZATION NOTE (find_matchcase): This is meant to appear as an icon that changes color
-     if match-case is activated. i.e. No more than two letters, one uppercase, one lowercase. -->
-<!ENTITY find_matchcase "Aa">
 
 <!ENTITY intent_uri_cannot_open "Cannot open link">
 <!-- LOCALIZATION NOTE (intent_uri_private_browsing_prompt): This string will

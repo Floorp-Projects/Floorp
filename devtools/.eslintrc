@@ -92,7 +92,7 @@
     // rule is a better rule to check this.
     "max-depth": 0,
     // Maximum length of a line.
-    "max-len": [1, 80, 2, {"ignoreUrls": true, "ignorePattern": "^\\s*loader\\.lazy"}],
+    "max-len": [1, 80, 2, {"ignoreUrls": true, "ignorePattern": "\\s*require\\s*\\(|^\\s*loader\\.lazy"}],
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": [2, 3],
     // Don't limit the number of parameters that can be used in a function.
@@ -301,8 +301,6 @@
     "space-after-function-name": 0,
     // Require a space after keywords.
     "space-after-keywords": [1, "always"],
-    // Deprecated, will be removed in 1.0.
-    "space-after-function-name": 0,
     // Require a space before the start brace of a block.
     "space-before-blocks": [1, "always"],
     // Deprecated, will be removed in 1.0.

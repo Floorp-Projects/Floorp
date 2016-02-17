@@ -15,7 +15,7 @@ import time
 def monitor():
     while 1:
         time.sleep(1.)
-        _ = sys._current_frames()
+        sys._current_frames()
 
 
 def start_monitoring():
@@ -23,5 +23,3 @@ def start_monitoring():
     thread.daemon = True
     thread.start()
     return thread
-
-start_monitoring()

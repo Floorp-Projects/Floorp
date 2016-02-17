@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993, 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Margo Seltzer.
@@ -13,7 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. ***REMOVED*** - see 
+ * 3. ***REMOVED*** - see
  *    ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
@@ -33,7 +33,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)hash_log2.c	8.2 (Berkeley) 5/31/94";
+static char sccsid[] = "@(#)hash_log2.c 8.2 (Berkeley) 5/31/94";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdio.h>
@@ -42,11 +42,13 @@ static char sccsid[] = "@(#)hash_log2.c	8.2 (Berkeley) 5/31/94";
 #endif
 #include "mcom_db.h"
 
-uint32 __log2(uint32 num)
+uint32
+__log2(uint32 num)
 {
-	register uint32 i, limit;
+    register uint32 i, limit;
 
-	limit = 1;
-	for (i = 0; limit < num; limit = limit << 1, i++) {}
-	return (i);
+    limit = 1;
+    for (i = 0; limit < num; limit = limit << 1, i++) {
+    }
+    return (i);
 }

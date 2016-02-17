@@ -16,34 +16,21 @@ from __future__ import print_function
 
 import os
 import shutil
+from StringIO import StringIO
 import sys
 import tempfile
 try:
     from urllib2 import urlopen
 except ImportError:
     from urllib.request import urlopen
+import zipfile
 
 from optparse import OptionParser
 
 # The next two variables define where in the repository the Python files
 # reside. This is used to remotely download file content when it isn't
 # available locally.
-REPOSITORY_PATH_PREFIX = 'python/mozboot'
-
-REPOSITORY_PATHS = [
-    'mozboot/__init__.py',
-    'mozboot/android.py',
-    'mozboot/archlinux.py',
-    'mozboot/base.py',
-    'mozboot/bootstrap.py',
-    'mozboot/centos.py',
-    'mozboot/debian.py',
-    'mozboot/fedora.py',
-    'mozboot/freebsd.py',
-    'mozboot/gentoo.py',
-    'mozboot/openbsd.py',
-    'mozboot/osx.py',
-]
+REPOSITORY_PATH_PREFIX = 'python/mozboot/'
 
 TEMPDIR = None
 
@@ -65,11 +52,22 @@ def fetch_files(repo_url, repo_type):
     files = {}
 
     if repo_type == 'hgweb':
-        for path in REPOSITORY_PATHS:
-            url = repo_url + '/raw-file/default/python/mozboot/' + path
+        url = repo_url + '/archive/default.zip/python/mozboot'
+        req = urlopen(url=url, timeout=30)
+        data = StringIO(req.read())
+        data.seek(0)
+        zip = zipfile.ZipFile(data, 'r')
+        for f in zip.infolist():
+            # The paths are prefixed with the repo and revision name before the
+            # directory name.
+            offset = f.filename.find(REPOSITORY_PATH_PREFIX) + len(REPOSITORY_PATH_PREFIX)
+            name = f.filename[offset:]
 
-            req = urlopen(url=url, timeout=30)
-            files[path] = req.read()
+            # We only care about the Python modules.
+            if not name.startswith('mozboot/'):
+                continue
+
+            files[name] = zip.read(f)
     else:
         raise NotImplementedError('Not sure how to handle repo type.', repo_type)
 

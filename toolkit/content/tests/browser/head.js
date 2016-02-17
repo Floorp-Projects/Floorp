@@ -1,5 +1,10 @@
 "use strict";
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
+
 /**
  * A wrapper for the findbar's method "close", which is not synchronous
  * because of animation.
@@ -17,4 +22,10 @@ function closeFindbarAndWait(findbar) {
     });
     findbar.close();
   });
+}
+
+function pushPrefs(...aPrefs) {
+  let deferred = Promise.defer();
+  SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
+  return deferred.promise;
 }

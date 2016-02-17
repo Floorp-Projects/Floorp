@@ -58,6 +58,9 @@ protected:
                                         PBackgroundIndexedDBUtilsParent* aActor)
                                         override;
 
+  virtual bool
+  RecvFlushPendingFileDeletions() override;
+
   virtual PBlobParent*
   AllocPBlobParent(const BlobConstructorParams& aParams) override;
 

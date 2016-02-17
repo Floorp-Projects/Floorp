@@ -42,14 +42,14 @@ const VALUES_TEST_DATA = [{
     ruleSelector: "#div1",
     styleSheetLocation: "null:1"
   }]
-},{
+}, {
   selector: "#div2",
   values: [{
     name: "border-bottom-width",
     ruleSelector: "#div2",
     styleSheetLocation: "null:2"
   }]
-},{
+}, {
   selector: "#div3",
   values: [{
     name: "padding-top",
@@ -72,7 +72,7 @@ const VALUES_TEST_DATA = [{
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
 
   info("Checking the regions tooltips");
 

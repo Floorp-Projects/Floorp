@@ -141,7 +141,7 @@ add_task(function* test_recovery_inaccessible() {
   yield File.setPermissions(Paths.recovery, { unixMode: 0 });
 
   is((yield SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
-  yield File.setPermissions(Paths.recovery, { unixMode: 0644 });
+  yield File.setPermissions(Paths.recovery, { unixMode: 0o644 });
 });
 
 add_task(function* test_clean() {

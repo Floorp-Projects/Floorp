@@ -157,7 +157,9 @@ config = {
                 "--appname=%(binary_path)s",
                 "--utility-path=tests/bin",
                 "--extra-profile-file=tests/bin/plugins",
-                "--symbols-path=%(symbols_path)s"
+                "--symbols-path=%(symbols_path)s",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"

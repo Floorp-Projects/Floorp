@@ -40,10 +40,10 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
     } else if (type == "exit") {
       // If we just revert the state to a previous fullscreen state,
       // the window won't back to the normal mode. Hence we check
-      // mozFullScreenElement first here. Note that we need to check
+      // fullscreenElement first here. Note that we need to check
       // the fullscreen element of the outmost document here instead
       // of the current one.
-      return topWin.document.mozFullScreenElement || inNormalMode(topWin);
+      return topWin.document.fullscreenElement || inNormalMode(topWin);
     } else {
       throw "'type' must be either 'enter', or 'exit'.";
     }
@@ -54,7 +54,7 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
     requestAnimationFrame(() => setTimeout(() => callback(event), 0), 0);
   }
   function onFullscreenChange(event) {
-    doc.removeEventListener("mozfullscreenchange", onFullscreenChange, false);
+    doc.removeEventListener("fullscreenchange", onFullscreenChange, false);
     if (checkCondition()) {
       invokeCallback(event);
       return;
@@ -67,16 +67,16 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
     }
     topWin.addEventListener("resize", onResize, false);
   }
-  doc.addEventListener("mozfullscreenchange", onFullscreenChange, false);
+  doc.addEventListener("fullscreenchange", onFullscreenChange, false);
 }
 
 // Calls |callback| when the next fullscreenerror is dispatched to inDoc||document.
 function addFullscreenErrorContinuation(callback, inDoc) {
   var doc = inDoc || document;
   var listener = function(event) {
-    doc.removeEventListener("mozfullscreenerror", listener, false);
+    doc.removeEventListener("fullscreenerror", listener, false);
     setTimeout(function(){callback(event);}, 0);
   };
-  doc.addEventListener("mozfullscreenerror", listener, false);
+  doc.addEventListener("fullscreenerror", listener, false);
 }
 

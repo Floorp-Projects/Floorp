@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace dom {
 
+#ifndef SPIDERMONKEY_PROMISE
 // This is the base class for any PromiseCallback.
 // It's a logical step in the promise chain of callbacks.
 class PromiseCallback : public nsISupports
@@ -193,6 +194,8 @@ private:
   RefPtr<PromiseNativeHandler> mHandler;
   Promise::PromiseState mState;
 };
+
+#endif // SPIDERMONKEY_PROMISE
 
 } // namespace dom
 } // namespace mozilla

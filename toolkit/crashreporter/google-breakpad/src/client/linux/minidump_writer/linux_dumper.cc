@@ -38,20 +38,39 @@
 #include "client/linux/minidump_writer/linux_dumper.h"
 
 #include <assert.h>
+#include <elf.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stddef.h>
 #include <string.h>
 
 #include "client/linux/minidump_writer/line_reader.h"
+#include "common/linux/elfutils.h"
 #include "common/linux/file_id.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/memory_mapped_file.h"
 #include "common/linux/safe_readlink.h"
 #include "third_party/lss/linux_syscall_support.h"
 
+#if defined(__ANDROID__)
+
+// Android packed relocations definitions are not yet available from the
+// NDK header files, so we have to provide them manually here.
+#ifndef DT_LOOS
+#define DT_LOOS 0x6000000d
+#endif
+#ifndef DT_ANDROID_REL
+static const int DT_ANDROID_REL = DT_LOOS + 2;
+#endif
+#ifndef DT_ANDROID_RELA
+static const int DT_ANDROID_RELA = DT_LOOS + 4;
+#endif
+
+#endif  // __ANDROID __
+
 static const char kMappedFileUnsafePrefix[] = "/dev/";
 static const char kDeletedSuffix[] = " (deleted)";
+static const char kReservedFlags[] = " ---p";
 
 inline static bool IsMappedFileOpenUnsafe(
     const google_breakpad::MappingInfo& mapping) {
@@ -73,10 +92,13 @@ LinuxDumper::LinuxDumper(pid_t pid)
     : pid_(pid),
       crash_address_(0),
       crash_signal_(0),
-      crash_thread_(0),
+      crash_thread_(pid),
       threads_(&allocator_, 8),
       mappings_(&allocator_),
       auxv_(&allocator_, AT_MAX + 1) {
+  // The passed-in size to the constructor (above) is only a hint.
+  // Must call .resize() to do actual initialization of the elements.
+  auxv_.resize(AT_MAX + 1);
 }
 
 LinuxDumper::~LinuxDumper() {
@@ -86,12 +108,18 @@ bool LinuxDumper::Init() {
   return ReadAuxv() && EnumerateThreads() && EnumerateMappings();
 }
 
+bool LinuxDumper::LateInit() {
+#if defined(__ANDROID__)
+  LatePostprocessMappings();
+#endif
+  return true;
+}
+
 bool
 LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                          bool member,
                                          unsigned int mapping_id,
-                                         uint8_t identifier[sizeof(MDGUID)])
-{
+                                         uint8_t identifier[sizeof(MDGUID)]) {
   assert(!member || mapping_id < mappings_.size());
   my_memset(identifier, 0, sizeof(MDGUID));
   if (IsMappedFileOpenUnsafe(mapping))
@@ -113,15 +141,16 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
 
   char filename[NAME_MAX];
   size_t filename_len = my_strlen(mapping.name);
-  assert(filename_len < NAME_MAX);
-  if (filename_len >= NAME_MAX)
+  if (filename_len >= NAME_MAX) {
+    assert(false);
     return false;
+  }
   my_memcpy(filename, mapping.name, filename_len);
   filename[filename_len] = '\0';
   bool filename_modified = HandleDeletedFileInMapping(filename);
 
-  MemoryMappedFile mapped_file(filename);
-  if (!mapped_file.data())  // Should probably check if size >= ElfW(Ehdr)?
+  MemoryMappedFile mapped_file(filename, mapping.offset);
+  if (!mapped_file.data() || mapped_file.size() < SELFMAG)
     return false;
 
   bool success =
@@ -132,6 +161,120 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
   }
 
   return success;
+}
+
+namespace {
+bool ElfFileSoNameFromMappedFile(
+    const void* elf_base, char* soname, size_t soname_size) {
+  if (!IsValidElf(elf_base)) {
+    // Not ELF
+    return false;
+  }
+
+  const void* segment_start;
+  size_t segment_size;
+  int elf_class;
+  if (!FindElfSection(elf_base, ".dynamic", SHT_DYNAMIC,
+                      &segment_start, &segment_size, &elf_class)) {
+    // No dynamic section
+    return false;
+  }
+
+  const void* dynstr_start;
+  size_t dynstr_size;
+  if (!FindElfSection(elf_base, ".dynstr", SHT_STRTAB,
+                      &dynstr_start, &dynstr_size, &elf_class)) {
+    // No dynstr section
+    return false;
+  }
+
+  const ElfW(Dyn)* dynamic = static_cast<const ElfW(Dyn)*>(segment_start);
+  size_t dcount = segment_size / sizeof(ElfW(Dyn));
+  for (const ElfW(Dyn)* dyn = dynamic; dyn < dynamic + dcount; ++dyn) {
+    if (dyn->d_tag == DT_SONAME) {
+      const char* dynstr = static_cast<const char*>(dynstr_start);
+      if (dyn->d_un.d_val >= dynstr_size) {
+        // Beyond the end of the dynstr section
+        return false;
+      }
+      const char* str = dynstr + dyn->d_un.d_val;
+      const size_t maxsize = dynstr_size - dyn->d_un.d_val;
+      my_strlcpy(soname, str, maxsize < soname_size ? maxsize : soname_size);
+      return true;
+    }
+  }
+
+  // Did not find SONAME
+  return false;
+}
+
+// Find the shared object name (SONAME) by examining the ELF information
+// for |mapping|. If the SONAME is found copy it into the passed buffer
+// |soname| and return true. The size of the buffer is |soname_size|.
+// The SONAME will be truncated if it is too long to fit in the buffer.
+bool ElfFileSoName(
+    const MappingInfo& mapping, char* soname, size_t soname_size) {
+  if (IsMappedFileOpenUnsafe(mapping)) {
+    // Not safe
+    return false;
+  }
+
+  char filename[NAME_MAX];
+  size_t filename_len = my_strlen(mapping.name);
+  if (filename_len >= NAME_MAX) {
+    assert(false);
+    // name too long
+    return false;
+  }
+
+  my_memcpy(filename, mapping.name, filename_len);
+  filename[filename_len] = '\0';
+
+  MemoryMappedFile mapped_file(filename, mapping.offset);
+  if (!mapped_file.data() || mapped_file.size() < SELFMAG) {
+    // mmap failed
+    return false;
+  }
+
+  return ElfFileSoNameFromMappedFile(mapped_file.data(), soname, soname_size);
+}
+
+}  // namespace
+
+
+// static
+void LinuxDumper::GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
+                                                 char* file_path,
+                                                 size_t file_path_size,
+                                                 char* file_name,
+                                                 size_t file_name_size) {
+  my_strlcpy(file_path, mapping.name, file_path_size);
+
+  // If an executable is mapped from a non-zero offset, this is likely because
+  // the executable was loaded directly from inside an archive file (e.g., an
+  // apk on Android). We try to find the name of the shared object (SONAME) by
+  // looking in the file for ELF sections.
+  bool mapped_from_archive = false;
+  if (mapping.exec && mapping.offset != 0)
+    mapped_from_archive = ElfFileSoName(mapping, file_name, file_name_size);
+
+  if (mapped_from_archive) {
+    // Some tools (e.g., stackwalk) extract the basename from the pathname. In
+    // this case, we append the file_name to the mapped archive path as follows:
+    //   file_name := libname.so
+    //   file_path := /path/to/ARCHIVE.APK/libname.so
+    if (my_strlen(file_path) + 1 + my_strlen(file_name) < file_path_size) {
+      my_strlcat(file_path, "/", file_path_size);
+      my_strlcat(file_path, file_name, file_path_size);
+    }
+  } else {
+    // Common case:
+    //   file_path := /path/to/libname.so
+    //   file_name := libname.so
+    const char* basename = my_strrchr(file_path, '/');
+    basename = basename == NULL ? file_path : (basename + 1);
+    my_strlcpy(file_name, basename, file_name_size);
+  }
 }
 
 bool LinuxDumper::ReadAuxv() {
@@ -193,6 +336,7 @@ bool LinuxDumper::EnumerateMappings() {
     if (*i1 == '-') {
       const char* i2 = my_read_hex_ptr(&end_addr, i1 + 1);
       if (*i2 == ' ') {
+        bool exec = (*(i2 + 3) == 'x');
         const char* i3 = my_read_hex_ptr(&offset, i2 + 6 /* skip ' rwxp ' */);
         if (*i3 == ' ') {
           const char* name = NULL;
@@ -216,11 +360,29 @@ bool LinuxDumper::EnumerateMappings() {
               continue;
             }
           }
+          // Also merge mappings that result from address ranges that the
+          // linker reserved but which a loaded library did not use. These
+          // appear as an anonymous private mapping with no access flags set
+          // and which directly follow an executable mapping.
+          if (!name && !mappings_.empty()) {
+            MappingInfo* module = mappings_.back();
+            if ((start_addr == module->start_addr + module->size) &&
+                module->exec &&
+                module->name[0] == '/' &&
+                offset == 0 && my_strncmp(i2,
+                                          kReservedFlags,
+                                          sizeof(kReservedFlags) - 1) == 0) {
+              module->size = end_addr - module->start_addr;
+              line_reader->PopLine(line_len);
+              continue;
+            }
+          }
           MappingInfo* const module = new(allocator_) MappingInfo;
           my_memset(module, 0, sizeof(MappingInfo));
           module->start_addr = start_addr;
           module->size = end_addr - start_addr;
           module->offset = offset;
+          module->exec = exec;
           if (name != NULL) {
             const unsigned l = my_strlen(name);
             if (l < sizeof(module->name))
@@ -256,6 +418,113 @@ bool LinuxDumper::EnumerateMappings() {
   return !mappings_.empty();
 }
 
+#if defined(__ANDROID__)
+
+bool LinuxDumper::GetLoadedElfHeader(uintptr_t start_addr, ElfW(Ehdr)* ehdr) {
+  CopyFromProcess(ehdr, pid_,
+                  reinterpret_cast<const void*>(start_addr),
+                  sizeof(*ehdr));
+  return my_memcmp(&ehdr->e_ident, ELFMAG, SELFMAG) == 0;
+}
+
+void LinuxDumper::ParseLoadedElfProgramHeaders(ElfW(Ehdr)* ehdr,
+                                               uintptr_t start_addr,
+                                               uintptr_t* min_vaddr_ptr,
+                                               uintptr_t* dyn_vaddr_ptr,
+                                               size_t* dyn_count_ptr) {
+  uintptr_t phdr_addr = start_addr + ehdr->e_phoff;
+
+  const uintptr_t max_addr = UINTPTR_MAX;
+  uintptr_t min_vaddr = max_addr;
+  uintptr_t dyn_vaddr = 0;
+  size_t dyn_count = 0;
+
+  for (size_t i = 0; i < ehdr->e_phnum; ++i) {
+    ElfW(Phdr) phdr;
+    CopyFromProcess(&phdr, pid_,
+                    reinterpret_cast<const void*>(phdr_addr),
+                    sizeof(phdr));
+    if (phdr.p_type == PT_LOAD && phdr.p_vaddr < min_vaddr) {
+      min_vaddr = phdr.p_vaddr;
+    }
+    if (phdr.p_type == PT_DYNAMIC) {
+      dyn_vaddr = phdr.p_vaddr;
+      dyn_count = phdr.p_memsz / sizeof(ElfW(Dyn));
+    }
+    phdr_addr += sizeof(phdr);
+  }
+
+  *min_vaddr_ptr = min_vaddr;
+  *dyn_vaddr_ptr = dyn_vaddr;
+  *dyn_count_ptr = dyn_count;
+}
+
+bool LinuxDumper::HasAndroidPackedRelocations(uintptr_t load_bias,
+                                              uintptr_t dyn_vaddr,
+                                              size_t dyn_count) {
+  uintptr_t dyn_addr = load_bias + dyn_vaddr;
+  for (size_t i = 0; i < dyn_count; ++i) {
+    ElfW(Dyn) dyn;
+    CopyFromProcess(&dyn, pid_,
+                    reinterpret_cast<const void*>(dyn_addr),
+                    sizeof(dyn));
+    if (dyn.d_tag == DT_ANDROID_REL || dyn.d_tag == DT_ANDROID_RELA) {
+      return true;
+    }
+    dyn_addr += sizeof(dyn);
+  }
+  return false;
+}
+
+uintptr_t LinuxDumper::GetEffectiveLoadBias(ElfW(Ehdr)* ehdr,
+                                            uintptr_t start_addr) {
+  uintptr_t min_vaddr = 0;
+  uintptr_t dyn_vaddr = 0;
+  size_t dyn_count = 0;
+  ParseLoadedElfProgramHeaders(ehdr, start_addr,
+                               &min_vaddr, &dyn_vaddr, &dyn_count);
+  // If |min_vaddr| is non-zero and we find Android packed relocation tags,
+  // return the effective load bias.
+  if (min_vaddr != 0) {
+    const uintptr_t load_bias = start_addr - min_vaddr;
+    if (HasAndroidPackedRelocations(load_bias, dyn_vaddr, dyn_count)) {
+      return load_bias;
+    }
+  }
+  // Either |min_vaddr| is zero, or it is non-zero but we did not find the
+  // expected Android packed relocations tags.
+  return start_addr;
+}
+
+void LinuxDumper::LatePostprocessMappings() {
+  for (size_t i = 0; i < mappings_.size(); ++i) {
+    // Only consider exec mappings that indicate a file path was mapped, and
+    // where the ELF header indicates a mapped shared library.
+    MappingInfo* mapping = mappings_[i];
+    if (!(mapping->exec && mapping->name[0] == '/')) {
+      continue;
+    }
+    ElfW(Ehdr) ehdr;
+    if (!GetLoadedElfHeader(mapping->start_addr, &ehdr)) {
+      continue;
+    }
+    if (ehdr.e_type == ET_DYN) {
+      // Compute the effective load bias for this mapped library, and update
+      // the mapping to hold that rather than |start_addr|, at the same time
+      // adjusting |size| to account for the change in |start_addr|. Where
+      // the library does not contain Android packed relocations,
+      // GetEffectiveLoadBias() returns |start_addr| and the mapping entry
+      // is not changed.
+      const uintptr_t load_bias = GetEffectiveLoadBias(&ehdr,
+                                                       mapping->start_addr);
+      mapping->size += mapping->start_addr - load_bias;
+      mapping->start_addr = load_bias;
+    }
+  }
+}
+
+#endif  // __ANDROID__
+
 // Get information about the stack, given the stack pointer. We don't try to
 // walk the stack since we might not have all the information needed to do
 // unwind. So we just grab, up to, 32k of stack.
@@ -273,7 +542,8 @@ bool LinuxDumper::GetStackInfo(const void** stack, size_t* stack_len,
   const MappingInfo* mapping = FindMapping(stack_pointer);
   if (!mapping)
     return false;
-  const ptrdiff_t offset = stack_pointer - (uint8_t*) mapping->start_addr;
+  const ptrdiff_t offset = stack_pointer -
+      reinterpret_cast<uint8_t*>(mapping->start_addr);
   const ptrdiff_t distance_to_end =
       static_cast<ptrdiff_t>(mapping->size) - offset;
   *stack_len = distance_to_end > kStackToCapture ?

@@ -205,7 +205,7 @@ GeckoMediaPluginService::GMPCrashCallback::Run(const nsACString& aPluginName)
   RefPtr<dom::PluginCrashedEvent> event =
     dom::PluginCrashedEvent::Constructor(document, NS_LITERAL_STRING("PluginCrashed"), init);
   event->SetTrusted(true);
-  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   EventDispatcher::DispatchDOMEvent(parentWindow, nullptr, event, nullptr, nullptr);
 }

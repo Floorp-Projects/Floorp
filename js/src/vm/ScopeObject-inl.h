@@ -84,39 +84,49 @@ template <AllowGC allowGC>
 inline void
 StaticScopeIter<allowGC>::operator++(int)
 {
-    if (!scope->template is<StaticFunctionScope>()) {
-        scope = scope->enclosingScope();
-    } else if (onNamedLambda || !scope->template as<StaticFunctionScope>().isNamedLambda()) {
+    if (obj->template is<NestedStaticScope>()) {
+        obj = obj->template as<NestedStaticScope>().enclosingScope();
+    } else if (obj->template is<StaticEvalScope>()) {
+        obj = obj->template as<StaticEvalScope>().enclosingScope();
+    } else if (obj->template is<StaticNonSyntacticScope>()) {
+        obj = obj->template as<StaticNonSyntacticScope>().enclosingScope();
+    } else if (obj->template is<ModuleObject>()) {
+        obj = obj->template as<ModuleObject>().enclosingStaticScope();
+    } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
-        scope = scope->enclosingScope();
+        JSFunction& fun = obj->template as<JSFunction>();
+        if (fun.isBeingParsed())
+            obj = fun.functionBox()->enclosingStaticScope();
+        else
+            obj = fun.nonLazyScript()->enclosingStaticScope();
     } else {
         onNamedLambda = true;
     }
-    MOZ_ASSERT_IF(scope, scope->template is<StaticScope>());
-    MOZ_ASSERT_IF(onNamedLambda, scope->template is<StaticFunctionScope>());
+    MOZ_ASSERT_IF(obj, IsStaticScope(obj));
+    MOZ_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
 }
 
 template <AllowGC allowGC>
 inline bool
 StaticScopeIter<allowGC>::hasSyntacticDynamicScopeObject() const
 {
-    if (scope->template is<StaticFunctionScope>()) {
-        JSFunction& fun = scope->template as<StaticFunctionScope>().function();
+    if (obj->template is<JSFunction>()) {
+        JSFunction& fun = obj->template as<JSFunction>();
         if (fun.isBeingParsed())
             return fun.functionBox()->needsCallObject();
         return fun.needsCallObject();
     }
-    if (scope->template is<StaticModuleScope>())
+    if (obj->template is<ModuleObject>())
         return true;
-    if (scope->template is<StaticBlockScope>()) {
-        return scope->template as<StaticBlockScope>().needsClone() ||
-               scope->template as<StaticBlockScope>().isGlobal();
+    if (obj->template is<StaticBlockScope>()) {
+        return obj->template as<StaticBlockScope>().needsClone() ||
+               obj->template as<StaticBlockScope>().isGlobal();
     }
-    if (scope->template is<StaticWithScope>())
+    if (obj->template is<StaticWithScope>())
         return true;
-    if (scope->template is<StaticEvalScope>())
-        return scope->template as<StaticEvalScope>().isStrict();
-    MOZ_ASSERT(scope->template is<StaticNonSyntacticScope>());
+    if (obj->template is<StaticEvalScope>())
+        return obj->template as<StaticEvalScope>().isStrict();
+    MOZ_ASSERT(obj->template is<StaticNonSyntacticScope>());
     return false;
 }
 
@@ -129,8 +139,8 @@ StaticScopeIter<allowGC>::scopeShape() const
     if (type() == Block)
         return block().lastProperty();
     if (type() == Module)
-        return module().environmentShape();
-    return fun().environmentShape();
+        return moduleScript()->callObjShape();
+    return funScript()->callObjShape();
 }
 
 template <AllowGC allowGC>
@@ -139,17 +149,17 @@ StaticScopeIter<allowGC>::type() const
 {
     if (onNamedLambda)
         return NamedLambda;
-    if (scope->template is<StaticBlockScope>())
+    if (obj->template is<StaticBlockScope>())
         return Block;
-    if (scope->template is<StaticModuleScope>())
-        return Module;
-    if (scope->template is<StaticWithScope>())
+    if (obj->template is<StaticWithScope>())
         return With;
-    if (scope->template is<StaticEvalScope>())
+    if (obj->template is<StaticEvalScope>())
         return Eval;
-    if (scope->template is<StaticNonSyntacticScope>())
+    if (obj->template is<StaticNonSyntacticScope>())
         return NonSyntactic;
-    MOZ_ASSERT(scope->template is<StaticFunctionScope>());
+    if (obj->template is<ModuleObject>())
+        return Module;
+    MOZ_ASSERT(obj->template is<JSFunction>());
     return Function;
 }
 
@@ -158,7 +168,7 @@ inline StaticBlockScope&
 StaticScopeIter<allowGC>::block() const
 {
     MOZ_ASSERT(type() == Block);
-    return scope->template as<StaticBlockScope>();
+    return obj->template as<StaticBlockScope>();
 }
 
 template <AllowGC allowGC>
@@ -166,7 +176,7 @@ inline StaticWithScope&
 StaticScopeIter<allowGC>::staticWith() const
 {
     MOZ_ASSERT(type() == With);
-    return scope->template as<StaticWithScope>();
+    return obj->template as<StaticWithScope>();
 }
 
 template <AllowGC allowGC>
@@ -174,7 +184,7 @@ inline StaticEvalScope&
 StaticScopeIter<allowGC>::eval() const
 {
     MOZ_ASSERT(type() == Eval);
-    return scope->template as<StaticEvalScope>();
+    return obj->template as<StaticEvalScope>();
 }
 
 template <AllowGC allowGC>
@@ -182,7 +192,7 @@ inline StaticNonSyntacticScope&
 StaticScopeIter<allowGC>::nonSyntactic() const
 {
     MOZ_ASSERT(type() == NonSyntactic);
-    return scope->template as<StaticNonSyntacticScope>();
+    return obj->template as<StaticNonSyntacticScope>();
 }
 
 template <AllowGC allowGC>
@@ -190,15 +200,15 @@ inline JSScript*
 StaticScopeIter<allowGC>::funScript() const
 {
     MOZ_ASSERT(type() == Function);
-    return scope->template as<StaticFunctionScope>().function().nonLazyScript();
+    return obj->template as<JSFunction>().nonLazyScript();
 }
 
 template <AllowGC allowGC>
-inline StaticFunctionScope&
+inline JSFunction&
 StaticScopeIter<allowGC>::fun() const
 {
     MOZ_ASSERT(type() == Function);
-    return scope->template as<StaticFunctionScope>();
+    return obj->template as<JSFunction>();
 }
 
 template <AllowGC allowGC>
@@ -206,17 +216,25 @@ inline frontend::FunctionBox*
 StaticScopeIter<allowGC>::maybeFunctionBox() const
 {
     MOZ_ASSERT(type() == Function);
-    if (fun().function().isBeingParsed())
-        return fun().function().functionBox();
+    if (fun().isBeingParsed())
+        return fun().functionBox();
     return nullptr;
 }
 
 template <AllowGC allowGC>
-inline StaticModuleScope&
+inline JSScript*
+StaticScopeIter<allowGC>::moduleScript() const
+{
+    MOZ_ASSERT(type() == Module);
+    return obj->template as<ModuleObject>().script();
+}
+
+template <AllowGC allowGC>
+inline ModuleObject&
 StaticScopeIter<allowGC>::module() const
 {
     MOZ_ASSERT(type() == Module);
-    return scope->template as<StaticModuleScope>();
+    return obj->template as<ModuleObject>();
 }
 
 }  /* namespace js */
@@ -233,8 +251,7 @@ JSObject::enclosingScope()
     if (is<js::GlobalObject>())
         return nullptr;
 
-    MOZ_ASSERT(!is<JSFunction>());
-    MOZ_ASSERT(!is<js::StaticScope>());
+    MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
     return &global();
 }
 

@@ -262,10 +262,18 @@ Rect.prototype = {
 
   /** Ensure this rectangle is inside the other, if possible. Preserves w, h. */
   translateInside: function translateInside(other) {
-    let offsetX = (this.left <= other.left ? other.left - this.left :
-                  (this.right > other.right ? other.right - this.right : 0));
-    let offsetY = (this.top <= other.top ? other.top - this.top :
-                  (this.bottom > other.bottom ? other.bottom - this.bottom : 0));
+    let offsetX = 0;
+    if (this.left <= other.left)
+      offsetX = other.left - this.left;
+    else if (this.right > other.right)
+      offsetX = other.right - this.right;
+
+    let offsetY = 0;
+    if (this.top <= other.top)
+      offsetY = other.top - this.top;
+    else if (this.bottom > other.bottom)
+      offsetY = other.bottom - this.bottom;
+
     return this.translate(offsetX, offsetY);
   },
 

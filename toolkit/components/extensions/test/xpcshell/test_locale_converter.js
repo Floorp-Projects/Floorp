@@ -118,7 +118,7 @@ add_task(function* testInvalidUUID() {
   }, expectInvalidContextException);
 
   Assert.throws(() => {
-    let listener = { QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener]) };
+    let listener = {QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener])};
 
     convService.asyncConvertData(FROM_TYPE, TO_TYPE, listener, uri);
   }, expectInvalidContextException);

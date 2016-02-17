@@ -8,9 +8,6 @@ CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 DIRS += ['chrome', 'components', 'locales']
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['../xulrunner/tools/redit']
-
 if CONFIG['GAIADIR']:
     DIRS += ['gaia']
 

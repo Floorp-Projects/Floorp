@@ -45,37 +45,34 @@ add_task(function* test_expiration_origin_threshold() {
 
   // The notification threshold is per-origin, even with multiple service
   // workers for different scopes.
-  yield addVisit({
-    uri: 'https://example.com/login',
-    title: 'Sign in to see your auctions',
-    visits: [{
+  yield PlacesTestUtils.addVisits([
+    {
+      uri: 'https://example.com/login',
+      title: 'Sign in to see your auctions',
       visitDate: (Date.now() - 7 * 24 * 60 * 60 * 1000) * 1000,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
-    }],
-  });
-
-  // We'll always use your most recent visit to an origin.
-  yield addVisit({
-    uri: 'https://example.com/auctions',
-    title: 'Your auctions',
-    visits: [{
+      transition: Ci.nsINavHistoryService.TRANSITION_LINK
+    },
+    // We'll always use your most recent visit to an origin.
+    {
+      uri: 'https://example.com/auctions',
+      title: 'Your auctions',
       visitDate: (Date.now() - 2 * 24 * 60 * 60 * 1000) * 1000,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
-    }],
-  });
-
-  // ...But we won't count downloads or embeds.
-  yield addVisit({
-    uri: 'https://example.com/invoices/invoice.pdf',
-    title: 'Invoice #123',
-    visits: [{
+      transition: Ci.nsINavHistoryService.TRANSITION_LINK
+    },
+    // ...But we won't count downloads or embeds.
+    {
+      uri: 'https://example.com/invoices/invoice.pdf',
+      title: 'Invoice #123',
       visitDate: (Date.now() - 1 * 24 * 60 * 60 * 1000) * 1000,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_EMBED,
-    }, {
+      transition: Ci.nsINavHistoryService.TRANSITION_EMBED
+    },
+    {
+      uri: 'https://example.com/invoices/invoice.pdf',
+      title: 'Invoice #123',
       visitDate: Date.now() * 1000,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-    }],
-  });
+      transition: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD
+    }
+  ]);
 
   // We expect to receive 6 notifications: 5 on the `auctions` channel,
   // and 1 on the `deals` channel. They're from the same origin, but

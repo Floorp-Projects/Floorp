@@ -1241,7 +1241,10 @@ var Histogram = {
       //   - If it's 1 -> manually correct it to 0 (the 0..1 anomaly)
       //   - For the rest, set the label as the bottom value instead of the upper.
       //   --> so we'll end with the following (non dummy) labels: 0, 2, 4, 8, 16, ...
-      return !aIsBHR ? k : k == 1 ? 0 : (k + 1) / 2;
+      if (!aIsBHR) {
+        return k;
+      }
+      return k == 1 ? 0 : (k + 1) / 2;
     }
 
     const labelledValues = Object.keys(aHgram.values)

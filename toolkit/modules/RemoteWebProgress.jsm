@@ -215,6 +215,9 @@ RemoteWebProgressManager.prototype = {
 
     switch (aMessage.name) {
     case "Content:StateChange":
+      if (isTopLevel) {
+        this._browser._documentURI = newURI(json.documentURI);
+      }
       this._callProgressListeners("onStateChange", webProgress, request, json.stateFlags, json.status);
       break;
 

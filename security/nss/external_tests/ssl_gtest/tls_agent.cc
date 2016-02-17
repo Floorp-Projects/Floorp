@@ -11,6 +11,7 @@
 #include "sslerr.h"
 #include "sslproto.h"
 #include "keyhi.h"
+#include "databuffer.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -24,6 +25,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea
   : name_(name),
     mode_(mode),
     kea_(kea),
+    server_key_bits_(0),
     pr_fd_(nullptr),
     adapter_(nullptr),
     ssl_fd_(nullptr),
@@ -84,6 +86,12 @@ bool TlsAgent::EnsureTlsSetup() {
     CERTCertificate* cert = PK11_FindCertFromNickname(name_.c_str(), nullptr);
     EXPECT_NE(nullptr, cert);
     if (!cert) return false;
+
+    SECKEYPublicKey* pub = CERT_ExtractPublicKey(cert);
+    EXPECT_NE(nullptr, pub);
+    if (!pub) return false;  // Leak cert.
+    server_key_bits_ = SECKEY_PublicKeyStrengthInBits(pub);
+    SECKEY_DestroyPublicKey(pub);
 
     SECKEYPrivateKey* priv = PK11_FindKeyByAnyCert(cert, nullptr);
     EXPECT_NE(nullptr, priv);
@@ -221,8 +229,17 @@ void TlsAgent::SetVersionRange(uint16_t minver, uint16_t maxver) {
    }
 }
 
+void TlsAgent::GetVersionRange(uint16_t* minver, uint16_t* maxver) {
+  *minver = vrange_.min;
+  *maxver = vrange_.max;
+}
+
 void TlsAgent::SetExpectedVersion(uint16_t version) {
   expected_version_ = version;
+}
+
+void TlsAgent::SetServerKeyBits(uint16_t bits) {
+  server_key_bits_ = bits;
 }
 
 void TlsAgent::SetExpectedReadError(bool err) {
@@ -273,11 +290,34 @@ void TlsAgent::SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
 void TlsAgent::CheckKEAType(SSLKEAType type) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(type, csinfo_.keaType);
+
+  switch (type) {
+      case ssl_kea_ecdh:
+          EXPECT_EQ(256U, info_.keaKeyBits);
+          break;
+      case ssl_kea_dh:
+          EXPECT_EQ(2048U, info_.keaKeyBits);
+          break;
+      case ssl_kea_rsa:
+          EXPECT_EQ(server_key_bits_, info_.keaKeyBits);
+          break;
+      default:
+          break;
+  }
 }
 
 void TlsAgent::CheckAuthType(SSLAuthType type) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(type, csinfo_.authAlgorithm);
+  EXPECT_EQ(server_key_bits_, info_.authKeyBits);
+  switch (type) {
+      case ssl_auth_ecdsa:
+          // extra check for P-256
+          EXPECT_EQ(256U, info_.authKeyBits);
+          break;
+      default:
+          break;
+  }
 }
 
 void TlsAgent::EnableFalseStart() {
@@ -407,6 +447,9 @@ void TlsAgent::EnableExtendedMasterSecret() {
 }
 
 void TlsAgent::CheckExtendedMasterSecret(bool expected) {
+  if (version() >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    expected = PR_TRUE;
+  }
   ASSERT_EQ(expected, info_.extendedMasterSecretUsed != PR_FALSE)
       << "unexpected extended master secret state for " << name_;
 }
@@ -421,6 +464,20 @@ void TlsAgent::DisableRollbackDetection() {
   ASSERT_EQ(SECSuccess, rv);
 }
 
+void TlsAgent::EnableCompression() {
+  ASSERT_TRUE(EnsureTlsSetup());
+
+  SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_DEFLATE, PR_TRUE);
+  ASSERT_EQ(SECSuccess, rv);
+}
+
+void TlsAgent::SetDowngradeCheckVersion(uint16_t version) {
+  ASSERT_TRUE(EnsureTlsSetup());
+
+  SECStatus rv = SSL_SetDowngradeCheckVersion(ssl_fd_, version);
+  ASSERT_EQ(SECSuccess, rv);
+}
+
 void TlsAgent::Handshake() {
   SECStatus rv = SSL_ForceHandshake(ssl_fd_);
   if (rv == SECSuccess) {
@@ -428,7 +485,6 @@ void TlsAgent::Handshake() {
 
     Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
                              &TlsAgent::ReadableCallback);
-
     return;
   }
 
@@ -446,9 +502,11 @@ void TlsAgent::Handshake() {
     case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
     default:
       if (IS_SSL_ERROR(err)) {
-        LOG("Handshake failed with SSL error " << err - SSL_ERROR_BASE);
+        LOG("Handshake failed with SSL error " << (err - SSL_ERROR_BASE)
+            << ": " << PORT_ErrorToString(err));
       } else {
-        LOG("Handshake failed with error " << err);
+        LOG("Handshake failed with error " << err
+            << ": " << PORT_ErrorToString(err));
       }
       error_code_ = err;
       SetState(STATE_ERROR);
@@ -467,6 +525,11 @@ void TlsAgent::StartRenegotiate() {
 
   SECStatus rv = SSL_ReHandshake(ssl_fd_, PR_TRUE);
   EXPECT_EQ(SECSuccess, rv);
+}
+
+void TlsAgent::SendDirect(const DataBuffer& buf) {
+  LOG("Send Direct " << buf);
+  adapter_->peer()->PacketReceived(buf);
 }
 
 void TlsAgent::SendData(size_t bytes, size_t blocksize) {
@@ -493,27 +556,28 @@ void TlsAgent::SendData(size_t bytes, size_t blocksize) {
 void TlsAgent::ReadBytes() {
   uint8_t block[1024];
 
-  LOG("Reading application data from socket");
-
   int32_t rv = PR_Read(ssl_fd_, block, sizeof(block));
+  LOG("ReadBytes " << rv);
 
-  int32_t err = PR_GetError();
-  if (err != PR_WOULD_BLOCK_ERROR) {
-    if (expected_read_error_) {
+  if (rv >= 0) {
+    size_t count = static_cast<size_t>(rv);
+    for (size_t i = 0; i < count; ++i) {
+      ASSERT_EQ(recv_ctr_ & 0xff, block[i]);
+      recv_ctr_++;
+    }
+  } else {
+    int32_t err = PR_GetError();
+    LOG("Read error " << err << ": " << PORT_ErrorToString(err));
+    if (err != PR_WOULD_BLOCK_ERROR && expected_read_error_) {
       error_code_ = err;
-    } else {
-      ASSERT_LE(0, rv);
-      size_t count = static_cast<size_t>(rv);
-      LOG("Read " << count << " bytes");
-      for (size_t i = 0; i < count; ++i) {
-        ASSERT_EQ(recv_ctr_ & 0xff, block[i]);
-        recv_ctr_++;
-      }
     }
   }
 
-  Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
-                           &TlsAgent::ReadableCallback);
+  // If closed, then don't bother waiting around.
+  if (rv) {
+    Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
+                             &TlsAgent::ReadableCallback);
+  }
 }
 
 void TlsAgent::ResetSentBytes() {

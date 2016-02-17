@@ -287,7 +287,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
             introducerFilename = maybeScript->scriptSource()->introducerFilename();
 
-        Rooted<StaticScope*> enclosing(cx);
+        RootedObject enclosing(cx);
         if (evalType == DIRECT_EVAL)
             enclosing = callerScript->innermostStaticScope(pc);
         else
@@ -373,7 +373,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
             introducerFilename = maybeScript->scriptSource()->introducerFilename();
 
-        Rooted<StaticScope*> enclosing(cx, callerScript->innermostStaticScope(pc));
+        RootedObject enclosing(cx, callerScript->innermostStaticScope(pc));
         Rooted<StaticEvalScope*> staticScope(cx, StaticEvalScope::create(cx, enclosing));
         if (!staticScope)
             return false;
@@ -475,8 +475,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
 
     // Unlike the non-syntactic scope chain API used by the subscript loader,
     // this API creates a fresh block scope each time.
-    Rooted<StaticNonSyntacticScope*> enclosingStaticScope(cx,
-        &script->enclosingStaticScope()->as<StaticNonSyntacticScope>());
+    RootedObject enclosingStaticScope(cx, script->enclosingStaticScope());
     scope = ClonedBlockObject::createNonSyntactic(cx, enclosingStaticScope, scope);
     if (!scope)
         return false;

@@ -213,10 +213,6 @@ public:
     return mActive;
   }
 
-#if defined(DEBUG)
-  void Dump(const char* aPath);
-#endif
-
 private:
   ~SourceBuffer();
 
@@ -238,7 +234,7 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
-  void BufferAppend(uint32_t aAppendID);
+  void BufferAppend();
 
   // Implement the "Append Error Algorithm".
   // Will call endOfStream() with "decode" error if aDecodeError is true.
@@ -265,11 +261,6 @@ private:
   bool mUpdating;
 
   mozilla::Atomic<bool> mActive;
-
-  // Each time mUpdating is set to true, mUpdateID will be incremented.
-  // This allows for a queued AppendData task to identify if it was earlier
-  // aborted and another AppendData queued.
-  uint32_t mUpdateID;
 
   MozPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
   const nsCString mType;

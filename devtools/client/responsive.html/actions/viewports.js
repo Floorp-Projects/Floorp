@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { ADD_VIEWPORT } = require("./index");
+const {
+  ADD_VIEWPORT,
+  RESIZE_VIEWPORT,
+  ROTATE_VIEWPORT
+} = require("./index");
 
 module.exports = {
 
@@ -14,6 +18,28 @@ module.exports = {
   addViewport() {
     return {
       type: ADD_VIEWPORT,
+    };
+  },
+
+  /**
+   * Resize the viewport.
+   */
+  resizeViewport(id, width, height) {
+    return {
+      type: RESIZE_VIEWPORT,
+      id,
+      width,
+      height,
+    };
+  },
+
+  /**
+   * Rotate the viewport.
+   */
+  rotateViewport(id) {
+    return {
+      type: ROTATE_VIEWPORT,
+      id,
     };
   },
 

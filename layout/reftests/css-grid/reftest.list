@@ -34,7 +34,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-abspos-items-015.html grid-abspos-items-015-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
-== grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
+fuzzy-if(skiaContent,1,200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
 skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html

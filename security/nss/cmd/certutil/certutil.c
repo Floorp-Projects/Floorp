@@ -3484,6 +3484,9 @@ shutdown:
     if (name) {
 	PL_strfree(name);
     }
+    if (newName) {
+	PL_strfree(newName);
+    }
     if (inFile && inFile != PR_STDIN) {
 	PR_Close(inFile);
     }

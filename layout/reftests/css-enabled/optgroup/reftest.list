@@ -1,1 +1,1 @@
-== optgroup-fieldset-1.html optgroup-fieldset-ref.html
+fuzzy-if(skiaContent,1,2) == optgroup-fieldset-1.html optgroup-fieldset-ref.html

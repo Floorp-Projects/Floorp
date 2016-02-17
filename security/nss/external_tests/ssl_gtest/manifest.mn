@@ -20,13 +20,17 @@ CPPSRCS = \
       test_io.cc \
       tls_agent.cc \
       tls_connect.cc \
+      tls_hkdf_unittest.cc \
       tls_filter.cc \
       tls_parser.cc \
       $(NULL)
 
-INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include
+INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/external_tests/common
 
 REQUIRES = nspr nss libdbm gtest
 
 PROGRAM = ssl_gtest
 EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
+
+USE_STATIC_LIBS = 1

@@ -45,8 +45,9 @@
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "WorkerPrivate.h"
 #include "nsDOMClassInfo.h"
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/UseCounter.h"
@@ -1867,11 +1868,10 @@ DictionaryBase::ParseJSON(JSContext* aCx,
 
 bool
 DictionaryBase::StringifyToJSON(JSContext* aCx,
-                                JS::MutableHandle<JS::Value> aValue,
+                                JS::Handle<JSObject*> aObj,
                                 nsAString& aJSON) const
 {
-  return JS_Stringify(aCx, aValue, nullptr, JS::NullHandleValue,
-                      AppendJSONToString, &aJSON);
+  return JS::ToJSONMaybeSafely(aCx, aObj, AppendJSONToString, &aJSON);
 }
 
 /* static */
@@ -2790,6 +2790,7 @@ ConvertExceptionToPromise(JSContext* cx,
                           JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval)
 {
+#ifndef SPIDERMONKEY_PROMISE
   GlobalObject global(cx, promiseScope);
   if (global.Failed()) {
     return false;
@@ -2824,6 +2825,33 @@ ConvertExceptionToPromise(JSContext* cx,
   }
 
   return GetOrCreateDOMReflector(cx, promise, rval);
+#else // SPIDERMONKEY_PROMISE
+  {
+    JSAutoCompartment ac(cx, promiseScope);
+
+    JS::Rooted<JS::Value> exn(cx);
+    if (!JS_GetPendingException(cx, &exn)) {
+      // This is very important: if there is no pending exception here but we're
+      // ending up in this code, that means the callee threw an uncatchable
+      // exception.  Just propagate that out as-is.
+      return false;
+    }
+
+    JS_ClearPendingException(cx);
+
+    JSObject* promise = JS::CallOriginalPromiseReject(cx, exn);
+    if (!promise) {
+      // We just give up.  Put the exception back.
+      JS_SetPendingException(cx, exn);
+      return false;
+    }
+
+    rval.setObject(*promise);
+  }
+
+  // Now make sure we rewrap promise back into the compartment we want
+  return JS_WrapValue(cx, rval);
+#endif // SPIDERMONKEY_PROMISE
 }
 
 /* static */
@@ -3210,6 +3238,19 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
     window->GetExtantDoc()->WarnOnceAbout(aOperation);
   }
 }
+
+namespace binding_detail {
+JSObject*
+UnprivilegedJunkScopeOrWorkerGlobal()
+{
+  if (NS_IsMainThread()) {
+    return xpc::UnprivilegedJunkScope();
+  }
+
+  return workers::GetCurrentThreadWorkerPrivate()->
+    GlobalScope()->GetGlobalJSObject();
+}
+} // namespace binding_detail
 
 } // namespace dom
 } // namespace mozilla

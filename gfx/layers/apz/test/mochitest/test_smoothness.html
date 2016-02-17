@@ -61,12 +61,6 @@
         SimpleTest.finish();
       }
 
-      var hwVsyncEnabled = SpecialPowers.getBoolPref("gfx.vsync.hw-vsync.enabled");
-      if (!hwVsyncEnabled) {
-        SimpleTest.ok(true, "Hardware vsync not enabled, skipping test");
-        SimpleTest.finish();
-      }
-
       SpecialPowers.pushPrefEnv({
         "set" : [
           [testPref, true]

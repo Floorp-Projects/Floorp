@@ -44,7 +44,6 @@ class nsIURI;
 class nsIScrollableFrame;
 class nsAttrValueOrString;
 class nsContentList;
-class nsDOMSettableTokenList;
 class nsDOMTokenList;
 struct nsRect;
 class nsFocusManager;
@@ -729,8 +728,8 @@ public:
   }
 
   // aCx == nullptr is allowed only if aOptions.isNullOrUndefined()
-  void MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
-                            ErrorResult& aError);
+  void RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
+                         ErrorResult& aError);
   void MozRequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
@@ -1298,7 +1297,7 @@ protected:
    */
   virtual void GetLinkTarget(nsAString& aTarget);
 
-  nsDOMSettableTokenList* GetTokenList(nsIAtom* aAtom);
+  nsDOMTokenList* GetTokenList(nsIAtom* aAtom);
   void GetTokenList(nsIAtom* aAtom, nsIVariant** aResult);
   nsresult SetTokenList(nsIAtom* aAtom, nsIVariant* aValue);
 
@@ -1808,8 +1807,8 @@ NS_IMETHOD ReleaseCapture(void) final override                                \
 NS_IMETHOD MozRequestFullScreen(void) final override                          \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  Element::MozRequestFullScreen(nullptr, JS::UndefinedHandleValue, rv);       \
-  return rv.StealNSResult();                                                      \
+  Element::RequestFullscreen(nullptr, JS::UndefinedHandleValue, rv);          \
+  return rv.StealNSResult();                                                  \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) final override                         \
 {                                                                             \

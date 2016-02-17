@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    .ball {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+    }
+
+    .script-animation {
+      background: #f06;
+    }
+
+    .css-transition {
+      background: #006;
+      transition: background-color 20s;
+    }
+
+    .css-animation {
+      background: #a06;
+      animation: flash 10s forwards;
+    }
+
+    @keyframes flash {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ball script-animation"></div>
+  <div class="ball css-animation"></div>
+  <div class="ball css-transition"></div>
+
+  <script>
+    setTimeout(function(){
+      document.querySelector(".css-transition").style.backgroundColor = "yellow";
+    }, 0);
+
+    document.querySelector(".script-animation").animate([
+      {  opacity: 1, offset: 0 },
+      {  opacity: .1, offset: 1 }
+    ], {
+      duration: 10000,
+      fill: "forwards"
+    });
+  </script>
+</body>
+</html>

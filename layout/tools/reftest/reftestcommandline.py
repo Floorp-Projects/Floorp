@@ -1,7 +1,10 @@
 import argparse
 import os
+import sys
 from collections import OrderedDict
 from urlparse import urlparse
+
+import mozlog
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -207,6 +210,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           nargs="*",
                           help="Path to test file, manifest file, or directory containing tests")
 
+        mozlog.commandline.add_logging_group(self)
+
     def get_ip(self):
         import moznetwork
         if os.name != "nt":
@@ -235,8 +240,6 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         self.error("Failed to determine test suite; supply --suite to set this explicitly")
 
     def validate(self, options, reftest):
-        import sys
-
         if not options.tests:
             # Can't just set this in the argument parser because mach will set a default
             self.error("Must supply at least one path to a manifest file, test directory, or test file to run.")

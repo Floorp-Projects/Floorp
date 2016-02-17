@@ -57,7 +57,7 @@ function run_test()
 
   var manifest = do_get_file('compmgr_warnings.manifest');
   registerAppManifest(manifest);
-  manifest = do_get_file('testcomponent.manifest');
+  manifest = do_get_file('components/testcomponent.manifest');
   registerAppManifest(manifest);
 
   run_deferred_event(function() {

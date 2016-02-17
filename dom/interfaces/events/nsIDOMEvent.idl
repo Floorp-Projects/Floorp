@@ -7,7 +7,7 @@
 
 interface nsIDOMEventTarget;
 
-[ptr] native WidgetEventPtr(mozilla::WidgetEvent);
+[ptr] native WidgetEvent(mozilla::WidgetEvent);
 [ptr] native DOMEventPtr(mozilla::dom::Event);
 [ptr] native IPCMessagePtr(IPC::Message);
 [ptr] native ConstIPCMessagePtr(const IPC::Message);
@@ -207,7 +207,7 @@ interface nsIDOMEvent : nsISupports
   [noscript] void duplicatePrivateData();
   [noscript] void setTarget(in nsIDOMEventTarget aTarget);
   [notxpcom] boolean IsDispatchStopped();
-  [notxpcom] WidgetEventPtr GetInternalNSEvent();
+  [notxpcom] WidgetEvent WidgetEventPtr();
   [noscript,notxpcom] void SetTrusted(in boolean aTrusted);
   [notxpcom] void Serialize(in IPCMessagePtr aMsg,
                             in boolean aSerializeInterfaceType);

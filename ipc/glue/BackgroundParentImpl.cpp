@@ -217,6 +217,15 @@ BackgroundParentImpl::DeallocPBackgroundIndexedDBUtilsParent(
     mozilla::dom::indexedDB::DeallocPBackgroundIndexedDBUtilsParent(aActor);
 }
 
+bool
+BackgroundParentImpl::RecvFlushPendingFileDeletions()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::indexedDB::RecvFlushPendingFileDeletions();
+}
+
 auto
 BackgroundParentImpl::AllocPBlobParent(const BlobConstructorParams& aParams)
   -> PBlobParent*

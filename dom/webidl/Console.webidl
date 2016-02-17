@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [ChromeOnly,
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker,WorkerDebugger)]
 interface Console {
   void log(any... data);
   void info(any... data);
@@ -52,10 +52,7 @@ dictionary ConsoleEvent {
   DOMString functionName = "";
   double timeStamp = 0;
   sequence<any> arguments;
-
-  // This array will only hold strings or null elements.
-  sequence<any> styles;
-
+  sequence<DOMString?> styles;
   boolean private = false;
   // stacktrace is handled via a getter in some cases so we can construct it
   // lazily.  Note that we're not making this whole thing an interface because

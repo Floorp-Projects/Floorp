@@ -21,8 +21,6 @@ namespace js {
 
 class ModuleEnvironmentObject;
 class ModuleObject;
-class StaticScope;
-class StaticModuleScope;
 
 namespace frontend {
 class ParseNode;
@@ -162,7 +160,6 @@ class ModuleNamespaceObject : public ProxyObject
                              AutoIdVector& props) const override;
         bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                      ObjectOpResult& result) const override;
-        bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const override;
         bool getPrototype(JSContext* cx, HandleObject proxy,
                           MutableHandleObject protop) const override;
         bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
@@ -227,7 +224,7 @@ class ModuleObject : public NativeObject
 
     static bool isInstance(HandleValue value);
 
-    static ModuleObject* create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticScope);
+    static ModuleObject* create(ExclusiveContext* cx, HandleObject enclosingStaticScope);
     void init(HandleScript script);
     void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
@@ -237,7 +234,7 @@ class ModuleObject : public NativeObject
                               HandleArrayObject starExportEntries);
 
     JSScript* script() const;
-    StaticModuleScope* staticScope() const;
+    JSObject* enclosingStaticScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
     ModuleNamespaceObject* namespace_();

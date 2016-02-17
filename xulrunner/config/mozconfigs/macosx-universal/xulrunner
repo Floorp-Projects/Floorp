@@ -1,9 +1,0 @@
-. $topsrcdir/build/macosx/universal/mozconfig
-
-export MOZILLA_OFFICIAL=1
-
-ac_add_options --enable-application=xulrunner
-ac_add_options --disable-tests
-ac_add_options --with-xulrunner-stub-name=xulrunner-stub
-
-. "$topsrcdir/xulrunner/config/mozconfigs/common.override"

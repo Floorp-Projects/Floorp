@@ -516,6 +516,16 @@ class PerfherderOutput(Output):
                     if 'mainthreadio' in name:
                         continue
 
+                    # responsiveness has it's own metric, not the mean
+                    # TODO: consider doing this for all counters
+                    if 'responsiveness' is name:
+                        subtest = {
+                            'name': name,
+                            'value': self.responsiveness_Metric(vals)
+                        }
+                        counter_subtests.append(subtest)
+                        continue
+
                     subtest = {
                         'name': name,
                         'value': 0.0,

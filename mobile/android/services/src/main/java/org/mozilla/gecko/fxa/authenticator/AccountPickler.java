@@ -174,7 +174,7 @@ public class AccountPickler {
 
     ExtendedJSONObject json = null;
     try {
-      json = ExtendedJSONObject.parseJSONObject(jsonString);
+      json = new ExtendedJSONObject(jsonString);
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception reading pickle file '" + filename + "'; aborting.", e);
       return null;

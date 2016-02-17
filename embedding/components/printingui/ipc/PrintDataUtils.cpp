@@ -22,7 +22,7 @@ namespace embedding {
 
 NS_IMPL_ISUPPORTS(MockWebBrowserPrint, nsIWebBrowserPrint);
 
-MockWebBrowserPrint::MockWebBrowserPrint(PrintData aData)
+MockWebBrowserPrint::MockWebBrowserPrint(const PrintData &aData)
   : mData(aData)
 {
   MOZ_COUNT_CTOR(MockWebBrowserPrint);

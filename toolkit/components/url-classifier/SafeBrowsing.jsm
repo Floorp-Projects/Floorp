@@ -332,8 +332,14 @@ this.SafeBrowsing = {
     let dummyListener = {
       updateUrlRequested: function() { },
       streamFinished:     function() { },
-      updateError:        function() { },
-      updateSuccess:      function() { }
+      // We notify observers when we're done in order to be able to make perf
+      // test results more consistent
+      updateError:        function() {
+        Services.obs.notifyObservers(db, "mozentries-update-finished", "error");
+      },
+      updateSuccess:      function() {
+        Services.obs.notifyObservers(db, "mozentries-update-finished", "success");
+      }
     };
 
     try {
@@ -346,6 +352,18 @@ this.SafeBrowsing = {
     } catch(ex) {
       // beginUpdate will throw harmlessly if there's an existing update in progress, ignore failures.
       log("addMozEntries failed!", ex);
+      Services.obs.notifyObservers(db, "mozentries-update-finished", "exception");
     }
   },
+
+  addMozEntriesFinishedPromise: new Promise(resolve => {
+    let finished = (subject, topic, data) => {
+      Services.obs.removeObserver(finished, "mozentries-update-finished");
+      if (data == "error") {
+        Cu.reportError("addMozEntries failed to update the db!");
+      }
+      resolve();
+    };
+    Services.obs.addObserver(finished, "mozentries-update-finished", false);
+  }),
 };

@@ -18,13 +18,16 @@ fhs.observe(null, "profile-after-change", null);
 Services.prefs.setCharPref("identity.sync.tokenserver.uri", "http://token-server");
 
 // Make sure to provide the right OS so crypto loads the right binaries
-var OS = "XPCShell";
-if (mozinfo.os == "win")
-  OS = "WINNT";
-else if (mozinfo.os == "mac")
-  OS = "Darwin";
-else
-  OS = "Linux";
+function getOS() {
+  switch (mozinfo.os) {
+    case "win":
+      return "WINNT";
+    case "mac":
+      return "Darwin";
+    default:
+      return "Linux";
+  }
+}
 
 var XULAppInfo = {
   vendor: "Mozilla",
@@ -36,7 +39,7 @@ var XULAppInfo = {
   platformBuildID: "20100621",
   inSafeMode: false,
   logConsoleErrors: true,
-  OS: OS,
+  OS: getOS(),
   XPCOMABI: "noarch-spidermonkey",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
   invalidateCachesOnRestart: function invalidateCachesOnRestart() { }

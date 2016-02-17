@@ -228,7 +228,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
                         len = is.read(buf);
                     }
                     fos.close();
-
+                    is.close();
                     tempFile = file.getAbsolutePath();
                     sendResult((tempFile == null) ? "" : tempFile);
 

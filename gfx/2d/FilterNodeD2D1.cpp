@@ -8,9 +8,6 @@
 #include "Logging.h"
 
 #include "SourceSurfaceD2D1.h"
-#include "SourceSurfaceD2D.h"
-#include "SourceSurfaceD2DTarget.h"
-#include "DrawTargetD2D.h"
 #include "DrawTargetD2D1.h"
 #include "ExtendInputEffectD2D1.h"
 
@@ -159,8 +156,6 @@ already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSur
   switch (aDT->GetBackendType()) {
     case BackendType::DIRECT2D1_1:
       return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, ExtendMode::CLAMP);
-    case BackendType::DIRECT2D:
-      return static_cast<DrawTargetD2D*>(aDT)->GetImageForSurface(aSurface);
     default:
       gfxDevCrash(LogReason::FilterNodeD2D1Backend) << "Unknown draw target type! " << (int)aDT->GetBackendType();
       return nullptr;

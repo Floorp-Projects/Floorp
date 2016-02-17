@@ -1593,12 +1593,13 @@ module.exports = function (chai, _) {
       }
     }
 
-    var actuallyGot = ''
-      , expectedThrown = name !== null
-        ? name
-        : desiredError
-          ? '#{exp}' //_.inspect(desiredError)
-          : 'an error';
+    var actuallyGot = '';
+    var expectedThrown = 'an error';
+    if (name !== null) {
+      expectedThrown = name;
+    } else if (desiredError) {
+      expectedThrown = '#{exp}'; //_.inspect(desiredError)
+    }
 
     if (thrown) {
       actuallyGot = ' but #{act} was thrown'

@@ -87,6 +87,8 @@ var gSyncUI = {
       sidebarBroadcaster.removeAttribute("hidden");
     }
 
+    this.maybeMoveSyncedTabsButton();
+
     this.updateUI();
   },
 
@@ -330,6 +332,28 @@ var gSyncUI = {
       // It is placed somewhere else - just try and show it.
       PanelUI.showSubView("PanelUI-remotetabs", anchor, area);
     }
+  },
+
+  /* After Sync is initialized we perform a once-only check for the sync
+     button being in "customize purgatory" and if so, move it to the panel.
+     This is done primarily for profiles created before SyncedTabs landed,
+     where the button defaulted to being in that purgatory.
+     We use a preference to ensure we only do it once, so people can still
+     customize it away and have it stick.
+  */
+  maybeMoveSyncedTabsButton() {
+    const prefName = "browser.migrated-sync-button";
+    let migrated = false;
+    try {
+      migrated = Services.prefs.getBoolPref(prefName);
+    } catch (_) {}
+    if (migrated) {
+      return;
+    }
+    if (!CustomizableUI.getPlacementOfWidget("sync-button")) {
+      CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+    }
+    Services.prefs.setBoolPref(prefName, true);
   },
 
   /* Update the tooltip for the sync-status broadcaster (which will update the

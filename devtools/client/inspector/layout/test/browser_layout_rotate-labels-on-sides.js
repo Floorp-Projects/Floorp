@@ -7,23 +7,24 @@
 // Test that longer values are rotated on the side
 
 const res1 = [
-  {selector: ".layout-margin.layout-top > span",         value: 30},
-  {selector: ".layout-margin.layout-left > span",        value: "auto"},
-  {selector: ".layout-margin.layout-bottom > span",      value: 30},
-  {selector: ".layout-margin.layout-right > span",       value: "auto"},
-  {selector: ".layout-padding.layout-top > span",        value: 20},
-  {selector: ".layout-padding.layout-left > span",       value: 2000000},
-  {selector: ".layout-padding.layout-bottom > span",     value: 20},
-  {selector: ".layout-padding.layout-right > span",      value: 20},
-  {selector: ".layout-border.layout-top > span",         value: 10},
-  {selector: ".layout-border.layout-left > span",        value: 10},
-  {selector: ".layout-border.layout-bottom > span",      value: 10},
-  {selector: ".layout-border.layout-right > span",       value: 10},
+  {selector: ".layout-margin.layout-top > span", value: 30},
+  {selector: ".layout-margin.layout-left > span", value: "auto"},
+  {selector: ".layout-margin.layout-bottom > span", value: 30},
+  {selector: ".layout-margin.layout-right > span", value: "auto"},
+  {selector: ".layout-padding.layout-top > span", value: 20},
+  {selector: ".layout-padding.layout-left > span", value: 2000000},
+  {selector: ".layout-padding.layout-bottom > span", value: 20},
+  {selector: ".layout-padding.layout-right > span", value: 20},
+  {selector: ".layout-border.layout-top > span", value: 10},
+  {selector: ".layout-border.layout-left > span", value: 10},
+  {selector: ".layout-border.layout-bottom > span", value: 10},
+  {selector: ".layout-border.layout-right > span", value: 10},
 ];
 
 const TEST_URI = encodeURIComponent([
   "<style>",
-  "div{border:10px solid black; padding: 20px 20px 20px 2000000px; margin: 30px auto;}",
+  "div { border:10px solid black; padding: 20px 20px 20px 2000000px; " +
+  "margin: 30px auto; }",
   "</style>",
   "<div></div>"
 ].join(""));
@@ -31,7 +32,7 @@ const LONG_TEXT_ROTATE_LIMIT = 3;
 
 add_task(function*() {
   yield addTab("data:text/html," + TEST_URI);
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
   yield selectNode("div", inspector);
 
   for (let i = 0; i < res1.length; i++) {

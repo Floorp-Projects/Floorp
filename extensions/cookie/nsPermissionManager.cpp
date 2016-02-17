@@ -1571,7 +1571,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
   PermissionHashKey* entry = mPermissionTable.PutEntry(key);
   if (!entry) return NS_ERROR_FAILURE;
   if (!entry->GetKey()) {
-    mPermissionTable.RawRemoveEntry(entry);
+    mPermissionTable.RemoveEntry(entry);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1694,7 +1694,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       // If there are no more permissions stored for that entry, clear it.
       if (entry->GetPermissions().IsEmpty()) {
-        mPermissionTable.RawRemoveEntry(entry);
+        mPermissionTable.RemoveEntry(entry);
       }
 
       break;

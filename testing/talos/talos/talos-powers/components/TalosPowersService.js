@@ -53,11 +53,23 @@ TalosPowersService.prototype = {
 
   receiveMessage(message) {
     if (message.name == "Talos:ForceQuit") {
-      this.forceQuit();
+      this.forceQuit(message.data);
     }
   },
 
-  forceQuit() {
+  forceQuit(messageData) {
+    if (messageData && messageData.waitForSafeBrowsing) {
+      let SafeBrowsing = Cu.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
+
+      let whenDone = () => {
+        this.forceQuit();
+      };
+      SafeBrowsing.addMozEntriesFinishedPromise.then(whenDone, whenDone);
+      // Speed things up in case nobody else called this:
+      SafeBrowsing.init();
+      return;
+    }
+
     let enumerator = Services.wm.getEnumerator(null);
     while (enumerator.hasMoreElements()) {
       let domWindow = enumerator.getNext();

@@ -5,10 +5,13 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-const {
-  getCssDocs,
-  PAGE_LINK_URL
-} = require("devtools/client/shared/widgets/MdnDocsWidget");
+
+var MdnDocsWidget;
+try {
+  MdnDocsWidget = require("devtools/client/shared/widgets/MdnDocsWidget");
+} catch (e) {
+  // DevTools MdnDocsWidget only available in Firefox Desktop
+}
 
 exports.items = [{
   name: "mdn",
@@ -26,10 +29,14 @@ exports.items = [{
     description: l10n.lookup("mdnCssProp")
   }],
   exec: function(args) {
-    return getCssDocs(args.property).then(result => {
+    if (!MdnDocsWidget) {
+      return null;
+    }
+
+    return MdnDocsWidget.getCssDocs(args.property).then(result => {
       return {
         data: result,
-        url: PAGE_LINK_URL + args.property,
+        url: MdnDocsWidget.PAGE_LINK_URL + args.property,
         property: args.property
       };
     }, error => {

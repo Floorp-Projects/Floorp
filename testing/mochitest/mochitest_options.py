@@ -10,7 +10,7 @@ import json
 import os
 import tempfile
 
-from droid import DroidADB, DroidSUT
+from mozdevice import DroidADB, DroidSUT
 from mozprofile import DEFAULT_PORTS
 import mozinfo
 import mozlog
@@ -530,7 +530,7 @@ class MochitestArguments(ArgumentContainer):
         [["--valgrind-args"],
          {"dest": "valgrindArgs",
           "default": None,
-          "help": "Extra arguments to pass to Valgrind.",
+          "help": "Comma-separated list of extra arguments to pass to Valgrind.",
           }],
         [["--valgrind-supp-files"],
          {"dest": "valgrindSuppFiles",
@@ -558,13 +558,17 @@ class MochitestArguments(ArgumentContainer):
           "help": "Enable logging of unsafe CPOW usage, which is disabled by default for tests",
           "suppress": True,
           }],
+        [["--marionette"],
+         {"default": None,
+          "help": "host:port to use when connecting to Marionette",
+          }],
     ]
 
     defaults = {
         # Bug 1065098 - The geckomediaplugin process fails to produce a leak
         # log for some reason.
         'ignoreMissingLeaks': ["geckomediaplugin"],
-
+        'extensionsToExclude': ['specialpowers'],
         # Set server information on the args object
         'webServer': '127.0.0.1',
         'httpPort': DEFAULT_PORTS['http'],
@@ -795,11 +799,6 @@ class MochitestArguments(ArgumentContainer):
             "geckomediaplugin": 20000,
         }
 
-        # Bug 1091917 - We exit early in tab processes on Windows, so we don't
-        # get leak logs yet.
-        if mozinfo.isWin:
-            options.ignoreMissingLeaks.append("tab")
-
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the
         # mach command and therefore not finalized yet. Conversely, test paths
@@ -821,10 +820,6 @@ class B2GArguments(ArgumentContainer):
           "default": None,
           "help": "Path to B2G repo or QEMU directory.",
           "suppress": True,
-          }],
-        [["--marionette"],
-         {"default": None,
-          "help": "host:port to use when connecting to Marionette",
           }],
         [["--emulator"],
          {"default": None,
@@ -919,6 +914,8 @@ class B2GArguments(ArgumentContainer):
         # Specialpowers is integrated with marionette for b2g,
         # see marionette's jar.mn.
         'extensionsToExclude': ['specialpowers'],
+        # mochijar doesn't get installed via marionette on android
+        'extensionsToInstall': [os.path.join(here, 'mochijar')],
         # See dependencies of bug 1038943.
         'defaultLeakThreshold': 5536,
     }
@@ -1071,6 +1068,10 @@ class AndroidArguments(ArgumentContainer):
 
     defaults = {
         'dm': None,
+        # we don't want to exclude specialpowers on android just yet
+        'extensionsToExclude': [],
+        # mochijar doesn't get installed via marionette on android
+        'extensionsToInstall': [os.path.join(here, 'mochijar')],
         'logFile': 'mochitest.log',
         'utilityPath': None,
     }

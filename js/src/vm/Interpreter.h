@@ -21,7 +21,6 @@
 namespace js {
 
 class ScopeIter;
-class StaticWithScope;
 
 /*
  * For a given |call|, convert null/undefined |this| into the global object for
@@ -429,8 +428,8 @@ unsigned
 GetInitDataPropAttrs(JSOp op);
 
 bool
-EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
-                   Handle<StaticWithScope*> staticWith);
+EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val, HandleObject staticWith);
+
 
 bool
 InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue idval,

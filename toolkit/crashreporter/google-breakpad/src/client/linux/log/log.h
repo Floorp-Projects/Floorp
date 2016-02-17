@@ -36,6 +36,20 @@ namespace logger {
 
 int write(const char* buf, size_t nbytes);
 
+// In the case of Android the log can be written to the default system log
+// (default behavior of write() above, or to the crash log (see
+// writeToCrashLog() below).
+#if defined(__ANDROID__)
+
+// The logger must be initialized in a non-compromised context.
+void initializeCrashLogWriter();
+
+// Once initialized, writeToCrashLog is safe to use in a compromised context,
+// even if the initialization failed, in which case this will silently fall
+// back on write().
+int writeToCrashLog(const char* buf);
+#endif
+
 }  // namespace logger
 
 #endif  // CLIENT_LINUX_LOG_LOG_H_

@@ -139,8 +139,11 @@ CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
     Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
     ret = WebGL1Context::Create();
-    if (!ret)
+    if (!ret) {
+      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 0);
       return nullptr;
+    }
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 1);
 
     break;
 
@@ -148,8 +151,11 @@ CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
     Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
     ret = WebGL2Context::Create();
-    if (!ret)
+    if (!ret) {
+      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 0);
       return nullptr;
+    }
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 1);
 
     break;
 

@@ -9,6 +9,8 @@
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html?" + Date.now();
+const TEST_FILE = "chrome://mochitests/content/browser/devtools/client/" +
+                  "webconsole/test/test-cu-reporterror.js";
 
 const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 
@@ -44,6 +46,10 @@ function consoleOpened(hud) {
   // Add a message from a chrome window.
   hud.iframeWindow.console.log("bug587757a");
 
+  // Check Cu.reportError stack.
+  // Use another js script to not depend on the test file line numbers.
+  Services.scriptloader.loadSubScript(TEST_FILE, hud.iframeWindow);
+
   // Add a message from a content window.
   content.console.log("bug587757b");
 
@@ -75,6 +81,23 @@ function consoleOpened(hud) {
         text: "bug587757a",
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
+      },
+      {
+        name: "Cu.reportError is displayed",
+        text: "bug1141222",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+        stacktrace: [{
+          file: TEST_FILE,
+          line: 2,
+        }, {
+          file: TEST_FILE,
+          line: 4,
+        },
+        // Ignore the rest of the stack,
+        // just assert Cu.reportError call site
+        // and consoleOpened call
+        ]
       },
       {
         name: "content window console.log() is displayed",

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+<script type="application/javascript">
+function f()
+{
+  if (speechSynthesis.getVoices().length == 0) {
+    // No synthesis backend to test this
+    document.documentElement.removeAttribute('class');
+    return;
+  }
+
+  var s = new SpeechSynthesisUtterance("hello world");
+  s.onerror = () => {
+    // No synthesis backend to test this
+    document.documentElement.removeAttribute('class');
+    return;
+  }
+  s.onend = () => {
+    document.documentElement.removeAttribute('class');
+  };
+  speechSynthesis.speak(s);
+  speechSynthesis.cancel();
+  speechSynthesis.pause();
+  speechSynthesis.resume();
+}
+  </script>
+</head>
+<body onload="f();">
+</body>
+</html>

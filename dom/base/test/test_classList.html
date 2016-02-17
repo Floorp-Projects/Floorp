@@ -98,15 +98,20 @@ function assignToClassListStrict(e) {
   "use strict";
   try {
     e.classList = "foo";
-    ok(false, "assigning to classList didn't throw");
-  } catch (e) { }
+    ok(true, "assigning to classList didn't throw");
+    e.removeAttribute("class");
+  } catch (e) { 
+    ok(false, "assigning to classList threw");
+  }
 }
 
 function assignToClassList(e) {
   try {
     var expect = e.classList;
     e.classList = "foo";
+    ok(true, "assigning to classList didn't throw");
     is(e.classList, expect, "classList should be unchanged after assignment");
+    e.removeAttribute("class");
   } catch (e) {
     ok(false, "assigning to classList threw");
   }
@@ -160,8 +165,6 @@ function testClassList(e) {
 
   ok(DOMTokenList.prototype.hasOwnProperty("toString"),
      "Should have own toString on DOMTokenList")
-  ok(!DOMSettableTokenList.prototype.hasOwnProperty("toString"),
-     "Should not have own toString on DOMSettableTokenList")
 
   e.removeAttribute("class");
   is(e.classList.toString(), "", "wrong classList.toString() value");

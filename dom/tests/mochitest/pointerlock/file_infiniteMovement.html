@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
 
           div.removeEventListener("mousemove", secondMoveListener, false);
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         }
 
         document.addEventListener("mozpointerlockchange", function (e) {
@@ -84,13 +84,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           }
         }, false);
 
-        document.addEventListener("mozfullscreenchange", function() {
-          if (document.mozFullScreenElement === div) {
-            info("Got mozfullscreenchange for entering");
+        document.addEventListener("fullscreenchange", function() {
+          if (document.fullscreenElement === div) {
+            info("Got fullscreenchange for entering");
             div.mozRequestPointerLock();
           }
           else {
-            info("Got mozfullscreenchange for exiting");
+            info("Got fullscreenchange for exiting");
             runTests();
             SimpleTest.finish();
           }
@@ -98,7 +98,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         function start() {
           info("Requesting fullscreen on parent");
-          div.mozRequestFullScreen();
+          div.requestFullscreen();
         }
       </script>
     </pre>

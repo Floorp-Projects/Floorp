@@ -1244,7 +1244,9 @@ var Impl = {
       }
 
       payloadObj.addonDetails = protect(() => AddonManagerPrivate.getTelemetryDetails());
-      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements());
+
+      let clearUIsession = !(reason == REASON_GATHER_PAYLOAD || reason == REASON_GATHER_SUBSESSION_PAYLOAD);
+      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements(clearUIsession));
 
       if (this._slowSQLStartup &&
           Object.keys(this._slowSQLStartup).length != 0 &&
@@ -1276,7 +1278,7 @@ var Impl = {
   getSessionPayload: function getSessionPayload(reason, clearSubsession) {
     this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
 
-    const isMobile = ["gonk", "android"].indexOf(AppConstants.platform) !== -1;
+    const isMobile = ["gonk", "android"].includes(AppConstants.platform);
     const isSubsession = isMobile ? false : !this._isClassicReason(reason);
 
     if (isMobile) {
@@ -1998,7 +2000,7 @@ var Impl = {
       REASON_GATHER_PAYLOAD,
       REASON_TEST_PING,
     ];
-    return classicReasons.indexOf(reason) != -1;
+    return classicReasons.includes(reason);
   },
 
   /**

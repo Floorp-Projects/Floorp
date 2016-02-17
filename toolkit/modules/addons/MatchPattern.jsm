@@ -153,7 +153,7 @@ MatchPattern.prototype = {
     // So, instead, we need to manually check our filters, and accept any
     // with hosts that end with our cookie's host.
 
-    let { host, isSecure } = cookie;
+    let {host, isSecure} = cookie;
 
     for (let matcher of this.matchers) {
       let schemes = matcher.schemes;

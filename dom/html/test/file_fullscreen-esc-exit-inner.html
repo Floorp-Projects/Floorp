@@ -11,7 +11,7 @@ exit DOM full-screen mode.
   <title>Test for Bug 700764</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <style>
-    body:not(:-moz-full-screen) {
+    body:not(:fullscreen) {
       background-color: blue;
     }
   </style>
@@ -44,8 +44,8 @@ window.addEventListener("keyup", keyHandler, true);
 window.addEventListener("keypress", keyHandler, true);
 
 function startTest() {
-  ok(!document.mozFullScreen, "Subdoc should not be in full-screen mode");
-  ok(parent.document.mozFullScreen, "Parent should be in full-screen mode");
+  ok(!document.fullscreenElement, "Subdoc should not be in full-screen mode");
+  ok(parent.document.fullscreenElement, "Parent should be in full-screen mode");
   escKeySent = true;
   window.focus();
   synthesizeKey("VK_ESCAPE", {});

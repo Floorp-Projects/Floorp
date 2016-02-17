@@ -95,13 +95,13 @@ class MacroAssemblerX86Shared : public Assembler
     Double* getDouble(double d);
     SimdData* getSimdData(const SimdConstant& v);
 
-    bool asmMergeWith(const MacroAssemblerX86Shared& other);
-
   public:
     using Assembler::call;
 
     MacroAssemblerX86Shared()
     { }
+
+    bool asmMergeWith(const MacroAssemblerX86Shared& other);
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
@@ -109,52 +109,12 @@ class MacroAssemblerX86Shared : public Assembler
         else
             vucomisd(rhs, lhs);
     }
-    void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label* label)
-    {
-        compareDouble(cond, lhs, rhs);
-
-        if (cond == DoubleEqual) {
-            Label unordered;
-            j(Parity, &unordered);
-            j(Equal, label);
-            bind(&unordered);
-            return;
-        }
-        if (cond == DoubleNotEqualOrUnordered) {
-            j(NotEqual, label);
-            j(Parity, label);
-            return;
-        }
-
-        MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
-        j(ConditionFromDoubleCondition(cond), label);
-    }
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
             vucomiss(lhs, rhs);
         else
             vucomiss(rhs, lhs);
-    }
-    void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label* label)
-    {
-        compareFloat(cond, lhs, rhs);
-
-        if (cond == DoubleEqual) {
-            Label unordered;
-            j(Parity, &unordered);
-            j(Equal, label);
-            bind(&unordered);
-            return;
-        }
-        if (cond == DoubleNotEqualOrUnordered) {
-            j(NotEqual, label);
-            j(Parity, label);
-            return;
-        }
-
-        MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
-        j(ConditionFromDoubleCondition(cond), label);
     }
 
     void branchNegativeZero(FloatRegister reg, Register scratch, Label* label, bool  maybeNonZero = true);
@@ -568,60 +528,8 @@ class MacroAssemblerX86Shared : public Assembler
         cmpw(rhs, lhs);
         j(cond, label);
     }
-    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
-        cmp32(Operand(lhs), imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const BaseIndex& lhs, Register rhs, Label* label) {
-        cmp32(Operand(lhs), rhs);
-        j(cond, label);
-    }
-    void branch32(Condition cond, const BaseIndex& lhs, Imm32 imm, Label* label) {
-        cmp32(Operand(lhs), imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        cmp32(lhs, imm);
-        j(cond, label);
-    }
-    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
-        cmp32(lhs, rhs);
-        j(cond, label);
-    }
     void branchTest16(Condition cond, Register lhs, Register rhs, Label* label) {
         testw(rhs, lhs);
-        j(cond, label);
-    }
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        test32(lhs, rhs);
-        j(cond, label);
-    }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        test32(lhs, imm);
-        j(cond, label);
-    }
-    void branchTest32(Condition cond, const Address& address, Imm32 imm, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        test32(Operand(address), imm);
-        j(cond, label);
-    }
-    void branchTest32(Condition cond, const Operand& lhs, Imm32 imm, Label* label) {
-        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        test32(lhs, imm);
         j(cond, label);
     }
 
@@ -639,6 +547,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void jump(const Address& addr) {
         jmp(Operand(addr));
+    }
+    void jump(wasm::JumpTarget target) {
+        jmp(target);
     }
 
     void convertInt32ToDouble(Register src, FloatRegister dest) {
@@ -1310,16 +1221,7 @@ class MacroAssemblerX86Shared : public Assembler
         j(Assembler::NotEqual, fail);
     }
 
-    void clampIntToUint8(Register reg) {
-        Label inRange;
-        branchTest32(Assembler::Zero, reg, Imm32(0xffffff00), &inRange);
-        {
-            sarl(Imm32(31), reg);
-            notl(reg);
-            andl(Imm32(255), reg);
-        }
-        bind(&inRange);
-    }
+    inline void clampIntToUint8(Register reg);
 
     bool maybeInlineDouble(double d, FloatRegister dest) {
         uint64_t u = mozilla::BitwiseCast<uint64_t>(d);

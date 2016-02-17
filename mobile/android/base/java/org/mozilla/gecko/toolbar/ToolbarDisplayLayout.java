@@ -10,7 +10,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
@@ -21,17 +20,14 @@ import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -62,8 +58,7 @@ import android.widget.ImageButton;
 * {@code ToolbarDisplayLayout} is meant to be owned by {@code BrowserToolbar}
 * which is the main event bus for the toolbar subsystem.
 */
-public class ToolbarDisplayLayout extends ThemedLinearLayout
-                                  implements Animation.AnimationListener {
+public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
     private boolean mTrackingProtectionEnabled;
@@ -108,21 +103,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     private OnTitleChangeListener mTitleChangeListener;
 
     private final ImageButton mSiteSecurity;
-    private boolean mSiteSecurityVisible;
-
-    // To de-bounce sets.
-    private Bitmap mLastFavicon;
-    private final ImageButton mFavicon;
-    private int mFaviconSize;
 
     private final ImageButton mStop;
     private OnStopListener mStopListener;
 
     private final PageActionLayout mPageActionLayout;
-
-    private AlphaAnimation mLockFadeIn;
-    private TranslateAnimation mTitleSlideLeft;
-    private TranslateAnimation mTitleSlideRight;
 
     private final SiteIdentityPopup mSiteIdentityPopup;
     private int mSecurityImageLevel;
@@ -137,8 +122,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     // Levels for displaying Tracking Protection state icons.
     private final int LEVEL_SHIELD_ENABLED = 5;
     private final int LEVEL_SHIELD_DISABLED = 6;
-
-    private PropertyAnimator mForwardAnim;
 
     private final ForegroundColorSpan mUrlColor;
     private final ForegroundColorSpan mBlockedColor;
@@ -163,23 +146,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext));
         mPrivateDomainColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext_private));
 
-        mFavicon = (ImageButton) findViewById(R.id.favicon);
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
-
-        if (HardwareUtils.isTablet()) {
-            mSiteSecurity.setVisibility(View.VISIBLE);
-
-            // We don't show favicons in the toolbar on new tablet. Note that while we could
-            // null the favicon reference, we don't do so to avoid excessive null-checking.
-            removeView(mFavicon);
-        } else {
-            if (Versions.feature16Plus) {
-                mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            }
-            mFaviconSize = Math.round(Favicons.browserToolbarFaviconSize);
-        }
-
-        mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
         mSiteIdentityPopup.setAnchor(this);
@@ -193,15 +160,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     public void onAttachedToWindow() {
         mIsAttached = true;
 
-        Button.OnClickListener faviconListener = new Button.OnClickListener() {
+        mSiteSecurity.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mSiteIdentityPopup.show();
             }
-        };
-
-        mFavicon.setOnClickListener(faviconListener);
-        mSiteSecurity.setOnClickListener(faviconListener);
+        });
 
         mStop.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -211,31 +175,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
                     // immediately based on the stopped tab.
                     final Tab tab = mStopListener.onStop();
                     if (tab != null) {
-                        updateUiMode(UIMode.DISPLAY, EnumSet.noneOf(UpdateFlags.class));
+                        updateUiMode(UIMode.DISPLAY);
                     }
                 }
             }
         });
-
-        float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_site_security_width);
-
-        LayoutParams siteSecParams = (LayoutParams) mSiteSecurity.getLayoutParams();
-        final float scale = getResources().getDisplayMetrics().density;
-        slideWidth += (siteSecParams.leftMargin + siteSecParams.rightMargin) * scale + 0.5f;
-
-        mLockFadeIn = new AlphaAnimation(0.0f, 1.0f);
-        mLockFadeIn.setAnimationListener(this);
-
-        mTitleSlideLeft = new TranslateAnimation(slideWidth, 0, 0, 0);
-        mTitleSlideLeft.setAnimationListener(this);
-
-        mTitleSlideRight = new TranslateAnimation(-slideWidth, 0, 0, 0);
-        mTitleSlideRight.setAnimationListener(this);
-
-        final int lockAnimDuration = 300;
-        mLockFadeIn.setDuration(lockAnimDuration);
-        mTitleSlideLeft.setDuration(lockAnimDuration);
-        mTitleSlideRight.setDuration(lockAnimDuration);
     }
 
     @Override
@@ -245,36 +189,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     @Override
-    public void onAnimationStart(Animation animation) {
-        if (animation.equals(mLockFadeIn)) {
-            if (mSiteSecurityVisible)
-                mSiteSecurity.setVisibility(View.VISIBLE);
-        } else if (animation.equals(mTitleSlideLeft)) {
-            // These two animations may be scheduled to start while the forward
-            // animation is occurring. If we're showing the site security icon, make
-            // sure it doesn't take any space during the forward transition.
-            mSiteSecurity.setVisibility(View.GONE);
-        } else if (animation.equals(mTitleSlideRight)) {
-            // If we're hiding the icon, make sure that we keep its padding
-            // in place during the forward transition
-            mSiteSecurity.setVisibility(View.INVISIBLE);
-        }
-    }
-
-    @Override
-    public void onAnimationRepeat(Animation animation) {
-    }
-
-    @Override
-    public void onAnimationEnd(Animation animation) {
-        if (animation.equals(mTitleSlideRight)) {
-            mSiteSecurity.startAnimation(mLockFadeIn);
-        }
-    }
-
-    @Override
     public void setNextFocusDownId(int nextId) {
-        mFavicon.setNextFocusDownId(nextId);
         mStop.setNextFocusDownId(nextId);
         mSiteSecurity.setNextFocusDownId(nextId);
         mPageActionLayout.setNextFocusDownId(nextId);
@@ -295,16 +210,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             updateTitle(tab);
         }
 
-        if (flags.contains(UpdateFlags.FAVICON)) {
-            updateFavicon(tab);
-        }
-
         if (flags.contains(UpdateFlags.SITE_IDENTITY)) {
-            updateSiteIdentity(tab, flags);
+            updateSiteIdentity(tab);
         }
 
         if (flags.contains(UpdateFlags.PROGRESS)) {
-            updateProgress(tab, flags);
+            updateProgress(tab);
         }
 
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
@@ -380,38 +291,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         return ReaderModeUtils.getUrlFromAboutReader(url);
     }
 
-    private void updateFavicon(Tab tab) {
-        if (HardwareUtils.isTablet()) {
-            // We don't display favicons in the toolbar on tablet.
-            return;
-        }
-
-        if (tab == null) {
-            mFavicon.setImageDrawable(null);
-            return;
-        }
-
-        Bitmap image = tab.getFavicon();
-
-        if (image != null && image == mLastFavicon) {
-            Log.d(LOGTAG, "Ignoring favicon: new image is identical to previous one.");
-            return;
-        }
-
-        // Cache the original so we can debounce without scaling
-        mLastFavicon = image;
-
-        Log.d(LOGTAG, "updateFavicon(" + image + ")");
-
-        if (image != null) {
-            image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
-            mFavicon.setImageBitmap(image);
-        } else {
-            mFavicon.setImageResource(R.drawable.favicon_globe);
-        }
-    }
-
-    private void updateSiteIdentity(Tab tab, EnumSet<UpdateFlags> flags) {
+    private void updateSiteIdentity(Tab tab) {
         final SiteIdentity siteIdentity;
         if (tab == null) {
             siteIdentity = null;
@@ -468,24 +348,24 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         if (mSecurityImageLevel != imageLevel) {
             mSecurityImageLevel = imageLevel;
             mSiteSecurity.setImageLevel(mSecurityImageLevel);
-            updatePageActions(flags);
+            updatePageActions();
         }
 
         mTrackingProtectionEnabled = trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED;
     }
 
-    private void updateProgress(Tab tab, EnumSet<UpdateFlags> flags) {
+    private void updateProgress(Tab tab) {
         final boolean shouldShowThrobber = (tab != null &&
                                             tab.getState() == Tab.STATE_LOADING);
 
-        updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY, flags);
+        updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY);
 
         if (Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
             mActivity.showTrackingProtectionPromptIfApplicable();
         }
     }
 
-    private void updateUiMode(UIMode uiMode, EnumSet<UpdateFlags> flags) {
+    private void updateUiMode(UIMode uiMode) {
         if (mUiMode == uiMode) {
             return;
         }
@@ -501,57 +381,19 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
 
-        updatePageActions(flags);
+        updatePageActions();
     }
 
-    private void updatePageActions(EnumSet<UpdateFlags> flags) {
+    private void updatePageActions() {
         final boolean isShowingProgress = (mUiMode == UIMode.PROGRESS);
 
         mStop.setVisibility(isShowingProgress ? View.VISIBLE : View.GONE);
         mPageActionLayout.setVisibility(!isShowingProgress ? View.VISIBLE : View.GONE);
 
-        boolean shouldShowSiteSecurity = (!isShowingProgress && mSecurityImageLevel > 0);
-
-        setSiteSecurityVisibility(shouldShowSiteSecurity, flags);
-
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
         mTitle.setPadding(0, 0, (!isShowingProgress ? mTitlePadding : 0), 0);
-    }
-
-    private void setSiteSecurityVisibility(boolean visible, EnumSet<UpdateFlags> flags) {
-        // We don't hide site security on tablet.
-        if (visible == mSiteSecurityVisible || HardwareUtils.isTablet()) {
-            return;
-        }
-
-        mSiteSecurityVisible = visible;
-
-        mTitle.clearAnimation();
-        mSiteSecurity.clearAnimation();
-
-        if (flags.contains(UpdateFlags.DISABLE_ANIMATIONS)) {
-            mSiteSecurity.setVisibility(visible ? View.VISIBLE : View.GONE);
-            return;
-        }
-
-        // If any of these animations were cancelled as a result of the
-        // clearAnimation() calls above, we need to reset them.
-        mLockFadeIn.reset();
-        mTitleSlideLeft.reset();
-        mTitleSlideRight.reset();
-
-        if (mForwardAnim != null) {
-            long delay = mForwardAnim.getRemainingTime();
-            mTitleSlideRight.setStartOffset(delay);
-            mTitleSlideLeft.setStartOffset(delay);
-        } else {
-            mTitleSlideRight.setStartOffset(0);
-            mTitleSlideLeft.setStartOffset(0);
-        }
-
-        mTitle.startAnimation(visible ? mTitleSlideRight : mTitleSlideLeft);
     }
 
     List<View> getFocusOrder() {
@@ -578,15 +420,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
-        mForwardAnim = anim;
-
         if (animation == ForwardButtonAnimation.HIDE) {
             // We animate these items individually, rather than this entire view,
             // so that we don't animate certain views, e.g. the stop button.
             anim.attach(mTitle,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        0);
-            anim.attach(mFavicon,
                         PropertyAnimator.Property.TRANSLATION_X,
                         0);
             anim.attach(mSiteSecurity,
@@ -597,13 +434,9 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             // the animation starts, so we shift these items to the right so that they don't
             // appear to move initially.
             ViewHelper.setTranslationX(mTitle, width);
-            ViewHelper.setTranslationX(mFavicon, width);
             ViewHelper.setTranslationX(mSiteSecurity, width);
         } else {
             anim.attach(mTitle,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-            anim.attach(mFavicon,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
             anim.attach(mSiteSecurity,
@@ -614,10 +447,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
     void finishForwardAnimation() {
         ViewHelper.setTranslationX(mTitle, 0);
-        ViewHelper.setTranslationX(mFavicon, 0);
         ViewHelper.setTranslationX(mSiteSecurity, 0);
-
-        mForwardAnim = null;
     }
 
     void prepareStartEditingAnimation() {

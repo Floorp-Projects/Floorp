@@ -31,3 +31,5 @@ with Files('customizeToolbar.*'):
 
 with Files('widgets/*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
+
+DEFINES['TOPOBJDIR'] = TOPOBJDIR

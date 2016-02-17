@@ -1,0 +1,7 @@
+CLANG_DIR=`cd "$topsrcdir/clang/bin" ; pwd`
+export PATH="${CLANG_DIR}:${PATH}"
+
+mk_export_correct_style PATH
+
+export CC=clang-cl
+export CXX=clang-cl

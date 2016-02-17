@@ -1269,7 +1269,7 @@ function copyTempDouble(ptr) {
           node.contentMode = MEMFS.CONTENT_FLEXIBLE;
         }
       },mount:function (mount) {
-        return MEMFS.create_node(null, '/', 0040000 | 0777, 0);
+        return MEMFS.create_node(null, '/', 0o040000 | 0o777, 0);
       },create_node:function (parent, name, mode, dev) {
         if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
           // no supported
@@ -1407,7 +1407,7 @@ function copyTempDouble(ptr) {
           }
           return entries;
         },symlink:function (parent, newname, oldpath) {
-          var node = MEMFS.create_node(parent, newname, 0777 | 0120000, 0);
+          var node = MEMFS.create_node(parent, newname, 0o777 | 0o120000, 0);
           node.link = oldpath;
           return node;
         },readlink:function (node) {
@@ -1657,19 +1657,19 @@ function copyTempDouble(ptr) {
       },isMountpoint:function (node) {
         return node.mounted;
       },isFile:function (mode) {
-        return (mode & 0170000) === 0100000;
+        return (mode & 0o170000) === 0o100000;
       },isDir:function (mode) {
-        return (mode & 0170000) === 0040000;
+        return (mode & 0o170000) === 0o040000;
       },isLink:function (mode) {
-        return (mode & 0170000) === 0120000;
+        return (mode & 0o170000) === 0o120000;
       },isChrdev:function (mode) {
-        return (mode & 0170000) === 0020000;
+        return (mode & 0o170000) === 0o020000;
       },isBlkdev:function (mode) {
-        return (mode & 0170000) === 0060000;
+        return (mode & 0o170000) === 0o060000;
       },isFIFO:function (mode) {
-        return (mode & 0170000) === 0010000;
+        return (mode & 0o170000) === 0o010000;
       },isSocket:function (mode) {
-        return (mode & 0140000) === 0140000;
+        return (mode & 0o140000) === 0o140000;
       },flagModes:{"r":0,"rs":8192,"r+":2,"w":1537,"wx":3585,"xw":3585,"w+":1538,"wx+":3586,"xw+":3586,"a":521,"ax":2569,"xa":2569,"a+":522,"ax+":2570,"xa+":2570},modeStringToFlags:function (str) {
         var flags = FS.flagModes[str];
         if (typeof flags === 'undefined') {
@@ -1836,21 +1836,21 @@ function copyTempDouble(ptr) {
         }
         return parent.node_ops.mknod(parent, name, mode, dev);
       },create:function (path, mode) {
-        mode = mode !== undefined ? mode : 0666;
+        mode = mode !== undefined ? mode : 0o666;
         mode &= 4095;
-        mode |= 0100000;
+        mode |= 0o100000;
         return FS.mknod(path, mode, 0);
       },mkdir:function (path, mode) {
-        mode = mode !== undefined ? mode : 0777;
-        mode &= 511 | 0001000;
-        mode |= 0040000;
+        mode = mode !== undefined ? mode : 0o777;
+        mode &= 511 | 0o001000;
+        mode |= 0o040000;
         return FS.mknod(path, mode, 0);
       },mkdev:function (path, mode, dev) {
         if (typeof(dev) === 'undefined') {
           dev = mode;
-          mode = 0666;
+          mode = 0o666;
         }
-        mode |= 0020000;
+        mode |= 0o020000;
         return FS.mknod(path, mode, dev);
       },symlink:function (oldpath, newpath) {
         var lookup = FS.lookupPath(newpath, { parent: true });
@@ -2096,16 +2096,16 @@ function copyTempDouble(ptr) {
       },open:function (path, flags, mode, fd_start, fd_end) {
         path = PATH.normalize(path);
         flags = typeof flags === 'string' ? FS.modeStringToFlags(flags) : flags;
-        mode = typeof mode === 'undefined' ? 0666 : mode;
+        mode = typeof mode === 'undefined' ? 0o666 : mode;
         if ((flags & 512)) {
-          mode = (mode & 4095) | 0100000;
+          mode = (mode & 4095) | 0o100000;
         } else {
           mode = 0;
         }
         var node;
         try {
           var lookup = FS.lookupPath(path, {
-            follow: !(flags & 0200000)
+            follow: !(flags & 0o200000)
           });
           node = lookup.node;
           path = lookup.path;
@@ -2345,7 +2345,7 @@ function copyTempDouble(ptr) {
         assert(stderr.fd === 3, 'invalid handle for stderr (' + stderr.fd + ')');
       },staticInit:function () {
         FS.nameTable = new Array(4096);
-        FS.root = FS.createNode(null, '/', 0040000 | 0777, 0);
+        FS.root = FS.createNode(null, '/', 0o040000 | 0o777, 0);
         FS.mount(MEMFS, {}, '/');
         FS.createDefaultDirectories();
         FS.createDefaultDevices();
@@ -2767,7 +2767,7 @@ function copyTempDouble(ptr) {
         openRequest.onerror = onerror;
       }};
   var SOCKFS={mount:function (mount) {
-        return FS.createNode(null, '/', 0040000 | 0777, 0);
+        return FS.createNode(null, '/', 0o040000 | 0o777, 0);
       },nextname:function () {
         if (!SOCKFS.nextname.current) {
           SOCKFS.nextname.current = 0;
@@ -2791,7 +2791,7 @@ function copyTempDouble(ptr) {
         };
         // create the filesystem node to store the socket structure
         var name = SOCKFS.nextname();
-        var node = FS.createNode(SOCKFS.root, name, 0140000, 0);
+        var node = FS.createNode(SOCKFS.root, name, 0o140000, 0);
         node.sock = sock;
         // and the wrapping stream that enables library functions such
         // as read and write to indirectly interact with the socket

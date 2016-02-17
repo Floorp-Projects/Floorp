@@ -32,21 +32,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef JS_STANDALONE
-ifndef MOZ_PROFILE_USE
-# Generate a new buildid every time we "export" in config... that's only
-# supposed to be once per-build!
-export:: buildid
-
-buildid: FORCE
-ifdef MOZ_BUILD_DATE
-	printf '%s' $(MOZ_BUILD_DATE) > buildid
-else
-	$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid > buildid
-endif
-endif
-endif
-
 ifdef WRAP_SYSTEM_INCLUDES
 export-preqs = \
   $(call mkdir_deps,system_wrappers) \

@@ -1377,6 +1377,63 @@ const KTableEntry nsCSSProps::kAlignContentPosition[] = {
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
+// <NOTE> these are only used for auto-completion, not parsing:
+const KTableEntry nsCSSProps::kAutoCompletionAlignJustifySelf[] = {
+  { eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO },
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
+  { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
+  { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
+  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  { eCSSKeyword_start,         NS_STYLE_ALIGN_START },
+  { eCSSKeyword_end,           NS_STYLE_ALIGN_END },
+  { eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START },
+  { eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END },
+  { eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER },
+  { eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT },
+  { eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT },
+  { eCSSKeyword_self_start,    NS_STYLE_ALIGN_SELF_START },
+  { eCSSKeyword_self_end,      NS_STYLE_ALIGN_SELF_END },
+  { eCSSKeyword_UNKNOWN,       -1 }
+};
+
+const KTableEntry nsCSSProps::kAutoCompletionAlignItems[] = {
+  // Intentionally no 'auto' here.
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
+  { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
+  { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
+  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  { eCSSKeyword_start,         NS_STYLE_ALIGN_START },
+  { eCSSKeyword_end,           NS_STYLE_ALIGN_END },
+  { eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START },
+  { eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END },
+  { eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER },
+  { eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT },
+  { eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT },
+  { eCSSKeyword_self_start,    NS_STYLE_ALIGN_SELF_START },
+  { eCSSKeyword_self_end,      NS_STYLE_ALIGN_SELF_END },
+  { eCSSKeyword_UNKNOWN,       -1 }
+};
+
+const KTableEntry nsCSSProps::kAutoCompletionAlignJustifyContent[] = {
+  // Intentionally no 'auto' here.
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
+  { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
+  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
+  { eCSSKeyword_space_between, NS_STYLE_ALIGN_SPACE_BETWEEN },
+  { eCSSKeyword_space_around,  NS_STYLE_ALIGN_SPACE_AROUND },
+  { eCSSKeyword_space_evenly,  NS_STYLE_ALIGN_SPACE_EVENLY },
+  { eCSSKeyword_start,         NS_STYLE_ALIGN_START },
+  { eCSSKeyword_end,           NS_STYLE_ALIGN_END },
+  { eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START },
+  { eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END },
+  { eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER },
+  { eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT },
+  { eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT },
+  { eCSSKeyword_UNKNOWN,       -1 }
+};
+// </NOTE>
+
 const KTableEntry nsCSSProps::kFlexDirectionKTable[] = {
   { eCSSKeyword_row,            NS_STYLE_FLEX_DIRECTION_ROW },
   { eCSSKeyword_row_reverse,    NS_STYLE_FLEX_DIRECTION_ROW_REVERSE },

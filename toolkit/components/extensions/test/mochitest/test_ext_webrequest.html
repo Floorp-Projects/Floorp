@@ -87,6 +87,7 @@ function compareLists(list1, list2, kind) {
 function backgroundScript() {
   const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
 
+  let checkCompleted = true;
   let savedTabId = -1;
 
   function checkType(details) {
@@ -197,15 +198,36 @@ function backgroundScript() {
     }
   }
 
+  let completedUrls = {
+    responseStarted: new Set(),
+    completed: new Set(),
+  };
+
+  function checkIpAndRecord(kind, details) {
+    onRecord(kind, details);
+
+    // When resources are cached, the ip property is not present,
+    // so only check for the ip property the first time around.
+    if (checkCompleted && !completedUrls[kind].has(details.url)) {
+      browser.test.assertEq(details.ip, "127.0.0.1", "correct ip");
+      completedUrls[kind].add(details.url);
+    }
+  }
+
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking"]);
   browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: ["<all_urls>"]});
   browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
-  browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
-  browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
+  browser.webRequest.onResponseStarted.addListener(checkIpAndRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
+  browser.webRequest.onCompleted.addListener(checkIpAndRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
 
-  function onTestMessage() {
-    browser.test.sendMessage("results", recorded);
+  function onTestMessage(msg) {
+    if (msg == "skipCompleted") {
+      checkCompleted = false;
+      browser.test.sendMessage("ackSkipCompleted");
+    } else {
+      browser.test.sendMessage("results", recorded);
+    }
   }
 
   browser.test.onMessage.addListener(onTestMessage);
@@ -213,7 +235,7 @@ function backgroundScript() {
   browser.test.sendMessage("ready", browser.webRequest.ResourceType);
 }
 
-function* test_once() {
+function* test_once(skipCompleted) {
   let extensionData = {
     manifest: {
       permissions: [
@@ -227,6 +249,11 @@ function* test_once() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   let [, resourceTypes] = yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webrequest extension loaded");
+
+  if (skipCompleted) {
+    extension.sendMessage("skipCompleted");
+    yield extension.awaitMessage("ackSkipCompleted");
+  }
 
   for (let key in resourceTypes) {
     let value = resourceTypes[key];
@@ -278,8 +305,8 @@ function* test_once() {
 }
 
 // Run the test twice to make sure it works with caching.
-add_task(test_once);
-add_task(test_once);
+add_task(function*() { yield test_once(false); });
+add_task(function*() { yield test_once(true); });
 </script>
 
 </body>

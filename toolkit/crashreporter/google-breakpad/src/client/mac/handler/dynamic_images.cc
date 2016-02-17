@@ -567,7 +567,7 @@ cpu_type_t DynamicImages::DetermineTaskCPUType(task_t task) {
 
     cpu_type_t cpu_type;
     size_t cpuTypeSize = sizeof(cpu_type);
-    sysctl(mib, mibLen, &cpu_type, &cpuTypeSize, 0, 0);
+    sysctl(mib, static_cast<u_int>(mibLen), &cpu_type, &cpuTypeSize, 0, 0);
     return cpu_type;
   }
 

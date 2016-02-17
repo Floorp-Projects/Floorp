@@ -8,9 +8,11 @@ if [ $(id -u) = 0 ]; then
     # each of the caches we have mounted are owned by root, so update that ownership
     # to 'worker'
     for cache in /home/worker/.tc-vcs /home/worker/workspace /home/worker/tooltool-cache; do
-        # -R probably isn't necessary forever, but it fixes some poisoned
-        # caches for now
-        chown -R worker:worker $cache
+        if [ -d $cache ]; then
+            # -R probably isn't necessary forever, but it fixes some poisoned
+            # caches for now
+            chown -R worker:worker $cache
+        fi
     done
 
     # ..then drop privileges by re-running this script

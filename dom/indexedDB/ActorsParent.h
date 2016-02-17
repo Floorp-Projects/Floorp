@@ -45,6 +45,9 @@ AllocPBackgroundIndexedDBUtilsParent();
 bool
 DeallocPBackgroundIndexedDBUtilsParent(PBackgroundIndexedDBUtilsParent* aActor);
 
+bool
+RecvFlushPendingFileDeletions();
+
 PIndexedDBPermissionRequestParent*
 AllocPIndexedDBPermissionRequestParent(Element* aOwnerElement,
                                        nsIPrincipal* aPrincipal);

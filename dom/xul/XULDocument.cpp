@@ -92,6 +92,7 @@
 #include "nsJSUtils.h"
 #include "mozilla/dom/URL.h"
 #include "nsIContentPolicy.h"
+#include "mozAutoDocUpdate.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1831,7 +1832,7 @@ XULDocument::RemoveElementFromRefMap(Element* aElement)
         if (!entry)
             return;
         if (entry->RemoveElement(aElement)) {
-            mRefMap.RawRemoveEntry(entry);
+            mRefMap.RemoveEntry(entry);
         }
     }
 }
@@ -2967,10 +2968,14 @@ XULDocument::DoneWalking()
     // XXXldb This is where we should really be setting the chromehidden
     // attribute.
 
-    uint32_t count = mOverlaySheets.Length();
-    for (uint32_t i = 0; i < count; ++i) {
-        AddStyleSheet(mOverlaySheets[i]);
+    {
+        mozAutoDocUpdate updateBatch(this, UPDATE_STYLE, true);
+        uint32_t count = mOverlaySheets.Length();
+        for (uint32_t i = 0; i < count; ++i) {
+            AddStyleSheet(mOverlaySheets[i]);
+        }
     }
+
     mOverlaySheets.Clear();
 
     if (!mDocumentLoaded) {

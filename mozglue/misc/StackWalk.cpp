@@ -817,7 +817,7 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
   modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
   if (modInfoRes) {
-    strncpy(aDetails->library, modInfo.ModuleName,
+    strncpy(aDetails->library, modInfo.LoadedImageName,
                 sizeof(aDetails->library));
     aDetails->library[mozilla::ArrayLength(aDetails->library) - 1] = '\0';
     aDetails->loffset = (char*)aPC - (char*)modInfo.BaseOfImage;

@@ -5,10 +5,3 @@
 NSDISTMODE = copy
 
 PROGRAMS_DEST = $(DIST)/bin
-
-include $(topsrcdir)/config/rules.mk
-
-GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
-
-webapprt.$(OBJ_SUFFIX): $(DEPTH)/config/buildid
