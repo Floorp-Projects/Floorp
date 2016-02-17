@@ -62,12 +62,12 @@ function checkFullscreenState(elem, hasState, viewportRect) {
   var id = elem.id;
   var rect = elem.getBoundingClientRect();
   if (hasState) {
-    ok(elem.matches(":-moz-full-screen"),
+    ok(elem.matches(":fullscreen"),
        `${id} should match selector ":fullscreen"`);
     ok(rectEquals(rect, viewportRect),
        `The bounding rect of ${id} should match the viewport`);
   } else {
-    ok(!elem.matches(":-moz-full-screen"),
+    ok(!elem.matches(":fullscreen"),
        `${id} should not match selector ":fullscreen"`);
     ok(rectEquals(rect, elem.initialRect),
        `The bounding rect of ${id} should match its initial state`);
@@ -91,7 +91,7 @@ function begin() {
     var rect = elem.getBoundingClientRect();
     var id = elem.id;
     elem.initialRect = rect;
-    ok(!elem.matches(":-moz-full-screen"),
+    ok(!elem.matches(":fullscreen"),
        `${id} should not match selector ":fullscreen"`);
     ok(!rectEquals(elem.initialRect, viewportRect),
        `The initial bounding rect of ${id} should not match the viewport`);
@@ -99,42 +99,42 @@ function begin() {
 
   info("Entering fullscreen on fullscreen0");
   addFullscreenChangeContinuation("enter", enter0);
-  fullscreenElems[0].mozRequestFullScreen();
+  fullscreenElems[0].requestFullscreen();
 }
 
 function enter0() {
   checkFullscreenStates([true, false, false]);
   info("Entering fullscreen on fullscreen1");
   addFullscreenChangeContinuation("enter", enter1);
-  fullscreenElems[1].mozRequestFullScreen();
+  fullscreenElems[1].requestFullscreen();
 }
 
 function enter1() {
   checkFullscreenStates([true, true, false]);
   info("Entering fullscreen on fullscreen2");
   addFullscreenChangeContinuation("enter", enter2);
-  fullscreenElems[2].mozRequestFullScreen();
+  fullscreenElems[2].requestFullscreen();
 }
 
 function enter2() {
   checkFullscreenStates([true, true, true]);
   info("Leaving fullscreen on fullscreen2");
   addFullscreenChangeContinuation("exit", exit2);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit2() {
   checkFullscreenStates([true, true, false]);
   info("Leaving fullscreen on fullscreen1");
   addFullscreenChangeContinuation("exit", exit1);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit1() {
   checkFullscreenStates([true, false, false]);
   info("Leaving fullscreen on fullscreen0");
   addFullscreenChangeContinuation("exit", exit0);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit0() {
@@ -144,14 +144,14 @@ function exit0() {
   var count = 0;
   function listener() {
     if (++count == 3) {
-      document.removeEventListener("mozfullscreenchange", listener);
+      document.removeEventListener("fullscreenchange", listener);
       enterAll();
     }
   }
-  document.addEventListener("mozfullscreenchange", listener);
-  fullscreenElems[0].mozRequestFullScreen();
-  fullscreenElems[1].mozRequestFullScreen();
-  fullscreenElems[2].mozRequestFullScreen();
+  document.addEventListener("fullscreenchange", listener);
+  fullscreenElems[0].requestFullscreen();
+  fullscreenElems[1].requestFullscreen();
+  fullscreenElems[2].requestFullscreen();
 }
 
 function enterAll() {
