@@ -5756,31 +5756,6 @@ nsComputedDOMStyle::DoGetStopColor()
   return val.forget();
 }
 
-inline void AppendBasicShapeTypeToString(nsStyleBasicShape::Type aType,
-                                         nsAutoString& aString)
-{
-  nsCSSKeyword functionName;
-  switch (aType) {
-    case nsStyleBasicShape::Type::ePolygon:
-      functionName = eCSSKeyword_polygon;
-      break;
-    case nsStyleBasicShape::Type::eCircle:
-      functionName = eCSSKeyword_circle;
-      break;
-    case nsStyleBasicShape::Type::eEllipse:
-      functionName = eCSSKeyword_ellipse;
-      break;
-    case nsStyleBasicShape::Type::eInset:
-      functionName = eCSSKeyword_inset;
-      break;
-    default:
-      functionName = eCSSKeyword_UNKNOWN;
-      NS_NOTREACHED("unexpected type");
-  }
-  AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(functionName),
-                     aString);
-}
-
 void
 nsComputedDOMStyle::BoxValuesToString(nsAString& aString,
                                       const nsTArray<nsStyleCoord>& aBoxValues)
@@ -5840,7 +5815,9 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
     nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
     // Shape function name and opening parenthesis.
     nsAutoString shapeFunctionString;
-    AppendBasicShapeTypeToString(type, shapeFunctionString);
+    AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
+                         aStyleBasicShape->GetShapeTypeName()),
+                       shapeFunctionString);
     shapeFunctionString.Append('(');
     switch (type) {
       case nsStyleBasicShape::Type::ePolygon: {
