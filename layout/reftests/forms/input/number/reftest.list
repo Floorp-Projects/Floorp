@@ -14,11 +14,11 @@ pref(layout.css.vertical-text.enabled,true) == number-similar-to-text-unthemed-v
 pref(layout.css.vertical-text.enabled,true) == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
 
 # dynamic type changes:
-fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
-== from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
+fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
+fuzzy-if(skiaContent,2,5) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:
-== show-value.html show-value-ref.html
+fuzzy-if(skiaContent,2,13) == show-value.html show-value-ref.html
 
 # disabled
 == number-disabled.html number-disabled-ref.html
@@ -38,7 +38,7 @@ skip-if(B2G||Mulet||Android) == number-max-height-2.html number-max-height-2-ref
 # focus
 # autofocus is disabled on B2G
 # https://bugzilla.mozilla.org/show_bug.cgi?id=965763
-skip-if(B2G||Mulet) needs-focus == focus-handling.html focus-handling-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html focus-handling-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # select
 == number-selected.html number-selected-ref.html

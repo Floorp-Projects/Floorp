@@ -32,12 +32,12 @@ function is(a, b, msg) {
 
 /*
 <html>
-  <body onload='document.body.mozRequestFullScreen();'>
+  <body onload='document.body.requestFullscreen();'>
   <iframe id='inner-frame'></iframe>
   </body>
 </html>
 */
-var iframeContents = "data:text/html;charset=utf-8,<html><body onload%3D'parent.SimpleTest.waitForFocus(function(){document.body.mozRequestFullScreen();});'><iframe id%3D'inner-frame'><%2Fiframe><%2Fbody><%2Fhtml>";
+var iframeContents = "data:text/html;charset=utf-8,<html><body onload%3D'parent.SimpleTest.waitForFocus(function(){document.body.requestFullscreen();});'><iframe id%3D'inner-frame'><%2Fiframe><%2Fbody><%2Fhtml>";
 
 var iframe = null;
 var outOfDocElement = null;
@@ -55,24 +55,24 @@ function fullScreenElement() {
 }
 
 function enter1(event) {
-  ok(document.mozFullScreen, "1. Should be in full-screen mode (first time)");
-  is(event.target, document, "2. Event target should be full-screen document #1");
-  is(document.mozFullScreenElement, fullScreenElement(), "3. Full-screen element should be div element.");
-  ok(document.mozFullScreenElement.matches(":-moz-full-screen"), "4. FSE should match :-moz-full-screen");
+  is(event.target, document, "Event target should be full-screen document #1");
+  is(document.fullscreenElement, fullScreenElement(),
+     "Full-screen element should be div element.");
+  ok(document.fullscreenElement.matches(":fullscreen"),
+     "FSE should match :fullscreen");
   var fse = fullScreenElement();
   addFullscreenChangeContinuation("exit", exit1);
   fse.parentNode.removeChild(fse);
-  is(document.mozFullScreenElement, null, "5. Full-screen element should be null after removing.");
-  ok(!document.mozFullScreen, "6. Should have left full-screen mode when we remove full-screen element");
+  is(document.fullscreenElement, null,
+     "Full-screen element should be null after removing.");
   document.body.appendChild(fse);
-  ok(!document.mozFullScreen, "7. Should not return to full-screen mode when re-adding former FSE");
-  is(document.mozFullScreenElement, null, "8. Full-screen element should still be null after re-adding former FSE.");
+  is(document.fullscreenElement, null,
+     "Full-screen element should still be null after re-adding former FSE.");
 }
 
 function exit1(event) {
-  ok(!document.mozFullScreen, "9. Should have left full-screen mode (first time)");
-  is(event.target, document, "10. Event target should be full-screen document #2");
-  is(document.mozFullScreenElement, null, "11. Full-screen element should be null.");
+  is(event.target, document, "Event target should be full-screen document #2");
+  is(document.fullscreenElement, null, "Full-screen element should be null.");
   iframe = document.createElement("iframe");
   iframe.allowFullscreen = true;
   addFullscreenChangeContinuation("enter", enter2);
@@ -81,76 +81,77 @@ function exit1(event) {
 }
 
 function enter2(event) {
-  ok(document.mozFullScreen, "12. Should be back in full-screen mode (second time)");
-  is(event.target, document, "13. Event target should be full-screen document #3");
-  is(document.mozFullScreenElement, iframe, "14. Full-screen element should be iframe element.");
-  is(iframe.contentDocument.mozFullScreenElement, iframe.contentDocument.body, "15. Full-screen element in subframe should be body");
+  is(event.target, document, "Event target should be full-screen document #3");
+  is(document.fullscreenElement, iframe,
+     "Full-screen element should be iframe element.");
+  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body,
+     "Full-screen element in subframe should be body");
   
   // The iframe's body is full-screen. Cancel full-screen in the subdocument to return
   // the full-screen element to the previous full-screen element. This causes
   // a fullscreenchange event.
   addFullscreenChangeContinuation("exit", exit2);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit2(event) {
-  ok(!document.mozFullScreen, "16. Should have left full-screen when canceling fullscreen in ancestor document.");
-  is(document.mozFullScreenElement, null, "17. Full-screen element should have rolled back.");
-  is(iframe.contentDocument.mozFullScreenElement, null, "18. Full-screen element in subframe should be null");
+  is(document.fullscreenElement, null,
+     "Full-screen element should have rolled back.");
+  is(iframe.contentDocument.fullscreenElement, null,
+     "Full-screen element in subframe should be null");
   
   addFullscreenChangeContinuation("enter", enter3);
-  fullScreenElement().mozRequestFullScreen();
+  fullScreenElement().requestFullscreen();
 }
 
 function enter3(event) {
-  ok(document.mozFullScreen, "19. Should be back in full-screen mode (second time)");
-  is(event.target, document, "20. Event target should be full-screen document #3");
-  is(document.mozFullScreenElement, fullScreenElement(), "21. Full-screen element should be div.");
+  is(event.target, document, "Event target should be full-screen document #3");
+  is(document.fullscreenElement, fullScreenElement(),
+     "Full-screen element should be div.");
   
   // Transplant the FSE into subdoc. Should exit full-screen.
   addFullscreenChangeContinuation("exit", exit3);
   var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
   var fse = fullScreenElement();
   _innerFrame.contentDocument.body.appendChild(fse);
-  ok(!document.mozFullScreen, "22. Should exit full-screen after transplanting FSE");
-  is(document.mozFullScreenElement, null, "23. Full-screen element transplanted, should be null.");
-  is(iframe.contentDocument.mozFullScreenElement, null, "24. Full-screen element in outer frame should be null.");
-  is(_innerFrame.contentDocument.mozFullScreenElement, null, "25. Full-screen element in inner frame should be null.");
-  ok(!iframe.contentDocument.mozFullScreen, "26. Outer frame should not acquire full-screen status.");
-  ok(!_innerFrame.contentDocument.mozFullScreen, "27. Inner frame should not acquire full-screen status.");
+  is(document.fullscreenElement, null,
+     "Full-screen element transplanted, should be null.");
+  is(iframe.contentDocument.fullscreenElement, null,
+     "Full-screen element in outer frame should be null.");
+  is(_innerFrame.contentDocument.fullscreenElement, null,
+     "Full-screen element in inner frame should be null.");
   
   document.body.appendChild(fse);
 }
 
 function exit3(event) {
-  ok(!document.mozFullScreen, "28. Should be back in non-full-screen mode (second time)");
-  is(event.target, document, "29. Event target should be full-screen document #4");
-  is(document.mozFullScreenElement, null, "30. Full-screen element should be null.");
+  is(event.target, document, "Event target should be full-screen document #4");
+  is(document.fullscreenElement, null, "Full-screen element should be null.");
   document.body.removeChild(iframe);
   iframe = null;
 
   // Do a request out of document. It should be denied.
-  // Continue test in the following mozfullscreenerror handler.
+  // Continue test in the following fullscreenerror handler.
   outOfDocElement = document.createElement("div");
   addFullscreenErrorContinuation(error1);    
-  outOfDocElement.mozRequestFullScreen();
+  outOfDocElement.requestFullscreen();
 }
 
 function error1(event) {
-  ok(!document.mozFullScreen, "31. Requests for full-screen from not-in-doc elements should fail.");
+  ok(!document.fullscreenElement,
+     "Requests for full-screen from not-in-doc elements should fail.");
   container = document.createElement("div");
   inDocElement = document.createElement("div");
   container.appendChild(inDocElement);
   fullScreenElement().appendChild(container);
 
   addFullscreenChangeContinuation("enter", enter4);
-  inDocElement.mozRequestFullScreen();
+  inDocElement.requestFullscreen();
 }
 
 function enter4(event) {
-  ok(document.mozFullScreen, "32. Should still be in full-screen mode (third time)");
-  is(event.target, document, "33. Event target should be full-screen document #5");
-  is(document.mozFullScreenElement, inDocElement, "35. FSE should be inDocElement.");
+  is(event.target, document, "Event target should be full-screen document #5");
+  is(document.fullscreenElement, inDocElement, "FSE should be inDocElement.");
 
   var n = container;
   do {
@@ -161,96 +162,104 @@ function enter4(event) {
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
   addFullscreenChangeContinuation("exit", exit_to_arg_test_1);
   container.parentNode.removeChild(container);
-  ok(!document.mozFullScreen, "36. Should exit full-screen mode after removing full-screen element ancestor from document");
-  is(document.mozFullScreenElement, null, "37. Should not have a full-screen element again.");
+  is(document.fullscreenElement, null,
+     "Should not have a full-screen element again.");
 }
 
 function exit_to_arg_test_1(event) {
-  ok(!document.mozFullScreen, "Should have left full-screen mode (third time).");
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (third time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_1);
   var threw = false;
   try {
-    fullScreenElement().mozRequestFullScreen(123);
+    fullScreenElement().requestFullscreen(123);
   } catch (e) {
     threw = true;
     // trigger normal fullscreen so that we continue
-    fullScreenElement().mozRequestFullScreen();
+    fullScreenElement().requestFullscreen();
   }
-  ok(!threw, "mozRequestFullScreen with bogus arg (123) shouldn't throw exception");
+  ok(!threw, "requestFullscreen with bogus arg (123) shouldn't throw exception");
 }
 
 function enter_from_arg_test_1(event) {
-  ok(document.mozFullScreen, "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
+  ok(document.fullscreenElement,
+     "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
   addFullscreenChangeContinuation("exit", exit_to_arg_test_2);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit_to_arg_test_2(event) {
-  ok(!document.mozFullScreen, "Should have left full-screen mode (fourth time).");
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (fourth time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_2);
   var threw = false;
   try {
-    fullScreenElement().mozRequestFullScreen({ vrDisplay: null });
+    fullScreenElement().requestFullscreen({ vrDisplay: null });
   } catch (e) {
     threw = true;
     // trigger normal fullscreen so that we continue
-    fullScreenElement().mozRequestFullScreen();
+    fullScreenElement().requestFullscreen();
   }
-  ok(!threw, "mozRequestFullScreen with { vrDisplay: null } shouldn't throw exception");
+  ok(!threw, "requestFullscreen with { vrDisplay: null } shouldn't throw exception");
 }
 
 function enter_from_arg_test_2(event) {
-  ok(document.mozFullScreen, "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
+  ok(document.fullscreenElement,
+     "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
   addFullscreenChangeContinuation("exit", exit4);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit4(event) {
-  ok(!document.mozFullScreen, "38. Should be back in non-full-screen mode (fifth time)");
+  ok(!document.fullscreenElement,
+     "Should be back in non-full-screen mode (fifth time)");
   SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, function() {
     addFullscreenErrorContinuation(error2);
-    fullScreenElement().mozRequestFullScreen();
+    fullScreenElement().requestFullscreen();
   });
 }
 
 function error2(event) {
-  ok(!document.mozFullScreen, "Should still be in normal mode, because calling context isn't trusted.");
+  ok(!document.fullscreenElement,
+     "Should still be in normal mode, because calling context isn't trusted.");
   button = document.createElement("button");
-  button.onclick = function(){fullScreenElement().mozRequestFullScreen();}
+  button.onclick = function(){fullScreenElement().requestFullscreen();}
   fullScreenElement().appendChild(button);
   addFullscreenChangeContinuation("enter", enter5);
   sendMouseClick(button);
 }
 
 function enter5(event) {
-  ok(document.mozFullScreen, "Moved to full-screen after mouse click");
+  ok(document.fullscreenElement, "Moved to full-screen after mouse click");
   addFullscreenChangeContinuation("exit", exit5);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exit5(event) {
-  ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");
+  ok(!document.fullscreenElement,
+     "Should have left full-screen mode (last time).");
   SpecialPowers.pushPrefEnv({
     "set":[["full-screen-api.allow-trusted-requests-only", false],
            ["full-screen-api.enabled", false]]}, function() {
-              is(document.mozFullScreenEnabled, false, "document.mozFullScreenEnabled should be false if full-screen-api.enabled is false");
+              is(document.fullscreenEnabled, false, "document.fullscreenEnabled should be false if full-screen-api.enabled is false");
               addFullscreenErrorContinuation(error3);
-              fullScreenElement().mozRequestFullScreen();
+              fullScreenElement().requestFullscreen();
   });
 }
 
 function error3(event) {
-  ok(!document.mozFullScreen, "Should still be in normal mode, because pref is not enabled.");
+  ok(!document.fullscreenElement,
+     "Should still be in normal mode, because pref is not enabled.");
 
   SpecialPowers.pushPrefEnv({"set":[["full-screen-api.enabled", true]]}, function() {
-    is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
+    is(document.fullscreenEnabled, true, "document.fullscreenEnabled should be true if full-screen-api.enabled is true");
     opener.nextTest();
   });
 }
 
 function begin() {
   addFullscreenChangeContinuation("enter", enter1);
-  fullScreenElement().mozRequestFullScreen();
+  fullScreenElement().requestFullscreen();
 }
 
 </script>

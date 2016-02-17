@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_indexeddatabasemanager_h__
-#define mozilla_dom_indexeddb_indexeddatabasemanager_h__
+#ifndef mozilla_dom_indexeddatabasemanager_h__
+#define mozilla_dom_indexeddatabasemanager_h__
 
 #include "nsIObserver.h"
 
@@ -26,18 +26,23 @@ class EventChainPostVisitor;
 
 namespace dom {
 
+class IDBFactory;
+
 namespace indexedDB {
 
 class BackgroundUtilsChild;
 class FileManager;
 class FileManagerInfo;
-class IDBFactory;
+
+} // namespace indexedDB
 
 class IndexedDatabaseManager final
   : public nsIObserver
   , public nsITimerCallback
 {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  typedef mozilla::dom::indexedDB::FileManager FileManager;
+  typedef mozilla::dom::indexedDB::FileManagerInfo FileManagerInfo;
 
 public:
   enum LoggingMode
@@ -221,7 +226,7 @@ private:
   nsCString mLocale;
 #endif
 
-  BackgroundUtilsChild* mBackgroundActor;
+  indexedDB::BackgroundUtilsChild* mBackgroundActor;
 
   static bool sIsMainProcess;
   static bool sFullSynchronousMode;
@@ -230,8 +235,7 @@ private:
   static mozilla::Atomic<bool> sLowDiskSpaceMode;
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_indexeddatabasemanager_h__
+#endif // mozilla_dom_indexeddatabasemanager_h__

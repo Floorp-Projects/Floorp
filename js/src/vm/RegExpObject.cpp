@@ -123,6 +123,33 @@ RegExpObject::getShared(JSContext* cx, RegExpGuard* g)
     return createShared(cx, g);
 }
 
+/* static */ bool
+RegExpObject::isOriginalFlagGetter(JSNative native, unsigned* slot)
+{
+  if (native == regexp_global) {
+      *slot = GLOBAL_FLAG_SLOT;
+      return true;
+  }
+  if (native == regexp_ignoreCase) {
+      *slot = IGNORE_CASE_FLAG_SLOT;
+      return true;
+  }
+  if (native == regexp_multiline) {
+      *slot = MULTILINE_FLAG_SLOT;
+      return true;
+  }
+  if (native == regexp_sticky) {
+      *slot = STICKY_FLAG_SLOT;
+      return true;
+  }
+  if (native == regexp_unicode) {
+      *slot = UNICODE_FLAG_SLOT;
+      return true;
+  }
+
+  return false;
+}
+
 /* static */ void
 RegExpObject::trace(JSTracer* trc, JSObject* obj)
 {

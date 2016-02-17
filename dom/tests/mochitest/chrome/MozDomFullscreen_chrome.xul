@@ -43,12 +43,12 @@ function firstEntry(event) {
   if (event.type == "MozDOMFullscreen:Entered") {
     window.removeEventListener("MozDOMFullscreen:Entered", firstEntry, false);
     ok(!gReceivedFullscreenEnteredEvent, "MozDOMFullscreen:Entered shouldn't have been triggered twice");
-    ok(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
+    is(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
     gReceivedFullscreenEnteredEvent = true;
   } else if (event.type == "MozDOMFullscreen:NewOrigin") {
     window.removeEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
     ok(!gReceivedNewOriginEvent, "MozDOMFullscreen:NewOrigin shouldn't have been triggered twice");
-    ok(event.target, gOuterDoc, "First MozDOMFullscreen:NewOrigin should be targeted at outer doc");
+    is(event.target, gOuterDoc, "First MozDOMFullscreen:NewOrigin should be targeted at outer doc");
     gReceivedNewOriginEvent = true;
   } else {
     ok(false, "Unknown event received");
@@ -57,28 +57,28 @@ function firstEntry(event) {
     return;
   }
 
-  ok(gOuterDoc.mozFullScreenElement != null, "Outer doc should be in fullscreen");
+  ok(gOuterDoc.fullscreenElement != null, "Outer doc should be in fullscreen");
   gInnerDoc = gOuterDoc.getElementById("innerFrame").contentDocument;
   window.addEventListener("MozDOMFullscreen:NewOrigin", secondEntry, false);
   gInnerDoc.defaultView.focus();
-  gInnerDoc.body.mozRequestFullScreen();
+  gInnerDoc.body.requestFullscreen();
 }
 
 function secondEntry(event) {
   is(event.target, gInnerDoc, "Second MozDOMFullscreen:NewOrigin should be targeted at inner doc");
-  ok(gInnerDoc.mozFullScreenElement != null, "Inner doc should be in fullscreen");
+  ok(gInnerDoc.fullscreenElement != null, "Inner doc should be in fullscreen");
   window.removeEventListener("MozDOMFullscreen:NewOrigin", secondEntry, false);
   window.addEventListener("MozDOMFullscreen:NewOrigin", thirdEntry, false);
-  gInnerDoc.mozCancelFullScreen();
+  gInnerDoc.exitFullscreen();
 }
 
 function thirdEntry(event) {
   is(event.target, gOuterDoc, "Third MozDOMFullscreen:NewOrigin should be targeted at outer doc");
-  ok(gOuterDoc.mozFullScreenElement != null, "Outer doc return to fullscreen after cancel fullscreen in inner doc");
+  ok(gOuterDoc.fullscreenElement != null, "Outer doc return to fullscreen after cancel fullscreen in inner doc");
   window.removeEventListener("MozDOMFullscreen:NewOrigin", thirdEntry, false);
   window.removeEventListener("MozDOMFullscreen:Exited", earlyExit, false);
   window.addEventListener("MozDOMFullscreen:Exited", lastExit, false);
-  gOuterDoc.mozCancelFullScreen();
+  gOuterDoc.exitFullscreen();
 }
 
 function earlyExit(event) {
@@ -87,7 +87,7 @@ function earlyExit(event) {
 
 function lastExit(event) {
   is(event.target, gOuterDoc, "MozDOMFullscreen:Exited should be targeted at the last exited doc");
-  ok(gOuterDoc.mozFullScreenElement == null, "Fullscreen should have been fully exited");
+  ok(gOuterDoc.fullscreenElement == null, "Fullscreen should have been fully exited");
   window.opener.wrappedJSObject.done();
 }
 
@@ -99,7 +99,7 @@ function start() {
       gBrowser.contentWindow.focus();
       window.addEventListener("MozDOMFullscreen:Entered", firstEntry, false);
       window.addEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
-      gOuterDoc.body.mozRequestFullScreen();
+      gOuterDoc.body.requestFullscreen();
     });
 }
 

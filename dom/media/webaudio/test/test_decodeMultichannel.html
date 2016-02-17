@@ -23,11 +23,11 @@ function finishTest(a) {
 function decodeUsingAudioElement() {
   var a = new Audio();
   a.addEventListener("error", function() {
-    ok(true, "We should not be able to decode this file using an HTMLAudioElement");
+    ok(false, "Error loading metadata");
     finishTest(a);
   });
   a.addEventListener("loadedmetadata", function() {
-    ok(false, "We should not be able to decode this file using an HTMLMediaElement.");
+    ok(true, "Metadata Loaded");
     finishTest(a);
   });
 

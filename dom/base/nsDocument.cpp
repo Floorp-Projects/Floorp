@@ -9212,7 +9212,7 @@ static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
   DispatchCustomEventWithFlush(
-    aTarget, NS_LITERAL_STRING("mozfullscreenchange"),
+    aTarget, NS_LITERAL_STRING("fullscreenchange"),
     /* Bubbles */ true, /* OnlyChrome */ false);
 }
 
@@ -11027,12 +11027,12 @@ nsDocument::SetFullscreenRoot(nsIDocument* aRoot)
 NS_IMETHODIMP
 nsDocument::MozCancelFullScreen()
 {
-  nsIDocument::MozCancelFullScreen();
+  nsIDocument::ExitFullscreen();
   return NS_OK;
 }
 
 void
-nsIDocument::MozCancelFullScreen()
+nsIDocument::ExitFullscreen()
 {
   RestorePreviousFullScreenState();
 }
@@ -11173,7 +11173,7 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
     return;
   }
 
-  // Stores a list of documents to which we must dispatch "mozfullscreenchange".
+  // Stores a list of documents to which we must dispatch "fullscreenchange".
   // We're required by the spec to dispatch the events in leaf-to-root
   // order when exiting fullscreen, but we traverse the doctree in a
   // root-to-leaf order, so we save references to the documents we must
@@ -11183,7 +11183,7 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
   // Walk the tree of fullscreen documents, and reset their fullscreen state.
   ResetFullScreen(root, static_cast<void*>(&changed));
 
-  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
+  // Dispatch "fullscreenchange" events. Note this loop is in reverse
   // order so that the events for the leaf document arrives before the root
   // document, as required by the spec.
   for (uint32_t i = 0; i < changed.Length(); ++i) {
@@ -11322,7 +11322,7 @@ nsDocument::RestorePreviousFullScreenState()
 bool
 nsDocument::IsFullScreenDoc()
 {
-  return GetFullScreenElement() != nullptr;
+  return GetFullscreenElement() != nullptr;
 }
 
 class nsCallRequestFullScreen : public nsRunnable
@@ -11354,20 +11354,17 @@ nsDocument::AsyncRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   NS_DispatchToCurrentThread(event);
 }
 
-static void
-LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
+void
+nsIDocument::DispatchFullscreenError(const char* aMessage)
 {
-  if (!aLogFailure) {
-    return;
-  }
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(aDoc,
-                             NS_LITERAL_STRING("mozfullscreenerror"),
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("fullscreenerror"),
                              true,
                              false);
   asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"), aDoc,
+                                  NS_LITERAL_CSTRING("DOM"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aMessage);
 }
@@ -11425,7 +11422,7 @@ nsDocument::FullScreenStackPush(Element* aElement)
   }
   EventStateManager::SetFullScreenState(aElement, true);
   mFullScreenStack.AppendElement(do_GetWeakReference(aElement));
-  NS_ASSERTION(GetFullScreenElement() == aElement, "Should match");
+  NS_ASSERTION(GetFullscreenElement() == aElement, "Should match");
   UpdateViewportScrollbarOverrideForFullscreen(this);
   return true;
 }
@@ -11558,40 +11555,82 @@ ReleaseVRDeviceProxyRef(void *, nsIAtom*, void *aPropertyValue, void *)
   }
 }
 
+static bool
+HasFullScreenSubDocument(nsIDocument* aDoc)
+{
+  uint32_t count = CountFullscreenSubDocuments(aDoc);
+  NS_ASSERTION(count <= 1, "Fullscreen docs should have at most 1 fullscreen child!");
+  return count >= 1;
+}
+
+// Returns nullptr if a request for Fullscreen API is currently enabled
+// in the given document. Returns a static string indicates the reason
+// why it is not enabled otherwise.
+static const char*
+GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
+{
+  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
+    // Chrome code can always use the full-screen API, provided it's not
+    // explicitly disabled. Note IsCallerChrome() returns true when running
+    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
+    // nsRunnable!
+    return nullptr;
+  }
+
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    return "FullscreenDeniedDisabled";
+  }
+  if (!aDoc->IsVisible()) {
+    return "FullscreenDeniedHidden";
+  }
+  if (HasFullScreenSubDocument(aDoc)) {
+    return "FullscreenDeniedSubDocFullScreen";
+  }
+
+  // Ensure that all containing elements are <iframe> and have
+  // allowfullscreen attribute set.
+  nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
+  if (!docShell || !docShell->GetFullscreenAllowed()) {
+    return "FullscreenDeniedContainerNotAllowed";
+  }
+
+  return nullptr;
+}
+
 bool
 nsDocument::FullscreenElementReadyCheck(Element* aElement,
                                         bool aWasCallerChrome)
 {
   NS_ASSERTION(aElement,
     "Must pass non-null element to nsDocument::RequestFullScreen");
-  if (!aElement || aElement == GetFullScreenElement()) {
+  if (!aElement || aElement == GetFullscreenElement()) {
     return false;
   }
   if (!aElement->IsInDoc()) {
-    LogFullScreenDenied(true, "FullScreenDeniedNotInDocument", this);
+    DispatchFullscreenError("FullscreenDeniedNotInDocument");
     return false;
   }
   if (aElement->OwnerDoc() != this) {
-    LogFullScreenDenied(true, "FullScreenDeniedMovedDocument", this);
+    DispatchFullscreenError("FullscreenDeniedMovedDocument");
     return false;
   }
   if (!GetWindow()) {
-    LogFullScreenDenied(true, "FullScreenDeniedLostWindow", this);
+    DispatchFullscreenError("FullscreenDeniedLostWindow");
     return false;
   }
-  if (!IsFullScreenEnabled(aWasCallerChrome, true)) {
-    // IsFullScreenEnabled calls LogFullScreenDenied, no need to log.
+  if (const char* msg = GetFullscreenError(this, aWasCallerChrome)) {
+    DispatchFullscreenError(msg);
     return false;
   }
-  if (GetFullScreenElement() &&
-      !nsContentUtils::ContentIsDescendantOf(aElement, GetFullScreenElement())) {
+  if (GetFullscreenElement() &&
+      !nsContentUtils::ContentIsDescendantOf(aElement, GetFullscreenElement())) {
     // If this document is full-screen, only grant full-screen requests from
     // a descendant of the current full-screen element.
-    LogFullScreenDenied(true, "FullScreenDeniedNotDescendant", this);
+    DispatchFullscreenError("FullscreenDeniedNotDescendant");
     return false;
   }
   if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
-    LogFullScreenDenied(true, "FullScreenDeniedNotFocusedTab", this);
+    DispatchFullscreenError("FullscreenDeniedNotFocusedTab");
     return false;
   }
   // Deny requests when a windowed plugin is focused.
@@ -11605,7 +11644,7 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
   if (focusedElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
     if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(content)) {
-      LogFullScreenDenied(true, "FullScreenDeniedFocusedPlugin", this);
+      DispatchFullscreenError("FullscreenDeniedFocusedPlugin");
       return false;
     }
   }
@@ -11856,7 +11895,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // to detect if the origin which is fullscreen has changed.
   nsCOMPtr<nsIDocument> previousFullscreenDoc = GetFullscreenLeaf(this);
 
-  // Stores a list of documents which we must dispatch "mozfullscreenchange"
+  // Stores a list of documents which we must dispatch "fullscreenchange"
   // too. We're required by the spec to dispatch the events in root-to-leaf
   // order, but we traverse the doctree in a leaf-to-root order, so we save
   // references to the documents we must dispatch to so that we get the order
@@ -11943,7 +11982,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
       /* Bubbles */ true, /* ChromeOnly */ true);
   }
 
-  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
+  // Dispatch "fullscreenchange" events. Note this loop is in reverse
   // order so that the events for the root document arrives before the leaf
   // document, as required by the spec.
   for (uint32_t i = 0; i < changed.Length(); ++i) {
@@ -11955,32 +11994,14 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 NS_IMETHODIMP
 nsDocument::GetMozFullScreenElement(nsIDOMElement **aFullScreenElement)
 {
-  ErrorResult rv;
-  Element* el = GetMozFullScreenElement(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
+  Element* el = GetFullscreenElement();
   nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
   retval.forget(aFullScreenElement);
   return NS_OK;
 }
 
 Element*
-nsDocument::GetMozFullScreenElement(ErrorResult& rv)
-{
-  if (IsFullScreenDoc()) {
-    // Must have a full-screen element while in full-screen mode.
-    Element* el = GetFullScreenElement();
-    if (!el) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-    }
-    return el;
-  }
-  return nullptr;
-}
-
-Element*
-nsDocument::GetFullScreenElement()
+nsDocument::GetFullscreenElement()
 {
   Element* element = FullScreenStackTop();
   NS_ASSERTION(!element ||
@@ -12000,57 +12021,14 @@ NS_IMETHODIMP
 nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = MozFullScreenEnabled();
+  *aFullScreen = FullscreenEnabled();
   return NS_OK;
 }
 
 bool
-nsDocument::MozFullScreenEnabled()
+nsDocument::FullscreenEnabled()
 {
-  return IsFullScreenEnabled(nsContentUtils::IsCallerChrome(), false);
-}
-
-static bool
-HasFullScreenSubDocument(nsIDocument* aDoc)
-{
-  uint32_t count = CountFullscreenSubDocuments(aDoc);
-  NS_ASSERTION(count <= 1, "Fullscreen docs should have at most 1 fullscreen child!");
-  return count >= 1;
-}
-
-bool
-nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
-{
-  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
-    // Chrome code can always use the full-screen API, provided it's not
-    // explicitly disabled. Note IsCallerChrome() returns true when running
-    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
-    // nsRunnable!
-    return true;
-  }
-
-  if (!nsContentUtils::IsFullScreenApiEnabled()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
-    return false;
-  }
-  if (!IsVisible()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedHidden", this);
-    return false;
-  }
-  if (HasFullScreenSubDocument(this)) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedSubDocFullScreen", this);
-    return false;
-  }
-
-  // Ensure that all containing elements are <iframe> and have
-  // allowfullscreen attribute set.
-  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-  if (!docShell || !docShell->GetFullscreenAllowed()) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedContainerNotAllowed", this);
-    return false;
-  }
-
-  return true;
+  return !GetFullscreenError(this, nsContentUtils::IsCallerChrome());
 }
 
 uint16_t

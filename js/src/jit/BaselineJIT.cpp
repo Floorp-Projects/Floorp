@@ -6,6 +6,7 @@
 
 #include "jit/BaselineJIT.h"
 
+#include "mozilla/BinarySearch.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "asmjs/WasmModule.h"
@@ -25,6 +26,8 @@
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Stack-inl.h"
+
+using mozilla::BinarySearchIf;
 
 using namespace js;
 using namespace js::jit;
@@ -604,20 +607,29 @@ BaselineScript::returnAddressForIC(const ICEntry& ent)
 static inline size_t
 ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset)
 {
-    size_t bottom = 0;
-    size_t top = baseline->numICEntries();
-    size_t mid = bottom + (top - bottom) / 2;
-    while (mid < top) {
-        ICEntry& midEntry = baseline->icEntry(mid);
-        if (midEntry.pcOffset() < pcOffset)
-            bottom = mid + 1;
-        else if (midEntry.pcOffset() > pcOffset)
-            top = mid;
-        else
-            break;
-        mid = bottom + (top - bottom) / 2;
-    }
-    return mid;
+    struct ICEntries
+    {
+        BaselineScript* const baseline_;
+
+        explicit ICEntries(BaselineScript* baseline) : baseline_(baseline) {}
+
+        ICEntry& operator[](size_t index) const {
+            return baseline_->icEntry(index);
+        }
+    };
+
+    size_t loc;
+    BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
+                   [pcOffset](ICEntry& entry) {
+                       uint32_t entryOffset = entry.pcOffset();
+                       if (pcOffset < entryOffset)
+                           return -1;
+                       if (pcOffset > entryOffset)
+                           return 1;
+                       return 0;
+                   },
+                   &loc);
+    return loc;
 }
 
 ICEntry&

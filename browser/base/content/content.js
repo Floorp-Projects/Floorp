@@ -719,8 +719,8 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
       media.dispatchEvent(event);
       break;
     case "fullscreen":
-      if (content.document.mozFullScreenEnabled)
-        media.mozRequestFullScreen();
+      if (content.document.fullscreenEnabled)
+        media.requestFullscreen();
       break;
   }
 });

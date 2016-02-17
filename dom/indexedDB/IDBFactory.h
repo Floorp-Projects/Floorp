@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbfactory_h__
-#define mozilla_dom_indexeddb_idbfactory_h__
+#ifndef mozilla_dom_idbfactory_h__
+#define mozilla_dom_idbfactory_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/StorageTypeBinding.h"
@@ -35,15 +35,15 @@ class PrincipalInfo;
 namespace dom {
 
 struct IDBOpenDBOptions;
+class IDBOpenDBRequest;
 template <typename> class Optional;
 class TabChild;
 
 namespace indexedDB {
-
 class BackgroundFactoryChild;
 class FactoryRequestParams;
-class IDBOpenDBRequest;
 class LoggingInfo;
+}
 
 class IDBFactory final
   : public nsISupports
@@ -69,7 +69,7 @@ class IDBFactory final
 
   nsTArray<nsAutoPtr<PendingRequestInfo>> mPendingRequests;
 
-  BackgroundFactoryChild* mBackgroundActor;
+  indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
@@ -240,18 +240,17 @@ private:
 
   nsresult
   BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
-                         const LoggingInfo& aLoggingInfo);
+                         const indexedDB::LoggingInfo& aLoggingInfo);
 
   void
   BackgroundActorFailed();
 
   nsresult
   InitiateRequest(IDBOpenDBRequest* aRequest,
-                  const FactoryRequestParams& aParams);
+                  const indexedDB::FactoryRequestParams& aParams);
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbfactory_h__
+#endif // mozilla_dom_idbfactory_h__

@@ -48,8 +48,8 @@ function enteredFullscreen(id) {
   if (id == "one") {
     window2 = openWindow("two");
   } else if (id == "two") {
-    ok(window1.document.mozFullScreenElement &&
-       window2.document.mozFullScreenElement,
+    ok(window1.document.fullscreenElement &&
+       window2.document.fullscreenElement,
        "Both windows should be fullscreen concurrently");
     window1.close();
     window2.close();

@@ -118,27 +118,6 @@ void MacroAssemblerARM::convertDoubleToFloat32(FloatRegister src, FloatRegister 
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src), false, c);
 }
 
-// There are two options for implementing emitTruncateDouble:
-//
-// 1. Convert the floating point value to an integer, if it did not fit, then it
-// was clamped to INT_MIN/INT_MAX, and we can test it. NOTE: if the value
-// really was supposed to be INT_MAX / INT_MIN then it will be wrong.
-//
-// 2. Convert the floating point value to an integer, if it did not fit, then it
-// set one or two bits in the fpcsr. Check those.
-void
-MacroAssemblerARM::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
-{
-    ScratchDoubleScope scratch(asMasm());
-    FloatRegister scratchSIntReg = scratch.sintOverlay();
-
-    ma_vcvt_F64_I32(src, scratchSIntReg);
-    ma_vxfer(scratchSIntReg, dest);
-    ma_cmp(dest, Imm32(0x7fffffff));
-    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
-    ma_b(fail, Assembler::Equal);
-}
-
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
@@ -218,17 +197,6 @@ MacroAssemblerARM::convertFloat32ToDouble(FloatRegister src, FloatRegister dest)
     MOZ_ASSERT(dest.isDouble());
     MOZ_ASSERT(src.isSingle());
     as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
-}
-
-void
-MacroAssemblerARM::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
-{
-    ScratchFloat32Scope scratch(asMasm());
-    ma_vcvt_F32_I32(src, scratch.sintOverlay());
-    ma_vxfer(scratch, dest);
-    ma_cmp(dest, Imm32(0x7fffffff));
-    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
-    ma_b(fail, Assembler::Equal);
 }
 
 void
@@ -2503,30 +2471,6 @@ MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 }
 
 void
-MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, FloatRegister lhs,
-                                      FloatRegister rhs, Label* label)
-{
-    compareDouble(lhs, rhs);
-
-    if (cond == DoubleNotEqual) {
-        // Force the unordered cases not to jump.
-        Label unordered;
-        ma_b(&unordered, VFP_Unordered);
-        ma_b(label, VFP_NotEqualOrUnordered);
-        bind(&unordered);
-        return;
-    }
-
-    if (cond == DoubleEqualOrUnordered) {
-        ma_b(label, VFP_Unordered);
-        ma_b(label, VFP_Equal);
-        return;
-    }
-
-    ma_b(label, ConditionFromDoubleCondition(cond));
-}
-
-void
 MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.
@@ -2537,30 +2481,6 @@ MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
 
     // Move vector status bits to normal status flags.
     as_vmrs(pc);
-}
-
-void
-MacroAssemblerARMCompat::branchFloat(DoubleCondition cond, FloatRegister lhs,
-                                     FloatRegister rhs, Label* label)
-{
-    compareFloat(lhs, rhs);
-
-    if (cond == DoubleNotEqual) {
-        // Force the unordered cases not to jump.
-        Label unordered;
-        ma_b(&unordered, VFP_Unordered);
-        ma_b(label, VFP_NotEqualOrUnordered);
-        bind(&unordered);
-        return;
-    }
-
-    if (cond == DoubleEqualOrUnordered) {
-        ma_b(label, VFP_Unordered);
-        ma_b(label, VFP_Equal);
-        return;
-    }
-
-    ma_b(label, ConditionFromDoubleCondition(cond));
 }
 
 Assembler::Condition
@@ -2963,18 +2883,18 @@ MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address& valaddr,
     // Check payload before tag, since payload is more likely to differ.
     if (cond == NotEqual) {
         ma_ldr(ToPayload(valaddr), scratch);
-        branchPtr(NotEqual, scratch, value.payloadReg(), label);
+        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), label);
 
         ma_ldr(ToType(valaddr), scratch);
-        branchPtr(NotEqual, scratch, value.typeReg(), label);
+        asMasm().branchPtr(NotEqual, scratch, value.typeReg(), label);
     } else {
         Label fallthrough;
 
         ma_ldr(ToPayload(valaddr), scratch);
-        branchPtr(NotEqual, scratch, value.payloadReg(), &fallthrough);
+        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), &fallthrough);
 
         ma_ldr(ToType(valaddr), scratch);
-        branchPtr(Equal, scratch, value.typeReg(), label);
+        asMasm().branchPtr(Equal, scratch, value.typeReg(), label);
 
         bind(&fallthrough);
     }
@@ -3234,22 +3154,6 @@ MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType val
 template void
 MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
                                            const BaseIndex& dest, MIRType slotType);
-
-
-void
-MacroAssemblerARMCompat::branchTest64(Condition cond, Register64 lhs, Register64 rhs,
-                                      Register temp, Label* label)
-{
-    if (cond == Assembler::Zero) {
-        MOZ_ASSERT(lhs.low == rhs.low);
-        MOZ_ASSERT(lhs.high == rhs.high);
-        mov(lhs.low, ScratchRegister);
-        asMasm().or32(lhs.high, ScratchRegister);
-        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
-    } else {
-        MOZ_CRASH("Unsupported condition");
-    }
-}
 
 void
 MacroAssemblerARMCompat::moveValue(const Value& val, Register type, Register data)
@@ -3589,11 +3493,13 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     Label bailout;
 
     ma_ldr(Address(sp, offsetof(ResumeFromException, kind)), r0);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME),
+                      &entryFrame);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN),
+                      &return_);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
 
     breakpoint(); // Invalid kind.
 
@@ -3644,7 +3550,8 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
         Label skipProfilingInstrumentation;
         // Test if profiler enabled.
         AbsoluteAddress addressOfEnabled(GetJitContext()->runtime->spsProfiler().addressOfEnabled());
-        branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
+        asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
+                          &skipProfilingInstrumentation);
         profilerExitFrame();
         bind(&skipProfilingInstrumentation);
     }
@@ -4119,8 +4026,8 @@ MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, R
 
     ma_mov(Imm32(startChunk), scratch2);
     as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
-    branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              scratch2, Imm32(nursery.numChunks()), label);
+    asMasm().branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                      scratch2, Imm32(nursery.numChunks()), label);
 }
 
 void

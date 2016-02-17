@@ -70,6 +70,13 @@ OnImpreciseConversion()
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_FAILED_CONVERSION);
 }
 
+static void
+BadIndirectCall()
+{
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IND_CALL);
+}
+
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
@@ -175,6 +182,8 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(OnOutOfBounds, Args_General0);
       case SymbolicAddress::OnImpreciseConversion:
         return FuncCast(OnImpreciseConversion, Args_General0);
+      case SymbolicAddress::BadIndirectCall:
+        return FuncCast(BadIndirectCall, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::InvokeImport_Void:

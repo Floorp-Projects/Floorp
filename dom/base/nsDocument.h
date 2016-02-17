@@ -1195,7 +1195,6 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) override;
 
-  virtual Element* GetFullScreenElement() override;
   virtual nsTArray<Element*> GetFullscreenStack() const override;
   virtual void AsyncRequestFullScreen(
     mozilla::UniquePtr<FullscreenRequest>&& aRequest) override;
@@ -1261,8 +1260,8 @@ public:
   Element* FullScreenStackTop();
 
   // DOM-exposed fullscreen API
-  virtual bool MozFullScreenEnabled() override;
-  virtual Element* GetMozFullScreenElement(mozilla::ErrorResult& rv) override;
+  bool FullscreenEnabled() override;
+  Element* GetFullscreenElement() override;
 
   void RequestPointerLock(Element* aElement) override;
   bool ShouldLockPointer(Element* aElement, Element* aCurrentLock,
@@ -1418,15 +1417,6 @@ protected:
       NS_RELEASE_THIS();
     }
   }
-
-  // Returns true if a request for DOM full-screen is currently enabled in
-  // this document. This returns true if there are no windowed plugins in this
-  // doc tree, and if the document is visible, and if the api is not
-  // disabled by pref. aIsCallerChrome must contain the return value of
-  // nsContentUtils::IsCallerChrome() from the context we're checking.
-  // If aLogFailure is true, an appropriate warning message is logged to the
-  // console, and a "mozfullscreenerror" event is dispatched to this document.
-  bool IsFullScreenEnabled(bool aIsCallerChrome, bool aLogFailure);
 
   /**
    * Check that aId is not empty and log a message to the console
