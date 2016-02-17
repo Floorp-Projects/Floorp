@@ -23,9 +23,9 @@ add_task(function* () {
       let pageURL = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
 
       let expectedSequence = [
-        { status: "loading" },
-        { status: "loading", url: pageURL },
-        { status: "complete" },
+        {status: "loading"},
+        {status: "loading", url: pageURL},
+        {status: "complete"},
       ];
       let collectedSequence = [];
 
@@ -60,7 +60,7 @@ add_task(function* () {
         browser.test.notifyPass("tabs.onUpdated");
       });
 
-      browser.tabs.create({ url: pageURL });
+      browser.tabs.create({url: pageURL});
     },
     files: {
       "content-script.js": `

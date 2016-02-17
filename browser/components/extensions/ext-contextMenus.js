@@ -310,7 +310,7 @@ MenuItem.prototype = {
     let extension = this.extension;
     if (!rootItems.has(extension)) {
       let root = new MenuItem(extension, this.context,
-                              { title: extension.name },
+                              {title: extension.name},
                               /* isRoot = */ true);
       rootItems.set(extension, root);
     }

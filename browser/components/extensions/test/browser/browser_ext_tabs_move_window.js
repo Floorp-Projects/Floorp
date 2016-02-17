@@ -21,7 +21,7 @@ add_task(function* () {
         browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 
         browser.tabs.query(
-          { url: "<all_urls>" },
+          {url: "<all_urls>"},
           tabs => {
             browser.test.assertEq(tabs[0].url, "http://example.com/");
             browser.test.assertEq(tabs[0].windowId, destination.windowId);
@@ -54,14 +54,14 @@ add_task(function* () {
 
     background: function() {
       browser.tabs.query(
-        { url: "<all_urls>" },
+        {url: "<all_urls>"},
         tabs => {
           let destination = tabs[0];
           let source = tabs[1]; // remember, pinning moves it to the left.
           browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 
           browser.tabs.query(
-            { url: "<all_urls>" },
+            {url: "<all_urls>"},
             tabs => {
               browser.test.assertEq(true, tabs[0].pinned);
               browser.test.notifyPass("tabs.move.pin");
@@ -94,13 +94,13 @@ add_task(function* () {
 
     background: function() {
       browser.tabs.query(
-        { url: "<all_urls>" },
+        {url: "<all_urls>"},
         tabs => {
           let move1 = tabs[1];
           let move3 = tabs[3];
           browser.tabs.move([move1.id, move3.id], {index: 0});
           browser.tabs.query(
-            { url: "<all_urls>" },
+            {url: "<all_urls>"},
             tabs => {
               browser.test.assertEq(tabs[0].url, move1.url);
               browser.test.assertEq(tabs[2].url, move3.url);

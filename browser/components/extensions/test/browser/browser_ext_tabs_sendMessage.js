@@ -9,7 +9,7 @@ add_task(function* tabsSendMessageNoExceptionOnNonExistentTab() {
     },
 
     background: function() {
-      browser.tabs.create({ url: "about:robots"}, tab => {
+      browser.tabs.create({url: "about:robots"}, tab => {
         let exception;
         try {
           browser.tabs.sendMessage(tab.id, "message");

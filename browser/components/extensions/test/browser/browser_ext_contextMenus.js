@@ -22,14 +22,14 @@ add_task(function* () {
         browser.test.sendMessage("menuItemClick", JSON.stringify(info));
       }
 
-      browser.contextMenus.create({ contexts: ["all"], type: "separator" });
+      browser.contextMenus.create({contexts: ["all"], type: "separator"});
 
       let contexts = ["page", "selection", "image"];
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
-        browser.contextMenus.create({ title: title, contexts: [context], id: "ext-" + context,
-                                      onclick: genericOnClick });
+        browser.contextMenus.create({title: title, contexts: [context], id: "ext-" + context,
+                                     onclick: genericOnClick});
         if (context == "selection") {
           browser.contextMenus.update("ext-selection", {
             title: "selection is: '%s'",
@@ -41,20 +41,20 @@ add_task(function* () {
         }
       }
 
-      let parent = browser.contextMenus.create({ title: "parent" });
+      let parent = browser.contextMenus.create({title: "parent"});
       browser.contextMenus.create(
-        { title: "child1", parentId: parent, onclick: genericOnClick });
+        {title: "child1", parentId: parent, onclick: genericOnClick});
       let child2 = browser.contextMenus.create(
-        { title: "child2", parentId: parent, onclick: genericOnClick });
+        {title: "child2", parentId: parent, onclick: genericOnClick});
 
-      let parentToDel = browser.contextMenus.create({ title: "parentToDel" });
+      let parentToDel = browser.contextMenus.create({title: "parentToDel"});
       browser.contextMenus.create(
-        { title: "child1", parentId: parentToDel, onclick: genericOnClick });
+        {title: "child1", parentId: parentToDel, onclick: genericOnClick});
       browser.contextMenus.create(
-        { title: "child2", parentId: parentToDel, onclick: genericOnClick });
+        {title: "child2", parentId: parentToDel, onclick: genericOnClick});
       browser.contextMenus.remove(parentToDel);
 
-      browser.contextMenus.update(parent, { parentId: child2 }).then(
+      browser.contextMenus.update(parent, {parentId: child2}).then(
         () => {
           browser.test.notifyFail();
         },
@@ -81,7 +81,7 @@ add_task(function* () {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
   yield BrowserTestUtils.synthesizeMouseAtCenter("#img1",
-    { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+    {type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
   yield popupShownPromise;
 
   // Check some menu items
@@ -134,7 +134,7 @@ add_task(function* () {
   // Bring up context menu again
   popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
   yield BrowserTestUtils.synthesizeMouse(null, 1, 1,
-    { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+    {type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
   yield popupShownPromise;
 
   items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
@@ -163,7 +163,7 @@ add_task(function* () {
 
   popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
   yield BrowserTestUtils.synthesizeMouseAtCenter("#img1",
-    { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+    {type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
   yield popupShownPromise;
 
   items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
