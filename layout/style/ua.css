@@ -276,7 +276,7 @@
 
 }
 
-*|*:-moz-full-screen:not(:root) {
+*|*:fullscreen:not(:root) {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -296,7 +296,7 @@
 
 /* Selectors here should match the check in
  * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
-*|*:-moz-full-screen:not(:root):not(:-moz-browser-frame) {
+*|*:fullscreen:not(:root):not(:-moz-browser-frame) {
   -moz-top-layer: top !important;
 }
 
