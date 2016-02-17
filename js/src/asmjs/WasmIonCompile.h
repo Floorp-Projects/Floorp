@@ -67,7 +67,6 @@ class FuncCompileResults
 class IonCompileTask
 {
     JSRuntime* const runtime_;
-    const CompileArgs args_;
     ModuleGeneratorThreadView& mg_;
     LifoAlloc lifo_;
     UniqueFuncBytecode func_;
@@ -77,22 +76,14 @@ class IonCompileTask
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* rt, CompileArgs args, ModuleGeneratorThreadView& mg,
-                   size_t defaultChunkSize)
-      : runtime_(rt),
-        args_(args),
-        mg_(mg),
-        lifo_(defaultChunkSize),
-        func_(nullptr)
+    IonCompileTask(JSRuntime* rt, ModuleGeneratorThreadView& mg, size_t defaultChunkSize)
+      : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr)
     {}
     JSRuntime* runtime() const {
         return runtime_;
     }
     LifoAlloc& lifo() {
         return lifo_;
-    }
-    CompileArgs args() const {
-        return args_;
     }
     ModuleGeneratorThreadView& mg() const {
         return mg_;
