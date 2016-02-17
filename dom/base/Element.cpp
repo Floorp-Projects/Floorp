@@ -1744,7 +1744,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
                                       nsContentUtils::eDOM_PROPERTIES,
-                                      "RemovedFullScreenElement");
+                                      "RemovedFullscreenElement");
       // Fully exit full-screen.
       nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
     }
@@ -3241,7 +3241,7 @@ GetFullScreenError(nsIDocument* aDoc)
   }
 
   if (!nsContentUtils::IsRequestFullScreenAllowed()) {
-    return "FullScreenDeniedNotInputDriven";
+    return "FullscreenDeniedNotInputDriven";
   }
 
   return nullptr;
