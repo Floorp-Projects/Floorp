@@ -65,8 +65,10 @@ add_task(function*() {
   info("Select a finite animation, reload the page and wait for the " +
        "animation to complete");
   yield selectNode(".negative-delay", inspector);
+
+  let onScrubberStopped = waitForScrubberStopped(timeline);
   yield reloadTab(inspector);
-  yield waitForScrubberStopped(timeline);
+  yield onScrubberStopped;
 
   ok(btn.classList.contains("paused"),
      "The button is in paused state once finite animations are done");

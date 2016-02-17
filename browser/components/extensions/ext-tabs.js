@@ -465,7 +465,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       captureVisibleTab: function(windowId, options) {
         if (!extension.hasPermission("<all_urls>")) {
-          return Promise.reject({ message: "The <all_urls> permission is required to use the captureVisibleTab API" });
+          return Promise.reject({message: "The <all_urls> permission is required to use the captureVisibleTab API"});
         }
 
         let window = windowId == null ?
@@ -524,7 +524,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         if (details.file !== null) {
           let url = context.uri.resolve(details.file);
           if (!extension.isExtensionURL(url)) {
-            return Promise.reject({ message: "Files to be injected must be within the extension" });
+            return Promise.reject({message: "Files to be injected must be within the extension"});
           }
           options[kind].push(url);
         }
@@ -538,7 +538,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = details.runAt;
         }
 
-        return context.sendMessage(mm, "Extension:Execute", { options }, recipient);
+        return context.sendMessage(mm, "Extension:Execute", {options}, recipient);
       },
 
       executeScript: function(tabId, details) {

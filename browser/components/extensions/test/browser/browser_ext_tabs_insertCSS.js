@@ -62,7 +62,7 @@ add_task(function* testExecuteScript() {
         return;
       }
 
-      let { promise, background, foreground } = promises.shift();
+      let {promise, background, foreground} = promises.shift();
       new Promise(promise).then(() => {
         browser.tabs.executeScript({
           code: `(${checkCSS})()`,

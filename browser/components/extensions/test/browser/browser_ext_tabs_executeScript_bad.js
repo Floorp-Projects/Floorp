@@ -14,7 +14,7 @@ function* testHasNoPermission(params) {
     browser.test.onMessage.addListener(msg => {
       browser.test.assertEq(msg, "execute-script");
 
-      browser.tabs.query({ currentWindow: true }, tabs => {
+      browser.tabs.query({currentWindow: true}, tabs => {
         browser.tabs.executeScript({
           file: "script.js",
         });
@@ -70,12 +70,12 @@ add_task(function* testBadPermissions() {
 
   info("Test no special permissions");
   yield testHasNoPermission({
-    manifest: { "permissions": ["http://example.com/"] },
+    manifest: {"permissions": ["http://example.com/"]},
   });
 
   info("Test tabs permissions");
   yield testHasNoPermission({
-    manifest: { "permissions": ["http://example.com/", "tabs"] },
+    manifest: {"permissions": ["http://example.com/", "tabs"]},
   });
 
   info("Test active tab, browser action, no click");
@@ -94,7 +94,7 @@ add_task(function* testBadPermissions() {
     },
     contentSetup() {
       return new Promise(resolve => {
-        browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+        browser.tabs.query({active: true, currentWindow: true}, tabs => {
           browser.pageAction.show(tabs[0].id);
           resolve();
         });
@@ -108,7 +108,7 @@ add_task(function* testBadPermissions() {
 
 add_task(function* testBadURL() {
   function background() {
-    browser.tabs.query({ currentWindow: true }, tabs => {
+    browser.tabs.query({currentWindow: true}, tabs => {
       let promises = [
         new Promise(resolve => {
           browser.tabs.executeScript({

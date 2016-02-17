@@ -36,7 +36,7 @@ function* testCookies(options) {
 
 
     // Try to access some cookies in various ways.
-    let { url, domain, secure } = options;
+    let {url, domain, secure} = options;
 
     let failures = 0;
     let tallyFailure = error => {
@@ -44,11 +44,11 @@ function* testCookies(options) {
     };
 
     awaitChanges.then(() => {
-      return browser.cookies.get({ url, name: "foo" });
+      return browser.cookies.get({url, name: "foo"});
     }).then(cookie => {
       browser.test.assertEq(options.shouldPass, cookie != null, "should pass == get cookie");
 
-      return browser.cookies.getAll({ domain });
+      return browser.cookies.getAll({domain});
     }).then(cookies => {
       if (options.shouldPass) {
         browser.test.assertEq(2, cookies.length, "expected number of cookies");
@@ -57,9 +57,9 @@ function* testCookies(options) {
       }
 
       return Promise.all([
-        browser.cookies.set({ url, domain, secure, name: "foo", "value": "baz", expirationDate: options.expiry }).catch(tallyFailure),
-        browser.cookies.set({ url, domain, secure, name: "bar", "value": "quux", expirationDate: options.expiry }).catch(tallyFailure),
-        browser.cookies.remove({ url, name: "deleted" }),
+        browser.cookies.set({url, domain, secure, name: "foo", "value": "baz", expirationDate: options.expiry}).catch(tallyFailure),
+        browser.cookies.set({url, domain, secure, name: "bar", "value": "quux", expirationDate: options.expiry}).catch(tallyFailure),
+        browser.cookies.remove({url, name: "deleted"}),
       ]);
     }).then(() => {
       if (options.shouldPass) {

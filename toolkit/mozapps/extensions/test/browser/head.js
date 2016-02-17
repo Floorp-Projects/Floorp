@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+/*globals end_test*/
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -1343,7 +1344,7 @@ MockInstall.prototype = {
         break;
       case AddonManager.STATE_DOWNLOADING:
       case AddonManager.STATE_CHECKING:
-      case AddonManger.STATE_INSTALLING:
+      case AddonManager.STATE_INSTALLING:
         // Installation is already running
         return;
       default:

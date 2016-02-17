@@ -142,3 +142,26 @@ function getDisplayedSnapshotStatus(document) {
   const status = document.querySelector(".snapshot-status");
   return status ? status.textContent.trim() : null;
 }
+
+/**
+ * Get the index of the currently selected snapshot.
+ *
+ * @return {Number}
+ */
+function getSelectedSnapshotIndex(store) {
+  let snapshots = store.getState().snapshots;
+  let selectedSnapshot = snapshots.find(s => s.selected);
+  return snapshots.indexOf(selectedSnapshot);
+}
+
+/**
+ * Returns a promise that will resolve when the snapshot with provided index
+ * becomes selected.
+ *
+ * @return {Promise}
+ */
+function waitUntilSnapshotSelected(store, snapshotIndex) {
+  return waitUntilState(store, state =>
+    state.snapshots[snapshotIndex] &&
+    state.snapshots[snapshotIndex].selected === true);
+}

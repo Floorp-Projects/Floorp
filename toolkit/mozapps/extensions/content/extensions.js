@@ -4,6 +4,9 @@
 
 "use strict";
 
+/* import-globals-from ../../../content/contentAreaUtils.js */
+/*globals XMLStylesheetProcessingInstruction*/
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;

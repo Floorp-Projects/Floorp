@@ -1,6 +1,6 @@
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -83,11 +83,11 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
       getAllFrames(details) {
         let tab = TabManager.getTab(details.tabId);
         if (!tab) {
-          return Promise.reject({ message: `No tab found with tabId: ${details.tabId}`});
+          return Promise.reject({message: `No tab found with tabId: ${details.tabId}`});
         }
 
-        let { innerWindowID, messageManager } = tab.linkedBrowser;
-        let recipient = { innerWindowID };
+        let {innerWindowID, messageManager} = tab.linkedBrowser;
+        let recipient = {innerWindowID};
 
         return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, recipient)
                       .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
@@ -95,7 +95,7 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
       getFrame(details) {
         let tab = TabManager.getTab(details.tabId);
         if (!tab) {
-          return Promise.reject({ message: `No tab found with tabId: ${details.tabId}`});
+          return Promise.reject({message: `No tab found with tabId: ${details.tabId}`});
         }
 
         let recipient = {
@@ -103,11 +103,11 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
         };
 
         let mm = tab.linkedBrowser.messageManager;
-        return context.sendMessage(mm, "WebNavigation:GetFrame", { options: details }, recipient)
+        return context.sendMessage(mm, "WebNavigation:GetFrame", {options: details}, recipient)
                       .then((result) => {
                         return result ?
                           convertGetFrameResult(details.tabId, result) :
-                          Promise.reject({ message: `No frame found with frameId: ${details.frameId}`});
+                          Promise.reject({message: `No frame found with frameId: ${details.frameId}`});
                       });
       },
     },

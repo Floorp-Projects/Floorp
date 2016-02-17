@@ -57,7 +57,7 @@ class MachCommands(MachCommandBase):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
-        return self.run_process(['./gradlew'] + args,
+        return self.run_process([self.substs['GRADLE']] + args,
             pass_thru=True, # Allow user to run gradle interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir))

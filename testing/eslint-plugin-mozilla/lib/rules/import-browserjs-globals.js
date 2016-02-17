@@ -15,8 +15,12 @@
 var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
+var globals = require("../globals");
 
 const SCRIPTS = [
+  //"browser/base/content/nsContextMenu.js",
+  "toolkit/content/contentAreaUtils.js",
+  "browser/components/places/content/editBookmarkOverlay.js",
   "toolkit/components/printing/content/printUtils.js",
   "toolkit/content/viewZoomOverlay.js",
   "browser/components/places/content/browserPlacesViews.js",
@@ -46,13 +50,14 @@ const SCRIPTS = [
   "browser/base/content/browser-thumbnails.js",
   "browser/base/content/browser-trackingprotection.js",
   "browser/base/content/browser-data-submission-info-bar.js",
-  "browser/base/content/browser-fxaccounts.js",
+  "browser/base/content/browser-fxaccounts.js"
 ];
 
 module.exports = function(context) {
   return {
     Program: function(node) {
-      if (!helpers.getIsBrowserMochitest(this)) {
+      if (!helpers.getIsBrowserMochitest(this) &&
+          !helpers.getIsHeadFile(this)) {
         return;
       }
 
@@ -60,10 +65,9 @@ module.exports = function(context) {
       for (let script of SCRIPTS) {
         let fileName = path.join(root, script);
         try {
-          let globals = helpers.getGlobalsForFile(fileName);
-          helpers.addGlobals(globals, context);
-        }
-        catch (e) {
+          let newGlobals = globals.getGlobalsForFile(fileName);
+          helpers.addGlobals(newGlobals, context.getScope());
+        } catch (e) {
           context.report(
             node,
             "Could not load globals from file {{filePath}}: {{error}}",

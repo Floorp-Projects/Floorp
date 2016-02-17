@@ -109,7 +109,7 @@ add_task(function*() {
   do_check_false(addon.seen);
 
   // Updating through the API shouldn't change the state
-  install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
+  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
   yield promiseCompleteAllInstalls([install]);
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
@@ -190,7 +190,7 @@ add_task(function*() {
   do_check_true(addon.seen);
 
   // Updating through the API shouldn't change the state
-  install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
+  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
   yield promiseCompleteAllInstalls([install]);
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
