@@ -441,6 +441,7 @@ void
 MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
                                                     AudioDataValue* aBuffer,
                                                     size_t aFrames,
+                                                    TrackRate aRate,
                                                     uint32_t aChannels)
 {
 }
@@ -450,15 +451,16 @@ void
 MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
                                                    const AudioDataValue* aBuffer,
                                                    size_t aFrames,
+                                                   TrackRate aRate,
                                                    uint32_t aChannels)
 {
   // This will call Process() with data coming out of the AEC/NS/AGC/etc chain
   if (!mPacketizer ||
-      mPacketizer->PacketSize() != mSampleFrequency/100 ||
+      mPacketizer->PacketSize() != aRate/100u ||
       mPacketizer->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
-    mPacketizer = new AudioPacketizer<AudioDataValue, int16_t>(mSampleFrequency/100, aChannels);
-   }
+    mPacketizer = new AudioPacketizer<AudioDataValue, int16_t>(aRate/100, aChannels);
+  }
 
   mPacketizer->Input(aBuffer, static_cast<uint32_t>(aFrames));
 
@@ -466,7 +468,8 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
     uint32_t samplesPerPacket = mPacketizer->PacketSize() *
                                 mPacketizer->Channels();
     int16_t* packet = mPacketizer->Output();
-    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, mSampleFrequency, 0);
+
+    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
   }
 }
 

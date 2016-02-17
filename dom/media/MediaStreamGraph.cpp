@@ -1059,10 +1059,10 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
 // All AudioInput listeners get the same speaker data (at least for now).
 void
 MediaStreamGraph::NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                                   uint32_t aChannels)
+                                   TrackRate aRate, uint32_t aChannels)
 {
   for (auto& listener : mAudioInputs) {
-    listener->NotifyOutputData(this, aBuffer, aFrames, aChannels);
+    listener->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
   }
 }
 

@@ -197,14 +197,14 @@ public:
    */
   virtual void NotifyOutputData(MediaStreamGraph* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
-                                uint32_t aChannels) = 0;
+                                TrackRate aRate, uint32_t aChannels) = 0;
   /**
    * Input data from a microphone (or other audio source.  This is not
    * guaranteed to be in any particular size chunks.
    */
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
-                               uint32_t aChannels) = 0;
+                               TrackRate aRate, uint32_t aChannels) = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
@@ -1298,7 +1298,7 @@ public:
    * to notify any listeners (for echo cancellation).
    */
   void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels);
+                        TrackRate aRate, uint32_t aChannels);
 
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)
