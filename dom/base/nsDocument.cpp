@@ -11955,28 +11955,10 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 NS_IMETHODIMP
 nsDocument::GetMozFullScreenElement(nsIDOMElement **aFullScreenElement)
 {
-  ErrorResult rv;
-  Element* el = GetMozFullScreenElement(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
+  Element* el = GetMozFullScreenElement();
   nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
   retval.forget(aFullScreenElement);
   return NS_OK;
-}
-
-Element*
-nsDocument::GetMozFullScreenElement(ErrorResult& rv)
-{
-  if (IsFullScreenDoc()) {
-    // Must have a full-screen element while in full-screen mode.
-    Element* el = GetFullScreenElement();
-    if (!el) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-    }
-    return el;
-  }
-  return nullptr;
 }
 
 Element*

@@ -1262,7 +1262,7 @@ public:
 
   // DOM-exposed fullscreen API
   virtual bool MozFullScreenEnabled() override;
-  virtual Element* GetMozFullScreenElement(mozilla::ErrorResult& rv) override;
+  Element* GetMozFullScreenElement() override { return GetFullScreenElement(); }
 
   void RequestPointerLock(Element* aElement) override;
   bool ShouldLockPointer(Element* aElement, Element* aCurrentLock,
