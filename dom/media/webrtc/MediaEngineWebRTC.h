@@ -271,10 +271,14 @@ private:
     // Calculate translation from existing mDevices to new devices. Note we
     // never end up with less devices than before, since people have
     // stashed indexes.
+    // For some reason the "fake" device for automation is marked as DISABLED,
+    // so white-list it.
     for (uint32_t i = 0; i < devices->count; i++) {
       if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
           (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
-           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED))
+           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED ||
+           (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
+            strcmp(devices->device[i]->friendly_name, "Sine source at 440 Hz") == 0)))
       {
         auto j = mDeviceNames->IndexOf(devices->device[i]->device_id);
         if (j != nsTArray<nsCString>::NoIndex) {
