@@ -91,6 +91,8 @@ DEFAULTS = dict(
         'network.proxy.type': 1,
         'security.enable_java': False,
         'security.fileuri.strict_origin_policy': False,
+        'toolkit.telemetry.prompted': 999,
+        'toolkit.telemetry.notifiedOptOut': 999,
         'dom.send_after_paint_to_content': True,
         'security.turn_off_all_security_so_that_viruses_can_'
         'take_over_this_computer': True,

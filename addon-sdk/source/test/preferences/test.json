@@ -26,6 +26,8 @@
   "security.default_personal_cert": "Select Automatically",
   "network.http.prompt-temp-redirect": false,
   "security.warn_viewing_mixed": false,
+  "toolkit.telemetry.prompted": 999,
+  "toolkit.telemetry.notifiedOptOut": 999,
   "extensions.defaultProviders.enabled": true,
   "datareporting.policy.dataSubmissionPolicyBypassNotification": true,
   "layout.css.report_errors": true,
