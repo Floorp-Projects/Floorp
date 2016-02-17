@@ -41,12 +41,11 @@ add_task(function* testTabEvents() {
     }
 
     browser.test.log("Create second browser window");
-    let windowId;
     Promise.all([
       browser.windows.getCurrent(),
       browser.windows.create({}),
     ]).then(windows => {
-      windowId = windows[0].id;
+      let windowId = windows[0].id;
       let otherWindowId = windows[1].id;
       let initialTab;
 
@@ -104,43 +103,10 @@ add_task(function* testTabEvents() {
           browser.test.assertEq(initialTab.id, removed.tabId, "Expected removed tab ID");
           browser.test.assertEq(otherWindowId, removed.windowId, "Expected removed tab window ID");
           browser.test.assertEq(true, removed.isWindowClosing, "Expected isWindowClosing value");
+        }).then(() => {
+          browser.test.notifyPass("tabs-events");
         });
       });
-    }).then(() => {
-      browser.test.log("Create additional tab in window 1");
-      return browser.tabs.create({windowId, url: "about:blank"});
-    }).then(tab => {
-      return expectEvents(["onCreated"]).then(() => {
-        browser.test.log("Create a new window, adopting the new tab");
-
-        // We have to explicitly wait for the event here, since its timing is
-        // not predictable.
-        let promiseAttached = new Promise(resolve => {
-          browser.tabs.onAttached.addListener(function listener(tabId) {
-            browser.tabs.onAttached.removeListener(listener);
-            resolve();
-          });
-        });
-
-        return Promise.all([
-          browser.windows.create({tabId: tab.id}),
-          promiseAttached,
-        ]);
-      }).then(([window]) => {
-        return expectEvents(["onDetached", "onAttached"]).then(([detached, attached]) => {
-          browser.test.assertEq(tab.id, detached.tabId, "Expected onDetached tab ID");
-
-          browser.test.assertEq(tab.id, attached.tabId, "Expected onAttached tab ID");
-          browser.test.assertEq(0, attached.newPosition, "Expected onAttached new index");
-          browser.test.assertEq(window.id, attached.newWindowId,
-                                "Expected onAttached new window id");
-
-          browser.test.log("Close the new window");
-          return browser.windows.remove(window.id);
-        });
-      });
-    }).then(() => {
-      browser.test.notifyPass("tabs-events");
     }).catch(e => {
       try {
         browser.test.fail(`${e} :: ${e.stack}`);
