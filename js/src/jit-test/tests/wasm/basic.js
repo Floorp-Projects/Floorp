@@ -238,6 +238,8 @@ assertErrorMessage(() => wasmEvalText('(module (func (result f32) (block (i32.co
 assertEq(wasmEvalText('(module (func (result i32) (block (i32.const 13) (block (i32.const 42)))) (export "" 0))')(), 42);
 assertErrorMessage(() => wasmEvalText('(module (func (result f32) (param f32) (block (get_local 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
 
+assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.const 42)) (get_local 0)) (export "" 0))')(), 42);
+
 // ----------------------------------------------------------------------------
 // calls
 
