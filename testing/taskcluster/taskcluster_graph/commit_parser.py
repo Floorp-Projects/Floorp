@@ -350,6 +350,7 @@ def parse_commit(message, jobs):
             # TODO support declaring a different build type
             'build_type': name,
             'interactive': args.interactive,
+            'when': task.get('when', {})
         })
 
     # Times that test jobs will be scheduled
