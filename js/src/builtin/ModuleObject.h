@@ -133,7 +133,7 @@ class ModuleNamespaceObject : public ProxyObject
     static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module);
 
     ModuleObject& module();
-    ArrayObject& exports();
+    JSObject& exports();
     IndirectBindingMap& bindings();
 
     bool addBinding(JSContext* cx, HandleAtom exportedName, HandleModuleObject targetModule,
@@ -245,7 +245,7 @@ class ModuleObject : public NativeObject
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
     IndirectBindingMap& importBindings();
-    ArrayObject* namespaceExports();
+    JSObject* namespaceExports();
     IndirectBindingMap* namespaceBindings();
 
     void createEnvironment();
@@ -257,7 +257,7 @@ class ModuleObject : public NativeObject
     static bool evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval);
 
     static ModuleNamespaceObject* createNamespace(JSContext* cx, HandleModuleObject self,
-                                                  HandleArrayObject exports);
+                                                  HandleObject exports);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
