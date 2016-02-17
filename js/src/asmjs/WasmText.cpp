@@ -34,6 +34,7 @@
 
 using namespace js;
 using namespace js::wasm;
+
 using mozilla::BitwiseCast;
 using mozilla::CountLeadingZeroes32;
 using mozilla::CheckedInt;

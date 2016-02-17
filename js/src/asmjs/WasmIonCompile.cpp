@@ -3021,7 +3021,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     CompileInfo compileInfo(func.numLocals());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS),
-                     task->args().useSignalHandlersForOOB);
+                     task->mg().args().useSignalHandlersForOOB);
 
     // Build MIR graph
     {

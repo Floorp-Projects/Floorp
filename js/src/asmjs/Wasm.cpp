@@ -1165,7 +1165,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
         return Fail(cx, d, "failed to match binary version");
 
-    UniqueModuleGeneratorData init = MakeUnique<ModuleGeneratorData>();
+    UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
     if (!init)
         return false;
 
