@@ -554,8 +554,6 @@ DrawTargetSkia::ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialias
   if (aAntialiasMode == AntialiasMode::DEFAULT) {
     switch (aFontType) {
       case FontType::MAC:
-      case FontType::GDI:
-      case FontType::DWRITE:
         return true;
       default:
         // TODO: Figure out what to do for the other platforms.
