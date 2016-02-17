@@ -96,12 +96,10 @@ function RefreshDeviceList()
         // prefer lookup by token name.  However, the token may not be
         // present, so maybe slot names should be listed, while token names
         // are "remembered" for lookup?
-	if (slot != null) {
-          if (slot.tokenName)
-            slotnames[slotnames.length] = slot.tokenName;
-          else
-            slotnames[slotnames.length] = slot.name;
-	}
+        if (slot != null) {
+          slotnames[slotnames.length] = slot.tokenName ? slot.tokenName
+                                                       : slot.name;
+        }
         try {
           slots.next();
         } catch (e) { slots_done = true; }
@@ -199,8 +197,9 @@ function getSelectedItem()
 
 function enableButtons()
 {
-  if (skip_enable_buttons)
+  if (skip_enable_buttons) {
     return;
+  }
 
   var login_toggle = "true";
   var logout_toggle = "true";
@@ -244,9 +243,10 @@ function enableButtons()
 // clear the display of information for the slot
 function ClearInfoList()
 {
-  var info_list = document.getElementById("info_list");
-  while (info_list.firstChild)
-      info_list.removeChild(info_list.firstChild);
+  let infoList = document.getElementById("info_list");
+  while (infoList.hasChildNodes()) {
+    infoList.removeChild(infoList.firstChild);
+  }
 }
 
 function ClearDeviceList()
@@ -469,12 +469,12 @@ function doLoadDevice()
   var path_box = document.getElementById("device_path");
   try {
     getPKCS11().addModule(name_box.value, path_box.value, 0,0);
-  }
-  catch (e) {
-    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)
+  } catch (e) {
+    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
       doPrompt(getNSSString("AddModuleDup"));
-    else
+    } else {
       doPrompt(getNSSString("AddModuleFailure"));
+    }
 
     return false;
   }
