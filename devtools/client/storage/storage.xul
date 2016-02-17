@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/storage.css" type="text/css"?>
 
