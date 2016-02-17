@@ -14,7 +14,7 @@
 #include "crmfi.h"
 
 #define CMMF_MAX_CHALLENGES 10
-#define CMMF_MAX_KEY_PAIRS  50
+#define CMMF_MAX_KEY_PAIRS 50
 
 /*
  * Some templates that the code will need to implement CMMF.
@@ -27,72 +27,66 @@ extern const SEC_ASN1Template CMMFSequenceOfCertsTemplate[];
 extern const SEC_ASN1Template CMMFPKIStatusInfoTemplate[];
 extern const SEC_ASN1Template CMMFCertifiedKeyPairTemplate[];
 
-
 /*
- * Some utility functions that are shared by multiple files in this 
+ * Some utility functions that are shared by multiple files in this
  * implementation.
  */
 
-extern SECStatus cmmf_CopyCertResponse (PLArenaPool      *poolp,
-					CMMFCertResponse *dest, 
-					CMMFCertResponse *src);
+extern SECStatus cmmf_CopyCertResponse(PLArenaPool *poolp,
+                                       CMMFCertResponse *dest,
+                                       CMMFCertResponse *src);
 
-extern SECStatus cmmf_CopyPKIStatusInfo (PLArenaPool       *poolp,
-					 CMMFPKIStatusInfo *dest,
-					 CMMFPKIStatusInfo *src);
+extern SECStatus cmmf_CopyPKIStatusInfo(PLArenaPool *poolp,
+                                        CMMFPKIStatusInfo *dest,
+                                        CMMFPKIStatusInfo *src);
 
-extern SECStatus cmmf_CopyCertifiedKeyPair(PLArenaPool          *poolp,
-					   CMMFCertifiedKeyPair *dest,
-					   CMMFCertifiedKeyPair *src);
+extern SECStatus cmmf_CopyCertifiedKeyPair(PLArenaPool *poolp,
+                                           CMMFCertifiedKeyPair *dest,
+                                           CMMFCertifiedKeyPair *src);
 
-extern SECStatus cmmf_DestroyPKIStatusInfo(CMMFPKIStatusInfo *info, 
-					   PRBool freeit);
+extern SECStatus cmmf_DestroyPKIStatusInfo(CMMFPKIStatusInfo *info,
+                                           PRBool freeit);
 
-extern SECStatus cmmf_DestroyCertOrEncCert(CMMFCertOrEncCert *certOrEncCert, 
-					   PRBool freeit);
+extern SECStatus cmmf_DestroyCertOrEncCert(CMMFCertOrEncCert *certOrEncCert,
+                                           PRBool freeit);
 
-extern SECStatus cmmf_PKIStatusInfoSetStatus(CMMFPKIStatusInfo    *statusInfo,
-					     PLArenaPool          *poolp,
-					     CMMFPKIStatus         inStatus);
+extern SECStatus cmmf_PKIStatusInfoSetStatus(CMMFPKIStatusInfo *statusInfo,
+                                             PLArenaPool *poolp,
+                                             CMMFPKIStatus inStatus);
 
-extern SECStatus cmmf_ExtractCertsFromList(CERTCertList      *inCertList,
-					   PLArenaPool       *poolp,
-					   CERTCertificate ***certArray);
+extern SECStatus cmmf_ExtractCertsFromList(CERTCertList *inCertList,
+                                           PLArenaPool *poolp,
+                                           CERTCertificate ***certArray);
 
-extern SECStatus 
-       cmmf_CertOrEncCertSetCertificate(CMMFCertOrEncCert *certOrEncCert,
-					PLArenaPool       *poolp,
-					CERTCertificate   *inCert);
+extern SECStatus
+cmmf_CertOrEncCertSetCertificate(CMMFCertOrEncCert *certOrEncCert,
+                                 PLArenaPool *poolp,
+                                 CERTCertificate *inCert);
 
-extern CMMFPKIStatus 
-       cmmf_PKIStatusInfoGetStatus(CMMFPKIStatusInfo *inStatus);
+extern CMMFPKIStatus
+cmmf_PKIStatusInfoGetStatus(CMMFPKIStatusInfo *inStatus);
 
-extern CERTCertList*
-       cmmf_MakeCertList(CERTCertificate **inCerts);
+extern CERTCertList *
+cmmf_MakeCertList(CERTCertificate **inCerts);
 
-extern CERTCertificate*
+extern CERTCertificate *
 cmmf_CertOrEncCertGetCertificate(CMMFCertOrEncCert *certOrEncCert,
-                                 CERTCertDBHandle  *certdb);
+                                 CERTCertDBHandle *certdb);
 
 extern SECStatus
-cmmf_decode_process_cert_response(PLArenaPool      *poolp,
-				  CERTCertDBHandle *db,
-				  CMMFCertResponse *inCertResp);
+cmmf_decode_process_cert_response(PLArenaPool *poolp,
+                                  CERTCertDBHandle *db,
+                                  CMMFCertResponse *inCertResp);
 
 extern SECStatus
-cmmf_decode_process_certified_key_pair(PLArenaPool          *poolp,
-				       CERTCertDBHandle     *db,
-				       CMMFCertifiedKeyPair *inCertKeyPair);
+cmmf_decode_process_certified_key_pair(PLArenaPool *poolp,
+                                       CERTCertDBHandle *db,
+                                       CMMFCertifiedKeyPair *inCertKeyPair);
 
 extern SECStatus
 cmmf_user_encode(void *src, CRMFEncoderOutputCallback inCallback, void *inArg,
-		 const SEC_ASN1Template *inTemplate);
+                 const SEC_ASN1Template *inTemplate);
 
 extern SECStatus
-cmmf_copy_secitem (PLArenaPool *poolp, SECItem *dest, SECItem *src);
+cmmf_copy_secitem(PLArenaPool *poolp, SECItem *dest, SECItem *src);
 #endif /*_CMMFI_H_*/
-
-
-
-
-

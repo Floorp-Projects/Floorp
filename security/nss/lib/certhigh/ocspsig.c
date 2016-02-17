@@ -19,12 +19,11 @@
 #include "ocspi.h"
 #include "pk11pub.h"
 
-
 extern const SEC_ASN1Template ocsp_ResponderIDByNameTemplate[];
 extern const SEC_ASN1Template ocsp_ResponderIDByKeyTemplate[];
 extern const SEC_ASN1Template ocsp_OCSPResponseTemplate[];
 
-ocspCertStatus*
+ocspCertStatus *
 ocsp_CreateCertStatus(PLArenaPool *arena,
                       ocspCertStatusType status,
                       PRTime revocationTime)
@@ -45,7 +44,7 @@ ocsp_CreateCertStatus(PLArenaPool *arena,
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             return NULL;
     }
-    
+
     cs = PORT_ArenaZNew(arena, ocspCertStatus);
     if (!cs)
         return NULL;
@@ -71,8 +70,9 @@ ocsp_CreateCertStatus(PLArenaPool *arena,
             if (!cs->certStatusInfo.revokedInfo->revocationReason)
                 return NULL;
             if (DER_TimeToGeneralizedTimeArena(arena,
-                    &cs->certStatusInfo.revokedInfo->revocationTime,
-                    revocationTime) != SECSuccess)
+                                               &cs->certStatusInfo.revokedInfo->revocationTime,
+                                               revocationTime) !=
+                SECSuccess)
                 return NULL;
             break;
         default:
@@ -91,11 +91,11 @@ static const SEC_ASN1Template mySEC_PointerToEnumeratedTemplate[] = {
 
 static const SEC_ASN1Template ocsp_EncodeRevokedInfoTemplate[] = {
     { SEC_ASN1_GENERALIZED_TIME,
-        offsetof(ocspRevokedInfo, revocationTime) },
+      offsetof(ocspRevokedInfo, revocationTime) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC| 0,
-        offsetof(ocspRevokedInfo, revocationReason),
-        mySEC_PointerToEnumeratedTemplate },
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+      offsetof(ocspRevokedInfo, revocationReason),
+      mySEC_PointerToEnumeratedTemplate },
     { 0 }
 };
 
@@ -110,26 +110,26 @@ static const SEC_ASN1Template mySEC_NullTemplate[] = {
 
 static const SEC_ASN1Template ocsp_CertStatusTemplate[] = {
     { SEC_ASN1_CHOICE, offsetof(ocspCertStatus, certStatusType),
-        0, sizeof(ocspCertStatus) },
+      0, sizeof(ocspCertStatus) },
     { SEC_ASN1_CONTEXT_SPECIFIC | 0,
-        0, mySEC_NullTemplate, ocspCertStatus_good },
+      0, mySEC_NullTemplate, ocspCertStatus_good },
     { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED |
-      SEC_ASN1_CONTEXT_SPECIFIC | 1,
-        offsetof(ocspCertStatus, certStatusInfo.revokedInfo),
-        ocsp_PointerToEncodeRevokedInfoTemplate, ocspCertStatus_revoked },
+          SEC_ASN1_CONTEXT_SPECIFIC | 1,
+      offsetof(ocspCertStatus, certStatusInfo.revokedInfo),
+      ocsp_PointerToEncodeRevokedInfoTemplate, ocspCertStatus_revoked },
     { SEC_ASN1_CONTEXT_SPECIFIC | 2,
-        0, mySEC_NullTemplate, ocspCertStatus_unknown },
+      0, mySEC_NullTemplate, ocspCertStatus_unknown },
     { 0 }
 };
 
 static const SEC_ASN1Template mySECOID_AlgorithmIDTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-          0, NULL, sizeof(SECAlgorithmID) },
+      0, NULL, sizeof(SECAlgorithmID) },
     { SEC_ASN1_OBJECT_ID,
-          offsetof(SECAlgorithmID,algorithm), },
+      offsetof(SECAlgorithmID, algorithm) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_ANY,
-          offsetof(SECAlgorithmID,parameters), },
-    { 0, }
+      offsetof(SECAlgorithmID, parameters) },
+    { 0 }
 };
 
 static const SEC_ASN1Template mySEC_AnyTemplate[] = {
@@ -153,7 +153,7 @@ static const SEC_ASN1Template mySEC_PointerToIntegerTemplate[] = {
 };
 
 static const SEC_ASN1Template mySEC_GeneralizedTimeTemplate[] = {
-    { SEC_ASN1_GENERALIZED_TIME | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem)}
+    { SEC_ASN1_GENERALIZED_TIME | SEC_ASN1_MAY_STREAM, 0, NULL, sizeof(SECItem) }
 };
 
 static const SEC_ASN1Template mySEC_PointerToGeneralizedTimeTemplate[] = {
@@ -162,29 +162,29 @@ static const SEC_ASN1Template mySEC_PointerToGeneralizedTimeTemplate[] = {
 
 static const SEC_ASN1Template ocsp_myCertIDTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTOCSPCertID) },
+      0, NULL, sizeof(CERTOCSPCertID) },
     { SEC_ASN1_INLINE,
-        offsetof(CERTOCSPCertID, hashAlgorithm),
-        mySECOID_AlgorithmIDTemplate },
+      offsetof(CERTOCSPCertID, hashAlgorithm),
+      mySECOID_AlgorithmIDTemplate },
     { SEC_ASN1_OCTET_STRING,
-        offsetof(CERTOCSPCertID, issuerNameHash) },
+      offsetof(CERTOCSPCertID, issuerNameHash) },
     { SEC_ASN1_OCTET_STRING,
-        offsetof(CERTOCSPCertID, issuerKeyHash) },
+      offsetof(CERTOCSPCertID, issuerKeyHash) },
     { SEC_ASN1_INTEGER,
-        offsetof(CERTOCSPCertID, serialNumber) },
+      offsetof(CERTOCSPCertID, serialNumber) },
     { 0 }
 };
 
 static const SEC_ASN1Template myCERT_CertExtensionTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-          0, NULL, sizeof(CERTCertExtension) },
+      0, NULL, sizeof(CERTCertExtension) },
     { SEC_ASN1_OBJECT_ID,
-          offsetof(CERTCertExtension,id) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_BOOLEAN,             /* XXX DER_DEFAULT */
-          offsetof(CERTCertExtension,critical) },
+      offsetof(CERTCertExtension, id) },
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_BOOLEAN, /* XXX DER_DEFAULT */
+      offsetof(CERTCertExtension, critical) },
     { SEC_ASN1_OCTET_STRING,
-          offsetof(CERTCertExtension,value) },
-    { 0, }
+      offsetof(CERTCertExtension, value) },
+    { 0 }
 };
 
 static const SEC_ASN1Template myCERT_SequenceOfCertExtensionTemplate[] = {
@@ -197,66 +197,65 @@ static const SEC_ASN1Template myCERT_PointerToSequenceOfCertExtensionTemplate[] 
 
 static const SEC_ASN1Template ocsp_mySingleResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTOCSPSingleResponse) },
+      0, NULL, sizeof(CERTOCSPSingleResponse) },
     { SEC_ASN1_POINTER,
-        offsetof(CERTOCSPSingleResponse, certID),
-        ocsp_myCertIDTemplate },
+      offsetof(CERTOCSPSingleResponse, certID),
+      ocsp_myCertIDTemplate },
     { SEC_ASN1_ANY,
-        offsetof(CERTOCSPSingleResponse, derCertStatus) },
+      offsetof(CERTOCSPSingleResponse, derCertStatus) },
     { SEC_ASN1_GENERALIZED_TIME,
-        offsetof(CERTOCSPSingleResponse, thisUpdate) },
+      offsetof(CERTOCSPSingleResponse, thisUpdate) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
-        offsetof(CERTOCSPSingleResponse, nextUpdate),
-        mySEC_PointerToGeneralizedTimeTemplate },
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+      offsetof(CERTOCSPSingleResponse, nextUpdate),
+      mySEC_PointerToGeneralizedTimeTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 1,
-        offsetof(CERTOCSPSingleResponse, singleExtensions),
-        myCERT_PointerToSequenceOfCertExtensionTemplate },
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 1,
+      offsetof(CERTOCSPSingleResponse, singleExtensions),
+      myCERT_PointerToSequenceOfCertExtensionTemplate },
     { 0 }
 };
 
 static const SEC_ASN1Template ocsp_myResponseDataTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(ocspResponseData) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |           /* XXX DER_DEFAULT */
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
-        offsetof(ocspResponseData, version),
-        mySEC_PointerToIntegerTemplate },
+      0, NULL, sizeof(ocspResponseData) },
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT | /* XXX DER_DEFAULT */
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+      offsetof(ocspResponseData, version),
+      mySEC_PointerToIntegerTemplate },
     { SEC_ASN1_ANY,
-        offsetof(ocspResponseData, derResponderID) },
+      offsetof(ocspResponseData, derResponderID) },
     { SEC_ASN1_GENERALIZED_TIME,
-        offsetof(ocspResponseData, producedAt) },
+      offsetof(ocspResponseData, producedAt) },
     { SEC_ASN1_SEQUENCE_OF,
-        offsetof(ocspResponseData, responses),
-        ocsp_mySingleResponseTemplate },
+      offsetof(ocspResponseData, responses),
+      ocsp_mySingleResponseTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 1,
-        offsetof(ocspResponseData, responseExtensions),
-        myCERT_PointerToSequenceOfCertExtensionTemplate },
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 1,
+      offsetof(ocspResponseData, responseExtensions),
+      myCERT_PointerToSequenceOfCertExtensionTemplate },
     { 0 }
 };
-
 
 static const SEC_ASN1Template ocsp_EncodeBasicOCSPResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(ocspBasicOCSPResponse) },
+      0, NULL, sizeof(ocspBasicOCSPResponse) },
     { SEC_ASN1_POINTER,
-        offsetof(ocspBasicOCSPResponse, tbsResponseData),
-        ocsp_myResponseDataTemplate },
+      offsetof(ocspBasicOCSPResponse, tbsResponseData),
+      ocsp_myResponseDataTemplate },
     { SEC_ASN1_INLINE,
-        offsetof(ocspBasicOCSPResponse, responseSignature.signatureAlgorithm),
-        mySECOID_AlgorithmIDTemplate },
+      offsetof(ocspBasicOCSPResponse, responseSignature.signatureAlgorithm),
+      mySECOID_AlgorithmIDTemplate },
     { SEC_ASN1_BIT_STRING,
-        offsetof(ocspBasicOCSPResponse, responseSignature.signature) },
+      offsetof(ocspBasicOCSPResponse, responseSignature.signature) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_EXPLICIT |
-      SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
-        offsetof(ocspBasicOCSPResponse, responseSignature.derCerts),
-        mySEC_PointerToSequenceOfAnyTemplate },
+          SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+      offsetof(ocspBasicOCSPResponse, responseSignature.derCerts),
+      mySEC_PointerToSequenceOfAnyTemplate },
     { 0 }
 };
 
-static CERTOCSPSingleResponse*
+static CERTOCSPSingleResponse *
 ocsp_CreateSingleResponse(PLArenaPool *arena,
                           CERTOCSPCertID *id, ocspCertStatus *status,
                           PRTime thisUpdate, const PRTime *nextUpdate)
@@ -274,25 +273,25 @@ ocsp_CreateSingleResponse(PLArenaPool *arena,
     sr->arena = arena;
     sr->certID = id;
     sr->certStatus = status;
-    if (DER_TimeToGeneralizedTimeArena(arena, &sr->thisUpdate, thisUpdate)
-             != SECSuccess)
+    if (DER_TimeToGeneralizedTimeArena(arena, &sr->thisUpdate, thisUpdate) !=
+        SECSuccess)
         return NULL;
     sr->nextUpdate = NULL;
     if (nextUpdate) {
         sr->nextUpdate = SECITEM_AllocItem(arena, NULL, 0);
         if (!sr->nextUpdate)
             return NULL;
-        if (DER_TimeToGeneralizedTimeArena(arena, sr->nextUpdate, *nextUpdate)
-             != SECSuccess)
+        if (DER_TimeToGeneralizedTimeArena(arena, sr->nextUpdate, *nextUpdate) !=
+            SECSuccess)
             return NULL;
     }
 
-    sr->singleExtensions = PORT_ArenaNewArray(arena, CERTCertExtension*, 1);
+    sr->singleExtensions = PORT_ArenaNewArray(arena, CERTCertExtension *, 1);
     if (!sr->singleExtensions)
         return NULL;
 
     sr->singleExtensions[0] = NULL;
-    
+
     if (!SEC_ASN1EncodeItem(arena, &sr->derCertStatus,
                             status, ocsp_CertStatusTemplate))
         return NULL;
@@ -300,13 +299,13 @@ ocsp_CreateSingleResponse(PLArenaPool *arena,
     return sr;
 }
 
-CERTOCSPSingleResponse*
+CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseGood(PLArenaPool *arena,
                                   CERTOCSPCertID *id,
                                   PRTime thisUpdate,
                                   const PRTime *nextUpdate)
 {
-    ocspCertStatus * cs;
+    ocspCertStatus *cs;
     if (!arena) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
@@ -317,13 +316,13 @@ CERT_CreateOCSPSingleResponseGood(PLArenaPool *arena,
     return ocsp_CreateSingleResponse(arena, id, cs, thisUpdate, nextUpdate);
 }
 
-CERTOCSPSingleResponse*
+CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseUnknown(PLArenaPool *arena,
                                      CERTOCSPCertID *id,
                                      PRTime thisUpdate,
                                      const PRTime *nextUpdate)
 {
-    ocspCertStatus * cs;
+    ocspCertStatus *cs;
     if (!arena) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
@@ -334,16 +333,16 @@ CERT_CreateOCSPSingleResponseUnknown(PLArenaPool *arena,
     return ocsp_CreateSingleResponse(arena, id, cs, thisUpdate, nextUpdate);
 }
 
-CERTOCSPSingleResponse*
+CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseRevoked(
     PLArenaPool *arena,
     CERTOCSPCertID *id,
     PRTime thisUpdate,
     const PRTime *nextUpdate,
     PRTime revocationTime,
-    const CERTCRLEntryReasonCode* revocationReason)
+    const CERTCRLEntryReasonCode *revocationReason)
 {
-    ocspCertStatus * cs;
+    ocspCertStatus *cs;
     /* revocationReason is not yet supported, so it must be NULL. */
     if (!arena || revocationReason) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -357,7 +356,7 @@ CERT_CreateOCSPSingleResponseRevoked(
 
 /* responderCert == 0 means:
  * create a response with an invalid signature (for testing purposes) */
-SECItem*
+SECItem *
 CERT_CreateEncodedOCSPSuccessResponse(
     PLArenaPool *arena,
     CERTCertificate *responderCert,
@@ -373,12 +372,12 @@ CERT_CreateEncodedOCSPSuccessResponse(
     ocspBasicOCSPResponse *br = NULL;
     ocspResponseBytes *rb = NULL;
     CERTOCSPResponse *response = NULL;
-    
+
     SECOidTag algID;
     SECOidData *od = NULL;
     SECKEYPrivateKey *privKey = NULL;
     SECItem *result = NULL;
-  
+
     if (!arena || !responses) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
@@ -408,114 +407,114 @@ CERT_CreateEncodedOCSPSuccessResponse(
     response = PORT_ArenaZNew(tmpArena, CERTOCSPResponse);
     if (!response)
         goto done;
-    
-    rd->version.data=NULL;
-    rd->version.len=0;
+
+    rd->version.data = NULL;
+    rd->version.len = 0;
     rd->responseExtensions = NULL;
     rd->responses = responses;
-    if (DER_TimeToGeneralizedTimeArena(tmpArena, &rd->producedAt, producedAt)
-            != SECSuccess)
+    if (DER_TimeToGeneralizedTimeArena(tmpArena, &rd->producedAt, producedAt) !=
+        SECSuccess)
         goto done;
 
     if (!responderCert) {
-	/* use invalid signature for testing purposes */
-	unsigned char dummyChar = 'd';
-	SECItem dummy;
+        /* use invalid signature for testing purposes */
+        unsigned char dummyChar = 'd';
+        SECItem dummy;
 
-	dummy.len = 1;
-	dummy.data = &dummyChar;
+        dummy.len = 1;
+        dummy.data = &dummyChar;
 
-	/* it's easier to produdce a keyHash out of nowhere,
-	 * than to produce an encoded subject,
-	 * so for our dummy response we always use byKey
-	 */
-	
-	rid->responderIDType = ocspResponderID_byKey;
-	if (!ocsp_DigestValue(tmpArena, SEC_OID_SHA1, &rid->responderIDValue.keyHash,
-			      &dummy))
-	    goto done;
+        /* it's easier to produdce a keyHash out of nowhere,
+    	 * than to produce an encoded subject,
+    	 * so for our dummy response we always use byKey
+    	 */
 
-	if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
-				ocsp_ResponderIDByKeyTemplate))
-	    goto done;
+        rid->responderIDType = ocspResponderID_byKey;
+        if (!ocsp_DigestValue(tmpArena, SEC_OID_SHA1, &rid->responderIDValue.keyHash,
+                              &dummy))
+            goto done;
 
-	br->tbsResponseData = rd;
+        if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
+                                ocsp_ResponderIDByKeyTemplate))
+            goto done;
 
-	if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
-				ocsp_myResponseDataTemplate))
-	    goto done;
+        br->tbsResponseData = rd;
 
-	br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem*, 1);
-	if (!br->responseSignature.derCerts)
-	    goto done;
-	br->responseSignature.derCerts[0] = NULL;
+        if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
+                                ocsp_myResponseDataTemplate))
+            goto done;
 
-	algID = SEC_GetSignatureAlgorithmOidTag(rsaKey, SEC_OID_SHA1);
-	if (algID == SEC_OID_UNKNOWN)
-	    goto done;
+        br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem *, 1);
+        if (!br->responseSignature.derCerts)
+            goto done;
+        br->responseSignature.derCerts[0] = NULL;
 
-	/* match the regular signature code, which doesn't use the arena */
-	if (!SECITEM_AllocItem(NULL, &br->responseSignature.signature, 1))
-	    goto done;
-	PORT_Memcpy(br->responseSignature.signature.data, &dummyChar, 1);
+        algID = SEC_GetSignatureAlgorithmOidTag(rsaKey, SEC_OID_SHA1);
+        if (algID == SEC_OID_UNKNOWN)
+            goto done;
 
-	/* convert len-in-bytes to len-in-bits */
-	br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
+        /* match the regular signature code, which doesn't use the arena */
+        if (!SECITEM_AllocItem(NULL, &br->responseSignature.signature, 1))
+            goto done;
+        PORT_Memcpy(br->responseSignature.signature.data, &dummyChar, 1);
+
+        /* convert len-in-bytes to len-in-bits */
+        br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
     }
     else {
-	rid->responderIDType = responderIDType;
-	if (responderIDType == ocspResponderID_byName) {
-	    responderIDTemplate = ocsp_ResponderIDByNameTemplate;
-	    if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
-			    &responderCert->subject) != SECSuccess)
-		goto done;
-	}
-	else {
-	    responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
-	    if (!CERT_GetSubjectPublicKeyDigest(tmpArena, responderCert,
-				SEC_OID_SHA1, &rid->responderIDValue.keyHash))
-		goto done;
-	}
+        rid->responderIDType = responderIDType;
+        if (responderIDType == ocspResponderID_byName) {
+            responderIDTemplate = ocsp_ResponderIDByNameTemplate;
+            if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
+                              &responderCert->subject) != SECSuccess)
+                goto done;
+        }
+        else {
+            responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
+            if (!CERT_GetSubjectPublicKeyDigest(tmpArena, responderCert,
+                                                SEC_OID_SHA1, &rid->responderIDValue.keyHash))
+                goto done;
+        }
 
-	if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
-		responderIDTemplate))
-	    goto done;
+        if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
+                                responderIDTemplate))
+            goto done;
 
-	br->tbsResponseData = rd;
+        br->tbsResponseData = rd;
 
-	if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
-		ocsp_myResponseDataTemplate))
-	    goto done;
+        if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
+                                ocsp_myResponseDataTemplate))
+            goto done;
 
-	br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem*, 1);
-	if (!br->responseSignature.derCerts)
-	    goto done;
-	br->responseSignature.derCerts[0] = NULL;
+        br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem *, 1);
+        if (!br->responseSignature.derCerts)
+            goto done;
+        br->responseSignature.derCerts[0] = NULL;
 
-	privKey = PK11_FindKeyByAnyCert(responderCert, wincx);
-	if (!privKey)
-	    goto done;
+        privKey = PK11_FindKeyByAnyCert(responderCert, wincx);
+        if (!privKey)
+            goto done;
 
-	algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, SEC_OID_SHA1);
-	if (algID == SEC_OID_UNKNOWN)
-	    goto done;
+        algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, SEC_OID_SHA1);
+        if (algID == SEC_OID_UNKNOWN)
+            goto done;
 
-	if (SEC_SignData(&br->responseSignature.signature,
-			    br->tbsResponseDataDER.data, br->tbsResponseDataDER.len,
-			    privKey, algID)
-		!= SECSuccess)
-	    goto done;
+        if (SEC_SignData(&br->responseSignature.signature,
+                         br->tbsResponseDataDER.data, br->tbsResponseDataDER.len,
+                         privKey, algID) !=
+            SECSuccess)
+            goto done;
 
-	/* convert len-in-bytes to len-in-bits */
-	br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
+        /* convert len-in-bytes to len-in-bits */
+        br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
 
-	/* br->responseSignature.signature wasn't allocated from arena,
-	* we must free it when done. */
+        /* br->responseSignature.signature wasn't allocated from arena,
+	     * we must free it when done. */
     }
 
-    if (SECOID_SetAlgorithmID(tmpArena, &br->responseSignature.signatureAlgorithm, algID, 0)
-	    != SECSuccess)
-	goto done;
+    if (SECOID_SetAlgorithmID(tmpArena, &br->responseSignature.signatureAlgorithm, algID, 0) !=
+        SECSuccess)
+        goto done;
 
     if (!SEC_ASN1EncodeItem(tmpArena, &rb->response, br,
                             ocsp_EncodeBasicOCSPResponseTemplate))
@@ -552,15 +551,15 @@ done:
 
 static const SEC_ASN1Template ocsp_OCSPErrorResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTOCSPResponse) },
+      0, NULL, sizeof(CERTOCSPResponse) },
     { SEC_ASN1_ENUMERATED,
-        offsetof(CERTOCSPResponse, responseStatus) },
+      offsetof(CERTOCSPResponse, responseStatus) },
     { 0, 0,
-        mySEC_NullTemplate },
+      mySEC_NullTemplate },
     { 0 }
 };
 
-SECItem*
+SECItem *
 CERT_CreateEncodedOCSPErrorResponse(PLArenaPool *arena, int error)
 {
     CERTOCSPResponse response;

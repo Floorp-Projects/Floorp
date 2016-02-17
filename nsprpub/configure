@@ -2488,7 +2488,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=11
+MOD_MINOR_VERSION=12
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -7048,10 +7048,6 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
             PR_MD_ASFILES=os_Linux_ppc.s
         fi
         ;;
-    m68k)
-        CFLAGS="$CFLAGS -m68020-60"
-        CXXFLAGS="$CXXFLAGS -m68020-60"
-        ;;
     esac
     ;;
 
@@ -7894,7 +7890,7 @@ fi
 
 _SAVE_LIBS="$LIBS"
 LIBS="$LIBS $OS_LIBS"
-for ac_func in dladdr gettid lchown setpriority strerror syscall
+for ac_func in dladdr gettid lchown setpriority strerror syscall  secure_getenv __secure_getenv
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"

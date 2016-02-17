@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   {
     char *tmp;
 
-    if((tmp = getenv("RM_TESTS")) != NULL) {
+    if((tmp = PR_GetEnvSecure("RM_TESTS")) != NULL) {
       if((g_tests = atoi(tmp)) <= 0)
 	g_tests = RM_TESTS;
     }

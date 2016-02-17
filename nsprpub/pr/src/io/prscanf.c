@@ -194,7 +194,7 @@ static PRStatus
 GetInt(ScanfState *state, int code)
 {
     char buf[FMAX + 1], *p;
-    int ch;
+    int ch = 0;
     static const char digits[] = "0123456789abcdefABCDEF";
     PRBool seenDigit = PR_FALSE;
     int base;
@@ -304,7 +304,7 @@ static PRStatus
 GetFloat(ScanfState *state)
 {
     char buf[FMAX + 1], *p;
-    int ch;
+    int ch = 0;
     PRBool seenDigit = PR_FALSE;
 
     if (state->width == 0 || state->width > FMAX) {

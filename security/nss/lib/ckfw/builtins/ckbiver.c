@@ -15,5 +15,4 @@
 /*
  * Version information
  */
-const char __nss_builtins_version[] = "Version: NSS Builtin Trusted Root CAs "
-        NSS_BUILTINS_LIBRARY_VERSION _DEBUG_STRING;
+const char __nss_builtins_version[] = "Version: NSS Builtin Trusted Root CAs " NSS_BUILTINS_LIBRARY_VERSION _DEBUG_STRING;
