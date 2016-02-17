@@ -149,16 +149,16 @@ class FilteringMessageManager {
    * Receives a message from our message manager, maps it to a handler, and
    * passes the result to our message callback.
    */
-  receiveMessage({ data, target }) {
+  receiveMessage({data, target}) {
     let handlers = Array.from(this.getHandlers(data.messageName, data.recipient));
 
     let result = {};
     if (handlers.length == 0) {
-      result.error = { result: MessageChannel.RESULT_NO_HANDLER,
-                       message: "No matching message handler" };
+      result.error = {result: MessageChannel.RESULT_NO_HANDLER,
+                      message: "No matching message handler"};
     } else if (handlers.length > 1) {
-      result.error = { result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
-                       message: `Multiple matching handlers for ${data.messageName}` };
+      result.error = {result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
+                      message: `Multiple matching handlers for ${data.messageName}`};
     } else {
       result.handler = handlers[0];
     }
@@ -414,7 +414,7 @@ this.MessageChannel = {
    */
   sendMessage(target, messageName, data, recipient = {}, sender = {}) {
     let channelId = gChannelId++;
-    let message = { messageName, channelId, sender, recipient, data };
+    let message = {messageName, channelId, sender, recipient, data};
 
     let deferred = PromiseUtils.defer();
     deferred.messageFilter = {};
@@ -446,11 +446,11 @@ this.MessageChannel = {
    * Each handler object is a `MessageReceiver` object as passed to
    * `addListener`.
    */
-  _handleMessage({ handler, error }, data) {
+  _handleMessage({handler, error}, data) {
     // The target passed to `receiveMessage` is sometimes a message manager
     // owner instead of a message manager, so make sure to convert it to a
     // message manager first if necessary.
-    let { target } = data;
+    let {target} = data;
     if (!(target instanceof Ci.nsIMessageSender)) {
       target = target.messageManager;
     }
@@ -513,7 +513,7 @@ this.MessageChannel = {
    * Each handler object is a deferred object created by `sendMessage`, and
    * should be resolved or rejected based on the contents of the response.
    */
-  _handleResponse({ handler, error }, data) {
+  _handleResponse({handler, error}, data) {
     if (error) {
       // If we have an error at this point, we have handler to report it to,
       // so just log it.

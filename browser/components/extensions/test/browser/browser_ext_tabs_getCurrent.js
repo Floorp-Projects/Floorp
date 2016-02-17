@@ -7,7 +7,7 @@ add_task(function* () {
     manifest: {
       "permissions": ["tabs"],
 
-      "browser_action": { "default_popup": "popup.html" },
+      "browser_action": {"default_popup": "popup.html"},
     },
 
     files: {
@@ -18,7 +18,7 @@ add_task(function* () {
           browser.test.assertEq(currentTab.url, url, "getCurrent in non-active background tab");
 
           // Activate the tab.
-          browser.tabs.onActivated.addListener(function listener({ tabId }) {
+          browser.tabs.onActivated.addListener(function listener({tabId}) {
             if (tabId == currentTab.id) {
               browser.tabs.onActivated.removeListener(listener);
 
@@ -31,7 +31,7 @@ add_task(function* () {
               });
             }
           });
-          browser.tabs.update(currentTab.id, { active: true });
+          browser.tabs.update(currentTab.id, {active: true});
         });
       },
 
@@ -52,7 +52,7 @@ add_task(function* () {
         browser.test.sendMessage("background-finished");
       });
 
-      browser.tabs.create({ url: "tab.html", active: false });
+      browser.tabs.create({url: "tab.html", active: false});
     },
   });
 

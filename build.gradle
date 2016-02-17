@@ -9,7 +9,9 @@ allprojects {
     }
 
     repositories {
-        jcenter()
+        maven {
+            url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
+        }
     }
 }
 
@@ -17,8 +19,9 @@ buildDir "${topobjdir}/gradle/build"
 
 buildscript {
     repositories {
-        jcenter()
-
+        maven {
+            url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
+        }
     }
 
     dependencies {

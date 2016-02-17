@@ -9,6 +9,8 @@
 %extensionsDTD;
 ]>
 
+<!-- import-globals-from extensions.js -->
+
 <bindings id="addonBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

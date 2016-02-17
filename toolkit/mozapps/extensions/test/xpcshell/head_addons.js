@@ -37,7 +37,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
+const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm", {});
 Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
@@ -47,9 +47,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
 
 // We need some internal bits of AddonManager
-var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
-var AddonManager = AMscope.AddonManager;
-var AddonManagerInternal = AMscope.AddonManagerInternal;
+var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
+var { AddonManager, AddonManagerInternal, AddonManagerPrivate } = AMscope;
+
 // Mock out AddonManager's reference to the AsyncShutdown module so we can shut
 // down AddonManager from the test
 var MockAsyncShutdown = {
@@ -469,7 +469,7 @@ function overrideCertDB(handler) {
   let certDBFactory = {
     createInstance: function(outer, iid) {
       if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return fakeCertDB.QueryInterface(iid);
     }
@@ -1794,7 +1794,7 @@ if ("nsIWindowsRegKey" in AM_Ci) {
       case AM_Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT:
         return MockRegistry.CLASSES_ROOT;
       default:
-        do_throw("Unknown root " + aRootKey);
+        do_throw("Unknown root " + aRoot);
         return null;
       }
     },
