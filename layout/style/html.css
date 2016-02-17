@@ -725,7 +725,7 @@ area {
   display: none ! important;
 }
 
-iframe:-moz-full-screen {
+iframe:fullscreen {
   /* iframes in full-screen mode don't show a border. */
   border: none !important;
   padding: 0 !important;
