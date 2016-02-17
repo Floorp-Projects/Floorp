@@ -13,12 +13,10 @@
 #include "nsIObserver.h"
 
 class nsXULAlerts : public nsIAlertsService,
-                    public nsIAlertsDoNotDisturb,
-                    public nsIAlertsIconURI
+                    public nsIAlertsDoNotDisturb
 {
   friend class nsXULAlertObserver;
 public:
-  NS_DECL_NSIALERTSICONURI
   NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_ISUPPORTS
