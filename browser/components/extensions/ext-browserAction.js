@@ -44,7 +44,7 @@ function BrowserAction(options, extension) {
     title: title || extension.name,
     badgeText: "",
     badgeBackgroundColor: null,
-    icon: IconDetails.normalize({ path: options.default_icon }, extension,
+    icon: IconDetails.normalize({path: options.default_icon}, extension,
                                 null, true),
     popup: popup,
   };

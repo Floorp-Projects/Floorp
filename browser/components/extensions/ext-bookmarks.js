@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 var Bookmarks = PlacesUtils.bookmarks;
@@ -141,7 +141,7 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         try {
           return Bookmarks.insert(info).then(convert);
         } catch (e) {
-          return Promise.reject({ message: `Invalid bookmark: ${JSON.stringify(info)}` });
+          return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
         }
       },
 
@@ -160,7 +160,7 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         try {
           return Bookmarks.update(info).then(convert);
         } catch (e) {
-          return Promise.reject({ message: `Invalid bookmark: ${JSON.stringify(info)}` });
+          return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
         }
       },
 
@@ -179,7 +179,7 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         try {
           return Bookmarks.update(info).then(convert);
         } catch (e) {
-          return Promise.reject({ message: `Invalid bookmark: ${JSON.stringify(info)}` });
+          return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
         }
       },
 
@@ -192,7 +192,7 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         try {
           return Bookmarks.remove(info).then(result => {});
         } catch (e) {
-          return Promise.reject({ message: `Invalid bookmark: ${JSON.stringify(info)}` });
+          return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
         }
       },
     },

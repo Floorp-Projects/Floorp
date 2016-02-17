@@ -43,9 +43,12 @@
     // Always require spacing around a single line block
     "block-spacing": 1,
 
+    // Forbid spaces inside the curly brackets of object literals.
+    "object-curly-spacing": [2, "never"],
+
     // Enforce one true brace style (opening brace on the same line) and avoid
     // start and end braces on the same line.
-    "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+    "brace-style": [2, "1tbs", {"allowSingleLine": true}],
 
     // No space before always a space after a comma
     "comma-spacing": [2, {"before": false, "after": true}],
@@ -69,10 +72,10 @@
     "generator-star-spacing": [2, {"before": false, "after": true}],
 
     // Two space indent
-    "indent": [2, 2, { "SwitchCase": 1 }],
+    "indent": [2, 2, {"SwitchCase": 1}],
 
     // Space after colon not before in property declarations
-    "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
+    "key-spacing": [2, {"beforeColon": false, "afterColon": true, "mode": "minimum"}],
 
     // Unix linebreaks
     "linebreak-style": [2, "unix"],
@@ -189,7 +192,7 @@
     "no-unused-expressions": 2,
 
     // No declaring variables that are never used
-    "no-unused-vars": [2, { "args": "none", "varsIgnorePattern": "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$" }],
+    "no-unused-vars": [2, {"args": "none", "varsIgnorePattern": "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$"}],
 
     // No using variables before defined
     "no-use-before-define": 2,
@@ -207,7 +210,7 @@
     "space-before-blocks": 2,
 
     // Never use spaces before function parentheses
-    "space-before-function-paren": [2, { "anonymous": "never", "named": "never" }],
+    "space-before-function-paren": [2, {"anonymous": "never", "named": "never"}],
 
     // Require spaces before finally, catch, etc.
     "space-before-keywords": [2, "always"],
@@ -223,7 +226,7 @@
     "space-return-throw-case": 2,
 
     // ++ and -- should not need spacing
-    "space-unary-ops": [1, { "nonwords": false }],
+    "space-unary-ops": [1, {"nonwords": false}],
 
     // No comparisons to NaN
     "use-isnan": 2,
