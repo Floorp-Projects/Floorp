@@ -63,8 +63,7 @@ PRLock *_pr_dnsLock = NULL;
 
 #if defined(SOLARIS) || (defined(BSDI) && defined(_REENTRANT)) \
 	|| (defined(LINUX) && defined(_REENTRANT) \
-        && !(defined(__GLIBC__) && __GLIBC__ >= 2) \
-        && !defined(ANDROID))
+        && defined(__GLIBC__) && __GLIBC__ < 2)
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_GETPROTO_R_POINTER
 #endif

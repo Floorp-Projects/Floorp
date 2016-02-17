@@ -21,14 +21,14 @@
 **
 ** rsaOaepKey maps to keys with SEC_OID_PKCS1_RSA_OAEP_ENCRYPTION and may only
 ** be used for encryption with OAEP padding (PKCS #1 v2.1).
-*/ 
+*/
 
-typedef enum { 
-    nullKey = 0, 
-    rsaKey = 1, 
-    dsaKey = 2, 
+typedef enum {
+    nullKey = 0,
+    rsaKey = 1,
+    dsaKey = 2,
     fortezzaKey = 3, /* deprecated */
-    dhKey = 4, 
+    dhKey = 4,
     keaKey = 5, /* deprecated */
     ecKey = 6,
     rsaPssKey = 7,
@@ -54,20 +54,19 @@ SEC_ASN1_CHOOSER_DECLARE(SECKEY_RSAPublicKeyTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SECKEY_RSAPSSParamsTemplate)
 SEC_END_PROTOS
 
-
 /*
 ** RSA Public Key structures
-** member names from PKCS#1, section 7.1 
+** member names from PKCS#1, section 7.1
 */
 
 struct SECKEYRSAPublicKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem modulus;
     SECItem publicExponent;
 };
 typedef struct SECKEYRSAPublicKeyStr SECKEYRSAPublicKey;
 
-/* 
+/*
 ** RSA-PSS parameters
 */
 struct SECKEYRSAPSSParamsStr {
@@ -97,20 +96,19 @@ struct SECKEYDSAPublicKeyStr {
 };
 typedef struct SECKEYDSAPublicKeyStr SECKEYDSAPublicKey;
 
-
 /*
 ** Diffie-Hellman Public Key structure
 ** Structure member names suggested by PKCS#3.
 */
 struct SECKEYDHParamsStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem prime; /* p */
-    SECItem base; /* g */
+    SECItem base;  /* g */
 };
 typedef struct SECKEYDHParamsStr SECKEYDHParams;
 
 struct SECKEYDHPublicKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem prime;
     SECItem base;
     SECItem publicValue;
@@ -126,8 +124,8 @@ typedef SECItem SECKEYECParams;
 
 struct SECKEYECPublicKeyStr {
     SECKEYECParams DEREncodedParams;
-    int     size;             /* size in bits */
-    SECItem publicValue;      /* encoded point */
+    int size;            /* size in bits */
+    SECItem publicValue; /* encoded point */
     /* XXX Even though the PKCS#11 interface takes encoded parameters,
      * we may still wish to decode them above PKCS#11 for things like
      * printing key information. For named curves, which is what
@@ -141,9 +139,9 @@ typedef struct SECKEYECPublicKeyStr SECKEYECPublicKey;
 ** FORTEZZA Public Key structures
 */
 struct SECKEYFortezzaPublicKeyStr {
-    int      KEAversion;
-    int      DSSversion;
-    unsigned char    KMID[8];
+    int KEAversion;
+    int DSSversion;
+    unsigned char KMID[8];
     SECItem clearance;
     SECItem KEApriviledge;
     SECItem DSSpriviledge;
@@ -173,7 +171,7 @@ struct SECKEYKEAParamsStr {
     SECItem hash;
 };
 typedef struct SECKEYKEAParamsStr SECKEYKEAParams;
- 
+
 struct SECKEYKEAPublicKeyStr {
     SECKEYKEAParams params;
     SECItem publicValue;
@@ -190,26 +188,26 @@ struct SECKEYPublicKeyStr {
     CK_OBJECT_HANDLE pkcs11ID;
     union {
         SECKEYRSAPublicKey rsa;
-	SECKEYDSAPublicKey dsa;
-	SECKEYDHPublicKey  dh;
+        SECKEYDSAPublicKey dsa;
+        SECKEYDHPublicKey dh;
         SECKEYKEAPublicKey kea;
         SECKEYFortezzaPublicKey fortezza;
-	SECKEYECPublicKey  ec;
+        SECKEYECPublicKey ec;
     } u;
 };
 typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
 
 /* bit flag definitions for staticflags */
-#define SECKEY_Attributes_Cached 0x1    /* bit 0 states
-                                           whether attributes are cached */
-#define SECKEY_CKA_PRIVATE (1U << 1)    /* bit 1 is the value of CKA_PRIVATE */
-#define SECKEY_CKA_ALWAYS_AUTHENTICATE (1U << 2)    
+#define SECKEY_Attributes_Cached 0x1 /* bit 0 states \
+                                        whether attributes are cached */
+#define SECKEY_CKA_PRIVATE (1U << 1) /* bit 1 is the value of CKA_PRIVATE */
+#define SECKEY_CKA_ALWAYS_AUTHENTICATE (1U << 2)
 
 #define SECKEY_ATTRIBUTES_CACHED(key) \
-     (0 != (key->staticflags & SECKEY_Attributes_Cached))
+    (0 != (key->staticflags & SECKEY_Attributes_Cached))
 
 #define SECKEY_ATTRIBUTE_VALUE(key,attribute) \
-     (0 != (key->staticflags & SECKEY_##attribute))
+    (0 != (key->staticflags & SECKEY_##attribute))
 
 #define SECKEY_HAS_ATTRIBUTE_SET(key,attribute) \
     (0 != (key->staticflags & SECKEY_Attributes_Cached)) ? \
@@ -223,15 +221,15 @@ typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
 
 /*
 ** A generic key structure
-*/ 
+*/
 struct SECKEYPrivateKeyStr {
     PLArenaPool *arena;
     KeyType keyType;
-    PK11SlotInfo *pkcs11Slot;	/* pkcs11 slot this key lives in */
-    CK_OBJECT_HANDLE pkcs11ID;  /* ID of pkcs11 object */
-    PRBool pkcs11IsTemp;	/* temp pkcs11 object, delete it when done */
-    void *wincx;		/* context for errors and pw prompts */
-    PRUint32 staticflags;       /* bit flag of cached PKCS#11 attributes */
+    PK11SlotInfo *pkcs11Slot;  /* pkcs11 slot this key lives in */
+    CK_OBJECT_HANDLE pkcs11ID; /* ID of pkcs11 object */
+    PRBool pkcs11IsTemp;       /* temp pkcs11 object, delete it when done */
+    void *wincx;               /* context for errors and pw prompts */
+    PRUint32 staticflags;      /* bit flag of cached PKCS#11 attributes */
 };
 typedef struct SECKEYPrivateKeyStr SECKEYPrivateKey;
 
@@ -255,4 +253,3 @@ typedef struct {
     PLArenaPool *arena;
 } SECKEYPublicKeyList;
 #endif /* _KEYTHI_H_ */
-

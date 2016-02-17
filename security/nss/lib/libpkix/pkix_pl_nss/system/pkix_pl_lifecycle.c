@@ -135,7 +135,7 @@ PKIX_PL_Initialize(
             return PKIX_ALLOC_ERROR();
         }
 
-        if (PR_GetEnv("NSS_STRICT_SHUTDOWN")) {
+        if (PR_GetEnvSecure("NSS_STRICT_SHUTDOWN")) {
             pkixLog = PR_NewLogModule("pkix");
         }
         /*
@@ -262,7 +262,7 @@ PKIX_PL_Shutdown(void *plContext)
 
 #ifdef DEBUG
         numLeakedObjects = pkix_pl_lifecycle_ObjectLeakCheck(NULL);
-        if (PR_GetEnv("NSS_STRICT_SHUTDOWN")) {
+        if (PR_GetEnvSecure("NSS_STRICT_SHUTDOWN")) {
            PORT_Assert(numLeakedObjects == 0);
         }
 #else

@@ -58,6 +58,7 @@
 #define PR_Sleep  PR_Sleep_stub
 #define PR_Unlock  PR_Unlock_stub
 #define PR_WaitCondVar PR_WaitCondVar_stub
+#define PR_GetEnvSecure PR_GetEnvSecure_stub
 
 extern int  FREEBL_InitStubs(void);
 
