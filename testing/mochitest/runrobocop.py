@@ -21,7 +21,7 @@ from mochitest_options import MochitestArgumentParser
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
-import devicemanager
+import mozdevice
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -237,7 +237,7 @@ class RobocopTestRunner(MochitestDesktop):
         os.remove(os.path.join(self.localProfile, 'userChrome.css'))
         try:
             self.dm.pushDir(self.localProfile, self.remoteProfileCopy)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")
             raise
@@ -255,7 +255,7 @@ class RobocopTestRunner(MochitestDesktop):
                 self.dm.shellCheckOutput(
                     ['cp', '-r', self.remoteProfileCopy, self.remoteProfile],
                     root=True, timeout=60)
-            except devicemanager.DMError:
+            except mozdevice.DMError:
                 # For instance, cp is not available on some older versions of
                 # Android.
                 self.log.info(
@@ -345,7 +345,7 @@ class RobocopTestRunner(MochitestDesktop):
                 else:
                     self.log.info("  %s: %s" % (category, devinfo[category]))
             self.log.info("Test root: %s" % self.dm.deviceRoot)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             self.log.warning("Error getting device information")
 
     def setupRobotiumConfig(self, browserEnv):
@@ -548,7 +548,7 @@ def run_test_harness(options):
     finally:
         try:
             robocop.cleanup()
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             # ignore device error while cleaning up
             pass
         message_logger.finish()

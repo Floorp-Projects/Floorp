@@ -543,7 +543,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "autocomplete-did-enter-text", false);
 
     if (AppConstants.NIGHTLY_BUILD) {
-      AddonWatcher.init();
       os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
     }
 
@@ -551,6 +550,7 @@ BrowserGlue.prototype = {
     ExtensionManagement.registerScript("chrome://browser/content/ext-browserAction.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-pageAction.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-contextMenus.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-desktop-runtime.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-tabs.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-windows.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-bookmarks.js");
@@ -2679,7 +2679,7 @@ ContentPermissionPrompt.prototype = {
     options.removeOnDismissal = autoAllow;
     options.eventCallback = type => {
       if (type == "removed") {
-        notification.browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
+        notification.browser.removeEventListener("fullscreenchange", onFullScreen, true);
         if (autoAllow) {
           aRequest.allow();
         }
@@ -2694,7 +2694,7 @@ ContentPermissionPrompt.prototype = {
     // upon exit), so if the page enters fullscreen mode after requesting
     // pointerLock (but before the user has granted permission), we should
     // remove the now-impotent notification.
-    notification.browser.addEventListener("mozfullscreenchange", onFullScreen, true);
+    notification.browser.addEventListener("fullscreenchange", onFullScreen, true);
   },
 
   prompt: function CPP_prompt(request) {

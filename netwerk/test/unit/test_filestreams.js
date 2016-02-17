@@ -128,7 +128,7 @@ function sync_operations(aDeferOpen)
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let ostream = Cc[OUTPUT_STREAM_CONTRACT_ID].
                 createInstance(Ci.nsIFileOutputStream);
@@ -215,7 +215,7 @@ function do_test_zero_size_buffered(disableBuffering)
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);

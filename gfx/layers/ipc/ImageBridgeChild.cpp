@@ -58,6 +58,37 @@ using namespace mozilla::media;
 typedef std::vector<CompositableOperation> OpVector;
 typedef nsTArray<OpDestroy> OpDestroyVector;
 
+namespace {
+class ImageBridgeThread : public Thread {
+public:
+
+  ImageBridgeThread() : Thread("ImageBridgeChild") {
+  }
+
+protected:
+
+  void Init() {
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    mPseudoStackHack = mozilla_get_pseudo_stack();
+#endif
+  }
+
+  void CleanUp() {
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    mPseudoStackHack = nullptr;
+#endif
+  }
+
+private:
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  // This is needed to avoid a spurious leak report.  There's no other
+  // use for it.  See bug 1239504 and bug 1215265.
+  PseudoStack* mPseudoStackHack;
+#endif
+};
+}
+
 struct CompositableTransaction
 {
   CompositableTransaction()
@@ -376,7 +407,7 @@ bool ImageBridgeChild::IsCreated()
 void ImageBridgeChild::StartUp()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  ImageBridgeChild::StartUpOnThread(new Thread("ImageBridgeChild"));
+  ImageBridgeChild::StartUpOnThread(new ImageBridgeThread());
 }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -709,7 +740,7 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   gfxPlatform::GetPlatform();
 
-  sImageBridgeChildThread = new Thread("ImageBridgeChild");
+  sImageBridgeChildThread = new ImageBridgeThread();
   if (!sImageBridgeChildThread->Start()) {
     return nullptr;
   }

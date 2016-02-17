@@ -3,8 +3,6 @@
 
 package org.mozilla.android.sync.net.test;
 
-import ch.boye.httpclientandroidlib.Header;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
@@ -15,6 +13,8 @@ import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import ch.boye.httpclientandroidlib.Header;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +46,7 @@ public class TestCredentialsEndToEnd {
   }
 
   @Test
-  public void testAuthHeaderFromPassword() throws NonObjectJSONException, IOException, ParseException {
+  public void testAuthHeaderFromPassword() throws NonObjectJSONException, IOException {
     final ExtendedJSONObject parsed = new ExtendedJSONObject(DESKTOP_PASSWORD_JSON);
 
     final String password = parsed.getString("password");

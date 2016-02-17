@@ -9,6 +9,13 @@ let json = [
    properties: {
      PROP1: {value: 20},
      prop2: {type: "string"},
+     prop3: {
+       $ref: "submodule",
+     },
+     prop4: {
+       $ref: "submodule",
+       unsupported: true,
+     },
    },
 
    types: [
@@ -53,6 +60,18 @@ let json = [
        $extend: "basetype2",
        choices: [
          {type: "string"},
+       ],
+     },
+
+     {
+       id: "submodule",
+       type: "object",
+       functions: [
+         {
+           name: "sub_foo",
+           type: "function",
+           parameters: [],
+         },
        ],
      },
    ],
@@ -275,6 +294,18 @@ function verify(...args) {
   tallied = null;
 }
 
+let talliedErrors = [];
+
+function checkErrors(errors) {
+  do_check_eq(talliedErrors.length, errors.length, "Got expected number of errors");
+  for (let [i, error] of errors.entries()) {
+    do_check_true(i in talliedErrors && talliedErrors[i].includes(error),
+                  `${JSON.stringify(error)} is a substring of error ${JSON.stringify(talliedErrors[i])}`);
+  }
+
+  talliedErrors.length = 0;
+}
+
 let wrapper = {
   url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
 
@@ -282,17 +313,35 @@ let wrapper = {
     return !url.startsWith("chrome:");
   },
 
-  callFunction(ns, name, args) {
+  logError(message) {
+    talliedErrors.push(message);
+  },
+
+  callFunction(path, name, args) {
+    let ns = path.join(".");
     tally("call", ns, name, args);
   },
 
-  addListener(ns, name, listener, args) {
+  getProperty(path, name) {
+    let ns = path.join(".");
+    tally("get", ns, name);
+  },
+
+  setProperty(path, name, value) {
+    let ns = path.join(".");
+    tally("set", ns, name, value);
+  },
+
+  addListener(path, name, listener, args) {
+    let ns = path.join(".");
     tally("addListener", ns, name, [listener, args]);
   },
-  removeListener(ns, name, listener) {
+  removeListener(path, name, listener) {
+    let ns = path.join(".");
     tally("removeListener", ns, name, [listener]);
   },
-  hasListener(ns, name, listener) {
+  hasListener(path, name, listener) {
+    let ns = path.join(".");
     tally("hasListener", ns, name, [listener]);
   },
 };
@@ -335,28 +384,28 @@ add_task(function* () {
   root.testing.bar(true);
   verify("call", "testing", "bar", [null, true]);
 
-  root.testing.baz({ prop1: "hello", prop2: 22 });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: 22 }]);
+  root.testing.baz({prop1: "hello", prop2: 22});
+  verify("call", "testing", "baz", [{prop1: "hello", prop2: 22}]);
 
-  root.testing.baz({ prop1: "hello" });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
+  root.testing.baz({prop1: "hello"});
+  verify("call", "testing", "baz", [{prop1: "hello", prop2: null}]);
 
-  root.testing.baz({ prop1: "hello", prop2: null });
-  verify("call", "testing", "baz", [{ prop1: "hello", prop2: null }]);
+  root.testing.baz({prop1: "hello", prop2: null});
+  verify("call", "testing", "baz", [{prop1: "hello", prop2: null}]);
 
-  Assert.throws(() => root.testing.baz({ prop2: 12 }),
+  Assert.throws(() => root.testing.baz({prop2: 12}),
                 /Property "prop1" is required/,
                 "should throw without required property");
 
-  Assert.throws(() => root.testing.baz({ prop1: "hi", prop3: 12 }),
+  Assert.throws(() => root.testing.baz({prop1: "hi", prop3: 12}),
                 /Property "prop3" is unsupported by Firefox/,
                 "should throw with unsupported property");
 
-  Assert.throws(() => root.testing.baz({ prop1: "hi", prop4: 12 }),
+  Assert.throws(() => root.testing.baz({prop1: "hi", prop4: 12}),
                 /Unexpected property "prop4"/,
                 "should throw with unexpected property");
 
-  Assert.throws(() => root.testing.baz({ prop1: 12 }),
+  Assert.throws(() => root.testing.baz({prop1: 12}),
                 /Expected string instead of 12/,
                 "should throw with wrong type");
 
@@ -564,4 +613,179 @@ add_task(function* () {
   Assert.throws(() => root.testing.extended2(true),
                 /Incorrect argument types/,
                 "should throw for wrong argument type");
+
+  root.testing.prop3.sub_foo();
+  verify("call", "testing.prop3", "sub_foo", []);
+  tallied = null;
+
+  Assert.throws(() => root.testing.prop4.sub_foo(),
+                /root.testing.prop4 is undefined/,
+                "should throw for unsupported submodule");
+});
+
+let deprecatedJson = [
+  {namespace: "deprecated",
+
+   properties: {
+     accessor: {
+       type: "string",
+       writable: true,
+       deprecated: "This is not the property you are looking for",
+     },
+   },
+
+   types: [
+     {
+       "id": "Type",
+       "type": "string",
+     },
+   ],
+
+   functions: [
+     {
+       name: "property",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             foo: {
+               type: "string",
+             },
+           },
+           additionalProperties: {
+             type: "any",
+             deprecated: "Unknown property",
+           },
+         },
+       ],
+     },
+
+     {
+       name: "value",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               type: "integer",
+             },
+             {
+               type: "string",
+               deprecated: "Please use an integer, not ${value}",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "choices",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           deprecated: "You have no choices",
+           choices: [
+             {
+               type: "integer",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "ref",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               $ref: "Type",
+               deprecated: "Deprecated alias",
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "method",
+       type: "function",
+       deprecated: "Do not call this method",
+       parameters: [
+       ],
+     },
+   ],
+
+   events: [
+     {
+       name: "onDeprecated",
+       type: "function",
+       deprecated: "This event does not work",
+     },
+   ],
+  },
+];
+
+add_task(function* testDeprecation() {
+  let url = "data:," + JSON.stringify(deprecatedJson);
+  let uri = BrowserUtils.makeURI(url);
+  yield Schemas.load(uri);
+
+  let root = {};
+  Schemas.inject(root, wrapper);
+
+  talliedErrors.length = 0;
+
+
+  root.deprecated.property({foo: "bar", xxx: "any", yyy: "property"});
+  verify("call", "deprecated", "property", [{foo: "bar", xxx: "any", yyy: "property"}]);
+  checkErrors([
+    "Error processing xxx: Unknown property",
+    "Error processing yyy: Unknown property",
+  ]);
+
+  root.deprecated.value(12);
+  verify("call", "deprecated", "value", [12]);
+  checkErrors([]);
+
+  root.deprecated.value("12");
+  verify("call", "deprecated", "value", ["12"]);
+  checkErrors(["Please use an integer, not \"12\""]);
+
+  root.deprecated.choices(12);
+  verify("call", "deprecated", "choices", [12]);
+  checkErrors(["You have no choices"]);
+
+  root.deprecated.ref("12");
+  verify("call", "deprecated", "ref", ["12"]);
+  checkErrors(["Deprecated alias"]);
+
+  root.deprecated.method();
+  verify("call", "deprecated", "method", []);
+  checkErrors(["Do not call this method"]);
+
+
+  void root.deprecated.accessor;
+  verify("get", "deprecated", "accessor", null);
+  checkErrors(["This is not the property you are looking for"]);
+
+  root.deprecated.accessor = "x";
+  verify("set", "deprecated", "accessor", "x");
+  checkErrors(["This is not the property you are looking for"]);
+
+
+  root.deprecated.onDeprecated.addListener(() => {});
+  checkErrors(["This event does not work"]);
+
+  root.deprecated.onDeprecated.removeListener(() => {});
+  checkErrors(["This event does not work"]);
+
+  root.deprecated.onDeprecated.hasListener(() => {});
+  checkErrors(["This event does not work"]);
 });

@@ -256,8 +256,11 @@ BookmarkImporter.prototype = {
     } else {
       // Ensure tag folder gets processed last
       nodes[0].children.sort(function sortRoots(aNode, bNode) {
-        return (aNode.root && aNode.root == "tagsFolder") ? 1 :
-               (bNode.root && bNode.root == "tagsFolder") ? -1 : 0;
+        if (aNode.root && aNode.root == "tagsFolder")
+          return 1;
+        if (bNode.root && bNode.root == "tagsFolder")
+          return -1;
+        return 0;
       });
 
       let batch = {

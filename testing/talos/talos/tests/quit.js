@@ -68,7 +68,7 @@ function canQuitApplication()
   return true;
 }
 
-function goQuitApplication()
+function goQuitApplication(waitForSafeBrowsing)
 {
   const privs = 'UniversalPreferencesRead UniversalPreferencesWrite ' +
     'UniversalXPConnect';
@@ -82,6 +82,30 @@ function goQuitApplication()
     throw('goQuitApplication: privilege failure ' + ex);
   }
 
+  var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
+                 .getService(Components.interfaces.nsIXULRuntime);
+  if (xulRuntime.processType == xulRuntime.PROCESS_TYPE_CONTENT) {
+    // If we're running in a remote browser, emit an event for a
+    // frame script to pick up to quit the whole browser.
+    var event = new CustomEvent("TalosQuitApplication", {bubbles:true, detail: {waitForSafeBrowsing}});
+    document.dispatchEvent(event);
+    return;
+  }
+
+  if (waitForSafeBrowsing) {
+    var SafeBrowsing = Components.utils.
+      import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
+
+    var whenDone = () => {
+      goQuitApplication(false);
+    };
+
+    SafeBrowsing.addMozEntriesFinishedPromise.then(whenDone, whenDone);
+    // Speed things up in case nobody else called this:
+    SafeBrowsing.init();
+    return false;
+  }
+
   if (!canQuitApplication())
   {
     return false;
@@ -90,20 +114,17 @@ function goQuitApplication()
   const kAppStartup = '@mozilla.org/toolkit/app-startup;1';
   const kAppShell   = '@mozilla.org/appshell/appShellService;1';
   var   appService;
-  var   forceQuit;
 
   if (kAppStartup in Components.classes)
   {
     appService = Components.classes[kAppStartup].
       getService(Components.interfaces.nsIAppStartup);
-    forceQuit  = Components.interfaces.nsIAppStartup.eForceQuit;
 
   }
   else if (kAppShell in Components.classes)
   {
     appService = Components.classes[kAppShell].
       getService(Components.interfaces.nsIAppShellService);
-    forceQuit = Components.interfaces.nsIAppShellService.eForceQuit;
   }
   else
   {
@@ -130,11 +151,7 @@ function goQuitApplication()
 
   try
   {
-    appService.quit(forceQuit);
-    // If we're running in a remote browser, emit an event for a
-    // frame script to pick up to quit the whole browser.
-    var event = new CustomEvent("TalosQuitApplication", {bubbles:true});
-    document.dispatchEvent(event);
+    appService.quit(appService.eForceQuit);
   }
   catch(ex)
   {

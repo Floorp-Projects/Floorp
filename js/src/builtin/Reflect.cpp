@@ -177,33 +177,6 @@ Reflect_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if 0
-/*
- * ES6 26.1.5 Reflect.enumerate(target)
- *
- * TODO:
- * - redefine enumeration in terms of iterators without losing performance
- * - support iterators in Proxies
- */
-static bool
-Reflect_enumerate(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    RootedObject obj(cx, NonNullObject(cx, args.get(0)));
-    if (!obj)
-        return false;
-
-    // Step 2.
-    RootedObject iterator(cx);
-    if (!Enumerate(cx, obj, &iterator))
-        return false;
-    args.rval().setObject(*iterator);
-    return true;
-}
-#endif
-
 /* ES6 26.1.6 Reflect.get(target, propertyKey [, receiver]) */
 static bool
 Reflect_get(JSContext* cx, unsigned argc, Value* vp)
@@ -380,7 +353,6 @@ static const JSFunctionSpec methods[] = {
     JS_FN("construct", Reflect_construct, 2, 0),
     JS_FN("defineProperty", Reflect_defineProperty, 3, 0),
     JS_FN("deleteProperty", Reflect_deleteProperty, 2, 0),
-    // JS_FN("enumerate", Reflect_enumerate, 1, 0),
     JS_FN("get", Reflect_get, 2, 0),
     JS_FN("getOwnPropertyDescriptor", Reflect_getOwnPropertyDescriptor, 2, 0),
     JS_FN("getPrototypeOf", Reflect_getPrototypeOf, 1, 0),

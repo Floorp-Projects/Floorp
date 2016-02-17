@@ -247,9 +247,9 @@ struct BytecodeEmitter
 
     StmtInfoBCE* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
-    StaticScope* innermostStaticScope() const;
-    StaticScope* blockScopeOfDef(Definition* dn) const {
-        return &parser->blockScopes[dn->pn_blockid].get()->as<StaticScope>();
+    JSObject* innermostStaticScope() const;
+    JSObject* blockScopeOfDef(Definition* dn) const {
+        return parser->blockScopes[dn->pn_blockid];
     }
 
     bool atBodyLevel(StmtInfoBCE* stmt) const;

@@ -179,5 +179,5 @@ HTTP(..) == reflow-sanity-delay-1-metrics.html reflow-sanity-1-ref.html
 
 # font-display
 pref(layout.css.font-display.enabled,true) HTTP(..) == font-display-1.html font-display-1-ref.html # normal font load (~500ms)
-pref(layout.css.font-display.enabled,true) HTTP(..) == font-display-2.html font-display-2-ref.html # font load takes 4500ms
+pref(layout.css.font-display.enabled,true) fuzzy-if(OSX==1010,3,5) HTTP(..) == font-display-2.html font-display-2-ref.html # font load takes 4500ms
 

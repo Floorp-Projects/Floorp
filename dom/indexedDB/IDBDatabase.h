@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbdatabase_h__
-#define mozilla_dom_indexeddb_idbdatabase_h__
+#ifndef mozilla_dom_idbdatabase_h__
+#define mozilla_dom_idbdatabase_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/StorageTypeBinding.h"
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+#include "mozilla/dom/IDBWrapperCache.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
@@ -30,25 +30,26 @@ namespace dom {
 
 class Blob;
 class DOMStringList;
+class IDBFactory;
+class IDBMutableFile;
+class IDBObjectStore;
 struct IDBObjectStoreParameters;
+class IDBOpenDBRequest;
+class IDBRequest;
+class IDBTransaction;
 template <class> class Optional;
 class StringOrStringSequence;
 
 namespace indexedDB {
-
 class BackgroundDatabaseChild;
 class DatabaseSpec;
-class IDBFactory;
-class IDBMutableFile;
-class IDBObjectStore;
-class IDBOpenDBRequest;
-class IDBRequest;
-class IDBTransaction;
 class PBackgroundIDBDatabaseFileChild;
+}
 
 class IDBDatabase final
   : public IDBWrapperCache
 {
+  typedef mozilla::dom::indexedDB::DatabaseSpec DatabaseSpec;
   typedef mozilla::dom::StorageType StorageType;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
@@ -68,11 +69,11 @@ class IDBDatabase final
   // Normally null except during a versionchange transaction.
   nsAutoPtr<DatabaseSpec> mPreviousSpec;
 
-  BackgroundDatabaseChild* mBackgroundActor;
+  indexedDB::BackgroundDatabaseChild* mBackgroundActor;
 
   nsTHashtable<nsPtrHashKey<IDBTransaction>> mTransactions;
 
-  nsDataHashtable<nsISupportsHashKey, PBackgroundIDBDatabaseFileChild*>
+  nsDataHashtable<nsISupportsHashKey, indexedDB::PBackgroundIDBDatabaseFileChild*>
     mFileActors;
 
   nsTHashtable<nsISupportsHashKey> mReceivedBlobs;
@@ -90,7 +91,7 @@ public:
   static already_AddRefed<IDBDatabase>
   Create(IDBOpenDBRequest* aRequest,
          IDBFactory* aFactory,
-         BackgroundDatabaseChild* aActor,
+         indexedDB::BackgroundDatabaseChild* aActor,
          DatabaseSpec* aSpec);
 
 #ifdef DEBUG
@@ -179,11 +180,11 @@ public:
   void
   AbortTransactions(bool aShouldWarn);
 
-  PBackgroundIDBDatabaseFileChild*
+  indexedDB::PBackgroundIDBDatabaseFileChild*
   GetOrCreateFileActorForBlob(Blob* aBlob);
 
   void
-  NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor);
+  NoteFinishedFileActor(indexedDB::PBackgroundIDBDatabaseFileChild* aFileActor);
 
   void
   NoteReceivedBlob(Blob* aBlob);
@@ -285,7 +286,7 @@ public:
 private:
   IDBDatabase(IDBOpenDBRequest* aRequest,
               IDBFactory* aFactory,
-              BackgroundDatabaseChild* aActor,
+              indexedDB::BackgroundDatabaseChild* aActor,
               DatabaseSpec* aSpec);
 
   ~IDBDatabase();
@@ -320,8 +321,7 @@ private:
              uint32_t aColumnNumber);
 };
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_idbdatabase_h__
+#endif // mozilla_dom_idbdatabase_h__

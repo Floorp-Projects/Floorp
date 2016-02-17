@@ -58,9 +58,16 @@ public:
     switch (event) {
       case EVENT_FINISHED:
         {
-          nsCOMPtr<nsIRunnable> runnable =
+          if (!mStarted) {
+            mStarted = true;
+            nsCOMPtr<nsIRunnable> startRunnable =
+              NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
+            aGraph->DispatchToMainThreadAfterStreamStateUpdate(startRunnable.forget());
+          }
+
+          nsCOMPtr<nsIRunnable> endRunnable =
             NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyFinished);
-          aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+          aGraph->DispatchToMainThreadAfterStreamStateUpdate(endRunnable.forget());
         }
         break;
       case EVENT_REMOVED:

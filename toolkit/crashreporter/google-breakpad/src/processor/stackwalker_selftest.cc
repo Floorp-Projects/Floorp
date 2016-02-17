@@ -49,6 +49,8 @@
 //
 // Author: Mark Mentovai
 
+#include <assert.h>
+
 #include "processor/logging.h"
 
 #if defined(__i386) && !defined(__i386__)
@@ -102,17 +104,20 @@ using google_breakpad::StackwalkerSPARC;
 // process' memory space by pointer.
 class SelfMemoryRegion : public MemoryRegion {
  public:
-  virtual uint64_t GetBase() { return 0; }
-  virtual uint32_t GetSize() { return 0xffffffff; }
+  virtual uint64_t GetBase() const { return 0; }
+  virtual uint32_t GetSize() const { return 0xffffffff; }
 
-  bool GetMemoryAtAddress(uint64_t address, uint8_t*  value) {
+  bool GetMemoryAtAddress(uint64_t address, uint8_t*  value) const {
       return GetMemoryAtAddressInternal(address, value); }
-  bool GetMemoryAtAddress(uint64_t address, uint16_t* value) {
+  bool GetMemoryAtAddress(uint64_t address, uint16_t* value) const {
       return GetMemoryAtAddressInternal(address, value); }
-  bool GetMemoryAtAddress(uint64_t address, uint32_t* value) {
+  bool GetMemoryAtAddress(uint64_t address, uint32_t* value) const {
       return GetMemoryAtAddressInternal(address, value); }
-  bool GetMemoryAtAddress(uint64_t address, uint64_t* value) {
+  bool GetMemoryAtAddress(uint64_t address, uint64_t* value) const {
       return GetMemoryAtAddressInternal(address, value); }
+  void Print() const {
+    assert(false);
+  }
 
  private:
   template<typename T> bool GetMemoryAtAddressInternal(uint64_t address,

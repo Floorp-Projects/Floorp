@@ -41,6 +41,8 @@ reAfterArg = "(?=[,)])"
 reMatchArg = re.compile(reBeforeArg + reArgType + reArgName + reArgDefault + reAfterArg)
 
 def get_normalized_signatures(signature, fileAnnot = None):
+    # Remove static
+    signature = signature.replace('static', '')
     # Remove semicolon.
     signature = signature.replace(';', ' ')
     # Normalize spaces.

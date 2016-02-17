@@ -30,7 +30,7 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 a
 
   gfx::Matrix4x4 trans = aRootTransform * aLayer->GetTransform();
   trans.ProjectTo2D();
-  gfx::IntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::IntRect clipRect = aLayer->GetLocalVisibleRegion().GetBounds();
   Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   trans.TransformBounds(rect);
 

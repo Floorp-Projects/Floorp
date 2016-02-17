@@ -416,8 +416,6 @@ BytesPerPixel(const PackingInfo& packing)
 //////////////////////////////////////////////////////////////////////////////////////////
 // FormatUsageAuthority
 
-
-
 bool
 FormatUsageInfo::IsUnpackValid(const PackingInfo& key,
                                const DriverUnpackInfo** const out_value) const
@@ -428,6 +426,29 @@ FormatUsageInfo::IsUnpackValid(const PackingInfo& key,
 
     *out_value = &(itr->second);
     return true;
+}
+
+void
+FormatUsageInfo::ResolveMaxSamples(gl::GLContext* gl)
+{
+    MOZ_ASSERT(!this->maxSamplesKnown);
+    MOZ_ASSERT(this->maxSamples == 0);
+    MOZ_ASSERT(gl->IsCurrent());
+
+    this->maxSamplesKnown = true;
+
+    const GLenum internalFormat = this->format->sizedFormat;
+    if (!internalFormat)
+        return;
+
+    if (!gl->IsSupported(gl::GLFeature::internalformat_query))
+        return; // Leave it at 0.
+
+    GLint maxSamplesGL = 0;
+    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalFormat, LOCAL_GL_SAMPLES, 1,
+                             &maxSamplesGL);
+
+    this->maxSamples = maxSamplesGL;
 }
 
 ////////////////////////////////////////

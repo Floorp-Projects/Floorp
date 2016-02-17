@@ -149,12 +149,10 @@ function checkStateRead(aSubject, aTopic, aData) {
   checkDefaultSiteHPKPStatus();
 
   // failure to insert new pin entry leaves previous pin behavior
-  try {
+  throws(() => {
     gSSService.setKeyPins("a.pinning2.example.com", true, 1000, 1,
                           ["not a hash"]);
-    ok(false, "Attempting to set an invalid pin should have failed");
-  } catch(e) {
-  }
+  }, /NS_ERROR_ILLEGAL_VALUE/, "Attempting to set an invalid pin should fail");
   checkFail(certFromFile('cn-a.pinning2.example.com-badca'), "a.pinning2.example.com");
   checkOK(certFromFile('cn-a.pinning2.example.com-pinningroot'), "a.pinning2.example.com");
   checkOK(certFromFile('cn-x.a.pinning2.example.com-badca'), "x.a.pinning2.example.com");
@@ -170,12 +168,11 @@ function checkStateRead(aSubject, aTopic, aData) {
   checkDefaultSiteHPKPStatus();
 
   // Incorrect size results in failure
-  try {
+  throws(() => {
     gSSService.setKeyPins("a.pinning2.example.com", true, 1000, 2,
                           ["not a hash"]);
-    ok(false, "Attempting to set a pin with an incorrect size should have failed");
-  } catch(e) {
-  }
+  }, /NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY/,
+     "Attempting to set a pin with an incorrect size should fail");
 
   // Ensure built-in pins work as expected
   ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HPKP,

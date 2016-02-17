@@ -64,7 +64,6 @@ browser/base/content/test/**
 browser/base/content/newtab/**
 browser/components/downloads/**
 browser/components/feeds/**
-browser/components/migration/**
 browser/components/pocket/**
 browser/components/preferences/**
 browser/components/privatebrowsing/**
@@ -92,7 +91,6 @@ devtools/client/framework/**
 # included in the ignore list.
 devtools/client/inspector/computed/**
 devtools/client/inspector/fonts/**
-devtools/client/inspector/layout/**
 devtools/client/inspector/markup/test/**
 devtools/client/inspector/rules/**
 devtools/client/inspector/shared/test/**
@@ -189,8 +187,8 @@ toolkit/components/osfile/**
 toolkit/components/passwordmgr/**
 
 # Uses preprocessing
-toolkit/content/contentAreaUtils.js
 toolkit/content/widgets/videocontrols.xml
+toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/search/nsSearchService.js
 toolkit/components/url-classifier/**

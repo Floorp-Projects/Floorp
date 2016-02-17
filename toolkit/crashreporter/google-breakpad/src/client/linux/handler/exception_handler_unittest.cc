@@ -35,6 +35,9 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#if defined(__mips__)
+#include <sys/cachectl.h>
+#endif
 
 #include <string>
 
@@ -55,7 +58,7 @@ using namespace google_breakpad;
 namespace {
 
 // Flush the instruction cache for a given memory range.
-// Only required on ARM.
+// Only required on ARM and mips.
 void FlushInstructionCache(const char* memory, uint32_t memory_size) {
 #if defined(__arm__)
   long begin = reinterpret_cast<long>(memory);
@@ -69,6 +72,22 @@ void FlushInstructionCache(const char* memory, uint32_t memory_size) {
 #  define __ARM_NR_cacheflush 0xf0002
 #  endif
   syscall(__ARM_NR_cacheflush, begin, end, 0);
+# else
+#   error "Your operating system is not supported yet"
+# endif
+#elif defined(__mips__)
+# if defined(__ANDROID__)
+  // Provided by Android's <unistd.h>
+  long begin = reinterpret_cast<long>(memory);
+  long end = begin + static_cast<long>(memory_size);
+#if _MIPS_SIM == _ABIO32
+  cacheflush(begin, end, 0);
+#else
+  syscall(__NR_cacheflush, begin, end, ICACHE);
+#endif
+# elif defined(__linux__)
+  // See http://www.linux-mips.org/wiki/Cacheflush_Syscall.
+  cacheflush(const_cast<char*>(memory), memory_size, ICACHE);
 # else
 #   error "Your operating system is not supported yet"
 # endif
@@ -176,6 +195,22 @@ static bool DoneCallback(const MinidumpDescriptor& descriptor,
   return true;
 }
 
+#ifndef ADDRESS_SANITIZER
+
+// This is a replacement for "*reinterpret_cast<volatile int*>(NULL) = 0;"
+// It is needed because GCC is allowed to assume that the program will
+// not execute any undefined behavior (UB) operation. Further, when GCC
+// observes that UB statement is reached, it can assume that all statements
+// leading to the UB one are never executed either, and can completely
+// optimize them out. In the case of ExceptionHandlerTest::ExternalDumper,
+// GCC-4.9 optimized out the entire set up of ExceptionHandler, causing
+// test failure.
+volatile int *p_null;  // external linkage, so GCC can't tell that it
+                       // remains NULL. Volatile just for a good measure.
+static void DoNullPointerDereference() {
+  *p_null = 1;
+}
+
 void ChildCrash(bool use_fd) {
   AutoTempDir temp_dir;
   int fds[2] = {0};
@@ -202,7 +237,7 @@ void ChildCrash(bool use_fd) {
                                            true, -1));
       }
       // Crash with the exception handler in scope.
-      *reinterpret_cast<volatile int*>(NULL) = 0;
+      DoNullPointerDereference();
     }
   }
   if (!use_fd)
@@ -226,6 +261,8 @@ TEST(ExceptionHandlerTest, ChildCrashWithPath) {
 TEST(ExceptionHandlerTest, ChildCrashWithFD) {
   ASSERT_NO_FATAL_FAILURE(ChildCrash(true));
 }
+
+#endif  // !ADDRESS_SANITIZER
 
 static bool DoneCallbackReturnFalse(const MinidumpDescriptor& descriptor,
                                     void* context,
@@ -268,13 +305,15 @@ static bool InstallRaiseSIGKILL() {
   return sigaction(SIGSEGV, &sa, NULL) != -1;
 }
 
+#ifndef ADDRESS_SANITIZER
+
 static void CrashWithCallbacks(ExceptionHandler::FilterCallback filter,
                                ExceptionHandler::MinidumpCallback done,
                                string path) {
   ExceptionHandler handler(
       MinidumpDescriptor(path), filter, done, NULL, true, -1);
   // Crash with the exception handler in scope.
-  *reinterpret_cast<volatile int*>(NULL) = 0;
+  DoNullPointerDereference();
 }
 
 TEST(ExceptionHandlerTest, RedeliveryOnFilterCallbackFalse) {
@@ -365,7 +404,7 @@ TEST(ExceptionHandlerTest, RedeliveryOnBadSignalHandlerFlag) {
               reinterpret_cast<void*>(SIG_ERR));
 
     // Crash with the exception handler in scope.
-    *reinterpret_cast<volatile int*>(NULL) = 0;
+    DoNullPointerDereference();
   }
   // SIGKILL means Breakpad's signal handler didn't crash.
   ASSERT_NO_FATAL_FAILURE(WaitForProcessToTerminate(child, SIGKILL));
@@ -435,6 +474,18 @@ TEST(ExceptionHandlerTest, StackedHandlersUnhandledToBottom) {
   ASSERT_NO_FATAL_FAILURE(WaitForProcessToTerminate(child, SIGKILL));
 }
 
+#endif  // !ADDRESS_SANITIZER
+
+const unsigned char kIllegalInstruction[] = {
+#if defined(__mips__)
+  // mfc2 zero,Impl - usually illegal in userspace.
+  0x48, 0x00, 0x00, 0x48
+#else
+  // This crashes with SIGILL on x86/x86-64/arm.
+  0xff, 0xff, 0xff, 0xff
+#endif
+};
+
 // Test that memory around the instruction pointer is written
 // to the dump as a MinidumpMemoryRegion.
 TEST(ExceptionHandlerTest, InstructionPointerMemory) {
@@ -446,8 +497,6 @@ TEST(ExceptionHandlerTest, InstructionPointerMemory) {
   // data from the minidump afterwards.
   const uint32_t kMemorySize = 256;  // bytes
   const int kOffset = kMemorySize / 2;
-  // This crashes with SIGILL on x86/x86-64/arm.
-  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
 
   const pid_t child = fork();
   if (child == 0) {
@@ -469,7 +518,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemory) {
     // Write some instructions that will crash. Put them in the middle
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
-    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    memcpy(memory + kOffset, kIllegalInstruction, sizeof(kIllegalInstruction));
     FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
@@ -517,12 +566,13 @@ TEST(ExceptionHandlerTest, InstructionPointerMemory) {
   ASSERT_TRUE(bytes);
 
   uint8_t prefix_bytes[kOffset];
-  uint8_t suffix_bytes[kMemorySize - kOffset - sizeof(instructions)];
+  uint8_t suffix_bytes[kMemorySize - kOffset - sizeof(kIllegalInstruction)];
   memset(prefix_bytes, 0, sizeof(prefix_bytes));
   memset(suffix_bytes, 0, sizeof(suffix_bytes));
   EXPECT_TRUE(memcmp(bytes, prefix_bytes, sizeof(prefix_bytes)) == 0);
-  EXPECT_TRUE(memcmp(bytes + kOffset, instructions, sizeof(instructions)) == 0);
-  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(instructions),
+  EXPECT_TRUE(memcmp(bytes + kOffset, kIllegalInstruction, 
+                     sizeof(kIllegalInstruction)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(kIllegalInstruction),
                      suffix_bytes, sizeof(suffix_bytes)) == 0);
 
   unlink(minidump_path.c_str());
@@ -539,8 +589,6 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMinBound) {
   // data from the minidump afterwards.
   const uint32_t kMemorySize = 256;  // bytes
   const int kOffset = 0;
-  // This crashes with SIGILL on x86/x86-64/arm.
-  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
 
   const pid_t child = fork();
   if (child == 0) {
@@ -562,7 +610,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMinBound) {
     // Write some instructions that will crash. Put them in the middle
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
-    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    memcpy(memory + kOffset, kIllegalInstruction, sizeof(kIllegalInstruction));
     FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
@@ -609,10 +657,11 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMinBound) {
   const uint8_t* bytes = region->GetMemory();
   ASSERT_TRUE(bytes);
 
-  uint8_t suffix_bytes[kMemorySize / 2 - sizeof(instructions)];
+  uint8_t suffix_bytes[kMemorySize / 2 - sizeof(kIllegalInstruction)];
   memset(suffix_bytes, 0, sizeof(suffix_bytes));
-  EXPECT_TRUE(memcmp(bytes + kOffset, instructions, sizeof(instructions)) == 0);
-  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(instructions),
+  EXPECT_TRUE(memcmp(bytes + kOffset, kIllegalInstruction, 
+                     sizeof(kIllegalInstruction)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(kIllegalInstruction),
                      suffix_bytes, sizeof(suffix_bytes)) == 0);
   unlink(minidump_path.c_str());
 }
@@ -630,9 +679,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
   // if a smaller size is requested, and this test wants to
   // test the upper bound of the memory range.
   const uint32_t kMemorySize = 4096;  // bytes
-  // This crashes with SIGILL on x86/x86-64/arm.
-  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
-  const int kOffset = kMemorySize - sizeof(instructions);
+  const int kOffset = kMemorySize - sizeof(kIllegalInstruction);
 
   const pid_t child = fork();
   if (child == 0) {
@@ -654,7 +701,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
     // Write some instructions that will crash. Put them in the middle
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
-    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    memcpy(memory + kOffset, kIllegalInstruction, sizeof(kIllegalInstruction));
     FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
@@ -697,7 +744,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
   ASSERT_TRUE(region);
 
   const size_t kPrefixSize = 128;  // bytes
-  EXPECT_EQ(kPrefixSize + sizeof(instructions), region->GetSize());
+  EXPECT_EQ(kPrefixSize + sizeof(kIllegalInstruction), region->GetSize());
   const uint8_t* bytes = region->GetMemory();
   ASSERT_TRUE(bytes);
 
@@ -705,15 +752,11 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
   memset(prefix_bytes, 0, sizeof(prefix_bytes));
   EXPECT_TRUE(memcmp(bytes, prefix_bytes, sizeof(prefix_bytes)) == 0);
   EXPECT_TRUE(memcmp(bytes + kPrefixSize,
-                     instructions, sizeof(instructions)) == 0);
+                     kIllegalInstruction, sizeof(kIllegalInstruction)) == 0);
 
   unlink(minidump_path.c_str());
 }
 
-// If AddressSanitizer is used, NULL pointer dereferences generate SIGILL
-// (illegal instruction) instead of SIGSEGV (segmentation fault).  Also,
-// the number of memory regions differs, so there is no point in running
-// this test if AddressSanitizer is used.
 #ifndef ADDRESS_SANITIZER
 
 // Ensure that an extra memory block doesn't get added when the instruction
@@ -731,8 +774,13 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryNullPointer) {
                              true, -1);
     // Try calling a NULL pointer.
     typedef void (*void_function)(void);
-    void_function memory_function = reinterpret_cast<void_function>(NULL);
+    // Volatile markings are needed to keep Clang from generating invalid
+    // opcodes.  See http://crbug.com/498354 for details.
+    volatile void_function memory_function =
+      reinterpret_cast<void_function>(NULL);
     memory_function();
+    // not reached
+    exit(1);
   }
   close(fds[1]);
 
@@ -760,7 +808,8 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryNullPointer) {
 
   unlink(minidump_path.c_str());
 }
-#endif // !ADDRESS_SANITIZER
+
+#endif  // !ADDRESS_SANITIZER
 
 // Test that anonymous memory maps can be annotated with names and IDs.
 TEST(ExceptionHandlerTest, ModuleInfo) {
@@ -881,6 +930,8 @@ CrashHandler(const void* crash_context, size_t crash_context_size,
   return true;
 }
 
+#ifndef ADDRESS_SANITIZER
+
 TEST(ExceptionHandlerTest, ExternalDumper) {
   int fds[2];
   ASSERT_NE(socketpair(AF_UNIX, SOCK_DGRAM, 0, fds), -1);
@@ -894,7 +945,7 @@ TEST(ExceptionHandlerTest, ExternalDumper) {
     ExceptionHandler handler(MinidumpDescriptor("/tmp1"), NULL, NULL,
                              reinterpret_cast<void*>(fds[1]), true, -1);
     handler.set_crash_handler(CrashHandler);
-    *reinterpret_cast<volatile int*>(NULL) = 0;
+    DoNullPointerDereference();
   }
   close(fds[1]);
   struct msghdr msg = {0};
@@ -913,7 +964,7 @@ TEST(ExceptionHandlerTest, ExternalDumper) {
   const ssize_t n = HANDLE_EINTR(recvmsg(fds[0], &msg, 0));
   ASSERT_EQ(static_cast<ssize_t>(kCrashContextSize), n);
   ASSERT_EQ(kControlMsgSize, msg.msg_controllen);
-  ASSERT_EQ(static_cast<typeof(msg.msg_flags)>(0), msg.msg_flags);
+  ASSERT_EQ(static_cast<__typeof__(msg.msg_flags)>(0), msg.msg_flags);
   ASSERT_EQ(0, close(fds[0]));
 
   pid_t crashing_pid = -1;
@@ -952,6 +1003,8 @@ TEST(ExceptionHandlerTest, ExternalDumper) {
   ASSERT_GT(st.st_size, 0);
   unlink(templ.c_str());
 }
+
+#endif  // !ADDRESS_SANITIZER
 
 TEST(ExceptionHandlerTest, WriteMinidumpExceptionStream) {
   AutoTempDir temp_dir;

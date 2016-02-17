@@ -1,7 +1,7 @@
 diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
 --- a/mfbt/decimal/Decimal.cpp
 +++ b/mfbt/decimal/Decimal.cpp
-@@ -278,17 +278,17 @@ bool Decimal::EncodedData::operator==(co
+@@ -277,17 +277,17 @@ bool Decimal::EncodedData::operator==(co
  }
  
  Decimal::Decimal(int32_t i32)

@@ -60,12 +60,17 @@ SimpleTest.registerCleanupFunction(() =>
 
 var gManifestURL = "http://www.example.com/chrome/dom/apps/tests/apps/basic.webapp";
 
+// Get the permission count before installing the app so we can compare it to
+// the permission count after uninstalling the app.
+var currentPermissionCount = getPermissionCountForApp(-1);
+
 function onInstall() {
   var testAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
 
-  is(getPermissionCountForApp(testAppId), 0, "App should have no permission");
-
-  var currentPermissionCount = getPermissionCountForApp(-1);
+  // PermissionsManager.installPermissions gets run during the install process,
+  // and it adds the "indexedDB" permission by default, so the app should have
+  // that permission.
+  is(getPermissionCountForApp(testAppId), 1, "App should have 1 permission");
 
   var attrs = {appId: testAppId};
   var principal = secMan.createCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
@@ -85,10 +90,9 @@ function onInstall() {
                                              attrs);
   permManager.addFromPrincipal(principal, "foobar", Ci.nsIPermissionManager.ALLOW_ACTION);
 
-  is(getPermissionCountForApp(testAppId), 5, "App should have 5 permissions");
+  is(getPermissionCountForApp(testAppId), 6, "App should have 6 permissions");
 
-  // Not installed means not installed as native app.
-  navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+  navigator.mozApps.mgmt.getAll().onsuccess = function() {
     for (i in this.result) {
       var app = this.result[i];
       if (app.manifestURL == gManifestURL) {

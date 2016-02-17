@@ -494,13 +494,6 @@ ModuleNamespaceObject::ProxyHandler::delete_(JSContext* cx, HandleObject proxy, 
 }
 
 bool
-ModuleNamespaceObject::ProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
-                                               MutableHandleObject objp) const
-{
-    return BaseProxyHandler::enumerate(cx, proxy, objp);
-}
-
-bool
 ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
                                                      AutoIdVector& props) const
 {
@@ -573,7 +566,7 @@ ModuleObject::isInstance(HandleValue value)
 }
 
 /* static */ ModuleObject*
-ModuleObject::create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticScope)
+ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
 {
     RootedObject proto(cx, cx->global()->getModulePrototype());
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
@@ -581,16 +574,13 @@ ModuleObject::create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticS
         return nullptr;
 
     RootedModuleObject self(cx, &obj->as<ModuleObject>());
-    Rooted<StaticModuleScope*> scope(cx, StaticModuleScope::create(cx, self,
-                                                                   enclosingStaticScope));
-    if (!scope)
-        return nullptr;
-    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(scope));
+    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(enclosingStaticScope));
 
     Zone* zone = cx->zone();
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
+        js_delete<IndirectBindingMap>(bindings);
         return nullptr;
     }
 
@@ -733,10 +723,10 @@ ModuleObject::initialEnvironment() const
     return getReservedSlot(InitialEnvironmentSlot).toObject().as<ModuleEnvironmentObject>();
 }
 
-StaticModuleScope*
-ModuleObject::staticScope() const
+JSObject*
+ModuleObject::enclosingStaticScope() const
 {
-    return &getReservedSlot(StaticScopeSlot).toObject().as<StaticModuleScope>();
+    return getReservedSlot(StaticScopeSlot).toObjectOrNull();
 }
 
 /* static */ void
@@ -842,6 +832,7 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleArra
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
+        js_delete<IndirectBindingMap>(bindings);
         return nullptr;
     }
 

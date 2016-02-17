@@ -5,7 +5,6 @@ package org.mozilla.android.sync.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -35,8 +34,14 @@ public class TestCryptoRecord {
   String base64HmacKey = "MMntEfutgLTc8FlTLQFms8/xMPmCldqPlq/QQXEjx70=";
 
   @Test
-  public void testBaseCryptoRecordEncrypt() throws IOException, ParseException, NonObjectJSONException, CryptoException {
-    ExtendedJSONObject clearPayload = ExtendedJSONObject.parseJSONObject("{\"id\":\"5qRsgXWRJZXr\",\"title\":\"Index of file:///Users/jason/Library/Application Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\",\"histUri\":\"file:///Users/jason/Library/Application%20Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\",\"visits\":[{\"type\":1,\"date\":1319149012372425}]}");
+  public void testBaseCryptoRecordEncrypt() throws IOException, NonObjectJSONException, CryptoException {
+
+    ExtendedJSONObject clearPayload = new ExtendedJSONObject("{\"id\":\"5qRsgXWRJZXr\"," +
+            "\"title\":\"Index of file:///Users/jason/Library/Application " +
+            "Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\"," +
+            "\"histUri\":\"file:///Users/jason/Library/Application%20Support/Firefox/Profiles" +
+            "/ksgd7wpk.LocalSyncServer/weave/logs/\",\"visits\":[{\"type\":1," +
+            "\"date\":1319149012372425}]}");
 
     CryptoRecord record = new CryptoRecord();
     record.payload = clearPayload;
@@ -256,7 +261,7 @@ public class TestCryptoRecord {
     assertEquals(expectedJson.get("collections"), decrypted.payload.get("collections"));
 
     // Check that the extracted keys were as expected.
-    JSONArray keys = ExtendedJSONObject.parseJSONObject(decrypted.payload.toJSONString()).getArray("default");
+    JSONArray keys = new ExtendedJSONObject(decrypted.payload.toJSONString()).getArray("default");
     KeyBundle keyBundle = KeyBundle.fromBase64EncodedKeys((String)keys.get(0), (String)keys.get(1));
 
     assertArrayEquals(Base64.decodeBase64(expectedBase64EncryptionKey.getBytes("UTF-8")), keyBundle.getEncryptionKey());

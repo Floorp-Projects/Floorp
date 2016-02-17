@@ -1787,6 +1787,12 @@ GCRuntime::removeRoot(Value* vp)
     poke();
 }
 
+void
+GCRuntime::registerStackWrapperVector(NonEscapingWrapperVector* vec)
+{
+    stackWrappers.insertBack(vec);
+}
+
 extern JS_FRIEND_API(bool)
 js::AddRawValueRoot(JSContext* cx, Value* vp, const char* name)
 {
@@ -1999,6 +2005,8 @@ AutoDisableCompactingGC::AutoDisableCompactingGC(JSRuntime* rt)
   : gc(rt->gc)
 {
     gc.disableCompactingGC();
+    if (gc.isIncrementalGCInProgress() && gc.isCompactingGc())
+        AutoFinishGC finishGC(rt);
 }
 
 AutoDisableCompactingGC::~AutoDisableCompactingGC()
@@ -6106,7 +6114,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         MOZ_FALLTHROUGH;
 
       case MARK:
-        AutoGCRooter::traceAllWrappers(&marker);
+        traceStackWrappers(&marker);
 
         /* If we needed delayed marking for gray roots, then collect until done. */
         if (!hasBufferedGrayRoots()) {
@@ -6852,7 +6860,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // Get the static global lexical scope of the target compartment. Static
     // scopes need to be fixed up below.
-    Rooted<StaticScope*> targetStaticGlobalLexicalScope(rt);
+    RootedObject targetStaticGlobalLexicalScope(rt);
     targetStaticGlobalLexicalScope = &target->maybeGlobal()->lexicalScope().staticBlock();
 
     for (ZoneCellIter iter(source->zone(), AllocKind::SCRIPT); !iter.done(); iter.next()) {
@@ -7731,6 +7739,8 @@ JSObject*
 NewMemoryInfoObject(JSContext* cx)
 {
     RootedObject obj(cx, JS_NewObject(cx, nullptr));
+    if (!obj)
+        return nullptr;
 
     using namespace MemInfo;
     struct NamedGetter {

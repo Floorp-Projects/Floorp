@@ -96,7 +96,7 @@
 
 #include "HTMLPropertiesCollection.h"
 #include "nsVariant.h"
-#include "nsDOMSettableTokenList.h"
+#include "nsDOMTokenList.h"
 #include "nsThreadUtils.h"
 #include "nsTextFragment.h"
 #include "mozilla/dom/BindingUtils.h"

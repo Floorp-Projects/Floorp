@@ -179,7 +179,7 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
     // Division instructions are slow. Division by constant denominators can be
     // rewritten to use other instructions.
     if (div->rhs()->isConstant()) {
-        int32_t rhs = div->rhs()->toConstant()->value().toInt32();
+        int32_t rhs = div->rhs()->toConstant()->toInt32();
 
         // Division by powers of two can be done by shifting, and division by
         // other numbers can be done by a reciprocal multiplication technique.
@@ -226,7 +226,7 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
     }
 
     if (mod->rhs()->isConstant()) {
-        int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
+        int32_t rhs = mod->rhs()->toConstant()->toInt32();
         int32_t shift = FloorLog2(Abs(rhs));
         if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
             LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
@@ -275,7 +275,7 @@ void
 LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
 {
     if (div->rhs()->isConstant()) {
-        uint32_t rhs = div->rhs()->toConstant()->value().toInt32();
+        uint32_t rhs = div->rhs()->toConstant()->toInt32();
         int32_t shift = FloorLog2(rhs);
 
         LAllocation lhs = useRegisterAtStart(div->lhs());
@@ -306,7 +306,7 @@ void
 LIRGeneratorX86Shared::lowerUMod(MMod* mod)
 {
     if (mod->rhs()->isConstant()) {
-        uint32_t rhs = mod->rhs()->toConstant()->value().toInt32();
+        uint32_t rhs = mod->rhs()->toConstant()->toInt32();
         int32_t shift = FloorLog2(rhs);
 
         if (rhs != 0 && uint32_t(1) << shift == rhs) {

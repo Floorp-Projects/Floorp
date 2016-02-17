@@ -58,6 +58,7 @@
 #include "jswrapper.h"
 #include "shellmoduleloader.out.h"
 
+#include "asmjs/Wasm.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
@@ -139,7 +140,7 @@ static const double MAX_TIMEOUT_INTERVAL = 1800.0;
 // Per-runtime shell state.
 struct ShellRuntime
 {
-    ShellRuntime();
+    explicit ShellRuntime(JSRuntime* rt);
 
     bool isWorker;
     double timeoutInterval;
@@ -287,12 +288,14 @@ extern JS_EXPORT_API(void)   add_history(char* line);
 } // extern "C"
 #endif
 
-ShellRuntime::ShellRuntime()
+ShellRuntime::ShellRuntime(JSRuntime* rt)
   : isWorker(false),
     timeoutInterval(-1.0),
     serviceInterrupt(false),
     haveInterruptFunc(false),
+    interruptFunc(rt, NullValue()),
     lastWarningEnabled(false),
+    lastWarning(rt, NullValue()),
     watchdogLock(nullptr),
     watchdogWakeup(nullptr),
     watchdogThread(nullptr),
@@ -2771,7 +2774,7 @@ WorkerMain(void* arg)
         return;
     }
 
-    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>(rt);
     if (!sr) {
         JS_DestroyRuntime(rt);
         js_delete(input);
@@ -2825,6 +2828,9 @@ WorkerMain(void* arg)
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
     DestroyContext(cx, false);
+
+    KillWatchdog(rt);
+
     JS_DestroyRuntime(rt);
 
     js_delete(input);
@@ -4669,8 +4675,6 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         script = fun->getOrCreateScript(cx);
-        if (!script)
-            return false;
     } else {
         script = obj->as<ModuleObject>().script();
     }
@@ -4909,6 +4913,62 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setUndefined();
     return true;
 }
+
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+static bool
+WasmLoop(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() < 1 || args.length() > 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String");
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    RootedString givenPath(cx, args[0].toString());
+    RootedString str(cx, ResolvePath(cx, givenPath, RootRelative));
+    if (!str)
+        return false;
+
+    JSAutoByteString filename(cx, str);
+    if (!filename)
+        return false;
+
+    while (__AFL_LOOP(1000)) {
+        Rooted<JSObject*> ret(cx, FileAsTypedArray(cx, filename.ptr()));
+        if (!ret)
+            return false;
+
+        Rooted<TypedArrayObject*> typedArray(cx, &ret->as<TypedArrayObject>());
+        if (!TypedArrayObject::ensureHasBuffer(cx, typedArray))
+            return false;
+
+        Rooted<ArrayBufferObject*> arrayBuffer(cx, typedArray->bufferUnshared());
+        RootedObject exportObj(cx);
+        if (!wasm::Eval(cx, arrayBuffer, importObj, &exportObj)) {
+            // Clear any pending exceptions, we don't care about them
+            cx->clearPendingException();
+        }
+    }
+
+    return true;
+}
+#endif // __AFL_HAVE_MANUAL_CONTROL
 
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
@@ -5379,6 +5439,13 @@ TestAssertRecoveredOnBailout,
 "  On non-ARM, no-op. On ARM, set the hardware capabilities. The list of \n"
 "  flags is available by calling this function with \"help\" as the flag's name"),
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+    JS_FN_HELP("wasmLoop", WasmLoop, 2, 0,
+"wasmLoop(filename, imports)",
+"  Performs an AFL-style persistent loop reading data from the given file and passing it\n"
+"  to the 'wasmEval' function together with the specified imports object."),
+#endif
+
     JS_FS_HELP_END
 };
 
@@ -5453,7 +5520,7 @@ PrintHelp(JSContext* cx, HandleObject obj)
     if (!JS_GetProperty(cx, obj, "help", &help))
         return false;
 
-    if (usage.isUndefined() || help.isUndefined())
+    if (!usage.isString() || !help.isString())
         return true;
 
     return PrintHelpString(cx, usage) && PrintHelpString(cx, help);
@@ -6994,7 +7061,7 @@ main(int argc, char** argv, char** envp)
     if (!rt)
         return 1;
 
-    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>(rt);
     if (!sr)
         return 1;
 
@@ -7005,9 +7072,6 @@ main(int argc, char** argv, char** envp)
     JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;
-
-    sr->interruptFunc.init(rt, NullValue());
-    sr->lastWarning.init(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 

@@ -21,5 +21,7 @@ interface DOMTokenList {
   void remove(DOMString... tokens);
   [Throws]
   boolean toggle(DOMString token, optional boolean force);
+  [SetterThrows]
+  attribute DOMString value;
   stringifier DOMString ();
 };

@@ -8,6 +8,7 @@ const { createClass, createFactory, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
+const { resizeViewport, rotateViewport } = require("./actions/viewports");
 const Types = require("./types");
 const Viewports = createFactory(require("./components/viewports"));
 
@@ -22,6 +23,7 @@ let App = createClass({
 
   render() {
     let {
+      dispatch,
       location,
       viewports,
     } = this.props;
@@ -31,6 +33,9 @@ let App = createClass({
     return Viewports({
       location,
       viewports,
+      onRotateViewport: id => dispatch(rotateViewport(id)),
+      onResizeViewport: (id, width, height) =>
+        dispatch(resizeViewport(id, width, height)),
     });
   },
 

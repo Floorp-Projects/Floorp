@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  --background-color: #f3f3f3;
+  background: tomato;
+}
+
+body {
+  background: var(--background-color);
+  color: #222;
+  padding: 0 10px;
+  margin: 0;
+}
+
+header {
+  background: #eee;
+  border-bottom: solid 2px #ccc;
+  margin: 0 -10px;
+  margin-bottom: 5px;
+  padding: 4px;
+}
+
+header h1 {
+  margin: 0;
+  padding: 0;
+}

@@ -4,6 +4,7 @@
   <title>Test for MozMousePixelScroll events</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
     .scrollable {
@@ -62,6 +63,8 @@ function* prepareScrollUnits()
     setTimeout(runTest, 0);
   }
   window.addEventListener("MozMousePixelScroll", handler, true);
+
+  yield waitForAllPaints(function () { setTimeout(runTest, 0); });
 
   yield synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,

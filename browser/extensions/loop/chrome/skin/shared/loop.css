@@ -50,6 +50,15 @@
     -moz-image-region: rect(1px, 125px, 17px, 109px);
   }
 
+  /* The slideshow state disables the button for that window and makes it look
+     the same as the hover state to visually indicate that it's in-use.
+     */
+  #loop-button[state="slideshow"] {
+    background: var(--toolbarbutton-hover-background);
+    border-color: var(--toolbarbutton-hover-bordercolor);
+    box-shadow: var(--toolbarbutton-hover-boxshadow);
+  }
+
   @media (min-resolution: 1.1dppx) {
     #loop-button {
       list-style-image: url("chrome://loop/skin/toolbar@2x.png");
@@ -275,5 +284,39 @@
   .chat-toolbarbutton.chat-loop-hangup:-moz-any(:hover,:hover:active) {
     background-color: #ef6745;
     border-color: #ef6745;
+  }
+
+  #loop-remote-cursor {
+    background: url("chrome://loop/content/shared/img/cursor.svg#blue") no-repeat;
+    height: 20px;
+    width: 15px;
+    /*
+     * Svg cursor has a white outline so we need to get rid off it to ensure
+     * that the cursor points at a more precise position
+     */
+    margin: -2px;
+    pointer-events: none;
+    position: absolute;
+  }
+  
+  #loop-slideshow-container {
+    /* cover the entire viewport, mouse interaction with non-slideshow
+      content is now impossible. */
+    position: fixed;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+
+    /* darken the background content */
+    background: rgba(0, 0, 0, .8);
+  }
+
+  #loop-slideshow-browser {
+    width: 620px;
+    height:450px;
+    margin-top: 10%;
+
+    /* XXX derived from width, so should be 50% - (620px / 2)? */
+    -moz-margin-start: calc(50% - 310px);
   }
 }

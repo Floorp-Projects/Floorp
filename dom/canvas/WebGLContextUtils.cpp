@@ -727,6 +727,8 @@ WebGLContext::AssertCachedBindings()
 
     MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
 #endif
+
+    // We do not check the renderbuffer binding, because we never rely on it matching.
 }
 
 void

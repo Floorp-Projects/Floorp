@@ -1,4 +1,5 @@
 #filter substitution
+#include @TOPOBJDIR@/source-repo.h
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -308,7 +309,10 @@ this.AppConstants = Object.freeze({
   // URL to the hg revision this was built from (e.g.
   // "https://hg.mozilla.org/mozilla-central/rev/6256ec9113c1")
   // On unofficial builds, this is an empty string.
-  SOURCE_REVISION_URL: "@SOURCE_REV_URL@",
+#ifndef MOZ_SOURCE_URL
+#define MOZ_SOURCE_URL
+#endif
+  SOURCE_REVISION_URL: "@MOZ_SOURCE_URL@",
 
   MOZ_NUWA_PROCESS:
 #ifdef MOZ_NUWA_PROCESS

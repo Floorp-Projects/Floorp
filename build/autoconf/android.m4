@@ -356,6 +356,19 @@ fi
 
 ])
 
+AC_DEFUN([MOZ_ANDROID_INSTALL_TRACKING],
+[
+
+if test -n "$MOZ_INSTALL_TRACKING"; then
+    AC_SUBST(MOZ_INSTALL_TRACKING)
+    MOZ_ANDROID_AAR(play-services-ads, 8.1.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-analytics, 8.1.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-appindexing, 8.1.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-basement, 8.1.0, google, com/google/android/gms)
+fi
+
+])
+
 dnl Configure an Android SDK.
 dnl Arg 1: target SDK version, like 22.
 dnl Arg 2: build tools version, like 22.0.1.

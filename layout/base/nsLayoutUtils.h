@@ -1091,7 +1091,9 @@ public:
 
   class BoxCallback {
   public:
+    BoxCallback() : mIncludeCaptionBoxForTable(true) {}
     virtual void AddBox(nsIFrame* aFrame) = 0;
+    bool mIncludeCaptionBoxForTable;
   };
   /**
    * Collect all CSS boxes associated with aFrame and its
@@ -2678,14 +2680,10 @@ public:
    * displayport yet (as tracked by |aBuilder|), calculate and set a
    * displayport.
    *
-   * If this function creates a displayport, it computes margins and stores
-   * |aDisplayPortBase| as the base rect.
-   *
    * This is intended to be called during display list building.
    */
   static void MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                     nsIFrame* aScrollFrame,
-                                     nsRect aDisplayPortBase);
+                                     nsIFrame* aScrollFrame);
 
   static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
 
@@ -2719,6 +2717,15 @@ public:
    */
   static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
                                                       CSSSize aSize);
+
+  /**
+   * Returns true if the given scroll origin is "higher priority" than APZ.
+   * In general any content programmatic scrolls (e.g. scrollTo calls) are
+   * higher priority, and take precedence over APZ scrolling. This function
+   * returns true for those, and returns false for other origins like APZ
+   * itself, or scroll position updates from the history restore code.
+   */
+  static bool CanScrollOriginClobberApz(nsIAtom* aScrollOrigin);
 
   static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,

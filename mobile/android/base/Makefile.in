@@ -2,7 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
+# We call mach -> Make -> gradle -> mach, which races to find and
+# create .mozconfig files and to generate targets.
+ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+.NOTPARALLEL:
+endif
+
+MOZ_BUILDID := $(shell awk '{print $$3}' $(DEPTH)/buildid.h)
 
 # Set the appropriate version code, based on the existance of the
 # MOZ_APP_ANDROID_VERSION_CODE variable.
@@ -15,7 +21,7 @@ else
         --with-android-cpu-arch=$(ANDROID_CPU_ARCH) \
         $(if $(MOZ_ANDROID_MIN_SDK_VERSION),--with-android-min-sdk=$(MOZ_ANDROID_MIN_SDK_VERSION)) \
         $(if $(MOZ_ANDROID_MAX_SDK_VERSION),--with-android-max-sdk=$(MOZ_ANDROID_MAX_SDK_VERSION)) \
-        $(MOZ_APP_BUILDID))
+        $(MOZ_BUILDID))
 endif
 
 DEFINES += \
@@ -23,7 +29,7 @@ DEFINES += \
   -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
   -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
   -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
-  -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
+  -DMOZ_BUILDID=$(MOZ_BUILDID) \
   $(NULL)
 
 GARBAGE += \
@@ -82,6 +88,15 @@ ifdef MOZ_ANDROID_GCM
         $(NULL)
 endif
 
+ifdef MOZ_INSTALL_TRACKING
+    JAVA_CLASSPATH += \
+        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(NULL)
+endif
+
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 # Library jars that we're bundling: these are subject to Proguard before inclusion
@@ -109,6 +124,15 @@ ifdef MOZ_ANDROID_GCM
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(NULL)
+endif
+
+ifdef MOZ_INSTALL_TRACKING
+    java_bundled_libs += \
+        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(NULL)
 endif
 
@@ -157,11 +181,49 @@ library_jars := \
     $(ANDROID_SDK)/android.jar \
     $(NULL)
 
+# Android 23 (Marshmallow) deprecated a part of the Android platform, namely the
+# org.apache.http package.  Fennec removed all code that referenced said package
+# in order to easily ship to Android 23 devices (and, by extension, all devices
+# before Android 23).
+#
+# Google did not remove all code that referenced said package in their own
+# com.google.android.gms namespace!  It turns out that the org.apache.http
+# package is not removed, only deprecated and hidden by default.  Google added a
+# a `useLibrary` Gradle directive that allows legacy code to reference the
+# package, which is still (hidden) in the Android 23 platform.
+#
+# Fennec code doesn't need to compile against the deprecated package, since our
+# code doesn't reference the package anymore.  However, we do need to Proguard
+# against the deprecated package.  If we don't, Proguard -- which is a global
+# optimization -- sees Google libraries referencing "non-existent" libraries and
+# complains.  The solution is to mimic the `useLibraries` directive by declaring
+# the legacy package as a provided library jar.
+#
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1233238#c19 for symptoms and
+# more discussion.
+ifdef MOZ_INSTALL_TRACKING
+library_jars += $(ANDROID_SDK)/optional/org.apache.http.legacy.jar
+endif # MOZ_INSTALL_TRACKING
+
 library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
 
+gradle_dir := $(topobjdir)/gradle/build/mobile/android
+
+ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+.gradle.deps: .aapt.deps FORCE
+	@$(TOUCH) $@
+	$(topsrcdir)/mach gradle \
+		$(if $(MOZILLA_OFFICIAL),--no-daemon --offline --info) \
+		app:assembleAutomationDebug app:assembleAutomationDebugAndroidTest -x lint
+
+classes.dex: .gradle.deps
+	$(REPORT_BUILD)
+	cp $(gradle_dir)/app/intermediates/transforms/dex/automation/debug/folders/1000/1f/main/classes.dex $@
+else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex jars-proguarded
+endif
 
 ifdef MOZ_DISABLE_PROGUARD
   PROGUARD_PASSES=0
@@ -271,25 +333,6 @@ preprocessed_PATH := generated/preprocessed/org/mozilla/gecko
 preprocessed_KEEP_PATH := 1
 preprocessed_FLAGS := --marker='//\\\#'
 
-ifdef MOZ_INSTALL_TRACKING
-ifdef MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
-# The value of MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN is sensitive: we don't
-# want to expose it in build logs.  Following the model set by
-# toolkit/components/urlformatter/Makefile.in, we expose it to AppConstants.java
-# quietly here.  Be aware that the included line's marker needs to agree with
-# --marker above.
-
-adjust_sdk_app_token:
-	@echo '//#define MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN $(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)' > $@
-
-export:: adjust_sdk_app_token
-
-preprocessed_FLAGS += -I adjust_sdk_app_token
-endif # MOZ_INSTALL_TRACKING
-endif # MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
-
-GARBAGE += adjust_sdk_app_token
-
 PP_TARGETS += preprocessed
 
 include $(topsrcdir)/config/rules.mk
@@ -389,6 +432,9 @@ generated/android/support/design/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
+generated/com/google/android/gms/ads/R.java: .aapt.deps ;
+generated/com/google/android/gms/analytics/R.java: .aapt.deps ;
+generated/com/google/android/gms/appindexing/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
@@ -456,8 +502,13 @@ endef
 # .aapt.deps: $(all_resources)
 $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
-# .aapt.nodeps: $(abspath $(CURDIR)/AndroidManifest.xml) FORCE
-$(eval $(call aapt_command,.aapt.nodeps,$(abspath $(CURDIR)/AndroidManifest.xml) FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
+ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+.aapt.nodeps: FORCE
+	cp $(gradle_dir)/app/intermediates/res/resources-automation-debug.ap_ gecko-nodeps.ap_
+else
+# .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
+$(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
+endif
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -487,7 +538,14 @@ gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
 gradle-targets: $(abspath AndroidManifest.xml)
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
-gradle-omnijar: $(ABS_DIST)/fennec/$(OMNIJAR_NAME)
+ifndef MOZILLA_OFFICIAL
+# Local developers update omni.ja during their builds.  There's a
+# chicken-and-egg problem here.
+gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
+else
+# In automation, omni.ja is built only during packaging.
+gradle-omnijar:
+endif
 
 .PHONY: gradle-targets gradle-omnijar
 
@@ -498,8 +556,8 @@ endif
 
 # GeneratedJNIWrappers.cpp target also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
-libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
-	$(INSTALL) classes.dex $(FINAL_TARGET)
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && \
 	  diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
 	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
@@ -513,3 +571,9 @@ libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.t
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
 	  exit 1)
+endif
+
+libs:: $(CURDIR)/fennec_ids.txt
+
+libs:: classes.dex
+	$(INSTALL) classes.dex $(FINAL_TARGET)

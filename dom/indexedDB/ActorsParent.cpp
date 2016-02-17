@@ -8566,6 +8566,16 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
+class FlushPendingFileDeletionsRunnable final
+  : public nsRunnable
+{
+private:
+  ~FlushPendingFileDeletionsRunnable()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+};
+
 class PermissionRequestHelper final
   : public PermissionRequestBase
   , public PIndexedDBPermissionRequestParent
@@ -9565,6 +9575,19 @@ DeallocPBackgroundIndexedDBUtilsParent(PBackgroundIndexedDBUtilsParent* aActor)
   MOZ_ASSERT(aActor);
 
   RefPtr<Utils> actor = dont_AddRef(static_cast<Utils*>(aActor));
+  return true;
+}
+
+bool
+RecvFlushPendingFileDeletions()
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<FlushPendingFileDeletionsRunnable> runnable =
+    new FlushPendingFileDeletionsRunnable();
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+
   return true;
 }
 
@@ -27058,6 +27081,24 @@ GetFileReferencesHelper::Run()
 
   mWaiting = false;
   mCondVar.Notify();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FlushPendingFileDeletionsRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
+  if (NS_WARN_IF(!mgr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = mgr->FlushPendingFileDeletions();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }

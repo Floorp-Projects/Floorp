@@ -7,19 +7,19 @@
 #ifndef mozilla_Hal_h
 #define mozilla_Hal_h
 
-#include "mozilla/hal_sandbox/PHal.h"
-#include "mozilla/HalTypes.h"
 #include "base/basictypes.h"
 #include "base/platform_thread.h"
-#include "mozilla/Observer.h"
-#include "mozilla/Types.h"
 #include "nsTArray.h"
-#include "mozilla/dom/MozPowerManagerBinding.h"
 #include "mozilla/dom/battery/Types.h"
+#include "mozilla/dom/MozPowerManagerBinding.h"
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/power/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalScreenConfiguration.h"
+#include "mozilla/HalTypes.h"
+#include "mozilla/Observer.h"
+#include "mozilla/Types.h"
 
 /*
  * Hal.h contains the public Hal API.

@@ -375,23 +375,25 @@ function adHocExchange() {
     assertEq(exchangeLoop(a), -100000);
 }
 
+// isLockFree(n) may return true only if there is an integer array
+// on which atomic operations is allowed whose byte size is n,
+// ie, it must return false for n=8.
+//
+// SpiderMonkey has isLockFree(1), isLockFree(2), isLockFree(4) on all
+// supported platforms, though this is not guaranteed by the spec.
+
 var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
                    9,    10,    11,    12];
-var answers = [ true,  true, false,  true, false, false, false, {},
+var answers = [ true,  true, false,  true, false, false, false, false,
 	       false, false, false, false];
 
 function testIsLockFree() {
-    var saved8 = "Invalid";
-
     // This ought to defeat most compile-time resolution.
     for ( var i=0 ; i < sizes.length ; i++ ) {
 	var v = Atomics.isLockFree(sizes[i]);
 	var a = answers[i];
 	assertEq(typeof v, 'boolean');
-	if (typeof a == 'boolean')
-	    assertEq(v, a);
-	else
-	    saved8 = v;
+	assertEq(v, a);
     }
 
     // This ought to be optimizable.
@@ -402,11 +404,43 @@ function testIsLockFree() {
     assertEq(Atomics.isLockFree(5), false);
     assertEq(Atomics.isLockFree(6), false);
     assertEq(Atomics.isLockFree(7), false);
-    assertEq(Atomics.isLockFree(8), saved8);
+    assertEq(Atomics.isLockFree(8), false);
     assertEq(Atomics.isLockFree(9), false);
     assertEq(Atomics.isLockFree(10), false);
     assertEq(Atomics.isLockFree(11), false);
     assertEq(Atomics.isLockFree(12), false);
+}
+
+function testIsLockFree2() {
+    assertEq(Atomics.isLockFree(0), false);
+    assertEq(Atomics.isLockFree(0/-1), false);
+    assertEq(Atomics.isLockFree(3.5), false);
+    assertEq(Atomics.isLockFree(Number.NaN), false);  // NaN => +0
+    assertEq(Atomics.isLockFree(Number.POSITIVE_INFINITY), false);
+    assertEq(Atomics.isLockFree(Number.NEGATIVE_INFINITY), false);
+    assertEq(Atomics.isLockFree(-4), false);
+    assertEq(Atomics.isLockFree('4'), true);
+    assertEq(Atomics.isLockFree('-4'), false);
+    assertEq(Atomics.isLockFree('4.5'), true);
+    assertEq(Atomics.isLockFree('5.5'), false);
+    assertEq(Atomics.isLockFree(new Number(4)), true);
+    assertEq(Atomics.isLockFree(new String('4')), true);
+    assertEq(Atomics.isLockFree(new Boolean(true)), true);
+    var thrown = false;
+    try {
+	Atomics.isLockFree(Symbol('1'));
+    } catch (e) {
+	thrown = e;
+    }
+    assertEq(thrown instanceof TypeError, true);
+    assertEq(Atomics.isLockFree(true), true);
+    assertEq(Atomics.isLockFree(false), false);
+    assertEq(Atomics.isLockFree(undefined), false);
+    assertEq(Atomics.isLockFree(null), false);
+    assertEq(Atomics.isLockFree({toString: () => '4'}), true);
+    assertEq(Atomics.isLockFree({valueOf: () => 4}), true);
+    assertEq(Atomics.isLockFree({valueOf: () => 5}), false);
+    assertEq(Atomics.isLockFree({password: "qumquat"}), false);
 }
 
 function testUint8Clamped(sab) {
@@ -516,6 +550,7 @@ function runTests() {
 
     // Misc
     testIsLockFree();
+    testIsLockFree2();
 }
 
 if (this.Atomics && this.SharedArrayBuffer)

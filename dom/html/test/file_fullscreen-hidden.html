@@ -34,13 +34,17 @@ function begin()
 
 function b2()
 {
-  try { e1.mozRequestFullScreen(); } catch(e) { opener.ok(false, "[hidden] Should not enter full-screen"); }
+  try {
+    e1.requestFullscreen();
+  } catch(e) {
+    opener.ok(false, "[hidden] Should not enter full-screen");
+  }
   setTimeout(done, 0);
 }
 
 function done() {
-  opener.ok(!document.mozFullScreen, "[hidden] Should not have entered full-screen mode in hidden document.");
-  opener.ok(!e1.ownerDocument.mozFullScreen, "[hidden] Requesting owner should not have entered full-screen mode.");
+  opener.ok(!document.fullscreenElement, "[hidden] Should not have entered full-screen mode in hidden document.");
+  opener.ok(!e1.ownerDocument.fullscreenElement, "[hidden] Requesting owner should not have entered full-screen mode.");
   opener.nextTest();
 }
 

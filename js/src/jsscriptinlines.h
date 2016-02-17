@@ -92,22 +92,7 @@ LazyScript::functionDelazifying(JSContext* cx) const
     return function_;
 }
 
-inline StaticScope*
-LazyScript::enclosingScope() const
-{
-    return staticScope_->enclosingScope();
-}
-
 } // namespace js
-
-inline js::StaticScope*
-JSScript::enclosingStaticScope() const
-{
-    // The static scope of a function script is the function scope (which
-    // contains arguments and local variables). This method's callers want to
-    // skip that scope.
-    return function_ ? staticScope_->enclosingScope() : staticScope_;
-}
 
 inline JSFunction*
 JSScript::functionDelazifying() const

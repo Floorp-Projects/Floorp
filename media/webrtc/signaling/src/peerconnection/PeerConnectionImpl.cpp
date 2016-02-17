@@ -2628,7 +2628,7 @@ PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
     PluginCrashedEvent::Constructor(doc, NS_LITERAL_STRING("PluginCrashed"), init);
 
   event->SetTrusted(true);
-  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   EventDispatcher::DispatchDOMEvent(mWindow, nullptr, event, nullptr, nullptr);
 #endif

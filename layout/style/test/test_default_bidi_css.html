@@ -32,10 +32,10 @@ var tests = [
     ['div', {'dir': ''}, 'ltr', '-moz-isolate'],
 
     ['span', {}, 'ltr', 'normal'],
-    ['span', {'dir': 'ltr'}, 'ltr', 'embed'],
-    ['span', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['span', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['span', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
     ['span', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
-    ['span', {'dir': ''}, 'ltr', 'normal'],
+    ['span', {'dir': ''}, 'ltr', '-moz-isolate'],
 
     ['bdi', {}, 'ltr', '-moz-isolate'],
     ['bdi', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
@@ -56,10 +56,10 @@ var tests = [
     ['bdo', {'dir': ''}, 'ltr', 'bidi-override'],
 
     ['textarea', {}, 'ltr', 'normal'],
-    ['textarea', {'dir': 'ltr'}, 'ltr', 'embed'],
-    ['textarea', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['textarea', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['textarea', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
     ['textarea', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
-    ['textarea', {'dir': ''}, 'ltr', 'normal'],
+    ['textarea', {'dir': ''}, 'ltr', '-moz-isolate'],
 
     ['pre', {}, 'ltr', '-moz-isolate'],
     ['pre', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],

@@ -457,6 +457,8 @@ class RegExpObject : public NativeObject
     bool sticky() const     { return getFixedSlot(STICKY_FLAG_SLOT).toBoolean(); }
     bool unicode() const    { return getFixedSlot(UNICODE_FLAG_SLOT).toBoolean(); }
 
+    static bool isOriginalFlagGetter(JSNative native, unsigned* slot);
+
     bool getShared(JSContext* cx, RegExpGuard* g);
 
     void setShared(RegExpShared& shared) {

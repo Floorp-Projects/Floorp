@@ -147,13 +147,19 @@ class AtomicOperations
     static inline void memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes);
 
   public:
-    // Test lock-freedom for any integer value.
+    // Test lock-freedom for any int32 value.  This implements the
+    // Atomics::isLockFree() operation in the Shared Memory and
+    // Atomics specification, as follows:
     //
-    // This implements a platform-independent pattern, as follows:
+    // 1, 2, and 4 bytes are always lock free (in SpiderMonkey).
     //
-    // 1, 2, and 4 bytes are always lock free, lock-freedom for 8
-    // bytes is determined by the platform's isLockfree8(), and there
-    // is no lock-freedom for any other values on any platform.
+    // Lock-freedom for 8 bytes is determined by the platform's
+    // isLockfree8().  However, the spec stipulates that isLockFree(8)
+    // is true only if there is an integer array that admits atomic
+    // operations whose BYTES_PER_ELEMENT=8; at the moment (February
+    // 2016) there are no such arrays.
+    //
+    // There is no lock-freedom for any other values on any platform.
     static inline bool isLockfree(int32_t n);
 
     // If the return value is true then a call to the 64-bit (8-byte)
@@ -297,7 +303,12 @@ AtomicOperations::isLockfree(int32_t size)
       case 4:
         return true;
       case 8:
-        return AtomicOperations::isLockfree8();
+        // The spec requires Atomics.isLockFree(n) to return false
+        // unless n is the BYTES_PER_ELEMENT value of some integer
+        // TypedArray that admits atomic operations.  At the time of
+        // writing (February 2016) there is no such array with n=8.
+        // return AtomicOperations::isLockfree8();
+        return false;
       default:
         return false;
     }

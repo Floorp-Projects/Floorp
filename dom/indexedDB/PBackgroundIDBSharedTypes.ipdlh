@@ -17,8 +17,8 @@ using struct mozilla::null_t
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
-using mozilla::dom::indexedDB::IDBCursor::Direction
-  from "mozilla/dom/indexedDB/IDBCursor.h";
+using mozilla::dom::IDBCursor::Direction
+  from "mozilla/dom/IDBCursor.h";
 
 using class mozilla::dom::indexedDB::Key
   from "mozilla/dom/indexedDB/Key.h";

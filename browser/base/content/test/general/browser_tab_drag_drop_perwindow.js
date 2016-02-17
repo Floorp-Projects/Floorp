@@ -147,3 +147,33 @@ add_task(function* test_dragging_blacklisted() {
   yield BrowserTestUtils.closeWindow(remoteWin1);
   yield BrowserTestUtils.closeWindow(remoteWin2);
 });
+
+
+/**
+ * Tests that tabs dragged between windows dispatch TabOpen and TabClose
+ * events with the appropriate adoption details.
+ */
+add_task(function* test_dragging_adoption_events() {
+  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+
+  let tab1 = yield BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  let tab2 = yield BrowserTestUtils.openNewForegroundTab(win2.gBrowser);
+
+  let awaitCloseEvent = BrowserTestUtils.waitForEvent(tab1, "TabClose");
+  let awaitOpenEvent = BrowserTestUtils.waitForEvent(win2, "TabOpen");
+
+  let effect = ChromeUtils.synthesizeDrop(tab1, tab2,
+    [[{type: TAB_DROP_TYPE, data: tab1}]],
+    null, win1, win2);
+  is(effect, "move", "Tab should be moved from win1 to win2.");
+
+  let closeEvent = yield awaitCloseEvent;
+  let openEvent = yield awaitOpenEvent;
+
+  is(openEvent.detail.adoptedTab, tab1, "New tab adopted old tab");
+  is(closeEvent.detail.adoptedBy, openEvent.target, "Old tab adopted by new tab");
+
+  yield BrowserTestUtils.closeWindow(win1);
+  yield BrowserTestUtils.closeWindow(win2);
+});

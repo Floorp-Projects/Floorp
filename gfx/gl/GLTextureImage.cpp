@@ -12,6 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "ScopedGLHelpers.h"
 #include "GLUploadHelpers.h"
+#include "GfxTexturesReporter.h"
 
 #include "TextureImageEGL.h"
 #ifdef XP_MACOSX
@@ -95,6 +96,16 @@ gfx::IntRect TextureImage::GetSrcTileRect() {
     return GetTileRect();
 }
 
+void
+TextureImage::UpdateUploadSize(size_t amount)
+{
+    if (mUploadSize > 0) {
+        GfxTexturesReporter::UpdateAmount(GfxTexturesReporter::MemoryFreed, mUploadSize);
+    }
+    mUploadSize = amount;
+    GfxTexturesReporter::UpdateAmount(GfxTexturesReporter::MemoryAllocated, mUploadSize);
+}
+
 BasicTextureImage::~BasicTextureImage()
 {
     GLContext *ctx = mGLContext;
@@ -162,16 +173,21 @@ BasicTextureImage::EndUpdate()
     RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     bool relative = FinishedSurfaceUpdate();
-
+    bool needInit = mTextureState == Created;
+    size_t uploadSize;
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
                                updateData,
                                mUpdateRegion,
                                mTexture,
-                               mTextureState == Created,
+                               &uploadSize,
+                               needInit,
                                mUpdateOffset,
                                relative);
     FinishedSurfaceUpload();
+    if (uploadSize > 0) {
+        UpdateUploadSize(uploadSize);
+    }
 
     mUpdateDrawTarget = nullptr;
     mTextureState = Valid;
@@ -214,14 +230,20 @@ BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
         region = aRegion;
     }
 
+    size_t uploadSize;
+    bool needInit = mTextureState == Created;
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
                                aSurf,
                                region,
                                mTexture,
-                               mTextureState == Created,
+                               &uploadSize,
+                               needInit,
                                bounds.TopLeft() + IntPoint(aFrom.x, aFrom.y),
                                false);
+    if (uploadSize > 0) {
+        UpdateUploadSize(uploadSize);
+    }
     mTextureState = Valid;
     return true;
 }
@@ -273,6 +295,7 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
     , mTextureFormat(gfx::SurfaceFormat::UNKNOWN)
     , mFilter(Filter::GOOD)
     , mFlags(aFlags)
+    , mUploadSize(0)
 {}
 
 BasicTextureImage::BasicTextureImage(GLuint aTexture,

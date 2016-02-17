@@ -69,7 +69,7 @@ class LAllocation : public TempObject
 
   public:
     enum Kind {
-        CONSTANT_VALUE, // Constant js::Value.
+        CONSTANT_VALUE, // MConstant*.
         CONSTANT_INDEX, // Constant arbitrary index.
         USE,            // Use of a virtual register, with physical allocation policy.
         GPR,            // General purpose register.
@@ -107,10 +107,10 @@ class LAllocation : public TempObject
         MOZ_ASSERT(isBogus());
     }
 
-    // The value pointer must be rooted in MIR and have its low bits cleared.
-    explicit LAllocation(const Value* vp) {
-        MOZ_ASSERT(vp);
-        bits_ = uintptr_t(vp);
+    // The MConstant pointer must have its low bits cleared.
+    explicit LAllocation(const MConstant* c) {
+        MOZ_ASSERT(c);
+        bits_ = uintptr_t(c);
         MOZ_ASSERT((bits_ & (KIND_MASK << KIND_SHIFT)) == 0);
         bits_ |= CONSTANT_VALUE << KIND_SHIFT;
     }
@@ -166,9 +166,9 @@ class LAllocation : public TempObject
     inline const LConstantIndex* toConstantIndex() const;
     inline AnyRegister toRegister() const;
 
-    const Value* toConstant() const {
+    const MConstant* toConstant() const {
         MOZ_ASSERT(isConstantValue());
-        return reinterpret_cast<const Value*>(bits_ & ~(KIND_MASK << KIND_SHIFT));
+        return reinterpret_cast<const MConstant*>(bits_ & ~(KIND_MASK << KIND_SHIFT));
     }
 
     bool operator ==(const LAllocation& other) const {

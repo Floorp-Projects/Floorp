@@ -136,7 +136,6 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     LOG(("nsHttpCompresssConv %p onstop partial gzip\n", this));
   }
   if (NS_SUCCEEDED(status) && mMode == HTTP_COMPRESS_BROTLI) {
-    uint32_t waste;
     nsCOMPtr<nsIForcePendingChannel> fpChannel = do_QueryInterface(request);
     bool isPending = false;
     if (request) {
@@ -145,7 +144,9 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(true);
     }
-    status = BrotliHandler(nullptr, this, nullptr, 0, 0, &waste);
+    if (mBrotli->mTotalOut == 0 && !BrotliStateIsStreamEnd(&mBrotli->mState)) {
+      status = NS_ERROR_INVALID_CONTENT_ENCODING;
+    }
     LOG(("nsHttpCompresssConv %p onstop brotlihandler rv %x\n", this, status));
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(false);
@@ -160,6 +161,7 @@ NS_METHOD
 nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const char *dataIn,
                                   uint32_t, uint32_t aAvail, uint32_t *countRead)
 {
+  MOZ_ASSERT(stream);
   nsHTTPCompressConv *self = static_cast<nsHTTPCompressConv *>(closure);
   *countRead = 0;
 
@@ -179,11 +181,10 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
     outSize = kOutSize;
     outPtr = outBuffer;
 
-    // brotli api is documented in brotli/dec/decode.h
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress %d finish %d\n",
-         self, avail, !stream));
-    res = ::BrotliDecompressBufferStreaming(
-      &avail, reinterpret_cast<const unsigned char **>(&dataIn), stream ? 0 : 1,
+    // brotli api is documented in brotli/dec/decode.h and brotli/dec/decode.c
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress %d\n", self, avail));
+    res = ::BrotliDecompressStream(
+      &avail, reinterpret_cast<const unsigned char **>(&dataIn),
       &outSize, &outPtr, &self->mBrotli->mTotalOut, &self->mBrotli->mState);
     outSize = kOutSize - outSize;
     LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%x out=%d\n",
@@ -195,12 +196,15 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
       return self->mBrotli->mStatus;
     }
 
-    // in 'the current implementation' brotli consumes all input on success
-    MOZ_ASSERT(!avail);
-    if (avail) {
-      LOG(("nsHttpCompressConv %p did not consume all input", self));
-      self->mBrotli->mStatus = NS_ERROR_UNEXPECTED;
-      return self->mBrotli->mStatus;
+    // in 'the current implementation' brotli must consume everything before
+    // asking for more input
+    if (res == BROTLI_RESULT_NEEDS_MORE_INPUT) {
+      MOZ_ASSERT(!avail);
+      if (avail) {
+        LOG(("nsHttpCompressConv %p did not consume all input", self));
+        self->mBrotli->mStatus = NS_ERROR_UNEXPECTED;
+        return self->mBrotli->mStatus;
+      }
     }
     if (outSize > 0) {
       nsresult rv = self->do_OnDataAvailable(self->mBrotli->mRequest,

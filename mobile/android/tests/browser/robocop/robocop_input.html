@@ -33,6 +33,16 @@
           input.value = "good";
         },
 
+        test_set_selection: function() {
+          let inputEditable = SpecialPowers.wrap(input).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
+          let inputIme = inputEditable.editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
+          do_check_true(inputIme.composing);
+
+          // Ending the composition then setting the selection triggers the bug.
+          inputIme.forceCompositionEnd();
+          input.setSelectionRange(3, 3);
+        },
+
         focus_resetting_input: function(val) {
           resetting_input.value = val;
           resetting_input.focus();

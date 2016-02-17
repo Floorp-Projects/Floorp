@@ -885,6 +885,17 @@ class AssemblerX86Shared : public AssemblerShared
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
     void jmp(RepatchLabel* label) { jmpSrc(label); }
 
+    void j(Condition cond, wasm::JumpTarget target) {
+        Label l;
+        j(cond, &l);
+        bindLater(&l, target);
+    }
+    void jmp(wasm::JumpTarget target) {
+        Label l;
+        jmp(&l);
+        bindLater(&l, target);
+    }
+
     void jmp(const Operand& op) {
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:
@@ -915,6 +926,15 @@ class AssemblerX86Shared : public AssemblerShared
         }
         label->bind(dst.offset());
     }
+    void bindLater(Label* label, wasm::JumpTarget target) {
+        if (label->used()) {
+            JmpSrc jmp(label->offset());
+            do {
+                append(target, jmp.offset());
+            } while (masm.nextJump(jmp, &jmp));
+        }
+        label->reset();
+    }
     void bind(RepatchLabel* label) {
         JmpDst dst(masm.label());
         if (label->used()) {
@@ -931,11 +951,11 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     // Re-routes pending jumps to a new label.
-    void retargetWithOffset(size_t baseOffset, const LabelBase* label, LabelBase* target) {
+    void retarget(Label* label, Label* target) {
         if (!label->used())
             return;
         bool more;
-        JmpSrc jmp(label->offset() + baseOffset);
+        JmpSrc jmp(label->offset());
         do {
             JmpSrc next;
             more = masm.nextJump(jmp, &next);
@@ -947,11 +967,8 @@ class AssemblerX86Shared : public AssemblerShared
                 JmpSrc prev(target->use(jmp.offset()));
                 masm.setNextJump(jmp, prev);
             }
-            jmp = JmpSrc(next.offset() + baseOffset);
+            jmp = JmpSrc(next.offset());
         } while (more);
-    }
-    void retarget(Label* label, Label* target) {
-        retargetWithOffset(0, label, target);
         label->reset();
     }
 
@@ -1007,6 +1024,16 @@ class AssemblerX86Shared : public AssemblerShared
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
         unsigned char* code = masm.data();
         X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
+    }
+    CodeOffset thunkWithPatch() {
+        return CodeOffset(masm.jmp().offset());
+    }
+    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) {
+        unsigned char* code = masm.data();
+        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+    }
+    static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
+        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
     }
 
     void breakpoint() {

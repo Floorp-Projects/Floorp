@@ -19,7 +19,7 @@ add_task(function* () {
     manifest: {
       "permissions": ["tabs"],
 
-      "background": { "page": "bg/background.html" },
+      "background": {"page": "bg/background.html"},
     },
 
     files: {
@@ -45,48 +45,48 @@ add_task(function* () {
 
           let tests = [
             {
-              create: { url: "http://example.com/" },
-              result: { url: "http://example.com/" },
+              create: {url: "http://example.com/"},
+              result: {url: "http://example.com/"},
             },
             {
-              create: { url: "blank.html" },
-              result: { url: browser.runtime.getURL("bg/blank.html") },
+              create: {url: "blank.html"},
+              result: {url: browser.runtime.getURL("bg/blank.html")},
             },
             {
               create: {},
-              result: { url: "about:newtab" },
+              result: {url: "about:newtab"},
             },
             {
-              create: { active: false },
-              result: { active: false },
+              create: {active: false},
+              result: {active: false},
             },
             {
-              create: { active: true },
-              result: { active: true },
+              create: {active: true},
+              result: {active: true},
             },
             {
-              create: { pinned: true },
-              result: { pinned: true, index: 0 },
+              create: {pinned: true},
+              result: {pinned: true, index: 0},
             },
             {
-              create: { pinned: true, active: true },
-              result: { pinned: true, active: true, index: 0 },
+              create: {pinned: true, active: true},
+              result: {pinned: true, active: true, index: 0},
             },
             {
-              create: { pinned: true, active: false },
-              result: { pinned: true, active: false, index: 0 },
+              create: {pinned: true, active: false},
+              result: {pinned: true, active: false, index: 0},
             },
             {
-              create: { index: 1 },
-              result: { index: 1 },
+              create: {index: 1},
+              result: {index: 1},
             },
             {
-              create: { index: 1, active: false },
-              result: { index: 1, active: false },
+              create: {index: 1, active: false},
+              result: {index: 1, active: false},
             },
             {
-              create: { windowId: activeWindow },
-              result: { windowId: activeWindow },
+              create: {windowId: activeWindow},
+              result: {windowId: activeWindow},
             },
           ];
 
@@ -141,7 +141,7 @@ add_task(function* () {
 
               return browser.tabs.remove(tabId);
             }).then(() => {
-              return browser.tabs.update(activeTab, { active: true });
+              return browser.tabs.update(activeTab, {active: true});
             }).then(() => {
               nextTest();
             });
@@ -150,7 +150,7 @@ add_task(function* () {
           nextTest();
         }
 
-        browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+        browser.tabs.query({active: true, currentWindow: true}, tabs => {
           activeTab = tabs[0].id;
           activeWindow = tabs[0].windowId;
 

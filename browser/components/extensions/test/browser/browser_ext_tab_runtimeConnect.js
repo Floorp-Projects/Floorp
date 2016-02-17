@@ -38,16 +38,16 @@ add_task(function* () {
         });
       });
 
-      browser.tabs.create({ url: "tab.html" },
+      browser.tabs.create({url: "tab.html"},
                           (tab) => { tabId = tab.id; });
     },
 
     files: {
       "tab.js": function() {
-        let port = browser.runtime.connect({ name: "tab-connection-name"});
+        let port = browser.runtime.connect({name: "tab-connection-name"});
         port.postMessage("tab to background port message");
         port.onMessage.addListener((msg) => {
-          port.postMessage({ tabReceived: msg });
+          port.postMessage({tabReceived: msg});
         });
       },
       "tab.html": `

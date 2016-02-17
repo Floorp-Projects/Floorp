@@ -1193,9 +1193,7 @@ TreeNode.compareAmounts = function(aA, aB) {
 };
 
 TreeNode.compareUnsafeNames = function(aA, aB) {
-  return aA._unsafeName < aB._unsafeName ? -1 :
-         aA._unsafeName > aB._unsafeName ?  1 :
-         0;
+  return aA._unsafeName.localeCompare(aB._unsafeName);
 };
 
 

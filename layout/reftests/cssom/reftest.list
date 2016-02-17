@@ -1,2 +1,2 @@
-skip-if(B2G||Mulet) == computed-style-cross-window.html computed-style-cross-window-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) == computed-style-cross-window.html computed-style-cross-window-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == inline-style-null.html inline-style-null-ref.html

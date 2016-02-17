@@ -597,7 +597,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     // get the event coordinates relative to the root frame of the document
     // containing the popup.
     NS_ASSERTION(aPopup, "Expected a popup node");
-    WidgetEvent* event = aEvent->GetInternalNSEvent();
+    WidgetEvent* event = aEvent->WidgetEventPtr();
     if (event) {
       WidgetInputEvent* inputEvent = event->AsInputEvent();
       if (inputEvent) {
@@ -2058,7 +2058,7 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
 {
   // On Windows, don't check shortcuts when the accelerator key is down.
 #ifdef XP_WIN
-  WidgetInputEvent* evt = aKeyEvent->AsEvent()->GetInternalNSEvent()->AsInputEvent();
+  WidgetInputEvent* evt = aKeyEvent->AsEvent()->WidgetEventPtr()->AsInputEvent();
   if (evt && evt->IsAccel()) {
     return false;
   }
@@ -2074,7 +2074,7 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
     if (result) {
       aFrame->ChangeMenuItem(result, false, true);
       if (action) {
-        WidgetGUIEvent* evt = aKeyEvent->AsEvent()->GetInternalNSEvent()->AsGUIEvent();
+        WidgetGUIEvent* evt = aKeyEvent->AsEvent()->WidgetEventPtr()->AsGUIEvent();
         nsMenuFrame* menuToOpen = result->Enter(evt);
         if (menuToOpen) {
           nsCOMPtr<nsIContent> content = menuToOpen->GetContent();
@@ -2321,7 +2321,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       // Enter method will return a menu if one needs to be opened as a result.
       nsMenuFrame* menuToOpen = nullptr;
       WidgetGUIEvent* GUIEvent = aKeyEvent->AsEvent()->
-        GetInternalNSEvent()->AsGUIEvent();
+        WidgetEventPtr()->AsGUIEvent();
 
       if (aTopVisibleMenuItem) {
         menuToOpen = aTopVisibleMenuItem->Frame()->Enter(GUIEvent);

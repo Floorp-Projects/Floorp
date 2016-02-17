@@ -570,6 +570,7 @@ SpecialPowersObserverAPI.prototype = {
         }).then(() => {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionStarted", args: []});
         }).catch(e => {
+          dump(`Extension startup failed: ${e}\n${e.stack}`);
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionFailed", args: []});
         });
         return undefined;

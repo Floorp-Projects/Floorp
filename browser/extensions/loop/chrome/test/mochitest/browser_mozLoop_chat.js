@@ -18,7 +18,7 @@ add_task(function* test_mozLoop_nochat() {
 });
 
 add_task(function* test_mozLoop_openchat() {
-  let windowId = LoopRooms.open("fake1234");
+  let windowId = yield LoopRooms.open("fake1234");
   Assert.ok(isAnyLoopChatOpen(), "chat window should have been opened");
 
   let chatboxesForRoom = [...Chat.chatboxes].filter(chatbox => {
@@ -28,7 +28,7 @@ add_task(function* test_mozLoop_openchat() {
 });
 
 add_task(function* test_mozLoop_hangupAllChatWindows() {
-  LoopRooms.open("fake2345");
+  yield LoopRooms.open("fake2345");
 
   yield promiseWaitForCondition(() => {
     MozLoopService.hangupAllChatWindows();
@@ -49,7 +49,7 @@ add_task(function* test_mozLoop_hangupOnClose() {
     }
   });
 
-  let windowId = LoopRooms.open(roomToken);
+  let windowId = yield LoopRooms.open(roomToken);
 
   yield promiseWaitForCondition(() => {
     MozLoopService.hangupAllChatWindows();

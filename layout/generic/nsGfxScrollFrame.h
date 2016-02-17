@@ -370,6 +370,7 @@ public:
   void NotifyImageVisibilityUpdate();
   bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort);
 
+  bool AllowDisplayPortExpiration();
   void TriggerDisplayPortExpiration();
   void ResetDisplayPortExpiryTimer();
 

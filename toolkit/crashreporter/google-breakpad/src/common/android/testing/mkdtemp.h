@@ -27,9 +27,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Android doesn't provide mkdtemp(). Keep this implementation in an
-// C++ anonymous namespace to avoid conflicts on Chromium (which
-// already provides an extern "C" mkdtemp function).
+// mkdtemp() wasn't declared in <stdlib.h> until NDK r9b due to a simple
+// packaging bug (the function has always been implemented in all versions
+// of the C library). This header is provided to build Breakpad with earlier
+// NDK revisions (e.g. the one used by Chromium). It may be removed in the
+// future once all major projects upgrade to use a more recent NDK.
 //
 // The reason this is inlined here is to avoid linking a new object file
 // into each unit test program (i.e. keep build files simple).
@@ -44,9 +46,14 @@
 #include <string.h>
 #include <sys/stat.h>
 
+// Using a macro renaming trick here is necessary when building against
+// NDK r9b. Otherwise the compiler will complain that calls to mkdtemp()
+// are ambiguous.
+#define mkdtemp breakpad_mkdtemp
+
 namespace {
 
-char* mkdtemp(char* path) {
+char* breakpad_mkdtemp(char* path) {
   if (path == NULL) {
     errno = EINVAL;
     return NULL;

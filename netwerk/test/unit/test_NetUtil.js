@@ -68,7 +68,7 @@ function async_write_file(aContractId, aDeferOpen)
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append("NetUtil-async-test-file.tmp");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Then, we need an output stream to our output file.
   let ostream = Cc[aContractId].createInstance(Ci.nsIFileOutputStream);
@@ -123,7 +123,7 @@ function test_async_copy()
       getService(Ci.nsIProperties).
       get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
     let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
       createInstance(Ci.nsIFileOutputStream);
@@ -144,7 +144,7 @@ function test_async_copy()
       getService(Ci.nsIProperties).
       get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
     let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
       createInstance(Ci.nsIFileOutputStream);
@@ -409,7 +409,7 @@ function test_asyncFetch_with_nsIFile()
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append("NetUtil-asyncFetch-test-file.tmp");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the test data to the file.
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].

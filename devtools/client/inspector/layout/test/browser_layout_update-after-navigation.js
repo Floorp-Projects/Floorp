@@ -7,14 +7,31 @@
 // Test that the layout-view continues to work after a page navigation and that
 // it also works after going back
 
+const IFRAME1 = URL_ROOT + "doc_layout_iframe1.html";
+const IFRAME2 = URL_ROOT + "doc_layout_iframe2.html";
+
 add_task(function*() {
-  yield addTab(URL_ROOT + "doc_layout_iframe1.html");
-  let {toolbox, inspector, view} = yield openLayoutView();
-  yield runTests(inspector, view);
+  yield addTab(IFRAME1);
+  let {inspector, view, testActor} = yield openLayoutView();
+
+  yield testFirstPage(inspector, view, testActor);
+
+  info("Navigate to the second page");
+  yield testActor.eval(`content.location.href="${IFRAME2}"`);
+  yield inspector.once("markuploaded");
+
+  yield testSecondPage(inspector, view, testActor);
+
+  info("Go back to the first page");
+  yield testActor.eval("content.history.back();");
+  yield inspector.once("markuploaded");
+
+  yield testBackToFirstPage(inspector, view, testActor);
 });
 
-addTest("Test that the layout-view works on the first page",
-function*(inspector, view) {
+function* testFirstPage(inspector, view, testActor) {
+  info("Test that the layout-view works on the first page");
+
   info("Selecting the test node");
   yield selectNode("p", inspector);
 
@@ -24,22 +41,17 @@ function*(inspector, view) {
 
   info("Listening for layout-view changes and modifying the padding");
   let onUpdated = waitForUpdate(inspector);
-  getNode("p").style.padding = "20px";
+  yield setStyle(testActor, "p", "padding", "20px");
   yield onUpdated;
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
   is(paddingElt.textContent, "20");
-});
+}
 
-addTest("Navigate to the second page",
-function*(inspector, view) {
-  yield navigateTo(URL_ROOT + "doc_layout_iframe2.html");
-  yield inspector.once("markuploaded");
-});
+function* testSecondPage(inspector, view, testActor) {
+  info("Test that the layout-view works on the second page");
 
-addTest("Test that the layout-view works on the second page",
-function*(inspector, view) {
   info("Selecting the test node");
   yield selectNode("p", inspector);
 
@@ -49,22 +61,17 @@ function*(inspector, view) {
 
   info("Listening for layout-view changes and modifying the size");
   let onUpdated = waitForUpdate(inspector);
-  getNode("p").style.width = "200px";
+  yield setStyle(testActor, "p", "width", "200px");
   yield onUpdated;
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
   is(sizeElt.textContent, "200" + "\u00D7" + "100");
-});
+}
 
-addTest("Go back to the first page",
-function*(inspector, view) {
-  content.history.back();
-  yield inspector.once("markuploaded");
-});
+function* testBackToFirstPage(inspector, view, testActor) {
+  info("Test that the layout-view works on the first page after going back");
 
-addTest("Test that the layout-view works on the first page after going back",
-function*(inspector, view) {
   info("Selecting the test node");
   yield selectNode("p", inspector);
 
@@ -75,24 +82,10 @@ function*(inspector, view) {
 
   info("Listening for layout-view changes and modifying the padding");
   let onUpdated = waitForUpdate(inspector);
-  getNode("p").style.padding = "100px";
+  yield setStyle(testActor, "p", "padding", "100px");
   yield onUpdated;
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
   is(paddingElt.textContent, "100");
-});
-
-function navigateTo(url) {
-  info("Navigating to " + url);
-
-  let def = promise.defer();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL " + url + " loading complete");
-    waitForFocus(def.resolve, content);
-  }, true);
-  content.location = url;
-
-  return def.promise;
 }

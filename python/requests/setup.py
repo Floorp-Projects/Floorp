@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
-
-import requests
 
 from codecs import open
 
@@ -29,6 +28,14 @@ packages = [
 
 requires = []
 
+version = ''
+with open('requests/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        fd.read(), re.MULTILINE).group(1)
+
+if not version:
+    raise RuntimeError('Cannot find version information')
+
 with open('README.rst', 'r', 'utf-8') as f:
     readme = f.read()
 with open('HISTORY.rst', 'r', 'utf-8') as f:
@@ -36,7 +43,7 @@ with open('HISTORY.rst', 'r', 'utf-8') as f:
 
 setup(
     name='requests',
-    version=requests.__version__,
+    version=version,
     description='Python HTTP for Humans.',
     long_description=readme + '\n\n' + history,
     author='Kenneth Reitz',
@@ -55,14 +62,13 @@ setup(
         'Natural Language :: English',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'
-
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ),
     extras_require={
-        'security': ['pyOpenSSL', 'ndg-httpsclient', 'pyasn1'],
+        'security': ['pyOpenSSL>=0.13', 'ndg-httpsclient', 'pyasn1'],
     },
 )

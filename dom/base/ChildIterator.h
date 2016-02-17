@@ -64,7 +64,7 @@ public:
   // found.  This version can take shortcuts that the two-argument version
   // can't, so can be faster (and in fact can be O(1) instead of O(N) in many
   // cases).
-  void Seek(nsIContent* aChildToFind);
+  bool Seek(nsIContent* aChildToFind);
 
   // Looks for aChildToFind respecting insertion points until aChildToFind is found.
   // or aBound is found. If aBound is nullptr then the seek is unbounded. Returns
@@ -198,6 +198,8 @@ public:
 #ifdef DEBUG
   ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
 #endif
+
+  bool Seek(nsIContent* aChildToFind);
 
   nsIContent* GetNextChild();
   nsIContent* Parent() const { return mOriginalContent; }

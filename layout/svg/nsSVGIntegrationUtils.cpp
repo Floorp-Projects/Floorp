@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxDrawable.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSClipPathInstance.h"
 #include "nsDisplayList.h"
 #include "nsFilterInstance.h"
 #include "nsLayoutUtils.h"
@@ -155,8 +156,7 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   bool hasValidLayers = style->mMask.HasLayerWithImage();
 
-  return (style->HasFilters() || hasValidLayers ||
-          (style->mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE));
+  return (style->HasFilters() || style->HasClipPath() || hasValidLayers);
 }
 
 // For non-SVG frames, this gives the offset to the frame's "user space".
@@ -636,6 +636,9 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
   if (clipPathFrame && isTrivialClip) {
     aContext.Save();
     clipPathFrame->ApplyClipPath(aContext, aFrame, cssPxToDevPxMatrix);
+  } else if (!clipPathFrame && svgReset->HasClipPath()) {
+    aContext.Save();
+    nsCSSClipPathInstance::ApplyBasicShapeClip(aContext, aFrame);
   }
 
   /* Paint the child */
@@ -656,7 +659,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
     basic->SetTarget(oldCtx);
   }
 
-  if (clipPathFrame && isTrivialClip) {
+  if ((clipPathFrame && isTrivialClip) ||
+      (!clipPathFrame && svgReset->HasClipPath())) {
     aContext.Restore();
   }
 

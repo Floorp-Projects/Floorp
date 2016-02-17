@@ -13,6 +13,7 @@
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -21,7 +22,6 @@
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
 
@@ -53,7 +53,6 @@ using namespace mozilla::dom;
 USING_WORKERS_NAMESPACE
 
 using mozilla::dom::cache::CacheStorage;
-using mozilla::dom::indexedDB::IDBFactory;
 using mozilla::ipc::PrincipalInfo;
 
 BEGIN_WORKERS_NAMESPACE
@@ -668,6 +667,25 @@ WorkerDebuggerGlobalScope::~WorkerDebuggerGlobalScope()
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerDebuggerGlobalScope)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerDebuggerGlobalScope,
+                                                  DOMEventTargetHelper)
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerDebuggerGlobalScope,
+                                                DOMEventTargetHelper)
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WorkerDebuggerGlobalScope,
+                                               DOMEventTargetHelper)
+  tmp->mWorkerPrivate->AssertIsOnWorkerThread();
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_ADDREF_INHERITED(WorkerDebuggerGlobalScope, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(WorkerDebuggerGlobalScope, DOMEventTargetHelper)
 
@@ -908,6 +926,19 @@ WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
   JS::DescribeScriptedCaller(aCx, &chars, &lineno);
   nsString filename(NS_ConvertUTF8toUTF16(chars.get()));
   mWorkerPrivate->ReportErrorToDebugger(filename, lineno, aMessage);
+}
+
+Console*
+WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  // Debugger console has its own console object.
+  if (!mConsole) {
+    mConsole = new Console(nullptr);
+  }
+
+  return mConsole;
 }
 
 void

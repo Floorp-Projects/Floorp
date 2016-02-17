@@ -7,17 +7,17 @@ task:
     description: Gaia Build Unit Test
 
   payload:
+    env:
+      NEED_XVFB: true
+      NEED_PULL_GAIA: true
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/gaia_build_unit.py'
+      MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_gaia_integration.py'
     command:
-      - entrypoint
-      - ./bin/pull_gaia.sh &&
-      - >
-        python ./mozharness/scripts/gaia_build_unit.py
-        --application firefox
-        --config-file ./mozharness/configs/b2g/taskcluster_gaia_integration.py
-        --installer-url {{build_url}}
-        --test-packages-url {{test_packages_url}}
-        --gaia-repo https://hg.mozilla.org/integration/gaia-central
-        --gaia-dir /home/worker
+      - bash
+      - /home/worker/bin/test.sh
+      - --application=firefox
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
     artifacts:
       'public/build':
         type: directory

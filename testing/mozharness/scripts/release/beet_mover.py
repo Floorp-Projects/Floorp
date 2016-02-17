@@ -63,6 +63,10 @@ CONFIG_OPTIONS = [
         "dest": "app_version",
         "help": "numbered version based on gecko. e.g. '44.0'"
     }],
+    [["--partial-version"], {
+        "dest": "partial_version",
+        "help": "the partial version the mar is based off of"
+    }],
     [["--build-num"], {
         "dest": "build_num",
         "help": "the release build identifier"
@@ -157,7 +161,8 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             "platform": self.config['platform'],
             "locales": self.config['locales'],
             "version": self.config['version'],
-            "app_version": self.config['app_version'],
+            "app_version": self.config.get('app_version', ''),
+            "partial_version": self.config.get('partial_version', ''),
             "build_num": self.config['build_num'],
             # mirror current release folder structure
             "s3_prefix": 'pub/{}/candidates'.format(self.config['product']),

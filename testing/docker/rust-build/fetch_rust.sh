@@ -13,3 +13,8 @@ set -v
 
 # Check out rust sources
 git clone $RUST_REPOSITORY -b $RUST_BRANCH ${WORKSPACE}/rust
+
+# Report version
+VERSION=$(git -C ${WORKSPACE}/rust describe --tags --dirty)
+COMMIT=$(git -C ${WORKSPACE}/rust rev-parse HEAD)
+echo "rust ${VERSION} (commit ${COMMIT})" | tee rust-version

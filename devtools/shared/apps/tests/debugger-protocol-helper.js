@@ -96,7 +96,7 @@ function downloadURL(url, file) {
 
   let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                   .createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, 0x04 | 0x08 | 0x20, 0600, 0);
+  ostream.init(file, 0x04 | 0x08 | 0x20, 0o600, 0);
   ostream.write(data, data.length);
   ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
 }

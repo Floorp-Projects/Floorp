@@ -426,9 +426,12 @@ var gGestureSupport = {
     try {
       // Determine what type of data to load based on default value's type
       let type = typeof aDef;
-      let getFunc = "get" + (type == "boolean" ? "Bool" :
-                             type == "number" ? "Int" : "Char") + "Pref";
-      return gPrefService[getFunc](branch + aPref);
+      let getFunc = "Char";
+      if (type == "boolean")
+        getFunc = "Bool";
+      else if (type == "number")
+        getFunc = "Int";
+      return gPrefService["get" + getFunc + "Pref"](branch + aPref);
     }
     catch (e) {
       return aDef;

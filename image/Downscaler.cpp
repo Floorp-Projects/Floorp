@@ -202,9 +202,9 @@ GetFilterOffsetAndLength(UniquePtr<skia::ConvolutionFilter1D>& aFilter,
 }
 
 void
-Downscaler::ClearRow(uint32_t aStartingAtCol)
+Downscaler::ClearRestOfRow(uint32_t aStartingAtCol)
 {
-  MOZ_ASSERT(int64_t(mOriginalSize.width) > int64_t(aStartingAtCol));
+  MOZ_ASSERT(int64_t(aStartingAtCol) <= int64_t(mOriginalSize.width));
   uint32_t bytesToClear = (mOriginalSize.width - aStartingAtCol)
                         * sizeof(uint32_t);
   memset(mRowBuffer.get() + (aStartingAtCol * sizeof(uint32_t)),

@@ -34,22 +34,24 @@
 
 //#define ENABLE_MDB 1
 
+class GrAuditTrail;
 class GrBatch;
 class GrClip;
 class GrCaps;
 class GrPath;
 class GrDrawPathBatchBase;
-class GrPathRangeDraw;
 
 class GrDrawTarget final : public SkRefCnt {
 public:
     /** Options for GrDrawTarget behavior. */
     struct Options {
-        Options () : fClipBatchToBounds(false) {}
+        Options () : fClipBatchToBounds(false), fDrawBatchBounds(false), fMaxBatchLookback(-1) {}
         bool fClipBatchToBounds;
+        bool fDrawBatchBounds;
+        int  fMaxBatchLookback;
     };
 
-    GrDrawTarget(GrRenderTarget*, GrGpu*, GrResourceProvider*, const Options&);
+    GrDrawTarget(GrRenderTarget*, GrGpu*, GrResourceProvider*, GrAuditTrail*, const Options&);
 
     ~GrDrawTarget() override;
 
@@ -111,76 +113,13 @@ public:
                      GrPathRendering::FillType);
 
     /**
-     * Draws a path. Fill must not be a hairline. It will respect the HW
-     * antialias flag on the GrPipelineBuilder (if possible in the 3D API).
+     * Draws a path batch. Fill must not be a hairline. It will respect the HW antialias flag on
+     * the GrPipelineBuilder (if possible in the 3D API). This needs to be separate from drawBatch
+     * because we install path stencil settings late.
      *
-     * TODO: Remove this function and construct the batch outside GrDrawTarget.
+     * TODO: Figure out a better model that allows us to roll this method into drawBatch.
      */
-    void drawPath(const GrPipelineBuilder&, const SkMatrix& viewMatrix, GrColor color,
-                  const GrPath*, GrPathRendering::FillType);
-
-    /**
-     * Draws the aggregate path from combining multiple. Note that this will not
-     * always be equivalent to back-to-back calls to drawPath(). It will respect
-     * the HW antialias flag on the GrPipelineBuilder (if possible in the 3D API).
-     *
-     * TODO: Remove this function and construct the batch outside GrDrawTarget.
-     *
-     * @param draw            The transforms and indices for the draw.
-     *                        This object must only be drawn once. The draw
-     *                        may modify its contents.
-     * @param fill            Fill type for drawing all the paths
-     */
-    void drawPathsFromRange(const GrPipelineBuilder&,
-                            const SkMatrix& viewMatrix,
-                            const SkMatrix& localMatrix,
-                            GrColor color,
-                            GrPathRange* range,
-                            GrPathRangeDraw* draw,
-                            GrPathRendering::FillType fill,
-                            const SkRect& bounds);
-
-    /**
-     * Helper function for drawing rects.
-     *
-     * @param rect        the rect to draw
-     * @param localRect   optional rect that specifies local coords to map onto
-     *                    rect. If nullptr then rect serves as the local coords.
-     * @param localMatrix Optional local matrix. The local coordinates are specified by localRect,
-     *                    or if it is nullptr by rect. This matrix applies to the coordinate implied by
-     *                    that rectangle before it is input to GrCoordTransforms that read local
-     *                    coordinates
-     */
-    void drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
-                       GrColor color,
-                       const SkMatrix& viewMatrix,
-                       const SkRect& rect);
-
-    void drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
-                       GrColor color,
-                       const SkMatrix& viewMatrix,
-                       const SkRect& rect,
-                       const SkMatrix& localMatrix);
-
-    void drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
-                       GrColor color,
-                       const SkMatrix& viewMatrix,
-                       const SkRect& rect,
-                       const SkRect& localRect);
-
-    void drawNonAARect(const GrPipelineBuilder& ds,
-                       GrColor color,
-                       const SkMatrix& viewM,
-                       const SkIRect& irect) {
-        SkRect rect = SkRect::Make(irect);
-        this->drawNonAARect(ds, color, viewM, rect);
-    }
-
-    void drawAARect(const GrPipelineBuilder& pipelineBuilder,
-                    GrColor color,
-                    const SkMatrix& viewMatrix,
-                    const SkRect& rect,
-                    const SkRect& devRect);
+    void drawPathBatch(const GrPipelineBuilder& pipelineBuilder, GrDrawPathBatchBase* batch);
 
     /**
      * Clear the passed in render target. Ignores the GrPipelineBuilder and clip. Clears the whole
@@ -227,6 +166,8 @@ public:
     };
 
     const CMMAccess cmmAccess() { return CMMAccess(this); }
+
+    GrAuditTrail* getAuditTrail() const { return fAuditTrail; }
 
 private:
     friend class GrDrawingManager; // for resetFlag & TopoSortTraits
@@ -287,8 +228,6 @@ private:
         GrXferProcessor::DstTexture*,
         const SkRect& batchBounds);
 
-    void drawPathBatch(const GrPipelineBuilder& pipelineBuilder, GrDrawPathBatchBase* batch,
-                       GrPathRendering::FillType fill);
     // Check to see if this set of draw commands has been sent out
     void getPathStencilSettingsForFilltype(GrPathRendering::FillType,
                                            const GrStencilAttachment*,
@@ -310,7 +249,7 @@ private:
     GrContext*                                  fContext;
     GrGpu*                                      fGpu;
     GrResourceProvider*                         fResourceProvider;
-    bool                                        fFlushing;
+    GrAuditTrail*                               fAuditTrail;
 
     SkDEBUGCODE(int                             fDebugID;)
     uint32_t                                    fFlags;
@@ -318,6 +257,9 @@ private:
     // 'this' drawTarget relies on the output of the drawTargets in 'fDependencies'
     SkTDArray<GrDrawTarget*>                    fDependencies;
     GrRenderTarget*                             fRenderTarget;
+
+    bool                                        fDrawBatchBounds;
+    int                                         fMaxBatchLookback;
 
     typedef SkRefCnt INHERITED;
 };

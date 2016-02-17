@@ -310,7 +310,7 @@ function getEdgeLocalDataFolder() {
     Cu.reportError("Exception trying to find the Edge favorites directory: " + ex);
   }
   return null;
-};
+}
 
 
 function Bookmarks(migrationType) {

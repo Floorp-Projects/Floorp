@@ -443,7 +443,9 @@
               Components.utils.reportError(e);
             }
           }
-          var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
+          var val = rv;
+          if (val === undefined)
+            val = this.instantApply ? this.valueFromPreferences : this.value;
           // if the preference is marked for reset, show default value in UI
           if (val === undefined)
             val = this.defaultValue;

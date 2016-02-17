@@ -48,7 +48,7 @@ RegExpMatcher(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                 int32_t lastIndex, bool sticky,
+                 uint32_t lastIndex, bool sticky,
                  MatchPairs* maybeMatches, MutableHandleValue output);
 
 extern bool
@@ -56,7 +56,7 @@ RegExpTester(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                int32_t lastIndex, bool sticky, int32_t* endIndex);
+                uint32_t lastIndex, bool sticky, int32_t* endIndex);
 
 /*
  * The following functions are for use by self-hosted code.
@@ -97,6 +97,18 @@ regexp_construct(JSContext* cx, unsigned argc, Value* vp);
 extern const JSPropertySpec regexp_static_props[];
 extern const JSPropertySpec regexp_properties[];
 extern const JSFunctionSpec regexp_methods[];
+
+// Used in RegExpObject::isOriginalFlagGetter.
+extern bool
+regexp_global(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_ignoreCase(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_multiline(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_sticky(JSContext* cx, unsigned argc, JS::Value* vp);
+extern bool
+regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } /* namespace js */
 

@@ -53,6 +53,7 @@ using google_breakpad::CodeModule;
 using google_breakpad::StackFrameSymbolizer;
 using google_breakpad::StackFrame;
 using google_breakpad::StackFrameAMD64;
+using google_breakpad::Stackwalker;
 using google_breakpad::StackwalkerAMD64;
 using google_breakpad::SystemInfo;
 using google_breakpad::test_assembler::kLittleEndian;
@@ -60,6 +61,7 @@ using google_breakpad::test_assembler::Label;
 using google_breakpad::test_assembler::Section;
 using std::vector;
 using testing::_;
+using testing::AnyNumber;
 using testing::Return;
 using testing::SetArgumentPointee;
 using testing::Test;
@@ -88,16 +90,25 @@ class StackwalkerAMD64Fixture {
 
     // By default, none of the modules have symbol info; call
     // SetModuleSymbols to override this.
-    EXPECT_CALL(supplier, GetCStringSymbolData(_, _, _, _))
+    EXPECT_CALL(supplier, GetCStringSymbolData(_, _, _, _, _))
       .WillRepeatedly(Return(MockSymbolSupplier::NOT_FOUND));
+
+    // Avoid GMOCK WARNING "Uninteresting mock function call - returning
+    // directly" for FreeSymbolData().
+    EXPECT_CALL(supplier, FreeSymbolData(_)).Times(AnyNumber());
+
+    // Reset max_frames_scanned since it's static.
+    Stackwalker::set_max_frames_scanned(1024);
   }
 
   // Set the Breakpad symbol information that supplier should return for
   // MODULE to INFO.
   void SetModuleSymbols(MockCodeModule *module, const string &info) {
-    char *buffer = supplier.CopySymbolDataAndOwnTheCopy(info);
-    EXPECT_CALL(supplier, GetCStringSymbolData(module, &system_info, _, _))
+    size_t buffer_size;
+    char *buffer = supplier.CopySymbolDataAndOwnTheCopy(info, &buffer_size);
+    EXPECT_CALL(supplier, GetCStringSymbolData(module, &system_info, _, _, _))
       .WillRepeatedly(DoAll(SetArgumentPointee<3>(buffer),
+                            SetArgumentPointee<4>(buffer_size),
                             Return(MockSymbolSupplier::FOUND)));
   }
 
@@ -146,9 +157,12 @@ TEST_F(SanityCheck, NoResolver) {
                           &frame_symbolizer);
   // This should succeed even without a resolver or supplier.
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(1U, modules_without_symbols.size());
   ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -169,9 +183,12 @@ TEST_F(GetContextFrame, Simple) {
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(1U, modules_without_symbols.size());
   ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -190,9 +207,12 @@ TEST_F(GetContextFrame, NoStackMemory) {
   StackwalkerAMD64 walker(&system_info, &raw_context, NULL, &modules,
                           &frame_symbolizer);
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(1U, modules_without_symbols.size());
   ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -248,10 +268,13 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(2U, modules_without_symbols.size());
   ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
   ASSERT_EQ("module2", modules_without_symbols[1]->debug_file());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_EQ(3U, frames->size());
 
@@ -320,8 +343,11 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(0U, modules_without_symbols.size());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
 
@@ -342,6 +368,68 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   EXPECT_EQ(frame1_rbp.Value(), frame1->context.rbp);
   EXPECT_EQ("echidna", frame1->function_name);
   EXPECT_EQ(0x50000000b0000100ULL, frame1->function_base);
+}
+
+// Test that set_max_frames_scanned prevents using stack scanning
+// to find caller frames.
+TEST_F(GetCallerFrame, ScanningNotAllowed) {
+  // When the stack walker resorts to scanning the stack,
+  // only addresses located within loaded modules are
+  // considered valid return addresses.
+  stack_section.start() = 0x8000000080000000ULL;
+  uint64_t return_address1 = 0x50000000b0000100ULL;
+  uint64_t return_address2 = 0x50000000b0000900ULL;
+  Label frame1_sp, frame2_sp, frame1_rbp;
+  stack_section
+    // frame 0
+    .Append(16, 0)                      // space
+
+    .D64(0x40000000b0000000ULL)         // junk that's not
+    .D64(0x50000000d0000000ULL)         // a return address
+
+    .D64(return_address1)               // actual return address
+    // frame 1
+    .Mark(&frame1_sp)
+    .Append(16, 0)                      // space
+
+    .D64(0x40000000b0000000ULL)         // more junk
+    .D64(0x50000000d0000000ULL)
+
+    .Mark(&frame1_rbp)
+    .D64(stack_section.start())         // This is in the right place to be
+                                        // a saved rbp, but it's bogus, so
+                                        // we shouldn't report it.
+
+    .D64(return_address2)               // actual return address
+    // frame 2
+    .Mark(&frame2_sp)
+    .Append(32, 0);                     // end of stack
+
+  RegionFromSection();
+
+  raw_context.rip = 0x40000000c0000200ULL;
+  raw_context.rbp = frame1_rbp.Value();
+  raw_context.rsp = stack_section.start().Value();
+
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
+  StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
+                          &frame_symbolizer);
+  Stackwalker::set_max_frames_scanned(0);
+
+  vector<const CodeModule*> modules_without_symbols;
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
+  ASSERT_EQ(1U, modules_without_symbols.size());
+  ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
+  frames = call_stack.frames();
+  ASSERT_EQ(1U, frames->size());
+
+  StackFrameAMD64 *frame0 = static_cast<StackFrameAMD64 *>(frames->at(0));
+  EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame0->trust);
+  ASSERT_EQ(StackFrameAMD64::CONTEXT_VALID_ALL, frame0->context_validity);
+  EXPECT_EQ(0, memcmp(&raw_context, &frame0->context, sizeof(raw_context)));
 }
 
 TEST_F(GetCallerFrame, CallerPushedRBP) {
@@ -387,8 +475,11 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
   vector<const CodeModule*> modules_without_symbols;
-  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  vector<const CodeModule*> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
   ASSERT_EQ(0U, modules_without_symbols.size());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
 
@@ -400,7 +491,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   EXPECT_EQ(0x40000000c0000100ULL, frame0->function_base);
 
   StackFrameAMD64 *frame1 = static_cast<StackFrameAMD64 *>(frames->at(1));
-  EXPECT_EQ(StackFrame::FRAME_TRUST_SCAN, frame1->trust);
+  EXPECT_EQ(StackFrame::FRAME_TRUST_FP, frame1->trust);
   ASSERT_EQ((StackFrameAMD64::CONTEXT_VALID_RIP |
              StackFrameAMD64::CONTEXT_VALID_RSP |
              StackFrameAMD64::CONTEXT_VALID_RBP),
@@ -465,8 +556,11 @@ struct CFIFixture: public StackwalkerAMD64Fixture {
     StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                             &frame_symbolizer);
     vector<const CodeModule*> modules_without_symbols;
-    ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+    vector<const CodeModule*> modules_with_corrupt_symbols;
+    ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                            &modules_with_corrupt_symbols));
     ASSERT_EQ(0U, modules_without_symbols.size());
+    ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
     frames = call_stack.frames();
     ASSERT_EQ(2U, frames->size());
 

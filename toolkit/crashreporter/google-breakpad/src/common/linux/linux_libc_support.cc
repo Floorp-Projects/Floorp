@@ -138,6 +138,16 @@ const char* my_strrchr(const char* haystack, char needle) {
   return ret;
 }
 
+void* my_memchr(const void* src, int needle, size_t src_len) {
+  const unsigned char* p = (const unsigned char*)src;
+  const unsigned char* p_end = p + src_len;
+  for (; p < p_end; ++p) {
+    if (*p == needle)
+      return (void*)p;
+  }
+  return NULL;
+}
+
 // Read a hex value
 //   result: (output) the resulting value
 //   s: a string

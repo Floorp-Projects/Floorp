@@ -357,6 +357,7 @@ class BuildOptionParser(object):
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
         'api-9': 'builds/releng_sub_%s_configs/%s_api_9.py',
         'api-11': 'builds/releng_sub_%s_configs/%s_api_11.py',
+        'api-15-frontend': 'builds/releng_sub_%s_configs/%s_api_15_frontend.py',
         'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
         'api-9-debug': 'builds/releng_sub_%s_configs/%s_api_9_debug.py',
         'api-11-debug': 'builds/releng_sub_%s_configs/%s_api_11_debug.py',
@@ -1041,6 +1042,8 @@ or run without that action (ie: --no-{action})"
             post_upload_cmd.append('--release-to-dated')
             if c['platform_supports_post_upload_to_latest']:
                 post_upload_cmd.append('--release-to-latest')
+        post_upload_cmd.extend(c.get('post_upload_extra', []))
+
         return post_upload_cmd
 
     def _ccache_z(self):
@@ -1151,7 +1154,7 @@ or run without that action (ie: --no-{action})"
         if auth_file:
             cmd.extend(['--authentication-file', auth_file])
         self.info(str(cmd))
-        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True)
+        self.run_command_m(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True)
 
     def query_revision(self, source_path=None):
         """ returns the revision of the build

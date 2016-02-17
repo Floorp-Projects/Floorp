@@ -5,7 +5,7 @@ skip-if(B2G||Mulet) HTTP(..) == marker-string.html marker-string-ref.html # Init
 skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,206,41) fuzzy-if(Android&&AndroidVersion>=15,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1770) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264 # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy(2,453) HTTP(..) == anonymous-block.html anonymous-block-ref.html
+fuzzy(2,453) fuzzy-if(skiaContent,9,1800) HTTP(..) == anonymous-block.html anonymous-block-ref.html
 skip-if(B2G||Mulet) HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
 skip-if(B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1724) fuzzy-if(gtkWidget,10,8) HTTP(..) == block-padding.html block-padding-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
@@ -13,10 +13,10 @@ HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
-skip-if(B2G||Mulet) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == selection.html selection-ref.html # bug 668849 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html # bug 668849 # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
-skip-if(Android||B2G) == clipped-elements.html clipped-elements-ref.html
+skip-if(Android||B2G) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
 skip-if(B2G||Mulet) HTTP(..) == table-cell.html table-cell-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Mulet) fuzzy-if(gtkWidget,10,32) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables

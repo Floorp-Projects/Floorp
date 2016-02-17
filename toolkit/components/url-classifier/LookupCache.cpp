@@ -584,7 +584,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 
 #ifdef DEBUG
   uint32_t size;
-  size = mPrefixSet->SizeInMemory();
+  size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
   LOG(("SB tree done, size = %d bytes\n", size));
 #endif
 
@@ -627,7 +627,7 @@ LookupCache::LoadPrefixSet()
 
 #ifdef DEBUG
   if (mPrimed) {
-    uint32_t size = mPrefixSet->SizeInMemory();
+    uint32_t size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
     LOG(("SB tree done, size = %d bytes\n", size));
   }
 #endif

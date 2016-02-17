@@ -200,14 +200,14 @@ FlagAllOperandsAsHavingRemovedUses(MBasicBlock* block)
 
     // Flag observable operands of the entry resume point as having removed uses.
     MResumePoint* rp = block->entryResumePoint();
-    do {
+    while (rp) {
         for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
             if (!rp->isObservableOperand(i))
                 continue;
             rp->getOperand(i)->setUseRemovedUnchecked();
         }
         rp = rp->caller();
-    } while (rp);
+    }
 
     // Flag Phi inputs of the successors has having removed uses.
     MPhiVector worklist;
@@ -462,7 +462,7 @@ jit::SplitCriticalEdges(MIRGraph& graph)
 
 // Return whether a block simply computes the specified constant value.
 static bool
-BlockComputesConstant(MBasicBlock* block, MDefinition* value)
+BlockComputesConstant(MBasicBlock* block, MDefinition* value, bool* constBool)
 {
     // Look for values with no uses. This is used to eliminate constant
     // computing blocks in condition statements, and the phi which used to
@@ -478,7 +478,7 @@ BlockComputesConstant(MBasicBlock* block, MDefinition* value)
         if (*iter != value || !iter->isGoto())
             return false;
     }
-    return true;
+    return value->toConstant()->valueToBoolean(constBool);
 }
 
 // Find phis that are redudant:
@@ -745,10 +745,9 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     // directly to successors of testBlock, rather than to testBlock itself.
 
     MBasicBlock* trueTarget = trueBranch;
-    if (BlockComputesConstant(trueBranch, trueResult)) {
-        trueTarget = trueResult->constantToBoolean()
-                     ? finalTest->ifTrue()
-                     : finalTest->ifFalse();
+    bool constBool;
+    if (BlockComputesConstant(trueBranch, trueResult, &constBool)) {
+        trueTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
         phiBlock->removePredecessor(trueBranch);
         graph.removeBlock(trueBranch);
     } else if (initialTest->input() == trueResult) {
@@ -759,10 +758,8 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     }
 
     MBasicBlock* falseTarget = falseBranch;
-    if (BlockComputesConstant(falseBranch, falseResult)) {
-        falseTarget = falseResult->constantToBoolean()
-                      ? finalTest->ifTrue()
-                      : finalTest->ifFalse();
+    if (BlockComputesConstant(falseBranch, falseResult, &constBool)) {
+        falseTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
         phiBlock->removePredecessor(falseBranch);
         graph.removeBlock(falseBranch);
     } else if (initialTest->input() == falseResult) {
@@ -1193,7 +1190,7 @@ class TypeAnalyzer
     bool propagateSpecialization(MPhi* phi);
     bool specializePhis();
     void replaceRedundantPhi(MPhi* phi);
-    void adjustPhiInputs(MPhi* phi);
+    bool adjustPhiInputs(MPhi* phi);
     bool adjustInputs(MDefinition* def);
     bool insertConversions();
 
@@ -1408,7 +1405,7 @@ TypeAnalyzer::specializePhis()
     return true;
 }
 
-void
+bool
 TypeAnalyzer::adjustPhiInputs(MPhi* phi)
 {
     MIRType phiType = phi->type();
@@ -1423,6 +1420,9 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             MDefinition* in = phi->getOperand(i);
             if (in->type() == phiType)
                 continue;
+
+            if (!alloc().ensureBallast())
+                return false;
 
             if (in->isBox() && in->toBox()->input()->type() == phiType) {
                 phi->replaceOperand(i, in->toBox()->input());
@@ -1467,7 +1467,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             }
         }
 
-        return;
+        return true;
     }
 
     // Box every typed input.
@@ -1481,10 +1481,15 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             // the original box.
             phi->replaceOperand(i, in->toUnbox()->input());
         } else {
+            if (!alloc().ensureBallast())
+                return false;
+
             MDefinition* box = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
             phi->replaceOperand(i, box);
         }
     }
+
+    return true;
 }
 
 bool
@@ -1552,13 +1557,17 @@ TypeAnalyzer::insertConversions()
                 replaceRedundantPhi(phi);
                 block->discardPhi(phi);
             } else {
-                adjustPhiInputs(phi);
+                if (!adjustPhiInputs(phi))
+                    return false;
             }
         }
 
         // AdjustInputs can add/remove/mutate instructions before and after the
         // current instruction. Only increment the iterator after it is finished.
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
+            if (!alloc().ensureBallast())
+                return false;
+
             if (!adjustInputs(*iter))
                 return false;
         }
@@ -1921,6 +1930,17 @@ jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarked
         // since we may have removed edges even if we didn't remove any blocks.
         graph.unmarkBlocks();
     } else {
+        // As we are going to remove edges and basic blocks, we have to mark
+        // instructions which would be needed by baseline if we were to
+        // bailout.
+        for (PostorderIterator it(graph.poBegin()); it != graph.poEnd();) {
+            MBasicBlock* block = *it++;
+            if (!block->isMarked())
+                continue;
+
+            FlagAllOperandsAsHavingRemovedUses(block);
+        }
+
         // Find unmarked blocks and remove them.
         for (ReversePostorderIterator iter(graph.rpoBegin()); iter != graph.rpoEnd();) {
             MBasicBlock* block = *iter++;
@@ -2682,11 +2702,10 @@ jit::ExtractLinearSum(MDefinition* ins)
     if (ins->type() != MIRType_Int32)
         return SimpleLinearSum(ins, 0);
 
-    if (ins->isConstantValue()) {
-        const Value& v = ins->constantValue();
-        MOZ_ASSERT(v.isInt32());
-        return SimpleLinearSum(nullptr, v.toInt32());
-    } else if (ins->isAdd() || ins->isSub()) {
+    if (ins->isConstant())
+        return SimpleLinearSum(nullptr, ins->toConstant()->toInt32());
+
+    if (ins->isAdd() || ins->isSub()) {
         MDefinition* lhs = ins->getOperand(0);
         MDefinition* rhs = ins->getOperand(1);
         if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
@@ -2702,7 +2721,8 @@ jit::ExtractLinearSum(MDefinition* ins)
                 if (!SafeAdd(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
                 return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
-            } else if (lsum.term) {
+            }
+            if (lsum.term) {
                 int32_t constant;
                 if (!SafeSub(lsum.constant, rsum.constant, &constant))
                     return SimpleLinearSum(ins, 0);
@@ -3299,8 +3319,8 @@ LinearSum::add(MDefinition* term, int32_t scale)
     if (scale == 0)
         return true;
 
-    if (term->isConstantValue()) {
-        int32_t constant = term->constantValue().toInt32();
+    if (MConstant* termConst = term->maybeConstantValue()) {
+        int32_t constant = termConst->toInt32();
         if (!SafeMul(constant, scale, &constant))
             return false;
         return add(constant);
@@ -3372,7 +3392,7 @@ jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block, const LinearSum&
 
     for (size_t i = 0; i < sum.numTerms(); i++) {
         LinearTerm term = sum.term(i);
-        MOZ_ASSERT(!term.term->isConstantValue());
+        MOZ_ASSERT(!term.term->isConstant());
         if (term.scale == 1) {
             if (def) {
                 def = MAdd::New(alloc, def, term.term);

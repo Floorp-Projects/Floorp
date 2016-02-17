@@ -32,11 +32,12 @@
 // dwarf_line_to_module.cc: Implementation of DwarfLineToModule class.
 // See dwarf_line_to_module.h for details. 
 
+#include <stdio.h>
+
 #include <string>
 
 #include "common/dwarf_line_to_module.h"
 #include "common/using_std_string.h"
-#include "common/logging.h"
 
 // Trying to support Windows paths in a reasonable way adds a lot of
 // variations to test; it would be better to just put off dealing with
@@ -88,8 +89,8 @@ void DwarfLineToModule::DefineFile(const string &name, int32 file_num,
       dir_name = directory_it->second;
     } else {
       if (!warned_bad_directory_number_) {
-        BPLOG(INFO) << "warning: DWARF line number data refers to undefined"
-                    << " directory numbers";
+        fprintf(stderr, "warning: DWARF line number data refers to undefined"
+                " directory numbers\n");
         warned_bad_directory_number_ = true;
       }
     }
@@ -124,8 +125,8 @@ void DwarfLineToModule::AddLine(uint64 address, uint64 length,
   Module::File *file = files_[file_num];
   if (!file) {
     if (!warned_bad_file_number_) {
-      BPLOG(INFO) << "warning: DWARF line number data refers to "
-                  << "undefined file numbers";
+      fprintf(stderr, "warning: DWARF line number data refers to "
+              "undefined file numbers\n");
       warned_bad_file_number_ = true;
     }
     return;

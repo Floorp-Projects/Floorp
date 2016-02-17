@@ -4616,7 +4616,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   // HandleKeyPressEvent()'s switch statement.
 
   WidgetKeyboardEvent* nativeKeyEvent =
-    aKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(nativeKeyEvent->mMessage == eKeyPress,
                "HandleKeyPressEvent gets non-keypress event");
@@ -5053,7 +5053,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   // If the event is trusted, the event should always cause input.
   NS_ENSURE_TRUE(aEvent, false);
 
-  WidgetEvent* widgetEvent = aEvent->GetInternalNSEvent();
+  WidgetEvent* widgetEvent = aEvent->WidgetEventPtr();
   if (NS_WARN_IF(!widgetEvent)) {
     return false;
   }
@@ -5086,7 +5086,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     case eCompositionCommitAsIs:
       // Don't allow composition events whose internal event are not
       // WidgetCompositionEvent.
-      widgetGUIEvent = aEvent->GetInternalNSEvent()->AsCompositionEvent();
+      widgetGUIEvent = aEvent->WidgetEventPtr()->AsCompositionEvent();
       needsWidget = true;
       break;
     default:

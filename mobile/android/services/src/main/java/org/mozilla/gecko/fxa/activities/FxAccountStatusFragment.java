@@ -213,6 +213,9 @@ public class FxAccountStatusFragment
     syncNowPreference = ensureFindPreference("sync_now");
     syncNowPreference.setEnabled(true);
     syncNowPreference.setOnPreferenceClickListener(this);
+
+    ensureFindPreference("linktos").setOnPreferenceClickListener(this);
+    ensureFindPreference("linkprivacy").setOnPreferenceClickListener(this);
   }
 
   /**
@@ -291,6 +294,16 @@ public class FxAccountStatusFragment
       if (fxAccount != null) {
         fxAccount.requestImmediateSync(null, null);
       }
+      return true;
+    }
+
+    if (TextUtils.equals("linktos", preference.getKey())) {
+      ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), getResources().getString(R.string.fxaccount_link_tos));
+      return true;
+    }
+
+    if (TextUtils.equals("linkprivacy", preference.getKey())) {
+      ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), getResources().getString(R.string.fxaccount_link_pn));
       return true;
     }
 

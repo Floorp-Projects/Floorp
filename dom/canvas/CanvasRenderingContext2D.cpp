@@ -1570,9 +1570,7 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider) {
     CurrentState().transform = mTarget->GetTransform();
-    DrawTarget* oldDT = mTarget;
-    mTarget = nullptr;
-    mBufferProvider->ReturnAndUseDT(oldDT);
+    mBufferProvider->ReturnAndUseDT(mTarget.forget());
   }
 }
 
@@ -4916,6 +4914,9 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+  // If this canvas was contained in the drawn window, the pre-transaction callback
+  // may have returned its DT. If so, we must reacquire it here.
+  EnsureTarget();
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();

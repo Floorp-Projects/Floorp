@@ -31,8 +31,9 @@ ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 1
 
 
-def memberReservedSlot(member):
-    return "(DOM_INSTANCE_RESERVED_SLOTS + %d)" % member.slotIndex
+def memberReservedSlot(member, descriptor):
+    return ("(DOM_INSTANCE_RESERVED_SLOTS + %d)" %
+            member.slotIndices[descriptor.interface.identifier.name])
 
 
 def toStringBool(arg):
@@ -2149,7 +2150,7 @@ def clearableCachedAttrs(descriptor):
             m.isAttr() and
             # Constants should never need clearing!
             m.dependsOn != "Nothing" and
-            m.slotIndex is not None)
+            m.slotIndices is not None)
 
 
 def MakeClearCachedValueNativeName(member):
@@ -2991,6 +2992,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         if self.descriptor.name == "Promise":
             speciesSetup = CGGeneric(fill(
                 """
+                #ifndef SPIDERMONKEY_PROMISE
                 JS::Rooted<JSObject*> promiseConstructor(aCx, *interfaceCache);
                 JS::Rooted<jsid> species(aCx,
                   SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::species)));
@@ -2998,6 +3000,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                            JSPROP_SHARED, Promise::PromiseSpecies, nullptr)) {
                   $*{failureCode}
                 }
+                #endif // SPIDERMONKEY_PROMISE
                 """,
                 failureCode=failureCode))
         else:
@@ -3803,8 +3806,6 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                     }
                     // Getter handled setting our reserved slots
                     """,
-                    slot=memberReservedSlot(m),
-                    interface=self.descriptor.interface.identifier.name,
                     member=m.identifier.name)
 
         body += "\nreturn true;\n"
@@ -3826,7 +3827,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
         CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
 
     def definition_body(self):
-        slotIndex = memberReservedSlot(self.member)
+        slotIndex = memberReservedSlot(self.member, self.descriptor)
         if self.member.getExtendedAttribute("StoreInSlot"):
             # We have to root things and save the old value in case
             # regetting fails, so we can restore it.
@@ -5189,7 +5190,26 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   if (promiseGlobal.Failed()) {
                     $*{exceptionCode}
                   }
+
+                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
+                  if (!JS_WrapValue(cx, &valueToResolve)) {
+                    $*{exceptionCode}
+                  }
                   ErrorResult promiseRv;
+                #ifdef SPIDERMONKEY_PROMISE
+                  nsCOMPtr<nsIGlobalObject> global =
+                    do_QueryInterface(promiseGlobal.GetAsSupports());
+                  if (!global) {
+                    promiseRv.Throw(NS_ERROR_UNEXPECTED);
+                    promiseRv.MaybeSetPendingException(cx);
+                    $*{exceptionCode}
+                  }
+                  $${declName} = Promise::Resolve(global, cx, valueToResolve,
+                                                  promiseRv);
+                  if (promiseRv.MaybeSetPendingException(cx)) {
+                    $*{exceptionCode}
+                  }
+                #else
                   JS::Handle<JSObject*> promiseCtor =
                     PromiseBinding::GetConstructorObjectHandle(cx, globalObj);
                   if (!promiseCtor) {
@@ -5197,10 +5217,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   }
                   JS::Rooted<JS::Value> resolveThisv(cx, JS::ObjectValue(*promiseCtor));
                   JS::Rooted<JS::Value> resolveResult(cx);
-                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
-                  if (!JS_WrapValue(cx, &valueToResolve)) {
-                    $*{exceptionCode}
-                  }
                   Promise::Resolve(promiseGlobal, resolveThisv, valueToResolve,
                                    &resolveResult, promiseRv);
                   if (promiseRv.MaybeSetPendingException(cx)) {
@@ -5212,6 +5228,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     promiseRv.MaybeSetPendingException(cx);
                     $*{exceptionCode}
                   }
+                #endif // SPIDERMONKEY_PROMISE
                 }
                 """,
                 getPromiseGlobal=getPromiseGlobal,
@@ -6332,7 +6349,13 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 wrapMethod = "GetOrCreateDOMReflector"
                 wrapArgs = "cx, %s, ${jsvalHandle}" % result
             else:
-                if not returnsNewObject:
+                # Hack: the "Promise" interface is OK to return from
+                # non-newobject things even when it's not wrappercached; that
+                # happens when using SpiderMonkey promises, and the WrapObject()
+                # method will just return the existing reflector, which is just
+                # not stored in a wrappercache.
+                if (not returnsNewObject and
+                    descriptor.interface.identifier.name != "Promise"):
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
                 wrapMethod = "WrapNewBindingNonWrapperCachedObject"
                 wrapArgs = "cx, ${obj}, %s, ${jsvalHandle}" % result
@@ -7347,7 +7370,7 @@ class CGPerSignatureCall(CGThing):
                               "NewObject implies that we need to keep the object alive with a strong reference.");
                 """)
 
-        setSlot = self.idlNode.isAttr() and self.idlNode.slotIndex is not None
+        setSlot = self.idlNode.isAttr() and self.idlNode.slotIndices is not None
         if setSlot:
             # For attributes in slots, we want to do some
             # post-processing once we've wrapped them.
@@ -7394,7 +7417,7 @@ class CGPerSignatureCall(CGThing):
                                               "args.rval().isObject()")
                 postSteps += freezeValue.define()
             postSteps += ("js::SetReservedSlot(reflector, %s, args.rval());\n" %
-                          memberReservedSlot(self.idlNode))
+                          memberReservedSlot(self.idlNode, self.descriptor))
             # For the case of Cached attributes, go ahead and preserve our
             # wrapper if needed.  We need to do this because otherwise the
             # wrapper could get garbage-collected and the cached value would
@@ -7979,7 +8002,7 @@ class CGSetterCall(CGPerSignatureCall):
 
     def wrap_return_value(self):
         attr = self.idlNode
-        if self.descriptor.wrapperCache and attr.slotIndex is not None:
+        if self.descriptor.wrapperCache and attr.slotIndices is not None:
             if attr.getExtendedAttribute("StoreInSlot"):
                 args = "cx, self"
             else:
@@ -8526,7 +8549,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             return getMaplikeOrSetlikeSizeGetterBody(self.descriptor, self.attr)
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        if self.attr.slotIndex is not None:
+        if self.attr.slotIndices is not None:
             if self.descriptor.hasXPConnectImpls:
                 raise TypeError("Interface '%s' has XPConnect impls, so we "
                                 "can't use our slot for property '%s'!" %
@@ -8552,7 +8575,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 }
 
                 """,
-                slot=memberReservedSlot(self.attr),
+                slot=memberReservedSlot(self.attr, self.descriptor),
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
@@ -8803,10 +8826,13 @@ class CGMemberJITInfo(CGThing):
                 slotIndex=slotIndex)
             return initializer.rstrip()
 
-        slotAssert = dedent(
+        slotAssert = fill(
             """
-            static_assert(%s <= JSJitInfo::maxSlotIndex, "We won't fit");
-            """ % slotIndex)
+            static_assert(${slotIndex} <= JSJitInfo::maxSlotIndex, "We won't fit");
+            static_assert(${slotIndex} < ${classReservedSlots}, "There is no slot for us");
+            """,
+            slotIndex=slotIndex,
+            classReservedSlots=INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots)
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
@@ -8854,10 +8880,10 @@ class CGMemberJITInfo(CGThing):
 
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             isAlwaysInSlot = self.member.getExtendedAttribute("StoreInSlot")
-            if self.member.slotIndex is not None:
+            if self.member.slotIndices is not None:
                 assert isAlwaysInSlot or self.member.getExtendedAttribute("Cached")
                 isLazilyCachedInSlot = not isAlwaysInSlot
-                slotIndex = memberReservedSlot(self.member)
+                slotIndex = memberReservedSlot(self.member, self.descriptor)
                 # We'll statically assert that this is not too big in
                 # CGUpdateMemberSlotsMethod, in the case when
                 # isAlwaysInSlot is true.
@@ -12233,13 +12259,21 @@ class CGDictionary(CGThing):
             "ToJSON", "bool",
             [Argument('nsAString&', 'aJSON')],
             body=dedent("""
-                MOZ_ASSERT(NS_IsMainThread());
                 AutoJSAPI jsapi;
                 jsapi.Init();
                 JSContext *cx = jsapi.cx();
-                JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope()); // Usage approved by bholley
-                JS::Rooted<JS::Value> obj(cx);
-                return ToObjectInternal(cx, &obj) && StringifyToJSON(cx, &obj, aJSON);
+                // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here
+                // because we'll only be creating objects, in ways that have no
+                // side-effects, followed by a call to JS::ToJSONMaybeSafely,
+                // which likewise guarantees no side-effects for the sorts of
+                // things we will pass it.
+                JSAutoCompartment ac(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
+                JS::Rooted<JS::Value> val(cx);
+                if (!ToObjectInternal(cx, &val)) {
+                  return false;
+                }
+                JS::Rooted<JSObject*> obj(cx, &val.toObject());
+                return StringifyToJSON(cx, obj, aJSON);
             """), const=True)
 
     def toObjectInternalMethod(self):
@@ -12379,7 +12413,8 @@ class CGDictionary(CGThing):
         methods.append(self.initFromJSONMethod())
         try:
             methods.append(self.toObjectInternalMethod())
-            methods.append(self.toJSONMethod())
+            if self.dictionarySafeToJSONify(self.dictionary):
+                methods.append(self.toJSONMethod())
         except MethodNotNewObjectError:
             # If we can't have a ToObjectInternal() because one of our members
             # can only be returned from [NewObject] methods, then just skip
@@ -12685,6 +12720,52 @@ class CGDictionary(CGThing):
             not CGDictionary.isDictionaryCopyConstructible(dictionary.parent)):
             return False
         return all(isTypeCopyConstructible(m.type) for m in dictionary.members)
+
+    @staticmethod
+    def typeSafeToJSONify(type):
+        """
+        Determine whether the given type is safe to convert to JSON.  The
+        restriction is that this needs to be safe while in a global controlled
+        by an adversary, and "safe" means no side-effects when the JS
+        representation of this type is converted to JSON.  That means that we
+        have to be pretty restrictive about what things we can allow.  For
+        example, "object" is out, because it may have accessor properties on it.
+        """
+        if type.nullable():
+            # Converting null to JSON is always OK.
+            return CGDictionary.typeSafeToJSONify(type.inner)
+
+        if type.isSequence():
+            # Sequences are arrays we create ourselves, with no holes.  They
+            # should be safe if their contents are safe, as long as we suppress
+            # invocation of .toJSON on objects.
+            return CGDictionary.typeSafeToJSONify(type.inner)
+
+        if type.isUnion():
+            # OK if everything in it is ok.
+            return all(CGDictionary.typeSafeToJSONify(t)
+                       for t in type.flatMemberTypes)
+
+        if type.isDictionary():
+            # OK if the dictionary is OK
+            return CGDictionary.dictionarySafeToJSONify(type.inner)
+
+        if type.isString() or type.isEnum():
+            # Strings are always OK.
+            return True
+
+        if type.isPrimitive():
+            # Primitives (numbers and booleans) are ok, as long as
+            # they're not unrestricted float/double.
+            return not type.isFloat() or not type.isUnrestricted()
+
+        return False
+
+    @staticmethod
+    def dictionarySafeToJSONify(dictionary):
+        # The dictionary itself is OK, so we're good if all our types are.
+        return all(CGDictionary.typeSafeToJSONify(m.type)
+                   for m in dictionary.members)
 
 
 class CGRegisterWorkerBindings(CGAbstractMethod):
@@ -13167,7 +13248,6 @@ class CGBindingRoot(CGThing):
         bindingHeaders["WrapperFactory.h"] = descriptors
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
         bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries  # AutoJSAPI
-        bindingHeaders["xpcpublic.h"] = dictionaries  # xpc::UnprivilegedJunkScope
         # Ensure we see our enums in the generated .cpp file, for the ToJSValue
         # method body.  Also ensure that we see jsapi.h.
         if enums:
@@ -15250,7 +15330,7 @@ def getMaplikeOrSetlikeBackingObject(descriptor, maplikeOrSetlike, helperImpl=No
           PreserveWrapper<${selfType}>(self);
         }
         """,
-        slot=memberReservedSlot(maplikeOrSetlike),
+        slot=memberReservedSlot(maplikeOrSetlike, descriptor),
         func_prefix=func_prefix,
         errorReturn=getMaplikeOrSetlikeErrorReturn(helperImpl),
         selfType=descriptor.nativeType)
@@ -15613,7 +15693,10 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             jsapi.Init();
             jsapi.TakeOwnershipOfErrorReporting();
             JSContext* cx = jsapi.cx();
-            JSAutoCompartment tempCompartment(cx, xpc::UnprivilegedJunkScope());
+            // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
+            // all we want is to wrap into _some_ scope and then unwrap to find
+            // the reflector, and wrapping has no side-effects.
+            JSAutoCompartment tempCompartment(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
             JS::Rooted<JS::Value> v(cx);
             if(!ToJSValue(cx, self, &v)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);

@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import java.util.EnumSet;
 
+import android.util.Log;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -21,6 +22,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListAdapter;
+import org.mozilla.gecko.util.NetworkUtils;
 
 /**
  * A ListView of bookmarks.
@@ -93,6 +95,7 @@ public class BookmarksListView extends HomeListView
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));
 
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "bookmarks");
+            Telemetry.addToHistogram("FENNEC_LOAD_SAVED_PAGE", NetworkUtils.isConnected(getContext()) ? 2 : 3);
 
             // This item is a TwoLinePageRow, so we allow switch-to-tab.
             getOnUrlOpenListener().onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));

@@ -336,6 +336,9 @@ protected:
 
   static void DeleteAllForEntry(Entry* aEntry);
 
+  // Note that mLastEntry points into mEntries, so we need to be careful about
+  // not triggering a resize of mEntries, e.g. use RawRemoveEntry() instead of
+  // RemoveEntry() in some places.
   nsTHashtable<Entry> mEntries;
   const nsIFrame* mLastFrame;
   Entry* mLastEntry;

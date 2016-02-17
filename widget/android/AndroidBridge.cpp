@@ -48,6 +48,8 @@
 #include "SurfaceTexture.h"
 #include "GLContextProvider.h"
 
+#include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ContentChild.h"
 
 using namespace mozilla;
@@ -72,17 +74,17 @@ static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNI
 jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
 {
     // First try the default class loader.
-    auto classRef = ClassObject::LocalRef::Adopt(
+    auto classRef = Class::LocalRef::Adopt(
             env, env->FindClass(className));
 
     if (!classRef && sBridge && sBridge->mClassLoader) {
         // If the default class loader failed but we have an app class loader, try that.
         // Clear the pending exception from failed FindClass call above.
         env->ExceptionClear();
-        classRef = ClassObject::LocalRef::Adopt(env,
+        classRef = Class::LocalRef::Adopt(env, jclass(
                 env->CallObjectMethod(sBridge->mClassLoader.Get(),
                                       sBridge->mClassLoaderLoadClass,
-                                      Param<String>(className, env).Get()));
+                                      StringParam(className, env).Get())));
     }
 
     if (!classRef) {
@@ -93,7 +95,7 @@ jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
         MOZ_CRASH();
     }
 
-    return ClassObject::GlobalRef(env, classRef).Forget();
+    return Class::GlobalRef(env, classRef).Forget();
 }
 
 jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
@@ -184,9 +186,10 @@ AndroidBridge::~AndroidBridge()
 }
 
 AndroidBridge::AndroidBridge()
-  : mLayerClient(nullptr),
-    mPresentationWindow(nullptr),
-    mPresentationSurface(nullptr)
+  : mLayerClient(nullptr)
+  , mUiTaskQueueLock("UiTaskQueue")
+  , mPresentationWindow(nullptr)
+  , mPresentationSurface(nullptr)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
@@ -199,7 +202,7 @@ AndroidBridge::AndroidBridge()
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
     mMessageQueue = widget::GeckoThread::MsgQueue();
-    auto msgQueueClass = ClassObject::LocalRef::Adopt(
+    auto msgQueueClass = Class::LocalRef::Adopt(
             jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
     // mMessageQueueNext must not be null
     mMessageQueueNext = GetMethodID(
@@ -474,7 +477,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
     auto jstrType = GeckoAppShell::GetMimeTypeFromExtensionsWrapper(aFileExt);
 
     if (jstrType) {
-        aMimeType = jstrType;
+        aMimeType = jstrType->ToCString();
     }
 }
 
@@ -486,7 +489,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
     auto jstrExt = GeckoAppShell::GetExtensionFromMimeTypeWrapper(aMimeType);
 
     if (jstrExt) {
-        aFileExt = nsCString(jstrExt);
+        aFileExt = jstrExt->ToCString();
     }
 }
 
@@ -498,7 +501,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     auto text = Clipboard::GetClipboardTextWrapper();
 
     if (text) {
-        aText = nsString(text);
+        aText = text->ToString();
     }
     return !!text;
 }
@@ -1673,7 +1676,7 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
     if (!jstrRet)
         return NS_ERROR_FAILURE;
 
-    aResult = nsCString(jstrRet);
+    aResult = jstrRet->ToCString();
     return NS_OK;
 }
 
@@ -1744,7 +1747,7 @@ AndroidBridge::GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResul
     if (!jstrThreadName)
         return false;
 
-    aResult = nsCString(jstrThreadName);
+    aResult = jstrThreadName->ToCString();
     return true;
 }
 
@@ -1758,7 +1761,7 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
     if (!jstrSampleName)
         return false;
 
-    aResult = nsCString(jstrSampleName);
+    aResult = jstrSampleName->ToCString();
     return true;
 }
 
@@ -2047,24 +2050,76 @@ AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
     return progressiveUpdateData->Abort();
 }
 
+class AndroidBridge::DelayedTask
+{
+    using TimeStamp = mozilla::TimeStamp;
+    using TimeDuration = mozilla::TimeDuration;
+
+public:
+    DelayedTask(Task* aTask)
+        : mTask(aTask)
+        , mRunTime() // Null timestamp representing no delay.
+    {}
+
+    DelayedTask(Task* aTask, int aDelayMs)
+        : mTask(aTask)
+        , mRunTime(TimeStamp::Now() + TimeDuration::FromMilliseconds(aDelayMs))
+    {}
+
+    bool IsEarlierThan(const DelayedTask& aOther) const
+    {
+        if (mRunTime) {
+            return aOther.mRunTime ? mRunTime < aOther.mRunTime : false;
+        }
+        // In the case of no delay, we're earlier if aOther has a delay.
+        // Otherwise, we're not earlier, to maintain task order.
+        return !!aOther.mRunTime;
+    }
+
+    int64_t MillisecondsToRunTime() const
+    {
+        if (mRunTime) {
+            return int64_t((mRunTime - TimeStamp::Now()).ToMilliseconds());
+        }
+        return 0;
+    }
+
+    UniquePtr<Task>&& GetTask()
+    {
+        return static_cast<UniquePtr<Task>&&>(mTask);
+    }
+
+private:
+    UniquePtr<Task> mTask;
+    const TimeStamp mRunTime;
+};
+
+
 void
 AndroidBridge::PostTaskToUiThread(Task* aTask, int aDelayMs)
 {
-    // add the new task into the mDelayedTaskQueue, sorted with
+    // add the new task into the mUiTaskQueue, sorted with
     // the earliest task first in the queue
-    DelayedTask* newTask = new DelayedTask(aTask, aDelayMs);
-    uint32_t i = 0;
-    while (i < mDelayedTaskQueue.Length()) {
-        if (newTask->IsEarlierThan(mDelayedTaskQueue[i])) {
-            mDelayedTaskQueue.InsertElementAt(i, newTask);
-            break;
+    size_t i;
+    DelayedTask newTask(aDelayMs ? DelayedTask(aTask, aDelayMs)
+                                 : DelayedTask(aTask));
+
+    {
+        MutexAutoLock lock(mUiTaskQueueLock);
+
+        for (i = 0; i < mUiTaskQueue.Length(); i++) {
+            if (newTask.IsEarlierThan(mUiTaskQueue[i])) {
+                mUiTaskQueue.InsertElementAt(i, mozilla::Move(newTask));
+                break;
+            }
         }
-        i++;
+
+        if (i == mUiTaskQueue.Length()) {
+            // We didn't insert the task, which means we should append it.
+            mUiTaskQueue.AppendElement(mozilla::Move(newTask));
+        }
     }
-    if (i == mDelayedTaskQueue.Length()) {
-        // this new task will run after all the existing tasks in the queue
-        mDelayedTaskQueue.AppendElement(newTask);
-    }
+
     if (i == 0) {
         // if we're inserting it at the head of the queue, notify Java because
         // we need to get a callback at an earlier time than the last scheduled
@@ -2076,9 +2131,10 @@ AndroidBridge::PostTaskToUiThread(Task* aTask, int aDelayMs)
 int64_t
 AndroidBridge::RunDelayedUiThreadTasks()
 {
-    while (mDelayedTaskQueue.Length() > 0) {
-        DelayedTask* nextTask = mDelayedTaskQueue[0];
-        int64_t timeLeft = nextTask->MillisecondsToRunTime();
+    MutexAutoLock lock(mUiTaskQueueLock);
+
+    while (!mUiTaskQueue.IsEmpty()) {
+        const int64_t timeLeft = mUiTaskQueue[0].MillisecondsToRunTime();
         if (timeLeft > 0) {
             // this task (and therefore all remaining tasks)
             // have not yet reached their runtime. return the
@@ -2086,14 +2142,13 @@ AndroidBridge::RunDelayedUiThreadTasks()
             return timeLeft;
         }
 
-        // we have a delayed task to run. extract it from
-        // the wrapper and free the wrapper
+        // Retrieve task before unlocking/running.
+        const UniquePtr<Task> nextTask(mUiTaskQueue[0].GetTask());
+        mUiTaskQueue.RemoveElementAt(0);
 
-        mDelayedTaskQueue.RemoveElementAt(0);
-        Task* task = nextTask->GetTask();
-        delete nextTask;
-
-        task->Run();
+        // Unlock to allow posting new tasks reentrantly.
+        MutexAutoUnlock unlock(mUiTaskQueueLock);
+        nextTask->Run();
     }
     return -1;
 }
@@ -2212,6 +2267,6 @@ nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsASt
     if (!path) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    aPath = nsString(path);
+    aPath = path->ToString();
     return NS_OK;
 }

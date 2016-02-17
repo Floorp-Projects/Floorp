@@ -154,6 +154,18 @@ TEST(LinuxLibcSupportTest, strrchr) {
   ASSERT_EQ(abc3 + 6, my_strrchr(abc3, 'a'));
 }
 
+TEST(LinuxLibcSupportTest, memchr) {
+  ASSERT_EQ(NULL, my_memchr("abc", 'd', 3));
+  ASSERT_EQ(NULL, my_memchr("abcd", 'd', 3));
+  ASSERT_EQ(NULL, my_memchr("a", 'a', 0));
+
+  static const char abc3[] = "abcabcabc";
+  ASSERT_EQ(abc3, my_memchr(abc3, 'a', 3));
+  ASSERT_EQ(abc3, my_memchr(abc3, 'a', 9));
+  ASSERT_EQ(abc3+1, my_memchr(abc3, 'b', 9));
+  ASSERT_EQ(abc3+2, my_memchr(abc3, 'c', 9));
+}
+
 TEST(LinuxLibcSupportTest, read_hex_ptr) {
   uintptr_t result;
   const char* last;

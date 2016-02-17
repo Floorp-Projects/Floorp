@@ -20,7 +20,7 @@ function createTemporarySaveDirectory() {
   saveDir.append("testsavedir");
   if (!saveDir.exists()) {
     info("create testsavedir!");
-    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   }
   info("return from createTempSaveDir: " + saveDir.path);
   return saveDir;

@@ -248,9 +248,14 @@ struct FormatUsageInfo
     const FormatInfo* const format;
     bool isRenderable;
     bool isFilterable;
+
     std::map<PackingInfo, DriverUnpackInfo> validUnpacks;
     const DriverUnpackInfo* idealUnpack;
+
     const GLint* textureSwizzleRGBA;
+
+    bool maxSamplesKnown;
+    uint32_t maxSamples;
 
     static const GLint kLuminanceSwizzleRGBA[4];
     static const GLint kAlphaSwizzleRGBA[4];
@@ -262,10 +267,14 @@ struct FormatUsageInfo
         , isFilterable(false)
         , idealUnpack(nullptr)
         , textureSwizzleRGBA(nullptr)
+        , maxSamplesKnown(false)
+        , maxSamples(0)
     { }
 
     bool IsUnpackValid(const PackingInfo& key,
                        const DriverUnpackInfo** const out_value) const;
+
+    void ResolveMaxSamples(gl::GLContext* gl);
 };
 
 class FormatUsageAuthority

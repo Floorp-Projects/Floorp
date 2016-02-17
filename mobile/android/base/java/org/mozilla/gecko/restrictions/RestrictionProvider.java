@@ -38,7 +38,7 @@ public class RestrictionProvider extends BroadcastReceiver {
             @Override
             public void run() {
                 final Bundle oldRestrictions = intent.getBundleExtra(Intent.EXTRA_RESTRICTIONS_BUNDLE);
-                RestrictedProfileConfiguration.migrateRestrictionsIfNeeded(oldRestrictions);
+                RestrictionCache.migrateRestrictionsIfNeeded(oldRestrictions);
 
                 final Bundle extras = new Bundle();
 

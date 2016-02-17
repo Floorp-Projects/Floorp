@@ -5,7 +5,7 @@
 != not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
 
 # dynamic type changes:
-== to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
+fuzzy-if(skiaContent,1,40) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
 == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
 
 # for different values:
@@ -13,13 +13,13 @@
 == same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1-ref.html
 
 # dynamic value changes:
-== value-prop-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) == value-prop-unthemed.html 75pct-unthemed-common-ref.html
 == value-prop.html 75pct-common-ref.html
-== valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) == valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
 == valueAsNumber-prop.html 75pct-common-ref.html
-fuzzy-if(B2G,2,1) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(B2G,2,1) fuzzy-if(skiaContent,1,40) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
 fuzzy-if(B2G,2,1) == stepDown.html 75pct-common-ref.html
-== stepUp-unthemed.html 75pct-unthemed-common-ref.html
+fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
 fuzzy-if(B2G,2,1) == max-prop.html 100pct-common-ref.html
 == reset-value.html reset-value-ref.html

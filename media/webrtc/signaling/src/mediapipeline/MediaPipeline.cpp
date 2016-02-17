@@ -884,7 +884,7 @@ UnsetTrackId(MediaStreamGraphImpl* graph) {
     }
     RefPtr<PipelineListener> listener_;
   };
-  graph->AppendMessage(new Message(this));
+  graph->AppendMessage(MakeUnique<Message>(this));
 #else
   UnsetTrackIdImpl();
 #endif
@@ -1373,7 +1373,7 @@ static void AddTrackAndListener(MediaStream* source,
     // atomically and have start time 0. When not queueing we have to add
     // the track on the MediaStreamGraph thread so it can be added with the
     // appropriate start time.
-    source->GraphImpl()->AppendMessage(new Message(source, track_id, track_rate, segment, listener, completed));
+    source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, track_id, track_rate, segment, listener, completed));
     MOZ_MTLOG(ML_INFO, "Dispatched track-add for track id " << track_id <<
                        " on stream " << source);
     return;

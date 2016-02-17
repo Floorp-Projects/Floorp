@@ -249,6 +249,7 @@ interface Element : Node {
 
            attribute DOMString id;
            attribute DOMString className;
+  [PutForwards=value]
   readonly attribute DOMTokenList classList;
 
   readonly attribute Attr[] attributes;
@@ -414,10 +415,7 @@ interface DOMTokenList {
   void remove(DOMString... tokens);
   boolean toggle(DOMString token, optional boolean force);
   stringifier;
-};
-
-interface DOMSettableTokenList : DOMTokenList {
-            attribute DOMString value;
+  attribute DOMString value;
 };
 </script>
 <script>

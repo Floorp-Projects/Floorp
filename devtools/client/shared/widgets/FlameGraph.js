@@ -37,6 +37,10 @@ const GRAPH_RESIZE_EVENTS_DRAIN = 100; // ms
 
 const GRAPH_WHEEL_ZOOM_SENSITIVITY = 0.00035;
 const GRAPH_WHEEL_SCROLL_SENSITIVITY = 0.5;
+const GRAPH_KEYBOARD_ZOOM_SENSITIVITY = 20;
+const GRAPH_KEYBOARD_PAN_SENSITIVITY = 20;
+const GRAPH_KEYBOARD_ACCELERATION = 1.05;
+const GRAPH_KEYBOARD_TRANSLATION_MAX = 150;
 const GRAPH_MIN_SELECTION_WIDTH = 0.001; // ms
 
 const GRAPH_HORIZONTAL_PAN_THRESHOLD = 10; // px
@@ -158,6 +162,11 @@ function FlameGraph(parent, sharpness) {
     this._selectionDragger = new GraphAreaDragger();
     this._verticalOffset = 0;
     this._verticalOffsetDragger = new GraphAreaDragger(0);
+    this._keyboardZoomAccelerationFactor = 1;
+    this._keyboardPanAccelerationFactor = 1;
+
+    this._userInputStack = 0;
+    this._keysPressed = [];
 
     // Calculating text widths is necessary to trim the text inside the blocks
     // while the scaling changes (e.g. via scrolling). This is very expensive,
@@ -171,6 +180,9 @@ function FlameGraph(parent, sharpness) {
     this._overflowCharWidth = this._getTextWidth(this.overflowChar);
 
     this._onAnimationFrame = this._onAnimationFrame.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
+    this._onKeyUp = this._onKeyUp.bind(this);
+    this._onKeyPress = this._onKeyPress.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
@@ -178,6 +190,9 @@ function FlameGraph(parent, sharpness) {
     this._onResize = this._onResize.bind(this);
     this.refresh = this.refresh.bind(this);
 
+    this._window.addEventListener("keydown", this._onKeyDown);
+    this._window.addEventListener("keyup", this._onKeyUp);
+    this._window.addEventListener("keypress", this._onKeyPress);
     this._window.addEventListener("mousemove", this._onMouseMove);
     this._window.addEventListener("mousedown", this._onMouseDown);
     this._window.addEventListener("mouseup", this._onMouseUp);
@@ -218,6 +233,9 @@ FlameGraph.prototype = {
   destroy: Task.async(function*() {
     yield this.ready();
 
+    this._window.removeEventListener("keydown", this._onKeyDown);
+    this._window.removeEventListener("keyup", this._onKeyUp);
+    this._window.removeEventListener("keypress", this._onKeyPress);
     this._window.removeEventListener("mousemove", this._onMouseMove);
     this._window.removeEventListener("mousedown", this._onMouseDown);
     this._window.removeEventListener("mouseup", this._onMouseUp);
@@ -236,6 +254,8 @@ FlameGraph.prototype = {
     this._selectionDragger = null;
     this._verticalOffset = null;
     this._verticalOffsetDragger = null;
+    this._keyboardZoomAccelerationFactor = null;
+    this._keyboardPanAccelerationFactor = null;
     this._textWidthsCache = null;
 
     this._data = null;
@@ -349,6 +369,13 @@ FlameGraph.prototype = {
   },
 
   /**
+   * Focuses this graph's iframe window.
+   */
+  focus: function() {
+    this._window.focus();
+  },
+
+  /**
    * Updates this graph to reflect the new dimensions of the parent node.
    *
    * @param boolean options.force
@@ -415,6 +442,14 @@ FlameGraph.prototype = {
     if (!this._shouldRedraw) {
       return;
     }
+
+    // Unlike mouse events which are updated as needed in their own respective
+    // handlers, keyboard events are granular and non-continuous (not even
+    // "keydown", which is fired with a low frequency). Therefore, to maintain
+    // animation smoothness, update anything that's controllable via the
+    // keyboard here, in the animation loop, before any actual drawing.
+    this._keyboardUpdateLoop();
+
     let ctx = this._ctx;
     let canvasWidth = this._width;
     let canvasHeight = this._height;
@@ -427,7 +462,100 @@ FlameGraph.prototype = {
     this._drawPyramid(this._data, this._verticalOffset, selection.start, selectionScale);
     this._drawHeader(selection.start, selectionScale);
 
-    this._shouldRedraw = false;
+    // If the user isn't doing anything anymore, it's safe to stop drawing.
+    // XXX: This doesn't handle cases where we should still be drawing even
+    // if any input stops (e.g. smooth panning transitions after the user
+    // finishes input). We don't care about that right now.
+    if (this._userInputStack == 0) {
+      return void (this._shouldRedraw = false);
+    }
+    if (this._userInputStack < 0) {
+      throw new Error("The user went back in time from a pyramid.");
+    }
+  },
+
+  /**
+   * Performs any necessary changes to the graph's state based on the
+   * user's input on a keyboard.
+   */
+  _keyboardUpdateLoop: function() {
+    const KEY_CODE_UP = 38;
+    const KEY_CODE_DOWN = 40;
+    const KEY_CODE_LEFT = 37;
+    const KEY_CODE_RIGHT = 39;
+    const KEY_CODE_W = 87;
+    const KEY_CODE_A = 65;
+    const KEY_CODE_S = 83;
+    const KEY_CODE_D = 68;
+
+    let canvasWidth = this._width;
+    let canvasHeight = this._height;
+    let pressed = this._keysPressed;
+
+    let selection = this._selection;
+    let selectionWidth = selection.end - selection.start;
+    let selectionScale = canvasWidth / selectionWidth;
+
+    let translation = [0, 0];
+    let isZooming = false;
+    let isPanning = false;
+
+    if (pressed[KEY_CODE_UP] || pressed[KEY_CODE_W]) {
+      translation[0] += GRAPH_KEYBOARD_ZOOM_SENSITIVITY / selectionScale;
+      translation[1] -= GRAPH_KEYBOARD_ZOOM_SENSITIVITY / selectionScale;
+      isZooming = true;
+    }
+    if (pressed[KEY_CODE_DOWN] || pressed[KEY_CODE_S]) {
+      translation[0] -= GRAPH_KEYBOARD_ZOOM_SENSITIVITY / selectionScale;
+      translation[1] += GRAPH_KEYBOARD_ZOOM_SENSITIVITY / selectionScale;
+      isZooming = true;
+    }
+    if (pressed[KEY_CODE_LEFT] || pressed[KEY_CODE_A]) {
+      translation[0] -= GRAPH_KEYBOARD_PAN_SENSITIVITY / selectionScale;
+      translation[1] -= GRAPH_KEYBOARD_PAN_SENSITIVITY / selectionScale;
+      isPanning = true;
+    }
+    if (pressed[KEY_CODE_RIGHT] || pressed[KEY_CODE_D]) {
+      translation[0] += GRAPH_KEYBOARD_PAN_SENSITIVITY / selectionScale;
+      translation[1] += GRAPH_KEYBOARD_PAN_SENSITIVITY / selectionScale;
+      isPanning = true;
+    }
+
+    if (isPanning) {
+      // Accelerate the left/right selection panning continuously
+      // while the pan keys are pressed.
+      this._keyboardPanAccelerationFactor *= GRAPH_KEYBOARD_ACCELERATION;
+      translation[0] *= this._keyboardPanAccelerationFactor;
+      translation[1] *= this._keyboardPanAccelerationFactor;
+    } else {
+      this._keyboardPanAccelerationFactor = 1;
+    }
+
+    if (isZooming) {
+      // Accelerate the in/out selection zooming continuously
+      // while the zoom keys are pressed.
+      this._keyboardZoomAccelerationFactor *= GRAPH_KEYBOARD_ACCELERATION;
+      translation[0] *= this._keyboardZoomAccelerationFactor;
+      translation[1] *= this._keyboardZoomAccelerationFactor;
+    } else {
+      this._keyboardZoomAccelerationFactor = 1;
+    }
+
+    if (translation[0] != 0 || translation[1] != 0) {
+      // Make sure the panning translation speed doesn't end up
+      // being too high.
+      let maxTranslation = GRAPH_KEYBOARD_TRANSLATION_MAX / selectionScale;
+      if (Math.abs(translation[0]) > maxTranslation) {
+        translation[0] = Math.sign(translation[0]) * maxTranslation;
+      }
+      if (Math.abs(translation[1]) > maxTranslation) {
+        translation[1] = Math.sign(translation[1]) * maxTranslation;
+      }
+      this._selection.start += translation[0];
+      this._selection.end += translation[1];
+      this._normalizeSelectionBounds();
+      this.emit("selecting");
+    }
   },
 
   /**
@@ -759,6 +887,39 @@ FlameGraph.prototype = {
       }
     }
     return "";
+  },
+
+  /**
+   * Listener for the "keydown" event on the graph's container.
+   */
+  _onKeyDown: function(e) {
+    ViewHelpers.preventScrolling(e);
+
+    if (!this._keysPressed[e.keyCode]) {
+      this._keysPressed[e.keyCode] = true;
+      this._userInputStack++;
+      this._shouldRedraw = true;
+    }
+  },
+
+  /**
+   * Listener for the "keyup" event on the graph's container.
+   */
+  _onKeyUp: function(e) {
+    ViewHelpers.preventScrolling(e);
+
+    if (this._keysPressed[e.keyCode]) {
+      this._keysPressed[e.keyCode] = false;
+      this._userInputStack--;
+      this._shouldRedraw = true;
+    }
+  },
+
+  /**
+   * Listener for the "keypress" event on the graph's container.
+   */
+  _onKeyPress: function(e) {
+    ViewHelpers.preventScrolling(e);
   },
 
   /**

@@ -112,6 +112,14 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "string",
         },
+        osVersion: {
+          required: true,
+          type: "string",
+        },
+        arch: {
+          required: true,
+          type: "string",
+        },
         vendor: {
           type: "string",
         },

@@ -2391,6 +2391,7 @@ nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
     // matching the one specified.
     nsCOMPtr<nsIURI> originalURI;
     aNewChannel->GetOriginalURI(getter_AddRefs(originalURI));
+    nsISupports* matchingKey = nullptr;
     for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
         nsISupports* key = iter.Key();
         nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(key);
@@ -2402,21 +2403,25 @@ nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
         bool matchingURI = false;
         thisURI->Equals(originalURI, &matchingURI);
         if (matchingURI) {
-            // If a match is found, remove the data entry with the old channel
-            // key and re-add it with the new channel key.
-            nsAutoPtr<OutputData> outputData;
-            mOutputMap.RemoveAndForget(key, outputData);
-            NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
-
-            // Store data again with new channel unless told to ignore redirects
-            if (!(mPersistFlags & PERSIST_FLAGS_IGNORE_REDIRECTED_DATA)) {
-                nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aNewChannel);
-                mOutputMap.Put(keyPtr, outputData.forget());
-            }
-
+            matchingKey = key;
             break;
         }
     }
+
+    if (matchingKey) {
+        // If a match was found, remove the data entry with the old channel
+        // key and re-add it with the new channel key.
+        nsAutoPtr<OutputData> outputData;
+        mOutputMap.RemoveAndForget(matchingKey, outputData);
+        NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
+
+        // Store data again with new channel unless told to ignore redirects.
+        if (!(mPersistFlags & PERSIST_FLAGS_IGNORE_REDIRECTED_DATA)) {
+            nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aNewChannel);
+            mOutputMap.Put(keyPtr, outputData.forget());
+        }
+    }
+
     return NS_OK;
 }
 

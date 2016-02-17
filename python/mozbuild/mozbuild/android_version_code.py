@@ -75,10 +75,10 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     '''
     def hours_since_cutoff(buildid):
         # The ID is formatted like YYYYMMDDHHMMSS (using
-        # datetime.now().strftime('%Y%m%d%H%M%S'); see
-        # toolkit/xre/make-platformini.py).  The inverse function is
-        # time.strptime.  N.B.: the time module expresses time as decimal
-        # seconds since the epoch.
+        # datetime.now().strftime('%Y%m%d%H%M%S'); see build/variables.py).
+        # The inverse function is time.strptime.
+        # N.B.: the time module expresses time as decimal seconds since the
+        # epoch.
         fmt = '%Y%m%d%H%M%S'
         build = time.strptime(str(buildid), fmt)
         cutoff = time.strptime(str(V1_CUTOFF), fmt)

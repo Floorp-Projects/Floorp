@@ -4,14 +4,13 @@
 
 package org.mozilla.gecko.sync.net;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.ThreadPool;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Resource class that implements expected headers and processing for Sync.
@@ -92,23 +91,5 @@ public class SyncStorageRecordRequest extends SyncStorageRequest {
 
   public void put(CryptoRecord record) {
     this.put(record.toJSONObject());
-  }
-
-  public void deferGet() {
-    final SyncStorageRecordRequest self = this;
-    ThreadPool.run(new Runnable() {
-      @Override
-      public void run() {
-        self.get();
-      }});
-  }
-
-  public void deferPut(final JSONObject body) {
-    final SyncStorageRecordRequest self = this;
-    ThreadPool.run(new Runnable() {
-      @Override
-      public void run() {
-        self.put(body);
-      }});
   }
 }

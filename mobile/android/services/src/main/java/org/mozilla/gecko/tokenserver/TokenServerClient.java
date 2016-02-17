@@ -171,7 +171,7 @@ public class TokenServerClient {
             }
           }
         } catch (NonArrayJSONException e) {
-          Logger.warn(LOG_TAG, "Got non-JSON array '" + result.getString(JSON_KEY_ERRORS) + "'.", e);
+          Logger.warn(LOG_TAG, "Got non-JSON array '" + JSON_KEY_ERRORS + "'.", e);
         }
       }
 

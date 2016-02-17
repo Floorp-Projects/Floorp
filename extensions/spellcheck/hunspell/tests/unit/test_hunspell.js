@@ -130,7 +130,7 @@ function do_get_file_by_line(file, charset) {
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
               createInstance(Ci.nsIFileInputStream);
   fis.init(file, 0x1 /* READONLY */,
-           0444, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+           0o444, Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
   let lis = Cc["@mozilla.org/intl/converter-input-stream;1"].
               createInstance(Ci.nsIConverterInputStream);

@@ -1276,6 +1276,13 @@ public:
    */
   bool Combines3DTransformWithAncestors() const;
 
+  /**
+   * Returns whether this frame has a hidden backface and has a parent that
+   * Extend3DContext(). This is useful because in some cases the hidden
+   * backface can safely be ignored if it could not be visible anyway.
+   */
+  bool In3DContextAndBackfaceIsHidden() const;
+
   bool IsPreserve3DLeaf() const {
     return Combines3DTransformWithAncestors() && !Extend3DContext();
   }

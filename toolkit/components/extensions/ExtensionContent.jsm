@@ -34,6 +34,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+                                  "resource://gre/modules/WebNavigationFrames.jsm");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   runSafeSyncWithoutClone,
@@ -240,7 +243,7 @@ class ExtensionContext extends BaseContext {
   constructor(extensionId, contentWindow, contextOptions = {}) {
     super();
 
-    let { isExtensionPage } = contextOptions;
+    let {isExtensionPage} = contextOptions;
 
     this.isExtensionPage = isExtensionPage;
     this.extension = ExtensionManager.get(extensionId);
@@ -338,8 +341,8 @@ class ExtensionContext extends BaseContext {
     // defined in the content window (See Bug 1214658 for rationale).
     if (this.isExtensionPage && !Cu.isDeadWrapper(this.contentWindow) &&
         Cu.waiveXrays(this.contentWindow).browser === this.chromeObj) {
-      Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
-      Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
+      Cu.createObjectIn(this.contentWindow, {defineAs: "browser"});
+      Cu.createObjectIn(this.contentWindow, {defineAs: "chrome"});
     }
     Cu.nukeSandbox(this.sandbox);
     this.sandbox = null;
@@ -401,7 +404,7 @@ var DocumentManager = {
 
       // Enable the content script APIs should be available in subframes' window
       // if it is recognized as a valid addon id (see Bug 1214658 for rationale).
-      const { CONTENTSCRIPT_PRIVILEGES } = ExtensionManagement.API_LEVELS;
+      const {CONTENTSCRIPT_PRIVILEGES} = ExtensionManagement.API_LEVELS;
       let extensionId = ExtensionManagement.getAddonIdForWindow(window);
 
       if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES &&
@@ -417,7 +420,7 @@ var DocumentManager = {
     } else if (topic == "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
-      MessageChannel.abortResponses({ innerWindowID: windowId });
+      MessageChannel.abortResponses({innerWindowID: windowId});
 
       // Close any existent content-script context for the destroyed window.
       if (this.contentScriptWindows.has(windowId)) {
@@ -503,7 +506,7 @@ var DocumentManager = {
 
     let context = this.extensionPageWindows.get(winId);
     if (!context) {
-      let context = new ExtensionContext(extensionId, window, { isExtensionPage: true });
+      let context = new ExtensionContext(extensionId, window, {isExtensionPage: true});
       this.extensionPageWindows.set(winId, context);
     }
 
@@ -550,7 +553,7 @@ var DocumentManager = {
       }
     }
 
-    MessageChannel.abortResponses({ extensionId });
+    MessageChannel.abortResponses({extensionId});
 
     this.extensionCount--;
     if (this.extensionCount == 0) {
@@ -668,6 +671,8 @@ class ExtensionGlobal {
 
     MessageChannel.addListener(global, "Extension:Capture", this);
     MessageChannel.addListener(global, "Extension:Execute", this);
+    MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
+    MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
 
     this.broker = new MessageBroker([global]);
 
@@ -676,11 +681,11 @@ class ExtensionGlobal {
                           .getInterface(Ci.nsIDOMWindowUtils)
                           .outerWindowID;
 
-    global.sendAsyncMessage("Extension:TopWindowID", { windowId: this.windowId });
+    global.sendAsyncMessage("Extension:TopWindowID", {windowId: this.windowId});
   }
 
   uninit() {
-    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", { windowId: this.windowId });
+    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId: this.windowId});
   }
 
   get messageFilter() {
@@ -692,39 +697,54 @@ class ExtensionGlobal {
     };
   }
 
-  receiveMessage({ target, messageName, recipient, data }) {
+  receiveMessage({target, messageName, recipient, data}) {
     switch (messageName) {
       case "Extension:Capture":
-        let win = this.global.content;
-
-        const XHTML_NS = "http://www.w3.org/1999/xhtml";
-        let canvas = win.document.createElementNS(XHTML_NS, "canvas");
-        canvas.width = data.width;
-        canvas.height = data.height;
-        canvas.mozOpaque = true;
-
-        let ctx = canvas.getContext("2d");
-
-        // We need to scale the image to the visible size of the browser,
-        // in order for the result to appear as the user sees it when
-        // settings like full zoom come into play.
-        ctx.scale(canvas.width / win.innerWidth,
-                  canvas.height / win.innerHeight);
-
-        ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
-
-        return canvas.toDataURL(`image/${data.options.format}`,
-                                data.options.quality / 100);
-
+        return this.handleExtensionCapture(data.width, data.height, data.options);
       case "Extension:Execute":
-        let deferred = PromiseUtils.defer();
-
-        let script = new Script(data.options, deferred);
-        let { extensionId } = recipient;
-        DocumentManager.executeScript(target, extensionId, script);
-
-        return deferred.promise;
+        return this.handleExtensionExecute(target, recipient, data.options);
+      case "WebNavigation:GetFrame":
+        return this.handleWebNavigationGetFrame(data.options);
+      case "WebNavigation:GetAllFrames":
+        return this.handleWebNavigationGetAllFrames();
     }
+  }
+
+  handleExtensionCapture(width, height, options) {
+    let win = this.global.content;
+
+    const XHTML_NS = "http://www.w3.org/1999/xhtml";
+    let canvas = win.document.createElementNS(XHTML_NS, "canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.mozOpaque = true;
+
+    let ctx = canvas.getContext("2d");
+
+    // We need to scale the image to the visible size of the browser,
+    // in order for the result to appear as the user sees it when
+    // settings like full zoom come into play.
+    ctx.scale(canvas.width / win.innerWidth, canvas.height / win.innerHeight);
+
+    ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
+
+    return canvas.toDataURL(`image/${options.format}`, options.quality / 100);
+  }
+
+  handleExtensionExecute(target, recipient, options) {
+    let deferred = PromiseUtils.defer();
+    let script = new Script(options, deferred);
+    let {extensionId} = recipient;
+    DocumentManager.executeScript(target, extensionId, script);
+    return deferred.promise;
+  }
+
+  handleWebNavigationGetFrame({frameId}) {
+    return WebNavigationFrames.getFrame(this.global.docShell, frameId);
+  }
+
+  handleWebNavigationGetAllFrames() {
+    return WebNavigationFrames.getAllFrames(this.global.docShell);
   }
 }
 

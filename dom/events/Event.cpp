@@ -629,7 +629,7 @@ Event::IsDispatchStopped()
 }
 
 NS_IMETHODIMP_(WidgetEvent*)
-Event::GetInternalNSEvent()
+Event::WidgetEventPtr()
 {
   return mEvent;
 }

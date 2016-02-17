@@ -54,8 +54,9 @@ add_task(function*() {
   do_check_true(addon.isCompatible);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
+  do_check_false(addon.isSystem);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -81,8 +82,9 @@ add_task(function*() {
   do_check_true(addon.isCompatible);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
+  do_check_false(addon.isSystem);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());
@@ -134,8 +136,9 @@ add_task(function*() {
   do_check_true(addon.isCompatible);
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
+  do_check_false(addon.isSystem);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());
@@ -252,6 +255,7 @@ add_task(function*() {
   do_check_neq(first_addon, null);
   do_check_false(first_addon.appDisabled);
   do_check_true(first_addon.isActive);
+  do_check_false(first_addon.isSystem);
 
   let manifestjson_id= "last-webextension2@tests.mozilla.org";
   let last_addon = yield promiseAddonByID(manifestjson_id);

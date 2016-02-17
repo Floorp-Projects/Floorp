@@ -53,16 +53,6 @@ assertThrowsInstanceOf(() => createProxy({a: 5}).a = 0, TypeError);
 assertEq(delete createProxy({}).a, true);
 assertEq(delete createProxy(Object.defineProperty({}, "a", {configurable: false})).a, false);
 
-// [[Enumerate]]
-for (var k in createProxy({})) {
-    // No properties in object.
-    assertEq(true, false);
-}
-for (var k in createProxy({a: 5})) {
-    // Properties in object.
-    assertEq(k, "a");
-}
-
 // [[OwnPropertyKeys]]
 assertEq(Object.getOwnPropertyNames(createProxy({})).length, 0);
 assertEq(Object.getOwnPropertyNames(createProxy({a: 5})).length, 1);

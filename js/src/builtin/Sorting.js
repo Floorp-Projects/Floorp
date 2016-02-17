@@ -45,10 +45,10 @@ function CountingSort(array, len, signed) {
 
 // For sorting small arrays.
 function InsertionSort(array, from, to, comparefn) {
-    var item, swap;
-    for (var i = from + 1; i <= to; i++) {
+    let item, swap, i, j;
+    for (i = from + 1; i <= to; i++) {
         item = array[i];
-        for (var j = i - 1; j >= from; j--) {
+        for (j = i - 1; j >= from; j--) {
             swap = array[j];
             if (comparefn(swap, item) <= 0)
                 break;
@@ -65,28 +65,29 @@ function SwapArrayElements(array, i, j) {
 }
 
 // A helper function for MergeSort.
-function Merge(array, start, mid, end, lBuffer, rBuffer, comparefn) {
+function Merge(list, start, mid, end, lBuffer, rBuffer, comparefn) {
     var i, j, k;
 
     var sizeLeft = mid - start + 1;
     var sizeRight =  end - mid;
 
-    // Copy our virtual arrays into separate buffers.
+    // Copy our virtual lists into separate buffers.
     for (i = 0; i < sizeLeft; i++)
-        lBuffer[i] = array[start + i];
+        lBuffer[i] = list[start + i];
 
     for (j = 0; j < sizeRight; j++)
-        rBuffer[j] = array[mid + 1 + j];
+        rBuffer[j] = list[mid + 1 + j];
+
 
     i = 0;
     j = 0;
     k = start;
     while (i < sizeLeft && j < sizeRight) {
         if (comparefn(lBuffer[i], rBuffer[j]) <= 0) {
-            array[k] = lBuffer[i];
+            list[k] = lBuffer[i];
             i++;
         } else {
-            array[k] = rBuffer[j];
+            list[k] = rBuffer[j];
             j++;
         }
         k++;
@@ -94,46 +95,70 @@ function Merge(array, start, mid, end, lBuffer, rBuffer, comparefn) {
 
     // Empty out any remaining elements in the buffer.
     while (i < sizeLeft) {
-        array[k] = lBuffer[i];
+        list[k] =lBuffer[i];
         i++;
         k++;
     }
 
     while (j < sizeRight) {
-        array[k] = rBuffer[j];
+        list[k] =rBuffer[j];
         j++;
         k++;
     }
 }
 
+// Helper function for overwriting a sparse array with a
+// dense array, filling remaining slots with holes.
+function MoveHoles(sparse, sparseLen, dense, denseLen) {
+    for (var i = 0; i < denseLen; i++)
+        _DefineDataProperty(sparse, i, dense[i]);
+    for (var j = denseLen; j < sparseLen; j++)
+        delete sparse[j];
+}
+
 // Iterative, bottom up, mergesort.
 function MergeSort(array, len, comparefn) {
+    // To save effort we will do all of our work on a dense list,
+    // then create holes at the end.
+    var denseList = new List();
+    var denseLen = 0;
+
+    for (var i = 0; i < len; i++) {
+        if (i in array)
+            denseList[denseLen++] = array[i];
+    }
+
+    if (denseLen < 1)
+        return array;
+
     // Insertion sort for small arrays, where "small" is defined by performance
     // testing.
     if (len < 24) {
-       InsertionSort(array, 0, len - 1, comparefn);
-       return array;
+        InsertionSort(denseList, 0, denseLen - 1, comparefn);
+        MoveHoles(array, len, denseList, denseLen);
+        return array;
     }
 
     // We do all of our allocating up front
     var lBuffer = new List();
     var rBuffer = new List();
-    var mid, end, endOne, endTwo;
 
-    for (var windowSize = 1; windowSize < len; windowSize = 2*windowSize) {
-        for (var start = 0; start < len - 1; start += 2*windowSize) {
-            assert(windowSize < len, "The window size is larger than the array length!");
+    var mid, end, endOne, endTwo;
+    for (var windowSize = 1; windowSize < denseLen; windowSize = 2 * windowSize) {
+        for (var start = 0; start < denseLen - 1; start += 2 * windowSize) {
+            assert(windowSize < denseLen, "The window size is larger than the array denseLength!");
             // The midpoint between the two subarrays.
             mid = start + windowSize - 1;
             // To keep from going over the edge.
             end = start + 2 * windowSize - 1;
-            end = end < len - 1 ? end : len - 1;
+            end = end < denseLen - 1 ? end : denseLen - 1;
             // Skip lopsided runs to avoid doing useless work
             if (mid > end)
                 continue;
-            Merge(array, start, mid, end, lBuffer, rBuffer, comparefn);
+            Merge(denseList, start, mid, end, lBuffer, rBuffer, comparefn);
         }
     }
+    MoveHoles(array, len, denseList, denseLen);
     return array;
 }
 

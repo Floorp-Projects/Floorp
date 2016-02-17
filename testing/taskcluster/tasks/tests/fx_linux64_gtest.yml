@@ -17,7 +17,7 @@ task:
           mozharness/configs/remove_executables.py
   metadata:
     name: '[TC] Linux64 gtest'
-    description: Gtests run {{chunk}}
+    description: Gtests run
   extra:
     suite:
       name: gtest

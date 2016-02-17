@@ -28,7 +28,6 @@ class SVGTests : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTESTS_IID)
-  NS_DECL_ISUPPORTS
 
   SVGTests();
 

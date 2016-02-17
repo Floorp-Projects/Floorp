@@ -87,3 +87,11 @@ TEST(WastefulVectorTest, Simple) {
   for (unsigned i = 0; i < 256; ++i)
     ASSERT_EQ(v[i], i);
 }
+
+TEST(WastefulVectorTest, UsesPageAllocator) {
+  PageAllocator allocator_;
+  wasteful_vector<unsigned> v(&allocator_);
+
+  v.push_back(1);
+  ASSERT_TRUE(allocator_.OwnsPointer(&v[0]));
+}

@@ -3,10 +3,6 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.io.IOException;
-import java.util.HashMap;
-
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -18,15 +14,18 @@ import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 
 public class MockGlobalSession extends MockPrefsGlobalSession {
 
-  public MockGlobalSession(String username, String password, KeyBundle keyBundle, GlobalSessionCallback callback) throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException {
+  public MockGlobalSession(String username, String password, KeyBundle keyBundle, GlobalSessionCallback callback) throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException {
     this(new SyncConfiguration(username, new BasicAuthHeaderProvider(username, password), new MockSharedPreferences(), keyBundle), callback);
   }
 
   public MockGlobalSession(SyncConfiguration config, GlobalSessionCallback callback)
-          throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
+          throws SyncConfigurationException, IllegalArgumentException, IOException, NonObjectJSONException {
     super(config, callback, null, null);
   }
 

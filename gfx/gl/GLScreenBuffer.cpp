@@ -538,7 +538,7 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
     if (!newBack)
         return false;
 
-    // In the case of DXGL interop, the new surface needs to be acquired before 
+    // In the case of DXGL interop, the new surface needs to be acquired before
     // it is attached so that the interop surface is locked, which populates
     // the GL renderbuffer. This results in the renderbuffer being ready and
     // attachment to framebuffer succeeds in Attach() call.
@@ -828,10 +828,7 @@ DrawBuffer::Create(GLContext* const gl,
     gl->fGenFramebuffers(1, &fb);
     gl->AttachBuffersToFB(0, colorMSRB, depthRB, stencilRB, fb);
 
-    GLsizei samples = formats.samples;
-    if (!samples)
-        samples = 1;
-
+    const GLsizei samples = formats.samples;
     UniquePtr<DrawBuffer> ret( new DrawBuffer(gl, size, samples, fb, colorMSRB,
                                               depthRB, stencilRB) );
 

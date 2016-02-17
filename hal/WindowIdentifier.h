@@ -8,8 +8,8 @@
 #define mozilla_hal_WindowIdentifier_h
 
 #include "mozilla/Types.h"
-#include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 class nsPIDOMWindowInner;
 

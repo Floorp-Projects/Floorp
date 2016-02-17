@@ -9,6 +9,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "mozilla/dom/FetchUtil.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -264,7 +265,7 @@ public:
     MOZ_ASSERT(aWorkerScope);
     MOZ_ASSERT(aEvent);
     nsCOMPtr<nsIGlobalObject> sgo = aWorkerScope;
-    WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+    WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
     ErrorResult result;
     result = aWorkerScope->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
@@ -1223,7 +1224,7 @@ private:
       nsCOMPtr<nsIRunnable> runnable;
       if (event->DefaultPrevented(aCx)) {
         event->ReportCanceled();
-      } else if (event->GetInternalNSEvent()->mFlags.mExceptionHasBeenRisen) {
+      } else if (event->WidgetEventPtr()->mFlags.mExceptionHasBeenRisen) {
         // Exception logged via the WorkerPrivate ErrorReporter
       } else {
         runnable = new ResumeRequest(mInterceptedChannel);
@@ -1391,7 +1392,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // TODO(catalinb): Bug 1192138 - Add telemetry for service worker wake-ups.
 
   // Ensure that the IndexedDatabaseManager is initialized
-  NS_WARN_IF(!indexedDB::IndexedDatabaseManager::GetOrCreate());
+  NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
 
   WorkerLoadInfo info;
   nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), mInfo->ScriptSpec(),

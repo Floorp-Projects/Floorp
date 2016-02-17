@@ -223,6 +223,12 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
   }, "remote-browser-shown", false);
 };
 
+SpecialPowers.prototype.isServiceWorkerRegistered = function() {
+  var swm = Components.classes["@mozilla.org/serviceworkers/manager;1"]
+                      .getService(Components.interfaces.nsIServiceWorkerManager);
+  return swm.getAllRegistrations().length != 0;
+};
+
 // Attach our API to the window.
 function attachSpecialPowersToWindow(aWindow) {
   try {

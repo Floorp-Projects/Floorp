@@ -526,6 +526,14 @@ destroydtoa
 				FREE((void*)v);
 			}
 		}
+#ifdef Omit_Private_Memory
+	Bigint* p5 = GET_STATE(p5s);
+	while (p5) {
+		Bigint* tmp = p5;
+		p5 = p5->next;
+		FREE(tmp);
+		}
+#endif
 	FREE((void *)state);
 }
 

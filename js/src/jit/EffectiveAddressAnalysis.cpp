@@ -23,15 +23,14 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     MDefinition* index = lsh->lhs();
     MOZ_ASSERT(index->type() == MIRType_Int32);
 
-    MDefinition* shift = lsh->rhs();
-    if (!shift->isConstantValue())
+    MConstant* shiftValue = lsh->rhs()->maybeConstantValue();
+    if (!shiftValue)
         return;
 
-    Value shiftValue = shift->constantValue();
-    if (!shiftValue.isInt32() || !IsShiftInScaleRange(shiftValue.toInt32()))
+    if (shiftValue->type() != MIRType_Int32 || !IsShiftInScaleRange(shiftValue->toInt32()))
         return;
 
-    Scale scale = ShiftToScale(shiftValue.toInt32());
+    Scale scale = ShiftToScale(shiftValue->toInt32());
 
     int32_t displacement = 0;
     MInstruction* last = lsh;
@@ -50,8 +49,8 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 
         MDefinition* other = add->getOperand(1 - add->indexOf(*use));
 
-        if (other->isConstantValue()) {
-            displacement += other->constantValue().toInt32();
+        if (MConstant* otherConst = other->maybeConstantValue()) {
+            displacement += otherConst->toInt32();
         } else {
             if (base)
                 break;
@@ -80,11 +79,12 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
             return;
 
         MDefinition* other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
-        if (!other->isConstantValue() || !other->constantValue().isInt32())
+        MConstant* otherConst = other->maybeConstantValue();
+        if (!otherConst || otherConst->type() != MIRType_Int32)
             return;
 
         uint32_t bitsClearedByShift = elemSize - 1;
-        uint32_t bitsClearedByMask = ~uint32_t(other->constantValue().toInt32());
+        uint32_t bitsClearedByMask = ~uint32_t(otherConst->toInt32());
         if ((bitsClearedByShift & bitsClearedByMask) != bitsClearedByMask)
             return;
 
@@ -136,13 +136,13 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
 {
     MDefinition* ptr = ins->ptr();
 
-    if (ptr->isConstantValue()) {
+    if (ptr->isConstant()) {
         // Look for heap[i] where i is a constant offset, and fold the offset.
         // By doing the folding now, we simplify the task of codegen; the offset
         // is always the address mode immediate. This also allows it to avoid
         // a situation where the sum of a constant pointer value and a non-zero
         // offset doesn't actually fit into the address mode immediate.
-        int32_t imm = ptr->constantValue().toInt32();
+        int32_t imm = ptr->toConstant()->toInt32();
         if (imm != 0 && tryAddDisplacement(ins, imm)) {
             MInstruction* zero = MConstant::New(graph_.alloc(), Int32Value(0));
             ins->block()->insertBefore(ins, zero);
@@ -154,10 +154,10 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
         // Alignment Mask Analysis pass.
         MDefinition* op0 = ptr->toAdd()->getOperand(0);
         MDefinition* op1 = ptr->toAdd()->getOperand(1);
-        if (op0->isConstantValue())
+        if (op0->isConstant())
             mozilla::Swap(op0, op1);
-        if (op1->isConstantValue()) {
-            int32_t imm = op1->constantValue().toInt32();
+        if (op1->isConstant()) {
+            int32_t imm = op1->toConstant()->toInt32();
             if (tryAddDisplacement(ins, imm))
                 ins->replacePtr(op0);
         }

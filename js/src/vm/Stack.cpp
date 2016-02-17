@@ -61,8 +61,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     prevpc_ = nullptr;
     prevsp_ = nullptr;
 
-    MOZ_ASSERT_IF(evalInFramePrev, isDebuggerEvalFrame());
     evalInFramePrev_ = evalInFramePrev;
+    MOZ_ASSERT_IF(evalInFramePrev, isDebuggerEvalFrame());
 
     if (script->isDebuggee())
         setIsDebuggee();
@@ -105,7 +105,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
 {
 #ifdef DEBUG
     RootedObject originalScope(cx, scope);
-    Rooted<StaticScope*> enclosingScope(cx, script->enclosingStaticScope());
+    RootedObject enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
             while (scope->is<DynamicWithObject>() ||
@@ -119,7 +119,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
         } else if (i.hasSyntacticDynamicScopeObject()) {
             switch (i.type()) {
               case StaticScopeIter<NoGC>::Module:
-                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().staticScope() == &i.module());
+                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().script() == i.moduleScript());
                 scope = &scope->as<ModuleEnvironmentObject>().enclosingScope();
                 break;
               case StaticScopeIter<NoGC>::Function:
@@ -1414,7 +1414,6 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken e
 jit::JitActivation::JitActivation(JSContext* cx, bool active)
   : Activation(cx, Jit),
     active_(active),
-    isLazyLinkExitFrame_(false),
     rematerializedFrames_(nullptr),
     ionRecovery_(cx),
     bailoutData_(nullptr),

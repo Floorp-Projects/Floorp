@@ -121,15 +121,15 @@ TEST(TreeTraversal, DepthFirstSearchValueExists)
   }
 
   RefPtr<SearchTestNode> root = nodeList[0];
-  nodeList[0]->AddChild(nodeList[1]);
   nodeList[0]->AddChild(nodeList[4]);
-  nodeList[1]->AddChild(nodeList[2]);
+  nodeList[0]->AddChild(nodeList[1]);
   nodeList[1]->AddChild(nodeList[3]);
-  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[1]->AddChild(nodeList[2]);
   nodeList[4]->AddChild(nodeList[6]);
+  nodeList[4]->AddChild(nodeList[5]);
   nodeList[6]->AddChild(nodeList[7]);
-  nodeList[7]->AddChild(nodeList[8]);
   nodeList[7]->AddChild(nodeList[9]);
+  nodeList[7]->AddChild(nodeList[8]);
 
   RefPtr<SearchTestNode> foundNode = DepthFirstSearch(root.get(),
       [&visitCount](SearchTestNode* aNode)
@@ -185,33 +185,156 @@ TEST(TreeTraversal, DepthFirstSearchValueDoesNotExist)
   }
 
   RefPtr<SearchTestNode> root = nodeList[0];
-  nodeList[0]->AddChild(nodeList[1]);
   nodeList[0]->AddChild(nodeList[4]);
-  nodeList[1]->AddChild(nodeList[2]);
+  nodeList[0]->AddChild(nodeList[1]);
   nodeList[1]->AddChild(nodeList[3]);
-  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[1]->AddChild(nodeList[2]);
   nodeList[4]->AddChild(nodeList[6]);
+  nodeList[4]->AddChild(nodeList[5]);
   nodeList[6]->AddChild(nodeList[7]);
-  nodeList[7]->AddChild(nodeList[8]);
   nodeList[7]->AddChild(nodeList[9]);
+  nodeList[7]->AddChild(nodeList[8]);
 
 
   RefPtr<SearchTestNode> foundNode = DepthFirstSearch(root.get(),
       [&visitCount](SearchTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == SearchNodeType::Needle;
       });
 
   for (int i = 0; i < 10; i++)
   {
-    ASSERT_EQ(nodeList[i]->GetExpectedTraversalRank(), 
+    ASSERT_EQ(nodeList[i]->GetExpectedTraversalRank(),
         nodeList[i]->GetActualTraversalRank())
         << "Node at index " << i << " was hit out of order.";
   }
 
-  ASSERT_EQ(foundNode.get(), nullptr) 
+  ASSERT_EQ(foundNode.get(), nullptr)
+      << "Search found something that should not exist.";
+}
+
+TEST(TreeTraversal, DepthFirstSearchPostOrderNull)
+{
+  RefPtr<SearchTestNode> nullNode;
+  RefPtr<SearchTestNode> result = DepthFirstSearchPostOrder(nullNode.get(),
+      [](SearchTestNode* aNode)
+      {
+        return aNode->GetType() == SearchNodeType::Needle;
+      });
+  ASSERT_EQ(result.get(), nullptr) << "Null root did not return null search result.";
+}
+
+TEST(TreeTraversal, DepthFirstSearchPostOrderValueExists)
+{
+  int visitCount = 0;
+  size_t expectedNeedleTraversalRank = 7;
+  RefPtr<SearchTestNode> needleNode;
+  std::vector<RefPtr<SearchTestNode>> nodeList;
+  for (size_t i = 0; i < 10; i++)
+  {
+    if (i == expectedNeedleTraversalRank) {
+      needleNode = new SearchTestNode(SearchNodeType::Needle, i);
+      nodeList.push_back(needleNode);
+    } else if (i < expectedNeedleTraversalRank) {
+      nodeList.push_back(new SearchTestNode(SearchNodeType::Hay, i));
+    } else {
+      nodeList.push_back(new SearchTestNode(SearchNodeType::Hay));
+    }
+  }
+
+  RefPtr<SearchTestNode> root = nodeList[9];
+  nodeList[9]->AddChild(nodeList[8]);
+  nodeList[9]->AddChild(nodeList[2]);
+  nodeList[2]->AddChild(nodeList[1]);
+  nodeList[2]->AddChild(nodeList[0]);
+  nodeList[8]->AddChild(nodeList[7]);
+  nodeList[8]->AddChild(nodeList[6]);
+  nodeList[6]->AddChild(nodeList[5]);
+  nodeList[5]->AddChild(nodeList[4]);
+  nodeList[5]->AddChild(nodeList[3]);
+
+  RefPtr<SearchTestNode> foundNode = DepthFirstSearchPostOrder(root.get(),
+      [&visitCount](SearchTestNode* aNode)
+      {
+        aNode->SetActualTraversalRank(visitCount);
+        visitCount++;
+        return aNode->GetType() == SearchNodeType::Needle;
+      });
+
+  for (size_t i = 0; i < nodeList.size(); i++)
+  {
+    ASSERT_EQ(nodeList[i]->GetExpectedTraversalRank(),
+        nodeList[i]->GetActualTraversalRank())
+        << "Node at index " << i << " was hit out of order.";
+  }
+
+  ASSERT_EQ(foundNode, needleNode) << "Search did not return expected node.";
+  ASSERT_EQ(foundNode->GetType(), SearchNodeType::Needle)
+      << "Returned node does not match expected value (something odd happened).";
+}
+
+TEST(TreeTraversal, DepthFirstSearchPostOrderRootIsNeedle)
+{
+  RefPtr<SearchTestNode> root = new SearchTestNode(SearchNodeType::Needle, 0);
+  RefPtr<SearchTestNode> childNode1= new SearchTestNode(SearchNodeType::Hay);
+  RefPtr<SearchTestNode> childNode2 = new SearchTestNode(SearchNodeType::Hay);
+  int visitCount = 0;
+  RefPtr<SearchTestNode> result = DepthFirstSearchPostOrder(root.get(),
+      [&visitCount](SearchTestNode* aNode)
+      {
+        aNode->SetActualTraversalRank(visitCount);
+        visitCount++;
+        return aNode->GetType() == SearchNodeType::Needle;
+      });
+  ASSERT_EQ(result, root) << "Search starting at needle did not return needle.";
+  ASSERT_EQ(root->GetExpectedTraversalRank(), root->GetActualTraversalRank())
+      << "Search starting at needle did not return needle.";
+  ASSERT_EQ(childNode1->GetExpectedTraversalRank(),
+      childNode1->GetActualTraversalRank())
+      << "Search starting at needle continued past needle.";
+  ASSERT_EQ(childNode2->GetExpectedTraversalRank(),
+      childNode2->GetActualTraversalRank())
+      << "Search starting at needle continued past needle.";
+}
+
+TEST(TreeTraversal, DepthFirstSearchPostOrderValueDoesNotExist)
+{
+  int visitCount = 0;
+  std::vector<RefPtr<SearchTestNode>> nodeList;
+  for (int i = 0; i < 10; i++)
+  {
+      nodeList.push_back(new SearchTestNode(SearchNodeType::Hay, i));
+  }
+
+  RefPtr<SearchTestNode> root = nodeList[9];
+  nodeList[9]->AddChild(nodeList[8]);
+  nodeList[9]->AddChild(nodeList[2]);
+  nodeList[2]->AddChild(nodeList[1]);
+  nodeList[2]->AddChild(nodeList[0]);
+  nodeList[8]->AddChild(nodeList[7]);
+  nodeList[8]->AddChild(nodeList[6]);
+  nodeList[6]->AddChild(nodeList[5]);
+  nodeList[5]->AddChild(nodeList[4]);
+  nodeList[5]->AddChild(nodeList[3]);
+
+  RefPtr<SearchTestNode> foundNode = DepthFirstSearchPostOrder(root.get(),
+      [&visitCount](SearchTestNode* aNode)
+      {
+        aNode->SetActualTraversalRank(visitCount);
+        visitCount++;
+        return aNode->GetType() == SearchNodeType::Needle;
+      });
+
+  for (int i = 0; i < 10; i++)
+  {
+    ASSERT_EQ(nodeList[i]->GetExpectedTraversalRank(),
+        nodeList[i]->GetActualTraversalRank())
+        << "Node at index " << i << " was hit out of order.";
+  }
+
+  ASSERT_EQ(foundNode.get(), nullptr)
       << "Search found something that should not exist.";
 }
 
@@ -243,10 +366,10 @@ TEST(TreeTraversal, BreadthFirstSearchRootIsNeedle)
   ASSERT_EQ(root->GetExpectedTraversalRank(), root->GetActualTraversalRank())
       << "Search starting at needle did not return needle.";
   ASSERT_EQ(childNode1->GetExpectedTraversalRank(),
-      childNode1->GetActualTraversalRank()) 
+      childNode1->GetActualTraversalRank())
       << "Search starting at needle continued past needle.";
   ASSERT_EQ(childNode2->GetExpectedTraversalRank(),
-      childNode2->GetActualTraversalRank()) 
+      childNode2->GetActualTraversalRank())
       << "Search starting at needle continued past needle.";
 }
 
@@ -283,7 +406,7 @@ TEST(TreeTraversal, BreadthFirstSearchValueExists)
       [&visitCount](SearchTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == SearchNodeType::Needle;
       });
 
@@ -324,7 +447,7 @@ TEST(TreeTraversal, BreadthFirstSearchValueDoesNotExist)
       [&visitCount](SearchTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == SearchNodeType::Needle;
       });
 
@@ -359,24 +482,24 @@ TEST(TreeTraversal, ForEachNodeAllEligible)
   }
 
   RefPtr<ForEachTestNode> root = nodeList[0];
-  nodeList[0]->AddChild(nodeList[1]);
   nodeList[0]->AddChild(nodeList[4]);
-  nodeList[1]->AddChild(nodeList[2]);
+  nodeList[0]->AddChild(nodeList[1]);
   nodeList[1]->AddChild(nodeList[3]);
-  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[1]->AddChild(nodeList[2]);
   nodeList[4]->AddChild(nodeList[6]);
+  nodeList[4]->AddChild(nodeList[5]);
   nodeList[6]->AddChild(nodeList[7]);
-  nodeList[7]->AddChild(nodeList[8]);
   nodeList[7]->AddChild(nodeList[9]);
+  nodeList[7]->AddChild(nodeList[8]);
 
 
   ForEachNode(root.get(),
       [&visitCount](ForEachTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == ForEachNodeType::Continue
-	    ? TraversalFlag::Continue : TraversalFlag::Skip;
+            ? TraversalFlag::Continue : TraversalFlag::Skip;
       });
 
   for (size_t i = 0; i < nodeList.size(); i++)
@@ -404,21 +527,21 @@ TEST(TreeTraversal, ForEachNodeSomeIneligibleNodes)
   expectedSkippedNodeList.push_back(new ForEachTestNode(ForEachNodeType::Skip));
 
   RefPtr<ForEachTestNode> root = expectedVisitedNodeList[0];
-  expectedVisitedNodeList[0]->AddChild(expectedVisitedNodeList[1]);
   expectedVisitedNodeList[0]->AddChild(expectedVisitedNodeList[2]);
-  expectedVisitedNodeList[1]->AddChild(expectedSkippedNodeList[0]);
+  expectedVisitedNodeList[0]->AddChild(expectedVisitedNodeList[1]);
   expectedVisitedNodeList[1]->AddChild(expectedSkippedNodeList[1]);
+  expectedVisitedNodeList[1]->AddChild(expectedSkippedNodeList[0]);
   expectedVisitedNodeList[2]->AddChild(expectedVisitedNodeList[3]);
-  expectedVisitedNodeList[3]->AddChild(expectedSkippedNodeList[2]);
   expectedVisitedNodeList[3]->AddChild(expectedSkippedNodeList[3]);
+  expectedVisitedNodeList[3]->AddChild(expectedSkippedNodeList[2]);
 
   ForEachNode(root.get(),
       [&visitCount](ForEachTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == ForEachNodeType::Continue
-	    ? TraversalFlag::Continue : TraversalFlag::Skip;
+            ? TraversalFlag::Continue : TraversalFlag::Skip;
       });
 
   for (size_t i = 0; i < expectedVisitedNodeList.size(); i++)
@@ -448,9 +571,9 @@ TEST(TreeTraversal, ForEachNodeIneligibleRoot)
       [&visitCount](ForEachTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == ForEachNodeType::Continue
-	    ? TraversalFlag::Continue : TraversalFlag::Skip;
+            ? TraversalFlag::Continue : TraversalFlag::Skip;
       });
 
   ASSERT_EQ(root->GetExpectedTraversalRank(), root->GetActualTraversalRank())
@@ -476,23 +599,23 @@ TEST(TreeTraversal, ForEachNodeLeavesIneligible)
   }
 
   RefPtr<ForEachTestNode> root = nodeList[0];
-  nodeList[0]->AddChild(nodeList[1]);
   nodeList[0]->AddChild(nodeList[2]);
-  nodeList[2]->AddChild(nodeList[3]);
+  nodeList[0]->AddChild(nodeList[1]);
   nodeList[2]->AddChild(nodeList[4]);
-  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[2]->AddChild(nodeList[3]);
   nodeList[4]->AddChild(nodeList[6]);
+  nodeList[4]->AddChild(nodeList[5]);
   nodeList[6]->AddChild(nodeList[7]);
-  nodeList[7]->AddChild(nodeList[8]);
   nodeList[7]->AddChild(nodeList[9]);
+  nodeList[7]->AddChild(nodeList[8]);
 
   ForEachNode(root.get(),
       [&visitCount](ForEachTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
         return aNode->GetType() == ForEachNodeType::Continue
-	    ? TraversalFlag::Continue : TraversalFlag::Skip;
+            ? TraversalFlag::Continue : TraversalFlag::Skip;
       });
 
   for (size_t i = 0; i < nodeList.size(); i++)
@@ -513,22 +636,22 @@ TEST(TreeTraversal, ForEachNodeLambdaReturnsVoid)
   }
 
   RefPtr<ForEachTestNode> root = nodeList[0];
-  nodeList[0]->AddChild(nodeList[1]);
   nodeList[0]->AddChild(nodeList[4]);
-  nodeList[1]->AddChild(nodeList[2]);
+  nodeList[0]->AddChild(nodeList[1]);
   nodeList[1]->AddChild(nodeList[3]);
-  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[1]->AddChild(nodeList[2]);
   nodeList[4]->AddChild(nodeList[6]);
+  nodeList[4]->AddChild(nodeList[5]);
   nodeList[6]->AddChild(nodeList[7]);
-  nodeList[7]->AddChild(nodeList[8]);
   nodeList[7]->AddChild(nodeList[9]);
+  nodeList[7]->AddChild(nodeList[8]);
 
 
   ForEachNode(root.get(),
       [&visitCount](ForEachTestNode* aNode)
       {
         aNode->SetActualTraversalRank(visitCount);
-	visitCount++;
+        visitCount++;
       });
 
   for (size_t i = 0; i < nodeList.size(); i++)

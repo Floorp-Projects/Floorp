@@ -31,100 +31,100 @@ add_task(function* testDetailsObjects() {
     /* eslint-disable comma-dangle, indent */
     let iconDetails = [
       // Only paths.
-      { details: { "path": "a.png" },
+      {details: {"path": "a.png"},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png"), } },
-      { details: { "path": "/a.png" },
+          "2": browser.runtime.getURL("data/a.png")}},
+      {details: {"path": "/a.png"},
         resolutions: {
           "1": browser.runtime.getURL("a.png"),
-          "2": browser.runtime.getURL("a.png"), } },
-      { details: { "path": { "19": "a.png" } },
+          "2": browser.runtime.getURL("a.png")}},
+      {details: {"path": {"19": "a.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png"), } },
-      { details: { "path": { "38": "a.png" } },
+          "2": browser.runtime.getURL("data/a.png")}},
+      {details: {"path": {"38": "a.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png"), } },
-      { details: { "path": { "19": "a.png", "38": "a-x2.png" } },
+          "2": browser.runtime.getURL("data/a.png")}},
+      {details: {"path": {"19": "a.png", "38": "a-x2.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a-x2.png"), } },
+          "2": browser.runtime.getURL("data/a-x2.png")}},
 
       // Only ImageData objects.
-      { details: { "imageData": imageData.red.imageData },
+      {details: {"imageData": imageData.red.imageData},
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url, } },
-      { details: { "imageData": { "19": imageData.red.imageData } },
+          "2": imageData.red.url}},
+      {details: {"imageData": {"19": imageData.red.imageData}},
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url, } },
-      { details: { "imageData": { "38": imageData.red.imageData } },
+          "2": imageData.red.url}},
+      {details: {"imageData": {"38": imageData.red.imageData}},
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url, } },
-      { details: { "imageData": {
+          "2": imageData.red.url}},
+      {details: {"imageData": {
           "19": imageData.red.imageData,
-          "38": imageData.green.imageData } },
+          "38": imageData.green.imageData}},
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.green.url, } },
+          "2": imageData.green.url}},
 
       // Mixed path and imageData objects.
       //
       // The behavior is currently undefined if both |path| and
       // |imageData| specify icons of the same size.
-      { details: {
-          "path": { "19": "a.png" },
-          "imageData": { "38": imageData.red.imageData } },
+      {details: {
+          "path": {"19": "a.png"},
+          "imageData": {"38": imageData.red.imageData}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": imageData.red.url, } },
-      { details: {
-          "path": { "38": "a.png" },
-          "imageData": { "19": imageData.red.imageData } },
+          "2": imageData.red.url}},
+      {details: {
+          "path": {"38": "a.png"},
+          "imageData": {"19": imageData.red.imageData}},
         resolutions: {
           "1": imageData.red.url,
-          "2": browser.runtime.getURL("data/a.png"), } },
+          "2": browser.runtime.getURL("data/a.png")}},
 
       // A path or ImageData object by itself is treated as a 19px icon.
-      { details: {
+      {details: {
           "path": "a.png",
-          "imageData": { "38": imageData.red.imageData } },
+          "imageData": {"38": imageData.red.imageData}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": imageData.red.url, } },
-      { details: {
-          "path": { "38": "a.png" },
-          "imageData": imageData.red.imageData, },
+          "2": imageData.red.url}},
+      {details: {
+          "path": {"38": "a.png"},
+          "imageData": imageData.red.imageData},
         resolutions: {
           "1": imageData.red.url,
-          "2": browser.runtime.getURL("data/a.png"), } },
+          "2": browser.runtime.getURL("data/a.png")}},
 
       // Various resolutions
-      { details: { "path": { "18": "a.png", "32": "a-x2.png" } },
+      {details: {"path": {"18": "a.png", "32": "a-x2.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a-x2.png"), } },
-      { details: { "path": { "16": "16.png", "100": "100.png" } },
+          "2": browser.runtime.getURL("data/a-x2.png")}},
+      {details: {"path": {"16": "16.png", "100": "100.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/100.png"),
-          "2": browser.runtime.getURL("data/100.png"), } },
-      { details: { "path": { "2": "2.png"} },
+          "2": browser.runtime.getURL("data/100.png")}},
+      {details: {"path": {"2": "2.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/2.png"),
-          "2": browser.runtime.getURL("data/2.png"), } },
-      { details: { "path": {
+          "2": browser.runtime.getURL("data/2.png")}},
+      {details: {"path": {
         "6": "6.png",
         "18": "18.png",
         "32": "32.png",
         "48": "48.png",
-        "128": "128.png" } },
+        "128": "128.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/18.png"),
-          "2": browser.runtime.getURL("data/48.png"), } },
+          "2": browser.runtime.getURL("data/48.png")}},
     ];
 
     // Allow serializing ImageData objects for logging.
@@ -162,7 +162,7 @@ add_task(function* testDetailsObjects() {
     let tests = [];
     for (let [idx, icon] of iconDetails.entries()) {
       for (let res of Object.keys(icon.resolutions)) {
-        tests.push({ index: idx, resolution: Number(res) });
+        tests.push({index: idx, resolution: Number(res)});
       }
     }
 
@@ -170,7 +170,7 @@ add_task(function* testDetailsObjects() {
     // between each test.
     tests.sort(test => test.resolution);
 
-    browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+    browser.tabs.query({active: true, currentWindow: true}, tabs => {
       tabId = tabs[0].id;
       browser.pageAction.show(tabId);
 
@@ -230,42 +230,46 @@ add_task(function* testInvalidIconSizes() {
     },
 
     background: function() {
-      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
         let tabId = tabs[0].id;
 
+        let promises = [];
         for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
           let assertSetIconThrows = function(detail, error, message) {
-            try {
-              detail.tabId = tabId;
-              browser[api].setIcon(detail);
-
-              browser.test.fail("Expected an error on invalid icon size.");
-              browser.test.notifyFail("setIcon with invalid icon size");
-              return;
-            } catch (e) {
-              browser.test.succeed("setIcon with invalid icon size");
-            }
+            detail.tabId = tabId;
+            promises.push(
+              browser[api].setIcon(detail).then(
+                () => {
+                  browser.test.fail("Expected an error on invalid icon size.");
+                  browser.test.notifyFail("setIcon with invalid icon size");
+                },
+                error => {
+                  browser.test.succeed("setIcon with invalid icon size");
+                }));
           };
+
+          let imageData = new ImageData(1, 1);
 
           // test invalid icon size inputs
           for (let type of ["path", "imageData"]) {
-            assertSetIconThrows({ [type]: { "abcdef": "test.png" } });
-            assertSetIconThrows({ [type]: { "48px": "test.png" } });
-            assertSetIconThrows({ [type]: { "20.5": "test.png" } });
-            assertSetIconThrows({ [type]: { "5.0": "test.png" } });
-            assertSetIconThrows({ [type]: { "-300": "test.png" } });
-            assertSetIconThrows({ [type]: {
-              "abc": "test.png",
-              "5": "test.png"
-            }});
+            let img = type == "imageData" ? imageData : "test.png";
+
+            assertSetIconThrows({[type]: {"abcdef": img}});
+            assertSetIconThrows({[type]: {"48px": img}});
+            assertSetIconThrows({[type]: {"20.5": img}});
+            assertSetIconThrows({[type]: {"5.0": img}});
+            assertSetIconThrows({[type]: {"-300": img}});
+            assertSetIconThrows({[type]: {"abc": img, "5": img}});
           }
 
-          assertSetIconThrows({ imageData: { "abcdef": "test.png" }, path: {"5": "test.png"} });
-          assertSetIconThrows({ path: { "abcdef": "test.png" }, imageData: {"5": "test.png"} });
+          assertSetIconThrows({imageData: {"abcdef": imageData}, path: {"5": "test.png"}});
+          assertSetIconThrows({path: {"abcdef": "test.png"}, imageData: {"5": imageData}});
         }
 
-        browser.test.notifyPass("setIcon with invalid icon size");
+        Promise.all(promises).then(() => {
+          browser.test.notifyPass("setIcon with invalid icon size");
+        });
       });
     }
   });
@@ -283,9 +287,9 @@ add_task(function* testDefaultDetails() {
   let icons = [
     "foo/bar.png",
     "/foo/bar.png",
-    { "19": "foo/bar.png" },
-    { "38": "foo/bar.png" },
-    { "19": "foo/bar.png", "38": "baz/quux.png" },
+    {"19": "foo/bar.png"},
+    {"38": "foo/bar.png"},
+    {"19": "foo/bar.png", "38": "baz/quux.png"},
   ];
 
   let expectedURL = new RegExp(String.raw`^moz-extension://[^/]+/foo/bar\.png$`);
@@ -293,12 +297,12 @@ add_task(function* testDefaultDetails() {
   for (let icon of icons) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        "browser_action": { "default_icon": icon },
-        "page_action": { "default_icon": icon },
+        "browser_action": {"default_icon": icon},
+        "page_action": {"default_icon": icon},
       },
 
       background: function() {
-        browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+        browser.tabs.query({active: true, currentWindow: true}, tabs => {
           let tabId = tabs[0].id;
 
           browser.pageAction.show(tabId);
@@ -341,31 +345,30 @@ add_task(function* testSecureURLsDenied() {
     },
 
     background: function() {
-      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
         let tabId = tabs[0].id;
 
         let urls = ["chrome://browser/content/browser.xul",
                     "javascript:true"];
 
+        let promises = [];
         for (let url of urls) {
           for (let api of ["pageAction", "browserAction"]) {
-            try {
-              browser[api].setIcon({tabId, path: url});
-
-              browser.test.fail(`Load of '${url}' succeeded. Expected failure.`);
-              browser.test.notifyFail("setIcon security tests");
-              return;
-            } catch (e) {
-              // We can't actually inspect the error here, since the
-              // error object belongs to the privileged scope of the API,
-              // rather than to the extension scope that calls into it.
-              // Just assume it's the expected security error, for now.
-              browser.test.succeed(`Load of '${url}' failed. Expected failure.`);
-            }
+            promises.push(
+              browser[api].setIcon({tabId, path: url}).then(
+                () => {
+                  browser.test.fail(`Load of '${url}' succeeded. Expected failure.`);
+                  browser.test.notifyFail("setIcon security tests");
+                },
+                error => {
+                  browser.test.succeed(`Load of '${url}' failed. Expected failure. ${error}`);
+                }));
           }
         }
 
-        browser.test.notifyPass("setIcon security tests");
+        Promise.all(promises).then(() => {
+          browser.test.notifyPass("setIcon security tests");
+        });
       });
     },
   });

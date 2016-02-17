@@ -508,17 +508,17 @@ function runTest(testNum) {
         invokeItemAction("1");
         closeContextMenu();
 
-        // run mozRequestFullScreen on the element we're testing
+        // run requestFullscreen on the element we're testing
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openDomFullScreen = function() {
-            subwindow.removeEventListener("mozfullscreenchange", openDomFullScreen, false);
+            subwindow.removeEventListener("fullscreenchange", openDomFullScreen, false);
             openContextMenuFor(dom_full_screen, true); // Invoke context menu for next test.
         }
-        subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
+        subwindow.addEventListener("fullscreenchange", openDomFullScreen, false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         SpecialPowers.setCharPref("full-screen-api.transition-duration.enter", "0 0");
         SpecialPowers.setCharPref("full-screen-api.transition-duration.leave", "0 0");
-        full_screen_element.mozRequestFullScreen();
+        full_screen_element.requestFullscreen();
     },
 
     function () {
@@ -542,14 +542,14 @@ function runTest(testNum) {
         closeContextMenu();
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openPagemenu = function() {
-            subwindow.removeEventListener("mozfullscreenchange", openPagemenu, false);
+            subwindow.removeEventListener("fullscreenchange", openPagemenu, false);
             SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
             SpecialPowers.clearUserPref("full-screen-api.transition-duration.enter", "0 0");
             SpecialPowers.clearUserPref("full-screen-api.transition-duration.leave", "0 0");
             openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         }
-        subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
-        subwindow.document.mozCancelFullScreen();
+        subwindow.addEventListener("fullscreenchange", openPagemenu, false);
+        subwindow.document.exitFullscreen();
     },
 
     function () {

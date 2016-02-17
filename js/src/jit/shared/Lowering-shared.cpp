@@ -79,28 +79,27 @@ LIRGeneratorShared::visitConstant(MConstant* ins)
         return;
     }
 
-    const Value& v = ins->value();
     switch (ins->type()) {
       case MIRType_Double:
-        define(new(alloc()) LDouble(v.toDouble()), ins);
+        define(new(alloc()) LDouble(ins->toDouble()), ins);
         break;
       case MIRType_Float32:
-        define(new(alloc()) LFloat32(v.toDouble()), ins);
+        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
         break;
       case MIRType_Boolean:
-        define(new(alloc()) LInteger(v.toBoolean()), ins);
+        define(new(alloc()) LInteger(ins->toBoolean()), ins);
         break;
       case MIRType_Int32:
-        define(new(alloc()) LInteger(v.toInt32()), ins);
+        define(new(alloc()) LInteger(ins->toInt32()), ins);
         break;
       case MIRType_String:
-        define(new(alloc()) LPointer(v.toString()), ins);
+        define(new(alloc()) LPointer(ins->toString()), ins);
         break;
       case MIRType_Symbol:
-        define(new(alloc()) LPointer(v.toSymbol()), ins);
+        define(new(alloc()) LPointer(ins->toSymbol()), ins);
         break;
       case MIRType_Object:
-        define(new(alloc()) LPointer(&v.toObject()), ins);
+        define(new(alloc()) LPointer(&ins->toObject()), ins);
         break;
       default:
         // Constants of special types (undefined, null) should never flow into

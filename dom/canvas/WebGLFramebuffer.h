@@ -49,7 +49,6 @@ private:
         , mAttachmentPoint(0)
     { }
 
-
 public:
     WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
     ~WebGLFBAttachPoint();
@@ -60,6 +59,7 @@ public:
     bool IsDeleteRequested() const;
 
     const webgl::FormatUsageInfo* Format() const;
+    uint32_t Samples() const;
 
     bool HasAlpha() const;
     bool IsReadableFloat() const;
@@ -98,7 +98,6 @@ public:
     void SetImageDataStatus(WebGLImageDataStatus x);
 
     void Size(uint32_t* const out_width, uint32_t* const out_height) const;
-    //const WebGLRectangleObject& RectangleObject() const;
 
     bool HasImage() const;
     bool IsComplete(WebGLContext* webgl, nsCString* const out_info) const;
@@ -229,6 +228,7 @@ public:
     bool HasDefinedAttachments() const;
     bool HasIncompleteAttachments(nsCString* const out_info) const;
     bool AllImageRectsMatch() const;
+    bool AllImageSamplesMatch() const;
     FBStatus PrecheckFramebufferStatus(nsCString* const out_info) const;
     FBStatus CheckFramebufferStatus(nsCString* const out_info) const;
 

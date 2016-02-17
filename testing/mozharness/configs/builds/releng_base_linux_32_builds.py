@@ -43,6 +43,7 @@ config = {
         ('/builds/mozilla-desktop-geoloc-api.key', '/builds/mozilla-desktop-geoloc-api.key'),
         ('/builds/crash-stats-api.token', '/builds/crash-stats-api.token'),
         ('/builds/adjust-sdk.token', '/builds/adjust-sdk.token'),
+        ('/builds/adjust-sdk-beta.token', '/builds/adjust-sdk-beta.token'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
     'enable_ccache': True,

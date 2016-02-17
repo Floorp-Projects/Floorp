@@ -10,6 +10,7 @@ XPIDL_SOURCES += [
     'xpctest_interfaces.idl',
     'xpctest_params.idl',
     'xpctest_returncode.idl',
+    'xpctest_utils.idl',
 ]
 
 XPIDL_MODULE = 'xpctest'

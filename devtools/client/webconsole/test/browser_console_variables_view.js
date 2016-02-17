@@ -108,11 +108,13 @@ function onUpdatedTestPropFound(aResults) {
   });
 }
 
-function onFooObjFetchAfterPropRename(aVar) {
+function* onFooObjFetchAfterPropRename(aVar) {
   info("onFooObjFetchAfterPropRename");
 
-  let para = content.wrappedJSObject.document.querySelector("p");
-  let expectedValue = content.document.title + content.location + para;
+  let expectedValue = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    let para = content.wrappedJSObject.document.querySelector("p");
+    return content.document.title + content.location + para;
+  });
 
   // Check that the new value is in the variables view.
   return findVariableViewProperties(aVar, [
@@ -139,11 +141,13 @@ function onRenamedTestPropFound(aResults) {
   });
 }
 
-function onPropUpdateError(aVar) {
+function* onPropUpdateError(aVar) {
   info("onPropUpdateError");
 
-  let para = content.wrappedJSObject.document.querySelector("p");
-  let expectedValue = content.document.title + content.location + para;
+  let expectedValue = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    let para = content.wrappedJSObject.document.querySelector("p");
+    return content.document.title + content.location + para;
+  });
 
   // Make sure the property did not change.
   return findVariableViewProperties(aVar, [

@@ -62,11 +62,3 @@ function uninstallExtension(data) {
     addon.uninstall();
   });
 }
-
-function startRun() {
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
-  let setsEnv = env.get("MOZSCREENSHOTS_SETS");
-  let sets = setsEnv ? setsEnv.split(",") : null;
-  TestRunner.start(sets);
-}

@@ -107,35 +107,10 @@ RemoteOpenFileChild::~RemoteOpenFileChild()
       NotifyListener(NS_ERROR_UNEXPECTED);
     }
   } else {
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    if (mainThread) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mURI, true)));
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mAppURI, true)));
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mListener,
-                                                   true)));
-
-      TabChild* tabChild;
-      mTabChild.forget(&tabChild);
-
-      if (tabChild) {
-        nsCOMPtr<nsIRunnable> runnable =
-          NS_NewNonOwningRunnableMethod(tabChild, &TabChild::Release);
-        MOZ_ASSERT(runnable);
-
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mainThread->Dispatch(runnable,
-                                                          NS_DISPATCH_NORMAL)));
-      }
-    } else {
-      using mozilla::Unused;
-
-      NS_WARNING("RemoteOpenFileChild released after thread shutdown, leaking "
-                 "its members!");
-
-      Unused << mURI.forget();
-      Unused << mAppURI.forget();
-      Unused << mListener.forget();
-      Unused << mTabChild.forget();
-    }
+    NS_ReleaseOnMainThread(mURI.forget(), true);
+    NS_ReleaseOnMainThread(mAppURI.forget(), true);
+    NS_ReleaseOnMainThread(mListener.forget(), true);
+    NS_ReleaseOnMainThread(mTabChild.forget(), true);
   }
 
   if (mNSPRFileDesc) {

@@ -123,7 +123,7 @@ fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
-fuzzy-if(gtkWidget,1,44) skip-if(B2G||Mulet) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(gtkWidget,1,44) fuzzy-if(skiaContent,1,50) skip-if(B2G||Mulet) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html
@@ -144,8 +144,8 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-skip-if(B2G||Mulet) HTTP(..) == 475092-sub.html 475092-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(!winWidget&&!gtkWidget) skip-if(B2G||Mulet) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(!winWidget&&!gtkWidget) skip-if(B2G||Mulet) fuzzy-if(skiaContent,64,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596 # Initial mulet triage: parity with B2G/B2G Desktop
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html

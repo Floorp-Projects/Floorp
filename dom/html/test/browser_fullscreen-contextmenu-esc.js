@@ -2,13 +2,15 @@
 
 function frameScript() {
   addMessageListener("Test:RequestFullscreen", () => {
-    content.document.body.mozRequestFullScreen();
+    content.document.body.requestFullscreen();
   });
-  content.document.addEventListener("mozfullscreenchange", () => {
-    sendAsyncMessage("Test:FullscreenChanged", content.document.mozFullScreen);
+  content.document.addEventListener("fullscreenchange", () => {
+    sendAsyncMessage("Test:FullscreenChanged",
+                     !!content.document.fullscreenElement);
   });
   addMessageListener("Test:QueryFullscreenState", () => {
-    sendAsyncMessage("Test:FullscreenState", content.document.mozFullScreen);
+    sendAsyncMessage("Test:FullscreenState",
+                     !!content.document.fullscreenElement);
   });
   function waitUntilActive() {
     let doc = content.document;
@@ -68,7 +70,7 @@ add_task(function* () {
   gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
   state = yield promiseOneMessage("Test:FullscreenChanged");
   ok(state, "The content should have entered fullscreen");
-  ok(document.mozFullScreen, "The chrome should also be in fullscreen");
+  ok(document.fullscreenElement, "The chrome should also be in fullscreen");
   gMessageManager.addMessageListener(
     "Test:FullscreenChanged", captureUnexpectedFullscreenChange);
 
@@ -92,7 +94,7 @@ add_task(function* () {
   gMessageManager.sendAsyncMessage("Test:QueryFullscreenState");
   state = yield promiseOneMessage("Test:FullscreenState");
   ok(state, "The content should still be in fullscreen");
-  ok(document.mozFullScreen, "The chrome should still be in fullscreen");
+  ok(document.fullscreenElement, "The chrome should still be in fullscreen");
 
   info("Send the second escape");
   gMessageManager.removeMessageListener(
@@ -101,5 +103,5 @@ add_task(function* () {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   state = yield fullscreenExitPromise;
   ok(!state, "The content should have exited fullscreen");
-  ok(!document.mozFullScreen, "The chrome should have exited fullscreen");
+  ok(!document.fullscreenElement, "The chrome should have exited fullscreen");
 });

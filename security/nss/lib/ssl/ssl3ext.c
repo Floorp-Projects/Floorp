@@ -99,7 +99,6 @@ static PRInt32 ssl3_ServerSendSignedCertTimestampXtn(sslSocket * ss,
 static SECStatus ssl3_ServerHandleSignedCertTimestampXtn(sslSocket *ss,
                                                          PRUint16 ex_type,
                                                          SECItem *data);
-
 static PRInt32 ssl3_ClientSendDraftVersionXtn(sslSocket *ss, PRBool append,
                                               PRUint32 maxBytes);
 static SECStatus ssl3_ServerHandleDraftVersionXtn(sslSocket *ss, PRUint16 ex_type,
@@ -109,7 +108,14 @@ static PRInt32 ssl3_SendExtendedMasterSecretXtn(sslSocket *ss, PRBool append,
 static SECStatus ssl3_HandleExtendedMasterSecretXtn(sslSocket *ss,
                                                     PRUint16 ex_type,
                                                     SECItem *data);
-
+static PRInt32 tls13_ClientSendKeyShareXtn(sslSocket *ss, PRBool append,
+                                           PRUint32 maxBytes);
+static SECStatus tls13_ClientHandleKeyShareXtn(sslSocket *ss,
+                                               PRUint16 ex_type,
+                                               SECItem *data);
+static SECStatus tls13_ServerHandleKeyShareXtn(sslSocket *ss,
+                                               PRUint16 ex_type,
+                                               SECItem *data);
 
 /*
  * Write bytes.  Using this function means the SECItem structure
@@ -277,6 +283,7 @@ static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_draft_version_xtn, &ssl3_ServerHandleDraftVersionXtn },
     { ssl_extended_master_secret_xtn, &ssl3_HandleExtendedMasterSecretXtn },
     { ssl_signed_cert_timestamp_xtn, &ssl3_ServerHandleSignedCertTimestampXtn },
+    { ssl_tls13_key_share_xtn, &tls13_ServerHandleKeyShareXtn },
     { -1, NULL }
 };
 
@@ -293,6 +300,7 @@ static const ssl3HelloExtensionHandler serverHelloHandlersTLS[] = {
     { ssl_cert_status_xtn,        &ssl3_ClientHandleStatusRequestXtn },
     { ssl_extended_master_secret_xtn, &ssl3_HandleExtendedMasterSecretXtn },
     { ssl_signed_cert_timestamp_xtn, &ssl3_ClientHandleSignedCertTimestampXtn },
+    { ssl_tls13_key_share_xtn,    &tls13_ClientHandleKeyShareXtn },
     { -1, NULL }
 };
 
@@ -324,6 +332,7 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_tls13_draft_version_xtn, &ssl3_ClientSendDraftVersionXtn },
     { ssl_extended_master_secret_xtn,       &ssl3_SendExtendedMasterSecretXtn},
     { ssl_signed_cert_timestamp_xtn, &ssl3_ClientSendSignedCertTimestampXtn },
+    { ssl_tls13_key_share_xtn, &tls13_ClientSendKeyShareXtn },
     /* any extra entries will appear as { 0, NULL }    */
 };
 
@@ -1929,18 +1938,34 @@ ssl3_ParseEncryptedSessionTicket(sslSocket *ss, SECItem *data,
  * if present, invoke that handler.
  * Servers ignore any extensions with unknown extension types.
  * Clients reject any extensions with unadvertised extension types.
+ * In TLS >= 1.3, the client checks that extensions appear in the
+ * right phase.
  */
 SECStatus
-ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
+ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length,
+                           SSL3HandshakeType handshakeMessage)
 {
     const ssl3HelloExtensionHandler * handlers;
+    PRBool isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
 
-    if (ss->sec.isServer) {
-        handlers = clientHelloHandlers;
-    } else if (ss->version > SSL_LIBRARY_VERSION_3_0) {
-        handlers = serverHelloHandlersTLS;
-    } else {
-        handlers = serverHelloHandlersSSL3;
+    switch (handshakeMessage) {
+        case client_hello:
+            handlers = clientHelloHandlers;
+            break;
+        case encrypted_extensions:
+            PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+            /* fall through */
+        case server_hello:
+            if (ss->version > SSL_LIBRARY_VERSION_3_0) {
+                handlers = serverHelloHandlersTLS;
+            } else {
+                handlers = serverHelloHandlersSSL3;
+            }
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            PORT_Assert(0);
+            return SECFailure;
     }
 
     while (*length) {
@@ -1960,10 +1985,9 @@ ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
             return rv; /* alert already sent */
 
         /* Check whether the server sent an extension which was not advertised
-         * in the ClientHello.
-         */
+         * in the ClientHello */
         if (!ss->sec.isServer &&
-            !ssl3_ClientExtensionAdvertised(ss, extension_type)) {
+            !ssl3_ClientExtensionAdvertised(ss,extension_type)) {
             (void)SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
             return SECFailure;
         }
@@ -1971,6 +1995,18 @@ ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
         /* Check whether an extension has been sent multiple times. */
         if (ssl3_ExtensionNegotiated(ss, extension_type)) {
             (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+            return SECFailure;
+        }
+
+        /* Check that this is a legal extension in TLS 1.3 */
+        if (isTLS13 && !tls13_ExtensionAllowed(extension_type,
+                                               handshakeMessage)) {
+            if (handshakeMessage == client_hello) {
+                /* Skip extensions not used in TLS 1.3 */
+                continue;
+            }
+            tls13_FatalError(ss, SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION,
+                             unsupported_extension);
             return SECFailure;
         }
 
@@ -2000,7 +2036,18 @@ ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
                                         ssl3HelloExtensionSenderFunc cb)
 {
     int i;
-    ssl3HelloExtensionSender *sender = &ss->xtnData.serverSenders[0];
+    ssl3HelloExtensionSender *sender;
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        sender = &ss->xtnData.serverHelloSenders[0];
+    } else {
+        if (tls13_ExtensionAllowed(ex_type, server_hello)) {
+            PORT_Assert(!tls13_ExtensionAllowed(ex_type, encrypted_extensions));
+            sender = &ss->xtnData.serverHelloSenders[0];
+        } else {
+            PORT_Assert(tls13_ExtensionAllowed(ex_type, encrypted_extensions));
+            sender = &ss->xtnData.encryptedExtensionsSenders[0];
+        }
+    }
 
     for (i = 0; i < SSL_MAX_EXTENSIONS; ++i, ++sender) {
         if (!sender->ex_sender) {
@@ -2707,7 +2754,6 @@ ssl3_HandleExtendedMasterSecretXtn(sslSocket * ss, PRUint16 ex_type,
     return SECSuccess;
 }
 
-
 /* ssl3_ClientSendSignedCertTimestampXtn sends the signed_certificate_timestamp
  * extension for TLS ClientHellos. */
 static PRInt32
@@ -2828,3 +2874,267 @@ ssl3_ServerHandleSignedCertTimestampXtn(sslSocket *ss, PRUint16 ex_type,
     return ssl3_RegisterServerHelloExtensionSender(ss, ex_type,
         ssl3_ServerSendSignedCertTimestampXtn);
 }
+
+/*
+ *     [draft-ietf-tls-tls13-11] Section 6.3.2.3.
+ *
+ *     struct {
+ *         NamedGroup group;
+ *         opaque key_exchange<1..2^16-1>;
+ *     } KeyShareEntry;
+ *
+ *     struct {
+ *         select (role) {
+ *             case client:
+ *                 KeyShareEntry client_shares<4..2^16-1>;
+ *
+ *             case server:
+ *                 KeyShareEntry server_share;
+ *         }
+ *     } KeyShare;
+ */
+static SECStatus
+tls13_SizeOfKeyShareEntry(ssl3KeyPair *pair)
+{
+    return 2 + 2 + tls13_SizeOfECDHEKeyShareKEX(pair);
+}
+
+static SECStatus
+tls13_EncodeKeyShareEntry(sslSocket *ss, ssl3KeyPair *pair)
+{
+    SECStatus rv;
+
+    /* This currently only works for ECC keys */
+    PORT_Assert(pair->pubKey->keyType == ecKey);
+    if (pair->pubKey->keyType != ecKey) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    rv = ssl3_AppendHandshakeNumber(ss, tls13_GroupForECDHEKeyShare(pair), 2);
+    if (rv != SECSuccess)
+        return rv;
+
+    rv = ssl3_AppendHandshakeNumber(ss, tls13_SizeOfECDHEKeyShareKEX(pair), 2);
+    if (rv != SECSuccess)
+        return rv;
+
+    rv = tls13_EncodeECDHEKeyShareKEX(ss, pair);
+    if (rv != SECSuccess)
+        return rv;
+
+    return SECSuccess;
+}
+
+static PRInt32
+tls13_ClientSendKeyShareXtn(sslSocket * ss, PRBool append,
+                            PRUint32 maxBytes)
+{
+    SECStatus rv;
+    PRUint32 entry_length;
+    PRUint32 extension_length;
+
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return 0;
+    }
+
+    /* Optimistically try to send an ECDHE key using the
+     * preexisting key (in future will be keys) */
+    SSL_TRC(3, ("%d: TLS13[%d]: send client key share xtn",
+                SSL_GETPID(), ss->fd));
+
+    entry_length = tls13_SizeOfKeyShareEntry(ss->ephemeralECDHKeyPair);
+    /* Type + length + vector_length + entry */
+    extension_length = 2 + 2 + 2 + entry_length;
+
+    if (maxBytes < extension_length) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    if (append) {
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_tls13_key_share_xtn, 2);
+        if (rv != SECSuccess)
+            goto loser;
+        rv = ssl3_AppendHandshakeNumber(ss, entry_length + 2, 2); /* Extension length */
+        if (rv != SECSuccess)
+            goto loser;
+        rv = ssl3_AppendHandshakeNumber(ss, entry_length, 2);  /* Vector length */
+        if (rv != SECSuccess)
+            goto loser;
+        rv = tls13_EncodeKeyShareEntry(ss, ss->ephemeralECDHKeyPair);
+        if (rv != SECSuccess)
+            goto loser;
+
+        ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
+                ssl_tls13_key_share_xtn;
+    }
+
+    return extension_length;
+
+loser:
+    return -1;
+}
+
+static SECStatus
+tls13_HandleKeyShareEntry(sslSocket *ss, SECItem *data)
+{
+    SECStatus rv;
+    PRInt32 group;
+    TLS13KeyShareEntry* ks = NULL;
+    SECItem share = { siBuffer, NULL, 0 };
+
+    group = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
+    if (group < 0) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
+        goto loser;
+    }
+
+    rv = ssl3_ConsumeHandshakeVariable(ss, &share, 2, &data->data,
+                                       &data->len);
+    if (rv != SECSuccess)
+        goto loser;
+
+    ks = PORT_ZNew(TLS13KeyShareEntry);
+    if (!ks)
+        goto loser;
+    ks->group = group;
+
+    rv = SECITEM_CopyItem(NULL, &ks->key_exchange, &share);
+    if (rv != SECSuccess)
+        goto loser;
+
+    PR_APPEND_LINK(&ks->link, &ss->ssl3.hs.remoteKeyShares);
+    return SECSuccess;
+
+loser:
+    if (ks)
+        tls13_DestroyKeyShareEntry(ks);
+    return SECFailure;
+}
+
+/* Handle an incoming KeyShare extension at the client and copy to
+ * |ss->ssl3.hs.remoteKeyShares| for future use. The key
+ * share is processed in tls13_HandleServerKeyShare(). */
+static SECStatus
+tls13_ClientHandleKeyShareXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv;
+
+    PORT_Assert(!ss->sec.isServer);
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        /* This can't happen because the extension processing
+         * code filters out TLS 1.3 extensions when not in
+         * TLS 1.3 mode. */
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    SSL_TRC(3, ("%d: SSL3[%d]: handle key_share extension",
+		SSL_GETPID(), ss->fd));
+
+    rv = tls13_HandleKeyShareEntry(ss, data);
+    if (rv != SECSuccess) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
+        return SECFailure;
+    }
+
+    if (data->len) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
+        return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
+/* Handle an incoming KeyShare extension at the server and copy to
+ * |ss->ssl3.hs.remoteKeyShares| for future use. The key
+ * share is processed in tls13_HandleClientKeyShare(). */
+static SECStatus
+tls13_ServerHandleKeyShareXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv;
+    PRInt32 length;
+
+    PORT_Assert(ss->sec.isServer);
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return SECSuccess;
+    }
+
+    SSL_TRC(3, ("%d: SSL3[%d]: handle key_share extension",
+		SSL_GETPID(), ss->fd));
+
+    /* Redundant length because of TLS encoding (this vector consumes
+     * the entire extension.) */
+    length = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data,
+                                         &data->len);
+    if (length < 0)
+        goto loser;
+    if (length != data->len) {
+        /* Check for consistency */
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
+        goto loser;
+    }
+
+    while (data->len) {
+        rv = tls13_HandleKeyShareEntry(ss, data);
+        if (rv != SECSuccess)
+            goto loser;
+    }
+    return SECSuccess;
+
+loser:
+    tls13_DestroyKeyShares(&ss->ssl3.hs.remoteKeyShares);
+    return SECFailure;
+}
+
+PRInt32
+tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
+                            PRUint32 maxBytes)
+{
+    PRUint32 extension_length;
+    PRUint32 entry_length;
+    SECStatus rv;
+
+    switch (ss->ssl3.hs.kea_def->exchKeyType) {
+#ifndef NSS_DISABLE_ECC
+    case ssl_kea_ecdh:
+        PORT_Assert(ss->ephemeralECDHKeyPair);
+        break;
+#endif
+    default:
+        /* got an unknown or unsupported Key Exchange Algorithm.
+         * Can't happen because tls13_HandleClientKeyShare
+         * enforces that we are ssl_kea_ecdh. */
+        PORT_Assert(0);
+        tls13_FatalError(ss, SEC_ERROR_UNSUPPORTED_KEYALG, internal_error);
+        return SECFailure;
+    }
+
+    entry_length = tls13_SizeOfKeyShareEntry(ss->ephemeralECDHKeyPair);
+    extension_length = 2 + 2 + entry_length; /* Type + length + entry_length */
+    if (maxBytes < extension_length) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    if (append) {
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_tls13_key_share_xtn, 2);
+        if (rv != SECSuccess)
+            goto loser;
+
+        rv = ssl3_AppendHandshakeNumber(ss, entry_length, 2);
+        if (rv != SECSuccess)
+            goto loser;
+
+        rv = tls13_EncodeKeyShareEntry(ss, ss->ephemeralECDHKeyPair);
+        if (rv != SECSuccess)
+            goto loser;
+    }
+
+    return extension_length;
+
+loser:
+    return -1;
+}
+

@@ -390,6 +390,345 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     as_mov(dest.high, lsr(dest.high, imm.value));
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    ma_cmp(lhs, rhs);
+    ma_b(label, cond);
+}
+
+template <class L>
+void
+MacroAssembler::branch32(Condition cond, Register lhs, Imm32 rhs, L label)
+{
+    ma_cmp(lhs, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    // branch32 will use ScratchRegister.
+    AutoRegisterScope scratch(*this, secondScratchReg_);
+    load32(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
+    ma_cmp(scratch2, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2); // ma_cmp will use the scratch register.
+    ma_cmp(scratch2, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label)
+{
+    // branch32 will use ScratchRegister.
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    load32(lhs, scratch2);
+    branch32(cond, scratch2, rhs, label);
+}
+
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Register rhs, Label* label)
+{
+    if (lhs.getTag() == Operand::OP2) {
+        branch32(cond, lhs.toReg(), rhs, label);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        ma_ldr(lhs.toAddress(), scratch);
+        branch32(cond, scratch, rhs, label);
+    }
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label)
+{
+    if (lhs.getTag() == Operand::OP2) {
+        branch32(cond, lhs.toReg(), rhs, label);
+    } else {
+        // branch32 will use ScratchRegister.
+        AutoRegisterScope scratch(*this, secondScratchReg_);
+        ma_ldr(lhs.toAddress(), scratch);
+        branch32(cond, scratch, rhs, label);
+    }
+}
+
+void
+MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(lhs, scratch);
+    branch32(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    branch32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    branch32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label)
+{
+    branchPtr(cond, lhs, ImmWord(uintptr_t(rhs.value)), label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    movePtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label)
+{
+    branch32(cond, lhs, Imm32(rhs.value), label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    branch32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label)
+{
+    branchPtr(cond, lhs, ImmWord(uintptr_t(rhs.value)), label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2);
+    branchPtr(cond, scratch2, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    loadPtr(lhs, scratch2);
+    branchPtr(cond, scratch2, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, ImmWord rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(lhs, scratch);
+    branchPtr(cond, scratch, rhs, label);
+}
+
+void
+MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    branchPtr(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                            Label* label)
+{
+    compareFloat(lhs, rhs);
+
+    if (cond == DoubleNotEqual) {
+        // Force the unordered cases not to jump.
+        Label unordered;
+        ma_b(&unordered, VFP_Unordered);
+        ma_b(label, VFP_NotEqualOrUnordered);
+        bind(&unordered);
+        return;
+    }
+
+    if (cond == DoubleEqualOrUnordered) {
+        ma_b(label, VFP_Unordered);
+        ma_b(label, VFP_Equal);
+        return;
+    }
+
+    ma_b(label, ConditionFromDoubleCondition(cond));
+}
+
+void
+MacroAssembler::branchTruncateFloat32(FloatRegister src, Register dest, Label* fail)
+{
+    ScratchFloat32Scope scratch(*this);
+    ma_vcvt_F32_I32(src, scratch.sintOverlay());
+    ma_vxfer(scratch, dest);
+    ma_cmp(dest, Imm32(0x7fffffff));
+    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
+    ma_b(fail, Assembler::Equal);
+}
+
+void
+MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
+                             Label* label)
+{
+    compareDouble(lhs, rhs);
+
+    if (cond == DoubleNotEqual) {
+        // Force the unordered cases not to jump.
+        Label unordered;
+        ma_b(&unordered, VFP_Unordered);
+        ma_b(label, VFP_NotEqualOrUnordered);
+        bind(&unordered);
+        return;
+    }
+
+    if (cond == DoubleEqualOrUnordered) {
+        ma_b(label, VFP_Unordered);
+        ma_b(label, VFP_Equal);
+        return;
+    }
+
+    ma_b(label, ConditionFromDoubleCondition(cond));
+}
+
+// There are two options for implementing emitTruncateDouble:
+//
+// 1. Convert the floating point value to an integer, if it did not fit, then it
+// was clamped to INT_MIN/INT_MAX, and we can test it. NOTE: if the value
+// really was supposed to be INT_MAX / INT_MIN then it will be wrong.
+//
+// 2. Convert the floating point value to an integer, if it did not fit, then it
+// set one or two bits in the fpcsr. Check those.
+void
+MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
+{
+    ScratchDoubleScope scratch(*this);
+    FloatRegister scratchSIntReg = scratch.sintOverlay();
+
+    ma_vcvt_F64_I32(src, scratchSIntReg);
+    ma_vxfer(scratchSIntReg, dest);
+    ma_cmp(dest, Imm32(0x7fffffff));
+    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
+    ma_b(fail, Assembler::Equal);
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    // x86 likes test foo, foo rather than cmp foo, #0.
+    // Convert the former into the latter.
+    if (lhs == rhs && (cond == Zero || cond == NonZero))
+        ma_cmp(lhs, Imm32(0));
+    else
+        ma_tst(lhs, rhs);
+    ma_b(label, cond);
+}
+
+template <class L>
+void
+MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs, L label)
+{
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    ma_tst(lhs, rhs);
+    ma_b(label, cond);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    // branchTest32 will use ScratchRegister.
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    load32(lhs, scratch2);
+    branchTest32(cond, scratch2, rhs, label);
+}
+
+void
+MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
+{
+    // branchTest32 will use ScratchRegister.
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    load32(lhs, scratch2);
+    branchTest32(cond, scratch2, rhs, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label)
+{
+    branchTest32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    branchTest32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Label* label)
+{
+    branchTest32(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                             Label* label)
+{
+    if (cond == Assembler::Zero) {
+        MOZ_ASSERT(lhs.low == rhs.low);
+        MOZ_ASSERT(lhs.high == rhs.high);
+        ma_orr(lhs.low, lhs.high, ScratchRegister);
+        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+    } else {
+        MOZ_CRASH("Unsupported condition");
+    }
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

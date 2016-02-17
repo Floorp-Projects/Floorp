@@ -40,13 +40,13 @@ public:
    *                       to have remained the same since the call to
    *                       ReturnAndUseDT.
    */
-  virtual gfx::DrawTarget* GetDT(const gfx::IntRect& aPersistedRect) = 0;
+  virtual already_AddRefed<gfx::DrawTarget> GetDT(const gfx::IntRect& aPersistedRect) = 0;
   /**
    * Return a DrawTarget to the PersistentBufferProvider and indicate the
    * contents of this DrawTarget is to be considered current by the
-   * BufferProvider
+   * BufferProvider. The caller should forget any references to the DrawTarget.
    */
-  virtual bool ReturnAndUseDT(gfx::DrawTarget* aDT) = 0;
+  virtual bool ReturnAndUseDT(already_AddRefed<gfx::DrawTarget> aDT) = 0;
 
   virtual already_AddRefed<gfx::SourceSurface> GetSnapshot() = 0;
 protected:
@@ -63,8 +63,15 @@ public:
 
   bool IsValid() { return !!mDrawTarget; }
   virtual LayersBackend GetType() { return LayersBackend::LAYERS_BASIC; }
-  gfx::DrawTarget* GetDT(const gfx::IntRect& aPersistedRect) { return mDrawTarget; }
-  bool ReturnAndUseDT(gfx::DrawTarget* aDT) { MOZ_ASSERT(mDrawTarget == aDT); return true; }
+  already_AddRefed<gfx::DrawTarget> GetDT(const gfx::IntRect& aPersistedRect) {
+    RefPtr<gfx::DrawTarget> dt(mDrawTarget);
+    return dt.forget();
+  }
+  bool ReturnAndUseDT(already_AddRefed<gfx::DrawTarget> aDT) {
+    RefPtr<gfx::DrawTarget> dt(aDT);
+    MOZ_ASSERT(mDrawTarget == dt);
+    return true;
+  }
   virtual already_AddRefed<gfx::SourceSurface> GetSnapshot() { return mDrawTarget->Snapshot(); }
 private:
   RefPtr<gfx::DrawTarget> mDrawTarget;

@@ -49,6 +49,7 @@ function nextTest_() {
 }
 
 // Needed by file_document_write_1.html
+window.file_document_write_1_loadCount = 0;
 function isTestDynamic() {
   var dyn = testWindow.document.getElementById("dynamic");
   is(dyn, null, "Should have gone back to the static page!");

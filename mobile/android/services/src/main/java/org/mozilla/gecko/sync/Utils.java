@@ -34,9 +34,6 @@ import org.mozilla.gecko.sync.setup.Constants;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.Spanned;
-import android.text.style.ClickableSpan;
 
 public class Utils {
 
@@ -425,14 +422,14 @@ public class Utils {
     ArrayList<String> toSkip = null;
     if (toSyncString != null) {
       try {
-        toSync = new ArrayList<String>(ExtendedJSONObject.parseJSONObject(toSyncString).keySet());
+        toSync = new ArrayList<String>(new ExtendedJSONObject(toSyncString).keySet());
       } catch (Exception e) {
         Logger.warn(LOG_TAG, "Got exception parsing stages to sync: '" + toSyncString + "'.", e);
       }
     }
     if (toSkipString != null) {
       try {
-        toSkip = new ArrayList<String>(ExtendedJSONObject.parseJSONObject(toSkipString).keySet());
+        toSkip = new ArrayList<String>(new ExtendedJSONObject(toSkipString).keySet());
       } catch (Exception e) {
         Logger.warn(LOG_TAG, "Got exception parsing stages to skip: '" + toSkipString + "'.", e);
       }

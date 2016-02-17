@@ -141,7 +141,7 @@ JSObject::getGroup(JSContext* cx)
 inline void
 JSObject::setGroup(js::ObjectGroup* group)
 {
-    MOZ_ASSERT(group);
+    MOZ_RELEASE_ASSERT(group);
     MOZ_ASSERT(!isSingleton());
     group_ = group;
 }

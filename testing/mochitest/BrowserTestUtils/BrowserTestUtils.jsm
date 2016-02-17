@@ -23,6 +23,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
 
 Cc["@mozilla.org/globalmessagemanager;1"]
   .getService(Ci.nsIMessageListenerManager)
@@ -451,6 +452,53 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Like waitForEvent, but adds the event listener to the message manager
+   * global for browser.
+   *
+   * @param {string} eventName
+   *        Name of the event to listen to.
+   * @param {bool} capture [optional]
+   *        Whether to use a capturing listener.
+   * @param {function} checkFn [optional]
+   *        Called with the Event object as argument, should return true if the
+   *        event is the expected one, or false if it should be ignored and
+   *        listening should continue. If not specified, the first event with
+   *        the specified name resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next event, since this is probably a bug in the test.
+   *
+   * @returns {Promise}
+   */
+  waitForContentEvent(browser, eventName, capture, checkFn) {
+    let parameters = { eventName,
+                       capture,
+                       checkFnSource: checkFn ? checkFn.toSource() : null };
+    return ContentTask.spawn(browser, parameters,
+        function({ eventName, capture, checkFnSource }) {
+          let checkFn;
+          if (checkFnSource) {
+            checkFn = eval(`(() => (${checkFnSource}))()`);
+          }
+          return new Promise((resolve, reject) => {
+            addEventListener(eventName, function listener(event) {
+              let completion = resolve;
+              try {
+                if (checkFn && !checkFn(event)) {
+                  return;
+                }
+              } catch (e) {
+                completion = () => reject(e);
+              }
+              removeEventListener(eventName, listener, capture);
+              completion();
+            }, capture);
+          });
+        });
+  },
+
+  /**
    *  Versions of EventUtils.jsm synthesizeMouse functions that synthesize a
    *  mouse event in a child process and return promises that resolve when the
    *  event has fired and completed. Instead of a window, a browser is required
@@ -792,6 +840,38 @@ this.BrowserTestUtils = {
         }
         tries++;
       }, interval);
+    });
+  },
+
+  /**
+   * Waits for a <xul:notification> with a particular value to appear
+   * for the <xul:notificationbox> of the passed in browser.
+   *
+   * @param tabbrowser (<xul:tabbrowser>)
+   *        The gBrowser that hosts the browser that should show
+   *        the notification. For most tests, this will probably be
+   *        gBrowser.
+   * @param browser (<xul:browser>)
+   *        The browser that should be showing the notification.
+   * @param notificationValue (string)
+   *        The "value" of the notification, which is often used as
+   *        a unique identifier. Example: "plugin-crashed".
+   * @return Promise
+   *        Resolves to the <xul:notification> that is being shown.
+   */
+  waitForNotificationBar(tabbrowser, browser, notificationValue) {
+    let notificationBox = tabbrowser.getNotificationBox(browser);
+    return new Promise((resolve) => {
+      let check = (event) => {
+        return event.target.value == notificationValue;
+      };
+
+      BrowserTestUtils.waitForEvent(notificationBox, "AlertActive",
+                                    false, check).then((event) => {
+        // The originalTarget of the AlertActive on a notificationbox
+        // will be the notification itself.
+        resolve(event.originalTarget);
+      });
     });
   },
 };

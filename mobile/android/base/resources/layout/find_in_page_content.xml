@@ -28,14 +28,6 @@
               android:textColor="@color/tabs_tray_icon_grey"
               android:visibility="gone"/>
 
-    <CheckedTextView android:id="@+id/find_matchcase"
-                     android:layout_width="wrap_content"
-                     android:layout_height="wrap_content"
-                     android:padding="@dimen/find_in_page_matchcase_padding"
-                     android:checked="false"
-                     android:text="@string/find_matchcase"
-                     android:textColor="@drawable/find_matchcase_selector"/>
-
     <ImageButton android:id="@+id/find_prev"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_prev"

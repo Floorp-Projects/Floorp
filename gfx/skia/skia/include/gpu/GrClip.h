@@ -85,7 +85,7 @@ public:
                 return this->irect() == other.irect();
                 break;
         }
-
+        SkFAIL("This should not occur\n");
         return false;
     }
 

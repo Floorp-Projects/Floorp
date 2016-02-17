@@ -31,7 +31,7 @@ template<typename A, typename B> struct SkTHasMoreDigits
  *  that source values are in the range of the Destination.
  */
 template <typename S> struct SkTOutOfRange_False {
-    typedef skstd::false_type can_be_true;
+    typedef std::false_type can_be_true;
     typedef S source_type;
     static bool apply(S s) {
         return false;
@@ -42,7 +42,7 @@ template <typename S> struct SkTOutOfRange_False {
  *  Assumes that Min(S) <= Min(D).
  */
 template <typename D, typename S> struct SkTOutOfRange_LT_MinD {
-    typedef skstd::true_type can_be_true;
+    typedef std::true_type can_be_true;
     typedef S source_type;
     static bool apply(S s) {
         typedef SkTHasMoreDigits<S, D> precondition;
@@ -54,7 +54,7 @@ template <typename D, typename S> struct SkTOutOfRange_LT_MinD {
 
 /** A low side predicate which tests if the source value is less than 0. */
 template <typename D, typename S> struct SkTOutOfRange_LT_Zero {
-    typedef skstd::true_type can_be_true;
+    typedef std::true_type can_be_true;
     typedef S source_type;
     static bool apply(S s) {
         return s < static_cast<S>(0);
@@ -65,7 +65,7 @@ template <typename D, typename S> struct SkTOutOfRange_LT_Zero {
  *  Assumes that Max(S) >= Max(D).
  */
 template <typename D, typename S> struct SkTOutOfRange_GT_MaxD {
-    typedef skstd::true_type can_be_true;
+    typedef std::true_type can_be_true;
     typedef S source_type;
     static bool apply(S s) {
         typedef SkTHasMoreDigits<S, D> precondition;
@@ -79,7 +79,7 @@ template <typename D, typename S> struct SkTOutOfRange_GT_MaxD {
  *  First checks OutOfRange_Low then, if in range, OutOfRange_High.
  */
 template<class OutOfRange_Low, class OutOfRange_High> struct SkTOutOfRange_Either {
-    typedef skstd::true_type can_be_true;
+    typedef std::true_type can_be_true;
     typedef typename OutOfRange_Low::source_type source_type;
     static bool apply(source_type s) {
         bool outOfRange = OutOfRange_Low::apply(s);

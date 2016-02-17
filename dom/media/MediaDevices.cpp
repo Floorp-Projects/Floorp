@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/MediaStreamBinding.h"
+#include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/dom/MediaDevicesBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/MediaManager.h"

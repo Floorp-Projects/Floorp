@@ -156,11 +156,13 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler)
     MOZ_ASSERT(GetStackPointer64().Is(x28)); // Lets the code below be a little cleaner.
 
     loadPtr(Address(r28, offsetof(ResumeFromException, kind)), r0);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
-    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME),
+                      &entryFrame);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN),
+                      &return_);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
 
     breakpoint(); // Invalid kind.
 
@@ -227,8 +229,8 @@ MacroAssemblerCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Regi
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
     asMasm().addPtr(ptr, temp);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              temp, ImmWord(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       temp, ImmWord(nursery.nurserySize()), label);
 }
 
 void
@@ -249,8 +251,8 @@ MacroAssemblerCompat::branchValueIsNurseryObject(Condition cond, ValueOperand va
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), temp);
     asMasm().addPtr(value.valueReg(), temp);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              temp, ImmWord(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       temp, ImmWord(nursery.nurserySize()), label);
 }
 
 void
@@ -562,6 +564,24 @@ MacroAssembler::callWithPatch()
 }
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
+{
+    MOZ_CRASH("NYI");
+}
+
+CodeOffset
+MacroAssembler::thunkWithPatch()
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchThunk(uint32_t thunkOffset, uint32_t targetOffset)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset)
 {
     MOZ_CRASH("NYI");
 }

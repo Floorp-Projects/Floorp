@@ -16,7 +16,7 @@ const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const EventEmitter = require("devtools/shared/event-emitter");
-const {gDevTools} = require("resource://devtools/client/framework/gDevTools.jsm");
+const {gDevTools} = require("devtools/client/framework/devtools");
 /* import-globals-from StyleEditorUtil.jsm */
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 const {SplitView} = Cu.import("resource://devtools/client/shared/SplitView.jsm", {});

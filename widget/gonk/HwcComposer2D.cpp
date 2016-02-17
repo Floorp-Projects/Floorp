@@ -280,7 +280,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     bool fillColor = false;
 
-    const nsIntRegion visibleRegion = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
+    const nsIntRegion visibleRegion = aLayer->GetLocalVisibleRegion().ToUnknownRegion();
     if (visibleRegion.IsEmpty()) {
         return true;
     }

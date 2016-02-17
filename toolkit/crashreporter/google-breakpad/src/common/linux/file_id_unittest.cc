@@ -34,6 +34,7 @@
 
 #include <string>
 
+#include "common/linux/elf_gnu_compat.h"
 #include "common/linux/elfutils.h"
 #include "common/linux/file_id.h"
 #include "common/linux/safe_readlink.h"
@@ -65,6 +66,9 @@ void PopulateSection(Section* section, int size, int prime_number) {
 
 }  // namespace
 
+#ifndef __ANDROID__
+// This test is disabled on Android: It will always fail, since there is no
+// 'strip' binary installed on test devices.
 TEST(FileIDStripTest, StripSelf) {
   // Calculate the File ID of this binary using
   // FileID::ElfFileIdentifier, then make a copy of this binary,
@@ -97,6 +101,7 @@ TEST(FileIDStripTest, StripSelf) {
                                     37);
   EXPECT_STREQ(identifier_string1, identifier_string2);
 }
+#endif  // !__ANDROID__
 
 template<typename ElfClass>
 class FileIDTest : public testing::Test {

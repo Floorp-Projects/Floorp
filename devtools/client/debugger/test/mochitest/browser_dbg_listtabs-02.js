@@ -101,7 +101,7 @@ function removeTabA() {
   let deferred = promise.defer();
 
   once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(!aEvent.detail, "This was a normal tab close");
+    ok(!aEvent.detail.adoptedBy, "This was a normal tab close");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);
@@ -145,7 +145,7 @@ function removeTabC() {
   let deferred = promise.defer();
 
   once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(aEvent.detail, "This was a tab closed by moving");
+    ok(aEvent.detail.adoptedBy, "This was a tab closed by moving");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);
@@ -203,7 +203,7 @@ function removeTabB() {
   let deferred = promise.defer();
 
   once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(!aEvent.detail, "This was a normal tab close");
+    ok(!aEvent.detail.adoptedBy, "This was a normal tab close");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);

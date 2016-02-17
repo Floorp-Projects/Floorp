@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.42';
-var pdfjsBuild = '4c59712';
+var pdfjsVersion = '1.4.64';
+var pdfjsBuild = '2f145d8';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -29687,15 +29687,21 @@ var Type1Parser = (function Type1ParserClosure() {
   }
 
   function decrypt(data, key, discardNumber) {
-    var r = key | 0, c1 = 52845, c2 = 22719;
-    var count = data.length;
+    if (discardNumber >= data.length) {
+      return new Uint8Array(0);
+    }
+    var r = key | 0, c1 = 52845, c2 = 22719, i, j;
+    for (i = 0; i < discardNumber; i++) {
+      r = ((data[i] + r) * c1 + c2) & ((1 << 16) - 1);
+    }
+    var count = data.length - discardNumber;
     var decrypted = new Uint8Array(count);
-    for (var i = 0; i < count; i++) {
+    for (i = discardNumber, j = 0; j < count; i++, j++) {
       var value = data[i];
-      decrypted[i] = value ^ (r >> 8);
+      decrypted[j] = value ^ (r >> 8);
       r = ((value + r) * c1 + c2) & ((1 << 16) - 1);
     }
-    return Array.prototype.slice.call(decrypted, discardNumber);
+    return decrypted;
   }
 
   function decryptAscii(data, key, discardNumber) {
@@ -33249,15 +33255,15 @@ var ColorSpace = (function ColorSpaceClosure() {
       case 'DeviceCmykCS':
         return this.singletons.cmyk;
       case 'CalGrayCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
-        gamma = IR[1].Gamma;
+        whitePoint = IR[1];
+        blackPoint = IR[2];
+        gamma = IR[3];
         return new CalGrayCS(whitePoint, blackPoint, gamma);
       case 'CalRGBCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
-        gamma = IR[1].Gamma;
-        var matrix = IR[1].Matrix;
+        whitePoint = IR[1];
+        blackPoint = IR[2];
+        gamma = IR[3];
+        var matrix = IR[4];
         return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
       case 'PatternCS':
         var basePatternCS = IR[1];
@@ -33276,11 +33282,11 @@ var ColorSpace = (function ColorSpaceClosure() {
         var tintFnIR = IR[3];
 
         return new AlternateCS(numComps, ColorSpace.fromIR(alt),
-                                PDFFunction.fromIR(tintFnIR));
+                               PDFFunction.fromIR(tintFnIR));
       case 'LabCS':
-        whitePoint = IR[1].WhitePoint;
-        blackPoint = IR[1].BlackPoint;
-        var range = IR[1].Range;
+        whitePoint = IR[1];
+        blackPoint = IR[2];
+        var range = IR[3];
         return new LabCS(whitePoint, blackPoint, range);
       default:
         error('Unknown name ' + name);
@@ -33324,7 +33330,7 @@ var ColorSpace = (function ColorSpaceClosure() {
     } else if (isArray(cs)) {
       mode = xref.fetchIfRef(cs[0]).name;
       this.mode = mode;
-      var numComps, params, alt;
+      var numComps, params, alt, whitePoint, blackPoint, gamma;
 
       switch (mode) {
         case 'DeviceGray':
@@ -33337,11 +33343,18 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'CMYK':
           return 'DeviceCmykCS';
         case 'CalGray':
-          params = xref.fetchIfRef(cs[1]).getAll();
-          return ['CalGrayCS', params];
+          params = xref.fetchIfRef(cs[1]);
+          whitePoint = params.get('WhitePoint');
+          blackPoint = params.get('BlackPoint');
+          gamma = params.get('Gamma');
+          return ['CalGrayCS', whitePoint, blackPoint, gamma];
         case 'CalRGB':
-          params = xref.fetchIfRef(cs[1]).getAll();
-          return ['CalRGBCS', params];
+          params = xref.fetchIfRef(cs[1]);
+          whitePoint = params.get('WhitePoint');
+          blackPoint = params.get('BlackPoint');
+          gamma = params.get('Gamma');
+          var matrix = params.get('Matrix');
+          return ['CalRGBCS', whitePoint, blackPoint, gamma, matrix];
         case 'ICCBased':
           var stream = xref.fetchIfRef(cs[1]);
           var dict = stream.dict;
@@ -33393,8 +33406,11 @@ var ColorSpace = (function ColorSpaceClosure() {
           var tintFnIR = PDFFunction.getIR(xref, xref.fetchIfRef(cs[3]));
           return ['AlternateCS', numComps, alt, tintFnIR];
         case 'Lab':
-          params = xref.fetchIfRef(cs[1]).getAll();
-          return ['LabCS', params];
+          params = xref.fetchIfRef(cs[1]);
+          whitePoint = params.get('WhitePoint');
+          blackPoint = params.get('BlackPoint');
+          var range = params.get('Range');
+          return ['LabCS', whitePoint, blackPoint, range];
         default:
           error('unimplemented color space object "' + mode + '"');
       }
@@ -35949,17 +35965,19 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         processed[resources.objId] = true;
       }
 
-      var nodes = [resources];
+      var nodes = [resources], xref = this.xref;
       while (nodes.length) {
-        var key;
+        var key, i, ii;
         var node = nodes.shift();
         // First check the current resources for blend modes.
         var graphicStates = node.get('ExtGState');
         if (isDict(graphicStates)) {
-          graphicStates = graphicStates.getAll();
-          for (key in graphicStates) {
-            var graphicState = graphicStates[key];
-            var bm = graphicState['BM'];
+          var graphicStatesKeys = graphicStates.getKeys();
+          for (i = 0, ii = graphicStatesKeys.length; i < ii; i++) {
+            key = graphicStatesKeys[i];
+
+            var graphicState = graphicStates.get(key);
+            var bm = graphicState.get('BM');
             if (isName(bm) && bm.name !== 'Normal') {
               return true;
             }
@@ -35970,9 +35988,20 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (!isDict(xObjects)) {
           continue;
         }
-        xObjects = xObjects.getAll();
-        for (key in xObjects) {
-          var xObject = xObjects[key];
+        var xObjectsKeys = xObjects.getKeys();
+        for (i = 0, ii = xObjectsKeys.length; i < ii; i++) {
+          key = xObjectsKeys[i];
+
+          var xObject = xObjects.getRaw(key);
+          if (isRef(xObject)) {
+            if (processed[xObject.toString()]) {
+              // The XObject has already been processed, and by avoiding a
+              // redundant `xref.fetch` we can *significantly* reduce the load
+              // time for badly generated PDF files (fixes issue6961.pdf).
+              continue;
+            }
+            xObject = xref.fetch(xObject);
+          }
           if (!isStream(xObject)) {
             continue;
           }
@@ -36266,11 +36295,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                                                    xref, stateManager) {
       // This array holds the converted/processed state data.
       var gStateObj = [];
-      var gStateMap = gState.map;
+      var gStateKeys = gState.getKeys();
       var self = this;
       var promise = Promise.resolve();
-      for (var key in gStateMap) {
-        var value = gStateMap[key];
+      for (var i = 0, ii = gStateKeys.length; i < ii; i++) {
+        var key = gStateKeys[i];
+        var value = gState.get(key);
         switch (key) {
           case 'Type':
             break;
@@ -36303,12 +36333,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               gStateObj.push([key, false]);
               break;
             }
-            var dict = xref.fetchIfRef(value);
-            if (isDict(dict)) {
-              promise = promise.then(function () {
+            if (isDict(value)) {
+              promise = promise.then(function (dict) {
                 return self.handleSMask(dict, resources, operatorList,
                                         task, stateManager);
-              });
+              }.bind(this, value));
               gStateObj.push([key, true]);
             } else {
               warn('Unsupported SMask type');
@@ -36340,7 +36369,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         }
       }
       return promise.then(function () {
-        if (gStateObj.length >= 0) {
+        if (gStateObj.length > 0) {
           operatorList.addOp(OPS.setGState, [gStateObj]);
         }
       });
@@ -37885,13 +37914,13 @@ var TranslatedFont = (function TranslatedFontClosure() {
 
       var translatedFont = this.font;
       var loadCharProcsPromise = Promise.resolve();
-      var charProcs = this.dict.get('CharProcs').getAll();
+      var charProcs = this.dict.get('CharProcs');
       var fontResources = this.dict.get('Resources') || resources;
-      var charProcKeys = Object.keys(charProcs);
+      var charProcKeys = charProcs.getKeys();
       var charProcOperatorList = Object.create(null);
       for (var i = 0, n = charProcKeys.length; i < n; ++i) {
         loadCharProcsPromise = loadCharProcsPromise.then(function (key) {
-          var glyphStream = charProcs[key];
+          var glyphStream = charProcs.get(key);
           var operatorList = new OperatorList();
           return evaluator.getOperatorList(glyphStream, task, fontResources,
                                            operatorList).then(function () {

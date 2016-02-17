@@ -5,20 +5,20 @@
 
 package org.mozilla.gecko;
 
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.os.Build;
+import android.util.Log;
+
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.restrictions.DefaultConfiguration;
 import org.mozilla.gecko.restrictions.GuestProfileConfiguration;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
+import org.mozilla.gecko.restrictions.RestrictionCache;
 import org.mozilla.gecko.restrictions.RestrictionConfiguration;
-
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.os.Build;
-import android.os.UserManager;
-import android.util.Log;
 
 @RobocopTarget
 public class Restrictions {
@@ -74,8 +74,7 @@ public class Restrictions {
         }
 
         // The user is on a restricted profile if, and only if, we injected application restrictions during account setup.
-        final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
-        return !mgr.getApplicationRestrictions(context.getPackageName()).isEmpty();
+        return RestrictionCache.hasApplicationRestrictions(context);
     }
 
     public static void update(Context context) {

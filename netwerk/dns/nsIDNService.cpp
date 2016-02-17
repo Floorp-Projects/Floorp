@@ -168,7 +168,7 @@ nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
   UIDNAInfo info = UIDNA_INFO_INITIALIZER;
   UErrorCode errorCode = U_ZERO_ERROR;
   int32_t inLen = inputStr.Length();
-  int32_t outMaxLen = inLen - kACEPrefixLen + 1;
+  int32_t outMaxLen = kMaxDNSNodeLen + 1;
   UChar outputBuffer[kMaxDNSNodeLen + 1];
 
   int32_t outLen = uidna_labelToUnicode(mIDNA, (const UChar*)inputStr.get(),

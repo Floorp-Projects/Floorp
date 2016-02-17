@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993, 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,7 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. ***REMOVED*** - see 
+ * 3. ***REMOVED*** - see
  *    ftp://ftp.cs.berkeley.edu/pub/4bsd/README.Impt.License.Change
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
@@ -28,35 +28,35 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)extern.h	8.4 (Berkeley) 6/16/94
+ *  @(#)extern.h    8.4 (Berkeley) 6/16/94
  */
 
-BUFHEAD	*__add_ovflpage (HTAB *, BUFHEAD *);
-int	 __addel (HTAB *, BUFHEAD *, const DBT *, const DBT *);
-int	 __big_delete (HTAB *, BUFHEAD *);
-int	 __big_insert (HTAB *, BUFHEAD *, const DBT *, const DBT *);
-int	 __big_keydata (HTAB *, BUFHEAD *, DBT *, DBT *, int);
-int	 __big_return (HTAB *, BUFHEAD *, int, DBT *, int);
-int	 __big_split (HTAB *, BUFHEAD *, BUFHEAD *, BUFHEAD *,
-		uint32, uint32, SPLIT_RETURN *);
-int	 __buf_free (HTAB *, int, int);
-void	 __buf_init (HTAB *, int);
-uint32	 __call_hash (HTAB *, char *, size_t);
-int	 __delpair (HTAB *, BUFHEAD *, int);
-int	 __expand_table (HTAB *);
-int	 __find_bigpair (HTAB *, BUFHEAD *, int, char *, int);
-uint16	 __find_last_page (HTAB *, BUFHEAD **);
-void	 __free_ovflpage (HTAB *, BUFHEAD *);
-BUFHEAD	*__get_buf (HTAB *, uint32, BUFHEAD *, int);
-int	 __get_page (HTAB *, char *, uint32, int, int, int);
-int	 __ibitmap (HTAB *, int, int, int);
-uint32	 __log2 (uint32);
-int	 __put_page (HTAB *, char *, uint32, int, int);
-void	 __reclaim_buf (HTAB *, BUFHEAD *);
-int	 __split_page (HTAB *, uint32, uint32);
+BUFHEAD *__add_ovflpage(HTAB *, BUFHEAD *);
+int __addel(HTAB *, BUFHEAD *, const DBT *, const DBT *);
+int __big_delete(HTAB *, BUFHEAD *);
+int __big_insert(HTAB *, BUFHEAD *, const DBT *, const DBT *);
+int __big_keydata(HTAB *, BUFHEAD *, DBT *, DBT *, int);
+int __big_return(HTAB *, BUFHEAD *, int, DBT *, int);
+int __big_split(HTAB *, BUFHEAD *, BUFHEAD *, BUFHEAD *,
+                uint32, uint32, SPLIT_RETURN *);
+int __buf_free(HTAB *, int, int);
+void __buf_init(HTAB *, int);
+uint32 __call_hash(HTAB *, char *, size_t);
+int __delpair(HTAB *, BUFHEAD *, int);
+int __expand_table(HTAB *);
+int __find_bigpair(HTAB *, BUFHEAD *, int, char *, int);
+uint16 __find_last_page(HTAB *, BUFHEAD **);
+void __free_ovflpage(HTAB *, BUFHEAD *);
+BUFHEAD *__get_buf(HTAB *, uint32, BUFHEAD *, int);
+int __get_page(HTAB *, char *, uint32, int, int, int);
+int __ibitmap(HTAB *, int, int, int);
+uint32 __log2(uint32);
+int __put_page(HTAB *, char *, uint32, int, int);
+void __reclaim_buf(HTAB *, BUFHEAD *);
+int __split_page(HTAB *, uint32, uint32);
 
 /* Default hash routine. */
-extern uint32 (*__default_hash) (const void *, size_t);
+extern uint32 (*__default_hash)(const void *, size_t);
 
 #ifdef HASH_STATISTICS
 extern int hash_accesses, hash_collisions, hash_expansions, hash_overflows;

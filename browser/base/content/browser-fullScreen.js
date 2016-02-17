@@ -64,7 +64,7 @@ var FullScreen = {
     if (enterFS) {
       gNavToolbox.setAttribute("inFullscreen", true);
       document.documentElement.setAttribute("inFullscreen", true);
-      if (!document.mozFullScreen && this.useLionFullScreen)
+      if (!document.fullscreenElement && this.useLionFullScreen)
         document.documentElement.setAttribute("OSXLionFullscreen", true);
     } else {
       gNavToolbox.removeAttribute("inFullscreen");
@@ -72,7 +72,7 @@ var FullScreen = {
       document.documentElement.removeAttribute("OSXLionFullscreen");
     }
 
-    if (!document.mozFullScreen)
+    if (!document.fullscreenElement)
       this._updateToolbars(enterFS);
 
     if (enterFS) {
@@ -80,7 +80,7 @@ var FullScreen = {
       document.addEventListener("popupshown", this._setPopupOpen, false);
       document.addEventListener("popuphidden", this._setPopupOpen, false);
       // In DOM fullscreen mode, we hide toolbars with CSS
-      if (!document.mozFullScreen)
+      if (!document.fullscreenElement)
         this.hideNavToolbox(true);
     }
     else {
@@ -96,20 +96,20 @@ var FullScreen = {
       TabsInTitlebar.updateAppearance(true);
     }
 
-    if (enterFS && !document.mozFullScreen) {
+    if (enterFS && !document.fullscreenElement) {
       Services.telemetry.getHistogramById("FX_BROWSER_FULLSCREEN_USED")
                         .add(1);
     }
   },
 
   exitDomFullScreen : function() {
-    document.mozCancelFullScreen();
+    document.exitFullscreen();
   },
 
   handleEvent: function (event) {
     switch (event.type) {
       case "activate":
-        if (document.mozFullScreen) {
+        if (document.fullscreenElement) {
           this._WarningBox.show();
         }
         break;
@@ -132,11 +132,11 @@ var FullScreen = {
           browser = gBrowser.getBrowserForContentWindow(topWin);
         }
         if (!browser || !this.enterDomFullscreen(browser)) {
-          if (document.mozFullScreen) {
+          if (document.fullscreenElement) {
             // MozDOMFullscreen:Entered is dispatched synchronously in
             // fullscreen change, hence we have to avoid calling this
             // method synchronously here.
-            setTimeout(() => document.mozCancelFullScreen(), 0);
+            setTimeout(() => document.exitFullscreen(), 0);
           }
           break;
         }
@@ -178,7 +178,7 @@ var FullScreen = {
   },
 
   enterDomFullscreen : function(aBrowser) {
-    if (!document.mozFullScreen)
+    if (!document.fullscreenElement)
       return false;
 
     // If we've received a fullscreen notification, we have to ensure that the
@@ -365,7 +365,7 @@ var FullScreen = {
 
     // Shows a warning that the site has entered fullscreen for a short duration.
     show: function(aOrigin) {
-      if (!document.mozFullScreen) {
+      if (!document.fullscreenElement) {
         return;
       }
 

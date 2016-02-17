@@ -13,6 +13,7 @@ basic/testBug686274.js
 basic/testManyVars.js
 basic/testTypedArrayInit.js
 gc/bug-1014972.js
+gc/bug-1246593.js
 gc/bug-906236.js
 gc/bug-906241.js
 ion/bug787921.js

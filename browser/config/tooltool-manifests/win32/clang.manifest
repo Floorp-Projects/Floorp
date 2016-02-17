@@ -1,0 +1,25 @@
+[
+{
+"clang_version": "r259916"
+},
+{
+"size": 266240,
+"digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
+"algorithm": "sha512",
+"filename": "mozmake.exe"
+},
+{
+"size": 167175,
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2",
+"unpack": true
+},
+{
+"size": 164660139,
+"digest": "7db5f16921c10023152e6a7765c6d31dfefc91a8742a14b6279bd253f86a683d8d951b17608aa200978f8cd433ead32e0ae9b53778566d2994e1db7af1df4cc4",
+"algorithm": "sha512",
+"filename": "clang32.tar.bz2",
+"unpack": true
+}
+]

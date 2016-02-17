@@ -688,22 +688,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nullptr
   },
   {
-    // CN=TURKTRUST Elektronik Sertifika Hizmet Saglayicisi,O=TURKTRUST Bilgi Illetisim ve Bilisim Guvenligi Hizmetleri A.S.,C=TR
-    "2.16.792.3.0.3.1.1.5",
-    "TurkTrust EV OID",
-    SEC_OID_UNKNOWN,
-    { 0x97, 0x8C, 0xD9, 0x66, 0xF2, 0xFA, 0xA0, 0x7B, 0xA7, 0xAA, 0x95,
-      0x00, 0xD9, 0xC0, 0x2E, 0x9D, 0x77, 0xF2, 0xCD, 0xAD, 0xA6, 0xAD,
-      0x6B, 0xA7, 0x4A, 0xF4, 0xB9, 0x1C, 0x66, 0x59, 0x3C, 0x50 },
-    "MIG/MT8wPQYDVQQDDDZUw5xSS1RSVVNUIEVsZWt0cm9uaWsgU2VydGlmaWthIEhp"
-    "em1ldCBTYcSfbGF5xLFjxLFzxLExCzAJBgNVBAYTAlRSMQ8wDQYDVQQHDAZBbmth"
-    "cmExXjBcBgNVBAoMVVTDnFJLVFJVU1QgQmlsZ2kgxLBsZXRpxZ9pbSB2ZSBCaWxp"
-    "xZ9pbSBHw7x2ZW5sacSfaSBIaXptZXRsZXJpIEEuxZ4uIChjKSBBcmFsxLFrIDIw"
-    "MDc=",
-    "AQ==",
-    nullptr
-  },
-  {
     // CN=China Internet Network Information Center EV Certificates Root,O=China Internet Network Information Center,C=CN
     "1.3.6.1.4.1.29836.1.10",
     "CNNIC EV OID",

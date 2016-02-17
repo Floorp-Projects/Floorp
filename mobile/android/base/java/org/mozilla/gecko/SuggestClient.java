@@ -17,10 +17,9 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
+import org.mozilla.gecko.util.NetworkUtils;
 
 /**
  * Use network-based search suggestions.
@@ -70,7 +69,7 @@ public class SuggestClient {
             return suggestions;
         }
 
-        if (!isNetworkConnected() && mCheckNetwork) {
+        if (!NetworkUtils.isConnected(mContext) && mCheckNetwork) {
             Log.i(LOGTAG, "Not connected to network");
             return suggestions;
         }
@@ -127,19 +126,6 @@ public class SuggestClient {
         mPrevQuery = query;
         mPrevResults = suggestions;
         return suggestions;
-    }
-
-    private boolean isNetworkConnected() {
-        NetworkInfo networkInfo = getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
-    }
-
-    private NetworkInfo getActiveNetworkInfo() {
-        ConnectivityManager connectivity = (ConnectivityManager) mContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivity == null)
-            return null;
-        return connectivity.getActiveNetworkInfo();
     }
 
     private String convertStreamToString(java.io.InputStream is) {

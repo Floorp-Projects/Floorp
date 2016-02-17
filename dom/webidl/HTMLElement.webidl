@@ -28,11 +28,11 @@ interface HTMLElement : Element {
   // microdata 
   [SetterThrows, Pure]
            attribute boolean itemScope;
-  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemType;
+  [PutForwards=value,Constant] readonly attribute DOMTokenList itemType;
   [SetterThrows, Pure]
            attribute DOMString itemId;
-  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemRef;
-  [PutForwards=value,Constant] readonly attribute DOMSettableTokenList itemProp;
+  [PutForwards=value,Constant] readonly attribute DOMTokenList itemRef;
+  [PutForwards=value,Constant] readonly attribute DOMTokenList itemProp;
   [Constant]
   readonly attribute HTMLPropertiesCollection properties;
   [Throws]
@@ -54,7 +54,7 @@ interface HTMLElement : Element {
   readonly attribute DOMString accessKeyLabel;
   [SetterThrows, Pure]
            attribute boolean draggable;
-  //[PutForwards=value] readonly attribute DOMSettableTokenList dropzone;
+  //[PutForwards=value] readonly attribute DOMTokenList dropzone;
   [SetterThrows, Pure]
            attribute DOMString contentEditable;
   [Pure]

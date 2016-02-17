@@ -1,6 +1,9 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../../framework/test/shared-head.js */
+/* import-globals-from ../../test/head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -52,23 +55,24 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
  * view is visible and ready
  */
 function openLayoutView() {
-  return openInspectorSidebarTab("layoutview").then(({toolbox, inspector}) => {
+  return openInspectorSidebarTab("layoutview").then(data => {
     // The actual highligher show/hide methods are mocked in layoutview tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
-      highlighter.showBoxModel = function(nodeFront, options) {
+      highlighter.showBoxModel = function() {
         return promise.resolve();
       };
       highlighter.hideBoxModel = function() {
         return promise.resolve();
       };
     }
-    mockHighlighter(toolbox);
+    mockHighlighter(data.toolbox);
 
     return {
-      toolbox,
-      inspector,
-      view: inspector.layoutview
+      toolbox: data.toolbox,
+      inspector: data.inspector,
+      view: data.inspector.layoutview,
+      testActor: data.testActor
     };
   });
 }
@@ -81,27 +85,16 @@ function waitForUpdate(inspector) {
   return inspector.once("layoutview-updated");
 }
 
-/**
- * The addTest/runTests function couple provides a simple way to define
- * subsequent test cases in a test file. Example:
- *
- * addTest("what this test does", function*() {
- *   ... actual code for the test ...
- * });
- * addTest("what this second test does", function*() {
- *   ... actual code for the second test ...
- * });
- * runTests().then(...);
- */
-var TESTS = [];
-
-function addTest(message, func) {
-  TESTS.push([message, Task.async(func)]);
+function getStyle(testActor, selector, propertyName) {
+  return testActor.eval(`
+    content.document.querySelector("${selector}")
+                    .style.getPropertyValue("${propertyName}");
+  `);
 }
 
-var runTests = Task.async(function*(...args) {
-  for (let [message, test] of TESTS) {
-    info("Running new test case: " + message);
-    yield test.apply(null, args);
-  }
-});
+function setStyle(testActor, selector, propertyName, value) {
+  return testActor.eval(`
+    content.document.querySelector("${selector}")
+                    .style.${propertyName} = "${value}";
+  `);
+}

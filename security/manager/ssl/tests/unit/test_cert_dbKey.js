@@ -53,14 +53,8 @@ function encodeCommonNameAsBytes(commonName) {
 }
 
 function testInvalidDBKey(certDB, dbKey) {
-  let exceptionCaught = false;
-  try {
-    let cert = certDB.findCertByDBKey(dbKey);
-  } catch(e) {
-    do_print(e);
-    exceptionCaught = true;
-  }
-  ok(exceptionCaught, "should have thrown and caught an exception");
+  throws(() => certDB.findCertByDBKey(dbKey), /NS_ERROR_ILLEGAL_INPUT/,
+         `findCertByDBKey(${dbKey}) should raise NS_ERROR_ILLEGAL_INPUT`);
 }
 
 function testDBKeyForNonexistentCert(certDB, dbKey) {

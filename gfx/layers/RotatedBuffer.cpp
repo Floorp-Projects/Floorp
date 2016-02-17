@@ -222,13 +222,13 @@ RotatedContentBuffer::DrawTo(PaintedLayer* aLayer,
   if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
       (ToData(aLayer)->GetClipToVisibleRegion() &&
        !aLayer->GetVisibleRegion().ToUnknownRegion().Contains(BufferRect())) ||
-      IsClippingCheap(aTarget, aLayer->GetEffectiveVisibleRegion().ToUnknownRegion())) {
+      IsClippingCheap(aTarget, aLayer->GetLocalVisibleRegion().ToUnknownRegion())) {
     // We don't want to draw invalid stuff, so we need to clip. Might as
     // well clip to the smallest area possible --- the visible region.
     // Bug 599189 if there is a non-integer-translation transform in aTarget,
-    // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
+    // we might sample pixels outside GetLocalVisibleRegion(), which is wrong
     // and may cause gray lines.
-    gfxUtils::ClipToRegion(aTarget, aLayer->GetEffectiveVisibleRegion().ToUnknownRegion());
+    gfxUtils::ClipToRegion(aTarget, aLayer->GetLocalVisibleRegion().ToUnknownRegion());
     clipped = true;
   }
 

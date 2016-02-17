@@ -14,4 +14,6 @@ FINAL_TARGET_PP_FILES.features['firefox@getpocket.com'] += [
   'install.rdf.in'
 ]
 
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
 JAR_MANIFESTS += ['jar.mn']

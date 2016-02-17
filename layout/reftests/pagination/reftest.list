@@ -42,8 +42,8 @@ fails == float-clear-003.html float-clear-000.ref.html
 == float-clear-002-print.html float-clear-000-print.ref.html
 == float-clear-003-print.html float-clear-000-print.ref.html
 fails == float-continuations-000.html float-continuations-000.ref.html
-== resize-reflow-000.html resize-reflow-000.ref.html
-== resize-reflow-001.html resize-reflow-001.ref.html
+fuzzy-if(skiaContent,1,21) == resize-reflow-000.html resize-reflow-000.ref.html
+fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 == table-page-break-before-auto-1.html table-page-break-before-auto-1-ref.html
 #== table-page-break-before-auto-2.html table-page-break-before-auto-2-ref.html bug 563280
 == table-page-break-before-always-1.html table-page-break-before-auto-2-ref.html

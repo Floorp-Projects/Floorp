@@ -124,9 +124,7 @@ class WindowOrientationObserver;
 namespace cache {
 class CacheStorage;
 } // namespace cache
-namespace indexedDB {
 class IDBFactory;
-} // namespace indexedDB
 } // namespace dom
 namespace gfx {
 class VRDeviceProxy;
@@ -503,8 +501,6 @@ public:
   // WebIDL interface.
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(uint32_t aIndex);
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
-
-  void GetSupportedNames(nsTArray<nsString>& aNames);
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
@@ -992,7 +988,7 @@ public:
   mozilla::dom::Selection* GetSelectionOuter();
   mozilla::dom::Selection* GetSelection(mozilla::ErrorResult& aError);
   already_AddRefed<nsISelection> GetSelection() override;
-  mozilla::dom::indexedDB::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
+  mozilla::dom::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                      mozilla::ErrorResult& aError) override;
@@ -1604,9 +1600,11 @@ protected:
                     const RefPtr<mozilla::dom::StorageEvent>& aEvent,
                     mozilla::ErrorResult& aRv);
 
+public:
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
 
+protected:
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyleHelperOuter(mozilla::dom::Element& aElt,
@@ -1834,7 +1832,7 @@ protected:
   // unsuspending it.
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
-  RefPtr<mozilla::dom::indexedDB::IDBFactory> mIndexedDB;
+  RefPtr<mozilla::dom::IDBFactory> mIndexedDB;
 
   // This counts the number of windows that have been opened in rapid succession
   // (i.e. within dom.successive_dialog_time_limit of each other). It is reset

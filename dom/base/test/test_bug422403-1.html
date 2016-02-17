@@ -35,14 +35,14 @@ function loadFileContent(aFile, aCharset) {
                                 null,      // aLoadingNode
                                 SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
                                 null,      // aTriggeringPrincipal
-                                SpecialPowers.Ci.nsILoadInfo.SEC_NORMAL,
+                                SpecialPowers.Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                 SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
 
     var cis = SpecialPowers.Ci.nsIConverterInputStream;
 
     var inputStream = SpecialPowers.Cc["@mozilla.org/intl/converter-input-stream;1"]
                        .createInstance(cis);
-    inputStream.init(chann.open(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
+    inputStream.init(chann.open2(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
     var str = {}, content = '';
     while (inputStream.readString(4096, str) != 0) {
         content += str.value;

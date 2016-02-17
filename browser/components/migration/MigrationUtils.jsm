@@ -24,6 +24,22 @@ var gMigrators = null;
 var gProfileStartup = null;
 var gMigrationBundle = null;
 
+XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
+  if (AppConstants.platform == "win") {
+    return [
+      "firefox", "edge", "ie", "chrome", "chromium", "safari", "360se",
+      "canary"
+    ];
+  }
+  if (AppConstants.platform == "macosx") {
+    return ["firefox", "safari", "chrome", "chromium", "canary"];
+  }
+  if (AppConstants.XP_UNIX) {
+    return ["firefox", "chrome", "chromium"];
+  }
+  return [];
+});
+
 function getMigrationBundle() {
   if (!gMigrationBundle) {
     gMigrationBundle = Services.strings.createBundle(
@@ -232,8 +248,8 @@ this.MigratorPrototype = {
 
       notify("Migration:Started");
       for (let [key, value] of resourcesGroupedByItems) {
-      	// TODO: (bug 449811).
-      	let migrationType = key, itemResources = value;
+        // TODO: (bug 449811).
+        let migrationType = key, itemResources = value;
 
         notify("Migration:ItemBeforeMigrate", migrationType);
 
@@ -505,32 +521,6 @@ this.MigrationUtils = Object.freeze({
     } catch (ex) { Cu.reportError(ex); return null }
   },
 
-  // Iterates the available migrators, in the most suitable
-  // order for the running platform.
-  get migrators() {
-    let migratorKeysOrdered = [
-#ifdef XP_WIN
-      "firefox", "edge", "ie", "chrome", "chromium", "safari", "360se", "canary"
-#elifdef XP_MACOSX
-      "firefox", "safari", "chrome", "chromium", "canary"
-#elifdef XP_UNIX
-      "firefox", "chrome", "chromium"
-#endif
-    ];
-
-    // If a supported default browser is found check it first
-    // so that the wizard defaults to import from that browser.
-    let defaultBrowserKey = getMigratorKeyForDefaultBrowser();
-    if (defaultBrowserKey)
-      migratorKeysOrdered.sort((a, b) => b == defaultBrowserKey ? 1 : 0);
-
-    for (let migratorKey of migratorKeysOrdered) {
-      let migrator = this.getMigrator(migratorKey);
-      if (migrator)
-        yield migrator;
-    }
-  },
-
   // Whether or not we're in the process of startup migration
   get isStartupMigration() {
     return gProfileStartup != null;
@@ -569,8 +559,7 @@ this.MigrationUtils = Object.freeze({
   showMigrationWizard:
   function MU_showMigrationWizard(aOpener, aParams) {
     let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
-#ifdef XP_MACOSX
-    if (!this.isStartupMigration) {
+    if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
       let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
       if (win) {
         win.focus();
@@ -580,7 +569,6 @@ this.MigrationUtils = Object.freeze({
       // startup-migration.
       features = "centerscreen,chrome,resizable=no";
     }
-#endif
 
     // nsIWindowWatcher doesn't deal with raw arrays, so we convert the input
     let params;
@@ -681,13 +669,11 @@ this.MigrationUtils = Object.freeze({
     if (!migrator) {
       // If there's no migrator set so far, ensure that there is at least one
       // migrator available before opening the wizard.
-      try {
-        this.migrators.next();
-      }
-      catch(ex) {
+      // Note that we don't need to check the default browser first, because
+      // if that one existed we would have used it in the block above this one.
+      if (!gAvailableMigratorKeys.some(key => !!this.getMigrator(key))) {
+        // None of the keys produced a usable migrator, so finish up here:
         this.finishMigration();
-        if (!(ex instanceof StopIteration))
-          throw ex;
         return;
       }
     }

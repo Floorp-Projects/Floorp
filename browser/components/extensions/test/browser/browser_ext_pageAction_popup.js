@@ -34,34 +34,34 @@ add_task(function* testPageActionPopup() {
         let sendClick;
         let tests = [
           () => {
-            sendClick({ expectEvent: false, expectPopup: "a" });
+            sendClick({expectEvent: false, expectPopup: "a"});
           },
           () => {
-            sendClick({ expectEvent: false, expectPopup: "a" });
+            sendClick({expectEvent: false, expectPopup: "a"});
           },
           () => {
-            browser.pageAction.setPopup({ tabId, popup: "popup-b.html" });
-            sendClick({ expectEvent: false, expectPopup: "b" });
+            browser.pageAction.setPopup({tabId, popup: "popup-b.html"});
+            sendClick({expectEvent: false, expectPopup: "b"});
           },
           () => {
-            sendClick({ expectEvent: false, expectPopup: "b" });
+            sendClick({expectEvent: false, expectPopup: "b"});
           },
           () => {
-            browser.pageAction.setPopup({ tabId, popup: "" });
-            sendClick({ expectEvent: true, expectPopup: null });
+            browser.pageAction.setPopup({tabId, popup: ""});
+            sendClick({expectEvent: true, expectPopup: null});
           },
           () => {
-            sendClick({ expectEvent: true, expectPopup: null });
+            sendClick({expectEvent: true, expectPopup: null});
           },
           () => {
-            browser.pageAction.setPopup({ tabId, popup: "/popup-a.html" });
-            sendClick({ expectEvent: false, expectPopup: "a" });
+            browser.pageAction.setPopup({tabId, popup: "/popup-a.html"});
+            sendClick({expectEvent: false, expectPopup: "a"});
           },
         ];
 
         let expect = {};
-        sendClick = ({ expectEvent, expectPopup }) => {
-          expect = { event: expectEvent, popup: expectPopup };
+        sendClick = ({expectEvent, expectPopup}) => {
+          expect = {event: expectEvent, popup: expectPopup};
           browser.test.sendMessage("send-click");
         };
 
@@ -101,7 +101,7 @@ add_task(function* testPageActionPopup() {
           }
         });
 
-        browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+        browser.tabs.query({active: true, currentWindow: true}, tabs => {
           tabId = tabs[0].id;
 
           browser.pageAction.show(tabId);
@@ -165,7 +165,7 @@ add_task(function* testPageActionSecurity() {
 
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        [api]: { "default_popup": URL },
+        [api]: {"default_popup": URL},
       },
     });
 

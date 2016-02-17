@@ -1,0 +1,63 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Masking: Reftest reference</title>
+  <link rel="author" title="Dirk Schulze" href="mailto:dschulze@adobe.com">
+<style>
+div {
+  height: 20px;
+  width: 100%;
+  background-color: green;
+  padding: 0;
+  margin: 0;
+}
+div:nth-child(odd) {
+  margin-bottom: 5px;
+  background-color: blue;
+}
+</style>
+<body>
+  <p>The test passes if you see a multiple green and blue stripe pairs. For each pair, the blue and green stripe must be of same length.</p>
+  <div style="clip-path: url(#c1)"></div>
+  <div style="width: 50%"></div>
+
+  <div style="clip-path: url(#c2)"></div>
+  <div style="width: 20em"></div>
+
+  <!--<div style="clip-path: url(#c3)"></div>
+  <div style="width: 50vw"></div>
+
+  <div style="clip-path: url(#c4)"></div>
+  <div style="width: 40vh"></div>
+
+  <div style="clip-path: url(#c5)"></div>
+  <div style="width: calc(30% + 15px)"></div>-->
+
+  <div style="clip-path: url(#c6)"></div>
+  <div style="width: 30ex"></div>
+  <svg>
+    <clipPath id="c1" clipPathUnits="objectBoundingBox">
+      <rect width="0.5" height="1"/>
+    </clipPath>
+    <clipPath id="c2">
+      <rect width="20em" height="20"/>
+    </clipPath>
+    <!--<clipPath id="c3">
+      <rect width="50vw" height="20"/>
+    </clipPath>
+    <clipPath id="c4">
+      <rect width="40vh" height="20"/>
+    </clipPath>
+    <clipPath id="c5">
+      <rect width="calc(30% + 15px)" height="20"/>
+    </clipPath>-->
+    <clipPath id="c6">
+      <rect width="30ex" height="20"/>
+    </clipPath>
+  </svg>
+</body>
+</html>

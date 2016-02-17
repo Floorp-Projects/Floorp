@@ -79,17 +79,17 @@
         } else {
           info("Got mozpointerlockchange for exiting");
           pointerUnlocked = true;
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         }
       }, false);
 
-      document.addEventListener("mozfullscreenchange", function(e) {
-        if (document.mozFullScreenElement === div) {
-          info("Got mozfullscreenchange for entering");
+      document.addEventListener("fullscreenchange", function(e) {
+        if (document.fullscreenElement === div) {
+          info("Got fullscreenchange for entering");
           hasRequestPointerLock = "mozRequestPointerLock" in div;
           div.mozRequestPointerLock();
         } else {
-          info("Got mozfullscreenchange for exiting");
+          info("Got fullscreenchange for exiting");
           runTests();
           SimpleTest.finish();
         }
@@ -98,7 +98,7 @@
       function start() {
         div = document.getElementById("div");
         info("Requesting fullscreen on parent");
-        div.mozRequestFullScreen();
+        div.requestFullscreen();
       }
     </script>
   </pre>

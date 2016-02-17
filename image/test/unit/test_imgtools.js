@@ -19,7 +19,7 @@ function dumpToFile(aData) {
     var outputStream = Cc["@mozilla.org/network/file-output-stream;1"].
                        createInstance(Ci.nsIFileOutputStream);
     // WR_ONLY|CREAT|TRUNC
-    outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0644, null);
+    outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0o644, null);
 
     var bos = Cc["@mozilla.org/binaryoutputstream;1"].
               createInstance(Ci.nsIBinaryOutputStream);

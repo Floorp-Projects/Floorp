@@ -66,7 +66,7 @@ const GUIDGenerator kGuidGenerator;
 
 bool CreateGUID(GUID *guid) {
   return kGuidGenerator.CreateGUID(guid);
-};
+}
 
 // Parse guid to string.
 bool GUIDToString(const GUID *guid, char *buf, int buf_len) {

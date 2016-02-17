@@ -25,13 +25,10 @@ function checkFailParseInvalidPin(pinValue) {
   let sslStatus = new FakeSSLStatus(
                         certFromFile('cn-a.pinning2.example.com-pinningroot'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
-  try {
+  throws(() => {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
                              pinValue, sslStatus, 0);
-    ok(false, "Invalid pin should have been rejected");
-  } catch (e) {
-    ok(true, "Invalid pin should be rejected");
-  }
+  }, /NS_ERROR_FAILURE/, `Invalid pin "${pinValue}" should be rejected`);
 }
 
 function checkPassValidPin(pinValue, settingPin) {

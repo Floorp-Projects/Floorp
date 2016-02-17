@@ -469,6 +469,13 @@ void AnnotateOOMAllocationSize(size_t size)
   gOOMAllocationSize = size;
 }
 
+static size_t gTexturesSize = 0;
+
+void AnnotateTexturesSize(size_t size)
+{
+  gTexturesSize = size;
+}
+
 #ifndef XP_WIN
 // Like Windows CopyFile for *nix
 bool copy_file(const char* from, const char* to)
@@ -716,6 +723,11 @@ bool MinidumpCallback(
     XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
   }
 
+  char texturesSizeBuffer[32] = "";
+  if (gTexturesSize) {
+    XP_STOA(gTexturesSize, texturesSizeBuffer, 10);
+  }
+
   // calculate time since last crash (if possible), and store
   // the time of this crash.
   time_t crashTime;
@@ -859,6 +871,11 @@ bool MinidumpCallback(
     if (oomAllocationSizeBuffer[0]) {
       WriteAnnotation(apiData, "OOMAllocationSize", oomAllocationSizeBuffer);
       WriteAnnotation(eventFile, "OOMAllocationSize", oomAllocationSizeBuffer);
+    }
+
+    if (texturesSizeBuffer[0]) {
+      WriteAnnotation(apiData, "TextureUsage", texturesSizeBuffer);
+      WriteAnnotation(eventFile, "TextureUsage", texturesSizeBuffer);
     }
 
     if (memoryReportPath) {

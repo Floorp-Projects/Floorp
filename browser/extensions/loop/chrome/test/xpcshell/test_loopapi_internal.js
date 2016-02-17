@@ -14,7 +14,7 @@ add_test(function test_intialize() {
 
   LoopAPIInternal.initialize();
   let [, , pageListeners2] = LoopAPI.inspect();
-  Assert.equal(pageListeners2.length, 2, "Two page listeners should be added");
+  Assert.equal(pageListeners2.length, 3, "Three page listeners should be added");
 
   let pageListenersStub = {};
   LoopAPI.stub([pageListenersStub]);

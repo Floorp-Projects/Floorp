@@ -542,10 +542,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     }
   }
 
-  MOZ_MTLOG(ML_DEBUG, "NAT filtering type: " << filtering_type);
-  MOZ_MTLOG(ML_DEBUG, "NAT mapping type: " << mapping_type);
-
   if (mapping_type && filtering_type) {
+    MOZ_MTLOG(ML_DEBUG, "NAT filtering type: " << filtering_type);
+    MOZ_MTLOG(ML_DEBUG, "NAT mapping type: " << mapping_type);
     TestNat* test_nat = new TestNat;
     test_nat->filtering_type_ = TestNat::ToNatBehavior(filtering_type);
     test_nat->mapping_type_ = TestNat::ToNatBehavior(mapping_type);

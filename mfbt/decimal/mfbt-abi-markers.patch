@@ -12,15 +12,15 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
  
 +#include "mozilla/Types.h"
 +
+ #include "platform/PlatformExport.h"
+ #include "wtf/Allocator.h"
+ #include "wtf/Assertions.h"
+ #include "wtf/text/WTFString.h"
  #include <stdint.h>
- #include <wtf/Assertions.h>
- #include <wtf/text/WTFString.h>
  
- namespace WebCore {
+ namespace blink {
  
- namespace DecimalPrivate {
- class SpecialValueHandler;
-@@ -88,92 +90,92 @@ public:
+@@ -91,92 +93,92 @@ public:
          FormatClass formatClass() const { return m_formatClass; }
  
          uint64_t m_coefficient;
@@ -32,7 +32,7 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
 -    Decimal(int32_t = 0);
 -    Decimal(Sign, int exponent, uint64_t coefficient);
 -    Decimal(const Decimal&);
-+    MFBT_API Decimal(int32_t = 0);
++    MFBT_API explicit Decimal(int32_t = 0);
 +    MFBT_API Decimal(Sign, int exponent, uint64_t coefficient);
 +    MFBT_API Decimal(const Decimal&);
  
@@ -87,12 +87,12 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
      bool isZero() const { return m_data.isZero(); }
  
 -    Decimal abs() const;
--    Decimal ceiling() const;
+-    Decimal ceil() const;
 -    Decimal floor() const;
 -    Decimal remainder(const Decimal&) const;
 -    Decimal round() const;
 +    MFBT_API Decimal abs() const;
-+    MFBT_API Decimal ceiling() const;
++    MFBT_API Decimal ceil() const;
 +    MFBT_API Decimal floor() const;
 +    MFBT_API Decimal remainder(const Decimal&) const;
 +    MFBT_API Decimal round() const;
@@ -135,7 +135,7 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
  
 -    Decimal(double);
 -    Decimal compareTo(const Decimal&) const;
-+    MFBT_API Decimal(double);
++    MFBT_API explicit Decimal(double);
 +    MFBT_API Decimal compareTo(const Decimal&) const;
  
 -    static AlignedOperands alignOperands(const Decimal& lhs, const Decimal& rhs);
@@ -147,4 +147,4 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
      EncodedData m_data;
  };
  
- } // namespace WebCore
+ } // namespace blink

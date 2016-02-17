@@ -6,13 +6,6 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <ImageButton android:id="@+id/favicon"
-                 style="@style/UrlBar.ImageButton"
-                 android:layout_width="@dimen/browser_toolbar_favicon_size"
-                 android:scaleType="fitCenter"
-                 android:paddingRight="4dip"
-                 android:layout_gravity="center_vertical"/>
-
     <!-- The site security icon is misaligned with the page title so
          we add a bottom margin to align their bottoms.
          Site security icon must have exact position and size as search icon in
@@ -30,7 +23,7 @@
                  android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
                  android:src="@drawable/site_security_level"
                  android:contentDescription="@string/site_security"
-                 android:visibility="gone"/>
+                 android:layout_gravity="center_vertical" />
 
     <org.mozilla.gecko.widget.FadedMultiColorTextView
             android:id="@+id/url_bar_title"

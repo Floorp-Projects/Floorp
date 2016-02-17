@@ -1336,8 +1336,7 @@ MSimdBox::writeRecoverData(CompactBufferWriter& writer) const
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_SimdBox));
     static_assert(sizeof(SimdType) == sizeof(uint8_t), "assuming uint8 storage class for SimdType");
-    SimdType type = templateObject()->typeDescr().as<SimdTypeDescr>().type();
-    writer.writeByte(uint8_t(type));
+    writer.writeByte(uint8_t(simdType()));
     return true;
 }
 

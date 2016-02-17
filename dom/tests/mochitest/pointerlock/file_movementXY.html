@@ -83,12 +83,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           secondMove.mozMovementY = e.mozMovementY;
 
           div.removeEventListener("mousemove", moveMouseAgain, false);
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         };
 
         function fullscreenchange() {
-          if (document.mozFullScreenElement === div) {
-            info("Got mozfullscreenchange for entering");
+          if (document.fullscreenElement === div) {
+            info("Got fullscreenchange for entering");
             var screenX = window.screenX;
             var screenY = window.screenY;
             if (screenX != 0 || screenY != 0) {
@@ -102,17 +102,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
           }
           else {
-            info("Got mozfullscreenchange for exiting");
+            info("Got fullscreenchange for exiting");
             runTests();
             SimpleTest.finish();
           }
         }
         
-        document.addEventListener("mozfullscreenchange", fullscreenchange, false);
+        document.addEventListener("fullscreenchange", fullscreenchange, false);
 
         function start() {
           info("Requesting fullscreen on parent");
-          div.mozRequestFullScreen();
+          div.requestFullscreen();
         }
       </script>
     </pre>

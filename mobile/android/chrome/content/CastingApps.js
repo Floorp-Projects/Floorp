@@ -414,16 +414,23 @@ var CastingApps = {
   _getContentTypeForURI: function(aURI, aElement, aCallback) {
     let channel;
     try {
-     channel = Services.io.newChannelFromURI2(aURI,
-                                              aElement,
-                                              null, // aLoadingPrincipal
-                                              null, // aTriggeringPrincipal
-                                              Ci.nsILoadInfo.SEC_NORMAL,
-                                              Ci.nsIContentPolicy.TYPE_OTHER);
-     } catch(e) {
-      aCallback(null);
-      return;
-     }
+      let secFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+      if (aElement.crossOrigin) {
+        secFlags = Ci.nsILoadInfo.SEC_REQUIRE_CORS_DATA_INHERITS;
+        if (aElement.crossOrigin === "use-credentials") {
+          secFlags |= Ci.nsILoadInfo.SEC_COOKIES_INCLUDE;
+        }
+      }
+      channel = NetUtil.newChannel({
+        uri: aURI,
+        loadingNode: aElement,
+        securityFlags: secFlags,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_VIDEO
+      });
+    } catch(e) {
+     aCallback(null);
+     return;
+    }
 
     let listener = {
       onStartRequest: function(request, context) {
@@ -446,7 +453,7 @@ var CastingApps = {
     };
 
     if (channel) {
-      channel.asyncOpen(listener, null);
+      channel.asyncOpen2(listener);
     } else {
       aCallback(null);
     }

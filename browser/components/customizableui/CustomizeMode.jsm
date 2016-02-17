@@ -916,8 +916,12 @@ CustomizeMode.prototype = {
     let removable = aPlace == "palette" || CustomizableUI.isWidgetRemovable(aNode);
     wrapper.setAttribute("removable", removable);
 
-    let contextMenuAttrName = aNode.getAttribute("context") ? "context" :
-                                aNode.getAttribute("contextmenu") ? "contextmenu" : "";
+    let contextMenuAttrName = "";
+    if (aNode.getAttribute("context")) {
+      contextMenuAttrName = "context";
+    } else if (aNode.getAttribute("contextmenu")) {
+      contextMenuAttrName = "contextmenu";
+    }
     let currentContextMenu = aNode.getAttribute(contextMenuAttrName);
     let contextMenuForPlace = aPlace == "panel" ?
                                 kPanelItemContextMenu :

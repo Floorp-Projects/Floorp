@@ -1,19 +1,14 @@
 /* Copyright 2013 Google Inc. All Rights Reserved.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+   Distributed under MIT license.
+   See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
 #include "./dictionary.h"
+
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
 
 /* In case of multiple definition linker error with dictionary.cc from the
   encoder: include only one of enc/dictionary.cc or dec/dictionary.c in a
@@ -9465,3 +9460,7 @@ const uint8_t kBrotliDictionary[122784] = {
   0x88, 0xe0, 0xa4, 0xb8, 0xe0, 0xa4, 0x95, 0xe0, 0xa5, 0x8d, 0xe0, 0xa4, 0xb0,
   0xe0, 0xa4, 0xbf, 0xe0, 0xa4, 0xaf, 0xe0, 0xa4, 0xa4, 0xe0, 0xa4, 0xbe,
 };
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    /* extern "C" */
+#endif

@@ -20,28 +20,33 @@ GetFBInfoForBlit(const WebGLFramebuffer* fb, const char* const fbInfo,
                  const webgl::FormatInfo** const out_depthFormat,
                  const webgl::FormatInfo** const out_stencilFormat)
 {
-    *out_samples = 1; // TODO
+    *out_samples = 0;
     *out_colorFormat = nullptr;
     *out_depthFormat = nullptr;
     *out_stencilFormat = nullptr;
 
     if (fb->ColorAttachment(0).IsDefined()) {
         const auto& attachment = fb->ColorAttachment(0);
+        *out_samples = attachment.Samples();
         *out_colorFormat = attachment.Format()->format;
     }
 
     if (fb->DepthStencilAttachment().IsDefined()) {
         const auto& attachment = fb->DepthStencilAttachment();
+        *out_samples = attachment.Samples();
+
         *out_depthFormat = attachment.Format()->format;
         *out_stencilFormat = *out_depthFormat;
     } else {
         if (fb->DepthAttachment().IsDefined()) {
             const auto& attachment = fb->DepthAttachment();
+            *out_samples = attachment.Samples();
             *out_depthFormat = attachment.Format()->format;
         }
 
         if (fb->StencilAttachment().IsDefined()) {
             const auto& attachment = fb->StencilAttachment();
+            *out_samples = attachment.Samples();
             *out_stencilFormat = attachment.Format()->format;
         }
     }
@@ -133,7 +138,7 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
             return;
         }
     } else {
-        srcSamples = 1; // Always 1.
+        srcSamples = 0; // Always 0.
 
         GetBackbufferFormats(mOptions, &srcColorFormat, &srcDepthFormat,
                              &srcStencilFormat);
@@ -221,13 +226,13 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
         return;
     }
 
-    if (dstSamples != 1) {
+    if (dstSamples != 0) {
         ErrorInvalidOperation("blitFramebuffer: DRAW_FRAMEBUFFER may not have"
                               " multiple samples.");
         return;
     }
 
-    if (srcSamples != 1) {
+    if (srcSamples != 0) {
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT &&
             dstColorFormat != srcColorFormat)
         {

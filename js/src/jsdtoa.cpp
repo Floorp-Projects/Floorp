@@ -40,15 +40,26 @@ using namespace js;
 #endif
 */
 
-/*
- * MALLOC gets declared external, and that doesn't work for class members, so
- * wrap.
- */
-static inline void* dtoa_malloc(size_t size) { return js_malloc(size); }
-static inline void dtoa_free(void* p) { return js_free(p); }
+// dtoa.c requires that MALLOC be infallible. Furthermore, its allocations are
+// few and small. So AutoEnterOOMUnsafeRegion is appropriate here.
+static inline void* dtoa_malloc(size_t size)
+{
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    void* p = js_malloc(size);
+    if (!p)
+        oomUnsafe.crash("dtoa_malloc");
+
+    return p;
+}
+
+static inline void dtoa_free(void* p)
+{
+  return js_free(p);
+}
 
 #define NO_GLOBAL_STATE
 #define NO_ERRNO
+#define Omit_Private_Memory // This saves memory for the workloads we see.
 #define MALLOC dtoa_malloc
 #define FREE dtoa_free
 #include "dtoa.c"

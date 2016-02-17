@@ -480,7 +480,7 @@ nsPrintSettingsGTK::GetPrinterName(char16_t * *aPrinter)
       return NS_OK;
     }
   }
-  *aPrinter = ToNewUnicode(nsDependentCString(gtkPrintName));
+  *aPrinter = UTF8ToNewUnicode(nsDependentCString(gtkPrintName));
   return NS_OK;
 }
 

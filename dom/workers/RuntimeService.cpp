@@ -38,7 +38,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
@@ -82,7 +82,6 @@ USING_WORKERS_NAMESPACE
 using mozilla::MutexAutoLock;
 using mozilla::MutexAutoUnlock;
 using mozilla::Preferences;
-using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
 // The size of the worker runtime heaps in bytes. May be changed via pref.
 #define WORKER_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
@@ -886,23 +885,10 @@ class WorkerJSRuntime : public mozilla::CycleCollectedJSRuntime
 public:
   // The heap size passed here doesn't matter, we will change it later in the
   // call to JS_SetGCParameter inside CreateJSContextForWorker.
-  WorkerJSRuntime(JSRuntime* aParentRuntime, WorkerPrivate* aWorkerPrivate)
-    : CycleCollectedJSRuntime(aParentRuntime,
-                              WORKER_DEFAULT_RUNTIME_HEAPSIZE,
-                              WORKER_DEFAULT_NURSERY_SIZE),
-    mWorkerPrivate(aWorkerPrivate)
+  explicit WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
+    : mWorkerPrivate(aWorkerPrivate)
   {
-    JSRuntime* rt = Runtime();
-    MOZ_ASSERT(rt);
-
-    JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(aWorkerPrivate));
-
-    js::SetPreserveWrapperCallback(rt, PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
-    JS_SetWrapObjectCallbacks(rt, &WrapObjectCallbacks);
-    if (aWorkerPrivate->IsDedicatedWorker()) {
-      JS_SetFutexCanWait(rt);
-    }
+    MOZ_ASSERT(aWorkerPrivate);
   }
 
   ~WorkerJSRuntime()
@@ -922,6 +908,31 @@ public:
     // The CC is shut down, and the superclass destructor will GC, so make sure
     // we don't try to CC again.
     mWorkerPrivate = nullptr;
+  }
+
+  nsresult Initialize(JSRuntime* aParentRuntime)
+  {
+    nsresult rv =
+      CycleCollectedJSRuntime::Initialize(aParentRuntime,
+                                          WORKER_DEFAULT_RUNTIME_HEAPSIZE,
+                                          WORKER_DEFAULT_NURSERY_SIZE);
+     if (NS_WARN_IF(NS_FAILED(rv))) {
+       return rv;
+     }
+
+    JSRuntime* rt = Runtime();
+    MOZ_ASSERT(rt);
+
+    JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(mWorkerPrivate));
+
+    js::SetPreserveWrapperCallback(rt, PreserveWrapper);
+    JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
+    JS_SetWrapObjectCallbacks(rt, &WrapObjectCallbacks);
+    if (mWorkerPrivate->IsDedicatedWorker()) {
+      JS_SetFutexCanWait(rt);
+    }
+
+    return NS_OK;
   }
 
   virtual void
@@ -1974,12 +1985,6 @@ RuntimeService::Shutdown()
   // That's it, no more workers.
   mShuttingDown = true;
 
-  // Remove all listeners from the worker debugger manager to ensure that it
-  // gets properly destroyed.
-  if (NS_FAILED(ClearWorkerDebuggerManagerListeners())) {
-    NS_WARNING("Failed to clear worker debugger manager listeners!");
-  }
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_WARN_IF_FALSE(obs, "Failed to get observer service?!");
 
@@ -2701,7 +2706,12 @@ WorkerThreadPrimaryRunnable::Run()
   {
     nsCycleCollector_startup();
 
-    WorkerJSRuntime runtime(mParentRuntime, mWorkerPrivate);
+    WorkerJSRuntime runtime(mWorkerPrivate);
+    nsresult rv = runtime.Initialize(mParentRuntime);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     JSRuntime* rt = runtime.Runtime();
 
     JSContext* cx = CreateJSContextForWorker(mWorkerPrivate, rt);

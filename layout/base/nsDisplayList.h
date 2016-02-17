@@ -27,6 +27,7 @@
 #include "DisplayListClipState.h"
 #include "LayerState.h"
 #include "FrameMetrics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/UserData.h"
 
@@ -575,7 +576,7 @@ public:
    * Because these frames include transforms set on their parent, dirty rects
    * for intermediate frames may be empty, yet child frames could still be visible.
    */
-  void MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect);
+  void MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame);
 
   const nsTArray<ThemeGeometry>& GetThemeGeometries() { return mThemeGeometries; }
 
@@ -967,8 +968,6 @@ public:
     return static_cast<OutOfFlowDisplayData*>(
       aFrame->Properties().Get(OutOfFlowDisplayDataProperty()));
   }
-
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Preserve3DDirtyRectProperty, nsRect)
 
   nsPresContext* CurrentPresContext() {
     return CurrentPresShellState()->mPresShell->GetPresContext();
@@ -4377,6 +4376,8 @@ public:
   // regardless of bidi directionality; top and bottom in vertical modes).
   nscoord mVisIStartEdge;
   nscoord mVisIEndEdge;
+  // Cached result of mFrame->IsSelected().  Only initialized when needed.
+  mutable mozilla::Maybe<bool> mIsFrameSelected;
 };
 
 /**

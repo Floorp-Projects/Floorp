@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
-import java.util.UUID;
 import java.util.zip.CRC32;
 
 import org.json.JSONException;
@@ -77,6 +76,8 @@ public class SwitchBoard {
 	
 	private static final String IS_EXPERIMENT_ACTIVE = "isActive";
 	private static final String EXPERIMENT_VALUES = "values";
+
+	private static String uuidExtra = null;
 	
 	
 	/**
@@ -93,6 +94,9 @@ public class SwitchBoard {
 		DEBUG = isDebug;
 	}
 	
+	public static void setUUIDFromExtra(String uuid) {
+		uuidExtra = uuid;
+	}
 	/**
 	 * Advanced initialization that supports a production and staging environment without changing the server URLs manually.
 	 * SwitchBoard will connect to the staging environment in debug mode. This makes it very simple to test new experiements
@@ -435,8 +439,11 @@ public class SwitchBoard {
 	 */
 	private static int getUserBucket(Context c) {
 		//get uuid
-		DeviceUuidFactory df = new DeviceUuidFactory(c);
-		String uuid = df.getDeviceUuid().toString();
+		String uuid = uuidExtra;
+		if (uuid == null) {
+			DeviceUuidFactory df = new DeviceUuidFactory(c);
+			uuid = df.getDeviceUuid().toString();
+		}
 
 		CRC32 crc = new CRC32();
 		crc.update(uuid.getBytes());

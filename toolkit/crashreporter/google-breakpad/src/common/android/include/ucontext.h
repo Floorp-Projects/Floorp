@@ -31,13 +31,12 @@
 #define GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_UCONTEXT_H
 
 #include <sys/cdefs.h>
-#include <signal.h>
 
-#ifdef __BIONIC_HAVE_UCONTEXT_H
-# include_next <ucontext.h>
+#ifdef __BIONIC_UCONTEXT_H
+#include <ucontext.h>
 #else
-# include <sys/ucontext.h>
-#endif  // __BIONIC_UCONTEXT_H
+
+#include <sys/ucontext.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,5 +50,7 @@ int breakpad_getcontext(ucontext_t* ucp);
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
+
+#endif  // __BIONIC_UCONTEXT_H
 
 #endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_UCONTEXT_H

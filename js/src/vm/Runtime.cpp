@@ -166,6 +166,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     nativeStackBase(GetNativeStackBase()),
     cxCallback(nullptr),
     destroyCompartmentCallback(nullptr),
+    sizeOfIncludingThisCompartmentCallback(nullptr),
     destroyZoneCallback(nullptr),
     sweepZoneCallback(nullptr),
     compartmentNameCallback(nullptr),
@@ -529,8 +530,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     for (ContextIter acx(this); !acx.done(); acx.next())
         rtSizes->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
 
-    rtSizes->dtoa += mallocSizeOf(mainThread.dtoaState);
-
     rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->interpreterStack += interpreterStack_.sizeOfExcludingThis(mallocSizeOf);
@@ -580,7 +579,7 @@ InvokeInterruptCallback(JSContext* cx)
         // invoke the onStep handler.
         if (cx->compartment()->isDebuggee()) {
             ScriptFrameIter iter(cx);
-            if (iter.script()->stepModeEnabled()) {
+            if (!iter.done() && iter.script()->stepModeEnabled()) {
                 RootedValue rval(cx);
                 switch (Debugger::onSingleStep(cx, &rval)) {
                   case JSTRAP_ERROR:

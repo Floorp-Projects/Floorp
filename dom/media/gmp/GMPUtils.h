@@ -9,6 +9,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "nsClassHashtable.h"
 
 class nsIFile;
 class nsCString;
@@ -59,6 +60,20 @@ private:
   Mode mMode;
   nsCOMPtr<nsISimpleEnumerator> mIter;
 };
+
+class GMPInfoFileParser {
+public:
+  bool Init(nsIFile* aFile);
+  bool Contains(const nsCString& aKey) const;
+  nsCString Get(const nsCString& aKey) const;
+private:
+  nsClassHashtable<nsCStringHashKey, nsCString> mValues;
+};
+
+bool
+ReadIntoArray(nsIFile* aFile,
+              nsTArray<uint8_t>& aOutDst,
+              size_t aMaxLength);
 
 } // namespace mozilla
 

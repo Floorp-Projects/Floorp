@@ -25,7 +25,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace indexedDB {
 
 namespace {
 
@@ -177,7 +176,7 @@ IDBIndex::LocaleAware() const
   return mMetadata->locale().IsEmpty();
 }
 
-const KeyPath&
+const indexedDB::KeyPath&
 IDBIndex::GetKeyPath() const
 {
   AssertIsOnOwningThread();
@@ -621,6 +620,5 @@ IDBIndex::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return IDBIndexBinding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla

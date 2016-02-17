@@ -2,7 +2,7 @@
 == 121142-1b.html 121142-1-ref.html
 == 121142-2.html 121142-2-ref.html
 == 156888-1.html 156888-1-ref.html
-== 156888-2.html 156888-2-ref.html
+fuzzy-if(skiaContent,1,2) == 156888-2.html 156888-2-ref.html
 == 162063-1.xhtml about:blank
 == 203923-1.html white-space-ref.html
 == 203923-2.html white-space-ref.html
@@ -11,14 +11,14 @@
 == 208305-3.html white-space-ref.html
 == 208305-4.html white-space-ref.html
 == 277995-1.html 277995-1-ref.html
-== 293576-1.html 293576-1-ref.html
+fuzzy-if(skiaContent,1,6) == 293576-1.html 293576-1-ref.html
 == 302113-1.html 302113-1-ref.html
-== 315146-1.xhtml 315146-1-ref.xhtml
+fuzzy-if(skiaContent,1,6) == 315146-1.xhtml 315146-1-ref.xhtml
 == 325543-1a.html 325543-1-ref.html
 == 325543-1b.html 325543-1-ref.html
-== 338735-1.html 338735-1-ref.html
-== 339388-1a.html 339388-1-ref.html
-== 339388-1b.html 339388-1-ref.html
+fuzzy-if(skiaContent,1,6) == 338735-1.html 338735-1-ref.html
+fuzzy-if(skiaContent,1,6) == 339388-1a.html 339388-1-ref.html
+fuzzy-if(skiaContent,1,6) == 339388-1b.html 339388-1-ref.html
 == 363326-1.html 363326-1-ref.html
 == 368932-1.html 368932-1-ref.html
 == 371054-1.html 371054-1-ref.html

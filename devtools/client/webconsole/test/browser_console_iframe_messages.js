@@ -55,49 +55,60 @@ const expectedMessagesAny = [
   },
 ];
 
-function test() {
-  expectUncaughtException();
-  loadTab(TEST_URI).then(() => {
-    openConsole().then(consoleOpened);
-  });
-}
+add_task(function*() {
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
-function consoleOpened(hud) {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
   ok(hud, "web console opened");
 
-  waitForMessages({
+  yield testWebConsole(hud);
+  yield closeConsole();
+  info("web console closed");
+
+  hud = yield HUDService.toggleBrowserConsole();
+  yield testBrowserConsole(hud);
+  yield closeConsole();
+});
+
+function* testWebConsole(hud) {
+  yield waitForMessages({
     webconsole: hud,
     messages: expectedMessages,
-  }).then(() => {
-    info("first messages matched");
-    waitForMessages({
+  });
+
+  info("first messages matched");
+
+  yield waitForMessages({
       webconsole: hud,
       messages: expectedMessagesAny,
       matchCondition: "any",
-    }).then(() => {
-      closeConsole().then(onWebConsoleClose);
-    });
   });
 }
 
-function onWebConsoleClose() {
-  info("web console closed");
-  HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
-}
-
-function onBrowserConsoleOpen(hud) {
+function* testBrowserConsole(hud) {
   ok(hud, "browser console opened");
-  waitForMessages({
+
+  // TODO: The browser console doesn't show page's console.log statements
+  // in e10s windows. See Bug 1241289.
+  if (Services.appinfo.browserTabsRemoteAutostart) {
+    todo(false, "Bug 1241289");
+    return;
+  }
+
+  yield waitForMessages({
     webconsole: hud,
     messages: expectedMessages,
-  }).then(() => {
-    info("first messages matched");
-    waitForMessages({
-      webconsole: hud,
-      messages: expectedMessagesAny,
-      matchCondition: "any",
-    }).then(() => {
-      closeConsole().then(finishTest);
-    });
+  });
+
+  info("first messages matched");
+  yield waitForMessages({
+    webconsole: hud,
+    messages: expectedMessagesAny,
+    matchCondition: "any",
   });
 }

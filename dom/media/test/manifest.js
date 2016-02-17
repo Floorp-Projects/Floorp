@@ -681,6 +681,7 @@ var gMetadataTests = [
   { name:"wave_metadata_bad_len.wav", tags: {
       name:"Track Title",
       artist:"Artist Name",
+      comments:"Comments",
     }
   },
   { name:"wave_metadata_bad_no_null.wav", tags: {
@@ -1357,8 +1358,8 @@ function removeNodeAndSource(n) {
 
 function once(target, name, cb) {
   var p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function() {
-      target.removeEventListener(name, cb);
+    target.addEventListener(name, function onceEvent() {
+      target.removeEventListener(name, onceEvent);
       resolve();
     });
   });

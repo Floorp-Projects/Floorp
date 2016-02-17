@@ -134,10 +134,12 @@ class CycleCollectedJSRuntime
   friend class JSZoneParticipant;
   friend class IncrementalFinalizeRunnable;
 protected:
-  CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
-                          uint32_t aMaxBytes,
-                          uint32_t aMaxNurseryBytes);
+  CycleCollectedJSRuntime();
   virtual ~CycleCollectedJSRuntime();
+
+  nsresult Initialize(JSRuntime* aParentRuntime,
+                      uint32_t aMaxBytes,
+                      uint32_t aMaxNurseryBytes);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
@@ -210,6 +212,9 @@ private:
   static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
+  static bool EnqueuePromiseJobCallback(JSContext* aCx,
+                                        JS::HandleObject aJob,
+                                        void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);

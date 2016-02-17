@@ -40,8 +40,8 @@ FFmpegLibWrapper::Link()
   uint32_t version = avcodec_version();
   mVersion = (version >> 16) & 0xff;
   uint32_t micro = version & 0xff;
-  if (mVersion == 57 && micro != 100) {
-    // a micro version of 100 indicates that it's FFmpeg (as opposed to LibAV).
+  if (mVersion == 57 && micro < 100) {
+    // a micro version >= 100 indicates that it's FFmpeg (as opposed to LibAV).
     // Due to current AVCodecContext binary incompatibility we can only
     // support FFmpeg 57 at this stage.
     Unlink();
