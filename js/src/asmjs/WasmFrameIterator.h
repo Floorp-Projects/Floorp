@@ -33,6 +33,7 @@ namespace wasm {
 class CallSite;
 class CodeRange;
 class Module;
+struct CallThunk;
 struct FuncOffsets;
 struct ProfilingOffsets;
 
@@ -66,6 +67,7 @@ enum class ExitReason : uint32_t
     None,          // default state, the pc is in wasm code
     ImportJit,     // fast-path call directly into JIT code
     ImportInterp,  // slow-path call into C++ Invoke()
+    Error,         // call to error generation
     Native         // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
 };
 
@@ -98,7 +100,7 @@ class ProfilingFrameIterator
 // Prologue/epilogue code generation
 void
 GenerateExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                     ProfilingOffsets* offsets, jit::Label* maybeEntry = nullptr);
+                     ProfilingOffsets* offsets);
 void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      ProfilingOffsets* offsets);
@@ -111,6 +113,9 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 
 void
 EnableProfilingPrologue(const Module& module, const CallSite& callSite, bool enabled);
+
+void
+EnableProfilingThunk(const Module& module, const CallThunk& callThunk, bool enabled);
 
 void
 EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, bool enabled);

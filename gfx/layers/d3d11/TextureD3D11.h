@@ -109,45 +109,6 @@ CreateD3D11extureClientWithDevice(gfx::IntSize aSize, gfx::SurfaceFormat aFormat
                                   ID3D11Device* aDevice,
                                   ISurfaceAllocator* aAllocator);
 
-
-class D3D10TextureData : public DXGITextureData
-{
-public:
-  static DXGITextureData*
-  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
-
-  virtual bool Lock(OpenMode aMode, FenceHandle*) override;
-
-  virtual void Unlock() override;
-
-  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
-
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
-
-  virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
-                TextureFlags aFlags,
-                TextureAllocationFlags aAllocFlags) const override;
-
-  // TODO - merge this with the FenceHandle API!
-  virtual void SyncWithObject(SyncObject* aSync) override;
-
-  virtual bool ReadBack(TextureReadbackSink* aReadbackSinc) override;
-
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
-
-  ~D3D10TextureData();
-protected:
-  D3D10TextureData(ID3D10Texture2D* aTexture,
-                   gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                   bool aNeedsClear, bool aNeedsClearWhite,
-                   bool aIsForOutOfBandContent);
-
-  virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
-
-  RefPtr<ID3D10Texture2D> mTexture;
-};
-
 class DXGIYCbCrTextureData : public TextureData
 {
 public:
@@ -431,12 +392,9 @@ public:
   virtual SyncType GetSyncType() { return SyncType::D3D11; }
 
   void RegisterTexture(ID3D11Texture2D* aTexture);
-  void RegisterTexture(ID3D10Texture2D* aTexture);
 
 private:
   RefPtr<ID3D11Texture2D> mD3D11Texture;
-  RefPtr<ID3D10Texture2D> mD3D10Texture;
-  std::vector<ID3D10Texture2D*> mD3D10SyncedTextures;
   std::vector<ID3D11Texture2D*> mD3D11SyncedTextures;
   SyncHandle mHandle;
 };

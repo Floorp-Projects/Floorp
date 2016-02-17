@@ -14,7 +14,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 import hanging_threads
-from config import *
+from config import CONTENT_SERVER_PORT, LOOP_SERVER_PORT, LOOP_SERVER_URL, \
+    FIREFOX_PREFERENCES
+
+hanging_threads.start_monitoring()
 
 CONTENT_SERVER_COMMAND = ["make", "runserver"]
 CONTENT_SERVER_ENV = os.environ.copy()
@@ -24,7 +27,7 @@ CONTENT_SERVER_ENV.update({"PORT": str(CONTENT_SERVER_PORT),
                            "LOOP_SERVER_URL": LOOP_SERVER_URL})
 
 ROOMS_WEB_APP_URL = "http://localhost:" + str(CONTENT_SERVER_PORT) + \
-  "/content/{token}"
+    "/content/{token}"
 
 LOOP_SERVER_COMMAND = ["make", "runserver"]
 LOOP_SERVER_ENV = os.environ.copy()
@@ -62,8 +65,8 @@ class LoopTestServers:
     def start_content_server():
         content_server_location = os.environ.get('STANDALONE_SERVER')
         if content_server_location is None:
-          content_server_location = os.path.join(os.path.dirname(__file__),
-                                                 "../../standalone")
+            content_server_location = os.path.join(os.path.dirname(__file__),
+                                                   "../../standalone")
         os.chdir(content_server_location)
 
         p = processhandler.ProcessHandler(CONTENT_SERVER_COMMAND,
@@ -84,4 +87,3 @@ class LoopTestServers:
             self.content_server.kill()
         if hasattr(self, "loop_server"):
             self.loop_server.kill()
-

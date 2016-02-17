@@ -119,7 +119,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::hreflang, aHreflang, aRv);
   }
-  nsDOMSettableTokenList* Sizes()
+  nsDOMTokenList* Sizes()
   {
     return GetTokenList(nsGkAtoms::sizes);
   }

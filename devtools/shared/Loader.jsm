@@ -254,6 +254,7 @@ this.DevToolsLoader = function DevToolsLoader() {
   this.lazyImporter = XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils);
   this.lazyServiceGetter = XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils);
   this.lazyRequireGetter = this.lazyRequireGetter.bind(this);
+  this.main = this.main.bind(this);
 };
 
 DevToolsLoader.prototype = {
@@ -390,7 +391,8 @@ DevToolsLoader.prototype = {
         lazyImporter: this.lazyImporter,
         lazyServiceGetter: this.lazyServiceGetter,
         lazyRequireGetter: this.lazyRequireGetter,
-        id: this.id
+        id: this.id,
+        main: this.main
       },
     };
     // Lazy define console in order to load Console.jsm only when it is used
@@ -420,7 +422,7 @@ DevToolsLoader.prototype = {
   /**
    * Reload the current provider.
    */
-  reload: function(showToolbox) {
+  reload: function() {
     var events = this.require("sdk/system/events");
     events.emit("startupcache-invalidate", {});
     events.emit("devtools-unloaded", {});
@@ -430,24 +432,6 @@ DevToolsLoader.prototype = {
     delete this._mainid;
     this._chooseProvider();
     this.main("devtools/client/main");
-
-    let window = Services.wm.getMostRecentWindow(null);
-    let location = window.location.href;
-    if (location.includes("/browser.xul") && showToolbox) {
-      // Reopen the toolbox automatically if we are reloading from toolbox shortcut
-      // and are on a browser window.
-      // Wait for a second before opening the toolbox to avoid races
-      // between the old and the new one.
-      let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
-      setTimeout(() => {
-        let { gBrowser } = window;
-        let target = this.TargetFactory.forTab(gBrowser.selectedTab);
-        const { gDevTools } = this.require("resource://devtools/client/framework/gDevTools.jsm");
-        gDevTools.showToolbox(target);
-      }, 1000);
-    } else if (location.includes("/webide.xul")) {
-      window.location.reload();
-    }
   },
 
   /**

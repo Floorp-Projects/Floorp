@@ -88,7 +88,7 @@ public class Utils {
         if (type.equals(Class.class)) {
             // You're doing reflection on Java objects from inside C, returning Class objects
             // to C, generating the corresponding code using this Java program. Really?!
-            return "mozilla::jni::ClassObject::Param";
+            return "mozilla::jni::Class::Param";
         }
 
         if (type.equals(Throwable.class)) {
@@ -120,7 +120,7 @@ public class Utils {
         if (type.equals(Class.class)) {
             // You're doing reflection on Java objects from inside C, returning Class objects
             // to C, generating the corresponding code using this Java program. Really?!
-            return "mozilla::jni::ClassObject::LocalRef";
+            return "mozilla::jni::Class::LocalRef";
         }
 
         if (type.equals(Throwable.class)) {

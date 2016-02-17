@@ -57,7 +57,29 @@
       <menuitem id="context-openlinkintab"
                 label="&openLinkCmdInTab.label;"
                 accesskey="&openLinkCmdInTab.accesskey;"
-                oncommand="gContextMenu.openLinkInTab();"/>
+                usercontextid="0"
+                oncommand="gContextMenu.openLinkInTab(event);"/>
+
+      <menu id="context-openlinkinusercontext-menu"
+            label="&openLinkCmdInContainerTab.label;"
+            accesskey="&openLinkCmdInContainerTab.accesskey;"
+            hidden="true">
+        <menupopup oncommand="gContextMenu.openLinkInTab(event);">
+          <menuitem label="&userContextPersonal.label;"
+                    usercontextid="1"
+                    accesskey="&userContextPersonal.accesskey;"/>
+          <menuitem label="&userContextWork.label;"
+                    usercontextid="2"
+                    accesskey="&userContextWork.accesskey;"/>
+          <menuitem label="&userContextBanking.label;"
+                    usercontextid="3"
+                    accesskey="&userContextBanking.accesskey;"/>
+          <menuitem label="&userContextShopping.label;"
+                    usercontextid="4"
+                    accesskey="&userContextShopping.accesskey;"/>
+        </menupopup>
+      </menu>
+
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"

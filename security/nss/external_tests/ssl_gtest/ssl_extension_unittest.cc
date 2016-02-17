@@ -17,60 +17,62 @@ namespace nss_test {
 
 class TlsExtensionFilter : public TlsHandshakeFilter {
  protected:
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output) {
-    if (handshake_type == kTlsHandshakeClientHello) {
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) {
+    if (header.handshake_type() == kTlsHandshakeClientHello) {
       TlsParser parser(input);
-      if (!FindClientHelloExtensions(parser, version)) {
-        return false;
+      if (!FindClientHelloExtensions(&parser, header)) {
+        return KEEP;
       }
-      return FilterExtensions(parser, input, output);
+      return FilterExtensions(&parser, input, output);
     }
-    if (handshake_type == kTlsHandshakeServerHello) {
+    if (header.handshake_type() == kTlsHandshakeServerHello) {
       TlsParser parser(input);
-      if (!FindServerHelloExtensions(parser, version)) {
-        return false;
+      if (!FindServerHelloExtensions(&parser, header.version())) {
+        return KEEP;
       }
-      return FilterExtensions(parser, input, output);
+      return FilterExtensions(&parser, input, output);
     }
-    return false;
+    return KEEP;
   }
 
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) = 0;
+  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) = 0;
 
  public:
-  static bool FindClientHelloExtensions(TlsParser& parser, uint16_t version) {
-    if (!parser.Skip(2 + 32)) { // version + random
+  static bool FindClientHelloExtensions(TlsParser* parser, const Versioned& header) {
+    if (!parser->Skip(2 + 32)) { // version + random
       return false;
     }
-    if (!parser.SkipVariable(1)) { // session ID
+    if (!parser->SkipVariable(1)) { // session ID
       return false;
     }
-    if (IsDtls(version) && !parser.SkipVariable(1)) { // DTLS cookie
+    if (header.is_dtls() && !parser->SkipVariable(1)) { // DTLS cookie
       return false;
     }
-    if (!parser.SkipVariable(2)) { // cipher suites
+    if (!parser->SkipVariable(2)) { // cipher suites
       return false;
     }
-    if (!parser.SkipVariable(1)) { // compression methods
+    if (!parser->SkipVariable(1)) { // compression methods
       return false;
     }
     return true;
   }
 
-  static bool FindServerHelloExtensions(TlsParser& parser, uint16_t version) {
-    if (!parser.Skip(2 + 32)) { // version + random
+  static bool FindServerHelloExtensions(TlsParser* parser, uint16_t version) {
+    if (!parser->Skip(2 + 32)) { // version + random
       return false;
     }
-    if (!parser.SkipVariable(1)) { // session ID
+    if (!parser->SkipVariable(1)) { // session ID
       return false;
     }
-    if (!parser.Skip(2)) { // cipher suite
+    if (!parser->Skip(2)) { // cipher suite
       return false;
     }
     if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
-      if (!parser.Skip(1)) { // compression method
+      if (!parser->Skip(1)) { // compression method
         return false;
       }
     }
@@ -78,67 +80,70 @@ class TlsExtensionFilter : public TlsHandshakeFilter {
   }
 
  private:
-  bool FilterExtensions(TlsParser& parser,
-                        const DataBuffer& input, DataBuffer* output) {
-    size_t length_offset = parser.consumed();
+  PacketFilter::Action FilterExtensions(TlsParser* parser,
+                                        const DataBuffer& input,
+                                        DataBuffer* output) {
+    size_t length_offset = parser->consumed();
     uint32_t all_extensions;
-    if (!parser.Read(&all_extensions, 2)) {
-      return false; // no extensions, odd but OK
+    if (!parser->Read(&all_extensions, 2)) {
+      return KEEP; // no extensions, odd but OK
     }
-    if (all_extensions != parser.remaining()) {
-      return false; // malformed
+    if (all_extensions != parser->remaining()) {
+      return KEEP; // malformed
     }
 
     bool changed = false;
 
     // Write out the start of the message.
     output->Allocate(input.len());
-    output->Write(0, input.data(), parser.consumed());
-    size_t output_offset = parser.consumed();
+    size_t offset = output->Write(0, input.data(), parser->consumed());
 
-    while (parser.remaining()) {
+    while (parser->remaining()) {
       uint32_t extension_type;
-      if (!parser.Read(&extension_type, 2)) {
-        return false; // malformed
+      if (!parser->Read(&extension_type, 2)) {
+        return KEEP; // malformed
       }
-
-      // Copy extension type.
-      output->Write(output_offset, extension_type, 2);
 
       DataBuffer extension;
-      if (!parser.ReadVariable(&extension, 2)) {
-        return false; // malformed
+      if (!parser->ReadVariable(&extension, 2)) {
+        return KEEP; // malformed
       }
-      output_offset = ApplyFilter(static_cast<uint16_t>(extension_type), extension,
-                                  output, output_offset + 2, &changed);
+
+      DataBuffer filtered;
+      PacketFilter::Action action = FilterExtension(extension_type, extension,
+                                                    &filtered);
+      if (action == DROP) {
+        changed = true;
+        std::cerr << "extension drop: " << extension << std::endl;
+        continue;
+      }
+
+      const DataBuffer* source = &extension;
+      if (action == CHANGE) {
+        EXPECT_GT(0x10000U, filtered.len());
+        changed = true;
+        std::cerr << "extension old: " << extension << std::endl;
+        std::cerr << "extension new: " << filtered << std::endl;
+        source = &filtered;
+      }
+
+      // Write out extension.
+      offset = output->Write(offset, extension_type, 2);
+      offset = output->Write(offset, source->len(), 2);
+      offset = output->Write(offset, *source);
     }
-    output->Truncate(output_offset);
+    output->Truncate(offset);
 
     if (changed) {
       size_t newlen = output->len() - length_offset - 2;
+      EXPECT_GT(0x10000U, newlen);
       if (newlen >= 0x10000) {
-        return false; // bad: size increased too much
+        return KEEP; // bad: size increased too much
       }
       output->Write(length_offset, newlen, 2);
+      return CHANGE;
     }
-    return changed;
-  }
-
-  size_t ApplyFilter(uint16_t extension_type, const DataBuffer& extension,
-                     DataBuffer* output, size_t offset, bool* changed) {
-    const DataBuffer* source = &extension;
-    DataBuffer filtered;
-    if (FilterExtension(extension_type, extension, &filtered) &&
-        filtered.len() < 0x10000) {
-      *changed = true;
-      std::cerr << "extension old: " << extension << std::endl;
-      std::cerr << "extension new: " << filtered << std::endl;
-      source = &filtered;
-    }
-
-    output->Write(offset, source->len(), 2);
-    output->Write(offset + 2, *source);
-    return offset + 2 + source->len();
+    return KEEP;
   }
 };
 
@@ -146,17 +151,17 @@ class TlsExtensionTruncator : public TlsExtensionFilter {
  public:
   TlsExtensionTruncator(uint16_t extension, size_t length)
       : extension_(extension), length_(length) {}
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) {
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
     if (extension_type != extension_) {
-      return false;
+      return KEEP;
     }
     if (input.len() <= length_) {
-      return false;
+      return KEEP;
     }
 
     output->Assign(input.data(), length_);
-    return true;
+    return CHANGE;
   }
  private:
     uint16_t extension_;
@@ -167,15 +172,15 @@ class TlsExtensionDamager : public TlsExtensionFilter {
  public:
   TlsExtensionDamager(uint16_t extension, size_t index)
       : extension_(extension), index_(index) {}
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) {
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
     if (extension_type != extension_) {
-      return false;
+      return KEEP;
     }
 
     *output = input;
     output->data()[index_] += 73; // Increment selected for maximum damage
-    return true;
+    return CHANGE;
   }
  private:
   uint16_t extension_;
@@ -186,14 +191,14 @@ class TlsExtensionReplacer : public TlsExtensionFilter {
  public:
   TlsExtensionReplacer(uint16_t extension, const DataBuffer& data)
       : extension_(extension), data_(data) {}
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) {
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
     if (extension_type != extension_) {
-      return false;
+      return KEEP;
     }
 
     *output = data_;
-    return true;
+    return CHANGE;
   }
  private:
   const uint16_t extension_;
@@ -205,36 +210,31 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
   TlsExtensionInjector(uint16_t ext, DataBuffer& data)
       : extension_(ext), data_(data) {}
 
-  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
-                               const DataBuffer& input, DataBuffer* output) {
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) {
     size_t offset;
-    if (handshake_type == kTlsHandshakeClientHello) {
+    if (header.handshake_type() == kTlsHandshakeClientHello) {
       TlsParser parser(input);
-      if (!TlsExtensionFilter::FindClientHelloExtensions(parser, version)) {
-        return false;
+      if (!TlsExtensionFilter::FindClientHelloExtensions(&parser, header)) {
+        return KEEP;
       }
       offset = parser.consumed();
-    } else if (handshake_type == kTlsHandshakeServerHello) {
+    } else if (header.handshake_type() == kTlsHandshakeServerHello) {
       TlsParser parser(input);
-      if (!TlsExtensionFilter::FindServerHelloExtensions(parser, version)) {
-        return false;
+      if (!TlsExtensionFilter::FindServerHelloExtensions(&parser, header.version())) {
+        return KEEP;
       }
       offset = parser.consumed();
     } else {
-      return false;
+      return KEEP;
     }
 
     *output = input;
 
-    std::cerr << "Pre:" << input << std::endl;
-    std::cerr << "Lof:" << offset << std::endl;
-
     // Increase the size of the extensions.
     uint16_t* len_addr = reinterpret_cast<uint16_t*>(output->data() + offset);
-    std::cerr << "L-p:" << ntohs(*len_addr) << std::endl;
     *len_addr = htons(ntohs(*len_addr) + data_.len() + 4);
-    std::cerr << "L-i:" << ntohs(*len_addr) << std::endl;
-
 
     // Insert the extension type and length.
     DataBuffer type_length;
@@ -246,8 +246,7 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
     // Insert the payload.
     output->Splice(data_, offset + 6);
 
-    std::cerr << "Aft:" << *output << std::endl;
-    return true;
+    return CHANGE;
   }
 
  private:
@@ -260,12 +259,12 @@ class TlsExtensionCapture : public TlsExtensionFilter {
   TlsExtensionCapture(uint16_t ext)
       : extension_(ext), data_() {}
 
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) {
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
     if (extension_type == extension_) {
       data_.Assign(input);
     }
-    return false;
+    return KEEP;
   }
 
   const DataBuffer& extension() const { return data_; }
@@ -329,6 +328,15 @@ class TlsExtensionTest12Plus
   TlsExtensionTest12Plus()
     : TlsExtensionTestBase(TlsConnectTestBase::ToMode(GetParam()),
                            SSL_LIBRARY_VERSION_TLS_1_2) {}
+};
+
+class TlsExtensionTest13
+  : public TlsExtensionTestBase,
+    public ::testing::WithParamInterface<std::string> {
+ public:
+  TlsExtensionTest13()
+    : TlsExtensionTestBase(TlsConnectTestBase::ToMode(GetParam()),
+                           SSL_LIBRARY_VERSION_TLS_1_3) {}
 };
 
 class TlsExtensionTestGeneric
@@ -619,10 +627,14 @@ class SignedCertificateTimestampsExtractor {
  public:
   SignedCertificateTimestampsExtractor(TlsAgent& client) {
     client.SetAuthCertificateCallback(
-      [&](TlsAgent& agent, PRBool checksig, PRBool isServer) {
+      [&](TlsAgent& agent, PRBool checksig, PRBool isServer) -> SECStatus {
         const SECItem *scts = SSL_PeerSignedCertTimestamps(agent.ssl_fd());
-        ASSERT_TRUE(scts);
+        EXPECT_TRUE(scts);
+        if (!scts) {
+          return SECFailure;
+        }
         auth_timestamps_.reset(new DataBuffer(scts->data, scts->len));
+        return SECSuccess;
       }
     );
     client.SetHandshakeCallback(
@@ -713,6 +725,13 @@ TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveBoth) {
 }
 
 
+// Temporary test to verify that we choke on an empty ClientKeyShare.
+// This test will fail when we implement HelloRetryRequest.
+TEST_P(TlsExtensionTest13, EmptyClientKeyShare) {
+  ClientHelloErrorTest(new TlsExtensionTruncator(ssl_tls13_key_share_xtn, 2),
+                       kTlsAlertHandshakeFailure);
+}
+
 INSTANTIATE_TEST_CASE_P(ExtensionTls10, TlsExtensionTestGeneric,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
@@ -723,6 +742,10 @@ INSTANTIATE_TEST_CASE_P(ExtensionVariants, TlsExtensionTestGeneric,
                           TlsConnectTestBase::kTlsV11V12));
 INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
                         TlsConnectTestBase::kTlsModesAll);
+#ifdef NSS_ENABLE_TLS_1_3
+INSTANTIATE_TEST_CASE_P(ExtensionTls13, TlsExtensionTest13,
+                        TlsConnectTestBase::kTlsModesStream);
+#endif
 INSTANTIATE_TEST_CASE_P(ExtensionDgram, TlsExtensionTestDtls,
                         TlsConnectTestBase::kTlsV11V12);
 

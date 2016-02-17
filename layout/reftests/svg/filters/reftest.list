@@ -21,14 +21,14 @@ include svg-filter-chains/reftest.list
 fuzzy(1,42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
-fuzzy-if(d2d,1,6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
+fuzzy-if(d2d||skiaContent,1,6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
 fuzzy-if(d2d,1,10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
 == feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
 
-fuzzy-if(d2d,1,9600) == feComposite-1.svg feComposite-1-ref.svg
-fuzzy-if(d2d,1,10000) == feComposite-2.svg feComposite-2-ref.svg
+fuzzy-if(d2d||skiaContent,1,9600) == feComposite-1.svg feComposite-1-ref.svg
+fuzzy-if(d2d||skiaContent,1,10000) == feComposite-2.svg feComposite-2-ref.svg
 
 == feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
 == feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
@@ -36,10 +36,10 @@ fuzzy-if(d2d,1,10000) == feComposite-2.svg feComposite-2-ref.svg
 == feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
 == feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
 
-fuzzy-if(d2d,1,6400) == feFlood-1.svg feFlood-1-ref.svg
-skip-if(d2d) == feFlood-2.svg feFlood-2-ref.svg
+fuzzy-if(d2d,1,6400) fuzzy-if(skiaContent,1,1600)  == feFlood-1.svg feFlood-1-ref.svg
+skip-if(d2d) fuzzy-if(skiaContent,1,6400) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy(1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
 == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
@@ -93,7 +93,7 @@ fuzzy(1,26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
-== feDisplacementMap-alpha-01.svg pass.svg
+fuzzy-if(skiaContent,1,400) == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 

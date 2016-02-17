@@ -206,7 +206,7 @@ public:
 
     GLsizei Samples() const {
         if (!mDraw)
-            return 1;
+            return 0;
 
         return mDraw->mSamples;
     }

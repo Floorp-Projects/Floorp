@@ -102,7 +102,10 @@
             "items": {
               "choices": [
                 { "$ref": "Permission" },
-                { "type": "string" }
+                {
+                  "type": "string",
+                  "deprecated": "Unknown permission ${value}"
+                }
               ]
             },
             "optional": true
@@ -116,7 +119,8 @@
         },
 
         "additionalProperties": {
-          "type": "any"
+          "type": "any",
+          "deprecated": "An unexpected property was found in the WebExtension manifest"
         }
       },
       {

@@ -32,16 +32,16 @@
           var elem = document.getElementById("svg-elem")
             , elemWasLocked = false;
 
-          document.addEventListener("mozfullscreenchange", function (e) {
-            if (document.mozFullScreenElement === elem) {
+          document.addEventListener("fullscreenchange", function (e) {
+            if (document.fullscreenElement === elem) {
               elemWasLocked = true;
-              document.mozCancelFullScreen();
+              document.exitFullscreen();
             } else {
               opener.ok(elemWasLocked, "Expected SVG elem to become locked.");
               opener.nextTest();
             }
           }, false);
-          elem.mozRequestFullScreen();
+          elem.requestFullscreen();
         }
       </script>
     </pre>

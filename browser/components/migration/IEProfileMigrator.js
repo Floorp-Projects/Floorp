@@ -365,7 +365,7 @@ Settings.prototype = {
               .sort(function (a , b) {
                 let qA = parseFloat(a.split(";q=")[1]) || 1.0;
                 let qB = parseFloat(b.split(";q=")[1]) || 1.0;
-                return qA < qB ? 1 : qA == qB ? 0 : -1;
+                return qB - qA;
               })
               .map(a => a.split(";")[0]);
     }
@@ -431,7 +431,7 @@ Settings.prototype = {
   /**
    * Reads a setting from the Registry and stores the converted result into
    * the appropriate Firefox preference.
-   * 
+   *
    * @param aPath
    *        Registry path under HKCU.
    * @param aKey

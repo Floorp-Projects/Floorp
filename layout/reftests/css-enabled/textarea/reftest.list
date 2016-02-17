@@ -1,9 +1,9 @@
-== textarea-fieldset-1.html textarea-fieldset-ref.html
-== textarea-fieldset-2.html textarea-fieldset-ref.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-1.html textarea-fieldset-ref.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-2.html textarea-fieldset-ref.html
 == textarea-fieldset-3.html textarea-fieldset-ref.html
 == textarea-fieldset-4.html textarea-fieldset-ref.html
-== textarea-fieldset-legend-1.html textarea-fieldset-legend-ref-1.html
-== textarea-fieldset-legend-2.html textarea-fieldset-legend-ref-2.html
-== textarea-fieldset-legend-3.html textarea-fieldset-legend-ref-3.html
-== textarea-fieldset-legend-4.html textarea-fieldset-legend-ref-4.html
-== textarea-fieldset-legend-5.html textarea-fieldset-legend-ref-5.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-1.html textarea-fieldset-legend-ref-1.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-2.html textarea-fieldset-legend-ref-2.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-3.html textarea-fieldset-legend-ref-3.html
+fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-4.html textarea-fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,1,10) == textarea-fieldset-legend-5.html textarea-fieldset-legend-ref-5.html

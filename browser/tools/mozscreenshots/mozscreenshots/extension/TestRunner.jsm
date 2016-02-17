@@ -9,12 +9,18 @@ this.EXPORTED_SYMBOLS = ["TestRunner"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const defaultSetNames = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
+                                  "resource://testing-common/BrowserTestUtils.jsm");
+
 Cu.import("chrome://mozscreenshots/content/Screenshot.jsm");
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
@@ -38,13 +44,14 @@ this.TestRunner = {
   _libDir: null,
 
   init(extensionPath) {
+    log.info("init");
     this._extensionPath = extensionPath;
   },
 
   /**
    * Load specified sets, execute all combinations of them, and capture screenshots.
    */
-  start(setNames = null) {
+  start: Task.async(function*(setNames = null) {
     setNames = setNames || defaultSetNames;
 
     let subDirs = ["mozscreenshots",
@@ -81,18 +88,20 @@ this.TestRunner = {
     // Don't let the caret blink since it causes false positives for image diffs
     Services.prefs.setIntPref("ui.caretBlinkTime", -1);
 
-    return Task.spawn(function* doStart() {
-      for (let i = 0; i < this.combos.length;
-           i++){
-        this.currentComboIndex = i;
-        yield* this._performCombo(this.combos.item(this.currentComboIndex));
-      }
+    let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
+    yield BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
+    yield BrowserTestUtils.browserLoaded(selectedBrowser);
 
-      log.info("Done: Completed " + this.completedCombos + " out of " +
-               this.combos.length + " configurations.");
-      this.cleanup();
-    }.bind(this));
-  },
+    for (let i = 0; i < this.combos.length; i++){
+      this.currentComboIndex = i;
+      yield this._performCombo(this.combos.item(this.currentComboIndex));
+    }
+
+    log.info("Done: Completed " + this.completedCombos + " out of " +
+             this.combos.length + " configurations.");
+    this.cleanup();
+  }),
 
   /**
    * Load sets of configurations from JSMs.
@@ -146,9 +155,15 @@ this.TestRunner = {
 
     function changeConfig(config) {
       log.debug("calling " + config.name);
-      let promise = config.applyConfig();
+      let promise = Promise.resolve(config.applyConfig());
       log.debug("called " + config.name);
-      return promise;
+      // Add a default timeout of 500ms to avoid conflicts when configurations
+      // try to apply at the same time. e.g WindowSize and TabsInTitlebar
+      return promise.then(() => {
+        return new Promise((resolve) => {
+          setTimeout(resolve, 500);
+        });
+      });
     }
 
     try {

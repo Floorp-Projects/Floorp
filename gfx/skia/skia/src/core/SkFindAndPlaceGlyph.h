@@ -14,6 +14,7 @@
 #include "SkPaint.h"
 #include "SkTemplates.h"
 #include "SkUtils.h"
+#include <utility>
 
 // Calculate a type with the same size as the max of all the Ts.
 // This must be top level because the is no specialization of inner classes.
@@ -29,6 +30,16 @@ struct SkMaxSizeOf<H, Ts...> {
     static const size_t value =
         sizeof(H) >= SkMaxSizeOf<Ts...>::value ? sizeof(H) : SkMaxSizeOf<Ts...>::value;
 };
+
+
+// This is a temporary helper function to work around a bug in the code generation
+// for aarch64 (arm) on GCC 4.9. This bug does not show up on other platforms, so it
+// seems to be an aarch64 backend problem.
+//
+// GCC 4.9 on ARM64 does not generate the proper constructor code for PositionReader or
+// GlyphFindAndPlace. The vtable is not set properly without adding the fixme code.
+// The implementation is in SkDraw.cpp.
+extern void FixGCC49Arm64Bug(int v);
 
 class SkFindAndPlaceGlyph {
 public:
@@ -81,7 +92,7 @@ private:
             #define alignof __alignof
         #endif
             SkASSERT(alignof(Variant) <= alignof(Space));
-            new(&fSpace) Variant(skstd::forward<Args>(args)...);
+            new(&fSpace) Variant(std::forward<Args>(args)...);
         }
 
     private:
@@ -229,6 +240,9 @@ private:
     public:
         virtual ~PositionReaderInterface() { }
         virtual SkPoint nextPoint() = 0;
+        // This is only here to fix a GCC 4.9 aarch64 code gen bug.
+        // See comment at the top of the file.
+        virtual int forceUseForBug() = 0;
     };
 
     class HorizontalPositions final : public PositionReaderInterface {
@@ -240,6 +254,8 @@ private:
             SkScalar x = *fPositions++;
             return {x, 0};
         }
+
+        int forceUseForBug() override { return 1; }
 
     private:
         const SkScalar* fPositions;
@@ -255,6 +271,8 @@ private:
             fPositions += 2;
             return to_return;
         }
+
+        int forceUseForBug() override { return 2; }
 
     private:
         const SkScalar* fPositions;
@@ -410,7 +428,9 @@ private:
     class GlyphFindAndPlaceSubpixel final : public GlyphFindAndPlaceInterface<ProcessOneGlyph> {
     public:
         GlyphFindAndPlaceSubpixel(LookupGlyph& glyphFinder)
-            : fGlyphFinder(glyphFinder) { }
+            : fGlyphFinder(glyphFinder) {
+            FixGCC49Arm64Bug(1);
+        }
 
         SkPoint findAndPositionGlyph(
             const char** text, SkPoint position, ProcessOneGlyph&& processOneGlyph) override {
@@ -464,6 +484,7 @@ private:
     public:
         GlyphFindAndPlaceFullPixel(LookupGlyph& glyphFinder)
             : fGlyphFinder(glyphFinder) {
+            FixGCC49Arm64Bug(2);
             // Kerning can only be used with SkPaint::kLeft_Align
             static_assert(!kUseKerning || SkPaint::kLeft_Align == kTextAlignment,
                           "Kerning can only be used with left aligned text.");
@@ -589,7 +610,7 @@ inline void SkFindAndPlaceGlyph::ProcessPosText(
             SkPoint mappedPoint = mapper.TranslationMapper::map(
                 positions.HorizontalPositions::nextPoint());
             positioner.Positioner::findAndPositionGlyph(
-                &cursor, mappedPoint, skstd::forward<ProcessOneGlyph>(processOneGlyph));
+                &cursor, mappedPoint, std::forward<ProcessOneGlyph>(processOneGlyph));
         }
         return;
     }
@@ -601,6 +622,7 @@ inline void SkFindAndPlaceGlyph::ProcessPosText(
             } else {
                 to_init->initialize<HorizontalPositions>(pos);
             }
+            positionReader->forceUseForBug();
         }
     };
 
@@ -617,7 +639,7 @@ inline void SkFindAndPlaceGlyph::ProcessPosText(
         }
     };
 
-    GlyphFindAndPlace<ProcessOneGlyph> findAndPosition{
+    GlyphFindAndPlace<ProcessOneGlyph> findAndPosition {
         [&](typename GlyphFindAndPlace<ProcessOneGlyph>::Variants* to_init) {
             if (cache->isSubpixel()) {
                 switch (textAlignment) {
@@ -660,7 +682,7 @@ inline void SkFindAndPlaceGlyph::ProcessPosText(
     while (text < stop) {
         SkPoint mappedPoint = mapper->map(positionReader->nextPoint());
         findAndPosition->findAndPositionGlyph(
-            &text, mappedPoint, skstd::forward<ProcessOneGlyph>(processOneGlyph));
+            &text, mappedPoint, std::forward<ProcessOneGlyph>(processOneGlyph));
     }
 }
 
@@ -704,7 +726,7 @@ inline void SkFindAndPlaceGlyph::ProcessText(
     while (text < stop) {
         current =
             findAndPosition->findAndPositionGlyph(
-                &text, current, skstd::forward<ProcessOneGlyph>(processOneGlyph));
+                &text, current, std::forward<ProcessOneGlyph>(processOneGlyph));
 
     }
 }

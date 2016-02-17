@@ -41,21 +41,24 @@
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/code_modules.h"
-#include "google_breakpad/processor/minidump.h"
+#include "google_breakpad/processor/dump_context.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
-#include "common/logging.h"
+#include "processor/logging.h"
 #include "processor/stackwalker_ppc.h"
+#include "processor/stackwalker_ppc64.h"
 #include "processor/stackwalker_sparc.h"
 #include "processor/stackwalker_x86.h"
 #include "processor/stackwalker_amd64.h"
 #include "processor/stackwalker_arm.h"
+#include "processor/stackwalker_arm64.h"
+#include "processor/stackwalker_mips.h"
 
 namespace google_breakpad {
 
-const int Stackwalker::kRASearchWords = 30;
+const int Stackwalker::kRASearchWords = 40;
 
 uint32_t Stackwalker::max_frames_ = 1024;
 bool Stackwalker::max_frames_set_ = false;
@@ -73,23 +76,53 @@ Stackwalker::Stackwalker(const SystemInfo* system_info,
   assert(frame_symbolizer_);
 }
 
+void InsertSpecialAttentionModule(
+    StackFrameSymbolizer::SymbolizerResult symbolizer_result,
+    const CodeModule* module,
+    vector<const CodeModule*>* modules) {
+  if (!module) {
+    return;
+  }
+  assert(symbolizer_result == StackFrameSymbolizer::kError ||
+         symbolizer_result == StackFrameSymbolizer::kWarningCorruptSymbols);
+  bool found = false;
+  vector<const CodeModule*>::iterator iter;
+  for (iter = modules->begin(); iter != modules->end(); ++iter) {
+    if (*iter == module) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    BPLOG(INFO) << ((symbolizer_result == StackFrameSymbolizer::kError) ?
+                       "Couldn't load symbols for: " :
+                       "Detected corrupt symbols for: ")
+                << module->debug_file() << "|" << module->debug_identifier();
+    modules->push_back(module);
+  }
+}
 
-bool Stackwalker::Walk(CallStack* stack,
-                       vector<const CodeModule*>* modules_without_symbols) {
+bool Stackwalker::Walk(
+    CallStack* stack,
+    vector<const CodeModule*>* modules_without_symbols,
+    vector<const CodeModule*>* modules_with_corrupt_symbols) {
   BPLOG_IF(ERROR, !stack) << "Stackwalker::Walk requires |stack|";
   assert(stack);
   stack->Clear();
 
   BPLOG_IF(ERROR, !modules_without_symbols) << "Stackwalker::Walk requires "
                                             << "|modules_without_symbols|";
+  BPLOG_IF(ERROR, !modules_without_symbols) << "Stackwalker::Walk requires "
+                                            << "|modules_with_corrupt_symbols|";
   assert(modules_without_symbols);
+  assert(modules_with_corrupt_symbols);
 
   // Begin with the context frame, and keep getting callers until there are
   // no more.
 
   // Keep track of the number of scanned or otherwise dubious frames seen
   // so far, as the caller may have set a limit.
-  uint32_t n_scanned_frames = 0;
+  uint32_t scanned_frames = 0;
 
   // Take ownership of the pointer returned by GetContextFrame.
   scoped_ptr<StackFrame> frame(GetContextFrame());
@@ -103,30 +136,24 @@ bool Stackwalker::Walk(CallStack* stack,
     StackFrameSymbolizer::SymbolizerResult symbolizer_result =
         frame_symbolizer_->FillSourceLineInfo(modules_, system_info_,
                                              frame.get());
-    if (symbolizer_result == StackFrameSymbolizer::kInterrupt) {
-      BPLOG(INFO) << "Stack walk is interrupted.";
-      return false;
-    }
-
-    // Keep track of modules that have no symbols.
-    if (symbolizer_result == StackFrameSymbolizer::kError &&
-        frame->module != NULL) {
-      bool found = false;
-      vector<const CodeModule*>::iterator iter;
-      for (iter = modules_without_symbols->begin();
-           iter != modules_without_symbols->end();
-           ++iter) {
-        if (*iter == frame->module) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        BPLOG(INFO) << "Couldn't load symbols for: "
-                    << frame->module->debug_file() << "|"
-                    << frame->module->debug_identifier();
-        modules_without_symbols->push_back(frame->module);
-      }
+    switch (symbolizer_result) {
+      case StackFrameSymbolizer::kInterrupt:
+        BPLOG(INFO) << "Stack walk is interrupted.";
+        return false;
+        break;
+      case StackFrameSymbolizer::kError:
+        InsertSpecialAttentionModule(symbolizer_result, frame->module,
+                                     modules_without_symbols);
+        break;
+      case StackFrameSymbolizer::kWarningCorruptSymbols:
+        InsertSpecialAttentionModule(symbolizer_result, frame->module,
+                                     modules_with_corrupt_symbols);
+        break;
+      case StackFrameSymbolizer::kNoError:
+        break;
+      default:
+        assert(false);
+        break;
     }
 
     // Keep track of the number of dubious frames so far.
@@ -134,7 +161,7 @@ bool Stackwalker::Walk(CallStack* stack,
        case StackFrame::FRAME_TRUST_NONE:
        case StackFrame::FRAME_TRUST_SCAN:
        case StackFrame::FRAME_TRUST_CFI_SCAN:
-         n_scanned_frames++;
+         scanned_frames++;
          break;
       default:
         break;
@@ -144,7 +171,7 @@ bool Stackwalker::Walk(CallStack* stack,
     // over the frame, because the stack now owns it.
     stack->frames_.push_back(frame.release());
     if (stack->frames_.size() > max_frames_) {
-      // Only emit an error message in the case where the limit that we
+      // Only emit an error message in the case where the limit
       // reached is the default limit, not set by the user.
       if (!max_frames_set_)
         BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
@@ -152,7 +179,7 @@ bool Stackwalker::Walk(CallStack* stack,
     }
 
     // Get the next frame and take ownership.
-    bool stack_scan_allowed = n_scanned_frames < max_frames_scanned_;
+    bool stack_scan_allowed = scanned_frames < max_frames_scanned_;
     frame.reset(GetCallerFrame(stack, stack_scan_allowed));
   }
 
@@ -163,7 +190,7 @@ bool Stackwalker::Walk(CallStack* stack,
 // static
 Stackwalker* Stackwalker::StackwalkerForCPU(
     const SystemInfo* system_info,
-    MinidumpContext* context,
+    DumpContext* context,
     MemoryRegion* memory,
     const CodeModules* modules,
     StackFrameSymbolizer* frame_symbolizer) {
@@ -188,6 +215,12 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                            memory, modules, frame_symbolizer);
       break;
 
+    case MD_CONTEXT_PPC64:
+      cpu_stackwalker = new StackwalkerPPC64(system_info,
+                                             context->GetContextPPC64(),
+                                             memory, modules, frame_symbolizer);
+      break;
+
     case MD_CONTEXT_AMD64:
       cpu_stackwalker = new StackwalkerAMD64(system_info,
                                              context->GetContextAMD64(),
@@ -199,8 +232,15 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              context->GetContextSPARC(),
                                              memory, modules, frame_symbolizer);
       break;
+ 
+    case MD_CONTEXT_MIPS:
+      cpu_stackwalker = new StackwalkerMIPS(system_info,
+                                            context->GetContextMIPS(),
+                                            memory, modules, frame_symbolizer);
+      break;
 
     case MD_CONTEXT_ARM:
+    {
       int fp_register = -1;
       if (system_info->os_short == "ios")
         fp_register = MD_CONTEXT_ARM_REG_IOS_FP;
@@ -208,6 +248,14 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                            context->GetContextARM(),
                                            fp_register, memory, modules,
                                            frame_symbolizer);
+      break;
+    }
+    
+    case MD_CONTEXT_ARM64:
+      cpu_stackwalker = new StackwalkerARM64(system_info,
+                                             context->GetContextARM64(),
+                                             memory, modules,
+                                             frame_symbolizer);
       break;
   }
 
@@ -234,7 +282,8 @@ bool Stackwalker::InstructionAddressSeemsValid(uint64_t address) {
     return true;
   }
 
-  if (symbolizer_result != StackFrameSymbolizer::kNoError) {
+  if (symbolizer_result != StackFrameSymbolizer::kNoError &&
+      symbolizer_result != StackFrameSymbolizer::kWarningCorruptSymbols) {
     // Some error occurred during symbolization, but the address is within a
     // known module
     return true;

@@ -36,12 +36,7 @@
 #include <cstdlib>
 
 #ifdef XP_LINUX
-#ifdef ANDROID
-// Android NDK doesn't contain ucontext.h; use Breakpad's copy.
-# include "common/android/include/sys/ucontext.h"
-#else
-# include <ucontext.h>
-#endif
+#include <ucontext.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #endif

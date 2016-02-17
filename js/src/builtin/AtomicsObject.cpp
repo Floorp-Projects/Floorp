@@ -508,11 +508,19 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     HandleValue v = args.get(0);
-    if (!v.isInt32()) {
-        args.rval().setBoolean(false);
-        return true;
+    int32_t size;
+    if (v.isInt32()) {
+        size = v.toInt32();
+    } else {
+        double dsize;
+        if (!ToInteger(cx, v, &dsize))
+            return false;
+        if (!mozilla::NumberIsInt32(dsize, &size)) {
+            args.rval().setBoolean(false);
+            return true;
+        }
     }
-    args.rval().setBoolean(jit::AtomicOperations::isLockfree(v.toInt32()));
+    args.rval().setBoolean(jit::AtomicOperations::isLockfree(size));
     return true;
 }
 
@@ -877,8 +885,8 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     HandleValue objv = args.get(0);
     HandleValue idx1v = args.get(1);
     HandleValue countv = args.get(2);
-    HandleValue valv = args.get(3);
-    HandleValue idx2v = args.get(4);
+    HandleValue idx2v = args.get(3);
+    HandleValue valv = args.get(4);
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);

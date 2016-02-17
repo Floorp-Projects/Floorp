@@ -388,7 +388,9 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
     return;
   }
 
-  mozilla::dom::Element* animationTarget = effect->GetTarget();
+  mozilla::dom::Element* animationTarget;
+  nsCSSPseudoElements::Type pseudoType;
+  effect->GetTarget(animationTarget, pseudoType);
   if (!animationTarget) {
     return;
   }

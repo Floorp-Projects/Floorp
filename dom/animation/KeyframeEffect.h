@@ -20,6 +20,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationEffectTiming.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h" // TimingParams
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
@@ -39,6 +40,8 @@ struct AnimationCollection;
 class AnimValuesStyleRule;
 
 namespace dom {
+class ElementOrCSSPseudoElement;
+class OwningElementOrCSSPseudoElement;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
@@ -188,34 +191,17 @@ public:
   // KeyframeEffectReadOnly interface
   static already_AddRefed<KeyframeEffectReadOnly>
   Constructor(const GlobalObject& aGlobal,
-              Element* aTarget,
+              const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
   {
-    return Constructor(aGlobal, aTarget, aFrames,
-                       TimingParams::FromOptionsUnion(aOptions, aTarget),
-                       aRv);
+    return ConstructKeyframeEffect<KeyframeEffectReadOnly>(
+      aGlobal, aTarget, aFrames,
+      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
   }
 
-  // More generalized version for Animatable.animate.
-  // Not exposed to content.
-  static already_AddRefed<KeyframeEffectReadOnly>
-  Constructor(const GlobalObject& aGlobal,
-              Element* aTarget,
-              JS::Handle<JSObject*> aFrames,
-              const TimingParams& aTiming,
-              ErrorResult& aRv);
-
-  Element* GetTarget() const {
-    // Currently we never return animations from the API whose effect
-    // targets a pseudo-element so this should never be called when
-    // mPseudoType is not 'none' (see bug 1174575).
-    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
-               "Requesting the target of a KeyframeEffect that targets a"
-               " pseudo-element is not yet supported.");
-    return mTarget;
-  }
+  void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
@@ -334,7 +320,21 @@ public:
   inline AnimationCollection* GetCollection() const;
 
 protected:
+  KeyframeEffectReadOnly(nsIDocument* aDocument,
+                         Element* aTarget,
+                         nsCSSPseudoElements::Type aPseudoType,
+                         AnimationEffectTimingReadOnly* aTiming);
+
   virtual ~KeyframeEffectReadOnly();
+
+  template<typename KeyframeEffectType>
+  static already_AddRefed<KeyframeEffectType>
+  ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                          const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                          JS::Handle<JSObject*> aFrames,
+                          const TimingParams& aTiming,
+                          ErrorResult& aRv);
+
   void ResetIsRunningOnCompositor();
 
   // This effect is registered with its target element so long as:
@@ -351,6 +351,7 @@ protected:
   static void BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
+    nsCSSPseudoElements::Type aPseudoType,
     JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv);
@@ -387,6 +388,43 @@ private:
   static bool IsGeometricProperty(const nsCSSProperty aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();
+};
+
+class KeyframeEffect : public KeyframeEffectReadOnly
+{
+public:
+  KeyframeEffect(nsIDocument* aDocument,
+                 Element* aTarget,
+                 nsCSSPseudoElements::Type aPseudoType,
+                 const TimingParams& aTiming);
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<KeyframeEffect>
+  Constructor(const GlobalObject& aGlobal,
+              const Nullable<ElementOrCSSPseudoElement>& aTarget,
+              JS::Handle<JSObject*> aFrames,
+              const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+              ErrorResult& aRv)
+  {
+    return ConstructKeyframeEffect<KeyframeEffect>(
+      aGlobal, aTarget, aFrames,
+      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
+  }
+
+  // More generalized version for Animatable.animate.
+  // Not exposed to content.
+  static already_AddRefed<KeyframeEffect>
+  inline Constructor(const GlobalObject& aGlobal,
+                     const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                     JS::Handle<JSObject*> aFrames,
+                     const TimingParams& aTiming,
+                     ErrorResult& aRv)
+  {
+    return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
+                                                   aTiming, aRv);
+  }
 };
 
 } // namespace dom

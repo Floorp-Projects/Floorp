@@ -534,9 +534,12 @@ function check_JSON_backup(aIsAutomaticBackup) {
  */
 function frecencyForUrl(aURI)
 {
-  let url = aURI instanceof Ci.nsIURI ? aURI.spec
-                                      : aURI instanceof URL ? aURI.href
-                                                            : aURI;
+  let url = aURI;
+  if (aURI instanceof Ci.nsIURI) {
+    url = aURI.spec;
+  } else if (aURI instanceof URL) {
+    url = aURI.href;
+  }
   let stmt = DBConn().createStatement(
     "SELECT frecency FROM moz_places WHERE url = ?1"
   );

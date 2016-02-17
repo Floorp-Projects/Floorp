@@ -47,9 +47,11 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
         FFMPEG_LOG("Requesting pixel format YUV444P.");
         return AV_PIX_FMT_YUV444P;
       case AV_PIX_FMT_YUV420P:
-      case AV_PIX_FMT_YUVJ420P:
         FFMPEG_LOG("Requesting pixel format YUV420P.");
         return AV_PIX_FMT_YUV420P;
+      case AV_PIX_FMT_YUVJ420P:
+        FFMPEG_LOG("Requesting pixel format YUVJ420P.");
+        return AV_PIX_FMT_YUVJ420P;
       default:
         break;
     }

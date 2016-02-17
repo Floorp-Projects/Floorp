@@ -40,34 +40,10 @@
 #ifndef GOOGLE_BREAKPAD_COMMON_BREAKPAD_TYPES_H__
 #define GOOGLE_BREAKPAD_COMMON_BREAKPAD_TYPES_H__
 
-#ifndef _WIN32
-
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif  /* __STDC_FORMAT_MACROS */
 #include <inttypes.h>
-
-#else  /* !_WIN32 */
-
-#if _MSC_VER >= 1600
-#include <stdint.h>
-#elif defined(BREAKPAD_CUSTOM_STDINT_H)
-/* Visual C++ Pre-2010 did not ship a stdint.h, so allow
- * consumers of this library to provide their own because
- * there are often subtle type incompatibilities.
- */
-#include BREAKPAD_CUSTOM_STDINT_H
-#else
-#include <wtypes.h>
-
-typedef unsigned __int8  uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef __int32 int32_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#endif
-
-#endif  /* !_WIN32 */
 
 typedef struct {
   uint64_t high;

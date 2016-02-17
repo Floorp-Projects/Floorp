@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -108,7 +107,7 @@ public class CollectionKeys {
    *          If non-null, the sync key bundle to decrypt <code>keys</code> with.
    */
   public void setKeyPairsFromWBO(CryptoRecord keys, KeyBundle syncKeyBundle)
-      throws CryptoException, IOException, ParseException, NonObjectJSONException {
+      throws CryptoException, IOException, NonObjectJSONException {
     if (keys == null) {
       throw new IllegalArgumentException("cannot set key pairs from null record");
     }

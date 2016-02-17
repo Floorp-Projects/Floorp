@@ -30,7 +30,7 @@ class PrefsHelper
                                jni::String::LocalRef& aPrefName)
     {
         if (NS_FAILED(aObsServ->NotifyObservers(aVariant, "android-get-pref",
-                                                nsString(aPrefName).get()))) {
+                                                aPrefName->ToString().get()))) {
             return false;
         }
 
@@ -68,8 +68,8 @@ class PrefsHelper
         }
 
         const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                jni::Param<jni::String>(strVal, aPrefName.Env()) :
-                jni::Param<jni::String>(nullptr);
+                jni::StringParam(strVal, aPrefName.Env()) :
+                jni::StringParam(nullptr);
 
         widget::PrefsHelper::CallPrefHandler(
                 aPrefHandler, type, aPrefName, boolVal, intVal, jstrVal);
@@ -95,13 +95,13 @@ class PrefsHelper
                 rv = aVariant->SetAsInt32(aIntVal);
                 break;
             case widget::PrefsHelper::PREF_STRING:
-                rv = aVariant->SetAsAString(nsString(aStrVal));
+                rv = aVariant->SetAsAString(aStrVal->ToString());
                 break;
         }
 
         if (NS_SUCCEEDED(rv)) {
             rv = aObsServ->NotifyObservers(aVariant, "android-set-pref",
-                                           nsString(aPrefName).get());
+                                           aPrefName->ToString().get());
         }
 
         uint16_t varType = nsIDataType::VTYPE_EMPTY;
@@ -121,24 +121,24 @@ class PrefsHelper
         }
 
         NS_WARNING(nsPrintfCString("Failed to set pref %s",
-                                   nsCString(aPrefName).get()).get());
+                                   aPrefName->ToCString().get()).get());
         // Pretend we handled the pref.
         return true;
     }
 
 public:
-    static void GetPrefs(const jni::ClassObject::LocalRef& aCls,
+    static void GetPrefs(const jni::Class::LocalRef& aCls,
                          jni::ObjectArray::Param aPrefNames,
                          jni::Object::Param aPrefHandler)
     {
-        nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames.GetElements());
+        nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames->GetElements());
         nsCOMPtr<nsIObserverService> obsServ;
         nsCOMPtr<nsIWritableVariant> value;
         nsAdoptingString strVal;
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
-            const nsCString& name = nsCString(nameStr);
+            const nsCString& name = nameStr->ToCString();
 
             int32_t type = widget::PrefsHelper::PREF_INVALID;
             bool boolVal = false;
@@ -185,8 +185,8 @@ public:
             }
 
             const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                    jni::Param<jni::String>(strVal, aCls.Env()) :
-                    jni::Param<jni::String>(nullptr);
+                    jni::StringParam(strVal, aCls.Env()) :
+                    jni::StringParam(nullptr);
 
             widget::PrefsHelper::CallPrefHandler(
                     aPrefHandler, type, nameStr, boolVal, intVal, jstrVal);
@@ -204,7 +204,7 @@ public:
                         int32_t aIntVal,
                         jni::String::Param aStrVal)
     {
-        const nsCString& name = nsCString(aPrefName);
+        const nsCString& name = aPrefName->ToCString();
 
         if (Preferences::GetType(name.get()) == nsIPrefBranch::PREF_INVALID) {
             // No pref; try asking first.
@@ -225,7 +225,7 @@ public:
                 Preferences::SetInt(name.get(), aIntVal);
                 break;
             case widget::PrefsHelper::PREF_STRING:
-                Preferences::SetString(name.get(), nsString(aStrVal));
+                Preferences::SetString(name.get(), aStrVal->ToString());
                 break;
             default:
                 MOZ_ASSERT(false, "Invalid pref type");
@@ -236,7 +236,7 @@ public:
         }
     }
 
-    static void AddObserver(const jni::ClassObject::LocalRef& aCls,
+    static void AddObserver(const jni::Class::LocalRef& aCls,
                             jni::ObjectArray::Param aPrefNames,
                             jni::Object::Param aPrefHandler,
                             jni::ObjectArray::Param aPrefsToObserve)
@@ -249,29 +249,29 @@ public:
         }
 
         nsTArray<jni::Object::LocalRef> nameRefArray(
-                aPrefsToObserve.GetElements());
+                aPrefsToObserve->GetElements());
         nsAppShell* const appShell = nsAppShell::Get();
         MOZ_ASSERT(appShell);
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
             MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Preferences::AddStrongObserver(
-                    appShell, nsCString(nameStr).get())));
+                    appShell, nameStr->ToCString().get())));
         }
     }
 
-    static void RemoveObserver(const jni::ClassObject::LocalRef& aCls,
+    static void RemoveObserver(const jni::Class::LocalRef& aCls,
                                jni::ObjectArray::Param aPrefsToUnobserve)
     {
         nsTArray<jni::Object::LocalRef> nameRefArray(
-                aPrefsToUnobserve.GetElements());
+                aPrefsToUnobserve->GetElements());
         nsAppShell* const appShell = nsAppShell::Get();
         MOZ_ASSERT(appShell);
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
             MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Preferences::RemoveObserver(
-                    appShell, nsCString(nameStr).get())));
+                    appShell, nameStr->ToCString().get())));
         }
     }
 
@@ -307,8 +307,8 @@ public:
         }
 
         const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                jni::Param<jni::String>(strVal) :
-                jni::Param<jni::String>(nullptr);
+                jni::StringParam(strVal) :
+                jni::StringParam(nullptr);
 
         widget::PrefsHelper::OnPrefChange(name, type, boolVal, intVal, jstrVal);
     }

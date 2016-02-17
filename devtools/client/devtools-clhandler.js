@@ -51,8 +51,13 @@ devtoolsCommandlineHandler.prototype = {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
       let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      // Load the browser devtools main module as the loader's main module.
-      Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+      // Ensure loading main devtools module that hooks up into browser UI
+      // and initialize all devtools machinery.
+      // browser.xul or main top-level document used to load this module,
+      // but this code may be called without/before it.
+      // Bug 1247203 should ease handling this.
+      require("devtools/client/framework/devtools-browser");
+
       let hudservice = require("devtools/client/webconsole/hudservice");
       let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
       hudservice.toggleBrowserConsole().then(null, console.error);
@@ -71,9 +76,10 @@ devtoolsCommandlineHandler.prototype = {
     Services.obs.addObserver(function onStartup(window) {
       Services.obs.removeObserver(onStartup,
                                   "browser-delayed-startup-finished");
-      const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
-      const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      let target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
+      const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      const {gDevTools} = require("devtools/client/framework/devtools");
+      const {TargetFactory} = require("devtools/client/framework/target");
+      let target = TargetFactory.forTab(window.gBrowser.selectedTab);
       gDevTools.showToolbox(target);
     }, "browser-delayed-startup-finished", false);
   },

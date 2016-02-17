@@ -9,7 +9,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
+const {gDevTools} = require("devtools/client/framework/devtools");
 const events  = require("devtools/shared/event-emitter");
 
 /**

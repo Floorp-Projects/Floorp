@@ -3480,6 +3480,10 @@ struct nsStyleSVGReset
     return !mFilters.IsEmpty();
   }
 
+  bool HasClipPath() const {
+    return mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE;
+  }
+
   bool HasNonScalingStroke() const {
     return mVectorEffect == NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE;
   }

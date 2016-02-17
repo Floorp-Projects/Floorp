@@ -2184,23 +2184,32 @@ class MOZ_STACK_CLASS StringRegExpGuard
         /* Build RegExp from pattern string. */
         RootedString opt(cx);
         if (optarg < args.length()) {
+            // flag argument is enabled only in release build by default.
+            // In non-release build, both telemetry and warning are still
+            // enabled, but the value of flag argument is ignored.
+
             if (JSScript* script = cx->currentScript()) {
                 const char* filename = script->filename();
                 cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedFlagsArgument);
             }
 
+            bool flagArgumentEnabled = cx->runtime()->options().matchFlagArgument();
             if (!cx->compartment()->warnedAboutFlagsArgument) {
                 if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                                  JSMSG_DEPRECATED_FLAGS_ARG))
+                                                  flagArgumentEnabled
+                                                  ? JSMSG_DEPRECATED_FLAGS_ARG
+                                                  : JSMSG_OBSOLETE_FLAGS_ARG))
+                {
                     return false;
+                }
                 cx->compartment()->warnedAboutFlagsArgument = true;
             }
 
-            opt = ToString<CanGC>(cx, args[optarg]);
-            if (!opt)
-                return false;
-        } else {
-            opt = nullptr;
+            if (flagArgumentEnabled) {
+                opt = ToString<CanGC>(cx, args[optarg]);
+                if (!opt)
+                    return false;
+            }
         }
 
         Rooted<JSAtom*> pat(cx);

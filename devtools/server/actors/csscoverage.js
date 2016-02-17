@@ -12,10 +12,8 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const { method, custom, RetVal, Arg } = protocol;
+const {gDevTools} = require("devtools/client/framework/devtools");
 
-loader.lazyGetter(this, "gDevTools", () => {
-  return require("resource://devtools/client/framework/gDevTools.jsm").gDevTools;
-});
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
 });

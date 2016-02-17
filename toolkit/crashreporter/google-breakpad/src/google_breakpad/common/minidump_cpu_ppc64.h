@@ -112,18 +112,23 @@ typedef struct {
   MDVectorSaveAreaPPC   vector_save;
 } MDRawContextPPC64;  /* Based on ppc_thread_state */
 
+/* Indices into gpr for registers with a dedicated or conventional purpose. */
+enum MDPPC64RegisterNumbers {
+  MD_CONTEXT_PPC64_REG_SP = 1
+};
+
 /* For (MDRawContextPPC).context_flags.  These values indicate the type of
  * context stored in the structure.  MD_CONTEXT_PPC is Breakpad-defined.  Its
  * value was chosen to avoid likely conflicts with MD_CONTEXT_* for other
  * CPUs. */
-#define MD_CONTEXT_PPC                0x20000000
-#define MD_CONTEXT_PPC_BASE           (MD_CONTEXT_PPC | 0x00000001)
-#define MD_CONTEXT_PPC_FLOATING_POINT (MD_CONTEXT_PPC | 0x00000008)
-#define MD_CONTEXT_PPC_VECTOR         (MD_CONTEXT_PPC | 0x00000020)
+#define MD_CONTEXT_PPC64                0x01000000
+#define MD_CONTEXT_PPC64_BASE           (MD_CONTEXT_PPC64 | 0x00000001)
+#define MD_CONTEXT_PPC64_FLOATING_POINT (MD_CONTEXT_PPC64 | 0x00000008)
+#define MD_CONTEXT_PPC64_VECTOR         (MD_CONTEXT_PPC64 | 0x00000020)
 
-#define MD_CONTEXT_PPC_FULL           MD_CONTEXT_PPC_BASE
-#define MD_CONTEXT_PPC_ALL            (MD_CONTEXT_PPC_FULL | \
-                                       MD_CONTEXT_PPC_FLOATING_POINT | \
-                                       MD_CONTEXT_PPC_VECTOR)
+#define MD_CONTEXT_PPC64_FULL           MD_CONTEXT_PPC64_BASE
+#define MD_CONTEXT_PPC64_ALL            (MD_CONTEXT_PPC64_FULL | \
+                                         MD_CONTEXT_PPC64_FLOATING_POINT | \
+                                         MD_CONTEXT_PPC64_VECTOR)
 
 #endif /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_PPC64_H__ */

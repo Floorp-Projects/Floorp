@@ -96,8 +96,7 @@ public:
 /// In the event of a crash, the crash report is annotated with first and
 /// the last few of these errors, under the key GraphicsCriticalError.
 /// The total number of errors stored in the crash report is controlled
-/// by preference gfx.logging.crash.length (default is six, so by default,
-/// the first as well as the last five would show up in the crash log.)
+/// by preference gfx.logging.crash.length.
 ///
 /// On platforms that support MOZ_LOGGING, the story is slightly more involved.
 /// In that case, unless gfx.logging.level is set to 4 or higher, the output

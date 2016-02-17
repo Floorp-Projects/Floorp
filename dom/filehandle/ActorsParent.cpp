@@ -897,7 +897,7 @@ FileHandleThreadPool::Enqueue(FileHandle* aFileHandle,
     if (aFileHandleOp) {
       fileHandleQueue->Enqueue(aFileHandleOp);
       if (aFinish) {
-        existingFileHandleQueue->Finish();
+        fileHandleQueue->Finish();
       }
     }
   }

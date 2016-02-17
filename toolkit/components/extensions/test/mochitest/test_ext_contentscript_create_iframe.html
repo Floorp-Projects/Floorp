@@ -27,21 +27,21 @@
 add_task(function* test_contentscript_create_iframe() {
   function backgroundScript() {
     browser.runtime.onMessage.addListener((msg, sender) => {
-      let { name, availableAPIs, manifest, testGetManifest } = msg;
+      let {name, availableAPIs, manifest, testGetManifest} = msg;
       let hasExtTabsAPI = availableAPIs.indexOf("tabs") > 0;
       let hasExtWindowsAPI = availableAPIs.indexOf("windows") > 0;
 
       browser.test.assertFalse(hasExtTabsAPI, "the created iframe should not be able to use privileged APIs (tabs)");
       browser.test.assertFalse(hasExtWindowsAPI, "the created iframe should not be able to use privileged APIs (windows)");
 
-      let { applications: { gecko: { id: expectedManifestGeckoId } } } = chrome.runtime.getManifest();
-      let { applications: { gecko: { id: actualManifestGeckoId } } } = manifest;
+      let {applications: {gecko: {id: expectedManifestGeckoId}}} = chrome.runtime.getManifest();
+      let {applications: {gecko: {id: actualManifestGeckoId}}} = manifest;
 
       browser.test.assertEq(actualManifestGeckoId, expectedManifestGeckoId,
                             "the add-on manifest should be accessible from the created iframe"
       );
 
-      let { applications: { gecko: { id: testGetManifestGeckoId } } } = testGetManifest;
+      let {applications: {gecko: {id: testGetManifestGeckoId}}} = testGetManifest;
 
       browser.test.assertEq(testGetManifestGeckoId, expectedManifestGeckoId,
                               "GET_MANIFEST() returns manifest data before extension unload"

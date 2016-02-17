@@ -151,8 +151,7 @@ function checkCookie() {
 
   gCurrentCookiesCount = getCookiesCount() - appCookiesCount;
 
-  // Not installed means not installed as native app.
-  navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+  navigator.mozApps.mgmt.getAll().onsuccess = function() {
     for (i in this.result) {
       var app = this.result[i];
       if (app.manifestURL == gManifestURL) {

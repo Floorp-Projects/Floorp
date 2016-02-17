@@ -22,21 +22,21 @@ fails == 345369-2.html 345369-2-ref.html
 == 1114329.html 1114329-ref.html
 == 1236745-1.html 1236745-1-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html
-== float-in-rtl-1b.html float-in-rtl-1-ref.html
-== float-in-rtl-1c.html float-in-rtl-1-ref.html
-== float-in-rtl-1d.html float-in-rtl-1-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-1d.html float-in-rtl-1-ref.html
 == float-in-rtl-2a.html float-in-rtl-2-ref.html
-== float-in-rtl-2b.html float-in-rtl-2-ref.html
-== float-in-rtl-2c.html float-in-rtl-2-ref.html
-== float-in-rtl-2d.html float-in-rtl-2-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-2b.html float-in-rtl-2-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-2c.html float-in-rtl-2-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-2d.html float-in-rtl-2-ref.html
 == float-in-rtl-3a.html float-in-rtl-3-ref.html
-== float-in-rtl-3b.html float-in-rtl-3-ref.html
-== float-in-rtl-3c.html float-in-rtl-3-ref.html
-== float-in-rtl-3d.html float-in-rtl-3-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-3b.html float-in-rtl-3-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-3c.html float-in-rtl-3-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-3d.html float-in-rtl-3-ref.html
 == float-in-rtl-4a.html float-in-rtl-4-ref.html
-== float-in-rtl-4b.html float-in-rtl-4-ref.html
-== float-in-rtl-4c.html float-in-rtl-4-ref.html
-== float-in-rtl-4d.html float-in-rtl-4-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-4b.html float-in-rtl-4-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-4c.html float-in-rtl-4-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
 
 == bfc-displace-1a.html bfc-displace-1a-ref.html
 == bfc-displace-1b.html bfc-displace-1b-ref.html
@@ -86,8 +86,8 @@ default-preferences pref(layout.css.vertical-text.enabled,true)
 == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html
 == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html
 == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html
-fuzzy-if(OSX==1010,26,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,26,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,28,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,28,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
 

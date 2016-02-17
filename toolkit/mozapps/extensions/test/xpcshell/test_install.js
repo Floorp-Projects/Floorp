@@ -7,11 +7,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-// Maximum error in file modification times. Some file systems don't store
-// modification times exactly. As long as we are closer than this then it
-// still passes.
-const MAX_TIME_DIFFERENCE = 3000;
-
 // install.rdf size, icon.png, icon64.png size
 const ADDON1_SIZE = 705 + 16 + 16;
 
@@ -145,6 +140,8 @@ function check_test_1(installSyncGUID) {
       else {
         let iconFile = uri.QueryInterface(AM_Ci.nsIFileURL).file;
         do_check_true(iconFile.exists());
+        // Make the iconFile predictably old.
+        iconFile.lastModifiedTime = Date.now() - MAKE_FILE_OLD_DIFFERENCE;
       }
 
       // Make the pending install have a sensible date
@@ -193,6 +190,14 @@ function check_test_1(installSyncGUID) {
           do_check_eq(a1.getResourceURI("install.rdf").spec, uri + "install.rdf");
           do_check_eq(a1.iconURL, uri + "icon.png");
           do_check_eq(a1.icon64URL, uri + "icon64.png");
+
+          // Ensure that extension bundle (or icon if unpacked) has updated
+          // lastModifiedDate.
+          let testURI = a1.getResourceURI(TEST_UNPACKED ? "icon.png" : "");
+          let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
+          do_check_true(testFile.exists());
+          difference = testFile.lastModifiedTime - Date.now();
+          do_check_true(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
           a1.uninstall();
           let { id, version } = a1;

@@ -7,19 +7,20 @@ import os
 import time
 import tempfile
 import traceback
+import urllib2
+
+import mozdevice
+import mozinfo
+from automation import Automation
+from remoteautomation import RemoteAutomation, fennecLogcatFilters
+
+from output import OutputHandler
+from runreftest import RefTest, ReftestResolver
+import reftestcommandline
 
 # We need to know our current directory so that we can serve our test files from it.
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
-from runreftest import RefTest, ReftestResolver
-from automation import Automation
-import devicemanager
-import droid
-import mozinfo
-import moznetwork
-from remoteautomation import RemoteAutomation, fennecLogcatFilters
-
-import reftestcommandline
 
 class RemoteReftestResolver(ReftestResolver):
     def absManifestPath(self, path):
@@ -145,6 +146,13 @@ class RemoteReftest(RefTest):
             self.SERVER_STARTUP_TIMEOUT = 90
         self.automation.deleteANRs()
         self.automation.deleteTombstones()
+
+        self._populate_logger(options)
+        outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
+        # RemoteAutomation.py's 'messageLogger' is also used by mochitest. Mimic a mochitest
+        # MessageLogger object to re-use this code path.
+        outputHandler.write = outputHandler.__call__
+        self.automation._processArgs['messageLogger'] = outputHandler
 
     def findPath(self, paths, filename = None):
         for path in paths:
@@ -273,7 +281,7 @@ class RemoteReftest(RefTest):
         try:
             self._devicemanager.pushDir(profileDir, options.remoteProfile)
             self._devicemanager.chmodDir(options.remoteProfile)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             print "Automation Error: Failed to copy profiledir to device"
             raise
 
@@ -285,7 +293,7 @@ class RemoteReftest(RefTest):
         try:
             self._devicemanager.pushDir(profileDir, options.remoteProfile)
             self._devicemanager.chmodDir(options.remoteProfile)
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             print "Automation Error: Failed to copy extra files to device"
             raise
 
@@ -304,7 +312,7 @@ class RemoteReftest(RefTest):
                 else:
                     print "  %s: %s" % (category, devinfo[category])
             print "Test root: %s" % self._devicemanager.deviceRoot
-        except devicemanager.DMError:
+        except mozdevice.DMError:
             print "WARNING: Error getting device information"
 
     def environment(self, **kwargs):
@@ -358,14 +366,14 @@ def runTests(options, parser):
     try:
         if (options.dm_trans == "adb"):
             if (options.deviceIP):
-                dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+                dm = mozdevice.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
             elif (options.deviceSerial):
-                dm = droid.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
+                dm = mozdevice.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
             else:
-                dm = droid.DroidADB(None, None, deviceRoot=options.remoteTestRoot)
+                dm = mozdevice.DroidADB(None, None, deviceRoot=options.remoteTestRoot)
         else:
-            dm = droid.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
-    except devicemanager.DMError:
+            dm = mozdevice.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+    except mozdevice.DMError:
         print "Automation Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
         return 1
 
@@ -445,4 +453,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

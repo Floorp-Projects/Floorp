@@ -4,7 +4,6 @@
 package org.mozilla.android.sync.test;
 
 import android.content.SharedPreferences;
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +61,7 @@ public class TestResetCommands {
   }
 
   @Test
-  public void testHandleResetCommand() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException {
+  public void testHandleResetCommand() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, CryptoException {
     // Create a global session.
     // Set up stage mappings for a real stage name (because they're looked up by name
     // in an enumeration) pointing to our fake stage.

@@ -38,8 +38,6 @@ public:
   NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override;
 
 private:
-  double GetDPIScale();
-
   HMONITOR mScreen;
   uint32_t mId;
 };

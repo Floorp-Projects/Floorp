@@ -66,7 +66,7 @@ function assertHasNoScrollbars(elem) {
 }
 
 function checkScrollbars(elem, shouldHaveScrollbars) {
-  is(elem, document.mozFullScreenElement,
+  is(elem, document.fullscreenElement,
      "Should only check the current fullscreen element");
   var assertFunc = shouldHaveScrollbars ?
     assertHasScrollbars : assertHasNoScrollbars;
@@ -93,28 +93,28 @@ function begin() {
 
   info("Entering fullscreen on root");
   addFullscreenChangeContinuation("enter", enteredFullscreenOnRoot);
-  document.documentElement.mozRequestFullScreen();
+  document.documentElement.requestFullscreen();
 }
 
 function enteredFullscreenOnRoot() {
   checkScrollbars(document.documentElement, true);
   info("Entering fullscreen on div");
   addFullscreenChangeContinuation("enter", enteredFullscreenOnDiv);
-  gFullscreenDiv.mozRequestFullScreen();
+  gFullscreenDiv.requestFullscreen();
 }
 
 function enteredFullscreenOnDiv() {
   checkScrollbars(gFullscreenDiv, false);
   info("Exiting fullscreen on div");
   addFullscreenChangeContinuation("exit", exitedFullscreenOnDiv);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exitedFullscreenOnDiv() {
   checkScrollbars(document.documentElement, true);
   info("Exiting fullscreen on root");
   addFullscreenChangeContinuation("exit", exitedFullscreenOnRoot);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exitedFullscreenOnRoot() {

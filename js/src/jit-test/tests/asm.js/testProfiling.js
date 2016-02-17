@@ -215,6 +215,15 @@ if (isSimdAvailable() && typeof SIMD !== 'undefined') {
 }
 
 
+// Thunks
+setJitCompilerOption("jump-threshold", 0);
+var h = asmLink(asmCompile(USE_ASM + 'function f() {} function g() { f() } function h() { g() } return h'));
+enableSingleStepProfiling();
+h();
+var stacks = disableSingleStepProfiling();
+assertStackContainsSeq(stacks, ">,h,>,g,h,>,f,g,h,>,g,h,>,h,>,>");
+setJitCompilerOption("jump-threshold", -1);
+
 // This takes forever to run.
 // Stack-overflow exit test
 //var limit = -1;

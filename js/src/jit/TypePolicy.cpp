@@ -106,6 +106,8 @@ AllDoublePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         if (in->type() == MIRType_Double)
             continue;
 
+        if (!alloc.ensureBallast())
+            return false;
         MInstruction* replace = MToDouble::New(alloc, in);
 
         ins->block()->insertBefore(ins, replace);
@@ -802,26 +804,12 @@ template bool ObjectPolicy<1>::staticAdjustInputs(TempAllocator& alloc, MInstruc
 template bool ObjectPolicy<2>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
 template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
 
-static bool
-MaybeSimdUnbox(TempAllocator& alloc, MInstruction* ins, MIRType type, unsigned op)
-{
-    MOZ_ASSERT(IsSimdType(type));
-    MDefinition* in = ins->getOperand(op);
-    if (in->type() == type)
-        return true;
-
-    MSimdUnbox* replace = MSimdUnbox::New(alloc, in, type);
-    ins->block()->insertBefore(ins, replace);
-    ins->replaceOperand(op, replace);
-
-    return replace->typePolicy()->adjustInputs(alloc, replace);
-}
-
 template <unsigned Op>
 bool
 SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    return MaybeSimdUnbox(alloc, ins, ins->type(), Op);
+    MOZ_ASSERT(ins->type() == ins->getOperand(Op)->type());
+    return true;
 }
 
 template bool
@@ -832,11 +820,8 @@ SimdSameAsReturnedTypePolicy<1>::staticAdjustInputs(TempAllocator& alloc, MInstr
 bool
 SimdAllPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    MIRType specialization = ins->typePolicySpecialization();
-    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
-        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
-            return false;
-    }
+    for (unsigned i = 0, e = ins->numOperands(); i < e; i++)
+        MOZ_ASSERT(ins->getOperand(i)->type() == ins->typePolicySpecialization());
     return true;
 }
 
@@ -844,7 +829,8 @@ template <unsigned Op>
 bool
 SimdPolicy<Op>::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    return MaybeSimdUnbox(alloc, ins, ins->typePolicySpecialization(), Op);
+    MOZ_ASSERT(ins->typePolicySpecialization() == ins->getOperand(Op)->type());
+    return true;
 }
 
 template bool
@@ -853,14 +839,10 @@ SimdPolicy<0>::adjustInputs(TempAllocator& alloc, MInstruction* ins);
 bool
 SimdShufflePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    MIRType specialization = ins->typePolicySpecialization();
-
     MSimdGeneralShuffle* s = ins->toSimdGeneralShuffle();
 
-    for (unsigned i = 0; i < s->numVectors(); i++) {
-        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
-            return false;
-    }
+    for (unsigned i = 0; i < s->numVectors(); i++)
+        MOZ_ASSERT(ins->getOperand(i)->type() == ins->typePolicySpecialization());
 
     // Next inputs are the lanes, which need to be int32
     for (unsigned i = 0; i < s->numLanes(); i++) {
@@ -881,17 +863,12 @@ SimdShufflePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 bool
 SimdSelectPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    MIRType specialization = ins->typePolicySpecialization();
-
     // First input is the mask, which has to be a bool32x4.
-    if (!MaybeSimdUnbox(alloc, ins, MIRType_Bool32x4, 0))
-        return false;
+    MOZ_ASSERT(ins->getOperand(0)->type() == MIRType_Bool32x4);
 
     // Next inputs are the two vectors of a particular type.
-    for (unsigned i = 1; i < 3; i++) {
-        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
-            return false;
-    }
+    for (unsigned i = 1; i < 3; i++)
+        MOZ_ASSERT(ins->getOperand(i)->type() == ins->typePolicySpecialization());
 
     return true;
 }
@@ -911,8 +888,11 @@ CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
             return false;
     }
 
-    for (uint32_t i = 0; i < call->numStackArgs(); i++)
+    for (uint32_t i = 0; i < call->numStackArgs(); i++) {
+        if (!alloc.ensureBallast())
+            return false;
         EnsureOperandNotFloat32(alloc, call, MCall::IndexOfStackArg(i));
+    }
 
     return true;
 }
@@ -948,9 +928,12 @@ StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc, MInstruction* i
                                            Scalar::Type writeType, MDefinition* value,
                                            int valueOperand)
 {
-    // Storing a SIMD value just implies that we might need a SimdUnbox.
-    if (Scalar::isSimdType(writeType))
-        return MaybeSimdUnbox(alloc, ins, ScalarTypeToMIRType(writeType), valueOperand);
+    // Storing a SIMD value requires a valueOperand that has already been
+    // SimdUnboxed. See IonBuilder::inlineSimdStore(()
+    if (Scalar::isSimdType(writeType)) {
+        MOZ_ASSERT(IsSimdType(value->type()));
+        return true;
+    }
 
     MDefinition* curValue = value;
     // First, ensure the value is int32, boolean, double or Value.

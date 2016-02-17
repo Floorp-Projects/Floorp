@@ -1165,6 +1165,12 @@ nsIFrame::Combines3DTransformWithAncestors() const
 }
 
 bool
+nsIFrame::In3DContextAndBackfaceIsHidden() const
+{
+  return Combines3DTransformWithAncestors() && StyleDisplay()->BackfaceIsHidden();
+}
+
+bool
 nsIFrame::HasPerspective() const
 {
   if (!IsTransformed()) {
@@ -2051,8 +2057,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRectOutsideTransform = dirtyRect;
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
-    if (Extend3DContext() || Combines3DTransformWithAncestors() ||
-        nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder,
+    if (nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder,
                                                               this)) {
       dirtyRect = overflow;
     } else {
@@ -2060,9 +2065,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         return;
       }
 
+      // If we're in preserve-3d then grab the dirty rect that was given to the root
+      // and transform using the combined transform.
+      if (Combines3DTransformWithAncestors()) {
+        dirtyRect = aBuilder->GetPreserves3DDirtyRect(this);
+      }
+
       nsRect untransformedDirtyRect;
       if (nsDisplayTransform::UntransformRect(dirtyRect, overflow, this,
-            nsPoint(0,0), &untransformedDirtyRect, false)) {
+            nsPoint(0,0), &untransformedDirtyRect, true)) {
         dirtyRect = untransformedDirtyRect;
       } else {
         NS_WARNING("Unable to untransform dirty rect!");
@@ -2101,8 +2112,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-  nsDisplayListBuilder::AutoSaveRestorePerspectiveIndex perspectiveIndex(aBuilder, this);
-
   if (isTransformed || useBlendMode || usingSVGEffects || useFixedPosition || useStickyPosition) {
     // We don't need to pass ancestor clipping down to our children;
     // everything goes inside a display item's child list, and the display
@@ -2121,6 +2130,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
+    nsDisplayListBuilder::AutoSaveRestorePerspectiveIndex
+      perspectiveIndex(aBuilder, this);
+
     CheckForApzAwareEventHandlers(aBuilder, this);
 
     nsRect clipPropClip;
@@ -2134,8 +2146,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // Extend3DContext() also guarantees that applyAbsPosClipping and usingSVGEffects are false
     // We only modify the preserve-3d rect if we are the top of a preserve-3d heirarchy
     if (Extend3DContext()) {
-      nsRect dirty = aBuilder->GetPreserves3DDirtyRect(this);
-      aBuilder->MarkPreserve3DFramesForDisplayList(this, dirty);
+      aBuilder->MarkPreserve3DFramesForDisplayList(this);
     }
 
     if (aBuilder->IsBuildingLayerEventRegions()) {
@@ -2461,15 +2472,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.SetEmpty();
     }
     pseudoStackingContext = true;
-  }
-  if (child->Combines3DTransformWithAncestors()) {
-    nsRect* savedDirty = static_cast<nsRect*>
-      (child->Properties().Get(nsDisplayListBuilder::Preserve3DDirtyRectProperty()));
-    if (savedDirty) {
-      dirty = *savedDirty;
-    } else {
-      dirty.SetEmpty();
-    }
   }
 
   NS_ASSERTION(childType != nsGkAtoms::placeholderFrame,

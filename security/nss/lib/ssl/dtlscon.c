@@ -86,6 +86,11 @@ dtls_DTLSVersionToTLSVersion(SSL3ProtocolVersion dtlsv)
     if (dtlsv == SSL_LIBRARY_VERSION_DTLS_1_0_WIRE) {
         return SSL_LIBRARY_VERSION_TLS_1_1;
     }
+    /* Handle the skipped version of DTLS 1.1 by returning
+     * an error. */
+    if (dtlsv == ((~0x0101) & 0xffff)) {
+        return 0;
+    }
     if (dtlsv == SSL_LIBRARY_VERSION_DTLS_1_2_WIRE) {
         return SSL_LIBRARY_VERSION_TLS_1_2;
     }
@@ -94,7 +99,7 @@ dtls_DTLSVersionToTLSVersion(SSL3ProtocolVersion dtlsv)
     }
 
     /* Return a fictional higher version than we know of */
-    return SSL_LIBRARY_VERSION_TLS_1_2 + 1;
+    return SSL_LIBRARY_VERSION_MAX_SUPPORTED + 1;
 }
 
 /* On this socket, Disable non-DTLS cipher suites in the argument's list */
@@ -814,9 +819,13 @@ dtls_CompressMACEncryptRecord(sslSocket *        ss,
     }
 
     if (cwSpec) {
-        rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
-                                           PR_FALSE, type, pIn, contentLen,
-                                           wrBuf);
+        if (ss->ssl3.cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+            rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
+                                               PR_FALSE, type, pIn, contentLen,
+                                               wrBuf);
+        } else {
+            rv = tls13_ProtectRecord(ss, type, pIn, contentLen, wrBuf);
+        }
     } else {
         PR_NOT_REACHED("Couldn't find a cipher spec matching epoch");
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -1047,10 +1056,10 @@ dtls_InitRecvdRecords(DTLSRecvdRecords *records)
  *  0 -- not received yet
  *  1 -- replay
  *
- *  Called from: dtls_HandleRecord()
+ *  Called from: ssl3_HandleRecord()
  */
 int
-dtls_RecordGetRecvd(DTLSRecvdRecords *records, PRUint64 seq)
+dtls_RecordGetRecvd(const DTLSRecvdRecords *records, PRUint64 seq)
 {
     PRUint64 offset;
 
@@ -1143,4 +1152,42 @@ DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
     }
 
     return SECSuccess;
+}
+
+/*
+ * DTLS relevance checks:
+ * Note that this code currently ignores all out-of-epoch packets,
+ * which means we lose some in the case of rehandshake +
+ * loss/reordering. Since DTLS is explicitly unreliable, this
+ * seems like a good tradeoff for implementation effort and is
+ * consistent with the guidance of RFC 6347 Sections 4.1 and 4.2.4.1.
+ *
+ * If the packet is not relevant, this function returns PR_FALSE.
+ * If the packet is relevant, this function returns PR_TRUE
+ * and sets |*seqNum| to the packet sequence number.
+ */
+PRBool
+dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
+                const SSL3Ciphertext *cText, PRUint64 *seqNum)
+{
+    DTLSEpoch epoch = cText->seq_num.high >> 16;
+    PRUint64 dtls_seq_num;
+
+    if (crSpec->epoch != epoch) {
+        SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, received packet "
+                 "from irrelevant epoch %d", SSL_GETPID(), ss->fd, epoch));
+        return PR_FALSE;
+    }
+
+    dtls_seq_num = (((PRUint64)(cText->seq_num.high & 0xffff)) << 32) |
+                   ((PRUint64)cText->seq_num.low);
+
+    if (dtls_RecordGetRecvd(&crSpec->recvdRecords, dtls_seq_num) != 0) {
+        SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, rejecting "
+                 "potentially replayed packet", SSL_GETPID(), ss->fd));
+        return PR_FALSE;
+    }
+
+    *seqNum = dtls_seq_num;
+    return PR_TRUE;
 }

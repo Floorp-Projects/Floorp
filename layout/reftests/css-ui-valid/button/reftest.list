@@ -1,13 +1,13 @@
-== button-valid.html button-ref.html
-== button-invalid.html button-ref.html
+fuzzy-if(skiaContent,2,2) == button-valid.html button-ref.html
+fuzzy-if(skiaContent,2,3) == button-invalid.html button-ref.html
 == button-disabled.html button-disabled-ref.html
-== button-dyn-disabled.html button-disabled-ref.html
-== button-dyn-not-disabled.html button-ref.html
-== button-button.html button-ref.html
-== button-reset.html button-ref.html
-== button-type-invalid.html button-ref.html
-== button-type-barred.html button-ref.html
+fuzzy-if(skiaContent,1,3) == button-dyn-disabled.html button-disabled-ref.html
+fuzzy-if(skiaContent,2,3) == button-dyn-not-disabled.html button-ref.html
+fuzzy-if(skiaContent,2,3) == button-button.html button-ref.html
+fuzzy-if(skiaContent,2,3) == button-reset.html button-ref.html
+fuzzy-if(skiaContent,2,3) == button-type-invalid.html button-ref.html
+fuzzy-if(skiaContent,2,3) == button-type-barred.html button-ref.html
 == button-disabled-fieldset-1.html button-fieldset-ref.html
-== button-disabled-fieldset-2.html button-fieldset-ref.html
-== button-fieldset-legend.html button-fieldset-legend-ref.html
-== button-novalidate.html button-ref.html
+fuzzy-if(skiaContent,1,3) == button-disabled-fieldset-2.html button-fieldset-ref.html
+fuzzy-if(skiaContent,1,3) == button-fieldset-legend.html button-fieldset-legend-ref.html
+fuzzy-if(skiaContent,2,2) == button-novalidate.html button-ref.html

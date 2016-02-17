@@ -9,7 +9,7 @@ var { interfaces: Ci } = Components;
  * fire the TalosQuitApplication custom event. This will
  * attempt to force-quit the browser.
  */
-addEventListener("TalosQuitApplication", () => {
+addEventListener("TalosQuitApplication", event => {
   // If we're loaded in a low-priority background process, like
   // the background page thumbnailer, then we shouldn't be allowed
   // to quit the whole application. This is a workaround until
@@ -19,6 +19,6 @@ addEventListener("TalosQuitApplication", () => {
                          .QueryInterface(Ci.nsISupportsPriority)
                          .priority;
   if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
-    sendAsyncMessage("Talos:ForceQuit");
+    sendAsyncMessage("Talos:ForceQuit", event.detail);
   }
 });

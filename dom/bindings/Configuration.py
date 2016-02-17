@@ -540,6 +540,13 @@ class Descriptor(DescriptorProvider):
         self.wrapperCache = (not self.interface.isCallback() and
                              not self.interface.isIteratorInterface() and
                              desc.get('wrapperCache', True))
+        # Nasty temporary hack for supporting both DOM and SpiderMonkey promises
+        # without too much pain
+        if self.interface.identifier.name == "Promise":
+            assert self.wrapperCache
+            # But really, we're only wrappercached if we have an interface
+            # object (that is, when we're not using SpiderMonkey promises).
+            self.wrapperCache = self.interface.hasInterfaceObject()
 
         def make_name(name):
             return name + "_workers" if self.workers else name

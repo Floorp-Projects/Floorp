@@ -27,7 +27,7 @@ function run_test() {
 
   var target = tmpDir.clone();
   target.append(entryName);
-  target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 6 * 64 + 4 * 8 + 0); // 0640
+  target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0o640); // 0640
 
   zipreader.extract(entryName, target);
 

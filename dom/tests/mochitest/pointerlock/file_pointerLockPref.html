@@ -52,11 +52,11 @@
 
         document.addEventListener("mozpointerlockerror", function (e) {
           prefDisabled = true;
-          document.mozCancelFullScreen();
+          document.exitFullscreen();
         }, false);
 
-        document.addEventListener("mozfullscreenchange", function (e) {
-          if (document.mozFullScreenElement === div) {
+        document.addEventListener("fullscreenchange", function (e) {
+          if (document.fullscreenElement === div) {
             SpecialPowers.setBoolPref("full-screen-api.pointer-lock.enabled",
                                       true );
             div.mozRequestPointerLock();
@@ -70,7 +70,7 @@
         }, false);
 
         function start() {
-          div.mozRequestFullScreen();
+          div.requestFullscreen();
         }
       </script>
     </pre>

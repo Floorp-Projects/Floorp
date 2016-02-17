@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=974309
+-->
+<head>
+  <title>Test for Bug 974309</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=974309">Mozilla Bug 974309</a>
+<div id="edit_not_table_parent" contenteditable="true"></div>
+<div>
+  <table id="table" border="1" width="100%">
+    <tbody>
+      <tr>
+        <td>a</td>
+        <td>b</td>
+        <td>c</td>
+      </tr>
+      <tr>
+        <td>d</td>
+        <td id="cell">e</td>
+        <td>f</td>
+      </tr>
+      <tr>
+        <td>g</td>
+        <td>h</td>
+        <td>i</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<script type="application/javascript">
+
+/**
+ * Test for Bug 974309
+ *
+ * Tests that editing a table row fails when the table or row is _not_ a child of a contenteditable node.
+ * See bug 857487 for tests that cover when the table or row _is_ a child of a contenteditable node.
+ */
+
+function getEditor() {
+  const Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+var cell = document.getElementById("cell");
+cell.focus();
+
+// place caret at end of center cell
+var sel = getSelection();
+sel.collapse(cell, cell.childNodes.length);
+
+var table = document.getElementById("table");
+
+var tableHTML = table.innerHTML;
+
+var editor = getEditor();
+editor.deleteTableRow(1);
+
+is(table.innerHTML == tableHTML, true, "editor should not modify non-editable table" );
+
+isnot(table.innerHTML == "\n    <tbody>\n      <tr>\n        <td>a</td>\n        <td>b</td>\n        <td>c</td>\n      </tr>\n      \n      <tr>\n        <td>g</td>\n        <td>h</td>\n        <td>i</td>\n      </tr>\n    </tbody>\n  ",
+   true, "editor.deleteTableRow(1) should not delete a non-editable row containing the selection");
+
+</script>
+
+
+</body>
+</html>

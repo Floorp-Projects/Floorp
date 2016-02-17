@@ -120,14 +120,24 @@ MacroAssemblerX64::finish()
     MacroAssemblerX86Shared::finish();
 }
 
+
 void
-MacroAssemblerX64::branchPrivatePtr(Condition cond, Address lhs, Register ptr, Label* label)
+MacroAssemblerX64::boxValue(JSValueType type, Register src, Register dest)
 {
-    ScratchRegisterScope scratch(asMasm());
-    if (ptr != scratch)
-        movePtr(ptr, scratch);
-    asMasm().rshiftPtr(Imm32(1), scratch);
-    branchPtr(cond, lhs, scratch, label);
+    MOZ_ASSERT(src != dest);
+
+    JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
+#ifdef DEBUG
+    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+        Label upper32BitsZeroed;
+        movePtr(ImmWord(UINT32_MAX), dest);
+        asMasm().branchPtr(Assembler::BelowOrEqual, src, dest, &upper32BitsZeroed);
+        breakpoint();
+        bind(&upper32BitsZeroed);
+    }
+#endif
+    mov(ImmShiftedTag(tag), dest);
+    orq(src, dest);
 }
 
 void
@@ -149,11 +159,11 @@ MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
     Label bailout;
 
     loadPtr(Address(rsp, offsetof(ResumeFromException, kind)), rax);
-    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
-    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
-    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
-    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
+    asMasm().branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    asMasm().branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    asMasm().branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
+    asMasm().branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+    asMasm().branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
 
     breakpoint(); // Invalid kind.
 
@@ -200,7 +210,7 @@ MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
     {
         Label skipProfilingInstrumentation;
         AbsoluteAddress addressOfEnabled(GetJitContext()->runtime->spsProfiler().addressOfEnabled());
-        branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
+        asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
         profilerExitFrame();
         bind(&skipProfilingInstrumentation);
     }
@@ -266,8 +276,8 @@ MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), scratch);
     asMasm().addPtr(ptr, scratch);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              scratch, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       scratch, Imm32(nursery.nurserySize()), label);
 }
 
 void
@@ -288,8 +298,8 @@ MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value
     ScratchRegisterScope scratch(asMasm());
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), scratch);
     asMasm().addPtr(value.valueReg(), scratch);
-    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              scratch, Imm32(nursery.nurserySize()), label);
+    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+                       scratch, Imm32(nursery.nurserySize()), label);
 }
 
 void

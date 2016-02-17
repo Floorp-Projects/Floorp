@@ -81,6 +81,8 @@ class MockWarningReporter: public DwarfCUToModule::WarningReporter {
   MOCK_METHOD1(UncoveredFunction, void(const Module::Function &function));
   MOCK_METHOD1(UncoveredLine, void(const Module::Line &line));
   MOCK_METHOD1(UnnamedFunction, void(uint64 offset));
+  MOCK_METHOD2(DemangleError, void(const string &input, int error));
+  MOCK_METHOD2(UnhandledInterCUReference, void(uint64 offset, uint64 target));
 };
 
 // A fixture class including all the objects needed to handle a
@@ -88,7 +90,6 @@ class MockWarningReporter: public DwarfCUToModule::WarningReporter {
 // for doing common kinds of setup and tests.
 class CUFixtureBase {
  public:
-
   // If we have:
   //
   //   vector<Module::Line> lines;
@@ -108,7 +109,8 @@ class CUFixtureBase {
   // in which case calling l2m with some line vector will append lines.
   class AppendLinesFunctor {
    public:
-    AppendLinesFunctor(const vector<Module::Line> *lines) : lines_(lines) { }
+    explicit AppendLinesFunctor(
+        const vector<Module::Line> *lines) : lines_(lines) { }
     void operator()(const char *program, uint64 length,
                     Module *module, vector<Module::Line> *lines) {
       lines->insert(lines->end(), lines_->begin(), lines_->end());
@@ -119,7 +121,7 @@ class CUFixtureBase {
 
   CUFixtureBase()
       : module_("module-name", "module-os", "module-arch", "module-id"),
-        file_context_("dwarf-filename", &module_),
+        file_context_("dwarf-filename", &module_, true),
         language_(dwarf2reader::DW_LANG_none),
         language_signed_(false),
         appender_(&lines_),
@@ -137,6 +139,7 @@ class CUFixtureBase {
     EXPECT_CALL(reporter_, UncoveredFunction(_)).Times(0);
     EXPECT_CALL(reporter_, UncoveredLine(_)).Times(0);
     EXPECT_CALL(reporter_, UnnamedFunction(_)).Times(0);
+    EXPECT_CALL(reporter_, UnhandledInterCUReference(_, _)).Times(0);
 
     // By default, expect the line program reader not to be invoked. We
     // may override this in StartCU.
@@ -145,8 +148,9 @@ class CUFixtureBase {
 
     // The handler will consult this section map to decide what to
     // pass to our line reader.
-    file_context_.section_map[".debug_line"] = make_pair(dummy_line_program_,
-                                                         dummy_line_size_);
+    file_context_.AddSectionToSectionMap(".debug_line",
+                                         dummy_line_program_,
+                                         dummy_line_size_);
   }
 
   // Add a line with the given address, size, filename, and line
@@ -182,7 +186,7 @@ class CUFixtureBase {
   // not Finish.
   DIEHandler *StartNamedDIE(DIEHandler *parent, DwarfTag tag,
                             const string &name);
- 
+
   // Start a child DIE of PARENT with the given tag and a
   // DW_AT_specification attribute whose value is SPECIFICATION. Leave
   // the handler ready to hear about children: call EndAttributes, but
@@ -190,7 +194,7 @@ class CUFixtureBase {
   // attribute.
   DIEHandler *StartSpecifiedDIE(DIEHandler *parent, DwarfTag tag,
                                 uint64 specification, const char *name = NULL);
- 
+
   // Define a function as a child of PARENT with the given name, address, and
   // size. If high_pc_form is DW_FORM_addr then the DW_AT_high_pc attribute
   // will be written as an address; otherwise it will be written as the
@@ -246,7 +250,7 @@ class CUFixtureBase {
   // parameter size is zero.
   void TestFunction(int i, const string &name,
                     Module::Address address, Module::Address size);
-  
+
   // Test that the number of source lines owned by the I'th function
   // in the module this.module_ is equal to EXPECTED.
   void TestLineCount(int i, size_t expected);
@@ -283,7 +287,7 @@ class CUFixtureBase {
   AppendLinesFunctor appender_;
   static const char dummy_line_program_[];
   static const size_t dummy_line_size_;
-  
+
   MockWarningReporter reporter_;
   DwarfCUToModule root_handler_;
 
@@ -299,8 +303,8 @@ class CUFixtureBase {
 };
 
 const char CUFixtureBase::dummy_line_program_[] = "lots of fun data";
-const size_t CUFixtureBase::dummy_line_size_ = 
-    sizeof (CUFixtureBase::dummy_line_program_);
+const size_t CUFixtureBase::dummy_line_size_ =
+    sizeof(CUFixtureBase::dummy_line_program_);
 
 void CUFixtureBase::PushLine(Module::Address address, Module::Address size,
                              const string &filename, int line_number) {
@@ -320,7 +324,7 @@ void CUFixtureBase::StartCU() {
   // If we have lines, make the line reader expect to be invoked at
   // most once. (Hey, if the handler can pass its tests without
   // bothering to read the line number data, that's great.)
-  // Have it add the lines passed to PushLine. Otherwise, leave the 
+  // Have it add the lines passed to PushLine. Otherwise, leave the
   // initial expectation (no calls) in force.
   if (!lines_.empty())
     EXPECT_CALL(line_reader_,
@@ -396,7 +400,7 @@ DIEHandler *CUFixtureBase::StartNamedDIE(DIEHandler *parent,
     delete handler;
     return NULL;
   }
-    
+
   return handler;
 }
 
@@ -420,7 +424,7 @@ DIEHandler *CUFixtureBase::StartSpecifiedDIE(DIEHandler *parent,
     delete handler;
     return NULL;
   }
-    
+
   return handler;
 }
 
@@ -541,7 +545,7 @@ void CUFixtureBase::AbstractInstanceDIE(DIEHandler *parent,
 
 void CUFixtureBase::DefineInlineInstanceDIE(DIEHandler *parent,
                                             const string &name,
-                                            uint64 origin, 
+                                            uint64 origin,
                                             Module::Address address,
                                             Module::Address size) {
   dwarf2reader::DIEHandler *func
@@ -708,7 +712,7 @@ TEST_F(SimpleCU, IrrelevantNamedScopeChildren) {
 // Verify that FileContexts can safely be deleted unused.
 TEST_F(SimpleCU, UnusedFileContext) {
   Module m("module-name", "module-os", "module-arch", "module-id");
-  DwarfCUToModule::FileContext fc("dwarf-filename", &m);
+  DwarfCUToModule::FileContext fc("dwarf-filename", &m, true);
 
   // Kludge: satisfy reporter_'s expectation.
   reporter_.SetCUName("compilation-unit-name");
@@ -864,34 +868,33 @@ TEST_P(FuncLinePairing, Pairing) {
 
   StartCU();
   DefineFunction(&root_handler_, "function1",
-                 s.functions[0].start, 
+                 s.functions[0].start,
                  s.functions[0].end - s.functions[0].start, NULL);
   DefineFunction(&root_handler_, "function2",
-                 s.functions[1].start, 
+                 s.functions[1].start,
                  s.functions[1].end - s.functions[1].start, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
   TestFunction(0, "function1",
-               s.functions[0].start, 
+               s.functions[0].start,
                s.functions[0].end - s.functions[0].start);
   TestLineCount(0, s.paired_count[0]);
   for (int i = 0; i < s.paired_count[0]; i++)
-    TestLine(0, i, s.paired[0][i].start, 
-             s.paired[0][i].end - s.paired[0][i].start, 
+    TestLine(0, i, s.paired[0][i].start,
+             s.paired[0][i].end - s.paired[0][i].start,
              "line-file", 67636963);
   TestFunction(1, "function2",
-               s.functions[1].start, 
+               s.functions[1].start,
                s.functions[1].end - s.functions[1].start);
   TestLineCount(1, s.paired_count[1]);
   for (int i = 0; i < s.paired_count[1]; i++)
-    TestLine(1, i, s.paired[1][i].start, 
-             s.paired[1][i].end - s.paired[1][i].start, 
+    TestLine(1, i, s.paired[1][i].start,
+             s.paired[1][i].end - s.paired[1][i].start,
              "line-file", 67636963);
 }
 
 TEST_F(FuncLinePairing, EmptyCU) {
-
   StartCU();
   root_handler_.Finish();
 
@@ -913,7 +916,7 @@ TEST_F(FuncLinePairing, FuncsNoLines) {
 
   StartCU();
   DefineFunction(&root_handler_, "function1", 0x127da12ffcf5c51fULL, 0x1000U,
-		 NULL);
+                 NULL);
   root_handler_.Finish();
 
   TestFunctionCount(1);
@@ -1064,11 +1067,11 @@ TEST_P(CXXQualifiedNames, FuncInEnclosureInNamespace) {
   PushLine(10, 1, "line-file", 69819327);
 
   StartCU();
-  DIEHandler *namespace_handler 
+  DIEHandler *namespace_handler
       = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_namespace,
                       "Namespace");
   EXPECT_TRUE(namespace_handler != NULL);
-  DIEHandler *enclosure_handler = StartNamedDIE(namespace_handler, tag, 
+  DIEHandler *enclosure_handler = StartNamedDIE(namespace_handler, tag,
                                                 "Enclosure");
   EXPECT_TRUE(enclosure_handler != NULL);
   DefineFunction(enclosure_handler, "function", 10, 1, NULL);
@@ -1127,10 +1130,10 @@ const LanguageAndQualifiedName LanguageAndQualifiedNameCases[] = {
   { dwarf2reader::DW_LANG_Mips_Assembler, NULL }
 };
 
-class QualifiedForLanguage:
-    public CUFixtureBase,
-    public TestWithParam<LanguageAndQualifiedName> { };
-                        
+class QualifiedForLanguage
+    : public CUFixtureBase,
+      public TestWithParam<LanguageAndQualifiedName> { };
+
 INSTANTIATE_TEST_CASE_P(LanguageAndQualifiedName, QualifiedForLanguage,
                         ValuesIn(LanguageAndQualifiedNameCases));
 
@@ -1254,7 +1257,7 @@ TEST_F(Specifications, FunctionDeclarationParent) {
   }
 
   DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
-                0x0e0e877c8404544aULL, "definition-name", 
+                0x0e0e877c8404544aULL, "definition-name",
                 0x463c9ddf405be227ULL, 0x6a47774af5049680ULL);
 
   root_handler_.Finish();
@@ -1287,14 +1290,14 @@ TEST_F(Specifications, NamedScopeDeclarationParent) {
       = StartSpecifiedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
                           0x419bb1d12f9a73a2ULL, "class-definition-name");
     ASSERT_TRUE(class_handler != NULL);
-    DefineFunction(class_handler, "function", 
+    DefineFunction(class_handler, "function",
                    0x5d13433d0df13d00ULL, 0x48ebebe5ade2cab4ULL, NULL);
     class_handler->Finish();
     delete class_handler;
   }
 
   root_handler_.Finish();
-  
+
   TestFunctionCount(1);
   TestFunction(0, "space_A::class-definition-name::function",
                0x5d13433d0df13d00ULL, 0x48ebebe5ade2cab4ULL);
@@ -1341,14 +1344,14 @@ TEST_F(Specifications, LongChain) {
   // class_H definition
   //   func_I declaration
   // func_I definition
-  // 
-  // So: 
+  //
+  // So:
   // - space_A, struct_C, union_E, and class_G don't use specifications;
   // - space_B, struct_D, union_F, and class_H do.
   // - func_I uses a specification.
-  // 
+  //
   // The full name for func_I is thus:
-  // 
+  //
   // space_A::space_B::struct_C::struct_D::union_E::union_F::
   //   class_G::class_H::func_I
   {
@@ -1429,7 +1432,7 @@ TEST_F(Specifications, LongChain) {
 
 TEST_F(Specifications, InterCU) {
   Module m("module-name", "module-os", "module-arch", "module-id");
-  DwarfCUToModule::FileContext fc("dwarf-filename", &m);
+  DwarfCUToModule::FileContext fc("dwarf-filename", &m, true);
   EXPECT_CALL(reporter_, UncoveredFunction(_)).WillOnce(Return());
   MockLineToModuleHandler lr;
   EXPECT_CALL(lr, ReadProgram(_,_,_,_)).Times(0);
@@ -1449,7 +1452,7 @@ TEST_F(Specifications, InterCU) {
                    dwarf2reader::DW_TAG_class_type, "class_A", "");
     root1_handler.Finish();
   }
-   
+
   // Second CU.  Defines class_A, declares member_func_B.
   {
     DwarfCUToModule root2_handler(&fc, &lr, &reporter_);
@@ -1484,6 +1487,63 @@ TEST_F(Specifications, InterCU) {
   m.GetFunctions(&functions, functions.end());
   EXPECT_EQ(1U, functions.size());
   EXPECT_STREQ("class_A::member_func_B", functions[0]->name.c_str());
+}
+
+TEST_F(Specifications, UnhandledInterCU) {
+  Module m("module-name", "module-os", "module-arch", "module-id");
+  DwarfCUToModule::FileContext fc("dwarf-filename", &m, false);
+  EXPECT_CALL(reporter_, UncoveredFunction(_)).WillOnce(Return());
+  MockLineToModuleHandler lr;
+  EXPECT_CALL(lr, ReadProgram(_,_,_,_)).Times(0);
+
+  // Kludge: satisfy reporter_'s expectation.
+  reporter_.SetCUName("compilation-unit-name");
+
+  // First CU.  Declares class_A.
+  {
+    DwarfCUToModule root1_handler(&fc, &lr, &reporter_);
+    ASSERT_TRUE(root1_handler.StartCompilationUnit(0, 1, 2, 3, 3));
+    ASSERT_TRUE(root1_handler.StartRootDIE(1,
+                                           dwarf2reader::DW_TAG_compile_unit));
+    ProcessStrangeAttributes(&root1_handler);
+    ASSERT_TRUE(root1_handler.EndAttributes());
+    DeclarationDIE(&root1_handler, 0xb8fbfdd5f0b26fceULL,
+                   dwarf2reader::DW_TAG_class_type, "class_A", "");
+    root1_handler.Finish();
+  }
+
+  // Second CU.  Defines class_A, declares member_func_B.
+  {
+    DwarfCUToModule root2_handler(&fc, &lr, &reporter_);
+    ASSERT_TRUE(root2_handler.StartCompilationUnit(0, 1, 2, 3, 3));
+    ASSERT_TRUE(root2_handler.StartRootDIE(1,
+                                           dwarf2reader::DW_TAG_compile_unit));
+    ASSERT_TRUE(root2_handler.EndAttributes());
+    EXPECT_CALL(reporter_, UnhandledInterCUReference(_, _)).Times(1);
+    DIEHandler *class_A_handler
+      = StartSpecifiedDIE(&root2_handler, dwarf2reader::DW_TAG_class_type,
+                          0xb8fbfdd5f0b26fceULL);
+    DeclarationDIE(class_A_handler, 0xb01fef8b380bd1a2ULL,
+                   dwarf2reader::DW_TAG_subprogram, "member_func_B", "");
+    class_A_handler->Finish();
+    delete class_A_handler;
+    root2_handler.Finish();
+  }
+
+  // Third CU.  Defines member_func_B.
+  {
+    DwarfCUToModule root3_handler(&fc, &lr, &reporter_);
+    ASSERT_TRUE(root3_handler.StartCompilationUnit(0, 1, 2, 3, 3));
+    ASSERT_TRUE(root3_handler.StartRootDIE(1,
+                                           dwarf2reader::DW_TAG_compile_unit));
+    ASSERT_TRUE(root3_handler.EndAttributes());
+    EXPECT_CALL(reporter_, UnhandledInterCUReference(_, _)).Times(1);
+    EXPECT_CALL(reporter_, UnnamedFunction(_)).Times(1);
+    DefinitionDIE(&root3_handler, dwarf2reader::DW_TAG_subprogram,
+                  0xb01fef8b380bd1a2ULL, "",
+                  0x2618f00a1a711e53ULL, 0x4fd94b76d7c2caf5ULL);
+    root3_handler.Finish();
+  }
 }
 
 TEST_F(Specifications, BadOffset) {
@@ -1554,8 +1614,9 @@ TEST_F(Specifications, PreferSpecificationParents) {
 
   StartCU();
   {
-    dwarf2reader::DIEHandler *declaration_class_handler
-      = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type, "declaration-class");
+    dwarf2reader::DIEHandler *declaration_class_handler =
+      StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
+                    "declaration-class");
     DeclarationDIE(declaration_class_handler, 0x9ddb35517455ef7aULL,
                    dwarf2reader::DW_TAG_subprogram, "function-declaration",
                    "");
@@ -1603,7 +1664,7 @@ TEST_F(CUErrors, NoLineSection) {
   EXPECT_CALL(reporter_, MissingSection(".debug_line")).Times(1);
   PushLine(0x88507fb678052611ULL, 0x42c8e9de6bbaa0faULL, "line-file", 64472290);
   // Delete the entry for .debug_line added by the fixture class's constructor.
-  file_context_.section_map.clear();
+  file_context_.ClearSectionMapForTest();
 
   StartCU();
   root_handler_.Finish();
@@ -1652,22 +1713,20 @@ TEST_F(CUErrors, BadCURootDIETag) {
 // produce) output, so their results need to be checked by hand.
 struct Reporter: public Test {
   Reporter()
-      : reporter("filename", 0x123456789abcdef0ULL) {
+      : reporter("filename", 0x123456789abcdef0ULL),
+        function("function name", 0x19c45c30770c1eb0ULL),
+        file("source file name") {
     reporter.SetCUName("compilation-unit-name");
 
-    function.name = "function name";
-    function.address = 0x19c45c30770c1eb0ULL;
     function.size = 0x89808a5bdfa0a6a3ULL;
     function.parameter_size = 0x6a329f18683dcd51ULL;
-
-    file.name = "source file name";
 
     line.address = 0x3606ac6267aebeccULL;
     line.size = 0x5de482229f32556aULL;
     line.file = &file;
     line.number = 93400201;
   }
-  
+
   DwarfCUToModule::WarningReporter reporter;
   Module::Function function;
   Module::File file;
@@ -1714,7 +1773,7 @@ TEST_F(Reporter, UncoveredLineEnabled) {
 
 TEST_F(Reporter, UnnamedFunction) {
   reporter.UnnamedFunction(0x90c0baff9dedb2d9ULL);
-}  
+}
 
 // Would be nice to also test:
 // - overlapping lines, functions

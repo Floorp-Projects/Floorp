@@ -61,6 +61,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gAboutNewTabService",
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
+XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
+                                  "resource://gre/modules/AddonWatcher.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -81,6 +83,7 @@ if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }
 
+/*globals gBrowser, gNavToolbox, gURLBar, gNavigatorBundle*/
 [
   ["gBrowser",            "content"],
   ["gNavToolbox",         "navigator-toolbox"],
@@ -155,9 +158,9 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 });
 
 XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
-  let tmp = {};
-  Cu.import("resource://devtools/client/shared/DeveloperToolbar.jsm", tmp);
-  return new tmp.DeveloperToolbar(window, document.getElementById("developer-toolbar"));
+  let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
+  return new DeveloperToolbar(window, document.getElementById("developer-toolbar"));
 });
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
@@ -923,6 +926,7 @@ var gBrowserInit = {
     DevEdition.init();
     AboutPrivateBrowsingListener.init();
     TrackingProtection.init();
+    RefreshBlocker.init();
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
@@ -1100,6 +1104,12 @@ var gBrowserInit = {
         // swap the given tab with the default about:blank tab and then close
         // the original tab in the other window.
         let tabToOpen = uriToLoad;
+
+        // If this tab was passed as a window argument, clear the
+        // reference to it from the arguments array.
+        if (window.arguments[0] == tabToOpen) {
+          window.arguments[0] = null;
+        }
 
         // Stop the about:blank load
         gBrowser.stop();
@@ -1341,6 +1351,9 @@ var gBrowserInit = {
 
       SocialUI.init();
 
+      // Start monitoring slow add-ons
+      AddonWatcher.init();
+
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
       setTimeout(() => {
@@ -1445,6 +1458,8 @@ var gBrowserInit = {
     DevEdition.uninit();
 
     TrackingProtection.uninit();
+
+    RefreshBlocker.uninit();
 
     gMenuButtonUpdateBadge.uninit();
 
@@ -3971,7 +3986,7 @@ function updateEditUIVisibility()
 function openNewUserContextTab(event)
 {
   openUILinkIn(BROWSER_NEW_TAB_URL, "tab", {
-    userContextId: event.target.getAttribute('usercontextid'),
+    userContextId: parseInt(event.target.getAttribute('usercontextid')),
   });
 }
 
@@ -4696,54 +4711,6 @@ var TabsProgressListener = {
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
   },
-
-  onRefreshAttempted: function (aBrowser, aWebProgress, aURI, aDelay, aSameURI) {
-    if (gPrefService.getBoolPref("accessibility.blockautorefresh")) {
-      let brandBundle = document.getElementById("bundle_brand");
-      let brandShortName = brandBundle.getString("brandShortName");
-      let refreshButtonText =
-        gNavigatorBundle.getString("refreshBlocked.goButton");
-      let refreshButtonAccesskey =
-        gNavigatorBundle.getString("refreshBlocked.goButton.accesskey");
-      let message =
-        gNavigatorBundle.getFormattedString(aSameURI ? "refreshBlocked.refreshLabel"
-                                                     : "refreshBlocked.redirectLabel",
-                                            [brandShortName]);
-      let docShell = aWebProgress.DOMWindow
-                                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
-      let notificationBox = gBrowser.getNotificationBox(aBrowser);
-      let notification = notificationBox.getNotificationWithValue("refresh-blocked");
-      if (notification) {
-        notification.label = message;
-        notification.refreshURI = aURI;
-        notification.delay = aDelay;
-        notification.docShell = docShell;
-      } else {
-        let buttons = [{
-          label: refreshButtonText,
-          accessKey: refreshButtonAccesskey,
-          callback: function (aNotification, aButton) {
-            var refreshURI = aNotification.docShell
-                                          .QueryInterface(Ci.nsIRefreshURI);
-            refreshURI.forceRefreshURI(aNotification.refreshURI,
-                                       aNotification.delay, true);
-          }
-        }];
-        notification =
-          notificationBox.appendNotification(message, "refresh-blocked",
-                                             "chrome://browser/skin/Info.png",
-                                             notificationBox.PRIORITY_INFO_MEDIUM,
-                                             buttons);
-        notification.refreshURI = aURI;
-        notification.delay = aDelay;
-        notification.docShell = docShell;
-      }
-      return false;
-    }
-    return true;
-  }
 }
 
 function nsBrowserAccess() { }

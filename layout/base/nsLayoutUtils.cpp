@@ -2054,7 +2054,7 @@ nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame
 {
   if (!aDOMEvent)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  WidgetEvent* event = aDOMEvent->GetInternalNSEvent();
+  WidgetEvent* event = aDOMEvent->WidgetEventPtr();
   if (!event)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   return GetEventCoordinatesRelativeTo(event, aFrame);
@@ -3104,17 +3104,12 @@ nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFram
 
 void
 nsLayoutUtils::MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                      nsIFrame* aScrollFrame,
-                                      nsRect aDisplayPortBase) {
+                                      nsIFrame* aScrollFrame) {
   nsIContent* content = aScrollFrame->GetContent();
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
   if (!content || !scrollableFrame) {
     return;
   }
-
-  // Set the base rect. Note that this will not influence 'haveDisplayPort',
-  // which is based on either the whole rect or margins being set.
-  SetDisplayPortBase(content, aDisplayPortBase);
 
   bool haveDisplayPort = HasDisplayPort(content);
 
@@ -3638,9 +3633,11 @@ AddBoxesForFrame(nsIFrame* aFrame,
 
   if (pseudoType == nsCSSAnonBoxes::tableOuter) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
-    nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
-    if (kid) {
-      AddBoxesForFrame(kid, aCallback);
+    if (aCallback->mIncludeCaptionBoxForTable) {
+      nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
+      if (kid) {
+        AddBoxesForFrame(kid, aCallback);
+      }
     }
   } else if (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
              pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
@@ -8579,6 +8576,14 @@ nsLayoutUtils::SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
   MaybeReflowForInflationScreenSizeChange(presContext);
 }
 
+/* static */ bool
+nsLayoutUtils::CanScrollOriginClobberApz(nsIAtom* aScrollOrigin)
+{
+  return aScrollOrigin != nullptr
+      && aScrollOrigin != nsGkAtoms::apz
+      && aScrollOrigin != nsGkAtoms::restore;
+}
+
 /* static */ FrameMetrics
 nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
                                    nsIFrame* aScrollFrame,
@@ -8635,11 +8640,10 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
     metrics.SetSmoothScrollOffset(CSSPoint::FromAppUnits(smoothScrollPosition));
 
-    // If the frame was scrolled since the last layers update, and by
-    // something other than the APZ code, we want to tell the APZ to update
+    // If the frame was scrolled since the last layers update, and by something
+    // that is higher priority than APZ, we want to tell the APZ to update
     // its scroll offset.
-    nsIAtom* lastScrollOrigin = scrollableFrame->LastScrollOrigin();
-    if (lastScrollOrigin && lastScrollOrigin != nsGkAtoms::apz) {
+    if (CanScrollOriginClobberApz(scrollableFrame->LastScrollOrigin())) {
       metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
     }
     nsIAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();

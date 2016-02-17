@@ -1,5 +1,8 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 // Test that the sidebar widget auto-registers existing tabs.
@@ -7,7 +10,6 @@
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 
 const testToolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                "<?xml-stylesheet href='chrome://devtools/skin/common.css' type='text/css'?>" +
                 "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
                 "<hbox flex='1'><description flex='1'>test tool</description>" +
                 "<splitter class='devtools-side-splitter'/>" +

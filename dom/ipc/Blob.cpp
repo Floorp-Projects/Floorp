@@ -24,7 +24,7 @@
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
 #include "mozilla/dom/indexedDB/FileSnapshot.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"

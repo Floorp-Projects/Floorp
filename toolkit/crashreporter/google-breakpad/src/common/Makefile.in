@@ -2,8 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(OS_TARGET),Android)
+ifeq (Android,$(OS_TARGET))
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/gonk-include/
+else
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# memory.h in this dir breaks things if -I$(srcdir) gets added, since memory.h
+# is also a system header and the copy here winds up getting included instead.
+INCLUDES := $(LOCAL_INCLUDES) -I$(DIST)/include

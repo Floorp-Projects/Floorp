@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853283
     var sb = new Cu.Sandbox(window);
     sb.iwin = iwin;
     sb.ok = ok;
-    Cu.evalInSandbox('try {iwin.navigator.mozApps; ok(true, "Didnt throw"); } catch (e) { ok(false, "Threw: " + e);}', sb);
+    Cu.evalInSandbox('try {iwin.navigator.mozContacts; ok(true, "Didnt throw"); } catch (e) { ok(false, "Threw: " + e);}', sb);
     SimpleTest.finish();
   }
 

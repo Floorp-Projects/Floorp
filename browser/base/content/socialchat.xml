@@ -207,6 +207,16 @@
           content.setAttribute("origin", this.content.getAttribute("origin"));
           content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
           content.swapDocShells(this.content);
+
+          // When a chat window is attached or detached, the docShell hosting
+          // the chat document is swapped to the newly created chat window.
+          // (Be it inside a popup or back inside a chatbox element attached to
+          // the chatbar.)
+          // Since a swapDocShells call does not swap the messageManager instances
+          // attached to a browser, we'll need to add the message listeners to
+          // the new messageManager. This is not a bug in swapDocShells, merely
+          // a design decision.
+          content.messageManager.addMessageListener("DOMTitleChanged", content);
         ]]></body>
       </method>
 

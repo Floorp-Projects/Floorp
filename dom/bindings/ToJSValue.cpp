@@ -7,6 +7,9 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
+#ifdef SPIDERMONKEY_PROMISE
+#include "mozilla/dom/Promise.h"
+#endif // SPIDERMONKEY_PROMISE
 #include "nsAString.h"
 #include "nsContentUtils.h"
 #include "nsStringBuffer.h"
@@ -63,6 +66,16 @@ ToJSValue(JSContext* aCx,
   JS_ClearPendingException(aCx);
   return true;
 }
+
+#ifdef SPIDERMONKEY_PROMISE
+bool
+ToJSValue(JSContext* aCx, Promise& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.setObject(*aArgument.PromiseObj());
+  return true;
+}
+#endif // SPIDERMONKEY_PROMISE
 
 } // namespace dom
 } // namespace mozilla

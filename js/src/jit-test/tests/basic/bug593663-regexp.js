@@ -12,6 +12,8 @@ function isPatternSyntaxError(pattern) {
     }
 }
 
+enableMatchFlagArgument();
+
 // Bug example.
 assertEq("1+2".replace("1+2", "$&+3", "g"), "1+2+3");
 assertEq("1112".replace("1+2", "", "g"), "1112");

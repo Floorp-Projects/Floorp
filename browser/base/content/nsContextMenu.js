@@ -31,6 +31,7 @@ nsContextMenu.prototype = {
       return;
 
     this.hasPageMenu = false;
+    this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     if (!aIsShift) {
       if (this.isRemote) {
         this.hasPageMenu =
@@ -71,6 +72,8 @@ nsContextMenu.prototype = {
                                                    Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
+    // Reset after "on-build-contextmenu" notification in case selection was
+    // changed during the notification.
     this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     this.onPlainTextLink = false;
 
@@ -141,9 +144,11 @@ nsContextMenu.prototype = {
 
     var shouldShow = this.onSaveableLink || isMailtoInternal || this.onPlainTextLink;
     var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+    var showContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
     this.showItem("context-openlink", shouldShow && !isWindowPrivate);
     this.showItem("context-openlinkprivate", shouldShow);
     this.showItem("context-openlinkintab", shouldShow);
+    this.showItem("context-openlinkinusercontext-menu", shouldShow && showContainers);
     this.showItem("context-openlinkincurrent", this.onPlainTextLink);
     this.showItem("context-sep-open", shouldShow);
   },
@@ -171,7 +176,7 @@ nsContextMenu.prototype = {
 
   initLeaveDOMFullScreenItems: function CM_initLeaveFullScreenItem() {
     // only show the option if the user is in DOM fullscreen
-    var shouldShow = (this.target.ownerDocument.mozFullScreenElement != null);
+    var shouldShow = (this.target.ownerDocument.fullscreenElement != null);
     this.showItem("context-leave-dom-fullscreen", shouldShow);
 
     // Explicitly show if in DOM fullscreen, but do not hide it has already been shown
@@ -467,7 +472,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-playbackrate", onMedia);
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", onMedia && this.target.controls);
-    this.showItem("context-video-fullscreen", this.onVideo && this.target.ownerDocument.mozFullScreenElement == null);
+    this.showItem("context-video-fullscreen", this.onVideo && this.target.ownerDocument.fullscreenElement == null);
     var statsShowing = this.onVideo && this.target.mozMediaStatisticsShowing;
     this.showItem("context-video-showstats", this.onVideo && this.target.controls && !statsShowing);
     this.showItem("context-video-hidestats", this.onVideo && this.target.controls && statsShowing);
@@ -957,7 +962,7 @@ nsContextMenu.prototype = {
   },
 
   // Open linked-to URL in a new tab.
-  openLinkInTab: function() {
+  openLinkInTab: function(event) {
     urlSecurityCheck(this.linkURL, this.principal);
     let referrerURI = gContextMenuContentData.documentURIObject;
 
@@ -978,6 +983,7 @@ nsContextMenu.prototype = {
 
     let params = this._openLinkInParameters({
       allowMixedContent: persistAllowMixedContentInChildTab,
+      userContextId: parseInt(event.target.getAttribute('usercontextid')),
     });
     openLinkIn(this.linkURL, "tab", params);
   },
@@ -1159,7 +1165,7 @@ nsContextMenu.prototype = {
   },
 
   leaveDOMFullScreen: function() {
-    document.mozCancelFullScreen();
+    document.exitFullscreen();
   },
 
   // Change current window to the URL of the background image.

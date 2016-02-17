@@ -2,6 +2,7 @@
 $inherits:
   from: 'tasks/tests/fx_desktop_generic.yml'
 task:
+  workerType: desktop-test-xlarge
   payload:
     maxRunTime: 7200
     command:
@@ -18,7 +19,7 @@ task:
           mozharness/configs/web_platform_tests/prod_config.py
           mozharness/configs/remove_executables.py
   metadata:
-    name: '[TC] Linux64 web-platform-tests {{chunk}}'
+    name: '[TC] Linux64 web-platform-tests-{{chunk}}'
     description: Web platform tests run {{chunk}}
   extra:
     chunks:

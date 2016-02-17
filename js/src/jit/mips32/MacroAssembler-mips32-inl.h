@@ -236,6 +236,29 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     as_srl(dest.high, dest.high, imm.value);
 }
 
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+{
+    branchPtr(cond, lhs, rhs, label);
+}
+
+void
+MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                             Label* label)
+{
+    if (cond == Assembler::Zero) {
+        MOZ_ASSERT(lhs.low == rhs.low);
+        MOZ_ASSERT(lhs.high == rhs.high);
+        as_or(ScratchRegister, lhs.low, lhs.high);
+        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+    } else {
+        MOZ_CRASH("Unsupported condition");
+    }
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -266,7 +289,7 @@ void
 MacroAssemblerMIPSCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
 {
     asMasm().subPtr(imm, lhs);
-    branchPtr(cond, lhs, Imm32(0), label);
+    asMasm().branchPtr(cond, lhs, Imm32(0), label);
 }
 
 } // namespace jit

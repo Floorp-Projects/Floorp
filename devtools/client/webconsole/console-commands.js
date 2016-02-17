@@ -7,7 +7,7 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-loader.lazyGetter(this, "gDevTools", () => require("resource://devtools/client/framework/gDevTools.jsm").gDevTools);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
 exports.items = [
   {

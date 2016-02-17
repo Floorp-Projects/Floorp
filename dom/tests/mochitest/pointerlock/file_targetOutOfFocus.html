@@ -48,12 +48,12 @@
         document.addEventListener("mozpointerlockchange", function (e) {
           if (document.mozPointerLockElement === div) {
             divPointerLock = true;
-            document.mozCancelFullScreen();
+            document.exitFullscreen();
           }
         }, false);
 
-        document.addEventListener("mozfullscreenchange", function() {
-          if (document.mozFullScreenElement === div) {
+        document.addEventListener("fullscreenchange", function() {
+          if (document.fullscreenElement === div) {
             input.focus();
           } else {
             runTests();
@@ -62,7 +62,7 @@
         }, false);
 
         function start() {
-          div.mozRequestFullScreen();
+          div.requestFullscreen();
         }
       </script>
     </pre>

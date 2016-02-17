@@ -38,7 +38,7 @@
 #define PROCESSOR_STATIC_CONTAINED_RANGE_MAP_INL_H__
 
 #include "processor/static_contained_range_map.h"
-#include "common/logging.h"
+#include "processor/logging.h"
 
 namespace google_breakpad {
 

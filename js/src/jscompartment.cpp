@@ -505,7 +505,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
 
 ClonedBlockObject*
 JSCompartment::getOrCreateNonSyntacticLexicalScope(JSContext* cx,
-                                                   Handle<StaticNonSyntacticScope*> enclosingStatic,
+                                                   HandleObject enclosingStatic,
                                                    HandleObject enclosingScope)
 {
     if (!nonSyntacticLexicalScopes_) {
@@ -673,7 +673,7 @@ JSCompartment::sweepInnerViews()
 void
 JSCompartment::sweepSavedStacks()
 {
-    savedStacks_.sweep(runtimeFromAnyThread());
+    savedStacks_.sweep();
 }
 
 void
@@ -1114,7 +1114,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t* regexpCompartment,
                                       size_t* savedStacksSet,
                                       size_t* nonSyntacticLexicalScopesArg,
-                                      size_t* jitCompartment)
+                                      size_t* jitCompartment,
+                                      size_t* privateData)
 {
     *compartmentObject += mallocSizeOf(this);
     objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
@@ -1134,6 +1135,10 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
         *nonSyntacticLexicalScopesArg += nonSyntacticLexicalScopes_->sizeOfIncludingThis(mallocSizeOf);
     if (jitCompartment_)
         *jitCompartment += jitCompartment_->sizeOfIncludingThis(mallocSizeOf);
+
+    auto callback = runtime_->sizeOfIncludingThisCompartmentCallback;
+    if (callback)
+        *privateData += callback(mallocSizeOf, this);
 }
 
 void

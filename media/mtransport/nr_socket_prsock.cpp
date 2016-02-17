@@ -1056,7 +1056,6 @@ NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerOpened() {
 // callback while UDP socket is connected
 NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerConnected() {
   return socket_->CallListenerConnected();
-  return NS_OK;
 }
 
 // callback while UDP socket is closed

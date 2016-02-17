@@ -221,6 +221,14 @@ nsBMPDecoder::GetCompressedImageSize() const
 }
 
 void
+nsBMPDecoder::BeforeFinishInternal()
+{
+  if (!IsMetadataDecode() && !mImageData) {
+    PostDataError();
+  }
+}
+
+void
 nsBMPDecoder::FinishInternal()
 {
   // We shouldn't be called in error cases.
@@ -232,17 +240,18 @@ nsBMPDecoder::FinishInternal()
   // Send notifications if appropriate.
   if (!IsMetadataDecode() && HasSize()) {
 
+    // We should have image data.
+    MOZ_ASSERT(mImageData);
+
     // If it was truncated, fill in the missing pixels as black.
-    if (mImageData) {
-      while (mCurrentRow > 0) {
-        uint32_t* dst = RowBuffer();
-        while (mCurrentPos < mH.mWidth) {
-          SetPixel(dst, 0, 0, 0);
-          mCurrentPos++;
-        }
-        mCurrentPos = 0;
-        FinishRow();
+    while (mCurrentRow > 0) {
+      uint32_t* dst = RowBuffer();
+      while (mCurrentPos < mH.mWidth) {
+        SetPixel(dst, 0, 0, 0);
+        mCurrentPos++;
       }
+      mCurrentPos = 0;
+      FinishRow();
     }
 
     // Invalidate.
@@ -441,6 +450,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         case State::BITFIELDS:        return ReadBitfields(aData, aLength);
         case State::COLOR_TABLE:      return ReadColorTable(aData, aLength);
         case State::GAP:              return SkipGap();
+        case State::AFTER_GAP:        return AfterGap();
         case State::PIXEL_ROW:        return ReadPixelRow(aData);
         case State::RLE_SEGMENT:      return ReadRLESegment(aData);
         case State::RLE_DELTA:        return ReadRLEDelta(aData);
@@ -492,7 +502,7 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
     PostDataError();
     return Transition::TerminateFailure();
   }
-  // ICO BMPs must have a WinVMPv3 header. nsICODecoder should have already
+  // ICO BMPs must have a WinBMPv3 header. nsICODecoder should have already
   // terminated decoding if this isn't the case.
   MOZ_ASSERT_IF(mIsWithinICO, mH.mBIHSize == InfoHeaderLength::WIN_V3);
 
@@ -710,12 +720,19 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
     PostDataError();
     return Transition::TerminateFailure();
   }
+
   uint32_t gapLength = mH.mDataOffset - mPreGapLength;
-  return Transition::To(State::GAP, gapLength);
+  return Transition::ToUnbuffered(State::AFTER_GAP, State::GAP, gapLength);
 }
 
 LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::SkipGap()
+{
+  return Transition::ContinueUnbuffered(State::GAP);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::AfterGap()
 {
   // If there are no pixels we can stop.
   //
@@ -977,7 +994,7 @@ nsBMPDecoder::ReadRLEDelta(const char* aData)
   if (mDownscaler) {
     // Clear the skipped pixels. (This clears to the end of the row,
     // which is perfect if there's a Y delta and harmless if not).
-    mDownscaler->ClearRow(/* aStartingAtCol = */ mCurrentPos);
+    mDownscaler->ClearRestOfRow(/* aStartingAtCol = */ mCurrentPos);
   }
 
   // Handle the XDelta.

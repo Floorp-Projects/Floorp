@@ -65,9 +65,7 @@ GMPChild::~GMPChild()
 
 static bool
 GetFileBase(const nsAString& aPluginPath,
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
             nsCOMPtr<nsIFile>& aLibDirectory,
-#endif
             nsCOMPtr<nsIFile>& aFileBase,
             nsAutoString& aBaseName)
 {
@@ -77,11 +75,9 @@ GetFileBase(const nsAString& aPluginPath,
     return false;
   }
 
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   if (NS_FAILED(aFileBase->Clone(getter_AddRefs(aLibDirectory)))) {
     return false;
   }
-#endif
 
   nsCOMPtr<nsIFile> parent;
   rv = aFileBase->GetParent(getter_AddRefs(parent));
@@ -102,18 +98,21 @@ GetFileBase(const nsAString& aPluginPath,
 }
 
 static bool
+GetFileBase(const nsAString& aPluginPath,
+            nsCOMPtr<nsIFile>& aFileBase,
+            nsAutoString& aBaseName)
+{
+  nsCOMPtr<nsIFile> unusedLibDir;
+  return GetFileBase(aPluginPath, unusedLibDir, aFileBase, aBaseName);
+}
+
+static bool
 GetPluginFile(const nsAString& aPluginPath,
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
               nsCOMPtr<nsIFile>& aLibDirectory,
-#endif
               nsCOMPtr<nsIFile>& aLibFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   GetFileBase(aPluginPath, aLibDirectory, aLibFile, baseName);
-#else
-  GetFileBase(aPluginPath, aLibFile, baseName);
-#endif
 
 #if defined(XP_MACOSX)
   nsAutoString binaryName = NS_LITERAL_STRING("lib") + baseName + NS_LITERAL_STRING(".dylib");
@@ -128,7 +127,16 @@ GetPluginFile(const nsAString& aPluginPath,
   return true;
 }
 
-#ifdef XP_WIN
+#if !defined(XP_MACOSX)
+static bool
+GetPluginFile(const nsAString& aPluginPath,
+              nsCOMPtr<nsIFile>& aLibFile)
+{
+  nsCOMPtr<nsIFile> unusedlibDir;
+  return GetPluginFile(aPluginPath, unusedlibDir, aLibFile);
+}
+#endif
+
 static bool
 GetInfoFile(const nsAString& aPluginPath,
             nsCOMPtr<nsIFile>& aInfoFile)
@@ -139,9 +147,22 @@ GetInfoFile(const nsAString& aPluginPath,
   aInfoFile->AppendRelativePath(infoFileName);
   return true;
 }
-#endif
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+static nsCString
+GetNativeTarget(nsIFile* aFile)
+{
+  bool isLink;
+  nsCString path;
+  aFile->IsSymlink(&isLink);
+  if (isLink) {
+    aFile->GetNativeTarget(path);
+  } else {
+    aFile->GetNativePath(path);
+  }
+  return path;
+}
+
 static bool
 GetPluginPaths(const nsAString& aPluginPath,
                nsCString &aPluginDirectoryPath,
@@ -154,19 +175,8 @@ GetPluginPaths(const nsAString& aPluginPath,
 
   // Mac sandbox rules expect paths to actual files and directories -- not
   // soft links.
-  bool isLink;
-  libDirectory->IsSymlink(&isLink);
-  if (isLink) {
-    libDirectory->GetNativeTarget(aPluginDirectoryPath);
-  } else {
-    libDirectory->GetNativePath(aPluginDirectoryPath);
-  }
-  libFile->IsSymlink(&isLink);
-  if (isLink) {
-    libFile->GetNativeTarget(aPluginFilePath);
-  } else {
-    libFile->GetNativePath(aPluginFilePath);
-  }
+  aPluginDirectoryPath = GetNativeTarget(libDirectory);
+  aPluginFilePath = GetNativeTarget(libFile);
 
   return true;
 }
@@ -202,19 +212,10 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
     return false;
   }
 
-  bool isLink;
-  app->IsSymlink(&isLink);
-  if (isLink) {
-    app->GetNativeTarget(aAppPath);
-  } else {
-    app->GetNativePath(aAppPath);
-  }
-  appBinary->IsSymlink(&isLink);
-  if (isLink) {
-    appBinary->GetNativeTarget(aAppBinaryPath);
-  } else {
-    appBinary->GetNativePath(aAppBinaryPath);
-  }
+  // Mac sandbox rules expect paths to actual files and directories -- not
+  // soft links.
+  aAppPath = GetNativeTarget(app);
+  appBinaryPath = GetNativeTarget(appBinary);
 
   return true;
 }
@@ -266,6 +267,15 @@ GMPChild::Init(const nsAString& aPluginPath,
 
   mPluginPath = aPluginPath;
   mSandboxVoucherPath = aVoucherPath;
+
+  nsCOMPtr<nsIFile> infoFile;
+  if (!GetInfoFile(mPluginPath, infoFile) || !infoFile) {
+    return false;
+  }
+  if (!mInfoParser.Init(infoFile)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -290,56 +300,13 @@ GMPChild::GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI)
   return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI);
 }
 
-static bool
-ReadIntoArray(nsIFile* aFile,
-              nsTArray<uint8_t>& aOutDst,
-              size_t aMaxLength)
-{
-  if (!FileExists(aFile)) {
-    return false;
-  }
-
-  PRFileDesc* fd = nullptr;
-  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  int32_t length = PR_Seek(fd, 0, PR_SEEK_END);
-  PR_Seek(fd, 0, PR_SEEK_SET);
-
-  if (length < 0 || (size_t)length > aMaxLength) {
-    NS_WARNING("EME file is longer than maximum allowed length");
-    PR_Close(fd);
-    return false;
-  }
-  aOutDst.SetLength(length);
-  int32_t bytesRead = PR_Read(fd, aOutDst.Elements(), length);
-  PR_Close(fd);
-  return (bytesRead == length);
-}
-
 #ifdef XP_WIN
-static bool
-ReadIntoString(nsIFile* aFile,
-               nsCString& aOutDst,
-               size_t aMaxLength)
-{
-  nsTArray<uint8_t> buf;
-  bool rv = ReadIntoArray(aFile, buf, aMaxLength);
-  if (rv) {
-    buf.AppendElement(0); // Append null terminator, required by nsC*String.
-    aOutDst = nsDependentCString((const char*)buf.Elements(), buf.Length() - 1);
-  }
-  return rv;
-}
-
 // Pre-load DLLs that need to be used by the EME plugin but that can't be
 // loaded after the sandbox has started
 bool
-GMPChild::PreLoadLibraries(const nsAString& aPluginPath)
+GMPChild::PreLoadLibraries()
 {
-  // This must be in sorted order and lowercase!
+  // Items in this must be lowercase!
   static const char* whitelist[] = {
     "d3d9.dll", // Create an `IDirect3D9` to get adapter information
     "dxva2.dll", // Get monitor information
@@ -352,42 +319,18 @@ GMPChild::PreLoadLibraries(const nsAString& aPluginPath)
     "msmpeg2vdec.dll", // H.264 decoder
   };
 
-  nsCOMPtr<nsIFile> infoFile;
-  GetInfoFile(aPluginPath, infoFile);
-
-  static const size_t MAX_GMP_INFO_FILE_LENGTH = 5 * 1024;
-  nsAutoCString info;
-  if (!ReadIntoString(infoFile, info, MAX_GMP_INFO_FILE_LENGTH)) {
-    NS_WARNING("Failed to read info file in GMP process.");
+  if (!mInfoParser.Contains(NS_LITERAL_CSTRING("libraries"))) {
     return false;
   }
 
-  // Note: we pass "\r\n" to SplitAt so that we'll split lines delimited
-  // by \n (Unix), \r\n (Windows) and \r (old MacOSX).
-  nsTArray<nsCString> lines;
-  SplitAt("\r\n", info, lines);
-  for (nsCString line : lines) {
-    // Make lowercase.
-    std::transform(line.BeginWriting(),
-                   line.EndWriting(),
-                   line.BeginWriting(),
-                   tolower);
-
-    const char* libraries = "libraries:";
-    int32_t offset = line.Find(libraries, false, 0);
-    if (offset == kNotFound) {
-      continue;
-    }
-    // Line starts with "libraries:".
-    nsTArray<nsCString> libs;
-    SplitAt(",", Substring(line, offset + strlen(libraries)), libs);
-    for (nsCString lib : libs) {
-      lib.Trim(" ");
-      for (const char* whiteListedLib : whitelist) {
-        if (lib.EqualsASCII(whiteListedLib)) {
-          LoadLibraryA(lib.get());
-          break;
-        }
+  nsTArray<nsCString> libs;
+  SplitAt(", ", mInfoParser.Get(NS_LITERAL_CSTRING("libraries")), libs);
+  for (nsCString lib : libs) {
+    ToLowerCase(lib);
+    for (const char* whiteListedLib : whitelist) {
+      if (lib.EqualsASCII(whiteListedLib)) {
+        LoadLibraryA(lib.get());
+        break;
       }
     }
   }
@@ -431,7 +374,7 @@ GMPChild::AnswerStartPlugin()
   LOGD("%s", __FUNCTION__);
 
 #if defined(XP_WIN)
-  PreLoadLibraries(mPluginPath);
+  PreLoadLibraries();
 #endif
   if (!PreLoadPluginVoucher()) {
     NS_WARNING("Plugin voucher failed to load!");
@@ -643,12 +586,7 @@ GetPluginVoucherFile(const nsAString& aPluginPath,
                      nsCOMPtr<nsIFile>& aOutVoucherFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  nsCOMPtr<nsIFile> libDir;
-  GetFileBase(aPluginPath, aOutVoucherFile, libDir, baseName);
-#else
   GetFileBase(aPluginPath, aOutVoucherFile, baseName);
-#endif
   nsAutoString infoFileName = baseName + NS_LITERAL_STRING(".voucher");
   aOutVoucherFile->AppendRelativePath(infoFileName);
 }

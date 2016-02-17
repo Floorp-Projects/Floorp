@@ -14,22 +14,20 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-function getStyle(node, property) {
-  return node.style.getPropertyValue(property);
-}
-
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openLayoutView();
 
-  yield runTests(inspector, view);
+  yield testEditing(inspector, view, testActor);
+  yield testEditingAndCanceling(inspector, view, testActor);
+  yield testDeleting(inspector, view, testActor);
+  yield testDeletingAndCanceling(inspector, view, testActor);
 });
 
-addTest("When all properties are set on the node editing one should work",
-function*(inspector, view) {
-  let node = content.document.getElementById("div1");
+function* testEditing(inspector, view, testActor) {
+  info("When all properties are set on the node editing one should work");
 
-  node.style.padding = "5px";
+  yield setStyle(testActor, "#div1", "padding", "5px");
   yield waitForUpdate(inspector);
 
   yield selectNode("#div1", inspector);
@@ -46,19 +44,21 @@ function*(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "7", "Should have the right value in the editor.");
-  is(getStyle(node, "padding-bottom"), "7px", "Should have updated the padding");
+  is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
+     "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "padding-bottom"), "7px", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
+     "Should be the right padding.");
   is(span.textContent, 7, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node editing one should work",
-function*(inspector, view) {
-  let node = content.document.getElementById("div1");
+function* testEditingAndCanceling(inspector, view, testActor) {
+  info("When all properties are set on the node editing one and then " +
+       "cancelling with ESCAPE should work");
 
-  node.style.padding = "5px";
+  yield setStyle(testActor, "#div1", "padding", "5px");
   yield waitForUpdate(inspector);
 
   yield selectNode("#div1", inspector);
@@ -75,20 +75,19 @@ function*(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "8", "Should have the right value in the editor.");
-  is(getStyle(node, "padding-left"), "8px", "Should have updated the padding");
+  is((yield getStyle(testActor, "#div1", "padding-left")), "8px",
+     "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
-  is(getStyle(node, "padding-left"), "5px", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
+     "Should be the right padding.");
   is(span.textContent, 5, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node deleting one should work",
-function*(inspector, view) {
-  let node = content.document.getElementById("div1");
-
-  node.style.padding = "5px";
+function* testDeleting(inspector, view, testActor) {
+  info("When all properties are set on the node deleting one should work");
 
   yield selectNode("#div1", inspector);
 
@@ -104,19 +103,21 @@ function*(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
-  is(getStyle(node, "padding-left"), "", "Should have updated the padding");
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
+     "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "padding-left"), "", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
+     "Should be the right padding.");
   is(span.textContent, 3, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node deleting one then cancelling should work",
-function*(inspector, view) {
-  let node = content.document.getElementById("div1");
+function* testDeletingAndCanceling(inspector, view, testActor) {
+  info("When all properties are set on the node deleting one then cancelling " +
+       "should work");
 
-  node.style.padding = "5px";
+  yield setStyle(testActor, "#div1", "padding", "5px");
   yield waitForUpdate(inspector);
 
   yield selectNode("#div1", inspector);
@@ -133,11 +134,13 @@ function*(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
-  is(getStyle(node, "padding-left"), "", "Should have updated the padding");
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
+     "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
-  is(getStyle(node, "padding-left"), "5px", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
+     "Should be the right padding.");
   is(span.textContent, 5, "Should have the right value in the box model.");
-});
+}

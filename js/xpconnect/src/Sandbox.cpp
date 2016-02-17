@@ -31,7 +31,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/CSSBinding.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
@@ -53,7 +53,7 @@ using namespace JS;
 using namespace xpc;
 
 using mozilla::dom::DestroyProtoAndIfaceCache;
-using mozilla::dom::indexedDB::IndexedDatabaseManager;
+using mozilla::dom::IndexedDatabaseManager;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SandboxPrivate)
 
@@ -292,9 +292,8 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     if (rv.MaybeSetPendingException(cx)) {
         return false;
     }
-    if (!GetOrCreateDOMReflector(cx, response, args.rval())) {
-        return false;
-    }
+
+    args.rval().setObject(*response->PromiseObj());
     return true;
 }
 
@@ -1167,10 +1166,12 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         if (!options.globalProperties.Define(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
 
+#ifndef SPIDERMONKEY_PROMISE
         // Promise is supposed to be part of ES, and therefore should appear on
         // every global.
         if (!dom::PromiseBinding::GetConstructorObject(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
+#endif // SPIDERMONKEY_PROMISE
     }
 
     // We handle the case where the context isn't in a compartment for the

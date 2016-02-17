@@ -43,12 +43,12 @@ public:
     bool isOpaque() const override;
     bool onReadPixels(const SkImageInfo&, void* dstPixels, size_t dstRowBytes,
                       int srcX, int srcY, CachingHint) const override;
-    SkImage* onApplyFilter(SkImageFilter*, SkIPoint* offset,
-                           bool forceResultToOriginalSize) const override;
 
     SkSurface* onNewSurface(const SkImageInfo& info) const override {
         return SkSurface::NewRenderTarget(fTexture->getContext(), SkSurface::kNo_Budgeted, info);
     }
+
+    bool asBitmapForImageFilters(SkBitmap* bitmap) const override;
 
 private:
     SkAutoTUnref<GrTexture>     fTexture;

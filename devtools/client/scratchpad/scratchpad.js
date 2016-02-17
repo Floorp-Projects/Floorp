@@ -52,13 +52,13 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
-Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/reflect.jsm");

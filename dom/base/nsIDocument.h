@@ -1130,14 +1130,6 @@ public:
   virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
 
   /**
-   * Returns the element which either requested DOM full-screen mode, or
-   * contains the element which requested DOM full-screen mode if the
-   * requestee is in a subdocument. Note this element must be *in*
-   * this document.
-   */
-  virtual Element* GetFullScreenElement() = 0;
-
-  /**
    * Returns all elements in the fullscreen stack in the insertion order.
    */
   virtual nsTArray<Element*> GetFullscreenStack() const = 0;
@@ -1238,6 +1230,12 @@ public:
    * Returns whether there is any fullscreen request handled.
    */
   static bool HandlePendingFullscreenRequests(nsIDocument* aDocument);
+
+  /**
+   * Dispatch fullscreenerror event and report the failure message to
+   * the console.
+   */
+  void DispatchFullscreenError(const char* aMessage);
 
   virtual void RequestPointerLock(Element* aElement) = 0;
 
@@ -2503,13 +2501,13 @@ public:
                                   Element* aElement) = 0;
   nsIURI* GetDocumentURIObject() const;
   // Not const because all the full-screen goop is not const
-  virtual bool MozFullScreenEnabled() = 0;
-  virtual Element* GetMozFullScreenElement(mozilla::ErrorResult& rv) = 0;
+  virtual bool FullscreenEnabled() = 0;
+  virtual Element* GetFullscreenElement() = 0;
   bool MozFullScreen()
   {
     return IsFullScreenDoc();
   }
-  void MozCancelFullScreen();
+  void ExitFullscreen();
   Element* GetMozPointerLockElement();
   void MozExitPointerLock()
   {

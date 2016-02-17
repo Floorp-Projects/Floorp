@@ -30,6 +30,12 @@ public:
 
   virtual void
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
+
+#ifdef SPIDERMONKEY_PROMISE
+    bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aWrapper);
+#endif // SPIDERMONKEY_PROMISE
+
 };
 
 } // namespace dom

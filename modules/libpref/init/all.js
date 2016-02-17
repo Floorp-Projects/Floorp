@@ -349,6 +349,7 @@ pref("media.raw.enabled", true);
 pref("media.ogg.enabled", true);
 pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
+pref("media.wave.decoder.enabled", true);
 pref("media.webm.enabled", true);
 #if defined(MOZ_FMP4) && defined(MOZ_WMF)
 pref("media.webm.intel_decoder.enabled", false);
@@ -704,8 +705,8 @@ pref("gfx.font_rendering.opentype_svg.enabled", true);
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
-pref("gfx.canvas.azure.backends", "direct2d1.1,direct2d,skia,cairo");
-pref("gfx.content.azure.backends", "direct2d1.1,direct2d,cairo");
+pref("gfx.canvas.azure.backends", "direct2d1.1,skia,cairo");
+pref("gfx.content.azure.backends", "direct2d1.1,cairo");
 #else
 #ifdef XP_MACOSX
 pref("gfx.content.azure.backends", "cg");
@@ -920,9 +921,8 @@ pref("devtools.commands.dir", "");
 // Allows setting the performance marks for which telemetry metrics will be recorded.
 pref("devtools.telemetry.supported_performance_marks", "contentInteractive,navigationInteractive,navigationLoaded,visuallyLoaded,fullyLoaded,mediaEnumerated,scanEnd");
 
-// Deprecation warnings after DevTools file migration.  Bug 1204127 tracks
-// enabling this.
-pref("devtools.migration.warnings", false);
+// Deprecation warnings after DevTools file migration.
+pref("devtools.migration.warnings", true);
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -1881,6 +1881,9 @@ pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 // Use the HSTS preload list by default
 pref("network.stricttransportsecurity.preloadlist", true);
 
+// Use JS mDNS as a fallback
+pref("network.mdns.use_js_fallback", false);
+
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 // Whether we include ruby annotation in the text despite whether it
@@ -2524,6 +2527,9 @@ pref("layout.spammy_warnings.enabled", false);
 pref("layout.float-fragments-inside-column.enabled", true);
 
 // Is support for the Web Animations API enabled?
+// Before enabling this by default, make sure also CSSPseudoElement interface
+// has been spec'ed properly, or we should add a separate pref for
+// CSSPseudoElement interface. See Bug 1174575 for further details.
 #ifdef RELEASE_BUILD
 pref("dom.animations-api.core.enabled", false);
 #else
@@ -4365,6 +4371,7 @@ pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 pref("layers.enable-tiles", false);
+pref("layers.single-tile.enabled", true);
 pref("layers.tiled-drawtarget.enabled", false);
 pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
@@ -4424,7 +4431,7 @@ pref("gfx.apitrace.enabled",false);
 #ifdef MOZ_X11
 pref("gfx.content.use-native-pushlayer", true);
 #ifdef MOZ_WIDGET_GTK
-pref("gfx.xrender.enabled",true);
+pref("gfx.xrender.enabled",false);
 #endif
 #endif
 
@@ -4433,7 +4440,6 @@ pref("gfx.content.use-native-pushlayer", true);
 
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);
-pref("gfx.direct2d.use1_1", true);
 
 // Whether to attempt to enable Direct2D regardless of automatic detection or
 // blacklisting
@@ -4628,6 +4634,7 @@ pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
 // 0 - disabled, 1 - enabled, 2 - autodetect
+// Autodetection is currently only supported on Windows and GTK3
 #if defined(XP_MACOSX)
 pref("dom.w3c_touch_events.enabled", 0);
 #elif defined(XP_WIN) && !defined(NIGHTLY_BUILD)
@@ -4944,6 +4951,9 @@ pref("layout.accessiblecaret.bar.width", "2.0");
 // Show the selection bars at the two ends of the selection highlight.
 pref("layout.accessiblecaret.bar.enabled", true);
 
+// Show the caret when long tapping on an empty content.
+pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
+
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
 // no one touches it. Set the value to 0 to disable this feature.
 pref("layout.accessiblecaret.timeout_ms", 3000);
@@ -5196,4 +5206,3 @@ pref("dom.input.fallbackUploadDir", "");
 
 // Turn rewriting of youtube embeds on/off
 pref("plugins.rewrite_youtube_embeds", true);
-

@@ -78,6 +78,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         STAPLINGDIR=${HOSTDIR}/stapling
         SSLGTESTDIR=${HOSTDIR}/ssl_gtests
         PK11GTESTDIR=${HOSTDIR}/pk11_gtests
+        DERGTESTDIR=${HOSTDIR}/der_gtests
 
         PWFILE=${HOSTDIR}/tests.pw
         NOISE_FILE=${HOSTDIR}/tests_noise
@@ -542,6 +543,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_STAPLINGDIR=../stapling
     R_SSLGTESTDIR=../ssl_gtests
     R_PK11GTESTDIR=../pk11_gtests
+    R_DERGTESTDIR=../der_gtests
 
     #
     # profiles are either paths or domains depending on the setting of

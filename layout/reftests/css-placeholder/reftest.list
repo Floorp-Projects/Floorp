@@ -1,7 +1,7 @@
 include input/reftest.list
 include textarea/reftest.list
 
-== css-restrictions.html css-restrictions-ref.html
+fuzzy-if(skiaContent,1,4) == css-restrictions.html css-restrictions-ref.html
 == css-simple-styling.html css-simple-styling-ref.html
 != css-background.html css-background-ref.html
-== ignore-pseudo-class.html ignore-pseudo-class-ref.html
+fuzzy-if(skiaContent,1,180) == ignore-pseudo-class.html ignore-pseudo-class-ref.html

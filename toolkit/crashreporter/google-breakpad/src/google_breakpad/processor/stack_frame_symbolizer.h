@@ -62,7 +62,10 @@ class StackFrameSymbolizer {
     kError,
     // This indicates error for which stack walk should be interrupted
     // and retried in future.
-    kInterrupt
+    kInterrupt,
+    // Symbol data was found and loaded in resolver however some corruptions
+    // were detected.
+    kWarningCorruptSymbols,
   };
 
   StackFrameSymbolizer(SymbolSupplier* supplier,

@@ -65,7 +65,7 @@ add_chat_task(function* testTearoffChat() {
   Assert.equal(chatbox.getAttribute("label"), chatTitle, "window should have same title as chat");
 
   yield ContentTask.spawn(chatbox.content, null, function* () {
-    div = content.document.getElementById("testdiv");
+    let div = content.document.getElementById("testdiv");
     is(div.getAttribute("test"), "1", "docshell should have been swapped");
     div.setAttribute("test", "2");
   });

@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
@@ -55,7 +54,7 @@ public class Married extends TokensAndKeysState {
     delegate.handleTransition(new LogMessage("staying married"), this);
   }
 
-  public String generateAssertion(String audience, String issuer) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException {
+  public String generateAssertion(String audience, String issuer) throws NonObjectJSONException, IOException, GeneralSecurityException {
     // We generate assertions with no iat and an exp after 2050 to avoid
     // invalid-timestamp errors from the token server.
     final long expiresAt = JSONWebTokenUtils.DEFAULT_FUTURE_EXPIRES_AT_IN_MILLISECONDS;

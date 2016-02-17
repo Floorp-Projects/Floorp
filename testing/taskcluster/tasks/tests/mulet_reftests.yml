@@ -3,26 +3,25 @@ $inherits:
   from: 'tasks/tests/b2g_unittest_base.yml'
 task:
   metadata:
-    name: '[TC] Reftest'
-    description: Reftest test run {{chunk}}
+    name: '[TC] Mulet Reftest ( {{chunk}} )'
+    description: Mulet Reftest run {{chunk}}
 
   payload:
     env:
       MOZ_DISABLE_NONLOCAL_CONNECTIONS: 0
+      NEED_XVFB: true
+      NEED_PULL_GAIA: true
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/mulet_unittest.py'
+      MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_mulet_automation.py'
     command:
-      - entrypoint
-      - ./bin/pull_gaia.sh &&
-      - >
-        python ./mozharness/scripts/mulet_unittest.py
-        --config-file ./mozharness/configs/b2g/taskcluster_mulet_automation.py
-        --installer-url {{build_url}}
-        --test-packages-url {{test_packages_url}}
-        --test-suite reftest
-        --test-manifest tests/layout/reftests/reftest.list
-        --this-chunk {{chunk}}
-        --total-chunk {{total_chunks}}
-        --gaia-repo https://hg.mozilla.org/integration/gaia-central
-        --gaia-dir /home/worker/gaia
+      - bash
+      - /home/worker/bin/test.sh
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --test-suite=reftest
+      - --test-manifest=tests/layout/reftests/reftest.list
+      - --this-chunk={{chunk}}
+      - --total-chunk={{total_chunks}}
     artifacts:
       'public/build':
         type: directory
@@ -40,3 +39,4 @@ task:
       groupName: Mulet Reftest
       symbol: 'R{{chunk}}'
       productName: b2g
+      tier: 3

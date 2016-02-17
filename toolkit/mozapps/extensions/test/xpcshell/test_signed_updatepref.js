@@ -1,5 +1,6 @@
 // Disable update security
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
+gUseRealCertChecks = true;
 
 const DATA = "data/signing_checks/";
 const ID = "test@tests.mozilla.org";
@@ -54,6 +55,7 @@ function run_test() {
 // Updating the pref without changing the app version won't disable add-ons
 // immediately but will after a signing check
 add_task(function*() {
+  Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   startupManager();
 
   // Install the signed add-on

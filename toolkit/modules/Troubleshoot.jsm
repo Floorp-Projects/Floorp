@@ -178,8 +178,14 @@ this.Troubleshoot = {
 var dataProviders = {
 
   application: function application(done) {
+
+    let sysInfo = Cc["@mozilla.org/system-info;1"].
+                  getService(Ci.nsIPropertyBag2);
+
     let data = {
       name: Services.appinfo.name,
+      osVersion: sysInfo.getProperty("name") + " " + sysInfo.getProperty("version"),
+      arch: sysInfo.getProperty("arch"),
       version: AppConstants.MOZ_APP_VERSION_DISPLAY,
       buildID: Services.appinfo.appBuildID,
       userAgent: Cc["@mozilla.org/network/protocol;1?name=http"].

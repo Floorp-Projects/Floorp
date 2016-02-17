@@ -577,7 +577,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
   // into. The final mask gets rendered into the original render target.
 
   // Calculate the size of the intermediate surfaces.
-  gfx::Rect visibleRect(aLayer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
+  gfx::Rect visibleRect(aLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
   gfx::Matrix4x4 transform = aLayer->GetEffectiveTransform();
   // TODO: Use RenderTargetIntRect and TransformBy here
   gfx::IntRect surfaceRect =

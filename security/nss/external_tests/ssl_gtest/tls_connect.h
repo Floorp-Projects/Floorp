@@ -27,6 +27,7 @@ class TlsConnectTestBase : public ::testing::Test {
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV11;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV11V12;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV12Plus;
+  static ::testing::internal::ParamGenerator<uint16_t> kTlsV13;
 
   static inline Mode ToMode(const std::string& str) {
     return str == "TLS" ? STREAM : DGRAM;
@@ -56,6 +57,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void CheckConnected();
   // Connect and expect it to fail.
   void ConnectExpectFail();
+  void CheckKeys(SSLKEAType keyType, SSLAuthType authType) const;
 
   void SetExpectedVersion(uint16_t version);
   // Expect resumption of a particular type.
@@ -70,6 +72,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void EnableSrtp();
   void CheckSrtp() const;
   void SendReceive();
+  void Receive(size_t amount);
   void ExpectExtendedMasterSecret(bool expected);
 
  protected:
@@ -88,11 +91,27 @@ class TlsConnectTestBase : public ::testing::Test {
   bool expect_extended_master_secret_;
 };
 
+// A non-parametrized TLS test base.
+class TlsConnectTest : public TlsConnectTestBase {
+ public:
+ TlsConnectTest() : TlsConnectTestBase(STREAM, 0) {}
+};
+
+// A non-parametrized DTLS-only test base.
+class DtlsConnectTest : public TlsConnectTestBase {
+ public:
+  DtlsConnectTest() : TlsConnectTestBase(DGRAM, 0) {}
+};
+
 // A TLS-only test base.
 class TlsConnectStream : public TlsConnectTestBase,
                          public ::testing::WithParamInterface<uint16_t> {
  public:
   TlsConnectStream() : TlsConnectTestBase(STREAM, GetParam()) {}
+};
+
+// A TLS-only test base for tests before 1.3
+class TlsConnectStreamPre13 : public TlsConnectStream {
 };
 
 // A DTLS-only test base.
@@ -126,6 +145,10 @@ class TlsConnectTls12
     public ::testing::WithParamInterface<std::string> {
  public:
   TlsConnectTls12();
+};
+
+// A variant that is used only with Pre13.
+class TlsConnectGenericPre13 : public TlsConnectGeneric {
 };
 
 } // namespace nss_test

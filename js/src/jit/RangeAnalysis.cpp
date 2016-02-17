@@ -196,12 +196,14 @@ RangeAnalysis::addBetaNodes()
             conservativeUpper = GenericNaN();
         }
 
-        if (left->isConstantValue() && left->constantValue().isNumber()) {
-            bound = left->constantValue().toNumber();
+        MConstant* leftConst = left->maybeConstantValue();
+        MConstant* rightConst = right->maybeConstantValue();
+        if (leftConst && leftConst->isNumber()) {
+            bound = leftConst->toNumber();
             val = right;
             jsop = ReverseCompareOp(jsop);
-        } else if (right->isConstantValue() && right->constantValue().isNumber()) {
-            bound = right->constantValue().toNumber();
+        } else if (rightConst && rightConst->isNumber()) {
+            bound = rightConst->toNumber();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
             MDefinition* smaller = nullptr;
@@ -1289,11 +1291,11 @@ MBeta::computeRange(TempAllocator& alloc)
 void
 MConstant::computeRange(TempAllocator& alloc)
 {
-    if (value().isNumber()) {
-        double d = value().toNumber();
+    if (isNumber()) {
+        double d = toNumber();
         setRange(Range::NewDoubleSingletonRange(alloc, d));
-    } else if (value().isBoolean()) {
-        bool b = value().toBoolean();
+    } else if (type() == MIRType_Boolean) {
+        bool b = toBoolean();
         setRange(Range::NewInt32Range(alloc, b, b));
     }
 }
@@ -1360,9 +1362,9 @@ MLsh::computeRange(TempAllocator& alloc)
     Range right(getOperand(1));
     left.wrapAroundToInt32();
 
-    MDefinition* rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
+    MConstant* rhsConst = getOperand(1)->maybeConstantValue();
+    if (rhsConst && rhsConst->type() == MIRType_Int32) {
+        int32_t c = rhsConst->toInt32();
         setRange(Range::lsh(alloc, &left, c));
         return;
     }
@@ -1378,9 +1380,9 @@ MRsh::computeRange(TempAllocator& alloc)
     Range right(getOperand(1));
     left.wrapAroundToInt32();
 
-    MDefinition* rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
+    MConstant* rhsConst = getOperand(1)->maybeConstantValue();
+    if (rhsConst && rhsConst->type() == MIRType_Int32) {
+        int32_t c = rhsConst->toInt32();
         setRange(Range::rsh(alloc, &left, c));
         return;
     }
@@ -1403,9 +1405,9 @@ MUrsh::computeRange(TempAllocator& alloc)
     left.wrapAroundToInt32();
     right.wrapAroundToShiftCount();
 
-    MDefinition* rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
+    MConstant* rhsConst = getOperand(1)->maybeConstantValue();
+    if (rhsConst && rhsConst->type() == MIRType_Int32) {
+        int32_t c = rhsConst->toInt32();
         setRange(Range::ursh(alloc, &left, c));
     } else {
         setRange(Range::ursh(alloc, &left, &right));
@@ -1863,6 +1865,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
             direction = NegateBranchDirection(direction);
             MBasicBlock* otherBlock = branch->branchSuccessor(direction);
             if (!otherBlock->isMarked()) {
+                if (!alloc().ensureBallast())
+                    return false;
                 iterationBound =
                     analyzeLoopIterationCount(header, branch, direction);
                 if (iterationBound)
@@ -2246,6 +2250,8 @@ RangeAnalysis::analyze()
 
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition* def = *iter;
+            if (!alloc().ensureBallast())
+                return false;
 
             def->computeRange(alloc());
             JitSpew(JitSpew_Range, "computing range on %d", def->id());
@@ -2311,6 +2317,8 @@ RangeAnalysis::addRangeAssertions()
             if (ins->isRecoveredOnBailout())
                 continue;
 
+            if (!alloc().ensureBallast())
+                return false;
             MAssertRange* guard = MAssertRange::New(alloc(), ins, new(alloc()) Range(r));
 
             // Beta nodes and interrupt checks are required to be located at the
@@ -2397,7 +2405,7 @@ MDefinition::truncate()
 bool
 MConstant::needTruncation(TruncateKind kind)
 {
-    return value_.isDouble();
+    return IsFloatingPointType(type());
 }
 
 void
@@ -2406,8 +2414,9 @@ MConstant::truncate()
     MOZ_ASSERT(needTruncation(Truncate));
 
     // Truncate the double to int, since all uses truncates it.
-    int32_t res = ToInt32(value_.toDouble());
-    value_.setInt32(res);
+    int32_t res = ToInt32(toNumber());
+    payload_.asBits = 0;
+    payload_.i32 = res;
     setResultType(MIRType_Int32);
     if (range())
         range()->setInt32(res, res);
@@ -2722,31 +2731,33 @@ MCompare::operandTruncateKind(size_t index) const
     return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
 }
 
-static void
+static bool
 TruncateTest(TempAllocator& alloc, MTest* test)
 {
     // If all possible inputs to the test are either int32 or boolean,
     // convert those inputs to int32 so that an int32 test can be performed.
 
     if (test->input()->type() != MIRType_Value)
-        return;
+        return true;
 
     if (!test->input()->isPhi() || !test->input()->hasOneDefUse() || test->input()->isImplicitlyUsed())
-        return;
+        return true;
 
     MPhi* phi = test->input()->toPhi();
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* def = phi->getOperand(i);
         if (!def->isBox())
-            return;
+            return true;
         MDefinition* inner = def->getOperand(0);
         if (inner->type() != MIRType_Boolean && inner->type() != MIRType_Int32)
-            return;
+            return true;
     }
 
     for (size_t i = 0; i < phi->numOperands(); i++) {
         MDefinition* inner = phi->getOperand(i)->getOperand(0);
         if (inner->type() != MIRType_Int32) {
+            if (!alloc.ensureBallast())
+                return false;
             MBasicBlock* block = inner->block();
             inner = MToInt32::New(alloc, inner);
             block->insertBefore(block->lastIns(), inner->toInstruction());
@@ -2756,6 +2767,7 @@ TruncateTest(TempAllocator& alloc, MTest* test)
     }
 
     phi->setResultType(MIRType_Int32);
+    return true;
 }
 
 // Truncating instruction result is an optimization which implies
@@ -2777,6 +2789,8 @@ CloneForDeadBranches(TempAllocator& alloc, MInstruction* candidate)
         return true;
 
     MOZ_ASSERT(candidate->canClone());
+    if (!alloc.ensureBallast())
+        return false;
 
     MDefinitionVector operands(alloc);
     size_t end = candidate->numOperands();
@@ -2794,7 +2808,7 @@ CloneForDeadBranches(TempAllocator& alloc, MInstruction* candidate)
 
     candidate->block()->insertBefore(candidate, clone);
 
-    if (!candidate->isConstantValue()) {
+    if (!candidate->maybeConstantValue()) {
         MOZ_ASSERT(clone->canRecoverOnBailout());
         clone->setRecoveredOnBailout();
     }
@@ -3007,8 +3021,10 @@ RangeAnalysis::truncate()
                 continue;
 
             if (iter->type() == MIRType_None) {
-                if (iter->isTest())
-                    TruncateTest(alloc(), iter->toTest());
+                if (iter->isTest()) {
+                    if (!TruncateTest(alloc(), iter->toTest()))
+                        return false;
+                }
                 continue;
             }
 
@@ -3088,6 +3104,8 @@ RangeAnalysis::truncate()
     // Update inputs/outputs of truncated instructions.
     JitSpew(JitSpew_Range, "Do graph type fixup (dequeue)");
     while (!worklist.empty()) {
+        if (!alloc().ensureBallast())
+            return false;
         MDefinition* def = worklist.popCopy();
         def->setNotInWorklist();
         RemoveTruncatesOnOutput(def);
@@ -3340,14 +3358,14 @@ MBinaryBitwiseInstruction::collectRangeInfoPreTrunc()
     Range lhsRange(lhs());
     Range rhsRange(rhs());
 
-    if (lhs()->isConstantValue() && lhs()->type() == MIRType_Int32 &&
-         DoesMaskMatchRange(lhs()->constantValue().toInt32(), rhsRange))
+    if (lhs()->isConstant() && lhs()->type() == MIRType_Int32 &&
+        DoesMaskMatchRange(lhs()->toConstant()->toInt32(), rhsRange))
     {
         maskMatchesRightRange = true;
     }
 
-    if (rhs()->isConstantValue() && rhs()->type() == MIRType_Int32 &&
-         DoesMaskMatchRange(rhs()->constantValue().toInt32(), lhsRange))
+    if (rhs()->isConstant() && rhs()->type() == MIRType_Int32 &&
+        DoesMaskMatchRange(rhs()->toConstant()->toInt32(), lhsRange))
     {
         maskMatchesLeftRange = true;
     }

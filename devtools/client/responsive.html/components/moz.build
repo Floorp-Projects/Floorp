@@ -6,6 +6,8 @@
 
 DevToolsModules(
     'browser.js',
+    'resizable-viewport.js',
+    'viewport-toolbar.js',
     'viewport.js',
     'viewports.js',
 )

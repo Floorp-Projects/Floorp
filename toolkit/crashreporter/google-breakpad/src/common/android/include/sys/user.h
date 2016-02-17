@@ -30,105 +30,46 @@
 #ifndef GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_USER_H
 #define GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_USER_H
 
+// The purpose of this file is to glue the mismatching headers (Android NDK vs
+// glibc) and therefore avoid doing otherwise awkward #ifdefs in the code.
+// The following quirks are currently handled by this file:
+// - i386: Use the Android NDK but alias user_fxsr_struct > user_fpxregs_struct.
+// - aarch64: Add missing user_regs_struct and user_fpsimd_struct structs.
+// - Other platforms: Just use the Android NDK unchanged.
+
+// TODO(primiano): remove these changes after Chromium has stably rolled to
+// an NDK with the appropriate fixes.
+
+#include_next <sys/user.h>
+
+#ifdef __i386__
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
-
-// These types are used with ptrace(), more specifically with
-// PTRACE_GETREGS, PTRACE_GETFPREGS and PTRACE_GETVFPREGS respectively.
-//
-// They are also defined, sometimes with different names, in <asm/user.h>
-//
-
-#if defined(__arm__)
-
-#define _ARM_USER_H  1  // Prevent <asm/user.h> conflicts
-
-// Note: on ARM, GLibc uses user_regs instead of user_regs_struct.
-struct user_regs {
-  // Note: Entries 0-15 match r0..r15
-  //       Entry 16 is used to store the CPSR register.
-  //       Entry 17 is used to store the "orig_r0" value.
-  unsigned long int uregs[18];
-};
-
-// Same here: user_fpregs instead of user_fpregs_struct.
-struct user_fpregs {
-  struct fp_reg {
-    unsigned int sign1:1;
-    unsigned int unused:15;
-    unsigned int sign2:1;
-    unsigned int exponent:14;
-    unsigned int j:1;
-    unsigned int mantissa1:31;
-    unsigned int mantissa0:32;
-  } fpregs[8];
-  unsigned int  fpsr:32;
-  unsigned int  fpcr:32;
-  unsigned char ftype[8];
-  unsigned int  init_flag;
-};
-
-// GLibc doesn't define this one in <sys/user.h> though.
-struct user_vfpregs {
-  unsigned long long  fpregs[32];
-  unsigned long       fpscr;
-};
-
-#elif defined(__i386__)
-
-#define _I386_USER_H 1  // Prevent <asm/user.h> conflicts
-
-// GLibc-compatible definitions
-struct user_regs_struct {
-  long ebx, ecx, edx, esi, edi, ebp, eax;
-  long xds, xes, xfs, xgs, orig_eax;
-  long eip, xcs, eflags, esp, xss;
-};
-
-struct user_fpregs_struct {
-  long cwd, swd, twd, fip, fcs, foo, fos;
-  long st_space[20];
-};
-
-struct user_fpxregs_struct {
-  unsigned short cwd, swd, twd, fop;
-  long fip, fcs, foo, fos, mxcsr, reserved;
-  long st_space[32];
-  long xmm_space[32];
-  long padding[56];
-};
-
-struct user {
-  struct user_regs_struct    regs;
-  int                        u_fpvalid;
-  struct user_fpregs_struct  i387;
-  unsigned long              u_tsize;
-  unsigned long              u_dsize;
-  unsigned long              u_ssize;
-  unsigned long              start_code;
-  unsigned long              start_stack;
-  long                       signal;
-  int                        reserved;
-  struct user_regs_struct*   u_ar0;
-  struct user_fpregs_struct* u_fpstate;
-  unsigned long              magic;
-  char                       u_comm [32];
-  int                        u_debugreg [8];
-};
-
-
-#elif defined(__mips__)
-
-// TODO: Provide some useful definitions here, once the rest of Breakpad
-//        requires them.
-
-#else
-#  error "Unsupported Android CPU ABI"
-#endif
-
+typedef struct user_fxsr_struct user_fpxregs_struct;
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
+#endif  // __i386__
+
+#ifdef __aarch64__
+#ifdef __cplusplus
+extern "C" {
+#endif  // __cplusplus
+struct user_regs_struct {
+ __u64 regs[31];
+ __u64 sp;
+ __u64 pc;
+ __u64 pstate;
+};
+struct user_fpsimd_struct {
+ __uint128_t vregs[32];
+ __u32 fpsr;
+ __u32 fpcr;
+};
+#ifdef __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
+#endif  // __aarch64__
 
 #endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_USER_H

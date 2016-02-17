@@ -203,6 +203,8 @@ public:
 protected:
     friend class GLContext;
 
+    void UpdateUploadSize(size_t amount);
+
     /**
      * After the ctor, the TextureImage is invalid.  Implementations
      * must allocate resources successfully before returning the new
@@ -214,7 +216,9 @@ protected:
                  Flags aFlags = NoFlags);
 
     // Protected destructor, to discourage deletion outside of Release():
-    virtual ~TextureImage() {}
+    virtual ~TextureImage() {
+        UpdateUploadSize(0);
+    }
 
     virtual gfx::IntRect GetSrcTileRect();
 
@@ -224,6 +228,7 @@ protected:
     gfx::SurfaceFormat mTextureFormat;
     gfx::Filter mFilter;
     Flags mFlags;
+    size_t mUploadSize;
 };
 
 /**

@@ -52,8 +52,7 @@ public:
     // We need to ensure that mParamsArray is released on the main thread,
     // as the binding arguments may be XPConnect values, which are safe
     // to release only on the main thread.
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    (void)NS_ProxyRelease(mainThread, mParamsArray);
+    NS_ReleaseOnMainThread(mParamsArray.forget());
   }
 
   /**

@@ -40,7 +40,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     MOZ_ASSERT(OsrFrameReg == IntArgReg3);
 
 #if defined(_WIN64)
-    const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
+    const Address token  = Address(rbp, 16 + ShadowStackSpace);
     const Operand scopeChain = Operand(rbp, 24 + ShadowStackSpace);
     const Operand numStackValuesAddr = Operand(rbp, 32 + ShadowStackSpace);
     const Operand result = Operand(rbp, 40 + ShadowStackSpace);

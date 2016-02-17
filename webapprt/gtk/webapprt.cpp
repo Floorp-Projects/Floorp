@@ -19,6 +19,7 @@
 #include "nsXPCOMPrivate.h"              // for MAXPATHLEN and XPCOM_DLL
 #include "nsXULAppAPI.h"
 #include "BinaryPath.h"
+#include "buildid.h"
 
 const char kAPP_INI[] = "application.ini";
 const char kWEBAPP_INI[] = "webapp.ini";
@@ -396,7 +397,7 @@ int main(int argc, char *argv[])
   }
 
   // If WebAppRT version == Firefox version, load XUL and execute the application
-  if (!strcmp(buildid, NS_STRINGIFY(GRE_BUILDID))) {
+  if (!strcmp(buildid, NS_STRINGIFY(MOZ_BUILDID))) {
     if (GRELoadAndLaunch(firefoxDir, false))
       return 0;
   }

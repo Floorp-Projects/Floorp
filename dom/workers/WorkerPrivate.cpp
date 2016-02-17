@@ -62,7 +62,6 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/WorkerTimelineMarker.h"
@@ -3626,17 +3625,8 @@ WorkerDebugger::~WorkerDebugger()
   MOZ_ASSERT(!mWorkerPrivate);
 
   if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIThread> mainThread;
-    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
-      NS_WARNING("Failed to proxy release of listeners, leaking instead!");
-    }
-
     for (size_t index = 0; index < mListeners.Length(); ++index) {
-      nsIWorkerDebuggerListener* listener = nullptr;
-      mListeners[index].forget(&listener);
-      if (NS_FAILED(NS_ProxyRelease(mainThread, listener))) {
-        NS_WARNING("Failed to proxy release of listener, leaking instead!");
-      }
+      NS_ReleaseOnMainThread(mListeners[index].forget());
     }
   }
 }
@@ -4116,7 +4106,6 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                            WorkerLoadInfo* aLoadInfo)
 {
   using namespace mozilla::dom::workers::scriptloader;
-  using mozilla::dom::indexedDB::IDBFactory;
 
   MOZ_ASSERT(aCx);
   MOZ_ASSERT_IF(NS_IsMainThread(), aCx == nsContentUtils::GetCurrentJSContext());
@@ -4158,11 +4147,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     if (parentStatus > Running) {
-      nsCOMPtr<nsIThread> mainThread;
-      if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread))) ||
-          NS_FAILED(NS_ProxyRelease(mainThread, loadInfo.mChannel))) {
-        NS_WARNING("Failed to proxy release of channel, leaking instead!");
-      }
+      NS_ReleaseOnMainThread(loadInfo.mChannel.forget());
       return NS_ERROR_FAILURE;
     }
 
@@ -4177,7 +4162,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     AssertIsOnMainThread();
 
     // Make sure that the IndexedDatabaseManager is set up
-    NS_WARN_IF(!indexedDB::IndexedDatabaseManager::GetOrCreate());
+    NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);

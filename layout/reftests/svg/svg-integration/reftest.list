@@ -1,3 +1,6 @@
+# clip-path tests
+include clip-path/reftest.list
+
 == clipPath-html-01.xhtml clipPath-html-01-ref.svg
 == clipPath-html-01-extref.xhtml clipPath-html-01-ref.svg
 == clipPath-html-02.xhtml clipPath-html-02-ref.svg

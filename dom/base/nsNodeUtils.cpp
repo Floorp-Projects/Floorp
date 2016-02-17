@@ -245,7 +245,7 @@ nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
     return nullptr;
   }
 
-  return effect->GetTarget();
+  return target;
 }
 
 void

@@ -1382,6 +1382,34 @@ CallNonGenericSelfhostedMethod(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<Test, CallSelfHostedNonGenericMethod>(cx, args);
 }
 
+bool
+js::IsCallSelfHostedNonGenericMethod(NativeImpl impl)
+{
+    return impl == CallSelfHostedNonGenericMethod;
+}
+
+bool
+js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
+{
+    // The contract for this function is the same as CallSelfHostedNonGenericMethod.
+    // The normal ReportIncompatible function doesn't work for selfhosted functions,
+    // because they always call the different CallXXXMethodIfWrapped methods,
+    // which would be reported as the called function instead.
+
+    // Lookup the selfhosted method that was invoked.
+    ScriptFrameIter iter(cx);
+    MOZ_ASSERT(iter.isFunctionFrame());
+
+    JSAutoByteString funNameBytes;
+    if (const char* funName = GetFunctionNameBytes(cx, iter.callee(cx), &funNameBytes)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
+                             funName, "method", InformalValueTypeName(args.thisv()));
+    }
+
+    return false;
+}
+
+
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -2249,10 +2277,9 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
                                  : selfHostedFunction->getAllocKind();
         MOZ_ASSERT(!CanReuseScriptForClone(cx->compartment(), selfHostedFunction, cx->global()));
         Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
-        Rooted<StaticScope*> staticGlobalLexical(cx, &globalLexical->staticBlock());
+        RootedObject staticGlobalLexical(cx, &globalLexical->staticBlock());
         clone = CloneFunctionAndScript(cx, selfHostedFunction, globalLexical,
                                        staticGlobalLexical, kind);
-
         // To be able to re-lazify the cloned function, its name in the
         // self-hosting compartment has to be stored on the clone.
         if (clone && hasName) {

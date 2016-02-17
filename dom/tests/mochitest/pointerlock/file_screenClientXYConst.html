@@ -82,7 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           clientY: e.clientY
         };
 
-        document.mozCancelFullScreen();
+        document.exitFullscreen();
       }
 
       document.addEventListener("mozpointerlockchange", function (e) {
@@ -101,8 +101,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       function fullscreenchange() {
         var screenX = window.screenX;
         var screenY = window.screenY;
-        if (document.mozFullScreenElement === div) {
-          info("Got mozfullscreenchange for entering");
+        if (document.fullscreenElement === div) {
+          info("Got fullscreenchange for entering");
           if (screenX != 0 || screenY != 0) {
             todo(screenX == 0 && screenY == 0,
               "We should only receive fullscreenchange once we've finished fullscreen transition " +
@@ -117,17 +117,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
           });
         } else {
-          info("Got mozfullscreenchange for exiting");
+          info("Got fullscreenchange for exiting");
           runTests();
           SimpleTest.finish();
         }
       }
-      document.addEventListener("mozfullscreenchange", fullscreenchange, false);
+      document.addEventListener("fullscreenchange", fullscreenchange, false);
 
       function start() {
         div = document.getElementById("div");
         info("Requesting fullscreen on parent");
-        div.mozRequestFullScreen();
+        div.requestFullscreen();
       }
   </script>
 </body>

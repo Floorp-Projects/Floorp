@@ -287,9 +287,7 @@ ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID,
 		    sid->u.ssl3.keys.resumable) &&
 		   /* server hostname matches. */
 	           (sid->urlSvrName != NULL) &&
-		   ((0 == PORT_Strcmp(urlSvrName, sid->urlSvrName)) ||
-		    ((sid->peerCert != NULL) && (SECSuccess == 
-		      CERT_VerifyCertName(sid->peerCert, urlSvrName))) )
+		   (0 == PORT_Strcmp(urlSvrName, sid->urlSvrName))
 		  ) {
 	    /* Hit */
 	    sid->lastAccessTime = now;

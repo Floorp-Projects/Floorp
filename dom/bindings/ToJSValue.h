@@ -19,6 +19,8 @@
 namespace mozilla {
 namespace dom {
 
+class Promise;
+
 // If ToJSValue returns false, it must set an exception on the
 // JSContext.
 
@@ -303,6 +305,14 @@ ToJSValue(JSContext* aCx,
 {
   return ToJSValue(aCx, *aArgument, aValue);
 }
+
+#ifdef SPIDERMONKEY_PROMISE
+// Accept Promise objects, which need special handling.
+MOZ_WARN_UNUSED_RESULT bool
+ToJSValue(JSContext* aCx,
+          Promise& aArgument,
+          JS::MutableHandle<JS::Value> aValue);
+#endif // SPIDERMONKEY_PROMISE
 
 // Accept arrays of other things we accept
 template <typename T>

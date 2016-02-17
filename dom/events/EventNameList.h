@@ -218,6 +218,14 @@ EVENT(ended,
       eEnded,
       EventNameType_HTML,
       eBasicEventClass)
+EVENT(fullscreenchange,
+      eFullscreenChange,
+      EventNameType_HTML,
+      eBasicEventClass)
+EVENT(fullscreenerror,
+      eFullscreenError,
+      EventNameType_HTML,
+      eBasicEventClass)
 EVENT(input,
       eEditorInput,
       EventNameType_HTMLXUL,
@@ -295,11 +303,11 @@ EVENT(mouseup,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mozfullscreenchange,
-      eFullscreenChange,
+      eMozFullscreenChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozfullscreenerror,
-      eFullscreenError,
+      eMozFullscreenError,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockchange,

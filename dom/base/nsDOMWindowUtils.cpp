@@ -77,8 +77,8 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
-#include "mozilla/dom/indexedDB/IDBMutableFile.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/IDBMutableFile.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -1773,7 +1773,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
 {
   NS_ENSURE_STATE(aEvent);
   aEvent->SetTrusted(aTrusted);
-  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   NS_ENSURE_STATE(internalEvent);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(content);
@@ -2158,7 +2158,7 @@ nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> a
   RefPtr<Promise> promise =
     MP4Decoder::IsVideoAccelerated(mgr->GetCompositorBackendType(), parentObject);
   NS_ENSURE_STATE(promise);
-  aPromise.setObject(*promise->GetWrapper());
+  aPromise.setObject(*promise->PromiseObj());
 #else
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(parentObject, rv);
@@ -2166,7 +2166,7 @@ nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> a
     return rv.StealNSResult();
   }
   promise.MaybeResolve(NS_LITERAL_STRING("No; Compiled without MP4 support."));
-  aPromise.setObject(*promise->GetWrapper());
+  aPromise.setObject(*promise->PromiseObj());
 #endif
   return NS_OK;
 }
@@ -2247,8 +2247,13 @@ ComputeAnimationValue(nsCSSProperty aProperty,
                       StyleAnimationValue& aOutput)
 {
 
-  if (!StyleAnimationValue::ComputeValue(aProperty, aElement, aInput,
-                                         false, aOutput)) {
+  if (!StyleAnimationValue::ComputeValue(
+        aProperty,
+        aElement,
+        nsCSSPseudoElements::ePseudo_NotPseudoElement,
+        aInput,
+        false,
+        aOutput)) {
     return false;
   }
 
@@ -2819,7 +2824,7 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
 
   JSObject* obj = aFile.toObjectOrNull();
 
-  indexedDB::IDBMutableFile* mutableFile = nullptr;
+  IDBMutableFile* mutableFile = nullptr;
   if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, obj, mutableFile))) {
     *_retval = mutableFile->GetFileId();
     return NS_OK;
@@ -2887,8 +2892,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   quota::PersistenceType persistenceType =
     quota::PersistenceTypeFromStorage(options.mStorage);
 
-  RefPtr<indexedDB::IndexedDatabaseManager> mgr =
-    indexedDB::IndexedDatabaseManager::Get();
+  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
 
   if (mgr) {
     rv = mgr->BlockAndGetFileReferences(persistenceType, origin, aDatabaseName,
@@ -2907,8 +2911,6 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
 NS_IMETHODIMP
 nsDOMWindowUtils::FlushPendingFileDeletions()
 {
-  using mozilla::dom::indexedDB::IndexedDatabaseManager;
-
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
   if (mgr) {
     nsresult rv = mgr->FlushPendingFileDeletions();
@@ -3451,7 +3453,7 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
 {
   *aRetVal = false;
   NS_ENSURE_STATE(aTarget && aEvent);
-  aEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   aTarget->DispatchEvent(aEvent, aRetVal);
   return NS_OK;
 }

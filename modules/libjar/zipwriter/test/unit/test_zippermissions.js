@@ -32,7 +32,7 @@ function run_test() {
 
   var tmp = tmpDir.clone();
   tmp.append("temp-permissions");
-  tmp.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE, 0755);
+  tmp.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE, 0o755);
 
   var file = tmp.clone();
   file.append("tempfile");

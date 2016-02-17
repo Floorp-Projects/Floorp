@@ -1,6 +1,7 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -17,11 +18,11 @@ function scopedCuImport(path) {
 }
 
 const {Services} = scopedCuImport("resource://gre/modules/Services.jsm");
-const {gDevTools} = scopedCuImport("resource://devtools/client/framework/gDevTools.jsm");
 const {console} = scopedCuImport("resource://gre/modules/Console.jsm");
 const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 const {require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
 
+const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 let promise = require("promise");

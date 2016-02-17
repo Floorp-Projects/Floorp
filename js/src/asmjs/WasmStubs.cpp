@@ -19,7 +19,6 @@
 #include "asmjs/WasmStubs.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EnumeratedRange.h"
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -28,7 +27,6 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::ArrayLength;
-using mozilla::MakeEnumeratedRange;
 
 static void
 AssertStackAlignment(MacroAssembler& masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
@@ -94,12 +92,9 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // The signature of the entry point is Module::CodePtr. The exported wasm
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of CodePtr to the export's signature's ABI.
-static bool
-GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
+Offsets
+wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool usesHeap)
 {
-    MacroAssembler& masm = mg.masm();
-    const Sig& sig = mg.exportSig(exportIndex);
-
     masm.haltingAlign(CodeAlignment);
 
     Offsets offsets;
@@ -235,9 +230,7 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
 
     // Call into the real function.
     masm.assertStackAlignment(AsmJSStackAlignment);
-    Label target;
-    target.bind(mg.exportEntryOffset(exportIndex));
-    masm.call(CallSiteDesc(CallSiteDesc::Relative), &target);
+    masm.call(CallSiteDesc(CallSiteDesc::Relative), AsmJSInternalCallee(target));
 
     // Recover the stack pointer value before dynamic alignment.
     masm.loadWasmActivation(scratch);
@@ -283,11 +276,8 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
     masm.move32(Imm32(true), ReturnReg);
     masm.ret();
 
-    if (masm.oom())
-        return false;
-
     offsets.end = masm.currentOffset();
-    return mg.defineExport(exportIndex, offsets);
+    return offsets;
 }
 
 static void
@@ -333,12 +323,10 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate InvokeImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
-static bool
-GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLabel,
-                       ProfilingOffsets* offsets)
+ProfilingOffsets
+wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t importIndex)
 {
-    MacroAssembler& masm = mg.masm();
-    const Sig& sig = *mg.import(importIndex).sig;
+    const Sig& sig = import.sig();
 
     masm.setFramePushed(0);
 
@@ -357,7 +345,8 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLa
     unsigned argBytes = Max<size_t>(1, sig.args().length()) * sizeof(Value);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
-    GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, offsets);
+    ProfilingOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
@@ -398,20 +387,24 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLa
     switch (sig.ret()) {
       case ExprType::Void:
         masm.call(SymbolicAddress::InvokeImport_Void);
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         break;
       case ExprType::I32:
         masm.call(SymbolicAddress::InvokeImport_I32);
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.unboxInt32(argv, ReturnReg);
         break;
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
-        MOZ_CRASH("Float32 shouldn't be returned from a FFI");
+        masm.call(SymbolicAddress::InvokeImport_F64);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
+        masm.loadDouble(argv, ReturnDoubleReg);
+        masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
+        break;
       case ExprType::F64:
         masm.call(SymbolicAddress::InvokeImport_F64);
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
       case ExprType::I32x4:
@@ -422,13 +415,10 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLa
         MOZ_CRASH("Limit");
     }
 
-    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, offsets);
+    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
-    if (masm.oom())
-        return false;
-
-    offsets->end = masm.currentOffset();
-    return true;
+    offsets.end = masm.currentOffset();
+    return offsets;
 }
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
@@ -440,12 +430,10 @@ static const unsigned MaybeSavedGlobalReg = 0;
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
-static bool
-GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
-                    Label* throwLabel, ProfilingOffsets* offsets)
+ProfilingOffsets
+wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
 {
-    MacroAssembler& masm = mg.masm();
-    const Sig& sig = *mg.import(importIndex).sig;
+    const Sig& sig = import.sig();
 
     masm.setFramePushed(0);
 
@@ -462,7 +450,8 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
     unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
 
-    GenerateExitPrologue(masm, jitFramePushed, ExitReason::ImportJit, offsets);
+    ProfilingOffsets offsets;
+    GenerateExitPrologue(masm, jitFramePushed, ExitReason::ImportJit, &offsets);
 
     // 1. Descriptor
     size_t argOffset = 0;
@@ -476,7 +465,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
     Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
-    unsigned globalDataOffset = mg.import(importIndex).globalDataOffset;
+    uint32_t globalDataOffset = import.exitGlobalDataOffset();
 #if defined(JS_CODEGEN_X64)
     masm.append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
@@ -647,7 +636,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
     unsigned nativeFramePushed = masm.framePushed();
     AssertStackAlignment(masm, ABIStackAlignment);
 
-    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
+    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, JumpTarget::Throw);
 
     Label oolConvert;
     switch (sig.ret()) {
@@ -660,7 +649,8 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
-        MOZ_CRASH("Float shouldn't be returned from an import");
+        masm.convertValueToFloat(JSReturnOperand, ReturnFloat32Reg, &oolConvert);
+        break;
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
         break;
@@ -680,7 +670,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
     if (usesHeap)
         masm.loadAsmJSHeapRegisterFromGlobalData();
 
-    GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, offsets);
+    GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -714,13 +704,19 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
         switch (sig.ret()) {
           case ExprType::I32:
             masm.call(SymbolicAddress::CoerceInPlace_ToInt32);
-            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
             masm.unboxInt32(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnReg);
             break;
           case ExprType::F64:
             masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
-            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
             masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
+            break;
+          case ExprType::F32:
+            masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
+            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
+            masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
+            masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
             break;
           default:
             MOZ_CRASH("Unsupported convert type");
@@ -732,25 +728,20 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
-    if (masm.oom())
-        return false;
-
-    offsets->end = masm.currentOffset();
-    return true;
+    offsets.end = masm.currentOffset();
+    return offsets;
 }
 
 // Generate a stub that is called immediately after the prologue when there is a
 // stack overflow. This stub calls a C++ function to report the error and then
 // jumps to the throw stub to pop the activation.
-static bool
-GenerateStackOverflowStub(ModuleGenerator& mg, Label* throwLabel)
+static Offsets
+GenerateStackOverflow(MacroAssembler& masm)
 {
-    MacroAssembler& masm = mg.masm();
-
     masm.haltingAlign(CodeAlignment);
+
     Offsets offsets;
     offsets.begin = masm.currentOffset();
-    masm.bind(masm.asmStackOverflowLabel());
 
     // If we reach here via the non-profiling prologue, WasmActivation::fp has
     // not been updated. To enable stack unwinding from C++, store to it now. If
@@ -769,99 +760,103 @@ GenerateStackOverflowStub(ModuleGenerator& mg, Label* throwLabel)
     // No need to restore the stack; the throw stub pops everything.
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::ReportOverRecursed);
-    masm.jump(throwLabel);
-
-    if (masm.oom())
-        return false;
+    masm.jump(JumpTarget::Throw);
 
     offsets.end = masm.currentOffset();
-    return mg.defineInlineStub(offsets);
+    return offsets;
 }
 
-// Generate a stub that is called from the synchronous, inline interrupt checks
-// when the interrupt flag is set. This stub calls the C++ function to handle
-// the interrupt which returns whether execution has been interrupted.
-static bool
-GenerateSyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
+// Generate a stub that is jumped to from function bodies to throw an exception.
+static Offsets
+GenerateErrorStub(MacroAssembler& masm, SymbolicAddress address)
 {
-    MacroAssembler& masm = mg.masm();
+    masm.haltingAlign(CodeAlignment);
 
-    masm.setFramePushed(0);
-    unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, ShadowStackSpace);
+    Offsets offsets;
+    offsets.begin = masm.currentOffset();
+
+    // sp can be anything at this point, so ensure it is aligned when calling
+    // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
+    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
+
+    masm.assertStackAlignment(ABIStackAlignment);
+    masm.call(address);
+    masm.jump(JumpTarget::Throw);
+
+    offsets.end = masm.currentOffset();
+    return offsets;
+}
+
+// If an exception is thrown, simply pop all frames (since asm.js does not
+// contain try/catch). To do this:
+//  1. Restore 'sp' to it's value right after the PushRegsInMask in GenerateEntry.
+//  2. PopRegsInMask to restore the caller's non-volatile registers.
+//  3. Return (to CallAsmJS).
+static Offsets
+GenerateThrow(MacroAssembler& masm)
+{
+    masm.haltingAlign(CodeAlignment);
+
+    Offsets offsets;
+    offsets.begin = masm.currentOffset();
+
+    // We are about to pop all frames in this WasmActivation. Set fp to null to
+    // maintain the invariant that fp is either null or pointing to a valid
+    // frame.
+    Register scratch = ABIArgGenerator::NonArgReturnReg0;
+    masm.loadWasmActivation(scratch);
+    masm.storePtr(ImmWord(0), Address(scratch, WasmActivation::offsetOfFP()));
+
+    masm.setFramePushed(FramePushedForEntrySP);
+    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
+    masm.Pop(scratch);
+    masm.PopRegsInMask(NonVolatileRegs);
+    MOZ_ASSERT(masm.framePushed() == 0);
+
+    masm.mov(ImmWord(0), ReturnReg);
+    masm.ret();
+
+    offsets.end = masm.currentOffset();
+    return offsets;
+}
+
+Offsets
+wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
+{
+    switch (target) {
+      case JumpTarget::StackOverflow:
+        return GenerateStackOverflow(masm);
+      case JumpTarget::ConversionError:
+        return GenerateErrorStub(masm, SymbolicAddress::OnImpreciseConversion);
+      case JumpTarget::OutOfBounds:
+        return GenerateErrorStub(masm, SymbolicAddress::OnOutOfBounds);
+      case JumpTarget::BadIndirectCall:
+        return GenerateErrorStub(masm, SymbolicAddress::BadIndirectCall);
+      case JumpTarget::Throw:
+        return GenerateThrow(masm);
+      case JumpTarget::Limit:
+        break;
+    }
+    MOZ_CRASH("bad JumpTarget");
+}
+
+ProfilingOffsets
+wasm::GenerateBadIndirectCallExit(MacroAssembler& masm)
+{
+    MIRTypeVector args;
+    unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
     ProfilingOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::Native, &offsets,
-                         masm.asmSyncInterruptLabel());
+    GenerateExitPrologue(masm, framePushed, ExitReason::Error, &offsets);
 
     AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(SymbolicAddress::HandleExecutionInterrupt);
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    masm.call(SymbolicAddress::BadIndirectCall);
+    masm.jump(JumpTarget::Throw);
 
-    GenerateExitEpilogue(masm, framePushed, ExitReason::Native, &offsets);
-
-    if (masm.oom())
-        return false;
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Error, &offsets);
 
     offsets.end = masm.currentOffset();
-    return mg.defineSyncInterruptStub(offsets);
-}
-
-// Generate a stub that is jumped to from an out-of-bounds heap access when
-// there are throwing semantics. This stub calls a C++ function to report an
-// error and then jumps to the throw stub to pop the activation.
-static bool
-GenerateConversionErrorStub(ModuleGenerator& mg, Label* throwLabel)
-{
-    MacroAssembler& masm = mg.masm();
-
-    masm.haltingAlign(CodeAlignment);
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-    masm.bind(masm.asmOnConversionErrorLabel());
-
-    // sp can be anything at this point, so ensure it is aligned when calling
-    // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
-    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-
-    // OnImpreciseConversion always throws.
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OnImpreciseConversion);
-    masm.jump(throwLabel);
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return mg.defineInlineStub(offsets);
-}
-
-// Generate a stub that is jumped to from an out-of-bounds heap access when
-// there are throwing semantics. This stub calls a C++ function to report an
-// error and then jumps to the throw stub to pop the activation.
-static bool
-GenerateOutOfBoundsStub(ModuleGenerator& mg, Label* throwLabel)
-{
-    MacroAssembler& masm = mg.masm();
-
-    masm.haltingAlign(CodeAlignment);
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-    masm.bind(masm.asmOnOutOfBoundsLabel());
-
-    // sp can be anything at this point, so ensure it is aligned when calling
-    // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
-    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-
-    // OnOutOfBounds always throws.
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OnOutOfBounds);
-    masm.jump(throwLabel);
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return mg.defineOutOfBoundsStub(offsets);
+    return offsets;
 }
 
 static const LiveRegisterSet AllRegsExceptSP(
@@ -877,12 +872,11 @@ static const LiveRegisterSet AllRegsExceptSP(
 // Unfortunately, loading this requires a scratch register which we don't have
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
-static bool
-GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
+Offsets
+wasm::GenerateInterruptStub(MacroAssembler& masm)
 {
-    MacroAssembler& masm = mg.masm();
-
     masm.haltingAlign(CodeAlignment);
+
     Offsets offsets;
     offsets.begin = masm.currentOffset();
 
@@ -912,7 +906,7 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, JumpTarget::Throw);
 
     // Restore the StackPointer to its position before the call.
     masm.moveToStackPtr(ABIArgGenerator::NonVolatileReg);
@@ -950,7 +944,7 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
 
     masm.addToStackPtr(Imm32(4 * sizeof(intptr_t)));
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, JumpTarget::Throw);
 
     // This will restore stack to the address before the call.
     masm.moveToStackPtr(s0);
@@ -993,7 +987,7 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    masm.branchIfFalseBool(ReturnReg, JumpTarget::Throw);
 
     // Restore the machine state to before the interrupt. this will set the pc!
 
@@ -1029,103 +1023,6 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
 # error "Unknown architecture!"
 #endif
 
-    if (masm.oom())
-        return false;
-
     offsets.end = masm.currentOffset();
-    return mg.defineAsyncInterruptStub(offsets);
+    return offsets;
 }
-
-// If an exception is thrown, simply pop all frames (since asm.js does not
-// contain try/catch). To do this:
-//  1. Restore 'sp' to it's value right after the PushRegsInMask in GenerateEntry.
-//  2. PopRegsInMask to restore the caller's non-volatile registers.
-//  3. Return (to CallAsmJS).
-static bool
-GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
-{
-    MacroAssembler& masm = mg.masm();
-
-    masm.haltingAlign(CodeAlignment);
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-    masm.bind(throwLabel);
-
-    // We are about to pop all frames in this WasmActivation. Set fp to null to
-    // maintain the invariant that fp is either null or pointing to a valid
-    // frame.
-    Register scratch = ABIArgGenerator::NonArgReturnReg0;
-    masm.loadWasmActivation(scratch);
-    masm.storePtr(ImmWord(0), Address(scratch, WasmActivation::offsetOfFP()));
-
-    masm.setFramePushed(FramePushedForEntrySP);
-    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
-    masm.Pop(scratch);
-    masm.PopRegsInMask(NonVolatileRegs);
-    MOZ_ASSERT(masm.framePushed() == 0);
-
-    masm.mov(ImmWord(0), ReturnReg);
-    masm.ret();
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return mg.defineInlineStub(offsets);
-}
-
-bool
-wasm::GenerateStubs(ModuleGenerator& mg, bool usesHeap)
-{
-    for (unsigned i = 0; i < mg.numExports(); i++) {
-        if (!GenerateEntry(mg, i, usesHeap))
-            return false;
-    }
-
-    Label onThrow;
-
-    for (size_t i = 0; i < mg.numImports(); i++) {
-        ProfilingOffsets interp;
-        if (!GenerateInterpExitStub(mg, i, &onThrow, &interp))
-            return false;
-
-        ProfilingOffsets jit;
-        if (!GenerateJitExitStub(mg, i, usesHeap, &onThrow, &jit))
-            return false;
-
-        if (!mg.defineImport(i, interp, jit))
-            return false;
-    }
-
-    if (mg.masm().asmStackOverflowLabel()->used()) {
-        if (!GenerateStackOverflowStub(mg, &onThrow))
-            return false;
-    }
-
-    if (mg.masm().asmSyncInterruptLabel()->used()) {
-        if (!GenerateSyncInterruptStub(mg, &onThrow))
-            return false;
-    }
-
-    if (mg.masm().asmOnConversionErrorLabel()->used()) {
-        if (!GenerateConversionErrorStub(mg, &onThrow))
-            return false;
-    }
-
-    // Generate unconditionally: the out-of-bounds exit may be used later even
-    // if signal handling isn't used for out-of-bounds at the moment.
-    if (!GenerateOutOfBoundsStub(mg, &onThrow))
-        return false;
-
-    // Generate unconditionally: the async interrupt may be taken at any time.
-    if (!GenerateAsyncInterruptStub(mg, &onThrow))
-        return false;
-
-    if (onThrow.used()) {
-        if (!GenerateThrowStub(mg, &onThrow))
-            return false;
-    }
-
-    return true;
-}
-

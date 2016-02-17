@@ -60,6 +60,7 @@ else
 PKG_BASENAME = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).$(MOZ_PKG_PLATFORM)
 endif
 PKG_PATH =
+SDK_PATH =
 PKG_INST_BASENAME = $(PKG_BASENAME).installer
 PKG_STUB_BASENAME = $(PKG_BASENAME).installer-stub
 PKG_INST_PATH = install/sea/
@@ -102,14 +103,9 @@ PKG_INST_BASENAME = $(MOZ_PKG_APPNAME_LC)-setup-$(MOZ_PKG_VERSION)
 endif
 endif
 PKG_PATH = $(MOZ_PKG_PLATFORM)/$(AB_CD)/
+SDK_PATH = $(PKG_PATH)/sdk/
 CHECKSUMS_FILE_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
 MOZ_INFO_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
-ifeq ($(MOZ_APP_NAME),xulrunner)
-PKG_PATH = runtimes/
-PKG_BASENAME = $(MOZ_APP_NAME)-$(MOZ_PKG_VERSION).$(AB_CD).$(MOZ_PKG_PLATFORM)
-CHECKSUMS_FILE_BASENAME = $(PKG_BASENAME)
-MOZ_INFO_BASENAME = $(PKG_BASENAME)
-endif
 PKG_INST_PATH = $(PKG_PATH)
 PKG_UPDATE_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
 PKG_UPDATE_PATH = update/$(PKG_PATH)
@@ -154,16 +150,6 @@ endif
 ifndef INCLUDED_RCS_MK
   USE_RCS_MK := 1
   include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
-endif
-
-MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(MOZILLA_DIR) parent --template="{node}\n" 2>/dev/null))
-
-###########################################################################
-# bug: 746277 - preserve existing functionality.
-# MOZILLA_DIR="": cd $(SPACE); hg # succeeds if ~/.hg exists
-###########################################################################
-ifdef MOZ_INCLUDE_SOURCE_INFO
-MOZ_SOURCE_REPO = $(call getSourceRepo,$(MOZILLA_DIR)$(NULL) $(NULL))
 endif
 
 MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).txt

@@ -6,7 +6,6 @@
  */
 
 #include "SkRecord.h"
-#include <algorithm>
 
 SkRecord::~SkRecord() {
     Destroyer destroyer;

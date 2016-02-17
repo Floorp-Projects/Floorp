@@ -20,6 +20,7 @@
 #define wasm_types_h
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
@@ -37,6 +38,7 @@ class PropertyName;
 
 namespace wasm {
 
+using mozilla::EnumeratedArray;
 using mozilla::Move;
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
@@ -243,6 +245,13 @@ class Sig
     }
 };
 
+struct SigHashPolicy
+{
+    typedef const Sig& Lookup;
+    static HashNumber hash(Lookup sig) { return sig.hash(); }
+    static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
+};
+
 // A "declared" signature is a Sig object that is created and owned by the
 // ModuleGenerator. These signature objects are read-only and have the same
 // lifetime as the ModuleGenerator. This type is useful since some uses of Sig
@@ -265,7 +274,7 @@ typedef Vector<const DeclaredSig*, 0, SystemAllocPolicy> DeclaredSigPtrVector;
 
 struct Offsets
 {
-    MOZ_IMPLICIT Offsets(uint32_t begin = 0, uint32_t end = 0)
+    explicit Offsets(uint32_t begin = 0, uint32_t end = 0)
       : begin(begin), end(end)
     {}
 
@@ -544,6 +553,7 @@ enum class SymbolicAddress
     ReportOverRecursed,
     OnOutOfBounds,
     OnImpreciseConversion,
+    BadIndirectCall,
     HandleExecutionInterrupt,
     InvokeImport_Void,
     InvokeImport_I32,
@@ -555,6 +565,23 @@ enum class SymbolicAddress
 
 void*
 AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
+
+// A wasm::JumpTarget represents one of a special set of stubs that can be
+// jumped to from any function. Because wasm modules can be larger than the
+// range of a plain jump, these potentially out-of-range jumps must be recorded
+// and patched specially by the MacroAssembler and ModuleGenerator.
+
+enum class JumpTarget
+{
+    StackOverflow,
+    OutOfBounds,
+    ConversionError,
+    BadIndirectCall,
+    Throw,
+    Limit
+};
+
+typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArray;
 
 // The CompileArgs struct captures global parameters that affect all wasm code
 // generation. It also currently is the single source of truth for whether or

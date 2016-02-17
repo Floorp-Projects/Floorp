@@ -294,13 +294,6 @@ SpecialPowersHandler.prototype = {
     return props;
   },
 
-  enumerate(target) {
-    return (function*() {
-      for (let property in this.wrappedObject)
-        yield property;
-    }).call(this);
-  },
-
   preventExtensions(target) {
     throw "Can't call preventExtensions on SpecialPowers wrapped object";
   }

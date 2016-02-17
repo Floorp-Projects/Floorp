@@ -44,6 +44,8 @@ CSRCS = \
 	cmpcert.c \
 	sslinfo.c \
 	ssl3ecc.c \
+        tls13con.c \
+        tls13hkdf.c \
 	$(NULL)
 
 LIBRARY_NAME = ssl

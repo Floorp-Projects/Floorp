@@ -224,7 +224,7 @@ int    gArgc;
 char **gArgv;
 
 static const char gToolkitVersion[] = NS_STRINGIFY(GRE_MILESTONE);
-static const char gToolkitBuildID[] = NS_STRINGIFY(GRE_BUILDID);
+static const char gToolkitBuildID[] = NS_STRINGIFY(MOZ_BUILDID);
 
 static nsIProfileLock* gProfileLock;
 
@@ -253,6 +253,12 @@ static char **gQtOnlyArgv;
 #include <fontconfig/fontconfig.h>
 #endif
 #include "BinaryPath.h"
+#ifndef MOZ_BUILDID
+// See comment in Makefile.in why we want to avoid including buildid.h.
+// Still include it when MOZ_BUILDID is not set, which can happen with some
+// build backends.
+#include "buildid.h"
+#endif
 
 #ifdef MOZ_LINKER
 extern "C" MFBT_API bool IsSignalHandlingBroken();

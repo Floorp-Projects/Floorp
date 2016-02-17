@@ -5641,7 +5641,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // When constructing a child of a non-open <details>, create only the frame
   // for the main <summary> element, and skip other elements.
   auto* details = HTMLDetailsElement::FromContentOrNull(parent);
-  if (details && !details->Open()) {
+  if (details && details->IsDetailsEnabled() && !details->Open()) {
     auto* summary = HTMLSummaryElement::FromContentOrNull(aContent);
     if (!summary || !summary->IsMainSummary()) {
       SetAsUndisplayedContent(aState, aItems, aContent, styleContext,
