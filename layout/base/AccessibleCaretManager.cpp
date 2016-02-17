@@ -105,17 +105,7 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
 
 AccessibleCaretManager::~AccessibleCaretManager()
 {
-}
-
-void
-AccessibleCaretManager::Terminate()
-{
   CancelCaretTimeoutTimer();
-  mCaretTimeoutTimer = nullptr;
-  mFirstCaret = nullptr;
-  mSecondCaret = nullptr;
-  mActiveCaret = nullptr;
-  mPresShell = nullptr;
 }
 
 nsresult
@@ -142,6 +132,7 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
     // Update visible carets, if javascript changes are allowed.
     if (sCaretsScriptUpdates &&
         (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible())) {
+        FlushLayout();
         UpdateCarets();
         return NS_OK;
     }
@@ -201,11 +192,6 @@ AccessibleCaretManager::DoNotShowCarets()
 void
 AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
 {
-  FlushLayout();
-  if (IsTerminated()) {
-    return;
-  }
-
   mLastUpdateCaretMode = GetCaretMode();
 
   switch (mLastUpdateCaretMode) {
@@ -386,9 +372,6 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
       secondCaretResult == PositionChangedResult::Changed) {
     // Flush layout to make the carets intersection correct.
     FlushLayout();
-    if (IsTerminated()) {
-      return;
-    }
   }
 
   if (aHint == UpdateCaretsHint::Default) {
@@ -610,6 +593,11 @@ AccessibleCaretManager::OnScrollEnd()
 
   mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
   mSecondCaret->SetAppearance(mSecondCaretAppearanceOnScrollStart);
+
+  // Flush layout to make the carets intersection correct since we turn the
+  // appearance of the carets from None or NormalNotShown into something
+  // visible.
+  FlushLayout();
 
   if (GetCaretMode() == CaretMode::Cursor) {
     if (!mFirstCaret->IsLogicallyVisible()) {
@@ -1144,7 +1132,7 @@ AccessibleCaretManager::CaretTimeoutMs() const
 void
 AccessibleCaretManager::LaunchCaretTimeoutTimer()
 {
-  if (!mPresShell || !mCaretTimeoutTimer || CaretTimeoutMs() == 0 ||
+  if (!mCaretTimeoutTimer || CaretTimeoutMs() == 0 ||
       GetCaretMode() != CaretMode::Cursor || mActiveCaret) {
     return;
   }
@@ -1171,12 +1159,11 @@ AccessibleCaretManager::CancelCaretTimeoutTimer()
 void
 AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason) const
 {
-  if (!mPresShell) {
-    return;
-  }
+  // Holding PresShell to prevent AccessibleCaretManager to be destroyed.
+  nsCOMPtr<nsIPresShell> presShell = mPresShell;
 
   FlushLayout();
-  if (IsTerminated()) {
+  if (presShell->IsDestroying()) {
     return;
   }
 

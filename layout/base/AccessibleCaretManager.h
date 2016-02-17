@@ -50,9 +50,6 @@ public:
   explicit AccessibleCaretManager(nsIPresShell* aPresShell);
   virtual ~AccessibleCaretManager();
 
-  // Called by AccessibleCaretEventHub to inform us that PresShell is destroyed.
-  void Terminate();
-
   // The aPoint in the following public methods should be relative to root
   // frame.
 
@@ -127,9 +124,7 @@ protected:
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const UpdateCaretsHint& aResult);
 
-  // Update carets based on current selection status. This function will flush
-  // layout, so caller must ensure the PresShell is still valid after calling
-  // this method.
+  // Update carets based on current selection status.
   void UpdateCarets(UpdateCaretsHint aHint = UpdateCaretsHint::Default);
 
   // Force hiding all carets regardless of the current selection status.
@@ -165,11 +160,7 @@ protected:
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
   void ClearMaintainedSelection() const;
-
-  // Caller is responsible to use IsTerminated() to check whether PresShell is
-  // still valid.
   void FlushLayout() const;
-
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
@@ -193,9 +184,6 @@ protected:
   // ---------------------------------------------------------------------------
   // The following functions are made virtual for stubbing or mocking in gtest.
   //
-  // @return true if Terminate() had been called.
-  virtual bool IsTerminated() const { return !mPresShell; }
-
   // Get caret mode based on current selection.
   virtual CaretMode GetCaretMode() const;
 
@@ -214,8 +202,8 @@ protected:
 
   virtual bool HasNonEmptyTextContent(nsINode* aNode) const;
 
-  // This function will flush layout, so caller must ensure the PresShell is
-  // still valid after calling this method.
+  // This function will call FlushPendingNotifications. So caller must ensure
+  // everything exists after calling this method.
   virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason) const;
 
   // ---------------------------------------------------------------------------
@@ -223,12 +211,10 @@ protected:
   //
   nscoord mOffsetYToCaretLogicalPosition = NS_UNCONSTRAINEDSIZE;
 
-  // AccessibleCaretEventHub owns us by a UniquePtr. When it's destroyed, we'll
-  // also be destroyed. No need to worry if we outlive mPresShell.
-  //
-  // mPresShell will be set to nullptr in Terminate(). Therefore mPresShell is
-  // nullptr either we are in gtest or PresShell::IsDestroying() is true.
-  nsIPresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
+  // AccessibleCaretEventHub owns us. When it's Terminate() called by
+  // PresShell::Destroy(), we will be destroyed. No need to worry we outlive
+  // mPresShell.
+  nsIPresShell* MOZ_NON_OWNING_REF const mPresShell = nullptr;
 
   // First caret is attached to nsCaret in cursor mode, and is attached to
   // selection highlight as the left caret in selection mode.
