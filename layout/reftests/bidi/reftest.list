@@ -52,7 +52,6 @@ random-if(cocoaWidget) == with-first-letter-2b.html with-first-letter-2-ref.html
 == 83958-1c.html 83958-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2a.html 83958-2-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2b.html 83958-2-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2c.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 151407-1.html 151407-1-ref.html
@@ -74,7 +73,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 263359-1a.html 263359-1-ref.html
 != 263359-1b.html 263359-1-ref.html
 == 263359-2.html 263359-2-ref.html
-== 263359-3.html 263359-3-ref.html
+fails == 263359-3.html 263359-3-ref.html # bug 1230455
 == 263359-4.html 263359-4-ref.html
 random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html
