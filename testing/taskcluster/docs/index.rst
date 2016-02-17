@@ -175,6 +175,11 @@ when
    *optional* Dictionary of conditions that must be met for this task
    to run. See the section below for more details.
 
+tags
+   *optional* List of string labels attached to the task. Multiple tasks
+   with the same tag can all be scheduled at once by specifying the tag
+   with the ``-j <tag>`` try syntax.
+
 Conditional Execution
 ---------------------
 
