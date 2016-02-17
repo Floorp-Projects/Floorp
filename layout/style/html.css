@@ -7,13 +7,14 @@
 
 /* bidi */
 
+[dir] {
+  unicode-bidi: -moz-isolate;
+}
 [dir="rtl"] {
   direction: rtl;
-  unicode-bidi: embed;
 }
 [dir="ltr"] {
   direction: ltr;
-  unicode-bidi: embed;
 }
 
 bdi:-moz-dir(ltr), [dir="auto"]:-moz-dir(ltr) { direction: ltr; }
@@ -30,62 +31,62 @@ bdi:-moz-dir(rtl), [dir="auto"]:-moz-dir(rtl) { direction: rtl; }
  * and the rules in http://dev.w3.org/html5/spec/rendering.html#rendering
  */
 
-address, address[dir],
-article, article[dir],
-aside, aside[dir],
-blockquote, blockquote[dir],
-body, body[dir],
-caption, caption[dir],
-center, center[dir],
-col, col[dir],
-colgroup, colgroup[dir],
-dd, dd[dir],
-dir, dir[dir],
-div, div[dir],
-dl, dl[dir],
-dt, dt[dir],
-fieldset, fieldset[dir],
-figcaption, figcaption[dir],
-figure, figure[dir],
-footer, footer[dir],
-form, form[dir],
-h1, h1[dir],
-h2, h2[dir],
-h3, h3[dir],
-h4, h4[dir],
-h5, h5[dir],
-h6, h6[dir],
-header, header[dir],
-hgroup, hgroup[dir],
-hr, hr[dir],
-html, html[dir],
-legend, legend[dir],
-li, li[dir],
-listing, listing[dir],
-main, main[dir],
-marquee, marquee[dir],
-menu, menu[dir],
-nav, nav[dir],
-noframes, noframes[dir],
-ol, ol[dir],
-p, p[dir],
-plaintext, plaintext[dir],
-pre, pre[dir],
-section, section[dir],
-summary, summary[dir],
-table, table[dir],
-tbody, tbody[dir],
-td, td[dir],
-tfoot, tfoot[dir],
-th, th[dir],
-thead, thead[dir],
-tr, tr[dir],
-ul, ul[dir],
-xmp, xmp[dir] {
+address,
+article,
+aside,
+blockquote,
+body,
+caption,
+center,
+col,
+colgroup,
+dd,
+dir,
+div,
+dl,
+dt,
+fieldset,
+figcaption,
+figure,
+footer,
+form,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+header,
+hgroup,
+hr,
+html,
+legend,
+li,
+listing,
+main,
+marquee,
+menu,
+nav,
+noframes,
+ol,
+p,
+plaintext,
+pre,
+section,
+summary,
+table,
+tbody,
+td,
+tfoot,
+th,
+thead,
+tr,
+ul,
+xmp {
   unicode-bidi: -moz-isolate;
 }
 
-bdi, bdi[dir], output, output[dir], [dir="auto"] { 
+bdi, output {
   unicode-bidi: -moz-isolate;
 }
 bdo, bdo[dir] {
