@@ -469,7 +469,11 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
   while (mPacketizer->PacketsAvailable()) {
     uint32_t samplesPerPacket = mPacketizer->PacketSize() *
                                 mPacketizer->Channels();
-    int16_t* packet = mPacketizer->Output();
+    if (mInputBufferLen < samplesPerPacket) {
+      mInputBuffer = MakeUnique<int16_t[]>(samplesPerPacket);
+    }
+    int16_t *packet = mInputBuffer.get();
+    mPacketizer->Output(packet);
 
     mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
   }
