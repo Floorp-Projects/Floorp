@@ -15,7 +15,7 @@
 
 #include "NetworkUtils.h"
 
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "SystemProperty.h"
 
 #include <android/log.h>
@@ -399,11 +399,11 @@ static void convertUTF8toUTF16(nsTArray<nsCString>& narrow,
 static void getIFProperties(const char* ifname, IFProperties& prop)
 {
   char key[Property::KEY_MAX_LENGTH];
-  PR_snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.gw", ifname);
+  snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.gw", ifname);
   Property::Get(key, prop.gateway, "");
-  PR_snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.dns1", ifname);
+  snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.dns1", ifname);
   Property::Get(key, prop.dns1, "");
-  PR_snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.dns2", ifname);
+  snprintf(key, Property::KEY_MAX_LENGTH - 1, "net.%s.dns2", ifname);
   Property::Get(key, prop.dns2, "");
 }
 
@@ -524,7 +524,7 @@ void NetworkUtils::nextNetdCommand()
 
   gCurrentCommand.chain = GET_CURRENT_CHAIN;
   gCurrentCommand.callback = GET_CURRENT_CALLBACK;
-  PR_snprintf(gCurrentCommand.command, MAX_COMMAND_SIZE - 1, "%s", GET_CURRENT_COMMAND);
+  snprintf(gCurrentCommand.command, MAX_COMMAND_SIZE - 1, "%s", GET_CURRENT_COMMAND);
 
   NU_DBG("Sending \'%s\' command to netd.", gCurrentCommand.command);
   SendNetdCommand(GET_CURRENT_NETD_COMMAND);
@@ -549,9 +549,9 @@ void NetworkUtils::doCommand(const char* aCommand, CommandChain* aChain, Command
 
   // Android JB version adds sequence number to netd command.
   if (SDK_VERSION >= 16) {
-    PR_snprintf((char*)netdCommand->mData, MAX_COMMAND_SIZE - 1, "0 %s", aCommand);
+    snprintf((char*)netdCommand->mData, MAX_COMMAND_SIZE - 1, "0 %s", aCommand);
   } else {
-    PR_snprintf((char*)netdCommand->mData, MAX_COMMAND_SIZE - 1, "%s", aCommand);
+    snprintf((char*)netdCommand->mData, MAX_COMMAND_SIZE - 1, "%s", aCommand);
   }
   netdCommand->mSize = strlen((char*)netdCommand->mData) + 1;
 
@@ -571,7 +571,7 @@ void NetworkUtils::wifiFirmwareReload(CommandChain* aChain,
                                       NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap fwreload %s %s", GET_CHAR(mIfname), GET_CHAR(mMode));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "softap fwreload %s %s", GET_CHAR(mIfname), GET_CHAR(mMode));
 
   doCommand(command, aChain, aCallback);
 }
@@ -589,7 +589,7 @@ void NetworkUtils::startAccessPointDriver(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap start %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "softap start %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -607,7 +607,7 @@ void NetworkUtils::stopAccessPointDriver(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap stop %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "softap stop %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -651,24 +651,24 @@ void NetworkUtils::setAccessPoint(CommandChain* aChain,
   escapeQuote(key);
 
   if (SDK_VERSION >= 19) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" broadcast 6 %s \"%s\"",
-                     GET_CHAR(mIfname),
-                     ssid.get(),
-                     GET_CHAR(mSecurity),
-                     key.get());
+    snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" broadcast 6 %s \"%s\"",
+             GET_CHAR(mIfname),
+             ssid.get(),
+             GET_CHAR(mSecurity),
+             key.get());
   } else if (SDK_VERSION >= 16) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" %s \"%s\"",
-                     GET_CHAR(mIfname),
-                     ssid.get(),
-                     GET_CHAR(mSecurity),
-                     key.get());
+    snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" %s \"%s\"",
+             GET_CHAR(mIfname),
+             ssid.get(),
+             GET_CHAR(mSecurity),
+             key.get());
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s %s \"%s\" %s \"%s\" 6 0 8",
-                     GET_CHAR(mIfname),
-                     GET_CHAR(mWifictrlinterfacename),
-                     ssid.get(),
-                     GET_CHAR(mSecurity),
-                     key.get());
+    snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s %s \"%s\" %s \"%s\" 6 0 8",
+             GET_CHAR(mIfname),
+             GET_CHAR(mWifictrlinterfacename),
+             ssid.get(),
+             GET_CHAR(mSecurity),
+             key.get());
   }
 
   doCommand(command, aChain, aCallback);
@@ -679,7 +679,7 @@ void NetworkUtils::cleanUpStream(CommandChain* aChain,
                                  NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0", GET_CHAR(mPreInternalIfname), GET_CHAR(mPreExternalIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0", GET_CHAR(mPreInternalIfname), GET_CHAR(mPreExternalIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -689,7 +689,7 @@ void NetworkUtils::createUpStream(CommandChain* aChain,
                                   NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0", GET_CHAR(mCurInternalIfname), GET_CHAR(mCurExternalIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0", GET_CHAR(mCurInternalIfname), GET_CHAR(mCurExternalIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -740,7 +740,7 @@ void NetworkUtils::setQuota(CommandChain* aChain,
                             NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setiquota %s %lld", GET_CHAR(mIfname), LLONG_MAX);
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setiquota %s % " PRId64, GET_CHAR(mIfname), INT64_MAX);
 
   doCommand(command, aChain, aCallback);
 }
@@ -750,7 +750,7 @@ void NetworkUtils::removeQuota(CommandChain* aChain,
                                NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeiquota %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeiquota %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -760,7 +760,8 @@ void NetworkUtils::setAlarm(CommandChain* aChain,
                             NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setinterfacealert %s %lld", GET_CHAR(mIfname), GET_FIELD(mThreshold));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setinterfacealert %s %lld",
+           GET_CHAR(mIfname), GET_FIELD(mThreshold));
 
   doCommand(command, aChain, aCallback);
 }
@@ -770,7 +771,7 @@ void NetworkUtils::removeAlarm(CommandChain* aChain,
                             NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeinterfacealert %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeinterfacealert %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -781,7 +782,7 @@ void NetworkUtils::setGlobalAlarm(CommandChain* aChain,
 {
   char command[MAX_COMMAND_SIZE];
 
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setglobalalert %ld", GET_FIELD(mThreshold));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setglobalalert %lld", GET_FIELD(mThreshold));
   doCommand(command, aChain, aCallback);
 }
 
@@ -791,7 +792,7 @@ void NetworkUtils::removeGlobalAlarm(CommandChain* aChain,
 {
   char command[MAX_COMMAND_SIZE];
 
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeglobalalert");
+  snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeglobalalert");
   doCommand(command, aChain, aCallback);
 }
 
@@ -800,7 +801,7 @@ void NetworkUtils::tetherInterface(CommandChain* aChain,
                                    NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface add %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface add %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -818,8 +819,8 @@ void NetworkUtils::addInterfaceToLocalNetwork(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network interface add local %s",
-              GET_CHAR(mInternalIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network interface add local %s",
+           GET_CHAR(mInternalIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -841,8 +842,8 @@ void NetworkUtils::addRouteToLocalNetwork(CommandChain* aChain,
   uint32_t ip = inet_addr(GET_CHAR(mIp));
   char* networkAddr = getNetworkAddr(ip, prefix);
 
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network route add local %s %s/%s",
-              GET_CHAR(mInternalIfname), networkAddr, GET_CHAR(mPrefix));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network route add local %s %s/%s",
+           GET_CHAR(mInternalIfname), networkAddr, GET_CHAR(mPrefix));
 
   doCommand(command, aChain, aCallback);
 }
@@ -853,9 +854,9 @@ void NetworkUtils::preTetherInterfaceList(CommandChain* aChain,
 {
   char command[MAX_COMMAND_SIZE];
   if (SDK_VERSION >= 16) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface list");
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface list");
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface list 0");
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface list 0");
   }
 
   doCommand(command, aChain, aCallback);
@@ -867,7 +868,7 @@ void NetworkUtils::postTetherInterfaceList(CommandChain* aChain,
 {
   // Send the dummy command to continue the function chain.
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
+  snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
 
   char buf[BUF_SIZE];
   NS_ConvertUTF16toUTF8 reason(aResult.mResultReason);
@@ -927,8 +928,8 @@ void NetworkUtils::addUpstreamInterface(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface add_upstream %s",
-              interface.get());
+  snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface add_upstream %s",
+           interface.get());
   doCommand(command, aChain, aCallback);
 }
 
@@ -947,8 +948,8 @@ void NetworkUtils::removeUpstreamInterface(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface remove_upstream %s",
-              interface.get());
+  snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface remove_upstream %s",
+           interface.get());
   doCommand(command, aChain, aCallback);
 }
 
@@ -959,14 +960,14 @@ void NetworkUtils::setIpForwardingEnabled(CommandChain* aChain,
   char command[MAX_COMMAND_SIZE];
 
   if (GET_FIELD(mEnable)) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "ipfwd enable");
+    snprintf(command, MAX_COMMAND_SIZE - 1, "ipfwd enable");
   } else {
     // Don't disable ip forwarding because others interface still need it.
     // Send the dummy command to continue the function chain.
     if (GET_FIELD(mInterfaceList).Length() > 1) {
-      PR_snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
+      snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
     } else {
-      PR_snprintf(command, MAX_COMMAND_SIZE - 1, "ipfwd disable");
+      snprintf(command, MAX_COMMAND_SIZE - 1, "ipfwd disable");
     }
   }
 
@@ -990,9 +991,9 @@ void NetworkUtils::stopTethering(CommandChain* aChain,
   // Don't stop tethering because others interface still need it.
   // Send the dummy to continue the function chain.
   if (GET_FIELD(mInterfaceList).Length() > 1) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
+    snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether stop");
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether stop");
   }
 
   doCommand(command, aChain, aCallback);
@@ -1007,18 +1008,18 @@ void NetworkUtils::startTethering(CommandChain* aChain,
   // We don't need to start tethering again.
   // Send the dummy command to continue the function chain.
   if (aResult.mResultReason.Find("started") != kNotFound) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
+    snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
   } else {
     // If usbStartIp/usbEndIp is not valid, don't append them since
     // the trailing white spaces will be parsed to extra empty args
     // See: http://androidxref.com/4.3_r2.1/xref/system/core/libsysutils/src/FrameworkListener.cpp#78
     if (!GET_FIELD(mUsbStartIp).IsEmpty() && !GET_FIELD(mUsbEndIp).IsEmpty()) {
-      PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s %s %s",
-                  GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp),
-                  GET_CHAR(mUsbStartIp),  GET_CHAR(mUsbEndIp));
+      snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s %s %s",
+               GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp),
+               GET_CHAR(mUsbStartIp),  GET_CHAR(mUsbEndIp));
     } else {
-      PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s",
-                  GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp));
+      snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s",
+               GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp));
     }
   }
 
@@ -1030,7 +1031,7 @@ void NetworkUtils::untetherInterface(CommandChain* aChain,
                                      NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface remove %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "tether interface remove %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1048,8 +1049,8 @@ void NetworkUtils::removeInterfaceFromLocalNetwork(CommandChain* aChain,
   }
 
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network interface remove local %s",
-              GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network interface remove local %s",
+           GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1061,11 +1062,11 @@ void NetworkUtils::setDnsForwarders(CommandChain* aChain,
   char command[MAX_COMMAND_SIZE];
 
   if (SDK_VERSION >= 20) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %d %s %s",
-                GET_FIELD(mNetId), GET_CHAR(mDns1), GET_CHAR(mDns2));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %d %s %s",
+             GET_FIELD(mNetId), GET_CHAR(mDns1), GET_CHAR(mDns2));
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %s %s",
-                GET_CHAR(mDns1), GET_CHAR(mDns2));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %s %s",
+             GET_CHAR(mDns1), GET_CHAR(mDns2));
   }
 
   doCommand(command, aChain, aCallback);
@@ -1083,12 +1084,12 @@ void NetworkUtils::enableNat(CommandChain* aChain,
     char* networkAddr = getNetworkAddr(ip, prefix);
 
     // address/prefix will only take effect when secondary routing table exists.
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 1 %s/%s",
-      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
-      GET_CHAR(mPrefix));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 1 %s/%s",
+             GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
+             GET_CHAR(mPrefix));
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0",
-      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0",
+             GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
   }
 
   doCommand(command, aChain, aCallback);
@@ -1105,12 +1106,12 @@ void NetworkUtils::disableNat(CommandChain* aChain,
     uint32_t ip = inet_addr(GET_CHAR(mIp));
     char* networkAddr = getNetworkAddr(ip, prefix);
 
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 1 %s/%s",
-      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
-      GET_CHAR(mPrefix));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 1 %s/%s",
+             GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
+             GET_CHAR(mPrefix));
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0",
-      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0",
+             GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
   }
 
   doCommand(command, aChain, aCallback);
@@ -1121,7 +1122,7 @@ void NetworkUtils::setDefaultInterface(CommandChain* aChain,
                                        NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "resolver setdefaultif %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "resolver setdefaultif %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1140,9 +1141,9 @@ void NetworkUtils::removeDefaultRoute(CommandChain* aChain,
   NS_ConvertUTF16toUTF8 autoGateway(gateways[GET_FIELD(mLoopIndex)]);
 
   int type = getIpType(autoGateway.get());
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network route remove %d %s %s/0 %s",
-              GET_FIELD(mNetId), GET_CHAR(mIfname),
-              type == AF_INET6 ? "::" : "0.0.0.0", autoGateway.get());
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network route remove %d %s %s/0 %s",
+           GET_FIELD(mNetId), GET_CHAR(mIfname),
+           type == AF_INET6 ? "::" : "0.0.0.0", autoGateway.get());
 
   struct MyCallback {
     static void callback(CommandCallback::CallbackType aOriginalCallback,
@@ -1173,11 +1174,11 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
   int written;
 
   if (SDK_VERSION >= 20) {
-    written = PR_snprintf(command, sizeof command, "resolver setnetdns %d %s",
-                                                   GET_FIELD(mNetId), GET_CHAR(mDomain));
+    written = snprintf_literal(command, "resolver setnetdns %d %s",
+                               GET_FIELD(mNetId), GET_CHAR(mDomain));
   } else {
-    written = PR_snprintf(command, sizeof command, "resolver setifdns %s %s",
-                                                   GET_CHAR(mIfname), GET_CHAR(mDomain));
+    written = snprintf_literal(command, "resolver setifdns %s %s",
+                               GET_CHAR(mIfname), GET_CHAR(mDomain));
   }
 
   nsTArray<nsString>& dnses = GET_FIELD(mDnses);
@@ -1186,7 +1187,7 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
   for (uint32_t i = 0; i < length; i++) {
     NS_ConvertUTF16toUTF8 autoDns(dnses[i]);
 
-    int ret = PR_snprintf(command + written, sizeof(command) - written, " %s", autoDns.get());
+    int ret = snprintf(command + written, sizeof(command) - written, " %s", autoDns.get());
     if (ret <= 1) {
       command[written] = '\0';
       continue;
@@ -1249,7 +1250,7 @@ void NetworkUtils::clearAddrForInterface(CommandChain* aChain,
                                          NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "interface clearaddrs %s", GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "interface clearaddrs %s", GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1259,7 +1260,7 @@ void NetworkUtils::createNetwork(CommandChain* aChain,
                                  NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network create %d", GET_FIELD(mNetId));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network create %d", GET_FIELD(mNetId));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1269,7 +1270,7 @@ void NetworkUtils::destroyNetwork(CommandChain* aChain,
                                   NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network destroy %d", GET_FIELD(mNetId));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network destroy %d", GET_FIELD(mNetId));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1279,8 +1280,8 @@ void NetworkUtils::addInterfaceToNetwork(CommandChain* aChain,
                                          NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network interface add %d %s",
-                    GET_FIELD(mNetId), GET_CHAR(mIfname));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network interface add %d %s",
+           GET_FIELD(mNetId), GET_CHAR(mIfname));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1339,10 +1340,10 @@ void NetworkUtils::modifyRouteOnInterface(CommandChain* aChain,
 
   const char* action = aDoAdd ? "add" : "remove";
 
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network route %s%s %d %s %s/%d%s",
-              legacyOrEmpty, action,
-              GET_FIELD(mNetId), GET_CHAR(mIfname), ipOrSubnetIp.get(),
-              GET_FIELD(mPrefixLength), gatewayOrEmpty.get());
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network route %s%s %d %s %s/%d%s",
+           legacyOrEmpty, action,
+           GET_FIELD(mNetId), GET_CHAR(mIfname), ipOrSubnetIp.get(),
+           GET_FIELD(mPrefixLength), gatewayOrEmpty.get());
 
   doCommand(command, aChain, aCallback);
 }
@@ -1361,9 +1362,9 @@ void NetworkUtils::addDefaultRouteToNetwork(CommandChain* aChain,
   NS_ConvertUTF16toUTF8 autoGateway(gateways[GET_FIELD(mLoopIndex)]);
 
   int type = getIpType(autoGateway.get());
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network route add %d %s %s/0 %s",
-              GET_FIELD(mNetId), GET_CHAR(mIfname),
-              type == AF_INET6 ? "::" : "0.0.0.0", autoGateway.get());
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network route add %d %s %s/0 %s",
+           GET_FIELD(mNetId), GET_CHAR(mIfname),
+           type == AF_INET6 ? "::" : "0.0.0.0", autoGateway.get());
 
   struct MyCallback {
     static void callback(CommandCallback::CallbackType aOriginalCallback,
@@ -1391,7 +1392,7 @@ void NetworkUtils::setDefaultNetwork(CommandChain* aChain,
                                      NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "network default set %d", GET_FIELD(mNetId));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network default set %d", GET_FIELD(mNetId));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1403,20 +1404,20 @@ void NetworkUtils::addRouteToSecondaryTable(CommandChain* aChain,
   char command[MAX_COMMAND_SIZE];
 
   if (SDK_VERSION >= 20) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1,
-                "network route add %d %s %s/%s %s",
-                GET_FIELD(mNetId),
-                GET_CHAR(mIfname),
-                GET_CHAR(mIp),
-                GET_CHAR(mPrefix),
-                GET_CHAR(mGateway));
+    snprintf(command, MAX_COMMAND_SIZE - 1,
+             "network route add %d %s %s/%s %s",
+             GET_FIELD(mNetId),
+             GET_CHAR(mIfname),
+             GET_CHAR(mIp),
+             GET_CHAR(mPrefix),
+             GET_CHAR(mGateway));
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1,
-                "interface route add %s secondary %s %s %s",
-                GET_CHAR(mIfname),
-                GET_CHAR(mIp),
-                GET_CHAR(mPrefix),
-                GET_CHAR(mGateway));
+    snprintf(command, MAX_COMMAND_SIZE - 1,
+             "interface route add %s secondary %s %s %s",
+             GET_CHAR(mIfname),
+             GET_CHAR(mIp),
+             GET_CHAR(mPrefix),
+             GET_CHAR(mGateway));
   }
 
   doCommand(command, aChain, aCallback);
@@ -1428,20 +1429,20 @@ void NetworkUtils::removeRouteFromSecondaryTable(CommandChain* aChain,
   char command[MAX_COMMAND_SIZE];
 
   if (SDK_VERSION >= 20) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1,
-                "network route remove %d %s %s/%s %s",
-                GET_FIELD(mNetId),
-                GET_CHAR(mIfname),
-                GET_CHAR(mIp),
-                GET_CHAR(mPrefix),
-                GET_CHAR(mGateway));
+    snprintf(command, MAX_COMMAND_SIZE - 1,
+             "network route remove %d %s %s/%s %s",
+             GET_FIELD(mNetId),
+             GET_CHAR(mIfname),
+             GET_CHAR(mIp),
+             GET_CHAR(mPrefix),
+             GET_CHAR(mGateway));
   } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1,
-                "interface route remove %s secondary %s %s %s",
-                GET_CHAR(mIfname),
-                GET_CHAR(mIp),
-                GET_CHAR(mPrefix),
-                GET_CHAR(mGateway));
+    snprintf(command, MAX_COMMAND_SIZE - 1,
+             "interface route remove %s secondary %s %s %s",
+             GET_CHAR(mIfname),
+             GET_CHAR(mIp),
+             GET_CHAR(mPrefix),
+             GET_CHAR(mGateway));
   }
 
   doCommand(command, aChain, aCallback);
@@ -1453,8 +1454,8 @@ void NetworkUtils::setIpv6Enabled(CommandChain* aChain,
                                   bool aEnabled)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "interface ipv6 %s %s",
-              GET_CHAR(mIfname), aEnabled ? "enable" : "disable");
+  snprintf(command, MAX_COMMAND_SIZE - 1, "interface ipv6 %s %s",
+           GET_CHAR(mIfname), aEnabled ? "enable" : "disable");
 
   struct MyCallback {
     static void callback(CommandCallback::CallbackType aOriginalCallback,
@@ -1489,8 +1490,8 @@ void NetworkUtils::setMtu(CommandChain* aChain,
                           NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "interface setmtu %s %d",
-              GET_CHAR(mIfname), GET_FIELD(mMtu));
+  snprintf(command, MAX_COMMAND_SIZE - 1, "interface setmtu %s %ld",
+           GET_CHAR(mIfname), GET_FIELD(mMtu));
 
   doCommand(command, aChain, aCallback);
 }
@@ -1876,9 +1877,9 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
     if (code == NETD_COMMAND_INTERFACE_CHANGE) {
       if (gWifiTetheringParms) {
         char linkdownReason[MAX_COMMAND_SIZE];
-        PR_snprintf(linkdownReason, MAX_COMMAND_SIZE - 1,
-                    "Iface linkstate %s down",
-                    NS_ConvertUTF16toUTF8(gWifiTetheringParms->mIfname).get());
+        snprintf(linkdownReason, MAX_COMMAND_SIZE - 1,
+                 "Iface linkstate %s down",
+                 NS_ConvertUTF16toUTF8(gWifiTetheringParms->mIfname).get());
 
         if (!strcmp(reason, linkdownReason)) {
           NU_DBG("Wifi link down, restarting tethering.");
@@ -1955,7 +1956,7 @@ CommandResult NetworkUtils::setDNS(NetworkParams& aOptions)
       NS_ConvertUTF16toUTF8 autoDns(aOptions.mDnses[i]);
 
       char dns_prop_key[Property::VALUE_MAX_LENGTH];
-      PR_snprintf(dns_prop_key, sizeof dns_prop_key, "net.dns%d", i+1);
+      snprintf_literal(dns_prop_key, "net.dns%d", i+1);
       Property::Set(dns_prop_key, autoDns.get());
     }
   } else {
@@ -1972,7 +1973,7 @@ CommandResult NetworkUtils::setDNS(NetworkParams& aOptions)
   Property::Get("net.dnschange", dnschange, "0");
 
   char num[Property::VALUE_MAX_LENGTH];
-  PR_snprintf(num, Property::VALUE_MAX_LENGTH - 1, "%d", atoi(dnschange) + 1);
+  snprintf(num, Property::VALUE_MAX_LENGTH - 1, "%d", atoi(dnschange) + 1);
   Property::Set("net.dnschange", num);
 
   // DNS needs to be set through netd since JellyBean (4.3).
@@ -2164,7 +2165,7 @@ CommandResult NetworkUtils::setDefaultRouteLegacy(NetworkParams& aOptions)
     char key[Property::KEY_MAX_LENGTH];
     char gateway[Property::KEY_MAX_LENGTH];
 
-    PR_snprintf(key, sizeof key - 1, "net.%s.gw", autoIfname.get());
+    snprintf(key, sizeof key - 1, "net.%s.gw", autoIfname.get());
     Property::Get(key, gateway, "");
 
     int type = getIpType(gateway);

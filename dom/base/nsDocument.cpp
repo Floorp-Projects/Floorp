@@ -23,7 +23,7 @@
 
 #include "mozilla/Logging.h"
 #include "plstr.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 
 #include "mozilla/Telemetry.h"
 #include "nsIInterfaceRequestor.h"
@@ -1777,12 +1777,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     if (tmp->mDocumentURI)
       tmp->mDocumentURI->GetSpec(uri);
     if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsDocument %s %s %s",
-                  loadedAsData.get(), kNSURIs[nsid], uri.get());
+      snprintf_literal(name, "nsDocument %s %s %s",
+                       loadedAsData.get(), kNSURIs[nsid], uri.get());
     }
     else {
-      PR_snprintf(name, sizeof(name), "nsDocument %s %s",
-                  loadedAsData.get(), uri.get());
+      snprintf_literal(name, "nsDocument %s %s",
+                       loadedAsData.get(), uri.get());
     }
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   }
@@ -2951,10 +2951,9 @@ GetFormattedTimeString(PRTime aTime, nsAString& aFormattedTimeString)
   PR_ExplodeTime(aTime, PR_LocalTimeParameters, &prtime);
   // "MM/DD/YYYY hh:mm:ss"
   char formatedTime[24];
-  if (PR_snprintf(formatedTime, sizeof(formatedTime),
-                  "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
-                  prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
-                  prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
+  if (snprintf_literal(formatedTime, "%02d/%02d/%04d %02d:%02d:%02d",
+                       prtime.tm_month + 1, prtime.tm_mday, int(prtime.tm_year),
+                       prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
     CopyASCIItoUTF16(nsDependentCString(formatedTime), aFormattedTimeString);
   } else {
     // If we for whatever reason failed to find the last modified time
