@@ -18,6 +18,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/RecordErrorEvent.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIPermissionManager.h"

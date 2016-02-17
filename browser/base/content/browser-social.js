@@ -763,7 +763,7 @@ SocialSidebar = {
 
   // Whether the sidebar can be shown for this window.
   get canShow() {
-    if (!SocialUI.enabled || document.mozFullScreen)
+    if (!SocialUI.enabled || document.fullscreenElement)
       return false;
     return Social.providers.some(p => p.sidebarURL);
   },

@@ -15,12 +15,9 @@
 namespace mozilla {
 namespace dom {
 
-namespace indexedDB {
+class DataStoreRevisionCallback;
 class IDBObjectStore;
 class IDBRequest;
-} // namespace indexedDB
-
-class DataStoreRevisionCallback;
 
 class DataStoreRevision final : public nsIDOMEventListener
 {
@@ -32,7 +29,7 @@ public:
   };
 
   nsresult AddRevision(JSContext* aCx,
-                       indexedDB::IDBObjectStore* aStore,
+                       IDBObjectStore* aStore,
                        uint32_t aObjectId,
                        RevisionType aRevisionType,
                        DataStoreRevisionCallback* aCallback);
@@ -43,7 +40,7 @@ public:
 private:
   ~DataStoreRevision() {}
   RefPtr<DataStoreRevisionCallback> mCallback;
-  RefPtr<indexedDB::IDBRequest> mRequest;
+  RefPtr<IDBRequest> mRequest;
   nsString mRevisionID;
 };
 

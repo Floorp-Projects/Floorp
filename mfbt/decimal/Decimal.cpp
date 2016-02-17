@@ -31,12 +31,12 @@
 #include "Decimal.h"
 #include "moz-decimal-utils.h"
 
+using namespace moz_decimal_utils;
+
 #include <algorithm>
 #include <float.h>
 
-using namespace moz_decimal_utils;
-
-namespace WebCore {
+namespace blink {
 
 namespace DecimalPrivate {
 
@@ -44,10 +44,11 @@ static int const ExponentMax = 1023;
 static int const ExponentMin = -1023;
 static int const Precision = 18;
 
-static const uint64_t MaxCoefficient = UINT64_C(0x16345785D89FFFF); // 999999999999999999 == 18 9's
+static const uint64_t MaxCoefficient = UINT64_C(0xDE0B6B3A763FFFF); // 999999999999999999 == 18 9's
 
 // This class handles Decimal special values.
 class SpecialValueHandler {
+    STACK_ALLOCATED();
     WTF_MAKE_NONCOPYABLE(SpecialValueHandler);
 public:
     enum HandleResult {
@@ -89,12 +90,12 @@ SpecialValueHandler::HandleResult SpecialValueHandler::handle()
     if (lhsClass == Decimal::EncodedData::ClassNaN) {
         m_result = ResultIsLHS;
         return EitherNaN;
-     }
+    }
 
     if (rhsClass == Decimal::EncodedData::ClassNaN) {
         m_result = ResultIsRHS;
         return EitherNaN;
-     }
+    }
 
     if (lhsClass == Decimal::EncodedData::ClassInfinity)
         return rhsClass == Decimal::EncodedData::ClassInfinity ? BothInfinity : LHSIsInfinity;
@@ -123,8 +124,8 @@ Decimal SpecialValueHandler::value() const
 // This class is used for 128 bit unsigned integer arithmetic.
 class UInt128 {
 public:
-    UInt128(uint64_t aLow, uint64_t aHigh)
-        : m_high(aHigh), m_low(aLow)
+    UInt128(uint64_t low, uint64_t high)
+        : m_high(high), m_low(low)
     {
     }
 
@@ -138,7 +139,6 @@ public:
 private:
     static uint32_t highUInt32(uint64_t x) { return static_cast<uint32_t>(x >> 32); }
     static uint32_t lowUInt32(uint64_t x) { return static_cast<uint32_t>(x & ((static_cast<uint64_t>(1) << 32) - 1)); }
-    bool isZero() const { return !m_low && !m_high; }
     static uint64_t makeUInt64(uint32_t low, uint32_t high) { return low | (static_cast<uint64_t>(high) << 32); }
 
     static uint64_t multiplyHigh(uint64_t, uint64_t);
@@ -209,7 +209,7 @@ static uint64_t scaleDown(uint64_t x, int n)
 static uint64_t scaleUp(uint64_t x, int n)
 {
     ASSERT(n >= 0);
-    ASSERT(n < Precision);
+    ASSERT(n <= Precision);
 
     uint64_t y = 1;
     uint64_t z = 10;
@@ -229,41 +229,41 @@ static uint64_t scaleUp(uint64_t x, int n)
 
 using namespace DecimalPrivate;
 
-Decimal::EncodedData::EncodedData(Sign aSign, FormatClass aFormatClass)
+Decimal::EncodedData::EncodedData(Sign sign, FormatClass formatClass)
     : m_coefficient(0)
     , m_exponent(0)
-    , m_formatClass(aFormatClass)
-    , m_sign(aSign)
+    , m_formatClass(formatClass)
+    , m_sign(sign)
 {
 }
 
-Decimal::EncodedData::EncodedData(Sign aSign, int aExponent, uint64_t aCoefficient)
-    : m_formatClass(aCoefficient ? ClassNormal : ClassZero)
-    , m_sign(aSign)
+Decimal::EncodedData::EncodedData(Sign sign, int exponent, uint64_t coefficient)
+    : m_formatClass(coefficient ? ClassNormal : ClassZero)
+    , m_sign(sign)
 {
-    if (aExponent >= ExponentMin && aExponent <= ExponentMax) {
-        while (aCoefficient > MaxCoefficient) {
-            aCoefficient /= 10;
-            ++aExponent;
+    if (exponent >= ExponentMin && exponent <= ExponentMax) {
+        while (coefficient > MaxCoefficient) {
+            coefficient /= 10;
+            ++exponent;
         }
     }
 
-    if (aExponent > ExponentMax) {
+    if (exponent > ExponentMax) {
         m_coefficient = 0;
         m_exponent = 0;
         m_formatClass = ClassInfinity;
         return;
     }
 
-    if (aExponent < ExponentMin) {
+    if (exponent < ExponentMin) {
         m_coefficient = 0;
         m_exponent = 0;
         m_formatClass = ClassZero;
         return;
     }
 
-    m_coefficient = aCoefficient;
-    m_exponent = static_cast<int16_t>(aExponent);
+    m_coefficient = coefficient;
+    m_exponent = static_cast<int16_t>(exponent);
 }
 
 bool Decimal::EncodedData::operator==(const EncodedData& another) const
@@ -279,8 +279,8 @@ Decimal::Decimal(int32_t i32)
 {
 }
 
-Decimal::Decimal(Sign aSign, int aExponent, uint64_t aCoefficient)
-    : m_data(aSign, aCoefficient ? aExponent : 0, aCoefficient)
+Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
+    : m_data(sign, coefficient ? exponent : 0, coefficient)
 {
 }
 
@@ -484,22 +484,27 @@ Decimal Decimal::operator/(const Decimal& rhs) const
     if (lhs.isZero())
         return Decimal(resultSign, resultExponent, 0);
 
-    uint64_t lhsRemainder = lhs.m_data.coefficient();
+    uint64_t remainder = lhs.m_data.coefficient();
     const uint64_t divisor = rhs.m_data.coefficient();
     uint64_t result = 0;
-    while (result < MaxCoefficient / 100) {
-        while (lhsRemainder < divisor) {
-            lhsRemainder *= 10;
+    for (;;) {
+        while (remainder < divisor && result < MaxCoefficient / 10) {
+            remainder *= 10;
             result *= 10;
             --resultExponent;
         }
-        result += lhsRemainder / divisor;
-        lhsRemainder %= divisor;
-        if (!lhsRemainder)
+        if (remainder < divisor)
+            break;
+        uint64_t quotient = remainder / divisor;
+        if (result > MaxCoefficient - quotient)
+            break;
+        result += quotient;
+        remainder %= divisor;
+        if (!remainder)
             break;
     }
 
-    if (lhsRemainder > divisor / 2)
+    if (remainder > divisor / 2)
         ++result;
 
     return Decimal(resultSign, resultExponent, result);
@@ -587,9 +592,9 @@ Decimal::AlignedOperands Decimal::alignOperands(const Decimal& lhs, const Decima
         if (numberOfLHSDigits) {
             const int lhsShiftAmount = lhsExponent - rhsExponent;
             const int overflow = numberOfLHSDigits + lhsShiftAmount - Precision;
-            if (overflow <= 0)
+            if (overflow <= 0) {
                 lhsCoefficient = scaleUp(lhsCoefficient, lhsShiftAmount);
-            else {
+            } else {
                 lhsCoefficient = scaleUp(lhsCoefficient, lhsShiftAmount - overflow);
                 rhsCoefficient = scaleDown(rhsCoefficient, overflow);
                 exponent += overflow;
@@ -601,9 +606,9 @@ Decimal::AlignedOperands Decimal::alignOperands(const Decimal& lhs, const Decima
         if (numberOfRHSDigits) {
             const int rhsShiftAmount = rhsExponent - lhsExponent;
             const int overflow = numberOfRHSDigits + rhsShiftAmount - Precision;
-            if (overflow <= 0)
+            if (overflow <= 0) {
                 rhsCoefficient = scaleUp(rhsCoefficient, rhsShiftAmount);
-            else {
+            } else {
                 rhsCoefficient = scaleUp(rhsCoefficient, rhsShiftAmount - overflow);
                 lhsCoefficient = scaleDown(lhsCoefficient, overflow);
                 exponent += overflow;
@@ -618,9 +623,13 @@ Decimal::AlignedOperands Decimal::alignOperands(const Decimal& lhs, const Decima
     return alignedOperands;
 }
 
+static bool isMultiplePowersOfTen(uint64_t coefficient, int n)
+{
+    return !coefficient || !(coefficient % scaleUp(1, n));
+}
+
 // Round toward positive infinity.
-// Note: Mac ports defines ceil(x) as wtf_ceil(x), so we can't use name "ceil" here.
-Decimal Decimal::ceiling() const
+Decimal Decimal::ceil() const
 {
     if (isSpecial())
         return *this;
@@ -628,16 +637,15 @@ Decimal Decimal::ceiling() const
     if (exponent() >= 0)
         return *this;
 
-    uint64_t coefficient = m_data.coefficient();
-    const int numberOfDigits = countDigits(coefficient);
+    uint64_t result = m_data.coefficient();
+    const int numberOfDigits = countDigits(result);
     const int numberOfDropDigits = -exponent();
-    if (numberOfDigits < numberOfDropDigits)
+    if (numberOfDigits <= numberOfDropDigits)
         return isPositive() ? Decimal(1) : zero(Positive);
 
-    uint64_t result = scaleDown(coefficient, numberOfDropDigits);
-    uint64_t droppedDigits = coefficient - scaleUp(result, numberOfDropDigits);
-    if (droppedDigits && isPositive())
-        result += 1;
+    result = scaleDown(result, numberOfDropDigits);
+    if (isPositive() && !isMultiplePowersOfTen(m_data.coefficient(), numberOfDropDigits))
+        ++result;
     return Decimal(sign(), 0, result);
 }
 
@@ -670,17 +678,15 @@ Decimal Decimal::floor() const
     if (exponent() >= 0)
         return *this;
 
-    uint64_t coefficient = m_data.coefficient();
-    const int numberOfDigits = countDigits(coefficient);
+    uint64_t result = m_data.coefficient();
+    const int numberOfDigits = countDigits(result);
     const int numberOfDropDigits = -exponent();
     if (numberOfDigits < numberOfDropDigits)
         return isPositive() ? zero(Positive) : Decimal(-1);
 
-    uint64_t result = scaleDown(coefficient, numberOfDropDigits);
-    uint64_t droppedDigits = coefficient - scaleUp(result, numberOfDropDigits);
-    if (droppedDigits && isNegative()) {
-        result += 1;
-    }
+    result = scaleDown(result, numberOfDropDigits);
+    if (isNegative() && !isMultiplePowersOfTen(m_data.coefficient(), numberOfDropDigits))
+        ++result;
     return Decimal(sign(), 0, result);
 }
 
@@ -738,8 +744,9 @@ Decimal Decimal::fromString(const String& str)
                     ++numberOfDigits;
                     accumulator *= 10;
                     accumulator += ch - '0';
-                } else
+                } else {
                     ++numberOfExtraDigits;
+                }
                 break;
             }
 
@@ -748,17 +755,6 @@ Decimal Decimal::fromString(const String& str)
             return nan();
 
         case StateDot:
-            if (ch >= '0' && ch <= '9') {
-                if (numberOfDigits < Precision) {
-                    ++numberOfDigits;
-                    ++numberOfDigitsAfterDot;
-                    accumulator *= 10;
-                    accumulator += ch - '0';
-                }
-                state = StateDotDigit;
-                break;
-            }
-
         case StateDotDigit:
             if (ch >= '0' && ch <= '9') {
                 if (numberOfDigits < Precision) {
@@ -767,6 +763,7 @@ Decimal Decimal::fromString(const String& str)
                     accumulator *= 10;
                     accumulator += ch - '0';
                 }
+                state = StateDotDigit;
                 break;
             }
 
@@ -909,7 +906,7 @@ Decimal Decimal::nan()
 Decimal Decimal::remainder(const Decimal& rhs) const
 {
     const Decimal quotient = *this / rhs;
-    return quotient.isSpecial() ? quotient : *this - (quotient.isNegative() ? quotient.ceiling() : quotient.floor()) * rhs;
+    return quotient.isSpecial() ? quotient : *this - (quotient.isNegative() ? quotient.ceil() : quotient.floor()) * rhs;
 }
 
 Decimal Decimal::round() const
@@ -926,8 +923,6 @@ Decimal Decimal::round() const
     if (numberOfDigits < numberOfDropDigits)
         return zero(Positive);
 
-    // We're implementing round-half-away-from-zero, so we only need the one
-    // (the most significant) fractional digit:
     result = scaleDown(result, numberOfDropDigits - 1);
     if (result % 10 >= 5)
         result += 10;
@@ -1052,5 +1047,4 @@ Decimal Decimal::zero(Sign sign)
     return Decimal(EncodedData(sign, EncodedData::ClassZero));
 }
 
-} // namespace WebCore
-
+} // namespace blink

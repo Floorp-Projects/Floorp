@@ -111,7 +111,7 @@ function nextTest() {
   // trigger a reflow to ensure the state of frames before fullscreen
   gFullscreen.getBoundingClientRect();
 
-  ok(!document.mozFullScreen, "Shouldn't be in fullscreen");
+  ok(!document.fullscreenElement, "Shouldn't be in fullscreen");
   // check window snapshot
   assertWindowPureColor(window, "red");
   // simulate click
@@ -123,11 +123,11 @@ function firstClick(evt) {
   window.removeEventListener("click", firstClick);
   is(evt.target, gBack, "Click target should be #back before fullscreen");
   addFullscreenChangeContinuation("enter", enterFullscreen);
-  gFullscreen.mozRequestFullScreen();
+  gFullscreen.requestFullscreen();
 }
 
 function enterFullscreen() {
-  ok(document.mozFullScreen, "Should now be in fullscreen");
+  ok(document.fullscreenElement, "Should now be in fullscreen");
   // check window snapshot
   assertWindowPureColor(window, "green");
   // check computed style of #parent
@@ -145,7 +145,7 @@ function secondClick(evt) {
   window.removeEventListener("click", secondClick);
   is(evt.target, gFullscreen, "Click target should be #fullscreen now");
   addFullscreenChangeContinuation("exit", exitFullscreen);
-  document.mozCancelFullScreen();
+  document.exitFullscreen();
 }
 
 function exitFullscreen() {

@@ -73,6 +73,10 @@ class WasmAstSig : public WasmAstBase
     ExprType ret_;
 
   public:
+    explicit WasmAstSig(LifoAlloc& lifo)
+      : args_(lifo),
+        ret_(ExprType::Void)
+    {}
     WasmAstSig(WasmAstValTypeVector&& args, ExprType ret)
       : args_(Move(args)),
         ret_(ret)
@@ -81,11 +85,18 @@ class WasmAstSig : public WasmAstBase
       : args_(Move(rhs.args_)),
         ret_(rhs.ret_)
     {}
+    void operator=(WasmAstSig&& rhs) {
+        args_ = Move(rhs.args_);
+        ret_ = rhs.ret_;
+    }
     const WasmAstValTypeVector& args() const {
         return args_;
     }
     ExprType ret() const {
         return ret_;
+    }
+    bool operator==(const WasmAstSig& rhs) const {
+        return ret() == rhs.ret() && EqualContainers(args(), rhs.args());
     }
 
     typedef const WasmAstSig& Lookup;
@@ -93,7 +104,7 @@ class WasmAstSig : public WasmAstBase
         return AddContainerToHash(sig.args(), HashNumber(sig.ret()));
     }
     static bool match(const WasmAstSig* lhs, Lookup rhs) {
-        return lhs->ret() == rhs.ret() && EqualContainers(lhs->args(), rhs.args());
+        return *lhs == rhs;
     }
 };
 
@@ -105,6 +116,7 @@ enum class WasmAstExprKind
     BinaryOperator,
     Block,
     Call,
+    CallIndirect,
     ComparisonOperator,
     Const,
     ConversionOperator,
@@ -219,6 +231,23 @@ class WasmAstCall : public WasmAstExpr
 
     Expr expr() const { return expr_; }
     uint32_t index() const { return index_; }
+    const WasmAstExprVector& args() const { return args_; }
+};
+
+class WasmAstCallIndirect : public WasmAstExpr
+{
+    uint32_t sigIndex_;
+    WasmAstExpr* index_;
+    WasmAstExprVector args_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::CallIndirect;
+    WasmAstCallIndirect(uint32_t sigIndex, WasmAstExpr* index, WasmAstExprVector&& args)
+      : WasmAstExpr(Kind), sigIndex_(sigIndex), index_(index), args_(Move(args))
+    {}
+
+    uint32_t sigIndex() const { return sigIndex_; }
+    WasmAstExpr* index() const { return index_; }
     const WasmAstExprVector& args() const { return args_; }
 };
 
@@ -360,6 +389,17 @@ class WasmAstExport : public WasmAstNode
     size_t funcIndex() const { MOZ_ASSERT(kind_ == WasmAstExportKind::Func); return u.funcIndex_; }
 };
 
+typedef WasmAstVector<uint32_t> WasmAstTableElemVector;
+
+class WasmAstTable : public WasmAstNode
+{
+    WasmAstTableElemVector elems_;
+
+  public:
+    explicit WasmAstTable(WasmAstTableElemVector&& elems) : elems_(Move(elems)) {}
+    const WasmAstTableElemVector& elems() const { return elems_; }
+};
+
 class WasmAstSegment : public WasmAstNode
 {
     uint32_t offset_;
@@ -403,6 +443,7 @@ class WasmAstModule : public WasmAstNode
     SigMap sigMap_;
     ImportVector imports_;
     ExportVector exports_;
+    WasmAstTable* table_;
     FuncVector funcs_;
 
   public:
@@ -413,6 +454,7 @@ class WasmAstModule : public WasmAstNode
         sigMap_(lifo),
         imports_(lifo),
         exports_(lifo),
+        table_(nullptr),
         funcs_(lifo)
     {}
     bool init() {
@@ -437,6 +479,13 @@ class WasmAstModule : public WasmAstNode
         return sigs_.append(new (lifo_) WasmAstSig(Move(sig))) &&
                sigMap_.add(p, sigs_.back(), *sigIndex);
     }
+    bool append(WasmAstSig* sig) {
+        uint32_t sigIndex = sigs_.length();
+        if (!sigs_.append(sig))
+            return false;
+        SigMap::AddPtr p = sigMap_.lookupForAdd(*sig);
+        return p || sigMap_.add(p, sig, sigIndex);
+    }
     const SigVector& sigs() const {
         return sigs_;
     }
@@ -457,6 +506,15 @@ class WasmAstModule : public WasmAstNode
     }
     const ExportVector& exports() const {
         return exports_;
+    }
+    bool initTable(WasmAstTable* table) {
+        if (table_)
+            return false;
+        table_ = table;
+        return true;
+    }
+    const WasmAstTable* maybeTable() const {
+        return table_;
     }
 };
 
@@ -553,6 +611,7 @@ class WasmToken
         Block,
         Call,
         CallImport,
+        CallIndirect,
         CloseParen,
         ComparisonOpcode,
         Const,
@@ -583,7 +642,9 @@ class WasmToken
         Segment,
         SetLocal,
         Store,
+        Table,
         Text,
+        Type,
         UnaryOpcode,
         ValueType
     };
@@ -949,12 +1010,16 @@ class WasmTokenStream
     }
 
     // Helpers:
-    bool getIf(WasmToken::Kind kind) {
+    bool getIf(WasmToken::Kind kind, WasmToken* token) {
         if (peek().kind() == kind) {
-            get();
+            *token = get();
             return true;
         }
         return false;
+    }
+    bool getIf(WasmToken::Kind kind) {
+        WasmToken token;
+        return getIf(kind, &token);
     }
     bool match(WasmToken::Kind expect, WasmToken* token, UniqueChars* error) {
         *token = get();
@@ -1082,6 +1147,8 @@ WasmToken WasmTokenStream::next()
 
       case 'c':
         if (consume(MOZ_UTF16("call"))) {
+            if (consume(MOZ_UTF16("_indirect")))
+                return WasmToken(WasmToken::CallIndirect, begin, cur_);
             if (consume(MOZ_UTF16("_import")))
                 return WasmToken(WasmToken::CallImport, begin, cur_);
             return WasmToken(WasmToken::Call, begin, cur_);
@@ -1616,6 +1683,13 @@ WasmToken WasmTokenStream::next()
             return WasmToken(WasmToken::Segment, begin, cur_);
         break;
 
+      case 't':
+        if (consume(MOZ_UTF16("table")))
+            return WasmToken(WasmToken::Table, begin, cur_);
+        if (consume(MOZ_UTF16("type")))
+            return WasmToken(WasmToken::Type, begin, cur_);
+        break;
+
       default:
         break;
     }
@@ -1684,23 +1758,52 @@ ParseBlock(WasmParseContext& c)
     return new(c.lifo) WasmAstBlock(Move(exprs));
 }
 
+static bool
+ParseArgs(WasmParseContext& c, WasmAstExprVector* args)
+{
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmAstExpr* arg = ParseExprInsideParens(c);
+        if (!arg || !args->append(arg))
+            return false;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+    }
+
+    return true;
+}
+
 static WasmAstCall*
 ParseCall(WasmParseContext& c, Expr expr)
 {
+    MOZ_ASSERT(expr == Expr::Call || expr == Expr::CallImport);
+
     WasmToken index;
     if (!c.ts.match(WasmToken::Index, &index, c.error))
         return nullptr;
 
     WasmAstExprVector args(c.lifo);
-    while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmAstExpr* arg = ParseExprInsideParens(c);
-        if (!arg || !args.append(arg))
-            return nullptr;
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
-            return nullptr;
-    }
+    if (!ParseArgs(c, &args))
+        return nullptr;
 
     return new(c.lifo) WasmAstCall(expr, index.index(), Move(args));
+}
+
+static WasmAstCallIndirect*
+ParseCallIndirect(WasmParseContext& c)
+{
+    WasmToken sigIndex;
+    if (!c.ts.match(WasmToken::Index, &sigIndex, c.error))
+        return nullptr;
+
+    WasmAstExpr* index = ParseExpr(c);
+    if (!index)
+        return nullptr;
+
+    WasmAstExprVector args(c.lifo);
+    if (!ParseArgs(c, &args))
+        return nullptr;
+
+    return new(c.lifo) WasmAstCallIndirect(sigIndex.index(), index, Move(args));
 }
 
 static uint_fast8_t
@@ -2241,6 +2344,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
         return ParseCall(c, Expr::CallImport);
+      case WasmToken::CallIndirect:
+        return ParseCallIndirect(c);
       case WasmToken::ComparisonOpcode:
         return ParseComparisonOperator(c, token.expr());
       case WasmToken::Const:
@@ -2291,6 +2396,8 @@ ParseResult(WasmParseContext& c, ExprType* result)
     return true;
 }
 
+static const uint32_t BadSigIndex = UINT32_MAX;
+
 static WasmAstFunc*
 ParseFunc(WasmParseContext& c, WasmAstModule* module)
 {
@@ -2298,7 +2405,24 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
     WasmAstValTypeVector args(c.lifo);
     ExprType result = ExprType::Void;
 
+    uint32_t sigIndex = BadSigIndex;
+
+    WasmToken openParen;
+    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Type)) {
+            WasmToken sigToken;
+            if (!c.ts.match(WasmToken::Index, &sigToken, c.error))
+                return nullptr;
+            sigIndex = sigToken.index();
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return nullptr;
+        } else {
+            c.ts.unget(openParen);
+        }
+    }
+
     WasmAstExpr* maybeBody = nullptr;
+
     while (c.ts.getIf(WasmToken::OpenParen) && !maybeBody) {
         WasmToken token = c.ts.get();
         switch (token.kind()) {
@@ -2325,11 +2449,59 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
             return nullptr;
     }
 
-    uint32_t sigIndex;
-    if (!module->declare(WasmAstSig(Move(args), result), &sigIndex))
-        return nullptr;
+    if (sigIndex == BadSigIndex) {
+        if (!module->declare(WasmAstSig(Move(args), result), &sigIndex))
+            return nullptr;
+    }
 
     return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), maybeBody);
+}
+
+static bool
+ParseFuncType(WasmParseContext& c, WasmAstSig* sig)
+{
+    WasmAstValTypeVector args(c.lifo);
+    ExprType result = ExprType::Void;
+
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmToken token = c.ts.get();
+        switch (token.kind()) {
+          case WasmToken::Param:
+            if (!ParseValueType(c, &args))
+                return false;
+            break;
+          case WasmToken::Result:
+            if (!ParseResult(c, &result))
+                return false;
+            break;
+          default:
+            c.ts.generateError(token, c.error);
+            return false;
+        }
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+    }
+
+    *sig = WasmAstSig(Move(args), result);
+    return true;
+}
+
+static WasmAstSig*
+ParseTypeDef(WasmParseContext& c)
+{
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+    if (!c.ts.match(WasmToken::Func, c.error))
+        return nullptr;
+
+    WasmAstSig sig(c.lifo);
+    if (!ParseFuncType(c, &sig))
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    return new(c.lifo) WasmAstSig(Move(sig));
 }
 
 static WasmAstSegment*
@@ -2379,30 +2551,12 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
     if (!c.ts.match(WasmToken::Text, &funcName, c.error))
         return nullptr;
 
-    WasmAstValTypeVector args(c.lifo);
-    ExprType result = ExprType::Void;
-
-    while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmToken token = c.ts.get();
-        switch (token.kind()) {
-          case WasmToken::Param:
-            if (!ParseValueType(c, &args))
-                return nullptr;
-            break;
-          case WasmToken::Result:
-            if (!ParseResult(c, &result))
-                return nullptr;
-            break;
-          default:
-            c.ts.generateError(token, c.error);
-            return nullptr;
-        }
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
-            return nullptr;
-    }
+    WasmAstSig sig(c.lifo);
+    if (!ParseFuncType(c, &sig))
+        return nullptr;
 
     uint32_t sigIndex;
-    if (!module->declare(WasmAstSig(Move(args), result), &sigIndex))
+    if (!module->declare(Move(sig), &sigIndex))
         return nullptr;
 
     return new(c.lifo) WasmAstImport(moduleName.text(), funcName.text(), sigIndex);
@@ -2430,6 +2584,20 @@ ParseExport(WasmParseContext& c)
 
 }
 
+static WasmAstTable*
+ParseTable(WasmParseContext& c)
+{
+    WasmAstTableElemVector elems(c.lifo);
+
+    WasmToken token;
+    while (c.ts.getIf(WasmToken::Index, &token)) {
+        if (!elems.append(token.index()))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstTable(Move(elems));
+}
+
 static WasmAstModule*
 ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
 {
@@ -2448,6 +2616,12 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
         WasmToken section = c.ts.get();
 
         switch (section.kind()) {
+          case WasmToken::Type: {
+            WasmAstSig* sig = ParseTypeDef(c);
+            if (!sig || !module->append(sig))
+                return nullptr;
+            break;
+          }
           case WasmToken::Memory: {
             WasmAstMemory* memory = ParseMemory(c);
             if (!memory)
@@ -2468,6 +2642,16 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             WasmAstExport* exp = ParseExport(c);
             if (!exp || !module->append(exp))
                 return nullptr;
+            break;
+          }
+          case WasmToken::Table: {
+            WasmAstTable* table = ParseTable(c);
+            if (!table)
+                return nullptr;
+            if (!module->initTable(table)) {
+                c.ts.generateError(section, c.error);
+                return nullptr;
+            }
             break;
           }
           case WasmToken::Func: {
@@ -2520,18 +2704,45 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
 }
 
 static bool
+EncodeArgs(Encoder& e, const WasmAstExprVector& args)
+{
+    for (WasmAstExpr* arg : args) {
+        if (!EncodeExpr(e, *arg))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeCall(Encoder& e, WasmAstCall& c)
 {
     if (!e.writeExpr(c.expr()))
         return false;
 
-    if (!e.writeU32(c.index()))
+    if (!e.writeVarU32(c.index()))
         return false;
 
-    for (WasmAstExpr* arg : c.args()) {
-        if (!EncodeExpr(e, *arg))
-            return false;
-    }
+    if (!EncodeArgs(e, c.args()))
+        return false;
+
+    return true;
+}
+
+static bool
+EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
+{
+    if (!e.writeExpr(Expr::CallIndirect))
+        return false;
+
+    if (!e.writeVarU32(c.sigIndex()))
+        return false;
+
+    if (!EncodeExpr(e, *c.index()))
+        return false;
+
+    if (!EncodeArgs(e, c.args()))
+        return false;
 
     return true;
 }
@@ -2548,10 +2759,10 @@ EncodeConst(Encoder& e, WasmAstConst& c)
                e.writeVarU64(c.val().i64());
       case ValType::F32:
         return e.writeExpr(Expr::F32Const) &&
-               e.writeF32(c.val().f32());
+               e.writeFixedF32(c.val().f32());
       case ValType::F64:
         return e.writeExpr(Expr::F64Const) &&
-               e.writeF64(c.val().f64());
+               e.writeFixedF64(c.val().f64());
       default:
         break;
     }
@@ -2647,6 +2858,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeBlock(e, expr.as<WasmAstBlock>());
       case WasmAstExprKind::Call:
         return EncodeCall(e, expr.as<WasmAstCall>());
+      case WasmAstExprKind::CallIndirect:
+        return EncodeCallIndirect(e, expr.as<WasmAstCallIndirect>());
       case WasmAstExprKind::ComparisonOperator:
         return EncodeComparisonOperator(e, expr.as<WasmAstComparisonOperator>());
       case WasmAstExprKind::Const:
@@ -2679,7 +2892,7 @@ EncodeSignatureSection(Encoder& e, WasmAstModule& module)
     if (module.sigs().empty())
         return true;
 
-    if (!e.writeCString(SigSection))
+    if (!e.writeCString(SigLabel))
         return false;
 
     size_t offset;
@@ -2712,7 +2925,7 @@ EncodeDeclarationSection(Encoder& e, WasmAstModule& module)
     if (module.funcs().empty())
         return true;
 
-    if (!e.writeCString(DeclSection))
+    if (!e.writeCString(DeclLabel))
         return false;
 
     size_t offset;
@@ -2741,9 +2954,6 @@ EncodeCString(Encoder& e, TwoByteChars twoByteChars)
 static bool
 EncodeImport(Encoder& e, WasmAstImport& imp)
 {
-    if (!e.writeCString(FuncSubsection))
-        return false;
-
     if (!e.writeVarU32(imp.sigIndex()))
         return false;
 
@@ -2762,20 +2972,22 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
     if (module.imports().empty())
         return true;
 
-    if (!e.writeCString(ImportSection))
+    if (!e.writeCString(ImportLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(module.imports().length()))
-        return false;
-
     for (WasmAstImport* imp : module.imports()) {
+        if (!e.writeCString(FuncLabel))
+            return false;
         if (!EncodeImport(e, *imp))
             return false;
     }
+
+    if (!e.writeCString(EndLabel))
+        return false;
 
     e.finishSection(offset);
     return true;
@@ -2787,7 +2999,7 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
     if (!module.maybeMemory())
         return true;
 
-    if (!e.writeCString(MemorySection))
+    if (!e.writeCString(MemoryLabel))
         return false;
 
     size_t offset;
@@ -2796,10 +3008,13 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 
     WasmAstMemory& memory = *module.maybeMemory();
 
-    if (!e.writeCString(FieldInitial))
+    if (!e.writeCString(InitialLabel))
         return false;
 
     if (!e.writeVarU32(memory.initialSize()))
+        return false;
+
+    if (!e.writeCString(EndLabel))
         return false;
 
     e.finishSection(offset);
@@ -2809,9 +3024,6 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 static bool
 EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 {
-    if (!e.writeCString(FuncSubsection))
-        return false;
-
     if (!e.writeVarU32(exp.funcIndex()))
         return false;
 
@@ -2824,9 +3036,6 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 static bool
 EncodeMemoryExport(Encoder& e, WasmAstExport& exp)
 {
-    if (!e.writeCString(MemorySubsection))
-        return false;
-
     if (!EncodeCString(e, exp.name()))
         return false;
 
@@ -2839,27 +3048,56 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
     if (module.exports().empty())
         return true;
 
-    if (!e.writeCString(ExportSection))
+    if (!e.writeCString(ExportLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(module.exports().length()))
-        return false;
-
     for (WasmAstExport* exp : module.exports()) {
         switch (exp->kind()) {
           case WasmAstExportKind::Func:
+            if (!e.writeCString(FuncLabel))
+                return false;
             if (!EncodeFunctionExport(e, *exp))
                 return false;
             break;
           case WasmAstExportKind::Memory:
+            if (!e.writeCString(MemoryLabel))
+                return false;
             if (!EncodeMemoryExport(e, *exp))
                 return false;
             break;
         }
+    }
+
+    if (!e.writeCString(EndLabel))
+        return false;
+
+    e.finishSection(offset);
+    return true;
+}
+
+static bool
+EncodeTableSection(Encoder& e, WasmAstModule& module)
+{
+    if (!module.maybeTable())
+        return true;
+
+    if (!e.writeCString(TableLabel))
+        return false;
+
+    size_t offset;
+    if (!e.startSection(&offset))
+        return false;
+
+    if (!e.writeVarU32(module.maybeTable()->elems().length()))
+        return false;
+
+    for (uint32_t index : module.maybeTable()->elems()) {
+        if (!e.writeVarU32(index))
+            return false;
     }
 
     e.finishSection(offset);
@@ -2867,9 +3105,9 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunc(Encoder& e, WasmAstFunc& func)
+EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
 {
-    if (!e.writeCString(FuncSubsection))
+    if (!e.writeCString(FuncLabel))
         return false;
 
     size_t offset;
@@ -2898,36 +3136,8 @@ EncodeFunc(Encoder& e, WasmAstFunc& func)
 }
 
 static bool
-EncodeCodeSection(Encoder& e, WasmAstModule& module)
-{
-    if (module.funcs().empty())
-        return true;
-
-    if (!e.writeCString(CodeSection))
-        return false;
-
-    size_t offset;
-    if (!e.startSection(&offset))
-        return false;
-
-    if (!e.writeVarU32(module.funcs().length()))
-        return false;
-
-    for (WasmAstFunc* func : module.funcs()) {
-        if (!EncodeFunc(e, *func))
-            return false;
-    }
-
-    e.finishSection(offset);
-    return true;
-}
-
-static bool
 EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
 {
-    if (!e.writeCString(SegmentSubsection))
-        return false;
-
     if (!e.writeVarU32(segment.offset()))
         return false;
 
@@ -2948,7 +3158,7 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
     if (!e.writeVarU32(bytes.length()))
         return false;
 
-    if (!e.writeData(bytes.begin(), bytes.length()))
+    if (!e.writeRawData(bytes.begin(), bytes.length()))
         return false;
 
     return true;
@@ -2962,20 +3172,22 @@ EncodeDataSection(Encoder& e, WasmAstModule& module)
 
     const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
 
-    if (!e.writeCString(DataSection))
+    if (!e.writeCString(DataLabel))
         return false;
 
     size_t offset;
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(segments.length()))
-        return false;
-
     for (WasmAstSegment* segment : segments) {
+        if (!e.writeCString(SegmentLabel))
+            return false;
         if (!EncodeDataSegment(e, *segment))
             return false;
     }
+
+    if (!e.writeCString(EndLabel))
+        return false;
 
     e.finishSection(offset);
     return true;
@@ -2990,10 +3202,10 @@ EncodeModule(WasmAstModule& module)
 
     Encoder e(*bytecode);
 
-    if (!e.writeU32(MagicNumber))
+    if (!e.writeFixedU32(MagicNumber))
         return nullptr;
 
-    if (!e.writeU32(EncodingVersion))
+    if (!e.writeFixedU32(EncodingVersion))
         return nullptr;
 
     if (!EncodeSignatureSection(e, module))
@@ -3005,19 +3217,24 @@ EncodeModule(WasmAstModule& module)
     if (!EncodeDeclarationSection(e, module))
         return nullptr;
 
+    if (!EncodeTableSection(e, module))
+        return nullptr;
+
     if (!EncodeMemorySection(e, module))
         return nullptr;
 
     if (!EncodeExportSection(e, module))
         return nullptr;
 
-    if (!EncodeCodeSection(e, module))
-        return nullptr;
+    for (WasmAstFunc* func : module.funcs()) {
+        if (!EncodeFunctionSection(e, *func))
+            return nullptr;
+    }
 
     if (!EncodeDataSection(e, module))
         return nullptr;
 
-    if (!e.writeCString(EndSection))
+    if (!e.writeCString(EndLabel))
         return nullptr;
 
     return Move(bytecode);

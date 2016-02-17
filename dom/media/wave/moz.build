@@ -6,11 +6,13 @@
 
 EXPORTS += [
     'WaveDecoder.h',
+    'WaveDemuxer.h',
     'WaveReader.h',
 ]
 
 UNIFIED_SOURCES += [
     'WaveDecoder.cpp',
+    'WaveDemuxer.cpp',
     'WaveReader.cpp',
 ]
 

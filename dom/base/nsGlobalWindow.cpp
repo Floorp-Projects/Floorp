@@ -183,8 +183,8 @@
 #include "prenv.h"
 #include "prprf.h"
 
+#include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/MessageChannel.h"
-#include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/Promise.h"
 
 #ifdef MOZ_GAMEPAD
@@ -266,7 +266,6 @@ using mozilla::PrincipalOriginAttributes;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 using mozilla::dom::cache::CacheStorage;
-using mozilla::dom::indexedDB::IDBFactory;
 
 static LazyLogModule gDOMLeakPRLog("DOMLeak");
 

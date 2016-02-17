@@ -93,7 +93,8 @@ public:
     SCROLL_SYNCHRONOUS = 1<<1,
     SCROLL_FIRST_ANCESTOR_ONLY = 1<<2,
     SCROLL_DO_FLUSH = 1<<3,
-    SCROLL_OVERFLOW_HIDDEN = 1<<5
+    SCROLL_OVERFLOW_HIDDEN = 1<<5,
+    SCROLL_FOR_CARET_MOVE = 1<<6
   };
   // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
   // when the scroll event fires so we make sure to scroll to the right place.

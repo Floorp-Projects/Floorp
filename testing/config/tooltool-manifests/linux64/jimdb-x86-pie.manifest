@@ -1,0 +1,10 @@
+[
+{
+"size": 2263182,
+"visibility": "public",
+"digest": "24711d54143978caa77c5db54fc7da142c82c827a9bbbfad0a133ed30440e9a46b7e7fcd9ade886dbc5f0d7cd11a4facb3aeb573303becf6169234edef6f84e9",
+"algorithm": "sha512",
+"filename": "jimdb-x86-pie-linux_x64.tar.bz2",
+"unpack": true
+}
+]

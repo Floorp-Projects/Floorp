@@ -1,2 +1,2 @@
 skip-if(B2G||Mulet) == legend.html legend-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-pref(dom.webcomponents.enabled,true) == shadow-dom.html shadow-dom-ref.html
+fuzzy-if(skiaContent,1,7) pref(dom.webcomponents.enabled,true) == shadow-dom.html shadow-dom-ref.html

@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIST_INSTALL = False
+FINAL_TARGET = '_tests/xpcshell/xpcom/tests/unit'
+EXTRA_PP_COMPONENTS += [
+    'testcomponent.manifest',
+]
 
 SOURCES += [
     'TestComponent.cpp',

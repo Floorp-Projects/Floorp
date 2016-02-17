@@ -1992,8 +1992,17 @@ CodeGeneratorMIPSShared::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
     Register out = ToRegister(ins->output());
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
 
-    BaseIndex source(GlobalReg, index, ScalePointer, addr);
-    masm.loadPtr(source, out);
+    if (mir->hasLimit()) {
+        masm.branch32(Assembler::Condition::AboveOrEqual, index, Imm32(mir->limit()),
+                      wasm::JumpTarget::OutOfBounds);
+    }
+
+    if (mir->alwaysThrow()) {
+        masm.jump(wasm::JumpTarget::BadIndirectCall);
+    } else {
+        BaseIndex source(GlobalReg, index, ScalePointer, addr);
+        masm.loadPtr(source, out);
+    }
 }
 
 void

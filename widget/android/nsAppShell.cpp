@@ -655,6 +655,8 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::TELEMETRY_UI_SESSION_STOP: {
+        if (!nsAppShell::Get()->mBrowserApp)
+            break;
         if (curEvent->Characters().Length() == 0)
             break;
 
@@ -672,6 +674,8 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::TELEMETRY_UI_SESSION_START: {
+        if (!nsAppShell::Get()->mBrowserApp)
+            break;
         if (curEvent->Characters().Length() == 0)
             break;
 
@@ -688,6 +692,8 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::TELEMETRY_UI_EVENT: {
+        if (!nsAppShell::Get()->mBrowserApp)
+            break;
         if (curEvent->Data().Length() == 0)
             break;
 

@@ -7,7 +7,7 @@
 == simple-anchor-end.svg simple-anchor-end-ref.html
 == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
 == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
-== simple-anchor-middle.svg simple-anchor-middle-ref.html
+fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle-ref.html
 == simple-bidi.svg simple-bidi-ref.html
 == simple-bidi-2.svg simple-bidi.svg
 
@@ -36,7 +36,7 @@ HTTP(../..) == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 HTTP(../..) == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi-ref.svg
 == simple-multiple-dx-anchor-end-rtl.svg simple-multiple-dx-anchor-end-rtl-ref.svg
 == simple-multiple-dx-anchor-end.svg simple-multiple-dx-anchor-end-ref.svg
-HTTP(../..) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl-ref.svg
+fuzzy-if(skiaContent,1,2) HTTP(../..) == simple-multiple-dx-anchor-middle-rtl.svg simple-multiple-dx-anchor-middle-rtl-ref.svg
 HTTP(../..) == simple-multiple-dx-anchor-middle.svg simple-multiple-dx-anchor-middle-ref.svg
 == simple-multiple-dx-bidi.svg simple-multiple-dx-bidi-ref.svg
 == simple-multiple-dx-bidi-2.svg simple-multiple-dx-bidi.svg
@@ -110,7 +110,7 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == simple-multiline-pc.svg simple-multiline-pc-ref.svg
 == simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
 
-== textpath.svg textpath-ref.svg
+fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
 == textpath-a.svg textpath-a-ref.svg
 == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
 == textpath-anchor-end.svg textpath-anchor-end-ref.svg
@@ -121,8 +121,8 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
 
 == textLength.svg textLength-ref.svg
-== textLength-2.svg textLength-2-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) == textLength-3.svg textLength-3-ref.svg
+fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,1,100) == textLength-3.svg textLength-3-ref.svg
 == textLength-4.svg textLength-4-ref.svg
 == textLength-5.svg textLength-5-ref.svg
 == textLength-6.svg textLength-6-ref.svg
@@ -164,7 +164,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == dynamic-font-size-4.svg dynamic-font-size-4-ref.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
-fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
+fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug 885316
 == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
@@ -184,17 +184,17 @@ fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
-== textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
+fuzzy-if(skiaContent,1,80) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg
-needs-focus == selectSubString.svg selectSubString-ref.svg
-needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
-needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
+fuzzy-if(skiaContent,1,250) needs-focus == selectSubString.svg selectSubString-ref.svg
+fuzzy-if(skiaContent,1,600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
+fuzzy-if(skiaContent,1,250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
 needs-focus == simple-selection.svg simple-selection-ref.html
-needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
-needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
-needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
+fuzzy-if(skiaContent,1,100) needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
+fuzzy-if(skiaContent,1,50) needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+fuzzy-if(skiaContent,1,150) needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
+fuzzy-if(skiaContent,1,300) needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
-needs-focus == textpath-selection.svg textpath-selection-ref.svg
+fuzzy-if(skiaContent,1,200) needs-focus == textpath-selection.svg textpath-selection-ref.svg

@@ -2679,7 +2679,7 @@ ContentPermissionPrompt.prototype = {
     options.removeOnDismissal = autoAllow;
     options.eventCallback = type => {
       if (type == "removed") {
-        notification.browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
+        notification.browser.removeEventListener("fullscreenchange", onFullScreen, true);
         if (autoAllow) {
           aRequest.allow();
         }
@@ -2694,7 +2694,7 @@ ContentPermissionPrompt.prototype = {
     // upon exit), so if the page enters fullscreen mode after requesting
     // pointerLock (but before the user has granted permission), we should
     // remove the now-impotent notification.
-    notification.browser.addEventListener("mozfullscreenchange", onFullScreen, true);
+    notification.browser.addEventListener("fullscreenchange", onFullScreen, true);
   },
 
   prompt: function CPP_prompt(request) {

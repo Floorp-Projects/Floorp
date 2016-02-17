@@ -128,12 +128,13 @@ function testSameOriginCredentials() {
     var request = makeRequest(test);
     console.log(request.url);
     fetch(request).then(function(res) {
-      testResponse(res, test);
-      if (i < tests.length-1) {
-        runATest(tests, i+1);
-      } else {
-        finalPromiseResolve();
-      }
+      testResponse(res, test).then(function() {
+        if (i < tests.length-1) {
+          runATest(tests, i+1);
+        } else {
+          finalPromiseResolve();
+        }
+      });
     }, function(e) {
       ok(!test.pass, "Expected test to fail " + test.toSource());
       ok(e instanceof TypeError, "Test should fail " + test.toSource());
@@ -1092,15 +1093,132 @@ function testCrossOriginCredentials() {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(function(res) {
-      testResponse(res, test);
+      testResponse(res, test).then(function() {
+        if (i < tests.length-1) {
+          runATest(tests, i+1);
+        } else {
+          finalPromiseResolve();
+        }
+      });
+    }, function(e) {
+      ok(!test.pass, "Expected test failure for " + test.toSource());
+      ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
       if (i < tests.length-1) {
         runATest(tests, i+1);
       } else {
         finalPromiseResolve();
       }
+    });
+  }
+
+  runATest(tests, 0);
+  return finalPromise;
+}
+
+function testModeNoCorsCredentials() {
+  var cookieStr = "type=chocolatechip";
+  var tests = [
+              {
+                // Initialize by setting a cookie.
+                pass: 1,
+                setCookie: cookieStr,
+                withCred: "include",
+              },
+              {
+                pass: 1,
+                noCookie: 1,
+                withCred: "omit",
+              },
+              {
+                pass: 1,
+                noCookie: 1,
+                withCred: "same-origin",
+              },
+              {
+                pass: 1,
+                cookie: cookieStr,
+                withCred: "include",
+              },
+              {
+                pass: 1,
+                cookie: cookieStr,
+                withCred: "omit",
+                status: 500,
+              },
+              {
+                pass: 1,
+                cookie: cookieStr,
+                withCred: "same-origin",
+                status: 500,
+              },
+              {
+                pass: 1,
+                noCookie: 1,
+                withCred: "include",
+                status: 500,
+              },
+              ];
+
+  var finalPromiseResolve, finalPromiseReject;
+  var finalPromise = new Promise(function(res, rej) {
+    finalPromiseResolve = res;
+    finalPromiseReject = rej;
+  });
+
+  function makeRequest(test) {
+    req = {
+      url : "http://example.org" + corsServerPath + "a+b",
+      withCred: test.withCred,
+    };
+
+    if (test.setCookie)
+      req.url += "&setCookie=" + escape(test.setCookie);
+    if (test.cookie)
+      req.url += "&cookie=" + escape(test.cookie);
+    if (test.noCookie)
+      req.url += "&noCookie";
+
+    return new Request(req.url, { method: 'GET',
+                                  mode: 'no-cors',
+                                  credentials: req.withCred });
+  }
+
+  function testResponse(res, test) {
+    is(res.type, 'opaque', 'wrong response type for ' + test.toSource());
+
+    // Get unfiltered response
+    var chromeResponse = SpecialPowers.wrap(res);
+    var unfiltered = chromeResponse.cloneUnfiltered();
+
+    var status = test.status ? test.status : 200;
+    is(unfiltered.status, status, "wrong status in test for " + test.toSource());
+    return unfiltered.text().then(function(v) {
+      if (status === 200) {
+        is(v, "<res>hello pass</res>\n",
+         "wrong text in test for " + test.toSource());
+      }
+    });
+  }
+
+  function runATest(tests, i) {
+    if (typeof SpecialPowers !== 'object') {
+      finalPromiseResolve();
+      return;
+    }
+
+    var test = tests[i];
+    var request = makeRequest(test);
+    fetch(request).then(function(res) {
+      testResponse(res, test).then(function() {
+        if (i < tests.length-1) {
+          runATest(tests, i+1);
+        } else {
+          finalPromiseResolve();
+        }
+      });
     }, function(e) {
-      ok(!test.pass, "Expected test failure for " + test.toSource());
-      ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
+      ok(!test.pass, "Expected test to fail " + test.toSource());
+      ok(e instanceof TypeError, "Test should fail " + test.toSource());
       if (i < tests.length-1) {
         runATest(tests, i+1);
       } else {
@@ -1622,6 +1740,7 @@ function runTest() {
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
+    .then(testModeNoCorsCredentials)
     .then(testCORSRedirects)
     .then(testNoCORSRedirects)
     .then(testReferrer)

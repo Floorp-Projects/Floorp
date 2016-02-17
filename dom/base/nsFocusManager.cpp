@@ -1236,7 +1236,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
                                     NS_LITERAL_CSTRING("DOM"),
                                     contentToFocus->OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
-                                    "FocusedWindowedPluginWhileFullScreen");
+                                    "FocusedWindowedPluginWhileFullscreen");
     nsIDocument::AsyncExitFullscreen(contentToFocus->OwnerDoc());
   }
 #endif
