@@ -201,9 +201,9 @@ yyparse()
     register int yym, yyn, yystate;
 #if YYDEBUG
     register char *yys;
-    extern char *getenv();
+    extern char *PR_GetEnvSecure();
 
-    if ((yys = getenv("YYDEBUG")) != NULL)
+    if ((yys = PR_GetEnvSecure("YYDEBUG")) != NULL)
     {
         yyn = *yys;
         if (yyn >= '0' && yyn <= '9')

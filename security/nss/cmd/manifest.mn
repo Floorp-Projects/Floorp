@@ -6,16 +6,36 @@
 DEPTH	= ..
 # MODULE	= seccmd
 
-REQUIRES = nss nspr libdbm
+SOFTOKEN_SRCDIRS=
+NSS_SRCDIRS=
+LIB_SRCDIRS=
 
-DIRS = lib  \
+ifdef NSS_BUILD_UTIL_ONLY
+REQUIRES = nspr
+else
+REQUIRES = nss nspr libdbm
+LIB_SRCDIRS = \
+ lib \
+ $(NULL)
+endif
+
+ifndef NSS_BUILD_UTIL_ONLY
+SOFTOKEN_SRCDIRS = \
+ $(BLTEST_SRCDIR) \
+ $(FIPSTEST_SRCDIR)  \
+ $(LOWHASHTEST_SRCDIR)  \
+ $(SHLIBSIGN_SRCDIR) \
+ $(NULL)
+endif
+
+ifndef NSS_BUILD_SOFTOKEN_ONLY
+ifndef NSS_BUILD_UTIL_ONLY
+NSS_SRCDIRS = \
  addbuiltin \
  atob  \
- $(BLTEST_SRCDIR) \
  btoa  \
  certcgi \
  certutil  \
- checkcert  \
  chktest  \
  crlutil  \
  crmftest \
@@ -23,8 +43,6 @@ DIRS = lib  \
  derdump  \
  digest  \
  httpserv  \
- $(FIPSTEST_SRCDIR)  \
- $(LOWHASHTEST_SRCDIR)  \
  listsuites \
  makepqg  \
  multinit \
@@ -47,7 +65,6 @@ DIRS = lib  \
  selfserv  \
  signtool \
  signver \
- $(SHLIBSIGN_SRCDIR) \
  smimetools  \
  ssltap  \
  strsclnt \
@@ -58,6 +75,13 @@ DIRS = lib  \
  vfyserv \
  modutil \
  $(NULL)
+endif
+endif
+
+DIRS = \
+ $(LIB_SRCDIRS) \
+ $(SOFTOKEN_SRCDIRS) \
+ $(NSS_SRCDIRS)
 
 TEMPORARILY_DONT_BUILD = \
  $(NULL)

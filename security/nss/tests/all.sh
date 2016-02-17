@@ -9,7 +9,7 @@
 # mozilla/security/nss/tests/all.sh
 #
 # Script to start selected available NSS QA suites on one machine
-# this script is called or sourced by NSS QA which runs on all required 
+# this script is called or sourced by NSS QA which runs on all required
 # platforms
 #
 # Needs to work on all Unix and Windows platforms
@@ -18,11 +18,11 @@
 # ----------------------------------
 #   cipher.sh    - tests NSS ciphers
 #   libpkix.sh   - tests PKIX functionality
-#   cert.sh      - exercises certutil and creates certs necessary for 
+#   cert.sh      - exercises certutil and creates certs necessary for
 #                  all other tests
 #   dbtests.sh   - tests related to certificate databases
 #   tools.sh     - tests the majority of the NSS tools
-#   fips.sh      - tests basic functionallity of NSS in FIPS-compliant 
+#   fips.sh      - tests basic functionallity of NSS in FIPS-compliant
 #                - mode
 #   sdr.sh       - tests NSS SDR
 #   crmf.sh      - CRMF/CMMF testing
@@ -30,22 +30,23 @@
 #   ssl.sh       - tests SSL V2 SSL V3 and TLS
 #   ocsp.sh      - OCSP testing
 #   merge.sh     - tests merging old and new shareable databases
-#   pkits.sh     - NIST/PKITS tests 
-#   chains.sh    - PKIX cert chains tests 
+#   pkits.sh     - NIST/PKITS tests
+#   chains.sh    - PKIX cert chains tests
 #   dbupgrade.sh - upgrade databases to new shareable version (used
 #                  only in upgrade test cycle)
 #   memleak.sh   - memory leak testing (optional)
-#   ssl_gtests.sh- Gtest based unit tests for ssl (optional)
+#   ssl_gtests.sh- Gtest based unit tests for ssl
+#   pk11_gtests.sh- Gtest based unit tests for PKCS#11
 #
 # NSS testing is now devided to 4 cycles:
 # ---------------------------------------
 #   standard     - run test suites with defaults settings
 #   pkix         - run test suites with PKIX enabled
-#   upgradedb    - upgrade existing certificate databases to shareable 
-#                  format (creates them if doesn't exist yet) and run 
+#   upgradedb    - upgrade existing certificate databases to shareable
+#                  format (creates them if doesn't exist yet) and run
 #                  test suites with those databases
-#   sharedb      - run test suites with shareable database format 
-#                  enabled (databases are created directly to this 
+#   sharedb      - run test suites with shareable database format
+#                  enabled (databases are created directly to this
 #                  format)
 #
 # Mandatory environment variables (to be set before testing):
@@ -55,7 +56,7 @@
 #
 # Optional environment variables to specify build to use:
 # -------------------------------------------------------
-#   BUILT_OPT    - use optimized/debug build 
+#   BUILT_OPT    - use optimized/debug build
 #   USE_64       - use 64bit/32bit build
 #
 # Optional environment variables to enable specific NSS features:
@@ -65,12 +66,12 @@
 #
 # Optional environment variables to select which cycles/suites to test:
 # ---------------------------------------------------------------------
-#   NSS_CYCLES     - list of cycles to run (separated by space 
+#   NSS_CYCLES     - list of cycles to run (separated by space
 #                    character)
 #                  - by default all cycles are tested
 #
 #   NSS_TESTS      - list of all test suites to run (separated by space
-#                    character, without trailing .sh) 
+#                    character, without trailing .sh)
 #                  - this list can be reduced for individual test cycles
 #
 #   NSS_SSL_TESTS  - list of ssl tests to run (see ssl.sh)
@@ -78,7 +79,7 @@
 #
 # Testing schema:
 # ---------------
-#                           all.sh                       ~  (main) 
+#                           all.sh                       ~  (main)
 #                              |                               |
 #          +------------+------------+-----------+       ~  run_cycles
 #          |            |            |           |             |
@@ -98,7 +99,7 @@
 #   Unlike the old QA this is based on files sourcing each other
 #   This is done to save time, since a great portion of time is lost
 #   in calling and sourcing the same things multiple times over the
-#   network. Also, this way all scripts have all shell function 
+#   network. Also, this way all scripts have all shell function
 #   available and a completely common environment
 #
 ########################################################################
@@ -111,14 +112,17 @@ run_tests()
 {
     for TEST in ${TESTS}
     do
-        echo "${TESTS_SKIP}" | grep "${TEST}" > /dev/null
+        # NOTE: the spaces are important. If you don't include
+        # the spaces, then turning off ssl_gtests will also turn off ssl
+        # tests.
+        echo " ${TESTS_SKIP} " | grep " ${TEST} " > /dev/null
         if [ $? -eq 0 ]; then
             continue
         fi
 
         SCRIPTNAME=${TEST}.sh
         echo "Running tests for ${TEST}"
-        echo "TIMESTAMP ${TEST} BEGIN: `date`" 
+        echo "TIMESTAMP ${TEST} BEGIN: `date`"
         (cd ${QADIR}/${TEST}; . ./${SCRIPTNAME} 2>&1)
         echo "TIMESTAMP ${TEST} END: `date`"
     done
@@ -191,7 +195,7 @@ run_cycle_upgrade_db()
         done
     fi
 
-    # upgrade certs dbs to shared db 
+    # upgrade certs dbs to shared db
     TESTS="dbupgrade"
     TESTS_SKIP=
 
@@ -202,7 +206,7 @@ run_cycle_upgrade_db()
 
     # run the subset of tests with the upgraded database
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains ssl_gtests"
+    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains ssl_gtests pk11_gtests"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -233,7 +237,7 @@ run_cycle_shared_db()
 
     # run the tests for native sharedb support
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits ssl_gtests"
+    TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits ssl_gtests pk11_gtests"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -251,7 +255,7 @@ run_cycles()
 {
     for CYCLE in ${CYCLES}
     do
-        case "${CYCLE}" in 
+        case "${CYCLE}" in
         "standard")
             run_cycle_standard
             ;;
@@ -264,7 +268,7 @@ run_cycles()
         "sharedb")
             run_cycle_shared_db
             ;;
-        esac  
+        esac
         . ${ENV_BACKUP}
     done
 }
@@ -274,12 +278,12 @@ run_cycles()
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ssl_gtests"
+tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ssl_gtests pk11_gtests"
 TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}
 
-nss_ssl_tests="crl bypass_normal normal_bypass fips_normal normal_fips iopr"
+nss_ssl_tests="crl bypass_normal normal_bypass fips_normal normal_fips iopr policy"
 NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"
 
 nss_ssl_run="cov auth stapling stress"
@@ -289,7 +293,7 @@ SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`
 
-# all.sh should be the first one to try to source the init 
+# all.sh should be the first one to try to source the init
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     cd common
     . ./init.sh
@@ -298,7 +302,7 @@ fi
 # NOTE:
 # Since in make at the top level, modutil is the last file
 # created, we check for modutil to know whether the build
-# is complete. If a new file is created after that, the 
+# is complete. If a new file is created after that, the
 # following test for modutil should check for that instead.
 # Exception: when building softoken only, shlibsign is the
 # last file created.
@@ -309,9 +313,16 @@ else
 fi
 
 if [ ! -f ${DIST}/${OBJDIR}/bin/${LAST_FILE_BUILT}${PROG_SUFFIX} ]; then
+  if [ "${NSS_BUILD_UTIL_ONLY}" = "1" ]; then
+    # Currently no tests are run or built when building util only.
+    # This may change in the future, atob and bota are
+    # possible candidates.
+    echo "No tests were built"
+  else
     echo "Build Incomplete. Aborting test." >> ${LOGFILE}
     html_head "Testing Initialization"
     Exit "Checking for build"
+  fi
 fi
 
 # NOTE:
@@ -323,11 +334,10 @@ env_backup > ${ENV_BACKUP}
 
 if [ "${O_CRON}" = "ON" ]; then
     run_cycles >> ${LOGFILE}
-else 
+else
     run_cycles | tee -a ${LOGFILE}
 fi
 
 SCRIPTNAME=all.sh
 
 . ${QADIR}/common/cleanup.sh
-

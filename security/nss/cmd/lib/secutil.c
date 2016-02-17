@@ -416,10 +416,13 @@ SECU_DefaultSSLDir(void)
     char *dir;
     static char sslDir[1000];
 
-    dir = PR_GetEnv("SSL_DIR");
+    dir = PR_GetEnvSecure("SSL_DIR");
     if (!dir)
 	return NULL;
 
+    if (strlen(dir) >= PR_ARRAY_SIZE(sslDir)) {
+	return NULL;
+    }
     sprintf(sslDir, "%s", dir);
 
     if (sslDir[strlen(sslDir)-1] == '/')
@@ -452,7 +455,7 @@ SECU_ConfigDirectory(const char* base)
     
 
     if (base == NULL || *base == 0) {
-	home = PR_GetEnv("HOME");
+	home = PR_GetEnvSecure("HOME");
 	if (!home) home = "";
 
 	if (*home && home[strlen(home) - 1] == '/')
@@ -3300,6 +3303,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 		    errstr = "[unknown usage].";
 		    break;
 		}
+		break;
 	    case SEC_ERROR_INADEQUATE_CERT_TYPE:
 		flags = (unsigned int)((char *)node->arg - (char *)NULL);
 		switch (flags) {
@@ -3326,6 +3330,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 		    errstr = "[unknown usage].";
 		    break;
 		}
+		break;
 	    case SEC_ERROR_UNKNOWN_ISSUER:
 	    case SEC_ERROR_UNTRUSTED_ISSUER:
 	    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:

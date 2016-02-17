@@ -15,17 +15,15 @@
 #include "secerr.h"
 
 SECStatus
-CERT_FindCertExtensionByOID(CERTCertificate *cert, SECItem *oid,
-			    SECItem *value)
+CERT_FindCertExtensionByOID(CERTCertificate *cert, SECItem *oid, SECItem *value)
 {
-    return (cert_FindExtensionByOID (cert->extensions, oid, value));
+    return (cert_FindExtensionByOID(cert->extensions, oid, value));
 }
-    
 
 SECStatus
 CERT_FindCertExtension(const CERTCertificate *cert, int tag, SECItem *value)
 {
-    return (cert_FindExtension (cert->extensions, tag, value));
+    return (cert_FindExtension(cert->extensions, tag, value));
 }
 
 static void
@@ -34,13 +32,13 @@ SetExts(void *object, CERTCertExtension **exts)
     CERTCertificate *cert = (CERTCertificate *)object;
 
     cert->extensions = exts;
-    DER_SetUInteger (cert->arena, &(cert->version), SEC_CERTIFICATE_VERSION_3);
+    DER_SetUInteger(cert->arena, &(cert->version), SEC_CERTIFICATE_VERSION_3);
 }
 
 void *
 CERT_StartCertExtensions(CERTCertificate *cert)
 {
-    return (cert_StartExtensions ((void *)cert, cert->arena, SetExts));
+    return (cert_StartExtensions((void *)cert, cert->arena, SetExts));
 }
 
 /*
@@ -50,10 +48,9 @@ SECStatus
 CERT_FindNSCertTypeExtension(CERTCertificate *cert, SECItem *retItem)
 {
 
-    return (CERT_FindBitStringExtension
-	    (cert->extensions, SEC_OID_NS_CERT_EXT_CERT_TYPE, retItem));    
+    return (CERT_FindBitStringExtension(
+        cert->extensions, SEC_OID_NS_CERT_EXT_CERT_TYPE, retItem));
 }
-
 
 /*
  * get the value of a string type extension
@@ -61,51 +58,50 @@ CERT_FindNSCertTypeExtension(CERTCertificate *cert, SECItem *retItem)
 char *
 CERT_FindNSStringExtension(CERTCertificate *cert, int oidtag)
 {
-    SECItem wrapperItem, tmpItem = {siBuffer,0};
+    SECItem wrapperItem, tmpItem = { siBuffer, 0 };
     SECStatus rv;
     PLArenaPool *arena = NULL;
     char *retstring = NULL;
-    
+
     wrapperItem.data = NULL;
     tmpItem.data = NULL;
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    
-    if ( ! arena ) {
-	goto loser;
-    }
-    
-    rv = cert_FindExtension(cert->extensions, oidtag,
-			       &wrapperItem);
-    if ( rv != SECSuccess ) {
-	goto loser;
+
+    if (!arena) {
+        goto loser;
     }
 
-    rv = SEC_QuickDERDecodeItem(arena, &tmpItem,
-                            SEC_ASN1_GET(SEC_IA5StringTemplate), &wrapperItem);
-
-    if ( rv != SECSuccess ) {
-	goto loser;
+    rv = cert_FindExtension(cert->extensions, oidtag, &wrapperItem);
+    if (rv != SECSuccess) {
+        goto loser;
     }
 
-    retstring = (char *)PORT_Alloc(tmpItem.len + 1 );
-    if ( retstring == NULL ) {
-	goto loser;
+    rv = SEC_QuickDERDecodeItem(
+        arena, &tmpItem, SEC_ASN1_GET(SEC_IA5StringTemplate), &wrapperItem);
+
+    if (rv != SECSuccess) {
+        goto loser;
     }
-    
+
+    retstring = (char *)PORT_Alloc(tmpItem.len + 1);
+    if (retstring == NULL) {
+        goto loser;
+    }
+
     PORT_Memcpy(retstring, tmpItem.data, tmpItem.len);
     retstring[tmpItem.len] = '\0';
 
 loser:
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
-    }
-    
-    if ( wrapperItem.data ) {
-	PORT_Free(wrapperItem.data);
+    if (arena) {
+        PORT_FreeArena(arena, PR_FALSE);
     }
 
-    return(retstring);
+    if (wrapperItem.data) {
+        PORT_Free(wrapperItem.data);
+    }
+
+    return (retstring);
 }
 
 /*
@@ -116,7 +112,7 @@ CERT_FindKeyUsageExtension(CERTCertificate *cert, SECItem *retItem)
 {
 
     return (CERT_FindBitStringExtension(cert->extensions,
-					SEC_OID_X509_KEY_USAGE, retItem));    
+                                        SEC_OID_X509_KEY_USAGE, retItem));
 }
 
 /*
@@ -127,24 +123,25 @@ CERT_FindSubjectKeyIDExtension(CERTCertificate *cert, SECItem *retItem)
 {
 
     SECStatus rv;
-    SECItem encodedValue = {siBuffer, NULL, 0 };
-    SECItem decodedValue = {siBuffer, NULL, 0 };
+    SECItem encodedValue = { siBuffer, NULL, 0 };
+    SECItem decodedValue = { siBuffer, NULL, 0 };
 
-    rv = cert_FindExtension
-	 (cert->extensions, SEC_OID_X509_SUBJECT_KEY_ID, &encodedValue);
+    rv = cert_FindExtension(cert->extensions, SEC_OID_X509_SUBJECT_KEY_ID,
+                            &encodedValue);
     if (rv == SECSuccess) {
-	PLArenaPool * tmpArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	if (tmpArena) {
-	    rv = SEC_QuickDERDecodeItem(tmpArena, &decodedValue, 
-	                                SEC_ASN1_GET(SEC_OctetStringTemplate), 
-					&encodedValue);
-	    if (rv == SECSuccess) {
-	        rv = SECITEM_CopyItem(NULL, retItem, &decodedValue);
-	    }
-	    PORT_FreeArena(tmpArena, PR_FALSE);
-	} else {
-	    rv = SECFailure;
-	}
+        PLArenaPool *tmpArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+        if (tmpArena) {
+            rv = SEC_QuickDERDecodeItem(tmpArena, &decodedValue,
+                                        SEC_ASN1_GET(SEC_OctetStringTemplate),
+                                        &encodedValue);
+            if (rv == SECSuccess) {
+                rv = SECITEM_CopyItem(NULL, retItem, &decodedValue);
+            }
+            PORT_FreeArena(tmpArena, PR_FALSE);
+        }
+        else {
+            rv = SECFailure;
+        }
     }
     SECITEM_FreeItem(&encodedValue, PR_FALSE);
     return rv;
@@ -152,7 +149,7 @@ CERT_FindSubjectKeyIDExtension(CERTCertificate *cert, SECItem *retItem)
 
 SECStatus
 CERT_FindBasicConstraintExten(CERTCertificate *cert,
-			      CERTBasicConstraints *value)
+                              CERTBasicConstraints *value)
 {
     SECItem encodedExtenValue;
     SECStatus rv;
@@ -161,42 +158,42 @@ CERT_FindBasicConstraintExten(CERTCertificate *cert,
     encodedExtenValue.len = 0;
 
     rv = cert_FindExtension(cert->extensions, SEC_OID_X509_BASIC_CONSTRAINTS,
-			    &encodedExtenValue);
-    if ( rv != SECSuccess ) {
-	return (rv);
+                            &encodedExtenValue);
+    if (rv != SECSuccess) {
+        return (rv);
     }
 
-    rv = CERT_DecodeBasicConstraintValue (value, &encodedExtenValue);
-    
+    rv = CERT_DecodeBasicConstraintValue(value, &encodedExtenValue);
+
     /* free the raw extension data */
     PORT_Free(encodedExtenValue.data);
     encodedExtenValue.data = NULL;
-    
-    return(rv);
+
+    return (rv);
 }
 
 CERTAuthKeyID *
-CERT_FindAuthKeyIDExten (PLArenaPool *arena, CERTCertificate *cert)
+CERT_FindAuthKeyIDExten(PLArenaPool *arena, CERTCertificate *cert)
 {
     SECItem encodedExtenValue;
     SECStatus rv;
     CERTAuthKeyID *ret;
-    
+
     encodedExtenValue.data = NULL;
     encodedExtenValue.len = 0;
 
     rv = cert_FindExtension(cert->extensions, SEC_OID_X509_AUTH_KEY_ID,
-			    &encodedExtenValue);
-    if ( rv != SECSuccess ) {
-	return (NULL);
+                            &encodedExtenValue);
+    if (rv != SECSuccess) {
+        return (NULL);
     }
 
-    ret = CERT_DecodeAuthKeyID (arena, &encodedExtenValue);
+    ret = CERT_DecodeAuthKeyID(arena, &encodedExtenValue);
 
     PORT_Free(encodedExtenValue.data);
     encodedExtenValue.data = NULL;
-    
-    return(ret);
+
+    return (ret);
 }
 
 SECStatus
@@ -207,9 +204,9 @@ CERT_CheckCertUsage(CERTCertificate *cert, unsigned char usage)
 
     /* There is no extension, v1 or v2 certificate */
     if (cert->extensions == NULL) {
-	return (SECSuccess);
+        return (SECSuccess);
     }
-    
+
     keyUsage.data = NULL;
 
     /* This code formerly ignored the Key Usage extension if it was
@@ -218,12 +215,13 @@ CERT_CheckCertUsage(CERTCertificate *cert, unsigned char usage)
     */
     rv = CERT_FindKeyUsageExtension(cert, &keyUsage);
     if (rv == SECFailure) {
-        rv = (PORT_GetError () == SEC_ERROR_EXTENSION_NOT_FOUND) ?
-	    SECSuccess : SECFailure;
-    } else if (!(keyUsage.data[0] & usage)) {
-	PORT_SetError (SEC_ERROR_CERT_USAGES_INVALID);
-	rv = SECFailure;
+        rv = (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND) ? SECSuccess
+                                                                : SECFailure;
     }
-    PORT_Free (keyUsage.data);
+    else if (!(keyUsage.data[0] & usage)) {
+        PORT_SetError(SEC_ERROR_CERT_USAGES_INVALID);
+        rv = SECFailure;
+    }
+    PORT_Free(keyUsage.data);
     return (rv);
 }

@@ -17,22 +17,23 @@ static const CK_BBOOL ck_false = CK_FALSE;
 static const CK_OBJECT_CLASS cko_netscape_builtin_root_list = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
 
 /* example of a static object */
-static const CK_ATTRIBUTE_TYPE nss_ckcapi_types_1 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL
+static const CK_ATTRIBUTE_TYPE nss_ckcapi_types_1[] = {
+    CKA_CLASS, CKA_TOKEN, CKA_PRIVATE, CKA_MODIFIABLE, CKA_LABEL
 };
 
-static const NSSItem nss_ckcapi_items_1 [] = {
-  { (void *)&cko_data, (PRUint32)sizeof(CK_OBJECT_CLASS) },
-  { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)"Mozilla CAPI Access", (PRUint32)20 }
+static const NSSItem nss_ckcapi_items_1[] = {
+    { (void *)&cko_data, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+    { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
+    { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+    { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+    { (void *)"Mozilla CAPI Access", (PRUint32)20 }
 };
 
 ckcapiInternalObject nss_ckcapi_data[] = {
-  { ckcapiRaw,
-    { 5, nss_ckcapi_types_1, nss_ckcapi_items_1} ,
-  },
+    {
+        ckcapiRaw,
+        { 5, nss_ckcapi_types_1, nss_ckcapi_items_1 },
+    },
 
 };
 
