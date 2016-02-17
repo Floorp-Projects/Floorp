@@ -64,7 +64,7 @@ var progressListener = {
       // On non-Windows platforms, we open new windows in fullscreen mode
       // if the opener window is in fullscreen mode, so we hide the menubar;
       // but on Mac we don't need to hide the menubar.
-      if (document.mozFullScreenElement) {
+      if (document.fullscreenElement) {
         document.getElementById("main-menubar").style.display = "none";
       }
     }
@@ -137,8 +137,8 @@ window.addEventListener("unload", onUnload, false);
 // Fullscreen handling.
 
 #ifndef XP_MACOSX
-document.addEventListener('mozfullscreenchange', function() {
-  if (document.mozFullScreenElement) {
+document.addEventListener('fullscreenchange', function() {
+  if (document.fullscreenElement) {
     document.getElementById("main-menubar").style.display = "none";
   } else {
     document.getElementById("main-menubar").style.display = "";
