@@ -329,7 +329,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   if (!aMIMEType.IsEmpty()) {
     CFURLRef appURL = NULL;
     // CFStringCreateWithCString() can fail even if we're not out of memory --
-    // for example if the 'cStr' parameter is something very wierd (like "ÿÿ~"
+    // for example if the 'cStr' parameter is something very weird (like "ÿÿ~"
     // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
     // specified in the 'encoding' parameter.  See bug 548719.
     cfMIMEType = ::CFStringCreateWithCString(NULL, flatType.get(),
