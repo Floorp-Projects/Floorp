@@ -9212,7 +9212,7 @@ static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
   DispatchCustomEventWithFlush(
-    aTarget, NS_LITERAL_STRING("mozfullscreenchange"),
+    aTarget, NS_LITERAL_STRING("fullscreenchange"),
     /* Bubbles */ true, /* OnlyChrome */ false);
 }
 
@@ -11173,7 +11173,7 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
     return;
   }
 
-  // Stores a list of documents to which we must dispatch "mozfullscreenchange".
+  // Stores a list of documents to which we must dispatch "fullscreenchange".
   // We're required by the spec to dispatch the events in leaf-to-root
   // order when exiting fullscreen, but we traverse the doctree in a
   // root-to-leaf order, so we save references to the documents we must
@@ -11183,7 +11183,7 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
   // Walk the tree of fullscreen documents, and reset their fullscreen state.
   ResetFullScreen(root, static_cast<void*>(&changed));
 
-  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
+  // Dispatch "fullscreenchange" events. Note this loop is in reverse
   // order so that the events for the leaf document arrives before the root
   // document, as required by the spec.
   for (uint32_t i = 0; i < changed.Length(); ++i) {
@@ -11359,7 +11359,7 @@ nsIDocument::DispatchFullscreenError(const char* aMessage)
 {
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this,
-                             NS_LITERAL_STRING("mozfullscreenerror"),
+                             NS_LITERAL_STRING("fullscreenerror"),
                              true,
                              false);
   asyncDispatcher->PostDOMEvent();
@@ -11895,7 +11895,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // to detect if the origin which is fullscreen has changed.
   nsCOMPtr<nsIDocument> previousFullscreenDoc = GetFullscreenLeaf(this);
 
-  // Stores a list of documents which we must dispatch "mozfullscreenchange"
+  // Stores a list of documents which we must dispatch "fullscreenchange"
   // too. We're required by the spec to dispatch the events in root-to-leaf
   // order, but we traverse the doctree in a leaf-to-root order, so we save
   // references to the documents we must dispatch to so that we get the order
@@ -11982,7 +11982,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
       /* Bubbles */ true, /* ChromeOnly */ true);
   }
 
-  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
+  // Dispatch "fullscreenchange" events. Note this loop is in reverse
   // order so that the events for the root document arrives before the leaf
   // document, as required by the spec.
   for (uint32_t i = 0; i < changed.Length(); ++i) {

@@ -359,6 +359,8 @@ NS_EVENT_MESSAGE(eShow)
 // Fullscreen DOM API
 NS_EVENT_MESSAGE(eFullscreenChange)
 NS_EVENT_MESSAGE(eFullscreenError)
+NS_EVENT_MESSAGE(eMozFullscreenChange)
+NS_EVENT_MESSAGE(eMozFullscreenError)
 
 NS_EVENT_MESSAGE(eTouchStart)
 NS_EVENT_MESSAGE(eTouchMove)
