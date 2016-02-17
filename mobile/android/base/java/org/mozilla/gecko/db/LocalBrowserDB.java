@@ -652,30 +652,6 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
-    public Cursor getTopSites(ContentResolver cr, int limit) {
-        // Filter out unvisited bookmarks and the ones that don't have real
-        // parents (e.g. pinned sites or reading list items).
-        String selection = DBUtils.concatenateWhere(Combined.HISTORY_ID + " <> -1",
-                                             Combined.URL + " NOT IN (SELECT " +
-                                             Bookmarks.URL + " FROM bookmarks WHERE " +
-                                             DBUtils.qualifyColumn("bookmarks", Bookmarks.PARENT) + " < ? AND " +
-                                             DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)");
-        String[] selectionArgs = new String[] { String.valueOf(Bookmarks.FIXED_ROOT_ID) };
-
-        return filterAllSites(cr,
-                              new String[] { Combined._ID,
-                                             Combined.URL,
-                                             Combined.TITLE,
-                                             Combined.BOOKMARK_ID,
-                                             Combined.HISTORY_ID },
-                              "",
-                              limit,
-                              AboutPages.URL_FILTER,
-                              selection,
-                              selectionArgs);
-    }
-
-    @Override
     public void updateVisitedHistory(ContentResolver cr, String uri) {
         ContentValues values = new ContentValues();
 
@@ -1590,18 +1566,6 @@ public class LocalBrowserDB implements BrowserDB {
                   Bookmarks.PARENT + " = ?",
                   new String[] { Integer.toString(position),
                                  String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
-    }
-
-    @Override
-    public Cursor getPinnedSites(ContentResolver cr, int limit) {
-        return cr.query(bookmarksUriWithLimit(limit),
-                        new String[] { Bookmarks._ID,
-                                       Bookmarks.URL,
-                                       Bookmarks.TITLE,
-                                       Bookmarks.POSITION },
-                        Bookmarks.PARENT + " == ?",
-                        new String[] { String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) },
-                        Bookmarks.POSITION + " ASC");
     }
 
     @Override
