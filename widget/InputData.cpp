@@ -31,6 +31,9 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const
 MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
   : InputData(MOUSE_INPUT, aMouseEvent.time, aMouseEvent.timeStamp,
               aMouseEvent.modifiers)
+  , mType(MOUSE_NONE)
+  , mButtonType(NONE)
+  , mButtons(aMouseEvent.buttons)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
@@ -65,10 +68,20 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
     case eDragEnd:
       mType = MOUSE_DRAG_END;
       break;
+    case eMouseEnterIntoWidget:
+      mType = MOUSE_WIDGET_ENTER;
+      break;
+    case eMouseExitFromWidget:
+      mType = MOUSE_WIDGET_EXIT;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Mouse event type not supported");
       break;
   }
+
+  mOrigin =
+    ScreenPoint(ViewAs<ScreenPixel>(aMouseEvent.refPoint,
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
 }
 
 bool
@@ -81,6 +94,72 @@ MouseInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
   mLocalOrigin = *point;
 
   return true;
+}
+
+WidgetMouseEvent
+MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
+{
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Can only convert To WidgetTouchEvent on main thread");
+
+  EventMessage msg = eVoidEvent;
+  switch (mType) {
+    case MOUSE_MOVE:
+      msg = eMouseMove;
+      break;
+    case MOUSE_UP:
+      msg = eMouseUp;
+      break;
+    case MOUSE_DOWN:
+      msg = eMouseDown;
+      break;
+    case MOUSE_DRAG_START:
+      msg = eDragStart;
+      break;
+    case MOUSE_DRAG_END:
+      msg = eDragEnd;
+      break;
+    case MOUSE_WIDGET_ENTER:
+      msg = eMouseEnterIntoWidget;
+      break;
+    case MOUSE_WIDGET_EXIT:
+      msg = eMouseExitFromWidget;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent in MouseInput");
+      break;
+  }
+
+  WidgetMouseEvent event(true, msg, aWidget, WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
+
+  if (msg == eVoidEvent) {
+    return event;
+  }
+
+  switch (mButtonType) {
+    case MouseInput::LEFT_BUTTON:
+      event.button = WidgetMouseEventBase::eLeftButton;
+      break;
+    case MouseInput::MIDDLE_BUTTON:
+      event.button = WidgetMouseEventBase::eMiddleButton;
+      break;
+    case MouseInput::RIGHT_BUTTON:
+      event.button = WidgetMouseEventBase::eRightButton;
+      break;
+    case MouseInput::NONE:
+    default:
+      break;
+  }
+
+  event.buttons = mButtons;
+  event.modifiers = modifiers;
+  event.time = mTime;
+  event.timeStamp = mTimeStamp;
+  event.refPoint =
+    RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
+
+  return event;
 }
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
