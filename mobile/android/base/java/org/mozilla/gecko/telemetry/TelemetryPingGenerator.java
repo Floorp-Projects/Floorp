@@ -8,12 +8,11 @@ package org.mozilla.gecko.telemetry;
 import android.content.Context;
 import android.os.Build;
 
-import com.keepsafe.switchboard.SwitchBoard;
-
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryConstants.CorePing;
+import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
@@ -87,9 +86,7 @@ public class TelemetryPingGenerator {
         ping.put(CorePing.LOCALE, Locales.getLanguageTag(Locale.getDefault()));
         ping.put(CorePing.OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
         ping.put(CorePing.SEQ, seq);
-        if (AppConstants.MOZ_SWITCHBOARD) {
-            ping.putArray(CorePing.EXPERIMENTS, SwitchBoard.getActiveExperiments(context));
-        }
+        ping.putArray(CorePing.EXPERIMENTS, Experiments.getActiveExperiments(context));
         // TODO (bug 1246816): Remove this "optional" parameter work-around when
         // GeckoProfile.getAndPersistProfileCreationDateFromFilesystem is implemented. That method returns -1
         // while it's not implemented so we don't include the parameter in the ping if that's the case.
