@@ -5,6 +5,8 @@
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -68,7 +70,27 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
         }
 
         let args = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
-        if (createData.url !== null) {
+
+        if (createData.tabId !== null) {
+          if (createData.url !== null) {
+            return Promise.reject({message: "`tabId` may not be used in conjunction with `url`"});
+          }
+
+          let tab = TabManager.getTab(createData.tabId);
+          if (tab == null) {
+            return Promise.reject({message: `Invalid tab ID: ${createData.tabId}`});
+          }
+
+          // Private browsing tabs can only be moved to private browsing
+          // windows.
+          let incognito = PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser);
+          if (createData.incognito !== null && createData.incognito != incognito) {
+            return Promise.reject({message: "`incognito` property must match the incognito state of tab"});
+          }
+          createData.incognito = incognito;
+
+          args.AppendElement(tab);
+        } else if (createData.url !== null) {
           if (Array.isArray(createData.url)) {
             let array = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
             for (let url of createData.url) {
