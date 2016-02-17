@@ -689,7 +689,35 @@ var DOMFullscreenHandler = {
 DOMFullscreenHandler.init();
 
 var RefreshBlocker = {
+  PREF: "accessibility.blockautorefresh",
+
   init() {
+    if (Services.prefs.getBoolPref(this.PREF)) {
+      this.enable();
+    }
+
+    Services.prefs.addObserver(this.PREF, this, false);
+  },
+
+  uninit() {
+    if (Services.prefs.getBoolPref(this.PREF)) {
+      this.disable();
+    }
+
+    Services.prefs.removeObserver(this.PREF, this);
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this.PREF) {
+      if (Services.prefs.getBoolPref(this.PREF)) {
+        this.enable();
+      } else {
+        this.disable();
+      }
+    }
+  },
+
+  enable() {
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
     this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_REFRESH);
@@ -701,7 +729,7 @@ var RefreshBlocker = {
     addMessageListener("RefreshBlocker:Refresh", this);
   },
 
-  uninit() {
+  disable() {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this._filter);
@@ -713,24 +741,20 @@ var RefreshBlocker = {
   },
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
-    if (Services.prefs.getBoolPref("accessibility.blockautorefresh")) {
-      let win = aWebProgress.DOMWindow;
-      let outerWindowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils)
-                             .outerWindowID;
+    let win = aWebProgress.DOMWindow;
+    let outerWindowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils)
+                           .outerWindowID;
 
-      sendAsyncMessage("RefreshBlocker:Blocked", {
-        URI: aURI.spec,
-        originCharset: aURI.originCharset,
-        delay: aDelay,
-        sameURI: aSameURI,
-        outerWindowID,
-      });
+    sendAsyncMessage("RefreshBlocker:Blocked", {
+      URI: aURI.spec,
+      originCharset: aURI.originCharset,
+      delay: aDelay,
+      sameURI: aSameURI,
+      outerWindowID,
+    });
 
-      return false;
-    }
-
-    return true;
+    return false;
   },
 
   receiveMessage(message) {
