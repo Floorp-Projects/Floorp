@@ -351,13 +351,15 @@ int
 CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
                                     const char* unique_idUTF8,
                                     const unsigned int unique_idUTF8Length,
-                                    int& capture_id)
+                                    int& capture_id,
+                                    const nsACString& aOrigin)
 {
   LOG((__PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
+  nsCString origin(aOrigin);
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([this, aCapEngine, unique_id]() -> nsresult {
-      if (this->SendAllocateCaptureDevice(aCapEngine, unique_id)) {
+    media::NewRunnableFrom([this, aCapEngine, unique_id, origin]() -> nsresult {
+      if (this->SendAllocateCaptureDevice(aCapEngine, unique_id, origin)) {
         return NS_OK;
       }
       return NS_ERROR_FAILURE;
