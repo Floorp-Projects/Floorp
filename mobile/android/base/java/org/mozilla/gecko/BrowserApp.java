@@ -427,7 +427,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showBookmarkRemovedSnackbar() {
-        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_SHORT);
+        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_LONG);
     }
 
     private void showSwitchToReadingListSnackbar(String message) {
@@ -459,7 +459,7 @@ public class BrowserApp extends GeckoApp
     public void onRemovedFromReadingList(String url) {
         SnackbarHelper.showSnackbar(this,
                 getResources().getString(R.string.reading_list_removed),
-                Snackbar.LENGTH_SHORT);
+                Snackbar.LENGTH_LONG);
     }
 
     @Override
