@@ -655,7 +655,7 @@ OnSharedPreferenceChangeListener
 
                 SnackbarHelper.showSnackbar(GeckoPreferences.this,
                         getString(stringRes),
-                        Snackbar.LENGTH_SHORT);
+                        Snackbar.LENGTH_LONG);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
