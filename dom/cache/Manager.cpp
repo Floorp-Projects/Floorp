@@ -147,12 +147,12 @@ private:
   nsTArray<nsID> mDeletedBodyIdList;
 };
 
-bool IsHeadRequest(CacheRequest aRequest, CacheQueryParams aParams)
+bool IsHeadRequest(const CacheRequest& aRequest, const CacheQueryParams& aParams)
 {
   return !aParams.ignoreMethod() && aRequest.method().LowerCaseEqualsLiteral("head");
 }
 
-bool IsHeadRequest(CacheRequestOrVoid aRequest, CacheQueryParams aParams)
+bool IsHeadRequest(const CacheRequestOrVoid& aRequest, const CacheQueryParams& aParams)
 {
   if (aRequest.type() == CacheRequestOrVoid::TCacheRequest) {
     return !aParams.ignoreMethod() &&
