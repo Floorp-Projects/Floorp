@@ -1869,7 +1869,8 @@ OptimizeMIR(MIRGenerator* mir)
 
     if (!mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
-        AddKeepAliveInstructions(graph);
+        if (!AddKeepAliveInstructions(graph))
+            return false;
         gs.spewPass("Add KeepAlive Instructions");
         AssertGraphCoherency(graph);
     }

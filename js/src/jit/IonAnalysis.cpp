@@ -3184,7 +3184,7 @@ NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use)
     MOZ_CRASH("Unreachable");
 }
 
-void
+bool
 jit::AddKeepAliveInstructions(MIRGraph& graph)
 {
     for (MBasicBlockIterator i(graph.begin()); i != graph.end(); i++) {
@@ -3246,11 +3246,15 @@ jit::AddKeepAliveInstructions(MIRGraph& graph)
                 if (!NeedsKeepAlive(ins, use))
                     continue;
 
+                if (!graph.alloc().ensureBallast())
+                    return false;
                 MKeepAliveObject* keepAlive = MKeepAliveObject::New(graph.alloc(), ownerObject);
                 use->block()->insertAfter(use, keepAlive);
             }
         }
     }
+
+    return true;
 }
 
 bool
