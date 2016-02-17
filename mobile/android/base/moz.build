@@ -243,7 +243,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/Table.java',
     'db/TabsAccessor.java',
     'db/TabsProvider.java',
-    'db/TopSitesCursorWrapper.java',
     'db/UrlAnnotations.java',
     'db/URLMetadata.java',
     'db/URLMetadataTable.java',
