@@ -6,6 +6,7 @@
 
 #include "nsNodeUtils.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsINode.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
@@ -235,7 +236,7 @@ nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
   }
 
   Element* target;
-  nsCSSPseudoElements::Type pseudoType;
+  CSSPseudoElementType pseudoType;
   effect->GetTarget(target, pseudoType);
 
   // If the animation targets a pseudo-element, we don't dispatch

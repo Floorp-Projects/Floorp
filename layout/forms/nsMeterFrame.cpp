@@ -19,6 +19,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsContentList.h"
+#include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "nsThemeConstants.h"
 #include <algorithm>
@@ -66,7 +67,7 @@ nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-meter-bar pseudo-element to the anonymous child.
-  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::mozMeterBar;
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::mozMeterBar;
   RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mBarDiv->AsElement());
@@ -281,7 +282,7 @@ nsMeterFrame::ShouldUseNativeStyle() const
 }
 
 Element*
-nsMeterFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsMeterFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::mozMeterBar) {
     return mBarDiv;

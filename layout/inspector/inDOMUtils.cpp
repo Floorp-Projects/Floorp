@@ -1196,7 +1196,7 @@ inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
 
   const uint8_t pseudoCount = static_cast<uint8_t>(CSSPseudoElementType::Count);
   for (uint8_t i = 0; i < pseudoCount; ++i) {
-    nsCSSPseudoElements::Type type = static_cast<nsCSSPseudoElements::Type>(i);
+    CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
     if (!nsCSSPseudoElements::PseudoElementIsUASheetOnly(type)) {
       nsIAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       array.AppendElement(atom);

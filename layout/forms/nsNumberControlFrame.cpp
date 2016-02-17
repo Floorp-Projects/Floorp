@@ -20,6 +20,7 @@
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
+#include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsThreadUtils.h"
@@ -323,7 +324,7 @@ nsresult
 nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
                                            nsTArray<ContentInfo>& aElements,
                                            nsIAtom* aTagName,
-                                           nsCSSPseudoElements::Type aPseudoType,
+                                           CSSPseudoElementType aPseudoType,
                                            nsStyleContext* aParentContext)
 {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
@@ -824,7 +825,7 @@ nsNumberControlFrame::AnonTextControlIsEmpty()
 }
 
 Element*
-nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsNumberControlFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::mozNumberWrapper) {
     return mOuterWrapper;

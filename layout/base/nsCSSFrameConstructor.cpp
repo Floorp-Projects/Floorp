@@ -20,6 +20,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIAtom.h"
 #include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
@@ -1757,7 +1758,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                                   nsContainerFrame* aParentFrame,
                                                   nsIContent*      aParentContent,
                                                   nsStyleContext*  aStyleContext,
-                                                  nsCSSPseudoElements::Type aPseudoElement,
+                                                  CSSPseudoElementType aPseudoElement,
                                                   FrameConstructionItemList& aItems)
 {
   MOZ_ASSERT(aPseudoElement == CSSPseudoElementType::before ||

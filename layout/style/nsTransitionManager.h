@@ -16,7 +16,6 @@
 #include "mozilla/dom/KeyframeEffect.h"
 #include "AnimationCommon.h"
 #include "nsCSSProps.h"
-#include "nsCSSPseudoElements.h"
 
 class nsIGlobalObject;
 class nsStyleContext;
@@ -24,6 +23,7 @@ class nsPresContext;
 class nsCSSPropertySet;
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 struct StyleTransition;
 } // namespace mozilla
 
@@ -37,7 +37,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
 {
   ElementPropertyTransition(nsIDocument* aDocument,
                             dom::Element* aTarget,
-                            nsCSSPseudoElements::Type aPseudoType,
+                            CSSPseudoElementType aPseudoType,
                             const TimingParams &aTiming,
                             StyleAnimationValue aStartForReversingTest,
                             double aReversePortion)
@@ -216,7 +216,7 @@ struct TransitionEventInfo {
   TimeStamp mTimeStamp;
 
   TransitionEventInfo(dom::Element* aElement,
-                      nsCSSPseudoElements::Type aPseudoType,
+                      CSSPseudoElementType aPseudoType,
                       nsCSSProperty aProperty,
                       StickyTimeDuration aDuration,
                       const TimeStamp& aTimeStamp,
@@ -289,7 +289,7 @@ public:
    * new style.
    */
   void PruneCompletedTransitions(mozilla::dom::Element* aElement,
-                                 nsCSSPseudoElements::Type aPseudoType,
+                                 mozilla::CSSPseudoElementType aPseudoType,
                                  nsStyleContext* aNewStyleContext);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {

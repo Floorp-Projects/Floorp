@@ -7,6 +7,7 @@
 #include "EffectSet.h"
 #include "mozilla/dom/Element.h" // For Element
 #include "RestyleManager.h"
+#include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsCycleCollectionNoteChild.h" // For CycleCollectionNoteChild
 #include "nsPresContext.h"
 #include "nsLayoutUtils.h"
@@ -38,7 +39,7 @@ EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback)
 
 /* static */ EffectSet*
 EffectSet::GetEffectSet(dom::Element* aElement,
-                        nsCSSPseudoElements::Type aPseudoType)
+                        CSSPseudoElementType aPseudoType)
 {
   nsIAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
   return static_cast<EffectSet*>(aElement->GetProperty(propName));
@@ -87,7 +88,7 @@ EffectSet::GetEffectSet(const nsIFrame* aFrame)
 
 /* static */ EffectSet*
 EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
-                                nsCSSPseudoElements::Type aPseudoType)
+                                CSSPseudoElementType aPseudoType)
 {
   EffectSet* effectSet = GetEffectSet(aElement, aPseudoType);
   if (effectSet) {
@@ -114,7 +115,7 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
 
 /* static */ void
 EffectSet::DestroyEffectSet(dom::Element* aElement,
-                            nsCSSPseudoElements::Type aPseudoType)
+                            CSSPseudoElementType aPseudoType)
 {
   nsIAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
   EffectSet* effectSet =
@@ -152,7 +153,7 @@ EffectSet::GetEffectSetPropertyAtoms()
 }
 
 /* static */ nsIAtom*
-EffectSet::GetEffectSetPropertyAtom(nsCSSPseudoElements::Type aPseudoType)
+EffectSet::GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType)
 {
   switch (aPseudoType) {
     case CSSPseudoElementType::NotPseudo:

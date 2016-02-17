@@ -2716,7 +2716,7 @@ static inline nsRestyleHint RestyleHintForOp(char16_t oper)
 nsRestyleHint
 nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aData,
                                            Element* aStatefulElement,
-                                           nsCSSPseudoElements::Type aPseudoType,
+                                           CSSPseudoElementType aPseudoType,
                                            EventStates aStateMask)
 {
   MOZ_ASSERT(!aData->mTreeMatchContext.mForScopedStyle,
@@ -3411,7 +3411,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
   RuleCascadeData * const cascade = aCascade;
 
   // Build the rule hash.
-  nsCSSPseudoElements::Type pseudoType = aRuleInfo->mSelector->PseudoType();
+  CSSPseudoElementType pseudoType = aRuleInfo->mSelector->PseudoType();
   if (MOZ_LIKELY(pseudoType == CSSPseudoElementType::NotPseudo)) {
     cascade->mRuleHash.AppendRule(*aRuleInfo);
   } else if (pseudoType < CSSPseudoElementType::Count) {
@@ -3462,7 +3462,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
   for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
     if (selector->IsPseudoElement()) {
-      nsCSSPseudoElements::Type pseudo = selector->PseudoType();
+      CSSPseudoElementType pseudo = selector->PseudoType();
       if (pseudo >= CSSPseudoElementType::Count ||
           !nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudo)) {
         NS_ASSERTION(!selector->mNegations, "Shouldn't have negations");

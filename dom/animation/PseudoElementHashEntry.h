@@ -9,18 +9,19 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/HashFunctions.h"
-#include "nsCSSPseudoElements.h"
 #include "PLDHashTable.h"
 
 namespace mozilla {
 
+enum class CSSPseudoElementType : uint8_t;
+
 struct PseudoElementHashKey
 {
   dom::Element* mElement;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 };
 
-// A hash entry that uses a RefPtr<dom::Element>, nsCSSPseudoElements::Type pair
+// A hash entry that uses a RefPtr<dom::Element>, CSSPseudoElementType pair
 class PseudoElementHashEntry : public PLDHashEntryHdr
 {
 public:
@@ -54,7 +55,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
   RefPtr<dom::Element> mElement;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 };
 
 } // namespace mozilla

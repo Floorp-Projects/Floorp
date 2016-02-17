@@ -10,6 +10,7 @@
 #include "nsTextControlFrame.h"
 #include "nsIPlaintextEditor.h"
 #include "nsCaret.h"
+#include "nsCSSPseudoElements.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
@@ -346,7 +347,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     NS_ENSURE_TRUE(placeholderNode, NS_ERROR_OUT_OF_MEMORY);
 
     // Associate ::-moz-placeholder pseudo-element with the placeholder node.
-    nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::mozPlaceholder;
+    CSSPseudoElementType pseudoType = CSSPseudoElementType::mozPlaceholder;
 
     RefPtr<nsStyleContext> placeholderStyleContext =
       PresContext()->StyleSet()->ResolvePseudoElementStyle(
@@ -1443,7 +1444,7 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 mozilla::dom::Element*
-nsTextControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsTextControlFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::mozPlaceholder) {
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
