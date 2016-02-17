@@ -11,6 +11,8 @@
 
 #include "vm/TypeInference.h"
 
+#include "mozilla/BinarySearch.h"
+#include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
 
 #include "builtin/SymbolObject.h"
@@ -518,26 +520,17 @@ TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc, uint32_t* bytecodeMa
     if (bytecodeMap[*hint] == offset)
         return typeArray + *hint;
 
-    // Fall back to a binary search.
-    size_t bottom = 0;
-    size_t top = script->nTypeSets() - 1;
-    size_t mid = bottom + (top - bottom) / 2;
-    while (mid < top) {
-        if (bytecodeMap[mid] < offset)
-            bottom = mid + 1;
-        else if (bytecodeMap[mid] > offset)
-            top = mid;
-        else
-            break;
-        mid = bottom + (top - bottom) / 2;
-    }
+    // Fall back to a binary search.  We'll either find the exact offset, or
+    // there are more JOF_TYPESET opcodes than nTypeSets in the script (as can
+    // happen if the script is very long) and we'll use the last location.
+    size_t loc;
+#ifdef DEBUG
+    bool found =
+#endif
+        mozilla::BinarySearch(bytecodeMap, 0, script->nTypeSets() - 1, offset, &loc);
 
-    // We should have have zeroed in on either the exact offset, unless there
-    // are more JOF_TYPESET opcodes than nTypeSets in the script (as can happen
-    // if the script is very long).
-    MOZ_ASSERT(bytecodeMap[mid] == offset || mid == top);
-
-    *hint = mid;
+    MOZ_ASSERT_IF(found, bytecodeMap[loc] == offset);
+    *hint = mozilla::AssertedCast<uint32_t>(loc);
     return typeArray + *hint;
 }
 
