@@ -955,7 +955,6 @@ public:
                        ServiceWorkerInfo* aServiceWorkerInfo)
     : ServiceWorkerJob(aQueue, aJobType)
     , mCallback(aCallback)
-    , mCanceled(false)
     , mRegistration(aRegistration)
     , mUpdateAndInstallInfo(aServiceWorkerInfo)
   {
@@ -964,7 +963,6 @@ public:
 
 protected:
   RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
-  bool mCanceled;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
 
