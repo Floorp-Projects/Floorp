@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 743198</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+  <div id="fullscreen"></div>
+<script>
+
+function ok(condition, msg) {
+  opener.ok(condition, "[prefixed] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[prefixed] " + msg);
+}
+
+function info(msg) {
+  opener.info("[prefixed] " + msg);
+}
+
+SimpleTest.requestFlakyTimeout(
+  "need to wait for a while to confirm no unexpected event is dispatched");
+
+let div = document.getElementById("fullscreen");
+let unattachedDiv = document.createElement('div');
+
+const NO_EVENT_HANDLER = 0;
+const PREFIXED_EVENT_ONLY = 1;
+const PREFIXED_AND_UNPREFIXED_EVENT = 2;
+
+class TestCase {
+  constructor(num, handlersOnWindow, handlersOnDocument) {
+    this.number = num;
+    this.handlersType = new Map([[window, handlersOnWindow],
+                                 [document, handlersOnDocument]]);
+  }
+
+  static checkState(inFullscreen, msg) {
+    var emptyOrNot = inFullscreen ? "" : "not ";
+    info(`Check fullscreen state ${msg}`);
+    is(document.mozFullScreen, inFullscreen,
+       `Should ${emptyOrNot}be in fullscreen`);
+    is(document.fullscreenElement, inFullscreen ? div : null,
+       `Fullscreen element should be ${inFullscreen ? "div" : "null"}`);
+    is(document.mozFullScreenElement, document.fullscreenElement,
+       "document.mozFullScreenElement should be identical to fullscreenElement");
+    is(div.matches(":fullscreen"), inFullscreen,
+       `Fullscreen element should ${emptyOrNot}match :fullscreen pseudo class`);
+    is(div.matches(":-moz-full-screen"), inFullscreen,
+       `Fullscreen element should ${emptyOrNot}match :-moz-full-screen pseudo class`);
+  }
+
+  changeListeners(action, eventType, handler) {
+    let method = `${action}EventListener`;
+    for (let [target, type] of this.handlersType.entries()) {
+      if (type == PREFIXED_EVENT_ONLY) {
+        target[method](`moz${eventType}`, handler);
+      } else if (type == PREFIXED_AND_UNPREFIXED_EVENT) {
+        target[method](eventType, handler);
+        target[method](`moz${eventType}`, handler);
+      } else if (type != NO_EVENT_HANDLER) {
+        ok(false, `Unknown handlers type ${type}`);
+      }
+    }
+  }
+
+  doTest(actionCallback, eventType, inFullscreen, msg) {
+    return new Promise(resolve => {
+      let timeout = 0;
+      let expectEvent = new Map();
+      for (let [target, type] of this.handlersType) {
+        expectEvent.set(target, this.handlersType != NO_EVENT_HANDLER);
+      }
+      let handleEvent = evt => {
+        let target = evt.currentTarget;
+        let type = this.handlersType.get(target);
+        if (type == PREFIXED_EVENT_ONLY) {
+          is(evt.type, `moz${eventType}`,
+             `Should get prefixed event on ${target}`);
+        } else if (type == PREFIXED_AND_UNPREFIXED_EVENT) {
+          is(evt.type, eventType,
+             `Should only get unprefixed event on ${target}`);
+        } else {
+          ok(false, `No event should be triggered on ${target}`);
+        }
+        // Ensure we receive each event exactly once.
+        if (expectEvent.get(target)) {
+          expectEvent.set(target, false);
+        } else {
+          ok(false, `Got an unexpected ${evt.type} event on ${target}`);
+        }
+        if (!timeout) {
+          timeout = setTimeout(() => {
+            this.changeListeners("remove", eventType, handleEvent);
+            TestCase.checkState(inFullscreen,
+                                `${msg} in test case ${this.number}`);
+            resolve();
+          });
+        }
+      };
+      this.changeListeners("add", eventType, handleEvent);
+      actionCallback();
+    });
+  }
+
+  test() {
+    return new Promise(resolve => {
+      Promise.resolve().then(() => {
+        return this.doTest(() => div.mozRequestFullScreen(),
+                           "fullscreenchange", true, "after request");
+      }).then(() => {
+        return this.doTest(() => document.mozCancelFullScreen(),
+                           "fullscreenchange", false, "after exit");
+      }).then(() => {
+        return this.doTest(() => unattachedDiv.mozRequestFullScreen(),
+                           "fullscreenerror", false, "after failed request");
+      }).then(resolve);
+    });
+  }
+}
+
+let gTestcases = [
+  new TestCase(1, PREFIXED_EVENT_ONLY,           NO_EVENT_HANDLER),
+  new TestCase(2, PREFIXED_AND_UNPREFIXED_EVENT, NO_EVENT_HANDLER),
+  new TestCase(3, NO_EVENT_HANDLER,              PREFIXED_EVENT_ONLY),
+  new TestCase(4, PREFIXED_EVENT_ONLY,           PREFIXED_EVENT_ONLY),
+  new TestCase(5, PREFIXED_AND_UNPREFIXED_EVENT, PREFIXED_EVENT_ONLY),
+  new TestCase(6, NO_EVENT_HANDLER,              PREFIXED_AND_UNPREFIXED_EVENT),
+  new TestCase(7, PREFIXED_EVENT_ONLY,           PREFIXED_AND_UNPREFIXED_EVENT),
+  new TestCase(8, PREFIXED_AND_UNPREFIXED_EVENT, PREFIXED_AND_UNPREFIXED_EVENT),
+  ];
+
+function begin() {
+  TestCase.checkState(false, "at the beginning");
+  runNextTestCase();
+}
+
+function runNextTestCase() {
+  let testcase = gTestcases.shift();
+  if (!testcase) {
+    opener.nextTest();
+    return;
+  }
+  testcase.test().then(runNextTestCase);
+}
+
+</script>
+</body>
+</html>
