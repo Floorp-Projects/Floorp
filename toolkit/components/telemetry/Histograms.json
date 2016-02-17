@@ -6800,371 +6800,476 @@
     "n_buckets": 1000,
     "description": "The time (in milliseconds) that it took an 'assign' request to go round trip."
   },
-  "DEVTOOLS_TOOLBOX_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's toolbox been opened?"
-  },
-  "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Options panel been opened?"
-  },
-  "DEVTOOLS_WEBCONSOLE_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Web Console been opened?"
-  },
-  "DEVTOOLS_BROWSERCONSOLE_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Browser Console been opened?"
-  },
-  "DEVTOOLS_INSPECTOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Inspector been opened?"
-  },
-  "DEVTOOLS_RULEVIEW_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Rule View been opened?"
-  },
-  "DEVTOOLS_COMPUTEDVIEW_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Computed View been opened?"
-  },
-  "DEVTOOLS_LAYOUTVIEW_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Layout View been opened?"
-  },
-  "DEVTOOLS_FONTINSPECTOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Font Inspector been opened?"
-  },
-  "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Animation Inspector been opened?"
-  },
-  "DEVTOOLS_JSDEBUGGER_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Debugger been opened?"
-  },
-  "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Browser Debugger been opened?"
-  },
-  "DEVTOOLS_STYLEEDITOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Style Editor been opened?"
-  },
-  "DEVTOOLS_SHADEREDITOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Shader Editor been opened?"
-  },
-  "DEVTOOLS_WEBAUDIOEDITOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Web Audio Editor been opened?"
-  },
-  "DEVTOOLS_CANVASDEBUGGER_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Canvas Debugger been opened?"
-  },
-  "DEVTOOLS_JSPROFILER_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's JS Profiler been opened?"
-  },
-  "DEVTOOLS_MEMORY_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Memory Tool been opened?"
-  },
-  "DEVTOOLS_NETMONITOR_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Network Monitor been opened?"
-  },
-  "DEVTOOLS_STORAGE_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the Storage Inspector been opened?"
-  },
-  "DEVTOOLS_PAINTFLASHING_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Paint Flashing been opened via the toolbox button?"
-  },
-  "DEVTOOLS_TILT_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Tilt been opened via the toolbox button?"
-  },
-  "DEVTOOLS_SCRATCHPAD_OPENED_BOOLEAN": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Scratchpad been opened via the toolbox button?"
-  },
-  "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_BOOLEAN": {
+  "DEVTOOLS_TOOLBOX_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "50",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Scratchpad standalone window been opened?",
-    "bug_numbers": [1214352]
-  },
-  "DEVTOOLS_RESPONSIVE_OPENED_BOOLEAN": {
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Responsive View been opened via the toolbox button?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools toolbox has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_EYEDROPPER_OPENED_BOOLEAN": {
+  "DEVTOOLS_OPTIONS_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Eyedropper tool been opened?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools options panel has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_MENU_EYEDROPPER_OPENED_BOOLEAN": {
+  "DEVTOOLS_WEBCONSOLE_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's eyedropper been opened via the devtools menu?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Web Console has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_BOOLEAN": {
+  "DEVTOOLS_BROWSERCONSOLE_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's eyedropper been opened via the color picker?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Browser Console has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_BOOLEAN": {
+  "DEVTOOLS_INSPECTOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the devtool's Developer Toolbar been opened via the toolbox button?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_ABOUTDEBUGGING_OPENED_BOOLEAN": {
+  "DEVTOOLS_RULEVIEW_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Rule View has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_COMPUTEDVIEW_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Computed View has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_LAYOUTVIEW_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Layout View has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_FONTINSPECTOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Font Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Animation Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_JSDEBUGGER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Debugger has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Browser Debugger has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_STYLEEDITOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Style Editor has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_SHADEREDITOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Shader Editor has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_WEBAUDIOEDITOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Web Audio Editor has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_CANVASDEBUGGER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Canvas Debugger has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_JSPROFILER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools JS Profiler has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_MEMORY_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Memory Tool has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_NETMONITOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Network Monitor has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_STORAGE_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Storage Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_PAINTFLASHING_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Paint Flashing has been opened via the toolbox button.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_TILT_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Tilt has been opened via the toolbox button.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_SCRATCHPAD_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Scratchpad has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1214352, 1247985],
+    "description": "Number of times the DevTools Scratchpad standalone window has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_RESPONSIVE_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Responsive Design Mode tool has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_EYEDROPPER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Eyedropper tool has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Eyedropper has been opened via the DevTools menu.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Eyedropper has been opened via the color picker.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools Developer Toolbar / GCLI has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_ABOUTDEBUGGING_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jan@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "boolean",
-    "description": "How many times has about:debugging been opened? (bug 1204601)"
-  },
-  "DEVTOOLS_WEBIDE_OPENED_BOOLEAN": {
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the DevTools WebIDE been opened?"
+    "kind": "count",
+    "bug_numbers": [1247985, 1204601],
+    "description": "Number of times about:debugging has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_BOOLEAN": {
+  "DEVTOOLS_WEBIDE_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has the DevTools WebIDE project editor been opened?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools WebIDE has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_BOOLEAN": {
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has a file been saved in the DevTools WebIDE project editor?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times the DevTools WebIDE project editor has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_WEBIDE_NEW_PROJECT_BOOLEAN": {
+  "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has a new project been created in the DevTools WebIDE?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times a file has been saved in the DevTools WebIDE project editor.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_WEBIDE_IMPORT_PROJECT_BOOLEAN": {
+  "DEVTOOLS_WEBIDE_NEW_PROJECT_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has a project been imported into the DevTools WebIDE?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times a new project has been created in the DevTools WebIDE.",
+    "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_CUSTOM_OPENED_BOOLEAN": {
+  "DEVTOOLS_WEBIDE_IMPORT_PROJECT_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times has a custom developer tool been opened via the toolbox button?"
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times a project has been imported into the DevTools WebIDE.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_CUSTOM_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985],
+    "description": "Number of times a custom developer tool has been opened.",
+    "releaseChannelCollection": "opt-out"
   },
   "DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many times has the devtool's toolbox been opened?"
+    "description": "Number of users that have opened the DevTools toolbox."
   },
   "DEVTOOLS_OPTIONS_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many times has the devtool's Options panel been opened?"
+    "description": "Number of users that have opened the DevTools Options panel."
   },
   "DEVTOOLS_WEBCONSOLE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Web Console?"
+    "description": "Number of users that have opened the DevTools Web Console."
   },
   "DEVTOOLS_BROWSERCONSOLE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Browser Console?"
+    "description": "Number of users that have opened the DevTools Browser Console."
   },
   "DEVTOOLS_INSPECTOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Inspector?"
+    "description": "Number of users that have opened the DevTools Inspector."
   },
   "DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Rule View?"
+    "description": "Number of users that have opened the DevTools Rule View."
   },
   "DEVTOOLS_COMPUTEDVIEW_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Computed View?"
+    "description": "Number of users that have opened the DevTools Computed View."
   },
   "DEVTOOLS_LAYOUTVIEW_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Layout View?"
+    "description": "Number of users that have opened the DevTools Layout View."
   },
   "DEVTOOLS_FONTINSPECTOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Font Inspector?"
+    "description": "Number of users that have opened the DevTools Font Inspector."
   },
   "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Animation Inspector?"
+    "description": "Number of users that have opened the DevTools Animation Inspector."
   },
   "DEVTOOLS_JSDEBUGGER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Debugger?"
+    "description": "Number of users that have opened the DevTools Debugger."
   },
   "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Browser Debugger?"
+    "description": "Number of users that have opened the DevTools Browser Debugger."
   },
   "DEVTOOLS_STYLEEDITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Style Editor?"
+    "description": "Number of users that have opened the DevTools Style Editor."
   },
   "DEVTOOLS_SHADEREDITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Shader Editor?"
+    "description": "Number of users that have opened the DevTools Shader Editor."
   },
   "DEVTOOLS_WEBAUDIOEDITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Web Audio Editor?"
+    "description": "Number of users that have opened the DevTools Web Audio Editor."
   },
   "DEVTOOLS_CANVASDEBUGGER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Canvas Debugger?"
+    "description": "Number of users that have opened the DevTools Canvas Debugger."
   },
   "DEVTOOLS_JSPROFILER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's JS Profiler?"
+    "description": "Number of users that have opened the DevTools JS Profiler."
   },
   "DEVTOOLS_MEMORY_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Memory Tool?"
+    "description": "Number of users that have opened the DevTools Memory Tool."
   },
   "DEVTOOLS_NETMONITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Network Monitor?"
+    "description": "Number of users that have opened the DevTools Network Monitor."
   },
   "DEVTOOLS_STORAGE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Storage Inspector?"
+    "description": "Number of users that have opened the DevTools Storage Inspector."
   },
   "DEVTOOLS_PAINTFLASHING_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Paint Flashing been opened via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Paint Flashing via the toolbox button."
   },
   "DEVTOOLS_TILT_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Tilt been opened via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Tilt via the toolbox button."
   },
   "DEVTOOLS_SCRATCHPAD_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Scratchpad been opened via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Scratchpad."
   },
   "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_PER_USER_FLAG": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "50",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Scratchpad standalone window been opened?",
+    "description": "Number of users that have opened the DevTools Scratchpad standalone window.",
     "bug_numbers": [1214352]
   },
   "DEVTOOLS_RESPONSIVE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Responsive View been opened via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Responsive Design Mode."
   },
   "DEVTOOLS_EYEDROPPER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Eyedropper via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Eyedropper via the toolbox button."
   },
   "DEVTOOLS_MENU_EYEDROPPER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Eyedropper via the devtools menu?"
+    "description": "Number of users that have opened the DevTools Eyedropper via the devtools menu."
   },
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Eyedropper via the color picker?"
+    "description": "Number of users that have opened the DevTools Eyedropper via the color picker."
   },
   "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the devtool's Developer Toolbar been opened via the toolbox button?"
+    "description": "Number of users that have opened the DevTools Developer Toolbar been opened via the toolbox button."
   },
   "DEVTOOLS_ABOUTDEBUGGING_OPENED_PER_USER_FLAG": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jan@mozilla.com"],
     "expires_in_version": "55",
     "kind": "flag",
-    "description": "How many users have opened about:debugging? (bug 1204601)"
+    "description": "Number of users that have opened about:debugging. (bug 1204601)"
   },
   "DEVTOOLS_WEBIDE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the DevTools WebIDE?"
+    "description": "Number of users that have opened the DevTools WebIDE."
   },
   "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened the DevTools WebIDE project editor?"
+    "description": "Number of users that have opened the DevTools WebIDE project editor."
   },
   "DEVTOOLS_WEBIDE_PROJECT_EDITOR_SAVE_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have saved a file in the DevTools WebIDE project editor?"
+    "description": "Number of users that have saved a file in the DevTools WebIDE project editor."
   },
   "DEVTOOLS_WEBIDE_NEW_PROJECT_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have created a new project in the DevTools WebIDE?"
+    "description": "Number of users that have created a new project in the DevTools WebIDE."
   },
   "DEVTOOLS_WEBIDE_IMPORT_PROJECT_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have imported a project into the DevTools WebIDE?"
+    "description": "Number of users that have imported a project into the DevTools WebIDE."
   },
   "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "How many users have opened a custom developer tool via the toolbox button?"
+    "description": "Number of users that have opened a custom developer tool via the toolbox button."
   },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
