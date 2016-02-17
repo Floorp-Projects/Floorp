@@ -28,7 +28,6 @@ background_junit3_sources = [
     'src/org/mozilla/gecko/background/helpers/BackgroundServiceTestCase.java',
     'src/org/mozilla/gecko/background/helpers/DBHelpers.java',
     'src/org/mozilla/gecko/background/helpers/DBProviderTestCase.java',
-    'src/org/mozilla/gecko/background/helpers/FakeProfileTestCase.java',
     'src/org/mozilla/gecko/background/nativecode/test/TestNativeCrypto.java',
     'src/org/mozilla/gecko/background/sync/AndroidSyncTestCaseWithAccounts.java',
     'src/org/mozilla/gecko/background/sync/helpers/BookmarkHelpers.java',
