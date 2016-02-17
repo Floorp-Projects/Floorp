@@ -369,9 +369,11 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
         if (!XPT_Do8(cursor, &td->argnum))
             return PR_FALSE;
         break;
-      case TD_ARRAY:
+      case TD_ARRAY: {
+        // argnum2 appears in the on-disk format but it isn't used.
+        uint8_t argnum2 = 0;
         if (!XPT_Do8(cursor, &td->argnum) ||
-            !XPT_Do8(cursor, &td->argnum2))
+            !XPT_Do8(cursor, &argnum2))
             return PR_FALSE;
 
         if (!XPT_InterfaceDescriptorAddTypes(arena, id, 1))
@@ -383,13 +385,16 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
                               id))
             return PR_FALSE;
         break;
+      }
       case TD_PSTRING_SIZE_IS:
-      case TD_PWSTRING_SIZE_IS:
+      case TD_PWSTRING_SIZE_IS: {
+        // argnum2 appears in the on-disk format but it isn't used.
+        uint8_t argnum2 = 0;
         if (!XPT_Do8(cursor, &td->argnum) ||
-            !XPT_Do8(cursor, &td->argnum2))
+            !XPT_Do8(cursor, &argnum2))
             return PR_FALSE;
         break;
-
+      }
       default:
         /* nothing special */
         break;
