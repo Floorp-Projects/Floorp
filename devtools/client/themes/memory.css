@@ -194,9 +194,36 @@ html, body, #app, #memory-tool {
   font-size: 90%;
 }
 
+.snapshot-list-item .snapshot-title {
+  display: flex;
+  justify-content: space-between;
+}
+
 .snapshot-list-item .save {
   text-decoration: underline;
   cursor: pointer;
+}
+
+.snapshot-list-item .delete {
+  cursor: pointer;
+  min-width: 20px;
+  position: relative;
+  top:-2px;
+  left:4px;
+}
+
+.theme-light .snapshot-list-item.selected .delete {
+  filter: invert(100%);
+}
+
+.snapshot-list-item .delete::before {
+  background-image: url(images/close.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  .snapshot-list-item .delete::before {
+    background-image: url(images/close@2x.png);
+  }
 }
 
 .snapshot-list-item > .snapshot-title {
