@@ -1908,12 +1908,7 @@ class MochitestDesktop(MochitestBase):
             # TODO: mozrunner should use -foreground at least for mac
             # https://bugzilla.mozilla.org/show_bug.cgi?id=916512
             args.append('-foreground')
-            if testUrl:
-                if debuggerInfo and debuggerInfo.requiresEscapedArgs:
-                    testUrl = testUrl.replace("&", "\\&")
-                self.start_script_args.append(testUrl)
-            else:
-                self.start_script_args.append('about:blank')
+            self.start_script_args.append(testUrl or 'about:blank')
 
             if detectShutdownLeaks:
                 shutdownLeaks = ShutdownLeaks(self.log)
