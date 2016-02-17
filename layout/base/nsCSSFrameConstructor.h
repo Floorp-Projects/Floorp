@@ -17,7 +17,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsQuoteList.h"
 #include "nsCounterManager.h"
-#include "nsCSSPseudoElements.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
@@ -51,6 +50,7 @@ class FlattenedChildIterator;
 class nsCSSFrameConstructor : public nsFrameManager
 {
 public:
+  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
 
   friend class mozilla::RestyleManager;
@@ -452,7 +452,7 @@ private:
                                   nsContainerFrame*          aFrame,
                                   nsIContent*                aContent,
                                   nsStyleContext*            aStyleContext,
-                                  nsCSSPseudoElements::Type  aPseudoElement,
+                                  CSSPseudoElementType       aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the beginning and put

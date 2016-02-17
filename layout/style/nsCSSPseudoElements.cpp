@@ -67,8 +67,8 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
                   aAtom == nsCSSPseudoElements::firstLetter ||
                   aAtom == nsCSSPseudoElements::firstLine;
   NS_ASSERTION(nsCSSAnonBoxes::IsAnonBox(aAtom) ||
-               result ==
-                 PseudoElementHasFlags(GetPseudoType(aAtom), CSS_PSEUDO_ELEMENT_IS_CSS2),
+               result == PseudoElementHasFlags(GetPseudoType(aAtom),
+                                               CSS_PSEUDO_ELEMENT_IS_CSS2),
                "result doesn't match flags");
   return result;
 }
@@ -76,9 +76,9 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
 /* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 {
-  for (uint32_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
+  for (uint8_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
-      return Type(i);
+      return static_cast<Type>(i);
     }
   }
 
@@ -98,15 +98,14 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 /* static */ nsIAtom*
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
-  NS_ASSERTION(aType < Type::Count,
-               "Unexpected type");
+  NS_ASSERTION(aType < Type::Count, "Unexpected type");
   return *CSSPseudoElements_info[static_cast<uint8_t>(aType)].mAtom;
 }
 
 /* static */ uint32_t
 nsCSSPseudoElements::FlagsForPseudoElement(const Type aType)
 {
-  size_t index = static_cast<size_t>(aType);
+  uint8_t index = static_cast<uint8_t>(aType);
   NS_ASSERTION(index < ArrayLength(CSSPseudoElements_flags),
                "argument must be a pseudo-element");
   return CSSPseudoElements_flags[index];

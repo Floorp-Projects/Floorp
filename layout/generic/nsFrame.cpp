@@ -24,6 +24,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -9121,7 +9122,7 @@ nsIFrame::IsPseudoStackingContextFromStyle() {
 }
 
 Element*
-nsIFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsIFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   nsIFrame* frame = nullptr;
 

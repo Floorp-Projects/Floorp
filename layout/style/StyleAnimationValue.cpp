@@ -19,6 +19,7 @@
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
+#include "nsCSSPseudoElements.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
@@ -2526,7 +2527,7 @@ BuildStyleRule(nsCSSProperty aProperty,
 inline
 already_AddRefed<nsStyleContext>
 LookupStyleContext(dom::Element* aElement,
-                   nsCSSPseudoElements::Type aPseudoType)
+                   CSSPseudoElementType aPseudoType)
 {
   nsIDocument* doc = aElement->GetCurrentDoc();
   nsIPresShell* shell = doc->GetShell();
@@ -2543,7 +2544,7 @@ LookupStyleContext(dom::Element* aElement,
 /* static */ bool
 StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
                                   dom::Element* aTargetElement,
-                                  nsCSSPseudoElements::Type aPseudoType,
+                                  CSSPseudoElementType aPseudoType,
                                   const nsAString& aSpecifiedValue,
                                   bool aUseSVGMode,
                                   StyleAnimationValue& aComputedValue,
@@ -2595,7 +2596,7 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
                                    nsCSSProps::EnabledState aEnabledState,
                                    dom::Element* aTargetElement,
-                                   nsCSSPseudoElements::Type aPseudoType,
+                                   CSSPseudoElementType aPseudoType,
                                    const nsAString& aSpecifiedValue,
                                    bool aUseSVGMode,
                                    nsTArray<PropertyStyleAnimationValuePair>& aResult)
@@ -2625,7 +2626,7 @@ StyleAnimationValue::ComputeValues(
     nsCSSProperty aProperty,
     nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     css::StyleRule* aStyleRule,
     nsTArray<PropertyStyleAnimationValuePair>& aValues,
     bool* aIsContextSensitive)

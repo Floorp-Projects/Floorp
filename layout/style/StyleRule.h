@@ -17,8 +17,8 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
 
 class nsIAtom;
@@ -208,13 +208,10 @@ private:
 
 public:
   // Get and set the selector's pseudo type
-  nsCSSPseudoElements::Type PseudoType() const {
-    return static_cast<nsCSSPseudoElements::Type>(mPseudoType);
+  mozilla::CSSPseudoElementType PseudoType() const {
+    return static_cast<mozilla::CSSPseudoElementType>(mPseudoType);
   }
-  void SetPseudoType(nsCSSPseudoElements::Type aType) {
-    NS_ASSERTION(static_cast<int32_t>(aType) >= INT16_MIN &&
-                 static_cast<int32_t>(aType) <= INT16_MAX,
-                 "Out of bounds - this will overflow mPseudoType");
+  void SetPseudoType(mozilla::CSSPseudoElementType aType) {
     mPseudoType = static_cast<int16_t>(aType);
   }
 

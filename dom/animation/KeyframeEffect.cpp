@@ -17,6 +17,7 @@
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
+#include "nsCSSPseudoElements.h"
 #include "nsCSSValue.h"
 #include "nsStyleUtil.h"
 #include <algorithm> // For std::max
@@ -74,7 +75,7 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   Element* aTarget,
-  nsCSSPseudoElements::Type aPseudoType,
+  CSSPseudoElementType aPseudoType,
   const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
                            new AnimationEffectTimingReadOnly(aTiming))
@@ -84,7 +85,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   Element* aTarget,
-  nsCSSPseudoElements::Type aPseudoType,
+  CSSPseudoElementType aPseudoType,
   AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
@@ -624,7 +625,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
              "Uninitialized target");
 
   RefPtr<Element> targetElement;
-  nsCSSPseudoElements::Type pseudoType = CSSPseudoElementType::NotPseudo;
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
   if (target.IsElement()) {
     targetElement = &target.GetAsElement();
   } else {
@@ -1229,7 +1230,7 @@ ApplyDistributeSpacing(nsTArray<OffsetIndexedKeyframe>& aKeyframes)
  */
 static void
 GenerateValueEntries(Element* aTarget,
-                     nsCSSPseudoElements::Type aPseudoType,
+                     CSSPseudoElementType aPseudoType,
                      nsTArray<OffsetIndexedKeyframe>& aKeyframes,
                      nsTArray<KeyframeValueEntry>& aResult,
                      ErrorResult& aRv)
@@ -1433,7 +1434,7 @@ static void
 BuildAnimationPropertyListFromKeyframeSequence(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::ForOfIterator& aIterator,
     nsTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -1491,7 +1492,7 @@ static void
 BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::Handle<JS::Value> aValue,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -1666,7 +1667,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 KeyframeEffectReadOnly::BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -2125,7 +2126,7 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
 
 KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
                                Element* aTarget,
-                               nsCSSPseudoElements::Type aPseudoType,
+                               CSSPseudoElementType aPseudoType,
                                const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
                            new AnimationEffectTiming(aTiming))
