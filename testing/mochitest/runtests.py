@@ -31,6 +31,7 @@ import tempfile
 import time
 import traceback
 import urllib2
+import uuid
 import zipfile
 import bisection
 
@@ -1210,8 +1211,6 @@ toolbar#nav-bar {
         self.nsprLogs = NSPR_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
         if self.nsprLogs:
             browserEnv["NSPR_LOG_MODULES"] = NSPR_LOG_MODULES
-
-            browserEnv["NSPR_LOG_FILE"] = "%s/nspr.log" % tempfile.gettempdir()
             browserEnv["GECKO_SEPARATE_NSPR_LOGS"] = "1"
 
         if debugger and not options.slowscript:
@@ -2288,6 +2287,9 @@ class MochitestDesktop(MochitestBase):
         if self.browserEnv is None:
             return 1
 
+        if self.nsprLogs:
+            self.browserEnv["NSPR_LOG_FILE"] = "{}/nspr-pid=%PID-uid={}.log".format(self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
+
         try:
             self.startServers(options, debuggerInfo)
 
@@ -2399,14 +2401,6 @@ class MochitestDesktop(MochitestBase):
             stack_fixer=get_stack_fixer_function(options.utilityPath,
                                                  options.symbolsPath),
         )
-
-        if self.nsprLogs:
-            with zipfile.ZipFile("%s/nsprlog.zip" % self.browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
-                for logfile in glob.glob(
-                        "%s/nspr*.log*" %
-                        tempfile.gettempdir()):
-                    logzip.write(logfile)
-                    os.remove(logfile)
 
         self.log.info("runtests.py | Running tests: end.")
 
@@ -2653,6 +2647,14 @@ def run_test_harness(options):
         options.runByDir = False
 
     result = runner.runTests(options)
+
+    if runner.nsprLogs:
+        with zipfile.ZipFile("{}/nsprlogs.zip".format(runner.browserEnv["MOZ_UPLOAD_DIR"]),
+                             "w", zipfile.ZIP_DEFLATED) as logzip:
+            for logfile in glob.glob("{}/nspr*.log*".format(runner.browserEnv["MOZ_UPLOAD_DIR"])):
+                logzip.write(logfile)
+                os.remove(logfile)
+            logzip.close()
 
     # don't dump failures if running from automation as treeherder already displays them
     if build_obj:
