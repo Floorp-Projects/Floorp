@@ -3259,18 +3259,8 @@ Element::RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
   // spoof the browser chrome/window and phish logins etc.
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
-  const char* error = GetFullScreenError(OwnerDoc());
-  if (error) {
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    error);
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(OwnerDoc(),
-                               NS_LITERAL_STRING("mozfullscreenerror"),
-                               true,
-                               false);
-    asyncDispatcher->PostDOMEvent();
+  if (const char* error = GetFullScreenError(OwnerDoc())) {
+    OwnerDoc()->DispatchFullscreenError(error);
     return;
   }
 
