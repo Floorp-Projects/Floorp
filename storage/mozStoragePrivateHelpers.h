@@ -105,6 +105,7 @@ DoGetBlobAsString(T* aThis, uint32_t aIndex, V& aValue)
   NS_ENSURE_SUCCESS(rv, rv);
 
   aValue.Assign(blob, size / sizeof(char_type));
+  delete[] blob;
   return NS_OK;
 }
 
