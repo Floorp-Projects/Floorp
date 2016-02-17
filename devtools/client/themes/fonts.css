@@ -3,18 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #sidebar-panel-fontinspector {
+  margin: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin: 0;
   padding-bottom: 20px;
   width: 100%;
+  /* Bug 1243598 - Reduce the container height by the tab height to make room
+     for the tabs above. */
+  height: calc(100% - 24px);
+  position: absolute;
 }
 
 #font-container {
   overflow: auto;
   flex: auto;
-  height: 0px;
 }
 
 #all-fonts {
