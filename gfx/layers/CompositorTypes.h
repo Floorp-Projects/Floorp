@@ -15,8 +15,6 @@
 
 #include "mozilla/TypedEnumBits.h"
 
-struct IDXGISwapChain;
-
 namespace mozilla {
 namespace layers {
 
@@ -168,31 +166,21 @@ struct TextureFactoryIdentifier
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   SyncHandle mSyncHandle;
-  // This member is required to send the SwapChain to the main thread in order
-  // to workaround bug 1232042.
-#ifdef XP_WIN
-  RefPtr<IDXGISwapChain> mSwapChain;
-#else
-  void* mSwapChain;
-#endif
-
-  // We can't include dxgi.h here because WinUser.h conflicts with some parts
-  // of the tree. Therefor we compile all constructors & operators in a single
-  // compile unit.
-  TextureFactoryIdentifier& operator=(const TextureFactoryIdentifier& aOther);
-
-  TextureFactoryIdentifier(const TextureFactoryIdentifier& aOther);
 
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                                     GeckoProcessType aParentProcessId = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
                                     bool aSupportsTextureBlitting = false,
                                     bool aSupportsPartialUploads = false,
-                                    SyncHandle aSyncHandle = 0,
-                                    IDXGISwapChain* aSwapChain = nullptr);
-  ~TextureFactoryIdentifier();
-
-  void SetSwapChain(IDXGISwapChain* aSwapChain);
+                                    SyncHandle aSyncHandle = 0)
+    : mParentBackend(aLayersBackend)
+    , mParentProcessId(aParentProcessId)
+    , mSupportedBlendModes(gfx::CompositionOp::OP_OVER)
+    , mMaxTextureSize(aMaxTextureSize)
+    , mSupportsTextureBlitting(aSupportsTextureBlitting)
+    , mSupportsPartialUploads(aSupportsPartialUploads)
+    , mSyncHandle(aSyncHandle)
+  {}
 };
 
 /**
