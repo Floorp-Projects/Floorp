@@ -5,7 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'tabs.js',
-    'toolbar.js',
-    'tree-view.js',
+    'array.js',
+    'caption.js',
+    'null.js',
+    'number.js',
+    'object-box.js',
+    'object-link.js',
+    'object.js',
+    'rep-utils.js',
+    'rep.js',
+    'reps.css',
+    'string.js',
+    'undefined.js',
 )
