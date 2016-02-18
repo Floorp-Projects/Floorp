@@ -10201,15 +10201,6 @@
     "kind": "count",
     "description": "Uses of HTMLMediaElement.fastSeek"
   },
-  "VIDEO_DROPPED_FRAMES_PROPORTION" : {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "linear",
-    "high": "100",
-    "n_buckets": 101,
-    "bug_numbers": [1238433],
-    "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
-  },
   "TAB_SWITCH_CACHE_POSITION": {
     "expires_in_version": "55",
     "bug_numbers": [1242013],
