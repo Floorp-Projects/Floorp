@@ -90,6 +90,20 @@ function getNode(nodeOrSelector, options = {}) {
 }
 
 /**
+ * Start the element picker and focus the content window.
+ * @param {Toolbox} toolbox
+ */
+var startPicker = Task.async(function*(toolbox) {
+  info("Start the element picker");
+  yield toolbox.highlighterUtils.startPicker();
+  // Make sure the content window is focused since the picker does not focus
+  // the content window by default.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    content.focus();
+  });
+});
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|NodeFront} selector
