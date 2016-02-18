@@ -3632,6 +3632,11 @@ class IDLIterable(IDLMaplikeOrSetlikeOrIterableBase):
         we generate our functions as if they were part of the interface
         specification during parsing.
         """
+        # We only need to add entries/keys/values here if we're a pair iterator.
+        # Value iterators just copy these from %ArrayPrototype% instead.
+        if not self.isPairIterator():
+            return
+
         # object entries()
         self.addMethod("entries", members, False, self.iteratorType,
                        affectsNothing=True, newObject=True)
