@@ -55,19 +55,6 @@ TestInterfaceIterableSingle::GetParentObject() const
   return mParent;
 }
 
-size_t
-TestInterfaceIterableSingle::GetIterableLength() const
-{
-  return mValues.Length();
-}
-
-int32_t
-TestInterfaceIterableSingle::GetValueAtIndex(uint32_t index) const
-{
-  MOZ_ASSERT(index < mValues.Length());
-  return mValues.ElementAt(index);
-}
-
 uint32_t
 TestInterfaceIterableSingle::Length() const
 {

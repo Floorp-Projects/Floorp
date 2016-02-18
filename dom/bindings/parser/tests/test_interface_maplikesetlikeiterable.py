@@ -100,9 +100,7 @@ def WebIDLTest(parser, harness):
                readonly attribute unsigned long length;
                getter long(unsigned long index);
                };
-               """, valueIterableMembers,
-               # numProductions == 2 because of the generated iterator iface,
-               numProductions=2)
+               """, valueIterableMembers)
 
     shouldPass("Iterable (key and value)",
                """
