@@ -33,6 +33,8 @@ SimpleTest.waitForExplicitFinish();
  *          valid, the iframe will not be considered as a mozapp.
  * - browser: say if the iframe should be a mozbrowser. This is implicit when
  *            app is set.
+ * - isolated: if origin isolation is enabled with browser frames.  Defaults to
+ *             true if unset.
  * - test: an array of tests to run for this test case:
  *   - eo-unique: the extendedOrigin of the prinicpal must be unique in the
  *                current list.
@@ -230,7 +232,7 @@ var gData = [
     },
     test: [ "child-has-different-eo", "child-has-same-appstatus", "child-has-same-appid" ],
   },
-  // browser containing an iframe is part of the browser
+  // browser containing an iframe that is part of the browser
   {
     src: "http://example.org/",
     isapp: false,
@@ -239,6 +241,49 @@ var gData = [
       src: "http://example.org/chrome/",
       isapp: false,
       inIsolatedMozBrowser: true,
+    },
+    test: [ "child-has-same-eo" ],
+  },
+  // iframe containing a browser with isolation disabled
+  // (only chrome documents can disable isolation)
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: false,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      browser: true,
+      isolated: false,
+      inIsolatedMozBrowser: true,
+    },
+    test: [ "child-has-different-eo" ],
+  },
+  // browser with isolation disabled containing an iframe that is part of the browser
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: true,
+    isolated: false,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      inIsolatedMozBrowser: false,
+    },
+    test: [ "child-has-same-eo" ],
+  },
+  // iframe with isolation enabled containing an iframe with isolation disabled
+  // (isolated only has an effect on browsers)
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: false,
+    isolated: true,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      browser: false,
+      isolated: false,
     },
     test: [ "child-has-same-eo" ],
   },
@@ -280,12 +325,15 @@ function checkIFrame(aFrame, data) {
        "principals from non-installed app should have NO_APP_ID");
   }
 
-  if (!data.isapp && !data.browser) {
+  if (!data.isapp && !data.browser ||
+      (data.browser && data.isolated === false)) {
     is(principal.jarPrefix, "",
-       'jarPrefix should return an empty string for non-app and non-browsers principals');
+       "jarPrefix should return an empty string for non-app, non-browsers, " +
+       "and browsers with isolation disabled");
   } else {
     isnot(principal.jarPrefix, "",
-          'jarPrefix should not return an empty string for apps or mozbrowsers');
+          "jarPrefix should not return an empty string for apps or browsers " +
+          "with isolation enabled");
   }
 
   if (data.test.indexOf("eo-unique") != -1) {
@@ -297,7 +345,11 @@ function checkIFrame(aFrame, data) {
        "extended origin should be the same as the last inserted one");
   }
 
-  is(principal.isInIsolatedMozBrowserElement, !!data.browser,
+  let isolationExpected = false;
+  if (data.isolated !== false) {
+    isolationExpected = !!data.browser;
+  }
+  is(principal.isInIsolatedMozBrowserElement, isolationExpected,
      "check principal.isInIsolatedMozBrowserElement");
 
   if (data.child) {
@@ -308,7 +360,14 @@ function checkIFrame(aFrame, data) {
          "child should be an installed app");
     }
 
-    is(childPrincipal.isInIsolatedMozBrowserElement, !!data.child.browser || !!data.child.inIsolatedMozBrowser,
+    let childIsolationExpected = false;
+    if (data.child.isolated !== false) {
+      childIsolationExpected = !!data.child.browser;
+    }
+    if (data.child.inIsolatedMozBrowser !== undefined) {
+      childIsolationExpected = data.child.inIsolatedMozBrowser;
+    }
+    is(childPrincipal.isInIsolatedMozBrowserElement, childIsolationExpected,
        "check childPrincipal.isInIsolatedMozBrowserElement");
 
     if (data.test.indexOf("child-has-same-eo") != -1) {
@@ -392,6 +451,10 @@ function runTest() {
         childFrame.setAttribute('mozbrowser', '');
       }
 
+      if (data.child.isolated === false) {
+        childFrame.setAttribute("noisolation", "");
+      }
+
       childFrame.src = data.child.src;
 
       this.removeEventListener('load', this.addChild.bind(this));
@@ -405,6 +468,10 @@ function runTest() {
       iframe.setAttribute('mozbrowser', '');
     } else if (data.browser) {
       iframe.setAttribute('mozbrowser', '');
+    }
+
+    if (data.isolated === false) {
+      iframe.setAttribute("noisolation", "");
     }
 
     iframe.src = data.src;
@@ -423,8 +490,9 @@ function runTest() {
 
 var gTestRunner = runTest();
 
-SpecialPowers.pushPrefEnv({'set':[["dom.mozBrowserFramesEnabled", true]]},
-                           function() { gTestRunner.next(); });
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.mozBrowserFramesEnabled", true],
+]}, function() { gTestRunner.next(); });
 
 </script>
 </pre>
