@@ -3,5 +3,3 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY aboutDebugging.title                      "about:debugging">
-<!ENTITY aboutDebugging.addons                     "Add-ons">
-<!ENTITY aboutDebugging.workers                    "Workers">

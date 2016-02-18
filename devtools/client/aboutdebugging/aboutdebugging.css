@@ -16,11 +16,6 @@ button {
   padding-right: 20px;
 }
 
-#body {
-  display: flex;
-  flex-direction: row;
-}
-
 /* Category tabs */
 
 .category {
@@ -33,16 +28,19 @@ button {
   cursor: default;
 }
 
+.app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
 .main-content {
   flex: 1;
 }
 
 .tab {
   max-width: 800px;
-}
-
-.tab:not(.active) {
-  display: none;
 }
 
 /* Prefs */
