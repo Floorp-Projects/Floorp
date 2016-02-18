@@ -238,7 +238,9 @@ task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndReso
 // entities.  (Each locale produces its own .dtd file, backstopped by the en-US
 // .dtd file in tree.)  Android Studio (and IntelliJ) don't handle these inline
 // entities smoothly.  This filter merely expands the entities in place, making
-// them appear properly throughout the IDE.
+// them appear properly throughout the IDE.  Be aware that this assumes that the
+// JVM's file.encoding is utf-8.  See comments in
+// mobile/android/mach_commands.py.
 class ExpandXMLEntitiesFilter extends FilterReader {
     ExpandXMLEntitiesFilter(Reader input) {
         // Extremely inefficient, but whatever.
