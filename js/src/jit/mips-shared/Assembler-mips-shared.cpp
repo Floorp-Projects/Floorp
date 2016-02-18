@@ -221,6 +221,12 @@ BOffImm16::BOffImm16(InstImm inst)
 {
 }
 
+Instruction*
+BOffImm16::getDest(Instruction* src) const
+{
+    return &src[(((int32_t)data << 16) >> 16) + 1];
+}
+
 bool
 AssemblerMIPSShared::oom() const
 {
