@@ -257,11 +257,16 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       let createdFiles = this._createdFiles;
       try {
         aMessage.data.forEach(function(request) {
+          const filePerms = 0666;
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-          testFile.append(request.name);
+          if (request.name) {
+            testFile.append(request.name);
+          } else {
+            testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
+          }
           let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
           outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                         0666, 0);
+                         filePerms, 0);
           if (request.data) {
             outStream.write(request.data, request.data.length);
             outStream.close();
