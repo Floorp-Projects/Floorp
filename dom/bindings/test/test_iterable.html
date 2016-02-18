@@ -52,6 +52,12 @@
        testExistence("IterableSingle: ", itr, base_properties);
        is(itr[Symbol.iterator], Array.prototype[Symbol.iterator],
           "IterableSingle: Should be using %ArrayIterator% for @@iterator");
+       is(itr.keys, Array.prototype.keys,
+          "IterableSingle: Should be using %ArrayIterator% for 'keys'");
+       is(itr.entries, Array.prototype.entries,
+          "IterableSingle: Should be using %ArrayIterator% for 'entries'");
+       is(itr.values, itr[Symbol.iterator],
+          "IterableSingle: Should be using @@iterator for 'values'");
        var keys = [...itr.keys()];
        var values = [...itr.values()];
        var entries = [...itr.entries()];
@@ -85,7 +91,7 @@
        is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
        is(entry.done, true, "IterableSingle: Entry iterator done should be true");
        is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
-          "[object TestInterfaceIterableSingleIteratorPrototype]",
+          "[object Array Iterator]",
           "iterator prototype should have the right brand");
 
        // Simple dual type iterable creation and functionality test
