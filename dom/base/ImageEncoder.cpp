@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageEncoder.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -491,6 +490,38 @@ ImageEncoder::GetImageEncoder(nsAString& aType)
   return encoder.forget();
 }
 
+class EncoderThreadPoolTerminator final : public nsIObserver
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const char16_t *) override
+    {
+      NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"),
+                   "Unexpected topic");
+      if (ImageEncoder::sThreadPool) {
+        ImageEncoder::sThreadPool->Shutdown();
+        ImageEncoder::sThreadPool = nullptr;
+      }
+      return NS_OK;
+    }
+  private:
+    ~EncoderThreadPoolTerminator() {}
+};
+
+NS_IMPL_ISUPPORTS(EncoderThreadPoolTerminator, nsIObserver)
+
+static void
+RegisterEncoderThreadPoolTerminatorObserver()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  NS_ASSERTION(os, "do_GetService failed");
+  os->AddObserver(new EncoderThreadPoolTerminator(),
+                  "xpcom-shutdown-threads",
+                  false);
+}
+
 /* static */
 nsresult
 ImageEncoder::EnsureThreadPool()
@@ -498,12 +529,13 @@ ImageEncoder::EnsureThreadPool()
   if (!sThreadPool) {
     nsCOMPtr<nsIThreadPool> threadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
     sThreadPool = threadPool;
+
     if (!NS_IsMainThread()) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-        ClearOnShutdown(&sThreadPool);
+        RegisterEncoderThreadPoolTerminatorObserver();
       }));
     } else {
-      ClearOnShutdown(&sThreadPool);
+      RegisterEncoderThreadPoolTerminatorObserver();
     }
 
     const uint32_t kThreadLimit = 2;
