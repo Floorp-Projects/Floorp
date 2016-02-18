@@ -200,6 +200,8 @@ public class TelemetryUploadService extends BackgroundService {
 
         delegate.setResource(resource);
         resource.delegate = delegate;
+        resource.setShouldCompressUploadedEntity(true);
+        resource.setShouldChunkUploadsHint(false); // Telemetry servers don't support chunking.
 
         // We're in a background thread so we don't have any reason to do this asynchronously.
         // If we tried, onStartCommand would return and IntentService might stop itself before we finish.
