@@ -350,6 +350,10 @@ protected:
 template <class T>
 class nsZipItemPtr final : public nsZipItemPtr_base
 {
+  static_assert(sizeof(T) == sizeof(char),
+                "This class cannot be used with larger T without re-examining"
+                " a number of assumptions.");
+
 public:
   nsZipItemPtr(nsZipArchive *aZip, const char *aEntryName, bool doCRC = false) : nsZipItemPtr_base(aZip, aEntryName, doCRC) { }
   /**
