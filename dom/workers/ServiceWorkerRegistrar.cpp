@@ -182,6 +182,7 @@ ServiceWorkerRegistrar::RegisterServiceWorker(
     bool found = false;
     for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
       if (Equivalent(aData, mData[i])) {
+        mData[i] = aData;
         found = true;
         break;
       }
