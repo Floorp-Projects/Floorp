@@ -577,44 +577,6 @@ NS_IMETHODIMP nsXULWindow::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
   return NS_OK;
 }
 
-DesktopToLayoutDeviceScale
-nsXULWindow::GetScaleForDestinationPosition(int32_t aX, int32_t aY)
-{
-  DesktopToLayoutDeviceScale scale(nsIWidget::DefaultScaleOverride());
-  if (scale.scale <= 0.0) {
-    // The destination monitor may have the different dpi from the source.
-    nsCOMPtr<nsIScreenManager> screenMgr(do_GetService(
-                                         "@mozilla.org/gfx/screenmanager;1"));
-    if (screenMgr) {
-      int32_t width, height;
-      // Use current size, converted to desktop pixels
-      GetSize(&width, &height);
-      DesktopToLayoutDeviceScale curr = mWindow->GetDesktopToDeviceScale();
-      width /= curr.scale;
-      height /= curr.scale;
-      width = std::max(1, width);
-      height = std::max(1, height);
-      nsCOMPtr<nsIScreen> screen;
-      screenMgr->ScreenForRect(aX, aY, width, height,
-                               getter_AddRefs(screen));
-      if (screen) {
-        double contentsScaleFactor;
-        if (NS_SUCCEEDED(screen->GetContentsScaleFactor(
-                         &contentsScaleFactor))) {
-          scale = DesktopToLayoutDeviceScale(contentsScaleFactor);
-        } else {
-          // Fallback to the scale from the widget.
-          scale = mWindow->GetDesktopToDeviceScale();
-        }
-      }
-    } else {
-      // this fallback should never actually be needed
-      scale = mWindow->GetDesktopToDeviceScale();
-    }
-  }
-  return scale;
-}
-
 NS_IMETHODIMP nsXULWindow::SetPositionDesktopPix(int32_t aX, int32_t aY)
 {
   nsresult rv = mWindow->Move(aX, aY);
@@ -630,23 +592,15 @@ NS_IMETHODIMP nsXULWindow::SetPositionDesktopPix(int32_t aX, int32_t aY)
   return NS_OK;
 }
 
+// The parameters here are device pixels; do the best we can to convert to
+// desktop px, using the window's current scale factor (if available).
 NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
 {
   // Don't reset the window's size mode here - platforms that don't want to move
   // maximized windows should reset it in their respective Move implementation.
-  DesktopToLayoutDeviceScale scale = GetScaleForDestinationPosition(aX, aY);
-  DesktopPoint pos = LayoutDeviceIntPoint(aX, aY) / scale;
-  nsresult rv = mWindow->Move(pos.x, pos.y);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  if (!mChromeLoaded) {
-    // If we're called before the chrome is loaded someone obviously wants this
-    // window at this position. We don't persist this one-time position.
-    mIgnoreXULPosition = true;
-    return NS_OK;
-  }
-  PersistentAttributesDirty(PAD_POSITION);
-  SavePersistentAttributes();
-  return NS_OK;
+  DesktopToLayoutDeviceScale currScale = mWindow->GetDesktopToDeviceScale();
+  DesktopPoint pos = LayoutDeviceIntPoint(aX, aY) / currScale;
+  return SetPositionDesktopPix(pos.x, pos.y);
 }
 
 NS_IMETHODIMP nsXULWindow::GetPosition(int32_t* aX, int32_t* aY)
@@ -1205,10 +1159,7 @@ bool nsXULWindow::LoadPositionFromXUL()
   }
   mWindow->ConstrainPosition(false, &specX, &specY);
   if (specX != currX || specY != currY) {
-    DesktopToLayoutDeviceScale destScale =
-      GetScaleForDestinationPosition(specX, specY);
-    LayoutDevicePoint devPos = DesktopIntPoint(specX, specY) * destScale;
-    SetPosition(devPos.x, devPos.y);
+    SetPositionDesktopPix(specX, specY);
   }
 
   return gotPosition;
