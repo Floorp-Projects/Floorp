@@ -1119,6 +1119,13 @@ class Type
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
     }
 
+    // Map an already canonicalized Type to the return type of a function call.
+    static Type ret(Type t) {
+        MOZ_ASSERT(t.isCanonical());
+        // The 32-bit external type is Signed, not Int.
+        return t.isInt() ? Signed: t;
+    }
+
     static Type lit(const NumLit& lit) {
         MOZ_ASSERT(lit.valid());
         Which which = Type::Which(lit.which());
@@ -4344,8 +4351,10 @@ CheckIsArgType(FunctionValidator& f, ParseNode* argNode, Type type)
 
 static bool
 CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calleeName,
-                  ExprType ret, Type* type)
+                  Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     if (!f.writeCall(callNode, Expr::Call))
         return false;
 
@@ -4358,8 +4367,9 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
+    Sig sig(Move(args), ret.canonicalToExprType());
     ModuleValidator::Func* callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Sig(Move(args), ret), calleeName, &callee))
+    if (!CheckFunctionSignature(f.m(), callNode, Move(sig), calleeName, &callee))
         return false;
 
     f.encoder().patchVarU32(funcIndexAt, callee->index());
@@ -4396,8 +4406,10 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyN
 }
 
 static bool
-CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* type)
+CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     ParseNode* callee = CallCallee(callNode);
     ParseNode* tableNode = ElemBase(callee);
     ParseNode* indexExpr = ElemIndex(callee);
@@ -4441,7 +4453,7 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    Sig sig(Move(args), ret);
+    Sig sig(Move(args), ret.canonicalToExprType());
 
     uint32_t tableIndex;
     if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(sig), mask, &tableIndex))
@@ -4462,14 +4474,15 @@ CheckIsExternType(FunctionValidator& f, ParseNode* argNode, Type type)
 }
 
 static bool
-CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprType ret,
-             Type* type)
+CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     PropertyName* calleeName = CallCallee(callNode)->name();
 
-    if (ret == ExprType::F32)
+    if (ret.isFloat())
         return f.fail(callNode, "FFI calls can't return float");
-    if (IsSimdType(ret))
+    if (ret.isSimd())
         return f.fail(callNode, "FFI calls can't return SIMD values");
 
     // Opcode
@@ -4485,8 +4498,9 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprT
     if (!CheckCallArgs<CheckIsExternType>(f, callNode, &args))
         return false;
 
+    Sig sig(Move(args), ret.canonicalToExprType());
     uint32_t importIndex;
-    if (!f.m().declareImport(calleeName, Sig(Move(args), ret), ffiIndex, &importIndex))
+    if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
         return false;
 
     f.encoder().patchVarU32(importIndexAt, importIndex);
@@ -4521,12 +4535,12 @@ CheckFloatCoercionArg(FunctionValidator& f, ParseNode* inputNode, Type inputType
 }
 
 static bool
-CheckCoercedCall(FunctionValidator& f, ParseNode* call, ExprType ret, Type* type);
+CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type);
 
 static bool
 CheckCoercionArg(FunctionValidator& f, ParseNode* arg, ValType expected, Type* type)
 {
-    ExprType ret = ToExprType(expected);
+    Type ret = Type::var(expected);
     if (arg->isKind(PNK_CALL))
         return CheckCoercedCall(f, arg, ret, type);
 
@@ -5323,27 +5337,27 @@ CheckUncoercedCall(FunctionValidator& f, ParseNode* expr, Type* type)
 }
 
 static bool
-CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actual, size_t patchAt,
+CoerceResult(FunctionValidator& f, ParseNode* expr, Type expected, Type actual, size_t patchAt,
              Type* type)
 {
+    MOZ_ASSERT(expected.isCanonical());
+
     // At this point, the bytecode resembles this:
     //      | patchAt | the thing we wanted to coerce | current position |>
-    switch (expected) {
-      case ExprType::Void:
+    switch (expected.which()) {
+      case Type::Void:
         f.encoder().patchExpr(patchAt, Expr::Id);
         break;
-      case ExprType::I32:
+      case Type::Int:
         if (!actual.isIntish())
             return f.failf(expr, "%s is not a subtype of intish", actual.toChars());
         f.encoder().patchExpr(patchAt, Expr::Id);
         break;
-      case ExprType::I64:
-        MOZ_CRASH("no int64 in asm.js");
-      case ExprType::F32:
+      case Type::Float:
         if (!CheckFloatCoercionArg(f, expr, actual, patchAt))
             return false;
         break;
-      case ExprType::F64:
+      case Type::Double:
         if (actual.isMaybeDouble())
             f.encoder().patchExpr(patchAt, Expr::Id);
         else if (actual.isMaybeFloat())
@@ -5355,23 +5369,12 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
         else
             return f.failf(expr, "%s is not a subtype of double?, float?, signed or unsigned", actual.toChars());
         break;
-      case ExprType::I32x4:
-        if (!actual.isInt32x4())
-            return f.failf(expr, "%s is not a subtype of int32x4", actual.toChars());
+      default:
+        MOZ_ASSERT(expected.isSimd(), "Incomplete switch");
+        if (actual != expected)
+            return f.failf(expr, "got type %s, expected %s", actual.toChars(), expected.toChars());
         f.encoder().patchExpr(patchAt, Expr::Id);
         break;
-      case ExprType::F32x4:
-        if (!actual.isFloat32x4())
-            return f.failf(expr, "%s is not a subtype of float32x4", actual.toChars());
-        f.encoder().patchExpr(patchAt, Expr::Id);
-        break;
-      case ExprType::B32x4:
-        if (!actual.isBool32x4())
-            return f.failf(expr, "%s is not a subtype of bool32x4", actual.toChars());
-        f.encoder().patchExpr(patchAt, Expr::Id);
-        break;
-      case ExprType::Limit:
-        MOZ_CRASH("Limit");
     }
 
     *type = Type::ret(expected);
@@ -5380,7 +5383,7 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
 
 static bool
 CheckCoercedMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMathBuiltinFunction func,
-                            ExprType ret, Type* type)
+                            Type ret, Type* type)
 {
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
@@ -5393,8 +5396,10 @@ CheckCoercedMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMath
 
 static bool
 CheckCoercedSimdCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
-                     ExprType ret, Type* type)
+                     Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
         return false;
@@ -5415,8 +5420,10 @@ CheckCoercedSimdCall(FunctionValidator& f, ParseNode* call, const ModuleValidato
 
 static bool
 CheckCoercedAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode,
-                               AsmJSAtomicsBuiltinFunction func, ExprType ret, Type* type)
+                               AsmJSAtomicsBuiltinFunction func, Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
         return false;
@@ -5427,8 +5434,10 @@ CheckCoercedAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode,
 }
 
 static bool
-CheckCoercedCall(FunctionValidator& f, ParseNode* call, ExprType ret, Type* type)
+CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type)
 {
+    MOZ_ASSERT(ret.isCanonical());
+
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
     if (IsNumericLiteral(f.m(), call)) {
@@ -5484,7 +5493,7 @@ CheckPos(FunctionValidator& f, ParseNode* pos, Type* type)
     ParseNode* operand = UnaryKid(pos);
 
     if (operand->isKind(PNK_CALL))
-        return CheckCoercedCall(f, operand, ExprType::F64, type);
+        return CheckCoercedCall(f, operand, Type::Double, type);
 
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
@@ -5494,7 +5503,7 @@ CheckPos(FunctionValidator& f, ParseNode* pos, Type* type)
     if (!CheckExpr(f, operand, &actual))
         return false;
 
-    return CoerceResult(f, operand, ExprType::F64, actual, opcodeAt, type);
+    return CoerceResult(f, operand, Type::Double, actual, opcodeAt, type);
 }
 
 static bool
@@ -5961,7 +5970,7 @@ CheckBitwise(FunctionValidator& f, ParseNode* bitwise, Type* type)
 
     if (IsLiteralInt(f.m(), rhs, &i) && i == uint32_t(identityElement)) {
         if (bitwise->isKind(PNK_BITOR) && lhs->isKind(PNK_CALL))
-            return CheckCoercedCall(f, lhs, ExprType::I32, type);
+            return CheckCoercedCall(f, lhs, Type::Int, type);
 
         Type lhsType;
         if (!CheckExpr(f, lhs, &lhsType))
@@ -6052,7 +6061,7 @@ CheckAsExprStatement(FunctionValidator& f, ParseNode* expr)
 {
     Type ignored;
     if (expr->isKind(PNK_CALL))
-        return CheckCoercedCall(f, expr, ExprType::Void, &ignored);
+        return CheckCoercedCall(f, expr, Type::Void, &ignored);
     return CheckExpr(f, expr, &ignored);
 }
 
