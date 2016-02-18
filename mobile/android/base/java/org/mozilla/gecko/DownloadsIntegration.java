@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.EventCallback;
@@ -23,6 +24,7 @@ import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -107,6 +109,25 @@ public class DownloadsIntegration implements NativeEventListener
         return (PackageManager.COMPONENT_ENABLED_STATE_ENABLED == state ||
                 PackageManager.COMPONENT_ENABLED_STATE_DEFAULT == state);
     }
+
+    @WrapForJNI
+    public static String getTemporaryDownloadDirectory() {
+        Context context = GeckoAppShell.getApplicationContext();
+
+        if (Permissions.has(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            // We do have the STORAGE permission, so we can save the file directly to the public
+            // downloads directory.
+            return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    .getAbsolutePath();
+        } else {
+            // Without the permission we are going to start to download the file to the cache
+            // directory. Later in the process we will ask for the permission and the download
+            // process will move the file to the actual downloads directory. If we do not get the
+            // permission then the download will be cancelled.
+            return context.getCacheDir().getAbsolutePath();
+        }
+    }
+
 
     @WrapForJNI
     public static void scanMedia(final String aFile, String aMimeType) {

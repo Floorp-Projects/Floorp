@@ -90,6 +90,21 @@ class DownloadsIntegration : public mozilla::jni::ObjectBase<DownloadsIntegratio
 public:
     explicit DownloadsIntegration(const Context& ctx) : ObjectBase<DownloadsIntegration, jobject>(ctx) {}
 
+    struct GetTemporaryDownloadDirectory_t {
+        typedef DownloadsIntegration Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getTemporaryDownloadDirectory";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto GetTemporaryDownloadDirectory() -> mozilla::jni::String::LocalRef;
+
     struct ScanMedia_t {
         typedef DownloadsIntegration Owner;
         typedef void ReturnType;
