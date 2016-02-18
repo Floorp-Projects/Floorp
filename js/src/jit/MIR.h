@@ -1371,6 +1371,7 @@ class MConstant : public MNullaryInstruction
         union {
             bool b;
             int32_t i32;
+            int64_t i64;
             float f;
             double d;
             JSString* str;
@@ -1396,12 +1397,14 @@ class MConstant : public MNullaryInstruction
     MConstant(const Value& v, CompilerConstraintList* constraints);
     explicit MConstant(JSObject* obj);
     explicit MConstant(float f);
+    explicit MConstant(int64_t i);
 
   public:
     INSTRUCTION_HEADER(Constant)
     static MConstant* New(TempAllocator& alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
     static MConstant* NewFloat32(TempAllocator& alloc, double d);
+    static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
 
@@ -1458,6 +1461,10 @@ class MConstant : public MNullaryInstruction
         MOZ_ASSERT(type() == MIRType_Int32);
         return payload_.i32;
     }
+    int64_t toInt64() const {
+        MOZ_ASSERT(type() == MIRType_Int64);
+        return payload_.i64;
+    }
     bool isInt32(int32_t i) const {
         return type() == MIRType_Int32 && payload_.i32 == i;
     }
@@ -1488,15 +1495,15 @@ class MConstant : public MNullaryInstruction
         return nullptr;
     }
 
-    bool isNumber() const {
-        return IsNumberType(type());
+    bool isTypeRepresentableAsDouble() const {
+        return IsTypeRepresentableAsDouble(type());
     }
-    double toNumber() const {
+    double numberToDouble() const {
+        MOZ_ASSERT(isTypeRepresentableAsDouble());
         if (type() == MIRType_Int32)
             return toInt32();
         if (type() == MIRType_Double)
             return toDouble();
-        MOZ_ASSERT(type() == MIRType_Float32);
         return toFloat32();
     }
 
