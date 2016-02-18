@@ -1060,7 +1060,20 @@ class NumLit
     }
 };
 
-// Respresents the type of a general asm.js expression.
+// Represents the type of a general asm.js expression.
+//
+// A canonical subset of types representing the coercion targets: Int, Float,
+// Double, and the SIMD types. This is almost equivalent to wasm::ValType,
+// except the integer SIMD types have signed/unsigned variants.
+//
+// Void is also part of the canonical subset which then maps to wasm::ExprType.
+//
+// Note that while the canonical subset distinguishes signed and unsigned SIMD
+// types, it only uses |Int| to represent signed and unsigned 32-bit integers.
+// This is because the scalar coersions x|0 and x>>>0 work with any kind of
+// integer input, while the SIMD check functions throw a TypeError if the passed
+// type doesn't match.
+//
 class Type
 {
   public:
@@ -1134,6 +1147,42 @@ class Type
         Type t;
         t.which_ = which;
         return t;
+    }
+
+    // Map |t| to one of the canonical vartype representations of a
+    // wasm::ExprType.
+    static Type canonicalize(Type t) {
+        switch(t.which()) {
+          case Fixnum:
+          case Signed:
+          case Unsigned:
+          case Int:
+            return Int;
+
+          case Float:
+            return Float;
+
+          case DoubleLit:
+          case Double:
+            return Double;
+
+          case Void:
+            return Void;
+
+          case Int32x4:
+          case Float32x4:
+          case Bool32x4:
+            return t;
+
+          case MaybeDouble:
+          case MaybeFloat:
+          case Floatish:
+          case Intish:
+            // These types need some kind of coercion, they can't be mapped
+            // to an ExprType.
+            break;
+        }
+        MOZ_CRASH("Invalid vartype");
     }
 
     Which which() const { return which_; }
@@ -1249,20 +1298,42 @@ class Type
         return isInt() || isFloat() || isDouble() || isSimd();
     }
 
-    ValType checkedValueType() const {
-        MOZ_ASSERT(isArgType());
-        if (isInt())
-            return ValType::I32;
-        else if (isFloat())
-            return ValType::F32;
-        else if (isDouble())
-            return ValType::F64;
-        else if (isInt32x4())
-            return ValType::I32x4;
-        else if (isBool32x4())
-            return ValType::B32x4;
-        MOZ_ASSERT(isFloat32x4());
-        return ValType::F32x4;
+    // Check if this is one of the canonical vartype representations of a
+    // wasm::ExprType. See Type::var().
+    bool isCanonical() const {
+        switch (which()) {
+          case Int:
+          case Float:
+          case Double:
+          case Void:
+            return true;
+          default:
+            return isSimd();
+        }
+    }
+
+    // Check if this is a canonical representation of a wasm::ValType.
+    bool isCanonicalValType() const {
+        return !isVoid() && isCanonical();
+    }
+
+    // Convert this canonical type to a wasm::ExprType.
+    ExprType canonicalToExprType() const {
+        switch (which()) {
+          case Int:       return ExprType::I32;
+          case Float:     return ExprType::F32;
+          case Double:    return ExprType::F64;
+          case Void:      return ExprType::Void;
+          case Int32x4:   return ExprType::I32x4;
+          case Float32x4: return ExprType::F32x4;
+          case Bool32x4:  return ExprType::B32x4;
+          default:        MOZ_CRASH("Need canonical type");
+        }
+    }
+
+    // Convert this canonical type to a wasm::ValType.
+    ValType canonicalToValType() const {
+        return NonVoidToValType(canonicalToExprType());
     }
 
     const char* toChars() const {
@@ -4246,7 +4317,7 @@ CheckCallArgs(FunctionValidator& f, ParseNode* callNode, ValTypeVector* args)
         if (!checkArg(f, argNode, type))
             return false;
 
-        if (!args->append(type.checkedValueType()))
+        if (!args->append(Type::canonicalize(type).canonicalToValType()))
             return false;
     }
     return true;
