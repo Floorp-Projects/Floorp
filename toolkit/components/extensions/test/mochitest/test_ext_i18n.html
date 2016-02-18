@@ -14,6 +14,8 @@
 <script type="text/javascript">
 "use strict";
 
+SimpleTest.registerCleanupFunction(() => { SpecialPowers.clearUserPref("general.useragent.locale"); });
+
 add_task(function* test_i18n() {
   function runTests(assertEq) {
     let _ = browser.i18n.getMessage.bind(browser.i18n);
@@ -158,6 +160,85 @@ add_task(function* test_i18n() {
   win.close();
 
   yield extension.awaitFinish("l10n");
+  yield extension.unload();
+});
+
+add_task(function* test_get_ui_language() {
+  function getResults() {
+    return {
+      getUILanguage: browser.i18n.getUILanguage(),
+      getMessage: browser.i18n.getMessage("@@ui_locale"),
+    };
+  }
+
+  function background(getResults) {
+    function checkResults(source, results, expected) {
+      browser.test.assertEq(
+        expected,
+        results.getUILanguage,
+        `Got expected getUILanguage result in ${source}`
+      );
+      browser.test.assertEq(
+        expected,
+        results.getMessage,
+        `Got expected getMessage result in ${source}`
+      );
+    }
+
+    let tabId;
+
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      browser.tabs.sendMessage(tabId, "get-results", result => {
+        checkResults("contentScript", result, expected);
+        checkResults("background", getResults(), expected);
+
+        browser.test.sendMessage("done");
+      });
+    });
+
+    browser.tabs.query({currentWindow: true, active: true}, tabs => {
+      tabId = tabs[0].id;
+      browser.test.sendMessage("ready");
+    });
+  }
+
+  function content(getResults) {
+    browser.runtime.onMessage.addListener((msg, sender, respond) => {
+      respond(getResults());
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "run_at": "document_start",
+        "js": ["content_script.js"],
+      }],
+    },
+
+    background: `(${background})(${getResults})`,
+
+    files: {
+      "content_script.js": `(${content})(${getResults})`,
+    },
+  });
+
+  let win = window.open("file_sample.html");
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  extension.sendMessage(["expect-results", "en_US"]);
+  yield extension.awaitMessage("done");
+
+  SpecialPowers.setCharPref("general.useragent.locale", "he");
+
+  extension.sendMessage(["expect-results", "he"]);
+  yield extension.awaitMessage("done");
+
+  win.close();
+
   yield extension.unload();
 });
 
