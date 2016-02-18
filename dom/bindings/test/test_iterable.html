@@ -50,6 +50,8 @@
        info("IterableSingle: Testing simple iterable creation and functionality");
        itr = new TestInterfaceIterableSingle();
        testExistence("IterableSingle: ", itr, base_properties);
+       is(itr[Symbol.iterator], Array.prototype[Symbol.iterator],
+          "IterableSingle: Should be using %ArrayIterator% for @@iterator");
        var keys = [...itr.keys()];
        var values = [...itr.values()];
        var entries = [...itr.entries()];

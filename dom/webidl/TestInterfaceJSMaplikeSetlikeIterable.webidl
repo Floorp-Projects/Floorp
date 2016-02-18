@@ -50,6 +50,8 @@ interface TestInterfaceSetlikeNode {
  Pref="dom.expose_test_interfaces"]
 interface TestInterfaceIterableSingle {
   iterable<long>;
+  getter long(unsigned long index);
+  readonly attribute unsigned long length;
 };
 
 [Constructor(),

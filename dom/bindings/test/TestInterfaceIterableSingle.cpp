@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END
 TestInterfaceIterableSingle::TestInterfaceIterableSingle(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {
-  for(int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 3; ++i) {
     mValues.AppendElement(i);
   }
 }
@@ -61,11 +61,29 @@ TestInterfaceIterableSingle::GetIterableLength() const
   return mValues.Length();
 }
 
-uint32_t
+int32_t
 TestInterfaceIterableSingle::GetValueAtIndex(uint32_t index) const
 {
   MOZ_ASSERT(index < mValues.Length());
   return mValues.ElementAt(index);
+}
+
+uint32_t
+TestInterfaceIterableSingle::Length() const
+{
+  return mValues.Length();
+}
+
+int32_t
+TestInterfaceIterableSingle::IndexedGetter(uint32_t aIndex, bool& aFound) const
+{
+  if (aIndex >= mValues.Length()) {
+    aFound = false;
+    return 0;
+  }
+
+  aFound = true;
+  return mValues[aIndex];
 }
 
 } // namespace dom
