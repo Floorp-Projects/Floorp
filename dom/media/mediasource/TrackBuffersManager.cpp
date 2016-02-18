@@ -107,7 +107,6 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mEvictionOccurred(false)
   , mMonitor("TrackBuffersManager")
   , mAppendRunning(false)
-  , mSegmentParserLoopRunning(false)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
 }
@@ -304,7 +303,6 @@ void
 TrackBuffersManager::CompleteResetParserState()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(!mSegmentParserLoopRunning);
   MSE_DEBUG("");
 
   for (auto& track : GetTracksList()) {
@@ -440,7 +438,6 @@ bool
 TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!mSegmentParserLoopRunning, "Logic error: Append in progress");
   MSE_DEBUG("From %.2fs to %.2f",
             aInterval.mStart.ToSeconds(), aInterval.mEnd.ToSeconds());
 
@@ -579,8 +576,6 @@ TrackBuffersManager::SegmentParserLoop()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mSegmentParserLoopRunning = true;
-
   while (true) {
     // 1. If the input buffer is empty, then jump to the need more data step below.
     if (!mInputBuffer || mInputBuffer->IsEmpty()) {
@@ -705,7 +700,6 @@ TrackBuffersManager::NeedMoreData()
   MSE_DEBUG("");
   RestoreCachedVariables();
   mAppendRunning = false;
-  mSegmentParserLoopRunning = false;
   {
     // Wake-up any pending Abort()
     MonitorAutoLock mon(mMonitor);
@@ -719,7 +713,6 @@ TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
 {
   MSE_DEBUG("rv=%d", aRejectValue);
   mAppendRunning = false;
-  mSegmentParserLoopRunning = false;
   {
     // Wake-up any pending Abort()
     MonitorAutoLock mon(mMonitor);
