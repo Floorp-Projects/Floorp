@@ -490,11 +490,6 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     return;
   }
 
-  MOZ_ASSERT(!computedTiming.mProgress.IsNull() &&
-             0.0 <= computedTiming.mProgress.Value() &&
-             computedTiming.mProgress.Value() <= 1.0,
-             "iteration progress should be in [0-1]");
-
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx)
   {
@@ -532,15 +527,11 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                 *segmentEnd = segment + prop.mSegments.Length();
     while (segment->mToKey < computedTiming.mProgress.Value()) {
       MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
-      ++segment;
-      if (segment == segmentEnd) {
-        MOZ_ASSERT_UNREACHABLE("incorrect iteration progress");
-        break; // in order to continue in outer loop (just below)
+      if ((segment+1) == segmentEnd) {
+        break;
       }
+      ++segment;
       MOZ_ASSERT(segment->mFromKey == (segment-1)->mToKey, "incorrect keys");
-    }
-    if (segment == segmentEnd) {
-      continue;
     }
     MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
     MOZ_ASSERT(segment >= prop.mSegments.Elements() &&
