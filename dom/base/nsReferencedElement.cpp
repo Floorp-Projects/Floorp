@@ -14,6 +14,61 @@
 #include "nsIDOMElement.h"
 #include "nsCycleCollectionParticipant.h"
 
+/**
+ * If aURI is https and is set to use its default port (i.e. has port = -1),
+ * then this function will clone it, and give the clone a hardcoded port of 443
+ * (which should already be its default).  Then, if that hardcoded port
+ * "sticks" (indicating that aURI has the wrong default port), then this
+ * function returns the clone, so that the caller can use it instead of aURI.
+ * Otherwise, this function just returns nullptr.
+ *
+ * (This lets us correct for aURI possibly having the wrong mDefaultPort.)
+ */
+already_AddRefed<nsIURI>
+CloneSecureURIWithHardcodedPort(nsIURI* aURI)
+{
+  // nsIURI port numbers of interest to this function:
+  static const int32_t kUsingDefaultPort = -1;
+  static const int32_t kDefaultPortForHTTPS = 443;
+
+  bool isHttps;
+  if (NS_FAILED(aURI->SchemeIs("https", &isHttps)) || !isHttps) {
+    // URI isn't HTTPS, so it's not affected by bug 1247733. We can bail.
+    return nullptr;
+  }
+
+  int32_t port;
+  if (NS_FAILED(aURI->GetPort(&port)) || port != kUsingDefaultPort) {
+    // URI isn't using its default port, so it's not affected by bug 1247733.
+    // We can bail.
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> cloneWithHardcodedPort;
+  if (NS_FAILED(aURI->Clone(getter_AddRefs(cloneWithHardcodedPort)))) {
+    // Clone failed. Bail.
+    return nullptr;
+  }
+  if (NS_FAILED(cloneWithHardcodedPort->SetPort(kDefaultPortForHTTPS))) {
+    // Hardcoding port 443 failed. Bail.
+    return nullptr;
+  }
+  if (NS_FAILED(cloneWithHardcodedPort->GetPort(&port)) ||
+      port == kUsingDefaultPort) {
+    // The port-hardcoding didn't make a difference, which means aURI already
+    // has port 443 as its mDefaultPort. So, our clone won't behave any
+    // differently from aURI. So it won't be useful for our caller. Bail.
+    return nullptr;
+  }
+  MOZ_ASSERT(port == kDefaultPortForHTTPS,
+             "How did we end up with a port other than the one we just set...?");
+
+  // The port hardcoding *did* make a difference! This means aURI has a bogus
+  // default port (it's not 443, despite the fact that aURI is https). Return
+  // our clone that has a hardcoded URI, so the caller can use it instead of aURI.
+  return cloneWithHardcodedPort.forget();
+}
+
 void
 nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
                            bool aWatch, bool aReferenceImage)
@@ -87,7 +142,24 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   }
 
   bool isEqualExceptRef;
-  rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
+  nsIURI* docURI = doc->GetDocumentURI();
+  rv = aURI->EqualsExceptRef(docURI, &isEqualExceptRef);
+
+  // BEGIN HACKAROUND FOR BUG 1247733
+  if (NS_SUCCEEDED(rv) && !isEqualExceptRef) {
+    // We think the URIs don't match, but it might just be because bug 1247733
+    // gave us the wrong mDefaultPort in our document URI (if it's HTTPS due
+    // to an HSTS upgrade). So: if we're HTTPS and we're using the default
+    // port, then assume that we maybe have the wrong default port, and try
+    // the comparison again, using a hardcoded port.
+    nsCOMPtr<nsIURI> clonedDocURI = CloneSecureURIWithHardcodedPort(docURI);
+    if (clonedDocURI) {
+      // Try the comparison again.
+      rv = aURI->EqualsExceptRef(clonedDocURI, &isEqualExceptRef);
+    }
+  }
+  // END HACKAROUND FOR BUG 1247733
+
   if (NS_FAILED(rv) || !isEqualExceptRef) {
     RefPtr<nsIDocument::ExternalResourceLoad> load;
     doc = doc->RequestExternalResource(aURI, aFromContent,
