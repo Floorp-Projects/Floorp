@@ -118,7 +118,7 @@ TestWriteInvalidateRead() {
   nsresult rv;
   const char* buf = "BeardBook competitive analysis";
   const char* id = "id";
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   uint32_t len;
   nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
@@ -130,7 +130,6 @@ TestWriteInvalidateRead() {
   sc->InvalidateCache();
 
   rv = sc->GetBuffer(id, &outbuf, &len);
-  delete[] outbuf;
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     passed("buffer not available after invalidate");
   } else if (NS_SUCCEEDED(rv)) {
@@ -206,16 +205,16 @@ TestWriteObject() {
     return rv;
   }
     
-  nsAutoArrayPtr<char> buf2;
+  UniquePtr<char[]> buf2;
   uint32_t len2;
   nsCOMPtr<nsIObjectInputStream> objectInput;
-  rv = sc->GetBuffer(id, getter_Transfers(buf2), &len2);
+  rv = sc->GetBuffer(id, &buf2, &len2);
   if (NS_FAILED(rv)) {
     fail("failed to retrieve buffer");
     return rv;
   }
 
-  rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf2.forget()), len2,
+  rv = NewObjectInputStreamFromBuffer(Move(buf2), len2,
                                       getter_AddRefs(objectInput));
   if (NS_FAILED(rv)) {
     fail("failed to created input stream");
@@ -309,7 +308,7 @@ TestIgnoreDiskCache(nsIFile* profileDir) {
   
   const char* buf = "Get a Beardbook app for your smartphone";
   const char* id = "id";
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   uint32_t len;
   
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
@@ -328,8 +327,6 @@ TestIgnoreDiskCache(nsIFile* profileDir) {
 
   nsresult r = LockCacheFile(false, profileDir);
   NS_ENSURE_SUCCESS(r, r);
-
-  delete[] outbuf;
 
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     passed("buffer not available after ignoring disk cache");
@@ -355,7 +352,7 @@ TestEarlyShutdown() {
   const char* buf = "Find your soul beardmate on BeardBook";
   const char* id = "id";
   uint32_t len;
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   
   sc->ResetStartupWriteTimer();
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
@@ -368,7 +365,6 @@ TestEarlyShutdown() {
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = sc->GetBuffer(id, &outbuf, &len);
-  delete[] outbuf;
 
   if (NS_SUCCEEDED(rv)) {
     passed("GetBuffer succeeded after early shutdown");
