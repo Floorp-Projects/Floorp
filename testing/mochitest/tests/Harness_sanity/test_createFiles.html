@@ -11,14 +11,16 @@
   <script type="text/javascript">
     // Creating one file, followed by failing to create a file.
     function test1() {
+      const fileType = "some file type";
       let fdata = "this is same data for a file";
-      SpecialPowers.createFiles([{name: "test1.txt", data:fdata}],
+      SpecialPowers.createFiles([{name: "test1.txt", data:fdata, options:{type:fileType}}],
         function (files) {
           is(files.length, 1, "Created 1 file");
           let f = files[0];
           is("[object File]", f.toString(), "first thing in array is a file");
           is(f.size, fdata.length, "test1 size of first file should be length of its data");
           is("test1.txt", f.name, "test1 test file should have the right name");
+          is(f.type, fileType, "File should have the specified type");
           test2();
         },
         function (msg) { ok(false, "Should be able to create a file without an error"); test2(); }
