@@ -405,9 +405,8 @@ protected:
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) override;
 
-  virtual void
-  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-          bool aRunResult) override;
+  // We just delegate PostRun to WorkerRunnable, since it does exactly
+  // what we want.
 };
 
 // Base class for the runnable objects, which makes a synchronous call to
