@@ -271,7 +271,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
             outStream.write(request.data, request.data.length);
             outStream.close();
           }
-          filePaths.push(new File(testFile.path));
+          filePaths.push(new File(testFile.path, request.options));
           createdFiles.push(testFile);
         });
         aMessage.target
