@@ -233,9 +233,25 @@ task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndReso
     from("${topobjdir}/mobile/android/base/generated/preprocessed")
 }
 
+// The localization system uses the moz.build preprocessor to interpolate a .dtd
+// file of XML entity definitions into an XML file of elements referencing those
+// entities.  (Each locale produces its own .dtd file, backstopped by the en-US
+// .dtd file in tree.)  Android Studio (and IntelliJ) don't handle these inline
+// entities smoothly.  This filter merely expands the entities in place, making
+// them appear properly throughout the IDE.
+class ExpandXMLEntitiesFilter extends FilterReader {
+    ExpandXMLEntitiesFilter(Reader input) {
+        // Extremely inefficient, but whatever.
+        super(new StringReader(groovy.xml.XmlUtil.serialize(new XmlParser(false, false, true).parse(input))))
+    }
+}
+
 task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
     into("${project.buildDir}/generated/source/preprocessed_resources")
     from("${topobjdir}/mobile/android/base/res")
+    filesMatching('**/strings.xml') {
+        filter(ExpandXMLEntitiesFilter)
+    }
 }
 
 // The omnijar inputs are listed as resource directory inputs to a dummy JAR.
