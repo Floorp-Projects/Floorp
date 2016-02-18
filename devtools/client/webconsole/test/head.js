@@ -38,7 +38,7 @@ const GROUP_INDENT = 12;
 
 const WEBCONSOLE_STRINGS_URI = "chrome://devtools/locale/" +
                                "webconsole.properties";
-var WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
+var WCUL10n = new WebConsoleUtils.L10n(WEBCONSOLE_STRINGS_URI);
 
 DevToolsUtils.testing = true;
 

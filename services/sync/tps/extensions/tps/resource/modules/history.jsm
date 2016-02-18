@@ -189,9 +189,16 @@ var HistoryEntry = {
       PlacesUtils.history.removePagesFromHost(item.host, false);
     }
     else if ("begin" in item && "end" in item) {
-      PlacesUtils.history.removeVisitsByTimeframe(
-          usSinceEpoch + (item.begin * 60 * 60 * 1000 * 1000),
-          usSinceEpoch + (item.end * 60 * 60 * 1000 * 1000));
+      let cb = Async.makeSpinningCallback();
+      let msSinceEpoch = parseInt(usSinceEpoch / 1000);
+      let filter = {
+        beginDate: new Date(msSinceEpoch + (item.begin * 60 * 60 * 1000)),
+        endDate: new Date(msSinceEpoch + (item.end * 60 * 60 * 1000))
+      };
+      PlacesUtils.history.removeVisitsByFilter(filter)
+      .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex))
+      .then(result => {cb(null, result)}, err => {cb(err)});
+      Async.waitForSyncCallback(cb);
     }
     else {
       Logger.AssertTrue(false, "invalid entry in delete history");

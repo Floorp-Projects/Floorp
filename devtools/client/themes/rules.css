@@ -17,15 +17,17 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
   width: 100%;
+  /* Bug 1243598 - Reduce the container height by the tab height to make room
+     for the tabs above. */
+  height: calc(100% - 24px);
+  position: absolute;
 }
 
 #ruleview-container {
   -moz-user-select: text;
   overflow: auto;
   flex: auto;
-  height: 0px;
 }
 
 #ruleview-container.non-interactive {

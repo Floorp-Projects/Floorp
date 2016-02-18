@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Services = require("Services")
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -17,11 +16,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
  *        The container element for the tree widget.
  * @param {Object} options
  *        - emptyText {string}: text to display when no entries in the table.
- *        - defaultType {string}: The default type of the tree items. For ex. 'js'
+ *        - defaultType {string}: The default type of the tree items. For ex.
+ *        'js'
  *        - sorted {boolean}: Defaults to true. If true, tree items are kept in
  *        lexical order. If false, items will be kept in insertion order.
  */
-function TreeWidget(node, options={}) {
+function TreeWidget(node, options = {}) {
   EventEmitter.decorate(this);
 
   this.document = node.ownerDocument;
@@ -43,7 +43,7 @@ function TreeWidget(node, options={}) {
   }
   // A map to hold all the passed attachment to each leaf in the tree.
   this.attachments = new Map();
-};
+}
 
 TreeWidget.prototype = {
 
@@ -220,7 +220,8 @@ TreeWidget.prototype = {
 
   /**
    * Adds an item in the tree. The item can be added as a child to any node in
-   * the tree. The method will also create any subnode not present in the process.
+   * the tree. The method will also create any subnode not present in the
+   * process.
    *
    * @param {[string|object]} items
    *        An array of either string or objects where each increasing index
@@ -266,7 +267,7 @@ TreeWidget.prototype = {
    *        The array of ids leading up to the item.
    */
   remove: function(item) {
-    this.root.remove(item)
+    this.root.remove(item);
     this.attachments.delete(JSON.stringify(item));
     // Display the empty tree text
     if (this.root.items.size == 0 && this.emptyText) {
@@ -337,7 +338,7 @@ TreeWidget.prototype = {
    */
   onKeypress: function(event) {
     let currentSelected = this._selectedLabel;
-    switch(event.keyCode) {
+    switch (event.keyCode) {
       case event.DOM_VK_UP:
         this.selectPreviousItem();
         break;
@@ -404,7 +405,7 @@ module.exports.TreeWidget = TreeWidget;
  *        The type of the current node. For ex. "js"
  */
 function TreeItem(document, parent, label, type) {
-  this.document = document
+  this.document = document;
   this.node = this.document.createElementNS(HTML_NS, "li");
   this.node.setAttribute("tabindex", "0");
   this.isRoot = !parent;
@@ -412,7 +413,7 @@ function TreeItem(document, parent, label, type) {
   if (this.parent) {
     this.level = this.parent.level + 1;
   }
-  if (!!label) {
+  if (label) {
     this.label = this.document.createElementNS(HTML_NS, "div");
     this.label.setAttribute("empty", "true");
     this.label.setAttribute("level", this.level);
@@ -421,7 +422,7 @@ function TreeItem(document, parent, label, type) {
       this.label.setAttribute("type", type);
     }
     if (typeof label == "string") {
-      this.label.textContent = label
+      this.label.textContent = label;
     } else {
       this.label.appendChild(label);
     }
@@ -454,8 +455,8 @@ TreeItem.prototype = {
   level: 0,
 
   /**
-   * Adds the item to the sub tree contained by this node. The item to be inserted
-   * can be a direct child of this node, or further down the tree.
+   * Adds the item to the sub tree contained by this node. The item to be
+   * inserted can be a direct child of this node, or further down the tree.
    *
    * @param {array} items
    *        Same as TreeWidget.add method's argument
@@ -473,16 +474,18 @@ TreeItem.prototype = {
     // Get the id and label corresponding to this level inside the tree.
     let id = items[this.level].id || items[this.level];
     if (this.items.has(id)) {
-      // An item with same id already exists, thus calling the add method of that
-      // child to add the passed node at correct position.
+      // An item with same id already exists, thus calling the add method of
+      // that child to add the passed node at correct position.
       this.items.get(id).add(items, defaultType, sorted);
       return;
     }
     // No item with the id `id` exists, so we create one and call the add
     // method of that item.
-    // The display string of the item can be the label, the id, or the item itself
-    // if its a plain string.
-    let label = items[this.level].label || items[this.level].id || items[this.level];
+    // The display string of the item can be the label, the id, or the item
+    // itself if its a plain string.
+    let label = items[this.level].label ||
+                items[this.level].id ||
+                items[this.level];
     let node = items[this.level].node;
     if (node) {
       // The item is supposed to be a DOMNode, so we fetch the textContent in

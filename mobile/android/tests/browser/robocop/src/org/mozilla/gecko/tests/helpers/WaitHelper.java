@@ -8,6 +8,8 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import android.os.SystemClock;
+
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 import org.mozilla.gecko.Actions;
@@ -68,6 +70,36 @@ public final class WaitHelper {
     public static void waitFor(String message, final Condition condition, final int waitMillis) {
         message = "Waiting for " + message + " with timeout " + waitMillis + ".";
         fAssertTrue(message, sSolo.waitForCondition(condition, waitMillis));
+    }
+
+    /**
+     * Waits for the given Callable to return something that is not null, using the given wait
+     * duration; will throw an AssertionError if the duration is elapsed and the callable has not
+     * returned a non-null object.
+     *
+     * @return the value returned by the Callable. Or null if the duration has elapsed.
+     */
+    public static <V> V waitFor(String message, final Callable<V> callable, int waitMillis) {
+        sContext.dumpLog("WaitHelper", "Waiting for " + message + " with timeout " + waitMillis + ".");
+
+        final Object[] value = new Object[1];
+
+        Condition condition = new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                try {
+                    V result = callable.call();
+                    value[0] = result;
+                    return result != null;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        };
+
+        sSolo.waitForCondition(condition, waitMillis);
+
+        return (V) value[0];
     }
 
     /**

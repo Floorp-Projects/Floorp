@@ -118,11 +118,29 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       onCreated: new EventManager(context, "tabs.onCreated", fire => {
         let listener = event => {
+          if (event.detail.adoptedTab) {
+            // This tab is being created to adopt a tab from another window. We
+            // map this event to an onAttached, rather than onCreated, event.
+            return;
+          }
+
+          // We need to delay sending this event until the next tick, since the
+          // tab does not have its final index when the TabOpen event is dispatched.
           let tab = event.originalTarget;
-          fire(TabManager.convert(extension, tab));
+          Promise.resolve().then(() => {
+            fire(TabManager.convert(extension, tab));
+          });
         };
 
         let windowListener = window => {
+          if (window.arguments[0] instanceof window.XULElement) {
+            // If the first window argument is a XUL element, it means the
+            // window is about to adopt a tab from another window to replace its
+            // initial tab, which means we need to skip the onCreated event, and
+            // fire an onAttached event instead.
+            return;
+          }
+
           for (let tab of window.gBrowser.tabs) {
             fire(TabManager.convert(extension, tab));
           }
@@ -133,6 +151,145 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         return () => {
           WindowListManager.removeOpenListener(windowListener);
           AllWindowEvents.removeListener("TabOpen", listener);
+        };
+      }).api(),
+
+      onAttached: new EventManager(context, "tabs.onAttached", fire => {
+        let fireForTab = tab => {
+          let newWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
+          fire(TabManager.getId(tab), {newWindowId, newPosition: tab._tPos});
+        };
+
+        let listener = event => {
+          if (event.detail.adoptedTab) {
+            // We need to delay sending this event until the next tick, since the
+            // tab does not have its final index when the TabOpen event is dispatched.
+            Promise.resolve().then(() => {
+              fireForTab(event.originalTarget);
+            });
+          }
+        };
+
+        let windowListener = window => {
+          if (window.arguments[0] instanceof window.XULElement) {
+            // If the first window argument is a XUL element, it means the
+            // window is about to adopt a tab from another window to replace its
+            // initial tab.
+            //
+            // Note that this event handler depends on running before the
+            // delayed startup code in browser.js, which is currently triggered
+            // by the first MozAfterPaint event. That code handles finally
+            // adopting the tab, and clears it from the arguments list in the
+            // process, so if we run later than it, we're too late.
+            let tab = window.arguments[0];
+
+            // We need to be sure to fire this event after the onDetached event
+            // for the original tab.
+            tab.addEventListener("TabClose", function listener(event) {
+              tab.removeEventListener("TabClose", listener);
+              Promise.resolve().then(() => {
+                fireForTab(event.detail.adoptedBy);
+              });
+            });
+          }
+        };
+
+        WindowListManager.addOpenListener(windowListener);
+        AllWindowEvents.addListener("TabOpen", listener);
+        return () => {
+          WindowListManager.removeOpenListener(windowListener);
+          AllWindowEvents.removeListener("TabOpen", listener);
+        };
+      }).api(),
+
+      onDetached: new EventManager(context, "tabs.onDetached", fire => {
+        let listener = event => {
+          if (event.detail.adoptedBy) {
+            let tab = event.originalTarget;
+            let oldWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
+            fire(TabManager.getId(tab), {oldWindowId, oldPosition: tab._tPos});
+          }
+        };
+
+        AllWindowEvents.addListener("TabClose", listener);
+        return () => {
+          AllWindowEvents.removeListener("TabClose", listener);
+        };
+      }).api(),
+
+      onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
+        let fireForTab = (tab, isWindowClosing) => {
+          let tabId = TabManager.getId(tab);
+          let windowId = WindowManager.getId(tab.ownerDocument.defaultView);
+
+          fire(tabId, {windowId, isWindowClosing});
+        };
+
+        let tabListener = event => {
+          // Only fire if this tab is not being moved to another window. If it
+          // is being adopted by another window, we fire an onDetached, rather
+          // than an onRemoved, event.
+          if (!event.detail.adoptedBy) {
+            fireForTab(event.originalTarget, false);
+          }
+        };
+
+        let windowListener = window => {
+          for (let tab of window.gBrowser.tabs) {
+            fireForTab(tab, true);
+          }
+        };
+
+        WindowListManager.addCloseListener(windowListener);
+        AllWindowEvents.addListener("TabClose", tabListener);
+        return () => {
+          WindowListManager.removeCloseListener(windowListener);
+          AllWindowEvents.removeListener("TabClose", tabListener);
+        };
+      }).api(),
+
+      onReplaced: ignoreEvent(context, "tabs.onReplaced"),
+
+      onMoved: new EventManager(context, "tabs.onMoved", fire => {
+        // There are certain circumstances where we need to ignore a move event.
+        //
+        // Namely, the first time the tab is moved after it's created, we need
+        // to report the final position as the initial position in the tab's
+        // onAttached or onCreated event. This is because most tabs are inserted
+        // in a temporary location and then moved after the TabOpen event fires,
+        // which generates a TabOpen event followed by a TabMove event, which
+        // does not match the contract of our API.
+        let ignoreNextMove = new WeakSet();
+
+        let openListener = event => {
+          ignoreNextMove.add(event.target);
+          // Remove the tab from the set on the next tick, since it will already
+          // have been moved by then.
+          Promise.resolve().then(() => {
+            ignoreNextMove.delete(event.target);
+          });
+        };
+
+        let moveListener = event => {
+          let tab = event.originalTarget;
+
+          if (ignoreNextMove.has(tab)) {
+            ignoreNextMove.delete(tab);
+            return;
+          }
+
+          fire(TabManager.getId(tab), {
+            windowId: WindowManager.getId(tab.ownerDocument.defaultView),
+            fromIndex: event.detail,
+            toIndex: tab._tPos,
+          });
+        };
+
+        AllWindowEvents.addListener("TabMove", moveListener);
+        AllWindowEvents.addListener("TabOpen", openListener);
+        return () => {
+          AllWindowEvents.removeListener("TabMove", moveListener);
+          AllWindowEvents.removeListener("TabOpen", openListener);
         };
       }).api(),
 
@@ -236,34 +393,6 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           AllWindowEvents.removeListener("TabAttrModified", listener);
           AllWindowEvents.removeListener("TabPinned", listener);
           AllWindowEvents.removeListener("TabUnpinned", listener);
-        };
-      }).api(),
-
-      onReplaced: ignoreEvent(context, "tabs.onReplaced"),
-
-      onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
-        let tabListener = event => {
-          let tab = event.originalTarget;
-          let tabId = TabManager.getId(tab);
-          let windowId = WindowManager.getId(tab.ownerDocument.defaultView);
-          let removeInfo = {windowId, isWindowClosing: false};
-          fire(tabId, removeInfo);
-        };
-
-        let windowListener = window => {
-          for (let tab of window.gBrowser.tabs) {
-            let tabId = TabManager.getId(tab);
-            let windowId = WindowManager.getId(window);
-            let removeInfo = {windowId, isWindowClosing: true};
-            fire(tabId, removeInfo);
-          }
-        };
-
-        WindowListManager.addCloseListener(windowListener);
-        AllWindowEvents.addListener("TabClose", tabListener);
-        return () => {
-          WindowListManager.removeCloseListener(windowListener);
-          AllWindowEvents.removeListener("TabClose", tabListener);
         };
       }).api(),
 
@@ -645,6 +774,25 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
 
         return Promise.resolve(tabsMoved.map(tab => TabManager.convert(extension, tab)));
+      },
+
+      duplicate: function(tabId) {
+        let tab = TabManager.getTab(tabId);
+        if (!tab) {
+          return Promise.reject({message: `Invalid tab ID: ${tabId}`});
+        }
+
+        let gBrowser = tab.ownerDocument.defaultView.gBrowser;
+        let newTab = gBrowser.duplicateTab(tab);
+        gBrowser.moveTabTo(newTab, tab._tPos + 1);
+        gBrowser.selectTabAtIndex(newTab._tPos);
+
+        return new Promise(resolve => {
+          newTab.addEventListener("SSTabRestored", function listener() {
+            newTab.removeEventListener("SSTabRestored", listener);
+            return resolve(TabManager.convert(extension, newTab));
+          });
+        });
       },
     },
   };

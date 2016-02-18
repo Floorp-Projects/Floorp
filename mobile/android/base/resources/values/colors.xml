@@ -110,9 +110,6 @@
   <color name="textbox_stroke">#000</color>
   <color name="textbox_stroke_disabled">#666</color>
 
-  <color name="url_bar_urltext">#A6A6A6</color>
-  <color name="url_bar_domaintext">#000</color>
-  <color name="url_bar_domaintext_private">#FFF</color>
   <color name="url_bar_blockedtext">#b14646</color>
   <color name="url_bar_shadow">#12000000</color>
 

@@ -33,7 +33,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
-var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -597,7 +597,7 @@ WebConsoleFrame.prototype = {
    * We need this because it makes the layout a lot faster than
    * using -moz-box-flex and 100% width.  See Bug 1237368.
    */
-  resize: function(e) {
+  resize: function() {
     this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
   },
 
@@ -606,7 +606,7 @@ WebConsoleFrame.prototype = {
    * selected or when there is a split console present.
    * @private
    */
-  _onPanelSelected: function(evt, id) {
+  _onPanelSelected: function() {
     this.jsterm.inputNode.focus();
   },
 
@@ -711,7 +711,7 @@ WebConsoleFrame.prototype = {
     let categories = this.document
                      .querySelectorAll(".webconsole-filter-button[category]");
     Array.forEach(categories, function(button) {
-      button.addEventListener("contextmenu", (event) => {
+      button.addEventListener("contextmenu", () => {
         button.open = true;
       }, false);
       button.addEventListener("click", this._toggleFilter, false);
@@ -1024,7 +1024,7 @@ WebConsoleFrame.prototype = {
     // "filtered-by-type" class, which turns on or off the display.
 
     let attribute = WORKERTYPES_PREFKEYS.indexOf(prefKey) == -1
-                      ? 'filter' : 'workerType';
+                      ? "filter" : "workerType";
 
     let xpath = ".//*[contains(@class, 'message') and " +
       "@" + attribute + "='" + prefKey + "']";
@@ -1107,22 +1107,19 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Merge the attributes of the two nodes that are about to be filtered.
-   * Increment the number of repeats of original.
+   * Merge the attributes of repeated nodes.
    *
    * @param nsIDOMNode original
    *        The Original Node. The one being merged into.
-   * @param nsIDOMNode filtered
-   *        The node being filtered out because it is repeated.
    */
-  mergeFilteredMessageNode: function(original, filtered) {
+  mergeFilteredMessageNode: function(original) {
     let repeatNode = original.getElementsByClassName("message-repeats")[0];
     if (!repeatNode) {
       // no repeat node, return early.
       return;
     }
 
-    let occurrences = parseInt(repeatNode.getAttribute("value")) + 1;
+    let occurrences = parseInt(repeatNode.getAttribute("value"), 10) + 1;
     repeatNode.setAttribute("value", occurrences);
     repeatNode.textContent = occurrences;
     let str = l10n.getStr("messageRepeats.tooltip2");
@@ -1172,7 +1169,7 @@ WebConsoleFrame.prototype = {
     }
 
     if (dupeNode) {
-      this.mergeFilteredMessageNode(dupeNode, node);
+      this.mergeFilteredMessageNode(dupeNode);
       return dupeNode;
     }
 
@@ -1378,7 +1375,7 @@ WebConsoleFrame.prototype = {
     let workerTypeID = CONSOLE_WORKER_IDS.indexOf(message.workerType);
     if (workerTypeID != -1) {
       node.workerType = WORKERTYPES_PREFKEYS[workerTypeID];
-      node.setAttribute('workerType', WORKERTYPES_PREFKEYS[workerTypeID]);
+      node.setAttribute("workerType", WORKERTYPES_PREFKEYS[workerTypeID]);
     }
 
     return node;
@@ -1406,19 +1403,19 @@ WebConsoleFrame.prototype = {
   reportPageError: function(category, scriptError) {
     // Warnings and legacy strict errors become warnings; other types become
     // errors.
-    let severity = 'error';
+    let severity = "error";
     if (scriptError.warning || scriptError.strict) {
-      severity = 'warning';
+      severity = "warning";
     } else if (scriptError.info) {
-      severity = 'log';
+      severity = "log";
     }
 
     switch (category) {
       case CATEGORY_CSS:
-        category = 'css';
+        category = "css";
         break;
       case CATEGORY_SECURITY:
-        category = 'security';
+        category = "security";
         break;
       default:
         category = "js";
@@ -1837,7 +1834,7 @@ WebConsoleFrame.prototype = {
   _updateNetMessage: function(actorId) {
     let networkInfo = this.webConsoleClient.getNetworkRequest(actorId);
     if (!networkInfo || !networkInfo.node) {
-      return;
+      return false;
     }
 
     let messageNode = networkInfo.node;
@@ -1846,7 +1843,7 @@ WebConsoleFrame.prototype = {
     let hasResponseStart = updates.indexOf("responseStart") > -1;
     let request = networkInfo.request;
     let methodText = (networkInfo.isXHR) ?
-                     request.method + ' XHR' : request.method;
+                     request.method + " XHR" : request.method;
     let response = networkInfo.response;
     let updated = false;
 
@@ -2133,7 +2130,7 @@ WebConsoleFrame.prototype = {
    *         - visible: boolean that tells if the message is visible.
    */
   _outputMessageFromQueue: function(hudIdSupportsString, item) {
-    let [category, methodOrNode, args] = item;
+    let [, methodOrNode, args] = item;
 
     // The last object in the args array should be message
     // object or response packet received from the server.
@@ -2532,16 +2529,16 @@ WebConsoleFrame.prototype = {
 
     // Make the location clickable.
     let onClick = () => {
-      let target = locationNode.target;
-      if (target == "scratchpad" || isScratchpad) {
+      let nodeTarget = locationNode.target;
+      if (nodeTarget == "scratchpad" || isScratchpad) {
         this.owner.viewSourceInScratchpad(url, line);
         return;
       }
 
       let category = locationNode.parentNode.category;
-      if (target == "styleeditor" || category == CATEGORY_CSS) {
+      if (nodeTarget == "styleeditor" || category == CATEGORY_CSS) {
         this.owner.viewSourceInStyleEditor(fullURL, line);
-      } else if (target == "jsdebugger" ||
+      } else if (nodeTarget == "jsdebugger" ||
                  category == CATEGORY_JS || category == CATEGORY_WEBDEV) {
         this.owner.viewSourceInDebugger(fullURL, line);
       } else {
@@ -2686,8 +2683,8 @@ WebConsoleFrame.prototype = {
    *
    * @param object options
    *        - linkOnly:
-   *        An optional flag to copy only URL without timestamp and
-   *        other meta-information. Default is false.
+   *        An optional flag to copy only URL without other meta-information.
+   *        Default is false.
    *        - contextmenu:
    *        An optional flag to copy the last clicked item which brought
    *        up the context menu if nothing is selected. Default is false.
@@ -2707,7 +2704,6 @@ WebConsoleFrame.prototype = {
       // Ensure the selected item hasn't been filtered by type or string.
       if (!item.classList.contains("filtered-by-type") &&
           !item.classList.contains("filtered-by-string")) {
-        let timestampString = l10n.timestampString(item.timestamp);
         if (options.linkOnly) {
           strings.push(item.url);
         } else {
@@ -2839,14 +2835,14 @@ WebConsoleFrame.prototype = {
  */
 function simpleValueEvalMacro(item, currentString) {
   return VariablesView.simpleValueEvalMacro(item, currentString, "_self");
-};
+}
 
 /**
  * @see VariablesView.overrideValueEvalMacro
  */
 function overrideValueEvalMacro(item, currentString) {
   return VariablesView.overrideValueEvalMacro(item, currentString, "_self");
-};
+}
 
 /**
  * @see VariablesView.getterOrSetterEvalMacro
@@ -3210,7 +3206,7 @@ JSTerm.prototype = {
       if (callback) {
         callback(msg);
       }
-    }
+    };
 
     // attempt to execute the content of the inputNode
     executeString = executeString || this.getInputValue();
@@ -3384,7 +3380,7 @@ JSTerm.prototype = {
       let document = options.targetElement.ownerDocument;
       let iframe = document.createElementNS(XHTML_NS, "iframe");
 
-      iframe.addEventListener("load", function onIframeLoad(event) {
+      iframe.addEventListener("load", function onIframeLoad() {
         iframe.removeEventListener("load", onIframeLoad, true);
         iframe.style.visibility = "visible";
         deferred.resolve(iframe.contentWindow);
@@ -4387,8 +4383,8 @@ JSTerm.prototype = {
 
     let currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
-      let suffix = currentItem.label.substring(this.lastCompletion.
-                                               matchProp.length);
+      let suffix =
+        currentItem.label.substring(this.lastCompletion.matchProp.length);
       this.updateCompleteNode(suffix);
     } else {
       this.updateCompleteNode("");
@@ -4421,8 +4417,8 @@ JSTerm.prototype = {
 
     let currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
-      let suffix = currentItem.label.substring(this.lastCompletion.
-                                               matchProp.length);
+      let suffix =
+        currentItem.label.substring(this.lastCompletion.matchProp.length);
       let cursor = this.inputNode.selectionStart;
       let value = this.getInputValue();
       this.setInputValue(value.substr(0, cursor) +
@@ -4585,7 +4581,9 @@ var Utils = {
       let prefName = CATEGORY_CLASS_FRAGMENTS[category];
       logLimit = Services.prefs.getIntPref("devtools.hud.loglimit." + prefName);
       logLimit = Math.max(logLimit, 1);
-    } catch (e) { }
+    } catch (e) {
+      // Ignore any exceptions
+    }
 
     return logLimit;
   },

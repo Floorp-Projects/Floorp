@@ -51,6 +51,13 @@ add_task(function* () {
     equal(typeof node.moreChildrenAvailable, "boolean",
           "each node should indicate if there are more children available or not");
 
+    equal(typeof node.shortestPaths, "object",
+          "Should have shortest paths");
+    equal(typeof node.shortestPaths.nodes, "object",
+          "Should have shortest paths' nodes");
+    equal(typeof node.shortestPaths.edges, "object",
+          "Should have shortest paths' edges");
+
     if (node.children) {
       node.children.forEach(checkTree);
     }
