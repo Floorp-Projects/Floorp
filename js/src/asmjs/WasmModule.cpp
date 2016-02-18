@@ -231,14 +231,9 @@ StaticLinkData::clone(JSContext* cx, StaticLinkData* out) const
 size_t
 StaticLinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    size_t size = internalLinks.sizeOfExcludingThis(mallocSizeOf) +
-                  symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
-                  SizeOfVectorExcludingThis(funcPtrTables, mallocSizeOf);
-
-    for (const Uint32Vector& offsets : symbolicLinks)
-        size += offsets.sizeOfExcludingThis(mallocSizeOf);
-
-    return size;
+    return internalLinks.sizeOfExcludingThis(mallocSizeOf) +
+           symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcPtrTables, mallocSizeOf);
 }
 
 static size_t
