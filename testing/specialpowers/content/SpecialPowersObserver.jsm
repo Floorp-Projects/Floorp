@@ -251,7 +251,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       break;
     case "SpecialPowers.CreateFiles":
       let filePaths = new Array;
-      if (!this.createdFiles) {
+      if (!this._createdFiles) {
         this._createdFiles = new Array;
       }
       let createdFiles = this._createdFiles;
