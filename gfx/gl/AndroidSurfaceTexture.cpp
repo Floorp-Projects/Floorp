@@ -238,7 +238,7 @@ AndroidSurfaceTexture::UpdateTexImage()
 }
 
 void
-AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
+AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix) const
 {
   JNIEnv* const env = jni::GetEnvForThread();
 
