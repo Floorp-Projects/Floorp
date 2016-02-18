@@ -3647,9 +3647,9 @@ IonBuilder::inlineSimdAnyAllTrue(CallInfo& callInfo, bool IsAllTrue, JSNative na
 
     MUnaryInstruction* ins;
     if (IsAllTrue)
-        ins = MSimdAllTrue::New(alloc(), arg);
+        ins = MSimdAllTrue::New(alloc(), arg, MIRType_Boolean);
     else
-        ins = MSimdAnyTrue::New(alloc(), arg);
+        ins = MSimdAnyTrue::New(alloc(), arg, MIRType_Boolean);
 
     current->add(ins);
     current->push(ins);
