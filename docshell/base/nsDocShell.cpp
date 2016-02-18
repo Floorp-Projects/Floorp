@@ -5815,6 +5815,15 @@ nsDocShell::SetPosition(int32_t aX, int32_t aY)
 }
 
 NS_IMETHODIMP
+nsDocShell::SetPositionDesktopPix(int32_t aX, int32_t aY)
+{
+  // Added to nsIBaseWindow in bug 1247335;
+  // implement if a use-case is found.
+  NS_ASSERTION(false, "implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetPosition(int32_t* aX, int32_t* aY)
 {
   return GetPositionAndSize(aX, aY, nullptr, nullptr);

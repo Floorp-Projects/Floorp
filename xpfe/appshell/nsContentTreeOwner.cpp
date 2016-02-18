@@ -628,6 +628,12 @@ NS_IMETHODIMP nsContentTreeOwner::GetDevicePixelsPerDesktopPixel(double* aScale)
    return mXULWindow->GetDevicePixelsPerDesktopPixel(aScale);
 }
 
+NS_IMETHODIMP nsContentTreeOwner::SetPositionDesktopPix(int32_t aX, int32_t aY)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->SetPositionDesktopPix(aX, aY);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::SetPosition(int32_t aX, int32_t aY)
 {
    NS_ENSURE_STATE(mXULWindow);

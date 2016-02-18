@@ -615,6 +615,21 @@ nsXULWindow::GetScaleForDestinationPosition(int32_t aX, int32_t aY)
   return scale;
 }
 
+NS_IMETHODIMP nsXULWindow::SetPositionDesktopPix(int32_t aX, int32_t aY)
+{
+  nsresult rv = mWindow->Move(aX, aY);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  if (!mChromeLoaded) {
+    // If we're called before the chrome is loaded someone obviously wants this
+    // window at this position. We don't persist this one-time position.
+    mIgnoreXULPosition = true;
+    return NS_OK;
+  }
+  PersistentAttributesDirty(PAD_POSITION);
+  SavePersistentAttributes();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
 {
   // Don't reset the window's size mode here - platforms that don't want to move
