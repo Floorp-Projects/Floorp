@@ -908,8 +908,5 @@ def getAllTypes(descriptors, dictionaries, callbacks):
 def iteratorNativeType(descriptor):
     assert descriptor.interface.isIterable()
     iterableDecl = descriptor.interface.maplikeOrSetlikeOrIterable
-    if iterableDecl.isValueIterator():
-        iterClass = "OneTypeIterableIterator"
-    else:
-        iterClass = "TwoTypeIterableIterator"
-    return "mozilla::dom::%s<%s>" % (iterClass, descriptor.nativeType)
+    assert iterableDecl.isPairIterator()
+    return "mozilla::dom::IterableIterator<%s>" % descriptor.nativeType
