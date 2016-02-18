@@ -1,17 +1,18 @@
 This directory contains files used in gecko builds from FFmpeg
 (http://ffmpeg.org). The current files are from FFmpeg as of
-revision n2.9-dev-2841-g369b161.
+revision n3.0-1-g0aa2fbd
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8 and vp9 portion of the library, and only on x86
 based platforms. If this changes, configuration files will most likely
 need to be updated.
 
-AVX2 was disabled due to the use of yasm 1.1 on the build bots.
+AVX2 must be disabled on Linux due to the use of yasm 1.1 on the build bots.
 Once yasm is upgraded to 1.2 or later, AVX2 code could be re-enabled.
+Add --disable-avx2 to configure on those platforms.
 
 configuration files were generated as follow using the configure script:
-./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-asm --enable-yasm --disable-avx2
+./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-asm --enable-yasm
 
 config_darwin32.h:
 add to configure command: --disable-asm --disable-yasm --cc='clang -m32'

@@ -3481,7 +3481,9 @@ class MSimdBox
         const MSimdBox* box = ins->toSimdBox();
         if (box->simdType() != simdType())
             return false;
-        MOZ_ASSERT(box->initialHeap() == initialHeap());
+        MOZ_ASSERT(box->templateObject() == templateObject());
+        if (box->initialHeap() != initialHeap())
+            return false;
         return true;
     }
 
@@ -3489,6 +3491,7 @@ class MSimdBox
         return AliasSet::None();
     }
 
+    void printOpcode(GenericPrinter& out) const override;
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
@@ -3534,6 +3537,8 @@ class MSimdUnbox
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
+
+    void printOpcode(GenericPrinter& out) const override;
 };
 
 // Creates a new derived type object. At runtime, this is just a call

@@ -57,8 +57,9 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
                                     outEntryInput,
                                     false);
             } finally {
-              if (entryInput != outEntryInput)
+              if (entryInput != outEntryInput) {
                 outEntryInput.close();
+              }
             }
           }
         } finally {
@@ -100,8 +101,9 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
 function removeEntry(entry, entryInput) { return [null, null]; }
 
 function truncateEntry(entry, entryInput) {
-  if (entryInput.available() == 0)
+  if (entryInput.available() == 0) {
     throw "Truncating already-zero length entry will result in identical entry.";
+  }
 
   var content = Cc["@mozilla.org/io/string-input-stream;1"]
                   .createInstance(Ci.nsIStringInputStream);

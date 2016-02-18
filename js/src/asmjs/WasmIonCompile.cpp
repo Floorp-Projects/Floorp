@@ -145,6 +145,8 @@ class FunctionCompiler
                 return false;
         }
 
+        addInterruptCheck();
+
         return true;
     }
 
@@ -589,6 +591,9 @@ class FunctionCompiler
 
     void addInterruptCheck()
     {
+        if (mg_.args().useSignalHandlersForInterrupt)
+            return;
+
         if (inDeadCode())
             return;
 
@@ -2362,22 +2367,6 @@ EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, MDefinition** d
 }
 
 static bool
-EmitInterruptCheck(FunctionCompiler& f)
-{
-    f.addInterruptCheck();
-    return true;
-}
-
-static bool
-EmitInterruptCheckLoop(FunctionCompiler& f)
-{
-    if (!EmitInterruptCheck(f))
-        return false;
-    MDefinition* _;
-    return EmitExprStmt(f, &_);
-}
-
-static bool
 EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
 {
     size_t headId = f.nextId();
@@ -2393,6 +2382,8 @@ EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
     MBasicBlock* afterLoop;
     if (!f.branchAndStartLoopBody(condDef, &afterLoop))
         return false;
+
+    f.addInterruptCheck();
 
     MDefinition* _;
     if (!EmitExprStmt(f, &_))
@@ -2429,6 +2420,8 @@ EmitFor(FunctionCompiler& f, Expr expr, const LabelVector* maybeLabels)
     if (!f.branchAndStartLoopBody(condDef, &afterLoop))
         return false;
 
+    f.addInterruptCheck();
+
     MDefinition* _;
     if (!EmitExprStmt(f, &_))
         return false;
@@ -2453,6 +2446,8 @@ EmitDoWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
     MBasicBlock* loopEntry;
     if (!f.startPendingLoop(headId, &loopEntry))
         return false;
+
+    f.addInterruptCheck();
 
     MDefinition* _;
     if (!EmitExprStmt(f, &_))
@@ -2706,10 +2701,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::AtomicsFence:
         f.memoryBarrier(MembarFull);
         return true;
-      case Expr::InterruptCheckHead:
-        return EmitInterruptCheck(f);
-      case Expr::InterruptCheckLoop:
-        return EmitInterruptCheckLoop(f);
       // Common
       case Expr::GetLocal:
         return EmitGetLocal(f, type, def);
@@ -3021,7 +3012,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     CompileInfo compileInfo(func.numLocals());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS),
-                     task->args().useSignalHandlersForOOB);
+                     task->mg().args().useSignalHandlersForOOB);
 
     // Build MIR graph
     {
@@ -3030,17 +3021,17 @@ wasm::IonCompileFunction(IonCompileTask* task)
             return false;
 
         MDefinition* last = nullptr;
-        if (f.mg().isAsmJS()) {
-            while (!f.done()) {
-                if (!EmitExprStmt(f, &last))
+        if (uint32_t numExprs = f.readVarU32()) {
+            for (uint32_t i = 0; i < numExprs - 1; i++) {
+                if (!EmitExpr(f, ExprType::Void, &last))
                     return false;
             }
-        } else {
+
             if (!EmitExpr(f, f.sig().ret(), &last))
                 return false;
-            MOZ_ASSERT(f.done());
         }
 
+        MOZ_ASSERT(f.done());
         MOZ_ASSERT(IsVoid(f.sig().ret()) || f.inDeadCode() || last);
 
         if (IsVoid(f.sig().ret()))

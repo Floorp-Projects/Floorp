@@ -111,8 +111,9 @@ function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
   var treeRow = document.createElement("treerow");
   var treeCell = document.createElement("treecell");
   treeCell.setAttribute("label",label);
-  if (value)
+  if (value) {
     treeCell.setAttribute("display",value);
+  }
   treeRow.appendChild(treeCell);
   treeElem1.appendChild(treeRow);
   treeChild.appendChild(treeElem1);
@@ -157,8 +158,9 @@ function listener() {
 listener.prototype.QueryInterface =
   function(iid) {
     if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsICertVerificationListener))
-        return this;
+        iid.equals(Components.interfaces.nsICertVerificationListener)) {
+      return this;
+    }
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
@@ -172,11 +174,13 @@ function DisplayVerificationData(cert, result)
 {
   document.getElementById("verify_pending").setAttribute("hidden", "true");
 
-  if (!result || !cert)
+  if (!result || !cert) {
     return; // no results could be produced
+  }
 
-  if (!(cert instanceof Components.interfaces.nsIX509Cert))
+  if (!(cert instanceof Components.interfaces.nsIX509Cert)) {
     return;
+  }
 
   //  Verification and usage
   var verifystr = "";
@@ -184,8 +188,9 @@ function DisplayVerificationData(cert, result)
   var o2 = {};
   var o3 = {};
 
-  if (!(result instanceof Components.interfaces.nsICertVerificationResult))
+  if (!(result instanceof Components.interfaces.nsICertVerificationResult)) {
     return;
+  }
 
   result.getUsagesArrayResult(o1, o2, o3);
 

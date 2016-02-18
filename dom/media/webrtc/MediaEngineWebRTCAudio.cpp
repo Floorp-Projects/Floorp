@@ -220,7 +220,8 @@ uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
 nsresult
 MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                             const MediaEnginePrefs &aPrefs,
-                                            const nsString& aDeviceId)
+                                            const nsString& aDeviceId,
+                                            const nsACString& aOrigin)
 {
   AssertIsOnOwningThread();
   if (mState == kReleased) {
@@ -358,6 +359,8 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
 
   if (mState == kStarted) {
     MOZ_ASSERT(aID == mTrackID);
+    // Make sure we're associated with this stream
+    mAudioInput->StartRecording(aStream, mListener);
     return NS_OK;
   }
   mState = kStarted;
@@ -374,14 +377,16 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
   }
+
+  // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
+  mAudioInput->StartRecording(aStream, mListener);
+
   if (mVoEBase->StartSend(mChannel)) {
     return NS_ERROR_FAILURE;
   }
 
   // Attach external media processor, so this::Process will be called.
   mVoERender->RegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel, *this);
-
-  mAudioInput->StartRecording(aStream->Graph(), mListener);
 
   return NS_OK;
 }
@@ -401,6 +406,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
     aSource->EndTrack(aID);
 
     if (!mSources.IsEmpty()) {
+      mAudioInput->StopRecording(aSource);
       return NS_OK;
     }
     if (mState != kStarted) {
@@ -413,7 +419,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
     mState = kStopped;
   }
 
-  mAudioInput->StopRecording(aSource->Graph(), mListener);
+  mAudioInput->StopRecording(aSource);
 
   mVoERender->DeRegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel);
 
@@ -440,6 +446,7 @@ void
 MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
                                                     AudioDataValue* aBuffer,
                                                     size_t aFrames,
+                                                    TrackRate aRate,
                                                     uint32_t aChannels)
 {
 }
@@ -449,23 +456,29 @@ void
 MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
                                                    const AudioDataValue* aBuffer,
                                                    size_t aFrames,
+                                                   TrackRate aRate,
                                                    uint32_t aChannels)
 {
   // This will call Process() with data coming out of the AEC/NS/AGC/etc chain
   if (!mPacketizer ||
-      mPacketizer->PacketSize() != mSampleFrequency/100 ||
+      mPacketizer->PacketSize() != aRate/100u ||
       mPacketizer->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
-    mPacketizer = new AudioPacketizer<AudioDataValue, int16_t>(mSampleFrequency/100, aChannels);
-   }
+    mPacketizer = new AudioPacketizer<AudioDataValue, int16_t>(aRate/100, aChannels);
+  }
 
   mPacketizer->Input(aBuffer, static_cast<uint32_t>(aFrames));
 
   while (mPacketizer->PacketsAvailable()) {
     uint32_t samplesPerPacket = mPacketizer->PacketSize() *
                                 mPacketizer->Channels();
-    int16_t* packet = mPacketizer->Output();
-    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, mSampleFrequency, 0);
+    if (mInputBufferLen < samplesPerPacket) {
+      mInputBuffer = MakeUnique<int16_t[]>(samplesPerPacket);
+    }
+    int16_t *packet = mInputBuffer.get();
+    mPacketizer->Output(packet);
+
+    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
   }
 }
 

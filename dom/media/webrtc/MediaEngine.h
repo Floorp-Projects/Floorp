@@ -171,7 +171,8 @@ public:
   /* This call reserves but does not start the device. */
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs,
-                            const nsString& aDeviceId) = 0;
+                            const nsString& aDeviceId,
+                            const nsACString& aOrigin) = 0;
 
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,

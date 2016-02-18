@@ -1119,6 +1119,8 @@ struct Bool64x2 {
 
 PropertyName* SimdTypeToName(JSContext* cx, SimdType type);
 
+const char* SimdTypeToString(SimdType type);
+
 template<typename V>
 JSObject* CreateSimd(JSContext* cx, const typename V::Elem* data);
 

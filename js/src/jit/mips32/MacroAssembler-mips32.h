@@ -296,6 +296,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branch(code);
     }
 
+    void jump(wasm::JumpTarget target) {
+        ma_b(target);
+    }
+
     void negl(Register reg) {
         ma_negu(reg, reg);
     }
@@ -417,6 +421,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestNumber(Condition cond, Register tag, Label* label);
 
     void branchTestMagic(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestMagic(Condition cond, const ValueOperand& value, wasm::JumpTarget target);
     void branchTestMagic(Condition cond, Register tag, Label* label);
     void branchTestMagic(Condition cond, const Address& address, Label* label);
     void branchTestMagic(Condition cond, const BaseIndex& src, Label* label);

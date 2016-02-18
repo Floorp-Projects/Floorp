@@ -1634,7 +1634,7 @@ intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-    RootedArrayObject exports(cx, &args[1].toObject().as<ArrayObject>());
+    RootedObject exports(cx, &args[1].toObject());
     RootedObject namespace_(cx, ModuleObject::createNamespace(cx, module, exports));
     if (!namespace_)
         return false;

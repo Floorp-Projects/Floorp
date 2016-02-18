@@ -197,14 +197,14 @@ public:
    */
   virtual void NotifyOutputData(MediaStreamGraph* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
-                                uint32_t aChannels) = 0;
+                                TrackRate aRate, uint32_t aChannels) = 0;
   /**
    * Input data from a microphone (or other audio source.  This is not
    * guaranteed to be in any particular size chunks.
    */
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
-                               uint32_t aChannels) = 0;
+                               TrackRate aRate, uint32_t aChannels) = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
@@ -734,6 +734,16 @@ public:
   SourceMediaStream* AsSourceStream() override { return this; }
 
   // Media graph thread only
+
+  // Users of audio inputs go through the stream so it can track when the
+  // last stream referencing an input goes away, so it can close the cubeb
+  // input.  Also note: callable on any thread (though it bounces through
+  // MainThread to set the command if needed).
+  nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                          AudioDataListener *aListener);
+  // Note: also implied when Destroy() happens
+  void CloseAudioInput();
+
   void DestroyImpl() override;
 
   // Call these on any thread.
@@ -919,6 +929,12 @@ protected:
    */
   void NotifyDirectConsumers(TrackData *aTrack,
                              MediaSegment *aSegment);
+
+  // Only accessed on the MSG thread.  Used so to ask the MSGImpl to usecount
+  // users of a specific input.
+  // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
+  // copyable (opaque pointers)
+  RefPtr<AudioDataListener> mInputListener;
 
   // This must be acquired *before* MediaStreamGraphImpl's lock, if they are
   // held together.
@@ -1298,7 +1314,7 @@ public:
    * to notify any listeners (for echo cancellation).
    */
   void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels);
+                        TrackRate aRate, uint32_t aChannels);
 
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)

@@ -2,24 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/UniquePtr.h"
+#include "nsNSSCertHelper.h"
 
+#include <algorithm>
+
+#include "mozilla/UniquePtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
+#include "nsNSSASN1Object.h"
+#include "nsNSSCertificate.h"
+#include "nsNSSCertTrust.h"
+#include "nsNSSCertValidity.h"
+#include "nsNSSComponent.h"
+#include "nsServiceManagerUtils.h"
 #include "prerror.h"
 #include "prprf.h"
-
-#include "nsNSSCertHelper.h"
-#include "nsCOMPtr.h"
-#include "nsNSSCertificate.h"
+#include "ScopedNSSTypes.h"
 #include "secder.h"
-#include "nsComponentManagerUtils.h"
-#include "nsNSSCertValidity.h"
-#include "nsNSSASN1Object.h"
-#include "nsNSSComponent.h"
-#include "nsNSSCertTrust.h"
-#include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
-#include "nsServiceManagerUtils.h"
-#include <algorithm>
 
 using namespace mozilla;
  
@@ -754,14 +755,14 @@ ProcessExtKeyUsage(SECItem  *extData,
                    nsINSSComponent *nssComponent)
 {
   nsAutoString local;
-  CERTOidSequence *extKeyUsage = nullptr;
   SECItem **oids;
   SECItem *oid;
   nsresult rv;
-  
-  extKeyUsage = CERT_DecodeOidSequence(extData);
-  if (!extKeyUsage)
+
+  UniqueCERTOidSequence extKeyUsage(CERT_DecodeOidSequence(extData));
+  if (!extKeyUsage) {
     return NS_ERROR_FAILURE;
+  }
 
   oids = extKeyUsage->oids;
   while (oids && *oids) {
@@ -793,7 +794,6 @@ ProcessExtKeyUsage(SECItem  *extData,
     oids++;
   }
 
-  CERT_DestroyOidSequence(extKeyUsage);
   return NS_OK;
 }
 
@@ -803,7 +803,6 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
   nsresult rv;
   CERTAVA** avas;
   CERTAVA* ava;
-  SECItem *decodeItem = nullptr;
   nsString avavalue;
   nsString type;
   nsAutoString temp;
@@ -812,12 +811,13 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
   avas = rdn->avas;
   while ((ava = *avas++) != 0) {
     rv = GetOIDText(&ava->type, nssComponent, type);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       return rv;
-    
+    }
+
     //This function returns a string in UTF8 format.
-    decodeItem = CERT_DecodeAVAValue(&ava->value);
-    if(!decodeItem) {
+    UniqueSECItem decodeItem(CERT_DecodeAVAValue(&ava->value));
+    if (!decodeItem) {
       return NS_ERROR_FAILURE;
     }
 
@@ -832,13 +832,11 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
           (char*)decodeItem->data, 
           decodeItem->len);
     if (SECSuccess != status) {
-      SECITEM_FreeItem(decodeItem, true);
       return NS_ERROR_FAILURE;
     }
 
     avavalue = NS_ConvertUTF8toUTF16(escapedValue.get());
-    
-    SECITEM_FreeItem(decodeItem, true);
+
     params[0] = type.get();
     params[1] = avavalue.get();
     nssComponent->PIPBundleFormatStringFromName("AVATemplate",
@@ -905,53 +903,46 @@ ProcessIA5String(SECItem  *extData,
 }
 
 static nsresult
-AppendBMPtoUTF16(PLArenaPool *arena,
-		 unsigned char* data, unsigned int len,
-		 nsAString& text)
+AppendBMPtoUTF16(const UniquePLArenaPool& arena, unsigned char* data,
+                 unsigned int len, nsAString& text)
 {
-  unsigned int   utf8ValLen;
-  unsigned char *utf8Val;
-
-  if (len % 2 != 0)
+  if (len % 2 != 0) {
     return NS_ERROR_FAILURE;
+  }
 
   /* XXX instead of converting to and from UTF-8, it would
      be sufficient to just swap bytes, or do nothing */
-  utf8ValLen = len * 3 + 1;
-  utf8Val = (unsigned char*)PORT_ArenaZAlloc(arena, utf8ValLen);
-  if (!PORT_UCS2_UTF8Conversion(false, data, len,
-				utf8Val, utf8ValLen, &utf8ValLen))
+  unsigned int utf8ValLen = len * 3 + 1;
+  unsigned char* utf8Val = (unsigned char*)PORT_ArenaZAlloc(arena.get(),
+                                                            utf8ValLen);
+  if (!PORT_UCS2_UTF8Conversion(false, data, len, utf8Val, utf8ValLen,
+                                &utf8ValLen)) {
     return NS_ERROR_FAILURE;
+  }
   AppendUTF8toUTF16((char*)utf8Val, text);
   return NS_OK;
 }
 
 static nsresult
-ProcessBMPString(SECItem  *extData, 
-		 nsAString &text,
-		 nsINSSComponent *nssComponent)
+ProcessBMPString(SECItem* extData, nsAString& text)
 {
-  SECItem item;
-  PLArenaPool *arena;
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  if (SECSuccess == SEC_ASN1DecodeItem(arena, &item, 
-				       SEC_ASN1_GET(SEC_BMPStringTemplate),
-				       extData))
-    rv = AppendBMPtoUTF16(arena, item.data, item.len, text);
-  PORT_FreeArena(arena, false);
-  return rv;
+  SECItem item;
+  if (SEC_ASN1DecodeItem(arena.get(), &item, SEC_ASN1_GET(SEC_BMPStringTemplate),
+                         extData) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return AppendBMPtoUTF16(arena, item.data, item.len, text);
 }
 
 static nsresult
-ProcessGeneralName(PLArenaPool *arena,
-		   CERTGeneralName *current,
-		   nsAString &text,
-		   nsINSSComponent *nssComponent)
+ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
+                   nsAString& text, nsINSSComponent* nssComponent)
 {
   NS_ENSURE_ARG_POINTER(current);
 
@@ -969,7 +960,7 @@ ProcessGeneralName(PLArenaPool *arena,
 	   raw data. */
 	SECItem decoded;
 	nssComponent->GetPIPNSSBundleString("CertDumpMSNTPrincipal", key);
-	if (SEC_ASN1DecodeItem(arena, &decoded, 
+        if (SEC_ASN1DecodeItem(arena.get(), &decoded,
 			       SEC_ASN1_GET(SEC_UTF8StringTemplate), 
 			       &current->name.OthName.name) == SECSuccess) {
 	  AppendUTF8toUTF16(nsAutoCString((char*)decoded.data, decoded.len),
@@ -982,7 +973,7 @@ ProcessGeneralName(PLArenaPool *arena,
 	/* This should be a 16-byte GUID */
 	SECItem guid;
 	nssComponent->GetPIPNSSBundleString("CertDumpMSDomainGUID", key);
-	if (SEC_ASN1DecodeItem(arena, &guid,
+        if (SEC_ASN1DecodeItem(arena.get(), &guid,
 			       SEC_ASN1_GET(SEC_OctetStringTemplate),
 			       &current->name.OthName.name) == SECSuccess
 	    && guid.len == 16) {
@@ -998,8 +989,9 @@ ProcessGeneralName(PLArenaPool *arena,
 	}
     } else {
       rv = GetDefaultOIDFormat(&current->name.OthName.oid, nssComponent, key, ' ');
-      if (NS_FAILED(rv))
-	goto finish;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
     }
     break;
@@ -1020,8 +1012,9 @@ ProcessGeneralName(PLArenaPool *arena,
     nssComponent->GetPIPNSSBundleString("CertDumpDirectoryName", key);
     rv = ProcessName(&current->name.directoryName, nssComponent, 
 		     getter_Copies(value));
-    if (NS_FAILED(rv))
-      goto finish;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     break;
   case certEDIPartyName:
     nssComponent->GetPIPNSSBundleString("CertDumpEDIPartyName", key);
@@ -1058,58 +1051,50 @@ ProcessGeneralName(PLArenaPool *arena,
   case certRegisterID:
     nssComponent->GetPIPNSSBundleString("CertDumpRegisterID", key);
     rv = GetDefaultOIDFormat(&current->name.other, nssComponent, value, '.');
-    if (NS_FAILED(rv))
-      goto finish;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     break;
   }
   text.Append(key);
   text.AppendLiteral(": ");
   text.Append(value);
   text.AppendLiteral(SEPARATOR);
- finish:
-    return rv;
+
+  return rv;
 }
 
 static nsresult
-ProcessGeneralNames(PLArenaPool *arena,
-		    CERTGeneralName *nameList,
-		    nsAString &text,
-		    nsINSSComponent *nssComponent)
+ProcessGeneralNames(const UniquePLArenaPool& arena, CERTGeneralName* nameList,
+                    nsAString& text, nsINSSComponent* nssComponent)
 {
-  CERTGeneralName *current = nameList;
+  CERTGeneralName* current = nameList;
   nsresult rv;
 
   do {
     rv = ProcessGeneralName(arena, current, text, nssComponent);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       break;
+    }
     current = CERT_GetNextGeneralName(current);
   } while (current != nameList);
   return rv;
 }
 
 static nsresult
-ProcessAltName(SECItem  *extData, 
-	       nsAString &text,
-	       nsINSSComponent *nssComponent)
+ProcessAltName(SECItem* extData, nsAString& text, nsINSSComponent* nssComponent)
 {
-  nsresult rv = NS_OK;
-  PLArenaPool *arena;
-  CERTGeneralName *nameList;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
+  CERTGeneralName* nameList = CERT_DecodeAltNameExtension(arena.get(), extData);
+  if (!nameList) {
+    return NS_OK;
+  }
 
-  nameList = CERT_DecodeAltNameExtension(arena, extData);
-  if (!nameList)
-    goto finish;
-
-  rv = ProcessGeneralNames(arena, nameList, text, nssComponent);
-
- finish:
-  PORT_FreeArena(arena, false);
-  return rv;
+  return ProcessGeneralNames(arena, nameList, text, nssComponent);
 }
 
 static nsresult
@@ -1117,30 +1102,26 @@ ProcessSubjectKeyId(SECItem  *extData,
 		    nsAString &text,
 		    nsINSSComponent *nssComponent)
 {
-  PLArenaPool *arena;
-  nsresult rv = NS_OK;
   SECItem decoded;
   nsAutoString local;
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  if (SEC_QuickDERDecodeItem(arena, &decoded, 
+  if (SEC_QuickDERDecodeItem(arena.get(), &decoded,
 			     SEC_ASN1_GET(SEC_OctetStringTemplate), 
 			     extData) != SECSuccess) {
-    rv = NS_ERROR_FAILURE;
-    goto finish;
+    return NS_ERROR_FAILURE;
   }
-  
+
   nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
   text.Append(local);
   text.AppendLiteral(": ");
   ProcessRawBytes(nssComponent, &decoded, text);
 
- finish:
-  PORT_FreeArena(arena, false);
-  return rv;
+  return NS_OK;
 }
 
 static nsresult
@@ -1148,19 +1129,17 @@ ProcessAuthKeyId(SECItem  *extData,
 		 nsAString &text,
 		 nsINSSComponent *nssComponent)
 {
-  CERTAuthKeyID *ret;
-  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  ret = CERT_DecodeAuthKeyID (arena, extData);
+  CERTAuthKeyID* ret = CERT_DecodeAuthKeyID(arena.get(), extData);
   if (!ret) {
-    rv = NS_ERROR_FAILURE;
-    goto finish;
+    return NS_ERROR_FAILURE;
   }
 
   if (ret->keyID.len > 0) {
@@ -1176,8 +1155,9 @@ ProcessAuthKeyId(SECItem  *extData,
     text.Append(local);
     text.AppendLiteral(": ");
     rv = ProcessGeneralNames(arena, ret->authCertIssuer, text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   if (ret->authCertSerialNumber.len > 0) {
@@ -1187,28 +1167,22 @@ ProcessAuthKeyId(SECItem  *extData,
     ProcessRawBytes(nssComponent, &ret->authCertSerialNumber, text);
   }
 
- finish:
-  PORT_FreeArena(arena, false);
   return rv;
 }
 
 static nsresult
-ProcessUserNotice(SECItem *der_notice,
-		  nsAString &text,
-		  nsINSSComponent *nssComponent)
+ProcessUserNotice(SECItem* derNotice, nsAString& text,
+                  nsINSSComponent* nssComponent)
 {
-  CERTUserNotice *notice = nullptr;
-  SECItem **itemList;
-  PLArenaPool *arena;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  notice = CERT_DecodeUserNotice(der_notice);
+  UniqueCERTUserNotice notice(CERT_DecodeUserNotice(derNotice));
   if (!notice) {
-    ProcessRawBytes(nssComponent, der_notice, text);
-    goto finish;
+    ProcessRawBytes(nssComponent, derNotice, text);
+    return NS_OK;
   }
 
   if (notice->noticeReference.organization.len != 0) {
@@ -1228,7 +1202,7 @@ ProcessUserNotice(SECItem *der_notice,
       break;
     }
     text.AppendLiteral(" - ");
-    itemList = notice->noticeReference.noticeNumbers;
+    SECItem** itemList = notice->noticeReference.noticeNumbers;
     while (*itemList) {
       unsigned long number;
       char buffer[60];
@@ -1259,10 +1233,7 @@ ProcessUserNotice(SECItem *der_notice,
       break;
     }
   }
- finish:
-  if (notice)
-    CERT_DestroyUserNotice(notice);
-  PORT_FreeArena(arena, false);
+
   return NS_OK;
 }
 
@@ -1272,15 +1243,16 @@ ProcessCertificatePolicies(SECItem  *extData,
                            SECOidTag ev_oid_tag, // SEC_OID_UNKNOWN means: not EV
 			   nsINSSComponent *nssComponent)
 {
-  CERTCertificatePolicies *policies;
   CERTPolicyInfo **policyInfos, *policyInfo;
   CERTPolicyQualifier **policyQualifiers, *policyQualifier;
   nsAutoString local;
   nsresult rv = NS_OK;
 
-  policies = CERT_DecodeCertificatePoliciesExtension(extData);
-  if (!policies)
+  UniqueCERTCertificatePolicies policies(
+    CERT_DecodeCertificatePoliciesExtension(extData));
+  if (!policies) {
     return NS_ERROR_FAILURE;
+  }
 
   policyInfos = policies->policyInfos;
   while (*policyInfos) {
@@ -1330,8 +1302,9 @@ ProcessCertificatePolicies(SECItem  *extData,
 	     of the Qualifier choice. */
 	  rv = ProcessIA5String(&policyQualifier->qualifierValue,
 				text, nssComponent);
-	  if (NS_FAILED(rv))
-	    goto finish;
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
 	  break;
 	case SEC_OID_PKIX_USER_NOTICE_QUALIFIER:
 	  nssComponent->GetPIPNSSBundleString("CertDumpUserNotice", local);
@@ -1352,8 +1325,6 @@ ProcessCertificatePolicies(SECItem  *extData,
     text.AppendLiteral(SEPARATOR);
   }
 
- finish:
-  CERT_DestroyCertificatePoliciesExtension(policies);
   return rv;
 }
 
@@ -1362,76 +1333,82 @@ ProcessCrlDistPoints(SECItem  *extData,
 		     nsAString &text,
 		     nsINSSComponent *nssComponent)
 {
-  CERTCrlDistributionPoints *crldp;
-  CRLDistributionPoint **points, *point;
-  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
-  int reasons, comma;
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  crldp = CERT_DecodeCRLDistributionPoints(arena, extData);
-  if (!crldp || !crldp->distPoints) {
-    rv = NS_ERROR_FAILURE;
-    goto finish;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for(points = crldp->distPoints; *points; points++) {
-    point = *points;
+  CERTCrlDistributionPoints* crldp =
+    CERT_DecodeCRLDistributionPoints(arena.get(), extData);
+  if (!crldp || !crldp->distPoints) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (CRLDistributionPoint** points = crldp->distPoints; *points; points++) {
+    CRLDistributionPoint* point = *points;
     switch (point->distPointType) {
     case generalName:
       rv = ProcessGeneralName(arena, point->distPoint.fullName,
 			      text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       break;
     case relativeDistinguishedName:
       rv = ProcessRDN(&point->distPoint.relativeName, 
 		      text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       break;
     }
     if (point->reasons.len) { 
-      reasons = point->reasons.data[0];
+      int reasons = point->reasons.data[0];
       text.Append(' ');
-      comma = 0;
+      bool comma = false;
       if (reasons & RF_UNUSED) {
 	nssComponent->GetPIPNSSBundleString("CertDumpUnused", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_KEY_COMPROMISE) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpKeyCompromise", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_CA_COMPROMISE) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpCACompromise", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_AFFILIATION_CHANGED) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpAffiliationChanged", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_SUPERSEDED) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpSuperseded", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_CESSATION_OF_OPERATION) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpCessation", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       if (reasons & RF_CERTIFICATE_HOLD) {
 	if (comma) text.AppendLiteral(", ");
 	nssComponent->GetPIPNSSBundleString("CertDumpHold", local);
-	text.Append(local); comma = 1;
+        text.Append(local);
+        comma = true;
       }
       text.AppendLiteral(SEPARATOR);
     }
@@ -1441,13 +1418,12 @@ ProcessCrlDistPoints(SECItem  *extData,
       text.AppendLiteral(": ");
       rv = ProcessGeneralNames(arena, point->crlIssuer,
 			       text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
   }
-  
- finish:
-  PORT_FreeArena(arena, false);
+
   return NS_OK;
 }
 
@@ -1456,21 +1432,22 @@ ProcessAuthInfoAccess(SECItem  *extData,
 		      nsAString &text,
 		      nsINSSComponent *nssComponent)
 {
-  CERTAuthInfoAccess **aia, *desc;
-  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
 
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  aia = CERT_DecodeAuthInfoAccessExtension(arena, extData);
-  if (!aia)
-    goto finish;
+  CERTAuthInfoAccess** aia = CERT_DecodeAuthInfoAccessExtension(arena.get(),
+                                                                extData);
+  if (!aia) {
+    return NS_OK;
+  }
 
   while (*aia) {
-    desc = *aia++;
+    CERTAuthInfoAccess* desc = *aia++;
     switch (SECOID_FindOIDTag(&desc->method)) {
     case SEC_OID_PKIX_OCSP:
       nssComponent->GetPIPNSSBundleString("CertDumpOCSPResponder", local);
@@ -1480,18 +1457,18 @@ ProcessAuthInfoAccess(SECItem  *extData,
       break;
     default:
       rv = GetDefaultOIDFormat(&desc->method, nssComponent, local, '.');
-      if (NS_FAILED(rv))
-	goto finish;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
     text.Append(local);
     text.AppendLiteral(": ");
     rv = ProcessGeneralName(arena, desc->location, text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
- finish:
-  PORT_FreeArena(arena, false);
   return rv;
 }
 
@@ -1563,7 +1540,7 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
     break;
   default:
     if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
-      rv = ProcessBMPString(extData, text, nssComponent);
+      rv = ProcessBMPString(extData, text);
       break;
     }
     if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
@@ -1726,8 +1703,8 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
 
   text.Truncate();
- 
-  SECKEYPublicKey *key = SECKEY_ExtractPublicKey(spki);
+
+  UniqueSECKEYPublicKey key(SECKEY_ExtractPublicKey(spki));
   bool displayed = false;
   if (key) {
       switch (key->keyType) {
@@ -1772,7 +1749,6 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
          /* Algorithm unknown, or too rarely used to bother displaying it */
          break;
       }
-      SECKEY_DestroyPublicKey (key);
   }
   if (!displayed) {
       // Algorithm unknown, display raw bytes

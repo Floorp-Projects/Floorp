@@ -128,7 +128,8 @@ MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid)
 nsresult
 MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs,
-                                    const nsString& aDeviceId)
+                                    const nsString& aDeviceId,
+                                    const nsACString& aOrigin)
 {
   // windowId is not a proper constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
