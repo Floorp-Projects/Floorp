@@ -345,6 +345,10 @@ this.AppsUtils = {
     return "";
   },
 
+  areAnyAppsInstalled: function(aApps) {
+    return Object.getOwnPropertyNames(aApps).length > 0;
+  },
+
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath()");
     try {
