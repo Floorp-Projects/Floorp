@@ -54,6 +54,7 @@ flags:
     mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
     mochitest-gl: /mochitest-webgl.*/
     mochitest-push: /mochitest-push.*/
+    mochitest-vg: /mochitest-valgrind.*/
     reftest: /(plain-)?reftest.*/
     reftest-no-accel: /(plain-)?reftest-no-accel.*/
     reftests: /(plain-)?reftest.*/
@@ -143,6 +144,7 @@ flags:
     - mochitest-oop
     - mochitest-push
     - mochitest-webgl
+    - mochitest-valgrind
     - mozmill
     - reftest
     - reftest-e10s
