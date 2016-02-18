@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Firefox for Android
-===================
+Welcome to Firefox for Android's documentation!
+===============================================
 
 Contents:
 
@@ -15,7 +15,6 @@ Contents:
    uitelemetry
    adjust
    defaultdomains
-   bouncer
 
 Indices and tables
 ==================
