@@ -549,7 +549,7 @@ TabChild::Create(nsIContentChild* aManager,
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
-        aContext.IsBrowserOrApp()) {
+        aContext.IsMozBrowserOrApp()) {
 
         RefPtr<TabChild> child = sPreallocatedTab.get();
         sPreallocatedTab = nullptr;
@@ -865,11 +865,9 @@ TabChild::NotifyTabContextUpdated()
     if (docShell) {
         // nsDocShell will do the right thing if we pass NO_APP_ID or
         // UNKNOWN_APP_ID for aOwnOrContainingAppId.
-        if (IsBrowserElement()) {
+        if (IsMozBrowserElement()) {
           docShell->SetIsBrowserInsideApp(BrowserOwnerAppId());
-          // TODO: Wants to call TabContext::IsIsolatedMozBrowserElement() based
-          // on isolation in principal, which is added in a later patch.
-          docShell->SetIsInIsolatedMozBrowserElement(IsBrowserElement());
+          docShell->SetIsInIsolatedMozBrowserElement(IsIsolatedMozBrowserElement());
         } else {
           docShell->SetIsApp(OwnAppId());
         }
@@ -1506,7 +1504,7 @@ TabChild::ApplyShowInfo(const ShowInfo& aInfo)
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   if (docShell) {
     nsCOMPtr<nsIDocShellTreeItem> item = do_GetInterface(docShell);
-    if (IsBrowserOrApp()) {
+    if (IsMozBrowserOrApp()) {
       // B2G allows window.name to be set by changing the name attribute on the
       // <iframe mozbrowser> element. window.open calls cause this attribute to
       // be set to the correct value. A normal <xul:browser> element has no such
@@ -1543,7 +1541,7 @@ TabChild::MaybeRequestPreinitCamera()
 {
     // Check if this tab is an app (not a browser frame) and will use the
     // `camera` permission,
-    if (IsBrowserElement()) {
+    if (IsIsolatedMozBrowserElement()) {
       return;
     }
 
@@ -2528,7 +2526,7 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     mTriedBrowserInit = true;
     // Initialize the child side of the browser element machinery,
     // if appropriate.
-    if (IsBrowserOrApp()) {
+    if (IsMozBrowserOrApp()) {
       RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
     }
   }
