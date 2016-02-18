@@ -18,11 +18,11 @@ function is(a, b, msg) {
 }
 
 function ok(cond, msg) {
-  do_check_true(!!cond, Components.stack.caller); 
+  do_check_true(!!cond, Components.stack.caller);
 }
 
 function isnot(a, b, msg) {
-  do_check_neq(a, b, Components.stack.caller); 
+  do_check_neq(a, b, Components.stack.caller);
 }
 
 function executeSoon(fun) {
@@ -150,12 +150,12 @@ function compareKeys(k1, k2) {
     if (!(k2 instanceof Array) ||
         k1.length != k2.length)
       return false;
-    
+
     for (let i = 0; i < k1.length; ++i) {
       if (!compareKeys(k1[i], k2[i]))
         return false;
     }
-    
+
     return true;
   }
 
