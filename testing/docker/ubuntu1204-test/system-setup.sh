@@ -51,14 +51,6 @@ apt_packages+=('libdrm-radeon1:i386')
 apt_packages+=('libdrm2:i386')
 apt_packages+=('libexpat1:i386')
 apt_packages+=('libgconf2-dev')
-apt_packages+=('libgl1-mesa-dri')
-apt_packages+=('libgl1-mesa-dri:i386')
-apt_packages+=('libgl1-mesa-glx')
-apt_packages+=('libgl1-mesa-glx:i386')
-apt_packages+=('libglapi-mesa')
-apt_packages+=('libglapi-mesa:i386')
-apt_packages+=('libglu1-mesa')
-apt_packages+=('libglu1-mesa:i386')
 apt_packages+=('libgnome-bluetooth8')
 apt_packages+=('libgstreamer-plugins-base0.10-dev')
 apt_packages+=('libgstreamer0.10-dev')
@@ -85,7 +77,6 @@ apt_packages+=('llvm-2.9-dev')
 apt_packages+=('llvm-2.9-runtime')
 apt_packages+=('llvm-dev')
 apt_packages+=('llvm-runtime')
-apt_packages+=('mesa-common-dev')
 apt_packages+=('nano')
 apt_packages+=('pulseaudio')
 apt_packages+=('pulseaudio-module-X11')
@@ -173,9 +164,9 @@ peep install -r requirements.txt
 tooltool_fetch <<'EOF'
 [
 {
-    "size": 5676610, 
-    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b", 
-    "algorithm": "sha512", 
+    "size": 5676610,
+    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b",
+    "algorithm": "sha512",
     "filename": "node-v0.10.36-linux-x64.tar.gz"
 }
 ]
@@ -205,6 +196,23 @@ tooltool_fetch <<'EOF'
 EOF
 tar -zxf xcb-repo-*.tgz
 echo "deb file://$PWD/xcb precise all" >> /etc/apt/sources.list
+
+# Install a patched version of mesa, per bug 1227637.  Origin of the packages themselves is unknown, as
+# these binaries were copied from the apt repositories used by puppet.  Ask rail for more information.
+# NOTE: if you're re-creating this, the tarball contains an `update.sh` which will rebuild the repository.
+tooltool_fetch <<'EOF'
+[
+{
+    "size": 590643702, 
+    "visibility": "public", 
+    "digest": "f03b11987c218e57073d1b7eec6cc0a753d48f600df8dde0a35fa7c4d4d30b3891c9cbcaee38ade23f038e72951cb15f0dca3f7c76cbf5bad5526baf13e91929", 
+    "algorithm": "sha512", 
+    "filename": "mesa-repo-9.2.1-1ubuntu3~precise1mozilla2.tgz"
+}
+]
+EOF
+tar -zxf mesa-repo-*.tgz
+echo "deb file://$PWD/mesa precise all" >> /etc/apt/sources.list
 
 # Install Valgrind (trunk, late Jan 2016) and do some crude sanity
 # checks.  It has to go in /usr/local, otherwise it won't work.  Copy
@@ -242,11 +250,25 @@ apt-get -q -y --force-yes install \
 libxcb1_version=$(dpkg-query -s libxcb1 | grep ^Version | awk '{ print $2 }')
 [ "$libxcb1_version" = "1.8.1-2ubuntu2.1mozilla1" ] || exit 1
 
+apt-get -q -y --force-yes install \
+    libgl1-mesa-dev-lts-saucy:i386 \
+    libgl1-mesa-dri-lts-saucy \
+    libgl1-mesa-dri-lts-saucy:i386 \
+    libgl1-mesa-glx-lts-saucy \
+    libgl1-mesa-glx-lts-saucy:i386 \
+    libglapi-mesa-lts-saucy \
+    libglapi-mesa-lts-saucy:i386 \
+    libxatracker1-lts-saucy \
+    mesa-common-dev-lts-saucy:i386
+mesa_version=$(dpkg-query -s libgl1-mesa-dri-lts-saucy | grep ^Version | awk '{ print $2 }')
+[ "$mesa_version" = "9.2.1-1ubuntu3~precise1mozilla2" ] || exit 1
+
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
 apt-get update
 
 # clean up
+apt_packages+=('mesa-common-dev')
 
 cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
