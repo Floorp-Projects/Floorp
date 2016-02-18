@@ -455,7 +455,7 @@ public:
    * presenting the document. The returned value is in the standard
    * nscoord units (as scaled by the device context).
    */
-  nsRect GetVisibleArea() { return mVisibleArea; }
+  nsRect GetVisibleArea() const { return mVisibleArea; }
 
   /**
    * Set the currently visible area. The units for r are standard
