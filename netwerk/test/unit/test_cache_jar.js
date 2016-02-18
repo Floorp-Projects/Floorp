@@ -24,7 +24,7 @@ function makeChan(url, appId, inIsolatedMozBrowser) {
                     .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
-    isInBrowserElement: inIsolatedMozBrowser,
+    isInIsolatedMozBrowserElement: inIsolatedMozBrowser,
     originAttributes: {
       appId: appId,
       inIsolatedMozBrowser: inIsolatedMozBrowser,
@@ -98,7 +98,7 @@ function run_test() {
 function doneFirstLoad(req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var nc = req.notificationCallbacks.getInterface(Ci.nsILoadContext);
-  var chan = makeChan(URL, nc.appId, nc.isInBrowserElement);
+  var chan = makeChan(URL, nc.appId, nc.isInIsolatedMozBrowserElement);
   chan.asyncOpen2(new ChannelListener(doneSecondLoad, expected));
 }
 

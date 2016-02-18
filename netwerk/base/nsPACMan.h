@@ -55,9 +55,9 @@ class PendingPACQuery final : public nsRunnable,
 {
 public:
   PendingPACQuery(nsPACMan *pacMan, nsIURI *uri, uint32_t appId,
-                  bool isInBrowser, nsPACManCallback *callback,
+                  bool isInIsolatedMozBrowser, nsPACManCallback *callback,
                   bool mainThreadResponse);
- 
+
   // can be called from either thread
   void Complete(nsresult status, const nsCString &pacString);
   void UseAlternatePACFile(const nsCString &pacURL);
@@ -74,7 +74,7 @@ private:
 
 public:
   uint32_t                   mAppId;
-  bool                       mIsInBrowser;
+  bool                       mIsInIsolatedMozBrowser;
   nsString                   mAppOrigin;
 
 private:
@@ -108,7 +108,7 @@ public:
    * calling thread.  If the PAC file has not yet been loaded, then this method
    * will queue up the request, and complete it once the PAC file has been
    * loaded.
-   * 
+   *
    * @param uri
    *        The URI to query.
    * @param appId

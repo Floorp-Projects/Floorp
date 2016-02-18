@@ -210,7 +210,7 @@ ChannelEventSink.prototype = {
  */
 function LoadContextCallback(appId, inIsolatedMozBrowser, isPrivate, isContent) {
   this.appId = appId;
-  this.isInBrowserElement = inIsolatedMozBrowser;
+  this.isInIsolatedMozBrowserElement = inIsolatedMozBrowser;
   this.originAttributes = {
     appId: appId,
     inIsolatedMozBrowser: inIsolatedMozBrowser
@@ -239,4 +239,3 @@ LoadContextCallback.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 }
-
