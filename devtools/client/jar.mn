@@ -138,7 +138,7 @@ devtools.jar:
     content/eyedropper/nocursor.css (eyedropper/nocursor.css)
     content/aboutdebugging/aboutdebugging.xhtml (aboutdebugging/aboutdebugging.xhtml)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
-    content/aboutdebugging/aboutdebugging.js (aboutdebugging/aboutdebugging.js)
+    content/aboutdebugging/initializer.js (aboutdebugging/initializer.js)
     content/responsive.html/index.xhtml (responsive.html/index.xhtml)
     content/responsive.html/index.js (responsive.html/index.js)
 %   skin devtools classic/1.0 %skin/
