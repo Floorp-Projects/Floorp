@@ -76,7 +76,9 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
 /* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 {
-  for (uint8_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
+  for (CSSPseudoElementTypeBase i = 0;
+       i < ArrayLength(CSSPseudoElements_info);
+       ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
       return static_cast<Type>(i);
     }
@@ -99,13 +101,14 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
   NS_ASSERTION(aType < Type::Count, "Unexpected type");
-  return *CSSPseudoElements_info[static_cast<uint8_t>(aType)].mAtom;
+  return *CSSPseudoElements_info[
+    static_cast<CSSPseudoElementTypeBase>(aType)].mAtom;
 }
 
 /* static */ uint32_t
 nsCSSPseudoElements::FlagsForPseudoElement(const Type aType)
 {
-  uint8_t index = static_cast<uint8_t>(aType);
+  CSSPseudoElementTypeBase index = static_cast<CSSPseudoElementTypeBase>(aType);
   NS_ASSERTION(index < ArrayLength(CSSPseudoElements_flags),
                "argument must be a pseudo-element");
   return CSSPseudoElements_flags[index];
