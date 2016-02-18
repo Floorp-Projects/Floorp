@@ -219,7 +219,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
       events.off(this.storageActor, "window-ready", this.onWindowReady);
       events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
 
-      this.hostVsStores = null;
+      this.hostVsStores.clear();
       this.storageActor = null;
     },
 
@@ -474,7 +474,7 @@ StorageActors.createActor({
   },
 
   destroy: function() {
-    this.hostVsStores = null;
+    this.hostVsStores.clear();
 
     // We need to remove the cookie listeners early in E10S mode so we need to
     // use a conditional here to ensure that we only attempt to remove them in
@@ -716,7 +716,7 @@ var cookieHelpers = {
       case "cookie-changed":
         let cookie = subject.QueryInterface(Ci.nsICookie2);
         cookieHelpers.onCookieChanged(cookie, topic, data);
-      break;
+        break;
     }
   },
 
@@ -726,7 +726,7 @@ var cookieHelpers = {
         let [cookie, topic, data] = msg.data.args;
         cookie = JSON.parse(cookie);
         cookieHelpers.onCookieChanged(cookie, topic, data);
-      break;
+        break;
     }
   },
 
@@ -764,9 +764,9 @@ exports.setupParentProcessForCookies = function({mm, prefix}) {
 
   gTrackedMessageManager.set("cookies", mm);
 
-  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
+  function handleMessageManagerDisconnected(evt, { mm: disconnectedMm }) {
     // filter out not subscribed message managers
-    if (disconnected_mm !== mm || !gTrackedMessageManager.has("cookies")) {
+    if (disconnectedMm !== mm || !gTrackedMessageManager.has("cookies")) {
       return;
     }
 
@@ -794,7 +794,7 @@ exports.setupParentProcessForCookies = function({mm, prefix}) {
         method: methodName,
         args: args
       });
-    } catch(e) {
+    } catch (e) {
       // We may receive a NS_ERROR_NOT_INITIALIZED if the target window has
       // been closed. This can legitimately happen in between test runs.
     }
@@ -837,7 +837,7 @@ function getObjectForLocalOrSessionStorage(type) {
     populateStoresForHost: function(host, window) {
       try {
         this.hostVsStores.set(host, window[type]);
-      } catch(ex) {
+      } catch (ex) {
         // Exceptions happen when local or session storage is inaccessible
       }
       return null;
@@ -850,7 +850,7 @@ function getObjectForLocalOrSessionStorage(type) {
           this.hostVsStores.set(this.getHostName(window.location),
                                 window[type]);
         }
-      } catch(ex) {
+      } catch (ex) {
         // Exceptions happen when local or session storage is inaccessible
       }
       return null;
@@ -922,11 +922,6 @@ StorageActors.createActor({
   storeObjectType: "storagestoreobject"
 }, getObjectForLocalOrSessionStorage("sessionStorage"));
 
-
-let CacheAttributes = [
-  "url",
-  "status",
-];
 types.addDictType("cacheobject", {
   "url": "string",
   "status": "string"
@@ -945,13 +940,15 @@ StorageActors.createActor({
 }, {
   getCachesForHost: Task.async(function*(host) {
     let uri = Services.io.newURI(host, null, null);
-    let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+    let principal =
+      Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
 
-    // The first argument tells if you want to get |content| cache or |chrome| cache.
+    // The first argument tells if you want to get |content| cache or |chrome|
+    // cache.
     // The |content| cache is the cache explicitely named by the web content
     // (service worker or web page).
-    // The |chrome| cache is the cache implicitely cached by the platform, hosting the
-    // source file of the service worker.
+    // The |chrome| cache is the cache implicitely cached by the platform,
+    // hosting the source file of the service worker.
     let { CacheStorage } = this.storageActor.window;
     let cache = new CacheStorage("content", principal);
     return cache;
@@ -981,18 +978,22 @@ StorageActors.createActor({
 
   getNamesForHost: function(host) {
     // UI code expect each name to be a JSON string of an array :/
-    return [...this.hostVsStores.get(host).keys()].map(a => JSON.stringify([a]));
+    return [...this.hostVsStores.get(host).keys()].map(a => {
+      return JSON.stringify([a]);
+    });
   },
 
   getValuesForHost: Task.async(function*(host, name) {
-    if (!name) return [];
+    if (!name) {
+      return [];
+    }
     // UI is weird and expect a JSON stringified array... and pass it back :/
     name = JSON.parse(name)[0];
 
     let cache = this.hostVsStores.get(host).get(name);
     let requests = yield cache.keys();
     let results = [];
-    for(let request of requests) {
+    for (let request of requests) {
       let response = yield cache.match(request);
       // Unwrap the response to get access to all its properties if the
       // response happen to be 'opaque', when it is a Cross Origin Request.
@@ -1016,7 +1017,7 @@ StorageActors.createActor({
     return location.protocol + "//" + location.host;
   },
 
-  populateStoresForHost: Task.async(function*(host, window) {
+  populateStoresForHost: Task.async(function*(host) {
     let storeMap = new Map();
     let caches = yield this.getCachesForHost(host);
     for (let name of (yield caches.keys())) {
@@ -1180,7 +1181,7 @@ StorageActors.createActor({
   },
 
   destroy: function() {
-    this.hostVsStores = null;
+    this.hostVsStores.clear();
     this.objectsSize = null;
 
     events.off(this.storageActor, "window-ready", this.onWindowReady);
@@ -1381,7 +1382,7 @@ StorageActors.createActor({
             unresolvedPromises.delete(func);
             deferred.resolve(msg.json.args[0]);
           }
-        break;
+          break;
       }
     });
 
@@ -1449,7 +1450,8 @@ var indexedDBHelpers = {
       principal = Services.scriptSecurityManager.getSystemPrincipal();
     } else {
       let uri = Services.io.newURI(host, null, null);
-      principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+      principal = Services.scriptSecurityManager
+                          .createCodebasePrincipal(uri, {});
     }
 
     return require("indexedDB").openForPrincipal(principal, name);
@@ -1733,9 +1735,9 @@ exports.setupParentProcessForIndexedDB = function({mm, prefix}) {
 
   gTrackedMessageManager.set("indexedDB", mm);
 
-  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
+  function handleMessageManagerDisconnected(evt, { mm: disconnectedMm }) {
     // filter out not subscribed message managers
-    if (disconnected_mm !== mm || !gTrackedMessageManager.has("indexedDB")) {
+    if (disconnectedMm !== mm || !gTrackedMessageManager.has("indexedDB")) {
       return;
     }
 
@@ -1802,8 +1804,8 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
     this.fetchChildWindows(this.parentActor.docShell);
 
     // Initialize the registered store types
-    for (let [store, actor] of storageTypePool) {
-      this.childActorPool.set(store, new actor(this));
+    for (let [store, ActorConstructor] of storageTypePool) {
+      this.childActorPool.set(store, new ActorConstructor(this));
     }
 
     // Notifications that help us keep track of newly added windows and windows
@@ -2089,7 +2091,7 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
 /**
  * Front for the Storage Actor.
  */
-var StorageFront = exports.StorageFront = protocol.FrontClass(StorageActor, {
+exports.StorageFront = protocol.FrontClass(StorageActor, {
   initialize: function(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.storageActor;

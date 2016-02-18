@@ -110,11 +110,22 @@ function BrowserLoader(baseURI, window) {
       // Allow modules to use the window's console to ensure logs appear in a
       // tab toolbox, if one exists, instead of just the browser console.
       console: window.console,
-      // Make sure 'define' function exists. This allows reusing AMD modules.
-      define: function(callback) {
-        callback(this.require, this.exports, this.module);
-        return this.exports;
-      }
+      // Make sure `define` function exists.  This allows defining some modules
+      // in AMD format while retaining CommonJS compatibility through this hook.
+      // JSON Viewer needs modules in AMD format, as it currently uses RequireJS
+      // from a content document and can't access our usual loaders.  So, any
+      // modules shared with the JSON Viewer should include a define wrapper:
+      //
+      //   // Make this available to both AMD and CJS environments
+      //   define(function(require, exports, module) {
+      //     ... code ...
+      //   });
+      //
+      // Bug 1248830 will work out a better plan here for our content module
+      // loading needs, especially as we head towards devtools.html.
+      define(factory) {
+        factory(this.require, this.exports, this.module);
+      },
     }
   };
 

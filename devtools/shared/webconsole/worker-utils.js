@@ -10,7 +10,7 @@
 // is stubbed out to prevent errors, and will need to implemented
 // for Bug 1209353.
 
-exports.Utils = { l10n: function() {} };
+exports.Utils = { L10n: function() {} };
 exports.ConsoleServiceListener = function() {};
 exports.ConsoleAPIListener = function() {};
 exports.addWebConsoleCommands = function() {};
