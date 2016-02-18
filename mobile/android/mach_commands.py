@@ -57,6 +57,12 @@ class MachCommands(MachCommandBase):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
+
+        # In automation, JAVA_HOME is set via mozconfig, which needs
+        # to be specially handled in each mach command. This turns
+        # $JAVA_HOME/bin/java into $JAVA_HOME.
+        java_home = os.path.dirname(os.path.dirname(self.substs['JAVA']))
+
         # We force the Gradle JVM to run with the UTF-8 encoding, since we
         # filter strings.xml, which is really UTF-8; the ellipsis character is
         # replaced with ??? in some encodings (including ASCII).  It's not yet
@@ -67,7 +73,10 @@ class MachCommands(MachCommandBase):
         # http://tools.android.com/knownissues/encoding.  See
         # http://stackoverflow.com/a/21267635 for discussion of this approach.
         return self.run_process([self.substs['GRADLE']] + args,
-            append_env={'GRADLE_OPTS': '-Dfile.encoding=utf-8'},
+            append_env={
+                'GRADLE_OPTS': '-Dfile.encoding=utf-8',
+                'JAVA_HOME': java_home,
+            },
             pass_thru=True, # Allow user to run gradle interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir))
