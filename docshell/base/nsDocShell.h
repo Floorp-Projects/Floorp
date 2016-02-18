@@ -1000,6 +1000,9 @@ protected:
   // Are we a regular frame, a browser frame, or an app frame?
   FrameType mFrameType;
 
+  // Whether we are in an isolated mozbrowser frame.
+  bool mIsInIsolatedMozBrowser;
+
   // We only expect mOwnOrContainingAppId to be something other than
   // UNKNOWN_APP_ID if mFrameType != eFrameTypeRegular. For vanilla iframes
   // inside an app, we'll retrieve the containing app-id by walking up the

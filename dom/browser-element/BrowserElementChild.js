@@ -26,7 +26,7 @@ function parentDocShell(docshell) {
 function isTopBrowserElement(docShell) {
   while (docShell) {
     docShell = parentDocShell(docShell);
-    if (docShell && docShell.isBrowserOrApp) {
+    if (docShell && docShell.isMozBrowserOrApp) {
       return false;
     }
   }
