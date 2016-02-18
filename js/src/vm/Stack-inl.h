@@ -850,6 +850,12 @@ AbstractFramePtr::popWith(JSContext* cx) const
     asBaselineFrame()->popWith(cx);
 }
 
+inline bool
+AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const
+{
+    return script()->isDerivedClassConstructor();
+}
+
 ActivationEntryMonitor::~ActivationEntryMonitor()
 {
     if (entryMonitor_)

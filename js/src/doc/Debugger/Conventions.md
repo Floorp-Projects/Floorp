@@ -111,7 +111,9 @@ resumption value has one of the following forms:
     was called as a constructor (that is, via a `new` expression), then
     <i>value</i> serves as the value returned by the function's body, not
     that produced by the `new` expression: if the value is not an object,
-    the `new` expression returns the frame's `this` value.
+    the `new` expression returns the frame's `this` value. Similarly, if
+    the function is the constructor for a subclass, then a non-object
+    value may result in a TypeError.
 
 <code>{ yield: <i>value</i> }</code>
 :   <i>(Not yet implemented.)</i> Yield <i>value</i> immediately as the
