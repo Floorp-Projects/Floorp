@@ -57,6 +57,10 @@ struct ComputedTiming
   // Will equal StickyTimeDuration::Forever() if the animation repeats
   // indefinitely.
   StickyTimeDuration  mActiveDuration;
+  // The effect end time in local time (i.e. an offset from the effect's
+  // start time). Will equal StickyTimeDuration::Forever() if the animation
+  // plays indefinitely.
+  StickyTimeDuration  mEndTime;
   // Progress towards the end of the current iteration. If the effect is
   // being sampled backwards, this will go from 1.0 to 0.0.
   // Will be null if the animation is neither animating nor
