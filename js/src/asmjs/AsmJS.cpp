@@ -1017,27 +1017,6 @@ class NumLit
         return false;
     }
 
-    ValType type() const {
-        switch (which_) {
-          case NumLit::Fixnum:
-          case NumLit::NegativeInt:
-          case NumLit::BigUnsigned:
-            return ValType::I32;
-          case NumLit::Double:
-            return ValType::F64;
-          case NumLit::Float:
-            return ValType::F32;
-          case NumLit::Int32x4:
-            return ValType::I32x4;
-          case NumLit::Float32x4:
-            return ValType::F32x4;
-          case NumLit::Bool32x4:
-            return ValType::B32x4;
-          case NumLit::OutOfRangeInt:;
-        }
-        MOZ_CRASH("bad literal");
-    }
-
     Val value() const {
         switch (which_) {
           case NumLit::Fixnum:
@@ -1299,7 +1278,7 @@ class Type
     }
 
     // Check if this is one of the canonical vartype representations of a
-    // wasm::ExprType. See Type::var().
+    // wasm::ExprType. See Type::canonicalize().
     bool isCanonical() const {
         switch (which()) {
           case Int:
@@ -1850,7 +1829,9 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     bool addGlobalVarInit(PropertyName* var, const NumLit& lit, bool isConst) {
         uint32_t index;
-        if (!mg_.allocateGlobalVar(lit.type(), isConst, &index))
+        Type litType = Type::lit(lit);
+        Type canonicalType = Type::canonicalize(litType);
+        if (!mg_.allocateGlobalVar(canonicalType.canonicalToValType(), isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
@@ -1858,7 +1839,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.varOrConst.index_ = index;
-        global->u.varOrConst.type_ = (isConst ? Type::lit(lit) : Type::var(lit.type())).which();
+        global->u.varOrConst.type_ = (isConst ? litType : canonicalType).which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
         if (!globalMap_.putNew(var, global))
@@ -2302,20 +2283,8 @@ IsCallToGlobal(ModuleValidator& m, ParseNode* pn, const ModuleValidator::Global*
     return !!*global;
 }
 
-static ValType
-ToValType(SimdType type)
-{
-    switch (type) {
-      case SimdType::Int32x4:   return ValType::I32x4;
-      case SimdType::Float32x4: return ValType::F32x4;
-      case SimdType::Bool32x4:  return ValType::B32x4;
-      default:                  break;
-    }
-    MOZ_CRASH("unexpected SIMD type");
-}
-
 static bool
-IsCoercionCall(ModuleValidator& m, ParseNode* pn, ValType* coerceTo, ParseNode** coercedExpr)
+IsCoercionCall(ModuleValidator& m, ParseNode* pn, Type* coerceTo, ParseNode** coercedExpr)
 {
     const ModuleValidator::Global* global;
     if (!IsCallToGlobal(m, pn, &global))
@@ -2328,12 +2297,12 @@ IsCoercionCall(ModuleValidator& m, ParseNode* pn, ValType* coerceTo, ParseNode**
         *coercedExpr = CallArgList(pn);
 
     if (global->isMathFunction() && global->mathBuiltinFunction() == AsmJSMathBuiltin_fround) {
-        *coerceTo = ValType::F32;
+        *coerceTo = Type::Float;
         return true;
     }
 
     if (global->isSimdOperation() && global->simdOperation() == SimdOperation::Fn_check) {
-        *coerceTo = ToValType(global->simdOperationType());
+        *coerceTo = global->simdOperationType();
         return true;
     }
 
@@ -2344,11 +2313,11 @@ static bool
 IsFloatLiteral(ModuleValidator& m, ParseNode* pn)
 {
     ParseNode* coercedExpr;
-    ValType coerceTo;
+    Type coerceTo;
     if (!IsCoercionCall(m, pn, &coerceTo, &coercedExpr))
         return false;
     // Don't fold into || to avoid clang/memcheck bug (bug 1077031).
-    if (coerceTo != ValType::F32)
+    if (!coerceTo.isFloat())
         return false;
     return IsNumericNonFloatLiteral(coercedExpr);
 }
@@ -2628,9 +2597,11 @@ class MOZ_STACK_CLASS FunctionValidator
   public:
     struct Local
     {
-        ValType type;
+        Type type;
         unsigned slot;
-        Local(ValType t, unsigned slot) : type(t), slot(slot) {}
+        Local(Type t, unsigned slot) : type(t), slot(slot) {
+            MOZ_ASSERT(type.isCanonicalValType());
+        }
     };
 
   private:
@@ -2695,12 +2666,12 @@ class MOZ_STACK_CLASS FunctionValidator
 
     /***************************************************** Local scope setup */
 
-    bool addLocal(ParseNode* pn, PropertyName* name, ValType type) {
+    bool addLocal(ParseNode* pn, PropertyName* name, Type type) {
         LocalMap::AddPtr p = locals_.lookupForAdd(name);
         if (p)
             return failName(pn, "duplicate local name '%s' not allowed", name);
         return locals_.add(p, name, Local(type, locals_.count())) &&
-               fg_.addLocal(type);
+               fg_.addLocal(type.canonicalToValType());
     }
 
     /****************************** For consistency of returns in a function */
@@ -2928,7 +2899,7 @@ CheckGlobalVariableInitConstant(ModuleValidator& m, PropertyName* varName, Parse
 }
 
 static bool
-CheckTypeAnnotation(ModuleValidator& m, ParseNode* coercionNode, ValType* coerceTo,
+CheckTypeAnnotation(ModuleValidator& m, ParseNode* coercionNode, Type* coerceTo,
                     ParseNode** coercedExpr = nullptr)
 {
     switch (coercionNode->getKind()) {
@@ -2937,13 +2908,13 @@ CheckTypeAnnotation(ModuleValidator& m, ParseNode* coercionNode, ValType* coerce
         uint32_t i;
         if (!IsLiteralInt(m, rhs, &i) || i != 0)
             return m.fail(rhs, "must use |0 for argument/return coercion");
-        *coerceTo = ValType::I32;
+        *coerceTo = Type::Int;
         if (coercedExpr)
             *coercedExpr = BitwiseLeft(coercionNode);
         return true;
       }
       case PNK_POS: {
-        *coerceTo = ValType::F64;
+        *coerceTo = Type::Double;
         if (coercedExpr)
             *coercedExpr = UnaryKid(coercionNode);
         return true;
@@ -2982,11 +2953,11 @@ static bool
 CheckGlobalVariableInitImport(ModuleValidator& m, PropertyName* varName, ParseNode* initNode,
                               bool isConst)
 {
-    ValType coerceTo;
+    Type coerceTo;
     ParseNode* coercedExpr;
     if (!CheckTypeAnnotation(m, initNode, &coerceTo, &coercedExpr))
         return false;
-    return CheckGlobalVariableImportExpr(m, varName, coerceTo, coercedExpr, isConst);
+    return CheckGlobalVariableImportExpr(m, varName, coerceTo.canonicalToValType(), coercedExpr, isConst);
 }
 
 static bool
@@ -3317,7 +3288,7 @@ ArgFail(FunctionValidator& f, PropertyName* argName, ParseNode* stmt)
 }
 
 static bool
-CheckArgumentType(FunctionValidator& f, ParseNode* stmt, PropertyName* name, ValType* type)
+CheckArgumentType(FunctionValidator& f, ParseNode* stmt, PropertyName* name, Type* type)
 {
     if (!stmt || !IsExpressionStatement(stmt))
         return ArgFail(f, name, stmt ? stmt : f.fn());
@@ -3367,11 +3338,11 @@ CheckArguments(FunctionValidator& f, ParseNode** stmtIter, ValTypeVector* argTyp
         if (!CheckArgument(f.m(), argpn, &name))
             return false;
 
-        ValType type;
+        Type type;
         if (!CheckArgumentType(f, stmt, name, &type))
             return false;
 
-        if (!argTypes->append(type))
+        if (!argTypes->append(type.canonicalToValType()))
             return false;
 
         if (!f.addLocal(argpn, name, type))
@@ -3451,7 +3422,7 @@ CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
             return false;
     }
 
-    return f.addLocal(var, name, lit.type());
+    return f.addLocal(var, name, Type::canonicalize(Type::lit(lit)));
 }
 
 static bool
@@ -3491,10 +3462,9 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
     if (const FunctionValidator::Local* local = f.lookupLocal(name)) {
         if (!f.encoder().writeExpr(Expr::GetLocal))
             return false;
-        MOZ_ASSERT(local->type != ValType::I64, "no int64 in asm.js");
         if (!f.encoder().writeVarU32(local->slot))
             return false;
-        *type = Type::var(local->type);
+        *type = local->type;
         return true;
     }
 
@@ -3813,9 +3783,8 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
 
         if (!(rhsType <= lhsVar->type)) {
             return f.failf(lhs, "%s is not a subtype of %s",
-                           rhsType.toChars(), Type::var(lhsVar->type).toChars());
+                           rhsType.toChars(), lhsVar->type.toChars());
         }
-        MOZ_ASSERT(lhsVar->type != ValType::I64, "no int64 in asm.js");
         *type = rhsType;
         return true;
     }
@@ -5208,11 +5177,11 @@ CheckSimdAnyTrue(FunctionValidator& f, ParseNode* call, SimdType opType, Type* t
 static bool
 CheckSimdCheck(FunctionValidator& f, ParseNode* call, SimdType opType, Type* type)
 {
-    ValType coerceTo;
+    Type coerceTo;
     ParseNode* argNode;
     if (!IsCoercionCall(f.m(), call, &coerceTo, &argNode))
         return f.failf(call, "expected 1 argument in call to check");
-    return CheckCoercionArg(f, argNode, coerceTo, type);
+    return CheckCoercionArg(f, argNode, coerceTo.canonicalToValType(), type);
 }
 
 static bool
