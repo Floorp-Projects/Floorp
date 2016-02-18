@@ -9,7 +9,6 @@ task:
 
   payload:
     env:
-      NEED_XVFB: true
       NEED_PULL_GAIA: true
       MOZHARNESS_SCRIPT: 'mozharness/scripts/gaia_integration.py'
       MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_gaia_integration.py'
@@ -21,11 +20,6 @@ task:
       - --test-packages-url={{test_packages_url}}
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     chunks:

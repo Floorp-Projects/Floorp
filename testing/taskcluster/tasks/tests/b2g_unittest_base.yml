@@ -17,9 +17,15 @@ task:
         loopbackVideo: true
         loopbackAudio: true
     env:
+      NEED_XVFB: true
       GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
       GECKO_HEAD_REV: '{{{head_rev}}}'
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
       GAIA_REF: '{{{gaia_ref}}}'
       GAIA_REV: '{{{gaia_rev}}}'
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'

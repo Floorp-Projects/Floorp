@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248185
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248185</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Avoid platform selection differences
+  SimpleTest.waitForFocus(function() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["layout.word_select.eat_space_to_next_word", true]]
+    }, runTests);
+  });
+
+  function runTests()
+  {
+    var editor = document.querySelector("#test");
+    editor.focus();
+
+    var sel = window.getSelection();
+
+    const kMoveRight2 = "cmd_moveRight2";
+    var controller =
+      top.document.commandDispatcher.getControllerForCommand(kMoveRight2);
+    ok((controller && controller.isCommandEnabled(kMoveRight2)),
+       "have " + kMoveRight2 + " command");
+
+    // we assume the controller for these is the same
+    const kSelectLeft2 = "cmd_selectLeft2";
+    const kSelectRight2 = "cmd_selectRight2";
+
+    controller.doCommand(kMoveRight2);
+    controller.doCommand(kMoveRight2);
+    controller.doCommand(kMoveRight2);
+    controller.doCommand(kSelectRight2);
+    ok(sel.toString() == "three ", "expected 'three ' to be selected");
+
+    controller.doCommand(kMoveRight2);
+    controller.doCommand(kMoveRight2);
+    controller.doCommand(kMoveRight2);
+    ok(sel.toString() == "", "expected empty selection");
+
+    controller.doCommand(kSelectLeft2);
+    ok(sel.toString() == "five", "expected 'five' to be selected");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248185">Mozilla Bug 1248185</a>
+<body>
+<div style="font: 12px monospace; width: 45ch;">
+<span contenteditable="" id="test">blablablablablablablablablablablablablabla one two three four five</span>
+<div>
+<span>foo</span>
+</div>
+</div>
+</body>
+</html>

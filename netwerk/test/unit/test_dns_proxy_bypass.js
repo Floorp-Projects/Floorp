@@ -67,7 +67,7 @@ function run_test() {
   chan.initLoadInfo(null, // aLoadingNode
                     Services.scriptSecurityManager.getSystemPrincipal(),
                     null, // aTriggeringPrincipal
-                    Ci.nsILoadInfo.SEC_NORMAL,
+                    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                     Ci.nsIContentPolicy.TYPE_WEBSOCKET);
 
   var uri = ioService.newURI(url, null, null);

@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1247733</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247733">Mozilla Bug 1247733</a>
+<p id="display">
+  <iframe id="myIframe"></iframe>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test"></pre>
+<script type="application/javascript">
+  /** Test for Bug 1247733 **/
+
+  /**
+   * This test ensures that we render the SVG 'use' element correctly, in
+   * pages that have been upgraded from HTTP to HTTPS using strict transport
+   * security (HSTS)
+   *
+   * Specifically:
+   *  (1) We load a file using HTTPS, in an iframe. The file gets sent
+   *      with a Strict-Transport-Security flag.
+   *  (2) We load the same file again, but now over HTTP (which should get
+   *      upgraded to HTTPS, since we received the Strict-Transport-Security
+   *      flag during the first load).
+   *  (3) After each of the above loads, we take a snapshot of the iframe
+   *      and ensure that it renders as fully lime (which the 'use' element
+   *      is responsible for). If the 'use' element fails to render, the iframe
+   *      will be fully red, and we'll fail an "assertSnapshots" check.
+   */
+  SimpleTest.waitForExplicitFinish();
+
+  const iframe = document.getElementById("myIframe");
+  const iframeWin = iframe.contentWindow;
+
+  // URI for our testcase with 'use' element, via HTTP and HTTPS:
+  const insecureURI = "http://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
+  const secureURI   = "https://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
+
+  // Snapshots that we'll populate below:
+  var blankSnapshot;  // Snapshot of blank iframe.
+  var refSnapshot;    // Snapshot of lime reference rendering in iframe.
+  var secureSnapshot; // Snapshot of testcase using HTTPS.
+  var upgradedSnapshot; // Snapshot of testcase using HTTP-upgraded-to-HTTPS.
+
+  // Bookkeeping to be sure receiveMessage is called as many times as we expect:
+  var numPostMessageCalls = 0;
+  const expectedNumPostMessageCalls = 2; // (We load the helper file twice.)
+
+  // Helper function, called via postMessage, to check iframe's actual location:
+  function receiveMessage(event) {
+    is(event.data, secureURI, "iframe should end up viewing secure URI");
+    numPostMessageCalls++;
+  }
+
+  // TEST CODE BEGINS HERE.
+  // Execution basically proceeds top-to-bottom through the functions
+  // from this point on, via a chain of iframe onload-callbacks.
+  function runTest() {
+    // Capture a snapshot with nothing in the iframe, so we can do a
+    // sanity-check not-equal comparison against our reference case, to be
+    // sure we're rendering anything at all:
+    blankSnapshot = snapshotWindow(iframeWin);
+
+    // Point iframe at a reference case:
+    iframe.onload = captureRefSnapshot;
+    iframe.src = "data:text/html,<body style='background:lime'>";
+  }
+
+  function captureRefSnapshot() {
+    // Capture the reference screenshot:
+    refSnapshot = snapshotWindow(iframeWin);
+
+    // Ensure reference-case looks different from blank snapshot:
+    assertSnapshots(refSnapshot, blankSnapshot,
+                    false /*not equal*/, null /*no fuzz*/,
+                    "refSnapshot", "blankSnapshot");
+
+    // OK, assuming we've got a valid refSnapshot, we can now proceed to
+    // capture test screenshots.
+
+    // Register a postMessage handler, so that iframe can report its location:
+    window.addEventListener("message", receiveMessage, false);
+
+    // Point iframe at secure (HTTPS) version of testcase, & wait for callback:
+    iframe.onload = captureSecureSnapshot;
+    iframe.src = secureURI;
+  }
+
+  function captureSecureSnapshot() {
+    // Capture snapshot of iframe showing always-HTTPS version of testcase:
+    secureSnapshot = snapshotWindow(iframeWin);
+    assertSnapshots(secureSnapshot, refSnapshot,
+                    true /*equal*/, null /*no fuzz*/,
+                    "secureSnapshot", "refSnapshot");
+
+    // Point iframe at insecure (HTTP) version of testcase (which should get
+    // automatically upgraded to secure (HTTPS) under the hood), & wait for
+    // callback:
+    iframe.onload = captureUpgradedSnapshot;
+    iframe.src = insecureURI;
+  }
+
+  function captureUpgradedSnapshot() {
+    // Double-check that iframe is really pointed at insecure URI, to be sure
+    // we're actually exercising HSTS. (Note that receiveMessage() will make
+    // sure it's been upgraded to a secure HTTPS URI under the hood.)
+    is(iframe.src, insecureURI,
+       "test should've attempted to load insecure HTTP URI, to exercise HSTS");
+
+    // Capture snapshot of iframe showing upgraded-to-HTTPS version of testcase:
+    upgradedSnapshot = snapshotWindow(iframeWin);
+    assertSnapshots(upgradedSnapshot, refSnapshot,
+                    true /*equal*/, null /*no fuzz*/,
+                    "upgradedSnapshot", "refSnapshot");
+    cleanupAndFinish();
+  }
+
+  function cleanupAndFinish() {
+    is(numPostMessageCalls, expectedNumPostMessageCalls,
+      "didn't receive as many messages from child iframe as expected");
+    SpecialPowers.cleanUpSTSData("http://example.com");
+    SimpleTest.finish();
+  }
+
+  runTest();
+</script>
+</body>
+</html>

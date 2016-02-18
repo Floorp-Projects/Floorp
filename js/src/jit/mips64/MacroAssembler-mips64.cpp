@@ -1532,6 +1532,15 @@ MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const ValueOperand& 
 }
 
 void
+MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const ValueOperand& value,
+                                            wasm::JumpTarget target)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    splitTag(value, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_MAGIC), target, cond);
+}
+
+void
 MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, Register tag, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);

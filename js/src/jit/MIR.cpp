@@ -1344,6 +1344,21 @@ MSimdInsertElement::printOpcode(GenericPrinter& out) const
     out.printf(" (%s)", MSimdInsertElement::LaneName(lane()));
 }
 
+void
+MSimdBox::printOpcode(GenericPrinter& out) const
+{
+    MDefinition::printOpcode(out);
+    out.printf(" (%s%s)", SimdTypeToString(simdType()),
+               initialHeap() == gc::TenuredHeap ? ", tenured" : "");
+}
+
+void
+MSimdUnbox::printOpcode(GenericPrinter& out) const
+{
+    MDefinition::printOpcode(out);
+    out.printf(" (%s)", SimdTypeToString(simdType()));
+}
+
 MCloneLiteral*
 MCloneLiteral::New(TempAllocator& alloc, MDefinition* obj)
 {

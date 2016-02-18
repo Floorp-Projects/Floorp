@@ -214,6 +214,7 @@ public:
 
   virtual ~DataTextureSourceD3D11();
 
+  virtual const char* Name() const override { return "DataTextureSourceD3D11"; }
 
   // DataTextureSource
 
@@ -368,6 +369,8 @@ public:
   CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,
                                const gfx::IntPoint& aOrigin,
                                DXGI_FORMAT aFormatOverride = DXGI_FORMAT_UNKNOWN);
+
+  virtual const char* Name() const override { return "CompositingRenderTargetD3D11"; }
 
   virtual TextureSourceD3D11* AsSourceD3D11() override { return this; }
 
