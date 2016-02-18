@@ -66,7 +66,7 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile "${topobjdir}/mobile/android/base/AndroidManifest.xml"
+            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
 
             java {
                 srcDir "${topsrcdir}/mobile/android/base/java"
@@ -270,7 +270,18 @@ task buildOmnijar(type:Exec) {
     }
 }
 
+// It's not easy -- see the backout in Bug 1242213 -- to change the <manifest>
+// package for Fennec.  Gradle has grown a mechanism to achieve what we want for
+// Fennec, however, with applicationId.  To use the same manifest as moz.build,
+// we replace the package with org.mozilla.gecko (the eventual package) here.
+task rewriteManifestPackage(type: Copy, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_manifest")
+    from("${topobjdir}/mobile/android/base/AndroidManifest.xml")
+    filter { it.replaceFirst(/package=".*?"/, 'package="org.mozilla.gecko"') }
+}
+
 android.applicationVariants.all { variant ->
+    variant.preBuild.dependsOn rewriteManifestPackage
     variant.preBuild.dependsOn syncPreprocessedCode
     variant.preBuild.dependsOn syncPreprocessedResources
 
