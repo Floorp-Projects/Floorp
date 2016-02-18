@@ -367,18 +367,19 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 }
 
 StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(const StickyTimeDuration& aIterationDuration,
-                                       double aIterationCount)
+KeyframeEffectReadOnly::ActiveDuration(
+  const StickyTimeDuration& aIterationDuration,
+  double aIterationCount)
 {
-  if (IsInfinite(aIterationCount)) {
-    // An animation that repeats forever has an infinite active duration
-    // unless its iteration duration is zero, in which case it has a zero
-    // active duration.
-    const StickyTimeDuration zeroDuration;
-    return aIterationDuration == zeroDuration ?
-           zeroDuration :
-           StickyTimeDuration::Forever();
+  // If either the iteration duration or iteration count is zero,
+  // Web Animations says that the active duration is zero. This is to
+  // ensure that the result is defined when the other argument is Infinity.
+  const StickyTimeDuration zeroDuration;
+  if (aIterationDuration == zeroDuration ||
+      aIterationCount == 0.0) {
+    return zeroDuration;
   }
+
   return aIterationDuration.MultDouble(aIterationCount);
 }
 
