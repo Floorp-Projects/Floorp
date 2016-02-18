@@ -9,7 +9,6 @@
 
 #include "ProtocolUtils.h"
 #include "SharedMemoryBasic.h"
-#include "SharedMemorySysV.h"
 
 #include "mozilla/unused.h"
 
@@ -73,10 +72,6 @@ NewSegment(SharedMemory::SharedMemoryType aType)
 {
   if (SharedMemory::TYPE_BASIC == aType) {
     return new SharedMemoryBasic;
-#ifdef MOZ_HAVE_SHAREDMEMORYSYSV
-  } else if (SharedMemory::TYPE_SYSV == aType) {
-    return new SharedMemorySysV;
-#endif
   } else {
     NS_ERROR("unknown Shmem type");
     return nullptr;
@@ -473,25 +468,6 @@ Shmem::Dealloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
 }
 
 #endif  // if defined(DEBUG)
-
-int
-Shmem::GetSysVID() const
-{
-#ifdef MOZ_HAVE_SHAREDMEMORYSYSV
-  AssertInvariants();
-
-  if (mSegment->Type() != SharedMemory::TYPE_SYSV) {
-    NS_ERROR("Can't call GetSysVID() on a non-SysV Shmem!");
-    return -1;
-  }
-
-  SharedMemorySysV* seg = static_cast<SharedMemorySysV*>(mSegment);
-  return seg->GetHandle();
-#else
-  NS_ERROR("Can't call GetSysVID() with no support for SysV shared memory!");
-  return -1;                    // not reached
-#endif
-}
 
 IPC::Message*
 Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
