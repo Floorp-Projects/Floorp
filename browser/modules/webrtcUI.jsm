@@ -352,14 +352,14 @@ function prompt(aBrowser, aRequest) {
       let chromeDoc = this.browser.ownerDocument;
 
       if (aTopic == "shown") {
-        let PopupNotifications = chromeDoc.defaultView.PopupNotifications;
         let popupId = "Devices";
         if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
                                          requestTypes[0] == "AudioCapture"))
           popupId = "Microphone";
         if (requestTypes.indexOf("Screen") != -1)
           popupId = "Screen";
-        PopupNotifications.panel.firstChild.setAttribute("popupid", "webRTC-share" + popupId);
+        chromeDoc.getElementById("webRTC-shareDevices-notification")
+                 .setAttribute("popupid", "webRTC-share" + popupId);
       }
 
       if (aTopic != "showing")
@@ -911,9 +911,10 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     dismissed: true,
     eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "shown") {
-        let PopupNotifications = this.browser.ownerDocument.defaultView.PopupNotifications;
         let popupId = captureState == "Microphone" ? "Microphone" : "Devices";
-        PopupNotifications.panel.firstChild.setAttribute("popupid", "webRTC-sharing" + popupId);
+        this.browser.ownerDocument
+            .getElementById("webRTC-sharingDevices-notification")
+            .setAttribute("popupid", "webRTC-sharing" + popupId);
       }
 
       if (aTopic == "swapping") {
@@ -950,8 +951,9 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     dismissed: true,
     eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "shown") {
-        let PopupNotifications = this.browser.ownerDocument.defaultView.PopupNotifications;
-        PopupNotifications.panel.firstChild.setAttribute("popupid", "webRTC-sharingScreen");
+        this.browser.ownerDocument
+            .getElementById("webRTC-sharingScreen-notification")
+            .setAttribute("popupid", "webRTC-sharingScreen");
       }
 
       if (aTopic == "swapping") {

@@ -374,11 +374,19 @@ html, body, #app, #memory-tool {
 .heap-tree-item-total-bytes {
   width: 10%;
   /*
-   * Provision for up to :
-   * - 12 characters for the number part (10s of GB and spaces every 3 digits)
-   * - 4 chars for the percent part (the maximum length string is "100%")
+   * Provision for up to 19 characters:
+   *
+   *     GG_MMM_KKK_BBB_100%
+   *     |            |||  |
+   *     '------------'|'--'
+   *     14 ch for 10s | 4 ch for the largest % we will
+   *     of GB and     | normally see: "100%"
+   *     spaces every  |
+   *     3 digits      |
+   *                   |
+   *             A space between the number and percent
    */
-  min-width: 16ch;
+  min-width: 19ch;
 }
 
 .heap-tree-item-name {

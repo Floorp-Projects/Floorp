@@ -249,6 +249,22 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
+    class VerifyContentDescription implements Condition {
+        private final View view;
+        private final String expected;
+
+        public VerifyContentDescription(View view, String expected) {
+            this.view = view;
+            this.expected = expected;
+        }
+
+        @Override
+        public boolean isSatisfied() {
+            final CharSequence actual = view.getContentDescription();
+            return TextUtils.equals(actual, expected);
+        }
+    }
+
     protected final String getAbsoluteUrl(String url) {
         return mBaseHostnameUrl + "/" + url.replaceAll("(^/)", "");
     }
@@ -469,6 +485,33 @@ abstract class BaseTest extends BaseRobocopTest {
             pageTitle = urlBarTitle.getText().toString();
         }
         mAsserter.is(pageTitle, expected, "Page title is correct");
+    }
+
+    public final void verifyUrlInContentDescription(String url) {
+        mAsserter.isnot(url, null, "The url argument is not null");
+
+        final String expected;
+        if (mStringHelper.ABOUT_HOME_URL.equals(url)) {
+            expected = mStringHelper.ABOUT_HOME_TITLE;
+        } else if (url.startsWith(URL_HTTP_PREFIX)) {
+            expected = url.substring(URL_HTTP_PREFIX.length());
+        } else {
+            expected = url;
+        }
+
+        final View urlDisplayLayout = mSolo.getView(R.id.display_layout);
+        assertNotNull("ToolbarDisplayLayout is not null", urlDisplayLayout);
+
+        String actualUrl = null;
+
+        // Wait for the title to make sure it has been displayed in case the view
+        // does not update fast enough
+        waitForCondition(new VerifyContentDescription(urlDisplayLayout, expected), MAX_WAIT_VERIFY_PAGE_TITLE_MS);
+        if (urlDisplayLayout.getContentDescription() != null) {
+            actualUrl = urlDisplayLayout.getContentDescription().toString();
+        }
+
+        mAsserter.is(actualUrl, expected, "Url is correct");
     }
 
     public final void verifyTabCount(int expectedTabCount) {

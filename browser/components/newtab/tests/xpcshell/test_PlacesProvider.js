@@ -31,6 +31,30 @@ function run_test() {
   run_next_test();
 }
 
+// url prefix for test history population
+const TEST_URL = "https://mozilla.com/";
+// time when the test starts execution
+const TIME_NOW = (new Date()).getTime();
+
+// utility function to compute past timestap
+function timeDaysAgo(numDays) {
+  return TIME_NOW - (numDays * 24 * 60 * 60 * 1000);
+}
+
+// utility function to make a visit for insetion into places db
+function makeVisit(index, daysAgo, isTyped, domain=TEST_URL) {
+  let {
+    TRANSITION_TYPED,
+    TRANSITION_LINK
+  } = PlacesUtils.history;
+
+  return {
+    uri: NetUtil.newURI(`${domain}${index}`),
+    visitDate: timeDaysAgo(daysAgo),
+    transition: (isTyped) ? TRANSITION_TYPED : TRANSITION_LINK,
+  };
+}
+
 /** Test LinkChecker **/
 
 add_task(function test_LinkChecker_securityCheck() {
@@ -48,97 +72,6 @@ add_task(function test_LinkChecker_securityCheck() {
     let observed = PlacesProvider.LinkChecker.checkLoadURI(url);
     equal(observed , expected, `can load "${url}"?`);
   }
-});
-
-/** Test LinkUtils **/
-
-add_task(function test_LinkUtils_compareLinks() {
-
-  let fixtures = {
-    firstOlder: {
-      url: "http://www.mozilla.org/firstolder",
-      title: "Mozilla",
-      frecency: 1337,
-      lastVisitDate: 1394678824766431,
-    },
-    older: {
-      url: "http://www.mozilla.org/older",
-      title: "Mozilla",
-      frecency: 1337,
-      lastVisitDate: 1394678824766431,
-    },
-    newer: {
-      url: "http://www.mozilla.org/newer",
-      title: "Mozilla",
-      frecency: 1337,
-      lastVisitDate: 1494678824766431,
-    },
-    moreFrecent: {
-      url: "http://www.mozilla.org/moreFrecent",
-      title: "Mozilla",
-      frecency: 1337357,
-      lastVisitDate: 1394678824766431,
-    }
-  };
-
-  let links = [
-    // tests string ordering, f is before o
-    {link1: fixtures.firstOlder, link2: fixtures.older, expected: false},
-
-    // test identity
-    {link1: fixtures.older, link2: fixtures.older, expected: false},
-
-    // test ordering by date
-    {link1: fixtures.older, link2: fixtures.newer, expected: true},
-    {link1: fixtures.newer, link2: fixtures.older, expected: false},
-
-    // test frecency
-    {link1: fixtures.moreFrecent, link2: fixtures.older, expected: false},
-  ];
-
-  for (let {link1, link2, expected} of links) {
-    let observed = PlacesProvider.LinkUtils.compareLinks(link1, link2) > 0;
-    equal(observed , expected, `comparing ${link1.url} and ${link2.url}`);
-  }
-
-  // test error scenarios
-
-  let errorFixtures = {
-    missingFrecency: {
-      url: "http://www.mozilla.org/firstolder",
-      title: "Mozilla",
-      lastVisitDate: 1394678824766431,
-    },
-    missingVisitDate: {
-      url: "http://www.mozilla.org/firstolder",
-      title: "Mozilla",
-      frecency: 1337,
-    },
-    missingURL: {
-      title: "Mozilla",
-      frecency: 1337,
-      lastVisitDate: 1394678824766431,
-    }
-  };
-
-  let errorLinks = [
-    {link1: fixtures.older, link2: errorFixtures.missingFrecency},
-    {link2: fixtures.older, link1: errorFixtures.missingFrecency},
-    {link1: fixtures.older, link2: errorFixtures.missingVisitDate},
-    {link1: fixtures.older, link2: errorFixtures.missingURL},
-    {link1: errorFixtures.missingFrecency, link2: errorFixtures.missingVisitDate}
-  ];
-
-  let errorCount = 0;
-  for (let {link1, link2} of errorLinks) {
-    try {
-      let observed = PlacesProvider.LinkUtils.compareLinks(link1, link2) > 0; // jshint ignore:line
-    } catch (e) {
-      ok(true, `exception for comparison of ${link1.url} and ${link2.url}`);
-      errorCount += 1;
-    }
-  }
-  equal(errorCount, errorLinks.length);
 });
 
 /** Test Provider **/
@@ -162,28 +95,13 @@ add_task(function* test_Links_getLinks() {
 add_task(function* test_Links_getLinks_Order() {
   yield PlacesTestUtils.clearHistory();
   let provider = PlacesProvider.links;
-  let {
-    TRANSITION_TYPED,
-    TRANSITION_LINK
-  } = PlacesUtils.history;
 
-  function timeDaysAgo(numDays) {
-    let now = new Date();
-    return now.getTime() - (numDays * 24 * 60 * 60 * 1000);
-  }
-
-  let timeEarlier = timeDaysAgo(0);
-  let timeLater = timeDaysAgo(2);
-
+  // all four visits must come from different domains to avoid deduplication
   let visits = [
-    // frecency 200
-    {uri: NetUtil.newURI("https://mozilla.com/0"), visitDate: timeEarlier, transition: TRANSITION_TYPED},
-    // sort by url, frecency 200
-    {uri: NetUtil.newURI("https://mozilla.com/1"), visitDate: timeEarlier, transition: TRANSITION_TYPED},
-    // sort by last visit date, frecency 200
-    {uri: NetUtil.newURI("https://mozilla.com/2"), visitDate: timeLater, transition: TRANSITION_TYPED},
-    // sort by frecency, frecency 10
-    {uri: NetUtil.newURI("https://mozilla.com/3"), visitDate: timeLater, transition: TRANSITION_LINK},
+    makeVisit(0, 0, true, "http://bar.com/"), // frecency 200, today
+    makeVisit(1, 0, true, "http://foo.com/"), // frecency 200, today
+    makeVisit(2, 2, true, "http://buz.com/"), // frecency 200, 2 days ago
+    makeVisit(3, 2, false, "http://aaa.com/"), // frecency 10, 2 days ago, transition
   ];
 
   let links = yield provider.getLinks();
@@ -195,6 +113,28 @@ add_task(function* test_Links_getLinks_Order() {
   for (let i = 0; i < links.length; i++) {
     equal(links[i].url, visits[i].uri.spec, "links are obtained in the expected order");
   }
+});
+
+add_task(function* test_Links_getLinks_Deduplication() {
+  yield PlacesTestUtils.clearHistory();
+  let provider = PlacesProvider.links;
+
+  // all for visits must come from different domains to avoid deduplication
+  let visits = [
+    makeVisit(0, 2, true, "http://bar.com/"), // frecency 200, 2 days ago
+    makeVisit(1, 0, true, "http://bar.com/"), // frecency 200, today
+    makeVisit(2, 0, false, "http://foo.com/"), // frecency 10, today
+    makeVisit(3, 0, true, "http://foo.com/"), // frecency 200, today
+  ];
+
+  let links = yield provider.getLinks();
+  equal(links.length, 0, "empty history yields empty links");
+  yield PlacesTestUtils.addVisits(visits);
+
+  links = yield provider.getLinks();
+  equal(links.length, 2, "only two links must be left after deduplication");
+  equal(links[0].url, visits[1].uri.spec, "earliest link is present");
+  equal(links[1].url, visits[3].uri.spec, "most fresent link is present");
 });
 
 add_task(function* test_Links_onLinkChanged() {
@@ -304,4 +244,123 @@ add_task(function* test_Links_onManyLinksChanged() {
 
   yield promise;
   provider.destroy();
+});
+
+add_task(function* test_Links_execute_query() {
+  yield PlacesTestUtils.clearHistory();
+  let provider = PlacesProvider.links;
+
+  let visits = [
+    makeVisit(0, 0, true), // frecency 200, today
+    makeVisit(1, 0, true), // frecency 200, today
+    makeVisit(2, 2, true), // frecency 200, 2 days ago
+    makeVisit(3, 2, false), // frecency 10, 2 days ago, transition
+  ];
+
+  yield PlacesTestUtils.addVisits(visits);
+
+  function testItemValue(results, index, value) {
+    equal(results[index][0], `${TEST_URL}${value}`, "raw url");
+    equal(results[index][1], `test visit for ${TEST_URL}${value}`, "raw title");
+  }
+
+  function testItemObject(results, index, columnValues) {
+    Object.keys(columnValues).forEach(name => {
+      equal(results[index][name], columnValues[name], "object name " + name);
+    });
+  }
+
+  // select all 4 records
+  let results = yield provider.executePlacesQuery("select url, title from moz_places");
+  equal(results.length, 4, "expect 4 items");
+  // check for insert order sequence
+  for (let i = 0; i < results.length; i++) {
+    testItemValue(results, i, i);
+  }
+
+  // test parameter passing
+  results = yield provider.executePlacesQuery(
+              "select url, title from moz_places limit :limit",
+              {params: {limit: 2}}
+            );
+  equal(results.length, 2, "expect 2 items");
+  for (let i = 0; i < results.length; i++) {
+    testItemValue(results, i, i);
+  }
+
+  // test extracting items by name
+  results = yield provider.executePlacesQuery(
+              "select url, title from moz_places limit :limit",
+              {columns: ["url", "title"], params: {limit: 4}}
+            );
+  equal(results.length, 4, "expect 4 items");
+  for (let i = 0; i < results.length; i++) {
+    testItemObject(results, i, {
+      "url": `${TEST_URL}${i}`,
+      "title": `test visit for ${TEST_URL}${i}`,
+    });
+  }
+
+  // test ordering
+  results = yield provider.executePlacesQuery(
+              "select url, title, last_visit_date, frecency from moz_places " +
+              "order by frecency DESC, last_visit_date DESC, url DESC limit :limit",
+              {columns: ["url", "title", "last_visit_date", "frecency"], params: {limit: 4}}
+            );
+  equal(results.length, 4, "expect 4 items");
+  testItemObject(results, 0, {url: `${TEST_URL}1`});
+  testItemObject(results, 1, {url: `${TEST_URL}0`});
+  testItemObject(results, 2, {url: `${TEST_URL}2`});
+  testItemObject(results, 3, {url: `${TEST_URL}3`});
+
+  // test callback passing
+  results = [];
+  function handleRow(aRow) {
+    results.push({
+      url:              aRow.getResultByName("url"),
+      title:            aRow.getResultByName("title"),
+      last_visit_date:  aRow.getResultByName("last_visit_date"),
+      frecency:         aRow.getResultByName("frecency")
+    });
+  }
+  yield provider.executePlacesQuery(
+        "select url, title, last_visit_date, frecency from moz_places " +
+        "order by frecency DESC, last_visit_date DESC, url DESC",
+        {callback: handleRow}
+      );
+  equal(results.length, 4, "expect 4 items");
+  testItemObject(results, 0, {url: `${TEST_URL}1`});
+  testItemObject(results, 1, {url: `${TEST_URL}0`});
+  testItemObject(results, 2, {url: `${TEST_URL}2`});
+  testItemObject(results, 3, {url: `${TEST_URL}3`});
+
+  // negative test cases
+  // bad sql
+  try {
+    yield provider.executePlacesQuery("select from moz");
+    do_throw("bad sql should've thrown");
+  }
+  catch (e) {
+    do_check_true("expected failure - bad sql");
+  }
+  // missing bindings
+  try {
+    yield provider.executePlacesQuery("select * from moz_places limit :limit");
+    do_throw("bad sql should've thrown");
+  }
+  catch (e) {
+    do_check_true("expected failure - missing bidning");
+  }
+  // non-existent column name
+  try {
+    yield provider.executePlacesQuery("select * from moz_places limit :limit",
+                                     {columns: ["no-such-column"], params: {limit: 4}});
+    do_throw("bad sql should've thrown");
+  }
+  catch (e) {
+    do_check_true("expected failure - wrong column name");
+  }
+
+  // cleanup
+  yield PlacesTestUtils.clearHistory();
 });

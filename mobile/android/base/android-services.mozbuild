@@ -912,6 +912,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/net/BearerAuthHeaderProvider.java',
     'sync/net/BrowserIDAuthHeaderProvider.java',
     'sync/net/ConnectionMonitorThread.java',
+    'sync/net/GzipNonChunkedCompressingEntity.java',
     'sync/net/HandleProgressException.java',
     'sync/net/HawkAuthHeaderProvider.java',
     'sync/net/HMACAuthHeaderProvider.java',

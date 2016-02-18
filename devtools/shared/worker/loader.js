@@ -494,6 +494,7 @@ this.worker = new WorkerDebuggerLoader({
     "Debugger": Debugger,
     "PromiseDebugging": PromiseDebugging,
     "Services": Object.create(null),
+    "URL": null,
     "chrome": chrome,
     "xpcInspector": xpcInspector
   },

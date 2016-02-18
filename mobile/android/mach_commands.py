@@ -57,7 +57,17 @@ class MachCommands(MachCommandBase):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
+        # We force the Gradle JVM to run with the UTF-8 encoding, since we
+        # filter strings.xml, which is really UTF-8; the ellipsis character is
+        # replaced with ??? in some encodings (including ASCII).  It's not yet
+        # possible to filter with encodings in Gradle
+        # (https://github.com/gradle/gradle/pull/520) and it's challenging to
+        # do our filtering with Gradle's Ant support.  Moreover, all of the
+        # Android tools expect UTF-8: see
+        # http://tools.android.com/knownissues/encoding.  See
+        # http://stackoverflow.com/a/21267635 for discussion of this approach.
         return self.run_process([self.substs['GRADLE']] + args,
+            append_env={'GRADLE_OPTS': '-Dfile.encoding=utf-8'},
             pass_thru=True, # Allow user to run gradle interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir))

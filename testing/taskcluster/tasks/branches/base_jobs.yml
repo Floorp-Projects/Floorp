@@ -162,6 +162,12 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
+  android-api-15-frontend:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_15_frontend.yml
   android-b2gdroid:
     platforms:
       - Android

@@ -55,4 +55,5 @@ DevToolsModules(
     'HeapAnalysesClient.js',
     'HeapAnalysesWorker.js',
     'HeapSnapshotFileUtils.js',
+    'shortest-paths.js',
 )

@@ -471,11 +471,60 @@ ExtensionTabManager.prototype = {
 global.TabManager = {
   _tabs: new WeakMap(),
   _nextId: 1,
+  _initialized: false,
+
+  // We begin listening for TabOpen and TabClose events once we've started
+  // assigning IDs to tabs, so that we can remap the IDs of tabs which are moved
+  // between windows.
+  initListener() {
+    if (this._initialized) {
+      return;
+    }
+
+    AllWindowEvents.addListener("TabOpen", this);
+    AllWindowEvents.addListener("TabClose", this);
+    WindowListManager.addOpenListener(this.handleWindowOpen.bind(this));
+
+    this._initialized = true;
+  },
+
+  handleEvent(event) {
+    if (event.type == "TabOpen") {
+      let {adoptedTab} = event.detail;
+      if (adoptedTab) {
+        // This tab is being created to adopt a tab from a different window.
+        // Copy the ID from the old tab to the new.
+        this._tabs.set(event.target, this.getId(adoptedTab));
+      }
+    } else if (event.type == "TabClose") {
+      let {adoptedBy} = event.detail;
+      if (adoptedBy) {
+        // This tab is being closed because it was adopted by a new window.
+        // Copy its ID to the new tab, in case it was created as the first tab
+        // of a new window, and did not have an `adoptedTab` detail when it was
+        // opened.
+        this._tabs.set(adoptedBy, this.getId(event.target));
+      }
+    }
+  },
+
+  handleWindowOpen(window) {
+    if (window.arguments[0] instanceof window.XULElement) {
+      // If the first window argument is a XUL element, it means the
+      // window is about to adopt a tab from another window to replace its
+      // initial tab.
+      let adoptedTab = window.arguments[0];
+
+      this._tabs.set(window.gBrowser.tabs[0], this.getId(adoptedTab));
+    }
+  },
 
   getId(tab) {
     if (this._tabs.has(tab)) {
       return this._tabs.get(tab);
     }
+    this.initListener();
+
     let id = this._nextId++;
     this._tabs.set(tab, id);
     return id;
