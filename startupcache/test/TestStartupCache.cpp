@@ -23,6 +23,7 @@
 #include "nsIXPConnect.h"
 #include "prio.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace JS;
 
@@ -30,7 +31,7 @@ namespace mozilla {
 namespace scache {
 
 NS_IMPORT nsresult
-NewObjectInputStreamFromBuffer(char* buffer, uint32_t len, 
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
@@ -46,6 +47,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
 } // namespace mozilla
 
 using namespace mozilla::scache;
+using mozilla::UniquePtr;
 
 #define NS_ENSURE_STR_MATCH(str1, str2, testname)  \
 PR_BEGIN_MACRO                                     \
@@ -216,12 +218,12 @@ TestWriteObject() {
     return rv;
   }
 
-  rv = NewObjectInputStreamFromBuffer(buf2, len2, getter_AddRefs(objectInput));
+  rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf2.forget()), len2,
+                                      getter_AddRefs(objectInput));
   if (NS_FAILED(rv)) {
     fail("failed to created input stream");
     return rv;
   }  
-  buf2.forget();
 
   nsCOMPtr<nsISupports> deserialized;
   rv = objectInput->ReadObject(true, getter_AddRefs(deserialized));

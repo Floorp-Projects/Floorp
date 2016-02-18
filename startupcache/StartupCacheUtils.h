@@ -8,12 +8,13 @@
 #include "nsIStorageStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace scache {
 
 NS_EXPORT nsresult
-NewObjectInputStreamFromBuffer(char* buffer, uint32_t len, 
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,

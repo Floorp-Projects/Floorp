@@ -345,9 +345,9 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
 
-    rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
+    rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf.forget()),
+                                        len, getter_AddRefs(ois));
     NS_ENSURE_SUCCESS(rv, rv);
-    buf.forget();
 
     mInputStreamTable.Put(uri, ois);
 
@@ -500,10 +500,10 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     rv = startupCache->GetBuffer(kXULCacheInfoKey, getter_Transfers(buf),
                                  &len);
     if (NS_SUCCEEDED(rv))
-        rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(objectInput));
+        rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf.forget()),
+                                            len, getter_AddRefs(objectInput));
 
     if (NS_SUCCEEDED(rv)) {
-        buf.forget();
         rv = objectInput->ReadCString(fileLocale);
         tmp = objectInput->ReadCString(fileChromePath);
         if (NS_FAILED(tmp)) {
