@@ -3118,7 +3118,11 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   }
 
   bool tabContextUpdated =
-    aTabContext->SetTabContext(ownApp, containingApp, attrs, signedPkgOrigin);
+    aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
+                               ownApp,
+                               containingApp,
+                               attrs,
+                               signedPkgOrigin);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;
