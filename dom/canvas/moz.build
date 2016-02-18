@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Number changes to this file to avoid bug 1081323 (clobber after changing a manifest):
+# 1
+
 TEST_DIRS += ['compiledtest']
 
 MOCHITEST_MANIFESTS += [
