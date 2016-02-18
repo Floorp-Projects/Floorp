@@ -69,6 +69,8 @@ function finishTest()
                                                  "free");
   }
 
+  SpecialPowers.removeFiles();
+
   do_execute_soon(function(){
     testGenerator.close();
     do_test_finished();
@@ -484,7 +486,46 @@ var SpecialPowers = {
     return Cu;
   },
 
-  createDOMFile: function(file, options) {
-    return new File(file, options);
+  // Based on SpecialPowersObserver.prototype.receiveMessage
+  createFiles: function(requests, callback) {
+    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    let filePaths = new Array;
+    if (!this._createdFiles) {
+      this._createdFiles = new Array;
+    }
+    let createdFiles = this._createdFiles;
+    requests.forEach(function(request) {
+      const filePerms = 0o666;
+      let testFile = dirSvc.get("ProfD", Ci.nsIFile);
+      if (request.name) {
+        testFile.append(request.name);
+      } else {
+        testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
+      }
+        let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+        outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+                       filePerms, 0);
+        if (request.data) {
+          outStream.write(request.data, request.data.length);
+          outStream.close();
+        }
+        filePaths.push(new File(testFile.path, request.options));
+        createdFiles.push(testFile);
+    });
+
+    setTimeout(function () {
+      callback(filePaths);
+    }, 0);
+  },
+
+  removeFiles: function() {
+    if (this._createdFiles) {
+      this._createdFiles.forEach(function (testFile) {
+        try {
+          testFile.remove(false);
+        } catch (e) {}
+      });
+      this._createdFiles = null;
+    }
   },
 };
