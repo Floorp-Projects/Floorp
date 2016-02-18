@@ -11,8 +11,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 add_task(function*() {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
-  info("Starting element picker");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Selecting the #another DIV");
   yield moveMouseOver("#another");
@@ -23,8 +22,7 @@ add_task(function*() {
   is(inspector.selection.nodeFront.id, "another", "The #another node was selected. Passed.");
 
   // Testing cancel-picker command
-  info("Starting element picker again");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Selecting the ahoy DIV");
   yield moveMouseOver("#ahoy");

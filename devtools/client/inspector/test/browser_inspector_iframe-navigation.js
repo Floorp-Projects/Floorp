@@ -14,7 +14,7 @@ add_task(function* () {
   let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Waiting for highlighter to activate.");
   let highlighterShowing = toolbox.once("highlighter-ready");
