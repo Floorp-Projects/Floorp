@@ -334,19 +334,18 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsAutoArrayPtr<char> buf;
+    UniquePtr<char[]> buf;
     uint32_t len;
     nsCOMPtr<nsIObjectInputStream> ois;
     StartupCache* sc = StartupCache::GetSingleton();
     if (!sc)
         return NS_ERROR_NOT_AVAILABLE;
 
-    rv = sc->GetBuffer(spec.get(), getter_Transfers(buf), &len);
+    rv = sc->GetBuffer(spec.get(), &buf, &len);
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
 
-    rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf.forget()),
-                                        len, getter_AddRefs(ois));
+    rv = NewObjectInputStreamFromBuffer(Move(buf), len, getter_AddRefs(ois));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mInputStreamTable.Put(uri, ois);
@@ -436,12 +435,12 @@ nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
         *exists = false;
         return NS_OK;
     }
-    nsAutoArrayPtr<char> buf;
+    UniquePtr<char[]> buf;
     uint32_t len;
     StartupCache* sc = StartupCache::GetSingleton();
-    if (sc)
-        rv = sc->GetBuffer(spec.get(), getter_Transfers(buf), &len);
-    else {
+    if (sc) {
+        rv = sc->GetBuffer(spec.get(), &buf, &len);
+    } else {
         *exists = false;
         return NS_OK;
     }
@@ -492,15 +491,14 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 
     nsAutoCString fileChromePath, fileLocale;
 
-    nsAutoArrayPtr<char> buf;
+    UniquePtr<char[]> buf;
     uint32_t len, amtRead;
     nsCOMPtr<nsIObjectInputStream> objectInput;
 
-    rv = startupCache->GetBuffer(kXULCacheInfoKey, getter_Transfers(buf),
-                                 &len);
+    rv = startupCache->GetBuffer(kXULCacheInfoKey, &buf, &len);
     if (NS_SUCCEEDED(rv))
-        rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf.forget()),
-                                            len, getter_AddRefs(objectInput));
+        rv = NewObjectInputStreamFromBuffer(Move(buf), len,
+                                            getter_AddRefs(objectInput));
 
     if (NS_SUCCEEDED(rv)) {
         rv = objectInput->ReadCString(fileLocale);
@@ -558,10 +556,10 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
         }
 
         if (NS_SUCCEEDED(rv)) {
-            buf = new char[len];
-            rv = inputStream->Read(buf, len, &amtRead);
+            buf = MakeUnique<char[]>(len);
+            rv = inputStream->Read(buf.get(), len, &amtRead);
             if (NS_SUCCEEDED(rv) && len == amtRead)
-                rv = startupCache->PutBuffer(kXULCacheInfoKey, buf, len);
+              rv = startupCache->PutBuffer(kXULCacheInfoKey, buf.get(), len);
             else {
                 rv = NS_ERROR_UNEXPECTED;
             }
