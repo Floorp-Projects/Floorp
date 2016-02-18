@@ -580,13 +580,24 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
  *        The name for the new property
  * @param {String} value
  *        The value for the new property
+ * @param {String} commitValueWith
+ *        Which key should be used to commit the new value. VK_RETURN is used by
+ *        default, but tests might want to use another key to test cancelling
+ *        for exmple.
+ * @param {Boolean} blurNewProperty
+ *        After the new value has been added, a new property would have been
+ *        focused. This parameter is true by default, and that causes the new
+ *        property to be blurred. Set to false if you don't want this.
  * @return {TextProperty} The instance of the TextProperty that was added
  */
-var addProperty = Task.async(function*(view, ruleIndex, name, value) {
+var addProperty = Task.async(function*(view, ruleIndex, name, value,
+                                       commitValueWith = "VK_RETURN",
+                                       blurNewProperty = true) {
   info("Adding new property " + name + ":" + value + " to rule " + ruleIndex);
 
   let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   let editor = yield focusNewRuleViewProperty(ruleEditor);
+  let numOfProps = ruleEditor.rule.textProps.length;
 
   info("Adding name " + name);
   editor.input.value = name;
@@ -599,14 +610,26 @@ var addProperty = Task.async(function*(view, ruleIndex, name, value) {
   let textProps = ruleEditor.rule.textProps;
   let textProp = textProps[textProps.length - 1];
 
+  is(ruleEditor.rule.textProps.length, numOfProps + 1,
+     "A new test property was added");
+  is(editor, inplaceEditor(textProp.editor.valueSpan),
+     "The inplace editor appeared for the value");
+
   info("Adding value " + value);
+  // Setting the input value schedules a preview to be shown in 10ms which
+  // triggers a ruleview-changed event (see bug 1209295).
+  let onPreview = view.once("ruleview-changed");
   editor.input.value = value;
+  yield onPreview;
+
   let onValueAdded = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  EventUtils.synthesizeKey(commitValueWith, {}, view.styleWindow);
   yield onValueAdded;
 
-  // Blur the new property field that was focused by default.
-  view.styleDocument.activeElement.blur();
+  if (blurNewProperty) {
+    view.styleDocument.activeElement.blur();
+  }
+
   return textProp;
 });
 
