@@ -99,6 +99,7 @@ flags:
     - aries-dogfood
     - aries-noril
     - android-api-15
+    - android-api-15-frontend
     - android-partner-sample1
     - android-b2gdroid
     - linux
