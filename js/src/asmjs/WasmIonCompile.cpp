@@ -2365,10 +2365,6 @@ EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, SimdSign sign, 
         return EmitSimdShift(f, type, MSimdShift::lsh, def);
       case SimdOperation::Fn_shiftRightByScalar:
         return EmitSimdShift(f, type, MSimdShift::rshForSign(sign), def);
-      case SimdOperation::Fn_shiftRightArithmeticByScalar:
-        return EmitSimdShift(f, type, MSimdShift::rsh, def);
-      case SimdOperation::Fn_shiftRightLogicalByScalar:
-        return EmitSimdShift(f, type, MSimdShift::ursh, def);
 #define _CASE(OP) \
       case SimdOperation::Fn_##OP: \
         return EmitSimdBinaryComp(f, type, MSimdBinaryComp::OP, sign, def);
