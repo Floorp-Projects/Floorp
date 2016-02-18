@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
 
 const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./reps/rep-utils");
+const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
 const DOM = React.DOM;
 
