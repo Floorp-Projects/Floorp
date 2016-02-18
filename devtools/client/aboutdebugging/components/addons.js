@@ -53,12 +53,14 @@ exports.AddonsComponent = React.createClass({
     let name = Strings.GetStringFromName("extensions");
 
     return React.createElement(
-      "div", null,
+      "div", { id: "tab-addons", className: "tab", role: "tabpanel",
+        "aria-labelledby": "tab-addons-header-name" },
         React.createElement(TabHeaderComponent, {
-          id: "addons-header", name: Strings.GetStringFromName("addons")}),
+          id: "tab-addons-header-name",
+          name: Strings.GetStringFromName("addons")}),
         React.createElement(AddonsControlsComponent, { debugDisabled }),
         React.createElement(
-          "div", { id: "addons", className: "inverted-icons" },
+          "div", { id: "addons" },
           React.createElement(TargetListComponent,
             { name, targets, client, debugDisabled })
       )

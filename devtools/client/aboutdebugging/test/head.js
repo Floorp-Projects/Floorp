@@ -21,19 +21,22 @@ registerCleanupFunction(() => {
   DevToolsUtils.testing = false;
 });
 
-function openAboutDebugging(page) {
+function* openAboutDebugging(page) {
   info("opening about:debugging");
   let url = "about:debugging";
   if (page) {
     url += "#" + page;
   }
-  return addTab(url).then(tab => {
-    let browser = tab.linkedBrowser;
-    return {
-      tab,
-      document: browser.contentDocument,
-    };
-  });
+
+  let tab = yield addTab(url);
+  let browser = tab.linkedBrowser;
+  let document = browser.contentDocument;
+
+  if (!document.querySelector(".app")) {
+    yield waitForMutation(document.body, { childList: true });
+  }
+
+  return { tab, document };
 }
 
 function closeAboutDebugging(tab) {

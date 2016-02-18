@@ -56,6 +56,7 @@ exports.TargetComponent = React.createClass({
     return React.createElement("div", { className: "target" },
       React.createElement("img", {
         className: "target-icon",
+        role: "presentation",
         src: target.icon }),
       React.createElement("div", { className: "target-details" },
         React.createElement("div", { className: "target-name" }, target.name),

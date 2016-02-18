@@ -53,9 +53,11 @@ exports.WorkersComponent = React.createClass({
     let { workers } = this.state;
 
     return React.createElement(
-      "div", null,
+      "div", { id: "tab-workers", className: "tab", role: "tabpanel",
+        "aria-labelledby": "tab-workers-header-name" },
         React.createElement(TabHeaderComponent, {
-          id: "workers-header", name: Strings.GetStringFromName("workers")}),
+          id: "tab-workers-header-name",
+          name: Strings.GetStringFromName("workers")}),
         React.createElement(
           "div", { id: "workers", className: "inverted-icons" },
           React.createElement(TargetListComponent, {
