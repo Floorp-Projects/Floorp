@@ -42,7 +42,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   // ComputedTimingProperties
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
   aRetVal.mEndTime
-    = std::max(aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay, 0.0);
+    = aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay;
   aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
   if (!aRetVal.mProgress.IsNull()) {
