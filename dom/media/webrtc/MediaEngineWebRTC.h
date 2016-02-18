@@ -14,6 +14,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 #include "DOMMediaStream.h"
@@ -72,7 +73,8 @@ public:
   void GetUUID(nsACString& aUUID) override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
-                    const nsString& aDeviceId) override
+                    const nsString& aDeviceId,
+                    const nsACString& aOrigin) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     return NS_OK;
@@ -95,11 +97,11 @@ public:
   {}
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override
+                        TrackRate aRate, uint32_t aChannels) override
   {}
   void NotifyInputData(MediaStreamGraph* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override
+                       TrackRate aRate, uint32_t aChannels) override
   {}
   void NotifyPull(MediaStreamGraph* aGraph, SourceMediaStream* aSource,
                   TrackID aID, StreamTime aDesiredTime) override
@@ -138,8 +140,8 @@ public:
   virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
                                      char aStrGuidUTF8[128]) = 0;
   virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
-  virtual void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
-  virtual void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
+  virtual void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) = 0;
+  virtual void StopRecording(SourceMediaStream *aStream) = 0;
   virtual int SetRecordingDevice(int aIndex) = 0;
 
 protected:
@@ -153,7 +155,7 @@ class AudioInputCubeb final : public AudioInput
 {
 public:
   explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine, int aIndex = 0) :
-    AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUse(false)
+    AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUseCount(0)
   {
     if (!mDeviceIndexes) {
       mDeviceIndexes = new nsTArray<int>;
@@ -214,25 +216,29 @@ public:
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener)
   {
     MOZ_ASSERT(mDevices);
 
-    ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
-    ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
-    if (ptrVoERender) {
-      ptrVoERender->SetExternalRecordingStatus(true);
+    if (mInUseCount == 0) {
+      ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
+      ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
+      if (ptrVoERender) {
+        ptrVoERender->SetExternalRecordingStatus(true);
+      }
+      mAnyInUse = true;
     }
-    aGraph->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
-    mInUse = true;
-    mAnyInUse = true;
+    mInUseCount++;
+    // Always tell the stream we're using it for input
+    aStream->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
   }
 
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  void StopRecording(SourceMediaStream *aStream)
   {
-    aGraph->CloseAudioInput(aListener);
-    mInUse = false;
-    mAnyInUse = false;
+    aStream->CloseAudioInput();
+    if (--mInUseCount == 0) {
+      mAnyInUse = false;
+    }
   }
 
   int SetRecordingDevice(int aIndex)
@@ -247,7 +253,7 @@ public:
 
 protected:
   ~AudioInputCubeb() {
-    MOZ_RELEASE_ASSERT(!mInUse);
+    MOZ_RELEASE_ASSERT(mInUseCount == 0);
   }
 
 private:
@@ -270,10 +276,14 @@ private:
     // Calculate translation from existing mDevices to new devices. Note we
     // never end up with less devices than before, since people have
     // stashed indexes.
+    // For some reason the "fake" device for automation is marked as DISABLED,
+    // so white-list it.
     for (uint32_t i = 0; i < devices->count; i++) {
       if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
           (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
-           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED))
+           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED ||
+           (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
+            strcmp(devices->device[i]->friendly_name, "Sine source at 440 Hz") == 0)))
       {
         auto j = mDeviceNames->IndexOf(devices->device[i]->device_id);
         if (j != nsTArray<nsCString>::NoIndex) {
@@ -300,7 +310,7 @@ private:
   // for this - and be careful of threading access.  The mappings need to
   // updated on each re-enumeration.
   int mSelectedDevice;
-  bool mInUse; // for assertions about listener lifetime
+  uint32_t mInUseCount;
 
   // pointers to avoid static constructors
   static nsTArray<int>* mDeviceIndexes;
@@ -347,8 +357,8 @@ public:
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
+  void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) {}
+  void StopRecording(SourceMediaStream *aStream) {}
 
   int SetRecordingDevice(int aIndex)
   {
@@ -379,15 +389,15 @@ public:
   // AudioDataListenerInterface methods
   virtual void NotifyOutputData(MediaStreamGraph* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
-                                uint32_t aChannels) override
+                                TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aChannels);
+    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
   }
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
-                               uint32_t aChannels) override
+                               TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aChannels);
+    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels);
   }
 
 private:
@@ -421,7 +431,8 @@ public:
     , mAGC(webrtc::kAgcDefault)
     , mNoiseSuppress(webrtc::kNsDefault)
     , mPlayoutDelay(0)
-    , mNullTransport(nullptr) {
+    , mNullTransport(nullptr)
+    , mInputBufferLen(0) {
     MOZ_ASSERT(aVoiceEnginePtr);
     MOZ_ASSERT(aAudioInput);
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
@@ -435,7 +446,8 @@ public:
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
-                    const nsString& aDeviceId) override;
+                    const nsString& aDeviceId,
+                    const nsACString& aOrigin) override;
   nsresult Deallocate() override;
   nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
@@ -452,10 +464,10 @@ public:
   // AudioDataListenerInterface methods
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override;
+                        TrackRate aRate, uint32_t aChannels) override;
   void NotifyInputData(MediaStreamGraph* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override;
+                       TrackRate aRate, uint32_t aChannels) override;
 
   bool IsFake() override {
     return false;
@@ -524,6 +536,10 @@ private:
   int32_t mPlayoutDelay;
 
   NullTransport *mNullTransport;
+
+  // For full_duplex packetizer output
+  size_t mInputBufferLen;
+  UniquePtr<int16_t[]> mInputBuffer;
 };
 
 class MediaEngineWebRTC : public MediaEngine

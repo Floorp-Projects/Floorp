@@ -87,7 +87,8 @@ MediaEngineDefaultVideoSource::GetBestFitnessDistance(
 nsresult
 MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
-                                        const nsString& aDeviceId)
+                                        const nsString& aDeviceId,
+                                        const nsACString& aOrigin)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -396,7 +397,8 @@ MediaEngineDefaultAudioSource::GetBestFitnessDistance(
 nsresult
 MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
-                                        const nsString& aDeviceId)
+                                        const nsString& aDeviceId,
+                                        const nsACString& aOrigin)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;

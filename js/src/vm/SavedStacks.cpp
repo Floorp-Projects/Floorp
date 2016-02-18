@@ -999,10 +999,8 @@ SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp)
 bool
 SavedStacks::init()
 {
-    if (!pcLocationMap.init())
-        return false;
-
-    return frames.init();
+    return frames.init() &&
+           pcLocationMap.init();
 }
 
 bool
@@ -1049,13 +1047,7 @@ SavedStacks::sweep()
 void
 SavedStacks::trace(JSTracer* trc)
 {
-    if (pcLocationMap.initialized()) {
-        // Mark each of the source strings in our pc to location cache.
-        for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
-            LocationValue& loc = e.front().value();
-            TraceEdge(trc, &loc.source, "SavedStacks::PCLocationMap's memoized script source name");
-        }
-    }
+    pcLocationMap.trace(trc);
 }
 
 uint32_t

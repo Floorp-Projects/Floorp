@@ -96,6 +96,7 @@ typedef Vector<AsmJSGlobalVariable, 0, SystemAllocPolicy> AsmJSGlobalVariableVec
 
 struct ModuleGeneratorData
 {
+    CompileArgs                     args;
     ModuleKind                      kind;
     uint32_t                        numTableElems;
 
@@ -109,8 +110,8 @@ struct ModuleGeneratorData
         return funcSigs[funcIndex] - sigs.begin();
     }
 
-    explicit ModuleGeneratorData(ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), numTableElems(0)
+    explicit ModuleGeneratorData(ExclusiveContext* cx, ModuleKind kind = ModuleKind::Wasm)
+      : args(cx), kind(kind), numTableElems(0)
     {}
 };
 
@@ -129,6 +130,9 @@ class ModuleGeneratorThreadView
     explicit ModuleGeneratorThreadView(const ModuleGeneratorData& shared)
       : shared_(shared)
     {}
+    CompileArgs args() const {
+        return shared_.args;
+    }
     bool isAsmJS() const {
         return shared_.kind == ModuleKind::AsmJS;
     }

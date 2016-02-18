@@ -31,6 +31,9 @@
 namespace js {
 namespace jit {
 
+// How far forward/back can a jump go? Provide a generous buffer for thunks.
+static const uint32_t JumpImmediateRange = 100 * 1024;
+
 class Registers
 {
   public:

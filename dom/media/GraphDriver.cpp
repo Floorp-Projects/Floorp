@@ -52,7 +52,6 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     mIterationEnd(0),
     mGraphImpl(aGraphImpl),
     mWaitState(WAITSTATE_RUNNING),
-    mAudioInput(nullptr),
     mCurrentTimeStamp(TimeStamp::Now()),
     mPreviousDriver(nullptr),
     mNextDriver(nullptr)
@@ -546,6 +545,7 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
   , mSampleRate(0)
+  , mInputChannels(1)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
   , mAudioInput(nullptr)
@@ -604,7 +604,7 @@ AudioCallbackDriver::Init()
   }
 
   input = output;
-  input.channels = 1; // change to support optional stereo capture
+  input.channels = mInputChannels; // change to support optional stereo capture
 
   cubeb_stream* stream;
   // XXX Only pass input input if we have an input listener.  Always
@@ -922,14 +922,14 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                               ChannelCount);
+                               mSampleRate, ChannelCount);
 
   // Process mic data if any/needed -- after inserting far-end data for AEC!
   if (aInputBuffer) {
     if (mAudioInput) { // for this specific input-only or full-duplex stream
       mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
                                    static_cast<size_t>(aFrames),
-                                   ChannelCount);
+                                   mSampleRate, mInputChannels);
     }
   }
 

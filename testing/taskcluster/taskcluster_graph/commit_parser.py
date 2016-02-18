@@ -258,13 +258,25 @@ def parse_commit(message, jobs):
     parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
     parser.add_argument('-u', '--unittests', nargs='?', dest='tests', const='all', default='all')
     parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
+    parser.add_argument('-j', '--job', dest='jobs', action='append')
     # In order to run test jobs multiple times
     parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
     args, unknown = parser.parse_known_args(parts[try_idx:])
 
+    # Normalize default value to something easier to detect.
+    if args.jobs == ['all']:
+        args.jobs = None
+
+    # Expand commas.
+    if args.jobs:
+        expanded = []
+        for job in args.jobs:
+            expanded.extend(j.strip() for j in job.split(','))
+        args.jobs = expanded
+
     # Then builds...
     if args.build_types is None:
-        return []
+        args.build_types = []
 
     build_types = [ BUILD_TYPE_ALIASES.get(build_type, build_type) for
             build_type in args.build_types ]
@@ -318,6 +330,42 @@ def parse_commit(message, jobs):
                 'build_type': build_type,
                 'interactive': args.interactive,
             })
+
+    # Process miscellaneous tasks.
+
+    def filtertask(name, task):
+        # args.jobs == None implies all tasks.
+        if args.jobs is None:
+            return True
+
+        if name in args.jobs:
+            return True
+
+        for tag in task.get('tags', []):
+            if tag in args.jobs:
+                return True
+
+        return False
+
+    for name, task in sorted(jobs.get('tasks', {}).items()):
+        if not filtertask(name, task):
+            continue
+
+        # TODO support tasks that are defined as dependent on another one.
+        if not task.get('root', False):
+            continue
+
+        result.append({
+            'task': task['task'],
+            'post-build': [],
+            'dependents': [],
+            'additional-parameters': task.get('additional-parameters', {}),
+            'build_name': name,
+            # TODO support declaring a different build type
+            'build_type': name,
+            'interactive': args.interactive,
+            'when': task.get('when', {})
+        })
 
     # Times that test jobs will be scheduled
     trigger_tests = args.trigger_tests

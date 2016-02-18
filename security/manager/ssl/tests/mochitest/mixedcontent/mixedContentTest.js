@@ -30,35 +30,25 @@ var hasMixedActiveContent = false;
 // Internal variables
 var _windowCount = 0;
 
-window.onload = function onLoad()
-{
-  if (location.search == "?runtest")
-  {
-    try
-    {
-      if (history.length == 1)
+window.onload = function onLoad() {
+  if (location.search == "?runtest") {
+    try {
+      if (history.length == 1) {
         runTest();
-      else
+      } else {
         afterNavigationTest();
-    }
-    catch (ex)
-    {
+      }
+    } catch (ex) {
       ok(false, "Exception thrown during test: " + ex);
       finish();
     }
-  }
-  else
-  {
+  } else {
     window.addEventListener("message", onMessageReceived, false);
 
-    var secureTestLocation;
-    if (loadAsInsecure)
-      secureTestLocation = "http://example.com";
-    else
-      secureTestLocation = "https://example.com";
+    let secureTestLocation = loadAsInsecure ? "http://example.com"
+                                            : "https://example.com";
     secureTestLocation += location.pathname
-    if (testPage != "")
-    {
+    if (testPage != "") {
       array = secureTestLocation.split("/");
       array.pop();
       array.push(testPage);
@@ -66,20 +56,16 @@ window.onload = function onLoad()
     }
     secureTestLocation += "?runtest";
 
-    if (hasMixedActiveContent)
-    {
+    if (hasMixedActiveContent) {
       SpecialPowers.pushPrefEnv(
         {"set": [["security.mixed_content.block_active_content", false]]},
         null);
     }
-    if (openTwoWindows)
-    {
+    if (openTwoWindows) {
       _windowCount = 2;
       window.open(secureTestLocation, "_new1", "");
       window.open(secureTestLocation, "_new2", "");
-    }
-    else
-    {
+    } else {
       _windowCount = 1;
       window.open(secureTestLocation);
     }
@@ -88,14 +74,13 @@ window.onload = function onLoad()
 
 function onMessageReceived(event)
 {
-  switch (event.data)
-  {
+  switch (event.data) {
     // Indication of all test parts finish (from any of the frames)
     case "done":
-      if (--_windowCount == 0)
-      {
-        if (testCleanUp)
+      if (--_windowCount == 0) {
+        if (testCleanUp) {
           testCleanUp();
+        }
         if (hasMixedActiveContent) {
           SpecialPowers.popPrefEnv(null);
         }
@@ -104,14 +89,9 @@ function onMessageReceived(event)
       }
       break;
 
-    // Any other message indicates error or succes message of a test
+    // Any other message is an error or success message of a test.
     default:
-      var failureRegExp = new RegExp("^FAILURE");
-      var todoRegExp = new RegExp("^TODO");
-      if (event.data.match(todoRegExp))
-        SimpleTest.todo(false, event.data);
-      else
-        SimpleTest.ok(!event.data.match(failureRegExp), event.data);
+      SimpleTest.ok(!event.data.match(/^FAILURE/), event.data);
       break;
   }
 }
@@ -141,10 +121,11 @@ function finish()
 
 function ok(a, message)
 {
-  if (!a)
+  if (!a) {
     postMsg("FAILURE: " + message);
-  else
+  } else {
     postMsg(message);
+  }
 }
 
 function is(a, b, message)
@@ -156,18 +137,11 @@ function is(a, b, message)
   }
 }
 
-function todo(a, message)
-{
-  if (a)
-    postMsg("FAILURE: TODO works? " + message);
-  else
-    postMsg("TODO: " + message);
-}
-
 function isSecurityState(expectedState, message, test)
 {
-  if (!test)
+  if (!test) {
     test = ok;
+  }
 
   // Quit nasty but working :)
   var ui = SpecialPowers.wrap(window)
@@ -184,19 +158,19 @@ function isSecurityState(expectedState, message, test)
     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
 
   var gotState;
-  if (isInsecure)
+  if (isInsecure) {
     gotState = "insecure";
-  else if (isBroken)
+  } else if (isBroken) {
     gotState = "broken";
-  else if (isEV)
+  } else if (isEV) {
     gotState = "EV";
-  else
+  } else {
     gotState = "secure";
+  }
 
   test(gotState == expectedState, (message || "") + ", " + "expected " + expectedState + " got " + gotState);
 
-  switch (expectedState)
-  {
+  switch (expectedState) {
     case "insecure":
       test(isInsecure && !isBroken && !isEV, "for 'insecure' excpected flags [1,0,0], " + (message || ""));
       break;

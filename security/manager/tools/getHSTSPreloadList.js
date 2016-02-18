@@ -304,10 +304,11 @@ function getHSTSStatuses(inHosts, outStatuses) {
     waitForAResponse(tmpOutput);
     var response = tmpOutput.shift();
     dump("request to '" + response.name + "' finished\n");
-    if (shouldRetry(response))
+    if (shouldRetry(response)) {
       inHosts.push(response);
-    else
+    } else {
       outStatuses.push(response);
+    }
 
     if (inHosts.length > 0) {
       var host = inHosts.shift();

@@ -22,6 +22,8 @@ class X11DataTextureSourceBasic : public DataTextureSource
 public:
   X11DataTextureSourceBasic() {};
 
+  virtual const char* Name() const override { return "X11DataTextureSourceBasic"; }
+
   virtual bool Update(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) override;

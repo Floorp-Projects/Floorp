@@ -533,13 +533,14 @@ class Marionette(object):
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
+    DEFAULT_SOCKET_TIMEOUT = 360
     DEFAULT_STARTUP_TIMEOUT = 60
 
     def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
                  profile=None, addons=None, emulator=None, sdcard=None, emulator_img=None,
                  emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
-                 busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
+                 busybox=None, symbols_path=None, timeout=None, socket_timeout=None,
                  device_serial=None, adb_path=None, process_args=None,
                  adb_host=None, adb_port=None, prefs=None, startup_timeout=None,
                  workspace=None, verbose=0):
@@ -560,7 +561,7 @@ class Marionette(object):
         self.no_window = no_window
         self._test_name = None
         self.timeout = timeout
-        self.socket_timeout = socket_timeout
+        self.socket_timeout = socket_timeout or self.DEFAULT_SOCKET_TIMEOUT
         self.device_serial = device_serial
         self.adb_host = adb_host
         self.adb_port = adb_port
@@ -670,7 +671,8 @@ class Marionette(object):
         finally:
             s.close()
 
-    def wait_for_port(self, timeout=60):
+    def wait_for_port(self, timeout=None):
+        timeout = timeout or self.DEFAULT_STARTUP_TIMEOUT
         return transport.wait_for_port(self.host, self.port, timeout=timeout)
 
     @do_crash_check

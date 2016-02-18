@@ -3247,8 +3247,7 @@ UnprivilegedJunkScopeOrWorkerGlobal()
     return xpc::UnprivilegedJunkScope();
   }
 
-  return workers::GetCurrentThreadWorkerPrivate()->
-    GlobalScope()->GetGlobalJSObject();
+  return workers::GetCurrentThreadWorkerGlobal();
 }
 } // namespace binding_detail
 
