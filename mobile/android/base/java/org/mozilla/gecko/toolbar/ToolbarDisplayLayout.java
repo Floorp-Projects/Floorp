@@ -29,6 +29,7 @@ import org.mozilla.gecko.widget.themed.ThemedTextView;
 import android.content.Context;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -190,7 +191,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mPrefs = prefs;
     }
 
-    void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
+    void updateFromTab(@NonNull Tab tab, EnumSet<UpdateFlags> flags) {
         // Several parts of ToolbarDisplayLayout's state depends
         // on the views being attached to the view tree.
         if (!mIsAttached) {
@@ -210,7 +211,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
 
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
-            mTitle.setPrivateMode(tab != null && tab.isPrivate());
+            mTitle.setPrivateMode(tab.isPrivate());
         }
     }
 
@@ -222,10 +223,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
     }
 
-    private void updateTitle(Tab tab) {
+    private void updateTitle(@NonNull Tab tab) {
         // Keep the title unchanged if there's no selected tab,
         // or if the tab is entering reader mode.
-        if (tab == null || tab.isEnteringReaderMode()) {
+        if (tab.isEnteringReaderMode()) {
             return;
         }
 
@@ -279,13 +280,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         return ReaderModeUtils.getUrlFromAboutReader(url);
     }
 
-    private void updateSiteIdentity(Tab tab) {
-        final SiteIdentity siteIdentity;
-        if (tab == null) {
-            siteIdentity = null;
-        } else {
-            siteIdentity = tab.getSiteIdentity();
-        }
+    private void updateSiteIdentity(@NonNull Tab tab) {
+        final SiteIdentity siteIdentity = tab.getSiteIdentity();
 
         mSiteIdentityPopup.setSiteIdentity(siteIdentity);
 
@@ -342,13 +338,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTrackingProtectionEnabled = trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED;
     }
 
-    private void updateProgress(@Nullable Tab tab) {
-        final boolean shouldShowThrobber = (tab != null &&
-                                            tab.getState() == Tab.STATE_LOADING);
+    private void updateProgress(@NonNull Tab tab) {
+        final boolean shouldShowThrobber = tab.getState() == Tab.STATE_LOADING;
 
         updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY);
 
-        if (tab != null && Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
+        if (Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
             mActivity.showTrackingProtectionPromptIfApplicable();
         }
     }

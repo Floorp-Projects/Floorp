@@ -56,6 +56,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.support.annotation.NonNull;
 
 /**
 * {@code BrowserToolbar} is single entry point for users of the toolbar
@@ -402,7 +403,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(@NonNull Tab tab, Tabs.TabEvents msg, Object data) {
         Log.d(LOGTAG, "onTabChanged: " + msg);
         final Tabs tabs = Tabs.getInstance();
 
@@ -591,7 +592,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                                          activity.getString(R.string.one_tab));
     }
 
-    private void updateDisplayLayout(Tab tab, EnumSet<UpdateFlags> flags) {
+    private void updateDisplayLayout(@NonNull Tab tab, EnumSet<UpdateFlags> flags) {
         if (isSwitchingTabs) {
             flags.add(UpdateFlags.DISABLE_ANIMATIONS);
         }
