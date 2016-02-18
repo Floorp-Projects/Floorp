@@ -501,6 +501,7 @@ public:
                                 const nsString& aName,
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
+                                const DocShellOriginAttributes& aOpenerOriginAttributes,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
