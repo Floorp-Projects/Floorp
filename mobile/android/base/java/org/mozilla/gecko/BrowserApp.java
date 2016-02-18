@@ -587,7 +587,7 @@ public class BrowserApp extends GeckoApp
 
         final Context appContext = getApplicationContext();
 
-        if (AppConstants.MOZ_SWITCHBOARD) {
+        if (!Experiments.isDisabled(new SafeIntent(intent)) && AppConstants.MOZ_SWITCHBOARD) {
             // Initializes the default URLs the first time.
             SwitchBoard.initDefaultServerUrls("https://switchboard.services.mozilla.com/urls", "https://switchboard.services.mozilla.com/v1", true);
 
