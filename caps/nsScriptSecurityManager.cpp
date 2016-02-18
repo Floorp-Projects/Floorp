@@ -260,13 +260,25 @@ uint16_t
 nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 {
     uint32_t appId = aPrin->GetAppId();
-    bool inMozBrowser = aPrin->GetIsInIsolatedMozBrowserElement();
+
+    // After bug 1238160, the principal no longer knows how to answer "is this a
+    // browser element", which is really what this code path wants. Currently,
+    // desktop is the only platform where we intend to disable isolation on a
+    // browser frame, so non-desktop should be able to assume that
+    // inIsolatedMozBrowser is true for all mozbrowser frames.  Additionally,
+    // apps are no longer used on desktop, so appId is always NO_APP_ID.  We use
+    // a release assertion in nsFrameLoader::OwnerIsIsolatedMozBrowserFrame so
+    // that platforms with apps can assume inIsolatedMozBrowser is true for all
+    // mozbrowser frames.
+    bool inIsolatedMozBrowser = aPrin->GetIsInIsolatedMozBrowserElement();
+
     NS_WARN_IF_FALSE(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
                      "Asking for app status on a principal with an unknown app id");
     // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
     // and they are not inside a mozbrowser.
     if (appId == nsIScriptSecurityManager::NO_APP_ID ||
-        appId == nsIScriptSecurityManager::UNKNOWN_APP_ID || inMozBrowser)
+        appId == nsIScriptSecurityManager::UNKNOWN_APP_ID ||
+        inIsolatedMozBrowser)
     {
         return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
     }
@@ -291,7 +303,7 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 
     // The app could contain a cross-origin iframe - make sure that the content
     // is actually same-origin with the app.
-    MOZ_ASSERT(inMozBrowser == false, "Checked this above");
+    MOZ_ASSERT(inIsolatedMozBrowser == false, "Checked this above");
     PrincipalOriginAttributes attrs(appId, false);
     nsCOMPtr<nsIPrincipal> appPrin = BasePrincipal::CreateCodebasePrincipal(appURI, attrs);
     NS_ENSURE_TRUE(appPrin, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
