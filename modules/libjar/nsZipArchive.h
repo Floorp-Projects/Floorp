@@ -373,16 +373,16 @@ public:
    * Copy member into a new buffer if uncompressed.
    * @return a buffer with whole zip member. It is caller's responsibility to free() it.
    */
-  T* Forget() {
+  mozilla::UniquePtr<T[]> Forget() {
     if (!mReturnBuf)
       return nullptr;
     // In uncompressed mmap case, give up buffer
     if (mAutoBuf.get() == mReturnBuf) {
       mReturnBuf = nullptr;
-      return (T*) mAutoBuf.release();
+      return mozilla::UniquePtr<T[]>(reinterpret_cast<T*>(mAutoBuf.release()));
     }
-    T *ret = (T*) malloc(Length());
-    memcpy(ret, mReturnBuf, Length());
+    auto ret = mozilla::MakeUnique<T[]>(Length());
+    memcpy(ret.get(), mReturnBuf, Length());
     mReturnBuf = nullptr;
     return ret;
   }

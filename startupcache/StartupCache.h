@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
@@ -112,7 +113,7 @@ public:
   // StartupCache methods. See above comments for a more detailed description.
 
   // Returns a buffer that was previously stored, caller takes ownership.
-  nsresult GetBuffer(const char* id, char** outbuf, uint32_t* length);
+  nsresult GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* length);
 
   // Stores a buffer. Caller keeps ownership, we make a copy.
   nsresult PutBuffer(const char* id, const char* inbuf, uint32_t length);
