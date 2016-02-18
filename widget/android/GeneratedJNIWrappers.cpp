@@ -31,6 +31,14 @@ constexpr char AlarmReceiver::NotifyAlarmFired_t::signature[];
 template<> const char mozilla::jni::Context<DownloadsIntegration, jobject>::name[] =
         "org/mozilla/gecko/DownloadsIntegration";
 
+constexpr char DownloadsIntegration::GetTemporaryDownloadDirectory_t::name[];
+constexpr char DownloadsIntegration::GetTemporaryDownloadDirectory_t::signature[];
+
+auto DownloadsIntegration::GetTemporaryDownloadDirectory() -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetTemporaryDownloadDirectory_t>::Call(DownloadsIntegration::Context(), nullptr);
+}
+
 constexpr char DownloadsIntegration::ScanMedia_t::name[];
 constexpr char DownloadsIntegration::ScanMedia_t::signature[];
 
