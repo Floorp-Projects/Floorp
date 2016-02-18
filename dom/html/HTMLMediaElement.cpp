@@ -108,9 +108,6 @@ static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 
 #include "mozilla/EventStateManager.h"
 
-#include "mozilla/dom/HTMLVideoElement.h"
-#include "mozilla/dom/VideoPlaybackQuality.h"
-
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 
@@ -2702,17 +2699,6 @@ HTMLMediaElement::ReportMSETelemetry()
     if (stalled) {
       state = STALLED;
     }
-  }
-
-  if (HTMLVideoElement* vid = HTMLVideoElement::FromContentOrNull(this)) {
-    RefPtr<VideoPlaybackQuality> quality = vid->GetVideoPlaybackQuality();
-    uint64_t totalFrames = quality->TotalVideoFrames();
-    uint64_t droppedFrames = quality->DroppedVideoFrames();
-    uint32_t percentage = 100 * droppedFrames / totalFrames;
-    LOG(LogLevel::Debug,
-        ("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK"));
-    Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,
-                          percentage);
   }
 
   Telemetry::Accumulate(Telemetry::VIDEO_MSE_UNLOAD_STATE, state);
