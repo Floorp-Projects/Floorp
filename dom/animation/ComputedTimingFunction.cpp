@@ -35,6 +35,40 @@ double
 ComputedTimingFunction::GetValue(double aPortion) const
 {
   if (HasSpline()) {
+    // Check for a linear curve.
+    // (GetSplineValue(), below, also checks this but doesn't work when
+    // aPortion is outside the range [0.0, 1.0]).
+    if (mTimingFunction.X1() == mTimingFunction.Y1() &&
+        mTimingFunction.X2() == mTimingFunction.Y2()) {
+      return aPortion;
+    }
+
+    // For negative values, try to extrapolate with tangent (p1 - p0) or,
+    // if p1 is coincident with p0, with (p2 - p0).
+    if (aPortion < 0.0) {
+      if (mTimingFunction.X1() > 0.0) {
+        return aPortion * mTimingFunction.Y1() / mTimingFunction.X1();
+      } else if (mTimingFunction.Y1() == 0 && mTimingFunction.X2() > 0.0) {
+        return aPortion * mTimingFunction.Y2() / mTimingFunction.X2();
+      }
+      // If we can't calculate a sensible tangent, don't extrapolate at all.
+      return 0.0;
+    }
+
+    // For values greater than 1, try to extrapolate with tangent (p2 - p3) or,
+    // if p2 is coincident with p3, with (p1 - p3).
+    if (aPortion > 1.0) {
+      if (mTimingFunction.X2() < 1.0) {
+        return 1.0 + (aPortion - 1.0) *
+          (mTimingFunction.Y2() - 1) / (mTimingFunction.X2() - 1);
+      } else if (mTimingFunction.Y2() == 1 && mTimingFunction.X1() < 1.0) {
+        return 1.0 + (aPortion - 1.0) *
+          (mTimingFunction.Y1() - 1) / (mTimingFunction.X1() - 1);
+      }
+      // If we can't calculate a sensible tangent, don't extrapolate at all.
+      return 1.0;
+    }
+
     return mTimingFunction.GetSplineValue(aPortion);
   }
 
