@@ -27,7 +27,7 @@ add_task(function*() {
 
 function* testCancelNew(view) {
   let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
+  let editor = yield focusNewRuleViewProperty(elementRuleEditor);
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "The new property editor got focused");
 
