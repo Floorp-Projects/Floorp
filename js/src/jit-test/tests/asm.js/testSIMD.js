@@ -972,19 +972,19 @@ assertThrowsInstanceOf(() => f(SIMD.Float32x4(NaN, 0, 0, 0)), RangeError);
 assertThrowsInstanceOf(() => f(SIMD.Float32x4(Infinity, 0, 0, 0)), RangeError);
 assertThrowsInstanceOf(() => f(SIMD.Float32x4(-Infinity, 0, 0, 0)), RangeError);
 
-// See the following commit.
-// TBD: var f = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + U32 + I32U32 + F32 + CF32 + CVTFU +
-// TBD:                            'function f(x){x=cf4(x); var y=u4(0,0,0,0); y=cvt(x); return ci4(i4u4(y));} return f'), this);
-// TBD: assertEqX4(f(SIMD.Float32x4(1,2,3,4)), [1, 2, 3, 4]);
-// TODO: Test negative numbers > -1. They should truncate to 0.
-// TBD: assertEqX4(f(SIMD.Float32x4(UINT32_MAX - 64, INT32_MAX+1, -0, 0)), [UINT32_MAX-64, INT32_MAX+1, 0, 0].map(Math.fround));
+var f = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + U32 + I32U32 + F32 + CF32 + CVTFU +
+                           'function f(x){x=cf4(x); var y=u4(0,0,0,0); y=cvt(x); return ci4(i4u4(y));} return f'), this);
+assertEqX4(f(SIMD.Float32x4(1,2,3,4)), [1, 2, 3, 4]);
+// TODO: Test negative numbers > -1. They should truncate to 0. See https://github.com/tc39/ecmascript_simd/issues/315
+assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(f(SIMD.Float32x4(0xffffff00, INT32_MAX+1, -0, 0))),
+           [0xffffff00, INT32_MAX+1, 0, 0].map(Math.fround));
 // Test boundaries: -1 or less.
-// TBD: assertThrowsInstanceOf(() => f(SIMD.Float32x4(-1, 0, 0, 0)), RangeError);
-// TBD: assertThrowsInstanceOf(() => f(SIMD.Float32x4(Math.pow(2, 32), 0, 0, 0)), RangeError);
+assertThrowsInstanceOf(() => f(SIMD.Float32x4(-1, 0, 0, 0)), RangeError);
+assertThrowsInstanceOf(() => f(SIMD.Float32x4(Math.pow(2, 32), 0, 0, 0)), RangeError);
 // Special values
-// TBD: assertThrowsInstanceOf(() => f(SIMD.Float32x4(NaN, 0, 0, 0)), RangeError);
-// TBD: assertThrowsInstanceOf(() => f(SIMD.Float32x4(Infinity, 0, 0, 0)), RangeError);
-// TBD: assertThrowsInstanceOf(() => f(SIMD.Float32x4(-Infinity, 0, 0, 0)), RangeError);
+assertThrowsInstanceOf(() => f(SIMD.Float32x4(NaN, 0, 0, 0)), RangeError);
+assertThrowsInstanceOf(() => f(SIMD.Float32x4(Infinity, 0, 0, 0)), RangeError);
+assertThrowsInstanceOf(() => f(SIMD.Float32x4(-Infinity, 0, 0, 0)), RangeError);
 
 // Cast operators
 const CVTIFB = 'var cvt=f4.fromInt32x4Bits;';
