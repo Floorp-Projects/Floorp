@@ -1073,8 +1073,6 @@ assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + NOTF32 + 'function f() {var x=f
 // Logical ops
 const LSHI = 'var lsh=i4.shiftLeftByScalar;'
 const RSHI = 'var rsh=i4.shiftRightByScalar;'
-const ARSHI = 'var arsh=i4.shiftRightArithmeticByScalar;'
-const URSHI = 'var ursh=i4.shiftRightLogicalByScalar;'
 
 assertAsmTypeFail('glob', USE_ASM + I32 + CI32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return ci4(lsh(x,f32(42)));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + CI32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return ci4(lsh(x,42));} return f");
@@ -1087,62 +1085,44 @@ var vinput = [0, 1, INT32_MIN, INT32_MAX];
 // TODO: What to do for masks > 31? Should we keep only the five low bits of
 // the mask (JS) or not (x86)?
 // See bug 1246800.
-function Lsh(i) {  if (i > 31) return () => 0; return function(x) { return (x << i) | 0 } }
-function Arsh(i) {  if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
-function Ursh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) | 0 } }
+function Lsh(i) { if (i > 31) return () => 0; return function(x) { return (x << i) | 0 } }
+function Rsh(i) { if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
 
 var asmLsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + LSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(lsh(v, x+y))} return f;'), this)
 var asmRsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + RSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(rsh(v, x+y))} return f;'), this)
-var asmArsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + ARSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(arsh(v, x+y))} return f;'), this)
-var asmUrsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + URSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(ursh(v, x+y))} return f;'), this)
 
 for (var i = 1; i < 64; i++) {
     CheckI4(LSHI,  'var x=' + input + '; x=lsh(x, ' + i + ')',   vinput.map(Lsh(i)));
-    CheckI4(RSHI,  'var x=' + input + '; x=rsh(x, ' + i + ')',   vinput.map(Arsh(i)));
-    CheckI4(ARSHI, 'var x=' + input + '; x=arsh(x, ' + i + ')',  vinput.map(Arsh(i)));
-    CheckI4(URSHI, 'var x=' + input + '; x=ursh(x, ' + i + ')',  vinput.map(Ursh(i)));
+    CheckI4(RSHI,  'var x=' + input + '; x=rsh(x, ' + i + ')',   vinput.map(Rsh(i)));
 
     assertEqX4(asmLsh(i, 3),  vinput.map(Lsh(i + 3)));
-    assertEqX4(asmRsh(i, 3),  vinput.map(Arsh(i + 3)));
-    assertEqX4(asmArsh(i, 3), vinput.map(Arsh(i + 3)));
-    assertEqX4(asmUrsh(i, 3), vinput.map(Ursh(i + 3)));
+    assertEqX4(asmRsh(i, 3),  vinput.map(Rsh(i + 3)));
 }
 
 // Same thing for Uint32x4.
 const LSHU = 'var lsh=u4.shiftLeftByScalar;'
 const RSHU = 'var rsh=u4.shiftRightByScalar;'
-const ARSHU = 'var arsh=u4.shiftRightArithmeticByScalar;'
-const URSHU = 'var ursh=u4.shiftRightLogicalByScalar;'
 
 input = 'u4(0, 1, 0x80008000, ' + INT32_MAX + ')';
 vinput = [0, 1, 0x80008000, INT32_MAX];
 
-function uLsh(i) {  if (i > 31) return () => 0; return function(x) { return (x << i) >>> 0 } }
-function uArsh(i) {  if (i > 31) return (x) => (((x|0)<0)?-1:0)>>>0; return function(x) { return (x >> i) >>> 0 } }
-function uUrsh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) } }
+function uLsh(i) { if (i > 31) return () => 0; return function(x) { return (x << i) >>> 0 } }
+function uRsh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) } }
 
 // Need to bitcast to Int32x4 before returning result.
 asmLsh = asmLink(asmCompile('glob', USE_ASM + U32 + CU32 + LSHU + I32 + CI32 + I32U32 +
                             'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(i4u4(lsh(v, x+y)));} return f;'), this)
 asmRsh = asmLink(asmCompile('glob', USE_ASM + U32 + CU32 + RSHU + I32 + CI32 + I32U32 +
                             'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(i4u4(rsh(v, x+y)));} return f;'), this)
-asmArsh = asmLink(asmCompile('glob', USE_ASM + U32 + CU32 + ARSHU + I32 + CI32 + I32U32 +
-                             'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(i4u4(arsh(v, x+y)));} return f;'), this)
-asmUrsh = asmLink(asmCompile('glob', USE_ASM + U32 + CU32 + URSHU + I32 + CI32 + I32U32 +
-                             'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(i4u4(ursh(v, x+y)));} return f;'), this)
 
 for (var i = 1; i < 64; i++) {
     // Constant shifts.
-    CheckU4(LSHU,  'var x=' + input + '; x=lsh(x, ' + i + ')',   vinput.map(uLsh(i)));
-    CheckU4(RSHU,  'var x=' + input + '; x=rsh(x, ' + i + ')',   vinput.map(uUrsh(i)));
-    CheckU4(ARSHU, 'var x=' + input + '; x=arsh(x, ' + i + ')',  vinput.map(uArsh(i)));
-    CheckU4(URSHU, 'var x=' + input + '; x=ursh(x, ' + i + ')',  vinput.map(uUrsh(i)));
+    CheckU4(LSHU,  'var x=' + input + '; x=lsh(x, ' + i + ')', vinput.map(uLsh(i)));
+    CheckU4(RSHU,  'var x=' + input + '; x=rsh(x, ' + i + ')', vinput.map(uRsh(i)));
 
     // Dynamically computed shifts. The asm function returns a Int32x4.
-    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmLsh(i, 3)),  vinput.map(uLsh(i + 3)));
-    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmRsh(i, 3)),  vinput.map(uUrsh(i + 3)));
-    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmArsh(i, 3)), vinput.map(uArsh(i + 3)));
-    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmUrsh(i, 3)), vinput.map(uUrsh(i + 3)));
+    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmLsh(i, 3)), vinput.map(uLsh(i + 3)));
+    assertEqX4(SIMD.Uint32x4.fromInt32x4Bits(asmRsh(i, 3)), vinput.map(uRsh(i + 3)));
 }
 
 // Select
