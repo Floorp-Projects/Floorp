@@ -113,13 +113,11 @@ void
 SdpFmtpAttributeList::Serialize(std::ostream& os) const
 {
   for (auto i = mFmtps.begin(); i != mFmtps.end(); ++i) {
-    os << "a=" << mType << ":" << i->format << " ";
     if (i->parameters) {
+      os << "a=" << mType << ":" << i->format << " ";
       i->parameters->Serialize(os);
-    } else {
-      os << i->parameters_string;
+      os << CRLF;
     }
-    os << CRLF;
   }
 }
 

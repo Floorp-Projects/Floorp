@@ -666,21 +666,6 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
     // payload_num is the number in the fmtp attribute, verbatim
     osPayloadType << fmtp->payload_num;
 
-    // Get the serialized form of the parameters
-    flex_string fs;
-    flex_string_init(&fs);
-
-    // Very lame, but we need direct access so we can get the serialized form
-    sdp_result_e sdpres = sdp_build_attr_fmtp_params(sdp, fmtp, &fs);
-
-    if (sdpres != SDP_SUCCESS) {
-      flex_string_free(&fs);
-      continue;
-    }
-
-    std::string paramsString(fs.buffer);
-    flex_string_free(&fs);
-
     // Get parsed form of parameters, if supported
     UniquePtr<SdpFmtpAttributeList::Parameters> parameters;
 
@@ -735,11 +720,17 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
 
         parameters.reset(vp8Parameters);
       } break;
+      case RTP_OPUS: {
+        SdpFmtpAttributeList::OpusParameters* opusParameters(
+            new SdpFmtpAttributeList::OpusParameters);
+        opusParameters->maxplaybackrate = fmtp->maxplaybackrate;
+        parameters.reset(opusParameters);
+      } break;
       default: {
       }
     }
 
-    fmtps->PushEntry(osPayloadType.str(), paramsString, Move(parameters));
+    fmtps->PushEntry(osPayloadType.str(), Move(parameters));
   }
 
   if (!fmtps->mFmtps.empty()) {
