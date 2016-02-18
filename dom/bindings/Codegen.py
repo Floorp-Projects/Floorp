@@ -2316,6 +2316,39 @@ class MethodDefiner(PropertyDefiner):
                     })
                     break
 
+        if (not static and
+            maplikeOrSetlikeOrIterable and
+            maplikeOrSetlikeOrIterable.isIterable() and
+            maplikeOrSetlikeOrIterable.isValueIterator()):
+            # Add our keys/values/entries
+            self.regular.append({
+                "name": "keys",
+                "methodInfo": False,
+                "selfHostedName": "ArrayKeys",
+                "length": 0,
+                "flags": "JSPROP_ENUMERATE",
+                "condition": PropertyDefiner.getControllingCondition(m,
+                                                                     descriptor)
+            })
+            self.regular.append({
+                "name": "values",
+                "methodInfo": False,
+                "selfHostedName": "ArrayValues",
+                "length": 0,
+                "flags": "JSPROP_ENUMERATE",
+                "condition": PropertyDefiner.getControllingCondition(m,
+                                                                     descriptor)
+            })
+            self.regular.append({
+                "name": "entries",
+                "methodInfo": False,
+                "selfHostedName": "ArrayEntries",
+                "length": 0,
+                "flags": "JSPROP_ENUMERATE",
+                "condition": PropertyDefiner.getControllingCondition(m,
+                                                                     descriptor)
+            })
+
         if not static:
             stringifier = descriptor.operations['Stringifier']
             if (stringifier and
