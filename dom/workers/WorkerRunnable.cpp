@@ -350,10 +350,44 @@ WorkerRunnable::Run()
     cx = jsapi.cx();
   }
 
-  // If we're not on the worker thread we'll either be in our parent's
-  // compartment or the null compartment, so we need to enter our own.
+  // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
+  // existing, since it may in fact have been GCed (and we may be one of the
+  // runnables cleaning up the worker as a result).
+
+  // If we are on the parent thread and that thread is not the main thread,
+  // then we must be a dedicated worker (because there are no
+  // Shared/ServiceWorkers whose parent is itself a worker) and then we
+  // definitely have a globalObject.  If it _is_ the main thread, globalObject
+  // can be null for workers started from JSMs or other non-window contexts,
+  // sadly.
+  MOZ_ASSERT_IF(!targetIsWorkerThread && !isMainThread,
+                mWorkerPrivate->IsDedicatedWorker() && globalObject);
+
+  // If we're on the parent thread we might be in a null compartment in the
+  // situation described above when globalObject is null.  Make sure to enter
+  // the compartment of the worker's reflector if there is one.  There might
+  // not be one if we're just starting to compile the script for this worker.
   Maybe<JSAutoCompartment> ac;
   if (!targetIsWorkerThread && mWorkerPrivate->GetWrapper()) {
+    // If we're on the parent thread and have a reflector and a globalObject,
+    // then the compartments of cx, globalObject, and the worker's reflector
+    // should all match.
+    MOZ_ASSERT_IF(globalObject,
+                  js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+                    js::GetContextCompartment(cx));
+    MOZ_ASSERT_IF(globalObject,
+                  js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+                    js::GetObjectCompartment(globalObject->GetGlobalJSObject()));
+
+    // If we're on the parent thread and have a reflector, then our
+    // JSContext had better be either in the null compartment (and hence
+    // have no globalObject) or in the compartment of our reflector.
+    MOZ_ASSERT(!js::GetContextCompartment(cx) ||
+               js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+                 js::GetContextCompartment(cx),
+               "Must either be in the null compartment or in our reflector "
+               "compartment");
+
     ac.emplace(cx, mWorkerPrivate->GetWrapper());
   }
 
