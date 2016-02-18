@@ -39,6 +39,7 @@ flags:
     jsreftest-e10s: /jsreftest-e10s.*/
     luciddream: /luciddream.*/
     marionette: /marionette.*/
+    marionette-e10s: /marionette-e10s.*/
     mochitest: /mochitest.*/
     mochitests: /mochitest.*/
     mochitest-e10s: /mochitest-e10s.*/
@@ -131,6 +132,7 @@ flags:
     - jsreftest-e10s
     - luciddream
     - marionette
+    - marionette-e10s
     - marionette-webapi
     - mochitest
     - mochitest-a11y
