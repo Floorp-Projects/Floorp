@@ -1543,8 +1543,7 @@ uint32_t StaticScopeChainLength(JSObject* staticScope);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
-bool GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
-                                              MutableHandleValue res);
+bool GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res);
 
 bool CheckVarNameConflict(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
                           HandlePropertyName name);
