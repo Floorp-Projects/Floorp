@@ -5587,12 +5587,14 @@
     "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar."
   },
   "POPUP_NOTIFICATION_STATS": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "48",
+    "bug_numbers": [1207089],
+    "expires_in_version": "50",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 40,
-    "description": "(Bug 1207089) Usage of popup notifications, keyed by ID (0 = Offered, 1..4 = Action, 5 = Click outside, 6 = Leave page, 7 = Use 'X', 8 = Not now, 10 = Open submenu, 11 = Learn more. Add 20 if happened after reopen.)"
+    "description": "Usage of popup notifications, keyed by ID (0 = Offered, 1..4 = Action, 5 = Click outside, 6 = Leave page, 7 = Use 'X', 8 = Not now, 10 = Open submenu, 11 = Learn more. Add 20 if happened after reopen.)"
   },
   "POPUP_NOTIFICATION_MAIN_ACTION_MS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
@@ -10042,6 +10044,7 @@
     "description": "Count of times a contextual menu item was used from a Notification (0: DND, 1: Disable, 2: Settings)"
   },
   "WEB_NOTIFICATION_SHOWN": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
     "expires_in_version": "50",
@@ -10143,6 +10146,7 @@
     "description": "Number of times the Notification Permissions dialog has been opened."
   },
   "WEB_NOTIFICATION_PERMISSIONS": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1219030],
     "expires_in_version": "50",
@@ -10159,6 +10163,7 @@
     "description": "Number of removed web notifications permissions (0 = remove deny, 1 = remove allow)."
   },
   "WEB_NOTIFICATION_SENDERS": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1219030],
     "expires_in_version": "50",
