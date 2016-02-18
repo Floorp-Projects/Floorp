@@ -601,6 +601,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentReferenceFrame(aReferenceFrame),
       mCurrentAGR(&mRootAGR),
       mRootAGR(aReferenceFrame, nullptr),
+      mUsedAGRBudget(0),
       mDirtyRect(-1,-1,-1,-1),
       mGlassDisplayItem(nullptr),
       mPendingScrollInfoItems(nullptr),
@@ -1083,8 +1084,12 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParen
 
   if (nsLayoutUtils::IsPopup(aFrame))
     return true;
-  if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(aFrame))
-    return true;
+  if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(aFrame)) {
+    const bool inBudget = AddToAGRBudget(aFrame);
+    if (inBudget) {
+      return true;
+    }
+  }
   if (!aFrame->GetParent() &&
       nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext())) {
     // Viewport frames in a display port need to be animated geometry roots
@@ -1237,7 +1242,7 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
 }
 
 const uint32_t gWillChangeAreaMultiplier = 3;
-static uint32_t GetWillChangeCost(const nsSize& aSize) {
+static uint32_t GetLayerizationCost(const nsSize& aSize) {
   // There's significant overhead for each layer created from Gecko
   // (IPC+Shared Objects) and from the backend (like an OpenGL texture).
   // Therefore we set a minimum cost threshold of a 64x64 area.
@@ -1254,7 +1259,7 @@ static uint32_t GetWillChangeCost(const nsSize& aSize) {
 bool
 nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
                                             const nsSize& aSize) {
-  if (mBudgetSet.Contains(aFrame)) {
+  if (mWillChangeBudgetSet.Contains(aFrame)) {
     return true; // Already accounted
   }
 
@@ -1270,14 +1275,14 @@ nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
   uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
     nsPresContext::AppUnitsToIntCSSPixels(area.height);
 
-  uint32_t cost = GetWillChangeCost(aSize);
+  uint32_t cost = GetLayerizationCost(aSize);
   bool onBudget = (budget.mBudget + cost) /
                     gWillChangeAreaMultiplier < budgetLimit;
 
   if (onBudget) {
     budget.mBudget += cost;
     mWillChangeBudget.Put(key, budget);
-    mBudgetSet.PutEntry(aFrame);
+    mWillChangeBudgetSet.PutEntry(aFrame);
   }
 
   return onBudget;
@@ -1290,7 +1295,7 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 
   if (!onBudget) {
     nsString usageStr;
-    usageStr.AppendInt(GetWillChangeCost(aSize));
+    usageStr.AppendInt(GetLayerizationCost(aSize));
 
     nsString multiplierStr;
     multiplierStr.AppendInt(gWillChangeAreaMultiplier);
@@ -1306,6 +1311,40 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
       nsIDocument::eIgnoringWillChangeOverBudget, false,
       params, ArrayLength(params));
   }
+  return onBudget;
+}
+
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+const float gAGRBudgetAreaMultiplier = 0.3;
+#else
+const float gAGRBudgetAreaMultiplier = 3.0;
+#endif
+
+bool
+nsDisplayListBuilder::AddToAGRBudget(nsIFrame* aFrame)
+{
+  if (mAGRBudgetSet.Contains(aFrame)) {
+    return true;
+  }
+
+  const nsPresContext* presContext = aFrame->PresContext()->GetRootPresContext();
+  if (!presContext) {
+    return false;
+  }
+
+  const nsRect area = presContext->GetVisibleArea();
+  const uint32_t budgetLimit = gAGRBudgetAreaMultiplier *
+    nsPresContext::AppUnitsToIntCSSPixels(area.width) *
+    nsPresContext::AppUnitsToIntCSSPixels(area.height);
+
+  const uint32_t cost = GetLayerizationCost(aFrame->GetSize());
+  const bool onBudget = mUsedAGRBudget + cost < budgetLimit;
+
+  if (onBudget) {
+    mUsedAGRBudget += cost;
+    mAGRBudgetSet.PutEntry(aFrame);
+  }
+
   return onBudget;
 }
 
