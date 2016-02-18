@@ -258,6 +258,20 @@ function handleRequest(req, res) {
     content = '<head> <script src="push2.js"/></head>body text';
   }
 
+  else if (u.pathname === "/push5") {
+    push = res.push('/push5.js');
+    push.writeHead(200, {
+      'content-type': 'application/javascript',
+      'pushed' : 'yes',
+      // no content-length
+      'X-Connection-Http2': 'yes'
+    });
+    content = generateContent(1024 * 150);
+    push.write(content);
+    push.end();
+    content = '<head> <script src="push5.js"/></head>body text';
+  }
+
   else if (u.pathname === "/pushapi1") {
     push1 = res.push(
         { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/1', method : 'GET',
