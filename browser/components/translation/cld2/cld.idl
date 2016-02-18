@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Note: This is a variant of WebIDL, but its semantics differ from our
+// internal WebIDL implementation. Some particular differences that are
+// relevent here include:
+//
+//  - Attribute declarations refer directly to member variables of the
+//    underlying class, and are not forwarded to explicit getter methods.
+//
+//  - Attribute declarations also do not create getters on the JavaScript
+//    wrapper object, but instead generate "get_foo()" and "set_foo()"
+//    methods, which must be called in order to access the value. In the case
+//    of array attributes, the callers must also pass the index they wish to
+//    access.
+//
+//  - Method overloading is fairly crude. Only explicitly declared variants
+//    are supported, and selection is based entirely on index of the first
+//    parameter whose value is undefined.
+//
+//  - DOMString attributes are nullable by default. Null values are not
+//    converted to empty strings, and non-null values are converted to
+//    null-terminated, UTF-8 byte arrays.
+
+interface Language {
+  [Const] DOMString getLanguageCode();
+};
+
+interface LanguageGuess {
+  byte getPercent();
+};
+
+interface LanguageInfo {
+  static LanguageInfo detectLanguage(DOMString buffer, boolean isPlainText);
+
+  static LanguageInfo detectLanguage(DOMString buffer, boolean isPlainText,
+                                     DOMString? tldHint, long encodingHint,
+                                     DOMString? languageHint);
+
+  boolean getIsReliable();
+
+  [BoundsChecked,Const] readonly attribute LanguageGuess[] languages;
+};
+
+LanguageGuess implements Language;
+LanguageInfo implements Language;
