@@ -216,6 +216,14 @@ WMFVideoMFTManager::Init()
     mDXVAFailureReason.Append(d3d11Failure);
   }
 
+  if (success && mDXVA2Manager) {
+    if (mDXVA2Manager->IsD3D11()) {
+      mDXVAFailureReason.AssignLiteral("Using D3D11 API");
+    } else {
+      mDXVAFailureReason.AssignLiteral("Using D3D9 API");
+    }
+  }
+
   return success;
 }
 
