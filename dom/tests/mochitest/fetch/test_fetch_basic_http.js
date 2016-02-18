@@ -169,7 +169,7 @@ function testFormDataSend() {
       }
 
       is(response[1].headers['Content-Disposition'],
-          'form-data; name="empty"; filename=""');
+          'form-data; name="empty"; filename="blob"');
 
       is(response[2].headers['Content-Disposition'],
           'form-data; name="explicit"; filename="explicit-file-name"');

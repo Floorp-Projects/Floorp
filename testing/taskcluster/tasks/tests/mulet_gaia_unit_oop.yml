@@ -8,7 +8,6 @@ task:
 
   payload:
     env:
-      NEED_XVFB: true
       NEED_PULL_GAIA: true
       MOZHARNESS_SCRIPT: 'mozharness/scripts/gaia_unit.py'
       MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_gaia_unit_production.py'
@@ -22,11 +21,6 @@ task:
       - --xre-url=https://api.pub.build.mozilla.org/tooltool/sha512/cefa8c00db04969d3a50e2a5509bd4ea1dc17d256a651a9518cb28dad72e87a1dbbcd3c88ef770be0edf0ab73d2d73925140df93618ffb7fab81b789d312f547
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherderEnv:

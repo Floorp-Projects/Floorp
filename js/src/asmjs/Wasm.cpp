@@ -627,8 +627,23 @@ DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator
     const uint8_t* bodyBegin = d.currentPosition();
 
     FunctionDecoder f(cx, d, mg, fg, funcIndex);
-    if (!DecodeExpr(f, f.ret()))
-        return false;
+
+    uint32_t numExprs;
+    if (!d.readVarU32(&numExprs))
+        return Fail(cx, d, "expected number of function body expressions");
+
+    if (numExprs) {
+        for (size_t i = 0; i < numExprs - 1; i++) {
+            if (!DecodeExpr(f, ExprType::Void))
+                return false;
+        }
+
+        if (!DecodeExpr(f, f.ret()))
+            return false;
+    } else {
+        if (!CheckType(f, ExprType::Void, f.ret()))
+            return false;
+    }
 
     const uint8_t* bodyEnd = d.currentPosition();
     uintptr_t bodyLength = bodyEnd - bodyBegin;
@@ -1165,7 +1180,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
         return Fail(cx, d, "failed to match binary version");
 
-    UniqueModuleGeneratorData init = MakeUnique<ModuleGeneratorData>();
+    UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
     if (!init)
         return false;
 

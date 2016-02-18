@@ -94,7 +94,8 @@ public:
   NS_IMETHOD GetType(nsAString& aType);
   Source* GetSource();
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs);
+                    const MediaEnginePrefs &aPrefs,
+                    const nsACString& aOrigin);
   nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
                    const MediaEnginePrefs &aPrefs);
 };
@@ -108,7 +109,8 @@ public:
   NS_IMETHOD GetType(nsAString& aType);
   Source* GetSource();
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs);
+                    const MediaEnginePrefs &aPrefs,
+                    const nsACString& aOrigin);
   nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
                    const MediaEnginePrefs &aPrefs);
 };

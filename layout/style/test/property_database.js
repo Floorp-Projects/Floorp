@@ -7121,13 +7121,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "border-bottom-right-radius",
     subproperties: [ "border-bottom-right-radius" ],
   };
-  gCSSProperties["-webkit-appearance"] = {
-    domProp: "webkitAppearance",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-appearance",
-    subproperties: [ "-moz-appearance" ],
-  };
   gCSSProperties["-webkit-background-clip"] = {
     domProp: "webkitBackgroundClip",
     inherited: false,

@@ -358,7 +358,7 @@ function test_asyncFetch_with_nsIURI()
   null,      // aLoadingNode
   Services.scriptSecurityManager.getSystemPrincipal(),
   null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
@@ -396,7 +396,7 @@ function test_asyncFetch_with_string()
   null,      // aLoadingNode
   Services.scriptSecurityManager.getSystemPrincipal(),
   null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
@@ -442,7 +442,7 @@ function test_asyncFetch_with_nsIFile()
   null,      // aLoadingNode
   Services.scriptSecurityManager.getSystemPrincipal(),
   null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
@@ -468,7 +468,7 @@ function test_asyncFetch_with_nsIInputString()
   null,      // aLoadingNode
   Services.scriptSecurityManager.getSystemPrincipal(),
   null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
@@ -528,7 +528,7 @@ function test_newChannel_with_string()
                                    null,      // aLoadingNode
                                    Services.scriptSecurityManager.getSystemPrincipal(),
                                    null,      // aTriggeringPrincipal
-                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                    Ci.nsIContentPolicy.TYPE_OTHER);
   let NetUtilChannel = NetUtil.newChannel({
     uri: TEST_SPEC,
@@ -550,7 +550,7 @@ function test_newChannel_with_nsIURI()
                                                         null,      // aLoadingNode
                                                         Services.scriptSecurityManager.getSystemPrincipal(),
                                                         null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
+                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                         Ci.nsIContentPolicy.TYPE_OTHER);
   let NetUtilChannel = NetUtil.newChannel({
     uri: uri,
@@ -569,7 +569,7 @@ function test_newChannel_with_options()
                                                         null,      // aLoadingNode
                                                         Services.scriptSecurityManager.getSystemPrincipal(),
                                                         null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
+                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                         Ci.nsIContentPolicy.TYPE_OTHER);
 
   function checkEqualToIOSChannel(channel) {

@@ -357,16 +357,7 @@ wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncO
         masm.twoByteNop();
 #elif defined(JS_CODEGEN_ARM)
         masm.nop();
-#elif defined(JS_CODEGEN_MIPS32)
-        masm.nop();
-        masm.nop();
-        masm.nop();
-        masm.nop();
-#elif defined(JS_CODEGEN_MIPS64)
-        masm.nop();
-        masm.nop();
-        masm.nop();
-        masm.nop();
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         masm.nop();
         masm.nop();
 #endif
@@ -741,12 +732,12 @@ wasm::EnableProfilingPrologue(const Module& module, const CallSite& callSite, bo
     MOZ_CRASH();
     void* callee = nullptr;
     (void)callerRetAddr;
-#elif defined(JS_CODEGEN_MIPS32)
-    Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
-    void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
-#elif defined(JS_CODEGEN_MIPS64)
-    Instruction* instr = (Instruction*)(callerRetAddr - 6 * sizeof(uint32_t));
-    void* callee = (void*)Assembler::ExtractLoad64Value(instr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    uint8_t* caller = callerRetAddr - 2 * sizeof(uint32_t);
+    InstImm* callerInsn = reinterpret_cast<InstImm*>(caller);
+    BOffImm16 calleeOffset;
+    callerInsn->extractImm16(&calleeOffset);
+    void* callee = calleeOffset.getDest(reinterpret_cast<Instruction*>(caller));
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
     void* callee = nullptr;
@@ -772,13 +763,8 @@ wasm::EnableProfilingPrologue(const Module& module, const CallSite& callSite, bo
 #elif defined(JS_CODEGEN_ARM64)
     (void)to;
     MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS32)
-    Assembler::WriteLuiOriInstructions(instr, instr->next(),
-                                       ScratchRegister, (uint32_t)to);
-    instr[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#elif defined(JS_CODEGEN_MIPS64)
-    Assembler::WriteLoad64Instructions(instr, ScratchRegister, (uint64_t)to);
-    instr[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    callerInsn->setBOffImm16(BOffImm16(to - caller));
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else
@@ -834,25 +820,12 @@ wasm::EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, 
     (void)jump;
     (void)profilingEpilogue;
     MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS32)
-    Instruction* instr = (Instruction*)jump;
-    if (enabled) {
-        Assembler::WriteLuiOriInstructions(instr, instr->next(),
-                                           ScratchRegister, (uint32_t)profilingEpilogue);
-        instr[2] = InstReg(op_special, ScratchRegister, zero, zero, ff_jr);
-    } else {
-        for (unsigned i = 0; i < 3; i++)
-            instr[i].makeNop();
-    }
-#elif defined(JS_CODEGEN_MIPS64)
-    Instruction* instr = (Instruction*)jump;
-    if (enabled) {
-        Assembler::WriteLoad64Instructions(instr, ScratchRegister, (uint64_t)profilingEpilogue);
-        instr[4] = InstReg(op_special, ScratchRegister, zero, zero, ff_jr);
-    } else {
-        for (unsigned i = 0; i < 5; i++)
-            instr[i].makeNop();
-    }
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    InstImm* instr = (InstImm*)jump;
+    if (enabled)
+        instr->setBOffImm16(BOffImm16(profilingEpilogue - jump));
+    else
+        instr->makeNop();
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else

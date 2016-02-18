@@ -1715,51 +1715,57 @@ nsStandardURL::SetPort(int32_t port)
     }
 
     InvalidateCache();
-
-    if (mPort == -1) {
-        // need to insert the port number in the URL spec
-        nsAutoCString buf;
-        buf.Assign(':');
-        buf.AppendInt(port);
-        mSpec.Insert(buf, mAuthority.mPos + mAuthority.mLen);
-        mAuthority.mLen += buf.Length();
-        ShiftFromPath(buf.Length());
+    if (port == mDefaultPort) {
+      port = -1;
     }
-    else if (port == -1 || port == mDefaultPort) {
-        // Don't allow mPort == mDefaultPort
-        port = -1;
 
-        // compute length of the current port
-        nsAutoCString buf;
-        buf.Assign(':');
-        buf.AppendInt(mPort);
-
-        // need to remove the port number from the URL spec
-        uint32_t start = mAuthority.mPos + mAuthority.mLen - buf.Length();
-        int32_t lengthToCut = buf.Length();
-        mSpec.Cut(start, lengthToCut);
-        mAuthority.mLen -= lengthToCut;
-        ShiftFromPath(-lengthToCut);
-    }
-    else {
-        // need to replace the existing port
-        nsAutoCString buf;
-        buf.Assign(':');
-        buf.AppendInt(mPort);
-        uint32_t start = mAuthority.mPos + mAuthority.mLen - buf.Length();
-        uint32_t length = buf.Length();
-
-        buf.Assign(':');
-        buf.AppendInt(port);
-        mSpec.Replace(start, length, buf);
-        if (buf.Length() != length) {
-            mAuthority.mLen += buf.Length() - length;
-            ShiftFromPath(buf.Length() - length);
-        }
-    }
+    ReplacePortInSpec(port);
 
     mPort = port;
     return NS_OK;
+}
+
+/**
+ * Replaces the existing port in mSpec with aNewPort.
+ *
+ * The caller is responsible for:
+ *  - Calling InvalidateCache (since our mSpec is changing).
+ *  - Checking whether aNewPort is mDefaultPort (in which case the
+ *    caller should pass aNewPort=-1).
+ */
+void
+nsStandardURL::ReplacePortInSpec(int32_t aNewPort)
+{
+    MOZ_ASSERT(mMutable, "Caller should ensure we're mutable");
+    NS_ASSERTION(aNewPort != mDefaultPort,
+                 "Caller should check its passed-in value and pass -1 instead of "
+                 "mDefaultPort, to avoid encoding default port into mSpec");
+
+    // Create the (possibly empty) string that we're planning to replace:
+    nsAutoCString buf;
+    if (mPort != -1) {
+        buf.Assign(':');
+        buf.AppendInt(mPort);
+    }
+    // Find the position & length of that string:
+    const uint32_t replacedLen = buf.Length();
+    const uint32_t replacedStart =
+        mAuthority.mPos + mAuthority.mLen - replacedLen;
+
+    // Create the (possibly empty) replacement string:
+    if (aNewPort == -1) {
+        buf.Truncate();
+    } else {
+        buf.Assign(':');
+        buf.AppendInt(aNewPort);
+    }
+    // Perform the replacement:
+    mSpec.Replace(replacedStart, replacedLen, buf);
+
+    // Bookkeeping to reflect the new length:
+    int32_t shift = buf.Length() - replacedLen;
+    mAuthority.mLen += shift;
+    ShiftFromPath(shift);
 }
 
 NS_IMETHODIMP
@@ -2879,6 +2885,25 @@ nsStandardURL::Init(uint32_t urlType,
     if (NS_FAILED(rv)) return rv;
 
     return SetSpec(buf);
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetDefaultPort(int32_t aNewDefaultPort)
+{
+    ENSURE_MUTABLE();
+
+    InvalidateCache();
+
+    // If we're already using the new default-port as a custom port, then clear
+    // it off of our mSpec & set mPort to -1, to indicate that we'll be using
+    // the default from now on (which happens to match what we already had).
+    if (mPort == aNewDefaultPort) {
+        ReplacePortInSpec(-1);
+        mPort = -1;
+    }
+    mDefaultPort = aNewDefaultPort;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

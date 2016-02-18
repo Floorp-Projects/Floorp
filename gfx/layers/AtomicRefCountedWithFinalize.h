@@ -66,7 +66,7 @@ public:
     friend class ::mozilla::StaticRefPtr;
 
     template<class U>
-    friend class ::RefPtr;
+    friend struct mozilla::RefPtrTraits;
 
     template<class U>
     friend struct ::RunnableMethodTraits;

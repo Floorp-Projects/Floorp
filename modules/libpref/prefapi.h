@@ -30,10 +30,10 @@ typedef union
 
 struct PrefHashEntry : PLDHashEntryHdr
 {
+    uint16_t flags; // This field goes first to minimize struct size on 64-bit.
     const char *key;
     PrefValue defaultPref;
     PrefValue userPref;
-    uint16_t  flags;
 };
 
 /*

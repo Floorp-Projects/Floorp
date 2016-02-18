@@ -1,0 +1,104 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+
+include protocol PContent;
+
+using mozilla::CSSPoint from "Units.h";
+using CSSRect from "Units.h";
+using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
+using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
+using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
+using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
+using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
+using mozilla::Modifiers from "mozilla/EventForwards.h";
+using class nsRegion from "nsRegion.h";
+
+namespace mozilla {
+namespace layers {
+
+
+/**
+ * If APZ is enabled then one PAPZ will be opened per PBrowser between the
+ * process where the PBrowser child actor lives and the main process (the
+ * PBrowser parent actor doesn't necessarily live in the main process, for
+ * example with nested browsers). This will typically be set up when the layers
+ * id is allocated for the PBrowser.
+ *
+ * Opened through PContent and runs on the main thread in both parent and child.
+ */
+sync protocol PAPZ
+{
+  manager PContent;
+
+parent:
+  async UpdateHitRegion(nsRegion aRegion);
+
+  /**
+   * Instructs the TabParent to forward a request to zoom to a rect given in
+   * CSS pixels. This rect is relative to the document.
+   */
+  async ZoomToRect(uint32_t aPresShellId, ViewID aViewId, CSSRect aRect, uint32_t aFlags);
+
+  /**
+   * We know for sure that content has either preventDefaulted or not
+   * preventDefaulted. This applies to an entire batch of touch events. It is
+   * expected that, if there are any DOM touch listeners, touch events will be
+   * batched and only processed for panning and zooming if content does not
+   * preventDefault.
+   */
+  async ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
+
+  /**
+   * Notifies the APZ code of the results of the gecko hit-test for a
+   * particular input block. Each target corresponds to one touch point in the
+   * touch event.
+   */
+  async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+
+  // Start an APZ drag on a scrollbar
+  async StartScrollbarDrag(AsyncDragMetrics aDragMetrics);
+
+  /**
+   * Notifies the APZ code of the allowed touch-behaviours for a particular
+   * input block. Each item in the aFlags array corresponds to one touch point
+   * in the touch event.
+   */
+  async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aFlags);
+
+  /**
+   * Updates the zoom constraints for a scrollable frame in this tab.
+   * The zoom controller code lives on the parent side and so this allows it to
+   * have up-to-date zoom constraints.
+   */
+  async UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
+                              MaybeZoomConstraints aConstraints);
+
+child:
+  async UpdateFrame(FrameMetrics frame);
+
+  // The following methods correspond to functions on the GeckoContentController
+  // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
+  // in that file for these functions.
+  async RequestFlingSnap(ViewID aScrollID, CSSPoint aDestination);
+  async AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
+  async HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
+  async HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid, bool aCallTakeFocusForClickFromTap);
+  async HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+  async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
+  async NotifyFlushComplete();
+
+  async __delete__();
+};
+
+} // layers
+} // mozilla

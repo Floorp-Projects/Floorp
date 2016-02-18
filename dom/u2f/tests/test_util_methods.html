@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for Utility Methods for other FIDO Universal Second Factor tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/u2f/tests/u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setBoolPref("security.webauth.u2f", true);
+SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", true);
+SpecialPowers.setBoolPref("security.webauth.u2f.usbtoken", false);
+
+// Example from:
+// https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-u2f-raw-message-formats.html
+//
+// Run this example from the console to check that the u2futil methods work
+var pubKey = hexDecode("04d368f1b665bade3c33a20f1e429c7750d5033660c019119d29aa4ba7abc04aa7c80a46bbe11ca8cb5674d74f31f8a903f6bad105fb6ab74aefef4db8b0025e1d");
+var appId = "https://gstatic.com/securitykey/a/example.com";
+var clientData = string2buffer('{"typ":"navigator.id.getAssertion","challenge":"opsXqUifDriAAmWclinfbS0e-USY0CgyJHe_Otd7z8o","cid_pubkey":{"kty":"EC","crv":"P-256","x":"HzQwlfXX7Q4S5MtCCnZUNBw3RMzPO9tOyWjBqRl4tJ8","y":"XVguGFLIZx1fXg3wNqfdbn75hi4-_7-BxhMljw42Ht4"},"origin":"http://example.com"}');
+var presenceAndCounter = hexDecode("0100000001");
+var signature = hexDecode("304402204b5f0cd17534cedd8c34ee09570ef542a353df4436030ce43d406de870b847780220267bb998fac9b7266eb60e7cb0b5eabdfd5ba9614f53c7b22272ec10047a923f");
+
+// Import the key
+// Assemble the client data
+// Verify
+Promise.all([
+  importPublicKey(pubKey),
+  assembleSignedData(appId, presenceAndCounter, clientData)
+])
+.then(function(results) {
+  var importedKey = results[0];
+  var signedData = new Uint8Array(results[1]);
+  return verifySignature(importedKey, signedData, signature);
+})
+.then(function(verified) {
+  console.log("verified:", verified);
+  ok(true, "Utility methods work")
+  SimpleTest.finish();
+})
+.catch(function(err) {
+  console.log("error:", err);
+  ok(false, "Utility methods failed")
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

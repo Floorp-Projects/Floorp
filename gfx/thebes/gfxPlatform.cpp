@@ -196,14 +196,14 @@ public:
   explicit CrashStatsLogForwarder(const char* aKey);
   virtual void Log(const std::string& aString) override;
   virtual void CrashAction(LogReason aReason) override;
+  virtual bool UpdateStringsVector(const std::string& aString) override;
 
   virtual LoggingRecord LoggingRecordCopy() override;
 
   void SetCircularBufferSize(uint32_t aCapacity);
 
 private:
-  // Helpers for the Log()
-  bool UpdateStringsVector(const std::string& aString);
+  // Helper for the Log()
   void UpdateCrashReport();
 
 private:
@@ -271,8 +271,14 @@ CrashStatsLogForwarder::UpdateStringsVector(const std::string& aString)
 void CrashStatsLogForwarder::UpdateCrashReport()
 {
   std::stringstream message;
-  for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-    message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
+  if (XRE_IsParentProcess()) {
+    for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
+      message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
+    }
+  } else {
+    for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
+      message << "|[C" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
+    }
   }
 
 #ifdef MOZ_CRASHREPORTER
@@ -287,12 +293,45 @@ void CrashStatsLogForwarder::UpdateCrashReport()
   }
 }
 
+class LogForwarderEvent : public nsRunnable
+{
+  virtual ~LogForwarderEvent() {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  explicit LogForwarderEvent(const nsCString& aMessage) : mMessage(aMessage) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread() && XRE_IsContentProcess());
+    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+    cc->SendGraphicsError(mMessage);
+    return NS_OK;
+  }
+
+protected:
+  nsCString mMessage;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(LogForwarderEvent, nsRunnable);
+
 void CrashStatsLogForwarder::Log(const std::string& aString)
 {
   MutexAutoLock lock(mMutex);
 
   if (UpdateStringsVector(aString)) {
     UpdateCrashReport();
+  }
+
+  // Add it to the parent strings
+  if (!XRE_IsParentProcess()) {
+    nsCString stringToSend(aString.c_str());
+    if (NS_IsMainThread()) {
+      dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+      cc->SendGraphicsError(stringToSend);
+    } else {
+      nsCOMPtr<nsIRunnable> r1 = new LogForwarderEvent(stringToSend);
+      NS_DispatchToMainThread(r1);
+    }
   }
 }
 

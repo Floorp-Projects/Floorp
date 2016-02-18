@@ -215,8 +215,8 @@ int ff_set_dimensions(AVCodecContext *s, int width, int height)
 
     s->coded_width  = width;
     s->coded_height = height;
-    s->width        = FF_CEIL_RSHIFT(width,  s->lowres);
-    s->height       = FF_CEIL_RSHIFT(height, s->lowres);
+    s->width        = AV_CEIL_RSHIFT(width,  s->lowres);
+    s->height       = AV_CEIL_RSHIFT(height, s->lowres);
 
     return ret;
 }
@@ -351,6 +351,8 @@ void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
     case AV_PIX_FMT_GBRP14BE:
     case AV_PIX_FMT_GBRP16LE:
     case AV_PIX_FMT_GBRP16BE:
+    case AV_PIX_FMT_GBRAP16LE:
+    case AV_PIX_FMT_GBRAP16BE:
         w_align = 16; //FIXME assume 16 pixel per macroblock
         h_align = 16 * 2; // interlaced needs 2 macroblocks height
         break;
@@ -521,7 +523,9 @@ static int update_frame_pool(AVCodecContext *avctx, AVFrame *frame)
         do {
             // NOTE: do not align linesizes individually, this breaks e.g. assumptions
             // that linesize[0] == 2*linesize[1] in the MPEG-encoder for 4:2:2
-            av_image_fill_linesizes(linesize, avctx->pix_fmt, w);
+            ret = av_image_fill_linesizes(linesize, avctx->pix_fmt, w);
+            if (ret < 0)
+                return ret;
             // increase alignment of w for next try (rhs gives the lowest bit set in w)
             w += w & ~(w - 1);
 
@@ -700,8 +704,8 @@ void ff_color_frame(AVFrame *frame, const int c[4])
     for (p = 0; p<desc->nb_components; p++) {
         uint8_t *dst = frame->data[p];
         int is_chroma = p == 1 || p == 2;
-        int bytes  = is_chroma ? FF_CEIL_RSHIFT(frame->width,  desc->log2_chroma_w) : frame->width;
-        int height = is_chroma ? FF_CEIL_RSHIFT(frame->height, desc->log2_chroma_h) : frame->height;
+        int bytes  = is_chroma ? AV_CEIL_RSHIFT(frame->width,  desc->log2_chroma_w) : frame->width;
+        int height = is_chroma ? AV_CEIL_RSHIFT(frame->height, desc->log2_chroma_h) : frame->height;
         for (y = 0; y < height; y++) {
             if (desc->comp[0].depth >= 9) {
                 for (x = 0; x<bytes; x++)
@@ -859,8 +863,8 @@ static int get_buffer_internal(AVCodecContext *avctx, AVFrame *frame, int flags)
     }
     if (avctx->codec_type == AVMEDIA_TYPE_VIDEO) {
         if (frame->width <= 0 || frame->height <= 0) {
-            frame->width  = FFMAX(avctx->width,  FF_CEIL_RSHIFT(avctx->coded_width,  avctx->lowres));
-            frame->height = FFMAX(avctx->height, FF_CEIL_RSHIFT(avctx->coded_height, avctx->lowres));
+            frame->width  = FFMAX(avctx->width,  AV_CEIL_RSHIFT(avctx->coded_width,  avctx->lowres));
+            frame->height = FFMAX(avctx->height, AV_CEIL_RSHIFT(avctx->coded_height, avctx->lowres));
             override_dimensions = 0;
         }
     }
@@ -1012,9 +1016,8 @@ static int setup_hwaccel(AVCodecContext *avctx,
     int ret        = 0;
 
     if (avctx->active_thread_type & FF_THREAD_FRAME) {
-        av_log(avctx, AV_LOG_ERROR,
-               "Hardware accelerated decoding with frame threading is not supported.\n");
-        return AVERROR(EINVAL);
+        av_log(avctx, AV_LOG_WARNING,
+               "Hardware accelerated decoding with frame threading is known to be unstable and its use is discouraged.\n");
     }
 
     if (!hwa) {
@@ -1234,7 +1237,7 @@ int attribute_align_arg avcodec_open2(AVCodecContext *avctx, const AVCodec *code
         goto free_and_end;
 
     if (avctx->codec_whitelist && av_match_list(codec->name, avctx->codec_whitelist, ',') <= 0) {
-        av_log(avctx, AV_LOG_ERROR, "Codec (%s) not on whitelist\n", codec->name);
+        av_log(avctx, AV_LOG_ERROR, "Codec (%s) not on whitelist \'%s\'\n", codec->name, avctx->codec_whitelist);
         ret = AVERROR(EINVAL);
         goto free_and_end;
     }
@@ -1317,8 +1320,8 @@ int attribute_align_arg avcodec_open2(AVCodecContext *avctx, const AVCodec *code
     if (!HAVE_THREADS)
         av_log(avctx, AV_LOG_WARNING, "Warning: not compiled with thread support, using thread emulation\n");
 
-    if (CONFIG_FRAME_THREAD_ENCODER) {
-        ff_unlock_avcodec(codec); //we will instanciate a few encoders thus kick the counter to prevent false detection of a problem
+    if (CONFIG_FRAME_THREAD_ENCODER && av_codec_is_encoder(avctx->codec)) {
+        ff_unlock_avcodec(codec); //we will instantiate a few encoders thus kick the counter to prevent false detection of a problem
         ret = ff_frame_thread_encoder_init(avctx, options ? *options : NULL);
         ff_lock_avcodec(avctx, codec);
         if (ret < 0)
@@ -1474,6 +1477,16 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
         if (!avctx->rc_initial_buffer_occupancy)
             avctx->rc_initial_buffer_occupancy = avctx->rc_buffer_size * 3 / 4;
+
+        if (avctx->ticks_per_frame && avctx->time_base.num &&
+            avctx->ticks_per_frame > INT_MAX / avctx->time_base.num) {
+            av_log(avctx, AV_LOG_ERROR,
+                   "ticks_per_frame %d too large for the timebase %d/%d.",
+                   avctx->ticks_per_frame,
+                   avctx->time_base.num,
+                   avctx->time_base.den);
+            goto free_and_end;
+        }
     }
 
     avctx->pts_correction_num_faulty_pts =

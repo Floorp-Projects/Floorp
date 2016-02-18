@@ -130,6 +130,7 @@ enum class LogReason : int {
   GlyphAllocFailedCG,
   InvalidRect,
   CannotDraw3D, // 20
+  IncompatibleBasicTexturedEffect,
   // End
   MustBeLessThanThis = 101,
 };
@@ -210,6 +211,7 @@ public:
   virtual ~LogForwarder() {}
   virtual void Log(const std::string &aString) = 0;
   virtual void CrashAction(LogReason aReason) = 0;
+  virtual bool UpdateStringsVector(const std::string& aString) = 0;
 
   // Provide a copy of the logs to the caller.
   virtual LoggingRecord LoggingRecordCopy() = 0;

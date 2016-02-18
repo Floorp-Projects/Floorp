@@ -93,7 +93,8 @@
                  is(e[1], 1, "SimpleMap: iterable second array element should be value");
              }
              is(m[Symbol.iterator].length, 0, "SimpleMap: @@iterator symbol is correct length");
-             is(m[Symbol.iterator].name, "[Symbol.iterator]", "SimpleMap: @@iterator symbol has correct name");
+             is(m[Symbol.iterator].name, "entries", "SimpleMap: @@iterator symbol has correct name");
+             is(m[Symbol.iterator], m.entries, 'SimpleMap: @@iterator is an alias for "entries"');
              ok(iterable, "SimpleMap: @@iterator symbol resolved correctly");
              for (var k of m.keys()) {
                  is(k, "test", "SimpleMap: first keys element should be 'test'");
@@ -139,7 +140,8 @@
                  is(e, "test", "SimpleSet: iterable first array element should be key");
              }
              is(m[Symbol.iterator].length, 0, "SimpleSet: @@iterator symbol is correct length");
-             is(m[Symbol.iterator].name, "[Symbol.iterator]", "SimpleSet: @@iterator symbol has correct name");
+             is(m[Symbol.iterator].name, "values", "SimpleSet: @@iterator symbol has correct name");
+             is(m[Symbol.iterator], m.values, 'SimpleSet: @@iterator is an alias for "values"');
              ok(iterable, "SimpleSet: @@iterator symbol resolved correctly");
              for (var k of m.keys()) {
                  is(k, "test", "SimpleSet: first keys element should be 'test'");
