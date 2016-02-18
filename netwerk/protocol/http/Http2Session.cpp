@@ -535,6 +535,7 @@ Http2Session::FlushOutputQueue()
 void
 Http2Session::DontReuse()
 {
+  LOG3(("Http2Session::DontReuse %p\n", this));
   mShouldGoAway = true;
   if (!mStreamTransactionHash.Count())
     Close(NS_OK);
@@ -1580,8 +1581,8 @@ Http2Session::RecvPushPromise(Http2Session *self)
   bool resetStream = true;
   SpdyPushCache *cache = nullptr;
 
-  if (self->mShouldGoAway) {
-    LOG3(("Http2Session::RecvPushPromise %p push while in GoAway "
+  if (self->mShouldGoAway && !Http2PushedStream::TestOnPush(associatedStream)) {
+    LOG3(("Http2Session::RecvPushPromise %p cache push while in GoAway "
           "mode refused.\n", self));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
   } else if (!gHttpHandler->AllowPush()) {
