@@ -11110,7 +11110,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
 
     // Try to emit a shared stub.
     trackOptimizationAttempt(TrackedStrategy::GetProp_SharedCache);
-    if (!getPropTrySharedStub(&emitted, obj) || emitted)
+    if (!getPropTrySharedStub(&emitted, obj, types) || emitted)
         return emitted;
 
     // Emit a call.
@@ -12050,7 +12050,7 @@ IonBuilder::getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
 }
 
 bool
-IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
+IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj, TemporaryTypeSet* types)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12065,6 +12065,15 @@ IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
 
     if (!resumeAfter(stub))
         return false;
+
+    // Due to inlining, it's possible the observed TypeSet is non-empty,
+    // even though we know |obj| is null/undefined and the MCallGetProperty
+    // will throw. Don't push a TypeBarrier in this case, to avoid
+    // inlining the following (unreachable) JSOP_CALL.
+    if (*pc != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {
+        if (!pushTypeBarrier(stub, types, BarrierKind::TypeSet))
+            return false;
+    }
 
     *emitted = true;
     return true;
