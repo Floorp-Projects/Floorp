@@ -151,6 +151,28 @@ Http2PushedStream::TryOnPush()
   return true;
 }
 
+// side effect free static method to determine if Http2Stream implements nsIHttpPushListener
+bool
+Http2PushedStream::TestOnPush(Http2Stream *stream)
+{
+  if (!stream) {
+    return false;
+  }
+  nsAHttpTransaction *abstractTransaction = stream->Transaction();
+  if (!abstractTransaction) {
+    return false;
+  }
+  nsHttpTransaction *trans = abstractTransaction->QueryHttpTransaction();
+  if (!trans) {
+    return false;
+  }
+  nsCOMPtr<nsIHttpChannelInternal> associatedChannel = do_QueryInterface(trans->HttpChannel());
+  if (!associatedChannel) {
+    return false;
+  }
+  return (trans->Caps() & NS_HTTP_ONPUSH_LISTENER);
+}
+
 nsresult
 Http2PushedStream::ReadSegments(nsAHttpSegmentReader *reader,
                                 uint32_t, uint32_t *count)
