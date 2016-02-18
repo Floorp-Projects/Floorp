@@ -46,7 +46,8 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
 };
 
 
-[Constructor ((Element or CSSPseudoElement)? target,
+[Func="nsDocument::IsWebAnimationsEnabled",
+ Constructor ((Element or CSSPseudoElement)? target,
               object? frames,
               optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffect : KeyframeEffectReadOnly {
