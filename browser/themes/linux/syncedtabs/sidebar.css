@@ -56,3 +56,12 @@ html {
 .textbox-search-clear:not([disabled]) {
   cursor: pointer;
 }
+
+.item.client .item-twisty-container {
+  -moz-appearance: treetwistyopen;
+  margin-top: 3px;
+}
+
+.item.client.closed .item-twisty-container {
+  -moz-appearance: treetwisty;
+}
