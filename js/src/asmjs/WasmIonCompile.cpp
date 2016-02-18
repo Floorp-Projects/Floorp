@@ -266,7 +266,7 @@ class FunctionCompiler
 
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdBinaryArith* ins = MSimdBinaryArith::NewAsmJS(alloc(), lhs, rhs, op);
+        auto* ins = MSimdBinaryArith::New(alloc(), lhs, rhs, op);
         curBlock_->add(ins);
         return ins;
     }
@@ -279,9 +279,18 @@ class FunctionCompiler
 
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdBinaryBitwise* ins = MSimdBinaryBitwise::NewAsmJS(alloc(), lhs, rhs, op);
+        auto* ins = MSimdBinaryBitwise::New(alloc(), lhs, rhs, op);
         curBlock_->add(ins);
         return ins;
+    }
+
+    MDefinition* binarySimdComp(MDefinition* lhs, MDefinition* rhs, MSimdBinaryComp::Operation op,
+                                SimdSign sign)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        return MSimdBinaryComp::AddLegalized(alloc(), curBlock_, lhs, rhs, op, sign);
     }
 
     template<class T>
@@ -290,7 +299,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        T* ins = T::NewAsmJS(alloc(), lhs, rhs, op);
+        T* ins = T::New(alloc(), lhs, rhs, op);
         curBlock_->add(ins);
         return ins;
     }
@@ -364,17 +373,27 @@ class FunctionCompiler
         return ins;
     }
 
-    template<class T>
-    MDefinition* convertSimd(MDefinition* vec, MIRType from, MIRType to)
+    // fromXXXBits()
+    MDefinition* bitcastSimd(MDefinition* vec, MIRType from, MIRType to)
     {
         if (inDeadCode())
             return nullptr;
 
         MOZ_ASSERT(vec->type() == from);
         MOZ_ASSERT(IsSimdType(from) && IsSimdType(to) && from != to);
-        T* ins = T::NewAsmJS(alloc(), vec, to);
+        auto* ins = MSimdReinterpretCast::New(alloc(), vec, to);
         curBlock_->add(ins);
         return ins;
+    }
+
+    // Int <--> Float conversions.
+    MDefinition* convertSimd(MDefinition* vec, MIRType from, MIRType to, SimdSign sign)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MOZ_ASSERT(IsSimdType(from) && IsSimdType(to) && from != to);
+        return MSimdConvert::AddLegalized(alloc(), curBlock_, vec, to, sign);
     }
 
     MDefinition* splatSimd(MDefinition* v, MIRType type)
@@ -618,14 +637,14 @@ class FunctionCompiler
         curBlock_->add(MAsmJSInterruptCheck::New(alloc()));
     }
 
-    MDefinition* extractSimdElement(SimdLane lane, MDefinition* base, MIRType type)
+    MDefinition* extractSimdElement(SimdLane lane, MDefinition* base, MIRType type, SimdSign sign)
     {
         if (inDeadCode())
             return nullptr;
 
         MOZ_ASSERT(IsSimdType(base->type()));
         MOZ_ASSERT(!IsSimdType(type));
-        MSimdExtractElement* ins = MSimdExtractElement::NewAsmJS(alloc(), base, type, lane);
+        auto* ins = MSimdExtractElement::New(alloc(), base, type, lane, sign);
         curBlock_->add(ins);
         return ins;
     }
@@ -1786,7 +1805,7 @@ EmitSimdBinary(FunctionCompiler& f, ExprType type, OpKind op, MDefinition** def)
 
 static bool
 EmitSimdBinaryComp(FunctionCompiler& f, ExprType type, MSimdBinaryComp::Operation op,
-                   MDefinition** def)
+                   SimdSign sign, MDefinition** def)
 {
     MDefinition* lhs;
     if (!EmitExpr(f, type, &lhs))
@@ -1794,7 +1813,7 @@ EmitSimdBinaryComp(FunctionCompiler& f, ExprType type, MSimdBinaryComp::Operatio
     MDefinition* rhs;
     if (!EmitExpr(f, type, &rhs))
         return false;
-    *def = f.binarySimd<MSimdBinaryComp>(lhs, rhs, op);
+    *def = f.binarySimdComp(lhs, rhs, op, sign);
     return true;
 }
 
@@ -1829,7 +1848,7 @@ SimdToLaneType(ExprType type)
 }
 
 static bool
-EmitExtractLane(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitExtractLane(FunctionCompiler& f, ExprType type, SimdSign sign, MDefinition** def)
 {
     MDefinition* vec;
     if (!EmitExpr(f, type, &vec))
@@ -1849,7 +1868,7 @@ EmitExtractLane(FunctionCompiler& f, ExprType type, MDefinition** def)
     MOZ_ASSERT(laneLit < 4);
     SimdLane lane = SimdLane(laneLit);
 
-    *def = f.extractSimdElement(lane, vec, ToMIRType(SimdToLaneType(type)));
+    *def = f.extractSimdElement(lane, vec, ToMIRType(SimdToLaneType(type)), sign);
     return true;
 }
 
@@ -1898,14 +1917,24 @@ EmitSimdReplaceLane(FunctionCompiler& f, ExprType simdType, MDefinition** def)
     return true;
 }
 
-template<class T>
 inline bool
-EmitSimdCast(FunctionCompiler& f, ExprType fromType, ExprType toType, MDefinition** def)
+EmitSimdBitcast(FunctionCompiler& f, ExprType fromType, ExprType toType, MDefinition** def)
 {
     MDefinition* in;
     if (!EmitExpr(f, fromType, &in))
         return false;
-    *def = f.convertSimd<T>(in, ToMIRType(fromType), ToMIRType(toType));
+    *def = f.bitcastSimd(in, ToMIRType(fromType), ToMIRType(toType));
+    return true;
+}
+
+inline bool
+EmitSimdConvert(FunctionCompiler& f, ExprType fromType, ExprType toType, SimdSign sign,
+                MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, fromType, &in))
+        return false;
+    *def = f.convertSimd(in, ToMIRType(fromType), ToMIRType(toType), sign);
     return true;
 }
 
@@ -2286,13 +2315,13 @@ EmitBitwise<MBitNot>(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, MDefinition** def)
+EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, SimdSign sign, MDefinition** def)
 {
     switch (op) {
       case SimdOperation::Constructor:
         return EmitSimdCtor(f, type, def);
       case SimdOperation::Fn_extractLane:
-        return EmitExtractLane(f, type, def);
+        return EmitExtractLane(f, type, sign, def);
       case SimdOperation::Fn_replaceLane:
         return EmitSimdReplaceLane(f, type, def);
       case SimdOperation::Fn_check:
@@ -2335,16 +2364,14 @@ EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, MDefinition** d
       case SimdOperation::Fn_shiftLeftByScalar:
         return EmitSimdShift(f, type, MSimdShift::lsh, def);
       case SimdOperation::Fn_shiftRightByScalar:
-        return EmitSimdShift(f, type,
-                             type == ExprType::I32x4 ? MSimdShift::rsh : MSimdShift::ursh,
-                             def);
+        return EmitSimdShift(f, type, MSimdShift::rshForSign(sign), def);
       case SimdOperation::Fn_shiftRightArithmeticByScalar:
         return EmitSimdShift(f, type, MSimdShift::rsh, def);
       case SimdOperation::Fn_shiftRightLogicalByScalar:
         return EmitSimdShift(f, type, MSimdShift::ursh, def);
 #define _CASE(OP) \
       case SimdOperation::Fn_##OP: \
-        return EmitSimdBinaryComp(f, type, MSimdBinaryComp::OP, def);
+        return EmitSimdBinaryComp(f, type, MSimdBinaryComp::OP, sign, def);
         FOREACH_COMP_SIMD_OP(_CASE)
 #undef _CASE
       case SimdOperation::Fn_and:
@@ -2360,19 +2387,20 @@ EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, MDefinition** d
       FOREACH_FLOAT_SIMD_BINOP(_CASE)
 #undef _CASE
       case SimdOperation::Fn_fromFloat32x4:
-        return EmitSimdCast<MSimdConvert>(f, ExprType::F32x4, type, def);
+        return EmitSimdConvert(f, ExprType::F32x4, type, sign, def);
       case SimdOperation::Fn_fromInt32x4:
-        return EmitSimdCast<MSimdConvert>(f, ExprType::I32x4, type, def);
-      case SimdOperation::Fn_fromInt32x4Bits:
-        return EmitSimdCast<MSimdReinterpretCast>(f, ExprType::I32x4, type, def);
-      case SimdOperation::Fn_fromFloat32x4Bits:
-        return EmitSimdCast<MSimdReinterpretCast>(f, ExprType::F32x4, type, def);
+        return EmitSimdConvert(f, ExprType::I32x4, type, SimdSign::Signed, def);
       case SimdOperation::Fn_fromUint32x4:
+        return EmitSimdConvert(f, ExprType::I32x4, type, SimdSign::Unsigned, def);
+      case SimdOperation::Fn_fromInt32x4Bits:
+      case SimdOperation::Fn_fromUint32x4Bits:
+        return EmitSimdBitcast(f, ExprType::I32x4, type, def);
+      case SimdOperation::Fn_fromFloat32x4Bits:
+        return EmitSimdBitcast(f, ExprType::F32x4, type, def);
       case SimdOperation::Fn_fromInt8x16Bits:
       case SimdOperation::Fn_fromInt16x8Bits:
       case SimdOperation::Fn_fromUint8x16Bits:
       case SimdOperation::Fn_fromUint16x8Bits:
-      case SimdOperation::Fn_fromUint32x4Bits:
       case SimdOperation::Fn_fromFloat64x2Bits:
         MOZ_CRASH("NYI");
     }
@@ -2909,17 +2937,18 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::F64StoreMemF32:
         return EmitStoreWithCoercion(f, Scalar::Float64, Scalar::Float32, def);
       // SIMD
-#define CASE(TYPE, OP)                                                     \
+#define CASE(TYPE, OP, SIGN)                                               \
       case Expr::TYPE##OP:                                                 \
-        return EmitSimdOp(f, ExprType::TYPE, SimdOperation::Fn_##OP, def);
-#define I32CASE(OP) CASE(I32x4, OP)
-#define F32CASE(OP) CASE(F32x4, OP)
-#define B32CASE(OP) CASE(B32x4, OP)
+        return EmitSimdOp(f, ExprType::TYPE, SimdOperation::Fn_##OP, SIGN, def);
+#define I32CASE(OP) CASE(I32x4, OP, SimdSign::Signed)
+#define F32CASE(OP) CASE(F32x4, OP, SimdSign::NotApplicable)
+#define B32CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
 #define ENUMERATE(TYPE, FORALL, DO)                                            \
       case Expr::TYPE##Const:                                                  \
         return EmitLiteral(f, ExprType::TYPE, def);                            \
       case Expr::TYPE##Constructor:                                            \
-        return EmitSimdOp(f, ExprType::TYPE, SimdOperation::Constructor, def); \
+        return EmitSimdOp(f, ExprType::TYPE, SimdOperation::Constructor,       \
+                          SimdSign::NotApplicable, def);                       \
       FORALL(DO)
 
       ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32CASE)
@@ -2931,6 +2960,25 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
 #undef F32CASE
 #undef B32CASE
 #undef ENUMERATE
+      // SIMD unsigned integer operations.
+      case Expr::I32x4shiftRightByScalarU:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_shiftRightByScalar,
+                          SimdSign::Unsigned, def);
+      case Expr::I32x4lessThanU:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned, def);
+      case Expr::I32x4lessThanOrEqualU:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_lessThanOrEqual,
+                          SimdSign::Unsigned, def);
+      case Expr::I32x4greaterThanU:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned,
+                          def);
+      case Expr::I32x4greaterThanOrEqualU:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_greaterThanOrEqual,
+                          SimdSign::Unsigned, def);
+      case Expr::I32x4fromFloat32x4U:
+        return EmitSimdOp(f, ExprType::I32x4, SimdOperation::Fn_fromFloat32x4,
+                          SimdSign::Unsigned, def);
+
       // Future opcodes
       case Expr::Loop:
       case Expr::Select:
