@@ -19,7 +19,7 @@ namespace mozilla {
 namespace scache {
 
 NS_EXPORT nsresult
-NewObjectInputStreamFromBuffer(char* buffer, uint32_t len, 
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream)
 {
   nsCOMPtr<nsIStringInputStream> stringStream
@@ -27,7 +27,7 @@ NewObjectInputStreamFromBuffer(char* buffer, uint32_t len,
   nsCOMPtr<nsIObjectInputStream> objectInput 
     = do_CreateInstance("@mozilla.org/binaryinputstream;1");
   
-  stringStream->AdoptData(buffer, len);
+  stringStream->AdoptData(buffer.release(), len);
   objectInput->SetInputStream(stringStream);
   
   objectInput.forget(stream);
