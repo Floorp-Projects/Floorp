@@ -73,7 +73,7 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 
 NS_EXPORT nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream, 
-                           char** buffer, uint32_t* len) 
+                           UniquePtr<char[]>* buffer, uint32_t* len) 
 {
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
@@ -86,9 +86,9 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   NS_ENSURE_TRUE(avail64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   uint32_t avail = (uint32_t)avail64;
-  nsAutoArrayPtr<char> temp (new char[avail]);
+  auto temp = MakeUnique<char[]>(avail);
   uint32_t read;
-  rv = inputStream->Read(temp, avail, &read);
+  rv = inputStream->Read(temp.get(), avail, &read);
   if (NS_SUCCEEDED(rv) && avail != read)
     rv = NS_ERROR_UNEXPECTED;
   
@@ -97,7 +97,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   }
   
   *len = avail;
-  *buffer = temp.forget();
+  *buffer = Move(temp);
   return NS_OK;
 }
 

@@ -290,11 +290,11 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t len;
-  nsAutoArrayPtr<char> buf;
-  rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf), &len);
+  UniquePtr<char[]> buf;
+  rv = NewBufferFromStorageStream(storageStream, &buf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return startupCache->PutBuffer(spec.get(), buf, len);
+  return startupCache->PutBuffer(spec.get(), buf.get(), len);
 }
 
 void

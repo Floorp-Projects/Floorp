@@ -401,10 +401,9 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         = do_QueryInterface(storageStream);
     outputStream->Close();
 
-    nsAutoArrayPtr<char> buf;
+    UniquePtr<char[]> buf;
     uint32_t len;
-    rv = NewBufferFromStorageStream(storageStream, getter_Transfers(buf),
-                                    &len);
+    rv = NewBufferFromStorageStream(storageStream, &buf, &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mStartupCacheURITable.GetEntry(uri)) {
@@ -412,7 +411,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         rv = PathifyURI(uri, spec);
         if (NS_FAILED(rv))
             return NS_ERROR_NOT_AVAILABLE;
-        rv = sc->PutBuffer(spec.get(), buf, len);
+        rv = sc->PutBuffer(spec.get(), buf.get(), len);
         if (NS_SUCCEEDED(rv)) {
             mOutputStreamTable.Remove(uri);
             mStartupCacheURITable.PutEntry(uri);
