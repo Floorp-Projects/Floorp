@@ -1168,17 +1168,17 @@ MacroAssembler::call(Label* label)
 CodeOffset
 MacroAssembler::callWithPatch()
 {
-    addLongJump(nextOffset());
-    ma_liPatchable(ScratchRegister, ImmWord(0));
-    return call(ScratchRegister);
+    as_bal(BOffImm16(0));
+    as_nop();
+    return CodeOffset(currentOffset());
 }
 
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    BufferOffset li(callerOffset - Assembler::PatchWrite_NearCallSize());
-    Assembler::PatchInstructionImmediate((uint8_t*)editSrc(li),
-                                         PatchedImmPtr((const void*)calleeOffset));
+    BufferOffset call(callerOffset - 2 * sizeof(uint32_t));
+    InstImm* bal = (InstImm*)editSrc(call);
+    bal->setBOffImm16(BufferOffset(calleeOffset).diffB<BOffImm16>(call));
 }
 
 CodeOffset
