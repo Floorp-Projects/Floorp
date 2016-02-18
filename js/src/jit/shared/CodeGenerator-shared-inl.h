@@ -28,7 +28,7 @@ ToInt32(const LAllocation* a)
 static inline double
 ToDouble(const LAllocation* a)
 {
-    return a->toConstant()->toNumber();
+    return a->toConstant()->numberToDouble();
 }
 
 static inline Register
