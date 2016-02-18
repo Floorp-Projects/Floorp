@@ -413,6 +413,7 @@ typedef enum {
     SDP_MAX_CODED_AUDIO_BW,
     SDP_CBR,
     SDP_MAX_FR,
+    SDP_MAX_PLAYBACK_RATE,
     SDP_MAX_FMTP_PARAM,
     SDP_FMTP_PARAM_UNKNOWN
 } sdp_fmtp_codec_param_e;
@@ -641,6 +642,7 @@ typedef struct sdp_fmtp {
     uint32_t                       mode;
 
     /* some OPUS specific fmtp params */
+    uint32_t                       maxplaybackrate;
     uint32_t                       maxaveragebitrate;
     uint16_t                       usedtx;
     uint16_t                       stereo;
