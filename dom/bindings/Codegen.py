@@ -2289,7 +2289,7 @@ class MethodDefiner(PropertyDefiner):
             maplikeOrSetlikeOrIterable and
             maplikeOrSetlikeOrIterable.isIterable() and
             maplikeOrSetlikeOrIterable.isValueIterator()):
-            # Add our keys/values/entries
+            # Add our keys/values/entries/forEach
             self.regular.append({
                 "name": "keys",
                 "methodInfo": False,
@@ -2312,6 +2312,15 @@ class MethodDefiner(PropertyDefiner):
                 "name": "entries",
                 "methodInfo": False,
                 "selfHostedName": "ArrayEntries",
+                "length": 0,
+                "flags": "JSPROP_ENUMERATE",
+                "condition": PropertyDefiner.getControllingCondition(m,
+                                                                     descriptor)
+            })
+            self.regular.append({
+                "name": "forEach",
+                "methodInfo": False,
+                "selfHostedName": "ArrayForEach",
                 "length": 0,
                 "flags": "JSPROP_ENUMERATE",
                 "condition": PropertyDefiner.getControllingCondition(m,
@@ -15811,6 +15820,31 @@ class CGIterableMethodGenerator(CGGeneric):
     using CGCallGenerator.
     """
     def __init__(self, descriptor, iterable, methodName):
+        if methodName == "forEach":
+            CGGeneric.__init__(self, fill(
+                """
+                if (!JS::IsCallable(arg0)) {
+                  ThrowErrorMessage(cx, MSG_NOT_CALLABLE, "Argument 1 of ${ifaceName}.forEach");
+                  return false;
+                }
+                JS::AutoValueArray<3> callArgs(cx);
+                callArgs[2].setObject(*obj);
+                JS::Rooted<JS::Value> ignoredReturnVal(cx);
+                for (size_t i = 0; i < self->GetIterableLength(); ++i) {
+                  if (!ToJSValue(cx, self->GetValueAtIndex(i), callArgs[0])) {
+                    return false;
+                  }
+                  if (!ToJSValue(cx, self->GetKeyAtIndex(i), callArgs[1])) {
+                    return false;
+                  }
+                  if (!JS::Call(cx, arg1, arg0, JS::HandleValueArray(callArgs),
+                                &ignoredReturnVal)) {
+                    return false;
+                  }
+                }
+                """,
+                ifaceName=descriptor.interface.identifier.name))
+            return
         CGGeneric.__init__(self, fill(
             """
             typedef ${iterClass} itrType;

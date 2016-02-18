@@ -14,7 +14,8 @@
 
        base_properties = [["entries", "function", 0],
                           ["keys", "function", 0],
-                          ["values", "function", 0]]
+                          ["values", "function", 0],
+                          ["forEach", "function", 1]]
        var testExistence = function testExistence(prefix, obj, properties) {
          for (var [name, type, args] of properties) {
            // Properties are somewhere up the proto chain, hasOwnProperty won't work
@@ -58,6 +59,8 @@
           "IterableSingle: Should be using %ArrayIterator% for 'entries'");
        is(itr.values, itr[Symbol.iterator],
           "IterableSingle: Should be using @@iterator for 'values'");
+       is(itr.forEach, Array.prototype.forEach,
+          "IterableSingle: Should be using %ArrayIterator% for 'forEach'");
        var keys = [...itr.keys()];
        var values = [...itr.values()];
        var entries = [...itr.entries()];
@@ -81,6 +84,23 @@
          is(entry.value[1], entries[i][1],
             "IterableSingle: Entry iterator value 1 should match destructuring " + i);
        }
+
+       var callsToForEachCallback = 0;
+       var thisArg = {};
+       itr.forEach(function(value, index, obj) {
+         is(index, callsToForEachCallback,
+            `IterableSingle: Should have the right index at ${callsToForEachCallback} calls to forEach callback`);
+         is(value, values[index],
+            `IterableSingle: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
+         is(this, thisArg,
+            "IterableSingle: Should have the right this value for forEach callback");
+         is(obj, itr,
+            "IterableSingle: Should have the right third arg for forEach callback");
+         ++callsToForEachCallback;
+       }, thisArg);
+       is(callsToForEachCallback, 3,
+          "IterableSingle: Should have right total number of calls to forEach callback");
+
        var key = key_itr.next();
        var value = value_itr.next();
        var entry = entries_itr.next();
@@ -124,6 +144,23 @@
          is(entry.value[1], entries[i][1],
             "IterableDouble: Entry iterator value 1 should match destructuring " + i);
        }
+
+       callsToForEachCallback = 0;
+       thisArg = {};
+       itr.forEach(function(value, key, obj) {
+         is(key, keys[callsToForEachCallback],
+            `IterableDouble: Should have the right key at ${callsToForEachCallback} calls to forEach callback`);
+         is(value, values[callsToForEachCallback],
+            `IterableDouble: Should have the right value at ${callsToForEachCallback} calls to forEach callback`);
+         is(this, thisArg,
+            "IterableDouble: Should have the right this value for forEach callback");
+         is(obj, itr,
+            "IterableSingle: Should have the right third arg for forEach callback");
+         ++callsToForEachCallback;
+       }, thisArg);
+       is(callsToForEachCallback, 3,
+          "IterableDouble: Should have right total number of calls to forEach callback");
+
        var key = key_itr.next();
        var value = value_itr.next();
        var entry = entries_itr.next()
