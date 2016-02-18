@@ -427,10 +427,10 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 }
 
 bool
-gfxPlatformMac::UseAcceleratedCanvas()
+gfxPlatformMac::UseAcceleratedSkiaCanvas()
 {
   // Lion or later is required
-  return nsCocoaFeatures::OnLionOrLater() && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
+  return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseAcceleratedSkiaCanvas();
 }
 
 bool
