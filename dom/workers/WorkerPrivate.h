@@ -1446,6 +1446,9 @@ IsCurrentThreadRunningChromeWorker();
 JSContext*
 GetCurrentThreadJSContext();
 
+JSObject*
+GetCurrentThreadWorkerGlobal();
+
 class AutoSyncLoopHolder
 {
   WorkerPrivate* mWorkerPrivate;
