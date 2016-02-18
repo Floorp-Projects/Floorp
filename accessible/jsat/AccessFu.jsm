@@ -344,7 +344,7 @@ this.AccessFu = { // jshint ignore:line
       {
         // Ignore notifications that aren't from a BrowserOrApp
         let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
-        if (!frameLoader.ownerIsBrowserOrAppFrame) {
+        if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
           return;
         }
         this._handleMessageManager(frameLoader.messageManager);

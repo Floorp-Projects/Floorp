@@ -44,6 +44,20 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
   [infallible] readonly attribute boolean reallyIsWidget;
 
   /**
+   * Gets whether this frame is an isolated frame.
+   *
+   * By default, browser frames are isolated, meaning they have a principal
+   * where OriginAttributes.mIsInIsolatedMozBrowser == true.  This isolates
+   * storage and other origin related items from non-browser apps, xul:browsers,
+   * etc.
+   *
+   * Isolation can be disabled by setting the frame's isolated attribute to
+   * false.  Disabling isolation is only allowed if the containing document has
+   * browser permission (or equivalent access).
+   */
+  [infallible] readonly attribute boolean isolated;
+
+  /**
    * This corresponds to the expecting-system-message attribute, which tells us
    * whether we should expect that this frame will receive a system message once
    * it starts up.

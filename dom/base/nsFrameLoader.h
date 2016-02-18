@@ -143,7 +143,7 @@ public:
     return mOwnerContent ? mOwnerContent->GetPrimaryFrame() : nullptr;
   }
 
-  /** 
+  /**
    * Return the document that owns this, or null if we don't have
    * an owner.
    */
@@ -194,7 +194,7 @@ public:
    * otherwise we'll discard the old presentation and set the detached
    * subdoc view to null. aContainerDoc is the document containing the
    * the subdoc frame. This enables us to detect when the containing
-   * document has changed during reframe, so we can discard the presentation 
+   * document has changed during reframe, so we can discard the presentation
    * in that case.
    */
   void SetDetachedSubdocView(nsView* aDetachedView,
@@ -242,8 +242,9 @@ private:
    * Is this a frameloader for a bona fide <iframe mozbrowser> or
    * <iframe mozapp>?  (I.e., does the frame return true for
    * nsIMozBrowserFrame::GetReallyIsBrowserOrApp()?)
+   * <xul:browser> is not a mozbrowser or app, so this is false for that case.
    */
-  bool OwnerIsBrowserOrAppFrame();
+  bool OwnerIsMozBrowserOrAppFrame();
 
   /**
    * Is this a frameloader for a bona fide <iframe mozwidget>?  (I.e., does the
@@ -259,8 +260,18 @@ private:
 
   /**
    * Is this a frame loader for a bona fide <iframe mozbrowser>?
+   * <xul:browser> is not a mozbrowser, so this is false for that case.
    */
-  bool OwnerIsBrowserFrame();
+  bool OwnerIsMozBrowserFrame();
+
+  /**
+   * Is this a frame loader for an isolated <iframe mozbrowser>?
+   *
+   * By default, mozbrowser frames are isolated.  Isolation can be disabled by
+   * setting the frame's noisolation attribute.  Disabling isolation is
+   * only allowed if the containing document is chrome.
+   */
+  bool OwnerIsIsolatedMozBrowserFrame();
 
   /**
    * Get our owning element's app manifest URL, or return the empty string if
