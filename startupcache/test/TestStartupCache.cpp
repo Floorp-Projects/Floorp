@@ -195,11 +195,9 @@ TestWriteObject() {
     return rv;
   }
 
-  char* bufPtr = nullptr;
   nsAutoArrayPtr<char> buf;
   uint32_t len;
-  NewBufferFromStorageStream(storageStream, &bufPtr, &len);
-  buf = bufPtr;
+  NewBufferFromStorageStream(storageStream, getter_Transfers(buf), &len);
 
   // Since this is a post-startup write, it should be written and
   // available.
@@ -209,16 +207,14 @@ TestWriteObject() {
     return rv;
   }
     
-  char* buf2Ptr = nullptr;
   nsAutoArrayPtr<char> buf2;
   uint32_t len2;
   nsCOMPtr<nsIObjectInputStream> objectInput;
-  rv = sc->GetBuffer(id, &buf2Ptr, &len2);
+  rv = sc->GetBuffer(id, getter_Transfers(buf2), &len2);
   if (NS_FAILED(rv)) {
     fail("failed to retrieve buffer");
     return rv;
   }
-  buf2 = buf2Ptr;
 
   rv = NewObjectInputStreamFromBuffer(buf2, len2, getter_AddRefs(objectInput));
   if (NS_FAILED(rv)) {
