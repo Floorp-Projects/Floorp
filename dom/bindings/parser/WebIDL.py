@@ -3514,7 +3514,8 @@ class IDLMaplikeOrSetlikeOrIterableBase(IDLInterfaceMember):
                                   [self.location, member.location])
 
     def addMethod(self, name, members, allowExistingOperations, returnType, args=[],
-                  chromeOnly=False, isPure=False, affectsNothing=False, newObject=False):
+                  chromeOnly=False, isPure=False, affectsNothing=False, newObject=False,
+                  isIteratorAlias=False):
         """
         Create an IDLMethod based on the parameters passed in.
 
@@ -3574,6 +3575,9 @@ class IDLMaplikeOrSetlikeOrIterableBase(IDLInterfaceMember):
         if newObject:
             method.addExtendedAttributes(
                 [IDLExtendedAttribute(self.location, ("NewObject",))])
+        if isIteratorAlias:
+            method.addExtendedAttributes(
+                [IDLExtendedAttribute(self.location, ("Alias", "@@iterator"))])
         members.append(method)
 
     def resolve(self, parentScope):
@@ -3639,7 +3643,8 @@ class IDLIterable(IDLMaplikeOrSetlikeOrIterableBase):
 
         # object entries()
         self.addMethod("entries", members, False, self.iteratorType,
-                       affectsNothing=True, newObject=True)
+                       affectsNothing=True, newObject=True,
+                       isIteratorAlias=True)
         # object keys()
         self.addMethod("keys", members, False, self.iteratorType,
                        affectsNothing=True, newObject=True)
@@ -3689,13 +3694,13 @@ class IDLMaplikeOrSetlike(IDLMaplikeOrSetlikeOrIterableBase):
 
         # object entries()
         self.addMethod("entries", members, False, BuiltinTypes[IDLBuiltinType.Types.object],
-                       affectsNothing=True)
+                       affectsNothing=True, isIteratorAlias=self.isMaplike())
         # object keys()
         self.addMethod("keys", members, False, BuiltinTypes[IDLBuiltinType.Types.object],
                        affectsNothing=True)
         # object values()
         self.addMethod("values", members, False, BuiltinTypes[IDLBuiltinType.Types.object],
-                       affectsNothing=True)
+                       affectsNothing=True, isIteratorAlias=self.isSetlike())
 
         # void forEach(callback(valueType, keyType), thisVal)
         foreachArguments = [IDLArgument(self.location,
