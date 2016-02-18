@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ComputedTimingFunction.h"
+#include "nsAlgorithm.h" // For clamped()
 #include "nsStyleUtil.h"
 
 namespace mozilla {
@@ -36,6 +37,19 @@ ComputedTimingFunction::GetValue(double aPortion) const
   if (HasSpline()) {
     return mTimingFunction.GetSplineValue(aPortion);
   }
+
+  // Since we use endpoint-exclusive timing, the output of a steps(start) timing
+  // function when aPortion = 0.0 is the top of the first step. When aPortion is
+  // negative, however, we should use the bottom of the first step. We handle
+  // negative values of aPortion specially here since once we clamp aPortion
+  // to [0,1] below we will no longer be able to distinguish to the two cases.
+  if (aPortion < 0.0) {
+    return 0.0;
+  }
+
+  // Clamp in case of steps(end) and steps(start) for values greater than 1.
+  aPortion = clamped(aPortion, 0.0, 1.0);
+
   if (mType == nsTimingFunction::Type::StepStart) {
     // There are diagrams in the spec that seem to suggest this check
     // and the bounds point should not be symmetric with StepEnd, but
