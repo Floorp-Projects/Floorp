@@ -44,7 +44,12 @@ public:
     MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
                "All pseudo-types allowed by this class should have a"
                " corresponding atom");
-    nsCSSPseudoElements::GetPseudoAtom(mPseudoType)->ToString(aRetVal);
+    // Our atoms use one colon and we would like to return two colons syntax
+    // for the returned pseudo type string, so serialize this to the
+    // non-deprecated two colon syntax.
+    aRetVal.Assign(char16_t(':'));
+    aRetVal.Append(
+      nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
   }
   already_AddRefed<Element> ParentElement() const
   {
