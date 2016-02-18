@@ -2077,7 +2077,7 @@ IsNuwaReady() {
   return sNuwaReady;
 }
 
-#if defined(DEBUG) || defined(ENABLE_TESTS)
+#if defined(DEBUG)
 MFBT_API void
 NuwaAssertNotFrozen(unsigned int aThread, const char* aThreadName) {
   if (!sIsNuwaProcess || !sIsFreezing) {
