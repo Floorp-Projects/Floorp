@@ -158,6 +158,26 @@ public:
         return;
       }
 
+      // Do not allow the convenience methods .add()/.addAll() to store failed
+      // responses.  A consequence of this is that these methods cannot be
+      // used to store opaque or opaqueredirect responses since they always
+      // expose a 0 status value.
+      if (!response->Ok()) {
+        uint32_t t = static_cast<uint32_t>(response->Type());
+        NS_ConvertASCIItoUTF16 type(ResponseTypeValues::strings[t].value,
+                                    ResponseTypeValues::strings[t].length);
+        nsAutoString status;
+        status.AppendInt(response->Status());
+        nsAutoString url;
+        mRequestList[i]->GetUrl(url);
+        ErrorResult rv;
+        rv.ThrowTypeError<MSG_CACHE_ADD_FAILED_RESPONSE>(type, status, url);
+
+        // TODO: abort the fetch requests we have running (bug 1157434)
+        mPromise->MaybeReject(rv);
+        return;
+      }
+
       responseList.AppendElement(Move(response));
     }
 
