@@ -2550,7 +2550,22 @@ static inline Expr
 SimdToExpr(SimdType type, SimdOperation op)
 {
     switch (type) {
+      case SimdType::Uint32x4:
+        // Handle the special unsigned opcodes, then fall through to Int32x4.
+        switch(op) {
+          case SimdOperation::Fn_shiftRightByScalar: return Expr::I32x4shiftRightByScalarU;
+          case SimdOperation::Fn_lessThan:           return Expr::I32x4lessThanU;
+          case SimdOperation::Fn_lessThanOrEqual:    return Expr::I32x4lessThanOrEqualU;
+          case SimdOperation::Fn_greaterThan:        return Expr::I32x4greaterThanU;
+          case SimdOperation::Fn_greaterThanOrEqual: return Expr::I32x4greaterThanOrEqualU;
+          case SimdOperation::Fn_fromFloat32x4:      return Expr::I32x4fromFloat32x4U;
+          case SimdOperation::Fn_fromInt32x4Bits:    return Expr::Id;
+          default: break;
+        }
+        MOZ_FALLTHROUGH;
       case SimdType::Int32x4: {
+        // Bitcasts Uint32x4 <--> Int32x4 become noops.
+        if (op == SimdOperation::Fn_fromUint32x4Bits) return Expr::Id;
         ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32CASE)
         break;
       }

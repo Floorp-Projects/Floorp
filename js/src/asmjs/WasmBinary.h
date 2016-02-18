@@ -273,6 +273,15 @@ enum class Expr : uint16_t
     I32x4Constructor,
     I32x4Const,
 #undef _
+    // Unsigned I32x4 operations. These are the SIMD.Uint32x4 operations that
+    // behave differently from their SIMD.Int32x4 counterparts.
+    I32x4shiftRightByScalarU,
+    I32x4lessThanU,
+    I32x4lessThanOrEqualU,
+    I32x4greaterThanU,
+    I32x4greaterThanOrEqualU,
+    I32x4fromFloat32x4U,
+
 #define _(OP) SIMD_OPCODE(F32x4, OP)
     FORALL_FLOAT32X4_ASMJS_OP(_)
     F32x4Constructor,
