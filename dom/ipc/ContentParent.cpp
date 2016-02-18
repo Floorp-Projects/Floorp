@@ -1122,11 +1122,11 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     openerTabId = TabParent::GetTabIdFrom(docShell);
   }
 
-  if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
+  if (aContext.IsMozBrowserElement() || !aContext.HasOwnApp()) {
     RefPtr<TabParent> tp;
     RefPtr<nsIContentParent> constructorSender;
     if (isInContentProcess) {
-      MOZ_ASSERT(aContext.IsBrowserElement());
+      MOZ_ASSERT(aContext.IsMozBrowserElement());
       constructorSender = CreateContentBridgeParent(aContext, initialPriority,
                                                     openerTabId, &tabId);
     } else {
@@ -1134,7 +1134,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender = aOpenerContentParent;
       } else {
         constructorSender =
-          GetNewOrUsedBrowserProcess(aContext.IsBrowserElement(),
+          GetNewOrUsedBrowserProcess(aContext.IsMozBrowserElement(),
                                      initialPriority);
         if (!constructorSender) {
           return nullptr;
@@ -5334,7 +5334,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     thisTabParent = TabParent::GetFrom(aThisTab);
   }
 
-  if (NS_WARN_IF(thisTabParent && thisTabParent->IsBrowserOrApp())) {
+  if (NS_WARN_IF(thisTabParent && thisTabParent->IsMozBrowserOrApp())) {
     return false;
   }
 

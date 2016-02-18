@@ -68,7 +68,7 @@ public:
         // to be killed.
         for (uint32_t j = 0; j < contextArray.Length(); ++j) {
           if ((contextArray[j].OwnOrContainingAppId() == mOriginAttributes.mAppId) &&
-              (contextArray[j].IsBrowserElement() == mOriginAttributes.mInIsolatedMozBrowser)) {
+              (contextArray[j].IsIsolatedMozBrowserElement() == mOriginAttributes.mInIsolatedMozBrowser)) {
             continue;
           }
           // Array entries with no mParent won't receive any notification.
