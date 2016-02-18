@@ -168,7 +168,7 @@ ChannelListener.prototype = {
  */
 function LoadContextCallback(appId, inIsolatedMozBrowser, isPrivate, isContent) {
   this.appId = appId;
-  this.isInBrowserElement = inIsolatedMozBrowser;
+  this.isInIsolatedMozBrowserElement = inIsolatedMozBrowser;
   this.usePrivateBrowsing = isPrivate;
   this.isContent = isContent;
   this.originAttributes = {

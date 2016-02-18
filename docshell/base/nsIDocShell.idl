@@ -780,16 +780,21 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isBrowserOrApp;
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser> or if
-   * the docshell is contained in an <iframe mozbrowser>.  (<iframe mozapp
-   * mozbrowser> does not count as a browser.)
+   * Returns true if this docshell corresponds to an isolated <iframe
+   * mozbrowser> or if the docshell is contained in an isolated <iframe
+   * mozbrowser>.
+   *
+   * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+   * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+   * isolated since isolation is disabled.  Isolation can only be disabled if
+   * the containing document is chrome.
    *
    * Our notion here of "contained in" means: Walk up the docshell hierarchy in
    * this process until we hit an <iframe mozapp> or <iframe mozbrowser> (or
    * until the hierarchy ends).  Return true iff the docshell we stopped on has
-   * isBrowserElement == true.
+   * isIsolatedMozBrowserElement == true.
    */
-  [infallible] readonly attribute boolean isInBrowserElement;
+  [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser> or
