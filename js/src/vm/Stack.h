@@ -216,6 +216,8 @@ class AbstractFramePtr
 
     inline Value newTarget() const;
 
+    inline bool debuggerNeedsCheckPrimitiveReturn() const;
+
     inline bool isFunctionFrame() const;
     inline bool isNonStrictDirectEvalFrame() const;
     inline bool isStrictEvalFrame() const;
