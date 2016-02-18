@@ -16,7 +16,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PNuwa.h"
 #include "mozilla/hal_sandbox/PHal.h"
-#if defined(DEBUG) || defined(ENABLE_TESTS)
+#ifdef DEBUG
 #include "jsprf.h"
 extern "C" char* PrintJSStack();
 #endif
@@ -202,18 +202,17 @@ ProcessLink::SendMessage(Message *msg)
         }
     }
 
+#if defined(DEBUG)
     // Nuwa to parent: check whether we are currently blocked.
     if (IsNuwaProcess() && mIsBlocked) {
-#if defined(ENABLE_TESTS) || defined(DEBUG)
         char* jsstack = PrintJSStack();
         printf_stderr("Fatal error: sending a message to the chrome process"
                       "with a blocked IPC channel from \n%s",
                       jsstack ? jsstack : "<no JS stack>");
         JS_smprintf_free(jsstack);
         MOZ_CRASH();
-#endif
     }
-
+#endif
 #endif
 
     mIOLoop->PostTask(
