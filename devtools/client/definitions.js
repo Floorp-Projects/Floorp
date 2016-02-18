@@ -103,6 +103,9 @@ Tools.inspector = {
   ],
 
   preventClosingOnKey: true,
+  onkey: function(panel, toolbox) {
+    toolbox.highlighterUtils.togglePicker();
+  },
 
   isTargetSupported: function(target) {
     return target.hasActor("inspector");
