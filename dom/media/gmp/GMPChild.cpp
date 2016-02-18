@@ -127,7 +127,7 @@ GetPluginFile(const nsAString& aPluginPath,
   return true;
 }
 
-#if !defined(XP_MACOSX)
+#if !defined(XP_MACOSX) || !defined(MOZ_GMP_SANDBOX)
 static bool
 GetPluginFile(const nsAString& aPluginPath,
               nsCOMPtr<nsIFile>& aLibFile)
