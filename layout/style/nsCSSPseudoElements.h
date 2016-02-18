@@ -39,7 +39,8 @@ namespace mozilla {
 
 // The total count of CSSPseudoElement is less than 256,
 // so use uint8_t as its underlying type.
-enum class CSSPseudoElementType : uint8_t {
+typedef uint8_t CSSPseudoElementTypeBase;
+enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
   // If the actual pseudo-elements stop being first here, change
   // GetPseudoType.
 #define CSS_PSEUDO_ELEMENT(_name, _value_, _flags) \
