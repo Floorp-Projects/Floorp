@@ -500,17 +500,19 @@ SharedMemoryBasic::SharedMemoryBasic()
 {
 }
 
-SharedMemoryBasic::SharedMemoryBasic(Handle aHandle)
-  : mPort(MACH_PORT_NULL)
-  , mMemory(nullptr)
-{
-  mPort = aHandle;
-}
-
 SharedMemoryBasic::~SharedMemoryBasic()
 {
   Unmap();
-  Destroy();
+  CloseHandle();
+}
+
+bool
+SharedMemoryBasic::SetHandle(const Handle& aHandle)
+{
+  MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
+
+  mPort = aHandle;
+  return true;
 }
 
 static inline void*
@@ -657,13 +659,16 @@ SharedMemoryBasic::Unmap()
 }
 
 void
-SharedMemoryBasic::Destroy()
+SharedMemoryBasic::CloseHandle()
 {
-  mach_port_deallocate(mach_task_self(), mPort);
+  if (mPort != MACH_PORT_NULL) {
+    mach_port_deallocate(mach_task_self(), mPort);
+    mPort = MACH_PORT_NULL;
+  }
 }
 
 bool
-SharedMemoryBasic::IsHandleValid(const Handle& aHandle)
+SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const
 {
   return aHandle > 0;
 }

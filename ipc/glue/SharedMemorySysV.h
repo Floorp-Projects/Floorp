@@ -35,19 +35,11 @@ namespace mozilla {
 namespace ipc {
 
 
-class SharedMemorySysV : public SharedMemory
+class SharedMemorySysV : public SharedMemoryCommon<int>
 {
 public:
-  typedef int Handle;
-
   SharedMemorySysV() :
     mHandle(-1),
-    mData(nullptr)
-  {
-  }
-
-  explicit SharedMemorySysV(Handle aHandle) :
-    mHandle(aHandle),
     mData(nullptr)
   {
   }
@@ -57,6 +49,14 @@ public:
     shmdt(mData);
     mHandle = -1;
     mData = nullptr;
+  }
+
+  virtual bool SetHandle(const Handle& aHandle) override
+  {
+    MOZ_ASSERT(mHandle == -1, "already initialized");
+
+    mHandle = aHandle;
+    return true;
   }
 
   virtual bool Create(size_t aNbytes) override
@@ -132,9 +132,21 @@ public:
     return -1;
   }
 
-  static bool IsHandleValid(Handle aHandle)
+  virtual bool IsHandleValid(const Handle& aHandle) const override
   {
     return aHandle != -1;
+  }
+
+  virtual void CloseHandle() override
+  {
+  }
+
+  virtual bool ShareToProcess(base::ProcessId aProcessId, Handle* aHandle) override {
+    if (mHandle == -1) {
+      return false;
+    }
+    *aHandle = mHandle;
+    return true;
   }
 
 private:
