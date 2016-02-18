@@ -805,6 +805,7 @@ nsDocShell::nsDocShell()
   , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
   , mBlankTiming(false)
   , mFrameType(eFrameTypeRegular)
+  , mIsInIsolatedMozBrowser(false)
   , mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
   , mUserContextId(nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID)
   , mParentCharsetSource(0)
@@ -2556,7 +2557,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
 NS_IMETHODIMP
 nsDocShell::SetFullscreenAllowed(bool aFullscreenAllowed)
 {
-  if (!nsIDocShell::GetIsBrowserOrApp()) {
+  if (!nsIDocShell::GetIsMozBrowserOrApp()) {
     // Only allow setting of fullscreenAllowed on content/process boundaries.
     // At non-boundaries the fullscreenAllowed attribute is calculated based on
     // whether all enclosing frames have the "mozFullscreenAllowed" attribute
@@ -3364,7 +3365,7 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem** aParent)
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nullptr;
 
-  if (nsIDocShell::GetIsBrowserOrApp()) {
+  if (nsIDocShell::GetIsMozBrowserOrApp()) {
     return NS_OK;
   }
 
@@ -4016,6 +4017,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
 
   aChild->SetTreeOwner(mTreeOwner);
   childDocShell->SetUserContextId(mUserContextId);
+  childDocShell->SetIsInIsolatedMozBrowserElement(mIsInIsolatedMozBrowser);
 
   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
   if (!childAsDocShell) {
@@ -6129,7 +6131,7 @@ nsDocShell::SetIsActiveInternal(bool aIsActive, bool aIsHidden)
       continue;
     }
 
-    if (!docshell->GetIsBrowserOrApp()) {
+    if (!docshell->GetIsMozBrowserOrApp()) {
       if (aIsHidden) {
         docshell->SetIsActive(aIsActive);
       } else {
@@ -13891,13 +13893,6 @@ nsDocShell::SetUserContextId(uint32_t aUserContextId)
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
-{
-  *aIsBrowser = (mFrameType == eFrameTypeBrowser);
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsApp(bool* aIsApp)
 {
   *aIsApp = (mFrameType == eFrameTypeApp);
@@ -13905,15 +13900,15 @@ nsDocShell::GetIsApp(bool* aIsApp)
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsBrowserOrApp(bool* aIsBrowserOrApp)
+nsDocShell::GetIsMozBrowserOrApp(bool* aIsMozBrowserOrApp)
 {
   switch (mFrameType) {
     case eFrameTypeRegular:
-      *aIsBrowserOrApp = false;
+      *aIsMozBrowserOrApp = false;
       break;
     case eFrameTypeBrowser:
     case eFrameTypeApp:
-      *aIsBrowserOrApp = true;
+      *aIsMozBrowserOrApp = true;
       break;
   }
 
@@ -13939,22 +13934,42 @@ nsDocShell::GetInheritedFrameType()
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
+nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 {
-  *aIsInIsolatedMozBrowserElement = (GetInheritedFrameType() == eFrameTypeBrowser);
+  bool result = mFrameType == eFrameTypeBrowser && mIsInIsolatedMozBrowser;
+  *aIsIsolatedMozBrowserElement = result;
   return NS_OK;
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsInBrowserOrApp(bool* aIsInBrowserOrApp)
+nsDocShell::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
+{
+  MOZ_ASSERT(!mIsInIsolatedMozBrowser ||
+             (GetInheritedFrameType() == eFrameTypeBrowser),
+             "Isolated mozbrowser should only be true inside browser frames");
+  bool result = (GetInheritedFrameType() == eFrameTypeBrowser) &&
+                mIsInIsolatedMozBrowser;
+  *aIsInIsolatedMozBrowserElement = result;
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
+nsDocShell::SetIsInIsolatedMozBrowserElement(bool aIsInIsolatedMozBrowserElement)
+{
+  mIsInIsolatedMozBrowser = aIsInIsolatedMozBrowserElement;
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
+nsDocShell::GetIsInMozBrowserOrApp(bool* aIsInMozBrowserOrApp)
 {
   switch (GetInheritedFrameType()) {
     case eFrameTypeRegular:
-      *aIsInBrowserOrApp = false;
+      *aIsInMozBrowserOrApp = false;
       break;
     case eFrameTypeBrowser:
     case eFrameTypeApp:
-      *aIsInBrowserOrApp = true;
+      *aIsInMozBrowserOrApp = true;
       break;
   }
 
@@ -14000,10 +14015,7 @@ nsDocShell::GetOriginAttributes()
   }
 
   attrs.mUserContextId = mUserContextId;
-
-  if (mFrameType == eFrameTypeBrowser) {
-    attrs.mInIsolatedMozBrowser = true;
-  }
+  attrs.mInIsolatedMozBrowser = mIsInIsolatedMozBrowser;
 
   return attrs;
 }

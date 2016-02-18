@@ -764,20 +764,26 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript] void notifyScrollObservers();
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>.
-   * (<iframe mozapp mozbrowser> is not considered a browser.)
-   */
-  [infallible] readonly attribute boolean isBrowserElement;
-
-  /**
    * Returns true iff the docshell corresponds to an <iframe mozapp>.
    */
   [infallible] readonly attribute boolean isApp;
 
   /**
-   * Returns isBrowserElement || isApp.
+   * Returns true if this docshell corresponds to an <iframe mozbrowser> or
+   * <iframe mozapp>.  <xul:browser> returns false here.
    */
-  [infallible] readonly attribute boolean isBrowserOrApp;
+  [infallible] readonly attribute boolean isMozBrowserOrApp;
+
+  /**
+   * Returns true if this docshell corresponds to an isolated <iframe
+   * mozbrowser>.
+   *
+   * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+   * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+   * isolated since isolation is disabled.  Isolation can only be disabled if
+   * the containing document is chrome.
+   */
+  [infallible] readonly attribute boolean isIsolatedMozBrowserElement;
 
   /**
    * Returns true if this docshell corresponds to an isolated <iframe
@@ -794,18 +800,18 @@ interface nsIDocShell : nsIDocShellTreeItem
    * until the hierarchy ends).  Return true iff the docshell we stopped on has
    * isIsolatedMozBrowserElement == true.
    */
-  [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
+  [infallible] attribute boolean isInIsolatedMozBrowserElement;
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser> or
    * <iframe mozapp>, or if this docshell is contained in an <iframe mozbrowser>
-   * or <iframe mozapp>.
+   * or <iframe mozapp>.  <xul:browser> returns false here.
    *
    * To compute this value, we walk up the docshell hierarchy.  If we encounter
-   * a docshell with isBrowserElement or isApp before we hit the end of the
-   * hierarchy, we return true.  Otherwise, we return false.
+   * a docshell with isMozBrowserOrApp before we hit the end of the hierarchy,
+   * we return true.  Otherwise, we return false.
    */
-  [infallible] readonly attribute boolean isInBrowserOrApp;
+  [infallible] readonly attribute boolean isInMozBrowserOrApp;
 
    /**
     * Indicate that this docshell corresponds to an app with the given app id.

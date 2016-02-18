@@ -1200,8 +1200,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (ourDocshell->GetIsBrowserElement() !=
-      otherDocshell->GetIsBrowserElement() ||
+  if (ourDocshell->GetIsIsolatedMozBrowserElement() !=
+      otherDocshell->GetIsIsolatedMozBrowserElement() ||
       ourDocshell->GetIsApp() != otherDocshell->GetIsApp()) {
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1916,6 +1916,7 @@ nsFrameLoader::MaybeCreateDocShell()
                         NS_ERROR_FAILURE);
     }
     mDocShell->SetIsBrowserInsideApp(containingAppId);
+    mDocShell->SetIsInIsolatedMozBrowserElement(OwnerIsIsolatedMozBrowserFrame());
   }
 
   if (OwnerIsMozBrowserOrAppFrame()) {
