@@ -51,7 +51,7 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
   // before we call SECMOD_DeleteModule, below.
 #ifndef MOZ_NO_SMART_CARDS
   {
-    mozilla::ScopedSECMODModule module(SECMOD_FindModule(moduleName.get()));
+    mozilla::UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
     if (!module) {
       return NS_ERROR_FAILURE;
     }
@@ -100,7 +100,7 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   }
 
 #ifndef MOZ_NO_SMART_CARDS
-  mozilla::ScopedSECMODModule module(SECMOD_FindModule(moduleName.get()));
+  mozilla::UniqueSECMODModule module(SECMOD_FindModule(moduleName.get()));
   if (!module) {
     return NS_ERROR_FAILURE;
   }
