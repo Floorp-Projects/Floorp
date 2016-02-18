@@ -37,7 +37,7 @@ add_task(function* () {
   yield toolbox.highlighter.showBoxModel(body);
 
   info("Waiting for element picker to become active.");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Moving mouse over iframe padding.");
   yield moveMouseOver("iframe", 1, 1);
