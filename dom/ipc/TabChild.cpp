@@ -867,6 +867,9 @@ TabChild::NotifyTabContextUpdated()
         // UNKNOWN_APP_ID for aOwnOrContainingAppId.
         if (IsBrowserElement()) {
           docShell->SetIsBrowserInsideApp(BrowserOwnerAppId());
+          // TODO: Wants to call TabContext::IsIsolatedMozBrowserElement() based
+          // on isolation in principal, which is added in a later patch.
+          docShell->SetIsInIsolatedMozBrowserElement(IsBrowserElement());
         } else {
           docShell->SetIsApp(OwnAppId());
         }
@@ -1110,7 +1113,7 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent,
     // isn't a request to open a modal-type window, we're going to create a new
     // <iframe mozbrowser/mozapp> and return its window here.
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-    bool iframeMoz = (docshell && docshell->GetIsInBrowserOrApp() &&
+    bool iframeMoz = (docshell && docshell->GetIsInMozBrowserOrApp() &&
                       !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                                         nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME)));
