@@ -45,8 +45,8 @@ def WebIDLTest(parser, harness):
                        prefix + " - Interface failed but not as a WebIDLError exception: %s" % e)
 
     iterableMembers = [(x, WebIDL.IDLMethod) for x in ["entries", "keys",
-                                                       "values"]]
-    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has", "forEach"]] +
+                                                       "values", "forEach"]]
+    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has"]] +
                     [("__setlike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
     setROMembers.extend([("size", WebIDL.IDLAttribute)])
@@ -62,7 +62,7 @@ def WebIDLTest(parser, harness):
                                                            "__clear",
                                                            "__delete"]] +
                           setRWMembers)
-    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has", "forEach"]] +
+    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has"]] +
                     [("__maplike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
     mapROMembers.extend([("size", WebIDL.IDLAttribute)])
