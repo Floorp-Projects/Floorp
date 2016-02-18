@@ -105,7 +105,7 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
         alarmsMap.get(extension).add(alarm);
       },
 
-      get: function(args) {
+      get: function(...args) {
         let name = "", callback;
         if (args.length == 1) {
           callback = args[0];
@@ -127,7 +127,7 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
 
       getAll: function(callback) {
         let alarms = alarmsMap.get(extension);
-        let result = alarms.map(alarm => alarm.data);
+        let result = Array.from(alarms, alarm => alarm.data);
         return context.wrapPromise(Promise.resolve(result), callback);
       },
 

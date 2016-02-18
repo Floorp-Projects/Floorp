@@ -22,14 +22,13 @@ add_task(function* test_alarm_without_permissions() {
     browser.test.notifyPass("alarms_permission");
   }
 
-  let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
     manifest: {
       permissions: [],
     },
-  };
+  });
 
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   info("extension loaded");
   yield extension.awaitFinish("alarms_permission");
@@ -53,14 +52,13 @@ add_task(function* test_alarm_fires() {
     }, 10000);
   }
 
-  let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
     manifest: {
       permissions: ["alarms"],
     },
-  };
+  });
 
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   info("extension loaded");
   yield extension.awaitFinish("alarms");
@@ -93,19 +91,88 @@ add_task(function* test_periodic_alarm_fires() {
     }, 30000);
   }
 
-  let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
     manifest: {
       permissions: ["alarms"],
     },
-  };
+  });
 
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   info("extension loaded");
   yield extension.awaitFinish("alarms");
   yield extension.unload();
   info("extension unloaded");
+});
+
+
+add_task(function* test_get_get_all_clear_all_alarms() {
+  function backgroundScript() {
+    const ALARM_NAME = "test_alarm";
+
+    let suffixes = [0, 1, 2];
+
+    suffixes.forEach(suffix => {
+      chrome.alarms.create(ALARM_NAME + suffix, {when: Date.now() + (suffix + 1) * 10000});
+    });
+
+    chrome.alarms.getAll(alarms => {
+      browser.test.assertEq(suffixes.length, alarms.length);
+      alarms.forEach((alarm, index) => {
+        browser.test.assertEq(ALARM_NAME + index, alarm.name, "expected alarm returned");
+      });
+
+      suffixes.forEach(suffix => {
+        chrome.alarms.get(ALARM_NAME + suffix, alarm => {
+          browser.test.assertEq(ALARM_NAME + suffix, alarm.name, "expected alarm returned");
+          browser.test.sendMessage(`get-${suffix}`);
+        });
+      });
+
+      chrome.alarms.clear(ALARM_NAME + suffixes[0], wasCleared => {
+        browser.test.assertTrue(wasCleared, "alarm was cleared");
+        chrome.alarms.getAll(alarms => {
+          browser.test.assertEq(2, alarms.length, "alarm was removed");
+        });
+
+        chrome.alarms.get(ALARM_NAME + suffixes[0], alarm => {
+          browser.test.assertEq(undefined, alarm, "non-existent alarm should be undefined");
+          browser.test.sendMessage(`get-invalid`);
+        });
+
+        chrome.alarms.clearAll(wasCleared => {
+          browser.test.assertTrue(wasCleared, "alarms were cleared");
+          chrome.alarms.getAll(alarms => {
+            browser.test.assertEq(0, alarms.length, "no alarms exist");
+          });
+          browser.test.sendMessage("clearAll");
+        });
+
+        browser.test.sendMessage("clear");
+      });
+
+      browser.test.sendMessage("getAll");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["alarms"],
+    },
+  });
+
+  yield Promise.all([
+    extension.startup(),
+    extension.awaitMessage("getAll"),
+    extension.awaitMessage("get-0"),
+    extension.awaitMessage("get-1"),
+    extension.awaitMessage("get-2"),
+    extension.awaitMessage("clear"),
+    extension.awaitMessage("get-invalid"),
+    extension.awaitMessage("clearAll"),
+  ]);
+  yield extension.unload();
 });
 
 </script>
