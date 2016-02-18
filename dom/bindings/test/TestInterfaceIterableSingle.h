@@ -37,11 +37,14 @@ public:
     Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
 
   size_t GetIterableLength() const;
-  uint32_t GetValueAtIndex(uint32_t aIndex) const;
+  int32_t GetValueAtIndex(uint32_t aIndex) const;
+  uint32_t Length() const;
+  int32_t IndexedGetter(uint32_t aIndex, bool& aFound) const;
+
 private:
   virtual ~TestInterfaceIterableSingle() {}
   nsCOMPtr<nsPIDOMWindowInner> mParent;
-  nsTArray<uint32_t> mValues;
+  nsTArray<int32_t> mValues;
 };
 
 } // namespace dom
