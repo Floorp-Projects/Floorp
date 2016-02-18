@@ -910,8 +910,8 @@ struct RuleCascadeData {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   RuleHash                 mRuleHash;
-  RuleHash*
-    mPseudoElementRuleHashes[static_cast<uint8_t>(CSSPseudoElementType::Count)];
+  RuleHash*                mPseudoElementRuleHashes[
+    static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count)];
   nsTArray<nsCSSRuleProcessor::StateSelector>  mStateSelectors;
   EventStates              mSelectorDocumentStates;
   PLDHashTable             mClassSelectors;
@@ -2644,9 +2644,8 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
-    RuleHash* ruleHash =
-      cascade->mPseudoElementRuleHashes[static_cast<uint8_t>(
-        aData->mPseudoType)];
+    RuleHash* ruleHash = cascade->mPseudoElementRuleHashes[
+      static_cast<CSSPseudoElementTypeBase>(aData->mPseudoType)];
     if (ruleHash) {
       NodeMatchContext nodeContext(EventStates(),
                                    nsCSSRuleProcessor::IsLink(aData->mElement));
@@ -3415,8 +3414,8 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
   if (MOZ_LIKELY(pseudoType == CSSPseudoElementType::NotPseudo)) {
     cascade->mRuleHash.AppendRule(*aRuleInfo);
   } else if (pseudoType < CSSPseudoElementType::Count) {
-    RuleHash*& ruleHash =
-      cascade->mPseudoElementRuleHashes[static_cast<uint8_t>(pseudoType)];
+    RuleHash*& ruleHash = cascade->mPseudoElementRuleHashes[
+      static_cast<CSSPseudoElementTypeBase>(pseudoType)];
     if (!ruleHash) {
       ruleHash = new RuleHash(cascade->mQuirksMode);
       if (!ruleHash) {

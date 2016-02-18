@@ -49,6 +49,8 @@ public:
       return 0;
 
     // Convert the scoped enum into an integer while adding it to hash.
+    // Note: CSSPseudoElementTypeBase is uint8_t, so we convert it into
+    //       uint8_t directly to avoid including the header.
     return mozilla::HashGeneric(aKey->mElement,
                                 static_cast<uint8_t>(aKey->mPseudoType));
   }
