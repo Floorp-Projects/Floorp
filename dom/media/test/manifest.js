@@ -479,7 +479,6 @@ var gSeekTests = [
   { name:"320x240.ogv", type:"video/ogg", duration:0.266 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"sine.webm", type:"audio/webm", duration:4.001 },
-  { name:"no-cues.webm", type:"video/webm", duration:3.967 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208333 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
@@ -506,6 +505,13 @@ function IsWindows8OrLater() {
   var winver = manifestNavigator().userAgent.match(re);
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.2;
 }
+
+// These files are WebMs without cues. They're seekable within their buffered
+// ranges. If work renders WebMs fully seekable these files should be moved
+// into gSeekTests
+var gCuelessWebMTests = [
+  { name:"no-cues.webm", type:"video/webm", duration:3.967 },
+];
 
 // These are files that are non seekable, due to problems with the media,
 // for example broken or missing indexes.
