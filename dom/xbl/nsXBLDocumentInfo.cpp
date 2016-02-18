@@ -206,9 +206,9 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
     return rv;
 
   nsCOMPtr<nsIObjectInputStream> stream;
-  rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(stream));
+  rv = NewObjectInputStreamFromBuffer(UniquePtr<char[]>(buf.forget()),
+                                      len, getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
-  buf.forget();
 
   // The file compatibility.ini stores the build id. This is checked in
   // nsAppRunner.cpp and will delete the cache if a different build is
