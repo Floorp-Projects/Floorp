@@ -63,6 +63,7 @@
 #include "plstr.h"
 #include "nsINestedURI.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "nsIScriptError.h"
 #include "nsISiteSecurityService.h"
 #include "nsHttpHandler.h"
@@ -1919,28 +1920,11 @@ NS_IsHSTSUpgradeRedirect(nsIChannel *aOldChannel,
     return false;
   }
 
-  bool isHttps;
-  if (NS_FAILED(newURI->SchemeIs("https", &isHttps)) || !isHttps) {
-    return false;
-  }
-
   nsCOMPtr<nsIURI> upgradedURI;
-  if (NS_FAILED(oldURI->Clone(getter_AddRefs(upgradedURI)))) {
+  nsresult rv =
+    HttpBaseChannel::GetSecureUpgradedURI(oldURI, getter_AddRefs(upgradedURI));
+  if (NS_FAILED(rv)) {
     return false;
-  }
-
-  if (NS_FAILED(upgradedURI->SetScheme(NS_LITERAL_CSTRING("https")))) {
-    return false;
-  }
-
-  int32_t oldPort = -1;
-  if (NS_FAILED(oldURI->GetPort(&oldPort))) {
-    return false;
-  }
-  if (oldPort == 80 || oldPort == -1) {
-    upgradedURI->SetPort(-1);
-  } else {
-    upgradedURI->SetPort(oldPort);
   }
 
   bool res;
