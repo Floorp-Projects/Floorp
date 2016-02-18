@@ -82,11 +82,15 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
     : mMutex(nullptr)
     , mCount(nullptr)
 {
-  if (!ipc::SharedMemoryBasic::IsHandleValid(aHandle)) {
+  mSharedBuffer = new ipc::SharedMemoryBasic;
+
+  if (!mSharedBuffer->IsHandleValid(aHandle)) {
     MOZ_CRASH();
   }
 
-  mSharedBuffer = new ipc::SharedMemoryBasic(aHandle);
+  if (!mSharedBuffer->SetHandle(aHandle)) {
+    MOZ_CRASH();
+  }
 
   if (!mSharedBuffer->Map(sizeof(MutexData))) {
     MOZ_CRASH();
