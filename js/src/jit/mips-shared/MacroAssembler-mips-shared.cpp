@@ -1184,19 +1184,25 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 CodeOffset
 MacroAssembler::thunkWithPatch()
 {
-    MOZ_CRASH("NYI");
+    addLongJump(nextOffset());
+    ma_liPatchable(ScratchRegister, ImmWord(0));
+    as_jr(ScratchRegister);
+    as_nop();
+    return CodeOffset(currentOffset());
 }
 
 void
 MacroAssembler::patchThunk(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    MOZ_CRASH("NYI");
+    BufferOffset li(callerOffset - Assembler::PatchWrite_NearCallSize());
+    Assembler::PatchInstructionImmediate((uint8_t*)editSrc(li),
+                                         PatchedImmPtr((const void*)calleeOffset));
 }
 
 void
 MacroAssembler::repatchThunk(uint8_t* code, uint32_t callerOffset, uint32_t calleeOffset)
 {
-    MOZ_CRASH("NYI");
+    Assembler::PatchInstructionImmediate(code, PatchedImmPtr((const void*)calleeOffset));
 }
 
 void
