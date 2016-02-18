@@ -6,6 +6,10 @@ extensions.registerSchemaAPI("i18n", null, (extension, context) => {
       getMessage: function(messageName, substitutions) {
         return extension.localizeMessage(messageName, substitutions);
       },
+
+      getUILanguage: function() {
+        return extension.localeData.uiLocale;
+      },
     },
   };
 });
