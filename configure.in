@@ -96,8 +96,7 @@ dnl ==============================================================
 _topsrcdir=`cd \`dirname $0\`; pwd -W 2>/dev/null || pwd -P`
 _objdir=`pwd -P`
 
-dnl TODO Don't exempt L10N builds once bug 842760 is resolved.
-if test "$_topsrcdir" = "$_objdir" -a "${with_l10n_base+set}" != set; then
+if test "$_topsrcdir" = "$_objdir"; then
   echo "  ***"
   echo "  * Building directly in the main source directory is not allowed."
   echo "  *"
