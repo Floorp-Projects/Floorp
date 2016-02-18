@@ -40,6 +40,8 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
                          int32_t priority)
   : mStreamID(0)
   , mSession(session)
+  , mSegmentReader(nullptr)
+  , mSegmentWriter(nullptr)
   , mUpstreamState(GENERATING_HEADERS)
   , mState(IDLE)
   , mRequestHeadersDone(0)
@@ -48,8 +50,6 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mQueued(0)
   , mTransaction(httpTransaction)
   , mSocketTransport(session->SocketTransport())
-  , mSegmentReader(nullptr)
-  , mSegmentWriter(nullptr)
   , mChunkSize(session->SendingChunkSize())
   , mRequestBlockedOnRead(0)
   , mRecvdFin(0)
@@ -67,7 +67,6 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mRequestBodyLenRemaining(0)
   , mLocalUnacked(0)
   , mBlockedOnRwin(false)
-  , mSentPushWindowBump(false)
   , mTotalSent(0)
   , mTotalRead(0)
   , mPushSource(nullptr)
@@ -1367,11 +1366,8 @@ Http2Stream::OnReadSegment(const char *buf,
     break;
 
   case UPSTREAM_COMPLETE:
-    MOZ_ASSERT(mPushSource && !mSentPushWindowBump, "unexpected upstream_complete");
+    MOZ_ASSERT(mPushSource);
     rv = TransmitFrame(nullptr, nullptr, true);
-    if (NS_SUCCEEDED(rv)) {
-      mSentPushWindowBump = true;
-    }
     break;
 
   default:
