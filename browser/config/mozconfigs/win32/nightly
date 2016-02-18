@@ -6,7 +6,5 @@ ac_add_options --enable-verify-mar
 
 ac_add_options --with-branding=browser/branding/nightly
 
-. "$topsrcdir/build/mozconfig.rust"
-
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
