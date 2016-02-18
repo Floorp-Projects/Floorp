@@ -41,8 +41,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 
   // ComputedTimingProperties
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
-  aRetVal.mEndTime
-    = aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay;
+  aRetVal.mEndTime = aComputedTiming.mEndTime.ToMilliseconds();
   aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
   if (!aRetVal.mProgress.IsNull()) {
@@ -245,6 +244,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
                        1.0f :
                        aTiming.mIterations;
   result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
+  // Bug 1244635: Add endDelay to the end time calculation
+  result.mEndTime = aTiming.mDelay + result.mActiveDuration;
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;

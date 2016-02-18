@@ -1204,8 +1204,7 @@ Animation::EffectEnd() const
     return StickyTimeDuration(0);
   }
 
-  return mEffect->SpecifiedTiming().mDelay
-         + mEffect->GetComputedTiming().mActiveDuration;
+  return mEffect->GetComputedTiming().mEndTime;
 }
 
 nsIDocument*
