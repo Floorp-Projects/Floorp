@@ -3045,51 +3045,36 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
 }
 
 static bool
-IsSimdTypeName(ModuleValidator& m, PropertyName* name, SimdType* type)
-{
-    if (name == m.cx()->names().Int32x4) {
-        *type = SimdType::Int32x4;
-        return true;
-    }
-    if (name == m.cx()->names().Float32x4) {
-        *type = SimdType::Float32x4;
-        return true;
-    }
-    if (name == m.cx()->names().Bool32x4) {
-        *type = SimdType::Bool32x4;
-        return true;
-    }
-    return false;
-}
-
-static bool
 IsSimdValidOperationType(SimdType type, SimdOperation op)
 {
 #define CASE(op) case SimdOperation::Fn_##op:
     switch(type) {
       case SimdType::Int32x4:
         switch (op) {
+          case SimdOperation::Constructor:
           FORALL_INT32X4_ASMJS_OP(CASE) return true;
           default: return false;
         }
         break;
       case SimdType::Float32x4:
         switch (op) {
+          case SimdOperation::Constructor:
           FORALL_FLOAT32X4_ASMJS_OP(CASE) return true;
           default: return false;
         }
         break;
       case SimdType::Bool32x4:
         switch (op) {
+          case SimdOperation::Constructor:
           FORALL_BOOL_SIMD_OP(CASE) return true;
           default: return false;
         }
         break;
       default:
-        break;
+        // Unimplemented SIMD type.
+        return false;
     }
 #undef CASE
-    MOZ_CRASH("Unhandles SIMD type");
 }
 
 static bool
@@ -3133,8 +3118,17 @@ CheckGlobalSimdImport(ModuleValidator& m, ParseNode* initNode, PropertyName* var
 
     // SIMD constructor, with the form glob.SIMD.[[type]]
     SimdType simdType;
-    if (!IsSimdTypeName(m, field, &simdType))
+    if (!IsSimdTypeName(m.cx()->names(), field, &simdType))
         return m.failName(initNode, "'%s' is not a standard SIMD type", field);
+
+    // IsSimdTypeName will return true for any SIMD type supported by the VM.
+    //
+    // Since we may not support all of those SIMD types in asm.js, use the
+    // asm.js-specific IsSimdValidOperationType() to check if this specific
+    // constructor is supported in asm.js.
+    if (!IsSimdValidOperationType(simdType, SimdOperation::Constructor))
+        return m.failName(initNode, "'%s' is not a supported SIMD type", field);
+
     return m.addSimdCtor(varName, simdType, field);
 }
 
@@ -7100,7 +7094,7 @@ ValidateSimdType(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal
     else
         type = global.simdOperationType();
 
-    RootedPropertyName simdTypeName(cx, SimdTypeToName(cx, type));
+    RootedPropertyName simdTypeName(cx, SimdTypeToName(cx->names(), type));
     if (!GetDataProperty(cx, v, simdTypeName, &v))
         return false;
 
