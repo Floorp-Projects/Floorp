@@ -284,7 +284,7 @@ namespace {
 
 nsresult
 GetBufferFromZipArchive(nsZipArchive *zip, bool doCRC, const char* id,
-                        char** outbuf, uint32_t* length)
+                        UniquePtr<char[]>* outbuf, uint32_t* length)
 {
   if (!zip)
     return NS_ERROR_NOT_AVAILABLE;
@@ -303,7 +303,7 @@ GetBufferFromZipArchive(nsZipArchive *zip, bool doCRC, const char* id,
 // NOTE: this will not find a new entry until it has been written to disk!
 // Consumer should take ownership of the resulting buffer.
 nsresult
-StartupCache::GetBuffer(const char* id, char** outbuf, uint32_t* length) 
+StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* length) 
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
@@ -315,8 +315,8 @@ StartupCache::GetBuffer(const char* id, char** outbuf, uint32_t* length)
     nsDependentCString idStr(id);
     mTable.Get(idStr, &entry);
     if (entry) {
-      *outbuf = new char[entry->size];
-      memcpy(*outbuf, entry->data, entry->size);
+      *outbuf = MakeUnique<char[]>(entry->size);
+      memcpy(outbuf->get(), entry->data, entry->size);
       *length = entry->size;
       return NS_OK;
     }
@@ -754,7 +754,10 @@ StartupCacheWrapper::GetBuffer(const char* id, char** outbuf, uint32_t* length)
   if (!sc) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return sc->GetBuffer(id, outbuf, length);
+  UniquePtr<char[]> buf;
+  nsresult rv = sc->GetBuffer(id, &buf, length);
+  *outbuf = buf.release();
+  return rv;
 }
 
 nsresult
