@@ -31,6 +31,7 @@
 #include "nsILoadContext.h"
 #include "nsUnicharUtils.h"
 #include "nsContentList.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "mozilla/css/Loader.h"
@@ -3154,7 +3155,9 @@ nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
       continue;
     }
 
-    node->AsElement()->GetAnimationsUnsorted(aAnimations);
+    Element::GetAnimationsUnsorted(node->AsElement(),
+                                   CSSPseudoElementType::NotPseudo,
+                                   aAnimations);
   }
 
   // Sort animations by priority
