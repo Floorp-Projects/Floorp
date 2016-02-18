@@ -316,7 +316,7 @@ StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* len
     mTable.Get(idStr, &entry);
     if (entry) {
       *outbuf = MakeUnique<char[]>(entry->size);
-      memcpy(outbuf->get(), entry->data, entry->size);
+      memcpy(outbuf->get(), entry->data.get(), entry->size);
       *length = entry->size;
       return NS_OK;
     }
@@ -347,8 +347,8 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, uint32_t len)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoArrayPtr<char> data(new char[len]);
-  memcpy(data, inbuf, len);
+  auto data = MakeUnique<char[]>(len);
+  memcpy(data.get(), inbuf, len);
 
   nsCString idStr(id);
   // Cache it for now, we'll write all together later.
@@ -367,7 +367,7 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, uint32_t len)
   }
 #endif
 
-  entry = new CacheEntry(data.forget(), len);
+  entry = new CacheEntry(Move(data), len);
   mTable.Put(idStr, entry);
   mPendingWrites.AppendElement(idStr);
   return ResetStartupWriteTimer();
@@ -414,7 +414,7 @@ CacheCloseHelper(const nsACString& key, const CacheEntry* data,
   nsIStringInputStream* stream = holder->stream;
   nsIZipWriter* writer = holder->writer;
 
-  stream->ShareData(data->data, data->size);
+  stream->ShareData(data->data.get(), data->size);
 
 #ifdef DEBUG
   bool hasEntry;
