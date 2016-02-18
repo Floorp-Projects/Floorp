@@ -27460,6 +27460,10 @@
         "url": "/web-animations/keyframe-effect/constructor.html"
       },
       {
+        "path": "web-animations/keyframe-effect/effect-easing.html",
+        "url": "/web-animations/keyframe-effect/effect-easing.html"
+      },
+      {
         "path": "web-animations/keyframe-effect/getComputedTiming.html",
         "url": "/web-animations/keyframe-effect/getComputedTiming.html"
       },
