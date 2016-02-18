@@ -223,6 +223,7 @@ class SavedStacks {
         RelocatablePtrScript script;
         jsbytecode* pc;
 
+        void trace(JSTracer* trc) { /* PCKey is weak. */ }
         bool needsSweep() { return IsAboutToBeFinalized(&script); }
     };
 
@@ -239,8 +240,12 @@ class SavedStacks {
         }
 
         bool needsSweep() {
+            // LocationValue is always held strongly, but in a weak map.
+            // Assert that it has been marked already, but allow it to be
+            // ejected from the map when the key dies.
             MOZ_ASSERT(source);
-            return IsAboutToBeFinalized(&source);
+            MOZ_ASSERT(!IsAboutToBeFinalized(&source));
+            return true;
         }
 
         RelocatablePtrAtom source;
@@ -282,6 +287,13 @@ class SavedStacks {
         }
     };
 
+    // We eagerly Atomize the script source stored in LocationValue because
+    // asm.js does not always have a JSScript and the source might not be
+    // available when we need it later. However, since the JSScript does not
+    // actually hold this atom, we have to trace it strongly to keep it alive.
+    // Thus, it takes two GC passes to fully clean up this table: the first GC
+    // removes the dead script; the second will clear out the source atom since
+    // it is no longer held by the table.
     using PCLocationMap = GCHashMap<PCKey, LocationValue, PCLocationHasher, SystemAllocPolicy>;
     PCLocationMap pcLocationMap;
 

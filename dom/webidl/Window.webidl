@@ -246,6 +246,9 @@ partial interface Window {
 // https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html
 Window implements GlobalCrypto;
 
+// https://fidoalliance.org/specifications/download/
+Window implements GlobalU2F;
+
 #ifdef MOZ_WEBSPEECH
 // http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
 [NoInterfaceObject]

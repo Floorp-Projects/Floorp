@@ -65,4 +65,16 @@ interface nsIStandardURL : nsIMutable
               in AUTF8String aSpec,
               in string aOriginCharset,
               in nsIURI aBaseURI);
+
+    /**
+     * Set the default port.
+     *
+     * Note: If this object is already using its default port (i.e. if it has
+     * mPort == -1), then it will now implicitly be using the new default port.
+     *
+     * @param aNewDefaultPort - if the URI has (or is later given) a port that
+     *                          matches this default, then we won't include a
+     *                          port number in the canonical form of the URL.
+     */
+    void setDefaultPort(in long aNewDefaultPort);
 };

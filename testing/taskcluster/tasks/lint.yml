@@ -18,8 +18,8 @@ task:
   schedulerId: task-graph-scheduler
 
   routes:
-    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}.{{build_type}}'
-    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}.{{build_type}}'
+    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}'
+    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
@@ -34,7 +34,7 @@ task:
 
   extra:
     build_product: '{{build_product}}'
-    build_name: '{{build_name}}'
-    build_type: '{{build_type}}'
+    build_name: eslint-gecko
+    build_type: opt
     index:
       rank: {{pushlog_id}}

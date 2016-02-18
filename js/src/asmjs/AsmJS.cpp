@@ -1783,7 +1783,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #undef ADDSTDLIBSIMDOPNAME
 
-        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
+        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(cx_, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
@@ -3407,7 +3407,7 @@ SetLocal(FunctionValidator& f, NumLit lit)
 }
 
 static bool
-CheckVariable(FunctionValidator& f, ParseNode* var)
+CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
 {
     if (!IsDefinition(var))
         return f.fail(var, "local variable names must not restate argument names");
@@ -3428,20 +3428,23 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
     if (!lit.valid())
         return f.failName(var, "var '%s' initializer out of range", name);
 
-    if (!lit.isZeroBits() && !SetLocal(f, lit))
-        return false;
+    if (!lit.isZeroBits()) {
+        ++*numStmts;
+        if (!SetLocal(f, lit))
+            return false;
+    }
 
     return f.addLocal(var, name, lit.type());
 }
 
 static bool
-CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
+CheckVariables(FunctionValidator& f, ParseNode** stmtIter, uint32_t* numStmts)
 {
     ParseNode* stmt = *stmtIter;
 
     for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode* var = VarListHead(stmt); var; var = NextNode(var)) {
-            if (!CheckVariable(f, var))
+            if (!CheckVariable(f, var, numStmts))
                 return false;
         }
     }
@@ -6083,26 +6086,6 @@ enum class InterruptCheckPosition {
 };
 
 static bool
-MaybeAddInterruptCheck(FunctionValidator& f, InterruptCheckPosition pos, ParseNode* pn)
-{
-    if (f.m().mg().args().useSignalHandlersForInterrupt)
-        return true;
-
-    switch (pos) {
-      case InterruptCheckPosition::Head:
-        if (!f.encoder().writeExpr(Expr::InterruptCheckHead))
-            return false;
-        break;
-      case InterruptCheckPosition::Loop:
-        if (!f.encoder().writeExpr(Expr::InterruptCheckLoop))
-            return false;
-        break;
-    }
-
-    return true;
-}
-
-static bool
 CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
 {
     MOZ_ASSERT(whileStmt->isKind(PNK_WHILE));
@@ -6118,8 +6101,7 @@ CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
-    return MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, whileStmt) &&
-           CheckStatement(f, body);
+    return CheckStatement(f, body);
 }
 
 static bool
@@ -6154,9 +6136,6 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt)
         return false;
     }
 
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, forStmt))
-        return false;
-
     if (!CheckStatement(f, body))
         return false;
 
@@ -6174,9 +6153,6 @@ CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt)
     ParseNode* cond = BinaryRight(whileStmt);
 
     if (!f.encoder().writeExpr(Expr::DoWhile))
-        return false;
-
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, cond))
         return false;
 
     if (!CheckStatement(f, body))
@@ -6626,22 +6602,27 @@ CheckFunction(ModuleValidator& m)
     if (!CheckArguments(f, &stmtIter, &args))
         return false;
 
-    if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Head, fn))
+    uint32_t numStmts = 0;
+
+    size_t numStmtsAt;
+    if (!f.encoder().writePatchableVarU32(&numStmtsAt))
         return false;
 
-    if (!CheckVariables(f, &stmtIter))
+    if (!CheckVariables(f, &stmtIter, &numStmts))
         return false;
 
     ParseNode* lastNonEmptyStmt = nullptr;
-    for (; stmtIter; stmtIter = NextNode(stmtIter)) {
+    for (; stmtIter; stmtIter = NextNonEmptyStatement(stmtIter)) {
+        numStmts++;
+        lastNonEmptyStmt = stmtIter;
         if (!CheckStatement(f, stmtIter))
             return false;
-        if (!IsEmptyStatement(stmtIter))
-            lastNonEmptyStmt = stmtIter;
     }
 
     if (!CheckFinalReturn(f, lastNonEmptyStmt))
         return false;
+
+    f.encoder().patchVarU32(numStmtsAt, numStmts);
 
     ModuleValidator::Func* func = nullptr;
     if (!CheckFunctionSignature(m, fn, Sig(Move(args), f.returnedType()), FunctionName(fn), &func))

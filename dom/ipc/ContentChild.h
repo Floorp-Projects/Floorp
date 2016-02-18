@@ -144,6 +144,11 @@ public:
   AllocPGMPServiceChild(mozilla::ipc::Transport* transport,
                         base::ProcessId otherProcess) override;
 
+  PAPZChild*
+  AllocPAPZChild(const TabId& aTabId) override;
+  bool
+  DeallocPAPZChild(PAPZChild* aActor) override;
+
   PCompositorChild*
   AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                         base::ProcessId aOtherProcess) override;

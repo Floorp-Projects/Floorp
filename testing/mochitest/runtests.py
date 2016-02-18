@@ -1928,12 +1928,7 @@ class MochitestDesktop(MochitestBase):
             # TODO: mozrunner should use -foreground at least for mac
             # https://bugzilla.mozilla.org/show_bug.cgi?id=916512
             args.append('-foreground')
-            if testUrl:
-                if debuggerInfo and debuggerInfo.requiresEscapedArgs:
-                    testUrl = testUrl.replace("&", "\\&")
-                self.start_script_args.append(testUrl)
-            else:
-                self.start_script_args.append('about:blank')
+            self.start_script_args.append(testUrl or 'about:blank')
 
             if detectShutdownLeaks:
                 shutdownLeaks = ShutdownLeaks(self.log)
@@ -2002,8 +1997,9 @@ class MochitestDesktop(MochitestBase):
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
+            port_timeout = marionette_args.pop('port_timeout')
             self.marionette = Marionette(**marionette_args)
-            self.marionette.start_session()
+            self.marionette.start_session(timeout=port_timeout)
 
             # install specialpowers and mochikit as temporary addons
             addons = Addons(self.marionette)
@@ -2354,6 +2350,8 @@ class MochitestDesktop(MochitestBase):
             self.start_script_args.append(self.getTestFlavor(options))
             marionette_args = {
                 'symbols_path': options.symbolsPath,
+                'socket_timeout': options.marionette_socket_timeout,
+                'port_timeout': options.marionette_port_timeout,
             }
 
             if options.marionette:

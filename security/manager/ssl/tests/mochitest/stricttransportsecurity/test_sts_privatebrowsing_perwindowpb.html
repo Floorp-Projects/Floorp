@@ -111,8 +111,9 @@
       } else {
         onMessageReceived(win, isPrivate, "INSECURE " + testName);
       }
-      if (aCallback)
+      if (aCallback) {
         aCallback();
+      }
     });
     win.content.document.body.appendChild(frame);
   }
@@ -150,13 +151,15 @@
       // remove all the iframes in the document
       win.content.document.body.removeChild(
         win.content.document.getElementById('ifr_bootstrap'));
-      for (var test in testframes)
+      for (let test in testframes) {
         win.content.document.body.removeChild(
           win.content.document.getElementById('ifr_' + test));
+      }
       currentround = "";
 
-      if (!isPrivate)
+      if (!isPrivate) {
         clean_up_sts_state(isPrivate);
+      }
       // Close test window.
       win.close();
       // And advance to the next test.

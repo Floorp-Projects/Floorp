@@ -19,6 +19,11 @@ interface nsICertVerificationListener;
 
 /**
  * This represents a X.509 certificate.
+ *
+ * NOTE: Service workers persist x.509 certs in object form on disk.  If you
+ *       change this uuid you probably need a hack in nsBinaryInputStream to
+ *       read the old uuid.  If you change the format of the object
+ *       serialization then more complex changes will be needed.
  */
 [scriptable, uuid(bdc3979a-5422-4cd5-8589-696b6e96ea83)]
 interface nsIX509Cert : nsISupports {

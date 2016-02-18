@@ -69,6 +69,7 @@ public:
   CacheIndexEntryAutoManage(const SHA1Sum::Hash *aHash, CacheIndex *aIndex)
     : mIndex(aIndex)
     , mOldRecord(nullptr)
+    , mOldFrecency(0)
     , mDoNotSearchInIndex(false)
     , mDoNotSearchInUpdates(false)
   {
@@ -79,6 +80,7 @@ public:
     mIndex->mIndexStats.BeforeChange(entry);
     if (entry && entry->IsInitialized() && !entry->IsRemoved()) {
       mOldRecord = entry->mRec;
+      mOldFrecency = entry->mRec->mFrecency;
     }
   }
 
@@ -104,6 +106,8 @@ public:
         mIndex->ReplaceRecordInIterators(mOldRecord, entry->mRec);
         mIndex->RemoveRecordFromFrecencyArray(mOldRecord);
         mIndex->InsertRecordToFrecencyArray(entry->mRec);
+      } else if (entry->mRec->mFrecency != mOldFrecency) {
+        mIndex->mFrecencyArraySorted = false;
       }
     } else {
       // both entries were removed or not initialized, do nothing
@@ -147,6 +151,7 @@ private:
   const SHA1Sum::Hash *mHash;
   RefPtr<CacheIndex> mIndex;
   CacheIndexRecord    *mOldRecord;
+  uint32_t             mOldFrecency;
   bool                 mDoNotSearchInIndex;
   bool                 mDoNotSearchInUpdates;
 };
@@ -246,6 +251,7 @@ CacheIndex::CacheIndex()
   , mRWBufSize(0)
   , mRWBufPos(0)
   , mJournalReadSuccessfully(false)
+  , mFrecencyArraySorted(false)
 {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
@@ -1187,7 +1193,11 @@ CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, 
   uint32_t i;
 
   // find first non-forced valid and unpinned entry with the lowest frecency
-  index->mFrecencyArray.Sort(FrecencyComparator());
+  if (!index->mFrecencyArraySorted) {
+    index->mFrecencyArray.Sort(FrecencyComparator());
+    index->mFrecencyArraySorted = true;
+  }
+
   for (i = 0; i < index->mFrecencyArray.Length(); ++i) {
     memcpy(&hash, &index->mFrecencyArray[i]->mHash, sizeof(SHA1Sum::Hash));
 
@@ -1385,7 +1395,11 @@ CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
     iter = new CacheIndexIterator(index, aAddNew);
   }
 
-  index->mFrecencyArray.Sort(FrecencyComparator());
+  if (!index->mFrecencyArraySorted) {
+    index->mFrecencyArray.Sort(FrecencyComparator());
+    index->mFrecencyArraySorted = true;
+  }
+
   iter->AddRecords(index->mFrecencyArray);
 
   index->mIterators.AppendElement(iter);
@@ -3161,6 +3175,7 @@ CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
 
   MOZ_ASSERT(!mFrecencyArray.Contains(aRecord));
   mFrecencyArray.AppendElement(aRecord);
+  mFrecencyArraySorted = false;
 }
 
 void

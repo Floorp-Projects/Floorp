@@ -290,10 +290,15 @@ void
 ContentClientRemoteBuffer::CreateBackBuffer(const IntRect& aBufferRect)
 {
   // gfx::BackendType::NONE means fallback to the content backend
+  TextureAllocationFlags textureAllocFlags
+                         = (mTextureFlags & TextureFlags::COMPONENT_ALPHA) ?
+                            TextureAllocationFlags::ALLOC_CLEAR_BUFFER_BLACK :
+                            TextureAllocationFlags::ALLOC_CLEAR_BUFFER;
+
   mTextureClient = CreateTextureClientForDrawing(
     mSurfaceFormat, mSize, BackendSelector::Content,
     mTextureFlags | ExtraTextureFlags(),
-    TextureAllocationFlags::ALLOC_CLEAR_BUFFER
+    textureAllocFlags
   );
   if (!mTextureClient || !AddTextureClient(mTextureClient)) {
     AbortTextureClientCreation();

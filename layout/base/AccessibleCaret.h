@@ -104,7 +104,7 @@ public:
     // Position is not changed.
     NotChanged,
 
-    // Position is changed.
+    // Position or zoom level is changed.
     Changed,
 
     // Position is out of scroll port.
@@ -138,8 +138,8 @@ public:
 
 protected:
   // Argument aRect should be relative to CustomContentContainerFrame().
-  void SetCaretElementStyle(const nsRect& aRect);
-  void SetSelectionBarElementStyle(const nsRect& aRect);
+  void SetCaretElementStyle(const nsRect& aRect, float aZoomLevel);
+  void SetSelectionBarElementStyle(const nsRect& aRect, float aZoomLevel);
 
   // Get current zoom level.
   float GetZoomLevel();
@@ -209,6 +209,9 @@ protected:
 
   // mImaginaryCaretRect is relative to root frame.
   nsRect mImaginaryCaretRect;
+
+  // Cache current zoom level to determine whether position is changed.
+  float mZoomLevel = 0.0f;
 
   // A no-op touch-start listener which prevents APZ from panning when dragging
   // the caret.

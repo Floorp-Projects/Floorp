@@ -157,7 +157,7 @@ public:
   NS_IMETHOD Run() {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", false) &&
+        Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", true) &&
         IsWin8OrLater()) {
       mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(mFailureReason);
     } else {

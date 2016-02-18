@@ -50,8 +50,6 @@ class CpowHolder;
 } // namespace jsipc
 
 namespace layers {
-class AsyncDragMetrics;
-struct FrameMetrics;
 struct TextureFactoryIdentifier;
 } // namespace layers
 
@@ -90,7 +88,6 @@ class TabParent final : public PBrowserParent
                       , public nsIWebBrowserPersistable
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-  typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
 
   virtual ~TabParent();
 
@@ -297,30 +294,8 @@ public:
 
   virtual bool RecvDispatchFocusToTopLevelWindow() override;
 
-  virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
-                              const ViewID& aViewId,
-                              const CSSRect& aRect,
-                              const uint32_t& aFlags) override;
-
-  virtual bool
-  RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
-                            const ViewID& aViewId,
-                            const MaybeZoomConstraints& aConstraints) override;
-
   virtual bool RecvRespondStartSwipeEvent(const uint64_t& aInputBlockId,
                                           const bool& aStartSwipe) override;
-
-  virtual bool
-  RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
-                                const uint64_t& aInputBlockId,
-                                const bool& aPreventDefault) override;
-
-  virtual bool RecvSetTargetAPZC(const uint64_t& aInputBlockId,
-                                 nsTArray<ScrollableLayerGuid>&& aTargets) override;
-
-  virtual bool
-  RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
-                              nsTArray<TouchBehaviorFlags>&& aTargets) override;
 
   virtual bool
   RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent) override;
@@ -330,9 +305,6 @@ public:
 
   virtual bool
   RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent) override;
-
-  virtual bool
-  RecvStartScrollbarDrag(const AsyncDragMetrics& aDragMetrics) override;
 
   virtual PColorPickerParent*
   AllocPColorPickerParent(const nsString& aTitle,
@@ -365,8 +337,6 @@ public:
 
   void UpdateDimensions(const nsIntRect& aRect, const ScreenIntSize& aSize);
 
-  void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
-
   void UIResolutionChanged();
 
   void ThemeChanged();
@@ -374,34 +344,6 @@ public:
   void HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
                        const bool& aIsTrusted,
                        const int32_t& aModifierMask);
-
-  void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                        const mozilla::CSSPoint& aDestination);
-
-  void AcknowledgeScrollUpdate(const ViewID& aScrollId,
-                               const uint32_t& aScrollGeneration);
-
-  void HandleDoubleTap(const CSSPoint& aPoint,
-                       Modifiers aModifiers,
-                       const ScrollableLayerGuid& aGuid);
-
-  void HandleSingleTap(const CSSPoint& aPoint,
-                       Modifiers aModifiers,
-                       const ScrollableLayerGuid& aGuid);
-
-  void HandleLongTap(const CSSPoint& aPoint,
-                     Modifiers aModifiers,
-                     const ScrollableLayerGuid& aGuid,
-                     uint64_t aInputBlockId);
-
-  void NotifyAPZStateChange(ViewID aViewId,
-                            APZStateChange aChange,
-                            int aArg);
-
-  void NotifyMouseScrollTestEvent(const ViewID& aScrollId,
-                                  const nsString& aEvent);
-
-  void NotifyFlushComplete();
 
   void Activate();
 
@@ -481,19 +423,6 @@ public:
   bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
 
   bool SendRealTouchEvent(WidgetTouchEvent& event);
-
-  bool SendHandleSingleTap(const CSSPoint& aPoint,
-                           const Modifiers& aModifiers,
-                           const ScrollableLayerGuid& aGuid);
-
-  bool SendHandleLongTap(const CSSPoint& aPoint,
-                         const Modifiers& aModifiers,
-                         const ScrollableLayerGuid& aGuid,
-                         const uint64_t& aInputBlockId);
-
-  bool SendHandleDoubleTap(const CSSPoint& aPoint,
-                           const Modifiers& aModifiers,
-                           const ScrollableLayerGuid& aGuid);
 
   virtual PDocumentRendererParent*
   AllocPDocumentRendererParent(const nsRect& documentRect,

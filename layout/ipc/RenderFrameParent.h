@@ -33,8 +33,6 @@ struct ScrollableLayerGuid;
 
 namespace layout {
 
-class RemoteContentController;
-
 class RenderFrameParent : public PRenderFrameParent
 {
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
@@ -79,23 +77,7 @@ public:
 
   void OwnerContentChanged(nsIContent* aContent);
 
-  void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect, const uint32_t aFlags);
-
-  void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
-                                 uint64_t aInputBlockId,
-                                 bool aPreventDefault);
-  void SetTargetAPZC(uint64_t aInputBlockId,
-                     const nsTArray<ScrollableLayerGuid>& aTargets);
-  void SetAllowedTouchBehavior(uint64_t aInputBlockId,
-                               const nsTArray<TouchBehaviorFlags>& aFlags);
-
-  void UpdateZoomConstraints(uint32_t aPresShellId,
-                             ViewID aViewId,
-                             const Maybe<ZoomConstraints>& aConstraints);
-
   bool HitTest(const nsRect& aRect);
-
-  void StartScrollbarDrag(const AsyncDragMetrics& aDragMetrics);
 
   void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
@@ -110,6 +92,8 @@ protected:
 
   virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) override;
 
+  virtual bool RecvTakeFocusForClickFromTap() override;
+
 private:
   void TriggerRepaint();
   void DispatchEventForPanZoomController(const InputEvent& aEvent);
@@ -123,13 +107,6 @@ private:
 
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ContainerLayer> mContainer;
-  // When our scrolling behavior is ASYNC_PAN_ZOOM, we have a nonnull
-  // APZCTreeManager. It's used to manipulate the shadow layer tree
-  // on the compositor thread.
-  RefPtr<layers::APZCTreeManager> mApzcTreeManager;
-  RefPtr<RemoteContentController> mContentController;
-
-  layers::APZCTreeManager* GetApzcTreeManager();
 
   // True after Destroy() has been called, which is triggered
   // originally by nsFrameLoader::Destroy().  After this point, we can

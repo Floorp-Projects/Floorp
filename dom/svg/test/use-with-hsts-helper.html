@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    // Notify parent of our final URI:
+    window.parent.postMessage(window.location.href, "*");
+  </script>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    svg {
+      display: block;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       xmlns:xlink="http://www.w3.org/1999/xlink"
+       version="1.1">
+    <defs>
+      <rect id="limeRect" width="100%" height="100%" fill="lime"/>
+    </defs>
+    <rect width="100%" height="100%" fill="red"/>
+    <use xlink:href="#limeRect"/>
+  </svg>
+</body>
+</html>

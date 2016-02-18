@@ -99,6 +99,7 @@ nsShmImage::Create(const LayoutDeviceIntSize& aSize,
             (shm->mImage->green_mask == 0xff00) &&
             (shm->mImage->blue_mask == 0xff)) {
             shm->mFormat = SurfaceFormat::B8G8R8A8;
+            memset(shm->mSegment->memory(), 0, size);
             break;
         }
         goto unsupported;
@@ -108,11 +109,13 @@ nsShmImage::Create(const LayoutDeviceIntSize& aSize,
             (shm->mImage->green_mask == 0xff00) &&
             (shm->mImage->blue_mask == 0xff)) {
             shm->mFormat = SurfaceFormat::B8G8R8X8;
+            memset(shm->mSegment->memory(), 0xFF, size);
             break;
         }
         goto unsupported;
     case 16:
         shm->mFormat = SurfaceFormat::R5G6B5_UINT16;
+        memset(shm->mSegment->memory(), 0, size);
         break;
     unsupported:
     default:

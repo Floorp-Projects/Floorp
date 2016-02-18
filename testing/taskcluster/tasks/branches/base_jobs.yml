@@ -174,12 +174,6 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_15_b2gdroid.yml
-  eslint-gecko:
-    platforms:
-      - lint
-    types:
-      opt:
-        task: tasks/tests/eslint-gecko.yml
 
 tests:
   cppunit:
@@ -316,3 +310,24 @@ tests:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_xpcshell.yml
+
+# Miscellaneous tasks.
+tasks:
+  eslint-gecko:
+    task: tasks/tests/eslint-gecko.yml
+    root: true
+    when:
+      file_patterns:
+        # Files that are likely audited.
+        - '**/*.js'
+        - '**/*.jsm'
+        - '**/*.jsx'
+        - '**/*.html'
+        - '**/*.xml'
+        # Run when eslint policies change.
+        - '**/.eslintignore'
+        - '**/*eslintrc*'
+        # The plugin implementing custom checks.
+        - 'testing/eslint-plugin-mozilla/**'
+        # Other misc lint related files.
+        - 'tools/lint/**'

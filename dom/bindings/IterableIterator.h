@@ -6,19 +6,17 @@
 
 /**
  * The IterableIterator class is used for WebIDL interfaces that have a
- * iterable<> member defined. It handles the ES6 Iterator-like functions that
- * are generated for the iterable interface.
+ * iterable<> member defined with two types (so a pair iterator). It handles
+ * the ES6 Iterator-like functions that are generated for the iterable
+ * interface.
  *
- * For iterable interfaces, the implementation class will need to
- * implement these two functions:
+ * For iterable interfaces with a pair iterator, the implementation class will
+ * need to implement these two functions:
  *
  * - size_t GetIterableLength()
  *   - Returns the number of elements available to iterate over
  * - [type] GetValueAtIndex(size_t index)
  *   - Returns the value at the requested index.
- *
- * If this is a two-type iterator, then the implementation class will also need to implement:
- *
  * - [type] GetKeyAtIndex(size_t index)
  *   - Returns the key at the requested index
  *
@@ -60,13 +58,77 @@ protected:
 };
 
 template <typename T>
-class IterableIterator : public IterableIteratorBase
+class IterableIterator final : public IterableIteratorBase
 {
 public:
-  explicit IterableIterator(T* aIterableObj)
+  typedef bool (*WrapFunc)(JSContext* aCx,
+                           IterableIterator<T>* aObject,
+                           JS::Handle<JSObject*> aGivenProto,
+                           JS::MutableHandle<JSObject*> aReflector);
+
+  explicit IterableIterator(T* aIterableObj,
+                            IterableIteratorType aIteratorType,
+                            WrapFunc aWrapFunc)
     : mIterableObj(aIterableObj)
+    , mIteratorType(aIteratorType)
+    , mWrapFunc(aWrapFunc)
+    , mIndex(0)
   {
     MOZ_ASSERT(mIterableObj);
+    MOZ_ASSERT(mWrapFunc);
+  }
+
+  void
+  Next(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv)
+  {
+    JS::Rooted<JS::Value> value(aCx, JS::UndefinedValue());
+    if (mIndex >= this->mIterableObj->GetIterableLength()) {
+      DictReturn(aCx, aResult, true, value, aRv);
+      return;
+    }
+    switch (mIteratorType) {
+    case IterableIteratorType::Keys:
+    {
+      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &value)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      DictReturn(aCx, aResult, false, value, aRv);
+      break;
+    }
+    case IterableIteratorType::Values:
+    {
+      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      DictReturn(aCx, aResult, false, value, aRv);
+      break;
+    }
+    case IterableIteratorType::Entries:
+    {
+      JS::Rooted<JS::Value> key(aCx);
+      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &key)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      KeyAndValueReturn(aCx, key, value, aResult, aRv);
+      break;
+    }
+    default:
+      MOZ_CRASH("Invalid iterator type!");
+    }
+    ++mIndex;
+  }
+
+  bool
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aObj)
+  {
+    return (*mWrapFunc)(aCx, this, aGivenProto, aObj);
   }
 
 protected:
@@ -128,161 +190,6 @@ protected:
 
   // Binding Implementation object that we're iterating over.
   RefPtr<T> mIterableObj;
-};
-
-template<typename T>
-class OneTypeIterableIterator final : public IterableIterator<T>
-{
-public:
-  typedef typename IterableIterator<T>::IterableIteratorType IterableIteratorType;
-  using IterableIterator<T>::DictReturn;
-  using IterableIterator<T>::KeyAndValueReturn;
-  typedef bool (*WrapFunc)(JSContext* aCx,
-                           OneTypeIterableIterator<T>* aObject,
-                           JS::Handle<JSObject*> aGivenProto,
-                           JS::MutableHandle<JSObject*> aReflector);
-
-  OneTypeIterableIterator(T* aIterableObj,
-                          IterableIteratorType aIteratorType,
-                          WrapFunc aWrapFunc)
-    : IterableIterator<T>(aIterableObj)
-    , mIteratorType(aIteratorType)
-    , mWrapFunc(aWrapFunc)
-    , mIndex(0)
-  {
-    MOZ_ASSERT(mWrapFunc);
-  }
-
-  void
-  Next(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv)
-  {
-    JS::Rooted<JS::Value> value(aCx, JS::UndefinedValue());
-    if (mIndex >= this->mIterableObj->GetIterableLength()) {
-      DictReturn(aCx, aResult, true, value, aRv);
-      return;
-    }
-
-    switch (mIteratorType) {
-    case IterableIteratorType::Keys:
-    case IterableIteratorType::Values:
-    {
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      DictReturn(aCx, aResult, false, value, aRv);
-      break;
-    }
-    case IterableIteratorType::Entries:
-    {
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      KeyAndValueReturn(aCx, value, value, aResult, aRv);
-      break;
-    }
-    default:
-      MOZ_CRASH("Invalid iterator type!");
-    }
-    ++mIndex;
-  }
-
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aObj)
-  {
-    return (*mWrapFunc)(aCx, this, aGivenProto, aObj);
-  }
-
-protected:
-  virtual ~OneTypeIterableIterator() {}
-
-  // Tells whether this is a key, value, or entries iterator.
-  IterableIteratorType mIteratorType;
-  // Function pointer to binding-type-specific Wrap() call for this iterator.
-  WrapFunc mWrapFunc;
-  // Current index of iteration.
-  uint32_t mIndex;
-};
-
-template<typename T>
-class TwoTypeIterableIterator final : public IterableIterator<T>
-{
-public:
-  typedef typename IterableIterator<T>::IterableIteratorType IterableIteratorType;
-  using IterableIterator<T>::DictReturn;
-  using IterableIterator<T>::KeyAndValueReturn;
-  typedef bool (*WrapFunc)(JSContext* aCx,
-                           TwoTypeIterableIterator<T>* aObject,
-                           JS::Handle<JSObject*> aGivenProto,
-                           JS::MutableHandle<JSObject*> aReflector);
-
-  TwoTypeIterableIterator(T* aIterableObj, IterableIteratorType aIteratorType,
-                          WrapFunc aWrapFunc)
-    : IterableIterator<T>(aIterableObj)
-    , mIteratorType(aIteratorType)
-    , mWrapFunc(aWrapFunc)
-    , mIndex(0)
-  {
-    MOZ_ASSERT(mWrapFunc);
-  }
-
-  void
-  Next(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv)
-  {
-    JS::Rooted<JS::Value> value(aCx, JS::UndefinedValue());
-    if (mIndex >= this->mIterableObj->GetIterableLength()) {
-      DictReturn(aCx, aResult, true, value, aRv);
-      return;
-    }
-    switch (mIteratorType) {
-    case IterableIteratorType::Keys:
-    {
-      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &value)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      DictReturn(aCx, aResult, false, value, aRv);
-      break;
-    }
-    case IterableIteratorType::Values:
-    {
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      DictReturn(aCx, aResult, false, value, aRv);
-      break;
-    }
-    case IterableIteratorType::Entries:
-    {
-      JS::Rooted<JS::Value> key(aCx);
-      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &key)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      KeyAndValueReturn(aCx, key, value, aResult, aRv);
-      break;
-    }
-    default:
-      MOZ_CRASH("Invalid iterator type!");
-    }
-    ++mIndex;
-  }
-
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aObj)
-  {
-    return (*mWrapFunc)(aCx, this, aGivenProto, aObj);
-  }
-
-protected:
-  virtual ~TwoTypeIterableIterator() {}
-
   // Tells whether this is a key, value, or entries iterator.
   IterableIteratorType mIteratorType;
   // Function pointer to binding-type-specific Wrap() call for this iterator.
