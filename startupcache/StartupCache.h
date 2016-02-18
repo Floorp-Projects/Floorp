@@ -74,20 +74,20 @@ namespace scache {
 
 struct CacheEntry
 {
-  nsAutoArrayPtr<char> data;
+  UniquePtr<char[]> data;
   uint32_t size;
 
-  CacheEntry() : data(nullptr), size(0) { }
+  CacheEntry() : size(0) { }
 
   // Takes possession of buf
-  CacheEntry(char* buf, uint32_t len) : data(buf), size(len) { }
+  CacheEntry(UniquePtr<char[]> buf, uint32_t len) : data(Move(buf)), size(len) { }
 
   ~CacheEntry()
   {
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(this) + mallocSizeOf(data);
+    return mallocSizeOf(this) + mallocSizeOf(data.get());
   }
 };
 
