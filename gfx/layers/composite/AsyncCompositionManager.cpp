@@ -604,14 +604,14 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(
         Nullable<TimeDuration>(elapsedDuration), timing);
 
-    MOZ_ASSERT(!computedTiming.mProgress.IsNull() &&
-               0.0 <= computedTiming.mProgress.Value() &&
-               computedTiming.mProgress.Value() <= 1.0,
-               "iteration progress should be in [0-1]");
+    MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
+               "iteration progress should not be null");
 
-    int segmentIndex = 0;
+    uint32_t segmentIndex = 0;
+    size_t segmentSize = animation.segments().Length();
     AnimationSegment* segment = animation.segments().Elements();
-    while (segment->endPortion() < computedTiming.mProgress.Value()) {
+    while (segment->endPortion() < computedTiming.mProgress.Value() &&
+           segmentIndex < segmentSize - 1) {
       ++segment;
       ++segmentIndex;
     }
