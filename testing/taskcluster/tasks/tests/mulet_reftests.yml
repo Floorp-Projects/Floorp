@@ -9,7 +9,6 @@ task:
   payload:
     env:
       MOZ_DISABLE_NONLOCAL_CONNECTIONS: 0
-      NEED_XVFB: true
       NEED_PULL_GAIA: true
       MOZHARNESS_SCRIPT: 'mozharness/scripts/mulet_unittest.py'
       MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_mulet_automation.py'
@@ -22,11 +21,6 @@ task:
       - --test-manifest=tests/layout/reftests/reftest.list
       - --this-chunk={{chunk}}
       - --total-chunk={{total_chunks}}
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherderEnv:

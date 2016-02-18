@@ -12,6 +12,9 @@
     // Functions must always return something or nothing
     "consistent-return": 2,
 
+    // Require braces around blocks that start a new line
+    "curly": [2, "multi-line"],
+
     // Always require a trailing EOL
     "eol-last": 2,
 

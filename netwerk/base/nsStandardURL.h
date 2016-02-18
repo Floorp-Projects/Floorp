@@ -173,6 +173,7 @@ protected:
 private:
     int32_t  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
+    void     ReplacePortInSpec(int32_t aNewPort);
     void     Clear();
     void     InvalidateCache(bool invalidateCachedFile = true);
 

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug  **/
+  SimpleTest.waitForExplicitFinish();
+
+  window.length = 0xffffffff;
+
+  SimpleTest.expectUncaughtException();
+  setTimeout(Array.prototype.splice, 0, undefined);
+
+  addEventListener("error", function(e) {
+    is(e.type, "error", "Should have an error event");
+    is(e.message, "uncaught exception: out of memory",
+       "Should have the right error message");
+    // Make sure we finish async, in case the expectUncaughtException assertion
+    // about having seen the exception runs after our listener
+    SimpleTest.executeSoon(SimpleTest.finish);
+  });
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

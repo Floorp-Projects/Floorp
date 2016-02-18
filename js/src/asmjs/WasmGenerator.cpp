@@ -120,7 +120,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename)
         return false;
 
     module_->globalBytes = InitialGlobalDataBytes;
-    module_->compileArgs = CompileArgs(cx_);
+    module_->compileArgs = shared->args;
     module_->kind = shared->kind;
     module_->heapUsage = HeapUsage::None;
     module_->filename = Move(filename);
@@ -764,7 +764,7 @@ ModuleGenerator::startFuncDefs()
         return false;
     JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(rt, args(), *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(rt, *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;

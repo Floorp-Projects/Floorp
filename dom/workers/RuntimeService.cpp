@@ -1369,6 +1369,12 @@ GetCurrentThreadJSContext()
   return GetCurrentThreadWorkerPrivate()->GetJSContext();
 }
 
+JSObject*
+GetCurrentThreadWorkerGlobal()
+{
+  return GetCurrentThreadWorkerPrivate()->GlobalScope()->GetGlobalJSObject();
+}
+
 END_WORKERS_NAMESPACE
 
 struct RuntimeService::IdleThreadInfo

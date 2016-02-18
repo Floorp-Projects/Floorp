@@ -111,7 +111,7 @@ DefaultJitOptions::DefaultJitOptions()
     SET_DEFAULT(disableScalarReplacement, false);
 
     // Toggles whether shared stubs are used in Ionmonkey.
-    SET_DEFAULT(disableSharedStubs, true);
+    SET_DEFAULT(disableSharedStubs, false);
 
     // Toggles whether sincos optimization is globally disabled.
     // See bug984018: The MacOS is the only one that has the sincos fast.

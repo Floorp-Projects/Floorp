@@ -7,6 +7,7 @@ var Cc = Components.classes;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 var unsafeAboutModule = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
@@ -38,13 +39,11 @@ function run_test() {
   let classID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
   registrar.registerFactory(classID, "", "@mozilla.org/network/protocol/about;1?what=unsafe", factory);
 
-  let aboutUnsafeURI = Services.io.newURI("about:unsafe", null, null);
-  let aboutUnsafeChan = Services.io.newChannelFromURI2(aboutUnsafeURI,
-                                                       null,      // aLoadingNode
-                                                       Services.scriptSecurityManager.getSystemPrincipal(),
-                                                       null,      // aTriggeringPrincipal
-                                                       Ci.nsILoadInfo.SEC_NORMAL,
-                                                       Ci.nsIContentPolicy.TYPE_OTHER);
+  let aboutUnsafeChan = NetUtil.newChannel({
+    uri: "about:unsafe",
+    loadUsingSystemPrincipal: true
+  });
+
   do_check_null(aboutUnsafeChan.owner, "URI_SAFE_FOR_UNTRUSTED_CONTENT channel has no owner");
 
   registrar.unregisterFactory(classID, factory);

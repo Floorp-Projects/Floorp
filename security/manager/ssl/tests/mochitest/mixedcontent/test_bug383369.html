@@ -80,9 +80,11 @@
 
     var prefKeys = ["dir", "useDownloadDir", "folderList",
                     "manager.closeWhenDone", "manager.showWhenStarting"];
-    for (var i = 0; i < prefKeys.length; i++)
-      if (prefs.prefHasUserValue(prefKeys[i]))
-        prefs.clearUserPref(prefKeys[i]);
+    for (let prefKey of prefKeys) {
+      if (prefs.prefHasUserValue(prefKey)) {
+        prefs.clearUserPref(prefKey);
+      }
+    }
   }
 
   </script>

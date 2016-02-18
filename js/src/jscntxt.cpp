@@ -302,7 +302,7 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
         oomCallback(cx, cx->runtime()->oomCallbackData);
     }
 
-    if (JS_IsRunning(cx)) {
+    if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
         cx->setPendingException(StringValue(cx->names().outOfMemory));
         return;
     }
