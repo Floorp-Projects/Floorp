@@ -1197,20 +1197,6 @@ class Type
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected rhs type");
     }
 
-    bool operator<=(ValType rhs) const {
-        switch (rhs) {
-          case ValType::I32:    return isInt();
-          case ValType::I64:    MOZ_CRASH("no int64 in asm.js");
-          case ValType::F32:    return isFloat();
-          case ValType::F64:    return isDouble();
-          case ValType::I32x4:  return isInt32x4();
-          case ValType::F32x4:  return isFloat32x4();
-          case ValType::B32x4:  return isBool32x4();
-          case ValType::Limit:  break;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected rhs type");
-    }
-
     bool isFixnum() const {
         return which_ == Fixnum;
     }
@@ -1282,6 +1268,11 @@ class Type
     // Check if this is one of the valid types for a function argument.
     bool isArgType() const {
         return isInt() || isFloat() || isDouble() || isSimd();
+    }
+
+    // Check if this is one of the valid types for a function return value.
+    bool isReturnType() const {
+        return isSigned() || isFloat() || isDouble() || isSimd() || isVoid();
     }
 
     // Check if this is one of the canonical vartype representations of a
@@ -4538,11 +4529,12 @@ static bool
 CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type);
 
 static bool
-CheckCoercionArg(FunctionValidator& f, ParseNode* arg, ValType expected, Type* type)
+CheckCoercionArg(FunctionValidator& f, ParseNode* arg, Type expected, Type* type)
 {
-    Type ret = Type::var(expected);
+    MOZ_ASSERT(expected.isCanonicalValType());
+
     if (arg->isKind(PNK_CALL))
-        return CheckCoercedCall(f, arg, ret, type);
+        return CheckCoercedCall(f, arg, expected, type);
 
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
@@ -4552,27 +4544,18 @@ CheckCoercionArg(FunctionValidator& f, ParseNode* arg, ValType expected, Type* t
     if (!CheckExpr(f, arg, &argType))
         return false;
 
-    switch (expected) {
-      case ValType::F32:
+    if (expected.isFloat()) {
         if (!CheckFloatCoercionArg(f, arg, argType, opcodeAt))
             return false;
-        break;
-      case ValType::I64:
-        MOZ_CRASH("no int64 in asm.js");
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B32x4:
+    } else if (expected.isSimd()) {
         if (!(argType <= expected))
             return f.fail(arg, "argument to SIMD coercion isn't from the correct SIMD type");
         f.encoder().patchExpr(opcodeAt, Expr::Id);
-        break;
-      case ValType::I32:
-      case ValType::F64:
-      case ValType::Limit:
+    } else {
         MOZ_CRASH("not call coercions");
     }
 
-    *type = Type::ret(ret);
+    *type = Type::ret(expected);
     return true;
 }
 
@@ -4584,7 +4567,7 @@ CheckMathFRound(FunctionValidator& f, ParseNode* callNode, Type* type)
 
     ParseNode* argNode = CallArgList(callNode);
     Type argType;
-    if (!CheckCoercionArg(f, argNode, ValType::F32, &argType))
+    if (!CheckCoercionArg(f, argNode, Type::Float, &argType))
         return false;
 
     MOZ_ASSERT(argType == Type::Float);
@@ -5195,7 +5178,7 @@ CheckSimdCheck(FunctionValidator& f, ParseNode* call, SimdType opType, Type* typ
     ParseNode* argNode;
     if (!IsCoercionCall(f.m(), call, &coerceTo, &argNode))
         return f.failf(call, "expected 1 argument in call to check");
-    return CheckCoercionArg(f, argNode, coerceTo.canonicalToValType(), type);
+    return CheckCoercionArg(f, argNode, coerceTo, type);
 }
 
 static bool
@@ -6394,14 +6377,14 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
 }
 
 static bool
-CheckReturnType(FunctionValidator& f, ParseNode* usepn, ExprType ret)
+CheckReturnType(FunctionValidator& f, ParseNode* usepn, Type ret)
 {
     if (!f.hasAlreadyReturned()) {
-        f.setReturnedType(ret);
+        f.setReturnedType(ret.canonicalToExprType());
         return true;
     }
 
-    if (f.returnedType() != ret) {
+    if (f.returnedType() != ret.canonicalToExprType()) {
         return f.failf(usepn, "%s incompatible with previous return of type %s",
                        Type::ret(ret).toChars(), Type::ret(f.returnedType()).toChars());
     }
@@ -6418,31 +6401,16 @@ CheckReturn(FunctionValidator& f, ParseNode* returnStmt)
         return false;
 
     if (!expr)
-        return CheckReturnType(f, returnStmt, ExprType::Void);
+        return CheckReturnType(f, returnStmt, Type::Void);
 
     Type type;
     if (!CheckExpr(f, expr, &type))
         return false;
 
-    ExprType ret;
-    if (type.isSigned())
-        ret = ExprType::I32;
-    else if (type.isFloat())
-        ret = ExprType::F32;
-    else if (type.isDouble())
-        ret = ExprType::F64;
-    else if (type.isInt32x4())
-        ret = ExprType::I32x4;
-    else if (type.isFloat32x4())
-        ret = ExprType::F32x4;
-    else if (type.isBool32x4())
-        ret = ExprType::B32x4;
-    else if (type.isVoid())
-        ret = ExprType::Void;
-    else
+    if (!type.isReturnType())
         return f.failf(expr, "%s is not a valid return type", type.toChars());
 
-    return CheckReturnType(f, expr, ret);
+    return CheckReturnType(f, expr, Type::canonicalize(type));
 }
 
 static bool
