@@ -995,7 +995,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   // input audio is either mono or stereo).
   uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
   const int16_t* samples = nullptr;
-  nsAutoArrayPtr<int16_t> convertedSamples;
+  UniquePtr<int16_t[]> convertedSamples;
 
   // If this track is not enabled, simply ignore the data in the chunk.
   if (!enabled_) {
@@ -1009,7 +1009,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   if (outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
     samples = chunk.ChannelData<int16_t>().Elements()[0];
   } else {
-    convertedSamples = new int16_t[chunk.mDuration * outputChannels];
+    convertedSamples = MakeUnique<int16_t[]>(chunk.mDuration * outputChannels);
 
     switch (chunk.mBufferFormat) {
         case AUDIO_FORMAT_FLOAT32:
@@ -1084,16 +1084,15 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     uint32_t length = yPlaneLen + cbcrPlaneLen;
 
     // Send a black image.
-    nsAutoArrayPtr<uint8_t> pixelData;
-    pixelData = new (fallible) uint8_t[length];
+    auto pixelData = MakeUniqueFallible<uint8_t[]>(length);
     if (pixelData) {
       // YCrCb black = 0x10 0x80 0x80
-      memset(pixelData, 0x10, yPlaneLen);
+      memset(pixelData.get(), 0x10, yPlaneLen);
       // Fill Cb/Cr planes
-      memset(pixelData + yPlaneLen, 0x80, cbcrPlaneLen);
+      memset(pixelData.get() + yPlaneLen, 0x80, cbcrPlaneLen);
 
       MOZ_MTLOG(ML_DEBUG, "Sending a black video frame");
-      conduit->SendVideoFrame(pixelData, length, size.width, size.height,
+      conduit->SendVideoFrame(pixelData.get(), length, size.width, size.height,
                               mozilla::kVideoI420, 0);
     }
     return;
