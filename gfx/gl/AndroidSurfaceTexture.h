@@ -44,7 +44,7 @@ public:
   // Android Jelly Bean.
   static already_AddRefed<AndroidSurfaceTexture> Create();
 
-  static AndroidSurfaceTexture* Find(int id);
+  static AndroidSurfaceTexture* Find(int aId);
 
   // If we are on Jelly Bean, the SurfaceTexture can be detached and reattached
   // to allow consumption from different GLContexts. It is recommended to only
