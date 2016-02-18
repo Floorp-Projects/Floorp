@@ -539,8 +539,7 @@ public:
             return false;
         }
 
-        ScreenIntPoint offset = ViewAs<ScreenPixel>(mWindow->WidgetToScreenOffset(), PixelCastJustification::LayoutDeviceIsScreenForBounds);
-        ScreenPoint origin = ScreenPoint(aX, aY) - offset;
+        ScreenPoint origin = ScreenPoint(aX, aY);
 
         ScrollWheelInput input(aTime, TimeStamp::Now(), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
@@ -616,8 +615,7 @@ public:
             return false;
         }
 
-        ScreenIntPoint offset = ViewAs<ScreenPixel>(mWindow->WidgetToScreenOffset(), PixelCastJustification::LayoutDeviceIsScreenForBounds);
-        ScreenPoint origin = ScreenPoint(aX, aY) - offset;
+        ScreenPoint origin = ScreenPoint(aX, aY);
 
         MouseInput input(type, MouseInput::NONE, 0, origin, aTime, TimeStamp(), GetModifiers(aMetaState));
 
@@ -724,9 +722,6 @@ public:
         MOZ_ASSERT(pointerId.Length() == toolMajor.Length());
         MOZ_ASSERT(pointerId.Length() == toolMinor.Length());
 
-        const nsIntPoint& offset =
-                mWindow->WidgetToScreenOffset().ToUnknownPoint();
-
         for (size_t i = startIndex; i < endIndex; i++) {
 
             float orien = orientation[i] * 180.0f / M_PI;
@@ -737,7 +732,7 @@ public:
             }
 
             nsIntPoint point = nsIntPoint(int32_t(floorf(x[i])),
-                                          int32_t(floorf(y[i]))) - offset;
+                                          int32_t(floorf(y[i])));
 
             // w3c touchevent radii are given with an orientation between 0 and
             // 90. The radii are found by removing the orientation and
