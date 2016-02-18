@@ -52,14 +52,33 @@
           is("emptyfile.txt", f2.name, "second test3 test file should have the right name");
           is(f1.size, f1data.length, "size of first file should be length of its data");
           is(f2.size, 0, "size of second file should be 0");
-          SimpleTest.finish();
+          test4();
         },
         function (msg) {
           ok(false, "Failed to create files: " + msg);
-          SimpleTest.finish();
+          test4();
         }
       );
     };
+
+    // Creating a file without specifying a name should work.
+    function test4() {
+      let fdata = "this is same data for a file";
+      SpecialPowers.createFiles([{data:fdata}],
+        function (files) {
+          is(files.length, 1, "Created 1 file");
+          let f = files[0];
+          is("[object File]", f.toString(), "first thing in array is a file");
+          is(f.size, fdata.length, "test4 size of first file should be length of its data");
+          ok(f.name, "test4 test file should have a name");
+          SimpleTest.finish();
+        },
+        function (msg) {
+          ok(false, "Should be able to create a file without a name without an error");
+          SimpleTest.finish();
+        }
+      );
+    }
 
     SimpleTest.waitForExplicitFinish();
     test1();
