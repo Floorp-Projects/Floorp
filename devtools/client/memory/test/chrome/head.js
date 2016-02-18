@@ -37,8 +37,6 @@ var ReactDOM = require("devtools/client/shared/vendor/react-dom");
 var Heap = React.createFactory(require("devtools/client/memory/components/heap"));
 var DominatorTreeComponent = React.createFactory(require("devtools/client/memory/components/dominator-tree"));
 var DominatorTreeItem = React.createFactory(require("devtools/client/memory/components/dominator-tree-item"));
-var SnapshotListItem = React.createFactory(require("devtools/client/memory/components/snapshot-list-item"));
-var List = React.createFactory(require("devtools/client/memory/components/list"));
 var Toolbar = React.createFactory(require("devtools/client/memory/components/toolbar"));
 
 // All tests are asynchronous.
@@ -107,36 +105,6 @@ var TEST_DOMINATOR_TREE_PROPS = Object.freeze({
   onCollapse: noop,
 });
 
-var TEST_SNAPSHOT = Object.freeze({
-  id: 1337,
-  selected: true,
-  path: "/fake/path/to/snapshot",
-  census: Object.freeze({
-    report: Object.freeze({
-      objects: Object.freeze({ count: 4, bytes: 400 }),
-      scripts: Object.freeze({ count: 3, bytes: 300 }),
-      strings: Object.freeze({ count: 2, bytes: 200 }),
-      other: Object.freeze({ count: 1, bytes: 100 }),
-    }),
-    breakdown: Object.freeze({
-      by: "coarseType",
-      objects: Object.freeze({ by: "count", count: true, bytes: true }),
-      scripts: Object.freeze({ by: "count", count: true, bytes: true }),
-      strings: Object.freeze({ by: "count", count: true, bytes: true }),
-      other: Object.freeze({ by: "count", count: true, bytes: true }),
-    }),
-    inverted: false,
-    filter: null,
-    expanded: new Set(),
-    focused: null,
-  }),
-  dominatorTree: TEST_DOMINATOR_TREE,
-  error: null,
-  imported: false,
-  creationTime: 0,
-  state: snapshotState.SAVED_CENSUS,
-});
-
 var TEST_HEAP_PROPS = Object.freeze({
   onSnapshotClick: noop,
   onLoadMoreSiblings: noop,
@@ -149,7 +117,35 @@ var TEST_HEAP_PROPS = Object.freeze({
   onViewSourceInDebugger: noop,
   diffing: null,
   view: viewState.CENSUS,
-  snapshot: TEST_SNAPSHOT
+  snapshot: Object.freeze({
+    id: 1337,
+    selected: true,
+    path: "/fake/path/to/snapshot",
+    census: Object.freeze({
+      report: Object.freeze({
+        objects: Object.freeze({ count: 4, bytes: 400 }),
+        scripts: Object.freeze({ count: 3, bytes: 300 }),
+        strings: Object.freeze({ count: 2, bytes: 200 }),
+        other: Object.freeze({ count: 1, bytes: 100 }),
+      }),
+      breakdown: Object.freeze({
+        by: "coarseType",
+        objects: Object.freeze({ by: "count", count: true, bytes: true }),
+        scripts: Object.freeze({ by: "count", count: true, bytes: true }),
+        strings: Object.freeze({ by: "count", count: true, bytes: true }),
+        other: Object.freeze({ by: "count", count: true, bytes: true }),
+      }),
+      inverted: false,
+      filter: null,
+      expanded: new Set(),
+      focused: null,
+    }),
+    dominatorTree: TEST_DOMINATOR_TREE,
+    error: null,
+    imported: false,
+    creationTime: 0,
+    state: snapshotState.SAVED_CENSUS,
+  }),
 });
 
 var TEST_TOOLBAR_PROPS = Object.freeze({
@@ -170,14 +166,6 @@ var TEST_TOOLBAR_PROPS = Object.freeze({
   dominatorTreeBreakdowns: getDominatorTreeBreakdownDisplayData(),
   onDominatorTreeBreakdownChange: noop,
   snapshots: [],
-});
-
-var TEST_SNAPSHOT_LIST_ITEM_PROPS = Object.freeze({
-  onClick: noop,
-  onSave: noop,
-  onDelete: noop,
-  item: TEST_SNAPSHOT,
-  index: 1234,
 });
 
 function onNextAnimationFrame(fn) {
