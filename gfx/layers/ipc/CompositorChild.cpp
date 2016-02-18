@@ -450,7 +450,8 @@ CompositorChild::SharedFrameMetricsData::SharedFrameMetricsData(
   , mLayersId(aLayersId)
   , mAPZCId(aAPZCId)
 {
-  mBuffer = new ipc::SharedMemoryBasic(metrics);
+  mBuffer = new ipc::SharedMemoryBasic;
+  mBuffer->SetHandle(metrics);
   mBuffer->Map(sizeof(FrameMetrics));
   mMutex = new CrossProcessMutex(handle);
   MOZ_COUNT_CTOR(SharedFrameMetricsData);

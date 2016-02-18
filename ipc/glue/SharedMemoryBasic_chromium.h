@@ -21,18 +21,15 @@
 namespace mozilla {
 namespace ipc {
 
-class SharedMemoryBasic final : public SharedMemory
+class SharedMemoryBasic final : public SharedMemoryCommon<base::SharedMemoryHandle>
 {
 public:
-  typedef base::SharedMemoryHandle Handle;
-
   SharedMemoryBasic()
   {
   }
 
-  explicit SharedMemoryBasic(const Handle& aHandle)
-    : mSharedMemory(aHandle, false)
-  {
+  virtual bool SetHandle(const Handle& aHandle) override {
+    return mSharedMemory.SetHandle(aHandle, false);
   }
 
   virtual bool Create(size_t aNbytes) override
@@ -53,6 +50,11 @@ public:
     return ok;
   }
 
+  virtual void CloseHandle() override
+  {
+    mSharedMemory.Close(false);
+  }
+
   virtual void* memory() const override
   {
     return mSharedMemory.memory();
@@ -68,13 +70,13 @@ public:
     return base::SharedMemory::NULLHandle();
   }
 
-  static bool IsHandleValid(const Handle &aHandle)
+  virtual bool IsHandleValid(const Handle &aHandle) const override
   {
     return base::SharedMemory::IsHandleValid(aHandle);
   }
 
-  bool ShareToProcess(base::ProcessId aProcessId,
-                      Handle* new_handle)
+  virtual bool ShareToProcess(base::ProcessId aProcessId,
+                              Handle* new_handle) override
   {
     base::SharedMemoryHandle handle;
     bool ret = mSharedMemory.ShareToProcess(aProcessId, &handle);
