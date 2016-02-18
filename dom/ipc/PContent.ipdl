@@ -94,6 +94,7 @@ using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::ipc::StructuredCloneData from "ipc/IPCMessageUtils.h";
 using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
+using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 union ChromeRegistryItem
 {
@@ -1172,7 +1173,8 @@ parent:
                       nsCString aURI,
                       nsString aName,
                       nsCString aFeatures,
-                      nsCString aBaseURI)
+                      nsCString aBaseURI,
+                      DocShellOriginAttributes aOpenerOriginAttributes)
       returns (nsresult rv,
                bool windowOpened,
                FrameScriptInfo[] frameScripts,

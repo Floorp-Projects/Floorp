@@ -7,16 +7,22 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsString.h"
 
+namespace mozilla {
+class DocShellOriginAttributes;
+}
+
 class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOPENURIINFRAMEPARAMS
 
-  nsOpenURIInFrameParams();
+  explicit nsOpenURIInFrameParams(const mozilla::DocShellOriginAttributes& aOriginAttributes);
 
 private:
   ~nsOpenURIInFrameParams();
+
+  mozilla::DocShellOriginAttributes mOpenerOriginAttributes;
   nsString mReferrer;
   bool mIsPrivate;
 };
