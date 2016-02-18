@@ -90,7 +90,7 @@ public:
       return true;
     }
 
-    bool UseAcceleratedCanvas();
+    virtual bool UseAcceleratedSkiaCanvas() override;
 
     virtual bool UseProgressivePaint() override;
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
