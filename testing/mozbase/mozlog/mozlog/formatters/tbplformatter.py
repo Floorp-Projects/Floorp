@@ -154,7 +154,7 @@ class TbplFormatter(BaseFormatter):
             return " ".join(test_id)
 
     def valgrind_error(self, data):
-        rv = "TEST-VALGRIND-ERROR | " + data['primary'] + "\n"
+        rv = "TEST-UNEXPECTED-VALGRIND-ERROR | " + data['primary'] + "\n"
         for line in data['secondary']:
             rv = rv + line + "\n"
 
