@@ -1264,61 +1264,6 @@ class Type
         return ValType::F32x4;
     }
 
-    MIRType toMIRType() const {
-        switch (which_) {
-          case Double:
-          case DoubleLit:
-          case MaybeDouble:
-            return MIRType_Double;
-          case Float:
-          case Floatish:
-          case MaybeFloat:
-            return MIRType_Float32;
-          case Fixnum:
-          case Int:
-          case Signed:
-          case Unsigned:
-          case Intish:
-            return MIRType_Int32;
-          case Int32x4:
-            return MIRType_Int32x4;
-          case Float32x4:
-            return MIRType_Float32x4;
-          case Bool32x4:
-            return MIRType_Bool32x4;
-          case Void:
-            return MIRType_None;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Invalid Type");
-    }
-
-    SimdType simdType() const {
-        MOZ_ASSERT(isSimd());
-        switch (which_) {
-          case Int32x4:
-            return SimdType::Int32x4;
-          case Float32x4:
-            return SimdType::Float32x4;
-          case Bool32x4:
-            return SimdType::Bool32x4;
-          // Scalar types
-          case Double:
-          case DoubleLit:
-          case MaybeDouble:
-          case Float:
-          case MaybeFloat:
-          case Floatish:
-          case Fixnum:
-          case Int:
-          case Signed:
-          case Unsigned:
-          case Intish:
-          case Void:
-            break;
-        }
-        MOZ_CRASH("not a SIMD Type");
-    }
-
     const char* toChars() const {
         switch (which_) {
           case Double:      return "double";
