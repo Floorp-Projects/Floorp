@@ -39,19 +39,6 @@ using mozilla::NumberIsInt32;
 
 static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
 
-PropertyName*
-js::SimdTypeToName(JSContext* cx, SimdType type)
-{
-    switch (type) {
-      case SimdType::Int32x4:   return cx->names().Int32x4;
-      case SimdType::Float32x4: return cx->names().Float32x4;
-      case SimdType::Bool32x4:  return cx->names().Bool32x4;
-      default:                  break;
-    }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected SIMD type");
-}
-
-
 static bool
 CheckVectorObject(HandleValue v, SimdType expectedType)
 {
@@ -105,6 +92,30 @@ js::SimdTypeToString(SimdType type)
       case SimdType::Count: break;
     }
     return "<bad SimdType>";
+}
+
+PropertyName*
+js::SimdTypeToName(const JSAtomState& atoms, SimdType type)
+{
+    switch (type) {
+#define CASE_(TypeName) case SimdType::TypeName: return atoms.TypeName;
+      FOR_EACH_SIMD(CASE_)
+#undef CASE_
+      case SimdType::Count: break;
+    }
+    MOZ_CRASH("bad SIMD type");
+}
+
+bool
+js::IsSimdTypeName(const JSAtomState& atoms, const PropertyName* name, SimdType* type)
+{
+#define CHECK_(TypeName) if (name == atoms.TypeName) {   \
+                             *type = SimdType::TypeName; \
+                             return true;                \
+                         }
+    FOR_EACH_SIMD(CHECK_)
+#undef CHECK_
+    return false;
 }
 
 static inline bool
