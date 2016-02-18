@@ -67,6 +67,11 @@ CONFIG_OPTIONS = [
         "dest": "partial_version",
         "help": "the partial version the mar is based off of"
     }],
+    [["--artifact-subdir"], {
+        "dest": "artifact_subdir",
+        "default": 'build',
+        "help": "subdir location for taskcluster artifacts after public/ base.",
+    }],
     [["--build-num"], {
         "dest": "build_num",
         "help": "the release build identifier"
@@ -101,7 +106,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 # base index url where to find taskcluster artifact based on taskid
                 # TODO - find out if we need to support taskcluster run number other than 0.
                 # e.g. maybe we could end up with artifacts in > 'run 0' in a re-trigger situation?
-                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/runs/0/artifacts/public/build',
+                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/runs/0/artifacts/public/{subdir}',
                 "virtualenv_modules": [
                     "boto",
                     "PyYAML",
@@ -167,7 +172,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             # mirror current release folder structure
             "s3_prefix": 'pub/{}/candidates'.format(self.config['product']),
             "artifact_base_url": self.config['artifact_base_url'].format(
-                    taskid=self.config['taskid']
+                    taskid=self.config['taskid'], subdir=self.config['artifact_sudbir']
             )
         }
         self.manifest = yaml.safe_load(template.render(**template_vars))
