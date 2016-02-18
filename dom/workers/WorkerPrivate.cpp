@@ -610,9 +610,7 @@ private:
     WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
 
     // Match the busy count increase from NotifyRunnable.
-    if (!aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false)) {
-      JS_ReportPendingException(aCx);
-    }
+    aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
 
     aWorkerPrivate->CloseHandlerFinished();
   }

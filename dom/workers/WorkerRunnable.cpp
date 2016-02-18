@@ -223,9 +223,7 @@ WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 #endif
 
   if (mBehavior == WorkerThreadModifyBusyCount) {
-    if (!aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false)) {
-      aRunResult = false;
-    }
+    aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
   }
 
   if (!aRunResult) {
@@ -644,6 +642,9 @@ bool
 WorkerSameThreadRunnable::PreDispatch(JSContext* aCx,
                                       WorkerPrivate* aWorkerPrivate)
 {
+  // We don't call WorkerRunnable::PreDispatch, because we're using
+  // WorkerThreadModifyBusyCount for mBehavior, and WorkerRunnable will assert
+  // that PreDispatch is on the parent thread in that case.
   aWorkerPrivate->AssertIsOnWorkerThread();
   return true;
 }
@@ -653,6 +654,9 @@ WorkerSameThreadRunnable::PostDispatch(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate,
                                        bool aDispatchResult)
 {
+  // We don't call WorkerRunnable::PostDispatch, because we're using
+  // WorkerThreadModifyBusyCount for mBehavior, and WorkerRunnable will assert
+  // that PostDispatch is on the parent thread in that case.
   aWorkerPrivate->AssertIsOnWorkerThread();
   if (aDispatchResult) {
     DebugOnly<bool> willIncrement = aWorkerPrivate->ModifyBusyCountFromWorker(aCx, true);
@@ -661,21 +665,3 @@ WorkerSameThreadRunnable::PostDispatch(JSContext* aCx,
     MOZ_ASSERT(willIncrement);
   }
 }
-
-void
-WorkerSameThreadRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                                  bool aRunResult)
-{
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aWorkerPrivate);
-
-  aWorkerPrivate->AssertIsOnWorkerThread();
-
-  DebugOnly<bool> willDecrement = aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
-  MOZ_ASSERT(willDecrement);
-
-  if (!aRunResult) {
-    JS_ReportPendingException(aCx);
-  }
-}
-
