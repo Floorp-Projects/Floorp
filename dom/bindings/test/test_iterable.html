@@ -98,6 +98,8 @@
        info("IterableDouble: Testing simple iterable creation and functionality");
        itr = new TestInterfaceIterableDouble();
        testExistence("IterableDouble: ", itr, base_properties);
+       is(itr.entries, itr[Symbol.iterator],
+          "IterableDouble: Should be using @@iterator for 'entries'");
        var elements = [["a", "b"], ["c", "d"], ["e", "f"]]
        var keys = [...itr.keys()];
        var values = [...itr.values()];
