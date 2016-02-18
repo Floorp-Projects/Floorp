@@ -198,6 +198,15 @@ class FunctionCompiler
         return constant;
     }
 
+    MDefinition* constant(int64_t i)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewInt64(alloc(), i);
+        curBlock_->add(constant);
+        return constant;
+    }
+
     template <class T>
     MDefinition* unary(MDefinition* op)
     {
@@ -1214,6 +1223,7 @@ class FunctionCompiler
 
     uint8_t        readU8()       { return decoder_.uncheckedReadFixedU8(); }
     uint32_t       readVarU32()   { return decoder_.uncheckedReadVarU32(); }
+    uint64_t       readVarU64()   { return decoder_.uncheckedReadVarU64(); }
     float          readF32()      { return decoder_.uncheckedReadFixedF32(); }
     double         readF64()      { return decoder_.uncheckedReadFixedF64(); }
     Expr           readExpr()     { return decoder_.uncheckedReadExpr(); }
@@ -1344,7 +1354,9 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition** def)
         return true;
       }
       case ExprType::I64: {
-        MOZ_CRASH("int64");
+        int64_t val = f.readVarU64();
+        *def = f.constant(val);
+        return true;
       }
       case ExprType::F32: {
         float val = f.readF32();
@@ -2808,6 +2820,9 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitAtomicsStore(f, def);
       case Expr::I32AtomicsBinOp:
         return EmitAtomicsBinOp(f, def);
+      // I64
+      case Expr::I64Const:
+        return EmitLiteral(f, ExprType::I64, def);
       // F32
       case Expr::F32Const:
         return EmitLiteral(f, ExprType::F32, def);
@@ -2929,7 +2944,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::F64Nearest:
       case Expr::F64Trunc:
       case Expr::I32WrapI64:
-      case Expr::I64Const:
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
       case Expr::I64TruncSF32:

@@ -2074,7 +2074,7 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
       case ValType::I64: {
         switch (val.kind()) {
           case WasmToken::Index:
-            return new(c.lifo) WasmAstConst(Val(val.index()));
+            return new(c.lifo) WasmAstConst(Val(uint64_t(val.index())));
           case WasmToken::UnsignedInteger:
             return new(c.lifo) WasmAstConst(Val(val.uint()));
           case WasmToken::SignedInteger:
