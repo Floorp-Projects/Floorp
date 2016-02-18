@@ -187,7 +187,7 @@ MFBT_API bool IsNuwaProcess();
  */
 MFBT_API bool IsNuwaReady();
 
-#if defined(DEBUG) || defined(ENABLE_TESTS)
+#if defined(DEBUG)
 /**
  * Asserts that aThread is not frozen.
  */
