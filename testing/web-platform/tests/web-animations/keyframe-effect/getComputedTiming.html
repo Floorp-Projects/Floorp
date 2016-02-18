@@ -198,6 +198,58 @@ gActiveDurationTests.forEach(function(stest) {
   }, "getComputedTiming().activeDuration for " + stest.desc);
 });
 
+var gEndTimeTests = [
+  { desc:     "an empty KeyframeEffectOptions object",
+    input:    { },
+    expected: 0 },
+  { desc:     "a non-zero duration and default iteration count",
+    input:    { duration: 1000 },
+    expected: 1000 },
+  { desc:     "a non-zero duration and non-default iteration count",
+    input:    { duration: 1000, iterations: 2.5 },
+    expected: 2500 },
+  { desc:     "a non-zero duration and non-zero delay",
+    input:    { duration: 1000, delay: 1500 },
+    expected: 2500 },
+  { desc:     "a non-zero duration, non-zero delay and non-default iteration",
+    input:    { duration: 1000, delay: 1500, iterations: 2 },
+    expected: 3500 },
+  { desc:     "an infinite iteration count",
+    input:    { duration: 1000, iterations: Infinity },
+    expected: Infinity },
+  { desc:     "an infinite duration",
+    input:    { duration: Infinity, iterations: 10 },
+    expected: Infinity },
+  { desc:     "an infinite duration and delay",
+    input:    { duration: Infinity, iterations: 10, delay: 1000 },
+    expected: Infinity },
+  { desc:     "an infinite duration and negative delay",
+    input:    { duration: Infinity, iterations: 10, delay: -1000 },
+    expected: Infinity },
+  { desc:     "an non-zero duration and negative delay",
+    input:    { duration: 1000, iterations: 2, delay: -1000 },
+    expected: 1000 },
+  { desc:     "an non-zero duration and negative delay greater than active " +
+              "duration",
+    input:    { duration: 1000, iterations: 2, delay: -3000 },
+    expected: -1000 },
+  { desc:     "a zero duration and negative delay",
+    input:    { duration: 0, iterations: 2, delay: -1000 },
+    expected: -1000 }
+];
+
+gEndTimeTests.forEach(function(stest) {
+  test(function(t) {
+    var effect = new KeyframeEffectReadOnly(target,
+                                            { left: ["10px", "20px"] },
+                                            stest.input);
+
+    assert_equals(effect.getComputedTiming().endTime,
+                  stest.expected);
+
+  }, "getComputedTiming().endTime for " + stest.desc);
+});
+
 done();
 </script>
 </body>
