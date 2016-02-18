@@ -40,6 +40,9 @@ mapping:
     symbols:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+    buildid_info:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win32_info.txt
   {% endif %}
 
   {% if platform == "win64" %}
@@ -52,6 +55,9 @@ mapping:
     symbols:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+    buildid_info:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win64_info.txt
   {% endif %}
 
   {% if platform == "linux-i686" %}
@@ -61,6 +67,9 @@ mapping:
     symbols:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+    buildid_info:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux_info.txt
   {% endif %}
 
   {% if platform == "linux-x86_64" %}
@@ -70,6 +79,9 @@ mapping:
     symbols:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+    buildid_info:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux64_info.txt
   {% endif %}
 
   {% if platform == "mac" %}
@@ -79,6 +91,9 @@ mapping:
     symbols:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox {{ version }}.crashreporter-symbols.zip
+    buildid_info:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/macosx64_info.txt
   {% endif %}
 
 {% endfor %}
