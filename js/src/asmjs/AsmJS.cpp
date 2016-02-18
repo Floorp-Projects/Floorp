@@ -2320,20 +2320,6 @@ IsFloatLiteral(ModuleValidator& m, ParseNode* pn)
     return IsNumericNonFloatLiteral(coercedExpr);
 }
 
-static unsigned
-SimdTypeToLength(SimdType type)
-{
-    switch (type) {
-      case SimdType::Int32x4:
-      case SimdType::Float32x4:
-      case SimdType::Bool32x4:
-        return 4;
-      default:
-        break;
-    }
-    MOZ_CRASH("unexpected SIMD type");
-}
-
 static bool
 IsSimdTuple(ModuleValidator& m, ParseNode* pn, SimdType* type)
 {
@@ -2344,7 +2330,7 @@ IsSimdTuple(ModuleValidator& m, ParseNode* pn, SimdType* type)
     if (!global->isSimdCtor())
         return false;
 
-    if (CallArgListLength(pn) != SimdTypeToLength(global->simdCtorType()))
+    if (CallArgListLength(pn) != GetSimdLanes(global->simdCtorType()))
         return false;
 
     *type = global->simdCtorType();
@@ -2368,7 +2354,7 @@ IsSimdLiteral(ModuleValidator& m, ParseNode* pn)
         return false;
 
     ParseNode* arg = CallArgList(pn);
-    unsigned length = SimdTypeToLength(type);
+    unsigned length = GetSimdLanes(type);
     for (unsigned i = 0; i < length; i++) {
         if (!IsNumericLiteral(m, arg))
             return false;
@@ -2433,7 +2419,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
     ParseNode* arg = CallArgList(pn);
     switch (type) {
       case SimdType::Int32x4: {
-        MOZ_ASSERT(SimdTypeToLength(type) == 4);
+        MOZ_ASSERT(GetSimdLanes(type) == 4);
         int32_t val[4];
         for (size_t i = 0; i < 4; i++, arg = NextNode(arg)) {
             uint32_t u32;
@@ -2444,7 +2430,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
         return NumLit(NumLit::Int32x4, SimdConstant::CreateX4(val));
       }
       case SimdType::Float32x4: {
-        MOZ_ASSERT(SimdTypeToLength(type) == 4);
+        MOZ_ASSERT(GetSimdLanes(type) == 4);
         float val[4];
         for (size_t i = 0; i < 4; i++, arg = NextNode(arg))
             val[i] = float(ExtractNumericNonFloatValue(arg));
@@ -2452,7 +2438,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
         return NumLit(NumLit::Float32x4, SimdConstant::CreateX4(val));
       }
       case SimdType::Bool32x4: {
-        MOZ_ASSERT(SimdTypeToLength(type) == 4);
+        MOZ_ASSERT(GetSimdLanes(type) == 4);
         int32_t val[4];
         for (size_t i = 0; i < 4; i++, arg = NextNode(arg)) {
             uint32_t u32;
@@ -4842,7 +4828,7 @@ class CheckSimdExtractLaneArgs
         // Second argument is the lane < vector length
         if (!IsLiteralOrConstInt(f, arg, &laneIndex))
             return f.failf(arg, "lane selector should be a constant integer literal");
-        if (laneIndex >= SimdTypeToLength(formalSimdType_))
+        if (laneIndex >= GetSimdLanes(formalSimdType_))
             return f.failf(arg, "lane selector should be in bounds");
         return true;
     }
@@ -4873,7 +4859,7 @@ class CheckSimdReplaceLaneArgs
             // Second argument is the lane (< vector length).
             if (!IsLiteralOrConstInt(f, arg, &u32))
                 return f.failf(arg, "lane selector should be a constant integer literal");
-            if (u32 >= SimdTypeToLength(formalSimdType_))
+            if (u32 >= GetSimdLanes(formalSimdType_))
                 return f.failf(arg, "lane selector should be in bounds");
             f.encoder().patchExpr(patchAt, Expr::Id);
             return true;
@@ -5288,7 +5274,7 @@ CheckSimdCtorCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::
     if (!f.writeSimdOp(simdType, SimdOperation::Constructor))
         return false;
 
-    unsigned length = SimdTypeToLength(simdType);
+    unsigned length = GetSimdLanes(simdType);
     if (!CheckSimdCallArgsPatchable(f, call, length, CheckSimdScalarArgs(simdType)))
         return false;
 
