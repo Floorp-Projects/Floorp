@@ -7063,7 +7063,6 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
                              getter_AddRefs(screen));
   }
 
-  LayoutDevicePoint devPos;
   if (screen) {
     int32_t screenLeftDeskPx, screenTopDeskPx, w, h;
     screen->GetRectDisplayPix(&screenLeftDeskPx, &screenTopDeskPx, &w, &h);
@@ -7072,20 +7071,19 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
 
     double scale;
     screen->GetDefaultCSSScaleFactor(&scale);
-    devPos = cssPos * CSSToLayoutDeviceScale(scale);
+    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(scale);
 
-    int32_t screenLeftDevPx, screenTopDevPx;
-    screen->GetRect(&screenLeftDevPx, &screenTopDevPx, &w, &h);
-    devPos.x += screenLeftDevPx;
-    devPos.y += screenTopDevPx;
+    screen->GetContentsScaleFactor(&scale);
+    DesktopPoint deskPos = devPos / DesktopToLayoutDeviceScale(scale);
+    aError = treeOwnerAsWin->SetPositionDesktopPix(screenLeftDeskPx + deskPos.x,
+                                                   screenTopDeskPx + deskPos.y);
   } else {
     // We couldn't find a screen? Just assume a 1:1 mapping.
     CSSIntPoint cssPos(aXPos, aXPos);
     CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerIsChrome);
-    devPos = cssPos * CSSToLayoutDeviceScale(1.0);
+    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(1.0);
+    aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
   }
-
-  aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
 }
 
 void
