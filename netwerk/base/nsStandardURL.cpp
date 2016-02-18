@@ -2888,6 +2888,25 @@ nsStandardURL::Init(uint32_t urlType,
 }
 
 NS_IMETHODIMP
+nsStandardURL::SetDefaultPort(int32_t aNewDefaultPort)
+{
+    ENSURE_MUTABLE();
+
+    InvalidateCache();
+
+    // If we're already using the new default-port as a custom port, then clear
+    // it off of our mSpec & set mPort to -1, to indicate that we'll be using
+    // the default from now on (which happens to match what we already had).
+    if (mPort == aNewDefaultPort) {
+        ReplacePortInSpec(-1);
+        mPort = -1;
+    }
+    mDefaultPort = aNewDefaultPort;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsStandardURL::GetMutable(bool *value)
 {
     *value = mMutable;
