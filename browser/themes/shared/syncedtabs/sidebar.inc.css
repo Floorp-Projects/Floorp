@@ -74,25 +74,11 @@ body {
   min-height: 16px;
   max-height: 16px;
   margin-right: 5px;
+  margin-left: 5px;
   background-size: 16px 16px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-}
-
-.item-twisty-container {
-  min-width: 16px;
-  max-width: 16px;
-  min-height: 16px;
-  max-height: 16px;
-  margin-right: 5px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.item-icon-container {
-  margin-left: 5px;
 }
 
 .item-title-container {
@@ -175,14 +161,6 @@ body {
 .deck .sync-state.selected {
   display: unset;
   opacity: 100;
-}
-
-.item.client .item-twisty-container {
-  background-image: url(twisty-open.svg);
-}
-
-.item.client.closed .item-twisty-container {
-  background-image: url(twisty-closed.svg);
 }
 
 .textbox-search-clear:not([disabled]) {
