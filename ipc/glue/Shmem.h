@@ -36,7 +36,7 @@
  *  means is OS specific.)
  *
  *  (4a) The child receives the special IPC message, and using the
- *  |SharedMemory{SysV,Basic}::Handle| it was passed, creates a
+ *  |SharedMemory{Basic}::Handle| it was passed, creates a
  *  |mozilla::ipc::SharedMemory| in the child
  *  process.
  *
@@ -174,8 +174,6 @@ public:
 
     return mSize / sizeof(T);
   }
-
-  int GetSysVID() const;
 
   // These shouldn't be used directly, use the IPDL interface instead.
   id_t Id(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead) const {
