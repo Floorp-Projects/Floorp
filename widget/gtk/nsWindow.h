@@ -8,8 +8,6 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
-#include "mozilla/ipc/SharedMemorySysV.h"
-
 #include "nsAutoPtr.h"
 
 #include "mozcontainer.h"
@@ -26,6 +24,8 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
+
+#include "nsShmImage.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
@@ -64,10 +64,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 class gfxASurface;
 class gfxPattern;
 class nsPluginNativeWindowGtk;
-#if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
-#  define MOZ_HAVE_SHMIMAGE
-class nsShmImage;
-#endif
 
 namespace mozilla {
 class TimeStamp;
