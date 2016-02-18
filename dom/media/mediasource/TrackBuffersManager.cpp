@@ -172,7 +172,7 @@ void
 TrackBuffersManager::ResetParserState()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!mAppendRunning, "Append is running, abort must have been called");
+  MOZ_DIAGNOSTIC_ASSERT(!mAppendRunning, "Append is running, abort must have been called");
   MSE_DEBUG("");
 
   // 1. If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
@@ -190,7 +190,7 @@ RefPtr<TrackBuffersManager::RangeRemovalPromise>
 TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!mAppendRunning, "Append is running");
+  MOZ_DIAGNOSTIC_ASSERT(!mAppendRunning, "Append is running");
   MSE_DEBUG("From %.2f to %.2f", aStart.ToSeconds(), aEnd.ToSeconds());
 
   mEnded = false;
@@ -304,7 +304,7 @@ void
 TrackBuffersManager::CompleteResetParserState()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_RELEASE_ASSERT(!mSegmentParserLoopRunning);
+  MOZ_DIAGNOSTIC_ASSERT(!mSegmentParserLoopRunning);
   MSE_DEBUG("");
 
   for (auto& track : GetTracksList()) {
@@ -542,7 +542,7 @@ RefPtr<TrackBuffersManager::AppendPromise>
 TrackBuffersManager::InitSegmentParserLoop()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_RELEASE_ASSERT(mAppendPromise.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(mAppendPromise.IsEmpty());
   MSE_DEBUG("");
 
   RefPtr<AppendPromise> p = mAppendPromise.Ensure(__func__);
