@@ -11,7 +11,7 @@ function makeChan(url, appId, inIsolatedMozBrowser) {
                     .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
-    isInBrowserElement: inIsolatedMozBrowser,
+    isInIsolatedMozBrowserElement: inIsolatedMozBrowser,
     originAttributes: {
       appId: appId,
       inIsolatedMozBrowser: inIsolatedMozBrowser,

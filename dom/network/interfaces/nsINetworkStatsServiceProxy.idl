@@ -22,7 +22,12 @@ interface nsINetworkStatsServiceProxy : nsISupports
   /*
    * An interface used to record per-app traffic data.
    * @param aAppId app id
-   * @param aIsInBrowser true if the iframe element is mozbrowser
+   * @param aIsInIsolatedMozBrowser
+   *        true if the frame is an isolated mozbrowser element. <iframe
+   *        mozbrowser mozapp> and <xul:browser> are not considered to be
+   *        mozbrowser elements.  <iframe mozbrowser noisolation> does not count
+   *        as isolated since isolation is disabled.  Isolation can only be
+   *        disabled if the containing document is chrome.
    * @param aNetworkInterface network
    * @param aTimeStamp time stamp
    * @param aRxBytes received data amount
@@ -31,7 +36,7 @@ interface nsINetworkStatsServiceProxy : nsISupports
    * @param aCallback an optional callback
    */
   void saveAppStats(in unsigned long aAppId,
-                    in boolean aIsInBrowser,
+                    in boolean aIsInIsolatedMozBrowser,
                     in nsINetworkInfo aNetworkInfo,
                     in unsigned long long aTimeStamp,
                     in unsigned long long aRxBytes,

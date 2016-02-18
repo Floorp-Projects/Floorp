@@ -559,10 +559,10 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
 
     // Verify load context appId and browser flag match the principal
     uint32_t contextAppId;
-    bool contextInBrowserElement;
+    bool contextInIsolatedBrowser;
     rv = loadContext->GetAppId(&contextAppId);
     NS_ENSURE_SUCCESS(rv, false);
-    rv = loadContext->GetIsInBrowserElement(&contextInBrowserElement);
+    rv = loadContext->GetIsInIsolatedMozBrowserElement(&contextInIsolatedBrowser);
     NS_ENSURE_SUCCESS(rv, false);
 
     uint32_t principalAppId;
@@ -573,7 +573,7 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
     NS_ENSURE_SUCCESS(rv, false);
 
     return contextAppId == principalAppId &&
-           contextInBrowserElement == principalInIsolatedBrowser;
+           contextInIsolatedBrowser == principalInIsolatedBrowser;
 }
 
 nsresult
@@ -1262,7 +1262,7 @@ NS_GetOriginAttributes(nsIChannel *aChannel,
 bool
 NS_GetAppInfo(nsIChannel *aChannel,
               uint32_t *aAppID,
-              bool *aIsInBrowserElement)
+              bool *aIsInIsolatedMozBrowserElement)
 {
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(aChannel, loadContext);
@@ -1273,7 +1273,7 @@ NS_GetAppInfo(nsIChannel *aChannel,
     nsresult rv = loadContext->GetAppId(aAppID);
     NS_ENSURE_SUCCESS(rv, false);
 
-    rv = loadContext->GetIsInBrowserElement(aIsInBrowserElement);
+    rv = loadContext->GetIsInIsolatedMozBrowserElement(aIsInIsolatedMozBrowserElement);
     NS_ENSURE_SUCCESS(rv, false);
 
     return true;

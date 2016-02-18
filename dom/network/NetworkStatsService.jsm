@@ -738,9 +738,9 @@ this.NetworkStatsService = {
   /*
    * Function responsible for receiving stats which are not from netd.
    */
-  saveStats: function saveStats(aAppId, aIsInBrowser, aServiceType, aNetworkInfo,
-                                aTimeStamp, aRxBytes, aTxBytes, aIsAccumulative,
-                                aCallback) {
+  saveStats: function saveStats(aAppId, aIsInIsolatedMozBrowser, aServiceType,
+                                aNetworkInfo, aTimeStamp, aRxBytes, aTxBytes,
+                                aIsAccumulative, aCallback) {
     let netId = this.convertNetworkInfo(aNetworkInfo);
     if (!netId) {
       if (aCallback) {
@@ -761,7 +761,7 @@ this.NetworkStatsService = {
     }
 
     let stats = { appId:          aAppId,
-                  isInBrowser:    aIsInBrowser,
+                  isInBrowser:    aIsInIsolatedMozBrowser,
                   serviceType:    aServiceType,
                   networkId:      this._networks[netId].network.id,
                   networkType:    this._networks[netId].network.type,
