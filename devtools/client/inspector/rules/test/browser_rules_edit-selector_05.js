@@ -71,42 +71,7 @@ function* checkModifiedElement(view, name) {
 
 function* testAddProperty(view) {
   info("Test creating a new property");
-
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-
-  info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(view, ruleEditor.closeBrace);
-
-  is(inplaceEditor(ruleEditor.newPropSpan), editor,
-    "The new property editor got focused");
-  let input = editor.input;
-
-  info("Entering text-align in the property name editor");
-  input.value = "text-align";
-
-  info("Pressing return to commit and focus the new value field");
-  let onValueFocus = once(ruleEditor.element, "focus", true);
-  let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onValueFocus;
-  yield onRuleViewChanged;
-
-  // Getting the new value editor after focus
-  editor = inplaceEditor(view.styleDocument.activeElement);
-  let textProp = ruleEditor.rule.textProps[0];
-
-  is(ruleEditor.rule.textProps.length, 1, "Created a new text property.");
-  is(ruleEditor.propertyList.children.length, 1, "Created a property editor.");
-  is(editor, inplaceEditor(textProp.editor.valueSpan),
-    "Editing the value span now.");
-
-  info("Entering a value and bluring the field to expect a rule change");
-  editor.input.value = "center";
-  let onBlur = once(editor.input, "blur");
-  onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
-  editor.input.blur();
-  yield onBlur;
-  yield onRuleViewChanged;
+  let textProp = yield addProperty(view, 1, "text-align", "center");
 
   is(textProp.value, "center", "Text prop should have been changed.");
   is(textProp.overridden, false, "Property should not be overridden");
