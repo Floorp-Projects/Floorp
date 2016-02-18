@@ -92,26 +92,23 @@ TestStartupWriteRead() {
   
   const char* buf = "Market opportunities for BeardBook";
   const char* id = "id";
-  char* outbufPtr = nullptr;
-  nsAutoArrayPtr<char> outbuf;  
+  UniquePtr<char[]> outbuf;  
   uint32_t len;
   
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = sc->GetBuffer(id, &outbufPtr, &len);
+  rv = sc->GetBuffer(id, &outbuf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
-  outbuf = outbufPtr;
-  NS_ENSURE_STR_MATCH(buf, outbuf, "pre-write read");
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "pre-write read");
 
   rv = sc->ResetStartupWriteTimer();
   rv = WaitForStartupTimer();
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = sc->GetBuffer(id, &outbufPtr, &len);
+  rv = sc->GetBuffer(id, &outbuf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
-  outbuf = outbufPtr;
-  NS_ENSURE_STR_MATCH(buf, outbuf, "simple write/read");
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "simple write/read");
 
   return NS_OK;
 }
