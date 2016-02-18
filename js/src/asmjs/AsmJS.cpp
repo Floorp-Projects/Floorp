@@ -1100,35 +1100,6 @@ class Type
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad SimdType");
     }
 
-    static Type var(ValType t) {
-        switch (t) {
-          case ValType::I32:   return Int;
-          case ValType::I64:   MOZ_CRASH("no int64 in asm.js");
-          case ValType::F32:   return Float;
-          case ValType::F64:   return Double;
-          case ValType::I32x4: return Int32x4; // No Uint32x4 in global vars.
-          case ValType::F32x4: return Float32x4;
-          case ValType::B32x4: return Bool32x4;
-          case ValType::Limit: break;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
-    }
-
-    static Type ret(ExprType t) {
-        switch (t) {
-          case ExprType::Void:   return Type::Void;
-          case ExprType::I32:    return Signed;
-          case ExprType::I64:    MOZ_CRASH("no int64 in asm.js");
-          case ExprType::F32:    return Float;
-          case ExprType::F64:    return Double;
-          case ExprType::I32x4:  return Int32x4; // No unsigned SIMD in signatures.
-          case ExprType::F32x4:  return Float32x4;
-          case ExprType::B32x4:  return Bool32x4;
-          case ExprType::Limit:  break;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
-    }
-
     // Map an already canonicalized Type to the return type of a function call.
     static Type ret(Type t) {
         MOZ_ASSERT(t.isCanonical());
@@ -1294,6 +1265,11 @@ class Type
     bool isReturnType() const {
         return isSigned() || isFloat() || isDouble() || (isSimd() && !isUnsignedSimd()) ||
                isVoid();
+    }
+
+    // Check if this is one of the valid types for a global variable.
+    bool isGlobalVarType() const {
+        return isArgType();
     }
 
     // Check if this is one of the canonical vartype representations of a
@@ -1848,11 +1824,13 @@ class MOZ_STACK_CLASS ModuleValidator
         MOZ_ASSERT(n->isTenured());
         module_->bufferArgumentName = n;
     }
-    bool addGlobalVarInit(PropertyName* var, const NumLit& lit, bool isConst) {
+    bool addGlobalVarInit(PropertyName* var, const NumLit& lit, Type type, bool isConst)
+    {
+        MOZ_ASSERT(type.isGlobalVarType());
+        MOZ_ASSERT(type == Type::canonicalize(Type::lit(lit)));
+
         uint32_t index;
-        Type litType = Type::lit(lit);
-        Type canonicalType = Type::canonicalize(litType);
-        if (!mg_.allocateGlobalVar(canonicalType.canonicalToValType(), isConst, &index))
+        if (!mg_.allocateGlobalVar(type.canonicalToValType(), isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
@@ -1860,7 +1838,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.varOrConst.index_ = index;
-        global->u.varOrConst.type_ = (isConst ? litType : canonicalType).which();
+        global->u.varOrConst.type_ = (isConst ? Type::lit(lit) : type).which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
         if (!globalMap_.putNew(var, global))
@@ -1872,9 +1850,12 @@ class MOZ_STACK_CLASS ModuleValidator
         g.pod.u.var.globalDataOffset_ = mg_.globalVar(index).globalDataOffset;
         return module_->globals.append(g);
     }
-    bool addGlobalVarImport(PropertyName* var, PropertyName* field, ValType type, bool isConst) {
+    bool addGlobalVarImport(PropertyName* var, PropertyName* field, Type type, bool isConst) {
+        MOZ_ASSERT(type.isGlobalVarType());
+
         uint32_t index;
-        if (!mg_.allocateGlobalVar(type, isConst, &index))
+        ValType valType = type.canonicalToValType();
+        if (!mg_.allocateGlobalVar(valType, isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
@@ -1882,13 +1863,13 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.varOrConst.index_ = index;
-        global->u.varOrConst.type_ = Type::var(type).which();
+        global->u.varOrConst.type_ = type.which();
         if (!globalMap_.putNew(var, global))
             return false;
 
         AsmJSGlobal g(AsmJSGlobal::Variable, field);
         g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
-        g.pod.u.var.u.importType_ = type;
+        g.pod.u.var.u.importType_ = valType;
         g.pod.u.var.globalDataOffset_ = mg_.globalVar(index).globalDataOffset;
         return module_->globals.append(g);
     }
@@ -2922,7 +2903,11 @@ CheckGlobalVariableInitConstant(ModuleValidator& m, PropertyName* varName, Parse
     if (!lit.valid())
         return m.fail(initNode, "global initializer is out of representable integer range");
 
-    return m.addGlobalVarInit(varName, lit, isConst);
+    Type canonicalType = Type::canonicalize(Type::lit(lit));
+    if (!canonicalType.isGlobalVarType())
+        return m.fail(initNode, "global variable type not allowed");
+
+    return m.addGlobalVarInit(varName, lit, canonicalType, isConst);
 }
 
 static bool
@@ -2958,11 +2943,19 @@ CheckTypeAnnotation(ModuleValidator& m, ParseNode* coercionNode, Type* coerceTo,
 }
 
 static bool
-CheckGlobalVariableImportExpr(ModuleValidator& m, PropertyName* varName, ValType coerceTo,
-                              ParseNode* coercedExpr, bool isConst)
+CheckGlobalVariableInitImport(ModuleValidator& m, PropertyName* varName, ParseNode* initNode,
+                              bool isConst)
 {
+    Type coerceTo;
+    ParseNode* coercedExpr;
+    if (!CheckTypeAnnotation(m, initNode, &coerceTo, &coercedExpr))
+        return false;
+
     if (!coercedExpr->isKind(PNK_DOT))
         return m.failName(coercedExpr, "invalid import expression for global '%s'", varName);
+
+    if (!coerceTo.isGlobalVarType())
+        return m.fail(initNode, "global variable type not allowed");
 
     ParseNode* base = DotBase(coercedExpr);
     PropertyName* field = DotMember(coercedExpr);
@@ -2974,17 +2967,6 @@ CheckGlobalVariableImportExpr(ModuleValidator& m, PropertyName* varName, ValType
         return m.failName(coercedExpr, "base of import expression must be '%s'", importName);
 
     return m.addGlobalVarImport(varName, field, coerceTo, isConst);
-}
-
-static bool
-CheckGlobalVariableInitImport(ModuleValidator& m, PropertyName* varName, ParseNode* initNode,
-                              bool isConst)
-{
-    Type coerceTo;
-    ParseNode* coercedExpr;
-    if (!CheckTypeAnnotation(m, initNode, &coerceTo, &coercedExpr))
-        return false;
-    return CheckGlobalVariableImportExpr(m, varName, coerceTo.canonicalToValType(), coercedExpr, isConst);
 }
 
 static bool
@@ -4335,14 +4317,14 @@ CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& s
 
     for (unsigned i = 0; i < sig.args().length(); i++) {
         if (sig.arg(i) != existing.arg(i)) {
-            return m.failf(usepn, "incompatible type for argument %u: (%s here vs. %s before)",
-                           i, Type::var(sig.arg(i)).toChars(), Type::var(existing.arg(i)).toChars());
+            return m.failf(usepn, "incompatible type for argument %u: (%s here vs. %s before)", i,
+                           ToCString(sig.arg(i)), ToCString(existing.arg(i)));
         }
     }
 
     if (sig.ret() != existing.ret()) {
         return m.failf(usepn, "%s incompatible with previous return of type %s",
-                       Type::ret(sig.ret()).toChars(), Type::ret(existing.ret()).toChars());
+                       ToCString(sig.ret()), ToCString(existing.ret()));
     }
 
     MOZ_ASSERT(sig == existing);
@@ -6425,7 +6407,7 @@ CheckReturnType(FunctionValidator& f, ParseNode* usepn, Type ret)
 
     if (f.returnedType() != ret.canonicalToExprType()) {
         return f.failf(usepn, "%s incompatible with previous return of type %s",
-                       Type::ret(ret).toChars(), Type::ret(f.returnedType()).toChars());
+                       Type::ret(ret).toChars(), ToCString(f.returnedType()));
     }
 
     return true;

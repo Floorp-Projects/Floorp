@@ -447,15 +447,15 @@ assertAsmTypeFail('glob', USE_ASM + I32 + "var g=0; function f() {var x=i4(1,2,3
 assertAsmTypeFail('glob', USE_ASM + I32 + "var g=0.; function f() {var x=i4(1,2,3,4); x=+g;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "var f32=glob.Math.fround; var g=f32(0.); function f() {var x=i4(1,2,3,4); x=f32(g);} return f");
 
+// Unsigned SIMD globals are not allowed.
+assertAsmTypeFail('glob', USE_ASM + U32 + "var g=u4(0,0,0,0); function f() {var x=u4(1,2,3,4); x=g;} return f");
+
 assertAsmTypeFail('glob', USE_ASM + F32 + "var g=0; function f() {var x=f4(0.,0.,0.,0.); x=g|0;} return f");
 assertAsmTypeFail('glob', USE_ASM + F32 + "var g=0.; function f() {var x=f4(0.,0.,0.,0.); x=+g;} return f");
 assertAsmTypeFail('glob', USE_ASM + F32 + "var f32=glob.Math.fround; var g=f32(0.); function f() {var x=f4(0.,0.,0.,0.); x=f32(g);} return f");
 
 CheckI4('var x=i4(1,2,3,4)', '', [1, 2, 3, 4]);
 CheckI4('var _=42; var h=i4(5,5,5,5); var __=13.37; var x=i4(4,7,9,2);', '', [4,7,9,2]);
-
-CheckU4('var x=u4(1,2,3,4)', '', [1, 2, 3, 4]);
-CheckU4('var _=42; var h=u4(5,5,5,5); var __=13.37; var x=u4(4,7,9,2);', '', [4,7,9,2]);
 
 CheckF4('var x=f4(1.,2.,3.,4.)', '', [1, 2, 3, 4]);
 CheckF4('var _=42; var h=f4(5.,5.,5.,5.); var __=13.37; var x=f4(4.,13.37,9.,-0.);', '', [4, 13.37, 9, -0]);
@@ -496,6 +496,9 @@ assertEq(SIMD.Int32x4.extractLane(Int32x4, 3), 4);
 
 for (var v of [1, {}, "totally legit SIMD variable", SIMD.Float32x4(1,2,3,4)])
     assertCaught(asmCompile('glob', 'ffi', USE_ASM + I32 + CI32 + "var g=ci4(ffi.g); function f() {return ci4(g)} return f"), this, {g: v});
+
+// Unsigned SIMD globals are not allowed.
+assertAsmTypeFail('glob', 'ffi', USE_ASM + U32 + CU32 + "var g=cu4(ffi.g); function f() {} return f");
 
 var Float32x4 = asmLink(asmCompile('glob', 'ffi', USE_ASM + F32 + CF32 + "var g=cf4(ffi.g); function f() {return cf4(g)} return f"), this, {g: SIMD.Float32x4(1,2,3,4)})();
 assertEq(SIMD.Float32x4.extractLane(Float32x4, 0), 1);
