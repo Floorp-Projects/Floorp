@@ -3165,10 +3165,6 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
         return inlineSimdShift(callInfo, native, MSimdShift::lsh, type);
       case SimdOperation::Fn_shiftRightByScalar:
         return inlineSimdShift(callInfo, native, MSimdShift::rshForSign(GetSimdSign(type)), type);
-      case SimdOperation::Fn_shiftRightArithmeticByScalar:
-        return inlineSimdShift(callInfo, native, MSimdShift::rsh, type);
-      case SimdOperation::Fn_shiftRightLogicalByScalar:
-        return inlineSimdShift(callInfo, native, MSimdShift::ursh, type);
 
         // Boolean unary.
       case SimdOperation::Fn_allTrue:
