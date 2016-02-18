@@ -138,6 +138,9 @@ add_task(function* testWebNavigationFrames() {
   is(getAllFramesDetails.length, collectedDetails.length,
      "number of frames found should equal the number onCompleted events collected");
 
+  is(getAllFramesDetails[0].frameId, 0, "the root frame has the expected frameId");
+  is(getAllFramesDetails[0].parentFrameId, -1, "the root frame has the expected parentFrameId");
+
   // ordered by frameId
   let sortByFrameId = (el1, el2) => {
     let val1 = el1 ? el1.frameId : -1;
