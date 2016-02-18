@@ -8426,6 +8426,14 @@
     "kind": "boolean",
     "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
   },
+  "E10S_ADDONS_BLOCKER_RAN": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "48",
+    "kind": "flag",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1248796],
+    "description": "Whether the code to block e10s for add-ons users was called",
+  },
   "BLOCKED_ON_PLUGIN_MODULE_INIT_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "50",
