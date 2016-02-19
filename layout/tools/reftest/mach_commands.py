@@ -240,6 +240,8 @@ class ReftestRunner(MozbuildObject):
             kwargs["xrePath"] = os.environ.get("MOZ_HOST_BIN")
         if not kwargs["app"]:
             kwargs["app"] = self.substs["ANDROID_PACKAGE_NAME"]
+        if not kwargs["utilityPath"]:
+            kwargs["utilityPath"] = kwargs["xrePath"]
         kwargs["dm_trans"] = "adb"
         kwargs["ignoreWindowSize"] = True
         kwargs["printDeviceInfo"] = False
