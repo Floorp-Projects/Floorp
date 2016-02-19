@@ -4,11 +4,16 @@
 
 package org.mozilla.gecko.util;
 
+import android.util.Log;
+import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+
 /**
  * This class should reflect the experiment names found in the Switchboard experiments config here:
  * https://github.com/mozilla-services/switchboard-experiments
  */
 public class Experiments {
+    private static final String LOGTAG = "GeckoExperiments";
+
     // Display History and Bookmarks in 3-dot menu.
     public static final String BOOKMARKS_HISTORY_MENU = "bookmark-history-menu";
 
@@ -20,4 +25,34 @@ public class Experiments {
     // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
     public static final String SEARCH_TERM = "search-term";
 
+    private static volatile Boolean disabled = null;
+
+    /**
+     * Determines whether Switchboard is disabled by the MOZ_DISABLE_SWITCHBOARD
+     * environment variable. We need to read this value from the intent string
+     * extra because environment variables from our test harness aren't set
+     * until Gecko is loaded, and we need to know this before then.
+     *
+     * @param intent Main intent that launched the app
+     * @return Whether Switchboard is disabled
+     */
+    public static boolean isDisabled(SafeIntent intent) {
+        if (disabled != null) {
+            return disabled;
+        }
+
+        String env = intent.getStringExtra("env0");
+        for (int i = 1; env != null; i++) {
+            if (env.startsWith("MOZ_DISABLE_SWITCHBOARD=")) {
+                if (!env.endsWith("=")) {
+                    Log.d(LOGTAG, "Switchboard disabled by MOZ_DISABLE_SWITCHBOARD environment variable");
+                    disabled = true;
+                    return disabled;
+                }
+            }
+            env = intent.getStringExtra("env" + i);
+        }
+        disabled = false;
+        return disabled;
+    }
 }

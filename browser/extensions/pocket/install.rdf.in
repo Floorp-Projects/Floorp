@@ -10,7 +10,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>firefox@getpocket.com</em:id>
-    <em:version>@FIREFOX_VERSION@</em:version>
+    <em:version>1.0</em:version>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
 

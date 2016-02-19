@@ -58,9 +58,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource://gre/modules/PageThumbs.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
-                                  "resource:///modules/CustomizationTabPreloader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
@@ -557,6 +554,7 @@ BrowserGlue.prototype = {
 
     ExtensionManagement.registerSchema("chrome://browser/content/schemas/bookmarks.json");
     ExtensionManagement.registerSchema("chrome://browser/content/schemas/browser_action.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/commands.json");
     ExtensionManagement.registerSchema("chrome://browser/content/schemas/context_menus.json");
     ExtensionManagement.registerSchema("chrome://browser/content/schemas/context_menus_internal.json");
     ExtensionManagement.registerSchema("chrome://browser/content/schemas/page_action.json");
@@ -1071,7 +1069,6 @@ BrowserGlue.prototype = {
 
     SelfSupportBackend.uninit();
 
-    CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
     NewTabPrefsProvider.prefs.uninit();

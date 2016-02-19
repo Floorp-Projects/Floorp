@@ -32,9 +32,6 @@ var WebappRT = {
     pref("extensions.autoDisableScopes", 1),
     // Disable add-on installation via the web-exposed APIs
     pref("xpinstall.enabled", false),
-    // Set a future policy version to avoid the telemetry prompt.
-    pref("toolkit.telemetry.prompted", 999),
-    pref("toolkit.telemetry.notifiedOptOut", 999),
     pref("media.useAudioChannelAPI", true),
     pref("dom.mozTCPSocket.enabled", true),
 

@@ -16,6 +16,14 @@
 }
 
 @media (min-resolution: 1.1dppx) {
+  #pocket-button {
+    list-style-image: url("chrome://pocket/skin/Toolbar@2x.png");
+  }
+
+  toolbar[brighttext] #pocket-button {
+    list-style-image: url("chrome://pocket/skin/Toolbar-inverted@2x.png");
+  }
+
   #pocket-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 36px, 36px, 0px);
   }

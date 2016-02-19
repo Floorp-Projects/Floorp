@@ -7,10 +7,12 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xml:lang="en" lang="en">
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <script src="chrome://browser/content/syncedtabs/sidebar.js" type="application/javascript;version=1.8"></script>
     <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
@@ -21,7 +23,7 @@
     <title>&syncedTabs.sidebar.label;</title>
   </head>
 
-  <body role="application">
+  <body dir="&locale.dir;" role="application">
     <template id="client-template">
       <div class="item client" role="option" tabindex="-1">
         <div class="item-title-container">

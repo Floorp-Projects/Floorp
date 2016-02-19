@@ -80,9 +80,9 @@ Structure::
             count: <number>,  // desktop only, e.g. 8, or null on failure - logical cpus
             cores: <number>, // desktop only, e.g., 4, or null on failure - physical cores
             vendor: <string>, // desktop only, e.g. "GenuineIntel", or null on failure
-            family: <string>, // desktop only, null on failure
-            model: <string>, // desktop only, null on failure
-            stepping: <string>, // desktop only, null on failure
+            family: <number>, // desktop only, null on failure
+            model: <number, // desktop only, null on failure
+            stepping: <number>, // desktop only, null on failure
             l2cacheKB: <number>, // L2 cache size in KB, only on windows & mac
             l3cacheKB: <number>, // desktop only, L3 cache size in KB
             speedMHz: <number>, // desktop only, cpu clock speed in MHz
@@ -230,7 +230,7 @@ Structure::
             <gmp id>: {
                 version: <string>,
                 userDisabled: <bool>,
-                applyBackgroundUpdates: <bool>,
+                applyBackgroundUpdates: <integer>,
             },
             ...
         ],
@@ -241,6 +241,13 @@ Structure::
         persona: <string>, // id of the current persona, null on GONK
       },
     }
+
+build
+-----
+
+buildId
+~~~~~~~
+Firefox builds downloaded from mozilla.org use a 14-digit buildId. Builds included in other distributions may have a different format (e.g. only 10 digits).
 
 Settings
 --------
@@ -301,9 +308,12 @@ The following is a partial list of collected preferences.
 - ``browser.urlbar.userMadeSearchSuggestionsChoice``: True if the user has clicked Yes or No in the urlbar's opt-in notification. Defaults to false.
 
 partner
-~~~~~~~
+-------
 
 If the user is using a partner repack, this contains information identifying the repack being used, otherwise "partnerNames" will be an empty array and other entries will be null. The information may be missing when the profile just becomes available. In Firefox for desktop, the information along with other customizations defined in distribution.ini are processed later in the startup phase, and will be fully applied when "distribution-customization-complete" notification is sent.
+
+addons
+------
 
 activeAddons
 ~~~~~~~~~~~~

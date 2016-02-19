@@ -27,7 +27,7 @@ add_task(function*() {
   let innerFrameDiv = ["iframe", "iframe", "div"];
 
   info("Waiting for element picker to activate.");
-  yield inspector.toolbox.highlighterUtils.startPicker();
+  yield startPicker(inspector.toolbox);
 
   info("Moving mouse over outerFrameDiv");
   yield moveMouseOver(testActor, outerFrameDiv);

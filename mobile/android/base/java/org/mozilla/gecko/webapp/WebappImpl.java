@@ -407,7 +407,7 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     }
 
     @Override
-    protected StartupAction getStartupAction(final String passedURL) {
+    protected StartupAction getStartupAction(final String passedURL, final String action) {
         return StartupAction.WEBAPP;
     }
 }

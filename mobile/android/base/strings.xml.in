@@ -48,7 +48,7 @@
   <string name="firstrun_bookmarks_subtext">&firstrun_bookmarks_subtext;</string>
   <string name="firstrun_data_title">&firstrun_data_title;</string>
   <string name="firstrun_data_message">&firstrun_data_message;</string>
-  <string name="firstrun_data_subtext">&firstrun_data_subtext;</string>
+  <string name="firstrun_data_subtext">&firstrun_data_subtext2;</string>
   <string name="firstrun_sync_title">&firstrun_sync_title;</string>
   <string name="firstrun_sync_message">&firstrun_sync_message;</string>
   <string name="firstrun_sync_subtext">&firstrun_sync_subtext;</string>

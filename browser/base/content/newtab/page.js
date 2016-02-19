@@ -167,7 +167,7 @@ var gPage = {
     gAllPages.unregister(this);
     // compute page life-span and send telemetry probe: using milli-seconds will leave
     // many low buckets empty. Instead we use half-second precision to make low end
-    // of histogram linear and not loose the change in user attention
+    // of histogram linear and not lose the change in user attention
     let delta = Math.round((Date.now() - this._firstVisibleTime) / 500);
     if (this._suggestedTilePresent) {
       Services.telemetry.getHistogramById("NEWTAB_PAGE_LIFE_SPAN_SUGGESTED").add(delta);
