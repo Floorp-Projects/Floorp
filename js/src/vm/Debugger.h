@@ -477,13 +477,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * debuggee compartment.
      */
     JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac, bool callHook);
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac, MutableHandleValue vp, bool callHook,
-                                         const mozilla::Maybe<HandleValue>& thisVForCheck = mozilla::Nothing(),
-                                         AbstractFramePtr frame = NullFramePtr());
+    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac, MutableHandleValue vp, bool callHook);
 
     JSTrapStatus handleUncaughtExceptionHelper(mozilla::Maybe<AutoCompartment>& ac,
-                                               MutableHandleValue* vp, bool callHook,
-                                               const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame);
+                                               MutableHandleValue* vp, bool callHook);
 
     /*
      * Handle the result of a hook that is expected to return a resumption
@@ -510,24 +507,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *     anything else - Make a new TypeError the pending exception and
      *         return handleUncaughtException(ac, vp, callHook).
      */
-    JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
-                                      AbstractFramePtr frame, MutableHandleValue vp,
-                                      bool callHook = true);
-
-    /*
-     * When we run the onEnterFrame hook, the |this| slot hasn't been fully
-     * initialized, because the initialzation happens in the function's
-     * prologue. To combat this, we pass the this for the primitive return
-     * check directly. When bug 1249193 is fixed, this overload should be
-     * removed.
-     */
-    JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
-                                      const Value& thisVForCheck, AbstractFramePtr frame,
+    JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                       MutableHandleValue vp, bool callHook = true);
-
-    JSTrapStatus parseResumptionValueHelper(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                                            const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
-                                            MutableHandleValue vp, bool callHook);
 
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
