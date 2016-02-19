@@ -522,20 +522,6 @@ ModuleGenerator::finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticL
     }
 #endif
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    // On MIPS we need to update all the long jumps because they contain an
-    // absolute adress. The values are correctly patched for the current address
-    // space, but not after serialization or profiling-mode toggling.
-    for (size_t i = 0; i < masm_.numLongJumps(); i++) {
-        size_t off = masm_.longJump(i);
-        StaticLinkData::InternalLink inLink(StaticLinkData::InternalLink::InstructionImmediate);
-        inLink.patchAtOffset = off;
-        inLink.targetOffset = Assembler::ExtractInstructionImmediate(code + off) - uintptr_t(code);
-        if (!link->internalLinks.append(inLink))
-            return false;
-    }
-#endif
-
 #if defined(JS_CODEGEN_X64)
     // Global data accesses on x64 use rip-relative addressing and thus do
     // not need patching after deserialization.
