@@ -6,26 +6,26 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const DOM = React.DOM;
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const DOM = React.DOM;
+  /**
+   * Renders a caption. This template is used by other components
+   * that needs to distinguish between a simple text/value and a label.
+   */
+  const Caption = React.createClass({
+    displayName: "Caption",
 
-/**
- * Renders a caption. This template is used by other components
- * that needs to distinguish between a simple text/value and a label.
- */
-const Caption = React.createClass({
-  displayName: "Caption",
+    render: function() {
+      return (
+        DOM.span({"className": "caption"}, this.props.object)
+      );
+    },
+  });
 
-  render: function() {
-    return (
-      DOM.span({"className": "caption"}, this.props.object)
-    );
-  },
-});
-
-// Exports from this module
-exports.Caption = Caption;
+  // Exports from this module
+  exports.Caption = Caption;
 });

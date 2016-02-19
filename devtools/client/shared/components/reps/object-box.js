@@ -6,30 +6,30 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const DOM = React.DOM;
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const DOM = React.DOM;
+  /**
+   * Renders a box for given object.
+   */
+  const ObjectBox = React.createClass({
+    displayName: "ObjectBox",
 
-/**
- * Renders a box for given object.
- */
-const ObjectBox = React.createClass({
-  displayName: "ObjectBox",
+    render: function() {
+      let className = this.props.className;
+      let boxClassName = className ? " objectBox-" + className : "";
 
-  render: function() {
-    var className = this.props.className;
-    var boxClassName = className ? " objectBox-" + className : "";
+      return (
+        DOM.span({className: "objectBox" + boxClassName, role: "presentation"},
+          this.props.children
+        )
+      );
+    }
+  });
 
-    return (
-      DOM.span({className: "objectBox" + boxClassName, role: "presentation"},
-        this.props.children
-      )
-    )
-  }
-});
-
-// Exports from this module
-exports.ObjectBox = ObjectBox;
+  // Exports from this module
+  exports.ObjectBox = ObjectBox;
 });

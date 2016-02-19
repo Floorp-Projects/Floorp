@@ -6,41 +6,40 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const { createFactories } = require("./rep-utils");
+  const { ObjectBox } = createFactories(require("./object-box"));
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./rep-utils");
-const { ObjectBox } = createFactories(require("./object-box"));
+  /**
+   * Renders null value
+   */
+  const Null = React.createClass({
+    displayName: "NullRep",
 
-/**
- * Renders null value
- */
-const Null = React.createClass({
-  displayName: "NullRep",
+    render: function() {
+      return (
+        ObjectBox({className: "null"},
+          "null"
+        )
+      );
+    },
+  });
 
-  render: function() {
-    return (
-      ObjectBox({className: "null"},
-        "null"
-      )
-    )
-  },
-});
+  function supportsObject(object, type) {
+    if (object && object.type && object.type == "null") {
+      return true;
+    }
 
-function supportsObject(object, type) {
-  if (object && object.type && object.type == "null") {
-    return true;
+    return (object == null);
   }
 
-  return (object == null);
-}
+  // Exports from this module
 
-// Exports from this module
-
-exports.Null = {
-  rep: Null,
-  supportsObject: supportsObject
-};
-
+  exports.Null = {
+    rep: Null,
+    supportsObject: supportsObject
+  };
 });
