@@ -141,6 +141,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     asyncCauseForNewActivations(this),
     asyncCallIsExplicit(false),
     entryMonitor(nullptr),
+    noExecuteDebuggerTop(nullptr),
     parentRuntime(parentRuntime),
 #ifdef DEBUG
     updateChildRuntimeCount(parentRuntime),
