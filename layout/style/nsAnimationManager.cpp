@@ -330,10 +330,9 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
 
   // build the animations list
-  dom::DocumentTimeline* timeline = aElement->OwnerDoc()->Timeline();
   AnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
-    BuildAnimations(aStyleContext, aElement, timeline, newAnimations);
+    BuildAnimations(aStyleContext, aElement, newAnimations);
   }
 
   if (newAnimations.IsEmpty()) {
@@ -569,6 +568,7 @@ public:
   {
     MOZ_ASSERT(aStyleContext);
     MOZ_ASSERT(aTarget);
+    mTimeline = mTarget->OwnerDoc()->Timeline();
   }
 
   already_AddRefed<CSSAnimation>
@@ -605,6 +605,7 @@ private:
 
   RefPtr<nsStyleContext> mStyleContext;
   RefPtr<dom::Element> mTarget;
+  RefPtr<dom::DocumentTimeline> mTimeline;
 
   ResolvedStyleCache mResolvedStyles;
   RefPtr<nsStyleContext> mStyleWithoutAnimation;
@@ -633,6 +634,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   animation->SetOwningElement(
     OwningElementRef(*mTarget, mStyleContext->GetPseudoType()));
 
+  animation->SetTimeline(mTimeline);
   animation->SetEffect(effect);
 
   return animation.forget();
@@ -853,7 +855,6 @@ CSSAnimationBuilder::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
-                                    dom::AnimationTimeline* aTimeline,
                                     AnimationPtrArray& aAnimations)
 {
   MOZ_ASSERT(aAnimations.IsEmpty(), "expect empty array");
@@ -883,7 +884,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     }
 
     RefPtr<CSSAnimation> dest = builder.Build(mPresContext, src, rule);
-    dest->SetTimeline(aTimeline);
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));
     aAnimations.AppendElement(dest);
 
