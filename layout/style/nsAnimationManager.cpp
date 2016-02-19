@@ -341,7 +341,7 @@ UpdateOldAnimationPropertiesWithNew(CSSAnimation& aOld, Animation& aNew)
       oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming() ||
       oldEffect->Properties() != newEffect->Properties();
     oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
-    oldEffect->CopyPropertiesFrom(*newEffect);
+    oldEffect->UpdateProperties(newEffect->Properties());
   }
 
   // Handle changes in play state. If the animation is idle, however,
