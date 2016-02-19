@@ -1034,7 +1034,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 void
 nsHTMLDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
 {
-  Element* root = GetRootElement();
+  nsCOMPtr<Element> root = GetRootElement();
 
   // The body element must be either a body tag or a frameset tag. And we must
   // have a html root tag, otherwise GetBody will not return the newly set
