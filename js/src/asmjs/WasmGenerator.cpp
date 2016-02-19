@@ -651,6 +651,15 @@ ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
     return true;
 }
 
+void
+ModuleGenerator::bumpMinHeapLength(uint32_t newMinHeapLength)
+{
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(newMinHeapLength >= shared_->minHeapLength);
+
+    shared_->minHeapLength = newMinHeapLength;
+}
+
 const DeclaredSig&
 ModuleGenerator::funcSig(uint32_t funcIndex) const
 {
