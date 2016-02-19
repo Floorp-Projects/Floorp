@@ -364,7 +364,7 @@
           }
 
           if (!this.hasAttribute("disablehistory")) {
-            Services.obs.addObserver(this, "browser:purge-session-history", false)
+            Services.obs.addObserver(this, "browser:purge-session-history", true)
           }
 
           let jsm = "resource://gre/modules/RemoteController.jsm";
