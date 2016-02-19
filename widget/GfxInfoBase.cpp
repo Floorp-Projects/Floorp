@@ -153,6 +153,8 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE:
       name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
       break;
+    case nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION:
+      name = BLACKLIST_PREF_BRANCH "canvas2d.acceleration";
     default:
       break;
   }
@@ -350,6 +352,8 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE;
   else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION"))
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION;
+  else if (aFeature.EqualsLiteral("CANVAS2D_ACCELERATION"))
+      return nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -995,6 +999,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_WEBGL_MSAA,
     nsIGfxInfo::FEATURE_STAGEFRIGHT,
     nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION,
+    nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
     0
   };
 
