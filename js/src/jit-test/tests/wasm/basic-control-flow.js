@@ -131,3 +131,12 @@ assertEq(counter, 0);
 assertErrorMessage(() => wasmEvalText('(module (func (result i32) (if (i32.const 42) (i32.const 0))))'), TypeError, mismatchError("void", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (result i32) (if_else (i32.const 1) (i32.const 0) (if (i32.const 1) (i32.const 1)))))'), TypeError, mismatchError("void", "i32"));
 wasmEvalText('(module (func (if_else (i32.const 1) (i32.const 0) (if (i32.const 1) (i32.const 1)))))');
+
+// ----------------------------------------------------------------------------
+// return
+
+assertEq(wasmEvalText('(module (func (return)) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (result i32) (return (i32.const 1))) (export "" 0))')(), 1);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (return (i32.const 1))) (export "" 0))'), TypeError, mismatchError("i32", "f32"));
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (result i32) (return)) (export "" 0))'), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (return (i32.const 1))) (export "" 0))'), TypeError);
