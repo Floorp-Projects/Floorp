@@ -12,6 +12,7 @@
 #include "base/string_util.h"
 
 using base::TimeDelta;
+using mozilla::StaticMutexAutoLock;
 
 namespace tracked_objects {
 
@@ -79,7 +80,7 @@ Births::Births(const Location& location)
 // static
 ThreadData* ThreadData::first_ = NULL;
 // static
-Lock ThreadData::list_lock_;
+mozilla::StaticMutex ThreadData::list_lock_;
 
 // static
 ThreadData::Status ThreadData::status_ = ThreadData::UNINITIALIZED;
@@ -97,7 +98,7 @@ ThreadData* ThreadData::current() {
     bool too_late_to_create = false;
     {
       registry = new ThreadData;
-      AutoLock lock(list_lock_);
+      StaticMutexAutoLock lock(list_lock_);
       // Use lock to insure we have most recent status.
       if (!IsActive()) {
         too_late_to_create = true;
@@ -150,7 +151,7 @@ void ThreadData::TallyADeath(const Births& lifetimes,
 
 // static
 ThreadData* ThreadData::first() {
-  AutoLock lock(list_lock_);
+  StaticMutexAutoLock lock(list_lock_);
   return first_;
 }
 
@@ -211,12 +212,12 @@ bool ThreadData::StartTracking(bool status) {
   return false;  // Not compiled in.
 #else
   if (!status) {
-    AutoLock lock(list_lock_);
+    StaticMutexAutoLock lock(list_lock_);
     DCHECK(status_ == ACTIVE || status_ == SHUTDOWN);
     status_ = SHUTDOWN;
     return true;
   }
-  AutoLock lock(list_lock_);
+  StaticMutexAutoLock lock(list_lock_);
   DCHECK(status_ == UNINITIALIZED);
   CHECK(tls_index_.Initialize(NULL));
   status_ = ACTIVE;
@@ -255,7 +256,7 @@ void ThreadData::ShutdownSingleThreadedCleanup() {
     return;
   ThreadData* thread_data_list;
   {
-    AutoLock lock(list_lock_);
+    StaticMutexAutoLock lock(list_lock_);
     thread_data_list = first_;
     first_ = NULL;
   }
