@@ -63,6 +63,13 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    */
   static OriginAttributesDictionary
   createOriginAttributesFromDict(optional OriginAttributesDictionary originAttrs);
+
+  /**
+   * Returns true if the 2 OriginAttributes are equal.
+   */
+  static boolean
+  isOriginAttributesEqual(optional OriginAttributesDictionary aA,
+                          optional OriginAttributesDictionary aB);
 };
 
 /**

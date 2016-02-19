@@ -72,6 +72,11 @@ public:
   CreateOriginAttributesFromDict(dom::GlobalObject& aGlobal,
                                  const dom::OriginAttributesDictionary& aAttrs,
                                  dom::OriginAttributesDictionary& aNewAttrs);
+
+  static bool
+  IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
+                          const dom::OriginAttributesDictionary& aA,
+                          const dom::OriginAttributesDictionary& aB);
 };
 
 } // namespace dom
