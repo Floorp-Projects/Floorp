@@ -338,9 +338,9 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
         return nullptr;
     }
 
-    // Given a JSContext entered into a debuggee compartment, reports a
+    // Given a JSContext entered into a debuggee compartment, report a
     // warning or an error if there is a lock that locks it.
-    static bool reportIfFoundInStack(JSContext* cx) {
+    static bool reportIfFoundInStack(JSContext* cx, HandleScript script) {
         if (EnterDebuggeeNoExecute* nx = findInStack(cx)) {
             bool warning = !cx->runtime()->options().throwOnDebuggeeWouldRun();
             if (!warning || !nx->reported_) {
@@ -350,9 +350,12 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
                     fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
                     DumpBacktrace(cx);
                 }
+                char linenoStr[15];
+                JS_snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
                 unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
                 return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
-                                                    JSMSG_DEBUGGEE_WOULD_RUN);
+                                                    JSMSG_DEBUGGEE_WOULD_RUN,
+                                                    script->filename(), linenoStr);
             }
         }
         return true;
@@ -388,11 +391,11 @@ class MOZ_RAII js::LeaveDebuggeeNoExecute
 };
 
 /* static */ bool
-Debugger::slowPathCheckNoExecute(JSContext* cx)
+Debugger::slowPathCheckNoExecute(JSContext* cx, HandleScript script)
 {
     MOZ_ASSERT(cx->compartment()->isDebuggee());
     MOZ_ASSERT(cx->runtime()->noExecuteDebuggerTop);
-    return EnterDebuggeeNoExecute::reportIfFoundInStack(cx);
+    return EnterDebuggeeNoExecute::reportIfFoundInStack(cx, script);
 }
 
 

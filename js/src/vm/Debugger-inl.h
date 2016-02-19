@@ -34,11 +34,11 @@ js::Debugger::fromJSObject(const JSObject* obj)
 }
 
 /* static */ inline bool
-js::Debugger::checkNoExecute(JSContext* cx)
+js::Debugger::checkNoExecute(JSContext* cx, HandleScript script)
 {
     if (!cx->compartment()->isDebuggee() || !cx->runtime()->noExecuteDebuggerTop)
         return true;
-    return slowPathCheckNoExecute(cx);
+    return slowPathCheckNoExecute(cx, script);
 }
 
 /* static */ JSTrapStatus
