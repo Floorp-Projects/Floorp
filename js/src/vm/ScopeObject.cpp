@@ -3157,10 +3157,10 @@ js::GetModuleEnvironmentForScript(JSScript* script)
 }
 
 bool
-js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res)
+js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                                             MutableHandleValue res)
 {
-    RootedScript firstScript(cx, frame.script());
-    for (ScopeIter si(cx, frame, firstScript->main()); !si.done(); ++si) {
+    for (ScopeIter si(cx, frame, pc); !si.done(); ++si) {
         if (si.type() == ScopeIter::Module) {
             res.setUndefined();
             return true;
