@@ -345,13 +345,24 @@ DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType expected)
 static bool
 DecodeLoadStoreAddress(FunctionDecoder &f)
 {
-    uint32_t offset, align;
-    return DecodeExpr(f, ExprType::I32) &&
-           f.d().readVarU32(&offset) &&
-           f.d().readVarU32(&align) &&
-           mozilla::IsPowerOfTwo(align) &&
-           (offset == 0 || f.fail("NYI: address offsets")) &&
-           f.fail("NYI: wasm loads and stores");
+    uint32_t offset;
+    if (!f.d().readVarU32(&offset))
+        return f.fail("expected memory access offset");
+
+    if (offset != 0)
+        return f.fail("NYI: address offsets");
+
+    uint32_t align;
+    if (!f.d().readVarU32(&align))
+        return f.fail("expected memory access alignment");
+
+    if (!mozilla::IsPowerOfTwo(align))
+        return f.fail("memory access alignment must be a power of two");
+
+    if (!DecodeExpr(f, ExprType::I32))
+        return false;
+
+    return f.fail("NYI: wasm loads and stores");
 }
 
 static bool
