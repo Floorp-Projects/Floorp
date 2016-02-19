@@ -291,6 +291,28 @@ class LUse : public LAllocation
 
 static const uint32_t MAX_VIRTUAL_REGISTERS = LUse::VREG_MASK;
 
+class LBoxAllocation
+{
+#ifdef JS_NUNBOX32
+    LAllocation type_;
+    LAllocation payload_;
+#else
+    LAllocation value_;
+#endif
+
+  public:
+#ifdef JS_NUNBOX32
+    LBoxAllocation(LAllocation type, LAllocation payload) : type_(type), payload_(payload) {}
+
+    LAllocation type() const { return type_; }
+    LAllocation payload() const { return payload_; }
+#else
+    explicit LBoxAllocation(LAllocation value) : value_(value) {}
+
+    LAllocation value() const { return value_; }
+#endif
+};
+
 class LGeneralReg : public LAllocation
 {
   public:
@@ -1049,6 +1071,14 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     }
     void setOperand(size_t index, const LAllocation& a) final override {
         operands_[index] = a;
+    }
+    void setBoxOperand(size_t index, const LBoxAllocation& alloc) {
+#ifdef JS_NUNBOX32
+        operands_[index] = alloc.type();
+        operands_[index + 1] = alloc.payload();
+#else
+        operands_[index] = alloc.value();
+#endif
     }
 };
 

@@ -182,9 +182,11 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
   public:
     LIR_HEADER(TableSwitchV);
 
-    LTableSwitchV(const LDefinition& inputCopy, const LDefinition& floatCopy,
-                  const LDefinition& jumpTablePointer, MTableSwitch* ins)
+    LTableSwitchV(const LBoxAllocation& input, const LDefinition& inputCopy,
+                  const LDefinition& floatCopy, const LDefinition& jumpTablePointer,
+                  MTableSwitch* ins)
     {
+        setBoxOperand(InputValue, input);
         setTemp(0, inputCopy);
         setTemp(1, floatCopy);
         setTemp(2, jumpTablePointer);

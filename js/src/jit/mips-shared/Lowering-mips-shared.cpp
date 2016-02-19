@@ -193,7 +193,8 @@ LIRGeneratorMIPSShared::newLTableSwitch(const LAllocation& in, const LDefinition
 LTableSwitchV*
 LIRGeneratorMIPSShared::newLTableSwitchV(MTableSwitch* tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempDouble(), temp(), tableswitch);
+    return new(alloc()) LTableSwitchV(useBox(tableswitch->getOperand(0)),
+                                      temp(), tempDouble(), temp(), tableswitch);
 }
 
 void

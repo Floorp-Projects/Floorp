@@ -49,10 +49,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool generate();
 
   private:
-
-    void useBoxAtStart(LInstruction* lir, size_t n, MDefinition* mir,
-                       LUse::Policy policy = LUse::REGISTER);
-    void useBoxFixedAtStart(LInstruction* lir, size_t n, MDefinition* mir, ValueOperand op);
+    LBoxAllocation useBoxFixedAtStart(MDefinition* mir, ValueOperand op);
+    LBoxAllocation useBoxAtStart(MDefinition* mir, LUse::Policy policy = LUse::REGISTER);
 
     void lowerBitOp(JSOp op, MInstruction* ins);
     void lowerShiftOp(JSOp op, MShiftInstruction* ins);

@@ -61,9 +61,11 @@ class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>
 
     static const size_t Input = 0;
 
-    LUnboxFloatingPoint(MIRType type)
+    LUnboxFloatingPoint(const LBoxAllocation& input, MIRType type)
       : type_(type)
-    { }
+    {
+        setBoxOperand(Input, input);
+    }
 
     MUnbox* mir() const {
         return mir_->toUnbox();
