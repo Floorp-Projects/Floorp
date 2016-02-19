@@ -13,8 +13,8 @@
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
+#include "jit/mips-shared/SharedICHelpers-mips-shared.h"
 #include "jit/mips64/Bailouts-mips64.h"
-#include "jit/mips64/SharedICHelpers-mips64.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
