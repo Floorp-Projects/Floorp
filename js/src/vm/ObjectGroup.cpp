@@ -582,14 +582,8 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
 
         const JSAtomState& names = cx->names();
 
-        if (obj->is<RegExpObject>()) {
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.source), TypeSet::StringType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.global), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.ignoreCase), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.multiline), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.sticky), TypeSet::BooleanType());
+        if (obj->is<RegExpObject>())
             AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex), TypeSet::Int32Type());
-        }
 
         if (obj->is<StringObject>())
             AddTypePropertyId(cx, group, nullptr, NameToId(names.length), TypeSet::Int32Type());
