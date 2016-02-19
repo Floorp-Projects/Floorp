@@ -111,6 +111,7 @@ var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
 Cu.import("resource://devtools/client/shared/browser-loader.js");
 const require = BrowserLoader("resource://devtools/client/debugger/", this).require;
 XPCOMUtils.defineConstant(this, "require", require);
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 // React
 const React = require("devtools/client/shared/vendor/react");

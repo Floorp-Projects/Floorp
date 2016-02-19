@@ -83,8 +83,6 @@
   skin/classic/browser/fxa/android@2x.png                      (../shared/fxa/android@2x.png)
   skin/classic/browser/fxa/ios.png                             (../shared/fxa/ios.png)
   skin/classic/browser/fxa/ios@2x.png                          (../shared/fxa/ios@2x.png)
-  skin/classic/browser/syncedtabs/twisty-closed.svg            (../shared/syncedtabs/twisty-closed.svg)
-  skin/classic/browser/syncedtabs/twisty-open.svg              (../shared/syncedtabs/twisty-open.svg)
   skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
   skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
   skin/classic/browser/search-indicator@2x.png                 (../shared/search/search-indicator@2x.png)

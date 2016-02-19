@@ -140,13 +140,14 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
-    public static enum StartupAction {
+    public enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
         PREFETCH,   /* launched with a passed URL that we prefetch */
         WEBAPP,     /* launched as a webapp runtime */
         GUEST,      /* launched in guest browsing */
-        RESTRICTED  /* launched with restricted profile */
+        RESTRICTED, /* launched with restricted profile */
+        SHORTCUT    /* launched from a homescreen shortcut */
     }
 
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
@@ -1588,7 +1589,7 @@ public abstract class GeckoApp
             getProfile().moveSessionFile();
         }
 
-        final StartupAction startupAction = getStartupAction(passedUri);
+        final StartupAction startupAction = getStartupAction(passedUri, action);
         Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
 
         // Check if launched from data reporting notification.
@@ -1901,9 +1902,16 @@ public abstract class GeckoApp
 
         final String action = intent.getAction();
 
+        final String uri = getURIFromIntent(intent);
+        final String passedUri;
+        if (!TextUtils.isEmpty(uri)) {
+            passedUri = uri;
+        } else {
+            passedUri = null;
+        }
+
         if (ACTION_LOAD.equals(action)) {
-            String uri = intent.getDataString();
-            Tabs.getInstance().loadUrl(uri);
+            Tabs.getInstance().loadUrl(intent.getDataString());
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -1915,10 +1923,8 @@ public abstract class GeckoApp
                 }
             });
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
         } else if (Intent.ACTION_SEARCH.equals(action)) {
-            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
@@ -1931,6 +1937,9 @@ public abstract class GeckoApp
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
         }
+
+        final StartupAction startupAction = getStartupAction(passedUri, action);
+        Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
     }
 
     /**
@@ -2768,7 +2777,7 @@ public abstract class GeckoApp
         return new StubbedHealthRecorder();
     }
 
-    protected StartupAction getStartupAction(final String passedURL) {
+    protected StartupAction getStartupAction(final String passedURL, final String action) {
         // Default to NORMAL here. Subclasses can handle the other types.
         return StartupAction.NORMAL;
     }

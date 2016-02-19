@@ -354,7 +354,6 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       events.emit(this._walker, "picker-node-hovered", this._currentNode);
     };
 
-    this._tabActor.window.focus();
     this._startPickerListeners();
 
     return null;

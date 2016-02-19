@@ -36,6 +36,7 @@
 #requests-menu-reload-notice-button {
   min-height: 26px;
   margin: 0;
+  background-color: var(--theme-toolbar-background);
 }
 
 /* Network requests table */
