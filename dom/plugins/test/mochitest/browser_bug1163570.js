@@ -39,18 +39,20 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
 
 add_task(function* () {
   registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("browser.uiCustomization.disableAnimation");
     window.focus();
   });
 });
 
 add_task(function* () {
+  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let pluginTab = gBrowser.selectedTab = gBrowser.addTab();
-  let prefTab = gBrowser.addTab();
+  let customizeTab = gBrowser.addTab();
 
   yield promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
-  yield promiseTabLoad(prefTab, "about:preferences");
+  yield promiseTabLoad(customizeTab, "about:customizing");
 
   let result = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
     let doc = content.document;
@@ -60,8 +62,10 @@ add_task(function* () {
 
   is(result, true, "plugin is loaded");
 
+  let cpromise = promiseWaitForEvent(window.gNavToolbox, "customizationready");
   let ppromise = promiseWaitForEvent(window, "MozAfterPaint");
-  gBrowser.selectedTab = prefTab;
+  gBrowser.selectedTab = customizeTab;
+  yield cpromise;
   yield ppromise;
 
   // We're going to switch tabs using actual mouse clicks, which helps
@@ -73,11 +77,13 @@ add_task(function* () {
   info("-> " + tabStripContainer.firstChild.tagName); // tab
   info("-> " + tabStripContainer.childNodes[0].label); // test harness tab
   info("-> " + tabStripContainer.childNodes[1].label); // plugin tab
-  info("-> " + tabStripContainer.childNodes[2].label); // preferences tab
+  info("-> " + tabStripContainer.childNodes[2].label); // customize tab
 
   for (let iteration = 0; iteration < 5; iteration++) {
+    cpromise = promiseWaitForEvent(window.gNavToolbox, "aftercustomization");
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[1], {}, window);
+    yield cpromise;
     yield ppromise;
 
     result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
@@ -88,8 +94,10 @@ add_task(function* () {
 
     is(result, true, "plugin is visible");
 
+    cpromise = promiseWaitForEvent(window.gNavToolbox, "customizationready");
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[2], {}, window);
+    yield cpromise;
     yield ppromise;
 
     result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
@@ -100,6 +108,11 @@ add_task(function* () {
     is(result, false, "plugin is hidden");
   }
 
-  gBrowser.removeTab(prefTab);
+  // wait for customize view to shutdown cleanly otherwise we get
+  // a ton of error spew on shutdown.
+  cpromise = promiseWaitForEvent(window.gNavToolbox, "aftercustomization");
+  gBrowser.removeTab(customizeTab);
+  yield cpromise;
+
   gBrowser.removeTab(pluginTab);
 });
