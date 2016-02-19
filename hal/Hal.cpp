@@ -292,7 +292,13 @@ protected:
   }
 };
 
-static BatteryObserversManager sBatteryObservers;
+static BatteryObserversManager&
+BatteryObservers()
+{
+  static BatteryObserversManager sBatteryObservers;
+  AssertMainThread();
+  return sBatteryObservers;
+}
 
 class NetworkObserversManager : public CachingObserversManager<NetworkInformation>
 {
@@ -348,29 +354,29 @@ void
 RegisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.AddObserver(aObserver);
+  BatteryObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.RemoveObserver(aObserver);
+  BatteryObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentBatteryInformation(BatteryInformation* aInfo)
 {
   AssertMainThread();
-  *aInfo = sBatteryObservers.GetCurrentInformation();
+  *aInfo = BatteryObservers().GetCurrentInformation();
 }
 
 void
 NotifyBatteryChange(const BatteryInformation& aInfo)
 {
   AssertMainThread();
-  sBatteryObservers.CacheInformation(aInfo);
-  sBatteryObservers.BroadcastCachedInformation();
+  BatteryObservers().CacheInformation(aInfo);
+  BatteryObservers().BroadcastCachedInformation();
 }
 
 bool GetScreenEnabled()
