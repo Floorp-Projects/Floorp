@@ -844,6 +844,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY social.directory.introText "Click on a service to add it to &brandShortName;.">
 <!ENTITY social.directory.viewmore.text "View More">
 
+<!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
 <!ENTITY customizeMode.menuAndToolbars.header2 "Additional Tools and Features">
 <!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">

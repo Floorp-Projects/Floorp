@@ -58,6 +58,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource://gre/modules/PageThumbs.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
+                                  "resource:///modules/CustomizationTabPreloader.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
@@ -1069,6 +1072,7 @@ BrowserGlue.prototype = {
 
     SelfSupportBackend.uninit();
 
+    CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
     NewTabPrefsProvider.prefs.uninit();

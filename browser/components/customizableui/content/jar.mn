@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/customizableui/aboutCustomizing.xul
   content/browser/customizableui/panelUI.css
   content/browser/customizableui/panelUI.js
   content/browser/customizableui/panelUI.xml

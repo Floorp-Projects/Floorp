@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPrefCustomizationAnimation = "browser.uiCustomization.disableAnimation";
 const kPaletteId = "customization-palette";
+const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
@@ -35,8 +36,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-                                  "resource:///modules/sessionstore/SessionStore.jsm");
 
 let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -56,23 +55,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 var gDisableAnimation = null;
 
 var gDraggingInToolbars;
-
-var gTab;
-
-function closeGlobalTab() {
-  let win = gTab.ownerGlobal;
-  if (win.gBrowser.browsers.length == 1) {
-    win.BrowserOpenTab();
-  }
-  win.gBrowser.removeTab(gTab);
-}
-
-function unregisterGlobalTab() {
-  gTab.removeEventListener("TabClose", unregisterGlobalTab);
-  gTab.ownerGlobal.removeEventListener("unload", unregisterGlobalTab);
-  gTab.removeAttribute("customizemode");
-  gTab = null;
-}
 
 function CustomizeMode(aWindow) {
   if (gDisableAnimation === null) {
@@ -158,32 +140,6 @@ CustomizeMode.prototype = {
     lwthemeIcon.style.backgroundImage = "url(" + imageURL + ")";
   },
 
-  setTab: function(aTab) {
-    if (gTab) {
-      closeGlobalTab();
-    }
-
-    gTab = aTab;
-
-    gTab.setAttribute("customizemode", "true");
-    SessionStore.persistTabAttribute("customizemode");
-
-    gTab.linkedBrowser.stop();
-
-    let win = gTab.ownerGlobal;
-
-    win.gBrowser.setTabTitle(gTab);
-    win.gBrowser.setIcon(gTab,
-                         "chrome://browser/skin/customizableui/customizeFavicon.ico");
-
-    gTab.addEventListener("TabClose", unregisterGlobalTab);
-    win.addEventListener("unload", unregisterGlobalTab);
-
-    if (gTab.selected) {
-      win.gCustomizeMode.enter();
-    }
-  },
-
   enter: function() {
     this._wantToBeInCustomizeMode = true;
 
@@ -198,17 +154,13 @@ CustomizeMode.prototype = {
       return;
     }
 
-    if (!gTab) {
-      this.setTab(this.browser.loadOneTab("about:blank",
-                                          { inBackground: false,
-                                            skipAnimation: true }));
-      return;
-    }
-    if (!gTab.selected) {
-      gTab.ownerGlobal.gBrowser.selectedTab = gTab;
-    }
-    gTab.ownerGlobal.focus();
-    if (gTab.ownerDocument != this.document) {
+
+    // We don't need to switch to kAboutURI, or open a new tab at
+    // kAboutURI if we're already on it.
+    if (this.browser.selectedBrowser.currentURI.spec != kAboutURI) {
+      this.window.switchToTabHavingURI(kAboutURI, true, {
+        skipTabAnimation: true,
+      });
       return;
     }
 
@@ -361,6 +313,10 @@ CustomizeMode.prototype = {
         delete this._enableOutlinesTimeout;
       }, 0);
 
+      // It's possible that we didn't enter customize mode via the menu panel,
+      // meaning we didn't kick off about:customizing preloading. If that's
+      // the case, let's kick it off for the next time we load this mode.
+      window.gCustomizationTabPreloader.ensurePreloading();
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
@@ -446,14 +402,31 @@ CustomizeMode.prototype = {
 
       Services.obs.removeObserver(this, "lightweight-theme-window-updated", false);
 
-      if (this.browser.selectedTab == gTab) {
-        if (gTab.linkedBrowser.currentURI.spec == "about:blank") {
-          closeGlobalTab();
+      let browser = document.getElementById("browser");
+      if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
+        let custBrowser = this.browser.selectedBrowser;
+        if (custBrowser.canGoBack) {
+          // If there's history to this tab, just go back.
+          // Note that this throws an exception if the previous document has a
+          // problematic URL (e.g. about:idontexist)
+          try {
+            custBrowser.goBack();
+          } catch (ex) {
+            log.error(ex);
+          }
         } else {
-          unregisterGlobalTab();
+          // If we can't go back, we're removing the about:customization tab.
+          // We only do this if we're the top window for this window (so not
+          // a dialog window, for example).
+          if (window.getTopWin(true) == window) {
+            let customizationTab = this.browser.selectedTab;
+            if (this.browser.browsers.length == 1) {
+              window.BrowserOpenTab();
+            }
+            this.browser.removeTab(customizationTab);
+          }
         }
       }
-      let browser = document.getElementById("browser");
       browser.parentNode.selectedPanel = browser;
       let customizer = document.getElementById("customization-container");
       customizer.hidden = true;
