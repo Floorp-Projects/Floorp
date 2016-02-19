@@ -30,39 +30,13 @@ interface ChromeUtils : ThreadSafeChromeUtils {
                                optional OriginAttributesPatternDictionary pattern);
 
   /**
-   * Returns an OriginAttributesDictionary with all default attributes added
-   * and assigned default values.
-   *
-   * @returns                 An OriginAttributesDictionary populated with the
-   *                          default attributes added and assigned default values.
-   */
-   static OriginAttributesDictionary
-   createDefaultOriginAttributes();
-
-  /**
-   * Returns an OriginAttributesDictionary with values from the |origin| suffix
-   * and unspecified attributes added and assigned default values.
-   *
-   * @param origin            The origin URI to create from.
-   * @returns                 An OriginAttributesDictionary with values from
-   *                          the origin suffix and unspecified attributes
-   *                          added and assigned default values.
+   * Returns an OriginAttributes dictionary using the origin URI but forcing
+   * the passed userContextId.
    */
   [Throws]
   static OriginAttributesDictionary
-  createOriginAttributesFromOrigin(DOMString origin);
-
-  /**
-   * Returns an OriginAttributesDictionary that is a copy of |originAttrs| with
-   * unspecified attributes added and assigned default values.
-   *
-   * @param originAttrs       The origin attributes to copy.
-   * @returns                 An OriginAttributesDictionary copy of |originAttrs|
-   *                          with unspecified attributes added and assigned 
-   *                          default values.
-   */
-  static OriginAttributesDictionary
-  createOriginAttributesFromDict(optional OriginAttributesDictionary originAttrs);
+  createOriginAttributesWithUserContextId(DOMString origin,
+                                          unsigned long userContextId);
 };
 
 /**
