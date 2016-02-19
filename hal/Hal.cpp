@@ -501,27 +501,32 @@ protected:
   }
 };
 
-static SystemTimezoneChangeObserversManager sSystemTimezoneChangeObservers;
+static SystemTimezoneChangeObserversManager&
+SystemTimezoneChangeObservers()
+{
+  static SystemTimezoneChangeObserversManager sSystemTimezoneChangeObservers;
+  return sSystemTimezoneChangeObservers;
+}
 
 void
 RegisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimezoneChangeObservers.AddObserver(aObserver);
+  SystemTimezoneChangeObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimezoneChangeObservers.RemoveObserver(aObserver);
+  SystemTimezoneChangeObservers().RemoveObserver(aObserver);
 }
 
 void
 NotifySystemTimezoneChange(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
 {
   nsJSUtils::ResetTimeZone();
-  sSystemTimezoneChangeObservers.BroadcastInformation(aSystemTimezoneChangeInfo);
+  SystemTimezoneChangeObservers().BroadcastInformation(aSystemTimezoneChangeInfo);
 }
 
 void
