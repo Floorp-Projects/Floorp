@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f439ab5d-64bd-4a6c-8863-30235fa784d2)]
+[scriptable, uuid(4816a559-5620-4cb5-8433-ff0b25e6622f)]
 interface nsINetworkInfo : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN       = -1;
@@ -12,6 +12,8 @@ interface nsINetworkInfo : nsISupports
   const long NETWORK_STATE_CONNECTED     = 1;
   const long NETWORK_STATE_DISCONNECTING = 2;
   const long NETWORK_STATE_DISCONNECTED  = 3;
+  const long NETWORK_STATE_ENABLED = 4;
+  const long NETWORK_STATE_DISABLED = 5;
 
   /**
    * Current network state, one of the NETWORK_STATE_* constants.
@@ -30,6 +32,7 @@ interface nsINetworkInfo : nsISupports
   const long NETWORK_TYPE_MOBILE_IMS  = 5;
   const long NETWORK_TYPE_MOBILE_DUN  = 6;
   const long NETWORK_TYPE_MOBILE_FOTA = 7;
+  const long NETWORK_TYPE_ETHERNET    = 8;
 
   /**
    * Network type. One of the NETWORK_TYPE_* constants.

@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     XPIDL_SOURCES += [
+        'nsIEthernetManager.idl',
         'nsINetworkStatsServiceProxy.idl',
     ]
 
