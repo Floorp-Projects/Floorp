@@ -110,8 +110,6 @@ add_task(function*() {
     id: "addon12@tests.mozilla.org",
     name: "Test add-on 12",
     signedState: AddonManager.SIGNEDSTATE_PRELIMINARY,
-    isActive: false,
-    appDisabled: true,
     foreignInstall: true,
   }, {
     id: "addon13@tests.mozilla.org",
@@ -892,16 +890,13 @@ add_task(function*() {
 
   is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
   is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
+  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
   is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
 
   is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
   is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_visible(get_node(addon, "error"), "Error message should be visible");
-  is(get_node(addon, "error").textContent, "Test add-on 12 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-  is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
-  is(get_node(addon, "error-link").value, "More Information", "Error link text should be correct");
-  is(get_node(addon, "error-link").href, infoURL, "Error link should be correct");
+  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
+  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
 
   info("Addon 13");
   addon = items["Test add-on 13"];
@@ -936,10 +931,9 @@ add_task(function*() {
   is_element_visible(signingInfoUI, "Signing info UI should be visible");
 
   items = get_test_items();
-  is(Object.keys(items).length, 3, "Two add-ons should be shown");
+  is(Object.keys(items).length, 2, "Two add-ons should be shown");
   is(Object.keys(items)[0], "Test add-on 10", "The disabled unsigned extension should be shown");
   is(Object.keys(items)[1], "Test add-on 11", "The disabled unsigned extension should be shown");
-  is(Object.keys(items)[2], "Test add-on 12", "The disabled foreign installed extension should be shown");
 
   showAllButton.click();
 

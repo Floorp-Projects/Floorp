@@ -693,8 +693,6 @@ function isUsableAddon(aAddon) {
        mustSign(aAddon.type)) {
     if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
       return false;
-    if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
-      return false;
   }
 
   if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
