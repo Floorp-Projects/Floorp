@@ -338,10 +338,10 @@ UpdateOldAnimationPropertiesWithNew(CSSAnimation& aOld, Animation& aNew)
     KeyframeEffectReadOnly* oldEffect = aOld.GetEffect();
     KeyframeEffectReadOnly* newEffect = aNew.GetEffect();
     animationChanged =
-      oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming() ||
-      oldEffect->Properties() != newEffect->Properties();
+      oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming();
     oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
-    oldEffect->UpdateProperties(newEffect->Properties());
+    animationChanged |=
+      oldEffect->UpdateProperties(newEffect->Properties());
   }
 
   // Handle changes in play state. If the animation is idle, however,
