@@ -241,7 +241,8 @@ Sanitizer.prototype = {
 
               if (cookie.creationTime > range[0]) {
                 // This cookie was created after our cutoff, clear it
-                cookieMgr.remove(cookie.host, cookie.name, cookie.path, false);
+                cookieMgr.remove(cookie.host, cookie.name, cookie.path,
+                                 cookie.originAttributes, false);
 
                 if (++yieldCounter % YIELD_PERIOD == 0) {
                   yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long

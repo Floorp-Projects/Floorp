@@ -71,7 +71,9 @@ var gCookiesWindow = {
   _cookieEquals: function (aCookieA, aCookieB, aStrippedHost) {
     return aCookieA.rawHost == aStrippedHost &&
            aCookieA.name == aCookieB.name &&
-           aCookieA.path == aCookieB.path;
+           aCookieA.path == aCookieB.path &&
+           ChromeUtils.isOriginAttributesEqual(aCookieA.originAttributes,
+                                               aCookieB.originAttributes);
   },
 
   observe: function (aCookie, aTopic, aData) {
@@ -276,15 +278,19 @@ var gCookiesWindow = {
       var item = this._getItemAtIndex(aIndex);
       if (!item) return;
       this._invalidateCache(aIndex - 1);
-      if (item.container)
+      if (item.container) {
         gCookiesWindow._hosts[item.rawHost] = null;
-      else {
+      } else {
         var parent = this._getItemAtIndex(item.parentIndex);
         for (var i = 0; i < parent.cookies.length; ++i) {
           var cookie = parent.cookies[i];
           if (item.rawHost == cookie.rawHost &&
-              item.name == cookie.name && item.path == cookie.path)
+              item.name == cookie.name &&
+              item.path == cookie.path &&
+              ChromeUtils.isOriginAttributesEqual(item.originAttributes,
+                                                  cookie.originAttributes)) {
             parent.cookies.splice(i, removeCount);
+          }
         }
       }
     },
@@ -584,7 +590,8 @@ var gCookiesWindow = {
       blockFutureCookies = psvc.getBoolPref("network.cookie.blockFutureCookies");
     for (var i = 0; i < deleteItems.length; ++i) {
       var item = deleteItems[i];
-      this._cm.remove(item.host, item.name, item.path, blockFutureCookies);
+      this._cm.remove(item.host, item.name, item.path,
+                      item.originAttributes, blockFutureCookies);
     }
   },
 
