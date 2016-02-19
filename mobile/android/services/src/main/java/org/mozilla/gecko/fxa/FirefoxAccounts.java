@@ -17,6 +17,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 
@@ -229,7 +230,7 @@ public class FirefoxAccounts {
   public static String getOldSyncUpgradeURL(final Resources res, final Locale locale) {
     final String VERSION = AppConstants.MOZ_APP_VERSION;
     final String OS = AppConstants.OS_TARGET;
-    final String LOCALE = Utils.getLanguageTag(locale);
+    final String LOCALE = Locales.getLanguageTag(locale);
     return res.getString(R.string.fxaccount_link_old_firefox, VERSION, OS, LOCALE);
   }
 }

@@ -659,3 +659,20 @@ function reloadPage(inspector) {
     inspector.markup._waitForChildren();
   });
 }
+
+/**
+ * Create a new rule by clicking on the "add rule" button.
+ *
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @return a promise that resolves after the rule has been added
+ */
+function* addNewRule(inspector, view) {
+  info("Adding the new rule using the button");
+  view.addRuleButton.click();
+
+  info("Waiting for rule view to change");
+  yield view.once("ruleview-changed");
+}

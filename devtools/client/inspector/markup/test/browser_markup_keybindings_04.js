@@ -69,7 +69,7 @@ function* selectWithBrowserMenu(inspector) {
 }
 
 function* selectWithElementPicker(inspector, testActor) {
-  yield inspector.toolbox.highlighterUtils.startPicker();
+  yield startPicker(inspector.toolbox);
 
   yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
     type: "mousemove",

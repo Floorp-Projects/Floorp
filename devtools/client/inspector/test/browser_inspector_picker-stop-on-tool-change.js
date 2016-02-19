@@ -15,7 +15,7 @@ add_task(function* () {
   let pickerStopped = toolbox.once("picker-stopped");
 
   info("Starting the inspector picker");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Selecting another tool than the inspector in the toolbox");
   yield toolbox.selectNextTool();

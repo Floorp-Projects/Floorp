@@ -9,6 +9,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException
         .FxAccountClientMalformedResponseException;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.HKDF;
@@ -280,7 +281,7 @@ public class FxAccountClient20 implements FxAccountClient {
 
       // The basics.
       final Locale locale = Locale.getDefault();
-      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, Utils.getLanguageTag(locale));
+      request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, Locales.getLanguageTag(locale));
       request.addHeader(HttpHeaders.ACCEPT, ACCEPT_HEADER);
     }
   }

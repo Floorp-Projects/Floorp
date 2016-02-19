@@ -22,10 +22,7 @@ add_task(function*() {
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  let onRuleViewChanged = once(view, "ruleview-changed");
-  view.addRuleButton.click();
-  yield onRuleViewChanged;
-
+  yield addNewRule(inspector, view);
   yield testEditSelector(view, "span");
 
   info("Selecting the modified element with the new rule");

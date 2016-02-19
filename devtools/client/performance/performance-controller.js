@@ -9,7 +9,7 @@ Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderMo
 var { loader, require } = BrowserLoaderModule.BrowserLoader("resource://devtools/client/performance/", this);
 var { Task } = require("resource://gre/modules/Task.jsm");
 var { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-var {gDevTools} = require("devtools/client/framework/devtools");
+var { gDevTools } = require("devtools/client/framework/devtools");
 
 // Events emitted by various objects in the panel.
 var EVENTS = require("devtools/client/performance/events");
