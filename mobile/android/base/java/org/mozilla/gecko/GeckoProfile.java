@@ -611,9 +611,8 @@ public final class GeckoProfile {
      * robust way to access it. However, we don't want to rely on Gecko running in order to get
      * the client ID so instead we access the file this module accesses directly. However, it's
      * possible the format of this file (and the access calls in the jsm) will change, leaving
-     * this code to fail.
-     *
-     * TODO: Write tests to prevent regressions. Mention them here. Test both file location and file format.
+     * this code to fail. There are tests in TestGeckoProfile to verify the file format but be
+     * warned: THIS IS NOT FOOLPROOF.
      *
      * [1]: https://mxr.mozilla.org/mozilla-central/source/toolkit/modules/ClientID.jsm
      *
@@ -777,7 +776,7 @@ public final class GeckoProfile {
      * @return true if the parent directory exists, false otherwise
      */
     @WorkerThread
-    public boolean ensureParentDirs(final String filename) {
+    protected boolean ensureParentDirs(final String filename) {
         final File file = new File(getDir(), filename);
         final File parentFile = file.getParentFile();
         return parentFile.mkdirs() || parentFile.isDirectory();
