@@ -47,7 +47,7 @@ window.onload = function onLoad() {
 
     let secureTestLocation = loadAsInsecure ? "http://example.com"
                                             : "https://example.com";
-    secureTestLocation += location.pathname
+    secureTestLocation += location.pathname;
     if (testPage != "") {
       array = secureTestLocation.split("/");
       array.pop();
@@ -70,7 +70,7 @@ window.onload = function onLoad() {
       window.open(secureTestLocation);
     }
   }
-}
+};
 
 function onMessageReceived(event)
 {

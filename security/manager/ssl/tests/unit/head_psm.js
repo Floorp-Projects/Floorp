@@ -565,7 +565,7 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
     function handleServerCallback(aRequest, aResponse) {
       invalidIdentities.forEach(function(identity) {
         Assert.notEqual(aRequest.host, identity,
-                        "Request host and invalid identity should not match")
+                        "Request host and invalid identity should not match");
       });
       do_print("got request for: " + aRequest.path);
       let basePath = aRequest.path.slice(1).split("/")[0];
@@ -633,7 +633,7 @@ FakeSSLStatus.prototype = {
     }
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-}
+};
 
 // Utility functions for adding tests relating to certificate error overrides
 

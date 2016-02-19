@@ -17,7 +17,7 @@ function check_ip(s, v, ip) {
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
   s.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                  "max-age=1000;includeSubdomains", sslStatus , 0,
+                  "max-age=1000;includeSubdomains", sslStatus, 0,
                   parsedMaxAge, parsedIncludeSubdomains);
 
   /* Test that processHeader will ignore headers for an uri, if the uri
