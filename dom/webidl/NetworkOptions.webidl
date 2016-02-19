@@ -3,7 +3,7 @@
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
-* This dictionnary holds the parameters sent to the network worker.
+* This dictionary holds the parameters sent to the network worker.
 */
 dictionary NetworkCommandOptions
 {
@@ -91,6 +91,7 @@ dictionary NetworkResultOptions
   DOMString server_str = "";
   DOMString vendor_str = "";
   long      lease = 0;
+  long      prefixLength = 0;
   long      mask = 0;
   long      ipaddr = 0;
   long      gateway = 0;
@@ -98,5 +99,11 @@ dictionary NetworkResultOptions
   long      dns2 = 0;
   long      server = 0;
 
-  DOMString netId = "";                // for "getNetId".
+  DOMString netId = "";               // for "getNetId".
+
+  sequence<DOMString> interfaceList;  // for "getInterfaceList".
+
+  DOMString flag = "down";            // for "getInterfaceConfig".
+  DOMString macAddr = "";             // for "getInterfaceConfig".
+  DOMString ipAddr = "";              // for "getInterfaceConfig".
 };
