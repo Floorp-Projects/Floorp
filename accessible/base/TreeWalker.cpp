@@ -46,7 +46,7 @@ TreeWalker::~TreeWalker()
 // TreeWalker: private
 
 Accessible*
-TreeWalker::NextChild()
+TreeWalker::Next()
 {
   if (mStateStack.IsEmpty())
     return nullptr;
@@ -82,7 +82,7 @@ TreeWalker::NextChild()
     top = PushState(parent);
     if (top->mDOMIter.Seek(mAnchorNode)) {
       mAnchorNode = parent;
-      return NextChild();
+      return Next();
     }
 
     // XXX We really should never get here, it means we're trying to find an

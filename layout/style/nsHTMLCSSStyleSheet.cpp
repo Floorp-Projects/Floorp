@@ -18,6 +18,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsCSSPseudoElements.h"
 #include "RestyleManager.h"
 
 using namespace mozilla;
@@ -81,7 +82,7 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
 
 void
 nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
-                                                nsCSSPseudoElements::Type
+                                                CSSPseudoElementType
                                                   aPseudoType,
                                                 nsRuleWalker* aRuleWalker)
 {

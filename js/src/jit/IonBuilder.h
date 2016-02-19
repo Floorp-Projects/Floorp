@@ -457,7 +457,7 @@ class IonBuilder
                             TemporaryTypeSet* types);
     bool getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
                          BarrierKind barrier, TemporaryTypeSet* types);
-    bool getPropTrySharedStub(bool* emitted, MDefinition* obj);
+    bool getPropTrySharedStub(bool* emitted, MDefinition* obj, TemporaryTypeSet* types);
 
     // jsop_setprop() helpers.
     bool setPropTryCommonSetter(bool* emitted, MDefinition* obj,

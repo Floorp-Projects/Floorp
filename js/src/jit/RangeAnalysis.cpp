@@ -198,12 +198,12 @@ RangeAnalysis::addBetaNodes()
 
         MConstant* leftConst = left->maybeConstantValue();
         MConstant* rightConst = right->maybeConstantValue();
-        if (leftConst && leftConst->isNumber()) {
-            bound = leftConst->toNumber();
+        if (leftConst && leftConst->isTypeRepresentableAsDouble()) {
+            bound = leftConst->numberToDouble();
             val = right;
             jsop = ReverseCompareOp(jsop);
-        } else if (rightConst && rightConst->isNumber()) {
-            bound = rightConst->toNumber();
+        } else if (rightConst && rightConst->isTypeRepresentableAsDouble()) {
+            bound = rightConst->numberToDouble();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
             MDefinition* smaller = nullptr;
@@ -1291,8 +1291,8 @@ MBeta::computeRange(TempAllocator& alloc)
 void
 MConstant::computeRange(TempAllocator& alloc)
 {
-    if (isNumber()) {
-        double d = toNumber();
+    if (isTypeRepresentableAsDouble()) {
+        double d = numberToDouble();
         setRange(Range::NewDoubleSingletonRange(alloc, d));
     } else if (type() == MIRType_Boolean) {
         bool b = toBoolean();
@@ -2416,7 +2416,7 @@ MConstant::truncate()
     MOZ_ASSERT(needTruncation(Truncate));
 
     // Truncate the double to int, since all uses truncates it.
-    int32_t res = ToInt32(toNumber());
+    int32_t res = ToInt32(numberToDouble());
     payload_.asBits = 0;
     payload_.i32 = res;
     setResultType(MIRType_Int32);

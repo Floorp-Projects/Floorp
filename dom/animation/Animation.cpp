@@ -1107,7 +1107,7 @@ Animation::PostUpdate()
   }
 
   Element* targetElement;
-  nsCSSPseudoElements::Type targetPseudoType;
+  CSSPseudoElementType targetPseudoType;
   mEffect->GetTarget(targetElement, targetPseudoType);
   if (!targetElement) {
     return;
@@ -1204,8 +1204,7 @@ Animation::EffectEnd() const
     return StickyTimeDuration(0);
   }
 
-  return mEffect->SpecifiedTiming().mDelay
-         + mEffect->GetComputedTiming().mActiveDuration;
+  return mEffect->GetComputedTiming().mEndTime;
 }
 
 nsIDocument*

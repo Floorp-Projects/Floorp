@@ -252,6 +252,7 @@ struct ContainerLayerAttributes {
   bool scaleToResolution;
   EventRegionsOverride eventRegionsOverride;
   uint32_t hmdDeviceID;
+  int32_t inputFrameID;
 };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { Filter filter; IntRect bounds; };
@@ -396,6 +397,7 @@ struct TimedTexture {
   IntRect picture;
   uint32_t frameID;
   uint32_t producerID;
+  int32_t inputFrameID;
 };
 
 /**

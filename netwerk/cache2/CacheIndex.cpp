@@ -347,13 +347,15 @@ CacheIndex::PreShutdown()
   nsCOMPtr<nsIRunnable> event;
   event = NS_NewRunnableMethod(index, &CacheIndex::PreShutdownInternal);
 
-  nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
-  MOZ_ASSERT(ioTarget);
+  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  MOZ_ASSERT(ioThread);
 
-  // PreShutdownInternal() will be executed before any queued event on INDEX
-  // level. That's OK since we don't want to wait for any operation in progess.
-  // We need to interrupt it and save journal as quickly as possible.
-  rv = ioTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  // Executing PreShutdownInternal() on WRITE level ensures that read/write
+  // events holding pointer to mRWBuf will be executed before we release the
+  // buffer by calling FinishRead()/FinishWrite() in PreShutdownInternal(), but
+  // it will be executed before any queued event on INDEX level. That's OK since
+  // we don't want to wait until updating of the index finishes.
+  rv = ioThread->Dispatch(event, CacheIOThread::WRITE);
   if (NS_FAILED(rv)) {
     NS_WARNING("CacheIndex::PreShutdown() - Can't dispatch event");
     LOG(("CacheIndex::PreShutdown() - Can't dispatch event" ));

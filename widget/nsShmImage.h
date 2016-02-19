@@ -7,9 +7,7 @@
 #ifndef __mozilla_widget_nsShmImage_h__
 #define __mozilla_widget_nsShmImage_h__
 
-#include "mozilla/ipc/SharedMemorySysV.h"
-
-#if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
+#if defined(MOZ_X11)
 #  define MOZ_HAVE_SHMIMAGE
 #endif
 
@@ -19,9 +17,7 @@
 #include "nsIWidget.h"
 #include "nsAutoPtr.h"
 
-#include "mozilla/X11Util.h"
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
 
 #ifdef MOZ_WIDGET_QT
@@ -33,30 +29,13 @@ class nsShmImage {
     // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsShmImage)
 
-    typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
-
 public:
     static bool UseShm();
-    static already_AddRefed<nsShmImage>
-        Create(const mozilla::LayoutDeviceIntSize& aSize,
-               Display* aDisplay, Visual* aVisual, unsigned int aDepth);
     static already_AddRefed<mozilla::gfx::DrawTarget>
         EnsureShmImage(const mozilla::LayoutDeviceIntSize& aSize,
                        Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                        RefPtr<nsShmImage>& aImage);
 
-private:
-    ~nsShmImage() {
-        if (mImage) {
-            mozilla::FinishX(mDisplay);
-            if (mXAttached) {
-                XShmDetach(mDisplay, &mInfo);
-            }
-            XDestroyImage(mImage);
-        }
-    }
-
-public:
     already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget();
 
 #ifdef MOZ_WIDGET_GTK
@@ -74,9 +53,16 @@ private:
         , mDisplay(nullptr)
         , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
         , mXAttached(false)
-    { mInfo.shmid = SharedMemorySysV::NULLHandle(); }
+    { mInfo.shmid = -1; }
 
-    RefPtr<SharedMemorySysV>   mSegment;
+    ~nsShmImage();
+
+    bool CreateShmSegment();
+    void DestroyShmSegment();
+
+    bool CreateImage(const mozilla::LayoutDeviceIntSize& aSize,
+                     Display* aDisplay, Visual* aVisual, unsigned int aDepth);
+
     XImage*                      mImage;
     Display*                     mDisplay;
     XShmSegmentInfo              mInfo;

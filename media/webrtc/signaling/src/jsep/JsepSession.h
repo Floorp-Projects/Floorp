@@ -102,6 +102,30 @@ public:
   // that manipulate the data structure (still pretty unwieldy).
   virtual std::vector<JsepCodecDescription*>& Codecs() = 0;
 
+  template <class UnaryFunction>
+  void ForEachCodec(UnaryFunction& function)
+  {
+    std::for_each(Codecs().begin(), Codecs().end(), function);
+    for (RefPtr<JsepTrack>& track : GetLocalTracks()) {
+      track->ForEachCodec(function);
+    }
+    for (RefPtr<JsepTrack>& track : GetRemoteTracks()) {
+      track->ForEachCodec(function);
+    }
+  }
+
+  template <class BinaryPredicate>
+  void SortCodecs(BinaryPredicate& sorter)
+  {
+    std::stable_sort(Codecs().begin(), Codecs().end(), sorter);
+    for (RefPtr<JsepTrack>& track : GetLocalTracks()) {
+      track->SortCodecs(sorter);
+    }
+    for (RefPtr<JsepTrack>& track : GetRemoteTracks()) {
+      track->SortCodecs(sorter);
+    }
+  }
+
   // Manage tracks. We take shared ownership of any track.
   virtual nsresult AddTrack(const RefPtr<JsepTrack>& track) = 0;
   virtual nsresult RemoveTrack(const std::string& streamId,

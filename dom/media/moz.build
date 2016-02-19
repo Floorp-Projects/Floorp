@@ -155,6 +155,11 @@ EXPORTS.mozilla.media.webrtc += [
     'webrtc/WebrtcGlobal.h',
 ]
 
+if not CONFIG['MOZ_WEBRTC']:
+  EXPORTS.mtransport += [
+      '../../media/mtransport/runnable_utils.h',
+  ]
+
 IPDL_SOURCES += [
     'webrtc/PWebrtcGlobal.ipdl'
 ]

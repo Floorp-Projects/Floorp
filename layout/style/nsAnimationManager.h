@@ -9,7 +9,6 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
-#include "nsCSSPseudoElements.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -26,6 +25,8 @@ class KeyframeEffectReadOnly;
 class Promise;
 } /* namespace dom */
 
+enum class CSSPseudoElementType : uint8_t;
+
 struct AnimationEventInfo {
   RefPtr<dom::Element> mElement;
   RefPtr<dom::Animation> mAnimation;
@@ -33,7 +34,7 @@ struct AnimationEventInfo {
   TimeStamp mTimeStamp;
 
   AnimationEventInfo(dom::Element* aElement,
-                     nsCSSPseudoElements::Type aPseudoType,
+                     CSSPseudoElementType aPseudoType,
                      EventMessage aMessage,
                      const nsSubstring& aAnimationName,
                      const StickyTimeDuration& aElapsedTime,
@@ -322,7 +323,7 @@ public:
   // rather than the element for the generated content for animations on
   // ::before and ::after.
   void StopAnimationsForElement(mozilla::dom::Element* aElement,
-                                nsCSSPseudoElements::Type aPseudoType);
+                                mozilla::CSSPseudoElementType aPseudoType);
 
   bool IsAnimationManager() override {
     return true;
