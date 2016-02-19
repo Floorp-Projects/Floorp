@@ -2130,6 +2130,51 @@ Accessible::RemoveChild(Accessible* aChild)
   return true;
 }
 
+void
+Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
+{
+  MOZ_ASSERT(aChild, "No child was given");
+  MOZ_ASSERT(aChild->mParent == this, "A child from different subtree was given");
+  MOZ_ASSERT(aChild->mIndexInParent != -1, "Unbound child was given");
+  MOZ_ASSERT(static_cast<uint32_t>(aChild->mIndexInParent) != aNewIndex,
+             "No move, same index");
+  MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
+
+#ifdef DEBUG
+  // AutoTreeMutation should update group info.
+  AssertInMutatingSubtree();
+#endif
+
+  mEmbeddedObjCollector = nullptr;
+  mChildren.RemoveElementAt(aChild->mIndexInParent);
+
+  uint32_t startIdx = aNewIndex, endIdx = aChild->mIndexInParent;
+
+  // If the child is moved after its current position.
+  if (static_cast<uint32_t>(aChild->mIndexInParent) < aNewIndex) {
+    startIdx = aChild->mIndexInParent;
+
+    if (aNewIndex == mChildren.Length() + 1) {
+      // The child is moved to the end.
+      mChildren.AppendElement(aChild);
+      endIdx = mChildren.Length() - 1;
+    }
+    else {
+      mChildren.InsertElementAt(aNewIndex - 1, aChild);
+      endIdx = aNewIndex;
+    }
+  }
+  else {
+    // The child is moved prior its current position.
+    mChildren.InsertElementAt(aNewIndex, aChild);
+  }
+
+  for (uint32_t idx = startIdx; idx <= endIdx; idx++) {
+    mChildren[idx]->mIndexInParent = idx;
+    mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
+  }
+}
+
 Accessible*
 Accessible::GetChildAt(uint32_t aIndex) const
 {

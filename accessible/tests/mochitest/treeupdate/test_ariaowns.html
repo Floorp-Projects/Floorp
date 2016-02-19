@@ -23,19 +23,21 @@
     // Invokers
     ////////////////////////////////////////////////////////////////////////////
 
-    function removeARIAOwns()
+    function changeARIAOwns()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("t1_checkbox")),
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_checkbox")),
         new invokerChecker(EVENT_SHOW, getNode("t1_checkbox")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
 
-      this.invoke = function removeARIAOwns_invoke()
+      this.invoke = function setARIAOwns_invoke()
       {
-        // children are swapped
+        // children are swapped by ARIA owns
         var tree =
           { SECTION: [
               { CHECKBUTTON: [
@@ -45,6 +47,41 @@
           ] };
         testAccessibleTree("t1_container", tree);
 
+        getNode("t1_container").
+          setAttribute("aria-owns", "t1_button t1_subdiv");
+      }
+
+      this.finalCheck = function setARIAOwns_finalCheck()
+      {
+        // children are swapped again, button and subdiv are appended to
+        // the children.
+        var tree =
+          { SECTION: [
+              { CHECKBUTTON: [ ] }, // checkbox, native order
+              { PUSHBUTTON: [ ] }, // button, rearranged by ARIA own
+              { SECTION: [ ] } // subdiv from the subtree, ARIA owned
+          ] };
+        testAccessibleTree("t1_container", tree);
+      }
+
+      this.getID = function setARIAOwns_getID()
+      {
+        return "Change @aria-owns attribute";
+      }
+    }
+
+    function removeARIAOwns()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("t1_button")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_REORDER, getNode("t1_container"))
+      ];
+
+      this.invoke = function removeARIAOwns_invoke()
+      {
         getNode("t1_container").removeAttribute("aria-owns");
       }
 
@@ -418,6 +455,7 @@
       gQueue = new eventQueue();
 
       // test1
+      gQueue.push(new changeARIAOwns());
       gQueue.push(new removeARIAOwns());
       gQueue.push(new setARIAOwns());
       gQueue.push(new addIdToARIAOwns());
