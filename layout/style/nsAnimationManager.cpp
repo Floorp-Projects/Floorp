@@ -304,44 +304,51 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsAnimationManager, Release)
 // Find the matching animation by |aName| in the old list
 // of animations and remove the matched animation from the list.
 static already_AddRefed<CSSAnimation>
-PullOutOldAnimationInCollection(const nsAString& aName,
-                                AnimationCollection* aCollection)
+PopExistingAnimation(const nsAString& aName,
+                     AnimationCollection* aCollection)
 {
-  // Find the matching animation with this name in the old list
-  // of animations.  We iterate through both lists in a backwards
-  // direction which means that if there are more animations in
-  // the new list of animations with a given name than in the old
-  // list, it will be the animations towards the of the beginning of
-  // the list that do not match and are treated as new animations.
-  size_t oldIdx = aCollection->mAnimations.Length();
-  while (oldIdx-- != 0) {
-    CSSAnimation* a = aCollection->mAnimations[oldIdx]->AsCSSAnimation();
-    MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
-      " be CSSAnimation objects");
-    if (a->AnimationName() == aName) {
-      RefPtr<CSSAnimation> old = a;
-      aCollection->mAnimations.RemoveElementAt(oldIdx);
-      return old.forget();
+  if (!aCollection) {
+    return nullptr;
+  }
+
+  // Animations are stored in reverse order to how they appear in the
+  // animation-name property. However, we want to match animations beginning
+  // from the end of the animation-name list, so we iterate *forwards*
+  // through the collection.
+  for (size_t idx = 0, length = aCollection->mAnimations.Length();
+       idx != length; ++ idx) {
+    CSSAnimation* cssAnim = aCollection->mAnimations[idx]->AsCSSAnimation();
+    MOZ_ASSERT(cssAnim,
+               "All animations stored by the animation manager should "
+               "be CSSAnimation objects");
+    if (cssAnim->AnimationName() == aName) {
+      RefPtr<CSSAnimation> match = cssAnim;
+      aCollection->mAnimations.RemoveElementAt(idx);
+      return match.forget();
     }
   }
+
   return nullptr;
 }
 
 static void
-UpdateOldAnimationPropertiesWithNew(CSSAnimation& aOld, Animation& aNew)
+UpdateOldAnimationPropertiesWithNew(
+    CSSAnimation& aOld,
+    TimingParams& aNewTiming,
+    InfallibleTArray<AnimationProperty>& aNewProperties,
+    bool aNewIsStylePaused)
 {
   bool animationChanged = false;
 
   // Update the old from the new so we can keep the original object
   // identity (and any expando properties attached to it).
-  if (aOld.GetEffect() && aNew.GetEffect()) {
+  if (aOld.GetEffect()) {
     KeyframeEffectReadOnly* oldEffect = aOld.GetEffect();
-    KeyframeEffectReadOnly* newEffect = aNew.GetEffect();
     animationChanged =
-      oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming();
-    oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
+      oldEffect->SpecifiedTiming() != aNewTiming;
+    oldEffect->SetSpecifiedTiming(aNewTiming);
     animationChanged |=
-      oldEffect->UpdateProperties(newEffect->Properties());
+      oldEffect->UpdateProperties(aNewProperties);
   }
 
   // Handle changes in play state. If the animation is idle, however,
@@ -354,16 +361,14 @@ UpdateOldAnimationPropertiesWithNew(CSSAnimation& aOld, Animation& aNew)
     //  downcasting to CSSAnimation and we happen to know that
     //  aNew will only ever be paused by calling PauseFromStyle
     //  making IsPausedOrPausing synonymous in this case.)
-    if (!aOld.IsStylePaused() && aNew.IsPausedOrPausing()) {
+    if (!aOld.IsStylePaused() && aNewIsStylePaused) {
       aOld.PauseFromStyle();
       animationChanged = true;
-    } else if (aOld.IsStylePaused() && !aNew.IsPausedOrPausing()) {
+    } else if (aOld.IsStylePaused() && !aNewIsStylePaused) {
       aOld.PlayFromStyle();
       animationChanged = true;
     }
   }
-
-  aOld.CopyAnimationIndex(*aNew.AsCSSAnimation());
 
   // Updating the effect timing above might already have caused the
   // animation to become irrelevant so only add a changed record if
@@ -401,10 +406,11 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 
   nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
 
-  // build the animations list
+  // Build the updated animations list, extracting matching animations from
+  // the existing collection as we go.
   AnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
-    BuildAnimations(aStyleContext, aElement, newAnimations);
+    BuildAnimations(aStyleContext, aElement, collection, newAnimations);
   }
 
   if (newAnimations.IsEmpty()) {
@@ -420,63 +426,10 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     if (effectSet) {
       effectSet->UpdateAnimationGeneration(mPresContext);
     }
-
-    // Copy over the start times and (if still paused) pause starts
-    // for each animation (matching on name only) that was also in the
-    // old list of animations.
-    // This means that we honor dynamic changes, which isn't what the
-    // spec says to do, but WebKit seems to honor at least some of
-    // them.  See
-    // http://lists.w3.org/Archives/Public/www-style/2011Apr/0079.html
-    // In order to honor what the spec said, we'd copy more data over
-    // (or potentially optimize BuildAnimations to avoid rebuilding it
-    // in the first place).
-    if (!collection->mAnimations.IsEmpty()) {
-
-      for (size_t newIdx = newAnimations.Length(); newIdx-- != 0;) {
-        Animation* newAnim = newAnimations[newIdx];
-
-        // Find the matching animation with this name in the old list
-        // of animations and remove the matched animation from the list.
-        // We iterate through both lists in a backwards
-        // direction which means that if there are more animations in
-        // the new list of animations with a given name than in the old
-        // list, it will be the animations towards the of the beginning of
-        // the list that do not match and are treated as new animations.
-        RefPtr<CSSAnimation> oldAnim =
-          PullOutOldAnimationInCollection(
-            newAnim->AsCSSAnimation()->AnimationName(), collection);
-        if (!oldAnim) {
-          // FIXME: Bug 1134163 - We shouldn't queue animationstart events
-          // until the animation is actually ready to run. However, we
-          // currently have some tests that assume that these events are
-          // dispatched within the same tick as the animation is added
-          // so we need to queue up any animationstart events from newly-created
-          // animations.
-          newAnim->AsCSSAnimation()->QueueEvents();
-          continue;
-        }
-        UpdateOldAnimationPropertiesWithNew(*oldAnim, *newAnim);
-
-        // Replace new animation with the (updated) old one.
-        //
-        // Although we're doing this while iterating this is safe because
-        // we're not changing the length of newAnimations.
-        newAnim->CancelFromStyle();
-        newAnim = nullptr;
-        newAnimations.ReplaceElementAt(newIdx, oldAnim);
-      }
-    }
   } else {
     collection = GetAnimationCollection(aElement,
                                         aStyleContext->GetPseudoType(),
                                         true /* aCreateIfNeeded */);
-    for (Animation* animation : newAnimations) {
-      // FIXME: Bug 1134163 - As above, we have shouldn't actually need to
-      // queue events here. (But we do for now since some tests expect
-      // animationstart events to be dispatched immediately.)
-      animation->AsCSSAnimation()->QueueEvents();
-    }
   }
   collection->mAnimations.SwapElements(newAnimations);
 
@@ -581,15 +534,21 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 class MOZ_STACK_CLASS CSSAnimationBuilder final {
 public:
   CSSAnimationBuilder(nsStyleContext* aStyleContext,
-                      dom::Element* aTarget)
+                      dom::Element* aTarget,
+                      AnimationCollection* aCollection)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
+    , mCollection(aCollection)
   {
     MOZ_ASSERT(aStyleContext);
     MOZ_ASSERT(aTarget);
     mTimeline = mTarget->OwnerDoc()->Timeline();
   }
 
+  // Returns a new animation set up with given StyleAnimation and
+  // keyframe rules.
+  // Or returns an existing animation matching StyleAnimation's name updated
+  // with the new StyleAnimation and keyframe rules.
   already_AddRefed<CSSAnimation>
   Build(nsPresContext* aPresContext,
         const StyleAnimation& aSrc,
@@ -628,6 +587,8 @@ private:
 
   ResolvedStyleCache mResolvedStyles;
   RefPtr<nsStyleContext> mStyleWithoutAnimation;
+  // Existing collection, nullptr if the target element has no animations.
+  AnimationCollection* mCollection;
 };
 
 already_AddRefed<CSSAnimation>
@@ -639,12 +600,38 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   MOZ_ASSERT(aRule);
 
   TimingParams timing = TimingParamsFrom(aSrc);
+
+  InfallibleTArray<AnimationProperty> animationProperties;
+  BuildAnimationProperties(aPresContext, aSrc, aRule, animationProperties);
+
+  bool isStylePaused =
+    aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
+
+  // Find the matching animation with animation name in the old list
+  // of animations and remove the matched animation from the list.
+  RefPtr<CSSAnimation> oldAnim =
+    PopExistingAnimation(aSrc.GetName(), mCollection);
+
+  if (oldAnim) {
+    // Copy over the start times and (if still paused) pause starts
+    // for each animation (matching on name only) that was also in the
+    // old list of animations.
+    // This means that we honor dynamic changes, which isn't what the
+    // spec says to do, but WebKit seems to honor at least some of
+    // them.  See
+    // http://lists.w3.org/Archives/Public/www-style/2011Apr/0079.html
+    // In order to honor what the spec said, we'd copy more data over.
+    UpdateOldAnimationPropertiesWithNew(*oldAnim,
+                                        timing,
+                                        animationProperties,
+                                        isStylePaused);
+    return oldAnim.forget();
+  }
+
   RefPtr<KeyframeEffectReadOnly> effect =
     new KeyframeEffectReadOnly(aPresContext->Document(), mTarget,
                                mStyleContext->GetPseudoType(), timing);
 
-  InfallibleTArray<AnimationProperty> animationProperties;
-  BuildAnimationProperties(aPresContext, aSrc, aRule, animationProperties);
   effect->Properties() = Move(animationProperties);
 
   RefPtr<CSSAnimation> animation =
@@ -655,6 +642,19 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
 
   animation->SetTimeline(mTimeline);
   animation->SetEffect(effect);
+
+  if (isStylePaused) {
+    animation->PauseFromStyle();
+  } else {
+    animation->PlayFromStyle();
+  }
+  // FIXME: Bug 1134163 - We shouldn't queue animationstart events
+  // until the animation is actually ready to run. However, we
+  // currently have some tests that assume that these events are
+  // dispatched within the same tick as the animation is added
+  // so we need to queue up any animationstart events from newly-created
+  // animations.
+  animation->AsCSSAnimation()->QueueEvents();
 
   return animation.forget();
 }
@@ -874,16 +874,16 @@ CSSAnimationBuilder::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
+                                    AnimationCollection* aCollection,
                                     AnimationPtrArray& aAnimations)
 {
   MOZ_ASSERT(aAnimations.IsEmpty(), "expect empty array");
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
 
-  CSSAnimationBuilder builder(aStyleContext, aTarget);
+  CSSAnimationBuilder builder(aStyleContext, aTarget, aCollection);
 
-  for (size_t animIdx = 0, animEnd = disp->mAnimationNameCount;
-       animIdx != animEnd; ++animIdx) {
+  for (size_t animIdx = disp->mAnimationNameCount; animIdx-- != 0;) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
 
     // CSS Animations whose animation-name does not match a @keyframes rule do
@@ -905,12 +905,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     RefPtr<CSSAnimation> dest = builder.Build(mPresContext, src, rule);
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));
     aAnimations.AppendElement(dest);
-
-    if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
-      dest->PauseFromStyle();
-    } else {
-      dest->PlayFromStyle();
-    }
   }
 }
 
