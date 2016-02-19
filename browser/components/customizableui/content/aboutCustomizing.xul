@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+]>
+
+<window id="aboutCustomizingWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="&customizeMode.tabTitle;">
+  <html:head>
+    <html:link rel="icon" type="image/x-icon"
+               href="chrome://browser/skin/customizableui/customizeFavicon.ico"/>
+  </html:head>
+</window>

@@ -22,6 +22,7 @@ EXTRA_JS_MODULES += [
     'ContentObservers.jsm',
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
+    'CustomizationTabPreloader.jsm',
     'DirectoryLinksProvider.jsm',
     'E10SUtils.jsm',
     'Feeds.jsm',
