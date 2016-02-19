@@ -23,7 +23,7 @@ var resProt = ios.getProtocolHandler("resource")
 var URLParser = Cc["@mozilla.org/network/url-parser;1?auth=no"]
                 .getService(Ci.nsIURLParser);
 
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
 function newURI(uriStr, base) {
   try {
@@ -66,11 +66,12 @@ var toFilename = exports.toFilename = function toFilename(url) {
   if (uri.scheme == "resource")
     uri = newURI(resolveResourceURI(uri));
   if (uri.scheme == "chrome") {
-    var channel = NetUtil.newChannel({
-      uri: uri,
-      loadUsingSystemPrincipal: true
-    });
-
+    var channel = ios.newChannelFromURI2(uri,
+                                         null,      // aLoadingNode
+                                         Services.scriptSecurityManager.getSystemPrincipal(),
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsIContentPolicy.TYPE_OTHER);
     try {
       channel = channel.QueryInterface(Ci.nsIFileChannel);
       return channel.file.path;
