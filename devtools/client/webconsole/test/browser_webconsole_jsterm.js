@@ -142,4 +142,28 @@ function* testJSTerm(hud) {
   jsterm.clearOutput();
   yield jsterm.execute("undefined");
   yield checkResult("undefined", "undefined is printed");
+
+  // check that thrown strings produce error messages,
+  // and the message text matches that of a stringified error object
+  // bug 1099071
+  jsterm.clearOutput();
+  yield jsterm.execute("throw '';");
+  yield checkResult((node) => {
+    return node.parentNode.getAttribute("severity") === "error" &&
+      node.textContent === new Error("").toString();
+  }, "thrown empty string generates error message");
+
+  jsterm.clearOutput();
+  yield jsterm.execute("throw 'tomatoes';");
+  yield checkResult((node) => {
+    return node.parentNode.getAttribute("severity") === "error" &&
+      node.textContent === new Error("tomatoes").toString();
+  }, "thrown non-empty string generates error message");
+
+  jsterm.clearOutput();
+  yield jsterm.execute("throw { foo: 'bar' };");
+  yield checkResult((node) => {
+    return node.parentNode.getAttribute("severity") === "error" &&
+      node.textContent === Object.prototype.toString();
+  }, "thrown object generates error message");
 }
