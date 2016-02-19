@@ -233,6 +233,8 @@ assertEq(wasmEvalText('(module (func (param $a i32) (local $b i32) (result i32) 
 assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate var/);
 assertErrorMessage(() => wasmEvalText('(module (func (get_local $a)))'), SyntaxError, /local not found/);
 
+wasmEvalText('(module (func (local i32) (local $a f32) (set_local 0 (i32.const 1)) (set_local $a (f32.const nan))))');
+
 // ----------------------------------------------------------------------------
 // blocks
 
@@ -264,6 +266,8 @@ wasmEvalText('(module (func (param i32) (nop)) (func (call 0 (i32.const 0))))');
 assertEq(wasmEvalText('(module (func (result i32) (i32.const 42)) (func (result i32) (call 0)) (export "" 1))')(), 42);
 assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 0)) (export "" 0))')(), InternalError);
 assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0)) (export "" 0))')(), InternalError);
+wasmEvalText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (f32.const nan))))');
+assertErrorMessage(() => wasmEvalText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
 
 assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', {a:()=>{}}), TypeError);
 assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0)))', {a:()=>{}}), TypeError);
@@ -375,5 +379,5 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
 wasmEvalText('(module (func $foo (nop)) (func (call $foo)))');
 wasmEvalText('(module (func (call $foo)) (func $foo (nop)))');
 wasmEvalText('(module (import $bar "a" "") (func (call_import $bar)) (func $foo (nop)))', {a:()=>{}});
-assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /function not found/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /import not found/);
 
