@@ -2841,11 +2841,6 @@
     "kind": "boolean",
     "description": "The URL path contains !//"
   },
-  "NETWORK_AUTODIAL": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "session used autodialer"
-  },
   "NETWORK_SESSION_AT_256FD": {
     "expires_in_version": "49",
     "kind": "boolean",
