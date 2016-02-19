@@ -148,7 +148,8 @@ MediaEngineGonkVideoSource::NumCapabilities()
 nsresult
 MediaEngineGonkVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                      const MediaEnginePrefs& aPrefs,
-                                     const nsString& aDeviceId)
+                                     const nsString& aDeviceId,
+                                     const nsACString& aOrigin)
 {
   LOG((__FUNCTION__));
 

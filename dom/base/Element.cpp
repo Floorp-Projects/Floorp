@@ -3368,7 +3368,7 @@ void
 Element::GetAnimationsUnsorted(nsTArray<RefPtr<Animation>>& aAnimations)
 {
   EffectSet* effects = EffectSet::GetEffectSet(this,
-                         nsCSSPseudoElements::ePseudo_NotPseudoElement);
+                                               CSSPseudoElementType::NotPseudo);
   if (!effects) {
     return;
   }

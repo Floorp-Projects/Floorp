@@ -196,6 +196,29 @@ ToMIRType(ExprType et)
     return IsVoid(et) ? jit::MIRType_None : ToMIRType(ValType(et));
 }
 
+static inline const char*
+ToCString(ExprType type)
+{
+    switch (type) {
+      case ExprType::Void:  return "void";
+      case ExprType::I32:   return "i32";
+      case ExprType::I64:   return "i64";
+      case ExprType::F32:   return "f32";
+      case ExprType::F64:   return "f64";
+      case ExprType::I32x4: return "i32x4";
+      case ExprType::F32x4: return "f32x4";
+      case ExprType::B32x4: return "b32x4";
+      case ExprType::Limit:;
+    }
+    MOZ_CRASH("bad expression type");
+}
+
+static inline const char*
+ToCString(ValType type)
+{
+    return ToCString(ToExprType(type));
+}
+
 // The Sig class represents a WebAssembly function signature which takes a list
 // of value types and returns an expression type. The engine uses two in-memory
 // representations of the argument Vector's memory (when elements do not fit

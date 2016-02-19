@@ -1557,6 +1557,7 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   switch (aStatus) {
     case JSGC_BEGIN:
       nsCycleCollector_prepareForGarbageCollection();
+      mZonesWaitingForGC.Clear();
       break;
     case JSGC_END: {
 #ifdef MOZ_CRASHREPORTER
@@ -1598,4 +1599,17 @@ CycleCollectedJSRuntime::OnLargeAllocationFailure()
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reporting);
   CustomLargeAllocationFailureCallback();
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reported);
+}
+
+void
+CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
+{
+  if (mZonesWaitingForGC.Count() == 0) {
+    JS::PrepareForFullGC(Runtime());
+  } else {
+    for (auto iter = mZonesWaitingForGC.Iter(); !iter.Done(); iter.Next()) {
+      JS::PrepareZoneForGC(iter.Get()->GetKey());
+    }
+    mZonesWaitingForGC.Clear();
+  }
 }

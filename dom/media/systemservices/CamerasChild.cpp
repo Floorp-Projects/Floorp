@@ -474,13 +474,14 @@ void
 Shutdown(void)
 {
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-  if (!CamerasSingleton::Child()) {
+  CamerasChild* child = CamerasSingleton::Child();
+  if (!child) {
     // We don't want to cause everything to get fired up if we're
     // really already shut down.
     LOG(("Shutdown when already shut down"));
     return;
   }
-  GetCamerasChild()->Shutdown();
+  child->ShutdownAll();
 }
 
 class ShutdownRunnable : public nsRunnable {
@@ -505,14 +506,22 @@ private:
 };
 
 void
-CamerasChild::Shutdown()
+CamerasChild::ShutdownAll()
 {
+  // Called with CamerasSingleton::Mutex() held
+  ShutdownParent();
+  ShutdownChild();
+}
+
+void
+CamerasChild::ShutdownParent()
+{
+  // Called with CamerasSingleton::Mutex() held
   {
     MonitorAutoLock monitor(mReplyMonitor);
     mIPCIsAlive = false;
     monitor.NotifyAll();
   }
-
   if (CamerasSingleton::Thread()) {
     LOG(("Dispatching actor deletion"));
     // Delete the parent actor.
@@ -524,6 +533,16 @@ CamerasChild::Shutdown()
         return NS_OK;
       });
     CamerasSingleton::Thread()->Dispatch(deleteRunnable, NS_DISPATCH_NORMAL);
+  } else {
+    LOG(("ShutdownParent called without PBackground thread"));
+  }
+}
+
+void
+CamerasChild::ShutdownChild()
+{
+  // Called with CamerasSingleton::Mutex() held
+  if (CamerasSingleton::Thread()) {
     LOG(("PBackground thread exists, dispatching close"));
     // Dispatch closing the IPC thread back to us when the
     // BackgroundChild is closed.
@@ -607,7 +626,11 @@ CamerasChild::~CamerasChild()
 
   {
     OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-    Shutdown();
+    // In normal circumstances we've already shut down and the
+    // following does nothing. But on fatal IPC errors we will
+    // get destructed immediately, and should not try to reach
+    // the parent.
+    ShutdownChild();
   }
 
   MOZ_COUNT_DTOR(CamerasChild);

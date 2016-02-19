@@ -192,13 +192,9 @@ public:
                        const unsigned int device_nameUTF8Length,
                        char* unique_idUTF8,
                        const unsigned int unique_idUTF8Length);
-  void Shutdown();
+  void ShutdownAll();
 
   webrtc::ExternalRenderer* Callback(CaptureEngine aCapEngine, int capture_id);
-  void AddCallback(const CaptureEngine aCapEngine, const int capture_id,
-                   webrtc::ExternalRenderer* render);
-  void RemoveCallback(const CaptureEngine aCapEngine, const int capture_id);
-
 
 private:
   CamerasChild();
@@ -207,6 +203,11 @@ private:
   // decidecated Cameras IPC/PBackground thread.
   bool DispatchToParent(nsIRunnable* aRunnable,
                         MonitorAutoLock& aMonitor);
+  void AddCallback(const CaptureEngine aCapEngine, const int capture_id,
+                   webrtc::ExternalRenderer* render);
+  void RemoveCallback(const CaptureEngine aCapEngine, const int capture_id);
+  void ShutdownParent();
+  void ShutdownChild();
 
   nsTArray<CapturerElement> mCallbacks;
   // Protects the callback arrays

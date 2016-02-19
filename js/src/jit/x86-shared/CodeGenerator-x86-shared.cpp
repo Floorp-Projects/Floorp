@@ -2408,7 +2408,11 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.vcmpleps(Operand(in), scratch, scratch);
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(15));
-    bailoutIf(Assembler::NotEqual, ins->snapshot());
+
+    if (gen->compilingAsmJS())
+        masm.j(Assembler::NotEqual, wasm::JumpTarget::ConversionError);
+    else
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
 
     // TODO: If the majority of lanes are A-lanes, it could be faster to compute
     // A first, use vmovmskps to check for any non-A-lanes and handle them in
@@ -2443,7 +2447,11 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // the remaining negative lanes in B.
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
-    bailoutIf(Assembler::NotEqual, ins->snapshot());
+
+    if (gen->compilingAsmJS())
+        masm.j(Assembler::NotEqual, wasm::JumpTarget::ConversionError);
+    else
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
 }
 
 void

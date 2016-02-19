@@ -173,7 +173,6 @@ public:
 
     virtual Shmem::SharedMemory* CreateSharedMemory(
         size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
-    virtual bool AdoptSharedMemory(Shmem::SharedMemory*, int32_t*) = 0;
     virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) = 0;
     virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
     virtual bool DestroySharedMemory(Shmem&) = 0;

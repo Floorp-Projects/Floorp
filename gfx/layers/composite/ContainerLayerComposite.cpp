@@ -139,8 +139,11 @@ template<class ContainerT> void
 ContainerRenderVR(ContainerT* aContainer,
                   LayerManagerComposite* aManager,
                   const gfx::IntRect& aClipRect,
-                  RefPtr<gfx::VRHMDInfo> aHMD)
+                  RefPtr<gfx::VRHMDInfo> aHMD,
+                  int32_t aInputFrameID)
 {
+  int32_t inputFrameID = -1;
+
   RefPtr<CompositingRenderTarget> surface;
 
   Compositor* compositor = aManager->GetCompositor();
@@ -265,6 +268,14 @@ ContainerRenderVR(ContainerT* aContainer,
                                                  surfaceRect.width, surfaceRect.height));
       layerToRender->RenderLayer(surfaceRect);
 
+      CompositableHost *ch = layerToRender->GetCompositableHost();
+      if (ch) {
+        int32_t compositableInputFrameID = ch->GetLastInputFrameID();
+        if (compositableInputFrameID != -1) {
+          inputFrameID = compositableInputFrameID;
+        }
+      }
+
       if (restoreTransform) {
         layer->ReplaceEffectiveTransform(childTransform);
       }
@@ -282,7 +293,7 @@ ContainerRenderVR(ContainerT* aContainer,
   compositor->SetRenderTarget(previousTarget);
 
   if (vrRendering) {
-    vrRendering->SubmitFrame(aContainer->mVRRenderTargetSet);
+    vrRendering->SubmitFrame(aContainer->mVRRenderTargetSet, inputFrameID);
     DUMP("<<< ContainerRenderVR [used vrRendering] [%p]\n", aContainer);
     if (!gfxPrefs::VRMirrorTextures()) {
       return;
@@ -696,7 +707,7 @@ ContainerRender(ContainerT* aContainer,
 
   RefPtr<gfx::VRHMDInfo> hmdInfo = gfx::VRManager::Get()->GetDevice(aContainer->GetVRDeviceID());
   if (hmdInfo && hmdInfo->GetConfiguration().IsValid()) {
-    ContainerRenderVR(aContainer, aManager, aClipRect, hmdInfo);
+    ContainerRenderVR(aContainer, aManager, aClipRect, hmdInfo, aContainer->GetInputFrameID());
     aContainer->mPrepared = nullptr;
     return;
   }

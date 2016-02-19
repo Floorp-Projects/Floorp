@@ -24,6 +24,7 @@ void ReleaseVRManagerParentSingleton() {
 }
 
 VRManagerChild::VRManagerChild()
+  : mInputFrameID(-1)
 {
   MOZ_COUNT_CTOR(VRManagerChild);
   MOZ_ASSERT(NS_IsMainThread());
@@ -157,6 +158,7 @@ VRManagerChild::RecvUpdateDeviceSensors(nsTArray<VRSensorUpdate>&& aDeviceSensor
     for (auto& device: mDevices) {
       if (device->GetDeviceInfo().GetDeviceID() == sensorUpdate.mDeviceID) {
         device->UpdateSensorState(sensorUpdate.mSensorState);
+        mInputFrameID = sensorUpdate.mSensorState.inputFrameID;
         break;
       }
     }
@@ -180,6 +182,12 @@ VRManagerChild::RefreshVRDevicesWithCallback(dom::Navigator* aNavigator)
     mNavigatorCallbacks.AppendElement(aNavigator);
   }
   return success;
+}
+
+int
+VRManagerChild::GetInputFrameID()
+{
+  return mInputFrameID;
 }
 
 } // namespace gfx

@@ -470,7 +470,7 @@ struct MOZ_STACK_CLASS PseudoElementRuleProcessorData :
   PseudoElementRuleProcessorData(nsPresContext* aPresContext,
                                  mozilla::dom::Element* aParentElement,
                                  nsRuleWalker* aRuleWalker,
-                                 nsCSSPseudoElements::Type aPseudoType,
+                                 mozilla::CSSPseudoElementType aPseudoType,
                                  TreeMatchContext& aTreeMatchContext,
                                  mozilla::dom::Element* aPseudoElement)
     : ElementDependentRuleProcessorData(aPresContext, aParentElement, aRuleWalker,
@@ -478,14 +478,13 @@ struct MOZ_STACK_CLASS PseudoElementRuleProcessorData :
       mPseudoType(aPseudoType),
       mPseudoElement(aPseudoElement)
   {
-    NS_PRECONDITION(aPseudoType <
-                      nsCSSPseudoElements::ePseudo_PseudoElementCount,
+    NS_PRECONDITION(aPseudoType < mozilla::CSSPseudoElementType::Count,
                     "invalid aPseudoType value");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
     NS_PRECONDITION(aRuleWalker, "Must have rule walker");
   }
 
-  nsCSSPseudoElements::Type mPseudoType;
+  mozilla::CSSPseudoElementType mPseudoType;
   mozilla::dom::Element* const mPseudoElement; // weak ref
 };
 
@@ -550,7 +549,7 @@ struct MOZ_STACK_CLASS PseudoElementStateRuleProcessorData :
   PseudoElementStateRuleProcessorData(nsPresContext* aPresContext,
                                       mozilla::dom::Element* aElement,
                                       mozilla::EventStates aStateMask,
-                                      nsCSSPseudoElements::Type aPseudoType,
+                                      mozilla::CSSPseudoElementType aPseudoType,
                                       TreeMatchContext& aTreeMatchContext,
                                       mozilla::dom::Element* aPseudoElement)
     : StateRuleProcessorData(aPresContext, aElement, aStateMask,
@@ -564,7 +563,7 @@ struct MOZ_STACK_CLASS PseudoElementStateRuleProcessorData :
   // We kind of want to inherit from both StateRuleProcessorData and
   // PseudoElementRuleProcessorData.  Instead we've just copied those
   // members from PseudoElementRuleProcessorData to this struct.
-  nsCSSPseudoElements::Type mPseudoType;
+  mozilla::CSSPseudoElementType mPseudoType;
   mozilla::dom::Element* const mPseudoElement; // weak ref
 };
 

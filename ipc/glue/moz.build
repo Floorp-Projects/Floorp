@@ -31,7 +31,6 @@ EXPORTS.mozilla.ipc += [
     'ScopedXREEmbed.h',
     'SharedMemory.h',
     'SharedMemoryBasic.h',
-    'SharedMemorySysV.h',
     'Shmem.h',
     'Transport.h',
     'URIUtils.h',

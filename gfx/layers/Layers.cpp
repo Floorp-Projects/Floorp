@@ -1117,7 +1117,8 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
     mMayHaveReadbackChild(false),
     mChildrenChanged(false),
     mEventRegionsOverride(EventRegionsOverride::NoOverride),
-    mVRDeviceID(0)
+    mVRDeviceID(0),
+    mInputFrameID(0)
 {
   MOZ_COUNT_CTOR(ContainerLayer);
   mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
@@ -1279,7 +1280,8 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
                                     mInheritedXScale, mInheritedYScale,
                                     mPresShellResolution, mScaleToResolution,
                                     mEventRegionsOverride,
-                                    mVRDeviceID);
+                                    mVRDeviceID,
+                                    mInputFrameID);
 }
 
 bool
@@ -2146,7 +2148,7 @@ ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << " [force-ehr]";
   }
   if (mVRDeviceID) {
-    aStream << nsPrintfCString(" [hmd=%lu]", mVRDeviceID).get();
+    aStream << nsPrintfCString(" [hmd=%lu] [hmdframe=%l]", mVRDeviceID, mInputFrameID).get();
   }
 }
 
