@@ -287,10 +287,11 @@ public:
   InfallibleTArray<AnimationProperty>& Properties() {
     return mProperties;
   }
-  // Copies the properties from another keyframe effect whilst preserving
-  // the mWinsInCascade and mIsRunningOnCompositor state of matching
-  // properties.
-  void CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther);
+  // Updates the set of properties using the supplied list whilst preserving
+  // the mWinsInCascade and mIsRunningOnCompositor state of any matching
+  // properties
+  void UpdateProperties(
+    const InfallibleTArray<AnimationProperty>& aProperties);
 
   // Updates |aStyleRule| with the animation values produced by this
   // AnimationEffect for the current time except any properties already
