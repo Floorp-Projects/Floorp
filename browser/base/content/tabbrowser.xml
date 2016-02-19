@@ -1398,11 +1398,6 @@
 
                 crop = "center";
 
-              } else if (aTab.hasAttribute("customizemode")) {
-                let brandBundle = document.getElementById("bundle_brand");
-                let brandShortName = brandBundle.getString("brandShortName");
-                title = gNavigatorBundle.getFormattedString("customizeMode.tabTitle",
-                                                            [ brandShortName ]);
               } else // Still no title?  Fall back to our untitled string.
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
@@ -1930,6 +1925,11 @@
             this._tabFilters.set(t, filter);
 
             b.droppedLinkHandler = handleDroppedLink;
+
+            // Swap in a preloaded customize tab, if available.
+            if (aURI == "about:customizing") {
+              usingPreloadedContent = gCustomizationTabPreloader.newTab(t);
+            }
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -2470,6 +2470,33 @@
             }
 
             this.selectedTab = tab;
+          ]]>
+        </body>
+      </method>
+
+      <method name="swapNewTabWithBrowser">
+        <parameter name="aNewTab"/>
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            // The browser must be standalone.
+            if (aBrowser.getTabBrowser())
+              throw Cr.NS_ERROR_INVALID_ARG;
+
+            // The tab is definitely not loading.
+            aNewTab.removeAttribute("busy");
+            if (aNewTab.selected) {
+              this.mIsBusy = false;
+            }
+
+            this._swapBrowserDocShells(aNewTab, aBrowser);
+
+            // Update the new tab's title.
+            this.setTabTitle(aNewTab);
+
+            if (aNewTab.selected) {
+              this.updateCurrentBrowser(true);
+            }
           ]]>
         </body>
       </method>
