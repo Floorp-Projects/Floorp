@@ -322,12 +322,6 @@ enum class Expr : uint16_t
     Limit
 };
 
-enum NeedsBoundsCheck : uint8_t
-{
-    NO_BOUNDS_CHECK,
-    NEEDS_BOUNDS_CHECK
-};
-
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytecode;
 typedef UniquePtr<Bytecode> UniqueBytecode;
 

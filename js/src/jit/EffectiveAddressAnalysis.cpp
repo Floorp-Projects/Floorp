@@ -148,6 +148,14 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
             ins->block()->insertBefore(ins, zero);
             ins->replacePtr(zero);
         }
+
+        // If the index is within the minimum heap length, we can optimize
+        // away the bounds check.
+        if (imm >= 0) {
+            int32_t end = (uint32_t)imm + ins->byteSize();
+            if (end >= imm && (uint32_t)end <= mir_->minAsmJSHeapLength())
+                 ins->removeBoundsCheck();
+        }
     } else if (ptr->isAdd()) {
         // Look for heap[a+i] where i is a constant offset, and fold the offset.
         // Alignment masks have already been moved out of the way by the
