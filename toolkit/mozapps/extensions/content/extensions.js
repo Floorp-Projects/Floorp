@@ -205,8 +205,6 @@ function isCorrectlySigned(aAddon) {
       return true;
   if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
     return false;
-  if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
-    return false;
   return true;
 }
 
