@@ -30,7 +30,7 @@ from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.selfserve import SelfServeMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
-from mozharness.mozilla.merge import GeckoMigrationMixin
+from mozharness.mozilla.repo_manupulation import MercurialRepoManipulationMixin
 
 VALID_MIGRATION_BEHAVIORS = (
     "beta_to_release", "aurora_to_beta", "central_to_aurora", "release_to_esr",
@@ -40,7 +40,8 @@ VALID_MIGRATION_BEHAVIORS = (
 
 # GeckoMigration {{{1
 class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
-                     SelfServeMixin, BuildbotMixin, GeckoMigrationMixin):
+                     SelfServeMixin, BuildbotMixin,
+                     MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
             "action": "store",
@@ -138,7 +139,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 )
         return self.abs_dirs
 
-    def query_gecko_repos(self):
+    def query_repos(self):
         """ Build a list of repos to clone.
             """
         if self.gecko_repos:
@@ -193,31 +194,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             """
         dirs = self.query_abs_dirs()
         return self.query_hg_revision(dirs['abs_to_dir'])
-
-    def hg_tag(self, cwd, tags, user=None, message=None, revision=None,
-               force=None, halt_on_failure=True):
-        if isinstance(tags, basestring):
-            tags = [tags]
-        message = "No bug - Tagging %s" % os.path.basename(cwd)
-        if revision:
-            message = "%s %s" % (message, revision)
-        message = "%s with %s" % (message, ', '.join(tags))
-        message += " a=release DONTBUILD CLOSED TREE"
-        self.info(message)
-        cmd = self.query_exe('hg', return_type='list') + ['tag']
-        if user:
-            cmd.extend(['-u', user])
-        if message:
-            cmd.extend(['-m', message])
-        if revision:
-            cmd.extend(['-r', revision])
-        if force:
-            cmd.append('-f')
-        cmd.extend(tags)
-        return self.run_command(
-            cmd, cwd=cwd, halt_on_failure=halt_on_failure,
-            error_list=HgErrorList
-        )
 
     def hg_merge_via_debugsetparents(self, cwd, old_head, new_head,
                                      preserve_tags=True, user=None):
@@ -483,7 +459,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             "revision": self.config["tools_repo_revision"],
             "dest": "tools",
             "vcs": "hg",
-        }] + self.query_gecko_repos()
+        }] + self.query_repos()
         super(GeckoMigration, self).pull(repos=repos)
 
     def lock_update_paths(self):
@@ -501,8 +477,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         end_tag = self.config['end_tag'] % {'major_version': to_fx_major_version}
         self.hg_tag(
             dirs['abs_from_dir'], base_tag, user=self.config['hg_user'],
-            message="Added %s tag for changeset %s. IGNORE BROKEN CHANGESETS DONTBUILD CLOSED TREE NO BUG a=release" %
-                    (base_tag, base_from_rev),
             revision=base_from_rev,
         )
         new_from_rev = self.query_from_revision()
@@ -522,8 +496,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             )
         self.hg_tag(
             dirs['abs_to_dir'], end_tag, user=self.config['hg_user'],
-            message="Added %s tag for changeset %s. IGNORE BROKEN CHANGESETS DONTBUILD CLOSED TREE NO BUG a=release" %
-                    (end_tag, base_to_rev),
             revision=base_to_rev, force=True,
         )
         # Call beta_to_release etc.
