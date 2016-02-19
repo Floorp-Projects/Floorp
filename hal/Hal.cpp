@@ -461,26 +461,32 @@ protected:
   }
 };
 
-static SystemClockChangeObserversManager sSystemClockChangeObservers;
+static SystemClockChangeObserversManager&
+SystemClockChangeObservers()
+{
+  static SystemClockChangeObserversManager sSystemClockChangeObservers;
+  AssertMainThread();
+  return sSystemClockChangeObservers;
+}
 
 void
 RegisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemClockChangeObservers.AddObserver(aObserver);
+  SystemClockChangeObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemClockChangeObservers.RemoveObserver(aObserver);
+  SystemClockChangeObservers().RemoveObserver(aObserver);
 }
 
 void
 NotifySystemClockChange(const int64_t& aClockDeltaMS)
 {
-  sSystemClockChangeObservers.BroadcastInformation(aClockDeltaMS);
+  SystemClockChangeObservers().BroadcastInformation(aClockDeltaMS);
 }
 
 class SystemTimezoneChangeObserversManager : public ObserversManager<SystemTimezoneChangeInformation>
