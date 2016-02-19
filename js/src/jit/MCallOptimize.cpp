@@ -328,16 +328,23 @@ IonBuilder::inlineNativeGetter(CallInfo& callInfo, JSFunction* target)
     }
 
     // Try to optimize RegExp getters.
-    unsigned slot = 0;
-    if (RegExpObject::isOriginalFlagGetter(native, &slot)) {
+    RegExpFlag mask = NoFlags;
+    if (RegExpObject::isOriginalFlagGetter(native, &mask)) {
         const Class* clasp = thisTypes->getKnownClass(constraints());
         if (clasp != &RegExpObject::class_)
             return InliningStatus_NotInlined;
 
-        MLoadFixedSlot* load = MLoadFixedSlot::New(alloc(), thisArg, slot);
-        current->add(load);
-        current->push(load);
-        load->setResultType(MIRType_Boolean);
+        MLoadFixedSlot* flags = MLoadFixedSlot::New(alloc(), thisArg, RegExpObject::flagsSlot());
+        current->add(flags);
+        flags->setResultType(MIRType_Int32);
+        MConstant* maskConst = MConstant::New(alloc(), Int32Value(mask));
+        current->add(maskConst);
+        MBitAnd* maskedFlag = MBitAnd::New(alloc(), flags, maskConst);
+        maskedFlag->setInt32Specialization();
+        current->add(maskedFlag);
+
+        MDefinition* result = convertToBoolean(maskedFlag);
+        current->push(result);
         return InliningStatus_Inlined;
     }
 
@@ -2173,11 +2180,7 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
                 last = either;
             }
 
-            // Convert to bool with the '!!' idiom
-            MNot* resultInverted = MNot::New(alloc(), last, constraints());
-            current->add(resultInverted);
-            MNot* result = MNot::New(alloc(), resultInverted, constraints());
-            current->add(result);
+            MDefinition* result = convertToBoolean(last);
             current->push(result);
         }
     }

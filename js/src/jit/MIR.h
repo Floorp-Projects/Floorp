@@ -5591,6 +5591,11 @@ class MBinaryBitwiseInstruction
     virtual void infer(BaselineInspector* inspector, jsbytecode* pc);
     void collectRangeInfoPreTrunc() override;
 
+    void setInt32Specialization() {
+        specialization_ = MIRType_Int32;
+        setResultType(MIRType_Int32);
+    }
+
     bool congruentTo(const MDefinition* ins) const override {
         return binaryCongruentTo(ins);
     }
