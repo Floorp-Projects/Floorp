@@ -52,7 +52,7 @@ function getReportCheck(expectReport, expectedError) {
     });
 
     reporter.reportTLSError(transportSecurityInfo, "example.com", -1);
-  }
+  };
 }
 
 // read the request body from a request

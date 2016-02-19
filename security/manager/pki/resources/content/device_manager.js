@@ -468,7 +468,7 @@ function doLoadDevice()
   var name_box = document.getElementById("device_name");
   var path_box = document.getElementById("device_path");
   try {
-    getPKCS11().addModule(name_box.value, path_box.value, 0,0);
+    getPKCS11().addModule(name_box.value, path_box.value, 0, 0);
   } catch (e) {
     if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
       doPrompt(getNSSString("AddModuleDup"));
