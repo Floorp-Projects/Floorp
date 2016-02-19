@@ -100,17 +100,6 @@ ChromeUtils::CreateOriginAttributesFromDict(dom::GlobalObject& aGlobal,
   aNewAttrs = aAttrs;
 }
 
-/* static */ bool
-ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
-                                     const dom::OriginAttributesDictionary& aA,
-                                     const dom::OriginAttributesDictionary& aB)
-{
-  return aA.mAddonId == aB.mAddonId &&
-         aA.mAppId == aB.mAppId &&
-         aA.mInBrowser == aB.mInBrowser &&
-         aA.mSignedPkg == aB.mSignedPkg &&
-         aA.mUserContextId == aB.mUserContextId;
-}
 
 } // namespace dom
 } // namespace mozilla
