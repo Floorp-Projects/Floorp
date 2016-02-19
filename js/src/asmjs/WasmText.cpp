@@ -195,6 +195,7 @@ enum class WasmAstExprKind
     IfElse,
     Load,
     Nop,
+    Return,
     SetLocal,
     Store,
     UnaryOperator,
@@ -321,6 +322,19 @@ class WasmAstCallIndirect : public WasmAstExpr
     const WasmAstExprVector& args() const { return args_; }
 };
 
+class WasmAstReturn : public WasmAstExpr
+{
+    WasmAstExpr* maybeExpr_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::Return;
+    explicit WasmAstReturn(WasmAstExpr* maybeExpr)
+      : WasmAstExpr(Kind),
+        maybeExpr_(maybeExpr)
+    {}
+    WasmAstExpr* maybeExpr() const { return maybeExpr_; }
+};
+
 class WasmAstIfElse : public WasmAstExpr
 {
     Expr expr_;
@@ -330,8 +344,8 @@ class WasmAstIfElse : public WasmAstExpr
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::IfElse;
-    explicit WasmAstIfElse(Expr expr, WasmAstExpr* cond, WasmAstExpr* ifBody,
-                           WasmAstExpr* elseBody = nullptr)
+    WasmAstIfElse(Expr expr, WasmAstExpr* cond, WasmAstExpr* ifBody,
+                  WasmAstExpr* elseBody = nullptr)
       : WasmAstExpr(Kind),
         expr_(expr),
         cond_(cond),
@@ -714,6 +728,7 @@ class WasmToken
         OpenParen,
         Param,
         Result,
+        Return,
         Segment,
         SetLocal,
         Store,
@@ -1785,6 +1800,8 @@ WasmToken WasmTokenStream::next()
       case 'r':
         if (consume(MOZ_UTF16("result")))
             return WasmToken(WasmToken::Result, begin, cur_);
+        if (consume(MOZ_UTF16("return")))
+            return WasmToken(WasmToken::Return, begin, cur_);
         break;
 
       case 's':
@@ -2245,6 +2262,20 @@ ParseSetLocal(WasmParseContext& c)
     return new(c.lifo) WasmAstSetLocal(local, *value);
 }
 
+static WasmAstReturn*
+ParseReturn(WasmParseContext& c)
+{
+    WasmAstExpr* maybeExpr = nullptr;
+
+    if (c.ts.peek().kind() != WasmToken::CloseParen) {
+        maybeExpr = ParseExpr(c);
+        if (!maybeExpr)
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstReturn(maybeExpr);
+}
+
 static WasmAstUnaryOperator*
 ParseUnaryOperator(WasmParseContext& c, Expr expr)
 {
@@ -2475,6 +2506,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseGetLocal(c);
       case WasmToken::Load:
         return ParseLoad(c, token.expr());
+      case WasmToken::Return:
+        return ParseReturn(c);
       case WasmToken::SetLocal:
         return ParseSetLocal(c);
       case WasmToken::Store:
@@ -3024,6 +3057,12 @@ ResolveStore(Resolver& r, WasmAstStore& s)
 }
 
 static bool
+ResolveReturn(Resolver& r, WasmAstReturn& ret)
+{
+    return !ret.maybeExpr() || ResolveExpr(r, *ret.maybeExpr());
+}
+
+static bool
 ResolveExpr(Resolver& r, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -3049,13 +3088,14 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveIfElse(r, expr.as<WasmAstIfElse>());
       case WasmAstExprKind::Load:
         return ResolveLoad(r, expr.as<WasmAstLoad>());
+      case WasmAstExprKind::Return:
+        return ResolveReturn(r, expr.as<WasmAstReturn>());
       case WasmAstExprKind::SetLocal:
         return ResolveSetLocal(r, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return ResolveStore(r, expr.as<WasmAstStore>());
       case WasmAstExprKind::UnaryOperator:
         return ResolveUnaryOperator(r, expr.as<WasmAstUnaryOperator>());
-      default:;
     }
     MOZ_CRASH("Bad expr kind");
 }
@@ -3314,6 +3354,13 @@ EncodeStore(Encoder& e, WasmAstStore& s)
 }
 
 static bool
+EncodeReturn(Encoder& e, WasmAstReturn& r)
+{
+    return e.writeExpr(Expr::Return) &&
+           (!r.maybeExpr() || EncodeExpr(e, *r.maybeExpr()));
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -3339,13 +3386,14 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeIfElse(e, expr.as<WasmAstIfElse>());
       case WasmAstExprKind::Load:
         return EncodeLoad(e, expr.as<WasmAstLoad>());
+      case WasmAstExprKind::Return:
+        return EncodeReturn(e, expr.as<WasmAstReturn>());
       case WasmAstExprKind::SetLocal:
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return EncodeStore(e, expr.as<WasmAstStore>());
       case WasmAstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<WasmAstUnaryOperator>());
-      default:;
     }
     MOZ_CRASH("Bad expr kind");
 }
