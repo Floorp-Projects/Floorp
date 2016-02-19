@@ -389,7 +389,7 @@ js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    if (!Debugger::checkNoExecute(cx))
+    if (!Debugger::checkNoExecute(cx, state.script()))
         return false;
 
 #if defined(MOZ_HAVE_RDTSC)

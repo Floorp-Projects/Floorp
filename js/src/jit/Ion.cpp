@@ -2897,7 +2897,9 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
 {
     JS_CHECK_RECURSION(cx, return JitExec_Error);
 
-    if (!Debugger::checkNoExecute(cx))
+    RootedScript script(cx, fun->nonLazyScript());
+
+    if (!Debugger::checkNoExecute(cx, script))
         return JitExec_Error;
 
 #ifdef DEBUG
@@ -2906,7 +2908,6 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
     nogc.emplace(cx->runtime());
 #endif
 
-    RootedScript script(cx, fun->nonLazyScript());
     IonScript* ion = script->ionScript();
     JitCode* code = ion->method();
     void* jitcode = code->raw();
