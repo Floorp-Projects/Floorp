@@ -81,33 +81,34 @@
     real(SyntaxError,           16,     InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
     real(TypeError,             17,     InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
     real(URIError,              18,     InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
-    real(Iterator,              19,     InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
-    real(StopIteration,         20,     InitStopIterationClass, OCLASP(StopIteration)) \
-    real(ArrayBuffer,           21,     InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
-    real(Int8Array,             22,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
-    real(Uint8Array,            23,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
-    real(Int16Array,            24,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int16)) \
-    real(Uint16Array,           25,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint16)) \
-    real(Int32Array,            26,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int32)) \
-    real(Uint32Array,           27,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint32)) \
-    real(Float32Array,          28,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
-    real(Float64Array,          29,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
-    real(Uint8ClampedArray,     30,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
-    real(Proxy,                 31,     InitProxyClass,         js::ProxyClassPtr) \
-    real(WeakMap,               32,     InitWeakMapClass,       OCLASP(WeakMap)) \
-    real(Map,                   33,     InitMapClass,           OCLASP(Map)) \
-    real(Set,                   34,     InitSetClass,           OCLASP(Set)) \
-    real(DataView,              35,     InitDataViewClass,      OCLASP(DataView)) \
-    real(Symbol,                36,     InitSymbolClass,        OCLASP(Symbol)) \
-IF_SAB(real,imaginary)(SharedArrayBuffer,       37,     InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
-IF_INTL(real,imaginary) (Intl,                  38,     InitIntlClass,          CLASP(Intl)) \
-IF_BDATA(real,imaginary)(TypedObject,           39,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
-    real(Reflect,               40,     InitReflect,            nullptr) \
-IF_SIMD(real,imaginary)(SIMD,                   41,     InitSimdClass, OCLASP(Simd)) \
-    real(WeakSet,               42,     InitWeakSetClass,       OCLASP(WeakSet)) \
-    real(TypedArray,            43,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-IF_SAB(real,imaginary)(Atomics,                 44,     InitAtomicsClass, OCLASP(Atomics)) \
-    real(SavedFrame,            45,      InitViaClassSpec,      &js::SavedFrame::class_) \
+    real(DebuggeeWouldRun,      19,     InitViaClassSpec,       ERROR_CLASP(JSEXN_DEBUGGEEWOULDRUN)) \
+    real(Iterator,              20,     InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
+    real(StopIteration,         21,     InitStopIterationClass, OCLASP(StopIteration)) \
+    real(ArrayBuffer,           22,     InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
+    real(Int8Array,             23,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
+    real(Uint8Array,            24,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
+    real(Int16Array,            25,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int16)) \
+    real(Uint16Array,           26,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint16)) \
+    real(Int32Array,            27,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int32)) \
+    real(Uint32Array,           28,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint32)) \
+    real(Float32Array,          29,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
+    real(Float64Array,          30,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
+    real(Uint8ClampedArray,     31,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
+    real(Proxy,                 32,     InitProxyClass,         js::ProxyClassPtr) \
+    real(WeakMap,               33,     InitWeakMapClass,       OCLASP(WeakMap)) \
+    real(Map,                   34,     InitMapClass,           OCLASP(Map)) \
+    real(Set,                   35,     InitSetClass,           OCLASP(Set)) \
+    real(DataView,              36,     InitDataViewClass,      OCLASP(DataView)) \
+    real(Symbol,                37,     InitSymbolClass,        OCLASP(Symbol)) \
+IF_SAB(real,imaginary)(SharedArrayBuffer,       38,     InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
+IF_INTL(real,imaginary) (Intl,                  39,     InitIntlClass,          CLASP(Intl)) \
+IF_BDATA(real,imaginary)(TypedObject,           40,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
+    real(Reflect,               41,     InitReflect,            nullptr) \
+IF_SIMD(real,imaginary)(SIMD,                   42,     InitSimdClass, OCLASP(Simd)) \
+    real(WeakSet,               43,     InitWeakSetClass,       OCLASP(WeakSet)) \
+    real(TypedArray,            44,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
+IF_SAB(real,imaginary)(Atomics,                 45,     InitAtomicsClass, OCLASP(Atomics)) \
+    real(SavedFrame,            46,      InitViaClassSpec,      &js::SavedFrame::class_) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
