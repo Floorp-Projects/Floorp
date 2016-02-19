@@ -354,7 +354,13 @@ protected:
   }
 };
 
-static ScreenConfigurationObserversManager sScreenConfigurationObservers;
+static ScreenConfigurationObserversManager&
+ScreenConfigurationObservers()
+{
+  AssertMainThread();
+  static ScreenConfigurationObserversManager sScreenConfigurationObservers;
+  return sScreenConfigurationObservers;
+}
 
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
@@ -702,28 +708,28 @@ void
 RegisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenConfigurationObservers.AddObserver(aObserver);
+  ScreenConfigurationObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenConfigurationObservers.RemoveObserver(aObserver);
+  ScreenConfigurationObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 {
   AssertMainThread();
-  *aScreenConfiguration = sScreenConfigurationObservers.GetCurrentInformation();
+  *aScreenConfiguration = ScreenConfigurationObservers().GetCurrentInformation();
 }
 
 void
 NotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration)
 {
-  sScreenConfigurationObservers.CacheInformation(aScreenConfiguration);
-  sScreenConfigurationObservers.BroadcastCachedInformation();
+  ScreenConfigurationObservers().CacheInformation(aScreenConfiguration);
+  ScreenConfigurationObservers().BroadcastCachedInformation();
 }
 
 bool
