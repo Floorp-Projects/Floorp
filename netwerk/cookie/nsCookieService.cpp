@@ -2366,15 +2366,9 @@ NS_IMETHODIMP
 nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aName,
                         const nsACString &aPath,
-                        JS::HandleValue  aOriginAttributes,
-                        bool             aBlocked,
-                        JSContext*       aCx)
+                        bool             aBlocked)
 {
   NeckoOriginAttributes attrs;
-  if (!attrs.Init(aCx, aOriginAttributes)) {
-    return NS_ERROR_FAILURE;
-  }
-
   return Remove(aHost, attrs, aName, aPath, aBlocked);
 }
 

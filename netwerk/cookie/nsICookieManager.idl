@@ -39,14 +39,11 @@ interface nsICookieManager : nsISupports
    *              dot must be present.
    * @param aName The name specified in the cookie
    * @param aPath The path for which the cookie was set
-   * @param aOriginAttributes The originAttributes of this cookie
    * @param aBlocked Indicates if cookies from this host should be permanently blocked
    *
    */
-  [implicit_jscontext]
-  void remove(in AUTF8String   aHost,
-              in ACString      aName,
-              in AUTF8String   aPath,
-              in jsval         aOriginAttributes,
-              in boolean       aBlocked);
+  void remove(in AUTF8String aHost,
+              in ACString    aName,
+              in AUTF8String aPath,
+              in boolean     aBlocked);
 };
