@@ -109,7 +109,7 @@ function truncateEntry(entry, entryInput) {
                   .createInstance(Ci.nsIStringInputStream);
   content.data = "";
 
-  return [entry, content]
+  return [entry, content];
 }
 
 function run_test() {
