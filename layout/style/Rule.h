@@ -123,11 +123,6 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE = 0;
 
-  // This is used to measure nsCOMArray<Rule>s.
-  static size_t SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
-                                                   mozilla::MallocSizeOf aMallocSizeOf,
-                                                   void* aData);
-
 protected:
   // This is sometimes null (e.g., for style attributes).
   CSSStyleSheet*    mSheet;

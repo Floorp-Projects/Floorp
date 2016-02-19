@@ -292,23 +292,6 @@ nsCOMArray_base::SetCount(int32_t aNewCount)
   return true;
 }
 
-size_t
-nsCOMArray_base::SizeOfExcludingThis(
-    nsBaseArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-    mozilla::MallocSizeOf aMallocSizeOf, void* aData) const
-{
-  size_t n = mArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
-
-  if (aSizeOfElementIncludingThis) {
-    for (uint32_t index = 0; index < mArray.Length(); ++index) {
-      n += aSizeOfElementIncludingThis(mArray[index], aMallocSizeOf, aData);
-    }
-  }
-
-  return n;
-}
-
-
 void
 nsCOMArray_base::Adopt(nsISupports** aElements, uint32_t aSize)
 {
