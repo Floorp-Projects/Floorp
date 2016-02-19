@@ -2058,7 +2058,10 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
     }
 
     if (child->Parent() == aOwner) {
-      MoveChild(child, insertIdx - 1);
+      if (child->IsRelocated()) {
+        children->RemoveElement(child);
+      }
+      MoveChild(child, insertIdx);
       children->InsertElementAt(arrayIdx, child);
       arrayIdx++;
 
@@ -2141,9 +2144,7 @@ DocAccessible::MoveChild(Accessible* aChild, int32_t aIdxInParent)
   reorderEvent->AddSubMutationEvent(hideEvent);
 
   AutoTreeMutation mut(parent);
-  parent->RemoveChild(aChild);
-
-  parent->InsertChildAt(aIdxInParent, aChild);
+  parent->MoveChild(aIdxInParent, aChild);
   aChild->SetRelocated(true);
 
   FireDelayedEvent(hideEvent);
@@ -2174,6 +2175,7 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
       RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
       RefPtr<AccMutationEvent> hideEvent = new AccHideEvent(child, false);
       reorderEvent->AddSubMutationEvent(hideEvent);
+      FireDelayedEvent(hideEvent);
 
       {
         AutoTreeMutation mut(owner);
@@ -2181,7 +2183,6 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
         child->SetRelocated(false);
       }
 
-      FireDelayedEvent(hideEvent);
       MaybeNotifyOfValueChange(owner);
       FireDelayedEvent(reorderEvent);
     }
