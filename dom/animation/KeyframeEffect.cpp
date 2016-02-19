@@ -17,6 +17,7 @@
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
+#include "nsCSSPseudoElements.h"
 #include "nsCSSValue.h"
 #include "nsStyleUtil.h"
 #include <algorithm> // For std::max
@@ -40,8 +41,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 
   // ComputedTimingProperties
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
-  aRetVal.mEndTime
-    = std::max(aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay, 0.0);
+  aRetVal.mEndTime = aComputedTiming.mEndTime.ToMilliseconds();
   aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
   if (!aRetVal.mProgress.IsNull()) {
@@ -74,7 +74,7 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   Element* aTarget,
-  nsCSSPseudoElements::Type aPseudoType,
+  CSSPseudoElementType aPseudoType,
   const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
                            new AnimationEffectTimingReadOnly(aTiming))
@@ -84,7 +84,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   Element* aTarget,
-  nsCSSPseudoElements::Type aPseudoType,
+  CSSPseudoElementType aPseudoType,
   AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
@@ -244,6 +244,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
                        1.0f :
                        aTiming.mIterations;
   result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
+  // Bug 1244635: Add endDelay to the end time calculation
+  result.mEndTime = aTiming.mDelay + result.mActiveDuration;
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;
@@ -366,18 +368,19 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 }
 
 StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(const StickyTimeDuration& aIterationDuration,
-                                       double aIterationCount)
+KeyframeEffectReadOnly::ActiveDuration(
+  const StickyTimeDuration& aIterationDuration,
+  double aIterationCount)
 {
-  if (IsInfinite(aIterationCount)) {
-    // An animation that repeats forever has an infinite active duration
-    // unless its iteration duration is zero, in which case it has a zero
-    // active duration.
-    const StickyTimeDuration zeroDuration;
-    return aIterationDuration == zeroDuration ?
-           zeroDuration :
-           StickyTimeDuration::Forever();
+  // If either the iteration duration or iteration count is zero,
+  // Web Animations says that the active duration is zero. This is to
+  // ensure that the result is defined when the other argument is Infinity.
+  const StickyTimeDuration zeroDuration;
+  if (aIterationDuration == zeroDuration ||
+      aIterationCount == 0.0) {
+    return zeroDuration;
   }
+
   return aIterationDuration.MultDouble(aIterationCount);
 }
 
@@ -624,8 +627,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
              "Uninitialized target");
 
   RefPtr<Element> targetElement;
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
   if (target.IsElement()) {
     targetElement = &target.GetAsElement();
   } else {
@@ -1230,7 +1232,7 @@ ApplyDistributeSpacing(nsTArray<OffsetIndexedKeyframe>& aKeyframes)
  */
 static void
 GenerateValueEntries(Element* aTarget,
-                     nsCSSPseudoElements::Type aPseudoType,
+                     CSSPseudoElementType aPseudoType,
                      nsTArray<OffsetIndexedKeyframe>& aKeyframes,
                      nsTArray<KeyframeValueEntry>& aResult,
                      ErrorResult& aRv)
@@ -1434,7 +1436,7 @@ static void
 BuildAnimationPropertyListFromKeyframeSequence(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::ForOfIterator& aIterator,
     nsTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -1492,7 +1494,7 @@ static void
 BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::Handle<JS::Value> aValue,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -1667,7 +1669,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 KeyframeEffectReadOnly::BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
@@ -1721,13 +1723,13 @@ KeyframeEffectReadOnly::GetTarget(
   }
 
   switch (mPseudoType) {
-    case nsCSSPseudoElements::ePseudo_before:
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::before:
+    case CSSPseudoElementType::after:
       aRv.SetValue().SetAsCSSPseudoElement() =
         CSSPseudoElement::GetCSSPseudoElement(mTarget, mPseudoType);
       break;
 
-    case nsCSSPseudoElements::ePseudo_NotPseudoElement:
+    case CSSPseudoElementType::NotPseudo:
       aRv.SetValue().SetAsElement() = mTarget;
       break;
 
@@ -1975,12 +1977,12 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
     return nullptr;
   }
 
-  if (mPseudoType == nsCSSPseudoElements::ePseudo_before) {
+  if (mPseudoType == CSSPseudoElementType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(frame);
-  } else if (mPseudoType == nsCSSPseudoElements::ePseudo_after) {
+  } else if (mPseudoType == CSSPseudoElementType::after) {
     frame = nsLayoutUtils::GetAfterFrame(frame);
   } else {
-    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+    MOZ_ASSERT(mPseudoType == CSSPseudoElementType::NotPseudo,
                "unknown mPseudoType");
   }
   if (!frame) {
@@ -2126,7 +2128,7 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
 
 KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
                                Element* aTarget,
-                               nsCSSPseudoElements::Type aPseudoType,
+                               CSSPseudoElementType aPseudoType,
                                const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
                            new AnimationEffectTiming(aTiming))

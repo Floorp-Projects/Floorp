@@ -284,7 +284,7 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
       if (container) {
         TreeWalker walker(container, findNode->AsContent(),
                           TreeWalker::eWalkContextTree);
-        descendant = walker.NextChild();
+        descendant = walker.Next();
         if (!descendant)
           descendant = container;
       }
@@ -1945,7 +1945,7 @@ HyperTextAccessible::CacheChildren()
   TreeWalker walker(this, mContent);
   Accessible* child = nullptr;
   Accessible* lastChild = nullptr;
-  while ((child = walker.NextChild())) {
+  while ((child = walker.Next())) {
     if (lastChild)
       AppendChild(lastChild);
 

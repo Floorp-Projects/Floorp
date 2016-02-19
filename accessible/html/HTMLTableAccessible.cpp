@@ -403,10 +403,10 @@ HTMLTableAccessible::CacheChildren()
   TreeWalker walker(this, mContent);
 
   Accessible* child = nullptr;
-  while ((child = walker.NextChild())) {
+  while ((child = walker.Next())) {
     if (child->Role() == roles::CAPTION) {
       InsertChildAt(0, child);
-      while ((child = walker.NextChild()) && AppendChild(child));
+      while ((child = walker.Next()) && AppendChild(child));
       break;
     }
     AppendChild(child);

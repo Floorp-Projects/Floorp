@@ -53,11 +53,6 @@ SOURCES += [
     'TestUrgentHangs.cpp',
 ]
 
-if CONFIG['OS_ARCH'] == 'Linux':
-    SOURCES += [
-        'TestSysVShmem.cpp',
-    ]
-
 SOURCES += [
     '!IPDLUnitTests.cpp',
     'IPDLUnitTestProcessChild.cpp',
@@ -127,7 +122,6 @@ IPDL_SOURCES += [
     'PTestSyncError.ipdl',
     'PTestSyncHang.ipdl',
     'PTestSyncWakeup.ipdl',
-    'PTestSysVShmem.ipdl',
     'PTestUrgency.ipdl',
     'PTestUrgentHangs.ipdl',
 ]

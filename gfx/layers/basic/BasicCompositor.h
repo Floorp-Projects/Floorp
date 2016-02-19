@@ -62,6 +62,11 @@ public:
                                const CompositingRenderTarget *aSource,
                                const gfx::IntPoint &aSourcePoint) override;
 
+  virtual already_AddRefed<CompositingRenderTarget>
+  CreateRenderTargetForWindow(const gfx::IntRect& aRect,
+                              SurfaceInitMode aInit,
+                              BufferMode aBufferMode);
+
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 

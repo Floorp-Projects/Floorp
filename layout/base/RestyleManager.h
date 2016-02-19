@@ -18,7 +18,6 @@
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 #include "nsRefPtrHashtable.h"
-#include "nsCSSPseudoElements.h"
 #include "nsTransitionManager.h"
 
 class nsIFrame;
@@ -26,6 +25,7 @@ class nsStyleChangeList;
 struct TreeMatchContext;
 
 namespace mozilla {
+  enum class CSSPseudoElementType : uint8_t;
   class EventStates;
   struct UndisplayedNode;
 
@@ -191,29 +191,29 @@ public:
 
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
-      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
-      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
+      if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mElementContexts.Put(aContent, aStyleContext);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+      } else if (pseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         mBeforePseudoContexts.Put(aContent->GetParent(), aStyleContext);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+      } else if (pseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterPseudoContexts.Put(aContent->GetParent(), aStyleContext);
       }
     }
 
     nsStyleContext* Get(nsIContent* aContent,
-                        nsCSSPseudoElements::Type aPseudoType) {
+                        CSSPseudoElementType aPseudoType) {
       MOZ_ASSERT(aContent);
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      if (aPseudoType == CSSPseudoElementType::NotPseudo) {
         return mElementContexts.GetWeak(aContent);
       }
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+      if (aPseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         return mBeforePseudoContexts.GetWeak(aContent->GetParent());
       }
-      if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+      if (aPseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         return mAfterPseudoContexts.GetWeak(aContent->GetParent());
       }
@@ -269,13 +269,13 @@ public:
     // the real element.
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
-      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
-      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
+      if (pseudoType == CSSPseudoElementType::NotPseudo) {
         mContents.AppendElement(aContent);
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+      } else if (pseudoType == CSSPseudoElementType::before) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         mBeforeContents.AppendElement(aContent->GetParent());
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+      } else if (pseudoType == CSSPseudoElementType::after) {
         MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterContents.AppendElement(aContent->GetParent());
       }
@@ -285,7 +285,7 @@ public:
 
   private:
     void StopAnimationsWithoutFrame(nsTArray<RefPtr<nsIContent>>& aArray,
-                                    nsCSSPseudoElements::Type aPseudoType);
+                                    CSSPseudoElementType aPseudoType);
 
     RestyleManager* mRestyleManager;
     AutoRestore<AnimationsWithDestroyedFrame*> mRestorePointer;
@@ -792,7 +792,7 @@ private:
                                const uint8_t    aDisplay);
   void MaybeReframeForBeforePseudo();
   void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
-  void MaybeReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+  void MaybeReframeForPseudo(CSSPseudoElementType aPseudoType,
                              nsIFrame* aGenConParentFrame,
                              nsIFrame* aFrame,
                              nsIContent* aContent,
@@ -801,7 +801,7 @@ private:
   bool MustReframeForBeforePseudo();
   bool MustReframeForAfterPseudo(nsIFrame* aFrame);
 #endif
-  bool MustReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+  bool MustReframeForPseudo(CSSPseudoElementType aPseudoType,
                             nsIFrame* aGenConParentFrame,
                             nsIFrame* aFrame,
                             nsIContent* aContent,

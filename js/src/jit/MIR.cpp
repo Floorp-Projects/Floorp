@@ -85,7 +85,8 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
     MDefinition* left = ins->getOperand(0);
     MDefinition* right = ins->getOperand(1);
 
-    MOZ_ASSERT(IsNumberType(left->type()) && IsNumberType(right->type()));
+    MOZ_ASSERT(IsTypeRepresentableAsDouble(left->type()));
+    MOZ_ASSERT(IsTypeRepresentableAsDouble(right->type()));
 
     if (!left->isConstant() || !right->isConstant())
         return nullptr;
@@ -114,25 +115,25 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
         ret.setNumber(uint32_t(lhs->toInt32()) >> (rhs->toInt32() & 0x1F));
         break;
       case MDefinition::Op_Add:
-        ret.setNumber(lhs->toNumber() + rhs->toNumber());
+        ret.setNumber(lhs->numberToDouble() + rhs->numberToDouble());
         break;
       case MDefinition::Op_Sub:
-        ret.setNumber(lhs->toNumber() - rhs->toNumber());
+        ret.setNumber(lhs->numberToDouble() - rhs->numberToDouble());
         break;
       case MDefinition::Op_Mul:
-        ret.setNumber(lhs->toNumber() * rhs->toNumber());
+        ret.setNumber(lhs->numberToDouble() * rhs->numberToDouble());
         break;
       case MDefinition::Op_Div:
         if (ins->toDiv()->isUnsigned())
             ret.setInt32(rhs->isInt32(0) ? 0 : uint32_t(lhs->toInt32()) / uint32_t(rhs->toInt32()));
         else
-            ret.setNumber(NumberDiv(lhs->toNumber(), rhs->toNumber()));
+            ret.setNumber(NumberDiv(lhs->numberToDouble(), rhs->numberToDouble()));
         break;
       case MDefinition::Op_Mod:
         if (ins->toMod()->isUnsigned())
             ret.setInt32(rhs->isInt32(0) ? 0 : uint32_t(lhs->toInt32()) % uint32_t(rhs->toInt32()));
         else
-            ret.setNumber(NumberMod(lhs->toNumber(), rhs->toNumber()));
+            ret.setNumber(NumberMod(lhs->numberToDouble(), rhs->numberToDouble()));
         break;
       default:
         MOZ_CRASH("NYI");
@@ -166,7 +167,7 @@ EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins)
         return nullptr;
 
     int32_t num;
-    if (!mozilla::NumberIsInt32(right->toConstant()->toNumber(), &num))
+    if (!mozilla::NumberIsInt32(right->toConstant()->numberToDouble(), &num))
         return nullptr;
 
     // check if rhs is a power of two
@@ -671,6 +672,12 @@ MConstant::NewFloat32(TempAllocator& alloc, double d)
 }
 
 MConstant*
+MConstant::NewInt64(TempAllocator& alloc, int64_t i)
+{
+    return new(alloc) MConstant(i);
+}
+
+MConstant*
 MConstant::NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type)
 {
     if (type == MIRType_Float32)
@@ -809,6 +816,13 @@ MConstant::MConstant(float f)
     setMovable();
 }
 
+MConstant::MConstant(int64_t i)
+{
+    setResultType(MIRType_Int64);
+    payload_.i64 = i;
+    setMovable();
+}
+
 #ifdef DEBUG
 void
 MConstant::assertInitializedPayload() const
@@ -825,6 +839,7 @@ MConstant::assertInitializedPayload() const
         MOZ_ASSERT((payload_.asBits >> 1) == 0);
         break;
       case MIRType_Double:
+      case MIRType_Int64:
         break;
       case MIRType_String:
       case MIRType_Object:
@@ -941,7 +956,7 @@ MConstant::printOpcode(GenericPrinter& out) const
 bool
 MConstant::canProduceFloat32() const
 {
-    if (!IsNumberType(type()))
+    if (!isTypeRepresentableAsDouble())
         return false;
 
     if (type() == MIRType_Int32)
@@ -1067,7 +1082,7 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
           case MIRType_Float32x4: {
             float a[4];
             for (size_t i = 0; i < 4; ++i)
-                a[i] = getOperand(i)->toConstant()->toNumber();
+                a[i] = getOperand(i)->toConstant()->numberToDouble();
             cst = SimdConstant::CreateX4(a);
             break;
           }
@@ -1103,7 +1118,7 @@ MSimdSplatX4::foldsTo(TempAllocator& alloc)
         break;
       }
       case MIRType_Float32x4: {
-        float v = op->toConstant()->toNumber();
+        float v = op->toConstant()->numberToDouble();
         cst = SimdConstant::SplatX4(v);
         break;
       }
@@ -1446,10 +1461,10 @@ MDefinition*
 MMathFunction::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = getOperand(0);
-    if (!input->isConstant() || !input->toConstant()->isNumber())
+    if (!input->isConstant() || !input->toConstant()->isTypeRepresentableAsDouble())
         return this;
 
-    double in = input->toConstant()->toNumber();
+    double in = input->toConstant()->numberToDouble();
     double out;
     switch (function_) {
       case Log:
@@ -2017,7 +2032,7 @@ MPhi::foldsTernary()
     // If testArg is an int32 type we can:
     // - fold testArg ? testArg : 0 to testArg
     // - fold testArg ? 0 : testArg to 0
-    if (testArg->type() == MIRType_Int32 && c->toNumber() == 0) {
+    if (testArg->type() == MIRType_Int32 && c->numberToDouble() == 0) {
         // When folding to the constant we need to hoist it.
         if (trueDef == c && !c->block()->dominates(block()))
             c->block()->moveBefore(pred->lastIns(), c);
@@ -2159,7 +2174,7 @@ jit::MergeTypes(MIRType* ptype, TemporaryTypeSet** ptypeSet,
     if (newTypeSet && newTypeSet->empty())
         return true;
     if (newType != *ptype) {
-        if (IsNumberType(newType) && IsNumberType(*ptype)) {
+        if (IsTypeRepresentableAsDouble(newType) && IsTypeRepresentableAsDouble(*ptype)) {
             *ptype = MIRType_Double;
         } else if (*ptype != MIRType_Value) {
             if (!*ptypeSet) {
@@ -2393,7 +2408,7 @@ IsConstant(MDefinition* def, double v)
     if (!def->isConstant())
         return false;
 
-    return NumbersAreIdentical(def->toConstant()->toNumber(), v);
+    return NumbersAreIdentical(def->toConstant()->numberToDouble(), v);
 }
 
 MDefinition*
@@ -2807,11 +2822,14 @@ MMinMax::foldsTo(TempAllocator& alloc)
     // Directly apply math utility to compare the rhs() and lhs() when
     // they are both constants.
     if (lhs()->isConstant() && rhs()->isConstant()) {
-        if (!lhs()->toConstant()->isNumber() || !rhs()->toConstant()->isNumber())
+        if (!lhs()->toConstant()->isTypeRepresentableAsDouble() ||
+            !rhs()->toConstant()->isTypeRepresentableAsDouble())
+        {
             return this;
+        }
 
-        double lnum = lhs()->toConstant()->toNumber();
-        double rnum = rhs()->toConstant()->toNumber();
+        double lnum = lhs()->toConstant()->numberToDouble();
+        double rnum = rhs()->toConstant()->numberToDouble();
         double result;
         if (isMax())
             result = js::math_max_impl(lnum, rnum);
@@ -2837,7 +2855,10 @@ MMinMax::foldsTo(TempAllocator& alloc)
 
     if (operand->isToDouble() && operand->getOperand(0)->type() == MIRType_Int32) {
         // min(int32, cte >= INT32_MAX) = int32
-        if (constant->isNumber() && constant->toNumber() >= INT32_MAX && !isMax()) {
+        if (!isMax() &&
+            constant->isTypeRepresentableAsDouble() &&
+            constant->numberToDouble() >= INT32_MAX)
+        {
             MLimitedTruncate* limit =
                 MLimitedTruncate::New(alloc, operand->getOperand(0), MDefinition::NoTruncate);
             block()->insertBefore(this, limit);
@@ -2846,7 +2867,10 @@ MMinMax::foldsTo(TempAllocator& alloc)
         }
 
         // max(int32, cte <= INT32_MIN) = int32
-        if (constant->isNumber() && constant->toNumber() <= INT32_MIN && isMax()) {
+        if (isMax() &&
+            constant->isTypeRepresentableAsDouble() &&
+            constant->numberToDouble() <= INT32_MIN)
+        {
             MLimitedTruncate* limit =
                 MLimitedTruncate::New(alloc, operand->getOperand(0), MDefinition::NoTruncate);
             block()->insertBefore(this, limit);
@@ -3238,7 +3262,7 @@ MCompare::determineCompareType(JSOp op, MDefinition* left, MDefinition* right)
     }
 
     // Numeric comparisons against a double coerce to double.
-    if (IsNumberType(lhs) && IsNumberType(rhs))
+    if (IsTypeRepresentableAsDouble(lhs) && IsTypeRepresentableAsDouble(rhs))
         return Compare_Double;
 
     // Any comparison is allowed except strict eq.
@@ -3648,7 +3672,7 @@ MToInt32::foldsTo(TempAllocator& alloc)
           case MIRType_Double:
             int32_t ival;
             // Only the value within the range of Int32 can be substituted as constant.
-            if (mozilla::NumberEqualsInt32(input->toConstant()->toNumber(), &ival))
+            if (mozilla::NumberEqualsInt32(input->toConstant()->numberToDouble(), &ival))
                 return MConstant::New(alloc, Int32Value(ival));
             break;
           default:
@@ -3696,8 +3720,8 @@ MToDouble::foldsTo(TempAllocator& alloc)
     if (input->type() == MIRType_Double)
         return input;
 
-    if (input->isConstant() && input->toConstant()->isNumber()) {
-        double out = input->toConstant()->toNumber();
+    if (input->isConstant() && input->toConstant()->isTypeRepresentableAsDouble()) {
+        double out = input->toConstant()->numberToDouble();
         return MConstant::New(alloc, DoubleValue(out));
     }
 
@@ -3718,8 +3742,8 @@ MToFloat32::foldsTo(TempAllocator& alloc)
     if (input->isToDouble() && input->toToDouble()->input()->type() == MIRType_Float32)
         return input->toToDouble()->input();
 
-    if (input->isConstant() && input->toConstant()->isNumber())
-        return MConstant::NewFloat32(alloc, float(input->toConstant()->toNumber()));
+    if (input->isConstant() && input->toConstant()->isTypeRepresentableAsDouble())
+        return MConstant::NewFloat32(alloc, float(input->toConstant()->numberToDouble()));
 
     return this;
 }
@@ -3740,8 +3764,8 @@ MDefinition*
 MClampToUint8::foldsTo(TempAllocator& alloc)
 {
     if (MConstant* inputConst = input()->maybeConstantValue()) {
-        if (inputConst->isNumber()) {
-            int32_t clamped = ClampDoubleToUint8(inputConst->toNumber());
+        if (inputConst->isTypeRepresentableAsDouble()) {
+            int32_t clamped = ClampDoubleToUint8(inputConst->numberToDouble());
             return MConstant::New(alloc, Int32Value(clamped));
         }
     }
@@ -4083,29 +4107,29 @@ MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result)
         return true;
     }
 
-    if (!lhs->isNumber() || !rhs->isNumber())
+    if (!lhs->isTypeRepresentableAsDouble() || !rhs->isTypeRepresentableAsDouble())
         return false;
 
     switch (jsop_) {
       case JSOP_LT:
-        *result = (lhs->toNumber() < rhs->toNumber());
+        *result = (lhs->numberToDouble() < rhs->numberToDouble());
         break;
       case JSOP_LE:
-        *result = (lhs->toNumber() <= rhs->toNumber());
+        *result = (lhs->numberToDouble() <= rhs->numberToDouble());
         break;
       case JSOP_GT:
-        *result = (lhs->toNumber() > rhs->toNumber());
+        *result = (lhs->numberToDouble() > rhs->numberToDouble());
         break;
       case JSOP_GE:
-        *result = (lhs->toNumber() >= rhs->toNumber());
+        *result = (lhs->numberToDouble() >= rhs->numberToDouble());
         break;
       case JSOP_STRICTEQ: // Fall through.
       case JSOP_EQ:
-        *result = (lhs->toNumber() == rhs->toNumber());
+        *result = (lhs->numberToDouble() == rhs->numberToDouble());
         break;
       case JSOP_STRICTNE: // Fall through.
       case JSOP_NE:
-        *result = (lhs->toNumber() != rhs->toNumber());
+        *result = (lhs->numberToDouble() != rhs->numberToDouble());
         break;
       default:
         return false;

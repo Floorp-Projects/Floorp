@@ -168,7 +168,7 @@ CSSAnimation::QueueEvents()
   }
 
   dom::Element* owningElement;
-  nsCSSPseudoElements::Type owningPseudoType;
+  CSSPseudoElementType owningPseudoType;
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
@@ -488,7 +488,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 void
 nsAnimationManager::StopAnimationsForElement(
   mozilla::dom::Element* aElement,
-  nsCSSPseudoElements::Type aPseudoType)
+  mozilla::CSSPseudoElementType aPseudoType)
 {
   MOZ_ASSERT(aElement);
   AnimationCollection* collection =

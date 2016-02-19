@@ -205,8 +205,9 @@ config = {
     "all_mochitest_suites": {
         "valgrind-plain": ["--valgrind=/usr/bin/valgrind",
                            "--valgrind-supp-files=" + VALGRIND_SUPP_ARCH +
-                               "," + VALGRIND_SUPP_CROSS_ARCH],
-        "plain": [],
+                               "," + VALGRIND_SUPP_CROSS_ARCH,
+                           "--timeout=900", "--max-timeouts=50"],
+         "plain": [],
         "plain-chunked": ["--chunk-by-dir=4"],
         "mochitest-push": ["--subsuite=push"],
         "chrome": ["--chrome"],

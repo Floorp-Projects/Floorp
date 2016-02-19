@@ -350,11 +350,8 @@ private:
   // Monitor to protect following objects accessed across multipple threads.
   // mMonitor is also notified if the value of mAppendRunning becomes false.
   mutable Monitor mMonitor;
-  // Set to true while SegmentParserLoop is running.
+  // Set to true while a BufferAppend is running or is pending.
   Atomic<bool> mAppendRunning;
-  // Set to true while SegmentParserLoop is running.
-  // This is for diagnostic only. Only accessed on the task queue.
-  bool mSegmentParserLoopRunning;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;

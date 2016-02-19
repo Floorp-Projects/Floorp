@@ -11,9 +11,14 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
+namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
+} // namespace mozilla
+
 class nsProgressFrame : public nsContainerFrame,
                         public nsIAnonymousContentCreator
 {
+  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
 
 public:
@@ -76,7 +81,7 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) override;
+  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
 
 protected:
   // Helper function which reflow the anonymous div frame.

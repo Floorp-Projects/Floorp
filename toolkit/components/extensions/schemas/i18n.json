@@ -68,7 +68,6 @@
       },
       {
         "name": "getUILanguage",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the browser UI language of the browser. This is different from $(ref:i18n.getAcceptLanguages) which returns the preferred user languages.",
         "parameters": [],

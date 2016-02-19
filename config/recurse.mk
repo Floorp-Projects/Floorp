@@ -152,7 +152,7 @@ widget/android/bindings/export: build/annotationProcessors/export
 mobile/android/tests/browser/robocop/roboextender/tools: mobile/android/tests/javaaddons/tools
 
 ifdef ENABLE_CLANG_PLUGIN
-$(filter-out build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
+$(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
 build/clang-plugin/tests/target: build/clang-plugin/target
 endif
 
@@ -176,3 +176,6 @@ endif
 # happen at the same time (bug #1146738)
 js/src/target: js/src/host
 endif
+# Most things are built during compile (target/host), but some things happen during export
+# Those need to depend on config/export for system wrappers.
+$(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/target: config/export

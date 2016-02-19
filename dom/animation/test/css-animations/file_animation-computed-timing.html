@@ -188,11 +188,11 @@ test(function(t) {
 }, 'endTime of an infinitely repeating zero-duration animation');
 
 test(function(t) {
-  // Fill forwards so div.getAnimations()[0] wouldn't return
+  // Fill forwards so div.getAnimations()[0] won't return an
   // undefined value.
   var div = addDiv(t, {style: 'animation: moveAnimation 10s -100s forwards'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().endTime, 0,
+  assert_equals(effect.getComputedTiming().endTime, -90000,
                 'Initial value of endTime');
 }, 'endTime of an animation that finishes before its startTime');
 

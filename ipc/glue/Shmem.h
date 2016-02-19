@@ -36,7 +36,7 @@
  *  means is OS specific.)
  *
  *  (4a) The child receives the special IPC message, and using the
- *  |SharedMemory{SysV,Basic}::Handle| it was passed, creates a
+ *  |SharedMemory{Basic}::Handle| it was passed, creates a
  *  |mozilla::ipc::SharedMemory| in the child
  *  process.
  *
@@ -125,13 +125,7 @@ public:
 
   bool operator==(const Shmem& aRhs) const
   {
-    // need to compare IDs because of AdoptShmem(); two Shmems might
-    // refer to the same segment but with different IDs for different
-    // protocol trees.  (NB: it's possible for this method to
-    // spuriously return true if AdoptShmem() gives the same ID for
-    // two protocol trees, but I don't think that can cause any
-    // problems since the Shmems really would be indistinguishable.)
-    return mSegment == aRhs.mSegment && mId == aRhs.mId;
+    return mSegment == aRhs.mSegment;
   }
 
   // Returns whether this Shmem is writable by you, and thus whether you can
@@ -174,8 +168,6 @@ public:
 
     return mSize / sizeof(T);
   }
-
-  int GetSysVID() const;
 
   // These shouldn't be used directly, use the IPDL interface instead.
   id_t Id(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead) const {

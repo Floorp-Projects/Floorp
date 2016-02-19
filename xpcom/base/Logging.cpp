@@ -12,12 +12,19 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Snprintf.h"
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
 #include "NSPRLogModulesParser.h"
 
 #include "prenv.h"
 #include "prprf.h"
+#ifdef XP_WIN
+#include <process.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 // NB: Initial amount determined by auditing the codebase for the total amount
 //     of unique module names and padding up to the next power of 2.
@@ -47,6 +54,15 @@ void log_print(const LogModule* aModule,
   va_start(ap, aFmt);
   aModule->Printv(aLevel, aFmt, ap);
   va_end(ap);
+}
+
+int log_pid()
+{
+#ifdef XP_WIN
+  return _getpid();
+#else
+  return getpid();
+#endif
 }
 
 }
@@ -126,6 +142,18 @@ public:
 
     const char* logFile = PR_GetEnv("NSPR_LOG_FILE");
     if (logFile && logFile[0]) {
+      static const char kPIDToken[] = "%PID";
+      const char* pidTokenPtr = strstr(logFile, kPIDToken);
+      char buf[2048];
+      if (pidTokenPtr &&
+          snprintf_literal(buf, "%.*s%d%s",
+            static_cast<int>(pidTokenPtr - logFile), logFile,
+            detail::log_pid(),
+            pidTokenPtr + strlen(kPIDToken)) > 0)
+      {
+        logFile = buf;
+      }
+
       mOutFile = fopen(logFile, shouldAppend ? "a" : "w");
     }
   }

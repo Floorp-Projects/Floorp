@@ -273,6 +273,15 @@ enum class Expr : uint16_t
     I32x4Constructor,
     I32x4Const,
 #undef _
+    // Unsigned I32x4 operations. These are the SIMD.Uint32x4 operations that
+    // behave differently from their SIMD.Int32x4 counterparts.
+    I32x4shiftRightByScalarU,
+    I32x4lessThanU,
+    I32x4lessThanOrEqualU,
+    I32x4greaterThanU,
+    I32x4greaterThanOrEqualU,
+    I32x4fromFloat32x4U,
+
 #define _(OP) SIMD_OPCODE(F32x4, OP)
     FORALL_FLOAT32X4_ASMJS_OP(_)
     F32x4Constructor,
@@ -704,19 +713,29 @@ class Decoder
     double uncheckedReadFixedF64() {
         return uncheckedRead<double>();
     }
-    uint32_t uncheckedReadVarU32() {
-        uint32_t decoded = 0;
+    template <typename UInt>
+    UInt uncheckedReadVarU() {
+        static const unsigned numBits = sizeof(UInt) * CHAR_BIT;
+        static const unsigned remainderBits = numBits % 7;
+        static const unsigned numBitsInSevens = numBits - remainderBits;
+        UInt decoded = 0;
         uint32_t shift = 0;
         do {
             uint8_t byte = *cur_++;
             if (!(byte & 0x80))
-                return decoded | (uint32_t(byte) << shift);
-            decoded |= uint32_t(byte & 0x7f) << shift;
+                return decoded | (UInt(byte) << shift);
+            decoded |= UInt(byte & 0x7f) << shift;
             shift += 7;
-        } while (shift != 28);
+        } while (shift != numBitsInSevens);
         uint8_t byte = *cur_++;
         MOZ_ASSERT(!(byte & 0xf0));
-        return decoded | (uint32_t(byte) << 28);
+        return decoded | (UInt(byte) << numBitsInSevens);
+    }
+    uint32_t uncheckedReadVarU32() {
+        return uncheckedReadVarU<uint32_t>();
+    }
+    uint64_t uncheckedReadVarU64() {
+        return uncheckedReadVarU<uint64_t>();
     }
     Expr uncheckedReadExpr() {
         return uncheckedReadEnum<Expr>();

@@ -6428,6 +6428,7 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
                            newContainerParameters, nullptr, flags);
 
   container->SetVRDeviceID(mHMD->GetDeviceInfo().GetDeviceID());
+  container->SetInputFrameID(mHMD->GetSensorState().inputFrameID);
   container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
                          /*the value is irrelevant*/nullptr);
 

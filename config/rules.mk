@@ -863,9 +863,6 @@ endif	# WINNT && !GCC
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
-ifdef MOZ_POST_DSO_LIB_COMMAND
-	$(MOZ_POST_DSO_LIB_COMMAND) $@
-endif
 
 ifeq ($(SOLARIS_SUNPRO_CC),1)
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
