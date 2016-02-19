@@ -265,8 +265,8 @@
     // Disallow unreachable statements after a return, throw, continue, or break
     // statement.
     "no-unreachable": 2,
-    // Disallow declaration of variables that are not used in the code
-    "no-unused-vars": 2,
+    // Disallow global and local variables that aren't used, but allow unused function arguments.
+    "no-unused-vars": [2, {"vars": "all", "args": "none"}],
     // Allow using variables before they are defined.
     "no-use-before-define": 0,
     // We use var-only-at-top-level instead of no-var as we allow top level
