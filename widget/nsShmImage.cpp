@@ -146,21 +146,19 @@ nsShmImage::CreateImage(const LayoutDeviceIntSize& aSize,
         (mImage->green_mask == 0xff00) &&
         (mImage->blue_mask == 0xff)) {
       mFormat = SurfaceFormat::B8G8R8A8;
-      memset(mImage->data, 0, mImage->bytes_per_line * mImage->height);
     }
     break;
   case 24:
-    // Only xRGB is supported.
+    // Only support the BGRX layout, and report it as BGRA to the compositor.
+    // The alpha channel will be discarded when we put the image.
     if ((mImage->red_mask == 0xff0000) &&
         (mImage->green_mask == 0xff00) &&
         (mImage->blue_mask == 0xff)) {
-      mFormat = SurfaceFormat::B8G8R8X8;
-      memset(mImage->data, 0xFF, mImage->bytes_per_line * mImage->height);
+      mFormat = SurfaceFormat::B8G8R8A8;
     }
     break;
   case 16:
     mFormat = SurfaceFormat::R5G6B5_UINT16;
-    memset(mImage->data, 0, mImage->bytes_per_line * mImage->height);
     break;
   }
 
