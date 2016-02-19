@@ -119,7 +119,13 @@ js::TransparentObjectWrapper(JSContext* cx, HandleObject existing, HandleObject 
 ErrorCopier::~ErrorCopier()
 {
     JSContext* cx = ac->context()->asJSContext();
-    if (ac->origin() != cx->compartment() && cx->isExceptionPending()) {
+
+    // The provenance of Debugger.DebuggeeWouldRun is the topmost locking
+    // debugger compartment; it should not be copied around.
+    if (ac->origin() != cx->compartment() &&
+        cx->isExceptionPending() &&
+        !cx->isThrowingDebuggeeWouldRun())
+    {
         RootedValue exc(cx);
         if (cx->getPendingException(&exc) && exc.isObject() && exc.toObject().is<ErrorObject>()) {
             cx->clearPendingException();

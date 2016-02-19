@@ -58,6 +58,7 @@ namespace js {
 class PerThreadData;
 class ExclusiveContext;
 class AutoKeepAtoms;
+class EnterDebuggeeNoExecute;
 #ifdef JS_TRACE_LOGGING
 class TraceLoggerThread;
 #endif
@@ -718,6 +719,15 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* If non-null, report JavaScript entry points to this monitor. */
     JS::dbg::AutoEntryMonitor* entryMonitor;
+
+    /*
+     * Stack of debuggers that currently disallow debuggee execution.
+     *
+     * When we check for NX we are inside the debuggee compartment, and thus a
+     * stack of Debuggers that have prevented execution need to be tracked to
+     * enter the correct Debugger compartment to report the error.
+     */
+    js::EnterDebuggeeNoExecute* noExecuteDebuggerTop;
 
     js::Activation* const* addressOfActivation() const {
         return &activation_;
