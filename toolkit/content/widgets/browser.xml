@@ -844,7 +844,7 @@
             if (this.docShell && this.webNavigation.sessionHistory) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
-              os.addObserver(this, "browser:purge-session-history", false);
+              os.addObserver(this, "browser:purge-session-history", true);
 
               // enable global history if we weren't told otherwise
               if (!this.hasAttribute("disableglobalhistory") && !this.isRemoteBrowser) {
