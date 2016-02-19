@@ -45,7 +45,7 @@ public:
   /* VRHMDRenderingSupport */
   already_AddRefed<RenderTargetSet> CreateRenderTargetSet(layers::Compositor *aCompositor, const IntSize& aSize) override;
   void DestroyRenderTargetSet(RenderTargetSet *aRTSet) override;
-  void SubmitFrame(RenderTargetSet *aRTSet) override;
+  void SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID) override;
 
   ovrSession GetOculusSession() const { return mSession; }
 
@@ -68,6 +68,7 @@ protected:
   ovrHmdDesc mDesc;
   ovrFovPort mFOVPort[2];
   ovrTrackingState mLastTrackingState;
+  int mInputFrameID;
 };
 
 } // namespace impl

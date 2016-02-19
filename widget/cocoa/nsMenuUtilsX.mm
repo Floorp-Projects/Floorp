@@ -116,7 +116,7 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // In principle we should be able to allocate this once and then always
-  // return the same object.  But wierd interactions happen between native
+  // return the same object.  But weird interactions happen between native
   // app-modal dialogs and Gecko-modal dialogs that open above them.  So what
   // we return here isn't always released before it needs to be added to
   // another menu.  See bmo bug 468393.

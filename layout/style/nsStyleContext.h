@@ -11,10 +11,13 @@
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/Assertions.h"
 #include "nsRuleNode.h"
-#include "nsCSSPseudoElements.h"
 
 class nsIAtom;
 class nsPresContext;
+
+namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
+} // namespace mozilla
 
 /**
  * An nsStyleContext represents the computed style data for an element.
@@ -60,13 +63,13 @@ public:
    *                   matches.  See |nsRuleNode| and |nsIStyleRule|.
    * @param aSkipParentDisplayBasedStyleFixup
    *                 If set, this flag indicates that we should skip
-   *                 the chunk of ApplyStyleFixups() that applies to 
-   *                 special cases where a child element's style may 
-   *                 need to be modified based on its parent's display 
+   *                 the chunk of ApplyStyleFixups() that applies to
+   *                 special cases where a child element's style may
+   *                 need to be modified based on its parent's display
    *                 value.
    */
   nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag,
-                 nsCSSPseudoElements::Type aPseudoType,
+                 mozilla::CSSPseudoElementType aPseudoType,
                  nsRuleNode* aRuleNode,
                  bool aSkipParentDisplayBasedStyleFixup);
 
@@ -137,9 +140,9 @@ public:
   nsStyleContext* GetParent() const { return mParent; }
 
   nsIAtom* GetPseudo() const { return mPseudoTag; }
-  nsCSSPseudoElements::Type GetPseudoType() const {
-    return static_cast<nsCSSPseudoElements::Type>(mBits >>
-                                                  NS_STYLE_CONTEXT_TYPE_SHIFT);
+  mozilla::CSSPseudoElementType GetPseudoType() const {
+    return static_cast<mozilla::CSSPseudoElementType>(
+             mBits >> NS_STYLE_CONTEXT_TYPE_SHIFT);
   }
 
   // Find, if it already exists *and is easily findable* (i.e., near the
@@ -629,7 +632,7 @@ private:
 already_AddRefed<nsStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
-                   nsCSSPseudoElements::Type aPseudoType,
+                   mozilla::CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,
                    bool aSkipParentDisplayBasedStyleFixup);
 #endif

@@ -68,7 +68,7 @@ CommonAnimationManager::RemoveAllElementCollections()
 
 AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
-                                               nsCSSPseudoElements::Type
+                                               CSSPseudoElementType
                                                  aPseudoType,
                                                bool aCreateIfNeeded)
 {
@@ -78,11 +78,11 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
   }
 
   nsIAtom *propName;
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+  if (aPseudoType == CSSPseudoElementType::NotPseudo) {
     propName = GetAnimationsAtom();
-  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+  } else if (aPseudoType == CSSPseudoElementType::before) {
     propName = GetAnimationsBeforeAtom();
-  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+  } else if (aPseudoType == CSSPseudoElementType::after) {
     propName = GetAnimationsAfterAtom();
   } else {
     NS_ASSERTION(!aCreateIfNeeded,
@@ -117,7 +117,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
 AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
 {
-  Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>> pseudoElement =
+  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (!pseudoElement) {
     return nullptr;
@@ -152,15 +152,15 @@ CommonAnimationManager::ExtractComputedValueForTransition(
 }
 
 /*static*/ nsString
-AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
+AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
 {
   switch (aPseudoType) {
-    case nsCSSPseudoElements::ePseudo_before:
+    case CSSPseudoElementType::before:
       return NS_LITERAL_STRING("::before");
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::after:
       return NS_LITERAL_STRING("::after");
     default:
-      MOZ_ASSERT(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+      MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo,
                  "Unexpected pseudo type");
       return EmptyString();
   }

@@ -488,8 +488,8 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
-    nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
-    if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+    CSSPseudoElementType type = nsCSSPseudoElements::GetPseudoType(aPseudo);
+    if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
@@ -696,8 +696,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }
-      nsCSSPseudoElements::Type pseudo =
-        topWithPseudoElementData->GetPseudoType();
+      CSSPseudoElementType pseudo = topWithPseudoElementData->GetPseudoType();
       nsIAtom* pseudoAtom = nsCSSPseudoElements::GetPseudoAtom(pseudo);
       nsAutoString assertMsg(
         NS_LITERAL_STRING("we should be in a pseudo-element that is expected to contain elements ("));

@@ -32,6 +32,7 @@ ImageHost::ImageHost(const TextureInfo& aTextureInfo)
   , mImageContainer(nullptr)
   , mLastFrameID(-1)
   , mLastProducerID(-1)
+  , mLastInputFrameID(-1)
   , mBias(BIAS_NONE)
   , mLocked(false)
 {}
@@ -84,6 +85,7 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
     img.mPictureRect = t.mPictureRect;
     img.mFrameID = t.mFrameID;
     img.mProducerID = t.mProducerID;
+    img.mInputFrameID = t.mInputFrameID;
   }
   // Recycle any leftover mTextureSources and call PrepareTextureSource on all
   // images.
@@ -357,6 +359,7 @@ ImageHost::Composite(LayerComposite* aLayer,
       }
       mLastFrameID = img->mFrameID;
       mLastProducerID = img->mProducerID;
+      mLastInputFrameID = img->mInputFrameID;
     }
     aEffectChain.mPrimaryEffect = effect;
     gfx::Rect pictureRect(0, 0, img->mPictureRect.width, img->mPictureRect.height);

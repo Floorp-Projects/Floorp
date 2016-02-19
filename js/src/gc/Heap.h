@@ -744,6 +744,7 @@ struct Arena
   private:
     static JS_FRIEND_DATA(const uint32_t) ThingSizes[];
     static JS_FRIEND_DATA(const uint32_t) FirstThingOffsets[];
+    static const uint32_t ThingsPerArena[];
 
   public:
     static void staticAsserts();
@@ -756,17 +757,12 @@ struct Arena
         return FirstThingOffsets[size_t(kind)];
     }
 
-    static size_t thingsPerArena(size_t thingSize) {
-        MOZ_ASSERT(thingSize % CellSize == 0);
-
-        /* We should be able to fit FreeSpan in any GC thing. */
-        MOZ_ASSERT(thingSize >= sizeof(FreeSpan));
-
-        return (ArenaSize - sizeof(ArenaHeader)) / thingSize;
+    static size_t thingsPerArena(AllocKind kind) {
+        return ThingsPerArena[size_t(kind)];
     }
 
-    static size_t thingsSpan(size_t thingSize) {
-        return thingsPerArena(thingSize) * thingSize;
+    static size_t thingsSpan(AllocKind kind) {
+        return thingsPerArena(kind) * thingSize(kind);
     }
 
     static bool isAligned(uintptr_t thing, size_t thingSize) {

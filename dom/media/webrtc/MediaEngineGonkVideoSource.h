@@ -62,7 +62,8 @@ public:
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
-                    const nsString& aDeviceId) override;
+                    const nsString& aDeviceId,
+                    const nsACString& aOrigin) override;
   nsresult Deallocate() override;
   nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;

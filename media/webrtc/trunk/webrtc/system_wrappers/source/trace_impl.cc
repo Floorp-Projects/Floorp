@@ -353,27 +353,26 @@ int32_t TraceImpl::AddMessage(
   if (written_so_far >= WEBRTC_TRACE_MAX_MESSAGE_SIZE) {
     return -1;
   }
-  // - 2 to leave room for newline and NULL termination.
+  // - 1 to leave room for newline.
 #ifdef _WIN32
   length = _snprintf(trace_message,
-                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
-                     "%s", msg);
+                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
+                     "%s\n", msg);
   if (length < 0) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
     trace_message[length] = 0;
   }
 #else
   length = snprintf(trace_message,
-                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
-                    "%s", msg);
+                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
+                    "%s\n", msg);
   if (length < 0 ||
-      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
+      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1) {
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
     trace_message[length] = 0;
   }
 #endif
-  // Length with NULL termination.
-  return length + 1;
+  return length;
 }
 
 void TraceImpl::AddMessageToList(

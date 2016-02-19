@@ -233,8 +233,6 @@ def get_default_valgrind_args():
              '--vex-iropt-register-updates=allregs-at-mem-access',
              '--trace-children=yes',
              '--child-silent-after-fork=yes',
-             '--leak-check=full',
-             '--show-possibly-lost=no',
              ('--trace-children-skip='
               + '/usr/bin/hg,/bin/rm,*/bin/certutil,*/bin/pk12util,'
               + '*/bin/ssltunnel,*/bin/uname,*/bin/which,*/bin/ps,'
@@ -242,7 +240,10 @@ def get_default_valgrind_args():
             ]
             + get_default_valgrind_tool_specific_args())
 
+# The default tool is Memcheck.  Feeding these arguments to a different
+# Valgrind tool will cause it to fail at startup, so don't do that!
 def get_default_valgrind_tool_specific_args():
-    return [
-            '--partial-loads-ok=yes'
-    ]
+    return ['--partial-loads-ok=yes',
+            '--leak-check=full',
+            '--show-possibly-lost=no',
+           ]
