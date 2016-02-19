@@ -286,6 +286,10 @@ class Sandbox(dict):
             if key in self._context and self._context[key] is not value:
                 raise KeyError('global_ns', 'reassign', key)
 
+            if (key not in self._context and isinstance(value, (list, dict))
+               and not value):
+                raise KeyError('Variable %s assigned an empty value.' % key)
+
             self._context[key] = value
         else:
             dict.__setitem__(self, key, value)
