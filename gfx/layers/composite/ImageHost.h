@@ -100,6 +100,7 @@ public:
 
   int32_t GetLastFrameID() const { return mLastFrameID; }
   int32_t GetLastProducerID() const { return mLastProducerID; }
+  virtual int32_t GetLastInputFrameID() const override { return mLastInputFrameID; }
 
   enum Bias {
     // Don't apply bias to frame times
@@ -118,6 +119,7 @@ protected:
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
     int32_t mProducerID;
+    int32_t mInputFrameID;
   };
 
   /**
@@ -135,6 +137,7 @@ protected:
   ImageContainerParent* mImageContainer;
   int32_t mLastFrameID;
   int32_t mLastProducerID;
+  int32_t mLastInputFrameID;
   /**
    * Bias to apply to the next frame.
    */

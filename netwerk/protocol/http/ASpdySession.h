@@ -68,7 +68,7 @@ public:
 
     // this could go either way, but because there are network instances of
     // it being a hard error we should consider it hard.
-    if (code == NS_ERROR_FAILURE) {
+    if (code == NS_ERROR_FAILURE || code == NS_ERROR_OUT_OF_MEMORY) {
       return false;
     }
 

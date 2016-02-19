@@ -333,9 +333,7 @@ LocaleData.prototype = {
 
     // Check for certain pre-defined messages.
     if (message == "@@ui_locale") {
-      // Return the browser locale, but convert it to a Chrome-style
-      // locale code.
-      return Locale.getLocale().replace(/-/g, "_");
+      return this.uiLocale;
     } else if (message.startsWith("@@bidi_")) {
       let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
       let rtl = registry.isLocaleRTL("global");
@@ -426,6 +424,13 @@ LocaleData.prototype = {
     this.messages.set(locale, result);
     return result;
   },
+
+  get uiLocale() {
+    // Return the browser locale, but convert it to a Chrome-style
+    // locale code.
+    return Locale.getLocale().replace(/-/g, "_");
+  },
+
 };
 
 // This is a generic class for managing event listeners. Example usage:

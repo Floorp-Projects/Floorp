@@ -83,7 +83,7 @@ public:
   // by this class for the given |aElement| and |aPseudoType|.
   AnimationCollection*
   GetAnimationCollection(dom::Element *aElement,
-                         nsCSSPseudoElements::Type aPseudoType,
+                         CSSPseudoElementType aPseudoType,
                          bool aCreateIfNeeded);
 
   // Given the frame |aFrame| with possibly animated content, finds its
@@ -174,20 +174,20 @@ public:
            mElementProperty == nsGkAtoms::animationsOfAfterProperty;
   }
 
-  nsCSSPseudoElements::Type PseudoElementType() const
+  CSSPseudoElementType PseudoElementType() const
   {
     if (IsForElement()) {
-      return nsCSSPseudoElements::ePseudo_NotPseudoElement;
+      return CSSPseudoElementType::NotPseudo;
     }
     if (IsForBeforePseudo()) {
-      return nsCSSPseudoElements::ePseudo_before;
+      return CSSPseudoElementType::before;
     }
     MOZ_ASSERT(IsForAfterPseudo(),
                "::before & ::after should be the only pseudo-elements here");
-    return nsCSSPseudoElements::ePseudo_after;
+    return CSSPseudoElementType::after;
   }
 
-  static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
+  static nsString PseudoTypeAsString(CSSPseudoElementType aPseudoType);
 
   dom::Element* GetElementToRestyle() const;
 
@@ -235,11 +235,11 @@ class OwningElementRef final
 public:
   OwningElementRef()
     : mElement(nullptr)
-    , mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
+    , mPseudoType(CSSPseudoElementType::NotPseudo)
   { }
 
   OwningElementRef(dom::Element& aElement,
-                   nsCSSPseudoElements::Type aPseudoType)
+                   CSSPseudoElementType aPseudoType)
     : mElement(&aElement)
     , mPseudoType(aPseudoType)
   { }
@@ -259,15 +259,15 @@ public:
       return nsContentUtils::PositionIsBefore(mElement, aOther.mElement);
     }
 
-    return mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-          (mPseudoType == nsCSSPseudoElements::ePseudo_before &&
-           aOther.mPseudoType == nsCSSPseudoElements::ePseudo_after);
+    return mPseudoType == CSSPseudoElementType::NotPseudo ||
+          (mPseudoType == CSSPseudoElementType::before &&
+           aOther.mPseudoType == CSSPseudoElementType::after);
   }
 
   bool IsSet() const { return !!mElement; }
 
   void GetElement(dom::Element*& aElement,
-                  nsCSSPseudoElements::Type& aPseudoType) const {
+                  CSSPseudoElementType& aPseudoType) const {
     aElement = mElement;
     aPseudoType = mPseudoType;
   }
@@ -276,7 +276,7 @@ public:
 
 private:
   dom::Element* MOZ_NON_OWNING_REF mElement;
-  nsCSSPseudoElements::Type        mPseudoType;
+  CSSPseudoElementType             mPseudoType;
 };
 
 template <class EventInfo>

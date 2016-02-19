@@ -1,3 +1,6 @@
+if (typeof SIMD !== 'object')
+    quit(0);
+
 function assertEqVec(v, w) {
     [0].forEach(i => v, w);
     function assertEqX4(...opts) {}

@@ -52,7 +52,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHangingChildDocuments)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentInsertions)
+  for (auto it = tmp->mContentInsertions.ConstIter(); !it.Done(); it.Next()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContentInsertions key");
+    cb.NoteXPCOMChild(it.Key());
+    nsTArray<nsCOMPtr<nsIContent>>* list = it.UserData();
+    for (uint32_t i = 0; i < list->Length(); i++) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                         "mContentInsertions value item");
+      cb.NoteXPCOMChild(list->ElementAt(i));
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvents)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelocations)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -103,10 +112,23 @@ NotificationController::ScheduleContentInsertion(Accessible* aContainer,
                                                  nsIContent* aStartChildNode,
                                                  nsIContent* aEndChildNode)
 {
-  RefPtr<ContentInsertion> insertion = new ContentInsertion(mDocument,
-                                                              aContainer);
-  if (insertion && insertion->InitChildList(aStartChildNode, aEndChildNode) &&
-      mContentInsertions.AppendElement(insertion)) {
+  nsTArray<nsCOMPtr<nsIContent>>* list =
+    mContentInsertions.LookupOrAdd(aContainer);
+
+  bool needsProcessing = false;
+  nsIContent* node = aStartChildNode;
+  while (node != aEndChildNode) {
+    // Notification triggers for content insertion even if no content was
+    // actually inserted, check if the given content has a frame to discard
+    // this case early.
+    if (node->GetPrimaryFrame()) {
+      if (list->AppendElement(node))
+        needsProcessing = true;
+    }
+    node = node->GetNextSibling();
+  }
+
+  if (needsProcessing) {
     ScheduleProcessing();
   }
 }
@@ -130,7 +152,7 @@ NotificationController::IsUpdatePending()
 {
   return mPresShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
-    mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
+    mContentInsertions.Count() != 0 || mNotifications.Length() != 0 ||
     mTextHash.Count() != 0 ||
     !mDocument->HasLoadState(DocAccessible::eTreeConstructed);
 }
@@ -178,7 +200,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
     mDocument->DoInitialUpdate();
 
-    NS_ASSERTION(mContentInsertions.Length() == 0,
+    NS_ASSERTION(mContentInsertions.Count() == 0,
                  "Pending content insertions while initial accessible tree isn't created!");
   }
 
@@ -196,15 +218,13 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // document accessible.
 
   // Process only currently queued content inserted notifications.
-  nsTArray<RefPtr<ContentInsertion> > contentInsertions;
-  contentInsertions.SwapElements(mContentInsertions);
-
-  uint32_t insertionCount = contentInsertions.Length();
-  for (uint32_t idx = 0; idx < insertionCount; idx++) {
-    contentInsertions[idx]->Process();
-    if (!mDocument)
+  for (auto iter = mContentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
+    mDocument->ProcessContentInserted(iter.Key(), iter.UserData());
+    if (!mDocument) {
       return;
+    }
   }
+  mContentInsertions.Clear();
 
   // Process rendered text change notifications.
   for (auto iter = mTextHash.Iter(); !iter.Done(); iter.Next()) {
@@ -403,7 +423,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
-  if (mContentInsertions.IsEmpty() && mNotifications.IsEmpty() &&
+  if (mContentInsertions.Count() == 0 && mNotifications.IsEmpty() &&
       mEvents.IsEmpty() && mTextHash.Count() == 0 &&
       mHangingChildDocuments.IsEmpty() &&
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
@@ -411,53 +431,3 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     mObservingState = eNotObservingRefresh;
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// NotificationController: content inserted notification
-
-NotificationController::ContentInsertion::
-  ContentInsertion(DocAccessible* aDocument, Accessible* aContainer) :
-  mDocument(aDocument), mContainer(aContainer)
-{
-}
-
-bool
-NotificationController::ContentInsertion::
-  InitChildList(nsIContent* aStartChildNode, nsIContent* aEndChildNode)
-{
-  bool haveToUpdate = false;
-
-  nsIContent* node = aStartChildNode;
-  while (node != aEndChildNode) {
-    // Notification triggers for content insertion even if no content was
-    // actually inserted, check if the given content has a frame to discard
-    // this case early.
-    if (node->GetPrimaryFrame()) {
-      if (mInsertedContent.AppendElement(node))
-        haveToUpdate = true;
-    }
-
-    node = node->GetNextSibling();
-  }
-
-  return haveToUpdate;
-}
-
-NS_IMPL_CYCLE_COLLECTION(NotificationController::ContentInsertion,
-                         mContainer)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NotificationController::ContentInsertion,
-                                     AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(NotificationController::ContentInsertion,
-                                       Release)
-
-void
-NotificationController::ContentInsertion::Process()
-{
-  mDocument->ProcessContentInserted(mContainer, &mInsertedContent);
-
-  mDocument = nullptr;
-  mContainer = nullptr;
-  mInsertedContent.Clear();
-}
-

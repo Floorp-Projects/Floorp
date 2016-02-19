@@ -12,6 +12,7 @@
 #include "mozilla/gfx/Blur.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "gfxUtils.h"
@@ -63,14 +64,14 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
 
     // Make an alpha-only surface to draw on. We will play with the data after
     // everything is drawn to create a blur effect.
-    mData = new (std::nothrow) unsigned char[blurDataSize];
+    mData = MakeUniqueFallible<unsigned char[]>(blurDataSize);
     if (!mData) {
         return nullptr;
     }
-    memset(mData, 0, blurDataSize);
+    memset(mData.get(), 0, blurDataSize);
 
     RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData, size,
+        gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData.get(), size,
                                                             mBlur->GetStride(),
                                                             SurfaceFormat::A8);
     if (!dt) {
@@ -119,11 +120,11 @@ DrawBlur(gfxContext* aDestinationCtx,
 already_AddRefed<SourceSurface>
 gfxAlphaBoxBlur::DoBlur(DrawTarget* aDT, IntPoint* aTopLeft)
 {
-    mBlur->Blur(mData);
+    mBlur->Blur(mData.get());
 
     *aTopLeft = mBlur->GetRect().TopLeft();
 
-    return aDT->CreateSourceSurfaceFromData(mData,
+    return aDT->CreateSourceSurfaceFromData(mData.get(),
                                             mBlur->GetSize(),
                                             mBlur->GetStride(),
                                             SurfaceFormat::A8);

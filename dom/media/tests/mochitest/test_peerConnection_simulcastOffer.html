@@ -74,15 +74,6 @@
       ]);
 
       test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
-        // addTrack will not finish until GMP is initted, but addTrack doesn't
-        // give us a promise to wait on or a callback. We cannot do
-        // setParameters until addTrack is finished. So, we create a dummy
-        // offer, which _does_ give us a promise to wait on, and once that is
-        // done we know that addTrack is done too.
-        // TODO(bug 1241153): Remove the need for this hack.
-        function PC_LOCAL_CREATE_OFFER(test) {
-          return test.createOffer(test.pcLocal);
-        },
         function PC_LOCAL_SET_RIDS(test) {
           var senders = test.pcLocal._pc.getSenders();
           is(senders.length, 1, "We have exactly one RTP sender");

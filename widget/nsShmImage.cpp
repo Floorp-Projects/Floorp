@@ -17,6 +17,14 @@
 #endif
 
 #ifdef MOZ_HAVE_SHMIMAGE
+#include "mozilla/X11Util.h"
+
+#include "mozilla/ipc/SharedMemory.h"
+
+#include <errno.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
@@ -45,92 +53,143 @@ TrapShmError(Display* aDisplay, XErrorEvent* aEvent)
 }
 #endif
 
-already_AddRefed<nsShmImage>
-nsShmImage::Create(const LayoutDeviceIntSize& aSize,
-                   Display* aDisplay, Visual* aVisual, unsigned int aDepth)
+bool
+nsShmImage::CreateShmSegment()
 {
-    RefPtr<nsShmImage> shm = new nsShmImage();
-    shm->mDisplay = aDisplay;
-    shm->mImage = XShmCreateImage(aDisplay, aVisual, aDepth,
-                                  ZPixmap, nullptr,
-                                  &(shm->mInfo),
-                                  aSize.width, aSize.height);
-    if (!shm->mImage) {
-        return nullptr;
-    }
+  if (!mImage) {
+    return false;
+  }
 
-    size_t size = SharedMemory::PageAlignedSize(
-        shm->mImage->bytes_per_line * shm->mImage->height);
-    shm->mSegment = new SharedMemorySysV();
-    if (!shm->mSegment->Create(size) || !shm->mSegment->Map(size)) {
-        return nullptr;
-    }
+  size_t size = SharedMemory::PageAlignedSize(mImage->bytes_per_line * mImage->height);
 
-    shm->mInfo.shmid = shm->mSegment->GetHandle();
-    shm->mInfo.shmaddr =
-        shm->mImage->data = static_cast<char*>(shm->mSegment->memory());
-    shm->mInfo.readOnly = False;
+  mInfo.shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0600);
+  if (mInfo.shmid == -1) {
+    return false;
+  }
 
-#if defined(MOZ_WIDGET_GTK)
-    gShmError = 0;
-    XErrorHandler previousHandler = XSetErrorHandler(TrapShmError);
-    Status attachOk = XShmAttach(aDisplay, &shm->mInfo);
-    XSync(aDisplay, False);
-    XSetErrorHandler(previousHandler);
-    if (gShmError) {
-      attachOk = 0;
-    }
-#elif defined(MOZ_WIDGET_QT)
-    Status attachOk = XShmAttach(aDisplay, &shm->mInfo);
+  mInfo.shmaddr = (char *)shmat(mInfo.shmid, nullptr, 0);
+  if (mInfo.shmaddr == (void *)-1) {
+    nsPrintfCString warning("shmat(): %s (%d)\n", strerror(errno), errno);
+    NS_WARNING(warning.get());
+    return false;
+  }
+
+  // Mark the handle as deleted so that, should this process go away, the
+  // segment is cleaned up.
+  shmctl(mInfo.shmid, IPC_RMID, 0);
+
+#ifdef DEBUG
+  struct shmid_ds info;
+  if (shmctl(mInfo.shmid, IPC_STAT, &info) < 0) {
+    return false;
+  }
+
+  MOZ_ASSERT(size <= info.shm_segsz,
+             "Segment doesn't have enough space!");
 #endif
 
-    if (!attachOk) {
-        // Assume XShm isn't available, and don't attempt to use it
-        // again.
-        gShmAvailable = false;
-        return nullptr;
-    }
+  mInfo.readOnly = False;
 
-    shm->mXAttached = true;
-    shm->mSize = aSize;
-    switch (shm->mImage->depth) {
-    case 32:
-        if ((shm->mImage->red_mask == 0xff0000) &&
-            (shm->mImage->green_mask == 0xff00) &&
-            (shm->mImage->blue_mask == 0xff)) {
-            shm->mFormat = SurfaceFormat::B8G8R8A8;
-            memset(shm->mSegment->memory(), 0, size);
-            break;
-        }
-        goto unsupported;
-    case 24:
-        // Only xRGB is supported.
-        if ((shm->mImage->red_mask == 0xff0000) &&
-            (shm->mImage->green_mask == 0xff00) &&
-            (shm->mImage->blue_mask == 0xff)) {
-            shm->mFormat = SurfaceFormat::B8G8R8X8;
-            memset(shm->mSegment->memory(), 0xFF, size);
-            break;
-        }
-        goto unsupported;
-    case 16:
-        shm->mFormat = SurfaceFormat::R5G6B5_UINT16;
-        memset(shm->mSegment->memory(), 0, size);
-        break;
-    unsupported:
-    default:
-        NS_WARNING("Unsupported XShm Image format!");
-        gShmAvailable = false;
-        return nullptr;
+  mImage->data = mInfo.shmaddr;
+
+  return true;
+}
+
+void
+nsShmImage::DestroyShmSegment()
+{
+  if (mInfo.shmid != -1) {
+    shmdt(mInfo.shmaddr);
+    mInfo.shmid = -1;
+  }
+}
+
+bool
+nsShmImage::CreateImage(const LayoutDeviceIntSize& aSize,
+                        Display* aDisplay, Visual* aVisual, unsigned int aDepth)
+{
+  mDisplay = aDisplay;
+  mImage = XShmCreateImage(aDisplay, aVisual, aDepth,
+                           ZPixmap, nullptr,
+                           &mInfo,
+                           aSize.width, aSize.height);
+  if (!mImage || !CreateShmSegment()) {
+    return false;
+  }
+
+#if defined(MOZ_WIDGET_GTK)
+  gShmError = 0;
+  XErrorHandler previousHandler = XSetErrorHandler(TrapShmError);
+  Status attachOk = XShmAttach(aDisplay, &mInfo);
+  XSync(aDisplay, False);
+  XSetErrorHandler(previousHandler);
+  if (gShmError) {
+    attachOk = 0;
+  }
+#elif defined(MOZ_WIDGET_QT)
+  Status attachOk = XShmAttach(aDisplay, &mInfo);
+#endif
+
+  if (!attachOk) {
+    // Assume XShm isn't available, and don't attempt to use it
+    // again.
+    gShmAvailable = false;
+    return false;
+  }
+
+  mXAttached = true;
+  mSize = aSize;
+  mFormat = SurfaceFormat::UNKNOWN;
+  switch (mImage->depth) {
+  case 32:
+    if ((mImage->red_mask == 0xff0000) &&
+        (mImage->green_mask == 0xff00) &&
+        (mImage->blue_mask == 0xff)) {
+      mFormat = SurfaceFormat::B8G8R8A8;
+      memset(mImage->data, 0, mImage->bytes_per_line * mImage->height);
     }
-    return shm.forget();
+    break;
+  case 24:
+    // Only xRGB is supported.
+    if ((mImage->red_mask == 0xff0000) &&
+        (mImage->green_mask == 0xff00) &&
+        (mImage->blue_mask == 0xff)) {
+      mFormat = SurfaceFormat::B8G8R8X8;
+      memset(mImage->data, 0xFF, mImage->bytes_per_line * mImage->height);
+    }
+    break;
+  case 16:
+    mFormat = SurfaceFormat::R5G6B5_UINT16;
+    memset(mImage->data, 0, mImage->bytes_per_line * mImage->height);
+    break;
+  }
+
+  if (mFormat == SurfaceFormat::UNKNOWN) {
+    NS_WARNING("Unsupported XShm Image format!");
+    gShmAvailable = false;
+    return false;
+  }
+
+  return true;
+}
+
+nsShmImage::~nsShmImage()
+{
+  if (mImage) {
+    mozilla::FinishX(mDisplay);
+    if (mXAttached) {
+      XShmDetach(mDisplay, &mInfo);
+    }
+    XDestroyImage(mImage);
+  }
+  DestroyShmSegment();
 }
 
 already_AddRefed<DrawTarget>
 nsShmImage::CreateDrawTarget()
 {
   return gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-    static_cast<unsigned char*>(mSegment->memory()),
+    reinterpret_cast<unsigned char*>(mImage->data),
     mSize.ToUnknownSize(),
     mImage->bytes_per_line,
     mFormat);
@@ -189,15 +248,18 @@ nsShmImage::EnsureShmImage(const LayoutDeviceIntSize& aSize,
                            Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                            RefPtr<nsShmImage>& aImage)
 {
-    if (!aImage || aImage->Size() != aSize) {
-        // Because we XSync() after XShmAttach() to trap errors, we
-        // know that the X server has the old image's memory mapped
-        // into its address space, so it's OK to destroy the old image
-        // here even if there are outstanding Puts.  The Detach is
-        // ordered after the Puts.
-        aImage = nsShmImage::Create(aSize, aDisplay, aVisual, aDepth);
+  if (!aImage || aImage->Size() != aSize) {
+    // Because we XSync() after XShmAttach() to trap errors, we
+    // know that the X server has the old image's memory mapped
+    // into its address space, so it's OK to destroy the old image
+    // here even if there are outstanding Puts.  The Detach is
+    // ordered after the Puts.
+    aImage = new nsShmImage;
+    if (!aImage->CreateImage(aSize, aDisplay, aVisual, aDepth)) {
+      aImage = nullptr;
     }
-    return !aImage ? nullptr : aImage->CreateDrawTarget();
+  }
+  return !aImage ? nullptr : aImage->CreateDrawTarget();
 }
 
-#endif  // defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
+#endif  // MOZ_HAVE_SHMIMAGE

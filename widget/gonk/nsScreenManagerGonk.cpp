@@ -754,6 +754,9 @@ NS_IMPL_ISUPPORTS(nsScreenManagerGonk, nsIScreenManager)
 
 nsScreenManagerGonk::nsScreenManagerGonk()
     : mInitialized(false)
+#if ANDROID_VERSION >= 19
+    , mDisplayEnabled(false)
+#endif
 {
 }
 
@@ -816,9 +819,16 @@ nsScreenManagerGonk::Initialize()
 void
 nsScreenManagerGonk::DisplayEnabled(bool aEnabled)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
 #if ANDROID_VERSION >= 19
+    /* Bug 1244044
+     * This function could be called before |mCompositorVsyncScheduler| is set.
+     * To avoid this issue, keep the value stored in |mDisplayEnabled|.
+     */
+    mDisplayEnabled = aEnabled;
     if (mCompositorVsyncScheduler) {
-        mCompositorVsyncScheduler->SetDisplay(aEnabled);
+        mCompositorVsyncScheduler->SetDisplay(mDisplayEnabled);
     }
 #endif
 
@@ -1063,6 +1073,8 @@ nsScreenManagerGonk::SetCompositorVsyncScheduler(mozilla::layers::CompositorVsyn
 
     // We assume on b2g that there is only 1 CompositorParent
     MOZ_ASSERT(mCompositorVsyncScheduler == nullptr);
+    MOZ_ASSERT(aObserver);
     mCompositorVsyncScheduler = aObserver;
+    mCompositorVsyncScheduler->SetDisplay(mDisplayEnabled);
 }
 #endif

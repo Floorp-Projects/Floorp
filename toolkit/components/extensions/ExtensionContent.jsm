@@ -118,6 +118,10 @@ var api = context => {
       getMessage: function(messageName, substitutions) {
         return context.extension.localizeMessage(messageName, substitutions);
       },
+
+      getUILanguage: function() {
+        return context.extension.localeData.uiLocale;
+      },
     },
   };
 };
