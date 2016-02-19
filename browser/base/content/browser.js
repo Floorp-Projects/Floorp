@@ -6443,10 +6443,13 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
   }
   // Not all principals have URIs...
   if (contentPrincipal.URI) {
+    if (uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) {
+      return true;
+    }
     return contentPrincipal.URI.equals(uri);
   }
   // ... so for those that don't have them, enforce that the page has the
-  // system principal (this matches e.g. on about:blank).
+  // system principal (this matches e.g. on about:home).
   let ssm = Services.scriptSecurityManager;
   return ssm.isSystemPrincipal(contentPrincipal);
 }
