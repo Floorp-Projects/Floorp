@@ -108,6 +108,7 @@ make-buildinfo-file:
 		$(addprefix MOZ_SOURCE_REPO=,MOZ_SOURCE_REPO=$(MOZ_SOURCE_REPO)) \
 		MOZ_SOURCE_STAMP=$(MOZ_SOURCE_STAMP) \
 		MOZ_PKG_PLATFORM=$(MOZ_PKG_PLATFORM)
+	echo "buildID=$(BUILDID)" > $(MOZ_BUILDID_INFO_TXT_FILE)
 
 .PHONY: make-mozinfo-file
 make-mozinfo-file:
