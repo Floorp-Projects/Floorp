@@ -396,6 +396,11 @@ public:
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild);
   virtual bool RemoveChild(Accessible* aChild);
 
+  /**
+   * Reallocates the child withing its parent.
+   */
+  void MoveChild(uint32_t aNewIndex, Accessible* aChild);
+
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods
 
