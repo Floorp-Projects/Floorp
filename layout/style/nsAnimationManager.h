@@ -349,13 +349,6 @@ private:
                        mozilla::dom::Element* aTarget,
                        mozilla::dom::AnimationTimeline* aTimeline,
                        mozilla::AnimationPtrArray& aAnimations);
-  bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
-                      aSegments,
-                    nsCSSProperty aProperty,
-                    const mozilla::StyleAnimation& aAnimation,
-                    float aFromKey, nsStyleContext* aFromContext,
-                    mozilla::css::Declaration* aFromDeclaration,
-                    float aToKey, nsStyleContext* aToContext);
 };
 
 #endif /* !defined(nsAnimationManager_h_) */
