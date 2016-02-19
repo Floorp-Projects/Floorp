@@ -5,7 +5,7 @@ from mozharness.base.log import FATAL, INFO
 from mozharness.base.vcs.mercurial import MercurialVCS
 
 
-class GeckoMigrationMixin(object):
+class MercurialRepoManipulationMixin(object):
 
     def get_version(self, repo_root,
                     version_file="browser/config/version.txt"):
@@ -60,7 +60,7 @@ class GeckoMigrationMixin(object):
             """
         dirs = self.query_abs_dirs()
         hg = self.query_exe("hg", return_type="list")
-        hg_repos = self.query_gecko_repos()
+        hg_repos = self.query_repos()
         hg_strip_error_list = [{
             'substr': r'''abort: empty revision set''', 'level': INFO,
             'explanation': "Nothing to clean up; we're good!",
@@ -111,6 +111,31 @@ class GeckoMigrationMixin(object):
                 ignore_no_changes=self.config.get("ignore_no_changes", False)
             )
         self.info("Now verify |hg out| and |hg out --patch| if you're paranoid, and --push")
+
+    def hg_tag(self, cwd, tags, user=None, message=None, revision=None,
+               force=None, halt_on_failure=True):
+        if isinstance(tags, basestring):
+            tags = [tags]
+        cmd = self.query_exe('hg', return_type='list') + ['tag']
+        if not message:
+            message = "No bug - Tagging %s" % os.path.basename(cwd)
+            if revision:
+                message = "%s %s" % (message, revision)
+            message = "%s with %s" % (message, ', '.join(tags))
+            message += " a=release DONTBUILD CLOSED TREE"
+        self.info(message)
+        cmd.extend(['-m', message])
+        if user:
+            cmd.extend(['-u', user])
+        if revision:
+            cmd.extend(['-r', revision])
+        if force:
+            cmd.append('-f')
+        cmd.extend(tags)
+        return self.run_command(
+            cmd, cwd=cwd, halt_on_failure=halt_on_failure,
+            error_list=HgErrorList
+        )
 
     def push(self):
         """
