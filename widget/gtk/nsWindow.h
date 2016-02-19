@@ -216,7 +216,8 @@ public:
 #endif
 
     virtual already_AddRefed<mozilla::gfx::DrawTarget>
-                       StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion) override;
+                       StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                                                  mozilla::layers::BufferMode* aBufferMode) override;
     virtual void       EndRemoteDrawingInRegion(mozilla::gfx::DrawTarget* aDrawTarget,
                                                 LayoutDeviceIntRegion& aInvalidRegion) override;
 
@@ -309,7 +310,9 @@ public:
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
-    virtual already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const LayoutDeviceIntRegion& aRegion);
+
+    already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const LayoutDeviceIntRegion& aRegion,
+                                                             mozilla::layers::BufferMode* aBufferMode);
 
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,

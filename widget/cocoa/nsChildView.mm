@@ -2635,7 +2635,8 @@ nsChildView::SwipeFinished()
 }
 
 already_AddRefed<gfx::DrawTarget>
-nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion)
+nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                                        BufferMode* aBufferMode)
 {
   // should have created the GLPresenter in InitCompositor.
   MOZ_ASSERT(mGLPresenter);
