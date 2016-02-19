@@ -73,7 +73,7 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) override;
+  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
 
 protected:
   // Helper function which reflow the anonymous div frame.

@@ -5002,6 +5002,8 @@ nsGlobalWindow::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
     height = lengthDevPixels;
   }
   aError = treeOwnerAsWin->SetSize(width, height, true);
+
+  CheckForDPIChange();
 }
 
 void
@@ -5323,6 +5325,8 @@ nsGlobalWindow::SetScreenXOuter(int32_t aScreenX, ErrorResult& aError, bool aCal
   x = CSSToDevIntPixels(aScreenX);
 
   aError = treeOwnerAsWin->SetPosition(x, y);
+
+  CheckForDPIChange();
 }
 
 void
@@ -5383,6 +5387,8 @@ nsGlobalWindow::SetScreenYOuter(int32_t aScreenY, ErrorResult& aError, bool aCal
   y = CSSToDevIntPixels(aScreenY);
 
   aError = treeOwnerAsWin->SetPosition(x, y);
+
+  CheckForDPIChange();
 }
 
 void
@@ -7063,8 +7069,11 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
                              getter_AddRefs(screen));
   }
 
-  LayoutDevicePoint devPos;
   if (screen) {
+    // On secondary displays, the "CSS px" coordinates are offset so that they
+    // share their origin with global desktop pixels, to avoid ambiguities in
+    // the coordinate space when there are displays with different DPIs.
+    // (See the corresponding code in GetScreenXY() above.)
     int32_t screenLeftDeskPx, screenTopDeskPx, w, h;
     screen->GetRectDisplayPix(&screenLeftDeskPx, &screenTopDeskPx, &w, &h);
     CSSIntPoint cssPos(aXPos - screenLeftDeskPx, aYPos - screenTopDeskPx);
@@ -7072,20 +7081,21 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
 
     double scale;
     screen->GetDefaultCSSScaleFactor(&scale);
-    devPos = cssPos * CSSToLayoutDeviceScale(scale);
+    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(scale);
 
-    int32_t screenLeftDevPx, screenTopDevPx;
-    screen->GetRect(&screenLeftDevPx, &screenTopDevPx, &w, &h);
-    devPos.x += screenLeftDevPx;
-    devPos.y += screenTopDevPx;
+    screen->GetContentsScaleFactor(&scale);
+    DesktopPoint deskPos = devPos / DesktopToLayoutDeviceScale(scale);
+    aError = treeOwnerAsWin->SetPositionDesktopPix(screenLeftDeskPx + deskPos.x,
+                                                   screenTopDeskPx + deskPos.y);
   } else {
     // We couldn't find a screen? Just assume a 1:1 mapping.
     CSSIntPoint cssPos(aXPos, aXPos);
     CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerIsChrome);
-    devPos = cssPos * CSSToLayoutDeviceScale(1.0);
+    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(1.0);
+    aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
   }
 
-  aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
+  CheckForDPIChange();
 }
 
 void
@@ -7135,6 +7145,8 @@ nsGlobalWindow::MoveByOuter(int32_t aXDif, int32_t aYDif, ErrorResult& aError, b
   nsIntSize newDevPos(CSSToDevIntPixels(cssPos));
 
   aError = treeOwnerAsWin->SetPosition(newDevPos.width, newDevPos.height);
+
+  CheckForDPIChange();
 }
 
 void
@@ -7193,6 +7205,8 @@ nsGlobalWindow::ResizeToOuter(int32_t aWidth, int32_t aHeight, ErrorResult& aErr
   nsIntSize devSz(CSSToDevIntPixels(cssSize));
 
   aError = treeOwnerAsWin->SetSize(devSz.width, devSz.height, true);
+
+  CheckForDPIChange();
 }
 
 void
@@ -7262,6 +7276,8 @@ nsGlobalWindow::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
   nsIntSize newDevSize(CSSToDevIntPixels(cssSize));
 
   aError = treeOwnerAsWin->SetSize(newDevSize.width, newDevSize.height, true);
+
+  CheckForDPIChange();
 }
 
 void
@@ -13956,6 +13972,23 @@ nsGlobalWindow::CreateImageBitmap(const ImageBitmapSource& aImage,
                                   ErrorResult& aRv)
 {
   return ImageBitmap::Create(this, aImage, Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aRv);
+}
+
+// Helper called by methods that move/resize the window,
+// to ensure the presContext (if any) is aware of resolution
+// change that may happen in multi-monitor configuration.
+void
+nsGlobalWindow::CheckForDPIChange()
+{
+  if (mDocShell) {
+    RefPtr<nsPresContext> presContext;
+    mDocShell->GetPresContext(getter_AddRefs(presContext));
+    if (presContext) {
+      if (presContext->DeviceContext()->CheckDPIChange()) {
+        presContext->UIResolutionChanged();
+      }
+    }
+  }
 }
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;

@@ -153,6 +153,32 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
   return nullptr;
 }
 
+already_AddRefed<CompositingRenderTarget>
+BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
+{
+  if (aBufferMode != BufferMode::BUFFER_NONE) {
+    return CreateRenderTarget(aRect, aInit);
+  }
+
+  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
+
+  if (aRect.width * aRect.height == 0) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(mDrawTarget);
+
+  // Adjust bounds rect to account for new origin at (0, 0).
+  IntRect rect(0, 0, aRect.XMost(), aRect.YMost());
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, rect);
+
+  if (aInit == INIT_MODE_CLEAR) {
+    mDrawTarget->ClearRect(gfx::Rect(aRect));
+  }
+
+  return rt.forget();
+}
+
 already_AddRefed<DataTextureSource>
 BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
@@ -557,13 +583,14 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = Rect();
   }
 
+  BufferMode bufferMode = BufferMode::BUFFERED;
   if (mTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Use a dummy
     // placeholder so that CreateRenderTarget() works.
     mDrawTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   } else {
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
-    mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion);
+    mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion, &bufferMode);
     if (!mDrawTarget) {
       return;
     }
@@ -581,7 +608,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
-    CreateRenderTarget(mInvalidRect.ToUnknownRect(), INIT_MODE_CLEAR);
+    CreateRenderTargetForWindow(mInvalidRect.ToUnknownRect(), INIT_MODE_CLEAR, bufferMode);
   if (!target) {
     if (!mTarget) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
@@ -592,8 +619,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // We only allocate a surface sized to the invalidated region, so we need to
   // translate future coordinates.
-  mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-mInvalidRect.x,
-                                                               -mInvalidRect.y));
+  mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-mRenderTarget->GetOrigin()));
 
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
                          mInvalidRegion.ToUnknownRegion());
@@ -631,22 +657,25 @@ BasicCompositor::EndFrame()
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
-  // Note: Most platforms require us to buffer drawing to the widget surface.
-  // That's why we don't draw to mDrawTarget directly.
-  RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
-  RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
+  if (mTarget || mRenderTarget->mDrawTarget != mDrawTarget) {
+    // Note: Most platforms require us to buffer drawing to the widget surface.
+    // That's why we don't draw to mDrawTarget directly.
+    RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
+    RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
-  nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
+    nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
 
-  // The source DrawTarget is clipped to the invalidation region, so we have
-  // to copy the individual rectangles in the region or else we'll draw blank
-  // pixels.
-  for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-    const LayoutDeviceIntRect& r = iter.Get();
-    dest->CopySurface(source,
-                      IntRect(r.x - mInvalidRect.x, r.y - mInvalidRect.y, r.width, r.height),
-                      IntPoint(r.x - offset.x, r.y - offset.y));
+    // The source DrawTarget is clipped to the invalidation region, so we have
+    // to copy the individual rectangles in the region or else we'll draw blank
+    // pixels.
+    for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const LayoutDeviceIntRect& r = iter.Get();
+      dest->CopySurface(source,
+                        IntRect(r.x, r.y, r.width, r.height) - mRenderTarget->GetOrigin(),
+                        IntPoint(r.x, r.y) - offset);
+    }
   }
+
   if (!mTarget) {
     mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
   }

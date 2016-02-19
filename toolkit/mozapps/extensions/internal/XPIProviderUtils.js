@@ -1723,7 +1723,10 @@ this.XPIDatabaseReconcile = {
         logger.warn("Disabling foreign installed add-on " + aNewAddon.id + " in "
             + aInstallLocation.name);
         aNewAddon.userDisabled = true;
-        aNewAddon.seen = false;
+
+        // If we don't have an old app version then this is a new profile in
+        // which case just mark any sideloaded add-ons as already seen.
+        aNewAddon.seen = !aOldAppVersion;
       }
     }
 

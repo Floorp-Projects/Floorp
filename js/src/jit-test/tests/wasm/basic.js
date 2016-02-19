@@ -46,6 +46,11 @@ assertEq(desc.value(), undefined);
 
 wasmEvalText('(module (func) (func) (export "a" 0))');
 wasmEvalText('(module (func) (func) (export "a" 1))');
+wasmEvalText('(module (func $a) (func $b) (export "a" $a) (export "b" $b))');
+wasmEvalText('(module (func $a) (func $b) (export "a" $a) (export "b" $b))');
+assertErrorMessage(() => wasmEvalText('(module (func $a) (func) (export "a" $a) (export "b" $b))'), SyntaxError, /function not found/);
+assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), SyntaxError, /duplicate function/);
+
 assertErrorMessage(() => wasmEvalText('(module (func) (export "a" 1))'), TypeError, /export function index out of range/);
 assertErrorMessage(() => wasmEvalText('(module (func) (func) (export "a" 2))'), TypeError, /export function index out of range/);
 
@@ -92,6 +97,7 @@ assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError
 
 assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /Second argument, if present, must be an Object/);
 assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /Second argument, if present, must be an Object/);
+assertErrorMessage(() => wasmEvalText('(module (import $foo "a" "b") (import $foo "a" "b"))'), SyntaxError, /duplicate import/);
 
 const noImportObj = /no import object given/;
 const notObject = /import object field is not an Object/;
@@ -121,6 +127,7 @@ wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:()=>{}});
 wasmEvalText('(module (import "a" "" (result i32)))', {a: ()=> {}});
 wasmEvalText('(module (import "a" "" (result f32)))', {a: ()=> {}});
 wasmEvalText('(module (import "a" "" (result f64)))', {a: ()=> {}});
+wasmEvalText('(module (import $foo "a" "" (result f64)))', {a: ()=> {}});
 
 // ----------------------------------------------------------------------------
 // memory
@@ -220,6 +227,11 @@ assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (get_local 0))) (export "" 0))')(), 0);
 
 assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), TypeError, /NYI/);
+
+assertEq(wasmEvalText('(module (func (param $a i32) (result i32) (get_local $a)) (export "" 0))')(), 0);
+assertEq(wasmEvalText('(module (func (param $a i32) (local $b i32) (result i32) (block (set_local $b (get_local $a)) (get_local $b))) (export "" 0))')(42), 42);
+assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate var/);
+assertErrorMessage(() => wasmEvalText('(module (func (get_local $a)))'), SyntaxError, /local not found/);
 
 // ----------------------------------------------------------------------------
 // blocks
@@ -336,3 +348,32 @@ for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math
     assertThrowsInstanceOf(() => i2i(bad, 0), RangeError);
     assertThrowsInstanceOf(() => i2v(bad, 0), RangeError);
 }
+
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (type $a (func (param i32))))'), SyntaxError, /duplicate signature/);
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (type $b) (i32.const 13)))'), SyntaxError, /signature not found/);
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect $c (get_local 0) (i32.const 0))))'), SyntaxError, /signature not found/);
+
+var {v2i, i2i, i2v} = wasmEvalText(`(module
+    (type $a (func (result i32)))
+    (type $b (func (param i32) (result i32)))
+    (type $c (func (param i32)))
+    (func $a (type $a) (i32.const 13))
+    (func $b (type $a) (i32.const 42))
+    (func $c (type $b) (i32.add (get_local 0) (i32.const 1)))
+    (func $d (type $b) (i32.add (get_local 0) (i32.const 2)))
+    (func $e (type $b) (i32.add (get_local 0) (i32.const 3)))
+    (func $f (type $b) (i32.add (get_local 0) (i32.const 4)))
+    (table $a $b $c $d $e $f)
+    (func (param i32) (result i32) (call_indirect $a (get_local 0)))
+    (func (param i32) (param i32) (result i32) (call_indirect $b (get_local 0) (get_local 1)))
+    (func (param i32) (call_indirect $c (get_local 0) (i32.const 0)))
+    (export "v2i" 6)
+    (export "i2i" 7)
+    (export "i2v" 8)
+)`);
+
+wasmEvalText('(module (func $foo (nop)) (func (call $foo)))');
+wasmEvalText('(module (func (call $foo)) (func $foo (nop)))');
+wasmEvalText('(module (import $bar "a" "") (func (call_import $bar)) (func $foo (nop)))', {a:()=>{}});
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /function not found/);
+

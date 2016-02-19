@@ -1214,4 +1214,3 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     return this.localize(this.manifest.name);
   },
 });
-

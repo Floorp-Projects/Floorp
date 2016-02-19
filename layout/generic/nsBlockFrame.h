@@ -367,7 +367,7 @@ protected:
   {
     return aPresContext->StyleSet()->
       ProbePseudoElementStyle(mContent->AsElement(),
-                              nsCSSPseudoElements::ePseudo_firstLetter,
+                              mozilla::CSSPseudoElementType::firstLetter,
                               mStyleContext);
   }
 #endif

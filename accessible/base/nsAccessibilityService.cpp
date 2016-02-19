@@ -596,7 +596,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
       Accessible* container = document->GetContainerAccessible(aChildNode);
       a11y::TreeWalker walker(container ? container : document, aChildNode,
                               a11y::TreeWalker::eWalkCache);
-      child = walker.NextChild();
+      child = walker.Next();
     }
 
     if (child) {

@@ -7,3 +7,5 @@ fuzzy-if(Android&&AndroidVersion>=15,8,220) == 413027-4.html 413027-4-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,30) == 425247-1.html 425247-1-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,30) == 425247-2.html 425247-2-ref.html
 random == 429849-1.html 429849-1-ref.html # bug 432288
+== 1160342-1.html 1160342-ref.html
+== 1160342-2.html 1160342-ref.html

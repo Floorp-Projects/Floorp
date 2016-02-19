@@ -399,6 +399,7 @@ enum MIRType
     MIRType_Null,
     MIRType_Boolean,
     MIRType_Int32,
+    MIRType_Int64,
     MIRType_Double,
     MIRType_Float32,
     MIRType_String,
@@ -504,6 +505,8 @@ StringFromMIRType(MIRType type)
       return "Bool";
     case MIRType_Int32:
       return "Int32";
+    case MIRType_Int64:
+      return "Int64";
     case MIRType_Double:
       return "Double";
     case MIRType_Float32:
@@ -557,7 +560,18 @@ StringFromMIRType(MIRType type)
 static inline bool
 IsNumberType(MIRType type)
 {
-    return type == MIRType_Int32 || type == MIRType_Double || type == MIRType_Float32;
+    return type == MIRType_Int32 ||
+           type == MIRType_Double ||
+           type == MIRType_Float32 ||
+           type == MIRType_Int64;
+}
+
+static inline bool
+IsTypeRepresentableAsDouble(MIRType type)
+{
+    return type == MIRType_Int32 ||
+           type == MIRType_Double ||
+           type == MIRType_Float32;
 }
 
 static inline bool
