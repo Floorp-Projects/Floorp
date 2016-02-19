@@ -1492,26 +1492,6 @@ struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
   Type mType;
 };
 
-class LogStringMessageAsync : public nsCancelableRunnable
-{
-public:
-  LogStringMessageAsync(const nsAString& aMsg) : mMsg(aMsg)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    nsCOMPtr<nsIConsoleService> cs =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (cs) {
-       cs->LogStringMessage(mMsg.get());
-    }
-    return NS_OK;
-  }
-
-private:
-  nsString mMsg;
-};
-
 class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink
 {
 public:
@@ -1710,16 +1690,17 @@ private:
     aLog->mFile = logFileFinalDestination;
 
     // Log to the error console.
-    nsAutoString logPath;
-    logFileFinalDestination->GetPath(logPath);
-    nsAutoString msg = aCollectorKind +
-      NS_LITERAL_STRING(" Collector log dumped to ") + logPath;
+    nsCOMPtr<nsIConsoleService> cs =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      // Copy out the path.
+      nsAutoString logPath;
+      logFileFinalDestination->GetPath(logPath);
 
-    // We don't want any JS to run between ScanRoots and CollectWhite calls,
-    // and since ScanRoots calls this method, better to log the message
-    // asynchronously.
-    RefPtr<LogStringMessageAsync> log = new LogStringMessageAsync(msg);
-    NS_DispatchToCurrentThread(log);
+      nsString msg = aCollectorKind +
+        NS_LITERAL_STRING(" Collector log dumped to ") + logPath;
+      cs->LogStringMessage(msg.get());
+    }
     return NS_OK;
   }
 
