@@ -316,7 +316,13 @@ protected:
   }
 };
 
-static NetworkObserversManager sNetworkObservers;
+static NetworkObserversManager&
+NetworkObservers()
+{
+  static NetworkObserversManager sNetworkObservers;
+  AssertMainThread();
+  return sNetworkObservers;
+}
 
 class WakeLockObserversManager : public ObserversManager<WakeLockInformation>
 {
@@ -602,28 +608,28 @@ void
 RegisterNetworkObserver(NetworkObserver* aObserver)
 {
   AssertMainThread();
-  sNetworkObservers.AddObserver(aObserver);
+  NetworkObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterNetworkObserver(NetworkObserver* aObserver)
 {
   AssertMainThread();
-  sNetworkObservers.RemoveObserver(aObserver);
+  NetworkObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentNetworkInformation(NetworkInformation* aInfo)
 {
   AssertMainThread();
-  *aInfo = sNetworkObservers.GetCurrentInformation();
+  *aInfo = NetworkObservers().GetCurrentInformation();
 }
 
 void
 NotifyNetworkChange(const NetworkInformation& aInfo)
 {
-  sNetworkObservers.CacheInformation(aInfo);
-  sNetworkObservers.BroadcastCachedInformation();
+  NetworkObservers().CacheInformation(aInfo);
+  NetworkObservers().BroadcastCachedInformation();
 }
 
 void Reboot()
