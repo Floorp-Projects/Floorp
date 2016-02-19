@@ -50,7 +50,7 @@ ThreadSafeChromeUtils::NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
   }
 }
 
-/* static */ void
+  /* static */ void
 ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
                                       const dom::OriginAttributesDictionary& aAttrs,
                                       nsCString& aSuffix)
@@ -71,17 +71,11 @@ ChromeUtils::OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
 }
 
 /* static */ void
-ChromeUtils::CreateDefaultOriginAttributes(dom::GlobalObject& aGlobal,
-                                      dom::OriginAttributesDictionary& aAttrs)
-{
-  aAttrs = GenericOriginAttributes();
-}
-
-/* static */ void
-ChromeUtils::CreateOriginAttributesFromOrigin(dom::GlobalObject& aGlobal,
-                                       const nsAString& aOrigin,
-                                       dom::OriginAttributesDictionary& aAttrs,
-                                       ErrorResult& aRv)
+ChromeUtils::CreateOriginAttributesWithUserContextId(dom::GlobalObject& aGlobal,
+                                                     const nsAString& aOrigin,
+                                                     uint32_t aUserContextId,
+                                                     dom::OriginAttributesDictionary& aAttrs,
+                                                     ErrorResult& aRv)
 {
   GenericOriginAttributes attrs;
   nsAutoCString suffix;
@@ -89,17 +83,10 @@ ChromeUtils::CreateOriginAttributesFromOrigin(dom::GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
+
+  attrs.mUserContextId = aUserContextId;
   aAttrs = attrs;
 }
-
-/* static */ void
-ChromeUtils::CreateOriginAttributesFromDict(dom::GlobalObject& aGlobal,
-                                 const dom::OriginAttributesDictionary& aAttrs,
-                                 dom::OriginAttributesDictionary& aNewAttrs)
-{
-  aNewAttrs = aAttrs;
-}
-
 
 } // namespace dom
 } // namespace mozilla
