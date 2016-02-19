@@ -1184,25 +1184,31 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 CodeOffset
 MacroAssembler::thunkWithPatch()
 {
-    addLongJump(nextOffset());
-    ma_liPatchable(ScratchRegister, ImmWord(0));
+    ma_move(SecondScratchReg, ra);
+    as_bal(BOffImm16(3 * sizeof(uint32_t)));
+    as_lw(ScratchRegister, ra, 0);
+    // Allocate space which will be patched by patchThunk().
+    CodeOffset u32Offset(currentOffset());
+    writeInst(UINT32_MAX);
+    addPtr(ra, ScratchRegister);
     as_jr(ScratchRegister);
-    as_nop();
-    return CodeOffset(currentOffset());
+    ma_move(ra, SecondScratchReg);
+    return u32Offset;
 }
 
 void
-MacroAssembler::patchThunk(uint32_t callerOffset, uint32_t calleeOffset)
+MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
 {
-    BufferOffset li(callerOffset - Assembler::PatchWrite_NearCallSize());
-    Assembler::PatchInstructionImmediate((uint8_t*)editSrc(li),
-                                         PatchedImmPtr((const void*)calleeOffset));
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));
+    MOZ_ASSERT(*u32 == UINT32_MAX);
+    *u32 = targetOffset - u32Offset;
 }
 
 void
-MacroAssembler::repatchThunk(uint8_t* code, uint32_t callerOffset, uint32_t calleeOffset)
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetOffset)
 {
-    Assembler::PatchInstructionImmediate(code, PatchedImmPtr((const void*)calleeOffset));
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + u32Offset);
+    *u32 = targetOffset - u32Offset;
 }
 
 void
