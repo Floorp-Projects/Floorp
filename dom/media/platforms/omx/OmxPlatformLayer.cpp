@@ -132,6 +132,36 @@ public:
   }
 };
 
+enum OmxAmrSampleRate {
+  kNarrowBand = 8000,
+  kWideBand = 16000,
+};
+
+template <OmxAmrSampleRate R>
+class OmxAmrConfig : public OmxAudioConfig
+{
+public:
+  OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const AudioInfo& aInfo) override
+  {
+    OMX_ERRORTYPE err;
+
+    OMX_AUDIO_PARAM_AMRTYPE def;
+    InitOmxParameter(&def);
+    def.nPortIndex = aOmx.InputPortIndex();
+    err = aOmx.GetParameter(OMX_IndexParamAudioAmr, &def, sizeof(def));
+    RETURN_IF_ERR(err);
+
+    def.eAMRFrameFormat = OMX_AUDIO_AMRFrameFormatFSF;
+    err = aOmx.SetParameter(OMX_IndexParamAudioAmr, &def, sizeof(def));
+    RETURN_IF_ERR(err);
+
+    MOZ_ASSERT(aInfo.mChannels == 1);
+    MOZ_ASSERT(aInfo.mRate == R);
+
+    return ConfigAudioOutputPort(aOmx, aInfo);
+  }
+};
+
 template<>
 UniquePtr<OmxAudioConfig>
 ConfigForMime(const nsACString& aMimeType)
@@ -144,6 +174,10 @@ ConfigForMime(const nsACString& aMimeType)
     } else if (aMimeType.EqualsLiteral("audio/mp3") ||
                 aMimeType.EqualsLiteral("audio/mpeg")) {
       conf.reset(new OmxMp3Config());
+    } else if (aMimeType.EqualsLiteral("audio/3gpp")) {
+      conf.reset(new OmxAmrConfig<OmxAmrSampleRate::kNarrowBand>());
+    } else if (aMimeType.EqualsLiteral("audio/amr-wb")) {
+      conf.reset(new OmxAmrConfig<OmxAmrSampleRate::kWideBand>());
     }
   }
   return Move(conf);
