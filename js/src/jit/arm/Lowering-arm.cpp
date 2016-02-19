@@ -17,16 +17,15 @@ using namespace js::jit;
 
 using mozilla::FloorLog2;
 
-void
-LIRGeneratorARM::useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1,
-                             Register reg2, bool useAtStart)
+LBoxAllocation
+LIRGeneratorARM::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
     MOZ_ASSERT(reg1 != reg2);
 
     ensureDefined(mir);
-    lir->setOperand(n, LUse(reg1, mir->virtualRegister(), useAtStart));
-    lir->setOperand(n + 1, LUse(reg2, VirtualRegisterOfPayload(mir), useAtStart));
+    return LBoxAllocation(LUse(reg1, mir->virtualRegister(), useAtStart),
+                          LUse(reg2, VirtualRegisterOfPayload(mir), useAtStart));
 }
 
 LAllocation
@@ -108,10 +107,9 @@ LIRGeneratorARM::visitUnbox(MUnbox* unbox)
     ensureDefined(inner);
 
     if (IsFloatingPointType(unbox->type())) {
-        LUnboxFloatingPoint* lir = new(alloc()) LUnboxFloatingPoint(unbox->type());
+        LUnboxFloatingPoint* lir = new(alloc()) LUnboxFloatingPoint(useBox(inner), unbox->type());
         if (unbox->fallible())
             assignSnapshot(lir, unbox->bailoutKind());
-        useBox(lir, LUnboxFloatingPoint::Input, inner);
         define(lir, unbox);
         return;
     }
@@ -345,7 +343,8 @@ LIRGeneratorARM::newLTableSwitch(const LAllocation& in, const LDefinition& input
 LTableSwitchV*
 LIRGeneratorARM::newLTableSwitchV(MTableSwitch* tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempDouble(), tableswitch);
+    return new(alloc()) LTableSwitchV(useBox(tableswitch->getOperand(0)),
+                                      temp(), tempDouble(), tableswitch);
 }
 
 void

@@ -14,13 +14,13 @@
 using namespace js;
 using namespace js::jit;
 
-void
-LIRGeneratorX64::useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register, bool useAtStart)
+LBoxAllocation
+LIRGeneratorX64::useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
 
     ensureDefined(mir);
-    lir->setOperand(n, LUse(reg1, mir->virtualRegister(), useAtStart));
+    return LBoxAllocation(LUse(reg1, mir->virtualRegister(), useAtStart));
 }
 
 LAllocation

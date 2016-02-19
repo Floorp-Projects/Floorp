@@ -20,10 +20,9 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     { }
 
   protected:
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2,
-                     bool useAtStart = false);
+    // Returns a box allocation. reg2 is ignored on 64-bit platforms.
+    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                               bool useAtStart = false);
 
     LAllocation useByteOpRegister(MDefinition* mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
