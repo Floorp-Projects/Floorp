@@ -159,14 +159,13 @@ class LIRGeneratorShared : public MDefinitionVisitor
     template <size_t Ops, size_t Temps>
     inline void defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand);
 
-    // Adds a use at operand |n| of a value-typed insturction.
-    inline void useBox(LInstruction* lir, size_t n, MDefinition* mir,
-                       LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
+    // Returns a box allocation for a Value-typed instruction.
+    inline LBoxAllocation useBox(MDefinition* mir, LUse::Policy policy = LUse::REGISTER,
+                                 bool useAtStart = false);
 
-    // Adds a use at operand |n|. The use is either typed, a Value, or a
-    // constant (if useConstant is true).
-    inline void useBoxOrTypedOrConstant(LInstruction* lir, size_t n, MDefinition* mir,
-                                        bool useConstant);
+    // Returns a box allocation. The use is either typed, a Value, or
+    // a constant (if useConstant is true).
+    inline LBoxAllocation useBoxOrTypedOrConstant(MDefinition* mir, bool useConstant);
 
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.

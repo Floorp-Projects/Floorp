@@ -29,7 +29,8 @@ LIRGeneratorX86Shared::newLTableSwitch(const LAllocation& in, const LDefinition&
 LTableSwitchV*
 LIRGeneratorX86Shared::newLTableSwitchV(MTableSwitch* tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempDouble(), temp(), tableswitch);
+    return new(alloc()) LTableSwitchV(useBox(tableswitch->getOperand(0)),
+                                      temp(), tempDouble(), temp(), tableswitch);
 }
 
 void

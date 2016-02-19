@@ -23,8 +23,8 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
-    // Adds a use at operand |n| of a value-typed insturction.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register, bool useAtStart = false);
+    // Returns a box allocation. reg2 is ignored on 64-bit platforms.
+    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart = false);
 
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on x64 all registers are okay.

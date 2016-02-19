@@ -21,7 +21,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
         MOZ_CRASH();
     }
 
-    void useBoxFixed(LInstruction*, size_t, MDefinition*, Register, Register, bool useAtStart = false) { MOZ_CRASH(); }
+    LBoxAllocation useBoxFixed(MDefinition*, Register, Register, bool useAtStart = false) { MOZ_CRASH(); }
 
     LAllocation useByteOpRegister(MDefinition*) { MOZ_CRASH(); }
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition*) { MOZ_CRASH(); }
