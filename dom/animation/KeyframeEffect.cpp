@@ -452,10 +452,17 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
   return false;
 }
 
-void
+bool
 KeyframeEffectReadOnly::UpdateProperties(
     const InfallibleTArray<AnimationProperty>& aProperties)
 {
+  // AnimationProperty::operator== does not compare mWinsInCascade and
+  // mIsRunningOnCompositor, we don't need to update anything here because
+  // we want to preserve
+  if (mProperties == aProperties) {
+    return false;
+  }
+
   nsCSSPropertySet winningInCascadeProperties;
   nsCSSPropertySet runningOnCompositorProperties;
 
@@ -476,6 +483,18 @@ KeyframeEffectReadOnly::UpdateProperties(
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
+
+  if (mAnimation) {
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType,
+                       EffectCompositor::RestyleType::Layer,
+                       mAnimation->CascadeLevel());
+    }
+  }
+
+  return true;
 }
 
 void
