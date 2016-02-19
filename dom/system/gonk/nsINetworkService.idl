@@ -153,11 +153,53 @@ interface nsIDhcpRequestCallback : nsISupports
   void dhcpRequestResult(in boolean success, in jsval dhcpInfo);
 };
 
+[scriptable, function, uuid(88e3ee22-f1b3-4fa0-8a5d-793fb827c42c)]
+interface nsIGetInterfacesCallback : nsISupports
+{
+  /**
+   * Callback function used to return the list of existing network interfaces.
+   *
+   * @param success
+   *        Boolean to indicate the operation is successful or not.
+   * @param interfaceList
+   *        An array of interface name.
+   */
+  void getInterfacesResult(in boolean success, in jsval interfaceList);
+};
+
+[scriptable, function, uuid(064e02a3-d2c0-42c5-a293-1efa84056100)]
+interface nsIGetInterfaceConfigCallback : nsISupports
+{
+  /**
+   * Callback function used to return the network config of a given interface.
+   *
+   * @param success
+   *        Boolean to indicate the operation is successful or not.
+   * @param result
+   *        .ip: Ip address.
+   *        .prefix: mask length.
+   *        .link: network link properties.
+   *        .mac: mac address.
+   */
+  void getInterfaceConfigResult(in boolean success, in jsval result);
+};
+
+[scriptable, function, uuid(b370f360-6ba8-4517-a4f9-31e8f004ee91)]
+interface nsISetInterfaceConfigCallback : nsISupports
+{
+  /**
+   * Callback function used to set network config for a specified interface.
+   *
+   * @param success
+   *        Boolean to indicate the operation is successful or not.
+   */
+  void setInterfaceConfigResult(in boolean success);
+};
 
 /**
  * Provide network services.
  */
-[scriptable, uuid(bb929ae3-4a42-4a63-8388-97c4de69200e)]
+[scriptable, uuid(e16fe98f-9f63-48fe-82ba-8d1a1b7c6a57)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -413,6 +455,37 @@ interface nsINetworkService : nsISupports
   void updateUpStream(in jsval previous,
                       in jsval current,
                       in nsIUpdateUpStreamCallback callback);
+
+  /*
+   * Obtain interfaces list.
+   *
+   * @param callback
+   *        Callback function to return the result.
+   */
+  void getInterfaces(in nsIGetInterfacesCallback callback);
+
+  /**
+   * Get config of a network interface.
+   *
+   * @param ifname
+   *        Target interface.
+   * @param callback
+   *        Callback function to report the result.
+   */
+  void getInterfaceConfig(in DOMString ifname, in nsIGetInterfaceConfigCallback callback);
+
+  /**
+   * Set config for a network interface.
+   *
+   * @param config
+   *        .ifname: Target interface.
+   *        .ip: Ip address.
+   *        .prefix: mask length.
+   *        .link: network link properties.
+   * @param callback
+   *        Callback function to report the result.
+   */
+  void setInterfaceConfig(in jsval config, in nsISetInterfaceConfigCallback callback);
 
   /**
    * Configure a network interface.
