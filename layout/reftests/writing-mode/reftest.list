@@ -69,7 +69,7 @@ skip-if(Android||B2G||Mulet||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.osc
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,5) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
