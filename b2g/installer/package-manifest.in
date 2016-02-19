@@ -453,6 +453,8 @@
 @RESPATH@/components/DOMWifiManager.manifest
 @RESPATH@/components/DOMWifiP2pManager.js
 @RESPATH@/components/DOMWifiP2pManager.manifest
+@RESPATH@/components/EthernetManager.js
+@RESPATH@/components/EthernetManager.manifest
 @RESPATH@/components/NetworkInterfaceListService.js
 @RESPATH@/components/NetworkInterfaceListService.manifest
 @RESPATH@/components/NetworkManager.js
