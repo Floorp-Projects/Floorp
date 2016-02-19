@@ -203,7 +203,7 @@ const CustomizableWidgets = [
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
         handleResult: function (aResultSet) {
-          let onItemClick = function (aEvent) {
+          let onItemCommand = function (aEvent) {
             let item = aEvent.target;
             win.openUILink(item.getAttribute("targetURI"), aEvent);
             CustomizableUI.hidePanelForNode(item);
@@ -219,7 +219,7 @@ const CustomizableWidgets = [
             item.setAttribute("label", title || uri);
             item.setAttribute("targetURI", uri);
             item.setAttribute("class", "subviewbutton");
-            item.addEventListener("click", onItemClick);
+            item.addEventListener("command", onItemCommand);
             if (icon) {
               let iconURL = "moz-anno:favicon:" + icon;
               item.setAttribute("image", iconURL);
