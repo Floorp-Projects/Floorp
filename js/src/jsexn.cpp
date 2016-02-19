@@ -65,7 +65,7 @@ static const JSFunctionSpec exception_methods[] = {
     JS_FS_END
 };
 
-#define IMPLEMENT_ERROR_SUBCLASS(name) \
+#define IMPLEMENT_ERROR_SUBCLASS_EXTRA_FLAGS(name, extraClassSpecFlags)  \
     { \
         js_Error_str, /* yes, really */ \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
@@ -90,9 +90,12 @@ static const JSFunctionSpec exception_methods[] = {
             exception_methods, \
             exception_properties, \
             nullptr, \
-            JSProto_Error \
+            JSProto_Error | extraClassSpecFlags \
         } \
     }
+
+#define IMPLEMENT_ERROR_SUBCLASS(name) \
+    IMPLEMENT_ERROR_SUBCLASS_EXTRA_FLAGS(name, 0)
 
 const Class
 ErrorObject::classes[JSEXN_LIMIT] = {
@@ -128,7 +131,11 @@ ErrorObject::classes[JSEXN_LIMIT] = {
     IMPLEMENT_ERROR_SUBCLASS(ReferenceError),
     IMPLEMENT_ERROR_SUBCLASS(SyntaxError),
     IMPLEMENT_ERROR_SUBCLASS(TypeError),
-    IMPLEMENT_ERROR_SUBCLASS(URIError)
+    IMPLEMENT_ERROR_SUBCLASS(URIError),
+
+    // DebuggeeWouldRun is a subclass of Error but is accessible via the
+    // Debugger constructor, not the global.
+    IMPLEMENT_ERROR_SUBCLASS_EXTRA_FLAGS(DebuggeeWouldRun, ClassSpec::DontDefineConstructor),
 };
 
 JSErrorReport*
