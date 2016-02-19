@@ -21,6 +21,7 @@
 #include <android/log.h>
 #include <limits>
 #include "mozilla/dom/network/NetUtils.h"
+#include "mozilla/fallible.h"
 
 #include <errno.h>
 #include <string.h>
@@ -139,7 +140,7 @@ const CommandFunc NetworkUtils::sWifiEnableChain[] = {
   NetworkUtils::startAccessPointDriver,
   NetworkUtils::setAccessPoint,
   NetworkUtils::startSoftAP,
-  NetworkUtils::setInterfaceUp,
+  NetworkUtils::setConfig,
   NetworkUtils::tetherInterface,
   NetworkUtils::addInterfaceToLocalNetwork,
   NetworkUtils::addRouteToLocalNetwork,
@@ -183,7 +184,7 @@ const CommandFunc NetworkUtils::sWifiRetryChain[] = {
   NetworkUtils::startAccessPointDriver,
   NetworkUtils::setAccessPoint,
   NetworkUtils::startSoftAP,
-  NetworkUtils::setInterfaceUp,
+  NetworkUtils::setConfig,
   NetworkUtils::tetherInterface,
   NetworkUtils::addInterfaceToLocalNetwork,
   NetworkUtils::addRouteToLocalNetwork,
@@ -201,7 +202,7 @@ const CommandFunc NetworkUtils::sWifiOperationModeChain[] = {
 };
 
 const CommandFunc NetworkUtils::sUSBEnableChain[] = {
-  NetworkUtils::setInterfaceUp,
+  NetworkUtils::setConfig,
   NetworkUtils::enableNat,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::tetherInterface,
@@ -241,7 +242,7 @@ const CommandFunc NetworkUtils::sUpdateUpStreamChain[] = {
 };
 
 const CommandFunc NetworkUtils::sStartDhcpServerChain[] = {
-  NetworkUtils::setInterfaceUp,
+  NetworkUtils::setConfig,
   NetworkUtils::startTethering,
   NetworkUtils::setDhcpServerSuccess
 };
@@ -267,6 +268,21 @@ const CommandFunc NetworkUtils::sNetworkInterfaceDisableAlarmChain[] = {
 const CommandFunc NetworkUtils::sNetworkInterfaceSetAlarmChain[] = {
   NetworkUtils::setAlarm,
   NetworkUtils::networkInterfaceAlarmSuccess
+};
+
+const CommandFunc NetworkUtils::sGetInterfacesChain[] = {
+  NetworkUtils::getInterfaceList,
+  NetworkUtils::getInterfacesSuccess
+};
+
+const CommandFunc NetworkUtils::sGetInterfaceConfigChain[] = {
+  NetworkUtils::getConfig,
+  NetworkUtils::getInterfaceConfigSuccess
+};
+
+const CommandFunc NetworkUtils::sSetInterfaceConfigChain[] = {
+  NetworkUtils::setConfig,
+  NetworkUtils::setInterfaceConfigSuccess
 };
 
 const CommandFunc NetworkUtils::sTetheringInterfaceSetAlarmChain[] = {
@@ -366,6 +382,15 @@ static void join(nsTArray<nsCString>& array,
   }
 
 #undef CHECK_LEN
+}
+
+static void convertUTF8toUTF16(nsTArray<nsCString>& narrow,
+                               nsTArray<nsString>& wide,
+                               uint32_t length)
+{
+  for (uint32_t i = 0; i < length; i++) {
+    wide.AppendElement(NS_ConvertUTF8toUTF16(narrow[i].get()));
+  }
 }
 
 /**
@@ -767,27 +792,6 @@ void NetworkUtils::removeGlobalAlarm(CommandChain* aChain,
   char command[MAX_COMMAND_SIZE];
 
   PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth removeglobalalert");
-  doCommand(command, aChain, aCallback);
-}
-
-void NetworkUtils::setInterfaceUp(CommandChain* aChain,
-                                  CommandCallback aCallback,
-                                  NetworkResultOptions& aResult)
-{
-  char command[MAX_COMMAND_SIZE];
-  if (SDK_VERSION >= 16) {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "interface setcfg %s %s %s %s",
-                     GET_CHAR(mIfname),
-                     GET_CHAR(mIp),
-                     GET_CHAR(mPrefix),
-                     GET_CHAR(mLink));
-  } else {
-    PR_snprintf(command, MAX_COMMAND_SIZE - 1, "interface setcfg %s %s %s [%s]",
-                     GET_CHAR(mIfname),
-                     GET_CHAR(mIp),
-                     GET_CHAR(mPrefix),
-                     GET_CHAR(mLink));
-  }
   doCommand(command, aChain, aCallback);
 }
 
@@ -1196,6 +1200,47 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
     written += ret;
   }
 
+  doCommand(command, aChain, aCallback);
+}
+
+void NetworkUtils::getInterfaceList(CommandChain* aChain,
+                                    CommandCallback aCallback,
+                                    NetworkResultOptions& aResult)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "interface list");
+
+  doCommand(command, aChain, aCallback);
+}
+
+void NetworkUtils::getConfig(CommandChain* aChain,
+                             CommandCallback aCallback,
+                             NetworkResultOptions& aResult)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "interface getcfg %s", GET_CHAR(mIfname));
+
+  doCommand(command, aChain, aCallback);
+}
+
+void NetworkUtils::setConfig(CommandChain* aChain,
+                             CommandCallback aCallback,
+                             NetworkResultOptions& aResult)
+{
+  char command[MAX_COMMAND_SIZE];
+  if (SDK_VERSION >= 16) {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "interface setcfg %s %s %s %s",
+                      GET_CHAR(mIfname),
+                      GET_CHAR(mIp),
+                      GET_CHAR(mPrefix),
+                      GET_CHAR(mLink));
+  } else {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "interface setcfg %s %s %s [%s]",
+                      GET_CHAR(mIfname),
+                      GET_CHAR(mIp),
+                      GET_CHAR(mPrefix),
+                      GET_CHAR(mLink));
+  }
   doCommand(command, aChain, aCallback);
 }
 
@@ -1616,6 +1661,80 @@ void NetworkUtils::defaultAsyncFailureHandler(NetworkParams& aOptions, NetworkRe
   postMessage(aOptions, aResult);
 }
 
+void NetworkUtils::getInterfacesFail(NetworkParams& aOptions, NetworkResultOptions& aResult)
+{
+  postMessage(aOptions, aResult);
+}
+
+void NetworkUtils::getInterfacesSuccess(CommandChain* aChain,
+                                        CommandCallback aCallback,
+                                        NetworkResultOptions& aResult)
+{
+  char buf[BUF_SIZE];
+  NS_ConvertUTF16toUTF8 reason(aResult.mResultReason);
+  memcpy(buf, reason.get(), strlen(reason.get()));
+
+  nsTArray<nsCString> result;
+  split(buf, INTERFACE_DELIMIT, result);
+
+  nsTArray<nsString> interfaceList;
+  uint32_t length = result.Length();
+  convertUTF8toUTF16(result, interfaceList, length);
+
+  aResult.mInterfaceList.Construct();
+  for (uint32_t i = 0; i < length; i++) {
+    aResult.mInterfaceList.Value().AppendElement(interfaceList[i], fallible_t());
+  }
+
+  postMessage(aChain->getParams(), aResult);
+  finalizeSuccess(aChain, aResult);
+}
+
+void NetworkUtils::getInterfaceConfigFail(NetworkParams& aOptions,
+                                          NetworkResultOptions& aResult)
+{
+  postMessage(aOptions, aResult);
+}
+
+void NetworkUtils::getInterfaceConfigSuccess(CommandChain* aChain,
+                                             CommandCallback aCallback,
+                                             NetworkResultOptions& aResult)
+{
+  char buf[BUF_SIZE];
+  NS_ConvertUTF16toUTF8 reason(aResult.mResultReason);
+  memcpy(buf, reason.get(), strlen(reason.get()));
+
+  nsTArray<nsCString> result;
+  split(buf, NETD_MESSAGE_DELIMIT, result);
+
+  ASSIGN_FIELD_VALUE(mMacAddr, NS_ConvertUTF8toUTF16(result[0]))
+  ASSIGN_FIELD_VALUE(mIpAddr, NS_ConvertUTF8toUTF16(result[1]))
+  ASSIGN_FIELD_VALUE(mPrefixLength, atol(result[2].get()))
+
+  if (result[3].Find("up")) {
+    ASSIGN_FIELD_VALUE(mFlag, NS_ConvertUTF8toUTF16("up"))
+  } else {
+    ASSIGN_FIELD_VALUE(mFlag, NS_ConvertUTF8toUTF16("down"))
+  }
+
+  postMessage(aChain->getParams(), aResult);
+  finalizeSuccess(aChain, aResult);
+}
+
+void NetworkUtils::setInterfaceConfigFail(NetworkParams& aOptions,
+                                          NetworkResultOptions& aResult)
+{
+  postMessage(aOptions, aResult);
+}
+
+void NetworkUtils::setInterfaceConfigSuccess(CommandChain* aChain,
+                                             CommandCallback aCallback,
+                                             NetworkResultOptions& aResult)
+{
+  postMessage(aChain->getParams(), aResult);
+  finalizeSuccess(aChain, aResult);
+}
+
 #undef ASSIGN_FIELD
 #undef ASSIGN_FIELD_VALUE
 
@@ -1688,6 +1807,9 @@ void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
     BUILD_ENTRY(createNetwork),
     BUILD_ENTRY(destroyNetwork),
     BUILD_ENTRY(getNetId),
+    BUILD_ENTRY(getInterfaces),
+    BUILD_ENTRY(getInterfaceConfig),
+    BUILD_ENTRY(setInterfaceConfig),
     BUILD_ENTRY(setMtu),
 
     #undef BUILD_ENTRY
@@ -1937,6 +2059,7 @@ CommandResult NetworkUtils::dhcpRequest(NetworkParams& aOptions) {
     result.mServer_str = NS_ConvertUTF8toUTF16(server);
     result.mVendor_str = NS_ConvertUTF8toUTF16(vendorinfo);
     result.mLease = lease;
+    result.mPrefixLength = prefixLength;
     result.mMask = makeMask(prefixLength);
 
     uint32_t inet4; // only support IPv4 for now.
@@ -2725,6 +2848,33 @@ CommandResult NetworkUtils::getNetId(NetworkParams& aOptions)
   }
   result.mNetId.AppendInt(netIdInfo.mNetId, 10);
   return result;
+}
+
+/**
+ * Get existing network interfaces.
+ */
+CommandResult NetworkUtils::getInterfaces(NetworkParams& aOptions)
+{
+  runChain(aOptions, sGetInterfacesChain, getInterfacesFail);
+  return CommandResult::Pending();
+}
+
+/**
+ * Get network config of a specified interface.
+ */
+CommandResult NetworkUtils::getInterfaceConfig(NetworkParams& aOptions)
+{
+  runChain(aOptions, sGetInterfaceConfigChain, getInterfaceConfigFail);
+  return CommandResult::Pending();
+}
+
+/**
+ * Set network config for a specified interface.
+ */
+CommandResult NetworkUtils::setInterfaceConfig(NetworkParams& aOptions)
+{
+  runChain(aOptions, sSetInterfaceConfigChain, setInterfaceConfigFail);
+  return CommandResult::Pending();
 }
 
 CommandResult NetworkUtils::setMtu(NetworkParams& aOptions)
