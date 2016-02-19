@@ -1005,6 +1005,15 @@ JSContext::isClosingGenerator()
 }
 
 bool
+JSContext::isThrowingDebuggeeWouldRun()
+{
+    return throwing &&
+           unwrappedException_.isObject() &&
+           unwrappedException_.toObject().is<ErrorObject>() &&
+           unwrappedException_.toObject().as<ErrorObject>().type() == JSEXN_DEBUGGEEWOULDRUN;
+}
+
+bool
 JSContext::saveFrameChain()
 {
     if (!savedFrameChains_.append(SavedFrameChain(compartment(), enterCompartmentDepth_)))

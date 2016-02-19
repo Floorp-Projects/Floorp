@@ -270,6 +270,123 @@ class AutoRestoreCompartmentDebugMode
     }
 };
 
+// Given a Debugger instance dbg, if it is enabled, prevents all its debuggee
+// compartments from executing scripts. Attempts to run script will throw an
+// instance of Debugger.DebuggeeWouldRun from the topmost locked Debugger's
+// compartment.
+class MOZ_RAII js::EnterDebuggeeNoExecute
+{
+    friend class js::LeaveDebuggeeNoExecute;
+
+    Debugger& dbg_;
+    EnterDebuggeeNoExecute** stack_;
+    EnterDebuggeeNoExecute* prev_;
+
+    // Non-nullptr when unlocked temporarily by a LeaveDebuggeeNoExecute.
+    LeaveDebuggeeNoExecute* unlocked_;
+
+  public:
+    explicit EnterDebuggeeNoExecute(JSContext* cx, Debugger& dbg)
+      : dbg_(dbg),
+        unlocked_(nullptr)
+    {
+        stack_ = &cx->runtime()->noExecuteDebuggerTop;
+        prev_ = *stack_;
+        *stack_ = this;
+    }
+
+    ~EnterDebuggeeNoExecute() {
+        MOZ_ASSERT(*stack_ == this);
+        *stack_ = prev_;
+    }
+
+    Debugger& debugger() const {
+        return dbg_;
+    }
+
+#ifdef DEBUG
+    static bool isUniqueLockedInStack(JSContext* cx, Debugger& dbg) {
+        JSRuntime* rt = cx->runtime();
+
+        // This invariant does not hold when DebuggeeWouldRun is only a
+        // warning.
+        if (!rt->options().throwOnDebuggeeWouldRun())
+            return true;
+
+        EnterDebuggeeNoExecute* found = nullptr;
+        for (EnterDebuggeeNoExecute* it = rt->noExecuteDebuggerTop; it; it = it->prev_) {
+            if (&it->debugger() == &dbg && !it->unlocked_) {
+                MOZ_ASSERT(!found);
+                found = it;
+            }
+        }
+        return !!found;
+    }
+#endif
+
+    // Given a JSContext entered into a debuggee compartment, find the lock
+    // that locks it. Returns nullptr if not found.
+    static EnterDebuggeeNoExecute* findInStack(JSContext* cx) {
+        JSRuntime* rt = cx->runtime();
+        JSCompartment* debuggee = cx->compartment();
+        for (EnterDebuggeeNoExecute* it = rt->noExecuteDebuggerTop; it; it = it->prev_) {
+            Debugger& dbg = it->debugger();
+            if (!it->unlocked_ && dbg.isEnabled() && dbg.observesGlobal(debuggee->maybeGlobal()))
+                return it;
+        }
+        return nullptr;
+    }
+
+    // As above, except for returning the Debugger instance.
+    static Debugger* findDebuggerInStack(JSContext* cx) {
+        if (EnterDebuggeeNoExecute* nx = findInStack(cx))
+            return &nx->debugger();
+        return nullptr;
+    }
+};
+
+// Given a JSContext entered into a debuggee compartment, if it is in
+// an NX section, unlock the topmost EnterDebuggeeNoExecute instance.
+//
+// Does nothing if debuggee is not in an NX section. For example, this
+// situation arises when invocation functions are called without entering
+// Debugger code, e.g., calling D.O.p.executeInGlobal or D.O.p.apply.
+class MOZ_RAII js::LeaveDebuggeeNoExecute
+{
+    EnterDebuggeeNoExecute* prevLocked_;
+
+  public:
+    explicit LeaveDebuggeeNoExecute(JSContext* cx)
+      : prevLocked_(EnterDebuggeeNoExecute::findInStack(cx))
+    {
+        if (prevLocked_) {
+            MOZ_ASSERT(!prevLocked_->unlocked_);
+            prevLocked_->unlocked_ = this;
+        }
+    }
+
+    ~LeaveDebuggeeNoExecute() {
+        if (prevLocked_) {
+            MOZ_ASSERT(prevLocked_->unlocked_ == this);
+            prevLocked_->unlocked_ = nullptr;
+        }
+    }
+};
+
+/* static */ bool
+Debugger::slowPathCheckNoExecute(JSContext* cx)
+{
+    MOZ_ASSERT(cx->compartment()->isDebuggee());
+    MOZ_ASSERT(cx->runtime()->noExecuteDebuggerTop);
+
+    if (Debugger* dbg = EnterDebuggeeNoExecute::findDebuggerInStack(cx)) {
+        AutoCompartment ac(cx, dbg->toJSObject());
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUGGEE_WOULD_RUN);
+        return false;
+    }
+    return true;
+}
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -656,6 +773,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
         for (JSObject** p = frames.begin(); p != frames.end(); p++) {
             RootedNativeObject frameobj(cx, &(*p)->as<NativeObject>());
             Debugger* dbg = Debugger::fromChildJSObject(frameobj);
+            EnterDebuggeeNoExecute nx(cx, *dbg);
 
             if (dbg->enabled &&
                 !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined()) {
@@ -1023,6 +1141,11 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
                                         MutableHandleValue* vp, bool callHook)
 {
     JSContext* cx = ac->context()->asJSContext();
+
+    // Uncaught exceptions arise from Debugger code, and so we must already be
+    // in an NX section.
+    MOZ_ASSERT(EnterDebuggeeNoExecute::isUniqueLockedInStack(cx, *this));
+
     if (cx->isExceptionPending()) {
         if (callHook && uncaughtExceptionHook) {
             RootedValue exc(cx);
@@ -1462,6 +1585,7 @@ Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled, FireHookFu
      */
     for (Value* p = triggered.begin(); p != triggered.end(); p++) {
         Debugger* dbg = Debugger::fromJSObject(&p->toObject());
+        EnterDebuggeeNoExecute nx(cx, *dbg);
         if (dbg->debuggees.has(global) && dbg->enabled && hookIsEnabled(dbg)) {
             JSTrapStatus st = fireHook(dbg);
             if (st != JSTRAP_CONTINUE)
@@ -1533,6 +1657,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
         if (hasDebuggee) {
             Maybe<AutoCompartment> ac;
             ac.emplace(cx, dbg->object);
+            EnterDebuggeeNoExecute nx(cx, *dbg);
 
             RootedValue scriptFrame(cx);
             if (!dbg->getScriptFrame(cx, iter, &scriptFrame))
@@ -1623,6 +1748,7 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
     for (JSObject** p = frames.begin(); p != frames.end(); p++) {
         RootedNativeObject frame(cx, &(*p)->as<NativeObject>());
         Debugger* dbg = Debugger::fromChildJSObject(frame);
+        EnterDebuggeeNoExecute nx(cx, *dbg);
 
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, dbg->object);
@@ -1709,6 +1835,7 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 
     for (size_t i = 0; i < watchers.length(); i++) {
         Debugger* dbg = fromJSObject(watchers[i]);
+        EnterDebuggeeNoExecute nx(cx, *dbg);
 
         // We disallow resumption values from onNewGlobalObject hooks, because we
         // want the debugger hooks for global object creation to be infallible.
@@ -6930,6 +7057,7 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     }
 
     /* Run the code and produce the completion value. */
+    LeaveDebuggeeNoExecute nnx(cx);
     RootedValue rval(cx);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
     jsbytecode* pc = iter ? iter->pc() : nullptr;
@@ -7754,6 +7882,7 @@ ApplyOrCall(JSContext* cx, unsigned argc, Value* vp, ApplyOrCallMode mode)
      * Call the function. Use receiveCompletionValue to return to the debugger
      * compartment and populate args.rval().
      */
+    LeaveDebuggeeNoExecute nnx(cx);
     RootedValue rval(cx);
     bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, args.rval());

@@ -389,6 +389,9 @@ js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    if (!Debugger::checkNoExecute(cx))
+        return false;
+
 #if defined(MOZ_HAVE_RDTSC)
     js::AutoStopwatch stopwatch(cx);
 #endif // defined(MOZ_HAVE_RDTSC)
