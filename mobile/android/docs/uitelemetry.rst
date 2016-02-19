@@ -230,6 +230,9 @@ Methods
 ``suggestion``
   Action triggered from a suggested result, like those from search engines or default tiles.
 
+``system``
+  Action triggered from an OS level action, like application foreground / background.
+
 ``toast``
   Action triggered from an unobtrusive, temporary notification.
 

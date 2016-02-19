@@ -188,6 +188,9 @@ public interface TelemetryContract {
         // Action triggered from a suggestion provided to the user.
         SUGGESTION("suggestion"),
 
+        // Action triggered from an OS system action.
+        SYSTEM("system"),
+
         // Action triggered from the Tabs tray.
         TABSTRAY("tabstray"),
 
