@@ -473,6 +473,8 @@ AccessibleCaretEventHub::HandleEvent(WidgetEvent* aEvent)
     return status;
   }
 
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
   switch (aEvent->mClass) {
   case eMouseEventClass:
     status = HandleMouseEvent(aEvent->AsMouseEvent());
@@ -655,6 +657,8 @@ AccessibleCaretEventHub::Reflow(DOMHighResTimeStamp aStart,
     return NS_OK;
   }
 
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnReflow(this);
   return NS_OK;
@@ -668,6 +672,8 @@ AccessibleCaretEventHub::ReflowInterruptible(DOMHighResTimeStamp aStart,
     return NS_OK;
   }
 
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
   return Reflow(aStart, aEnd);
 }
 
@@ -677,6 +683,8 @@ AccessibleCaretEventHub::AsyncPanZoomStarted()
   if (!mInitialized) {
     return;
   }
+
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnScrollStart(this);
@@ -689,6 +697,8 @@ AccessibleCaretEventHub::AsyncPanZoomStopped()
     return;
   }
 
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnScrollEnd(this);
 }
@@ -699,6 +709,8 @@ AccessibleCaretEventHub::ScrollPositionChanged()
   if (!mInitialized) {
     return;
   }
+
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnScrollPositionChanged(this);
@@ -742,6 +754,8 @@ AccessibleCaretEventHub::NotifySelectionChanged(nsIDOMDocument* aDoc,
     return NS_OK;
   }
 
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
   AC_LOG("%s, state: %s, reason: %d", __FUNCTION__, mState->Name(), aReason);
   mState->OnSelectionChanged(this, aDoc, aSel, aReason);
   return NS_OK;
@@ -753,6 +767,8 @@ AccessibleCaretEventHub::NotifyBlur(bool aIsLeavingDocument)
   if (!mInitialized) {
     return;
   }
+
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnBlur(this, aIsLeavingDocument);
