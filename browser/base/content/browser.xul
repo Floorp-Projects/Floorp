@@ -180,6 +180,12 @@
         <vbox>
           <label id="editBookmarkPanelTitle"/>
           <description id="editBookmarkPanelDescription"/>
+          <hbox>
+            <button id="editBookmarkPanelRemoveButton"
+                    class="editBookmarkPanelHeaderButton"
+                    oncommand="StarUI.removeBookmarkButtonCommand();"
+                    accesskey="&editBookmark.removeBookmark.accessKey;"/>
+          </hbox>
         </vbox>
       </row>
       <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
@@ -190,15 +196,15 @@
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
-        <button id="editBookmarkPanelRemoveButton"
+        <button id="editBookmarkPanelDeleteButton"
                 class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"
-                accesskey="&editBookmark.removeBookmark.accessKey;"/>
+                label="&editBookmark.cancel.label;"
+                oncommand="StarUI.cancelButtonOnCommand();"/>
 #else
-        <button id="editBookmarkPanelRemoveButton"
+        <button id="editBookmarkPanelDeleteButton"
                 class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"
-                accesskey="&editBookmark.removeBookmark.accessKey;"/>
+                label="&editBookmark.cancel.label;"
+                oncommand="StarUI.cancelButtonOnCommand();"/>
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
                 label="&editBookmark.done.label;"
