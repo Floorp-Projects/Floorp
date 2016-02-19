@@ -156,6 +156,10 @@ common conventions to report the debuggee's behavior safely. For other
 methods, if their normal operation would cause debuggee code to run, they
 throw an instance of the `Debugger.DebuggeeWouldRun` exception.
 
+If there are debugger frames on stack from multiple Debugger instances, the
+thrown exception is an instance of the topmost locking debugger's global's
+`Debugger.DebuggeeWouldRun`.
+
 A `Debugger.DebuggeeWouldRun` exception may have a `cause` property,
 providing more detailed information on why the debuggee would have run. The
 `cause` property's value is one of the following strings:
