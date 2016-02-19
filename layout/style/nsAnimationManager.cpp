@@ -315,15 +315,62 @@ PullOutOldAnimationInCollection(const nsAString& aName,
   // the list that do not match and are treated as new animations.
   size_t oldIdx = aCollection->mAnimations.Length();
   while (oldIdx-- != 0) {
-    RefPtr<CSSAnimation> a = aCollection->mAnimations[oldIdx]->AsCSSAnimation();
+    CSSAnimation* a = aCollection->mAnimations[oldIdx]->AsCSSAnimation();
     MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
-        " be CSSAnimation objects");
+      " be CSSAnimation objects");
     if (a->AnimationName() == aName) {
+      RefPtr<CSSAnimation> old = a;
       aCollection->mAnimations.RemoveElementAt(oldIdx);
-      return a.forget();
+      return old.forget();
     }
   }
   return nullptr;
+}
+
+static void
+UpdateOldAnimationPropertiesWithNew(CSSAnimation& aOld, Animation& aNew)
+{
+  bool animationChanged = false;
+
+  // Update the old from the new so we can keep the original object
+  // identity (and any expando properties attached to it).
+  if (aOld.GetEffect() && aNew.GetEffect()) {
+    KeyframeEffectReadOnly* oldEffect = aOld.GetEffect();
+    KeyframeEffectReadOnly* newEffect = aNew.GetEffect();
+    animationChanged =
+      oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming() ||
+      oldEffect->Properties() != newEffect->Properties();
+    oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
+    oldEffect->CopyPropertiesFrom(*newEffect);
+  }
+
+  // Handle changes in play state. If the animation is idle, however,
+  // changes to animation-play-state should *not* restart it.
+  if (aOld.PlayState() != AnimationPlayState::Idle) {
+    // CSSAnimation takes care of override behavior so that,
+    // for example, if the author has called pause(), that will
+    // override the animation-play-state.
+    // (We should check aNew->IsStylePaused() but that requires
+    //  downcasting to CSSAnimation and we happen to know that
+    //  aNew will only ever be paused by calling PauseFromStyle
+    //  making IsPausedOrPausing synonymous in this case.)
+    if (!aOld.IsStylePaused() && aNew.IsPausedOrPausing()) {
+      aOld.PauseFromStyle();
+      animationChanged = true;
+    } else if (aOld.IsStylePaused() && !aNew.IsPausedOrPausing()) {
+      aOld.PlayFromStyle();
+      animationChanged = true;
+    }
+  }
+
+  aOld.CopyAnimationIndex(*aNew.AsCSSAnimation());
+
+  // Updating the effect timing above might already have caused the
+  // animation to become irrelevant so only add a changed record if
+  // the animation is still relevant.
+  if (animationChanged && aOld.IsRelevant()) {
+    nsNodeUtils::AnimationChanged(&aOld);
+  }
 }
 
 void
@@ -409,49 +456,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
           newAnim->AsCSSAnimation()->QueueEvents();
           continue;
         }
-
-        bool animationChanged = false;
-
-        // Update the old from the new so we can keep the original object
-        // identity (and any expando properties attached to it).
-        if (oldAnim->GetEffect() && newAnim->GetEffect()) {
-          KeyframeEffectReadOnly* oldEffect = oldAnim->GetEffect();
-          KeyframeEffectReadOnly* newEffect = newAnim->GetEffect();
-          animationChanged =
-            oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming() ||
-            oldEffect->Properties() != newEffect->Properties();
-          oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
-          oldEffect->CopyPropertiesFrom(*newEffect);
-        }
-
-        // Handle changes in play state. If the animation is idle, however,
-        // changes to animation-play-state should *not* restart it.
-        if (oldAnim->PlayState() != AnimationPlayState::Idle) {
-          // CSSAnimation takes care of override behavior so that,
-          // for example, if the author has called pause(), that will
-          // override the animation-play-state.
-          // (We should check newAnim->IsStylePaused() but that requires
-          //  downcasting to CSSAnimation and we happen to know that
-          //  newAnim will only ever be paused by calling PauseFromStyle
-          //  making IsPausedOrPausing synonymous in this case.)
-          if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
-            oldAnim->PauseFromStyle();
-            animationChanged = true;
-          } else if (oldAnim->IsStylePaused() &&
-                    !newAnim->IsPausedOrPausing()) {
-            oldAnim->PlayFromStyle();
-            animationChanged = true;
-          }
-        }
-
-        oldAnim->CopyAnimationIndex(*newAnim->AsCSSAnimation());
-
-        // Updating the effect timing above might already have caused the
-        // animation to become irrelevant so only add a changed record if
-        // the animation is still relevant.
-        if (animationChanged && oldAnim->IsRelevant()) {
-          nsNodeUtils::AnimationChanged(oldAnim);
-        }
+        UpdateOldAnimationPropertiesWithNew(*oldAnim, *newAnim);
 
         // Replace new animation with the (updated) old one.
         //
