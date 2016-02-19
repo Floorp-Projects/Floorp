@@ -2016,7 +2016,7 @@ public class BrowserApp extends GeckoApp
         if (Tabs.getInstance().getDisplayCount() == 0)
             return;
 
-        hideFirstrunPager(TelemetryContract.Method.TABSTRAY);
+        hideFirstrunPager(TelemetryContract.Method.BUTTON);
 
         if (ensureTabsPanelExists()) {
             // If we've just inflated the tabs panel, only show it once the current
