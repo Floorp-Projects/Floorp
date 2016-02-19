@@ -17,9 +17,10 @@ function testLoad(type, ext, base, offset, align, expect) {
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
     '  (func (param i32) (result ' + type + ')' +
-    '    (' + type + '.load' + ext + ' (get_local 0)' +
+    '    (' + type + '.load' + ext +
     '     offset=' + offset +
     '     ' + (align != 0 ? 'align=' + align : '') +
+    '     (get_local 0)' +
     '    )' +
     '  ) (export "" 0))');
   assertEq(wasmEvalText(
@@ -29,9 +30,10 @@ function testLoad(type, ext, base, offset, align, expect) {
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
     '  (func (param i32) (result ' + type + ')' +
-    '    (' + type + '.load' + ext + ' (get_local 0)' +
+    '    (' + type + '.load' + ext +
     '     offset=' + offset +
     '     ' + (align != 0 ? 'align=' + align : '') +
+    '     (get_local 0)' +
     '    )' +
     '  ) (export "" 0))'
   )(base), expect);
@@ -45,9 +47,10 @@ function testStore(type, ext, base, offset, align, value) {
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
     '  (func (param i32) (param ' + type + ') (result ' + type + ')' +
-    '    (' + type + '.store' + ext + ' (get_local 0)' +
+    '    (' + type + '.store' + ext +
     '     offset=' + offset +
     '     ' + (align != 0 ? 'align=' + align : '') +
+    '     (get_local 0)' +
     '     (get_local 1)' +
     '    )' +
     '  ) (export "" 0))'
