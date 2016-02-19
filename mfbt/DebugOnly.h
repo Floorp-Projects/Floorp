@@ -64,9 +64,9 @@ public:
   const T& operator->() const { return value; }
 
 #else
-  MOZ_CONSTEXPR DebugOnly() { }
-  MOZ_CONSTEXPR MOZ_IMPLICIT DebugOnly(const T&) { }
-  MOZ_CONSTEXPR DebugOnly(const DebugOnly&) { }
+  DebugOnly() { }
+  MOZ_IMPLICIT DebugOnly(const T&) { }
+  DebugOnly(const DebugOnly&) { }
   DebugOnly& operator=(const T&) { return *this; }
   void operator++(int) { }
   void operator--(int) { }
@@ -82,7 +82,7 @@ public:
    * generate "unused variable" warnings, exactly what it's intended
    * to avoid!
    */
-  ~DebugOnly() = default;
+  ~DebugOnly() {}
 };
 
 } // namespace mozilla
