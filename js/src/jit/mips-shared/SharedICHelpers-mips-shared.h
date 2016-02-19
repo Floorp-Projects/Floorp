@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips64_SharedICHelpers_mips64_h
-#define jit_mips64_SharedICHelpers_mips64_h
+#ifndef jit_mips_shared_SharedICHelpers_mips_shared_h
+#define jit_mips_shared_SharedICHelpers_mips_shared_h
 
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -80,27 +80,26 @@ EmitChangeICReturnAddress(MacroAssembler& masm, Register reg)
 inline void
 EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
 {
-    // We assume during this that R0 and R1 have been pushed, and that R2 is
-    // unused.
-    MOZ_ASSERT(R2 == ValueOperand(a6));
+    Register scratch = R2.scratchReg();
 
     // Compute frame size.
-    masm.movePtr(BaselineFrameReg, a6);
-    masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), a6);
-    masm.subPtr(BaselineStackReg, a6);
+    masm.movePtr(BaselineFrameReg, scratch);
+    masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), scratch);
+    masm.subPtr(BaselineStackReg, scratch);
 
     // Store frame size without VMFunction arguments for GC marking.
-    masm.ma_dsubu(a7, a6, Imm32(argSize));
-    masm.store32(a7, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.subPtr(Imm32(argSize), scratch);
+    masm.store32(scratch, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+    masm.addPtr(Imm32(argSize), scratch);
 
     // Push frame descriptor and perform the tail call.
     // ICTailCallReg (ra) already contains the return address (as we
     // keep it there through the stub calls), but the VMWrapper code being
     // called expects the return address to also be pushed on the stack.
     MOZ_ASSERT(ICTailCallReg == ra);
-    masm.makeFrameDescriptor(a6, JitFrame_BaselineJS, ExitFrameLayout::Size());
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, ExitFrameLayout::Size());
     masm.subPtr(Imm32(sizeof(CommonFrameLayout)), StackPointer);
-    masm.storePtr(a6, Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
+    masm.storePtr(scratch, Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
     masm.storePtr(ra, Address(StackPointer, CommonFrameLayout::offsetOfReturnAddress()));
 
     masm.branch(target);
@@ -127,8 +126,9 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
 inline void
 EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
 {
-    EmitBaselineCreateStubFrameDescriptor(masm, a6, ExitFrameLayout::Size());
-    masm.push(a6);
+    Register scratch = R2.scratchReg();
+    EmitBaselineCreateStubFrameDescriptor(masm, scratch, ExitFrameLayout::Size());
+    masm.push(scratch);
     masm.call(target);
 }
 
@@ -176,6 +176,9 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     masm.storePtr(BaselineFrameReg, Address(StackPointer,
                                             offsetof(BaselineStubFrame, savedFrame)));
     masm.movePtr(BaselineStackReg, BaselineFrameReg);
+
+    // Stack should remain aligned.
+    masm.checkStackAlignment();
 }
 
 inline void
@@ -343,8 +346,7 @@ EmitStubGuardFailure(MacroAssembler& masm)
     masm.branch(R2.scratchReg());
 }
 
-
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips64_SharedICHelpers_mips64_h */
+#endif /* jit_mips_shared_SharedICHelpers_mips_shared_h */
