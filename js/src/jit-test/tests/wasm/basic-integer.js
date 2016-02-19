@@ -1,5 +1,9 @@
 load(libdir + "wasm.js");
 
+assertEq(wasmEvalText('(module (func (result i32) (i32.const -1)) (export "" 0))')(), -1);
+assertEq(wasmEvalText('(module (func (result i32) (i32.const -2147483648)) (export "" 0))')(), -2147483648);
+assertEq(wasmEvalText('(module (func (result i32) (i32.const 4294967295)) (export "" 0))')(), -1);
+
 function testUnary(type, opcode, op, expect) {
   assertEq(wasmEvalText('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0))) (export "" 0))')(op), expect);
 }

@@ -1066,6 +1066,9 @@ class WasmTokenStream
     WasmToken fail(const char16_t* begin) const {
         return WasmToken(begin);
     }
+
+    WasmToken nan(const char16_t* begin);
+    WasmToken literal(const char16_t* begin);
     WasmToken next();
 
   public:
@@ -1160,7 +1163,88 @@ class WasmTokenStream
 
 } // end anonymous namespace
 
-WasmToken WasmTokenStream::next()
+WasmToken
+WasmTokenStream::nan(const char16_t* begin)
+{
+    if (consume(MOZ_UTF16(":"))) {
+        if (!consume(MOZ_UTF16("0x")))
+            return fail(begin);
+
+        uint8_t digit;
+        while (cur_ != end_ && IsHexDigit(*cur_, &digit))
+            cur_++;
+    }
+
+    return WasmToken(WasmToken::NaN, begin, cur_);
+}
+
+WasmToken
+WasmTokenStream::literal(const char16_t* begin)
+{
+    CheckedInt<uint64_t> u = 0;
+    if (consume(MOZ_UTF16("0x"))) {
+        if (cur_ == end_)
+            return fail(begin);
+
+        do {
+            if (*cur_ == '.' || *cur_ == 'p')
+                return LexHexFloatLiteral(begin, end_, &cur_);
+
+            uint8_t digit;
+            if (!IsHexDigit(*cur_, &digit))
+                break;
+
+            u *= 16;
+            u += digit;
+            if (!u.isValid())
+                return LexHexFloatLiteral(begin, end_, &cur_);
+
+            cur_++;
+        } while (cur_ != end_);
+
+        if (*begin == '-') {
+            uint64_t value = u.value();
+            if (value > uint64_t(INT64_MIN))
+                return LexHexFloatLiteral(begin, end_, &cur_);
+
+            value = -value;
+            return WasmToken(int64_t(value), begin, cur_);
+        }
+    } else {
+        while (cur_ != end_) {
+            if (*cur_ == '.' || *cur_ == 'e')
+                return LexDecFloatLiteral(begin, end_, &cur_);
+
+            if (!IsWasmDigit(*cur_))
+                break;
+
+            u *= 10;
+            u += *cur_ - '0';
+            if (!u.isValid())
+                return LexDecFloatLiteral(begin, end_, &cur_);
+
+            cur_++;
+        }
+
+        if (*begin == '-') {
+            uint64_t value = u.value();
+            if (value > uint64_t(INT64_MIN))
+                return LexDecFloatLiteral(begin, end_, &cur_);
+
+            value = -value;
+            return WasmToken(int64_t(value), begin, cur_);
+        }
+    }
+
+    CheckedInt<uint32_t> index = u.value();
+    if (index.isValid())
+        return WasmToken(index.value(), begin, cur_);
+
+    return WasmToken(u.value(), begin, cur_);
+}
+
+WasmToken
+WasmTokenStream::next()
 {
     while (cur_ != end_ && IsWasmSpace(*cur_)) {
         if (IsWasmNewLine(*cur_++)) {
@@ -1208,58 +1292,15 @@ WasmToken WasmTokenStream::next()
       case '+': case '-':
         cur_++;
         if (consume(MOZ_UTF16("infinity")))
-            goto infinity;
+            return WasmToken(WasmToken::Infinity, begin, cur_);
         if (consume(MOZ_UTF16("nan")))
-            goto nan;
+            return nan(begin);
         if (!IsWasmDigit(*cur_))
             break;
         MOZ_FALLTHROUGH;
       case '0': case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8': case '9': {
-        CheckedInt<uint64_t> u = 0;
-        if (consume(MOZ_UTF16("0x"))) {
-            if (cur_ == end_)
-                return fail(begin);
-            do {
-                if (*cur_ == '.' || *cur_ == 'p')
-                    return LexHexFloatLiteral(begin, end_, &cur_);
-                uint8_t digit;
-                if (!IsHexDigit(*cur_, &digit))
-                    break;
-                u *= 16;
-                u += digit;
-                if (!u.isValid())
-                    return fail(begin);
-                cur_++;
-            } while (cur_ != end_);
-        } else {
-            while (cur_ != end_) {
-                if (*cur_ == '.' || *cur_ == 'e')
-                    return LexDecFloatLiteral(begin, end_, &cur_);
-                if (!IsWasmDigit(*cur_))
-                    break;
-                u *= 10;
-                u += *cur_ - '0';
-                if (!u.isValid())
-                    return fail(begin);
-                cur_++;
-            }
-        }
-
-        uint64_t value = u.value();
-        if (*begin == '-') {
-            if (value > uint64_t(INT64_MIN))
-                return fail(begin);
-            value = -value;
-            return WasmToken(int64_t(value), begin, cur_);
-        }
-
-        CheckedInt<uint32_t> index = u.value();
-        if (index.isValid())
-            return WasmToken(index.value(), begin, cur_);
-
-        return WasmToken(value, begin, cur_);
-      }
+      case '5': case '6': case '7': case '8': case '9':
+        return literal(begin);
 
       case 'a':
         if (consume(MOZ_UTF16("align")))
@@ -1748,10 +1789,8 @@ WasmToken WasmTokenStream::next()
         }
         if (consume(MOZ_UTF16("import")))
             return WasmToken(WasmToken::Import, begin, cur_);
-        if (consume(MOZ_UTF16("infinity"))) {
-        infinity:
+        if (consume(MOZ_UTF16("infinity")))
             return WasmToken(WasmToken::Infinity, begin, cur_);
-        }
         if (consume(MOZ_UTF16("if"))) {
             if (consume(MOZ_UTF16("_else")))
                 return WasmToken(WasmToken::IfElse, begin, cur_);
@@ -1772,17 +1811,8 @@ WasmToken WasmTokenStream::next()
         break;
 
       case 'n':
-        if (consume(MOZ_UTF16("nan"))) {
-        nan:
-            if (consume(MOZ_UTF16(":"))) {
-                if (!consume(MOZ_UTF16("0x")))
-                    break;
-                uint8_t digit;
-                while (cur_ != end_ && IsHexDigit(*cur_, &digit))
-                    cur_++;
-            }
-            return WasmToken(WasmToken::NaN, begin, cur_);
-        }
+        if (consume(MOZ_UTF16("nan")))
+            return nan(begin);
         if (consume(MOZ_UTF16("nop")))
             return WasmToken(WasmToken::Nop, begin, cur_);
         break;
@@ -2129,6 +2159,23 @@ template <typename Float>
 static bool
 ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
 {
+    switch (token.kind()) {
+      case WasmToken::Index:
+        *result = token.index();
+        return true;
+      case WasmToken::UnsignedInteger:
+        *result = token.uint();
+        return true;
+      case WasmToken::SignedInteger:
+        *result = token.sint();
+        return true;
+      case WasmToken::Float:
+        break;
+      default:
+        c.ts.generateError(token, c.error);
+        return false;
+    }
+
     const char16_t* begin = token.begin();
     const char16_t* end = token.end();
     const char16_t* cur = begin;
@@ -2216,16 +2263,12 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
         break;
       }
       case ValType::F32: {
-        if (val.kind() != WasmToken::Float)
-            break;
         float result;
         if (!ParseFloatLiteral(c, val, &result))
             break;
         return new(c.lifo) WasmAstConst(Val(result));
       }
       case ValType::F64: {
-        if (val.kind() != WasmToken::Float)
-            break;
         double result;
         if (!ParseFloatLiteral(c, val, &result))
             break;
