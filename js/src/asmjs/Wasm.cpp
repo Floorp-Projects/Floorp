@@ -370,6 +370,13 @@ DecodeStore(FunctionDecoder& f, ExprType expected, ExprType type)
 }
 
 static bool
+DecodeReturn(FunctionDecoder& f)
+{
+    return f.ret() == ExprType::Void ||
+           DecodeExpr(f, f.ret());
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -596,6 +603,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeStore(f, expected, ExprType::F32);
       case Expr::F64StoreMem:
         return DecodeStore(f, expected, ExprType::F64);
+      case Expr::Return:
+        return DecodeReturn(f);
       default:
         break;
     }
