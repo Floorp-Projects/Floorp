@@ -70,6 +70,10 @@
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#include "nsCocoaFeatures.h"
+#endif
+
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
@@ -109,6 +113,7 @@ WebGLContext::WebGLContext()
     , mNeedsFakeNoAlpha(false)
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
+    , mNeedsEmulatedLoneDepthStencil(false)
 {
     mGeneration = 0;
     mInvalidated = false;
@@ -891,6 +896,14 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
         if (!mOptions.stencil && gl->Caps().stencil)
             mNeedsFakeNoStencil = true;
+
+#ifdef MOZ_WIDGET_COCOA
+        if (!nsCocoaFeatures::IsAtLeastVersion(10, 12) &&
+            gl->Vendor() == GLVendor::Intel)
+        {
+            mNeedsEmulatedLoneDepthStencil = true;
+        }
+#endif
     }
 
     // Update mOptions.
@@ -1847,8 +1860,17 @@ WebGLContext::ScopedMaskWorkaround::~ScopedMaskWorkaround()
         mWebGL.gl->fEnable(LOCAL_GL_DEPTH_TEST);
     }
     if (mFakeNoStencil) {
+        MOZ_ASSERT(mWebGL.mStencilTestEnabled);
         mWebGL.gl->fEnable(LOCAL_GL_STENCIL_TEST);
     }
+}
+
+/*static*/ bool
+WebGLContext::ScopedMaskWorkaround::HasDepthButNoStencil(const WebGLFramebuffer* fb)
+{
+    const auto& depth = fb->DepthAttachment();
+    const auto& stencil = fb->StencilAttachment();
+    return depth.IsDefined() && !stencil.IsDefined();
 }
 
 ////////////////////////////////////////
