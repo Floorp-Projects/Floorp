@@ -280,6 +280,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_OS_X_10_9;
   else if (os.EqualsLiteral("Darwin 14"))
     return DRIVER_OS_OS_X_10_10;
+  else if (os.EqualsLiteral("Darwin 15"))
+    return DRIVER_OS_OS_X_10_11;
   else if (os.EqualsLiteral("Android"))
     return DRIVER_OS_ANDROID;
   else if (os.EqualsLiteral("All"))
