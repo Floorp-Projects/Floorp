@@ -176,14 +176,23 @@ public class AppMenuComponent extends BaseComponent {
     }
 
     private void pressMenuItem(final String menuItemTitle) {
-            final View menuItemView = findAppMenuItemView(menuItemTitle);
-            fAssertTrue("Menu is open", isMenuOpen(menuItemView));
+        // Wait for the menu item view to be enabled. This improves reliability on Android 2.3.
+        WaitHelper.waitFor(String.format("menu item %s to be enabled", menuItemTitle), new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                View v = findAppMenuItemView(menuItemTitle);
+                return (v != null) && v.isEnabled();
+            }
+        });
 
-            fAssertTrue(String.format("The menu item %s is enabled", menuItemTitle), menuItemView.isEnabled());
-            fAssertEquals(String.format("The menu item %s is visible", menuItemTitle), View.VISIBLE,
+        final View menuItemView = findAppMenuItemView(menuItemTitle);
+        fAssertTrue("Menu is open", isMenuOpen(menuItemView));
+
+        fAssertTrue(String.format("The menu item %s is enabled", menuItemTitle), menuItemView.isEnabled());
+        fAssertEquals(String.format("The menu item %s is visible", menuItemTitle), View.VISIBLE,
             menuItemView.getVisibility());
 
-            mSolo.clickOnView(menuItemView);
+        mSolo.clickOnView(menuItemView);
     }
 
     private void pressSubMenuItem(final String parentMenuItemTitle, final String childMenuItemTitle) {
