@@ -356,15 +356,11 @@ class RegExpObject : public NativeObject
 {
     static const unsigned LAST_INDEX_SLOT          = 0;
     static const unsigned SOURCE_SLOT              = 1;
-    static const unsigned GLOBAL_FLAG_SLOT         = 2;
-    static const unsigned IGNORE_CASE_FLAG_SLOT    = 3;
-    static const unsigned MULTILINE_FLAG_SLOT      = 4;
-    static const unsigned STICKY_FLAG_SLOT         = 5;
-    static const unsigned UNICODE_FLAG_SLOT        = 6;
+    static const unsigned FLAGS_SLOT               = 2;
 
   public:
-    static const unsigned RESERVED_SLOTS = 7;
-    static const unsigned PRIVATE_SLOT = 7;
+    static const unsigned RESERVED_SLOTS = 3;
+    static const unsigned PRIVATE_SLOT = 3;
 
     static const Class class_;
 
@@ -419,45 +415,24 @@ class RegExpObject : public NativeObject
         setSlot(SOURCE_SLOT, StringValue(source));
     }
 
-    RegExpFlag getFlags() const {
-        unsigned flags = 0;
-        flags |= global() ? GlobalFlag : 0;
-        flags |= ignoreCase() ? IgnoreCaseFlag : 0;
-        flags |= multiline() ? MultilineFlag : 0;
-        flags |= sticky() ? StickyFlag : 0;
-        flags |= unicode() ? UnicodeFlag : 0;
-        return RegExpFlag(flags);
-    }
-
     /* Flags. */
 
-    void setIgnoreCase(bool enabled) {
-        setSlot(IGNORE_CASE_FLAG_SLOT, BooleanValue(enabled));
+    static unsigned flagsSlot() { return FLAGS_SLOT; }
+
+    RegExpFlag getFlags() const {
+        return RegExpFlag(getFixedSlot(FLAGS_SLOT).toInt32());
+    }
+    void setFlags(RegExpFlag flags) {
+        setSlot(FLAGS_SLOT, Int32Value(flags));
     }
 
-    void setGlobal(bool enabled) {
-        setSlot(GLOBAL_FLAG_SLOT, BooleanValue(enabled));
-    }
+    bool ignoreCase() const { return getFlags() & IgnoreCaseFlag; }
+    bool global() const     { return getFlags() & GlobalFlag; }
+    bool multiline() const  { return getFlags() & MultilineFlag; }
+    bool sticky() const     { return getFlags() & StickyFlag; }
+    bool unicode() const    { return getFlags() & UnicodeFlag; }
 
-    void setMultiline(bool enabled) {
-        setSlot(MULTILINE_FLAG_SLOT, BooleanValue(enabled));
-    }
-
-    void setSticky(bool enabled) {
-        setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
-    }
-
-    void setUnicode(bool enabled) {
-        setSlot(UNICODE_FLAG_SLOT, BooleanValue(enabled));
-    }
-
-    bool ignoreCase() const { return getFixedSlot(IGNORE_CASE_FLAG_SLOT).toBoolean(); }
-    bool global() const     { return getFixedSlot(GLOBAL_FLAG_SLOT).toBoolean(); }
-    bool multiline() const  { return getFixedSlot(MULTILINE_FLAG_SLOT).toBoolean(); }
-    bool sticky() const     { return getFixedSlot(STICKY_FLAG_SLOT).toBoolean(); }
-    bool unicode() const    { return getFixedSlot(UNICODE_FLAG_SLOT).toBoolean(); }
-
-    static bool isOriginalFlagGetter(JSNative native, unsigned* slot);
+    static bool isOriginalFlagGetter(JSNative native, RegExpFlag* mask);
 
     bool getShared(JSContext* cx, RegExpGuard* g);
 

@@ -648,6 +648,8 @@ class IonBuilder
     MDefinition* getAliasedVar(ScopeCoordinate sc);
     MDefinition* addLexicalCheck(MDefinition* input);
 
+    MDefinition* convertToBoolean(MDefinition* input);
+
     bool tryFoldInstanceOf(MDefinition* lhs, JSObject* protoObject);
     bool hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* hasOnProto);
 
