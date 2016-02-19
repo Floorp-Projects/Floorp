@@ -68,8 +68,16 @@ class WasmName
     WasmName() : begin_(nullptr), end_(nullptr) {}
     const char16_t* begin() const { return begin_; }
     const char16_t* end() const { return end_; }
-    size_t length() const { MOZ_ASSERT(begin_ != nullptr); return end_ - begin_; }
+    size_t length() const { return end_ - begin_; }
     bool empty() const { return begin_ == nullptr; }
+
+    bool operator==(WasmName rhs) const {
+        if (length() != rhs.length())
+            return false;
+        if (begin() == rhs.begin())
+            return true;
+        return EqualChars(begin(), rhs.begin(), length());
+    }
 };
 
 class WasmRef
@@ -112,19 +120,16 @@ struct WasmNameHasher
         return mozilla::HashString(l.begin(), l.length());
     }
     static bool match(const WasmName key, Lookup lookup) {
-        if (key.length() != lookup.length())
-            return false;
-        if (key.begin() == lookup.begin())
-            return true;
-        return EqualChars(key.begin(), lookup.begin(), key.length());
+        return key == lookup;
     }
 };
 
-using WasmNameMap = HashMap<WasmName, uint32_t, WasmNameHasher, SystemAllocPolicy>;
+using WasmNameMap = WasmAstHashMap<WasmName, uint32_t, WasmNameHasher>;
 
 typedef WasmAstVector<ValType> WasmAstValTypeVector;
 typedef WasmAstVector<WasmAstExpr*> WasmAstExprVector;
-typedef mozilla::Vector<WasmName, 0, LifoAllocPolicy<Fallible>> WasmNameVector;
+typedef WasmAstVector<WasmName> WasmNameVector;
+typedef WasmAstVector<WasmRef> WasmRefVector;
 
 struct WasmAstBase
 {
@@ -186,6 +191,7 @@ enum class WasmAstExprKind
 {
     BinaryOperator,
     Block,
+    Branch,
     Call,
     CallIndirect,
     ComparisonOperator,
@@ -198,6 +204,7 @@ enum class WasmAstExprKind
     Return,
     SetLocal,
     Store,
+    TableSwitch,
     UnaryOperator,
 };
 
@@ -277,16 +284,45 @@ class WasmAstSetLocal : public WasmAstExpr
 
 class WasmAstBlock : public WasmAstExpr
 {
+    Expr expr_;
+    WasmName breakName_;
+    WasmName continueName_;
     WasmAstExprVector exprs_;
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::Block;
-    explicit WasmAstBlock(WasmAstExprVector&& exprs)
+    explicit WasmAstBlock(Expr expr, WasmName breakName, WasmName continueName,
+                          WasmAstExprVector&& exprs)
       : WasmAstExpr(Kind),
+        expr_(expr),
+        breakName_(breakName),
+        continueName_(continueName),
         exprs_(Move(exprs))
     {}
 
+    Expr expr() const { return expr_; }
+    WasmName breakName() const { return breakName_; }
+    WasmName continueName() const { return continueName_; }
     const WasmAstExprVector& exprs() const { return exprs_; }
+};
+
+class WasmAstBranch : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* cond_;
+    WasmRef target_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::Branch;
+    explicit WasmAstBranch(Expr expr, WasmAstExpr* cond, WasmRef target)
+      : WasmAstExpr(Kind),
+        expr_(expr),
+        cond_(cond),
+        target_(target)
+    {}
+    Expr expr() const { return expr_; }
+    WasmRef& target() { return target_; }
+    WasmAstExpr& cond() const { MOZ_ASSERT(cond_); return *cond_; }
 };
 
 class WasmAstCall : public WasmAstExpr
@@ -415,6 +451,25 @@ class WasmAstStore : public WasmAstExpr
     Expr expr() const { return expr_; }
     const WasmAstLoadStoreAddress& address() const { return address_; }
     WasmAstExpr& value() const { return *value_; }
+};
+
+class WasmAstTableSwitch : public WasmAstExpr
+{
+    WasmAstExpr& index_;
+    WasmRef default_;
+    WasmRefVector table_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::TableSwitch;
+    explicit WasmAstTableSwitch(WasmAstExpr& index, WasmRef def, WasmRefVector&& table)
+      : WasmAstExpr(Kind),
+        index_(index),
+        default_(def),
+        table_(Move(table))
+    {}
+    WasmAstExpr& index() const { return index_; }
+    WasmRef& def() { return default_; }
+    WasmRefVector& table() { return table_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -698,6 +753,8 @@ class WasmToken
         Align,
         BinaryOpcode,
         Block,
+        Br,
+        BrIf,
         Call,
         CallImport,
         CallIndirect,
@@ -721,6 +778,7 @@ class WasmToken
         Memory,
         Load,
         Local,
+        Loop,
         Module,
         Name,
         Nop,
@@ -733,6 +791,7 @@ class WasmToken
         SetLocal,
         Store,
         Table,
+        TableSwitch,
         Text,
         Type,
         UnaryOpcode,
@@ -1128,24 +1187,10 @@ class WasmTokenStream
             return token.name();
         return WasmName();
     }
-    bool getRef(WasmRef* ref) {
-        WasmToken token = get();
-        switch (token.kind()) {
-            case WasmToken::Name:
-                *ref = WasmRef(token.name(), WasmNoIndex);
-                break;
-            case WasmToken::Index:
-                *ref = WasmRef(WasmName(), token.index());
-                break;
-            default:
-                return false;
-        }
-        return true;
-    }
     bool getIfRef(WasmRef* ref) {
         WasmToken token = peek();
         if (token.kind() == WasmToken::Name || token.kind() == WasmToken::Index)
-            return getRef(ref);
+            return matchRef(ref, nullptr);
         return false;
     }
     bool match(WasmToken::Kind expect, WasmToken* token, UniqueChars* error) {
@@ -1158,6 +1203,21 @@ class WasmTokenStream
     bool match(WasmToken::Kind expect, UniqueChars* error) {
         WasmToken token;
         return match(expect, &token, error);
+    }
+    bool matchRef(WasmRef* ref, UniqueChars* error) {
+        WasmToken token = get();
+        switch (token.kind()) {
+          case WasmToken::Name:
+            *ref = WasmRef(token.name(), WasmNoIndex);
+            break;
+          case WasmToken::Index:
+            *ref = WasmRef(WasmName(), token.index());
+            break;
+          default:
+            generateError(token, error);
+            return false;
+        }
+        return true;
     }
 };
 
@@ -1310,6 +1370,11 @@ WasmTokenStream::next()
       case 'b':
         if (consume(MOZ_UTF16("block")))
             return WasmToken(WasmToken::Block, begin, cur_);
+        if (consume(MOZ_UTF16("br"))) {
+            if (consume(MOZ_UTF16("_if")))
+                return WasmToken(WasmToken::BrIf, begin, cur_);
+            return WasmToken(WasmToken::Br, begin, cur_);
+        }
         break;
 
       case 'c':
@@ -1801,6 +1866,8 @@ WasmTokenStream::next()
       case 'l':
         if (consume(MOZ_UTF16("local")))
             return WasmToken(WasmToken::Local, begin, cur_);
+        if (consume(MOZ_UTF16("loop")))
+            return WasmToken(WasmToken::Loop, begin, cur_);
         break;
 
       case 'm':
@@ -1842,8 +1909,11 @@ WasmTokenStream::next()
         break;
 
       case 't':
-        if (consume(MOZ_UTF16("table")))
+        if (consume(MOZ_UTF16("table"))) {
+            if (consume(MOZ_UTF16("switch")))
+                return WasmToken(WasmToken::TableSwitch, begin, cur_);
             return WasmToken(WasmToken::Table, begin, cur_);
+        }
         if (consume(MOZ_UTF16("type")))
             return WasmToken(WasmToken::Type, begin, cur_);
         break;
@@ -1905,9 +1975,15 @@ ParseExpr(WasmParseContext& c)
 }
 
 static WasmAstBlock*
-ParseBlock(WasmParseContext& c)
+ParseBlock(WasmParseContext& c, Expr expr)
 {
     WasmAstExprVector exprs(c.lifo);
+
+    WasmName breakName = c.ts.getIfName();
+
+    WasmName continueName;
+    if (expr == Expr::Loop)
+        continueName = c.ts.getIfName();
 
     while (c.ts.getIf(WasmToken::OpenParen)) {
         WasmAstExpr* expr = ParseExprInsideParens(c);
@@ -1917,7 +1993,26 @@ ParseBlock(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstBlock(Move(exprs));
+    return new(c.lifo) WasmAstBlock(expr, breakName, continueName, Move(exprs));
+}
+
+static WasmAstBranch*
+ParseBranch(WasmParseContext& c, Expr expr)
+{
+    MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+
+    WasmRef target;
+    if (!c.ts.matchRef(&target, c.error))
+        return nullptr;
+
+    WasmAstExpr* cond = nullptr;
+    if (expr == Expr::BrIf) {
+        cond = ParseExpr(c);
+        if (!cond)
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstBranch(expr, cond, target);
 }
 
 static bool
@@ -1940,7 +2035,7 @@ ParseCall(WasmParseContext& c, Expr expr)
     MOZ_ASSERT(expr == Expr::Call || expr == Expr::CallImport);
 
     WasmRef func;
-    if (!c.ts.getRef(&func))
+    if (!c.ts.matchRef(&func, c.error))
         return nullptr;
 
     WasmAstExprVector args(c.lifo);
@@ -1954,7 +2049,7 @@ static WasmAstCallIndirect*
 ParseCallIndirect(WasmParseContext& c)
 {
     WasmRef sig;
-    if (!c.ts.getRef(&sig))
+    if (!c.ts.matchRef(&sig, c.error))
         return nullptr;
 
     WasmAstExpr* index = ParseExpr(c);
@@ -2285,7 +2380,7 @@ static WasmAstGetLocal*
 ParseGetLocal(WasmParseContext& c)
 {
     WasmRef local;
-    if (!c.ts.getRef(&local))
+    if (!c.ts.matchRef(&local, c.error))
         return nullptr;
 
     return new(c.lifo) WasmAstGetLocal(local);
@@ -2295,7 +2390,7 @@ static WasmAstSetLocal*
 ParseSetLocal(WasmParseContext& c)
 {
     WasmRef local;
-    if (!c.ts.getRef(&local))
+    if (!c.ts.matchRef(&local, c.error))
         return nullptr;
 
     WasmAstExpr* value = ParseExpr(c);
@@ -2509,6 +2604,53 @@ ParseStore(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstStore(expr, WasmAstLoadStoreAddress(base, offset, align), value);
 }
 
+static WasmAstTableSwitch*
+ParseTableSwitch(WasmParseContext& c)
+{
+    WasmAstExpr* index = ParseExpr(c);
+    if (!index)
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+    if (!c.ts.match(WasmToken::Table, c.error))
+        return nullptr;
+
+    WasmRefVector table(c.lifo);
+
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        if (!c.ts.match(WasmToken::Br, c.error))
+            return nullptr;
+
+        WasmRef target;
+        if (!c.ts.matchRef(&target, c.error))
+            return nullptr;
+
+        if (!table.append(target))
+            return nullptr;
+
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+    if (!c.ts.match(WasmToken::Br, c.error))
+        return nullptr;
+
+    WasmRef def;
+    if (!c.ts.matchRef(&def, c.error))
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    return new(c.lifo) WasmAstTableSwitch(*index, def, Move(table));
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -2520,7 +2662,11 @@ ParseExprInsideParens(WasmParseContext& c)
       case WasmToken::BinaryOpcode:
         return ParseBinaryOperator(c, token.expr());
       case WasmToken::Block:
-        return ParseBlock(c);
+        return ParseBlock(c, Expr::Block);
+      case WasmToken::Br:
+        return ParseBranch(c, Expr::Br);
+      case WasmToken::BrIf:
+        return ParseBranch(c, Expr::BrIf);
       case WasmToken::Call:
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
@@ -2541,12 +2687,16 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseGetLocal(c);
       case WasmToken::Load:
         return ParseLoad(c, token.expr());
+      case WasmToken::Loop:
+        return ParseBlock(c, Expr::Loop);
       case WasmToken::Return:
         return ParseReturn(c);
       case WasmToken::SetLocal:
         return ParseSetLocal(c);
       case WasmToken::Store:
         return ParseStore(c, token.expr());
+      case WasmToken::TableSwitch:
+        return ParseTableSwitch(c);
       case WasmToken::UnaryOpcode:
         return ParseUnaryOperator(c, token.expr());
       default:
@@ -2622,7 +2772,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
         if (c.ts.getIf(WasmToken::Type)) {
-            if (!c.ts.getRef(&sig))
+            if (!c.ts.matchRef(&sig, c.error))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
@@ -2912,6 +3062,7 @@ class Resolver
     WasmNameMap sigMap_;
     WasmNameMap funcMap_;
     WasmNameMap importMap_;
+    WasmNameVector targetStack_;
 
     bool registerName(WasmNameMap& map, WasmName name, size_t index) {
         WasmNameMap::AddPtr p = map.lookupForAdd(name);
@@ -2941,14 +3092,20 @@ class Resolver
     }
 
   public:
-    explicit Resolver(UniqueChars* error)
-      : error_(error)
+    explicit Resolver(LifoAlloc& lifo, UniqueChars* error)
+      : error_(error),
+        varMap_(lifo),
+        sigMap_(lifo),
+        funcMap_(lifo),
+        importMap_(lifo),
+        targetStack_(lifo)
     {}
     bool init() {
         return sigMap_.init() && funcMap_.init() && importMap_.init() && varMap_.init();
     }
     void beginFunc() {
         varMap_.clear();
+        MOZ_ASSERT(targetStack_.empty());
     }
     bool registerSigName(WasmName name, size_t index) {
         return name.empty() || registerName(sigMap_, name, index);
@@ -2962,6 +3119,13 @@ class Resolver
     bool registerVarName(WasmName name, size_t index) {
         return name.empty() || registerName(varMap_, name, index);
     }
+    bool pushTarget(WasmName name) {
+        return targetStack_.append(name);
+    }
+    void popTarget(WasmName name) {
+        MOZ_ASSERT(targetStack_.back() == name);
+        targetStack_.popBack();
+    }
     bool resolveSigRef(WasmRef& ref) {
         return ref.name().empty() || resolveRef(sigMap_, ref);
     }
@@ -2973,6 +3137,16 @@ class Resolver
     }
     bool resolveVarRef(WasmRef& ref) {
         return ref.name().empty() || resolveRef(varMap_, ref);
+    }
+    bool resolveTarget(WasmRef& ref) {
+        for (size_t i = targetStack_.length(); i > 0; i--) {
+            uint32_t targetIndex = i - 1;
+            if (targetStack_[targetIndex] == ref.name()) {
+                ref.setIndex(targetIndex);
+                return true;
+            }
+        }
+        return false;
     }
     bool fail(const char*message) {
         error_->reset(JS_smprintf("%s", message));
@@ -2988,9 +3162,34 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr);
 static bool
 ResolveBlock(Resolver& r, WasmAstBlock& b)
 {
+    if (!r.pushTarget(b.breakName()))
+        return false;
+
+    if (b.expr() == Expr::Loop) {
+        if (!r.pushTarget(b.continueName()))
+            return false;
+    }
+
     size_t numExprs = b.exprs().length();
     for (size_t i = 0; i < numExprs; i++) {
         if (!ResolveExpr(r, *b.exprs()[i]))
+            return false;
+    }
+
+    if (b.expr() == Expr::Loop)
+        r.popTarget(b.continueName());
+    r.popTarget(b.breakName());
+    return true;
+}
+
+static bool
+ResolveBranch(Resolver& r, WasmAstBranch& br)
+{
+    if (!br.target().name().empty() && !r.resolveTarget(br.target()))
+        return r.fail("label not found");
+
+    if (br.expr() == Expr::BrIf) {
+        if (!ResolveExpr(r, br.cond()))
             return false;
     }
 
@@ -3122,6 +3321,20 @@ ResolveReturn(Resolver& r, WasmAstReturn& ret)
 }
 
 static bool
+ResolveTableSwitch(Resolver& r, WasmAstTableSwitch& ts)
+{
+    if (!ts.def().name().empty() && !r.resolveTarget(ts.def()))
+        return r.fail("switch default not found");
+
+    for (WasmRef& elem : ts.table()) {
+        if (!elem.name().empty() && !r.resolveTarget(elem))
+            return r.fail("switch element not found");
+    }
+
+    return ResolveExpr(r, ts.index());
+}
+
+static bool
 ResolveExpr(Resolver& r, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -3131,6 +3344,8 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveBinaryOperator(r, expr.as<WasmAstBinaryOperator>());
       case WasmAstExprKind::Block:
         return ResolveBlock(r, expr.as<WasmAstBlock>());
+      case WasmAstExprKind::Branch:
+        return ResolveBranch(r, expr.as<WasmAstBranch>());
       case WasmAstExprKind::Call:
         return ResolveCall(r, expr.as<WasmAstCall>());
       case WasmAstExprKind::CallIndirect:
@@ -3153,6 +3368,8 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveSetLocal(r, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return ResolveStore(r, expr.as<WasmAstStore>());
+      case WasmAstExprKind::TableSwitch:
+        return ResolveTableSwitch(r, expr.as<WasmAstTableSwitch>());
       case WasmAstExprKind::UnaryOperator:
         return ResolveUnaryOperator(r, expr.as<WasmAstUnaryOperator>());
     }
@@ -3180,7 +3397,7 @@ ResolveFunc(Resolver& r, WasmAstFunc& func)
 static bool
 ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
 {
-    Resolver r(error);
+    Resolver r(lifo, error);
 
     if (!r.init())
         return false;
@@ -3248,6 +3465,23 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
 
     for (size_t i = 0; i < numExprs; i++) {
         if (!EncodeExpr(e, *b.exprs()[i]))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+EncodeBranch(Encoder& e, WasmAstBranch& br)
+{
+    if (!e.writeExpr(br.expr()))
+        return false;
+
+    if (!e.writeVarU32(br.target().index()))
+        return false;
+
+    if (br.expr() == Expr::BrIf) {
+        if (!EncodeExpr(e, br.cond()))
             return false;
     }
 
@@ -3405,6 +3639,26 @@ EncodeReturn(Encoder& e, WasmAstReturn& r)
 }
 
 static bool
+EncodeTableSwitch(Encoder& e, WasmAstTableSwitch& ts)
+{
+    if (!e.writeExpr(Expr::TableSwitch))
+        return false;
+
+    if (!e.writeVarU32(ts.def().index()))
+        return false;
+
+    if (!e.writeVarU32(ts.table().length()))
+        return false;
+
+    for (const WasmRef& elem : ts.table()) {
+        if (!e.writeVarU32(elem.index()))
+            return false;
+    }
+
+    return EncodeExpr(e, ts.index());
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -3414,6 +3668,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
       case WasmAstExprKind::Block:
         return EncodeBlock(e, expr.as<WasmAstBlock>());
+      case WasmAstExprKind::Branch:
+        return EncodeBranch(e, expr.as<WasmAstBranch>());
       case WasmAstExprKind::Call:
         return EncodeCall(e, expr.as<WasmAstCall>());
       case WasmAstExprKind::CallIndirect:
@@ -3436,6 +3692,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return EncodeStore(e, expr.as<WasmAstStore>());
+      case WasmAstExprKind::TableSwitch:
+        return EncodeTableSwitch(e, expr.as<WasmAstTableSwitch>());
       case WasmAstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<WasmAstUnaryOperator>());
     }

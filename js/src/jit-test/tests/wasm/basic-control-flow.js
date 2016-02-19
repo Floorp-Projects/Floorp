@@ -140,3 +140,32 @@ assertEq(wasmEvalText('(module (func (result i32) (return (i32.const 1))) (expor
 assertErrorMessage(() => wasmEvalText('(module (func (result f32) (return (i32.const 1))) (export "" 0))'), TypeError, mismatchError("i32", "f32"));
 assertThrowsInstanceOf(() => wasmEvalText('(module (func (result i32) (return)) (export "" 0))'), TypeError);
 assertThrowsInstanceOf(() => wasmEvalText('(module (func (return (i32.const 1))) (export "" 0))'), TypeError);
+
+// TODO: convert these to wasmEval and assert some results once they are implemented
+
+// ----------------------------------------------------------------------------
+// br / br_if
+
+wasmTextToBinary('(module (func (block (br 0))))');
+wasmTextToBinary('(module (func (block $l (br $l))))');
+wasmTextToBinary('(module (func (result i32) (block (br_if 0 (i32.const 1)))))');
+wasmTextToBinary('(module (func (result i32) (block $l (br_if $l (i32.const 1)))))');
+
+wasmTextToBinary('(module (func (block $l (block $m (br $l)))))');
+wasmTextToBinary('(module (func (block $l (block $m (br $m)))))');
+
+// ----------------------------------------------------------------------------
+// loop
+
+wasmTextToBinary('(module (func (loop (br 0))))');
+wasmTextToBinary('(module (func (loop (br 1))))');
+wasmTextToBinary('(module (func (loop $a (br $a))))');
+wasmTextToBinary('(module (func (loop $a $b (br $a))))');
+wasmTextToBinary('(module (func (loop $a $b (br $b))))');
+wasmTextToBinary('(module (func (loop $a $a (br $a))))');
+
+// ----------------------------------------------------------------------------
+// tableswitch
+
+wasmTextToBinary('(module (func (param i32) (block $b1 (block $b2 (tableswitch (get_local 0) (table (br $b1) (br $b2)) (br $b2))))))');
+wasmTextToBinary('(module (func (param i32) (block $b1 (tableswitch (get_local 0) (table) (br $b1)))))');
