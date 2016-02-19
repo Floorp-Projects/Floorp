@@ -107,6 +107,31 @@ public:
   }
 };
 
+class OmxMp3Config : public OmxAudioConfig
+{
+public:
+  OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const AudioInfo& aInfo) override
+  {
+    OMX_ERRORTYPE err;
+
+    OMX_AUDIO_PARAM_MP3TYPE mp3Param;
+    InitOmxParameter(&mp3Param);
+    mp3Param.nPortIndex = aOmx.InputPortIndex();
+    err = aOmx.GetParameter(OMX_IndexParamAudioMp3, &mp3Param, sizeof(mp3Param));
+    RETURN_IF_ERR(err);
+
+    mp3Param.nChannels = aInfo.mChannels;
+    mp3Param.nSampleRate = aInfo.mRate;
+    err = aOmx.SetParameter(OMX_IndexParamAudioMp3, &mp3Param, sizeof(mp3Param));
+    RETURN_IF_ERR(err);
+
+    LOG("Config OMX_IndexParamAudioMp3, channel %d, sample rate %d",
+        mp3Param.nChannels, mp3Param.nSampleRate);
+
+    return ConfigAudioOutputPort(aOmx, aInfo);
+  }
+};
+
 template<>
 UniquePtr<OmxAudioConfig>
 ConfigForMime(const nsACString& aMimeType)
@@ -116,6 +141,9 @@ ConfigForMime(const nsACString& aMimeType)
   if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
     if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
       conf.reset(new OmxAacConfig());
+    } else if (aMimeType.EqualsLiteral("audio/mp3") ||
+                aMimeType.EqualsLiteral("audio/mpeg")) {
+      conf.reset(new OmxMp3Config());
     }
   }
   return Move(conf);
