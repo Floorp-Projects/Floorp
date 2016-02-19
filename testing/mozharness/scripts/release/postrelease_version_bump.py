@@ -16,12 +16,12 @@ import sys
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.buildbot import BuildbotMixin
-from mozharness.mozilla.merge import GeckoMigrationMixin
+from mozharness.mozilla.repo_manupulation import MercurialRepoManipulationMixin
 
 
 # PostReleaseVersionBump {{{1
 class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
-                             GeckoMigrationMixin):
+                             MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
             "action": "store",
@@ -102,7 +102,7 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                 self.abs_dirs['abs_work_dir'], self.config["repo"]["dest"])
         return self.abs_dirs
 
-    def query_gecko_repos(self):
+    def query_repos(self):
         """Build a list of repos to clone."""
         return [self.config["repo"]]
 
@@ -125,7 +125,7 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
 
     def pull(self):
         super(PostReleaseVersionBump, self).pull(
-                repos=self.query_gecko_repos())
+                repos=self.query_repos())
 
     def bump_postrelease(self, *args, **kwargs):
         """Bump version"""
