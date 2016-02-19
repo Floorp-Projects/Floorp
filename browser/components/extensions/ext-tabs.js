@@ -261,8 +261,22 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       create: function(createProperties, callback) {
-        let url = createProperties.url || aboutNewTabService.newTabURL;
-        url = context.uri.resolve(url);
+        let url;
+
+        if (createProperties.url) {
+          url = context.uri.resolve(createProperties.url);
+
+          if (!context.checkLoadURL(url)) {
+            // TODO: runtime.lastError should be set to `Invalid url: ${updateProperties.url}`
+            if (callback) {
+              runSafe(context, callback, undefined);
+            }
+
+            return;
+          }
+        } else {
+          url = aboutNewTabService.newTabURL;
+        }
 
         function createInWindow(window) {
           let tab = window.gBrowser.addTab(url);
@@ -323,9 +337,29 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       update: function(tabId, updateProperties, callback) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-        if (updateProperties.url !== null) {
-          tab.linkedBrowser.loadURI(updateProperties.url);
+
+        if (!tab) {
+          // TODO: runtime.lastError should be set to `No tab with id: ${tabId}`
+          if (callback) {
+            runSafe(context, callback, undefined);
+          }
+          return;
         }
+
+        if (updateProperties.url !== null) {
+          if (context.checkLoadURL(updateProperties.url)) {
+            tab.linkedBrowser.loadURI(updateProperties.url);
+          } else {
+            // TODO: runtime.lastError should be set to `Invalid url: ${updateProperties.url}`
+            if (callback) {
+              runSafe(context, callback, undefined);
+            }
+            return;
+          }
+        }
+
+        // FIXME: highlighted/selected, muted, openerTabId
+
         if (updateProperties.active !== null) {
           if (updateProperties.active) {
             tabbrowser.selectedTab = tab;
@@ -333,6 +367,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             // Not sure what to do here? Which tab should we select?
           }
         }
+
         if (updateProperties.pinned !== null) {
           if (updateProperties.pinned) {
             tabbrowser.pinTab(tab);
@@ -340,7 +375,6 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             tabbrowser.unpinTab(tab);
           }
         }
-        // FIXME: highlighted/selected, muted, openerTabId
 
         if (callback) {
           runSafe(context, callback, TabManager.convert(extension, tab));
