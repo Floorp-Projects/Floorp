@@ -194,12 +194,16 @@ PromiseSet.prototype = {
  * console. We therefore use dump() rather than Cu.reportError().
  */
 function log(msg, prefix = "", error = null) {
-  dump(prefix + msg + "\n");
-  if (error) {
-    dump(prefix + error + "\n");
-    if (typeof error == "object" && "stack" in error) {
-      dump(prefix + error.stack + "\n");
+  try {
+    dump(prefix + msg + "\n");
+    if (error) {
+      dump(prefix + error + "\n");
+      if (typeof error == "object" && "stack" in error) {
+        dump(prefix + error.stack + "\n");
+      }
     }
+  } catch (ex) {
+    dump("INTERNAL ERROR in AsyncShutdown: cannot log message.\n");
   }
 }
 const PREF_DEBUG_LOG = "toolkit.asyncshutdown.log";
@@ -305,35 +309,43 @@ function looseTimer(delay) {
  * @return object
  */
 function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
-  // Determine the filename and line number of the caller.
-  let frame = topFrame;
+  try {
+    // Determine the filename and line number of the caller.
+    let frame = topFrame;
 
-  for (; frame && frame.filename == topFrame.filename; frame = frame.caller) {
-    // Climb up the stack
-  }
-
-  if (filename == null) {
-    filename = frame ? frame.filename : "?";
-  }
-  if (lineNumber == null) {
-    lineNumber = frame ? frame.lineNumber : 0;
-  }
-  if (stack == null) {
-    // Now build the rest of the stack as a string, using Task.jsm's rewriting
-    // to ensure that we do not lose information at each call to `Task.spawn`.
-    let frames = [];
-    while (frame != null) {
-      frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
-      frame = frame.caller;
+    for (; frame && frame.filename == topFrame.filename; frame = frame.caller) {
+      // Climb up the stack
     }
-    stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
-  }
 
-  return {
-    filename: filename,
-    lineNumber: lineNumber,
-    stack: stack,
-  };
+    if (filename == null) {
+      filename = frame ? frame.filename : "?";
+    }
+    if (lineNumber == null) {
+      lineNumber = frame ? frame.lineNumber : 0;
+    }
+    if (stack == null) {
+      // Now build the rest of the stack as a string, using Task.jsm's rewriting
+      // to ensure that we do not lose information at each call to `Task.spawn`.
+      let frames = [];
+      while (frame != null) {
+        frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+        frame = frame.caller;
+      }
+      stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
+    }
+
+    return {
+      filename: filename,
+      lineNumber: lineNumber,
+      stack: stack,
+    };
+  } catch (ex) {
+    return {
+      filename: "<internal error: could not get origin>",
+      lineNumber: -1,
+      stack: "<internal error: could not get origin>",
+    }
+  }
 }
 
 this.EXPORTED_SYMBOLS = ["AsyncShutdown"];
@@ -512,16 +524,26 @@ Spinner.prototype = {
   // nsIObserver.observe
   observe: function() {
     let topic = this._topic;
+    debug(`Starting phase ${ topic }`);
     let barrier = this._barrier;
     Services.obs.removeObserver(this, topic);
 
     let satisfied = false; // |true| once we have satisfied all conditions
-    let promise = this._barrier.wait({
-      warnAfterMS: DELAY_WARNING_MS,
-      crashAfterMS: DELAY_CRASH_MS
-    });
+    let promise;
+    try {
+      promise = this._barrier.wait({
+        warnAfterMS: DELAY_WARNING_MS,
+        crashAfterMS: DELAY_CRASH_MS
+      }).catch(
+        // Additional precaution to be entirely sure that we cannot reject.
+      );
+    } catch (ex) {
+      debug("Error waiting for notification");
+      throw ex;
+    }
 
     // Now, spin the event loop
+    debug("Spinning the event loop");
     promise.then(() => satisfied = true); // This promise cannot reject
     let thread = Services.tm.mainThread;
     while (!satisfied) {
@@ -597,6 +619,9 @@ function Barrier(name) {
   /**
    * The name of the barrier.
    */
+  if (typeof name != "string") {
+    throw new TypeError("The name of the barrier must be a string");
+  }
   this._name = name;
 
   /**
@@ -665,13 +690,16 @@ function Barrier(name) {
         throw new TypeError("Expected an object as third argument to `addBlocker`, got " + details);
       }
       if (!this._waitForMe) {
-        throw new Error(`Phase "${ this._name } is finished, it is too late to register completion condition "${ name }"`);
+        throw new Error(`Phase "${ this._name }" is finished, it is too late to register completion condition "${ name }"`);
       }
       debug(`Adding blocker ${ name } for phase ${ this._name }`);
 
       // Normalize the details
 
       let fetchState = details.fetchState || null;
+      if (fetchState != null && typeof fetchState != "function") {
+        throw new TypeError("Expected a function for option `fetchState`");
+      }
       let filename = details.filename || null;
       let lineNumber = details.lineNumber || null;
       let stack = details.stack || null;
@@ -713,7 +741,10 @@ function Barrier(name) {
         // The error should remain uncaught, to ensure that it
         // still causes tests to fail.
         Promise.reject(error);
-      });
+      }).catch(
+        // Added as a last line of defense, in case `warn`, `this._name` or
+        // `safeGetState` somehow throws an error.
+      );
 
       let topFrame = null;
       if (filename == null || lineNumber == null || stack == null) {
