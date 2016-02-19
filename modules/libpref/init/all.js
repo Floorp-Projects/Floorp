@@ -1203,6 +1203,9 @@ pref("javascript.options.shared_memory", true);
 pref("javascript.options.shared_memory", false);
 #endif
 
+pref("javascript.options.throw_on_debuggee_would_run", false);
+pref("javascript.options.dump_stack_on_debuggee_would_run", false);
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");

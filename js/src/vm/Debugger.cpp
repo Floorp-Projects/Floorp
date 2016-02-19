@@ -285,10 +285,15 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
     // Non-nullptr when unlocked temporarily by a LeaveDebuggeeNoExecute.
     LeaveDebuggeeNoExecute* unlocked_;
 
+    // When DebuggeeWouldRun is a warning instead of an error, whether we've
+    // reported a warning already.
+    bool reported_;
+
   public:
     explicit EnterDebuggeeNoExecute(JSContext* cx, Debugger& dbg)
       : dbg_(dbg),
-        unlocked_(nullptr)
+        unlocked_(nullptr),
+        reported_(false)
     {
         stack_ = &cx->runtime()->noExecuteDebuggerTop;
         prev_ = *stack_;
@@ -307,16 +312,12 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
 #ifdef DEBUG
     static bool isUniqueLockedInStack(JSContext* cx, Debugger& dbg) {
         JSRuntime* rt = cx->runtime();
-
-        // This invariant does not hold when DebuggeeWouldRun is only a
-        // warning.
-        if (!rt->options().throwOnDebuggeeWouldRun())
-            return true;
-
         EnterDebuggeeNoExecute* found = nullptr;
         for (EnterDebuggeeNoExecute* it = rt->noExecuteDebuggerTop; it; it = it->prev_) {
             if (&it->debugger() == &dbg && !it->unlocked_) {
-                MOZ_ASSERT(!found);
+                // This invariant does not hold when DebuggeeWouldRun is only a
+                // warning.
+                MOZ_ASSERT_IF(rt->options().throwOnDebuggeeWouldRun(), !found);
                 found = it;
             }
         }
@@ -337,11 +338,24 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
         return nullptr;
     }
 
-    // As above, except for returning the Debugger instance.
-    static Debugger* findDebuggerInStack(JSContext* cx) {
-        if (EnterDebuggeeNoExecute* nx = findInStack(cx))
-            return &nx->debugger();
-        return nullptr;
+    // Given a JSContext entered into a debuggee compartment, reports a
+    // warning or an error if there is a lock that locks it.
+    static bool reportIfFoundInStack(JSContext* cx) {
+        if (EnterDebuggeeNoExecute* nx = findInStack(cx)) {
+            bool warning = !cx->runtime()->options().throwOnDebuggeeWouldRun();
+            if (!warning || !nx->reported_) {
+                AutoCompartment ac(cx, nx->debugger().toJSObject());
+                nx->reported_ = true;
+                if (cx->runtime()->options().dumpStackOnDebuggeeWouldRun()) {
+                    fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
+                    DumpBacktrace(cx);
+                }
+                unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
+                return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
+                                                    JSMSG_DEBUGGEE_WOULD_RUN);
+            }
+        }
+        return true;
     }
 };
 
@@ -378,13 +392,7 @@ Debugger::slowPathCheckNoExecute(JSContext* cx)
 {
     MOZ_ASSERT(cx->compartment()->isDebuggee());
     MOZ_ASSERT(cx->runtime()->noExecuteDebuggerTop);
-
-    if (Debugger* dbg = EnterDebuggeeNoExecute::findDebuggerInStack(cx)) {
-        AutoCompartment ac(cx, dbg->toJSObject());
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUGGEE_WOULD_RUN);
-        return false;
-    }
-    return true;
+    return EnterDebuggeeNoExecute::reportIfFoundInStack(cx);
 }
 
 
