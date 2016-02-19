@@ -6801,6 +6801,8 @@ var ActivityObserver = {
     let isForeground = false;
     let tab = BrowserApp.selectedTab;
 
+    UITelemetry.addEvent("show.1", "system", null, aTopic);
+
     switch (aTopic) {
       case "application-background" :
         let doc = (tab ? tab.browser.contentDocument : null);
@@ -6828,7 +6830,6 @@ var Telemetry = {
 };
 
 var Experiments = {
-
   // Enable malware download protection (bug 936041)
   MALWARE_DOWNLOAD_PROTECTION: "malware-download-protection",
 
