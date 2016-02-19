@@ -69,7 +69,7 @@ class WasmName
     const char16_t* begin() const { return begin_; }
     const char16_t* end() const { return end_; }
     size_t length() const { MOZ_ASSERT(begin_ != nullptr); return end_ - begin_; }
-    bool isEmpty() const { return begin_ == nullptr; }
+    bool empty() const { return begin_ == nullptr; }
 };
 
 class WasmRef
@@ -86,11 +86,11 @@ class WasmRef
     WasmRef(WasmName name, uint32_t index)
       : name_(name), index_(index)
     {
-        MOZ_ASSERT(name.isEmpty() ^ (index == WasmNoIndex));
+        MOZ_ASSERT(name.empty() ^ (index == WasmNoIndex));
         MOZ_ASSERT(!isInvalid());
     }
     bool isInvalid() const {
-        return name_.isEmpty() && index_ == WasmNoIndex;
+        return name_.empty() && index_ == WasmNoIndex;
     }
     WasmName name() const {
         return name_;
@@ -421,22 +421,22 @@ class WasmAstFunc : public WasmAstNode
 {
     WasmName name_;
     WasmRef sig_;
-    WasmAstValTypeVector varTypes_;
-    WasmNameVector varNames_;
+    WasmAstValTypeVector vars_;
+    WasmNameVector localNames_;
     WasmAstExprVector body_;
 
   public:
-    WasmAstFunc(WasmName name, WasmRef sig, WasmAstValTypeVector&& varTypes,
-                WasmNameVector&& varNames, WasmAstExprVector&& body)
+    WasmAstFunc(WasmName name, WasmRef sig, WasmAstValTypeVector&& vars,
+                WasmNameVector&& locals, WasmAstExprVector&& body)
       : name_(name),
         sig_(sig),
-        varTypes_(Move(varTypes)),
-        varNames_(Move(varNames)),
+        vars_(Move(vars)),
+        localNames_(Move(locals)),
         body_(Move(body))
     {}
     WasmRef& sig() { return sig_; }
-    const WasmAstValTypeVector& varTypes() const { return varTypes_; }
-    const WasmNameVector& varNames() const { return varNames_; }
+    const WasmAstValTypeVector& vars() const { return vars_; }
+    const WasmNameVector& locals() const { return localNames_; }
     const WasmAstExprVector& body() const { return body_; }
     WasmName name() const { return name_; }
 };
@@ -2523,9 +2523,21 @@ ParseExprInsideParens(WasmParseContext& c)
 static bool
 ParseValueType(WasmParseContext& c, WasmAstValTypeVector* vec)
 {
-    WasmToken valueType;
-    return c.ts.match(WasmToken::ValueType, &valueType, c.error) &&
-           vec->append(valueType.valueType());
+    WasmToken token;
+    return c.ts.match(WasmToken::ValueType, &token, c.error) &&
+           vec->append(token.valueType());
+}
+
+static bool
+ParseValueTypeList(WasmParseContext& c, WasmAstValTypeVector* vec)
+{
+    WasmToken token;
+    while (c.ts.getIf(WasmToken::ValueType, &token)) {
+        if (!vec->append(token.valueType()))
+            return false;
+    }
+
+    return true;
 }
 
 static bool
@@ -2536,12 +2548,29 @@ ParseResult(WasmParseContext& c, ExprType* result)
         return false;
     }
 
-    WasmToken valueType;
-    if (!c.ts.match(WasmToken::ValueType, &valueType, c.error))
+    WasmToken token;
+    if (!c.ts.match(WasmToken::ValueType, &token, c.error))
         return false;
 
-    *result = ToExprType(valueType.valueType());
+    *result = ToExprType(token.valueType());
     return true;
+}
+
+static bool
+ParseLocal(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* localTypes)
+{
+    return locals->append(c.ts.getIfName()) &&
+           ParseValueType(c, localTypes);
+}
+
+static bool
+ParseParam(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* args)
+{
+    if (c.ts.peek().kind() == WasmToken::Name)
+        return ParseLocal(c, locals, args);
+
+    return locals->append(WasmName()) &&
+           ParseValueTypeList(c, args);
 }
 
 static WasmAstFunc*
@@ -2549,7 +2578,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
 {
     WasmAstValTypeVector vars(c.lifo);
     WasmAstValTypeVector args(c.lifo);
-    WasmNameVector varNames(c.lifo);
+    WasmNameVector locals(c.lifo);
 
     WasmName funcName = c.ts.getIfName();
 
@@ -2574,14 +2603,17 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
         WasmToken token = c.ts.get();
         switch (token.kind()) {
           case WasmToken::Local:
-          case WasmToken::Param: {
-            WasmName name = c.ts.getIfName();
-            if (!varNames.append(name))
-                return nullptr;
-            if (!ParseValueType(c, token.kind() == WasmToken::Local ? &vars : &args))
+            if (!ParseLocal(c, &locals, &vars))
                 return nullptr;
             break;
-          }
+          case WasmToken::Param:
+            if (!vars.empty()) {
+                c.ts.generateError(token, c.error);
+                return nullptr;
+            }
+            if (!ParseParam(c, &locals, &args))
+                return nullptr;
+            break;
           case WasmToken::Result:
             if (!ParseResult(c, &result))
                 return nullptr;
@@ -2604,7 +2636,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
         sig.setIndex(sigIndex);
     }
 
-    return new(c.lifo) WasmAstFunc(funcName, sig, Move(vars), Move(varNames), Move(body));
+    return new(c.lifo) WasmAstFunc(funcName, sig, Move(vars), Move(locals), Move(body));
 }
 
 static bool
@@ -2617,7 +2649,7 @@ ParseFuncType(WasmParseContext& c, WasmAstSig* sig)
         WasmToken token = c.ts.get();
         switch (token.kind()) {
           case WasmToken::Param:
-            if (!ParseValueType(c, &args))
+            if (!ParseValueTypeList(c, &args))
                 return false;
             break;
           case WasmToken::Result:
@@ -2884,28 +2916,28 @@ class Resolver
         varMap_.clear();
     }
     bool registerSigName(WasmName name, size_t index) {
-        return registerName(sigMap_, name, index);
+        return name.empty() || registerName(sigMap_, name, index);
     }
     bool registerFuncName(WasmName name, size_t index) {
-        return registerName(funcMap_, name, index);
+        return name.empty() || registerName(funcMap_, name, index);
     }
     bool registerImportName(WasmName name, size_t index) {
-        return registerName(importMap_, name, index);
+        return name.empty() || registerName(importMap_, name, index);
     }
     bool registerVarName(WasmName name, size_t index) {
-        return registerName(varMap_, name, index);
+        return name.empty() || registerName(varMap_, name, index);
     }
     bool resolveSigRef(WasmRef& ref) {
-        return resolveRef(sigMap_, ref);
+        return ref.name().empty() || resolveRef(sigMap_, ref);
     }
     bool resolveFuncRef(WasmRef& ref) {
-        return resolveRef(funcMap_, ref);
+        return ref.name().empty() || resolveRef(funcMap_, ref);
     }
     bool resolveImportRef(WasmRef& ref) {
-        return resolveRef(importMap_, ref);
+        return ref.name().empty() || resolveRef(importMap_, ref);
     }
     bool resolveVarRef(WasmRef& ref) {
-        return resolveRef(varMap_, ref);
+        return ref.name().empty() || resolveRef(varMap_, ref);
     }
     bool fail(const char*message) {
         error_->reset(JS_smprintf("%s", message));
@@ -2947,12 +2979,13 @@ ResolveCall(Resolver& r, WasmAstCall& c)
     if (!ResolveArgs(r, c.args()))
         return false;
 
-    if (c.func().name().isEmpty())
-        return true;
-
-    if (c.expr() == Expr::Call ? !r.resolveFuncRef(c.func())
-                               : !r.resolveImportRef(c.func())) {
-        return r.fail("function not found");
+    if (c.expr() == Expr::Call) {
+        if (!r.resolveFuncRef(c.func()))
+            return r.fail("function not found");
+    } else {
+        MOZ_ASSERT(c.expr() == Expr::CallImport);
+        if (!r.resolveImportRef(c.func()))
+            return r.fail("import not found");
     }
 
     return true;
@@ -2967,9 +3000,6 @@ ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
     if (!ResolveArgs(r, c.args()))
         return false;
 
-    if (c.sig().name().isEmpty())
-        return true;
-
     if (!r.resolveSigRef(c.sig()))
         return r.fail("signature not found");
 
@@ -2979,9 +3009,6 @@ ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
 static bool
 ResolveGetLocal(Resolver& r, WasmAstGetLocal& gl)
 {
-    if (gl.local().name().isEmpty())
-        return true;
-
     if (!r.resolveVarRef(gl.local()))
         return r.fail("local not found");
 
@@ -2993,9 +3020,6 @@ ResolveSetLocal(Resolver& r, WasmAstSetLocal& sl)
 {
     if (!ResolveExpr(r, sl.value()))
         return false;
-
-    if (sl.local().name().isEmpty())
-        return true;
 
     if (!r.resolveVarRef(sl.local()))
         return r.fail("local not found");
@@ -3105,12 +3129,9 @@ ResolveFunc(Resolver& r, WasmAstFunc& func)
 {
     r.beginFunc();
 
-    size_t numVars = func.varNames().length();
+    size_t numVars = func.locals().length();
     for (size_t i = 0; i < numVars; i++) {
-        WasmName name = func.varNames()[i];
-        if (name.isEmpty())
-            continue;
-        if (!r.registerVarName(name, i))
+        if (!r.registerVarName(func.locals()[i], i))
             return r.fail("duplicate var");
     }
 
@@ -3132,8 +3153,6 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     size_t numSigs = module->sigs().length();
     for (size_t i = 0; i < numSigs; i++) {
         WasmAstSig* sig = module->sigs()[i];
-        if (sig->name().isEmpty())
-            continue;
         if (!r.registerSigName(sig->name(), i))
             return r.fail("duplicate signature");
     }
@@ -3141,20 +3160,14 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     size_t numFuncs = module->funcs().length();
     for (size_t i = 0; i < numFuncs; i++) {
         WasmAstFunc* func = module->funcs()[i];
-        if (!func->sig().name().isEmpty()) {
-            if (!r.resolveSigRef(func->sig()))
-                return r.fail("signature not found");
-        }
-        if (func->name().isEmpty())
-            continue;
+        if (!r.resolveSigRef(func->sig()))
+            return r.fail("signature not found");
         if (!r.registerFuncName(func->name(), i))
             return r.fail("duplicate function");
     }
 
     if (module->maybeTable()) {
         for (WasmRef& ref : module->maybeTable()->elems()) {
-            if (ref.name().isEmpty())
-                continue;
             if (!r.resolveFuncRef(ref))
                 return r.fail("function not found");
         }
@@ -3163,16 +3176,12 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     size_t numImports = module->imports().length();
     for (size_t i = 0; i < numImports; i++) {
         WasmAstImport* imp = module->imports()[i];
-        if (imp->name().isEmpty())
-            continue;
         if (!r.registerImportName(imp->name(), i))
             return r.fail("duplicate import");
     }
 
     for (WasmAstExport* export_ : module->exports()) {
         if (export_->kind() != WasmAstExportKind::Func)
-            continue;
-        if (export_->func().name().isEmpty())
             continue;
         if (!r.resolveFuncRef(export_->func()))
             return r.fail("function not found");
@@ -3630,10 +3639,10 @@ EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
     if (!e.startSection(&offset))
         return false;
 
-    if (!e.writeVarU32(func.varTypes().length()))
+    if (!e.writeVarU32(func.vars().length()))
         return false;
 
-    for (ValType type : func.varTypes()) {
+    for (ValType type : func.vars()) {
         if (!e.writeValType(type))
             return false;
     }
