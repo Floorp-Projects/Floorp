@@ -74,6 +74,16 @@ public class TestGeckoProfile {
     }
 
     @Test
+    public void testGetClientIdFileAlreadyExists() throws Exception {
+        final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, validClientId);
+
+        final String clientIdFromProfile = profile.getClientId();
+        assertEquals("Client ID from method matches ID written to disk", validClientId, clientIdFromProfile);
+    }
+
+    @Test
     public void testGetClientIdMigrateFromFHR() throws Exception {
         final File fhrClientIdFile = new File(profileDir, "healthreport/state.json");
         final String fhrClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
