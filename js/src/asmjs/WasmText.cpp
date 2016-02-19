@@ -902,7 +902,7 @@ IsWasmLetter(char16_t c)
 static bool
 IsNameAfterDollar(char16_t c)
 {
-    return c == '_' || IsWasmDigit(c) || IsWasmLetter(c);
+    return IsWasmLetter(c) || IsWasmDigit(c) || c == '_' || c == '$' || c == '-';
 }
 
 static bool
@@ -1076,7 +1076,7 @@ class WasmTokenStream
       : cur_(text),
         end_(text + js_strlen(text)),
         lineStart_(text),
-        line_(0),
+        line_(1),
         lookaheadIndex_(0),
         lookaheadDepth_(0)
     {}
