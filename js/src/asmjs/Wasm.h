@@ -27,10 +27,6 @@ class ArrayBufferObject;
 
 namespace wasm {
 
-// Add wasm testing JS functions to the given JS global object.
-bool
-DefineTestingFunctions(JSContext* cx, JS::HandleObject globalObj);
-
 // Return whether WebAssembly can be compiled on this platform.
 bool
 HasCompilerSupport(ExclusiveContext* cx);

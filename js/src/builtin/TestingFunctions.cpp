@@ -20,6 +20,7 @@
 
 #include "asmjs/AsmJS.h"
 #include "asmjs/Wasm.h"
+#include "asmjs/WasmText.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitFrameIterator.h"
 #include "js/Debug.h"
@@ -492,6 +493,87 @@ IsProxy(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
     args.rval().setBoolean(args[0].toObject().is<ProxyObject>());
+    return true;
+}
+
+static bool
+WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::HasCompilerSupport(cx));
+    return true;
+}
+
+static bool
+WasmEval(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() < 1 || args.length() > 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
+        ReportUsageError(cx, callee, "First argument must be an ArrayBuffer");
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
+
+    RootedObject exportObj(cx);
+    if (!wasm::Eval(cx, code, importObj, &exportObj))
+        return false;
+
+    args.rval().setObject(*exportObj);
+    return true;
+}
+
+static bool
+WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 1) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String");
+        return false;
+    }
+
+    AutoStableStringChars twoByteChars(cx);
+    if (!twoByteChars.initTwoByte(cx, args[0].toString()))
+        return false;
+
+    UniqueChars error;
+    wasm::UniqueBytecode bytes = wasm::TextToBinary(twoByteChars.twoByteChars(), &error);
+    if (!bytes) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                             error.get() ? error.get() : "out of memory");
+        return false;
+    }
+
+    Rooted<ArrayBufferObject*> buffer(cx, ArrayBufferObject::create(cx, bytes->length()));
+    if (!buffer)
+        return false;
+
+    memcpy(buffer->dataPointer(), bytes->begin(), bytes->length());
+
+    args.rval().setObject(*buffer);
     return true;
 }
 
@@ -3619,6 +3701,19 @@ gc::ZealModeHelpText),
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
 
+    JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
+"wasmIsSupported()",
+"  Returns a boolean indicating whether WebAssembly is supported on the current device."),
+
+    JS_FN_HELP("wasmEval", WasmEval, 2, 0,
+"wasmEval(buffer, imports)",
+"  Compiles the given binary wasm module given by 'buffer' (which must be an ArrayBuffer)\n"
+"  and links the module's imports with the given 'imports' object."),
+
+    JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
+"wasmTextToBinary(str)",
+"  Translates the given text wasm module into its binary encoding."),
+
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
 "  True if fun is a lazy JSFunction."),
@@ -3871,9 +3966,6 @@ js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
         fuzzingSafe = true;
 
     disableOOMFunctions = disableOOMFunctions_;
-
-    if (!wasm::DefineTestingFunctions(cx, obj))
-        return false;
 
     if (!JS_DefineProperties(cx, obj, TestingProperties))
         return false;
