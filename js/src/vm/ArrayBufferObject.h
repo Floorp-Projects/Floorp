@@ -288,7 +288,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
   public:
     uint8_t* dataPointer() const;
     SharedMem<uint8_t*> dataPointerShared() const;
-    size_t byteLength() const;
+    uint32_t byteLength() const;
     BufferContents contents() const {
         return BufferContents(dataPointer(), bufferKind());
     }
@@ -339,7 +339,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
   protected:
     void setDataPointer(BufferContents contents, OwnsState ownsState);
-    void setByteLength(size_t length);
+    void setByteLength(uint32_t length);
 
     uint32_t flags() const;
     void setFlags(uint32_t flags);

@@ -576,16 +576,17 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
     setFlags((flags() & ~KIND_MASK) | contents.kind());
 }
 
-size_t
+uint32_t
 ArrayBufferObject::byteLength() const
 {
-    return size_t(getSlot(BYTE_LENGTH_SLOT).toDouble());
+    return getSlot(BYTE_LENGTH_SLOT).toInt32();
 }
 
 void
-ArrayBufferObject::setByteLength(size_t length)
+ArrayBufferObject::setByteLength(uint32_t length)
 {
-    setSlot(BYTE_LENGTH_SLOT, DoubleValue(length));
+    MOZ_ASSERT(length <= INT32_MAX);
+    setSlot(BYTE_LENGTH_SLOT, Int32Value(length));
 }
 
 uint32_t
