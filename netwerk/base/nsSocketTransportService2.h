@@ -120,8 +120,6 @@ private:
 
     nsCOMPtr<nsIThread> mThread;    // protected by mLock
     mozilla::UniquePtr<mozilla::net::PollableEvent> mPollableEvent;
-    bool        mAutodialEnabled;
-                            // pref to control autodial code
 
     // Returns mThread, protecting the get-and-addref with mLock
     already_AddRefed<nsIThread> GetThreadSafely();
