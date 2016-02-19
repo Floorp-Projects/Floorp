@@ -106,6 +106,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRTC_HW_ACCELERATION_ENCODE = 14;
   /* Whether Webrtc Hardware acceleration is supported, starting in 42. */
   const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
+  /* Whether Canvas acceleration is supported, starting in 45 */
+  const long FEATURE_CANVAS2D_ACCELERATION = 16;
 
   /*
    * A set of return values from GetFeatureStatus
