@@ -1922,12 +1922,6 @@ var BrowserApp = {
             break;
           }
 
-          // Enabling or disabling suggestions will prevent future prompts
-          case SearchEngines.PREF_SUGGEST_ENABLED:
-            Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
-            aSubject.setAsEmpty();
-            break;
-
           // Crash reporter preference is in a service; set and return.
           case "datareporting.crashreporter.submitEnabled":
             let crashReporterBuilt = "nsICrashReporter" in Ci &&
