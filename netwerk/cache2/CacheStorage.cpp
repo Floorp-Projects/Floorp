@@ -104,7 +104,6 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   RefPtr<CacheEntryHandle> entry;
   rv = CacheStorageService::Self()->AddStorageEntry(
     this, noRefURI, aIdExtension,
-    true, // create always
     truncate, // replace any existing one?
     getter_AddRefs(entry));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -131,7 +130,6 @@ NS_IMETHODIMP CacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExt
   RefPtr<CacheEntryHandle> handle;
   rv = CacheStorageService::Self()->AddStorageEntry(
     this, noRefURI, aIdExtension,
-    true, // create always
     true, // replace any existing one
     getter_AddRefs(handle));
   NS_ENSURE_SUCCESS(rv, rv);

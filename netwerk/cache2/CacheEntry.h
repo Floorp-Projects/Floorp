@@ -266,6 +266,9 @@ private:
 
   // Called only from DoomAlreadyRemoved()
   void DoomFile();
+  // When this entry is doomed the first time, this method removes
+  // any force-valid timing info for this entry.
+  void RemoveForcedValidity();
 
   already_AddRefed<CacheEntryHandle> ReopenTruncated(bool aMemoryOnly,
                                                      nsICacheEntryOpenCallback* aCallback);
