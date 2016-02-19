@@ -80,6 +80,9 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_CANVAS2D_ACCELERATION);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
     gTestserver.stop(do_test_finished);
   }
 
