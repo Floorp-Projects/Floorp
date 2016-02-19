@@ -111,7 +111,8 @@ Sanitizer.prototype = {
 
     // Store the list of items to clear, in case we are killed before we
     // get a chance to complete.
-    Preferences.set(Sanitizer.PREF_SANITIZE_IN_PROGRESS, JSON.stringify(itemsToClear));
+    Preferences.set(Sanitizer.PREF_SANITIZE_IN_PROGRESS,
+                    JSON.stringify(itemsToClear));
 
     // Store the list of items to clear, for debugging/forensics purposes
     for (let k of itemsToClear) {
@@ -677,10 +678,19 @@ Sanitizer.prototype = {
   }
 };
 
-// "Static" members
+// The preferences branch for the sanitizer.
 Sanitizer.PREF_DOMAIN = "privacy.sanitize.";
+// Whether we should sanitize on shutdown.
 Sanitizer.PREF_SANITIZE_ON_SHUTDOWN = "privacy.sanitize.sanitizeOnShutdown";
+// During a sanitization this is set to a json containing the array of items
+// being sanitized, then cleared once the sanitization is complete.
+// This allows to retry a sanitization on startup in case it was interrupted
+// by a crash.
 Sanitizer.PREF_SANITIZE_IN_PROGRESS = "privacy.sanitize.sanitizeInProgress";
+// Whether the previous shutdown sanitization completed successfully.
+// This is used to detect cases where we were supposed to sanitize on shutdown
+// but due to a crash we were unable to.  In such cases there may not be any
+// sanitization in progress, cause we didn't have a chance to start it yet.
 Sanitizer.PREF_SANITIZE_DID_SHUTDOWN = "privacy.sanitize.didShutdownSanitize";
 
 // Time span constants corresponding to values of the privacy.sanitize.timeSpan
@@ -766,6 +776,19 @@ Sanitizer.sanitize = function(aParentWindow)
 };
 
 Sanitizer.onStartup = Task.async(function*() {
+  // Check if we were interrupted during the last shutdown sanitization.
+  let shutownSanitizationWasInterrupted =
+    Preferences.get(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
+    !Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
+
+  if (Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
+    // Reset the pref, so that if we crash before having a chance to
+    // sanitize on shutdown, we will do at the next startup.
+    // Flushing prefs has a cost, so do this only if necessary.
+    Preferences.reset(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
+    Services.prefs.savePrefFile(null);
+  }
+
   // Make sure that we are triggered during shutdown, at the right time,
   // and only once.
   let placesClient = Cc["@mozilla.org/browser/nav-history-service;1"]
@@ -800,18 +823,17 @@ Sanitizer.onStartup = Task.async(function*() {
       Services.prefs.setBoolPref("privacy.sanitize.migrateClearSavedPwdsOnExit", true);
   }
 
-  // Handle incomplete sanitizations
-  if (Preferences.has(Sanitizer.PREF_SANITIZE_IN_PROGRESS)) {
-    // Firefox crashed during sanitization.
+  // Check if Firefox crashed during a sanitization.
+  let lastInterruptedSanitization = Preferences.get(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
+  if (lastInterruptedSanitization) {
     let s = new Sanitizer();
-    let json = Preferences.get(Sanitizer.PREF_SANITIZE_IN_PROGRESS);
-    let itemsToClear = JSON.parse(json);
+    // If the json is invalid this will just throw and reject the Task.
+    let itemsToClear = JSON.parse(lastInterruptedSanitization);
     yield s.sanitize(itemsToClear);
-  }
-  if (Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
-    // Firefox crashed before having a chance to sanitize during shutdown.
-    // (note that if Firefox crashed during shutdown sanitization, we
-    // will hit both `if` so we will run a second double-sanitization).
+  } else if (shutownSanitizationWasInterrupted) {
+    // Otherwise, could be we were supposed to sanitize on shutdown but we
+    // didn't have a chance, due to an earlier crash.
+    // In such a case, just redo a shutdown sanitize now, during startup.
     yield Sanitizer.onShutdown();
   }
 });
@@ -824,5 +846,8 @@ Sanitizer.onShutdown = Task.async(function*() {
   let s = new Sanitizer();
   s.prefDomain = "privacy.clearOnShutdown.";
   yield s.sanitize();
+  // We didn't crash during shutdown sanitization, so annotate it to avoid
+  // sanitizing again on startup.
   Preferences.set(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN, true);
+  Services.prefs.savePrefFile(null);
 });
