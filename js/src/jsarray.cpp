@@ -2339,7 +2339,11 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * visited.  See bug 690622.
      */
     ObjectGroup* arrGroup = arr->getGroup(cx);
-    if (MOZ_UNLIKELY(!arrGroup || arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
+    if (!arrGroup) {
+        cx->recoverFromOutOfMemory();
+        return false;
+    }
+    if (MOZ_UNLIKELY(arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
         return false;
 
     /*
