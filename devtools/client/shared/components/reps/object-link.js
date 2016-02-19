@@ -6,31 +6,31 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const DOM = React.DOM;
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const DOM = React.DOM;
+  /**
+   * Renders a link for given object.
+   */
+  const ObjectLink = React.createClass({
+    displayName: "ObjectLink",
 
-/**
- * Renders a link for given object.
- */
-const ObjectLink = React.createClass({
-  displayName: "ObjectLink",
+    render: function() {
+      let className = this.props.className;
+      let objectClassName = className ? " objectLink-" + className : "";
+      let linkClassName = "objectLink" + objectClassName + " a11yFocus";
 
-  render: function() {
-    var className = this.props.className;
-    var objectClassName = className ? " objectLink-" + className : "";
-    var linkClassName = "objectLink" + objectClassName + " a11yFocus";
+      return (
+        DOM.a({className: linkClassName, _repObject: this.props.object},
+          this.props.children
+        )
+      );
+    }
+  });
 
-    return (
-      DOM.a({className: linkClassName, _repObject: this.props.object},
-        this.props.children
-      )
-    )
-  }
-});
-
-// Exports from this module
-exports.ObjectLink = ObjectLink;
+  // Exports from this module
+  exports.ObjectLink = ObjectLink;
 });

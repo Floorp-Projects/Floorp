@@ -6,24 +6,24 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-
-/**
- * Create React factories for given arguments.
- * Example:
- *   const { Rep } = createFactories(require("./rep"));
- */
-function createFactories(args) {
-  var result = {};
-  for (var p in args) {
-    result[p] = React.createFactory(args[p]);
+  /**
+   * Create React factories for given arguments.
+   * Example:
+   *   const { Rep } = createFactories(require("./rep"));
+   */
+  function createFactories(args) {
+    let result = {};
+    for (let p in args) {
+      result[p] = React.createFactory(args[p]);
+    }
+    return result;
   }
-  return result;
-}
 
-// Exports from this module
-exports.createFactories = createFactories;
+  // Exports from this module
+  exports.createFactories = createFactories;
 });

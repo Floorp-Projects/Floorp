@@ -6,82 +6,81 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
+  // Load all existing rep templates
+  const { Undefined } = require("./undefined");
+  const { Null } = require("./null");
+  const { StringRep } = require("./string");
+  const { Number } = require("./number");
+  const { ArrayRep } = require("./array");
+  const { Obj } = require("./object");
 
-// Load all existing rep templates
-const { Undefined } = require("./undefined");
-const { Null } = require("./null");
-const { StringRep } = require("./string");
-const { Number } = require("./number");
-const { ArrayRep } = require("./array");
-const { Obj } = require("./object");
+  // List of all registered template.
+  // XXX there should be a way for extensions to register a new
+  // or modify an existing rep.
+  let reps = [Undefined, Null, StringRep, Number, ArrayRep, Obj];
+  let defaultRep;
 
-// List of all registered template.
-// XXX there should be a way for extensions to register a new
-// or modify an existing rep.
-var reps = [Undefined, Null, StringRep, Number, ArrayRep, Obj];
-var defaultRep;
+  /**
+   * Generic rep that is using for rendering native JS types or an object.
+   * The right template used for rendering is picked automatically according
+   * to the current value type. The value must be passed is as 'object'
+   * property.
+   */
+  const Rep = React.createClass({
+    displayName: "Rep",
 
-/**
- * Generic rep that is using for rendering native JS types or an object.
- * The right template used for rendering is picked automatically according
- * to the current value type. The value must be passed is as 'object'
- * property.
- */
-const Rep = React.createClass({
-  displayName: "Rep",
+    render: function() {
+      let rep = getRep(this.props.object);
+      return rep(this.props);
+    },
+  });
 
-  render: function() {
-    var rep = getRep(this.props.object);
-    return rep(this.props);
-  },
-});
+  // Helpers
 
-// Helpers
+  /**
+   * Return a rep object that is responsible for rendering given
+   * object.
+   *
+   * @param object {Object} Object to be rendered in the UI. This
+   * can be generic JS object as well as a grip (handle to a remote
+   * debuggee object).
+   */
+  function getRep(object) {
+    let type = typeof object;
+    if (type == "object" && object instanceof String) {
+      type = "string";
+    }
 
-/**
- * Return a rep object that is responsible for rendering given
- * object.
- *
- * @param object {Object} Object to be rendered in the UI. This
- * can be generic JS object as well as a grip (handle to a remote
- * debuggee object).
- */
-function getRep(object) {
-  var type = typeof(object);
-  if (type == "object" && object instanceof String) {
-    type = "string";
-  }
+    if (isGrip(object)) {
+      type = object.class;
+    }
 
-  if (isGrip(object)) {
-    type = object.class;
-  }
-
-  for (var i=0; i<reps.length; i++) {
-    var rep = reps[i];
-    try {
-      // supportsObject could return weight (not only true/false
-      // but a number), which would allow to priorities templates and
-      // support better extensibility.
-      if (rep.supportsObject(object, type)) {
-        return React.createFactory(rep.rep);
+    for (let i = 0; i < reps.length; i++) {
+      let rep = reps[i];
+      try {
+        // supportsObject could return weight (not only true/false
+        // but a number), which would allow to priorities templates and
+        // support better extensibility.
+        if (rep.supportsObject(object, type)) {
+          return React.createFactory(rep.rep);
+        }
+      } catch (err) {
+        console.error("reps.getRep; EXCEPTION ", err, err);
       }
     }
-    catch (err) {
-      console.error("reps.getRep; EXCEPTION ", err, err);
-    }
+
+    return React.createFactory(defaultRep.rep);
   }
 
-  return React.createFactory(defaultRep.rep);
-}
+  function isGrip(object) {
+    return object && object.actor;
+  }
 
-function isGrip(object) {
-  return object && object.actor;
-}
-
-// Exports from this module
-exports.Rep = Rep;
+  // Exports from this module
+  exports.Rep = Rep;
 });

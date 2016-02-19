@@ -6,41 +6,40 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const { createFactories } = require("./rep-utils");
+  const { ObjectBox } = createFactories(require("./object-box"));
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./rep-utils");
-const { ObjectBox } = createFactories(require("./object-box"));
+  /**
+   * Renders undefined value
+   */
+  const Undefined = React.createClass({
+    displayName: "UndefinedRep",
 
-/**
- * Renders undefined value
- */
-const Undefined = React.createClass({
-  displayName: "UndefinedRep",
+    render: function() {
+      return (
+        ObjectBox({className: "undefined"},
+          "undefined"
+        )
+      );
+    },
+  });
 
-  render: function() {
-    return (
-      ObjectBox({className: "undefined"},
-        "undefined"
-      )
-    )
-  },
-});
+  function supportsObject(object, type) {
+    if (object && object.type && object.type == "undefined") {
+      return true;
+    }
 
-function supportsObject(object, type) {
-  if (object && object.type && object.type == "undefined") {
-    return true;
+    return (type == "undefined");
   }
 
-  return (type == "undefined");
-}
+  // Exports from this module
 
-// Exports from this module
-
-exports.Undefined = {
-  rep: Undefined,
-  supportsObject: supportsObject
-};
-
+  exports.Undefined = {
+    rep: Undefined,
+    supportsObject: supportsObject
+  };
 });

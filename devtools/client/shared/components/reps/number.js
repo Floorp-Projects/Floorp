@@ -6,42 +6,41 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const { createFactories } = require("./rep-utils");
+  const { ObjectBox } = createFactories(require("./object-box"));
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./rep-utils");
-const { ObjectBox } = createFactories(require("./object-box"));
+  /**
+   * Renders a number
+   */
+  const Number = React.createClass({
+    displayName: "Number",
 
-/**
- * Renders a number
- */
-const Number = React.createClass({
-  displayName: "Number",
+    render: function() {
+      let value = this.props.object;
+      return (
+        ObjectBox({className: "number"},
+          this.stringify(value)
+        )
+      );
+    },
 
-  render: function() {
-    var value = this.props.object;
-    return (
-      ObjectBox({className: "number"},
-        this.stringify(value)
-      )
-    )
-  },
+    stringify: function(object) {
+      return (Object.is(object, -0) ? "-0" : String(object));
+    },
+  });
 
-  stringify: function(object) {
-    return (Object.is(object, -0) ? "-0" : String(object));
-  },
-});
+  function supportsObject(object, type) {
+    return type == "boolean" || type == "number";
+  }
 
-function supportsObject(object, type) {
-  return type == "boolean" || type == "number";
-}
+  // Exports from this module
 
-// Exports from this module
-
-exports.Number = {
-  rep: Number,
-  supportsObject: supportsObject
-};
-
+  exports.Number = {
+    rep: Number,
+    supportsObject: supportsObject
+  };
 });

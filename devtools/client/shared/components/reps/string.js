@@ -6,97 +6,96 @@
 
 "use strict";
 
+// Make this available to both AMD and CJS environments
 define(function(require, exports, module) {
+  // Dependencies
+  const React = require("devtools/client/shared/vendor/react");
+  const { createFactories } = require("./rep-utils");
+  const { ObjectBox } = createFactories(require("./object-box"));
 
-// Dependencies
-const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./rep-utils");
-const { ObjectBox } = createFactories(require("./object-box"));
+  /**
+   * Renders a string. String value is enclosed within quotes.
+   */
+  const StringRep = React.createClass({
+    displayName: "StringRep",
 
-/**
- * Renders a string. String value is enclosed within quotes.
- */
-const StringRep = React.createClass({
-  displayName: "StringRep",
+    render: function() {
+      let text = this.props.object;
+      let member = this.props.member;
+      if (member && member.open) {
+        return (
+          ObjectBox({className: "string"},
+            "\"" + text + "\""
+          )
+        );
+      }
 
-  render: function() {
-    var text = this.props.object;
-    var member = this.props.member;
-    if (member && member.open) {
-      return (
-        ObjectBox({className: "string"},
-          "\"" + text + "\""
-        )
-      )
-    } else {
       return (
         ObjectBox({className: "string"},
           "\"" + cropMultipleLines(text) + "\""
         )
-      )
+      );
+    },
+  });
+
+  // Helpers
+
+  function escapeNewLines(value) {
+    return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
+  }
+
+  function cropMultipleLines(text, limit) {
+    return escapeNewLines(cropString(text, limit));
+  }
+
+  function cropString(text, limit, alternativeText) {
+    if (!alternativeText) {
+      alternativeText = "...";
     }
-  },
-});
 
-// Helpers
+    // Make sure it's a string.
+    text = text + "";
 
-function escapeNewLines(value) {
-  return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
-};
+    // Use default limit if necessary.
+    if (!limit) {
+      limit = 50;
+    }
 
-function cropMultipleLines(text, limit) {
-  return escapeNewLines(cropString(text, limit));
-};
+    // Crop the string only if a limit is actually specified.
+    if (limit <= 0) {
+      return text;
+    }
 
-function cropString(text, limit, alternativeText) {
-  if (!alternativeText) {
-    alternativeText = "...";
-  }
+    // Set the limit at least to the length of the alternative text
+    // plus one character of the original text.
+    if (limit <= alternativeText.length) {
+      limit = alternativeText.length + 1;
+    }
 
-  // Make sure it's a string.
-  text = text + "";
+    let halfLimit = (limit - alternativeText.length) / 2;
 
-  // Use default limit if necessary.
-  if (!limit) {
-    limit = 50;
-  }
+    if (text.length > limit) {
+      return text.substr(0, Math.ceil(halfLimit)) + alternativeText +
+        text.substr(text.length - Math.floor(halfLimit));
+    }
 
-  // Crop the string only if a limit is actually specified.
-  if (limit <= 0) {
     return text;
   }
 
-  // Set the limit at least to the length of the alternative text
-  // plus one character of the original text.
-  if (limit <= alternativeText.length) {
-    limit = alternativeText.length + 1;
+  function isCropped(value) {
+    let cropLength = 50;
+    return typeof value == "string" && value.length > cropLength;
   }
 
-  var halfLimit = (limit - alternativeText.length) / 2;
-
-  if (text.length > limit) {
-    return text.substr(0, Math.ceil(halfLimit)) + alternativeText +
-      text.substr(text.length - Math.floor(halfLimit));
+  function supportsObject(object, type) {
+    return (type == "string");
   }
 
-  return text;
-};
+  // Exports from this module
 
-function isCropped(value) {
-  var cropLength = 50;
-  return typeof(value) == "string" && value.length > cropLength;
-}
-
-function supportsObject(object, type) {
-  return (type == "string");
-}
-
-// Exports from this module
-
-exports.StringRep = {
-  rep: StringRep,
-  supportsObject: supportsObject,
-  isCropped: isCropped
-};
-
+  exports.StringRep = {
+    rep: StringRep,
+    supportsObject: supportsObject,
+    isCropped: isCropped
+  };
 });
