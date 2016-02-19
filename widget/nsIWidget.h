@@ -1287,9 +1287,13 @@ class nsIWidget : public nsISupports {
      *
      * Called by BasicCompositor on the compositor thread for OMTC drawing
      * before each composition.
+     *
+     * The window may specify its buffer mode. If unspecified, it is assumed
+     * to require double-buffering.
      */
     virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() = 0;
-    virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion) {
+    virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                                                                                  mozilla::layers::BufferMode* aBufferMode) {
       return StartRemoteDrawing();
     }
 
