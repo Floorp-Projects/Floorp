@@ -301,6 +301,31 @@ NS_IMPL_CYCLE_COLLECTION(nsAnimationManager, mEventDispatcher)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsAnimationManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsAnimationManager, Release)
 
+// Find the matching animation by |aName| in the old list
+// of animations and remove the matched animation from the list.
+static already_AddRefed<CSSAnimation>
+PullOutOldAnimationInCollection(const nsAString& aName,
+                                AnimationCollection* aCollection)
+{
+  // Find the matching animation with this name in the old list
+  // of animations.  We iterate through both lists in a backwards
+  // direction which means that if there are more animations in
+  // the new list of animations with a given name than in the old
+  // list, it will be the animations towards the of the beginning of
+  // the list that do not match and are treated as new animations.
+  size_t oldIdx = aCollection->mAnimations.Length();
+  while (oldIdx-- != 0) {
+    RefPtr<CSSAnimation> a = aCollection->mAnimations[oldIdx]->AsCSSAnimation();
+    MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
+        " be CSSAnimation objects");
+    if (a->AnimationName() == aName) {
+      aCollection->mAnimations.RemoveElementAt(oldIdx);
+      return a.forget();
+    }
+  }
+  return nullptr;
+}
+
 void
 nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
                                      mozilla::dom::Element* aElement)
@@ -365,23 +390,15 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
         Animation* newAnim = newAnimations[newIdx];
 
         // Find the matching animation with this name in the old list
-        // of animations.  We iterate through both lists in a backwards
+        // of animations and remove the matched animation from the list.
+        // We iterate through both lists in a backwards
         // direction which means that if there are more animations in
         // the new list of animations with a given name than in the old
         // list, it will be the animations towards the of the beginning of
         // the list that do not match and are treated as new animations.
-        RefPtr<CSSAnimation> oldAnim;
-        size_t oldIdx = collection->mAnimations.Length();
-        while (oldIdx-- != 0) {
-          CSSAnimation* a = collection->mAnimations[oldIdx]->AsCSSAnimation();
-          MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
-                        " be CSSAnimation objects");
-          if (a->AnimationName() ==
-              newAnim->AsCSSAnimation()->AnimationName()) {
-            oldAnim = a;
-            break;
-          }
-        }
+        RefPtr<CSSAnimation> oldAnim =
+          PullOutOldAnimationInCollection(
+            newAnim->AsCSSAnimation()->AnimationName(), collection);
         if (!oldAnim) {
           // FIXME: Bug 1134163 - We shouldn't queue animationstart events
           // until the animation is actually ready to run. However, we
@@ -436,16 +453,13 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
           nsNodeUtils::AnimationChanged(oldAnim);
         }
 
-        // Replace new animation with the (updated) old one and remove the
-        // old one from the array so we don't try to match it any more.
+        // Replace new animation with the (updated) old one.
         //
         // Although we're doing this while iterating this is safe because
-        // we're not changing the length of newAnimations and we've finished
-        // iterating over the list of old iterations.
+        // we're not changing the length of newAnimations.
         newAnim->CancelFromStyle();
         newAnim = nullptr;
         newAnimations.ReplaceElementAt(newIdx, oldAnim);
-        collection->mAnimations.RemoveElementAt(oldIdx);
       }
     }
   } else {
