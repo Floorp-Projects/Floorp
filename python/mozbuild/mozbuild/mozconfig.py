@@ -7,11 +7,12 @@ from __future__ import absolute_import, unicode_literals
 import filecmp
 import os
 import re
+import sys
 import subprocess
 import traceback
 
 from collections import defaultdict
-from mach.mixin.process import ProcessExecutionMixin
+from mozpack import path as mozpath
 
 
 MOZ_MYCONFIG_ERROR = '''
@@ -56,7 +57,7 @@ class MozconfigLoadException(Exception):
         Exception.__init__(self, message)
 
 
-class MozconfigLoader(ProcessExecutionMixin):
+class MozconfigLoader(object):
     """Handles loading and parsing of mozconfig files."""
 
     RE_MAKE_VARIABLE = re.compile('''
@@ -214,7 +215,7 @@ class MozconfigLoader(ProcessExecutionMixin):
         if path is None:
             return result
 
-        path = path.replace(os.sep, '/')
+        path = mozpath.normsep(path)
 
         result['configure_args'] = []
         result['make_extra'] = []
@@ -222,13 +223,22 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         env = dict(os.environ)
 
-        args = self._normalize_command([self._loader_script,
-            self.topsrcdir.replace(os.sep, '/'), path], True)
+        # Since mozconfig_loader is a shell script, running it "normally"
+        # actually leads to two shell executions on Windows. Avoid this by
+        # directly calling sh mozconfig_loader.
+        shell = 'sh'
+        if 'MOZILLABUILD' in os.environ:
+            shell = os.environ['MOZILLABUILD'] + '/msys/bin/sh'
+        if sys.platform == 'win32':
+            shell = shell + '.exe'
+
+        command = [shell, mozpath.normsep(self._loader_script),
+                   mozpath.normsep(self.topsrcdir), path]
 
         try:
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
-            output = subprocess.check_output(args, stderr=subprocess.STDOUT,
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT,
                 cwd=self.topsrcdir, env=env)
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
