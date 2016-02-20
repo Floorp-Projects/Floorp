@@ -92,6 +92,9 @@ LIRGeneratorShared::visitConstant(MConstant* ins)
       case MIRType_Int32:
         define(new(alloc()) LInteger(ins->toInt32()), ins);
         break;
+      case MIRType_Int64:
+        defineInt64(new(alloc()) LInteger64(ins->toInt64()), ins);
+        break;
       case MIRType_String:
         define(new(alloc()) LPointer(ins->toString()), ins);
         break;

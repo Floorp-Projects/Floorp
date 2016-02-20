@@ -143,6 +143,10 @@ class LIRGeneratorShared : public MDefinitionVisitor
                           LDefinition::Policy policy = LDefinition::REGISTER);
 
     template <size_t Ops, size_t Temps>
+    inline void defineInt64(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir, MDefinition* mir,
+                            LDefinition::Policy policy = LDefinition::REGISTER);
+
+    template <size_t Ops, size_t Temps>
     inline void defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefinition *mir,
                              LDefinition::Policy policy = LDefinition::REGISTER);
 

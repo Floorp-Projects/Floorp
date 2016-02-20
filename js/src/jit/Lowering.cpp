@@ -3915,6 +3915,10 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
         lir->setOperand(0, useFixed(rval, ReturnSimd128Reg));
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
+#if JS_BITS_PER_WORD == 64
+    else if (rval->type() == MIRType_Int64)
+        lir->setOperand(0, useFixed(rval, ReturnReg));
+#endif
     else
         MOZ_CRASH("Unexpected asm.js return type");
     add(lir);

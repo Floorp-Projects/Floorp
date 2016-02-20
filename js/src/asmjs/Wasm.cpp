@@ -112,6 +112,10 @@ DecodeValType(JSContext* cx, Decoder& d, ValType *type)
       case ValType::F64:
         break;
       case ValType::I64:
+#ifndef JS_CPU_X64
+        return Fail(cx, d, "i64 NYI on this platform");
+#endif
+        break;
       case ValType::I32x4:
       case ValType::F32x4:
       case ValType::B32x4:
@@ -136,6 +140,10 @@ DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
       case ExprType::Void:
         break;
       case ExprType::I64:
+#ifndef JS_CPU_X64
+        return Fail(cx, d, "i64 NYI on this platform");
+#endif
+        break;
       case ExprType::I32x4:
       case ExprType::F32x4:
       case ExprType::B32x4:
@@ -403,8 +411,7 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32Const:
         return DecodeConstI32(f, expected);
       case Expr::I64Const:
-        return f.fail("NYI: i64") &&
-               DecodeConstI64(f, expected);
+        return DecodeConstI64(f, expected);
       case Expr::F32Const:
         return DecodeConstF32(f, expected);
       case Expr::F64Const:
