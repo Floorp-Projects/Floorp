@@ -348,6 +348,15 @@ for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math
     assertThrowsInstanceOf(() => i2v(bad, 0), RangeError);
 }
 
+// When the test below starts failing, remove it and uncomment the lines below!
+assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
+/*
+assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
+*/
+
 
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type $a (func (result i32)))
