@@ -7,14 +7,11 @@ promise_test(function(test) {
     // the performance API introduces some rounding as well to prevent
     // timing attacks.
     var accuracy = 1.5;
-    var dateStart;
     return new Promise(function(resolve) {
-        dateStart = Date.now();
         performance.mark('startMark');
         setTimeout(resolve, durationMsec);
       }).then(function() {
           performance.mark('endMark');
-          var dateEnd = Date.now();
           performance.measure('measure', 'startMark', 'endMark');
           var startMark = performance.getEntriesByName('startMark')[0];
           var endMark = performance.getEntriesByName('endMark')[0];
@@ -29,12 +26,6 @@ promise_test(function(test) {
           performance.clearMeasures('measure');
           assert_equals(performance.getEntriesByType('mark').length, 1);
           assert_equals(performance.getEntriesByType('measure').length, 0);
-
-          // Performance API's fuzzy resolution means its measured duration
-          // can round to a slightly different value compared to Date.now()
-          // measurements.
-          var dateDuration = dateEnd - dateStart;
-          assert_approx_equals(Math.round(measure.duration), dateDuration, 1);
       });
   }, 'User Timing');
 
