@@ -496,6 +496,7 @@ public:
   }
 
   LayoutDeviceIntPoint GetChildProcessOffset();
+  CSSPoint AdjustTapToChildWidget(const CSSPoint& aPoint);
 
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
@@ -611,8 +612,6 @@ private:
   void TryCacheDPIAndScale();
 
   nsresult UpdatePosition();
-
-  CSSPoint AdjustTapToChildWidget(const CSSPoint& aPoint);
 
   bool AsyncPanZoomEnabled() const;
 
