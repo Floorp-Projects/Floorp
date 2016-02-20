@@ -259,8 +259,6 @@ SocialUI = {
   // called on tab/urlbar/location changes and after customization. Update
   // anything that is tab specific.
   updateState: function() {
-    if (location == "about:customizing")
-      return;
     goSetCommandEnabled("Social:PageShareOrMark", this.canShareOrMarkPage(gBrowser.currentURI));
     if (!SocialUI.enabled)
       return;

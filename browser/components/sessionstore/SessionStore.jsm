@@ -801,6 +801,8 @@ var SessionStoreInternal = {
             tab.label = activePageData.url;
             tab.crop = "center";
           }
+        } else if (tab.hasAttribute("customizemode")) {
+          win.gCustomizeMode.setTab(tab);
         }
 
         // Restore the tab icon.
@@ -3299,6 +3301,10 @@ var SessionStoreInternal = {
    *        optional load arguments used for loadURI()
    */
   restoreTabContent: function (aTab, aLoadArguments = null) {
+    if (aTab.hasAttribute("customizemode")) {
+      return;
+    }
+
     let browser = aTab.linkedBrowser;
     let window = aTab.ownerDocument.defaultView;
     let tabbrowser = window.gBrowser;
