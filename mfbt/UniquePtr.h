@@ -294,7 +294,7 @@ public:
   DeleterType& getDeleter() { return del(); }
   const DeleterType& getDeleter() const { return del(); }
 
-  Pointer release()
+  MOZ_WARN_UNUSED_RESULT Pointer release()
   {
     Pointer p = ptr();
     ptr() = nullptr;
@@ -429,7 +429,7 @@ public:
   DeleterType& getDeleter() { return mTuple.second(); }
   const DeleterType& getDeleter() const { return mTuple.second(); }
 
-  Pointer release()
+  MOZ_WARN_UNUSED_RESULT Pointer release()
   {
     Pointer p = mTuple.first();
     mTuple.first() = nullptr;
