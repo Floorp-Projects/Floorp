@@ -476,6 +476,15 @@ class Encoder
         return patchVarU32(offset, patchBits, UINT32_MAX);
     }
 
+    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU8(size_t* offset) {
+        *offset = bytecode_.length();
+        return writeU8(UINT8_MAX);
+    }
+    void patchVarU8(size_t offset, uint8_t patchBits) {
+        MOZ_ASSERT(patchBits < 0x80);
+        return patchU8(offset, patchBits);
+    }
+
     MOZ_WARN_UNUSED_RESULT bool writePatchableExpr(size_t* offset) {
         return writePatchableEnum<Expr>(offset);
     }
