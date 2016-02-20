@@ -413,8 +413,19 @@ RestyleTracker::GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData)
     // element.  Leave it around for now, but remove the other restyle
     // hints and the change hint for it.  Also unset its root bit,
     // since it's no longer a root with the new restyle data.
-    NS_ASSERTION(aData->mDescendants.IsEmpty(),
+
+    // During a normal restyle, we should have already processed the
+    // mDescendants array the last time we processed the restyle
+    // for this element.  But in RebuildAllStyleData, we don't initially
+    // expand out eRestyle_LaterSiblings, so we can get in here the
+    // first time we need to process a restyle for this element.  In that
+    // case, it's fine for us to have a non-empty mDescendants, since
+    // we know that RebuildAllStyleData adds eRestyle_ForceDescendants
+    // and we're guaranteed we'll restyle the entire tree.
+    NS_ASSERTION(mRestyleManager->InRebuildAllStyleData() ||
+                 aData->mDescendants.IsEmpty(),
                  "expected descendants to be handled by now");
+
     RestyleData* newData = new RestyleData;
     newData->mChangeHint = nsChangeHint(0);
     newData->mRestyleHint = eRestyle_LaterSiblings;
