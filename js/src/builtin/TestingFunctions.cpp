@@ -7,6 +7,7 @@
 #include "builtin/TestingFunctions.h"
 
 #include "mozilla/Move.h"
+#include "mozilla/unused.h"
 
 #include <cmath>
 
@@ -2612,7 +2613,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
         RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
         if (!edgeStr)
             return false;
-        edgeName.release(); // edgeStr acquired ownership
+        mozilla::Unused << edgeName.release(); // edgeStr acquired ownership
 
         if (!JS_DefineProperty(cx, obj, "edge", edgeStr, JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
