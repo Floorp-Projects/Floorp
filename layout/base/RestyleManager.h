@@ -442,6 +442,10 @@ public:
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint);
 
+#ifdef DEBUG
+  bool InRebuildAllStyleData() const { return mInRebuildAllStyleData; }
+#endif
+
 #ifdef RESTYLE_LOGGING
   /**
    * Returns whether a restyle event currently being processed by this
