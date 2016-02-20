@@ -763,9 +763,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         BufferOffset load = movePatchablePtr(ImmPtr(imm.value), dest);
         writeDataRelocation(imm, load);
     }
-    void move64(Register64 src, Register64 dest) {
-        movePtr(src.reg, dest.reg);
-    }
 
     void mov(ImmWord imm, Register dest) {
         movePtr(imm, dest);

@@ -50,6 +50,8 @@ static const uint32_t PAYLOAD_INDEX = 1;
 # error "Unknown!"
 #endif
 
+static const uint32_t INT64_PIECES = sizeof(int64_t) / sizeof(uintptr_t);
+
 // Represents storage for an operand. For constants, the pointer is tagged
 // with a single bit, and the untagged pointer is a pointer to a Value.
 class LAllocation : public TempObject
@@ -308,6 +310,28 @@ class LBoxAllocation
     LAllocation payload() const { return payload_; }
 #else
     explicit LBoxAllocation(LAllocation value) : value_(value) {}
+
+    LAllocation value() const { return value_; }
+#endif
+};
+
+class LInt64Allocation
+{
+#if JS_BITS_PER_WORD == 32
+    LAllocation high_;
+    LAllocation low_;
+#else
+    LAllocation value_;
+#endif
+
+  public:
+#if JS_BITS_PER_WORD == 32
+    LInt64Allocation(LAllocation high, LAllocation low) : high_(high), low_(low) {}
+
+    LAllocation high() const { return high_; }
+    LAllocation low() const { return low_; }
+#else
+    explicit LInt64Allocation(LAllocation value) : value_(value) {}
 
     LAllocation value() const { return value_; }
 #endif
@@ -589,6 +613,9 @@ class LDefinition
           case MIRType_Elements:
             return LDefinition::SLOTS;
           case MIRType_Pointer:
+#if JS_BITS_PER_WORD == 64
+          case MIRType_Int64:
+#endif
             return LDefinition::GENERAL;
           case MIRType_Bool32x4:
           case MIRType_Int32x4:

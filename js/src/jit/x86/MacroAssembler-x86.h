@@ -601,10 +601,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void movePtr(ImmGCPtr imm, Register dest) {
         movl(imm, dest);
     }
-    void move64(Register64 src, Register64 dest) {
-        movl(src.low, dest.low);
-        movl(src.high, dest.high);
-    }
     void loadPtr(const Address& address, Register dest) {
         movl(Operand(address), dest);
     }

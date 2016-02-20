@@ -108,6 +108,28 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, M
     add(lir);
 }
 
+template <size_t Ops, size_t Temps> void
+LIRGeneratorShared::defineInt64(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir, MDefinition* mir,
+                                LDefinition::Policy policy)
+{
+    // Call instructions should use defineReturn.
+    MOZ_ASSERT(!lir->isCall());
+
+    uint32_t vreg = getVirtualRegister();
+
+#if JS_BITS_PER_WORD == 32
+    lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL, policy));
+    lir->setDef(1, LDefinition(vreg + 1, LDefinition::GENERAL, policy));
+    getVirtualRegister();
+#else
+    lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL, policy));
+#endif
+    lir->setMir(mir);
+
+    mir->setVirtualRegister(vreg);
+    add(lir);
+}
+
 void
 LIRGeneratorShared::defineSharedStubReturn(LInstruction* lir, MDefinition* mir)
 {

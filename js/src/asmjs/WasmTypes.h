@@ -76,7 +76,7 @@ ToMIRType(ValType vt)
 {
     switch (vt) {
       case ValType::I32: return jit::MIRType_Int32;
-      case ValType::I64: MOZ_CRASH("NYI");
+      case ValType::I64: return jit::MIRType_Int64;
       case ValType::F32: return jit::MIRType_Float32;
       case ValType::F64: return jit::MIRType_Double;
       case ValType::I32x4: return jit::MIRType_Int32x4;
