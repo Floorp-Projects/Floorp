@@ -23,6 +23,7 @@ EXTRA_COMPONENTS += [
     'addonManager.js',
     'amContentHandler.js',
     'amInstallTrigger.js',
+    'amWebAPI.js',
     'amWebInstallListener.js',
     'nsBlocklistService.js',
     'nsBlocklistServiceContent.js',
@@ -43,12 +44,18 @@ JAR_MANIFESTS += ['jar.mn']
 
 EXPORTS.mozilla += [
     'AddonContentPolicy.h',
+    'AddonManagerWebAPI.h',
     'AddonPathService.h',
 ]
 
 UNIFIED_SOURCES += [
     'AddonContentPolicy.cpp',
+    'AddonManagerWebAPI.cpp',
     'AddonPathService.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
 ]
 
 FINAL_LIBRARY = 'xul'
