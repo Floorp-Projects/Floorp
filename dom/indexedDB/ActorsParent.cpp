@@ -3048,8 +3048,6 @@ UpgradeKeyFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 
   nsCOMPtr<nsIVariant> result = new mozilla::storage::AdoptedBlobVariant(data);
 
-  upgradedBlobData.release();
-
   result.forget(_retval);
   return NS_OK;
 }
@@ -3999,11 +3997,9 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aArguments
   uint32_t newIdvLength;
   rv = MakeCompressedIndexDataValues(oldIdv, newIdv, &newIdvLength);
 
-  std::pair<uint8_t*, int> data(newIdv.get(), newIdvLength);
+  std::pair<uint8_t*, int> data(newIdv.release(), newIdvLength);
   
   nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(data);
-
-  newIdv.release();
 
   result.forget(aResult);
   return NS_OK;
@@ -23502,12 +23498,10 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     return rv;
   }
 
-  std::pair<uint8_t *, int> copiedBlobDataPair(indexValuesBlob.get(),
+  std::pair<uint8_t *, int> copiedBlobDataPair(indexValuesBlob.release(),
                                                indexValuesBlobLength);
 
   value = new storage::AdoptedBlobVariant(copiedBlobDataPair);
-
-  indexValuesBlob.release();
 
   value.forget(_retval);
   return NS_OK;
