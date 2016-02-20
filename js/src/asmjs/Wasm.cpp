@@ -847,6 +847,20 @@ DecodeTableSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
+CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
+{
+    for (ValType argType : sig.args()) {
+        if (argType == ValType::I64)
+            return Fail(cx, d, "cannot import/export i64 argument");
+    }
+
+    if (sig.ret() == ExprType::I64)
+        return Fail(cx, d, "cannot import/export i64 return type");
+
+    return true;
+}
+
+static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     const DeclaredSig* sig;
@@ -854,6 +868,9 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
         return false;
 
     if (!init->imports.emplaceBack(sig))
+        return false;
+
+    if (!CheckTypeForJS(cx, d, *sig))
         return false;
 
     UniqueChars moduleName = d.readCString();
@@ -968,6 +985,9 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
 
     if (funcIndex >= mg.numFuncSigs())
         return Fail(cx, d, "export function index out of range");
+
+    if (!CheckTypeForJS(cx, d, mg.funcSig(funcIndex)))
+        return false;
 
     UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
     if (!fieldName)
