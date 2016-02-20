@@ -1077,15 +1077,15 @@ ConsumeTextByte(const char16_t** curp, const char16_t* end, uint8_t *byte = null
       case '\"': u8 = '\"'; break;
       case '\'': u8 = '\''; break;
       default: {
-        uint8_t lowNibble;
-        if (!IsHexDigit(*cur, &lowNibble))
+        uint8_t highNibble;
+        if (!IsHexDigit(*cur, &highNibble))
             return false;
 
         if (++cur == end)
             return false;
 
-        uint8_t highNibble;
-        if (!IsHexDigit(*cur, &highNibble))
+        uint8_t lowNibble;
+        if (!IsHexDigit(*cur, &lowNibble))
             return false;
 
         u8 = lowNibble | (highNibble << 4);
