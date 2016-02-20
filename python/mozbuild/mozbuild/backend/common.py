@@ -254,6 +254,10 @@ class CommonBackend(BuildBackend):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
 
         elif isinstance(obj, UnifiedSources):
+            # Unified sources aren't relevant to artifact builds.
+            if self.environment.is_artifact_build:
+                return True
+
             if obj.have_unified_mapping:
                 self._write_unified_files(obj.unified_source_mapping, obj.objdir)
             if hasattr(self, '_process_unified_sources'):
