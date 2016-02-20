@@ -1810,7 +1810,7 @@ BrowserGlue.prototype = {
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
-    if (Services.prefs.prefHasUserValue("browser.migration.version") {
+    if (Services.prefs.prefHasUserValue("browser.migration.version")) {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
     } else {
       // This is a new profile, nothing to migrate.
