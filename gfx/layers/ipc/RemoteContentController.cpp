@@ -102,7 +102,8 @@ RemoteContentController::HandleDoubleTap(const CSSPoint& aPoint,
     return;
   }
   if (CanSend()) {
-    Unused << SendHandleDoubleTap(aPoint, aModifiers, aGuid);
+    Unused << SendHandleDoubleTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
+            aModifiers, aGuid);
   }
 }
 
@@ -134,8 +135,8 @@ RemoteContentController::HandleSingleTap(const CSSPoint& aPoint,
   }
 
   if (CanSend()) {
-    Unused << SendHandleSingleTap(aPoint, aModifiers, aGuid,
-                                  callTakeFocusForClickFromTap);
+    Unused << SendHandleSingleTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
+            aModifiers, aGuid, callTakeFocusForClickFromTap);
   }
 }
 
@@ -155,7 +156,8 @@ RemoteContentController::HandleLongTap(const CSSPoint& aPoint,
     return;
   }
   if (CanSend()) {
-    Unused << SendHandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
+    Unused << SendHandleLongTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
+            aModifiers, aGuid, aInputBlockId);
   }
 }
 
