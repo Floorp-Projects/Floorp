@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1455058759000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1455726501000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -3390,6 +3390,18 @@
       <pluginItem  blockID="p1120">
                   <match name="filename" exp="(Silverlight\.plugin|npctrl\.dll)" />                      <versionRange  minVersion="5.1.20125" maxVersion="5.1.41105.0" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://www.microsoft.com/getsilverlight</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1121">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="20.0.0.235" maxVersion="20.0.0.286" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1122">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.268" maxVersion="18.0.0.326" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p1123">
+                                        <versionRange  minVersion="11.2.202.554" maxVersion="11.2.202.559" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
     </pluginItems>
 
