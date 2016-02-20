@@ -499,6 +499,9 @@ public:
                 const nsACString& aScope,
                 Maybe<nsTArray<uint8_t>> aData);
 
+  nsresult
+  NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();

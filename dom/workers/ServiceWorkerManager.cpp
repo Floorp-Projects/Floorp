@@ -2427,6 +2427,7 @@ class ServiceWorkerUnregisterJob final : public ServiceWorkerJob
   const nsCString mScope;
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  const bool mSendToParent;
 
   ~ServiceWorkerUnregisterJob()
   {}
@@ -2435,11 +2436,13 @@ public:
   ServiceWorkerUnregisterJob(ServiceWorkerJobQueue* aQueue,
                              const nsACString& aScope,
                              nsIServiceWorkerUnregisterCallback* aCallback,
-                             nsIPrincipal* aPrincipal)
+                             nsIPrincipal* aPrincipal,
+                             bool aSendToParent = true)
     : ServiceWorkerJob(aQueue, Type::UnregisterJob)
     , mScope(aScope)
     , mCallback(aCallback)
     , mPrincipal(aPrincipal)
+    , mSendToParent(aSendToParent)
   {
     AssertIsOnMainThread();
   }
@@ -2500,7 +2503,7 @@ private:
     // clients are closed by shutting down the browser.  If the registration
     // is resurrected by clearing mPendingUninstall then it should be saved
     // to disk again.
-    if (!registration->mPendingUninstall && swm->mActor) {
+    if (mSendToParent && !registration->mPendingUninstall && swm->mActor) {
       swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
     }
 
@@ -2572,6 +2575,47 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
 
   RefPtr<ServiceWorkerUnregisterJob> job =
     new ServiceWorkerUnregisterJob(queue, scope, aCallback, aPrincipal);
+
+  if (mActor) {
+    queue->Append(job);
+    return NS_OK;
+  }
+
+  AppendPendingOperation(queue, job);
+  return NS_OK;
+}
+
+nsresult
+ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
+                                       const nsAString& aScope)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+
+  nsresult rv;
+
+// This is not accessible by content, and callers should always ensure scope is
+// a correct URI, so this is wrapped in DEBUG
+#ifdef DEBUG
+  nsCOMPtr<nsIURI> scopeURI;
+  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
+
+  nsAutoCString originSuffix;
+  rv = PrincipalToScopeKey(aPrincipal, originSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  NS_ConvertUTF16toUTF8 scope(aScope);
+  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, scope);
+  MOZ_ASSERT(queue);
+
+  RefPtr<ServiceWorkerUnregisterJob> job =
+    new ServiceWorkerUnregisterJob(queue, scope, nullptr, aPrincipal, false);
 
   if (mActor) {
     queue->Append(job);
