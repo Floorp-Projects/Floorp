@@ -118,7 +118,8 @@ class FunctionCompiler
                 ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType_Int32);
                 break;
               case ValType::I64:
-                MOZ_CRASH("int64");
+                ins = MConstant::NewInt64(alloc(), 0);
+                break;
               case ValType::F32:
                 ins = MConstant::NewAsmJS(alloc(), Float32Value(0.f), MIRType_Float32);
                 break;

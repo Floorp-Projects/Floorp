@@ -573,9 +573,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
     }
-    void move64(Register64 src, Register64 dest) {
-        movq(src.reg, dest.reg);
-    }
     void loadPtr(AbsoluteAddress address, Register dest) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             movq(Operand(address), dest);

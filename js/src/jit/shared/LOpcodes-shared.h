@@ -14,6 +14,7 @@
     _(OsiPoint)                     \
     _(MoveGroup)                    \
     _(Integer)                      \
+    _(Integer64)                    \
     _(Pointer)                      \
     _(Double)                       \
     _(Float32)                      \

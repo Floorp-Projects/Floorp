@@ -87,8 +87,11 @@ wasmEvalText('(module (func (result i32) (param i32) (i32.const 42)))');
 wasmEvalText('(module (func (param f32)))');
 wasmEvalText('(module (func (param f64)))');
 
-assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
-assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
+var hasI64 = getBuildConfiguration().x64;
+if (!hasI64) {
+    assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
+}
 
 // ----------------------------------------------------------------------------
 // imports
@@ -223,7 +226,8 @@ wasmEvalText('(module (func (local i32) (local f32) (set_local 1 (get_local 1)))
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.const 42))) (export "" 0))')(), 42);
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (get_local 0))) (export "" 0))')(), 0);
 
-assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), TypeError, /NYI/);
+if (!hasI64)
+    assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), TypeError, /NYI/);
 
 assertEq(wasmEvalText('(module (func (param $a i32) (result i32) (get_local $a)) (export "" 0))')(), 0);
 assertEq(wasmEvalText('(module (func (param $a i32) (local $b i32) (result i32) (block (set_local $b (get_local $a)) (get_local $b))) (export "" 0))')(42), 42);
@@ -348,15 +352,12 @@ for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math
     assertThrowsInstanceOf(() => i2v(bad, 0), RangeError);
 }
 
-// When the test below starts failing, remove it and uncomment the lines below!
-assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
-/*
-assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
-*/
-
+if (hasI64) {
+    assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
+    assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
+    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
+    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
+}
 
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type $a (func (result i32)))

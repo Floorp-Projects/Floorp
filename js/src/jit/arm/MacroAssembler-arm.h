@@ -1002,10 +1002,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(wasm::SymbolicAddress imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
-    void move64(Register64 src, Register64 dest) {
-        move32(src.low, dest.low);
-        move32(src.high, dest.high);
-    }
 
     void load8SignExtend(const Address& address, Register dest);
     void load8SignExtend(const BaseIndex& src, Register dest);

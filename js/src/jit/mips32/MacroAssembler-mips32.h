@@ -936,10 +936,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
-    void move64(Register64 src, Register64 dest) {
-        move32(src.low, dest.low);
-        move32(src.high, dest.high);
-    }
 
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);

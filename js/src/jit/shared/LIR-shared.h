@@ -674,6 +674,23 @@ class LInteger : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Constant 64-bit integer.
+class LInteger64 : public LInstructionHelper<INT64_PIECES, 0, 0>
+{
+    int64_t i64_;
+
+  public:
+    LIR_HEADER(Integer64)
+
+    explicit LInteger64(int64_t i64)
+      : i64_(i64)
+    { }
+
+    int64_t getValue() const {
+        return i64_;
+    }
+};
+
 // Constant pointer.
 class LPointer : public LInstructionHelper<1, 0, 0>
 {

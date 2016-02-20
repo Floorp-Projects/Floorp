@@ -13,6 +13,19 @@ namespace js {
 namespace jit {
 
 //{{{ check_macroassembler_style
+
+void
+MacroAssembler::move64(Register64 src, Register64 dest)
+{
+    movePtr(src.reg, dest.reg);
+}
+
+void
+MacroAssembler::move64(Imm64 imm, Register64 dest)
+{
+    movePtr(ImmWord(imm.value), dest.reg);
+}
+
 // ===============================================================
 // Logical instructions
 
