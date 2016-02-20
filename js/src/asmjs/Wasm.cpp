@@ -359,10 +359,7 @@ DecodeLoadStoreAddress(FunctionDecoder &f)
     if (!mozilla::IsPowerOfTwo(align))
         return f.fail("memory access alignment must be a power of two");
 
-    if (!DecodeExpr(f, ExprType::I32))
-        return false;
-
-    return f.fail("NYI: wasm loads and stores");
+    return DecodeExpr(f, ExprType::I32);
 }
 
 static bool
