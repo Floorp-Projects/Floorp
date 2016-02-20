@@ -18829,13 +18829,11 @@ DatabaseOperationBase::UpdateIndexValues(
 
   if (indexDataValues) {
     rv = updateStmt->BindAdoptedBlobByName(indexDataValuesString,
-                                           indexDataValues.get(),
+                                           indexDataValues.release(),
                                            indexDataValuesLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    indexDataValues.release();
   } else {
     rv = updateStmt->BindNullByName(indexDataValuesString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -24434,12 +24432,9 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed);
     size_t dataBufferLength = compressedLength;
 
-    // If this call succeeds, | compressed | is now owned by the statement, and
-    // we are no longer responsible for it.
     rv = stmt->BindAdoptedBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
                                      dataBufferLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      free(compressed);
       return rv;
     }
   }
