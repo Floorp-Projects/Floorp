@@ -15,30 +15,35 @@
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.chain.removeAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION');
+    test.chain.removeAfter('PC_REMOTE_CHECK_CAN_TRICKLE_SYNC');
     test.chain.append([
-        function PC_REMOTE_ROLLBACK(test) {
-          // We still haven't negotiated the tracks
-          test.pcRemote.expectNegotiationNeeded();
-          return test.setRemoteDescription(
-              test.pcRemote,
-              new RTCSessionDescription({ type: "rollback" }),
-              STABLE);
-        },
+      function PC_REMOTE_ROLLBACK(test) {
+        // We still haven't negotiated the tracks
+        test.pcRemote.expectNegotiationNeeded();
+        return test.setRemoteDescription(
+          test.pcRemote,
+          new RTCSessionDescription({ type: "rollback" }),
+          STABLE);
+      },
 
-        function PC_LOCAL_ROLLBACK(test) {
-          // We still haven't negotiated the tracks
-          test.pcLocal.expectNegotiationNeeded();
-          return test.setLocalDescription(
-              test.pcLocal,
-              new RTCSessionDescription({ type: "rollback", sdp: ""}),
-              STABLE);
-        },
+      function PC_REMOTE_CHECK_CAN_TRICKLE_REVERT_SYNC(test) {
+        is(test.pcRemote._pc.canTrickleIceCandidates, null,
+           "Remote canTrickleIceCandidates is reverted to null");
+      },
 
-        // Rolling back should shut down gathering
-        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
-          return test.pcLocal.endOfTrickleIce;
-        },
+      function PC_LOCAL_ROLLBACK(test) {
+        // We still haven't negotiated the tracks
+        test.pcLocal.expectNegotiationNeeded();
+        return test.setLocalDescription(
+          test.pcLocal,
+          new RTCSessionDescription({ type: "rollback", sdp: ""}),
+          STABLE);
+      },
+
+      // Rolling back should shut down gathering
+      function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+        return test.pcLocal.endOfTrickleIce;
+      },
     ]);
     test.chain.append(commandsPeerConnectionOfferAnswer);
     test.run();
@@ -47,4 +52,3 @@
 </pre>
 </body>
 </html>
-

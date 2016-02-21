@@ -193,6 +193,15 @@ var commandsPeerConnectionInitial = [
        "Initial remote ICE connection state is 'new'");
   },
 
+  function PC_LOCAL_CHECK_INITIAL_CAN_TRICKLE_SYNC(test) {
+    is(test.pcLocal._pc.canTrickleIceCandidates, null,
+       "Local trickle status should start out unknown");
+  },
+
+  function PC_REMOTE_CHECK_INITIAL_CAN_TRICKLE_SYNC(test) {
+    is(test.pcRemote._pc.canTrickleIceCandidates, null,
+       "Remote trickle status should start out unknown");
+  },
 ];
 
 var commandsGetUserMedia = [
@@ -305,6 +314,11 @@ var commandsPeerConnectionOfferAnswer = [
       });
   },
 
+  function PC_REMOTE_CHECK_CAN_TRICKLE_SYNC(test) {
+    is(test.pcRemote._pc.canTrickleIceCandidates, true,
+       "Remote thinks that local can trickle");
+  },
+
   function PC_LOCAL_SANE_LOCAL_SDP(test) {
     test.pcLocal.localRequiresTrickleIce =
       sdputils.verifySdp(test._local_offer, "offer",
@@ -374,6 +388,11 @@ var commandsPeerConnectionOfferAnswer = [
       sdputils.verifySdp(test._remote_answer, "answer",
                          test._offer_constraints, test._offer_options,
                          test.testOptions);
+  },
+
+  function PC_LOCAL_CHECK_CAN_TRICKLE_SYNC(test) {
+    is(test.pcLocal._pc.canTrickleIceCandidates, true,
+       "Local thinks that remote can trickle");
   },
 
   function PC_LOCAL_WAIT_FOR_ICE_CONNECTED(test) {

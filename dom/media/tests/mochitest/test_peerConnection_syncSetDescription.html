@@ -41,8 +41,10 @@ runNetworkTest(() => {
   test.setMediaConstraints([{video: true}], [{video: true}]);
   test.chain.replace("PC_LOCAL_SET_LOCAL_DESCRIPTION", PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC);
   test.chain.replace("PC_REMOTE_SET_REMOTE_DESCRIPTION", PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC);
+  test.chain.remove("PC_REMOTE_CHECK_CAN_TRICKLE_SYNC");
   test.chain.replace("PC_REMOTE_SET_LOCAL_DESCRIPTION", PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC);
   test.chain.replace("PC_LOCAL_SET_REMOTE_DESCRIPTION", PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC);
+  test.chain.remove("PC_LOCAL_CHECK_CAN_TRICKLE_SYNC");
   test.run();
 });
 </script>
