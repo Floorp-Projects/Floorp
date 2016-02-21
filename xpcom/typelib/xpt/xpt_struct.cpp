@@ -26,7 +26,7 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
                    XPTInterfaceDescriptor *id);
 
 static PRBool
-DoAnnotation(XPTArena *arena, XPTCursor *cursor, XPTAnnotation **annp);
+DoAnnotations(XPTCursor *cursor);
 
 static PRBool
 DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer, XPTInterfaceDescriptor **idp);
@@ -97,7 +97,6 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
     XPTHeader * header;
     uint32_t ide_offset;
     int i;
-    XPTAnnotation *ann, *next, **annp;
 
     if (!XPT_DoHeaderPrologue(arena, cursor, headerp, &ide_offset))
         return PR_FALSE;
@@ -126,26 +125,8 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
             goto error;
     }
 
-    /*
-     * Iterate through the annotations rather than recurring, to avoid blowing
-     * the stack on large xpt files.
-     */
-    ann = next = header->annotations;
-    annp = &header->annotations;
-    do {
-        ann = next;
-        if (!DoAnnotation(arena, cursor, &ann))
-            goto error;
-
-        /*
-         * Make sure that we store the address of the newly allocated
-         * annotation in the previous annotation's ``next'' slot, or
-         * header->annotations for the first one.
-         */
-        *annp = ann;
-        annp = &ann->next;
-        next = ann->next;
-    } while (!XPT_ANN_IS_LAST(ann->flags));
+    if (!DoAnnotations(cursor))
+        goto error;
 
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset); 
@@ -424,29 +405,18 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
 }
 
 PRBool
-DoAnnotation(XPTArena *arena, XPTCursor *cursor, XPTAnnotation **annp)
+DoAnnotations(XPTCursor *cursor)
 {
-    XPTAnnotation* ann = XPT_NEWZAP(arena, XPTAnnotation);
-    if (!ann)
+    uint8_t flags;
+    if (!XPT_Do8(cursor, &flags))
         return PR_FALSE;
-    *annp = ann;
 
-    if (!XPT_Do8(cursor, &ann->flags))
-        goto error;
-
-    if (XPT_ANN_IS_PRIVATE(ann->flags)) {
-        if (!XPT_DoStringInline(arena, cursor, &ann->creator) ||
-            !XPT_DoStringInline(arena, cursor, &ann->private_data))
-            goto error_2;
+    // All we handle now is a single, empty annotation.
+    if (XPT_ANN_IS_PRIVATE(flags) || !XPT_ANN_IS_LAST(flags)) {
+        fprintf(stderr, "private annotations are no longer handled\n");
+        return PR_FALSE;
     }
 
     return PR_TRUE;
-    
- error_2:
-    if (ann && XPT_ANN_IS_PRIVATE(ann->flags)) {
-        XPT_FREEIF(arena, ann->creator);
-        XPT_FREEIF(arena, ann->private_data);
-    }
-    XPT_ERROR_HANDLE(arena, ann);
 }
 
