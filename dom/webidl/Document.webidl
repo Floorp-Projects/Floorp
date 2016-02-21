@@ -373,6 +373,10 @@ partial interface Document {
   [ChromeOnly] readonly attribute DOMString contentLanguage;
 
   [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;
+
+  // like documentURI, except that for error pages, it returns the URI we were
+  // trying to load when we hit an error, rather than the error page's own URI.
+  [ChromeOnly] readonly attribute URI? mozDocumentURIIfNotForErrorPages;
 };
 
 // Extension to give chrome JS the ability to determine when a document was

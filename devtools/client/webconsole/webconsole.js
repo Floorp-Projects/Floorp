@@ -577,7 +577,7 @@ WebConsoleFrame.prototype = {
     this._addFocusCallback(this.outputNode, (evt) => {
       if ((evt.target.nodeName.toLowerCase() != "a") &&
           (evt.target.parentNode.nodeName.toLowerCase() != "a")) {
-        this.jsterm.inputNode.focus();
+        this.jsterm.focus();
       }
     });
 
@@ -589,7 +589,7 @@ WebConsoleFrame.prototype = {
     });
 
     // focus input node
-    this.jsterm.inputNode.focus();
+    this.jsterm.focus();
   },
 
   /**
@@ -607,7 +607,7 @@ WebConsoleFrame.prototype = {
    * @private
    */
   _onPanelSelected: function() {
-    this.jsterm.inputNode.focus();
+    this.jsterm.focus();
   },
 
   /**
@@ -3090,9 +3090,8 @@ JSTerm.prototype = {
   },
 
   focus: function() {
-    let inputNode = this.inputNode;
-    if (!inputNode.getAttribute("focused")) {
-      inputNode.focus();
+    if (!this.inputNode.getAttribute("focused")) {
+      this.inputNode.focus();
     }
   },
 
@@ -3461,7 +3460,7 @@ JSTerm.prototype = {
     }
 
     this._sidebarDestroy();
-    this.inputNode.focus();
+    this.focus();
     event.stopPropagation();
   },
 
@@ -3854,7 +3853,7 @@ JSTerm.prototype = {
             // Ctrl-N is also used to focus the Network category button on
             // MacOSX. The preventDefault() call doesn't prevent the focus
             // from moving away from the input.
-            inputNode.focus();
+            this.focus();
           }
           this.clearCompletion();
           break;
@@ -3870,7 +3869,7 @@ JSTerm.prototype = {
             // Ctrl-P may also be used to focus some category button on MacOSX.
             // The preventDefault() call doesn't prevent the focus from moving
             // away from the input.
-            inputNode.focus();
+            this.focus();
           }
           this.clearCompletion();
           break;
