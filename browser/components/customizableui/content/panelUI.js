@@ -157,10 +157,6 @@ const PanelUI = {
 
       this.panel.addEventListener("popupshown", function onPopupShown() {
         this.removeEventListener("popupshown", onPopupShown);
-        // As an optimization for the customize mode transition, we preload
-        // about:customizing in the background once the menu panel is first
-        // shown.
-        gCustomizationTabPreloader.ensurePreloading();
         deferred.resolve();
       });
 

@@ -70,6 +70,12 @@ DistributionCustomizer.prototype = {
     return this._locale;
   },
 
+  get _language() {
+    let language = this._locale.split("-")[0];
+    this.__defineGetter__("_language", () => language);
+    return this._language;
+  },
+
   get _prefSvc() {
     let svc = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefService);
@@ -112,6 +118,8 @@ DistributionCustomizer.prototype = {
 
         if (keys.indexOf(key + "." + this._locale) >= 0) {
           key += "." + this._locale;
+        } else if (keys.indexOf(key + "." + this._language) >= 0) {
+          key += "." + this._language;
         }
 
         if (!items[itemIndex])
@@ -323,6 +331,8 @@ DistributionCustomizer.prototype = {
     try {
       if (globalPrefs["about." + this._locale]) {
         partnerAbout.data = this._ini.getString("Global", "about." + this._locale);
+      } else if (globalPrefs["about." + this._language]) {
+        partnerAbout.data = this._ini.getString("Global", "about." + this._language);
       } else {
         partnerAbout.data = this._ini.getString("Global", "about");
       }
@@ -367,6 +377,17 @@ DistributionCustomizer.prototype = {
         try {
           let value = eval(this._ini.getString("LocalizablePreferences", key));
           value = value.replace(/%LOCALE%/g, this._locale);
+          value = value.replace(/%LANGUAGE%/g, this._language);
+          localizedStr.data = "data:text/plain," + key + "=" + value;
+          defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
+        } catch (e) { /* ignore bad prefs and move on */ }
+      }
+    }
+
+    if (sections["LocalizablePreferences-" + this._language]) {
+      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences-" + this._language))) {
+        try {
+          let value = eval(this._ini.getString("LocalizablePreferences-" + this._language, key));
           localizedStr.data = "data:text/plain," + key + "=" + value;
           defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
         } catch (e) { /* ignore bad prefs and move on */ }

@@ -1,8 +1,29 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/. */
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CC=emcc
+PYTHON2 ?= python2
+
+EMSCRIPTEN_ROOT := $(shell if which emcc >/dev/null 2>&1; \
+                           then dirname `which emcc`; \
+                           else echo /usr/lib/emscripten; \
+                           fi)
+
+EMCC ?= $(EMSCRIPTEN_ROOT)/emcc
+
+WEBIDL ?= $(PYTHON2) $(EMSCRIPTEN_ROOT)/tools/webidl_binder.py
+
+# A 2MB heap is to analyze most web pages. For the outliers, we need to either
+# allow for heap growth, or allocate an unreasonable amount of memory at the
+# outset.
+# Unfortunately, once the heap has been enlarged, there is no shrinking, so
+# analyzing one 20MB web page gives us a 30-40MB heap for the life of the
+# worker.
+FLAGS=-s -O3 -s INLINING_LIMIT=1 -s NO_FILESYSTEM=1 -s NO_EXIT_RUNTIME=1 -s INVOKE_RUN=0 \
+      -s TOTAL_STACK=8192 -s TOTAL_MEMORY=2097152 -s ALLOW_MEMORY_GROWTH=1 \
+      --llvm-lto 1 --memory-init-file 1 --closure 1
+
+export EMCC_CLOSURE_ARGS = --language_in ECMASCRIPT6 --language_out ES5_STRICT
 
 SOURCES= \
 	internal/cldutil.cc \
@@ -32,13 +53,22 @@ SOURCES= \
 	cldapp.cc \
 	$(NULL)
 
-%.o: %.cc
-	$(CC) -Os -I. -o $@ $<
+OBJECTS=$(SOURCES:.cc=.o)
 
-FLAGS=-s USE_TYPED_ARRAYS=2 -O3 -s INLINING_LIMIT=1 --llvm-lto 1 --memory-init-file 1 --closure 1
+default: all
 
-all: $(SOURCES:.cc=.o)
-	$(CC) $(FLAGS) -I. -o cld-worker.js $^ --post-js post.js -s EXPORTED_FUNCTIONS="['_detectLangCode', '_lastResultReliable']"
+%.o: %.cc Makefile
+	$(EMCC) -Os -I. -o $@ $<
+
+cldapp.o: cld.cpp
+
+%.cpp %.js: %.idl
+	$(WEBIDL) $< $*
+
+all: cld-worker.js
+
+cld-worker.js: $(OBJECTS) post.js cld.js
+	$(EMCC) $(FLAGS) -I. -o cld-worker.js $(OBJECTS) --post-js cld.js --post-js post.js
 
 clean:
-	rm -rf $(SOURCES:.cc=.o)
+	rm -f $(OBJECTS) cld.cpp cld.js before.js

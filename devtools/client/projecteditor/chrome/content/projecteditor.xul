@@ -19,7 +19,7 @@
 %sourceEditorStrings;
 ]>
 
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="theme-body">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="theme-body theme-light">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 

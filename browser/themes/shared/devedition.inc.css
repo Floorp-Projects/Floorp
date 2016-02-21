@@ -75,7 +75,7 @@
   --chrome-secondary-background-color: #f5f6f7;
   --chrome-navigator-toolbox-separator-color: #cccccc;
   --chrome-nav-bar-separator-color: #B6B6B8;
-  --chrome-nav-buttons-background: #fcfcfc;
+  --chrome-nav-buttons-background: #ffffff; /* --theme-body-background */
   --chrome-nav-buttons-hover-background: #DADBDB;
   --chrome-nav-bar-controls-border-color: #ccc;
   --chrome-selection-color: #f5f7fa;
@@ -85,9 +85,7 @@
   --tab-hover-background-color: #D7D8DA;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
-  --tab-selection-box-shadow: 0 2px 0 #9FDFFF inset,
-                              0 -2px 0 rgba(0,0,0,.05) inset,
-                              0 -1px 0 rgba(0,0,0,.2) inset;
+  --tab-selection-box-shadow: none;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
 
 
