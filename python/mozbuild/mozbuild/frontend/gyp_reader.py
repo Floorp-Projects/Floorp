@@ -217,7 +217,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                         # We may be getting make variable references out of the
                         # gyp data, and we don't want those in emitted data, so
                         # substitute them with their actual value.
-                        f = expand_variables(f, config.substs)
+                        f = expand_variables(f, config.substs).split()
                         if not f:
                             continue
                         # the result may be a string or a list.
