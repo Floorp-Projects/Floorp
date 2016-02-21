@@ -11,12 +11,7 @@ describe("loop.roomViews", function() {
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
 
-  var sandbox,
-      dispatcher,
-      roomStore,
-      activeRoomStore,
-      remoteCursorStore,
-      view;
+  var sandbox, dispatcher, roomStore, activeRoomStore, view;
   var clock, fakeWindow, requestStubs;
   var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
@@ -73,9 +68,6 @@ describe("loop.roomViews", function() {
     roomStore = new loop.store.RoomStore(dispatcher, {
       constants: {},
       activeRoomStore: activeRoomStore
-    });
-    remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
-      sdkDriver: {}
     });
     var textChatStore = new loop.store.TextChatStore(dispatcher, {
       sdkDriver: {}
@@ -360,7 +352,6 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         chatWindowDetached: false,
-        cursorStore: remoteCursorStore,
         dispatcher: dispatcher,
         facebookEnabled: false,
         roomStore: roomStore,

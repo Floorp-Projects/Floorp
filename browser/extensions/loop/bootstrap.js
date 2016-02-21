@@ -24,26 +24,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
-// See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
-const PREF_LOG_LEVEL = "loop.debug.loglevel";
-
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
-  let consoleOptions = {
-    maxLogLevelPref: PREF_LOG_LEVEL,
-    prefix: "Loop"
-  };
-  return new ConsoleAPI(consoleOptions);
-});
-
 /**
  * This window listener gets loaded into each browser.xul window and is used
  * to provide the required loop functions for the window.
  */
 var WindowListener = {
-  // Records the add-on version once we know it.
-  addonVersion: "unknown",
-
   /**
    * Sets up the chrome integration within browser windows for Loop.
    *
@@ -55,7 +40,6 @@ var WindowListener = {
     let xhrClass = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
     let FileReader = window.FileReader;
     let menuItem = null;
-    let isSlideshowOpen = false;
 
     // the "exported" symbols
     var LoopUI = {
@@ -88,30 +72,6 @@ var WindowListener = {
           this.browser = browser;
         }
         return browser;
-      },
-
-      get isSlideshowOpen() {
-        return isSlideshowOpen;
-      },
-
-      set isSlideshowOpen(aOpen) {
-        isSlideshowOpen = aOpen;
-        this.updateToolbarState();
-      },
-      /**
-       * @return {Object} Getter for the Loop constants
-       */
-      get constants() {
-        if (!this._constants) {
-          // GetAllConstants is synchronous even though it's using a callback.
-          this.LoopAPI.sendMessageToHandler({
-            name: "GetAllConstants"
-          }, result => {
-            this._constants = result;
-          });
-        }
-
-        return this._constants;
       },
 
       /**
@@ -154,10 +114,6 @@ var WindowListener = {
           });
         }
 
-        if (this.isSlideshowOpen) {
-          return Promise.resolve();
-        }
-
         return this.openPanel(event).then(mm => {
           if (mm) {
             mm.sendAsyncMessage("Social:EnsureFocusElement");
@@ -185,12 +141,6 @@ var WindowListener = {
 
             mm.sendAsyncMessage("Social:WaitForDocumentVisible");
             mm.addMessageListener("Social:DocumentVisible", () => resolve(mm));
-
-            let buckets = this.constants.LOOP_MAU_TYPE;
-            this.LoopAPI.sendMessageToHandler({
-              name: "TelemetryAddValue",
-              data: ["LOOP_MAU", buckets.OPEN_PANEL]
-            });
           };
 
           // Used to clear the temporary "login" state from the button.
@@ -219,17 +169,6 @@ var WindowListener = {
               callback);
           });
         });
-      },
-
-      /**
-       * Wrapper for openPanel - to support Firefox 46 and 45.
-       *
-       * @param {event}  event   The event opening the panel, used to anchor
-       *                         the panel to the button which triggers it.
-       * @return {Promise}
-       */
-      openCallPanel: function(event) {
-        return this.openPanel(event);
       },
 
       /**
@@ -290,7 +229,7 @@ var WindowListener = {
       init: function() {
         // This is a promise for test purposes, but we don't want to be logging
         // expected errors to the console, so we catch them here.
-        this.MozLoopService.initialize(WindowListener.addonVersion).catch(ex => {
+        this.MozLoopService.initialize().catch(ex => {
           if (!ex.message ||
               (!ex.message.contains("not enabled") &&
                !ex.message.contains("not needed"))) {
@@ -374,8 +313,6 @@ var WindowListener = {
         if (this.MozLoopService.errors.size) {
           state = "error";
           mozL10nId += "-error";
-        } else if (this.isSlideshowOpen) {
-          state = "slideshow";
         } else if (this.MozLoopService.screenShareActive) {
           state = "action";
           mozL10nId += "-screensharing";
@@ -544,88 +481,8 @@ var WindowListener = {
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
         gBrowser.removeEventListener("DOMTitleChanged", this);
         gBrowser.removeEventListener("mousemove", this);
-        this.removeRemoteCursor();
         this._listeningToTabSelect = false;
         this._browserSharePaused = false;
-        this._sendTelemetryEventsIfNeeded();
-      },
-
-      /**
-       * Sends telemetry events for pause/ resume buttons if needed.
-       */
-      _sendTelemetryEventsIfNeeded: function() {
-        // The user can't click Resume button without clicking Pause button first.
-        if (!this._pauseButtonClicked) {
-          return;
-        }
-
-        let buckets = this.constants.SHARING_SCREEN;
-        this.LoopAPI.sendMessageToHandler({
-          name: "TelemetryAddValue",
-          data: [
-            "LOOP_INFOBAR_ACTION_BUTTONS",
-            buckets.PAUSED
-          ]
-        });
-
-        if (this._resumeButtonClicked) {
-          this.LoopAPI.sendMessageToHandler({
-            name: "TelemetryAddValue",
-            data: [
-              "LOOP_INFOBAR_ACTION_BUTTONS",
-              buckets.RESUMED
-            ]
-          });
-        }
-
-        this._pauseButtonClicked = false;
-        this._resumeButtonClicked = false;
-      },
-
-      /**
-       *  If sharing is active, paints and positions the remote cursor
-       *  over the screen
-       *
-       *  @param cursorData Object with the correct position for the cursor
-       *                    {
-       *                      ratioX: position on the X axis (percentage value)
-       *                      ratioY: position on the Y axis (percentage value)
-       *                    }
-       */
-      addRemoteCursor: function(cursorData) {
-        if (!this._listeningToTabSelect) {
-          return;
-        }
-
-        let browser = gBrowser.selectedBrowser;
-
-        let cursor = document.getElementById("loop-remote-cursor");
-        if (!cursor) {
-          cursor = document.createElement("image");
-          cursor.setAttribute("id", "loop-remote-cursor");
-        }
-
-        // Update the cursor's position.
-        cursor.setAttribute("left",
-                            cursorData.ratioX * browser.boxObject.width);
-        cursor.setAttribute("top",
-                            cursorData.ratioY * browser.boxObject.height);
-
-        // browser's parent is a xul:stack, so positioning with left/top works.
-        browser.parentNode.appendChild(cursor);
-      },
-
-      /**
-       *  Removes the remote cursor from the screen
-       *
-       *  @param browser OPT browser where the cursor should be removed from.
-       */
-      removeRemoteCursor: function() {
-        let cursor = document.getElementById("loop-remote-cursor");
-
-        if (cursor) {
-          cursor.parentNode.removeChild(cursor);
-        }
       },
 
       /**
@@ -682,11 +539,6 @@ var WindowListener = {
               buttonNode.label = stringObj.label;
               buttonNode.accessKey = stringObj.accesskey;
               LoopUI.MozLoopService.toggleBrowserSharing(this._browserSharePaused);
-              if (this._browserSharePaused) {
-                this._pauseButtonClicked = true;
-              } else {
-                this._resumeButtonClicked = true;
-              }
               return true;
             },
             type: "pause"
@@ -753,10 +605,7 @@ var WindowListener = {
             let wasVisible = false;
             // Hide the infobar from the previous tab.
             if (event.detail.previousTab) {
-              wasVisible = this._hideBrowserSharingInfoBar(
-                            event.detail.previousTab.linkedBrowser);
-              // And remove the cursor.
-              this.removeRemoteCursor();
+              wasVisible = this._hideBrowserSharingInfoBar(event.detail.previousTab.linkedBrowser);
             }
 
             // We've changed the tab, so get the new window id.
@@ -864,18 +713,10 @@ var WindowListener = {
     window.LoopUI = LoopUI;
   },
 
-  /**
-   * Take any steps to remove UI or anything from the browser window
-   * document.getElementById() etc. will work here.
-   *
-   * @param {Object} window The window to remove the integration from.
-   */
-  tearDownBrowserUI: function(window) {
-    if (window.LoopUI) {
-      window.LoopUI.removeMenuItem();
-
-      // XXX Bug 1229352 - Add in tear-down of the panel.
-    }
+  tearDownBrowserUI: function() {
+    // Take any steps to remove UI or anything from the browser window
+    // document.getElementById() etc. will work here
+    // XXX Add in tear-down of the panel.
   },
 
   // nsIWindowMediatorListener functions.
@@ -974,10 +815,7 @@ function loadDefaultPrefs() {
 /**
  * Called when the add-on is started, e.g. when installed or when Firefox starts.
  */
-function startup(data) {
-  // Record the add-on version for when the UI is initialised.
-  WindowListener.addonVersion = data.version;
-
+function startup() {
   loadDefaultPrefs();
 
   createLoopButton();
