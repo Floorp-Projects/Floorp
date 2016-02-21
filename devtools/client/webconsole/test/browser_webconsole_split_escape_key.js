@@ -30,7 +30,7 @@ function test() {
 
     yield executeJS();
     yield clickMessageAndShowVariablesView();
-    jsterm.inputNode.focus();
+    jsterm.focus();
 
     yield testHideVariablesViewAfterEscape();
 
@@ -144,7 +144,7 @@ function test() {
       deferred.resolve();
     }, false);
 
-    jsterm.inputNode.focus();
+    jsterm.focus();
     jsterm.setInputValue("document.location.");
     EventUtils.sendKey("TAB", hud.iframeWindow);
 

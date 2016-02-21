@@ -25,7 +25,7 @@ function setup(HUD) {
   jsterm = HUD.jsterm;
   inputNode = jsterm.inputNode;
 
-  inputNode.focus();
+  jsterm.focus();
 
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
 
