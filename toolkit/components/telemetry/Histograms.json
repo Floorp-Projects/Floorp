@@ -10210,7 +10210,7 @@
     "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
     "expires_in_version": "55",
     "kind": "linear",
-    "high": "100",
+    "high": 100,
     "n_buckets": 50,
     "bug_numbers": [1238433],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
