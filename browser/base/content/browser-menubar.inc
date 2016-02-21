@@ -500,6 +500,11 @@
                         key="key_openAddons"
                         command="Tools:Addons"/>
 
+              <menuitem id="menu_openLoop"
+                        label="&loopMenuItem.label;"
+                        accesskey = "&loopMenuItem.accesskey;"
+                        oncommand="LoopUI.togglePanel();"/>
+
               <!-- only one of sync-setup, sync-syncnowitem or sync-reauthitem will be showing at once -->
               <menuitem id="sync-setup"
                         label="&syncSignIn.label;"

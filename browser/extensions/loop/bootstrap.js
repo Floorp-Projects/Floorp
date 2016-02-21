@@ -237,7 +237,7 @@ var WindowListener = {
           }
         });
 
-        this.addMenuItem();
+        //this.addMenuItem();
 
         // Don't do the rest if this is for the hidden window - we don't
         // have a toolbar there.
