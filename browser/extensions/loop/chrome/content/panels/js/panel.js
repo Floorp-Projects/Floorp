@@ -37,13 +37,7 @@ loop.panel = function (_, mozL10n) {
           React.createElement(
             "div",
             { className: "fte-subheader" },
-            mozL10n.get("first_time_experience_subheading2")
-          ),
-          React.createElement("hr", { className: "fte-separator" }),
-          React.createElement(
-            "div",
-            { className: "fte-content" },
-            mozL10n.get("first_time_experience_content")
+            mozL10n.get("first_time_experience_subheading")
           ),
           React.createElement("img", { className: "fte-hello-web-share", src: "shared/img/hello-web-share.svg" })
         ),
@@ -51,7 +45,7 @@ loop.panel = function (_, mozL10n) {
           "div",
           { className: "fte-button-container" },
           React.createElement(Button, { additionalClass: "fte-get-started-button",
-            caption: mozL10n.get("first_time_experience_button_label2"),
+            caption: mozL10n.get("first_time_experience_button_label"),
             htmlId: "fte-button",
             onClick: this.handleButtonClick })
         )
