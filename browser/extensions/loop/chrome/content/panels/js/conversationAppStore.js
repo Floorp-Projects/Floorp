@@ -34,7 +34,6 @@ loop.store.ConversationAppStore = (function() {
 
     this._activeRoomStore = options.activeRoomStore;
     this._dispatcher = options.dispatcher;
-    this._facebookEnabled = options.facebookEnabled;
     this._feedbackPeriod = options.feedbackPeriod;
     this._feedbackTimestamp = options.feedbackTimestamp;
     this._rootObj = ("rootObject" in options) ? options.rootObject : window;
@@ -42,7 +41,7 @@ loop.store.ConversationAppStore = (function() {
 
     // Start listening for specific events, coming from the window object.
     this._eventHandlers = {};
-    ["unload", "LoopHangupNow", "socialFrameAttached", "socialFrameDetached", "ToggleBrowserSharing"]
+    ["unload", "LoopHangupNow", "socialFrameAttached", "socialFrameDetached"]
       .forEach(function(eventName) {
         var handlerName = eventName + "Handler";
         this._eventHandlers[eventName] = this[handlerName].bind(this);
@@ -59,7 +58,6 @@ loop.store.ConversationAppStore = (function() {
     getInitialStoreState: function() {
       return {
         chatWindowDetached: false,
-        facebookEnabled: this._facebookEnabled,
         // How often to display the form. Convert seconds to ms.
         feedbackPeriod: this._feedbackPeriod * 1000,
         // Date when the feedback form was last presented. Convert to ms.
@@ -160,17 +158,6 @@ loop.store.ConversationAppStore = (function() {
           loop.shared.mixins.WindowCloseMixin.closeWindow();
           break;
       }
-    },
-
-    /**
-     * Event handler; invoked when the 'PauseScreenShare' event is dispatched from
-     * the window object.
-     * It'll attempt to pause or resume the screen share as appropriate.
-     */
-    ToggleBrowserSharingHandler: function(actionData) {
-      this._dispatcher.dispatch(new loop.shared.actions.ToggleBrowserSharing({
-        enabled: !actionData.detail
-      }));
     },
 
     /**

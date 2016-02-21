@@ -131,15 +131,6 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Notifies that cursor data has been received from the other peer.
-     */
-    ReceivedCursorData: Action.define("receivedCursorData", {
-      ratioX: Number,
-      ratioY: Number,
-      type: String
-    }),
-
-    /**
      * Used by the ongoing views to notify stores about the elements
      * required for the sdk.
      */
@@ -224,14 +215,6 @@ loop.shared.actions = (function() {
      * Used to end a screen share.
      */
     EndScreenShare: Action.define("endScreenShare", {
-    }),
-
-    /**
-     * Used to mute or unmute a screen share.
-     */
-    ToggleBrowserSharing: Action.define("toggleBrowserSharing", {
-      // Whether or not to enable the stream.
-      enabled: Boolean
     }),
 
     /**
