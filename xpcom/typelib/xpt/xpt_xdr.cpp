@@ -120,38 +120,6 @@ XPT_SeekTo(XPTCursor *cursor, uint32_t offset)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoStringInline(XPTArena *arena, XPTCursor *cursor, XPTString **strp)
-{
-    XPTString *str = *strp;
-    int i;
-
-    str = XPT_NEWZAP(arena, XPTString);
-    if (!str)
-        return PR_FALSE;
-    *strp = str;
-
-    if (!XPT_Do16(cursor, &str->length))
-        goto error;
-
-    if (!(str->bytes = (char*)XPT_MALLOC(arena, str->length + 1u)))
-        goto error;
-
-    for (i = 0; i < str->length; i++)
-        if (!XPT_Do8(cursor, (uint8_t *)&str->bytes[i]))
-            goto error_2;
-
-    str->bytes[str->length] = 0;
-
-    return PR_TRUE;
-
- error_2:
-    XPT_DELETE(arena, str->bytes);
- error:
-    XPT_DELETE(arena, str);
-    return PR_FALSE;
-}
-
-XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
 {
     uint32_t offset = 0;
