@@ -1351,7 +1351,7 @@ public:
 
   /**
    * Returns the local transform for this layer: either mTransform or,
-   * for shadow layers, GetShadowTransform(), in either case with the
+   * for shadow layers, GetShadowBaseTransform(), in either case with the
    * pre- and post-scales applied.
    */
   const gfx::Matrix4x4 GetLocalTransform();
