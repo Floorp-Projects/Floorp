@@ -12,7 +12,7 @@ loader.lazyImporter(this, "AddonManager",
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 
-const React = require("devtools/client/shared/vendor/react");
+const { createClass, DOM: dom } = require("devtools/client/shared/vendor/react");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -20,32 +20,31 @@ const Strings = Services.strings.createBundle(
 const MORE_INFO_URL = "https://developer.mozilla.org/docs/Tools" +
                       "/about:debugging#Enabling_add-on_debugging";
 
-exports.AddonsControls = React.createClass({
+module.exports = createClass({
   displayName: "AddonsControls",
 
   render() {
     let { debugDisabled } = this.props;
 
-    return React.createElement(
-      "div", { className: "addons-controls" }, React.createElement(
-        "div", { className: "addons-options" },
-          React.createElement("input", {
+    return dom.div({ className: "addons-controls" },
+        dom.div({ className: "addons-options" },
+          dom.input({
             id: "enable-addon-debugging",
             type: "checkbox",
             checked: !debugDisabled,
             onChange: this.onEnableAddonDebuggingChange,
           }),
-          React.createElement("label", {
+          dom.label({
             className: "addons-debugging-label",
             htmlFor: "enable-addon-debugging",
             title: Strings.GetStringFromName("addonDebugging.tooltip")
           }, Strings.GetStringFromName("addonDebugging.label")),
           "(",
-          React.createElement("a", { href: MORE_INFO_URL, target: "_blank" },
+          dom.a({ href: MORE_INFO_URL, target: "_blank" },
             Strings.GetStringFromName("addonDebugging.moreInfo")),
           ")"
         ),
-        React.createElement("button", {
+        dom.button({
           id: "load-addon-from-file",
           onClick: this.loadAddonFromFile,
         }, Strings.GetStringFromName("loadTemporaryAddon"))

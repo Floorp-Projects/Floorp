@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global React */
-
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const Services = require("Services");
 
-const React = require("devtools/client/shared/vendor/react");
-const { AddonsControls } = require("./addons-controls");
-const { TabHeader } = require("./tab-header");
-const { TargetList } = require("./target-list");
+const { createFactory, createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
+const AddonsControls = createFactory(require("./addons-controls"));
+const TabHeader = createFactory(require("./tab-header"));
+const TargetList = createFactory(require("./target-list"));
 
 const ExtensionIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const Strings = Services.strings.createBundle(
@@ -21,7 +20,7 @@ const Strings = Services.strings.createBundle(
 const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
 const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 
-exports.AddonsTab = React.createClass({
+module.exports = createClass({
   displayName: "AddonsTab",
 
   getInitialState() {
@@ -56,19 +55,17 @@ exports.AddonsTab = React.createClass({
     let { debugDisabled, extensions: targets } = this.state;
     let name = Strings.GetStringFromName("extensions");
 
-    return React.createElement(
-      "div", { id: "tab-addons", className: "tab", role: "tabpanel",
-        "aria-labelledby": "tab-addons-header-name" },
-        React.createElement(TabHeader, {
-          id: "tab-addons-header-name",
-          name: Strings.GetStringFromName("addons")}),
-        React.createElement(AddonsControls, { debugDisabled }),
-        React.createElement(
-          "div", { id: "addons" },
-          React.createElement(TargetList,
-            { name, targets, client, debugDisabled })
-      )
-    );
+    return dom.div({
+      id: "tab-addons",
+      className: "tab",
+      role: "tabpanel",
+      "aria-labelledby": "tab-addons-header-name" },
+    TabHeader({
+      id: "tab-addons-header-name",
+      name: Strings.GetStringFromName("addons") }),
+    AddonsControls({ debugDisabled }),
+    dom.div({ id: "addons" },
+      TargetList({ name, targets, client, debugDisabled })));
   },
 
   updateDebugStatus() {
