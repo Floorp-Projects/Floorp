@@ -8,12 +8,12 @@
 
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "AddonsComponent",
-  "devtools/client/aboutdebugging/components/addons", true);
-loader.lazyRequireGetter(this, "TabMenuComponent",
+loader.lazyRequireGetter(this, "AddonsTab",
+  "devtools/client/aboutdebugging/components/addons-tab", true);
+loader.lazyRequireGetter(this, "TabMenu",
   "devtools/client/aboutdebugging/components/tab-menu", true);
-loader.lazyRequireGetter(this, "WorkersComponent",
-  "devtools/client/aboutdebugging/components/workers", true);
+loader.lazyRequireGetter(this, "WorkersTab",
+  "devtools/client/aboutdebugging/components/workers-tab", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -21,10 +21,10 @@ const Strings = Services.strings.createBundle(
 const tabs = [
   { id: "addons", name: Strings.GetStringFromName("addons"),
     icon: "chrome://devtools/skin/images/debugging-addons.svg",
-    component: AddonsComponent },
+    component: AddonsTab },
   { id: "workers", name: Strings.GetStringFromName("workers"),
     icon: "chrome://devtools/skin/images/debugging-workers.svg",
-    component: WorkersComponent },
+    component: WorkersTab },
 ];
 const defaultTabId = "addons";
 
@@ -58,8 +58,7 @@ exports.AboutDebuggingApp = React.createClass({
 
     return React.createElement(
       "div", { className: "app"},
-        React.createElement(TabMenuComponent,
-                              { tabs, selectedTabId, selectTab }),
+        React.createElement(TabMenu, { tabs, selectedTabId, selectTab }),
         React.createElement("div", { className: "main-content" },
           React.createElement(selectedTab.component, { client }))
         );

@@ -9,8 +9,8 @@
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
 
-exports.TabHeaderComponent = React.createClass({
-  displayName: "TabHeaderComponent",
+exports.TabHeader = React.createClass({
+  displayName: "TabHeader",
 
   render() {
     let { name, id } = this.props;
