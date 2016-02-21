@@ -864,7 +864,7 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Printing last used artifact details.')
-        self._pushhead_cache.print_last()
+        self._tree_cache.print_last()
         self._task_cache.print_last()
         self._artifact_cache.print_last()
 
@@ -872,7 +872,7 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Deleting cached artifacts and caches.')
-        self._pushhead_cache.clear_cache()
+        self._tree_cache.clear_cache()
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
 
