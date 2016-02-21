@@ -14,26 +14,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 // social frames are always treated as app tabs
 docShell.isAppTab = true;
 
-var gDOMContentLoaded = false;
-addEventListener("DOMContentLoaded", function() {
-  gDOMContentLoaded = true;
-  sendAsyncMessage("DOMContentLoaded");
-});
-var gDOMTitleChangedByUs = false;
-addEventListener("DOMTitleChanged", function(e) {
-  if (!gDOMTitleChangedByUs) {
-    sendAsyncMessage("DOMTitleChanged", {
-      title: e.target.title
-    });
-    gDOMTitleChangedByUs = false;
-  }
-});
-
 // Error handling class used to listen for network errors in the social frames
 // and replace them with a social-specific error page
 SocialErrorListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
-                                         Ci.nsIWebProgressListener,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference,
                                          Ci.nsISupports]),
 
@@ -41,130 +25,19 @@ SocialErrorListener = {
   urlTemplate: null,
 
   init() {
-    addMessageListener("Loop:MonitorPeerConnectionLifecycle", this);
-    addMessageListener("Loop:GetAllWebrtcStats", this);
-    addMessageListener("Social:CustomEvent", this);
-    addMessageListener("Social:EnsureFocus", this);
-    addMessageListener("Social:EnsureFocusElement", this);
-    addMessageListener("Social:HookWindowCloseForPanelClose", this);
-    addMessageListener("Social:ListenForEvents", this);
-    addMessageListener("Social:SetDocumentTitle", this);
     addMessageListener("Social:SetErrorURL", this);
-    addMessageListener("Social:WaitForDocumentVisible", this);
-    addMessageListener("WaitForDOMContentLoaded", this);
     let webProgress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
                                           Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
-
   receiveMessage(message) {
-    let document = content.document;
-
-    switch (message.name) {
-      case "Loop:GetAllWebrtcStats":
-        content.WebrtcGlobalInformation.getAllStats(allStats => {
-          content.WebrtcGlobalInformation.getLogging("", logs => {
-            sendAsyncMessage("Loop:GetAllWebrtcStats", {
-              allStats: allStats,
-              logs: logs
-            });
-          });
-        }, message.data.peerConnectionID);
-        break;
-      case "Loop:MonitorPeerConnectionLifecycle":
-        let ourID = content.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-
-        let onPCLifecycleChange = (pc, winID, type) => {
-          if (winID != ourID) {
-            return;
-          }
-
-          sendAsyncMessage("Loop:PeerConnectionLifecycleChange", {
-            iceConnectionState: pc.iceConnectionState,
-            locationHash: content.location.hash,
-            peerConnectionID: pc.id,
-            type: type
-          });
-        };
-
-        let pc_static = new content.RTCPeerConnectionStatic();
-        pc_static.registerPeerConnectionLifecycleCallback(onPCLifecycleChange);
-        break;
-      case "Social:CustomEvent":
-        let ev = new content.CustomEvent(message.data.name, message.data.detail ?
-          { detail: message.data.detail } : null);
-        content.dispatchEvent(ev);
-        break;
-      case "Social:EnsureFocus":
-        Services.focus.focusedWindow = content;
-        break;
-      case "Social:EnsureFocusElement":
-        let fm = Services.focus;
-        fm.moveFocus(document.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
-        break;
-      case "Social:HookWindowCloseForPanelClose":
-        // We allow window.close() to close the panel, so add an event handler for
-        // this, then cancel the event (so the window itself doesn't die) and
-        // close the panel instead.
-        // However, this is typically affected by the dom.allow_scripts_to_close_windows
-        // preference, but we can avoid that check by setting a flag on the window.
-        let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils);
-        dwu.allowScriptsToClose();
-
-        content.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
-          sendAsyncMessage("DOMWindowClose");
-          // preventDefault stops the default window.close() function being called,
-          // which doesn't actually close anything but causes things to get into
-          // a bad state (an internal 'closed' flag is set and debug builds start
-          // asserting as the window is used.).
-          // None of the windows we inject this API into are suitable for this
-          // default close behaviour, so even if we took no action above, we avoid
-          // the default close from doing anything.
-          evt.preventDefault();
-        }, true);
-        break;
-      case "Social:ListenForEvents":
-        for (let eventName of message.data.eventNames) {
-          content.addEventListener(eventName, this);
-        }
-        break;
-      case "Social:SetDocumentTitle":
-        let title = message.data.title;
-        if (title && (title = title.trim())) {
-          gDOMTitleChangedByUs = true;
-          document.title = title;
-        }
-        break;
-      case "Social:SetErrorURL":
-        // Either a url or null to reset to default template.
-        this.urlTemplate = message.data.template;
-        break;
-      case "Social:WaitForDocumentVisible":
-        if (!document.hidden) {
-          sendAsyncMessage("Social:DocumentVisible");
-          break;
-        }
-
-        document.addEventListener("visibilitychange", function onVisibilityChanged() {
-          document.removeEventListener("visibilitychange", onVisibilityChanged);
-          sendAsyncMessage("Social:DocumentVisible");
-        });
-        break;
-      case "WaitForDOMContentLoaded":
-        if (gDOMContentLoaded) {
-          sendAsyncMessage("DOMContentLoaded");
-        }
-        break;
+    switch(message.name) {
+      case "Social:SetErrorURL": {
+        // either a url or null to reset to default template
+        this.urlTemplate = message.objects.template;
+      }
     }
-  },
-
-  handleEvent: function(event) {
-    sendAsyncMessage("Social:CustomEvent", {
-      name: event.type
-    });
   },
 
   setErrorPage() {
