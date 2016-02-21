@@ -68,10 +68,6 @@ describe("loop.store.ActiveRoomStore", function() {
     store = new loop.store.ActiveRoomStore(dispatcher, {
       sdkDriver: fakeSdkDriver
     });
-
-    sandbox.stub(document.mozL10n ? document.mozL10n : navigator.mozL10n, "get", function(x) {
-      return x;
-    });
   });
 
   afterEach(function() {
@@ -1007,7 +1003,7 @@ describe("loop.store.ActiveRoomStore", function() {
       store.gotMediaPermission();
 
       sinon.assert.calledOnce(requestStubs["Rooms:Join"]);
-      sinon.assert.calledWith(requestStubs["Rooms:Join"], "tokenFake", "display_name_guest");
+      sinon.assert.calledWith(requestStubs["Rooms:Join"], "tokenFake");
     });
 
     it("should dispatch `JoinedRoom` on success", function() {

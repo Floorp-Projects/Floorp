@@ -131,15 +131,6 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     *  Used to send cursor data to the other peer
-     */
-    SendCursorData: Action.define("sendCursorData", {
-      ratioX: Number,
-      ratioY: Number,
-      type: String
-    }),
-
-    /**
      * Notifies that cursor data has been received from the other peer.
      */
     ReceivedCursorData: Action.define("receivedCursorData", {
@@ -405,13 +396,11 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      * @from: where the invitation is shared from.
      *        Possible values ['panel', 'conversation']
-     * @roomUrl: the URL that is shared.
-     * @roomOrigin: the URL browsed when the sharing is started - Optional.
+     * @roomUrl: the URL that is shared
      */
     FacebookShareRoomUrl: Action.define("facebookShareRoomUrl", {
       from: String,
       roomUrl: String
-      // roomOrigin: String
     }),
 
     /**
