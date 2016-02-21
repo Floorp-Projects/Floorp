@@ -9,8 +9,8 @@
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
 
-exports.TabMenuEntryComponent = React.createClass({
-  displayName: "TabMenuEntryComponent",
+exports.TabMenuEntry = React.createClass({
+  displayName: "TabMenuEntry",
 
   render() {
     let { icon, name, selected } = this.props;

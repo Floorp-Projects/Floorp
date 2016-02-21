@@ -5,11 +5,11 @@
 DevToolsModules(
     'aboutdebugging.js',
     'addons-controls.js',
-    'addons.js',
+    'addons-tab.js',
     'tab-header.js',
     'tab-menu-entry.js',
     'tab-menu.js',
     'target-list.js',
     'target.js',
-    'workers.js',
+    'workers-tab.js',
 )
