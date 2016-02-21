@@ -23,6 +23,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/popupNotifications/browser.ini',
     'content/test/referrer/browser.ini',
     'content/test/social/browser.ini',
+    'content/test/urlbar/browser.ini',
 ]
 
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']

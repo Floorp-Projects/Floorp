@@ -54,7 +54,7 @@ function test() {
     // Focus the console and add event listener to track whether it loses focus
     // (Must happen after generateMouseClickInTab() call)
     let consoleLostFocus = false;
-    jsterm.inputNode.focus();
+    jsterm.focus();
     jsterm.inputNode.addEventListener('blur', () => {consoleLostFocus = true;});
 
     is(gThreadClient.paused, true,

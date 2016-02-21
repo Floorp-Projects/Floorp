@@ -31,10 +31,10 @@ function copyStringShowSnackbar(string, notifyString) {
   try {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(string);
-    Snackbars.show(notifyString, Snackbars.LENGTH_SHORT);
+    Snackbars.show(notifyString, Snackbars.LENGTH_LONG);
   } catch (e) {
     debug("Error copying from about:logins");
-    Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), Snackbars.LENGTH_SHORT);
+    Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), Snackbars.LENGTH_LONG);
   }
 }
 
@@ -291,7 +291,7 @@ var Logins = {
       if ((newUsername === origUsername) &&
           (newPassword === origPassword) &&
           (newDomain === origDomain) ) {
-        Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_SHORT);
+        Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_LONG);
         this._showList();
         return;
       }
@@ -310,10 +310,10 @@ var Logins = {
         }
       }
     } catch (e) {
-      Snackbars.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), Snackbars.LENGTH_SHORT);
+      Snackbars.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), Snackbars.LENGTH_LONG);
       return;
     }
-    Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_SHORT);
+    Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_LONG);
     this._showList();
   },
 

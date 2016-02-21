@@ -8,7 +8,7 @@
 
 const { setTheme } = require("devtools/client/shared/theme");
 
-const LIGHT_BG = "#fcfcfc";
+const LIGHT_BG = "white";
 const DARK_BG = "#14171a";
 
 setTheme("dark");

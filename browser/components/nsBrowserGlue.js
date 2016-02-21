@@ -58,9 +58,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource://gre/modules/PageThumbs.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
-                                  "resource:///modules/CustomizationTabPreloader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
@@ -1072,7 +1069,6 @@ BrowserGlue.prototype = {
 
     SelfSupportBackend.uninit();
 
-    CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
     NewTabPrefsProvider.prefs.uninit();
@@ -1812,10 +1808,16 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     const UI_VERSION = 36;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
-    let currentUIVersion = 0;
-    try {
+
+    let currentUIVersion;
+    if (Services.prefs.prefHasUserValue("browser.migration.version")) {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
-    } catch(ex) {}
+    } else {
+      // This is a new profile, nothing to migrate.
+      Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
+      return;
+    }
+
     if (currentUIVersion >= UI_VERSION)
       return;
 

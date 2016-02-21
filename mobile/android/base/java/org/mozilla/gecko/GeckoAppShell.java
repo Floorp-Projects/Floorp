@@ -2670,7 +2670,7 @@ public class GeckoAppShell
     private static final void showImageShareFailureSnackbar() {
         SnackbarHelper.showSnackbar((Activity) getContext(),
                 getApplicationContext().getString(R.string.share_image_failed),
-                Snackbar.LENGTH_SHORT
+                Snackbar.LENGTH_LONG
         );
     }
 
