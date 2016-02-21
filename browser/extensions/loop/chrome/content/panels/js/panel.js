@@ -902,10 +902,6 @@ loop.panel = function (_, mozL10n) {
       onClick: React.PropTypes.func.isRequired
     },
 
-    componentWillMount: function () {
-      loop.request("SetPanelHeight", 262);
-    },
-
     render: function () {
       return React.createElement(
         "div",
@@ -957,8 +953,7 @@ loop.panel = function (_, mozL10n) {
         hasEncryptionKey: loop.getStoredRequest(["GetHasEncryptionKey"]),
         userProfile: loop.getStoredRequest(["GetUserProfile"]),
         gettingStartedSeen: loop.getStoredRequest(["GetLoopPref", "gettingStarted.latestFTUVersion"]) >= FTU_VERSION,
-        multiProcessActive: loop.getStoredRequest(["IsMultiProcessActive"]),
-        remoteAutoStart: loop.getStoredRequest(["GetLoopPref", "remote.autostart"])
+        multiProcessEnabled: loop.getStoredRequest(["IsMultiProcessEnabled"])
       };
     },
 
@@ -1047,7 +1042,7 @@ loop.panel = function (_, mozL10n) {
     render: function () {
       var NotificationListView = sharedViews.NotificationListView;
 
-      if (this.state.multiProcessActive && !this.state.remoteAutoStart) {
+      if (this.state.multiProcessEnabled) {
         return React.createElement(E10sNotSupported, { onClick: this.launchNonE10sWindow });
       }
 
@@ -1097,7 +1092,7 @@ loop.panel = function (_, mozL10n) {
    */
   function init() {
     var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetPluralRule"]];
-    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetLoopPref", "remote.autostart"], ["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessActive"]];
+    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessEnabled"]];
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
       // `requestIdx` is keyed off the order of the `requests` and `prefetch`
