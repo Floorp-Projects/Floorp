@@ -648,6 +648,8 @@ const JSFunctionSpec js::regexp_methods[] = {
     }
 
 DEFINE_STATIC_GETTER(static_input_getter,        return res->createPendingInput(cx, args.rval()))
+DEFINE_STATIC_GETTER(static_multiline_getter,    args.rval().setBoolean(res->multiline());
+                                                 return true)
 DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, args.rval()))
 DEFINE_STATIC_GETTER(static_lastParen_getter,    return res->createLastParen(cx, args.rval()))
 DEFINE_STATIC_GETTER(static_leftContext_getter,  return res->createLeftContext(cx, args.rval()))
@@ -692,44 +694,11 @@ static_input_setter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-WarnOnceAboutRegExpMultiline(JSContext* cx)
-{
-    if (!cx->compartment()->warnedAboutRegExpMultiline) {
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                          JSMSG_DEPRECATED_REGEXP_MULTILINE))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutRegExpMultiline = true;
-    }
-
-    return true;
-}
-
-static bool
-static_multiline_getter(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return false;
-
-    if (!WarnOnceAboutRegExpMultiline(cx))
-        return false;
-
-    args.rval().setBoolean(res->multiline());
-    return true;
-}
-
-static bool
 static_multiline_setter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RegExpStatics* res = cx->global()->getRegExpStatics(cx);
     if (!res)
-        return false;
-
-    if (!WarnOnceAboutRegExpMultiline(cx))
         return false;
 
     bool b = ToBoolean(args.get(0));
