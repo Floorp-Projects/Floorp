@@ -576,7 +576,7 @@ public abstract class GeckoApp
                     ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            SnackbarHelper.showSnackbar(GeckoApp.this, getString(resId), Snackbar.LENGTH_SHORT);
+                            SnackbarHelper.showSnackbar(GeckoApp.this, getString(resId), Snackbar.LENGTH_LONG);
                         }
                     });
                 }
@@ -1014,12 +1014,12 @@ public abstract class GeckoApp
                 File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
                 if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
-                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
                 }
                 String path = Media.insertImage(getContentResolver(),image, null, null);
                 if (path == null) {
-                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
                 }
                 final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
@@ -1036,7 +1036,7 @@ public abstract class GeckoApp
                 };
                 ActivityHandlerHelper.startIntentForActivity(this, chooser, handler);
             } else {
-                SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_SHORT);
+                SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_LONG);
             }
         } catch(OutOfMemoryError ome) {
             Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);

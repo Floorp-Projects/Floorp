@@ -15,19 +15,19 @@
  */
 
 :root.theme-light {
-  --theme-body-background: #fcfcfc;
-  --theme-sidebar-background: #f7f7f7;
+  --theme-body-background: white;
+  --theme-sidebar-background: white;
   --theme-contrast-background: #e6b064;
 
-  --theme-tab-toolbar-background: #ebeced;
-  --theme-toolbar-background: #f0f1f2;
+  --theme-tab-toolbar-background: #fcfcfc;
+  --theme-toolbar-background: #fcfcfc;
   --theme-selection-background: #4c9ed9;
-  --theme-selection-background-semitransparent: rgba(76, 158, 217, .23);
+  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
   --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #aaaaaa;
-  --theme-comment: #757873;
+  --theme-splitter-color: #dde1e4;
+  --theme-comment: #696969;
 
-  --theme-body-color: #18191a;
+  --theme-body-color: #393f4c;
   --theme-body-color-alt: #585959;
   --theme-content-color1: #292e33;
   --theme-content-color2: #8fa1b2;
