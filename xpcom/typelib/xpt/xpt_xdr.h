@@ -21,9 +21,6 @@ typedef struct XPTDatapool      XPTDatapool;
 typedef struct XPTCursor        XPTCursor;
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoStringInline(XPTArena *arena, XPTCursor *cursor, XPTString **strp);
-
-extern XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp);
 
 extern XPT_PUBLIC_API(PRBool)
