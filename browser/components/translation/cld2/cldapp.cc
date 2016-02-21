@@ -4,20 +4,104 @@
 
 #include "public/compact_lang_det.h"
 
-extern "C" {
+#define MAX_RESULTS 3
 
-using namespace CLD2;
+class Language {
+public:
+  Language(CLD2::Language lang) : mLang(lang) {}
 
-bool g_is_reliable;
+  const char* getLanguageCode() const
+  {
+    return CLD2::LanguageCode(mLang);
+  }
 
-const char* detectLangCode(const char* src) {
-  return LanguageCode(DetectLanguage(src, strlen(src),
-                                     true /* is_plain_text */,
-                                     &g_is_reliable));
-}
+private:
+  const CLD2::Language mLang;
+};
 
-bool lastResultReliable(void) {
-  return g_is_reliable;
-}
+class LanguageGuess : public Language {
+public:
+  LanguageGuess(CLD2::Language lang, char percent) :
+    Language(lang), mPercent(percent) {}
 
-}
+  char getPercent() const
+  {
+    return mPercent;
+  }
+
+private:
+  const char mPercent;
+};
+
+
+class LanguageInfo : public Language {
+public:
+  static LanguageInfo* detectLanguage(const char* buffer, bool isPlainText)
+  {
+    CLD2::Language languages[MAX_RESULTS] = {};
+    int percentages[MAX_RESULTS] = {};
+    bool isReliable = false;
+
+    // This is ignored.
+    int textBytes;
+
+    CLD2::Language bestGuess = DetectLanguageSummary(
+      buffer, strlen(buffer), isPlainText,
+      languages, percentages, &textBytes,
+      &isReliable);
+
+    return new LanguageInfo(isReliable, bestGuess, languages, percentages);
+  }
+
+  static LanguageInfo* detectLanguage(const char* buffer, bool isPlainText,
+                                      const char* tldHint, int encodingHint,
+                                      const char* languageHint)
+  {
+    CLD2::CLDHints hints = {languageHint, tldHint, encodingHint, CLD2::UNKNOWN_LANGUAGE};
+
+    CLD2::Language languages[MAX_RESULTS] = {};
+    int percentages[MAX_RESULTS] = {};
+    bool isReliable = false;
+
+    // These are ignored.
+    double scores[MAX_RESULTS];
+    int textBytes;
+
+    CLD2::Language bestGuess = ExtDetectLanguageSummary(
+      buffer, strlen(buffer), isPlainText,
+      &hints, 0,
+      languages, percentages, scores,
+      nullptr, &textBytes, &isReliable);
+
+    return new LanguageInfo(isReliable, bestGuess, languages, percentages);
+  }
+
+  ~LanguageInfo()
+  {
+    for (int i = 0; i < MAX_RESULTS; i++) {
+      delete languages[i];
+    }
+  }
+
+  bool getIsReliable() const
+  {
+    return mIsReliable;
+  }
+
+  const LanguageGuess* languages[MAX_RESULTS];
+
+private:
+  LanguageInfo(bool isReliable, CLD2::Language bestGuess,
+               CLD2::Language languageIDs[MAX_RESULTS],
+               int percentages[MAX_RESULTS]) :
+    Language(bestGuess), mIsReliable(isReliable)
+  {
+    for (int i = 0; i < MAX_RESULTS; i++) {
+      languages[i] = new LanguageGuess(languageIDs[i], percentages[i]);
+    }
+  }
+
+  const bool mIsReliable;
+};
+
+#include "cld.cpp"

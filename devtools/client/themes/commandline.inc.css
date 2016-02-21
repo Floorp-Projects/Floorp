@@ -10,11 +10,11 @@
    We are copy/pasting variables from light-theme and dark-theme,
    since they aren't loaded in this context (within browser.css). */
 :root[devtoolstheme="light"] #developer-toolbar {
-  --gcli-background-color: #ebeced; /* --theme-tab-toolbar-background */
-  --gcli-input-background: #f0f1f2; /* --theme-toolbar-background */
-  --gcli-input-focused-background: #f7f7f7; /* --theme-sidebar-background */
-  --gcli-input-color: #18191a; /* --theme-body-color */
-  --gcli-border-color: #aaaaaa; /* --theme-splitter-color */
+  --gcli-background-color: #fcfcfc; /* --theme-tab-toolbar-background */
+  --gcli-input-background: #fcfcfc; /* --theme-toolbar-background */
+  --gcli-input-focused-background: #ffffff; /* --theme-sidebar-background */
+  --gcli-input-color: #393f4c; /* --theme-body-color */
+  --gcli-border-color: #dde1e4; /* --theme-splitter-color */
   --selection-background: #4c9ed9; /* --theme-selection-background */
   --selection-color: #f5f7fa; /* --theme-selection-color */
 }

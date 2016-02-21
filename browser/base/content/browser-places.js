@@ -1359,7 +1359,7 @@ var BookmarkingUI = {
     PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                        .asyncExecuteLegacyQueries([query], 1, options, {
       handleResult: function (aResultSet) {
-        let onItemClick = function (aEvent) {
+        let onItemCommand = function (aEvent) {
           let item = aEvent.target;
           openUILink(item.getAttribute("targetURI"), aEvent);
           CustomizableUI.hidePanelForNode(item);
@@ -1379,7 +1379,7 @@ var BookmarkingUI = {
           item.setAttribute("targetURI", uri);
           item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
                                      extraCSSClass);
-          item.addEventListener("click", onItemClick);
+          item.addEventListener("command", onItemCommand);
           if (icon) {
             let iconURL = "moz-anno:favicon:" + icon;
             item.setAttribute("image", iconURL);

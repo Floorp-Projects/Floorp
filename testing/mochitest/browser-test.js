@@ -8,9 +8,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
-  "resource:///modules/CustomizationTabPreloader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
@@ -619,7 +616,6 @@ Tester.prototype = {
             socialSidebar.setAttribute("src", "about:blank");
 
             SelfSupportBackend.uninit();
-            CustomizationTabPreloader.uninit();
             SocialFlyout.unload();
             SocialShare.uninit();
           }
