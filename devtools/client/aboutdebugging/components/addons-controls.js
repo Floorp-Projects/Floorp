@@ -17,8 +17,8 @@ loader.lazyImporter(this, "AddonManager",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-exports.AddonsControlsComponent = React.createClass({
-  displayName: "AddonsControlsComponent",
+exports.AddonsControls = React.createClass({
+  displayName: "AddonsControls",
 
   render() {
     let { debugDisabled } = this.props;

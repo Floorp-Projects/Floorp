@@ -23,8 +23,8 @@ loader.lazyRequireGetter(this, "gDevTools",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-exports.TargetComponent = React.createClass({
-  displayName: "TargetComponent",
+exports.Target = React.createClass({
+  displayName: "Target",
 
   debug() {
     let { client, target } = this.props;

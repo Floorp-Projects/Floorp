@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global React, TargetComponent */
+/* global React */
 
 "use strict";
 
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "TargetComponent",
+loader.lazyRequireGetter(this, "Target",
   "devtools/client/aboutdebugging/components/target", true);
 loader.lazyRequireGetter(this, "Services");
 
@@ -18,14 +18,13 @@ const LocaleCompare = (a, b) => {
   return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 };
 
-exports.TargetListComponent = React.createClass({
-  displayName: "TargetListComponent",
+exports.TargetList = React.createClass({
+  displayName: "TargetList",
 
   render() {
     let { client, debugDisabled } = this.props;
     let targets = this.props.targets.sort(LocaleCompare).map(target => {
-      return React.createElement(TargetComponent,
-        { client, target, debugDisabled });
+      return React.createElement(Target, { client, target, debugDisabled });
     });
     return (
       React.createElement("div", { id: this.props.id, className: "targets" },

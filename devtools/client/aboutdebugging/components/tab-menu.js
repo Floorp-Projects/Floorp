@@ -8,17 +8,17 @@
 
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "TabMenuEntryComponent",
+loader.lazyRequireGetter(this, "TabMenuEntry",
   "devtools/client/aboutdebugging/components/tab-menu-entry", true);
 
-exports.TabMenuComponent = React.createClass({
-  displayName: "TabMenuComponent",
+exports.TabMenu = React.createClass({
+  displayName: "TabMenu",
 
   render() {
     let { tabs, selectedTabId, selectTab } = this.props;
     let tabLinks = tabs.map(({ id, name, icon }) => {
       let selected = id == selectedTabId;
-      return React.createElement(TabMenuEntryComponent,
+      return React.createElement(TabMenuEntry,
         { tabId: id, name, icon, selected, selectTab });
     });
 
