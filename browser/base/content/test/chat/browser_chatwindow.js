@@ -25,7 +25,9 @@ add_chat_task(function* testOpenCloseChat() {
   is(chatbar.selectedChat, null);
 
   // We check the content gets an unload event as we close it.
+  let promiseClosed = promiseOneEvent(chatbox.content, "unload", true);
   chatbox.close();
+  yield promiseClosed;
 });
 
 // In this case we open a chat minimized, then request the same chat again
@@ -80,9 +82,8 @@ add_chat_task(function* testOpenTwiceCallbacks() {
 // Bug 817782 - check chats work in new top-level windows.
 add_chat_task(function* testSecondTopLevelWindow() {
   const chatUrl = "http://example.com";
-  let winPromise = BrowserTestUtils.waitForNewWindow();
-  OpenBrowserWindow();
-  let secondWindow = yield winPromise;
+  let secondWindow = OpenBrowserWindow();
+  yield promiseOneEvent(secondWindow, "load");
   yield promiseOpenChat(chatUrl);
   // the chat was created - let's make sure it was created in the second window.
   Assert.equal(numChatsInWindow(window), 0, "main window has no chats");
