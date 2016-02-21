@@ -114,7 +114,7 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
 
-  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowTransform();
+  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowBaseTransform();
   if (!transform.Is2D()) {
     return;
   }
