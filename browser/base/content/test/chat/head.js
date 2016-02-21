@@ -15,12 +15,18 @@ function promiseOpenChat(url, mode, focus, buttonSet = null) {
   // we just through a few hoops to ensure the content document is fully
   // loaded, otherwise tests that rely on that content may intermittently fail.
   let callback = function(chatbox) {
-    let mm = chatbox.content.messageManager;
-    mm.sendAsyncMessage("WaitForDOMContentLoaded");
-    mm.addMessageListener("DOMContentLoaded", function cb() {
-      mm.removeMessageListener("DOMContentLoaded", cb);
+    if (chatbox.contentDocument.readyState == "complete") {
+      // already loaded.
       deferred.resolve(chatbox);
-    });
+      return;
+    }
+    chatbox.addEventListener("load", function onload(event) {
+      if (event.target != chatbox.contentDocument || chatbox.contentDocument.location.href == "about:blank") {
+        return;
+      }
+      chatbox.removeEventListener("load", onload, true);
+      deferred.resolve(chatbox);
+    }, true);
   }
   let chatbox = Chat.open(null, {
     origin: origin,
@@ -62,16 +68,6 @@ function promiseOneEvent(target, eventName, capture) {
   return deferred.promise;
 }
 
-function promiseOneMessage(target, messageName) {
-  return new Promise(resolve => {
-    let mm = target.messageManager;
-    mm.addMessageListener(messageName, function handler() {
-      mm.removeMessageListener(messageName, handler);
-      resolve();
-    });
-  });
-}
-
 // Return the number of chats in a browser window.
 function numChatsInWindow(win) {
   let chatbar = win.document.getElementById("pinnedchats");
@@ -106,33 +102,5 @@ function add_chat_task(genFunction) {
         win.close();
       }
     }
-  });
-}
-
-function waitForCondition(condition, nextTest, errorMsg) {
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= 100) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    var conditionPassed;
-    try {
-      conditionPassed = condition();
-    } catch (e) {
-      ok(false, e + "\n" + e.stack);
-      conditionPassed = false;
-    }
-    if (conditionPassed) {
-      moveOn();
-    }
-    tries++;
-  }, 100);
-  var moveOn = function() { clearInterval(interval); nextTest(); };
-}
-
-function promiseWaitForCondition(aConditionFn) {
-  return new Promise((resolve, reject) => {
-    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
   });
 }
