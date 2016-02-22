@@ -460,6 +460,9 @@ interface DOMTokenList {
   void add(DOMString... tokens);
   void remove(DOMString... tokens);
   boolean toggle(DOMString token, optional boolean force);
+  void replace(DOMString token, DOMString newToken);
+  boolean supports(DOMString token);
+           attribute DOMString value;
   stringifier;
 //  iterable<DOMString>;
 };

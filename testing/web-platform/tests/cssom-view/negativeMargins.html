@@ -15,10 +15,10 @@
    var inner = document.getElementById('inner');
    var outerRect = outer.getBoundingClientRect();
    test(function () {
-     assert_array_equals(document.elementFromPoint(outerRect.left + 1,
-                                                   outerRect.top + 1),
-                         outer,
-                         "elementFromPoint should get outer element");
+     assert_equals(document.elementFromPoint(outerRect.left + 1,
+                                             outerRect.top + 1),
+                   outer,
+                   "elementFromPoint should get outer element");
    });
    test(function () {
      assert_array_equals(document.elementsFromPoint(outerRect.left + 1,
