@@ -39,14 +39,21 @@ function handleRequest(request, response)
     data.push(bodyStream.readByteArray(available));
     size += available;
   }
-  xhr.send(concatUint8Arrays(data, size));
+
+  function reply(statusCode, statusText) {
+    response.setStatusLine(request.httpVersion, statusCode, statusText);
+    response.finish();
+  }
 
   xhr.onload = function(e) {
     debug("xhr : " + this.status);
-  }
+    reply(this.status, this.statusText);
+  };
   xhr.onerror = function(e) {
     debug("xhr error: " + e);
-  }
+    reply(500, "Internal Server Error");
+  };
 
-  response.setStatusLine(request.httpVersion, "200", "OK");
+  response.processAsync();
+  xhr.send(concatUint8Arrays(data, size));
 }
