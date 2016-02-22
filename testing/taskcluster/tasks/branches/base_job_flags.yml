@@ -31,7 +31,6 @@ flags:
     crashtest-e10s: /crashtest-e10s.*/
     e10s: /.*e10s.*/
     gaia-js-integration: /.*gaia-js-integration.*/
-    gaia-ui-test: /.*gaia-ui-test.*/
     gtest: /gtest.*/
     jittest: /jittest.*/
     jittests: /jittest.*/
@@ -121,10 +120,6 @@ flags:
     - gaia-linter
     - gaia-unit
     - gaia-unit-oop
-    - gaia-ui-test-sanity
-    - gaia-ui-test-functional
-    - gaia-ui-test-functional-dsds
-    - gaia-ui-test-unit
     - gtest
     - jetpack
     - jittests
@@ -159,4 +154,3 @@ flags:
     - web-platform-tests-reftests
     - web-platform-tests-reftests-e10s
     - xpcshell
-
