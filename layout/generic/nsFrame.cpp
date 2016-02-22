@@ -1141,6 +1141,12 @@ nsIFrame::Combines3DTransformWithAncestors() const
 }
 
 bool
+nsIFrame::In3DContextAndBackfaceIsHidden() const
+{
+  return Combines3DTransformWithAncestors() && StyleDisplay()->BackfaceIsHidden();
+}
+
+bool
 nsIFrame::HasPerspective() const
 {
   if (!IsTransformed()) {
