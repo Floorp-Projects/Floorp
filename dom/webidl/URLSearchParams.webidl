@@ -15,7 +15,7 @@
 
 [Constructor(optional USVString init = ""),
  Constructor(URLSearchParams init),
- Exposed=(Window,Worker,System)]
+ Exposed=(Window,Worker,WorkerDebugger,System)]
 interface URLSearchParams {
   void append(USVString name, USVString value);
   void delete(USVString name);
