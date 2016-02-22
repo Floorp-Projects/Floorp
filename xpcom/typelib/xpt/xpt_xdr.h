@@ -23,7 +23,8 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_SkipStringInline(XPTCursor *cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp);
+XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp,
+              bool ignore = false);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
