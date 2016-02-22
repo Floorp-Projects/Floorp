@@ -13,6 +13,11 @@
 #include "keyhi.h"
 #include "databuffer.h"
 
+extern "C" {
+// This is not something that should make you happy.
+#include "libssl_internals.h"
+}
+
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
@@ -195,6 +200,7 @@ void TlsAgent::DisableCiphersByKeyExchange(SSLKEAType kea) {
     SECStatus rv = SSL_GetCipherSuiteInfo(SSL_ImplementedCiphers[i],
                                           &csinfo, sizeof(csinfo));
     ASSERT_EQ(SECSuccess, rv);
+    EXPECT_EQ(sizeof(csinfo), csinfo.length);
 
     if (csinfo.keaType == kea) {
       rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_FALSE);
@@ -291,9 +297,12 @@ void TlsAgent::CheckKEAType(SSLKEAType type) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(type, csinfo_.keaType);
 
+  PRUint32 ecKEAKeyBits = SSLInt_DetermineKEABits(server_key_bits_,
+                                                  csinfo_.authAlgorithm);
+
   switch (type) {
       case ssl_kea_ecdh:
-          EXPECT_EQ(256U, info_.keaKeyBits);
+          EXPECT_EQ(ecKEAKeyBits, info_.keaKeyBits);
           break;
       case ssl_kea_dh:
           EXPECT_EQ(2048U, info_.keaKeyBits);
@@ -378,6 +387,7 @@ void TlsAgent::CheckPreliminaryInfo() {
   SSLPreliminaryChannelInfo info;
   EXPECT_EQ(SECSuccess,
             SSL_GetPreliminaryChannelInfo(ssl_fd_, &info, sizeof(info)));
+  EXPECT_EQ(sizeof(info), info.length);
   EXPECT_TRUE(info.valuesSet & ssl_preinfo_version);
   EXPECT_TRUE(info.valuesSet & ssl_preinfo_cipher_suite);
 
@@ -423,6 +433,7 @@ void TlsAgent::Connected() {
 
   SECStatus rv = SSL_GetChannelInfo(ssl_fd_, &info_, sizeof(info_));
   EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(sizeof(info_), info_.length);
 
   // Preliminary values are exposed through callbacks during the handshake.
   // If either expected values were set or the callbacks were called, check
@@ -432,6 +443,7 @@ void TlsAgent::Connected() {
 
   rv = SSL_GetCipherSuiteInfo(info_.cipherSuite, &csinfo_, sizeof(csinfo_));
   EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(sizeof(csinfo_), csinfo_.length);
 
   SetState(STATE_CONNECTED);
 }
