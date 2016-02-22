@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+    content/browser/extension.css
+    content/browser/extension-mac.css
     content/browser/extension.svg
     content/browser/ext-utils.js
     content/browser/ext-commands.js
