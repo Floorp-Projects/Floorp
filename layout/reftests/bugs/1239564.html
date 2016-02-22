@@ -1,0 +1,29 @@
+<html class="reftest-wait"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Testcase for bug 1239564</title>
+<style>
+#circle {
+  border-radius: 300px;
+  height: 80px;
+  width: 80px;
+  background-color: red;
+  margin: auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top:0;
+  bottom: 0;
+  will-change: transform;
+}
+</style>
+<body>
+<div id="circle"></div>
+<script>
+var c = document.getElementById('circle');
+function doTest() {
+  c.style.transform = "translateZ(1px) scale(3)";
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body></html>
