@@ -19,6 +19,10 @@ prefpane .groupbox-title {
   -moz-padding-start: 3px;
 }
 
+#fxaProfileImage {
+  -moz-user-focus: normal;
+}
+
 textbox + button {
   -moz-margin-start: -4px;
 }
