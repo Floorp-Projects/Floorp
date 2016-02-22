@@ -113,7 +113,6 @@ Sanitizer.prototype = {
     // get a chance to complete.
     Preferences.set(Sanitizer.PREF_SANITIZE_IN_PROGRESS,
                     JSON.stringify(itemsToClear));
-    }
 
     // Store the list of items to clear, for debugging/forensics purposes
     for (let k of itemsToClear) {
