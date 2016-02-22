@@ -35,19 +35,13 @@ extern "C" {
 typedef struct XPTArena XPTArena;
 
 XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(uint32_t block_size, size_t alignment, const char* name);
+XPT_NewArena(uint32_t block_size, size_t alignment);
 
 XPT_PUBLIC_API(void)
 XPT_DestroyArena(XPTArena *arena);
 
-XPT_PUBLIC_API(void)
-XPT_DumpStats(XPTArena *arena);
-
 XPT_PUBLIC_API(void *)
 XPT_ArenaMalloc(XPTArena *arena, size_t size);
-
-XPT_PUBLIC_API(char *)
-XPT_ArenaStrDup(XPTArena *arena, const char * s);
 
 XPT_PUBLIC_API(size_t)
 XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
@@ -56,9 +50,6 @@ XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 #define XPT_MALLOC(_arena, _bytes) \
     XPT_ArenaMalloc((_arena), (_bytes))
-
-#define XPT_STRDUP(_arena, _s) \
-    XPT_ArenaStrDup((_arena), (_s))
 
 #define XPT_CALLOC(_arena, _size) XPT_MALLOC((_arena), (_size))
 #define XPT_NEW(_arena, _struct) ((_struct *) XPT_MALLOC((_arena), sizeof(_struct)))
