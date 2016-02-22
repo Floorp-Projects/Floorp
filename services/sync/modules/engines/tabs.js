@@ -184,7 +184,9 @@ TabStore.prototype = {
         allTabs.push({
           title: current.title || "",
           urlHistory: urls,
-          icon: tabState.attributes && tabState.attributes.image || "",
+          icon: tabState.image ||
+                (tabState.attributes && tabState.attributes.image) ||
+                "",
           lastUsed: Math.floor((tabState.lastAccessed || 0) / 1000),
         });
       }
