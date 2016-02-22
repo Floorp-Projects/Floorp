@@ -45,25 +45,29 @@ DoParamDescriptor(XPTArena *arena, XPTCursor *cursor, XPTParamDescriptor *pd,
 /***************************************************************************/
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, uint32_t * ide_offset)
+XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 {
     unsigned int i;
+    uint32_t file_length = 0;
+    uint32_t ide_offset;
+
     XPTHeader* header = XPT_NEWZAP(arena, XPTHeader);
     if (!header)
         return PR_FALSE;
     *headerp = header;
 
-    for (i = 0; i < sizeof(header->magic); i++) {
-        if (!XPT_Do8(cursor, &header->magic[i]))
+    uint8_t magic[16];
+    for (i = 0; i < sizeof(magic); i++) {
+        if (!XPT_Do8(cursor, &magic[i]))
             return PR_FALSE;
     }
 
-    if (strncmp((const char*)header->magic, XPT_MAGIC, 16) != 0) {
+    if (strncmp((const char*)magic, XPT_MAGIC, 16) != 0) {
         /* Require that the header contain the proper magic */
         fprintf(stderr,
                 "libxpt: bad magic header in input file; "
                 "found '%s', expected '%s'\n",
-                header->magic, XPT_MAGIC_STRING);
+                magic, XPT_MAGIC_STRING);
         return PR_FALSE;
     }
 
@@ -77,43 +81,31 @@ XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, ui
          * number. We must set the header state thusly and return.
          */
         header->num_interfaces = 0;
-        header->file_length = 0;
         return PR_TRUE;
     }
 
     if (!XPT_Do16(cursor, &header->num_interfaces) ||
-        !XPT_Do32(cursor, &header->file_length) ||
-        (ide_offset != NULL && !XPT_Do32(cursor, ide_offset))) {
+        !XPT_Do32(cursor, &file_length) ||
+        !XPT_Do32(cursor, &ide_offset)) {
         return PR_FALSE;
     }
-    return PR_TRUE;
-}
 
-XPT_PUBLIC_API(PRBool)
-XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
-{
-    XPTHeader * header;
-    uint32_t ide_offset;
-    int i;
-
-    if (!XPT_DoHeaderPrologue(arena, cursor, headerp, &ide_offset))
-        return PR_FALSE;
-    header = *headerp;
     /* 
      * Make sure the file length reported in the header is the same size as
      * as our buffer unless it is zero (not set) 
      */
-    if (header->file_length != 0 && 
-        cursor->state->pool_allocated < header->file_length) {
+    if (file_length != 0 && 
+        cursor->state->pool_allocated < file_length) {
         fputs("libxpt: File length in header does not match actual length. File may be corrupt\n",
             stderr);
         return PR_FALSE;
     }
 
-    if (!XPT_Do32(cursor, &header->data_pool))
+    uint32_t data_pool;
+    if (!XPT_Do32(cursor, &data_pool))
         return PR_FALSE;
 
-    XPT_SetDataOffset(cursor->state, header->data_pool);
+    XPT_SetDataOffset(cursor->state, data_pool);
 
     if (header->num_interfaces) {
         header->interface_directory = 

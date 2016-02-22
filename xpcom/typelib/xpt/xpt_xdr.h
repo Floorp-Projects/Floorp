@@ -42,8 +42,6 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, uint8_t *u8p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, uint32_t * ide_offset);
-extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
 
 typedef enum {
