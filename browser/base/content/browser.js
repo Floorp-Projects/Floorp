@@ -2422,10 +2422,12 @@ function URLBarSetURI(aURI) {
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
-    if (gInitialPages.indexOf(uri.spec) != -1)
-      value = gBrowser.selectedBrowser.hasContentOpener ? uri.spec : "";
-    else
+    if (gInitialPages.indexOf(uri.spec) != -1 &&
+        checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
+      value = "";
+    } else {
       value = losslessDecodeURI(uri);
+    }
 
     valid = !isBlankPageURL(uri.spec);
   }
@@ -4502,7 +4504,7 @@ var XULBrowserWindow = {
     // Do not update urlbar if there was a subframe navigation
 
     if (aWebProgress.isTopLevel) {
-      if ((location == "about:blank" && !gBrowser.selectedBrowser.hasContentOpener) ||
+      if ((location == "about:blank" && checkEmptyPageOrigin()) ||
           location == "") {  // Second condition is for new tabs, otherwise
                              // reload function is enabled until tab is refreshed.
         this.reloadCommand.setAttribute("disabled", "true");
@@ -6609,13 +6611,64 @@ function isTabEmpty(aTab) {
   if (!isBlankPageURL(browser.currentURI.spec))
     return false;
 
-  if (browser.hasContentOpener)
+  if (!checkEmptyPageOrigin(browser))
     return false;
 
   if (browser.canGoForward || browser.canGoBack)
     return false;
 
   return true;
+}
+
+/**
+ * Check whether a page can be considered as 'empty', that its URI
+ * reflects its origin, and that if it's loaded in a tab, that tab
+ * could be considered 'empty' (e.g. like the result of opening
+ * a 'blank' new tab).
+ *
+ * We have to do more than just check the URI, because especially
+ * for things like about:blank, it is possible that the opener or
+ * some other page has control over the contents of the page.
+ *
+ * @param browser {Browser}
+ *        The browser whose page we're checking (the selected browser
+ *        in this window if omitted).
+ * @param uri {nsIURI}
+ *        The URI against which we're checking (the browser's currentURI
+ *        if omitted).
+ *
+ * @return false if the page was opened by or is controlled by arbitrary web
+ *         content, unless that content corresponds with the URI.
+ *         true if the page is blank and controlled by a principal matching
+ *         that URI (or the system principal if the principal has no URI)
+ */
+function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
+                              uri = browser.currentURI) {
+  // If another page opened this page with e.g. window.open, this page might
+  // be controlled by its opener - return false.
+  if (browser.hasContentOpener) {
+    return false;
+  }
+  let contentPrincipal = browser.contentPrincipal;
+  if (gMultiProcessBrowser && browser.isRemoteBrowser &&
+      !contentPrincipal && uri.spec == "about:blank") {
+    // Need to specialcase this because of how stopping an about:blank
+    // load from chrome on e10s causes a permanently null contentPrincipal,
+    // see bug 1249362.
+    return true;
+  }
+  // Not all principals have URIs...
+  if (contentPrincipal.URI) {
+    // A manually entered about:blank URI is slightly magical:
+    if (uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) {
+      return true;
+    }
+    return contentPrincipal.URI.equals(uri);
+  }
+  // ... so for those that don't have them, enforce that the page has the
+  // system principal (this matches e.g. on about:newtab).
+  let ssm = Services.scriptSecurityManager;
+  return ssm.isSystemPrincipal(contentPrincipal);
 }
 
 function BrowserOpenSyncTabs() {
