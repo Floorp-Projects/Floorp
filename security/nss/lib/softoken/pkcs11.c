@@ -370,6 +370,11 @@ static const struct mechanismList mechanisms[] = {
      {CKM_SEED_MAC,		{16, 16, CKF_SN_VR},		PR_TRUE},
      {CKM_SEED_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_TRUE},
      {CKM_SEED_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
+#ifndef NSS_DISABLE_CHACHAPOLY
+     /* ------------------------- ChaCha20 Operations ---------------------- */
+     {CKM_NSS_CHACHA20_KEY_GEN,	{32, 32, CKF_GENERATE},		PR_TRUE},
+     {CKM_NSS_CHACHA20_POLY1305,{32, 32, CKF_EN_DE},		PR_TRUE},
+#endif /* NSS_DISABLE_CHACHAPOLY */
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},

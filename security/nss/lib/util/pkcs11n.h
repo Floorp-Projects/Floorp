@@ -51,6 +51,8 @@
 #define CKK_NSS_JPAKE_ROUND1       (CKK_NSS + 2)
 #define CKK_NSS_JPAKE_ROUND2       (CKK_NSS + 3)
 
+#define CKK_NSS_CHACHA20           (CKK_NSS + 4)
+
 /*
  * NSS-defined certificate types
  *
@@ -218,6 +220,9 @@
 #define CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE    (CKM_NSS + 25)
 #define CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_DH (CKM_NSS + 26)
 
+#define CKM_NSS_CHACHA20_KEY_GEN                (CKM_NSS + 27)
+#define CKM_NSS_CHACHA20_POLY1305               (CKM_NSS + 28)
+
 /*
  * HISTORICAL:
  * Do not attempt to use these. They are only used by NETSCAPE's internal
@@ -284,6 +289,14 @@ typedef struct CK_NSS_MAC_CONSTANT_TIME_PARAMS {
     CK_BYTE * pHeader;          /* in */
     CK_ULONG ulHeaderLen;       /* in */
 } CK_NSS_MAC_CONSTANT_TIME_PARAMS;
+
+typedef struct CK_NSS_AEAD_PARAMS {
+    CK_BYTE_PTR  pNonce;
+    CK_ULONG     ulNonceLen;
+    CK_BYTE_PTR  pAAD;
+    CK_ULONG     ulAADLen;
+    CK_ULONG     ulTagLen;
+} CK_NSS_AEAD_PARAMS;
 
 /*
  * NSS-defined return values

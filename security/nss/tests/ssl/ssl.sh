@@ -85,12 +85,14 @@ ssl_init()
 
   if [ -z "$NSS_DISABLE_ECC" ] ; then
       ECC_STRING=" - with ECC"
+      # List of cipher suites to test, including ECC cipher suites.
+      CIPHER_SUITES="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:C023:C027:C02B:C02F:CCA8:CCA9:CCAA:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2cdefgijklmnvyz"
   else
       ECC_STRING=""
+      # List of cipher suites to test, excluding ECC cipher suites.
+      CIPHER_SUITES="-c ABCDEF:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2:CCAAcdefgijklmnvyz"
   fi
 
-  CSHORT="-c ABCDEF:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2cdefgijklmnvyz"
-  CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:C023:C027:C02B:C02F:0016:0032:0033:0038:0039:003B:003C:003D:0040:0041:0067:006A:006B:0084:009C:009E:00A2cdefgijklmnvyz"
 
   if [ "${OS_ARCH}" != "WINNT" ]; then
       ulimit -n 1000 # make sure we have enough file descriptors
@@ -260,11 +262,7 @@ ssl_cov()
   html_head "SSL Cipher Coverage $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE $ECC_STRING"
 
   testname=""
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      sparam="$CLONG"
-  else
-      sparam="$CSHORT"
-  fi
+  sparam="$CIPHER_SUITES"
 
   mixed=0
   start_selfserv # Launch the server
@@ -731,11 +729,7 @@ ssl_policy()
   html_head "SSL POLICY $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE $ECC_STRING"
 
   testname=""
-  if [ -z "$NSS_DISABLE_ECC" ] ; then
-      sparam="$CLONG"
-  else
-      sparam="$CSHORT"
-  fi
+  sparam="$CIPHER_SUITES"
 
   if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
       return;

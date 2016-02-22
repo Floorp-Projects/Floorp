@@ -482,6 +482,33 @@ ifndef NSS_DISABLE_ECC
     endif
 endif
 
+# poly1305-donna-x64-sse2-incremental-source.c requires __int128 support
+# in GCC 4.6.0.
+ifeq ($(CC_NAME),clang)
+    HAVE_INT128_SUPPORT = 1
+else ifeq (1,$(CC_IS_GCC))
+    ifneq (,$(filter 4.6 4.7 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
+        HAVE_INT128_SUPPORT = 1
+    endif
+    ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
+        HAVE_INT128_SUPPORT = 1
+    endif
+endif
+
+ifndef NSS_DISABLE_CHACHAPOLY
+    ifeq ($(CPU_ARCH),x86_64)
+        ifdef HAVE_INT128_SUPPORT
+            EXTRA_SRCS += poly1305-donna-x64-sse2-incremental-source.c
+        else
+            EXTRA_SRCS += poly1305.c
+        endif
+        EXTRA_SRCS += chacha20_vec.c
+    else
+        EXTRA_SRCS += poly1305.c
+        EXTRA_SRCS += chacha20.c
+    endif # x86_64
+endif # NSS_DISABLE_CHACHAPOLY
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

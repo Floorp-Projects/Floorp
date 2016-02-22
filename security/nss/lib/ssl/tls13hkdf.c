@@ -32,7 +32,7 @@ static const struct {
 };
 
 SECStatus
-tls13_HkdfExtract(PK11SymKey* ikm1, PK11SymKey* ikm2, SSLHashType baseHash,
+tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
                   PK11SymKey **prkp)
 {
     CK_NSS_HKDFParams params;
@@ -60,7 +60,8 @@ tls13_HkdfExtract(PK11SymKey* ikm1, PK11SymKey* ikm2, SSLHashType baseHash,
         params.pSalt = salt->data;
         params.ulSaltLen = salt->len;
         PORT_Assert(salt->len > 0);
-    } else {
+    }
+    else {
         /* Per documentation for CKM_NSS_HKDF_*:
          *
          *  If the optional salt is given, it is used; otherwise, the salt is
@@ -74,7 +75,7 @@ tls13_HkdfExtract(PK11SymKey* ikm1, PK11SymKey* ikm2, SSLHashType baseHash,
 
     PORT_Assert(kTlsHkdfInfo[baseHash].pkcs11Mech);
     PORT_Assert(kTlsHkdfInfo[baseHash].hashSize);
-    PORT_Assert(kTlsHkdfInfo[baseHash].hash==baseHash);
+    PORT_Assert(kTlsHkdfInfo[baseHash].hash == baseHash);
     prk = PK11_Derive(ikm2, kTlsHkdfInfo[baseHash].pkcs11Mech,
                       &paramsi, kTlsHkdfInfo[baseHash].pkcs11Mech,
                       CKA_DERIVE, kTlsHkdfInfo[baseHash].hashSize);
@@ -86,14 +87,14 @@ tls13_HkdfExtract(PK11SymKey* ikm1, PK11SymKey* ikm2, SSLHashType baseHash,
 }
 
 SECStatus
-tls13_HkdfExpandLabel(PK11SymKey* prk, SSLHashType baseHash,
+tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
                       const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
                       const char *label, unsigned int labelLen,
                       CK_MECHANISM_TYPE algorithm, unsigned int keySize,
                       PK11SymKey **keyp)
 {
     CK_NSS_HKDFParams params;
-    SECItem paramsi = {siBuffer, NULL, 0};
+    SECItem paramsi = { siBuffer, NULL, 0 };
     PRUint8 info[100];
     PRUint8 *ptr = info;
     unsigned int infoLen;
@@ -103,7 +104,8 @@ tls13_HkdfExpandLabel(PK11SymKey* prk, SSLHashType baseHash,
 
     if (handshakeHash) {
         PORT_Assert(handshakeHashLen == kTlsHkdfInfo[baseHash].hashSize);
-    } else {
+    }
+    else {
         PORT_Assert(!handshakeHashLen);
     }
 
@@ -169,9 +171,8 @@ abort:
     return SECFailure;
 }
 
-
 SECStatus
-tls13_HkdfExpandLabelRaw(PK11SymKey* prk, SSLHashType baseHash,
+tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
                          const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
                          const char *label, unsigned int labelLen,
                          unsigned char *output, unsigned int outputLen)

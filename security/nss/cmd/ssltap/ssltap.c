@@ -443,6 +443,10 @@ const char * V2CipherString(int cs_int)
   case 0x00C02C:    cs_str = "TLS/ECDHE-ECDSA/AES256-GCM/SHA384"; break;
   case 0x00C02F:    cs_str = "TLS/ECDHE-RSA/AES128-GCM/SHA256"; break;
 
+  case 0x00CCA8:    cs_str = "TLS/ECDHE-RSA/CHACHA20-POLY1305/SHA256"; break;
+  case 0x00CCA9:    cs_str = "TLS/ECDHE-ECDSA/CHACHA20-POLY1305/SHA256"; break;
+  case 0x00CCAA:    cs_str = "TLS/DHE-RSA/CHACHA20-POLY1305/SHA256"; break;
+
   case 0x00FEFF:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
   case 0x00FEFE:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;
   case 0x00FFE1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";     break;
