@@ -404,7 +404,7 @@
           var textBox = this._textbox;
 
           // Save the current value in the form history
-          if (aData && !PrivateBrowsingUtils.isWindowPrivate(window)) {
+          if (aData && !PrivateBrowsingUtils.isWindowPrivate(window) && this.FormHistory.enabled) {
             this.FormHistory.update(
               { op : "bump",
                 fieldname : textBox.getAttribute("autocompletesearchparam"),
