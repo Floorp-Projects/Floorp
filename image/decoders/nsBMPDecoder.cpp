@@ -681,10 +681,11 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
 
   if (mDownscaler) {
     // BMPs store their rows in reverse order, so the downscaler needs to
-    // reverse them again when writing its output.
+    // reverse them again when writing its output. Unless the height is
+    // negative!
     rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
                                  mImageData, mMayHaveTransparency,
-                                 /* aFlipVertically = */ true);
+                                 /* aFlipVertically = */ mH.mHeight >= 0);
     if (NS_FAILED(rv)) {
       return Transition::TerminateFailure();
     }
