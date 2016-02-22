@@ -76,9 +76,6 @@ var AboutReader = function(mm, win, articlePromise) {
     if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
       this._setupButton("toggle-button", this._onReaderToggle.bind(this, "button"), "aboutReader.toolbar.addToReadingList");
       this._setupButton("list-button", this._onList.bind(this), "aboutReader.toolbar.openReadingList");
-      this._setupButton("remove-button", this._onReaderToggle.bind(this, "footer"),
-        "aboutReader.footer.deleteThisArticle", "aboutReader.footer.deleteThisArticle");
-      this._doc.getElementById("reader-footer").setAttribute('readinglist-enabled', "true");
     }
   } catch (e) {
     // Pref doesn't exist.
@@ -314,7 +311,6 @@ AboutReader.prototype = {
       button.classList.remove("on");
       button.setAttribute("title", gStrings.GetStringFromName("aboutReader.toolbar.addToReadingList"));
     }
-    this._updateFooter();
   },
 
   _requestReadingListStatus: function() {
@@ -482,16 +478,6 @@ AboutReader.prototype = {
     }, true);
   },
 
-  _updateFooter: function() {
-    let footer = this._doc.getElementById("reader-footer");
-    if (!this._article || this._isReadingListItem == 0 ||
-        footer.getAttribute("readinglist-enabled") != "true") {
-      footer.style.display = "none";
-      return;
-    }
-    footer.style.display = null;
-  },
-
   _handleDeviceLight: function(newLux) {
     // Desired size of the this._luxValues array.
     let luxValuesSize = 10;
@@ -630,7 +616,6 @@ AboutReader.prototype = {
     if (!visible) {
       this._mm.sendAsyncMessage("Reader:ToolbarHidden");
     }
-    this._updateFooter();
   },
 
   _toggleToolbarVisibility: function() {
