@@ -334,13 +334,6 @@
   background-image: url("chrome://global/skin/reader/RM-Add-24x24.svg");
 }
 
-.list-button {
-  background-image: url("chrome://global/skin/reader/RM-Reading-List-24x24.svg");
-}
-.list-button.on {
-  background-color: #d9d9d9;
-}
-
 .minus-button {
   background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
 }
