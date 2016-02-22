@@ -56,13 +56,17 @@ typedef struct nsID nsID;
  * Every XPCOM typelib file begins with a header.
  */
 struct XPTHeader {
-    uint8_t                     magic[16];
+    // Some of these fields exists in the on-disk format but don't need to be
+    // stored in memory (other than very briefly, which can be done with local
+    // variables).
+
+    //uint8_t                   magic[16];
     uint8_t                     major_version;
     uint8_t                     minor_version;
     uint16_t                    num_interfaces;
-    uint32_t                    file_length;
+    //uint32_t                  file_length;
     XPTInterfaceDirectoryEntry  *interface_directory;
-    uint32_t                    data_pool;
+    //uint32_t                  data_pool;
 };
 
 #define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
@@ -71,15 +75,14 @@ struct XPTHeader {
 #define XPT_MAJOR_VERSION 0x01
 #define XPT_MINOR_VERSION 0x02
 
-/* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION 
+/* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION
  * or higher is to be considered incompatible by this version of xpt and
  * we will refuse to read it. We will return a header with magic, major and
- * minor versions set from the file. num_interfaces and file_length will be
- * set to zero to confirm our inability to read the file; i.e. even if some
- * client of this library gets out of sync with us regarding the agreed upon
- * value for XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces and
- * file_length are both zero we *know* that this library refused to read the 
- * file due to version imcompatibility.  
+ * minor versions set from the file. num_interfaces will be set to zero to
+ * confirm our inability to read the file; i.e. even if some client of this
+ * library gets out of sync with us regarding the agreed upon value for
+ * XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces is zero we *know*
+ * that this library refused to read the file due to version incompatibility.
  */
 #define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
 
