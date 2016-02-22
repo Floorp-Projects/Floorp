@@ -13,71 +13,82 @@
 <script type="text/javascript">
 "use strict";
 
-function backgroundScript() {
-  function assertExpected(cookie, expected) {
-    for (let key of Object.keys(cookie)) {
-      browser.test.assertTrue(key in expected, "found property " + key);
-      browser.test.assertEq(cookie[key], expected[key], "property value for " + key + " is wrong");
+add_task(function* test_cookies() {
+  function backgroundScript() {
+    function assertExpected(expected, cookie) {
+      for (let key of Object.keys(cookie)) {
+        browser.test.assertTrue(key in expected, `found property ${key}`);
+        browser.test.assertEq(expected[key], cookie[key], `property value for ${key} is correct`);
+      }
+      browser.test.assertEq(Object.keys(expected).length, Object.keys(cookie).length, "all expected properties found");
     }
-    browser.test.assertEq(Object.keys(cookie).length, Object.keys(expected).length, "all expected properties found");
+
+    let TEST_URL = "http://example.org/";
+    let THE_FUTURE = Date.now() + 5 * 60;
+
+    let expected = {
+      name: "name1",
+      value: "value1",
+      domain: "example.org",
+      hostOnly: true,
+      path: "/",
+      secure: false,
+      httpOnly: false,
+      session: false,
+      expirationDate: THE_FUTURE,
+      storeId: "firefox-default",
+    };
+
+    browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
+      assertExpected(expected, cookie);
+      return browser.cookies.get({url: TEST_URL, name: "name1"});
+    }).then(cookie => {
+      assertExpected(expected, cookie);
+      return browser.cookies.getAll({domain: "example.org"});
+    }).then(cookies => {
+      browser.test.assertEq(cookies.length, 1, "only found one cookie for example.org");
+      assertExpected(expected, cookies[0]);
+      return browser.cookies.remove({url: TEST_URL, name: "name1"});
+    }).then(details => {
+      assertExpected({url: TEST_URL, name: "name1", storeId: "firefox-default"}, details);
+      return browser.cookies.get({url: TEST_URL, name: "name1"});
+    }).then(cookie => {
+      browser.test.assertEq(null, cookie, "removed cookie not found");
+      return browser.cookies.getAllCookieStores();
+    }).then(stores => {
+      browser.test.assertEq(1, stores.length, "expected number of stores returned");
+      browser.test.assertEq("firefox-default", stores[0].id, "expected store id returned");
+      browser.test.assertEq(0, stores[0].tabIds.length, "no tabs returned for store"); // Todo: Implement this.
+      return browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
+    }).then(cookie => {
+      browser.test.assertEq(false, cookie.hostOnly, "cookie is not a hostOnly cookie");
+      return browser.cookies.remove({url: TEST_URL, name: "name2"});
+    }).then(details => {
+      assertExpected({url: TEST_URL, name: "name2", storeId: "firefox-default"}, details);
+      // Create a session cookie.
+      return browser.cookies.set({url: TEST_URL, name: "name1", value: "value1"});
+    }).then(cookie => {
+      browser.test.assertEq(true, cookie.session, "session cookie set");
+      return browser.cookies.get({url: TEST_URL, name: "name1"});
+    }).then(cookie => {
+      browser.test.assertEq(true, cookie.session, "got session cookie");
+      return browser.cookies.remove({url: TEST_URL, name: "name1"});
+    }).then(details => {
+      assertExpected({url: TEST_URL, name: "name1", storeId: "firefox-default"}, details);
+      return browser.cookies.get({url: TEST_URL, name: "name1"});
+    }).then(cookie => {
+      browser.test.assertEq(null, cookie, "removed cookie not found");
+      browser.test.notifyPass("cookies");
+    });
   }
 
-  let TEST_URL = "http://example.org/";
-  let THE_FUTURE = Date.now() + 5 * 60;
-
-  let expected = {
-    name: "name1",
-    value: "value1",
-    domain: "example.org",
-    hostOnly: true,
-    path: "/",
-    secure: false,
-    httpOnly: false,
-    session: false,
-    expirationDate: THE_FUTURE,
-    storeId: "firefox-default",
-  };
-
-  browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
-    assertExpected(cookie, expected);
-    return browser.cookies.get({url: TEST_URL, name: "name1"});
-  }).then(cookie => {
-    assertExpected(cookie, expected);
-    return browser.cookies.getAll({domain: "example.org"});
-  }).then(cookies => {
-    browser.test.assertEq(cookies.length, 1, "only found one cookie for example.org");
-    assertExpected(cookies[0], expected);
-    return browser.cookies.remove({url: TEST_URL, name: "name1"});
-  }).then(details => {
-    assertExpected(details, {url: TEST_URL, name: "name1", storeId: "firefox-default"});
-    return browser.cookies.get({url: TEST_URL, name: "name1"});
-  }).then(cookie => {
-    browser.test.assertEq(cookie, null);
-    return browser.cookies.getAllCookieStores();
-  }).then(stores => {
-    browser.test.assertEq(stores.length, 1);
-    browser.test.assertEq(stores[0].id, "firefox-default");
-    browser.test.assertEq(stores[0].tabIds.length, 0); // Todo: Implement this.
-    return browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
-  }).then(cookie => {
-    browser.test.assertEq(cookie.hostOnly, false, "not a hostOnly cookie");
-    return browser.cookies.remove({url: TEST_URL, name: "name2"});
-  }).then(details => {
-    assertExpected(details, {url: TEST_URL, name: "name2", storeId: "firefox-default"});
-  }).then(() => {
-    browser.test.notifyPass("cookies");
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["cookies", "*://example.org/"],
+    },
   });
-}
 
-let extensionData = {
-  background: "(" + backgroundScript.toString() + ")()",
-  manifest: {
-    permissions: ["cookies", "*://example.org/"],
-  },
-};
-
-add_task(function* test_cookies() {
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   info("extension loaded");
   yield extension.awaitFinish("cookies");
