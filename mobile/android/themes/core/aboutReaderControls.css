@@ -241,8 +241,7 @@
 
 /* desktop-only controls */
 .close-button,
-.list-button,
-.footer {
+.list-button {
   display: none;
 }
 
