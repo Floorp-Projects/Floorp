@@ -226,7 +226,7 @@ public:
   }
 
   UniquePtr(UniquePtr&& aOther)
-    : mTuple(aOther.release(), Forward<DeleterType>(aOther.getDeleter()))
+    : mTuple(aOther.release(), Forward<DeleterType>(aOther.get_deleter()))
   {}
 
   MOZ_IMPLICIT
@@ -247,7 +247,7 @@ public:
                                ? IsSame<D, E>::value
                                : IsConvertible<E, D>::value),
                               int>::Type aDummy = 0)
-    : mTuple(aOther.release(), Forward<E>(aOther.getDeleter()))
+    : mTuple(aOther.release(), Forward<E>(aOther.get_deleter()))
   {
   }
 
@@ -256,7 +256,7 @@ public:
   UniquePtr& operator=(UniquePtr&& aOther)
   {
     reset(aOther.release());
-    getDeleter() = Forward<DeleterType>(aOther.getDeleter());
+    get_deleter() = Forward<DeleterType>(aOther.get_deleter());
     return *this;
   }
 
@@ -270,7 +270,7 @@ public:
                   "can't assign from UniquePtr holding an array");
 
     reset(aOther.release());
-    getDeleter() = Forward<E>(aOther.getDeleter());
+    get_deleter() = Forward<E>(aOther.get_deleter());
     return *this;
   }
 
@@ -291,8 +291,8 @@ public:
 
   Pointer get() const { return ptr(); }
 
-  DeleterType& getDeleter() { return del(); }
-  const DeleterType& getDeleter() const { return del(); }
+  DeleterType& get_deleter() { return del(); }
+  const DeleterType& get_deleter() const { return del(); }
 
   MOZ_WARN_UNUSED_RESULT Pointer release()
   {
@@ -306,7 +306,7 @@ public:
     Pointer old = ptr();
     ptr() = aPtr;
     if (old != nullptr) {
-      getDeleter()(old);
+      get_deleter()(old);
     }
   }
 
@@ -395,7 +395,7 @@ public:
   = delete;
 
   UniquePtr(UniquePtr&& aOther)
-    : mTuple(aOther.release(), Forward<DeleterType>(aOther.getDeleter()))
+    : mTuple(aOther.release(), Forward<DeleterType>(aOther.get_deleter()))
   {}
 
   MOZ_IMPLICIT
@@ -411,7 +411,7 @@ public:
   UniquePtr& operator=(UniquePtr&& aOther)
   {
     reset(aOther.release());
-    getDeleter() = Forward<DeleterType>(aOther.getDeleter());
+    get_deleter() = Forward<DeleterType>(aOther.get_deleter());
     return *this;
   }
 
@@ -426,8 +426,8 @@ public:
   T& operator[](decltype(sizeof(int)) aIndex) const { return get()[aIndex]; }
   Pointer get() const { return mTuple.first(); }
 
-  DeleterType& getDeleter() { return mTuple.second(); }
-  const DeleterType& getDeleter() const { return mTuple.second(); }
+  DeleterType& get_deleter() { return mTuple.second(); }
+  const DeleterType& get_deleter() const { return mTuple.second(); }
 
   MOZ_WARN_UNUSED_RESULT Pointer release()
   {

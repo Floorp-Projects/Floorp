@@ -292,7 +292,7 @@ TestReferenceDeleterGuts()
   IntDeleterRef id2(Move(id1));
   CHECK(id1 == nullptr);
   CHECK(nullptr != id2);
-  CHECK(&id1.getDeleter() == &id2.getDeleter());
+  CHECK(&id1.get_deleter() == &id2.get_deleter());
 
   IntDeleterRef id3(Move(id2));
 
