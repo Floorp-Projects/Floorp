@@ -41,18 +41,6 @@
     (_a)->LOG_RealMallocTotalBytesRequested += (_size);         \
     } while(0)
 
-#define LOG_FREE(_a)                                            \
-    do{                                                         \
-    XPT_ASSERT((_a));                                           \
-    ++(_a)->LOG_FreeCallCount;                                  \
-    } while(0)
-
-#define LOG_DONE_LOADING(_a)                                    \
-    do{                                                         \
-    XPT_ASSERT((_a));                                           \
-    (_a)->LOG_LoadingFreeCallCount = (_a)->LOG_FreeCallCount;   \
-    } while(0)
-
 #define PRINT_STATS(_a)       xpt_DebugPrintArenaStats((_a))
 static void xpt_DebugPrintArenaStats(XPTArena *arena);
 
@@ -60,9 +48,7 @@ static void xpt_DebugPrintArenaStats(XPTArena *arena);
 
 #define LOG_MALLOC(_a, _req, _used)   ((void)0)
 #define LOG_REAL_MALLOC(_a, _size)    ((void)0)
-#define LOG_FREE(_a)                  ((void)0)
 
-#define LOG_DONE_LOADING(_a)          ((void)0)        
 #define PRINT_STATS(_a)               ((void)0)
 
 #endif /* XPT_ARENA_LOGGING */
@@ -95,8 +81,6 @@ struct XPTArena
     uint32_t LOG_MallocCallCount;
     uint32_t LOG_MallocTotalBytesRequested;
     uint32_t LOG_MallocTotalBytesUsed;
-    uint32_t LOG_FreeCallCount;
-    uint32_t LOG_LoadingFreeCallCount;
     uint32_t LOG_RealMallocCallCount;
     uint32_t LOG_RealMallocTotalBytesRequested;
 #endif /* XPT_ARENA_LOGGING */
@@ -249,22 +233,6 @@ XPT_ArenaStrDup(XPTArena *arena, const char * s)
     return cur;
 }
 
-XPT_PUBLIC_API(void)
-XPT_NotifyDoneLoading(XPTArena *arena)
-{
-#ifdef XPT_ARENA_LOGGING
-    if (arena) {
-        LOG_DONE_LOADING(arena);        
-    }
-#endif
-}
-
-XPT_PUBLIC_API(void)
-XPT_ArenaFree(XPTArena *arena, void *block)
-{
-    LOG_FREE(arena);
-}
-
 #ifdef XPT_ARENA_LOGGING
 static void xpt_DebugPrintArenaStats(XPTArena *arena)
 {
@@ -277,12 +245,6 @@ static void xpt_DebugPrintArenaStats(XPTArena *arena)
     printf("%d average bytes requested per call to arena malloc\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesRequested/arena->LOG_MallocCallCount) : 0);
     printf("%d average bytes used per call (accounts for alignment overhead)\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesUsed/arena->LOG_MallocCallCount) : 0);
     printf("%d average bytes used per call (accounts for all overhead and waste)\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_RealMallocTotalBytesRequested/arena->LOG_MallocCallCount) : 0);
-    printf("\n");
-    printf("%d during loading times arena free called\n", (int) arena->LOG_LoadingFreeCallCount);       
-    printf("%d during loading approx total bytes not freed\n", (int) arena->LOG_LoadingFreeCallCount * (int) (arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesUsed/arena->LOG_MallocCallCount) : 0));       
-    printf("\n");
-    printf("%d total times arena free called\n", (int) arena->LOG_FreeCallCount);       
-    printf("%d approx total bytes not freed until arena destruction\n", (int) arena->LOG_FreeCallCount * (int) (arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesUsed/arena->LOG_MallocCallCount) : 0 ));       
     printf("\n");
     printf("%d times arena called system malloc\n", (int) arena->LOG_RealMallocCallCount);       
     printf("%d total bytes arena requested from system\n", (int) arena->LOG_RealMallocTotalBytesRequested);       
