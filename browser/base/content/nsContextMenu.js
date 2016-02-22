@@ -981,11 +981,16 @@ nsContextMenu.prototype = {
       catch (e) { }
     }
 
-    let params = this._openLinkInParameters({
+    let params = {
       allowMixedContent: persistAllowMixedContentInChildTab,
-      userContextId: parseInt(event.target.getAttribute('usercontextid')),
-    });
-    openLinkIn(this.linkURL, "tab", params);
+      userContextId: parseInt(event.target.getAttribute('usercontextid'))
+    };
+
+    if (params.userContextId != this.principal.originAttributes.userContextId) {
+      params.noReferrer = true;
+    }
+
+    openLinkIn(this.linkURL, "tab", this._openLinkInParameters(params));
   },
 
   // open URL in current tab
