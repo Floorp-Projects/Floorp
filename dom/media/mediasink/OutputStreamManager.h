@@ -24,7 +24,8 @@ public:
   void Init(OutputStreamManager* aOwner, ProcessedMediaStream* aStream);
 
   // Connect mStream to the input stream.
-  void Connect(MediaStream* aStream);
+  // Return false is mStream is already destroyed, otherwise true.
+  bool Connect(MediaStream* aStream);
   // Disconnect mStream from its input stream.
   // Return false is mStream is already destroyed, otherwise true.
   bool Disconnect();
