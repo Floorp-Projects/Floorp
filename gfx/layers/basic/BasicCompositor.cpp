@@ -434,7 +434,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
     maskTransform = effectMask->mMaskTransform.As2D();
-    maskTransform.PreTranslate(-offset.x, -offset.y);
+    maskTransform.PostTranslate(-offset.x, -offset.y);
   }
 
   CompositionOp blendMode = CompositionOp::OP_OVER;
