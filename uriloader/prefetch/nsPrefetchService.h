@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include <deque>
 
 class nsPrefetchService;
 class nsPrefetchNode;
@@ -57,21 +58,18 @@ private:
     void     RemoveProgressListener();
     nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI,
                         nsIDOMNode *aSource, nsPrefetchNode **node);
-    nsresult EnqueueNode(nsPrefetchNode *node);
-    nsresult DequeueNode(nsPrefetchNode **node);
     void     EmptyQueue();
 
     void     StartPrefetching();
     void     StopPrefetching();
 
-    nsPrefetchNode                   *mQueueHead;
-    nsPrefetchNode                   *mQueueTail;
-    nsTArray<RefPtr<nsPrefetchNode>> mCurrentNodes;
-    int32_t                           mMaxParallelism;
-    int32_t                           mStopCount;
+    std::deque<RefPtr<nsPrefetchNode>> mQueue;
+    nsTArray<RefPtr<nsPrefetchNode>>   mCurrentNodes;
+    int32_t                            mMaxParallelism;
+    int32_t                            mStopCount;
     // true if pending document loads have ever reached zero.
-    int32_t                           mHaveProcessed;
-    bool                              mDisabled;
+    int32_t                            mHaveProcessed;
+    bool                               mDisabled;
 };
 
 //-----------------------------------------------------------------------------
@@ -99,7 +97,6 @@ public:
     nsresult OpenChannel();
     nsresult CancelChannel(nsresult error);
 
-    nsPrefetchNode             *mNext;
     nsCOMPtr<nsIURI>            mURI;
     nsCOMPtr<nsIURI>            mReferrerURI;
     nsCOMPtr<nsIWeakReference>  mSource;
@@ -107,7 +104,7 @@ public:
 private:
     ~nsPrefetchNode() {}
 
-    RefPtr<nsPrefetchService> mService;
+    RefPtr<nsPrefetchService>   mService;
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIChannel>        mRedirectChannel;
     int64_t                     mBytesRead;
