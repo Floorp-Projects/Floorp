@@ -54,6 +54,7 @@ function makeRemoteTabMatch(url, deviceName, extra = {}) {
     uri: makeActionURI("remotetab", {url, deviceName}),
     title: extra.title || url,
     style: [ "action" ],
+    icon: extra.icon,
   }
 }
 
@@ -115,10 +116,37 @@ add_task(function* test_maximal() {
     matches: [ makeSearchMatch("ex", { heuristic: true }),
                makeRemoteTabMatch("http://example.com/", "My Phone",
                                   { title: "An Example",
-                                    icon: "moz-anno:favicon:http://favicon"
+                                    icon: "moz-anno:favicon:http://favicon/"
                                   }),
              ],
   });
+});
+
+add_task(function* test_noShowIcons() {
+  Services.prefs.setBoolPref("services.sync.syncedTabs.showRemoteIcons", false);
+  configureEngine({
+    guid_mobile: {
+      clientName: "My Phone",
+      tabs: [{
+        urlHistory: ["http://example.com/"],
+        title: "An Example",
+        icon: "http://favicon",
+      }],
+    }
+  });
+
+  yield check_autocomplete({
+    search: "ex",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("ex", { heuristic: true }),
+               makeRemoteTabMatch("http://example.com/", "My Phone",
+                                  { title: "An Example",
+                                    // expecting the default favicon due to that pref.
+                                    icon: PlacesUtils.favicons.defaultFavicon.spec,
+                                  }),
+             ],
+  });
+  Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteIcons");
 });
 
 add_task(function* test_matches_title() {
