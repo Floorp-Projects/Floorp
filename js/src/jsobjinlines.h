@@ -275,7 +275,17 @@ ClassCanHaveFixedData(const Class* clasp)
         || js::IsTypedArrayClass(clasp);
 }
 
-static MOZ_ALWAYS_INLINE void
+// This function is meant to be called from allocation fast paths.
+//
+// If we do have an allocation metadata hook, it can cause a GC, so the object
+// must be rooted. The usual way to do this would be to make our callers pass a
+// HandleObject, but that would require them to pay the cost of rooting the
+// object unconditionally, even though collecting metadata is rare. Instead,
+// SetNewObjectMetadata's contract is that the caller must use the pointer
+// returned in place of the pointer passed. If a GC occurs, the returned pointer
+// may be the passed pointer, relocated by GC. If no GC could occur, it's just
+// passed through. We root nothing unless necessary.
+static MOZ_ALWAYS_INLINE MOZ_WARN_UNUSED_RESULT JSObject*
 SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
 {
     MOZ_ASSERT(!cxArg->compartment()->hasObjectPendingMetadata());
@@ -290,10 +300,13 @@ SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
             // callback, and any reentering of JS via Invoke() etc.
             AutoEnterAnalysis enter(cx);
 
-            RootedObject hobj(cx, obj);
-            cx->compartment()->setNewObjectMetadata(cx, hobj);
+            RootedObject rooted(cx, obj);
+            cx->compartment()->setNewObjectMetadata(cx, rooted);
+            return rooted;
         }
     }
+
+    return obj;
 }
 
 } // namespace js
@@ -357,7 +370,7 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
     if (group->clasp()->shouldDelayMetadataCallback())
         cx->compartment()->setObjectPendingMetadata(cx, obj);
     else
-        SetNewObjectMetadata(cx, obj);
+        obj = SetNewObjectMetadata(cx, obj);
 
     js::gc::TraceCreateObject(obj);
 
