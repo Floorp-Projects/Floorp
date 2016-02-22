@@ -2080,6 +2080,9 @@ WebConsoleFrame.prototype = {
 
     this._initOutputTimer();
 
+    // Resize the output area in case a vertical scrollbar has been added
+    this.resize();
+
     this._lastOutputFlush = Date.now();
   },
 
