@@ -1933,6 +1933,19 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
     MOZ_ASSERT(!dbgs.empty());
     mozilla::DebugOnly<Debugger**> begin = dbgs.begin();
 
+    // Root all the Debuggers while we're iterating over them;
+    // appendAllocationSite calls JSCompartment::wrap, and thus can GC.
+    //
+    // SpiderMonkey protocol is generally for the caller to prove that it has
+    // rooted the stuff it's asking you to operate on (i.e. by passing a
+    // Handle), but in this case, we're iterating over a global's list of
+    // Debuggers, and globals only hold their Debuggers weakly.
+    Rooted<GCVector<JSObject*>> activeDebuggers(cx, GCVector<JSObject*>(cx));
+    for (Debugger** dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
+        if (!activeDebuggers.append((*dbgp)->object))
+            return false;
+    }
+
     for (Debugger** dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
