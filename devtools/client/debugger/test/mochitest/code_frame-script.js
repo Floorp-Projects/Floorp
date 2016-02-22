@@ -4,8 +4,17 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                           getService(Ci.mozIJSSubScriptLoader);
 
-const EventUtils = {};
-loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
+// Set up a dummy environment so that EventUtils works. We need to be careful to
+// pass a window object into each EventUtils method we call rather than having
+// it rely on the |window| global.
+let EventUtils = {};
+EventUtils.window = content;
+EventUtils.parent = EventUtils.window;
+EventUtils._EU_Ci = Components.interfaces;
+EventUtils._EU_Cc = Components.classes;
+EventUtils.navigator = content.navigator;
+EventUtils.KeyboardEvent = content.KeyboardEvent;
+loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 dump("Frame script loaded.\n");
 

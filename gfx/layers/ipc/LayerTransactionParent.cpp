@@ -731,7 +731,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowTransform();
+  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowBaseTransform();
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     transform.PostScale(1.0f/c->GetInheritedXScale(),

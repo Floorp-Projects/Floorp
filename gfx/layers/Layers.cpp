@@ -893,7 +893,7 @@ Layer::GetLocalTransform()
 {
   Matrix4x4 transform;
   if (LayerComposite* shadow = AsLayerComposite())
-    transform = shadow->GetShadowTransform();
+    transform = shadow->GetShadowBaseTransform();
   else
     transform = mTransform;
 
@@ -2013,8 +2013,8 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
     if (const Maybe<ParentLayerIntRect>& clipRect = lc->GetShadowClipRect()) {
       DumpRect(s->mutable_clip(), *clipRect);
     }
-    if (!lc->GetShadowTransform().IsIdentity()) {
-      DumpTransform(s->mutable_transform(), lc->GetShadowTransform());
+    if (!lc->GetShadowBaseTransform().IsIdentity()) {
+      DumpTransform(s->mutable_transform(), lc->GetShadowBaseTransform());
     }
     if (!lc->GetShadowVisibleRegion().IsEmpty()) {
       DumpRegion(s->mutable_vregion(), lc->GetShadowVisibleRegion().ToUnknownRegion());
@@ -2422,8 +2422,8 @@ PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposite)
   if (const Maybe<ParentLayerIntRect>& clipRect = aLayerComposite->GetShadowClipRect()) {
     AppendToString(aStream, *clipRect, " [shadow-clip=", "]");
   }
-  if (!aLayerComposite->GetShadowTransform().IsIdentity()) {
-    AppendToString(aStream, aLayerComposite->GetShadowTransform(), " [shadow-transform=", "]");
+  if (!aLayerComposite->GetShadowBaseTransform().IsIdentity()) {
+    AppendToString(aStream, aLayerComposite->GetShadowBaseTransform(), " [shadow-transform=", "]");
   }
   if (!aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
     AppendToString(aStream, aLayerComposite->GetShadowVisibleRegion().ToUnknownRegion(), " [shadow-visible=", "]");

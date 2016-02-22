@@ -295,12 +295,11 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
 
     JSContext* cx = cxArg->asJSContext();
     cx->runtime()->hadOutOfMemory = true;
+    AutoSuppressGC suppressGC(cx);
 
     /* Report the oom. */
-    if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback) {
-        AutoSuppressGC suppressGC(cx);
+    if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback)
         oomCallback(cx, cx->runtime()->oomCallbackData);
-    }
 
     if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
         cx->setPendingException(StringValue(cx->names().outOfMemory));
@@ -318,10 +317,8 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
     PopulateReportBlame(cx, &report);
 
     /* Report the error. */
-    if (JSErrorReporter onError = cx->runtime()->errorReporter) {
-        AutoSuppressGC suppressGC(cx);
+    if (JSErrorReporter onError = cx->runtime()->errorReporter)
         onError(cx, msg, &report);
-    }
 
     /*
      * We would like to enforce the invariant that any exception reported
