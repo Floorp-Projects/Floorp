@@ -136,14 +136,16 @@ function updateFormHistory()
       !dialog.findKey.value)
     return;
 
-  FormHistory.update({
-    op: "bump",
-    fieldname: "find-dialog",
-    value: dialog.findKey.value
-  }, {
-    handleError: function(aError) {
-      Components.utils.reportError("Saving find to form history failed: " +
-                                   aError.message);
-    }
-  });
+  if (FormHistory.enabled) {
+    FormHistory.update({
+      op: "bump",
+      fieldname: "find-dialog",
+      value: dialog.findKey.value
+    }, {
+      handleError: function(aError) {
+        Components.utils.reportError("Saving find to form history failed: " +
+                                     aError.message);
+      }
+    });
+  }
 }
