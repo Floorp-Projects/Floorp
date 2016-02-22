@@ -405,6 +405,36 @@ add_task(function* ()
 
   yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
+  // ===== 21 =====
+  // Check update throws if form history is disabled and the operation is not a
+  // pure removal.
+  testnum++;
+  Services.prefs.setBoolPref("browser.formfill.enable", false);
+  Assert.throws(() => promiseUpdate(
+                { op : "bump", fieldname: "field5", value: "value5" }),
+                /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(() => promiseUpdate(
+                { op : "add", fieldname: "field5", value: "value5" }),
+                /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(() => promiseUpdate([
+                  { op : "update", fieldname: "field5", value: "value5" },
+                  { op : "remove", fieldname: "field5", value: "value5" }
+                ]),
+                /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(() => promiseUpdate([
+                  null,
+                  undefined,
+                  "",
+                  1,
+                  {},
+                  { op : "remove", fieldname: "field5", value: "value5" }
+                ]),
+                /NS_ERROR_ILLEGAL_VALUE/);
+  // Remove should work though.
+  yield promiseUpdate([{ op: "remove", fieldname: "field5", value: null },
+                       { op: "remove", fieldname: null, value: null }]);
+  Services.prefs.clearUserPref("browser.formfill.enable");
+
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
   }
