@@ -89,9 +89,9 @@ struct XPTArena
     size_t   space;
     size_t   alignment;
     size_t   block_size;
-    char    *name;
 
 #ifdef XPT_ARENA_LOGGING
+    char    *name;
     uint32_t LOG_MallocCallCount;
     uint32_t LOG_MallocTotalBytesRequested;
     uint32_t LOG_MallocTotalBytesUsed;
@@ -121,15 +121,15 @@ XPT_NewArena(uint32_t block_size, size_t alignment, const char* name)
                    ALIGN_RND(sizeof(BLK_HDR), alignment) +
                    ALIGN_RND(1, alignment));
 
+#ifdef XPT_ARENA_LOGGING
         if (name) {
             arena->name = XPT_STRDUP(arena, name);           
-#ifdef XPT_ARENA_LOGGING
             /* fudge the stats since we are using space in the arena */
             arena->LOG_MallocCallCount = 0;
             arena->LOG_MallocTotalBytesRequested = 0;
             arena->LOG_MallocTotalBytesUsed = 0;
-#endif /* XPT_ARENA_LOGGING */
         }
+#endif /* XPT_ARENA_LOGGING */
     }
     return arena;        
 }
