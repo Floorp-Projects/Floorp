@@ -7,6 +7,9 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/SyncedTabs.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
+const faviconService = Cc["@mozilla.org/browser/favicon-service;1"]
+                       .getService(Ci.nsIFaviconService);
+
 Log.repository.getLogger("Sync.RemoteTabs").addAppender(new Log.DumpAppender());
 
 // A mock "Tabs" engine which the SyncedTabs module will use instead of the real
@@ -79,6 +82,7 @@ add_task(function* test_clientWithTabs() {
       tabs: [
       {
         urlHistory: ["http://foo.com/"],
+        icon: "http://foo.com/favicon",
       }],
     },
     guid_mobile: {
@@ -92,8 +96,32 @@ add_task(function* test_clientWithTabs() {
   clients.sort((a, b) => { return a.name.localeCompare(b.name);});
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
+  equal(clients[0].tabs[0].icon, "http://foo.com/favicon");
   // second client has no tabs.
   equal(clients[1].tabs.length, 0);
+});
+
+add_task(function* test_clientWithTabsIconsDisabled() {
+  Services.prefs.setBoolPref("services.sync.syncedTabs.showRemoteIcons", false);
+  yield configureClients({
+    guid_desktop: {
+      clientName: "My Desktop",
+      tabs: [
+      {
+        urlHistory: ["http://foo.com/"],
+        icon: "http://foo.com/favicon",
+      }],
+    },
+  });
+
+  let clients = yield SyncedTabs.getTabClients();
+  equal(clients.length, 1);
+  clients.sort((a, b) => { return a.name.localeCompare(b.name);});
+  equal(clients[0].tabs.length, 1);
+  equal(clients[0].tabs[0].url, "http://foo.com/");
+  // expect the default favicon due to the pref being false.
+  equal(clients[0].tabs[0].icon, faviconService.defaultFavicon.spec);
+  Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteIcons");
 });
 
 add_task(function* test_filter() {
