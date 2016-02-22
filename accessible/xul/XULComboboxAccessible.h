@@ -26,7 +26,6 @@ public:
   virtual void Value(nsString& aValue) override;
   virtual a11y::role NativeRole() override;
   virtual uint64_t NativeState() override;
-  virtual bool CanHaveAnonChildren() override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
