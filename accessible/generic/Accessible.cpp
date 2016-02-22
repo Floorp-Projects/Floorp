@@ -302,12 +302,6 @@ Accessible::KeyboardShortcut() const
   return KeyBinding();
 }
 
-bool
-Accessible::CanHaveAnonChildren()
-{
-  return true;
-}
-
 void
 Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut)
 {

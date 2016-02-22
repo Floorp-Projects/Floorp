@@ -41,6 +41,7 @@ XULMenuitemAccessible::
   XULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t
@@ -265,13 +266,6 @@ int32_t
 XULMenuitemAccessible::GetLevelInternal()
 {
   return nsAccUtils::GetLevelForXULContainerItem(mContent);
-}
-
-bool
-XULMenuitemAccessible::CanHaveAnonChildren()
-{
-  // That indicates we don't walk anonymous children for menuitems
-  return false;
 }
 
 bool
