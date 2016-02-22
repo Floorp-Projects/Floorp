@@ -192,52 +192,6 @@ var MessageListener = {
 };
 
 /**
- * On initialization, this handler gets sent to the parent process as a CPOW.
- * The parent will use it only to flush pending data from the frame script
- * when needed, i.e. when closing a tab, closing a window, shutting down, etc.
- *
- * This will hopefully not be needed in the future once we have async APIs for
- * closing windows and tabs.
- */
-var SyncHandler = {
-  init: function () {
-    // Send this object as a CPOW to chrome. In single-process mode,
-    // the synchronous send ensures that the handler object is
-    // available in SessionStore.jsm immediately upon loading
-    // content-sessionStore.js.
-    sendSyncMessage("SessionStore:setupSyncHandler", {}, {handler: this});
-  },
-
-  /**
-   * This function is used to make the tab process flush all data that
-   * hasn't been sent to the parent process, yet.
-   *
-   * @param id (int)
-   *        A unique id that represents the last message received by the chrome
-   *        process before flushing. We will use this to determine data that
-   *        would be lost when data has been sent asynchronously shortly
-   *        before flushing synchronously.
-   */
-  flush: function (id) {
-    MessageQueue.flush(id);
-  },
-
-  /**
-   * DO NOT USE - DEBUGGING / TESTING ONLY
-   *
-   * This function is used to simulate certain situations where race conditions
-   * can occur by sending data shortly before flushing synchronously.
-   */
-  flushAsync: function () {
-    if (!Services.prefs.getBoolPref("browser.sessionstore.debug")) {
-      throw new Error("flushAsync() must be used for testing, only.");
-    }
-
-    MessageQueue.send();
-  }
-};
-
-/**
  * Listens for changes to the session history. Whenever the user navigates
  * we will collect URLs and everything belonging to session history.
  *
@@ -636,25 +590,11 @@ var PrivacyListener = {
  */
 var MessageQueue = {
   /**
-   * A unique, monotonically increasing ID used for outgoing messages. This is
-   * important to make it possible to reuse tabs and allow sync flushes before
-   * data could be destroyed.
-   */
-  _id: 1,
-
-  /**
    * A map (string -> lazy fn) holding lazy closures of all queued data
    * collection routines. These functions will return data collected from the
    * docShell.
    */
   _data: new Map(),
-
-  /**
-   * A map holding the |this._id| value for every type of data back when it
-   * was pushed onto the queue. We will use those IDs to find the data to send
-   * and flush.
-   */
-  _lastUpdated: new Map(),
 
   /**
    * The delay (in ms) used to delay sending changes after data has been
@@ -729,7 +669,6 @@ var MessageQueue = {
    */
   push: function (key, fn) {
     this._data.set(key, createLazy(fn));
-    this._lastUpdated.set(key, this._id);
 
     if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
@@ -741,8 +680,6 @@ var MessageQueue = {
    * Sends queued data to the chrome process.
    *
    * @param options (object)
-   *        {id: 123} to override the update ID used to accumulate data to send.
-   *        {sync: true} to send data to the parent process synchronously.
    *        {flushID: 123} to specify that this is a flush
    *        {isFinal: true} to signal this is the final message sent on unload
    */
@@ -759,36 +696,14 @@ var MessageQueue = {
       this._timeout = null;
     }
 
-    let sync = options && options.sync;
-    let startID = (options && options.id) || this._id;
     let flushID = (options && options.flushID) || 0;
-
-    // We use sendRpcMessage in the sync case because we may have been called
-    // through a CPOW. RPC messages are the only synchronous messages that the
-    // child is allowed to send to the parent while it is handling a CPOW
-    // request.
-    let sendMessage = sync ? sendRpcMessage : sendAsyncMessage;
 
     let durationMs = Date.now();
 
     let data = {};
     let telemetry = {};
-    for (let [key, id] of this._lastUpdated) {
-      // There is no data for the given key anymore because
-      // the parent process already marked it as received.
-      if (!this._data.has(key)) {
-        continue;
-      }
-
-      if (startID > id) {
-        // If the |id| passed by the parent process is higher than the one
-        // stored in |_lastUpdated| for the given key we know that the parent
-        // received all necessary data and we can remove it from the map.
-        this._data.delete(key);
-        continue;
-      }
-
-      let value = this._data.get(key)();
+    for (let [key, func] of this._data) {
+      let value = func();
       if (key == "telemetry") {
         for (let histogramId of Object.keys(value)) {
           telemetry[histogramId] = value[histogramId];
@@ -803,8 +718,8 @@ var MessageQueue = {
 
     try {
       // Send all data to the parent process.
-      sendMessage("SessionStore:update", {
-        id: this._id, data, telemetry, flushID,
+      sendAsyncMessage("SessionStore:update", {
+        data, telemetry, flushID,
         isFinal: options.isFinal || false,
         epoch: gCurrentEpoch
       });
@@ -812,39 +727,16 @@ var MessageQueue = {
       let telemetry = {
         FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
       };
-      sendMessage("SessionStore:error", {
+      sendAsyncMessage("SessionStore:error", {
         telemetry
       });
     }
-
-    // Increase our unique message ID.
-    this._id++;
   },
-
-  /**
-   * This function is used to make the message queue flush all queue data that
-   * hasn't been sent to the parent process, yet.
-   *
-   * @param id (int)
-   *        A unique id that represents the latest message received by the
-   *        chrome process. We can use this to determine which messages have not
-   *        yet been received because they are still stuck in the event queue.
-   */
-  flush: function (id) {
-    // It's important to always send data, even if there is nothing to flush.
-    // The update message will be received by the parent process that can then
-    // update its last received update ID to ignore stale messages.
-    this.send({id: id + 1, sync: true});
-
-    this._data.clear();
-    this._lastUpdated.clear();
-  }
 };
 
 EventListener.init();
 MessageListener.init();
 FormDataListener.init();
-SyncHandler.init();
 PageStyleListener.init();
 SessionHistoryListener.init();
 SessionStorageListener.init();
