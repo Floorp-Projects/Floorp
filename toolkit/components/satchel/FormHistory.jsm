@@ -842,10 +842,6 @@ this.FormHistory = {
   },
 
   update : function formHistoryUpdate(aChanges, aCallbacks) {
-    if (!Prefs.enabled) {
-      return;
-    }
-
     // Used to keep track of how many searches have been started. When that number
     // are finished, updateFormHistoryWrite can be called.
     let numSearches = 0;
@@ -859,6 +855,13 @@ this.FormHistory = {
 
     if (!("length" in aChanges))
       aChanges = [aChanges];
+
+    let isRemoveOperation = aChanges.every(change => change && change.op && change.op == "remove");
+    if (!Prefs.enabled && !isRemoveOperation) {
+      throw Components.Exception(
+        "Form history is disabled, only remove operations are allowed",
+        Cr.NS_ERROR_ILLEGAL_VALUE);
+    }
 
     for (let change of aChanges) {
       switch (change.op) {
