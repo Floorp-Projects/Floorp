@@ -70,7 +70,7 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
     if (group->clasp()->shouldDelayMetadataCallback())
         cx->compartment()->setObjectPendingMetadata(cx, obj);
     else
-        SetNewObjectMetadata(cx, obj);
+        obj = static_cast<NativeObject*>(SetNewObjectMetadata(cx, obj));
 
     probes::CreateObject(cx, obj);
     gc::TraceCreateObject(obj);
