@@ -14,8 +14,6 @@
 // runs.
 const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
                             ".delayed-animation"];
-// List of selectors that match some animated nodes in the test page only.
-const SOME_ANIMATED_NODES = [".simple-animation", ".delayed-animation"];
 
 add_task(function*() {
   let {client, walker, animations} =
@@ -37,19 +35,34 @@ add_task(function*() {
   yield animations.toggleAll();
   yield checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
-  info("Pause a given list of animations only");
-  let players = [];
-  for (let selector of SOME_ANIMATED_NODES) {
-    let [player] = yield getPlayersFor(walker, animations, selector);
-    players.push(player);
-  }
-  yield animations.toggleSeveral(players, true);
-  yield checkStates(walker, animations, SOME_ANIMATED_NODES, "paused");
-  yield checkStates(walker, animations, [".multiple-animations"], "running");
-
-  info("Play the same list of animations");
+  info("Play all animations from multiple animated node using toggleSeveral");
+  let players = yield getPlayersFor(walker, animations,
+                                   [".multiple-animations"]);
+  is(players.length, 2, "Node has 2 animation players");
   yield animations.toggleSeveral(players, false);
-  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
+  let state1 = yield players[0].getCurrentState();
+  is(state1.playState, "running",
+    "The playState of the first player is running");
+  let state2 = yield players[1].getCurrentState();
+  is(state2.playState, "running",
+    "The playState of the second player is running");
+
+  info("Pause one animation from a multiple animated node using toggleSeveral");
+  yield animations.toggleSeveral([players[0]], true);
+  state1 = yield players[0].getCurrentState();
+  is(state1.playState, "paused", "The playState of the first player is paused");
+  state2 = yield players[1].getCurrentState();
+  is(state2.playState, "running",
+    "The playState of the second player is running");
+
+  info("Play the same animation");
+  yield animations.toggleSeveral([players[0]], false);
+  state1 = yield players[0].getCurrentState();
+  is(state1.playState, "running",
+    "The playState of the first player is running");
+  state2 = yield players[1].getCurrentState();
+  is(state2.playState, "running",
+    "The playState of the second player is running");
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
