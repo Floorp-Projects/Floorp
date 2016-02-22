@@ -22,7 +22,7 @@
         "id": "FilenameConflictAction",
         "type": "string",
         "enum": [
-          "uniqify",
+          "uniquify",
           "overwrite",
           "prompt"
         ]
@@ -214,7 +214,7 @@
       {
         "name": "download",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Download a URL. If the URL uses the HTTP[S] protocol, then the request will include all cookies currently set for its hostname. If both <code>filename</code> and <code>saveAs</code> are specified, then the Save As dialog will be displayed, pre-populated with the specified <code>filename</code>. If the download started successfully, <code>callback</code> will be called with the new <a href='#type-DownloadItem'>DownloadItem</a>'s <code>downloadId</code>. If there was an error starting the download, then <code>callback</code> will be called with <code>downloadId=undefined</code> and <a href='extension.html#property-lastError'>chrome.extension.lastError</a> will contain a descriptive string. The error strings are not guaranteed to remain backwards compatible between releases. You must not parse it.",
         "parameters": [
           {
@@ -224,7 +224,8 @@
             "properties": {
               "url": {
                 "description": "The URL to download.",
-                "type": "string"
+                "type": "string",
+                "format": "url"
               },
               "filename": {
                 "description": "A file path relative to the Downloads directory to contain the downloaded file.",
@@ -236,11 +237,13 @@
                 "optional": true
               },
               "saveAs": {
+                "unsupported": true,
                 "description": "Use a file-chooser to allow the user to select a filename.",
                 "optional": true,
                 "type": "boolean"
               },
               "method": {
+                "unsupported": true,
                 "description": "The HTTP method to use if the URL uses the HTTP[S] protocol.",
                 "enum": [
                   "GET",
@@ -250,6 +253,7 @@
                 "type": "string"
               },
               "headers": {
+                "unsupported": true,
                 "optional": true,
                 "type": "array",
                 "description": "Extra HTTP headers to send with the request if the URL uses the HTTP[s] protocol. Each header is represented as a dictionary containing the keys <code>name</code> and either <code>value</code> or <code>binaryValue</code>, restricted to those allowed by XMLHttpRequest.",
@@ -268,6 +272,7 @@
                 }
               },
               "body": {
+                "unsupported": true,
                 "description": "Post body.",
                 "optional": true,
                 "type": "string"
