@@ -550,11 +550,13 @@ enum BluetoothServiceClass {
 };
 
 struct BluetoothUuid {
+  static const BluetoothUuid ZERO;
+  static const BluetoothUuid BASE;
 
-  uint8_t mUuid[16];
+  uint8_t mUuid[16];  // store 128-bit UUID value in big-endian order
 
   BluetoothUuid()
-    : BluetoothUuid(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    : BluetoothUuid(ZERO)
   { }
 
   MOZ_IMPLICIT BluetoothUuid(const BluetoothUuid&) = default;
@@ -608,7 +610,7 @@ struct BluetoothUuid {
    */
   void Clear()
   {
-    operator=(BluetoothUuid());
+    operator=(ZERO);
   }
 
   /**
@@ -617,7 +619,7 @@ struct BluetoothUuid {
    */
   bool IsCleared() const
   {
-    return operator==(BluetoothUuid());
+    return operator==(ZERO);
   }
 
   bool operator==(const BluetoothUuid& aRhs) const
@@ -631,30 +633,25 @@ struct BluetoothUuid {
     return !operator==(aRhs);
   }
 
+  /* This less-than operator is used for sorted insertion of nsTArray */
+  bool operator<(const BluetoothUuid& aUuid) const
+  {
+    return memcmp(mUuid, aUuid.mUuid, sizeof(aUuid.mUuid)) < 0;
+  };
+
   /*
    * Getter-setter methods for short UUIDS. The first 4 bytes in the
    * UUID are represented by the short notation UUID32, and bytes 3
    * and 4 (indices 2 and 3) are represented by UUID16. The rest of
-   * the UUID is filled with the SDP base UUID.
+   * the UUID is filled with the Bluetooth Base UUID.
    *
    * Below are helpers for accessing these values.
    */
 
   void SetUuid32(uint32_t aUuid32)
   {
+    operator=(BASE);
     BigEndian::writeUint32(&mUuid[0], aUuid32);
-    mUuid[4] = 0x00;
-    mUuid[5] = 0x00;
-    mUuid[6] = 0x10;
-    mUuid[7] = 0x00;
-    mUuid[8] = 0x80;
-    mUuid[9] = 0x00;
-    mUuid[10] = 0x00;
-    mUuid[11] = 0x80;
-    mUuid[12] = 0x5f;
-    mUuid[13] = 0x9b;
-    mUuid[14] = 0x34;
-    mUuid[15] = 0xfb;
   }
 
   uint32_t GetUuid32() const
@@ -664,7 +661,8 @@ struct BluetoothUuid {
 
   void SetUuid16(uint16_t aUuid16)
   {
-    SetUuid32(aUuid16); // MSB is 0x0000
+    operator=(BASE);
+    BigEndian::writeUint16(&mUuid[2], aUuid16);
   }
 
   uint16_t GetUuid16() const

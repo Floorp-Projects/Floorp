@@ -59,10 +59,7 @@ public:
     return mPaired;
   }
 
-  void GetUuids(nsTArray<nsString>& aUuids) const
-  {
-    aUuids = mUuids;
-  }
+  void GetUuids(nsTArray<nsString>& aUuids) const;
 
   BluetoothDeviceType Type() const
   {
@@ -96,6 +93,11 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   virtual void DisconnectFromOwner() override;
+
+  void GetUuids(nsTArray<BluetoothUuid>& aUuids) const
+  {
+    aUuids = mUuids;
+  }
 
 private:
   BluetoothDevice(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);
@@ -188,7 +190,7 @@ private:
   /**
    * Cached UUID list of services which this device provides.
    */
-  nsTArray<nsString> mUuids;
+  nsTArray<BluetoothUuid> mUuids;
 
   /**
    * Type of this device. Can be unknown/classic/le/dual.
