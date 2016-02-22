@@ -106,7 +106,7 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
      * as our buffer unless it is zero (not set) 
      */
     if (header->file_length != 0 && 
-        cursor->state->pool->allocated < header->file_length) {
+        cursor->state->pool_allocated < header->file_length) {
         fputs("libxpt: File length in header does not match actual length. File may be corrupt\n",
             stderr);
         goto error;

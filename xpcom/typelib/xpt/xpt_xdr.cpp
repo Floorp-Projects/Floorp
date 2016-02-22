@@ -21,7 +21,7 @@
 
 /* can be used as lvalue */
 #define CURS_POINT(cursor)                                                    \
-  ((cursor)->state->pool->data[CURS_POOL_OFFSET(cursor)])
+  ((cursor)->state->pool_data[CURS_POOL_OFFSET(cursor)])
 
 static PRBool
 CHECK_COUNT(XPTCursor* cursor, uint32_t space)
@@ -29,7 +29,7 @@ CHECK_COUNT(XPTCursor* cursor, uint32_t space)
     // Fail if we're in the data area and about to exceed the allocation.
     // XXX Also fail if we're in the data area and !state->data_offset
     if (cursor->pool == XPT_DATA &&
-        (CURS_POOL_OFFSET(cursor) + space > (cursor)->state->pool->allocated)) {
+        (CURS_POOL_OFFSET(cursor) + space > (cursor)->state->pool_allocated)) {
         XPT_ASSERT(0);
         fprintf(stderr, "FATAL: no room for %d in cursor\n", space);
         return PR_FALSE;
@@ -53,18 +53,12 @@ XPT_NewXDRState(char *data, uint32_t len)
         goto err_free_arena;
 
     state->arena = arena;
-    state->pool = XPT_NEW(arena, XPTDatapool);
     state->next_cursor[0] = state->next_cursor[1] = 1;
-    if (!state->pool)
-        goto err_free_state;
-
-    state->pool->data = data;
-    state->pool->allocated = len;
+    state->pool_data = data;
+    state->pool_allocated = len;
 
     return state;
 
- err_free_state:
-    XPT_DELETE(arena, state);
  err_free_arena:
     if (arena)
         XPT_DestroyArena(arena);
@@ -76,7 +70,6 @@ XPT_DestroyXDRState(XPTState *state)
 {
     XPTArena *arena = state->arena;
 
-    XPT_DELETE(arena, state->pool);
     XPT_DELETE(arena, state);
     if (arena)
         XPT_DestroyArena(arena);
