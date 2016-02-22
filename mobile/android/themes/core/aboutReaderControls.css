@@ -240,8 +240,7 @@
 /*======= Toolbar icons =======*/
 
 /* desktop-only controls */
-.close-button,
-.list-button {
+.close-button {
   display: none;
 }
 

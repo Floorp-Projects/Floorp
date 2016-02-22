@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 
-const READINGLIST_COMMAND_ID = "readingListSidebar";
-
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 var AboutReader = function(mm, win, articlePromise) {
@@ -36,8 +34,6 @@ var AboutReader = function(mm, win, articlePromise) {
   this._mm = mm;
   this._mm.addMessageListener("Reader:Added", this);
   this._mm.addMessageListener("Reader:Removed", this);
-  this._mm.addMessageListener("Sidebar:VisibilityChange", this);
-  this._mm.addMessageListener("ReadingList:VisibilityStatus", this);
   this._mm.addMessageListener("Reader:CloseDropdown", this);
   this._mm.addMessageListener("Reader:AddButton", this);
   this._mm.addMessageListener("Reader:RemoveButton", this);
@@ -75,7 +71,6 @@ var AboutReader = function(mm, win, articlePromise) {
   try {
     if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
       this._setupButton("toggle-button", this._onReaderToggle.bind(this, "button"), "aboutReader.toolbar.addToReadingList");
-      this._setupButton("list-button", this._onList.bind(this), "aboutReader.toolbar.openReadingList");
     }
   } catch (e) {
     // Pref doesn't exist.
@@ -120,9 +115,6 @@ var AboutReader = function(mm, win, articlePromise) {
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
   this._updateToggleButton();
-
-  // Setup initial ReadingList button styles.
-  this._updateListButton();
 
   this._loadArticle();
 }
@@ -239,20 +231,6 @@ AboutReader.prototype = {
         }
         break;
       }
-
-      // Notifys us of Sidebar updates, user clicks X to close,
-      // checks View -> Sidebar -> (Bookmarks, Histroy, Readinglist, etc).
-      case "Sidebar:VisibilityChange": {
-        let data = message.data;
-        this._updateListButtonStyle(data.isOpen && data.commandID === READINGLIST_COMMAND_ID);
-        break;
-      }
-
-      // Returns requested status of current ReadingList Sidebar.
-      case "ReadingList:VisibilityStatus": {
-        this._updateListButtonStyle(message.data.isOpen);
-        break;
-      }
     }
   },
 
@@ -291,8 +269,6 @@ AboutReader.prototype = {
 
         this._mm.removeMessageListener("Reader:Added", this);
         this._mm.removeMessageListener("Reader:Removed", this);
-        this._mm.removeMessageListener("Sidebar:VisibilityChange", this);
-        this._mm.removeMessageListener("ReadingList:VisibilityStatus", this);
         this._mm.removeMessageListener("Reader:CloseDropdown", this);
         this._mm.removeMessageListener("Reader:AddButton", this);
         this._mm.removeMessageListener("Reader:RemoveButton", this);
@@ -355,50 +331,6 @@ AboutReader.prototype = {
     } else {
       this._mm.sendAsyncMessage("Reader:RemoveFromList", { url: this._article.url });
       UITelemetry.addEvent("unsave.1", aMethod, null, "reading_list");
-    }
-  },
-
-  /**
-   * To help introduce ReadingList, we want to automatically
-   * open the Desktop sidebar the first time ReaderMode is used.
-   */
-  _showListIntro: function() {
-    this._mm.sendAsyncMessage("ReadingList:ShowIntro");
-  },
-
-  /**
-   * Toggle ReadingList Sidebar visibility. SidebarUI will trigger
-   * _updateListButtonStyle().
-   */
-  _onList: function() {
-    this._mm.sendAsyncMessage("ReadingList:ToggleVisibility");
-  },
-
-  /**
-   * Request ReadingList Sidebar-button visibility status update.
-   * Only desktop currently responds to this message.
-   */
-  _updateListButton: function() {
-    this._mm.sendAsyncMessage("ReadingList:GetVisibility");
-  },
-
-  /**
-   * Update ReadingList toggle button styles.
-   * @param   isVisible
-   *          What Sidebar ReadingList visibility style the List
-   *          toggle-button should be set to reflect, and what
-   *          button-action the tip will provide.
-   */
-  _updateListButtonStyle: function(isVisible) {
-    let classes = this._doc.getElementById("list-button").classList;
-    if (isVisible) {
-      classes.add("on");
-      // When on, action tip is "close".
-      this._setButtonTip("list-button", "aboutReader.toolbar.closeReadingList");
-    } else {
-      classes.remove("on");
-      // When off, action tip is "open".
-      this._setButtonTip("list-button", "aboutReader.toolbar.openReadingList");
     }
   },
 
@@ -505,11 +437,6 @@ AboutReader.prototype = {
   },
 
   _handleVisibilityChange: function() {
-    // ReadingList / Sidebar state might change while we're not the selected tab.
-    if (this._doc.visibilityState === "visible") {
-      this._updateListButton();
-    }
-
     let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
     if (colorScheme != "auto") {
       return;
@@ -787,7 +714,6 @@ AboutReader.prototype = {
     this._updateImageMargins();
     this._requestReadingListStatus();
 
-    this._showListIntro();
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
 
