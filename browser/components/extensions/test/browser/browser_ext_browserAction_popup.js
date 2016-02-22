@@ -3,7 +3,7 @@
 "use strict";
 
 function* testInArea(area) {
-  let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head></html>`;
+  let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -18,7 +18,13 @@ function* testInArea(area) {
     files: {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function() {
-        browser.runtime.sendMessage("from-popup-a");
+        window.onload = () => {
+          if (window.getComputedStyle(document.body).backgroundColor == "rgb(252, 252, 252)") {
+            browser.runtime.sendMessage("from-popup-a");
+          } else {
+            browser.runtime.sendMessage("popup-a-failed-style-check");
+          }
+        };
         browser.runtime.onMessage.addListener(msg => {
           if (msg == "close-popup") {
             window.close();
@@ -74,6 +80,8 @@ function* testInArea(area) {
         browser.runtime.onMessage.addListener(msg => {
           if (msg == "close-popup") {
             return;
+          } else if (msg == "popup-a-failed-style-check") {
+            browser.test.fail("popup failed style check");
           } else if (expect.popup) {
             browser.test.assertEq(msg, `from-popup-${expect.popup}`,
                                   "expected popup opened");
