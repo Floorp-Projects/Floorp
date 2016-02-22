@@ -125,6 +125,8 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 GfxInfo::GfxInfo()
   : mInitialized(false)
   , mGLStrings(new GLStrings)
+  , mOSVersionInteger(0)
+  , mSDKVersion(0)
 {
 }
 
@@ -181,13 +183,14 @@ GfxInfo::EnsureInitialized()
     mAdapterDescription.AppendPrintf(", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
   }
 
-  int32_t sdkVersion;
-  if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &sdkVersion))
-    sdkVersion = 0;
-
-  // the HARDWARE field isn't available on Android SDK < 8
-  if (sdkVersion >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", mHardware)) {
-    mAdapterDescription.AppendPrintf(", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
+  if (mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mSDKVersion)) {
+    // the HARDWARE field isn't available on Android SDK < 8, but we require 9+ anyway.
+    MOZ_ASSERT(mSDKVersion >= 8);
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", mHardware)) {
+      mAdapterDescription.AppendPrintf(", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
+    }
+  } else {
+    mSDKVersion = 0;
   }
 
   nsString release;
@@ -407,6 +410,12 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
   // Don't evaluate special cases when evaluating the downloaded blocklist.
   if (aDriverInfo.IsEmpty()) {
+    if (aFeature == nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION) {
+      // It's slower than software due to not having a compositing fast path
+      *aStatus = (mSDKVersion >= 11) ? nsIGfxInfo::FEATURE_STATUS_OK : nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      return NS_OK;
+    }
+
     if (aFeature == FEATURE_WEBGL_OPENGL) {
       if (mGLStrings->Renderer().Find("Adreno 200") != -1 ||
           mGLStrings->Renderer().Find("Adreno 205") != -1)
