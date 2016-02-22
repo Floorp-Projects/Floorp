@@ -836,6 +836,36 @@ intrinsic_IsInt8TypedArray(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_IsUint16TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint16);
+}
+
+static bool
+intrinsic_IsInt16TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int16);
+}
+
+static bool
+intrinsic_IsUint32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint32);
+}
+
+static bool
+intrinsic_IsInt32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int32);
+}
+
+static bool
+intrinsic_IsFloat32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Float32);
+}
+
+static bool
 intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1855,6 +1885,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
     JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),
+    JS_FN("IsUint16TypedArray",       intrinsic_IsUint16TypedArray,     1,0),
+    JS_FN("IsInt16TypedArray",        intrinsic_IsInt16TypedArray,      1,0),
+    JS_FN("IsUint32TypedArray",       intrinsic_IsUint32TypedArray,     1,0),
+    JS_FN("IsInt32TypedArray",        intrinsic_IsInt32TypedArray,      1,0),
+    JS_FN("IsFloat32TypedArray",      intrinsic_IsFloat32TypedArray,    1,0),
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,
                     IntrinsicIsTypedArray),
