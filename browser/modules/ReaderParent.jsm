@@ -23,12 +23,8 @@ var ReaderParent = {
   _readerModeInfoPanelOpen: false,
 
   MESSAGES: [
-    "Reader:AddToList",
     "Reader:ArticleGet",
     "Reader:FaviconRequest",
-    "Reader:ListStatusRequest",
-    "Reader:RemoveFromList",
-    "Reader:SystemUIVisibility",
     "Reader:UpdateReaderButton",
     "Reader:SetIntPref",
     "Reader:SetCharPref",
@@ -71,10 +67,6 @@ var ReaderParent = {
         }
         break;
       }
-
-      case "Reader:SystemUIVisibility":
-        // XXX: To implement.
-        break;
 
       case "Reader:UpdateReaderButton": {
         let browser = message.target;

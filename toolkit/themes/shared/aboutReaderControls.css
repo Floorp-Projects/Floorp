@@ -326,14 +326,6 @@
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
 }
 
-.toggle-button.on {
-  background-image: url("chrome://global/skin/reader/RM-Delete-24x24.svg");
-}
-
-.toggle-button {
-  background-image: url("chrome://global/skin/reader/RM-Add-24x24.svg");
-}
-
 .minus-button {
   background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
 }
