@@ -541,7 +541,7 @@ public:
         ScreenIntPoint offset = ViewAs<ScreenPixel>(mWindow->WidgetToScreenOffset(), PixelCastJustification::LayoutDeviceIsScreenForBounds);
         ScreenPoint origin = ScreenPoint(aX, aY) - offset;
 
-        ScrollWheelInput input(aTime, TimeStamp(), GetModifiers(aMetaState),
+        ScrollWheelInput input(aTime, TimeStamp::Now(), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
                                ScrollWheelInput::SCROLLDELTA_PIXEL,
                                origin,

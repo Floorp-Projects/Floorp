@@ -29,6 +29,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     boolean mNegateWheelScroll;
     private float mPointerScrollFactor;
     private final PrefsHelper.PrefHandler mPrefsObserver;
+    private long mLastDownTime;
     private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
     @WrapForJNI
@@ -50,6 +51,12 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
         final int action = event.getActionMasked();
         final int count = event.getPointerCount();
+
+        if (action == MotionEvent.ACTION_DOWN) {
+            mLastDownTime = event.getDownTime();
+        } else if (mLastDownTime != event.getDownTime()) {
+            return false;
+        }
 
         final int[] pointerId = new int[count];
         final float[] x = new float[count];
@@ -145,11 +152,12 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     @Override
     public boolean onMotionEvent(MotionEvent event) {
         final int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_SCROLL) {
+        if (action == MotionEvent.ACTION_SCROLL && event.getDownTime() >= mLastDownTime) {
+            mLastDownTime = event.getDownTime();
             return handleScrollEvent(event);
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     @Override
