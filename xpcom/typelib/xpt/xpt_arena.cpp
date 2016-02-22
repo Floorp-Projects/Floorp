@@ -19,11 +19,9 @@
 /****************************************************/
 
 /* Block header for each block in the arena */
-typedef struct BLK_HDR BLK_HDR;
 struct BLK_HDR
 {
     BLK_HDR *next;
-    size_t   size;
 };
 
 #define XPT_MIN_BLOCK_SIZE 32
@@ -117,9 +115,6 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
         /* link block into the list of blocks for use when we destroy */
         new_block->next = arena->first;
         arena->first = new_block;
-
-        /* save other block header info */
-        new_block->size = new_space;
 
         /* set info for current block */
         arena->next  = ((uint8_t*)new_block) + block_header_size;
