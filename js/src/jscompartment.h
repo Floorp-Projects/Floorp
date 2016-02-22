@@ -940,6 +940,27 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class MOZ_RAII AutoSuppressObjectMetadataCallback {
+    JS::Zone* zone;
+    bool saved;
+
+  public:
+    explicit AutoSuppressObjectMetadataCallback(ExclusiveContext* cx)
+      : AutoSuppressObjectMetadataCallback(cx->compartment()->zone())
+    { }
+
+    explicit AutoSuppressObjectMetadataCallback(JS::Zone* zone)
+      : zone(zone),
+        saved(zone->suppressObjectMetadataCallback)
+    {
+        zone->suppressObjectMetadataCallback = true;
+    }
+
+    ~AutoSuppressObjectMetadataCallback() {
+        zone->suppressObjectMetadataCallback = saved;
+    }
+};
+
 } /* namespace js */
 
 #endif /* jscompartment_h */
