@@ -54,20 +54,21 @@ function* testSetCurrentTime(walker, animations) {
 function* testSetCurrentTimes(walker, animations) {
   ok(animations.setCurrentTimes, "The AnimationsActor has the right method");
 
-  info("Retrieve multiple animated nodes and their animation players");
-  let node1 = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let player1 = (yield animations.getAnimationPlayersForNode(node1))[0];
-  let node2 = yield walker.querySelector(walker.rootNode, ".delayed-animation");
-  let player2 = (yield animations.getAnimationPlayersForNode(node2))[0];
+  info("Retrieve multiple animated node and its animation players");
+
+  let nodeMulti = yield walker.querySelector(walker.rootNode,
+    ".multiple-animations");
+  let players = (yield animations.getAnimationPlayersForNode(nodeMulti));
+
+  ok(players.length > 1, "Node has more than 1 animation player");
 
   info("Try to set multiple current times at once");
-  yield animations.setCurrentTimes([player1, player2], 500, true);
+  yield animations.setCurrentTimes(players, 500, true);
 
-  info("Get the states of both players and verify their correctness");
-  let state1 = yield player1.getCurrentState();
-  let state2 = yield player2.getCurrentState();
-  is(state1.playState, "paused", "Player 1 is paused");
-  is(state2.playState, "paused", "Player 2 is paused");
-  is(state1.currentTime, 500, "Player 1 has the right currentTime");
-  is(state2.currentTime, 500, "Player 2 has the right currentTime");
+  info("Get the states of players and verify their correctness");
+  for (let i = 0; i < players.length; i++) {
+    let state = yield players[i].getCurrentState();
+    is(state.playState, "paused", `Player ${i + 1} is paused`);
+    is(state.currentTime, 500, `Player ${i + 1} has the right currentTime`);
+  }
 }

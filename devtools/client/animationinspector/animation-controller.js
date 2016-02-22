@@ -148,13 +148,6 @@ var AnimationsController = {
     // Expose actor capabilities.
     this.traits = yield getServerTraits(target);
 
-    // We want to handle animation mutation events synchronously to avoid race
-    // conditions when there are many rapid mutations. So when a mutation occurs
-    // and animations are removed, we don't release the corresponding actors
-    // in a blocking way, we just release asynchronously and don't wait for
-    // completion, but instead store the promise in this array.
-    this.nonBlockingPlayerReleases = [];
-
     if (this.destroyed) {
       console.warn("Could not fully initialize the AnimationsController");
       return;
@@ -184,11 +177,8 @@ var AnimationsController = {
     this.destroyed = promise.defer();
 
     this.stopListeners();
-    yield this.destroyAnimationPlayers();
+    this.destroyAnimationPlayers();
     this.nodeFront = null;
-
-    // Finish releasing players that haven't been released yet.
-    yield promise.all(this.nonBlockingPlayerReleases);
 
     if (this.animationsFront) {
       this.animationsFront.destroy();
@@ -238,7 +228,7 @@ var AnimationsController = {
 
     if (!gInspector.selection.isConnected() ||
         !gInspector.selection.isElementNode()) {
-      yield this.destroyAnimationPlayers();
+      this.destroyAnimationPlayers();
       this.emit(this.PLAYERS_UPDATED_EVENT);
       done();
       return;
@@ -334,7 +324,7 @@ var AnimationsController = {
   animationPlayers: [],
 
   refreshAnimationPlayers: Task.async(function*(nodeFront) {
-    yield this.destroyAnimationPlayers();
+    this.destroyAnimationPlayers();
 
     this.animationPlayers = yield this.animationsFront
                                       .getAnimationPlayersForNode(nodeFront);
@@ -356,8 +346,6 @@ var AnimationsController = {
       }
 
       if (type === "removed") {
-        // Don't wait for the release request to complete, we can do that later.
-        this.nonBlockingPlayerReleases.push(player.release());
         let index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
       }
@@ -386,19 +374,9 @@ var AnimationsController = {
     return time;
   },
 
-  destroyAnimationPlayers: Task.async(function*() {
-    // Let the server know that we're not interested in receiving updates about
-    // players for the current node. We're either being destroyed or a new node
-    // has been selected.
-    if (this.traits.hasMutationEvents) {
-      yield this.animationsFront.stopAnimationPlayerUpdates();
-    }
-
-    for (let front of this.animationPlayers) {
-      yield front.release();
-    }
+  destroyAnimationPlayers: function() {
     this.animationPlayers = [];
-  })
+  }
 };
 
 EventEmitter.decorate(AnimationsController);

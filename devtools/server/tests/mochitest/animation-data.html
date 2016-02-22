@@ -1,0 +1,120 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Animation Test Data</title>
+  <style>
+    .ball {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #f06;
+
+      position: absolute;
+    }
+
+    .still {
+      top: 0;
+      left: 10px;
+    }
+
+    .animated {
+      top: 100px;
+      left: 10px;
+
+      animation: simple-animation 2s infinite alternate;
+    }
+
+    .multi {
+      top: 200px;
+      left: 10px;
+
+      animation: simple-animation 2s infinite alternate,
+                 other-animation 5s infinite alternate;
+    }
+
+    .delayed {
+      top: 300px;
+      left: 10px;
+      background: rebeccapurple;
+
+      animation: simple-animation 3s 60s 10;
+    }
+
+    .multi-finite {
+      top: 400px;
+      left: 10px;
+      background: yellow;
+
+      animation: simple-animation 3s,
+                 other-animation 4s;
+    }
+
+    .short {
+      top: 500px;
+      left: 10px;
+      background: red;
+
+      animation: simple-animation 2s;
+    }
+
+    .long {
+      top: 600px;
+      left: 10px;
+      background: blue;
+
+      animation: simple-animation 120s;
+    }
+
+    .negative-delay {
+      top: 700px;
+      left: 10px;
+      background: gray;
+
+      animation: simple-animation 15s -10s;
+      animation-fill-mode: forwards;
+    }
+
+    .no-compositor {
+      top: 0;
+      right: 10px;
+      background: gold;
+
+      animation: no-compositor 10s cubic-bezier(.57,-0.02,1,.31) forwards;
+    }
+
+    @keyframes simple-animation {
+      100% {
+        transform: translateX(300px);
+      }
+    }
+
+    @keyframes other-animation {
+      100% {
+        background: blue;
+      }
+    }
+
+    @keyframes no-compositor {
+      100% {
+        margin-right: 600px;
+      }
+    }
+  </style>
+  <script type="text/javascript">
+    window.onload = function() {
+      window.opener.postMessage('ready', '*');
+    };
+  </script>
+</head>
+</body>
+  <div class="ball still"></div>
+  <div class="ball animated"></div>
+  <div class="ball multi"></div>
+  <div class="ball delayed"></div>
+  <div class="ball multi-finite"></div>
+  <div class="ball short"></div>
+  <div class="ball long"></div>
+  <div class="ball negative-delay"></div>
+  <div class="ball no-compositor"></div>
+</body>
+</html>

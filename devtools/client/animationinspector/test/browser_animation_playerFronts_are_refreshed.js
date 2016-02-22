@@ -28,24 +28,9 @@ add_task(function*() {
   is(controller.animationPlayers.length, 2,
     "2 AnimationPlayerFronts have been created");
 
-  // Hold on to one of the AnimationPlayerFront objects and mock its release
-  // method to test that it is released correctly and that its auto-refresh is
-  // stopped.
-  let retainedFront = controller.animationPlayers[0];
-  let oldRelease = retainedFront.release;
-  let releaseCalled = false;
-  retainedFront.release = () => {
-    releaseCalled = true;
-  };
-
   info("Selecting a node with no animations");
   yield selectNode(".still", inspector);
 
   is(controller.animationPlayers.length, 0,
     "There are no more AnimationPlayerFront objects");
-
-  info("Checking the destroyed AnimationPlayerFront object");
-  ok(releaseCalled, "The AnimationPlayerFront has been released");
-
-  yield oldRelease.call(retainedFront);
 });
