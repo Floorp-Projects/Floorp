@@ -561,6 +561,10 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
   /**
    * Retrieve the list of AnimationPlayerActor actors for currently running
    * animations on a node and its descendants.
+   * Note that calling this method a second time will destroy all previously
+   * retrieved AnimationPlayerActors. Indeed, the lifecycle of these actors
+   * is managed here on the server and tied to getAnimationPlayersForNode
+   * being called.
    * @param {NodeActor} nodeActor The NodeActor as defined in
    * /devtools/server/actors/inspector
    */
@@ -570,9 +574,12 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
       ...this.getAllAnimations(nodeActor.rawNode)
     ];
 
-    // No care is taken here to destroy the previously stored actors because it
-    // is assumed that the client is responsible for lifetimes of actors.
+    // Destroy previously stored actors
+    if (this.actors) {
+      this.actors.forEach(actor => actor.destroy());
+    }
     this.actors = [];
+
     for (let i = 0; i < animations.length; i++) {
       let actor = AnimationPlayerActor(this, animations[i]);
       this.actors.push(actor);
