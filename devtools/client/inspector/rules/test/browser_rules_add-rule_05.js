@@ -34,7 +34,7 @@ const TEST_DATA = [
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+  let {inspector, view, testActor} = yield openRuleView();
 
   for (let data of TEST_DATA) {
     let {node, expected} = data;
@@ -43,7 +43,8 @@ add_task(function*() {
     yield testNewRule(view, expected, 1);
 
     info("Resetting page content");
-    content.document.body.innerHTML = TEST_URI;
+    yield testActor.eval(
+      "content.document.body.innerHTML = `" + TEST_URI + "`;");
   }
 });
 
