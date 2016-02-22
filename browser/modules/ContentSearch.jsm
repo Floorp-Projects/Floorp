@@ -375,16 +375,18 @@ this.ContentSearch = {
       return Promise.resolve();
     }
     let browserData = this._suggestionDataForBrowser(msg.target, true);
-    FormHistory.update({
-      op: "bump",
-      fieldname: browserData.controller.formHistoryParam,
-      value: entry,
-    }, {
-      handleCompletion: () => {},
-      handleError: err => {
-        Cu.reportError("Error adding form history entry: " + err);
-      },
-    });
+    if (FormHistory.enabled) {
+      FormHistory.update({
+        op: "bump",
+        fieldname: browserData.controller.formHistoryParam,
+        value: entry,
+      }, {
+        handleCompletion: () => {},
+        handleError: err => {
+          Cu.reportError("Error adding form history entry: " + err);
+        },
+      });
+    }
     return Promise.resolve();
   },
 
