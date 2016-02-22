@@ -605,6 +605,12 @@ Section "-InstallEndCleanup"
         GetFunctionAddress $0 SetAsDefaultAppUserHKCU
         UAC::ExecCodeSegment $0
       ${EndIf}
+    ${Else}
+      ${LogHeader} "Writing default-browser opt-out"
+      WriteRegStr HKCU "Software\Mozilla\Firefox" "DefaultBrowserOptOut" "True"
+      ${If} ${Errors}
+        ${LogHeader} "Error writing default-browser opt-out"
+      ${EndIf}
     ${EndIf}
   ${EndUnless}
 
