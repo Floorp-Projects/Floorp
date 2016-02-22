@@ -130,8 +130,9 @@ SharedMemoryBasic::Unmap()
 void
 SharedMemoryBasic::CloseHandle()
 {
-  if (mShmFd > 0) {
+  if (mShmFd != -1) {
     close(mShmFd);
+    mShmFd = -1;
   }
 }
 
