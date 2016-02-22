@@ -23,4 +23,42 @@ addMessageListener(TEST_MSG, msg => {
       detail: msg.data,
     })
   );
+
+  // If the message is a search, stop the page from loading and then tell the
+  // test that it loaded.
+  if (msg.data.type == "Search") {
+    waitForLoadAndStopIt(msg.data.expectedURL, url => {
+      sendAsyncMessage(TEST_MSG, {
+        type: "loadStopped",
+        url: url,
+      });
+    });
+  }
 });
+
+function waitForLoadAndStopIt(expectedURL, callback) {
+  let Ci = Components.interfaces;
+  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebProgress);
+  let listener = {
+    onStateChange: function (webProg, req, flags, status) {
+      if (req instanceof Ci.nsIChannel) {
+        let url = req.originalURI.spec;
+        dump("waitForLoadAndStopIt: onStateChange " + url + "\n");
+        let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                       Ci.nsIWebProgressListener.STATE_START;
+        if ((flags & docStart) && webProg.isTopLevel && url == expectedURL) {
+          webProgress.removeProgressListener(listener);
+          req.cancel(Components.results.NS_ERROR_FAILURE);
+          callback(url);
+        }
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIWebProgressListener,
+      Ci.nsISupportsWeakReference,
+    ]),
+  };
+  webProgress.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
+  dump("waitForLoadAndStopIt: Waiting for URL to load: " + expectedURL + "\n");
+}
