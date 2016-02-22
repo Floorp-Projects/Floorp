@@ -210,11 +210,12 @@ AboutReader.prototype = {
         while (target && target.id != "reader-popup")
           target = target.parentNode;
         if (!target)
-          this._toggleToolbarVisibility();
+          this._closeDropdown();
         break;
       case "scroll":
+        this._closeDropdown();
         let isScrollingUp = this._scrollOffset > aEvent.pageY;
-        this._setToolbarVisibility(isScrollingUp);
+        this._setSystemUIVisibility(isScrollingUp);
         this._scrollOffset = aEvent.pageY;
         break;
       case "resize":
@@ -431,33 +432,6 @@ AboutReader.prototype = {
       name: "reader.font_type",
       value: this._fontType
     });
-  },
-
-  _getToolbarVisibility: function() {
-    return this._toolbarElement.hasAttribute("visible");
-  },
-
-  _setToolbarVisibility: function(visible) {
-    this._closeDropdown();
-
-    if (this._getToolbarVisibility() === visible) {
-      return;
-    }
-
-    if (visible) {
-      this._toolbarElement.setAttribute("visible", true);
-    } else {
-      this._toolbarElement.removeAttribute("visible");
-    }
-    this._setSystemUIVisibility(visible);
-
-    if (!visible) {
-      this._mm.sendAsyncMessage("Reader:ToolbarHidden");
-    }
-  },
-
-  _toggleToolbarVisibility: function() {
-    this._setToolbarVisibility(!this._getToolbarVisibility());
   },
 
   _setSystemUIVisibility: function(visible) {
