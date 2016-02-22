@@ -1847,9 +1847,9 @@ ThreadActor.prototype = {
     }
 
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { sourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
+    const { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
-    const url = sourceActor ? sourceActor.url : null;
+    const url = originalSourceActor ? originalSourceActor.url : null;
 
     if (this.sources.isBlackBoxed(url)) {
       return undefined;
