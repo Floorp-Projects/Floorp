@@ -598,6 +598,7 @@ MarkupView.prototype = {
    */
   _onKeyDown: function(event) {
     let handled = true;
+    let previousNode, nextNode;
 
     // Ignore keystrokes that originated in editors.
     if (this._isInputOrTextarea(event.target)) {
@@ -649,26 +650,26 @@ MarkupView.prototype = {
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_UP:
-        let prev = this._selectionWalker().previousNode();
-        if (prev) {
-          this.navigate(prev.container);
+        previousNode = this._selectionWalker().previousNode();
+        if (previousNode) {
+          this.navigate(previousNode.container);
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
-        let next = this._selectionWalker().nextNode();
-        if (next) {
-          this.navigate(next.container);
+        nextNode = this._selectionWalker().nextNode();
+        if (nextNode) {
+          this.navigate(nextNode.container);
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP: {
         let walker = this._selectionWalker();
         let selection = this._selectedContainer;
         for (let i = 0; i < PAGE_SIZE; i++) {
-          let prev = walker.previousNode();
-          if (!prev) {
+          previousNode = walker.previousNode();
+          if (!previousNode) {
             break;
           }
-          selection = prev.container;
+          selection = previousNode.container;
         }
         this.navigate(selection);
         break;
@@ -677,11 +678,11 @@ MarkupView.prototype = {
         let walker = this._selectionWalker();
         let selection = this._selectedContainer;
         for (let i = 0; i < PAGE_SIZE; i++) {
-          let next = walker.nextNode();
-          if (!next) {
+          nextNode = walker.nextNode();
+          if (!nextNode) {
             break;
           }
-          selection = next.container;
+          selection = nextNode.container;
         }
         this.navigate(selection);
         break;
@@ -955,8 +956,8 @@ MarkupView.prototype = {
 
           // If there has been additions, flash the nodes if their associated
           // container exist (so if their parent is expanded in the inspector).
-          added.forEach(added => {
-            let addedContainer = this.getContainer(added);
+          added.forEach(node => {
+            let addedContainer = this.getContainer(node);
             if (addedContainer) {
               addedOrEditedContainers.add(addedContainer);
 
@@ -1501,55 +1502,56 @@ MarkupView.prototype = {
     // If the dirty flag is re-set while we're fetching we'll need to fetch
     // again.
     container.childrenDirty = false;
-    let updatePromise = this._getVisibleChildren(container, centered).then(children => {
-      if (!this._containers) {
-        return promise.reject("markup view destroyed");
-      }
-      this._queuedChildUpdates.delete(container);
+    let updatePromise =
+      this._getVisibleChildren(container, centered).then(children => {
+        if (!this._containers) {
+          return promise.reject("markup view destroyed");
+        }
+        this._queuedChildUpdates.delete(container);
 
-      // If children are dirty, we got a change notification for this node
-      // while the request was in progress, we need to do it again.
-      if (container.childrenDirty) {
-        return this._updateChildren(container, {expand: centered});
-      }
+        // If children are dirty, we got a change notification for this node
+        // while the request was in progress, we need to do it again.
+        if (container.childrenDirty) {
+          return this._updateChildren(container, {expand: centered});
+        }
 
-      let fragment = this.doc.createDocumentFragment();
+        let fragment = this.doc.createDocumentFragment();
 
-      for (let child of children.nodes) {
-        let container = this.importNode(child, flash);
-        fragment.appendChild(container.elt);
-      }
+        for (let child of children.nodes) {
+          let childContainer = this.importNode(child, flash);
+          fragment.appendChild(childContainer.elt);
+        }
 
-      while (container.children.firstChild) {
-        container.children.removeChild(container.children.firstChild);
-      }
+        while (container.children.firstChild) {
+          container.children.removeChild(container.children.firstChild);
+        }
 
-      if (!(children.hasFirst && children.hasLast)) {
-        let data = {
-          showing: this.strings.GetStringFromName("markupView.more.showing"),
-          showAll: this.strings.formatStringFromName(
-                    "markupView.more.showAll",
-                    [container.node.numChildren.toString()], 1),
-          allButtonClick: () => {
-            container.maxChildren = -1;
-            container.childrenDirty = true;
-            this._updateChildren(container);
+        if (!(children.hasFirst && children.hasLast)) {
+          let data = {
+            showing: this.strings.GetStringFromName("markupView.more.showing"),
+            showAll: this.strings.formatStringFromName(
+                      "markupView.more.showAll",
+                      [container.node.numChildren.toString()], 1),
+            allButtonClick: () => {
+              container.maxChildren = -1;
+              container.childrenDirty = true;
+              this._updateChildren(container);
+            }
+          };
+
+          if (!children.hasFirst) {
+            let span = this.template("more-nodes", data);
+            fragment.insertBefore(span, fragment.firstChild);
           }
-        };
-
-        if (!children.hasFirst) {
-          let span = this.template("more-nodes", data);
-          fragment.insertBefore(span, fragment.firstChild);
+          if (!children.hasLast) {
+            let span = this.template("more-nodes", data);
+            fragment.appendChild(span);
+          }
         }
-        if (!children.hasLast) {
-          let span = this.template("more-nodes", data);
-          fragment.appendChild(span);
-        }
-      }
 
-      container.children.appendChild(fragment);
-      return container;
-    }).then(null, console.error);
+        container.children.appendChild(fragment);
+        return container;
+      }).then(null, console.error);
     this._queuedChildUpdates.set(container, updatePromise);
     return updatePromise;
   },
@@ -2867,8 +2869,8 @@ ElementEditor.prototype = {
           editor.input.select();
         }
       },
-      done: (val, commit, direction) => {
-        if (!commit || val === initial) {
+      done: (newValue, commit, direction) => {
+        if (!commit || newValue === initial) {
           return;
         }
 
@@ -2881,7 +2883,7 @@ ElementEditor.prototype = {
         this.refocusOnEdit(attribute.name, attr, direction);
         this._saveAttribute(attribute.name, undoMods);
         doMods.removeAttribute(attribute.name);
-        this._applyAttributes(val, attr, doMods, undoMods);
+        this._applyAttributes(newValue, attr, doMods, undoMods);
         this.container.undo.do(() => {
           doMods.apply();
         }, () => {
@@ -2906,8 +2908,9 @@ ElementEditor.prototype = {
     // it (make sure to pass a complete list of existing attributes to the
     // parseAttribute function, by concatenating attribute, because this could
     // be a newly added attribute not yet on this.node).
-    let attributes = this.node.attributes
-      .filter(({name}) => name !== attribute.name);
+    let attributes = this.node.attributes.filter(existingAttribute => {
+      return existingAttribute.name !== attribute.name;
+    });
     attributes.push(attribute);
     let parsedLinksData = parseAttribute(this.node.namespaceURI,
       this.node.tagName, attributes, attribute.name);
