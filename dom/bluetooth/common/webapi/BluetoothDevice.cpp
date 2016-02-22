@@ -118,6 +118,17 @@ BluetoothDevice::~BluetoothDevice()
 }
 
 void
+BluetoothDevice::GetUuids(nsTArray<nsString>& aUuids) const
+{
+  aUuids.Clear();
+  for (size_t i = 0; i < mUuids.Length(); ++i) {
+    nsAutoString uuidStr;
+    UuidToString(mUuids[i], uuidStr);
+    aUuids.AppendElement(uuidStr);
+  }
+}
+
+void
 BluetoothDevice::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
@@ -158,19 +169,15 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Paired")) {
     mPaired = value.get_bool();
   } else if (name.EqualsLiteral("UUIDs")) {
-    // While converting to strings, we sort the received UUIDs and remove
-    // any duplicates.
+    // We sort the received UUIDs and remove any duplicates.
     const nsTArray<BluetoothUuid>& uuids = value.get_ArrayOfBluetoothUuid();
     nsTArray<nsString> uuidStrs;
+    mUuids.Clear();
     for (uint32_t index = 0; index < uuids.Length(); ++index) {
-      nsAutoString uuidStr;
-      UuidToString(uuids[index], uuidStr);
-
-      if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate UUIDs
-        uuidStrs.InsertElementSorted(uuidStr);
+      if (!mUuids.Contains(uuids[index])) { // filter out duplicate UUIDs
+        mUuids.InsertElementSorted(uuids[index]);
       }
     }
-    mUuids = Move(uuidStrs);
     BluetoothDeviceBinding::ClearCachedUuidsValue(this);
   } else if (name.EqualsLiteral("Type")) {
     mType = ConvertUint32ToDeviceType(value.get_uint32_t());
@@ -275,23 +282,14 @@ BluetoothDevice::IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
     case BluetoothDeviceAttribute::Uuids: {
       MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothUuid);
       const auto& uuids = aValue.get_ArrayOfBluetoothUuid();
-
-      nsTArray<nsString> uuidStrs;
-
-      // Construct a sorted uuid set
+      nsTArray<BluetoothUuid> sortedUuids;
+      // Construct a sorted UUID set
       for (size_t index = 0; index < uuids.Length(); ++index) {
-        nsAutoString uuidStr;
-        UuidToString(uuids[index], uuidStr);
-
-        if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate uuids
-          uuidStrs.InsertElementSorted(uuidStr);
+        if (!sortedUuids.Contains(uuids[index])) { // filter out duplicate uuids
+          sortedUuids.InsertElementSorted(uuids[index]);
         }
       }
-
-      // We assume the received uuids array is sorted without duplicate items.
-      // If it's not, we require additional processing before comparing it
-      // directly.
-      return mUuids != uuidStrs;
+      return mUuids != sortedUuids;
     }
     default:
       BT_WARNING("Type %d is not handled", uint32_t(aType));
@@ -386,7 +384,8 @@ BluetoothDevice::UpdatePropertiesFromAdvData(const nsTArray<uint8_t>& aAdvData)
     }
 
     // Update UUIDs and name of BluetoothDevice.
-    int type = aAdvData[offset++];
+    BluetoothGapDataType type =
+      static_cast<BluetoothGapDataType>(aAdvData[offset++]);
     switch (type) {
       case GAP_INCOMPLETE_UUID16:
       case GAP_COMPLETE_UUID16:
@@ -396,48 +395,33 @@ BluetoothDevice::UpdatePropertiesFromAdvData(const nsTArray<uint8_t>& aAdvData)
       case GAP_COMPLETE_UUID128: {
         mUuids.Clear();
 
-        // The length of uint16_t UUID array
-        uint8_t len = 0;
-        if (GAP_INCOMPLETE_UUID16 && GAP_COMPLETE_UUID16) {
-          len = 1;
-        } else if (GAP_INCOMPLETE_UUID32 && GAP_COMPLETE_UUID32) {
-          len = 2;
-        } else {
-          len = 8;
-        }
-        uint16_t uuid[len];
-
         while (dataLength > 0) {
-          // Read (len * 2) bytes from the data buffer and compose a 16-bits
-          // UUID array.
-          for (uint8_t i = 0; i < len; ++i) {
-            uuid[i] = aAdvData[offset++];
-            uuid[i] += (aAdvData[offset++] << 8);
-            dataLength -= 2;
-          }
-
-          char uuidStr[37]; // one more char to be null-terminated
+          BluetoothUuid uuid;
+          size_t length = 0;
           if (type == GAP_INCOMPLETE_UUID16 || type == GAP_COMPLETE_UUID16) {
-            // Convert 16-bits UUID into string.
-            snprintf(uuidStr, sizeof(uuidStr),
-                     "0000%04x-0000-1000-8000-00805f9b34fb", uuid[0]);
+            length = 2;
+            if (NS_FAILED(BytesToUuid(aAdvData, offset, UUID_16_BIT,
+                                      ENDIAN_GAP, uuid))) {
+              break;
+            }
           } else if (type == GAP_INCOMPLETE_UUID32 ||
                      type == GAP_COMPLETE_UUID32) {
-            // Convert 32-bits UUID into string.
-            snprintf(uuidStr, sizeof(uuidStr),
-                     "%04x%04x-0000-1000-8000-00805f9b34fb", uuid[1], uuid[0]);
+            length = 4;
+            if (NS_FAILED(BytesToUuid(aAdvData, offset, UUID_32_BIT,
+                                      ENDIAN_GAP, uuid))) {
+              break;
+            }
           } else if (type == GAP_INCOMPLETE_UUID128 ||
                      type == GAP_COMPLETE_UUID128) {
-            // Convert 128-bits UUID into string.
-            snprintf(uuidStr, sizeof(uuidStr),
-                     "%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
-                     uuid[7], uuid[6], uuid[5], uuid[4],
-                     uuid[3], uuid[2], uuid[1], uuid[0]);
+            length = 16;
+            if (NS_FAILED(BytesToUuid(aAdvData, offset, UUID_128_BIT,
+                                      ENDIAN_GAP, uuid))) {
+              break;
+            }
           }
-          nsString uuidNsString;
-          uuidNsString.AssignLiteral(uuidStr);
-
-          mUuids.AppendElement(uuidNsString);
+          mUuids.AppendElement(uuid);
+          offset += length;
+          dataLength -= length;
         }
 
         BluetoothDeviceBinding::ClearCachedUuidsValue(this);
