@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Reference: Active opacity should be rendered if it's inside the display port, even if it's currently offscreen</title>
+
+<style>
+
+#scrollbox {
+  border: 1px solid black;
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+}
+
+#scrolledContent {
+  height: 1000px;
+}
+
+#opacity {
+  will-change: opacity;
+  opacity: 0.5;
+  margin-top: 250px;
+  width: 100px;
+  height: 100px;
+  box-sizing: border-box;
+  border: 1px solid blue;
+}
+
+
+</style>
+
+<div id="scrollbox">
+  <div id="scrolledContent">
+    <div id="opacity"></div>
+  </div>
+</div>
+
+<script>
+
+document.getElementById("scrollbox").scrollTop = 150;
+
+</script>
