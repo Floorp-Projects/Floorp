@@ -1428,17 +1428,6 @@ public:
    * account.
    */
   nsRect GetClippedBounds(nsDisplayListBuilder* aBuilder);
-  /**
-   * Returns the result of GetClippedBounds, intersected with the item's
-   * scroll clips. The item walks up its chain of scroll clips, *not* crossing
-   * stacking contexts, applying each scroll clip until aIncludeScrollClipsUpTo
-   * is reached. aIncludeScrollClipsUpTo is *not* applied.
-   * The intersection is approximate since rounded corners are not taking into
-   * account.
-   */
-  nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo);
-
   nsRect GetBorderRect() {
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
@@ -2149,7 +2138,14 @@ public:
    */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
   /**
-   * Return the union of the scroll clipped bounds of all children.
+   * Return the union of the scroll clipped bounds of all children. To get the
+   * scroll clipped bounds of a child item, we start with the item's clipped
+   * bounds and walk its scroll clip chain up to (but not including)
+   * aIncludeScrollClipsUpTo, and take each scroll clip into account. For
+   * scroll clips from async scrollable frames we assume that the item can move
+   * anywhere inside that scroll frame.
+   * In other words, the return value from this method includes all pixels that
+   * could potentially be covered by items in this list under async scrolling.
    */
   nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
                                     const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const;
