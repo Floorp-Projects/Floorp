@@ -99,13 +99,11 @@ XPTInterfaceInfoManager::InitMemoryReporter()
 void
 XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
 {
-    XPTState *state = XPT_NewXDRState(buf, length);
-    if (!state)
-        return;
+    XPTState state;
+    XPT_InitXDRState(&state, buf, length);
 
     XPTCursor cursor;
-    if (!XPT_MakeCursor(state, XPT_HEADER, 0, &cursor)) {
-        XPT_DestroyXDRState(state);
+    if (!XPT_MakeCursor(&state, XPT_HEADER, 0, &cursor)) {
         return;
     }
 
@@ -113,8 +111,6 @@ XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
     if (XPT_DoHeader(gXPTIStructArena, &cursor, &header)) {
         RegisterXPTHeader(header);
     }
-
-    XPT_DestroyXDRState(state);
 }
 
 void
