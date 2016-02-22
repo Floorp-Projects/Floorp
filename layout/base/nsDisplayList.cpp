@@ -1472,7 +1472,21 @@ nsDisplayList::GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
                                           const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const {
   nsRect bounds;
   for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetScrollClippedBoundsUpTo(aBuilder, aIncludeScrollClipsUpTo));
+    nsRect r = i->GetClippedBounds(aBuilder);
+    if (r.IsEmpty()) {
+      continue;
+    }
+    for (auto* sc = i->ScrollClip(); sc && sc != aIncludeScrollClipsUpTo; sc = sc->mParent) {
+      if (sc->mClip && sc->mClip->HasClip()) {
+        if (sc->mIsAsyncScrollable) {
+          // Assume the item can move anywhere in the scroll clip's clip rect.
+          r = sc->mClip->GetClipRect();
+        } else {
+          r = sc->mClip->ApplyNonRoundedIntersection(r);
+        }
+      }
+    }
+    bounds.UnionRect(bounds, r);
   }
   return bounds;
 }
@@ -2244,21 +2258,6 @@ nsDisplayItem::GetClippedBounds(nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRect r = GetBounds(aBuilder, &snap);
   return GetClip().ApplyNonRoundedIntersection(r);
-}
-
-nsRect
-nsDisplayItem::GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                          const DisplayItemScrollClip* aIncludeScrollClipsUpTo)
-{
-  nsRect r = GetClippedBounds(aBuilder);
-  for (const DisplayItemScrollClip* sc = mScrollClip;
-       sc && sc != aIncludeScrollClipsUpTo;
-       sc = sc->mParent) {
-    if (sc->mClip) {
-      r = sc->mClip->ApplyNonRoundedIntersection(r);
-    }
-  }
-  return r;
 }
 
 nsRect
