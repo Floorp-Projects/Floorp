@@ -32,10 +32,23 @@
 #include "mozilla/Function.h"
 #endif
 
-namespace std {
+// In libc++, symbols such as std::forward may be defined in std::__1.
+// The _LIBCPP_BEGIN_NAMESPACE_STD and _LIBCPP_END_NAMESPACE_STD macros
+// will expand to the correct namespace.
+#ifdef _LIBCPP_BEGIN_NAMESPACE_STD
+#define MOZ_BEGIN_STD_NAMESPACE _LIBCPP_BEGIN_NAMESPACE_STD
+#define MOZ_END_STD_NAMESPACE _LIBCPP_END_NAMESPACE_STD
+#else
+#define MOZ_BEGIN_STD_NAMESPACE namespace std {
+#define MOZ_END_STD_NAMESPACE }
+#endif
+
+MOZ_BEGIN_STD_NAMESPACE
     using mozilla::Forward;
     #define forward Forward
+MOZ_END_STD_NAMESPACE
 
+namespace std {
 #if SKIA_IMPLEMENTATION
     using mozilla::IntegralConstant;
     using mozilla::IsEmpty;
