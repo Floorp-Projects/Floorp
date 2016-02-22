@@ -8404,14 +8404,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
   },
-  "LOOP_ACTIVITY_COUNTER": {
-    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
-    "expires_in_version": "51",
-    "kind": "count",
-    "n_values": 5,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of times an action is performed by a user (0=OPEN_PANEL, 1=OPEN_CONVERSATION, 2=ROOM_OPEN, 3=ROOM_SHARE, 4=ROOM_DELETE)"
-  },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
