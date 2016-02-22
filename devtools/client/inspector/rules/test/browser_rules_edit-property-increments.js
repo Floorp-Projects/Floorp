@@ -7,9 +7,23 @@
 // Test that increasing/decreasing values in rule view using
 // arrow keys works correctly.
 
+const TEST_URI = `
+  <style>
+    #test {
+      margin-top: 0px;
+      padding-top: 0px;
+      color: #000000;
+      background-color: #000000;
+      background: none;
+      transition: initial;
+      z-index: 0;
+    }
+  </style>
+  <div id="test"></div>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,sample document for bug 722691");
-  createDocument();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   let {inspector, view} = yield openRuleView();
   yield selectNode("#test", inspector);
@@ -22,22 +36,6 @@ add_task(function*() {
   yield testOddCases(view);
   yield testZeroValueIncrements(view);
 });
-
-function createDocument() {
-  content.document.body.innerHTML = "" +
-    "<style>" +
-    "  #test {" +
-    "    margin-top:0px;" +
-    "    padding-top: 0px;" +
-    "    color:#000000;" +
-    "    background-color: #000000;" +
-    "    background: none;" +
-    "    transition: initial;" +
-    "    z-index: 0;" +
-    "  }" +
-    "</style>" +
-    "<div id=\"test\"></div>";
-}
 
 function* testMarginIncrements(view) {
   info("Testing keyboard increments on the margin property");
