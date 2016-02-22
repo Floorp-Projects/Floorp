@@ -4519,6 +4519,8 @@ pref("dom.webnotifications.serviceworker.enabled", true);
 
 // Alert animation effect, name is disableSlidingEffect for backwards-compat.
 pref("alerts.disableSlidingEffect", false);
+// Show favicons in web notifications.
+pref("alerts.showFavicons", false);
 
 // DOM full-screen API.
 pref("full-screen-api.enabled", false);
