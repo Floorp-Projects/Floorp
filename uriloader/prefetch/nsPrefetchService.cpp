@@ -76,8 +76,7 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
                                nsIURI *aURI,
                                nsIURI *aReferrerURI,
                                nsIDOMNode *aSource)
-    : mNext(nullptr)
-    , mURI(aURI)
+    : mURI(aURI)
     , mReferrerURI(aReferrerURI)
     , mService(aService)
     , mChannel(nullptr)
@@ -312,9 +311,7 @@ nsPrefetchNode::OnRedirectResult(bool proceeding)
 //-----------------------------------------------------------------------------
 
 nsPrefetchService::nsPrefetchService()
-    : mQueueHead(nullptr)
-    , mQueueTail(nullptr)
-    , mMaxParallelism(6)
+    : mMaxParallelism(6)
     , mStopCount(0)
     , mHaveProcessed(false)
     , mDisabled(true)
@@ -380,10 +377,11 @@ nsPrefetchService::ProcessNextURI(nsPrefetchNode *aFinished)
     }
 
     do {
-        RefPtr<nsPrefetchNode> node;
-        rv = DequeueNode(getter_AddRefs(node));
-
-        if (NS_FAILED(rv)) break;
+        if (mQueue.empty()) {
+          break;
+        }
+        RefPtr<nsPrefetchNode> node = mQueue.front().forget();
+        mQueue.pop_front();
 
         if (LOG_ENABLED()) {
             nsAutoCString spec;
@@ -451,62 +449,24 @@ nsPrefetchService::RemoveProgressListener()
 }
 
 nsresult
-nsPrefetchService::EnqueueNode(nsPrefetchNode *aNode)
-{
-    NS_ADDREF(aNode);
-
-    if (!mQueueTail) {
-        mQueueHead = aNode;
-        mQueueTail = aNode;
-    }
-    else {
-        mQueueTail->mNext = aNode;
-        mQueueTail = aNode;
-    }
-
-    return NS_OK;
-}
-
-nsresult
 nsPrefetchService::EnqueueURI(nsIURI *aURI,
                               nsIURI *aReferrerURI,
                               nsIDOMNode *aSource,
                               nsPrefetchNode **aNode)
 {
-    nsPrefetchNode *node = new nsPrefetchNode(this, aURI, aReferrerURI,
-                                              aSource);
-    if (!node)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aNode = node);
-
-    return EnqueueNode(node);
-}
-
-nsresult
-nsPrefetchService::DequeueNode(nsPrefetchNode **node)
-{
-    if (!mQueueHead)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // give the ref to the caller
-    *node = mQueueHead;
-    mQueueHead = mQueueHead->mNext;
-    (*node)->mNext = nullptr;
-
-    if (!mQueueHead)
-        mQueueTail = nullptr;
-
+    RefPtr<nsPrefetchNode> node = new nsPrefetchNode(this, aURI, aReferrerURI,
+                                                     aSource);
+    mQueue.push_back(node);
+    node.forget(aNode);
     return NS_OK;
 }
 
 void
 nsPrefetchService::EmptyQueue()
 {
-    do {
-        RefPtr<nsPrefetchNode> node;
-        DequeueNode(getter_AddRefs(node));
-    } while (mQueueHead);
+    while (!mQueue.empty()) {
+        mQueue.pop_back();
+    }
 }
 
 void
@@ -527,7 +487,7 @@ nsPrefetchService::StartPrefetching()
     // until after all sub-frames have finished loading.
     if (!mStopCount) {
         mHaveProcessed = true;
-        while (mQueueHead && mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
+        while (!mQueue.empty() && mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
             ProcessNextURI(nullptr);
         }
     }
@@ -648,10 +608,10 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     //
     // cancel if already on the prefetch queue
     //
-    nsPrefetchNode *node = mQueueHead;
-    for (; node; node = node->mNext) {
+    for (std::deque<RefPtr<nsPrefetchNode>>::iterator node = mQueue.begin();
+         node != mQueue.end(); node++) {
         bool equals;
-        if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
+        if (NS_SUCCEEDED(node->get()->mURI->Equals(aURI, &equals)) && equals) {
             LOG(("rejected: URL is already on prefetch queue\n"));
             return NS_ERROR_ABORT;
         }
@@ -684,7 +644,7 @@ nsPrefetchService::PrefetchURI(nsIURI *aURI,
 NS_IMETHODIMP
 nsPrefetchService::HasMoreElements(bool *aHasMore)
 {
-    *aHasMore = (mCurrentNodes.Length() || mQueueHead);
+    *aHasMore = (mCurrentNodes.Length() || !mQueue.empty());
     return NS_OK;
 }
 
@@ -793,7 +753,7 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
             // prefetches to fill up our allowance. If we're now over our
             // allowance, we'll just silently let some of them finish to get
             // back below our limit.
-            while (mQueueHead && mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
+            while (!mQueue.empty() && mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
                 ProcessNextURI(nullptr);
             }
         }
