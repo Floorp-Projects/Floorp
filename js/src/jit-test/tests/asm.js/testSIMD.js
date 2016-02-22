@@ -1082,11 +1082,8 @@ assertAsmTypeFail('glob', USE_ASM + I32 + CI32 + FROUND + LSHI + "function f() {
 var input = 'i4(0, 1, ' + INT32_MIN + ', ' + INT32_MAX + ')';
 var vinput = [0, 1, INT32_MIN, INT32_MAX];
 
-// TODO: What to do for masks > 31? Should we keep only the five low bits of
-// the mask (JS) or not (x86)?
-// See bug 1246800.
-function Lsh(i) { if (i > 31) return () => 0; return function(x) { return (x << i) | 0 } }
-function Rsh(i) { if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
+function Lsh(i) { return function(x) { return (x << (i & 31)) | 0 } }
+function Rsh(i) { return function(x) { return (x >> (i & 31)) | 0 } }
 
 var asmLsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + LSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(lsh(v, x+y))} return f;'), this)
 var asmRsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + RSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(rsh(v, x+y))} return f;'), this)
@@ -1106,8 +1103,8 @@ const RSHU = 'var rsh=u4.shiftRightByScalar;'
 input = 'u4(0, 1, 0x80008000, ' + INT32_MAX + ')';
 vinput = [0, 1, 0x80008000, INT32_MAX];
 
-function uLsh(i) { if (i > 31) return () => 0; return function(x) { return (x << i) >>> 0 } }
-function uRsh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) } }
+function uLsh(i) { return function(x) { return (x << (i & 31)) >>> 0 } }
+function uRsh(i) { return function(x) { return (x >>> (i & 31)) } }
 
 // Need to bitcast to Int32x4 before returning result.
 asmLsh = asmLink(asmCompile('glob', USE_ASM + U32 + CU32 + LSHU + I32 + CI32 + I32U32 +

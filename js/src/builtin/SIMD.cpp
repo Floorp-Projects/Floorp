@@ -712,27 +712,37 @@ template<typename T>
 struct Or {
     static T apply(T l, T r) { return l | r; }
 };
+
 // For the following three operators, if the value v we're trying to shift is
 // such that v << bits can't fit in the int32 range, then we have undefined
-// behavior, according to C++11 [expr.shift]p2.
+// behavior, according to C++11 [expr.shift]p2. However, left-shifting an
+// unsigned type is well-defined.
+//
+// In C++, shifting by an amount outside the range [0;N-1] is undefined
+// behavior. SIMD.js reduces the shift amount modulo the number of bits in a
+// lane and has defined behavior for all shift amounts.
 template<typename T>
 struct ShiftLeft {
     static T apply(T v, int32_t bits) {
-        return uint32_t(bits) >= sizeof(T) * 8 ? 0 : v << bits;
+        typedef typename mozilla::MakeUnsigned<T>::Type UnsignedT;
+        uint32_t maskedBits = uint32_t(bits) % (sizeof(T) * 8);
+        return UnsignedT(v) << maskedBits;
     }
 };
 template<typename T>
 struct ShiftRightArithmetic {
     static T apply(T v, int32_t bits) {
         typedef typename mozilla::MakeSigned<T>::Type SignedT;
-        uint32_t maxBits = sizeof(T) * 8;
-        return SignedT(v) >> (uint32_t(bits) >= maxBits ? maxBits - 1 : bits);
+        uint32_t maskedBits = uint32_t(bits) % (sizeof(T) * 8);
+        return SignedT(v) >> maskedBits;
     }
 };
 template<typename T>
 struct ShiftRightLogical {
     static T apply(T v, int32_t bits) {
-        return uint32_t(bits) >= sizeof(T) * 8 ? 0 : uint32_t(v) >> bits;
+        typedef typename mozilla::MakeUnsigned<T>::Type UnsignedT;
+        uint32_t maskedBits = uint32_t(bits) % (sizeof(T) * 8);
+        return UnsignedT(v) >> maskedBits;
     }
 };
 
