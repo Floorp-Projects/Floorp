@@ -4257,13 +4257,17 @@ ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
 
 ScrollFrameHelper::ScrollEvent::~ScrollEvent()
 {
-  mDriver->RemoveRefreshObserver(this, Flush_Style);
-  mDriver = nullptr;
+  if (mDriver) {
+    mDriver->RemoveRefreshObserver(this, Flush_Style);
+    mDriver = nullptr;
+  }
 }
 
 void
 ScrollFrameHelper::ScrollEvent::WillRefresh(mozilla::TimeStamp aTime)
 {
+  mDriver->RemoveRefreshObserver(this, Flush_Style);
+  mDriver = nullptr;
   mHelper->FireScrollEvent();
 }
 
