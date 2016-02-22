@@ -863,7 +863,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   transition: opacity 0.15s ease;
 }
 
-#navigator-toolbox:not(:hover) .urlbar-history-dropmarker {
+#urlbar-wrapper[switchingtabs] > #urlbar > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  transition: none;
+}
+
+#navigator-toolbox:not(:hover) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
 
