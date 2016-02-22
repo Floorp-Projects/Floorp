@@ -30,8 +30,6 @@ public:
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t GetLevelInternal() override;
 
-  virtual bool CanHaveAnonChildren() override;
-
   // ActionAccessible
   virtual uint8_t ActionCount() override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
