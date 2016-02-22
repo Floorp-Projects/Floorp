@@ -935,15 +935,12 @@ function actionChain(chain, touchId) {
   touchProvider.createATouch = createATouch;
   touchProvider.emitTouchEvent = emitTouchEvent;
 
-  return new Promise((resolve, reject) => {
-    actions.dispatchActions(
-        chain,
-        touchId,
-        curContainer,
-        elementManager,
-        {onSuccess: resolve, onError: reject},
-        touchProvider);
-  });
+  return actions.dispatchActions(
+      chain,
+      touchId,
+      curContainer,
+      elementManager,
+      touchProvider);
 }
 
 /**
