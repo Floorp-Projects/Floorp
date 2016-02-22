@@ -1938,6 +1938,8 @@ BacktrackingAllocator::reifyAllocations()
                     LAllocation sourceAlloc = range->bundle()->allocation();
 
                     if (res != *alloc) {
+                        if (!this->alloc().ensureBallast())
+                            return false;
                         LMoveGroup* group = getInputMoveGroup(ins->toInstruction());
                         if (!group->addAfter(sourceAlloc, res, reg.type()))
                             return false;
