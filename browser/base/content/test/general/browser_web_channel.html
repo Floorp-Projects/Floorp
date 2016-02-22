@@ -6,6 +6,8 @@
 </head>
 <body>
 <script>
+   var IFRAME_SRC_ROOT = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_web_channel_iframe.html";
+
   window.onload = function() {
     var testName = window.location.search.replace(/^\?/, "");
 
@@ -18,6 +20,21 @@
         break;
       case "multichannel":
         test_multichannel();
+        break;
+      case "iframe":
+        test_iframe();
+        break;
+      case "iframe_pre_redirect":
+        test_iframe_pre_redirect();
+        break;
+      case "unsolicited":
+        test_unsolicited();
+        break;
+      case "bubbles":
+        test_bubbles();
+        break;
+      default:
+        throw new Error(`INVALID TEST NAME ${testName}`);
         break;
     }
   };
@@ -84,6 +101,67 @@
     window.dispatchEvent(event1);
     window.dispatchEvent(event2);
   }
+
+  function test_iframe() {
+    // Note that this message is the response to the message sent
+    // by the iframe!  This is bad, as this page is *not* trusted.
+    window.addEventListener("WebChannelMessageToContent", function(e) {
+      // the test parent will fail if the echo message is received.
+      echoEventToChannel(e, "echo");
+    });
+
+    // only attach the iframe for the iframe test to avoid
+    // interfering with other tests.
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", IFRAME_SRC_ROOT + "?iframe");
+    document.body.appendChild(iframe);
+  }
+
+  function test_iframe_pre_redirect() {
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", IFRAME_SRC_ROOT + "?iframe_pre_redirect");
+    document.body.appendChild(iframe);
+  }
+
+  function test_unsolicited() {
+    // echo any unsolicted events back to chrome.
+    window.addEventListener("WebChannelMessageToContent", function(e) {
+      echoEventToChannel(e, "echo");
+    }, true);
+  }
+
+  function test_bubbles() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: "not_a_window",
+        message: {
+          command: "start"
+        }
+      }
+    });
+
+    var nonWindowTarget = document.getElementById("not_a_window");
+
+    nonWindowTarget.addEventListener("WebChannelMessageToContent", function(e) {
+      echoEventToChannel(e, "not_a_window");
+    }, true);
+
+
+    nonWindowTarget.dispatchEvent(event);
+  }
+
+  function echoEventToChannel(e, channelId) {
+    var echoedEvent = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: channelId,
+        message: e.detail.message,
+      }
+    });
+
+    e.target.dispatchEvent(echoedEvent);
+  }
 </script>
+
+<div id="not_a_window"></div>
 </body>
 </html>
