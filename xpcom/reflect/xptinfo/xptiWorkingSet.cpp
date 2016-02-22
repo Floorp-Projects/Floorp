@@ -23,8 +23,8 @@ XPTInterfaceInfoManager::xptiWorkingSet::xptiWorkingSet()
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
 
-    gXPTIStructArena = XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double),
-                                    "xptiWorkingSet structs");
+    gXPTIStructArena =
+        XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double));
 }
 
 void

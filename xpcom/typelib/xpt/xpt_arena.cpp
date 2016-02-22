@@ -8,7 +8,6 @@
 /* XXX This exists because we don't want to drag in NSPR. It *seemed*
 *  to make more sense to write a quick and dirty arena than to clone
 *  plarena (like js/src did). This is not optimal, but it works. 
-*  Half of the code here is instrumentation.
 */
 
 #include "xpt_arena.h"
@@ -16,42 +15,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-/*************************/
-/* logging stats support */
-
-#if 0 && defined(DEBUG_jband)
-#define XPT_ARENA_LOGGING 1
-#endif
-
-#ifdef XPT_ARENA_LOGGING
-
-#define LOG_MALLOC(_a, _req, _used)                             \
-    do{                                                         \
-    XPT_ASSERT((_a));                                           \
-    ++(_a)->LOG_MallocCallCount;                                \
-    (_a)->LOG_MallocTotalBytesRequested += (_req);              \
-    (_a)->LOG_MallocTotalBytesUsed += (_used);                  \
-    } while(0)
-
-#define LOG_REAL_MALLOC(_a, _size)                              \
-    do{                                                         \
-    XPT_ASSERT((_a));                                           \
-    ++(_a)->LOG_RealMallocCallCount;                            \
-    (_a)->LOG_RealMallocTotalBytesRequested += (_size);         \
-    } while(0)
-
-#define PRINT_STATS(_a)       xpt_DebugPrintArenaStats((_a))
-static void xpt_DebugPrintArenaStats(XPTArena *arena);
-
-#else /* !XPT_ARENA_LOGGING */
-
-#define LOG_MALLOC(_a, _req, _used)   ((void)0)
-#define LOG_REAL_MALLOC(_a, _size)    ((void)0)
-
-#define PRINT_STATS(_a)               ((void)0)
-
-#endif /* XPT_ARENA_LOGGING */
 
 /****************************************************/
 
@@ -75,19 +38,10 @@ struct XPTArena
     size_t   space;
     size_t   alignment;
     size_t   block_size;
-
-#ifdef XPT_ARENA_LOGGING
-    char    *name;
-    uint32_t LOG_MallocCallCount;
-    uint32_t LOG_MallocTotalBytesRequested;
-    uint32_t LOG_MallocTotalBytesUsed;
-    uint32_t LOG_RealMallocCallCount;
-    uint32_t LOG_RealMallocTotalBytesRequested;
-#endif /* XPT_ARENA_LOGGING */
 };
 
 XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(uint32_t block_size, size_t alignment, const char* name)
+XPT_NewArena(uint32_t block_size, size_t alignment)
 {
     XPTArena *arena = (XPTArena*)calloc(1, sizeof(XPTArena));
     if (arena) {
@@ -104,16 +58,6 @@ XPT_NewArena(uint32_t block_size, size_t alignment, const char* name)
         XPT_ASSERT(arena->block_size >= 
                    ALIGN_RND(sizeof(BLK_HDR), alignment) +
                    ALIGN_RND(1, alignment));
-
-#ifdef XPT_ARENA_LOGGING
-        if (name) {
-            arena->name = XPT_STRDUP(arena, name);           
-            /* fudge the stats since we are using space in the arena */
-            arena->LOG_MallocCallCount = 0;
-            arena->LOG_MallocTotalBytesRequested = 0;
-            arena->LOG_MallocTotalBytesUsed = 0;
-        }
-#endif /* XPT_ARENA_LOGGING */
     }
     return arena;        
 }
@@ -132,13 +76,6 @@ XPT_DestroyArena(XPTArena *arena)
     }
     free(arena);
 }
-
-XPT_PUBLIC_API(void)
-XPT_DumpStats(XPTArena *arena)
-{
-    PRINT_STATS(arena);
-}        
-
 
 /* 
 * Our alignment rule is that we always round up the size of each allocation 
@@ -160,8 +97,6 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
     }
 
     bytes = ALIGN_RND(size, arena->alignment);
-    
-    LOG_MALLOC(arena, size, bytes);
 
     if (bytes > arena->space) {
         BLK_HDR* new_block;
@@ -178,8 +113,6 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
             arena->space = 0;
             return NULL;
         }
-
-        LOG_REAL_MALLOC(arena, new_space);
 
         /* link block into the list of blocks for use when we destroy */
         new_block->next = arena->first;
@@ -217,45 +150,6 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
     return cur;    
 }
 
-
-XPT_PUBLIC_API(char *)
-XPT_ArenaStrDup(XPTArena *arena, const char * s)
-{
-    size_t len;
-    char* cur;
-
-    if (!s)
-        return NULL;
-
-    len = strlen(s)+1;
-    cur = (char*)XPT_ArenaMalloc(arena, len);
-    memcpy(cur, s, len);
-    return cur;
-}
-
-#ifdef XPT_ARENA_LOGGING
-static void xpt_DebugPrintArenaStats(XPTArena *arena)
-{
-    printf("()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()\n");
-    printf("Start xpt arena stats for \"%s\"\n", 
-            arena->name ? arena->name : "unnamed arena");
-    printf("\n");
-    printf("%d times arena malloc called\n", (int) arena->LOG_MallocCallCount);       
-    printf("%d total bytes requested from arena malloc\n", (int) arena->LOG_MallocTotalBytesRequested);       
-    printf("%d average bytes requested per call to arena malloc\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesRequested/arena->LOG_MallocCallCount) : 0);
-    printf("%d average bytes used per call (accounts for alignment overhead)\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_MallocTotalBytesUsed/arena->LOG_MallocCallCount) : 0);
-    printf("%d average bytes used per call (accounts for all overhead and waste)\n", (int)arena->LOG_MallocCallCount ? (arena->LOG_RealMallocTotalBytesRequested/arena->LOG_MallocCallCount) : 0);
-    printf("\n");
-    printf("%d times arena called system malloc\n", (int) arena->LOG_RealMallocCallCount);       
-    printf("%d total bytes arena requested from system\n", (int) arena->LOG_RealMallocTotalBytesRequested);       
-    printf("%d byte block size specified at arena creation time\n", (int) arena->block_size);       
-    printf("%d byte block alignment specified at arena creation time\n", (int) arena->alignment);       
-    printf("\n");
-    printf("End xpt arena stats\n");
-    printf("()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()\n");
-}        
-#endif
-
 /***************************************************************************/
 
 #ifdef DEBUG
@@ -273,17 +167,9 @@ XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf)
 {
     size_t n = mallocSizeOf(arena);
 
-    /*
-     * We don't measure arena->name separately because it's allocated out of
-     * the arena itself.
-     */
-
-    BLK_HDR* cur;
-    BLK_HDR* next;
-        
-    cur = arena->first;
+    BLK_HDR* cur = arena->first;
     while (cur) {
-        next = cur->next;
+        BLK_HDR* next = cur->next;
         n += mallocSizeOf(cur);
         cur = next;
     }
