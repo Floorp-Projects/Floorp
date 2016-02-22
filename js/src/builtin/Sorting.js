@@ -43,6 +43,115 @@ function CountingSort(array, len, signed) {
     return array;
 }
 
+// Helper for RadixSort
+function ByteAtCol(x, pos) {
+    return  (x >> (pos * 8)) & 0xFF;
+}
+
+function SortByColumn(array, len, aux, col) {
+    const R = 256;
+    let counts = new List();
+
+    // |counts| is used to compute the starting index position for each key.
+    // Letting counts[0] always be 0, simplifies the transform step below.
+    // Example:
+    //
+    // Computing frequency counts for the input [1 2 1] gives:
+    //      0 1 2 3 ... (keys)
+    //      0 0 2 1     (frequencies)
+    //
+    // Transforming frequencies to indexes gives:
+    //      0 1 2 3 ... (keys)
+    //      0 0 2 3     (indexes)
+    for (let r = 0; r < R + 1; r++) {
+        counts[r] = 0;
+    }
+    // Compute frequency counts
+    for (let i = 0; i < len; i++) {
+        let val = array[i];
+        let b = ByteAtCol(val, col);
+        counts[b + 1]++;
+    }
+
+    // Transform counts to indices.
+    for (let r = 0; r < R; r++) {
+        counts[r+1] += counts[r];
+    }
+
+    // Distribute
+    for (let i = 0; i < len; i++) {
+        let val = array[i];
+        let b  = ByteAtCol(val, col);
+        aux[counts[b]++] = val;
+    }
+
+    // Copy back
+    for (let i = 0; i < len; i++) {
+        array[i] = aux[i];
+    }
+}
+
+// Sorts integers and float32. |signed| is true for int16 and int32, |floating|
+// is true for float32.
+function RadixSort(array, len, nbytes, signed, floating, comparefn) {
+
+    // Determined by performance testing.
+    if (len < 128) {
+        QuickSort(array, len, comparefn);
+        return array;
+    }
+
+    let aux = new List();
+    for (let i = 0; i < len; i++) {
+        aux[i] = 0;
+    }
+
+    let view = array;
+    let signMask = 1 << nbytes * 8 - 1;
+
+    // Preprocess
+    if (floating) {
+        view = new Int32Array(array.buffer);
+
+        // Flip sign bit for positive numbers; flip all bits for negative
+        // numbers
+        for (let i = 0; i < len; i++) {
+            if (view[i] & signMask) {
+                view[i] ^= 0xFFFFFFFF;
+            } else {
+                view[i] ^= signMask
+            }
+        }
+    } else if (signed) {
+        // Flip sign bit
+        for (let i = 0; i < len; i++) {
+            view[i] ^= signMask
+        }
+    }
+
+    // Sort
+    for (let col = 0; col < nbytes; col++) {
+        SortByColumn(view, len, aux, col);
+    }
+
+    // Restore original bit representation
+    if (floating) {
+        for (let i = 0; i < len; i++) {
+            if (view[i] & signMask) {
+                view[i] ^= signMask;
+            } else {
+                view[i] ^= 0xFFFFFFFF;
+            }
+        }
+    } else if (signed) {
+        for (let i = 0; i < len; i++) {
+            view[i] ^= signMask
+        }
+    }
+    return array;
+}
+
+
 // For sorting small arrays.
 function InsertionSort(array, from, to, comparefn) {
     let item, swap, i, j;

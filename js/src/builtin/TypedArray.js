@@ -987,15 +987,23 @@ function TypedArraySort(comparefn) {
     var len = TypedArrayLength(obj);
 
     if (comparefn === undefined) {
+        comparefn = TypedArrayCompare;
         // CountingSort doesn't invoke the comparefn
         if (IsUint8TypedArray(obj)) {
             return CountingSort(obj, len, false /* signed */);
         } else if (IsInt8TypedArray(obj)) {
             return CountingSort(obj, len, true /* signed */);
+        } else if (IsUint16TypedArray(obj)) {
+            return RadixSort(obj, len, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+        } else if (IsInt16TypedArray(obj)) {
+            return RadixSort(obj, len, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+        } else if (IsUint32TypedArray(obj)) {
+            return RadixSort(obj, len, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+        } else if (IsInt32TypedArray(obj)) {
+            return RadixSort(obj, len, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+        } else if (IsFloat32TypedArray(obj)) {
+            return RadixSort(obj, len, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
         }
-
-        comparefn = TypedArrayCompare;
-    } else {
         // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
         // the user supplied comparefn is wrapped.
         var wrappedCompareFn = comparefn;
