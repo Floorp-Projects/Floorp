@@ -53,10 +53,14 @@ wrtmessage(void *cbopaque, const char *s)
 	 * Use syscall(2) rather than write(2) when possible in order to avoid
 	 * the possibility of memory allocation within libc.  This is necessary
 	 * on FreeBSD; most operating systems do not have this problem though.
+	 *
+	 * syscall() returns long or int, depending on platform, so capture the
+	 * unused result in the widest plausible type to avoid compiler
+	 * warnings.
 	 */
-	UNUSED int result = syscall(SYS_write, STDERR_FILENO, s, strlen(s));
+	UNUSED long result = syscall(SYS_write, STDERR_FILENO, s, strlen(s));
 #else
-	UNUSED int result = write(STDERR_FILENO, s, strlen(s));
+	UNUSED ssize_t result = write(STDERR_FILENO, s, strlen(s));
 #endif
 }
 
@@ -86,7 +90,7 @@ buferror(int err, char *buf, size_t buflen)
 
 #ifdef _WIN32
 	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0,
-	    (LPSTR)buf, buflen, NULL);
+	    (LPSTR)buf, (DWORD)buflen, NULL);
 	return (0);
 #elif defined(__GLIBC__) && defined(_GNU_SOURCE)
 	char *b = strerror_r(err, buf, buflen);
@@ -581,7 +585,8 @@ malloc_vsnprintf(char *str, size_t size, const char *format, va_list ap)
 		str[i] = '\0';
 	else
 		str[size - 1] = '\0';
-	ret = i;
+	assert(i < INT_MAX);
+	ret = (int)i;
 
 #undef APPEND_C
 #undef APPEND_S
