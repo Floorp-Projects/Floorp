@@ -729,6 +729,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -760,6 +761,7 @@ with_jemalloc_prefix
 with_export
 with_private_namespace
 with_install_suffix
+with_malloc_conf
 enable_cc_silence
 enable_debug
 enable_ivsalloc
@@ -832,6 +834,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE}'
@@ -1084,6 +1087,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1221,7 +1233,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1374,6 +1386,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1443,6 +1456,8 @@ Optional Packages:
                           Prefix to prepend to all library-private APIs
   --with-install-suffix=<suffix>
                           Suffix to append to all installed files
+  --with-malloc-conf=<malloc_conf>
+                          config.malloc_conf options string
   --with-static-libunwind=<libunwind.a>
                           Path to static libunwind library; use rather than
                           dynamically linking
@@ -3571,6 +3586,42 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Wshorten-64-to-32" >&5
+$as_echo_n "checking whether compiler supports -Wshorten-64-to-32... " >&6; }
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Wshorten-64-to-32"
+else
+  CFLAGS="${CFLAGS} -Wshorten-64-to-32"
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+
+    return 0;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  je_cv_cflags_appended=-Wshorten-64-to-32
+              { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  je_cv_cflags_appended=
+              { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+              CFLAGS="${TCFLAGS}"
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -pipe" >&5
 $as_echo_n "checking whether compiler supports -pipe... " >&6; }
 TCFLAGS="${CFLAGS}"
@@ -4461,7 +4512,12 @@ if test "x${je_cv_msvc}" = "xyes" -a "x${ac_cv_header_inttypes_h}" = "xno"; then
   CPPFLAGS="$CPPFLAGS -I${srcdir}/include/msvc_compat/C99"
 fi
 
-# The cast to long int works around a bug in the HP C Compiler
+if test "x${je_cv_msvc}" = "xyes" ; then
+  LG_SIZEOF_PTR=LG_SIZEOF_PTR_WIN
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: Using a predefined value for sizeof(void *): 4 for 32-bit, 8 for 64-bit" >&5
+$as_echo "Using a predefined value for sizeof(void *): 4 for 32-bit, 8 for 64-bit" >&6; }
+else
+  # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -4494,12 +4550,13 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-if test "x${ac_cv_sizeof_void_p}" = "x8" ; then
-  LG_SIZEOF_PTR=3
-elif test "x${ac_cv_sizeof_void_p}" = "x4" ; then
-  LG_SIZEOF_PTR=2
-else
-  as_fn_error $? "Unsupported pointer size: ${ac_cv_sizeof_void_p}" "$LINENO" 5
+  if test "x${ac_cv_sizeof_void_p}" = "x8" ; then
+    LG_SIZEOF_PTR=3
+  elif test "x${ac_cv_sizeof_void_p}" = "x4" ; then
+    LG_SIZEOF_PTR=2
+  else
+    as_fn_error $? "Unsupported pointer size: ${ac_cv_sizeof_void_p}" "$LINENO" 5
+  fi
 fi
 cat >>confdefs.h <<_ACEOF
 #define LG_SIZEOF_PTR $LG_SIZEOF_PTR
@@ -4593,6 +4650,51 @@ else
 fi
 cat >>confdefs.h <<_ACEOF
 #define LG_SIZEOF_LONG $LG_SIZEOF_LONG
+_ACEOF
+
+
+# The cast to long int works around a bug in the HP C Compiler
+# version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
+# declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
+# This bug is HP SR number 8606223364.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking size of long long" >&5
+$as_echo_n "checking size of long long... " >&6; }
+if ${ac_cv_sizeof_long_long+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if ac_fn_c_compute_int "$LINENO" "(long int) (sizeof (long long))" "ac_cv_sizeof_long_long"        "$ac_includes_default"; then :
+
+else
+  if test "$ac_cv_type_long_long" = yes; then
+     { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error 77 "cannot compute sizeof (long long)
+See \`config.log' for more details" "$LINENO" 5; }
+   else
+     ac_cv_sizeof_long_long=0
+   fi
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_sizeof_long_long" >&5
+$as_echo "$ac_cv_sizeof_long_long" >&6; }
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define SIZEOF_LONG_LONG $ac_cv_sizeof_long_long
+_ACEOF
+
+
+if test "x${ac_cv_sizeof_long_long}" = "x8" ; then
+  LG_SIZEOF_LONG_LONG=3
+elif test "x${ac_cv_sizeof_long_long}" = "x4" ; then
+  LG_SIZEOF_LONG_LONG=2
+else
+  as_fn_error $? "Unsupported long long size: ${ac_cv_sizeof_long_long}" "$LINENO" 5
+fi
+cat >>confdefs.h <<_ACEOF
+#define LG_SIZEOF_LONG_LONG $LG_SIZEOF_LONG_LONG
 _ACEOF
 
 
@@ -4717,7 +4819,45 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 CPU_SPINWAIT=""
 case "${host_cpu}" in
   i686|x86_64)
-	if ${je_cv_pause+:} false; then :
+	if test "x${je_cv_msvc}" = "xyes" ; then
+	    if ${je_cv_pause_msvc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether pause instruction MSVC is compilable" >&5
+$as_echo_n "checking whether pause instruction MSVC is compilable... " >&6; }
+if ${je_cv_pause_msvc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+_mm_pause(); return 0;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_pause_msvc=yes
+else
+  je_cv_pause_msvc=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_pause_msvc" >&5
+$as_echo "$je_cv_pause_msvc" >&6; }
+
+fi
+
+	    if test "x${je_cv_pause_msvc}" = "xyes" ; then
+		CPU_SPINWAIT='_mm_pause()'
+	    fi
+	else
+	    if ${je_cv_pause+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -4750,8 +4890,9 @@ $as_echo "$je_cv_pause" >&6; }
 
 fi
 
-	if test "x${je_cv_pause}" = "xyes" ; then
-	    CPU_SPINWAIT='__asm__ volatile("pause")'
+	    if test "x${je_cv_pause}" = "xyes" ; then
+		CPU_SPINWAIT='__asm__ volatile("pause")'
+	    fi
 	fi
 	;;
   powerpc)
@@ -5928,6 +6069,21 @@ fi
 install_suffix="$INSTALL_SUFFIX"
 
 
+
+# Check whether --with-malloc_conf was given.
+if test "${with_malloc_conf+set}" = set; then :
+  withval=$with_malloc_conf; JEMALLOC_CONFIG_MALLOC_CONF="$with_malloc_conf"
+else
+  JEMALLOC_CONFIG_MALLOC_CONF=""
+
+fi
+
+config_malloc_conf="$JEMALLOC_CONFIG_MALLOC_CONF"
+cat >>confdefs.h <<_ACEOF
+#define JEMALLOC_CONFIG_MALLOC_CONF "$config_malloc_conf"
+_ACEOF
+
+
 je_="je_"
 
 
@@ -6783,6 +6939,8 @@ fi
 $as_echo "$je_cv_gcc_builtin_ffsl" >&6; }
 
 if test "x${je_cv_gcc_builtin_ffsl}" = "xyes" ; then
+  $as_echo "#define JEMALLOC_INTERNAL_FFSLL __builtin_ffsll" >>confdefs.h
+
   $as_echo "#define JEMALLOC_INTERNAL_FFSL __builtin_ffsl" >>confdefs.h
 
   $as_echo "#define JEMALLOC_INTERNAL_FFS __builtin_ffs" >>confdefs.h
@@ -6826,6 +6984,8 @@ fi
 $as_echo "$je_cv_function_ffsl" >&6; }
 
   if test "x${je_cv_function_ffsl}" = "xyes" ; then
+    $as_echo "#define JEMALLOC_INTERNAL_FFSLL ffsll" >>confdefs.h
+
     $as_echo "#define JEMALLOC_INTERNAL_FFSL ffsl" >>confdefs.h
 
     $as_echo "#define JEMALLOC_INTERNAL_FFS ffs" >>confdefs.h
@@ -6914,7 +7074,7 @@ main ()
     if (f == NULL) {
 	return 1;
     }
-    fprintf(f, "%d\n", result);
+    fprintf(f, "%d", result);
     fclose(f);
 
     return 0;
@@ -9681,6 +9841,8 @@ $as_echo "JEMALLOC_PRIVATE_NAMESPACE" >&6; }
 $as_echo "                   : ${JEMALLOC_PRIVATE_NAMESPACE}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: install_suffix     : ${install_suffix}" >&5
 $as_echo "install_suffix     : ${install_suffix}" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: malloc_conf        : ${config_malloc_conf}" >&5
+$as_echo "malloc_conf        : ${config_malloc_conf}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: autogen            : ${enable_autogen}" >&5
 $as_echo "autogen            : ${enable_autogen}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: cc-silence         : ${enable_cc_silence}" >&5
