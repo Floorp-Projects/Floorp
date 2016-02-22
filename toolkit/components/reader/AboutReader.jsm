@@ -71,7 +71,6 @@ var AboutReader = function(mm, win, articlePromise) {
 
   this._setupStyleDropdown();
   this._setupButton("close-button", this._onReaderClose.bind(this), "aboutReader.toolbar.close");
-  this._setupButton("share-button", this._onShare.bind(this), "aboutReader.toolbar.share");
 
   try {
     if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
@@ -361,17 +360,6 @@ AboutReader.prototype = {
       this._mm.sendAsyncMessage("Reader:RemoveFromList", { url: this._article.url });
       UITelemetry.addEvent("unsave.1", aMethod, null, "reading_list");
     }
-  },
-
-  _onShare: function() {
-    if (!this._article)
-      return;
-
-    this._mm.sendAsyncMessage("Reader:Share", {
-      url: this._article.url,
-      title: this._article.title
-    });
-    UITelemetry.addEvent("share.1", "list", null, "reader");
   },
 
   /**

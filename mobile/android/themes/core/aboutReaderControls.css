@@ -254,10 +254,6 @@
   background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
 }
 
-.share-button {
-  background-image: url('chrome://browser/skin/images/reader-share-icon-mdpi.png');
-}
-
 .style-button {
   background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
 }
@@ -281,10 +277,6 @@
 
   .toggle-button {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-hdpi.png');
   }
 
   .style-button {
@@ -313,10 +305,6 @@
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
   }
 
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
   }
@@ -341,10 +329,6 @@
 
   .toggle-button {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
   }
 
   .style-button {
