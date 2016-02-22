@@ -28,11 +28,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const doc = panel.panelWin.document;
 
   yield dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield dispatch(breakdownActions.setBreakdownAndRefresh(heapWorker,
-                                                         breakdowns.objectClass.breakdown));
-
-  is(getState().breakdown.by, "objectClass",
-     "Should be using object class breakdown");
+  is(getState().breakdown.by, "coarseType",
+     "Should be using coarse type breakdown");
 
   const bytesCells = [...doc.querySelectorAll(".heap-tree-item-bytes")];
   checkCells(bytesCells);

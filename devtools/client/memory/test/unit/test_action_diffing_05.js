@@ -71,7 +71,7 @@ add_task(function *() {
       name: "changing breakdowns",
       func: () =>
         dispatch(setBreakdownAndRefresh(heapWorker,
-                                        breakdowns.objectClass.breakdown))
+                                        breakdowns.allocationStack.breakdown))
     }
   ];
 
