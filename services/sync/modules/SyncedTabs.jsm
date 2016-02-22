@@ -62,8 +62,11 @@ let SyncedTabsInternal = {
   },
 
   /* Make a "tab" record. Returns a promise */
-  _makeTab: Task.async(function* (client, tab, url) {
-    let icon = tab.icon;
+  _makeTab: Task.async(function* (client, tab, url, showRemoteIcons) {
+    let icon;
+    if (showRemoteIcons) {
+      icon = tab.icon;
+    }
     if (!icon) {
       try {
         icon = (yield PlacesUtils.promiseFaviconLinkUrl(url)).spec;
@@ -108,6 +111,9 @@ let SyncedTabsInternal = {
       return result;
     }
 
+    // A boolean that controls whether we should show the icon from the remote tab.
+    const showRemoteIcons = Preferences.get("services.sync.syncedTabs.showRemoteIcons", true);
+
     let engine = Weave.Service.engineManager.get("tabs");
 
     let seenURLs = new Set();
@@ -134,7 +140,7 @@ let SyncedTabsInternal = {
         if (!url || seenURLs.has(url)) {
           continue;
         }
-        let tabRepr = yield this._makeTab(client, tab, url);
+        let tabRepr = yield this._makeTab(client, tab, url, showRemoteIcons);
         if (filter && !this._tabMatchesFilter(tabRepr, filter)) {
           continue;
         }
