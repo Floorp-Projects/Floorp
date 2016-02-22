@@ -276,8 +276,6 @@ var AboutCertErrorListener = {
 
     // if we're enabling reports, send a report for this failure
     if (event.detail) {
-      let doc = content.document;
-
       let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
           .getService(Ci.nsISerializationHelper);
 
@@ -287,9 +285,9 @@ var AboutCertErrorListener = {
 
       let serializedSecurityInfo = serhelper.serializeToString(serializable);
 
+      let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
       sendAsyncMessage("Browser:SendSSLErrorReport", {
-        documentURI: doc.documentURI,
-        location: {hostname: doc.location.hostname, port: doc.location.port},
+        uri: { host, port },
         securityInfo: serializedSecurityInfo
       });
     }
@@ -348,8 +346,6 @@ var AboutNetErrorListener = {
 
     // if we're enabling reports, send a report for this failure
     if (evt.detail) {
-      let contentDoc = content.document;
-
       let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                         .getService(Ci.nsISerializationHelper);
 
@@ -359,12 +355,9 @@ var AboutNetErrorListener = {
 
       let serializedSecurityInfo = serhelper.serializeToString(serializable);
 
+      let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
       sendAsyncMessage("Browser:SendSSLErrorReport", {
-        documentURI: contentDoc.documentURI,
-        location: {
-          hostname: contentDoc.location.hostname,
-          port: contentDoc.location.port
-        },
+        uri: { host, port },
         securityInfo: serializedSecurityInfo
       });
 
@@ -372,13 +365,8 @@ var AboutNetErrorListener = {
   },
 
   onOverride: function(evt) {
-    let contentDoc = content.document;
-    let location = contentDoc.location;
-
-    sendAsyncMessage("Browser:OverrideWeakCrypto", {
-      documentURI: contentDoc.documentURI,
-      location: {hostname: location.hostname, port: location.port}
-    });
+    let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
+    sendAsyncMessage("Browser:OverrideWeakCrypto", { uri: {host, port} });
   }
 }
 
