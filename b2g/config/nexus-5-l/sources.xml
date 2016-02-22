@@ -21,7 +21,7 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="ed8a35177153bc8a0af3ab8fd1a8118ff4b12636"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="d9faad5c0f14fcd42f920c9104f0638f46a48b2a"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e80b00f4d47ef5787a9a5a6720580c9848efac18"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
