@@ -23,12 +23,11 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -514,19 +513,23 @@ public class Favicons {
         // is bundled in the database, keyed only by page URL, hence the need to return the page URL
         // here. If the database ever migrates to stop being silly in this way, this can plausibly
         // be removed.
+        if (TextUtils.isEmpty(pageURL)) {
+            return null;
+        }
         if (AboutPages.isAboutPage(pageURL) || pageURL.startsWith("jar:")) {
             return pageURL;
         }
 
         try {
             // Fall back to trying "someScheme:someDomain.someExtension/favicon.ico".
-            URI u = new URI(pageURL);
-            return new URI(u.getScheme(),
-                           u.getAuthority(),
-                           "/favicon.ico", null,
-                           null).toString();
-        } catch (URISyntaxException e) {
-            Log.e(LOGTAG, "URISyntaxException getting default favicon URL", e);
+            Uri u = Uri.parse(pageURL);
+            Uri.Builder builder = new Uri.Builder();
+            builder.scheme(u.getScheme())
+                   .authority(u.getAuthority())
+                   .appendPath("favicon.ico");
+            return builder.build().toString();
+        } catch (Exception e) {
+            Log.d(LOGTAG, "Exception getting default favicon URL");
             return null;
         }
     }
