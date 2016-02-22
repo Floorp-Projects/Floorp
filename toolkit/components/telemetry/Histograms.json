@@ -8412,14 +8412,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of times an action is performed by a user (0=OPEN_PANEL, 1=OPEN_CONVERSATION, 2=ROOM_OPEN, 3=ROOM_SHARE, 4=ROOM_DELETE)"
   },
-  "LOOP_INFOBAR_ACTION_BUTTONS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
-    "expires_in_version": "51",
-    "kind": "enumerated",
-    "n_values": 2,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number times info bar buttons are clicked (0=PAUSED, 1=RESUMED)"
-  },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
