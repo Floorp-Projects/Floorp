@@ -17,7 +17,6 @@ extern "C" {
 #endif
 
 typedef struct XPTState         XPTState;
-typedef struct XPTDatapool      XPTDatapool;
 typedef struct XPTCursor        XPTCursor;
 
 extern XPT_PUBLIC_API(PRBool)
@@ -51,13 +50,9 @@ typedef enum {
 struct XPTState {
     uint32_t         data_offset;
     uint32_t         next_cursor[2];
-    XPTDatapool      *pool;
     XPTArena         *arena;
-};
-
-struct XPTDatapool {
-    char             *data;
-    uint32_t         allocated;
+    char             *pool_data;
+    uint32_t         pool_allocated;
 };
 
 struct XPTCursor {
