@@ -226,14 +226,12 @@ struct XPTTypeDescriptor {
  * of TypeDescriptors: 
  *
  * int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, 
- * int64_t, uint64_t, wchar_t, char, string
+ * int64_t, uint64_t, wchar_t, char
  * 
  * The type (and thus the size) of the value record is determined by the 
  * contents of the associated TypeDescriptor record. For instance, if type 
  * corresponds to int16_t, then value is a two-byte record consisting of a 
- * 16-bit signed integer.  For a ConstDescriptor type of string, the value 
- * record is of type String*, i.e. an offset within the data pool to a 
- * String record containing the constant string.
+ * 16-bit signed integer.
  */
 union XPTConstValue {
     int8_t    i8;
@@ -244,14 +242,8 @@ union XPTConstValue {
     uint32_t  ui32;
     int64_t   i64; 
     uint64_t  ui64; 
-    float     flt;
-    double    dbl;
-    PRBool    bul;
     char      ch; 
     uint16_t  wch;
-    nsID      *iid;
-    char      *str;
-    uint16_t  *wstr;
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
