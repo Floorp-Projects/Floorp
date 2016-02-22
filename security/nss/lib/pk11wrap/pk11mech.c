@@ -152,6 +152,8 @@ PK11_GetKeyMechanism(CK_KEY_TYPE type)
 	return CKM_SEED_CBC;
     case CKK_CAMELLIA:
 	return CKM_CAMELLIA_CBC;
+    case CKK_NSS_CHACHA20:
+	return CKM_NSS_CHACHA20_POLY1305;
     case CKK_AES:
 	return CKM_AES_CBC;
     case CKK_DES:
@@ -219,6 +221,9 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_CAMELLIA_CBC_PAD:
     case CKM_CAMELLIA_KEY_GEN:
 	return CKK_CAMELLIA;
+    case CKM_NSS_CHACHA20_POLY1305:
+    case CKM_NSS_CHACHA20_KEY_GEN:
+	return CKK_NSS_CHACHA20;
     case CKM_AES_ECB:
     case CKM_AES_CBC:
     case CKM_AES_CCM:
@@ -431,6 +436,8 @@ PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
     case CKM_CAMELLIA_CBC_PAD:
     case CKM_CAMELLIA_KEY_GEN:
 	return CKM_CAMELLIA_KEY_GEN;
+    case CKM_NSS_CHACHA20_POLY1305:
+	return CKM_NSS_CHACHA20_KEY_GEN;
     case CKM_AES_ECB:
     case CKM_AES_CBC:
     case CKM_AES_CCM:
