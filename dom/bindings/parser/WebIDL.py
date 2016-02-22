@@ -508,6 +508,9 @@ class IDLExposureMixins():
     def isExposedInAnyWorker(self):
         return len(self.getWorkerExposureSet()) > 0
 
+    def isExposedInWorkerDebugger(self):
+        return len(self.getWorkerDebuggerExposureSet()) > 0
+
     def isExposedInSystemGlobals(self):
         return 'BackstagePass' in self.exposureSet
 
@@ -526,6 +529,10 @@ class IDLExposureMixins():
     def getWorkerExposureSet(self):
         workerScopes = self._globalScope.globalNameMapping["Worker"]
         return workerScopes.intersection(self.exposureSet)
+
+    def getWorkerDebuggerExposureSet(self):
+        workerDebuggerScopes = self._globalScope.globalNameMapping["WorkerDebugger"]
+        return workerDebuggerScopes.intersection(self.exposureSet)
 
 
 class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
