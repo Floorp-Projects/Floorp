@@ -38,41 +38,12 @@ CHECK_COUNT(XPTCursor* cursor, uint32_t space)
     return PR_TRUE;
 }
 
-XPT_PUBLIC_API(XPTState *)
-XPT_NewXDRState(char *data, uint32_t len)
+XPT_PUBLIC_API(void)
+XPT_InitXDRState(XPTState* state, char *data, uint32_t len)
 {
-    XPTState *state;
-    XPTArena *arena;
-
-    arena = XPT_NewArena(512, sizeof(double), "an XDRState");
-    if (!arena)
-        return NULL;
-
-    state = XPT_NEWZAP(arena, XPTState);
-    if (!state)
-        goto err_free_arena;
-
-    state->arena = arena;
     state->next_cursor[0] = state->next_cursor[1] = 1;
     state->pool_data = data;
     state->pool_allocated = len;
-
-    return state;
-
- err_free_arena:
-    if (arena)
-        XPT_DestroyArena(arena);
-    return NULL;
-}
-
-XPT_PUBLIC_API(void)
-XPT_DestroyXDRState(XPTState *state)
-{
-    XPTArena *arena = state->arena;
-
-    XPT_DELETE(arena, state);
-    if (arena)
-        XPT_DestroyArena(arena);
 }
 
 /* All offsets are 1-based */

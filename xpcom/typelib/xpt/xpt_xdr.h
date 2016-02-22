@@ -50,7 +50,6 @@ typedef enum {
 struct XPTState {
     uint32_t         data_offset;
     uint32_t         next_cursor[2];
-    XPTArena         *arena;
     char             *pool_data;
     uint32_t         pool_allocated;
 };
@@ -62,17 +61,14 @@ struct XPTCursor {
     uint8_t     bits;
 };
 
-extern XPT_PUBLIC_API(XPTState *)
-XPT_NewXDRState(char *data, uint32_t len);
+extern XPT_PUBLIC_API(void)
+XPT_InitXDRState(XPTState* state, char* data, uint32_t len);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len, XPTCursor *cursor);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_SeekTo(XPTCursor *cursor, uint32_t offset);
-
-extern XPT_PUBLIC_API(void)
-XPT_DestroyXDRState(XPTState *state);
 
 extern XPT_PUBLIC_API(void)
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
