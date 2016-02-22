@@ -92,7 +92,11 @@ struct XPTHeader {
 struct XPTInterfaceDirectoryEntry {
     nsID                   iid;
     char                   *name;
-    char                   *name_space;
+
+    // This field exists in the on-disk format. But it isn't used so we don't
+    // allocate space for it in memory.
+    //char                 *name_space;
+
     XPTInterfaceDescriptor *interface_descriptor;
 };
 
