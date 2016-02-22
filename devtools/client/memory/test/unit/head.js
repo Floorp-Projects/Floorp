@@ -23,6 +23,7 @@ var HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFi
 var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 var { addDebuggerToGlobal } = require("resource://gre/modules/jsdebugger.jsm");
 var Store = require("devtools/client/memory/store");
+var { L10N } = require("devtools/client/memory/utils");
 var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 
 function dumpn(msg) {
@@ -80,11 +81,8 @@ function isBreakdownType (report, type) {
   switch (type) {
     case "coarseType":
       return report.children.find(c => c.name === "objects");
-    case "objectClass":
-      return report.children.find(c => c.name === "Function");
-    case "internalType":
-      return report.children.find(c => c.name === "js::BaseShape") &&
-             !report.children.find(c => c.name === "objects");
+    case "allocationStack":
+      return report.children.find(c => c.name === "noStack");
     default:
       throw new Error(`isBreakdownType does not yet support ${type}`);
   }
