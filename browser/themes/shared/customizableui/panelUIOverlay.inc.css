@@ -255,6 +255,14 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   max-width: 800px;
 }
 
+.cui-widget-panel[viewId^=PanelUI-webext-] > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: 3.5px;
+}
+
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
