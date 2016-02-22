@@ -2702,8 +2702,7 @@ var BrowserOnClick = {
       break;
       case "Browser:SendSSLErrorReport":
         this.onSSLErrorReport(msg.target,
-                              msg.data.documentURI,
-                              msg.data.location,
+                              msg.data.uri,
                               msg.data.securityInfo);
       break;
       case "Browser:SetSSLErrorReportAuto":
@@ -2723,7 +2722,7 @@ var BrowserOnClick = {
         let weakCryptoOverride = Cc["@mozilla.org/security/weakcryptooverride;1"]
                                    .getService(Ci.nsIWeakCryptoOverride);
         weakCryptoOverride.addWeakCryptoOverride(
-          msg.data.location.hostname,
+          msg.data.uri.host,
           PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
       break;
       case "Browser:SSLErrorGoBack":
@@ -2732,7 +2731,7 @@ var BrowserOnClick = {
     }
   },
 
-  onSSLErrorReport: function(browser, documentURI, location, securityInfo) {
+  onSSLErrorReport: function(browser, uri, securityInfo) {
     if (!Services.prefs.getBoolPref("security.ssl.errorReporting.enabled")) {
       Cu.reportError("User requested certificate error report sending, but certificate error reporting is disabled");
       return;
@@ -2745,11 +2744,8 @@ var BrowserOnClick = {
 
     let errorReporter = Cc["@mozilla.org/securityreporter;1"]
                           .getService(Ci.nsISecurityReporter);
-    // if location.port is the empty string, set to -1 (for consistency with
-    // port values from nsIURI)
-    let port = location.port === "" ? -1 : location.port;
     errorReporter.reportTLSError(transportSecurityInfo,
-                                 location.hostname, port);
+                                 uri.host, uri.port);
   },
 
   onAboutCertError: function (browser, elementId, isTopFrame, location, securityInfoAsString) {
