@@ -28,6 +28,14 @@ typedef union
     bool        boolVal;
 } PrefValue;
 
+struct PrefHashEntry : PLDHashEntryHdr
+{
+    uint16_t flags; // This field goes first to minimize struct size on 64-bit.
+    const char *key;
+    PrefValue defaultPref;
+    PrefValue userPref;
+};
+
 /*
 // <font color=blue>
 // The Init function initializes the preference context and creates
@@ -37,7 +45,7 @@ typedef union
 void        PREF_Init();
 
 /*
-// Cleanup should be called at program exit to free the
+// Cleanup should be called at program exit to free the 
 // list of registered callbacks.
 */
 void        PREF_Cleanup();
@@ -45,88 +53,23 @@ void        PREF_CleanupPrefs();
 
 /*
 // <font color=blue>
-// Preference flags, including the native type of the preference. Changing any of these
-// values will require modifying the code inside of PrefTypeFlags class.
+// Preference flags, including the native type of the preference
 // </font>
 */
 
-enum class PrefType {
-  Invalid = 0,
-  String = 1,
-  Int = 2,
-  Bool = 3,
-};
-
-// Keep the type of the preference, as well as the flags guiding its behaviour.
-class PrefTypeFlags
-{
-public:
-  PrefTypeFlags() : mValue(AsInt(PrefType::Invalid)) {}
-  PrefTypeFlags(PrefType aType) : mValue(AsInt(aType)) {}
-  PrefTypeFlags& Reset() { mValue = AsInt(PrefType::Invalid); return *this; }
-
-  bool IsTypeValid() const { return !IsPrefType(PrefType::Invalid); }
-  bool IsTypeString() const { return IsPrefType(PrefType::String); }
-  bool IsTypeInt() const { return IsPrefType(PrefType::Int); }
-  bool IsTypeBool() const { return IsPrefType(PrefType::Bool); }
-  bool IsPrefType(PrefType type) const { return GetPrefType() == type; }
-
-  PrefTypeFlags& SetPrefType(PrefType aType) {
-    mValue = mValue - AsInt(GetPrefType()) + AsInt(aType);
-    return *this;
-  }
-  PrefType GetPrefType() const {
-    return (PrefType)(mValue & (AsInt(PrefType::String) |
-                                AsInt(PrefType::Int) |
-                                AsInt(PrefType::Bool)));
-  }
-
-  bool HasDefault() const { return mValue & PREF_FLAG_HAS_DEFAULT; }
-  PrefTypeFlags& SetHasDefault(bool aSetOrUnset) { return SetFlag(PREF_FLAG_HAS_DEFAULT, aSetOrUnset); }
-
-  bool HasStickyDefault() const { return mValue & PREF_FLAG_STICKY_DEFAULT; }
-  PrefTypeFlags& SetHasStickyDefault(bool aSetOrUnset) { return SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset); }
-
-  bool IsLocked() const { return mValue & PREF_FLAG_LOCKED; }
-  PrefTypeFlags& SetLocked(bool aSetOrUnset) { return SetFlag(PREF_FLAG_LOCKED, aSetOrUnset); }
-
-  bool HasUserValue() const { return mValue & PREF_FLAG_USERSET; }
-  PrefTypeFlags& SetHasUserValue(bool aSetOrUnset) { return SetFlag(PREF_FLAG_USERSET, aSetOrUnset); }
-
-private:
-  static uint16_t AsInt(PrefType aType) { return (uint16_t)aType; }
-
-  PrefTypeFlags& SetFlag(uint16_t aFlag, bool aSetOrUnset) {
-    mValue = aSetOrUnset ? mValue | aFlag : mValue & ~aFlag;
-    return *this;
-  }
-
-  // Pack both the value of type (PrefType) and flags into the same int.  This is why
-  // the flag enum starts at 4, as PrefType occupies the bottom two bits.
-  enum {
-    PREF_FLAG_LOCKED = 4,
-    PREF_FLAG_USERSET = 8,
-    PREF_FLAG_CONFIG = 16,
-    PREF_FLAG_REMOTE = 32,
-    PREF_FLAG_LILOCAL = 64,
-    PREF_FLAG_HAS_DEFAULT = 128,
-    PREF_FLAG_STICKY_DEFAULT = 256,
-  };
-  uint16_t mValue;
-};
-
-struct PrefHashEntry : PLDHashEntryHdr
-{
-    PrefTypeFlags prefFlags; // This field goes first to minimize struct size on 64-bit.
-    const char *key;
-    PrefValue defaultPref;
-    PrefValue userPref;
-};
+typedef enum { PREF_INVALID = 0,
+               PREF_LOCKED = 1, PREF_USERSET = 2, PREF_CONFIG = 4, PREF_REMOTE = 8,
+               PREF_LILOCAL = 16, PREF_STRING = 32, PREF_INT = 64, PREF_BOOL = 128,
+               PREF_HAS_DEFAULT = 256,
+               // pref is default pref with "sticky" semantics
+               PREF_STICKY_DEFAULT = 512,
+               PREF_VALUETYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL)
+             } PrefType;
 
 /*
 // <font color=blue>
 // Set the various types of preferences.  These functions take a dotted
-// notation of the preference name (e.g. "browser.startup.homepage").
+// notation of the preference name (e.g. "browser.startup.homepage").  
 // Note that this will cause the preference to be saved to the file if
 // it is different from the default.  In other words, these are used
 // to set the _user_ preferences.
@@ -160,8 +103,8 @@ bool     PREF_HasUserPref(const char* pref_name);
 // </font>
 */
 nsresult PREF_GetIntPref(const char *pref,
-                           int32_t * return_int, bool get_default);
-nsresult PREF_GetBoolPref(const char *pref, bool * return_val, bool get_default);
+                           int32_t * return_int, bool get_default);	
+nsresult PREF_GetBoolPref(const char *pref, bool * return_val, bool get_default);	
 /*
 // <font color=blue>
 // These functions are similar to the above "Get" version with the significant
@@ -230,10 +173,10 @@ typedef void (*PrefChangedFunc) (const char *, void *);
 // matched all the parameters; otherwise it returns PREF_ERROR.
 // </font>
 */
-void PREF_RegisterCallback(const char* domain,
-                           PrefChangedFunc callback, void* instance_data );
-nsresult PREF_UnregisterCallback(const char* domain,
-                                 PrefChangedFunc callback, void* instance_data );
+void PREF_RegisterCallback( const char* domain,
+								PrefChangedFunc callback, void* instance_data );
+nsresult PREF_UnregisterCallback( const char* domain,
+								PrefChangedFunc callback, void* instance_data );
 
 /*
  * Used by nsPrefService as the callback function of the 'pref' parser

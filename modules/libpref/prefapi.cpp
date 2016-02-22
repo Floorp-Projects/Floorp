@@ -40,7 +40,7 @@ static void
 clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PrefHashEntry *pref = static_cast<PrefHashEntry *>(entry);
-    if (pref->prefFlags.IsTypeString())
+    if (pref->flags & PREF_STRING)
     {
         if (pref->defaultPref.stringVal)
             PL_strfree(pref->defaultPref.stringVal);
@@ -117,7 +117,13 @@ static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
 
 /*---------------------------------------------------------------------------*/
 
+#define PREF_IS_LOCKED(pref)            ((pref)->flags & PREF_LOCKED)
+#define PREF_HAS_DEFAULT_VALUE(pref)    ((pref)->flags & PREF_HAS_DEFAULT)
+#define PREF_HAS_USER_VALUE(pref)       ((pref)->flags & PREF_USERSET)
+#define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
+
 static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
+
 /* -- Privates */
 struct CallbackNode {
     char*                   domain;
@@ -243,7 +249,7 @@ PREF_SetCharPref(const char *pref_name, const char *value, bool set_default)
     PrefValue pref;
     pref.stringVal = (char*)value;
 
-    return pref_HashPref(pref_name, pref, PrefType::String, set_default ? kPrefSetDefault : 0);
+    return pref_HashPref(pref_name, pref, PREF_STRING, set_default ? kPrefSetDefault : 0);
 }
 
 nsresult
@@ -252,7 +258,7 @@ PREF_SetIntPref(const char *pref_name, int32_t value, bool set_default)
     PrefValue pref;
     pref.intVal = value;
 
-    return pref_HashPref(pref_name, pref, PrefType::Int, set_default ? kPrefSetDefault : 0);
+    return pref_HashPref(pref_name, pref, PREF_INT, set_default ? kPrefSetDefault : 0);
 }
 
 nsresult
@@ -261,7 +267,7 @@ PREF_SetBoolPref(const char *pref_name, bool value, bool set_default)
     PrefValue pref;
     pref.boolVal = value;
 
-    return pref_HashPref(pref_name, pref, PrefType::Bool, set_default ? kPrefSetDefault : 0);
+    return pref_HashPref(pref_name, pref, PREF_BOOL, set_default ? kPrefSetDefault : 0);
 }
 
 enum WhichValue { DEFAULT_VALUE, USER_VALUE };
@@ -329,12 +335,12 @@ pref_savePrefs(PLDHashTable* aTable)
         // where we're getting our pref from
         PrefValue* sourcePref;
 
-        if (pref->prefFlags.HasUserValue() &&
+        if (PREF_HAS_USER_VALUE(pref) &&
             (pref_ValueChanged(pref->defaultPref,
                                pref->userPref,
-                               pref->prefFlags.GetPrefType()) ||
-             !(pref->prefFlags.HasDefault()) ||
-             pref->prefFlags.HasStickyDefault())) {
+                               (PrefType) PREF_TYPE(pref)) ||
+             !(pref->flags & PREF_HAS_DEFAULT) ||
+             pref->flags & PREF_STICKY_DEFAULT)) {
             sourcePref = &pref->userPref;
         } else {
             // do not save default prefs that haven't changed
@@ -342,15 +348,15 @@ pref_savePrefs(PLDHashTable* aTable)
         }
 
         // strings are in quotes!
-        if (pref->prefFlags.IsTypeString()) {
+        if (pref->flags & PREF_STRING) {
             prefValue = '\"';
             str_escape(sourcePref->stringVal, prefValue);
             prefValue += '\"';
 
-        } else if (pref->prefFlags.IsTypeInt()) {
+        } else if (pref->flags & PREF_INT) {
             prefValue.AppendInt(sourcePref->intVal);
 
-        } else if (pref->prefFlags.IsTypeBool()) {
+        } else if (pref->flags & PREF_BOOL) {
             prefValue = (sourcePref->boolVal) ? "true" : "false";
         }
 
@@ -383,14 +389,14 @@ GetPrefValueFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref,
         settingValue = &aPref->defaultValue().get_PrefValue();
     }
 
-    switch (aHashEntry->prefFlags.GetPrefType()) {
-      case PrefType::String:
+    switch (aHashEntry->flags & PREF_VALUETYPE_MASK) {
+    case PREF_STRING:
         *settingValue = nsDependentCString(value->stringVal);
         return;
-      case PrefType::Int:
+    case PREF_INT:
         *settingValue = value->intVal;
         return;
-      case PrefType::Bool:
+    case PREF_BOOL:
         *settingValue = !!value->boolVal;
         return;
     default:
@@ -402,12 +408,12 @@ void
 pref_GetPrefFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref)
 {
     aPref->name() = aHashEntry->key;
-    if (aHashEntry->prefFlags.HasDefault()) {
+    if (PREF_HAS_DEFAULT_VALUE(aHashEntry)) {
         GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
     } else {
         aPref->defaultValue() = null_t();
     }
-    if (aHashEntry->prefFlags.HasUserValue()) {
+    if (PREF_HAS_USER_VALUE(aHashEntry)) {
         GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
     } else {
         aPref->userValue() = null_t();
@@ -445,7 +451,11 @@ bool PREF_HasUserPref(const char *pref_name)
         return false;
 
     PrefHashEntry *pref = pref_HashTableLookup(pref_name);
-    return pref && pref->prefFlags.HasUserValue();
+    if (!pref) return false;
+
+    /* convert PREF_HAS_USER_VALUE to bool */
+    return (PREF_HAS_USER_VALUE(pref) != 0);
+
 }
 
 nsresult
@@ -458,12 +468,12 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default
     char* stringVal;
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
 
-    if (pref && (pref->prefFlags.IsTypeString())) {
-        if (get_default || pref->prefFlags.IsLocked() || !pref->prefFlags.HasUserValue()) {
+    if (pref && (pref->flags & PREF_STRING))
+    {
+        if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
             stringVal = pref->defaultPref.stringVal;
-        } else {
+        else
             stringVal = pref->userPref.stringVal;
-        }
 
         if (stringVal) {
             *return_buffer = NS_strdup(stringVal);
@@ -480,17 +490,18 @@ nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_de
 
     nsresult rv = NS_ERROR_UNEXPECTED;
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
-    if (pref && (pref->prefFlags.IsTypeInt())) {
-        if (get_default || pref->prefFlags.IsLocked() || !pref->prefFlags.HasUserValue()) {
+    if (pref && (pref->flags & PREF_INT))
+    {
+        if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
+        {
             int32_t tempInt = pref->defaultPref.intVal;
             /* check to see if we even had a default */
-            if (!pref->prefFlags.HasDefault()) {
+            if (!(pref->flags & PREF_HAS_DEFAULT))
                 return NS_ERROR_UNEXPECTED;
-            }
             *return_int = tempInt;
-        } else {
-            *return_int = pref->userPref.intVal;
         }
+        else
+            *return_int = pref->userPref.intVal;
         rv = NS_OK;
     }
     return rv;
@@ -504,15 +515,18 @@ nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_d
     nsresult rv = NS_ERROR_UNEXPECTED;
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
     //NS_ASSERTION(pref, pref_name);
-    if (pref && (pref->prefFlags.IsTypeBool())) {
-        if (get_default || pref->prefFlags.IsLocked() || !pref->prefFlags.HasUserValue()) {
+    if (pref && (pref->flags & PREF_BOOL))
+    {
+        if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
+        {
             bool tempBool = pref->defaultPref.boolVal;
             /* check to see if we even had a default */
-            if (pref->prefFlags.HasDefault()) {
+            if (pref->flags & PREF_HAS_DEFAULT) {
                 *return_value = tempBool;
                 rv = NS_OK;
             }
-        } else {
+        }
+        else {
             *return_value = pref->userPref.boolVal;
             rv = NS_OK;
         }
@@ -570,10 +584,11 @@ PREF_ClearUserPref(const char *pref_name)
         return NS_ERROR_NOT_INITIALIZED;
 
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
-    if (pref && pref->prefFlags.HasUserValue()) {
-        pref->prefFlags.SetHasUserValue(false);
+    if (pref && PREF_HAS_USER_VALUE(pref))
+    {
+        pref->flags &= ~PREF_USERSET;
 
-        if (!pref->prefFlags.HasDefault()) {
+        if (!(pref->flags & PREF_HAS_DEFAULT)) {
             gHashTable->RemoveEntry(pref);
         }
 
@@ -597,11 +612,11 @@ PREF_ClearAllUserPrefs()
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
         auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-        if (pref->prefFlags.HasUserValue()) {
+        if (PREF_HAS_USER_VALUE(pref)) {
             prefStrings.push_back(std::string(pref->key));
 
-            pref->prefFlags.SetHasUserValue(false);
-            if (!pref->prefFlags.HasDefault()) {
+            pref->flags &= ~PREF_USERSET;
+            if (!(pref->flags & PREF_HAS_DEFAULT)) {
                 iter.Remove();
             }
         }
@@ -625,14 +640,18 @@ nsresult PREF_LockPref(const char *key, bool lockit)
         return NS_ERROR_UNEXPECTED;
 
     if (lockit) {
-        if (!pref->prefFlags.IsLocked()) {
-            pref->prefFlags.SetLocked(true);
+        if (!PREF_IS_LOCKED(pref))
+        {
+            pref->flags |= PREF_LOCKED;
             gIsAnyPrefLocked = true;
             pref_DoCallback(key);
         }
-    } else {
-        if (pref->prefFlags.IsLocked()) {
-            pref->prefFlags.SetLocked(false);
+    }
+    else
+    {
+        if (PREF_IS_LOCKED(pref))
+        {
+            pref->flags &= ~PREF_LOCKED;
             pref_DoCallback(key);
         }
     }
@@ -645,23 +664,15 @@ nsresult PREF_LockPref(const char *key, bool lockit)
 static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
 {
     bool changed = true;
-    switch(type) {
-      case PrefType::String:
-        if (oldValue.stringVal && newValue.stringVal) {
+    if (type & PREF_STRING)
+    {
+        if (oldValue.stringVal && newValue.stringVal)
             changed = (strcmp(oldValue.stringVal, newValue.stringVal) != 0);
-        }
-        break;
-      case PrefType::Int:
-        changed = oldValue.intVal != newValue.intVal;
-        break;
-      case PrefType::Bool:
-        changed = oldValue.boolVal != newValue.boolVal;
-        break;
-      case PrefType::Invalid:
-      default:
-        changed = false;
-        break;
     }
+    else if (type & PREF_INT)
+        changed = oldValue.intVal != newValue.intVal;
+    else if (type & PREF_BOOL)
+        changed = oldValue.boolVal != newValue.boolVal;
     return changed;
 }
 
@@ -670,21 +681,20 @@ static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType t
  * ensure that they are not changing the type of a preference that has
  * a default value.
  */
-static PrefTypeFlags pref_SetValue(PrefValue* existingValue, PrefTypeFlags flags,
-                                   PrefValue newValue, PrefType newType)
+static void pref_SetValue(PrefValue* existingValue, uint16_t *existingFlags,
+                          PrefValue newValue, PrefType newType)
 {
-    if (flags.IsTypeString() && existingValue->stringVal) {
+    if ((*existingFlags & PREF_STRING) && existingValue->stringVal) {
         PL_strfree(existingValue->stringVal);
     }
-    flags.SetPrefType(newType);
-    if (flags.IsTypeString()) {
+    *existingFlags = (*existingFlags & ~PREF_VALUETYPE_MASK) | newType;
+    if (newType & PREF_STRING) {
         PR_ASSERT(newValue.stringVal);
         existingValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : nullptr;
     }
     else {
         *existingValue = newValue;
     }
-    return flags;
 }
 
 PrefHashEntry* pref_HashTableLookup(const char *key)
@@ -713,53 +723,63 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     if (!pref->key) {
 
         // initialize the pref entry
-        pref->prefFlags.Reset().SetPrefType(type);
+        pref->flags = type;
         pref->key = ArenaStrDup(key, &gPrefNameArena);
         memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
         memset(&pref->userPref, 0, sizeof(pref->userPref));
-    } else if (pref->prefFlags.HasDefault() && !pref->prefFlags.IsPrefType(type)) {
+    }
+    else if ((pref->flags & PREF_HAS_DEFAULT) && PREF_TYPE(pref) != type)
+    {
         NS_WARNING(nsPrintfCString("Trying to overwrite value of default pref %s with the wrong type!", key).get());
         return NS_ERROR_UNEXPECTED;
     }
 
     bool valueChanged = false;
-    if (flags & kPrefSetDefault) {
-        if (!pref->prefFlags.IsLocked()) {
-            /* ?? change of semantics? */
+    if (flags & kPrefSetDefault)
+    {
+        if (!PREF_IS_LOCKED(pref))
+        {       /* ?? change of semantics? */
             if (pref_ValueChanged(pref->defaultPref, value, type) ||
-                !pref->prefFlags.HasDefault()) {
-                pref->prefFlags = pref_SetValue(&pref->defaultPref, pref->prefFlags, value, type).SetHasDefault(true);
-                if (flags & kPrefStickyDefault) {
-                    pref->prefFlags.SetHasStickyDefault(true);
-                }
-                if (!pref->prefFlags.HasUserValue()) {
+                !(pref->flags & PREF_HAS_DEFAULT))
+            {
+                pref_SetValue(&pref->defaultPref, &pref->flags, value, type);
+                pref->flags |= PREF_HAS_DEFAULT;
+                if (flags & kPrefStickyDefault)
+                    pref->flags |= PREF_STICKY_DEFAULT;
+                if (!PREF_HAS_USER_VALUE(pref))
                     valueChanged = true;
-                }
             }
             // What if we change the default to be the same as the user value?
             // Should we clear the user value?
         }
-    } else {
+    }
+    else
+    {
         /* If new value is same as the default value and it's not a "sticky"
            pref, then un-set the user value.
            Otherwise, set the user value only if it has changed */
-        if ((pref->prefFlags.HasDefault()) &&
-            !(pref->prefFlags.HasStickyDefault()) &&
+        if ((pref->flags & PREF_HAS_DEFAULT) &&
+            !(pref->flags & PREF_STICKY_DEFAULT) &&
             !pref_ValueChanged(pref->defaultPref, value, type) &&
-            !(flags & kPrefForceSet)) {
-            if (pref->prefFlags.HasUserValue()) {
+            !(flags & kPrefForceSet))
+        {
+            if (PREF_HAS_USER_VALUE(pref))
+            {
                 /* XXX should we free a user-set string value if there is one? */
-                pref->prefFlags.SetHasUserValue(false);
-                if (!pref->prefFlags.IsLocked()) {
+                pref->flags &= ~PREF_USERSET;
+                if (!PREF_IS_LOCKED(pref)) {
                     gDirty = true;
                     valueChanged = true;
                 }
             }
-        } else if (!pref->prefFlags.HasUserValue() ||
-                 !pref->prefFlags.IsPrefType(type) ||
-                 pref_ValueChanged(pref->userPref, value, type) ) {
-            pref->prefFlags = pref_SetValue(&pref->userPref, pref->prefFlags, value, type).SetHasUserValue(true);
-            if (!pref->prefFlags.IsLocked()) {
+        }
+        else if (!PREF_HAS_USER_VALUE(pref) ||
+                 PREF_TYPE(pref) != type ||
+                 pref_ValueChanged(pref->userPref, value, type) )
+        {
+            pref_SetValue(&pref->userPref, &pref->flags, value, type);
+            pref->flags |= PREF_USERSET;
+            if (!PREF_IS_LOCKED(pref)) {
                 gDirty = true;
                 valueChanged = true;
             }
@@ -788,11 +808,17 @@ PREF_GetPrefType(const char *pref_name)
 {
     if (gHashTable) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
-        if (pref) {
-            return pref->prefFlags.GetPrefType();
+        if (pref)
+        {
+            if (pref->flags & PREF_STRING)
+                return PREF_STRING;
+            else if (pref->flags & PREF_INT)
+                return PREF_INT;
+            else if (pref->flags & PREF_BOOL)
+                return PREF_BOOL;
         }
     }
-    return PrefType::Invalid;
+    return PREF_INVALID;
 }
 
 /* -- */
@@ -803,9 +829,8 @@ PREF_PrefIsLocked(const char *pref_name)
     bool result = false;
     if (gIsAnyPrefLocked && gHashTable) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
-        if (pref && pref->prefFlags.IsLocked()) {
+        if (pref && PREF_IS_LOCKED(pref))
             result = true;
-        }
     }
 
     return result;
@@ -948,16 +973,10 @@ void PREF_ReaderCallback(void       *closure,
                          PrefType    type,
                          bool        isDefault,
                          bool        isStickyDefault)
-
 {
-    uint32_t flags = 0;
-    if (isDefault) {
-        flags |= kPrefSetDefault;
-        if (isStickyDefault) {
-            flags |= kPrefStickyDefault;
-        }
-    } else {
-        flags |= kPrefForceSet;
+    uint32_t flags = isDefault ? kPrefSetDefault : kPrefForceSet;
+    if (isDefault && isStickyDefault) {
+        flags |= kPrefStickyDefault;
     }
     pref_HashPref(pref, value, type, flags);
 }
