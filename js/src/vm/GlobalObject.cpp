@@ -745,3 +745,18 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
     holder->setSlot(shape->slot(), value);
     return true;
 }
+
+/* static */ bool
+GlobalObject::ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global)
+{
+    if (global->getSlot(MODULE_PROTO).isUndefined()) {
+        MOZ_ASSERT(global->getSlot(IMPORT_ENTRY_PROTO).isUndefined() &&
+                   global->getSlot(EXPORT_ENTRY_PROTO).isUndefined());
+        if (!js::InitModuleClasses(cx, global))
+            return false;
+    }
+    MOZ_ASSERT(global->getSlot(MODULE_PROTO).isObject() &&
+               global->getSlot(IMPORT_ENTRY_PROTO).isObject() &&
+               global->getSlot(EXPORT_ENTRY_PROTO).isObject());
+    return true;
+}
