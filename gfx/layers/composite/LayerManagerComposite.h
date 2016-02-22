@@ -480,7 +480,7 @@ public:
   float GetShadowOpacity() { return mShadowOpacity; }
   const Maybe<ParentLayerIntRect>& GetShadowClipRect() { return mShadowClipRect; }
   const LayerIntRegion& GetShadowVisibleRegion() { return mShadowVisibleRegion; }
-  const gfx::Matrix4x4& GetShadowTransform() { return mShadowTransform; }
+  const gfx::Matrix4x4& GetShadowBaseTransform() { return mShadowTransform; }
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool HasLayerBeenComposited() { return mLayerComposited; }
   gfx::IntRect GetClearRect() { return mClearRect; }

@@ -15,17 +15,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/dispatcher.js");
 Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/elements.js");
+Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/simpletest.js");
 
 // Bug 1083711: Load transport.js as an SDK module instead of subscript
 loader.loadSubScript("resource://devtools/shared/transport/transport.js");
-
-// Preserve this import order:
-var events = {};
-loader.loadSubScript("chrome://marionette/content/EventUtils.js", events);
-loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", events);
-loader.loadSubScript("chrome://marionette/content/frame-manager.js");
 
 const logger = Log.repository.getLogger("Marionette");
 

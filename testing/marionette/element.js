@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+"use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/error.js");
 
 /**
@@ -299,7 +302,7 @@ ElementManager.prototype = {
    *        as its members.
    */
   applyNamedArgs: function EM_applyNamedArgs(args) {
-    namedArgs = {};
+    let namedArgs = {};
     args.forEach(function(arg) {
       if (arg && typeof(arg['__marionetteArgs']) === 'object') {
         for (let prop in arg['__marionetteArgs']) {
@@ -592,10 +595,113 @@ ElementManager.prototype = {
     }
     return elements;
   },
-}
+};
 
 this.elements = {};
+
 elements.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
+};
+
+/**
+ * This function generates a pair of coordinates relative to the viewport
+ * given a target element and coordinates relative to that element's
+ * top-left corner.
+ *
+ * @param {Node} node
+ *     Target node.
+ * @param {number=} x
+ *     Horizontal offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ * @param {number=} y
+ *     Vertical offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ */
+// TODO(ato): Replicated from listener.js for the time being
+elements.coordinates = function(node, x = undefined, y = undefined) {
+  let box = node.getBoundingClientRect();
+  if (!x) {
+    x = box.width / 2.0;
+  }
+  if (!y) {
+    y = box.height / 2.0;
+  }
+  return {
+    x: box.left + x,
+    y: box.top + y,
+  };
+}
+
+/**
+ * This function returns true if the node is in the viewport.
+ *
+ * @param {Element} element
+ *     Target element.
+ * @param {number=} x
+ *     Horizontal offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ * @param {number=} y
+ *     Vertical offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ */
+elements.inViewport = function(el, x = undefined, y = undefined) {
+  let win = el.ownerDocument.defaultView;
+  let c = elements.coordinates(el, x, y);
+  let vp = {
+    top: win.pageYOffset,
+    left: win.pageXOffset,
+    bottom: (win.pageYOffset + win.innerHeight),
+    right: (win.pageXOffset + win.innerWidth)
+  };
+
+  return (vp.left <= c.x + win.pageXOffset &&
+      c.x + win.pageXOffset <= vp.right &&
+      vp.top <= c.y + win.pageYOffset &&
+      c.y + win.pageYOffset <= vp.bottom);
+};
+
+/**
+ * This function throws the visibility of the element error if the element is
+ * not displayed or the given coordinates are not within the viewport.
+ *
+ * @param {Element} element
+ *     Element to check if visible.
+ * @param {Window} window
+ *     Window object.
+ * @param {number=} x
+ *     Horizontal offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ * @param {number=} y
+ *     Vertical offset relative to target.  Defaults to the centre of
+ *     the target's bounding box.
+ */
+elements.checkVisible = function(el, win, x = undefined, y = undefined) {
+  // Bug 1094246: Webdriver's isShown doesn't work with content xul
+  let ns = atom.getElementAttribute(el, "namespaceURI", win);
+  if (ns.indexOf("there.is.only.xul") < 0 &&
+      !atom.isElementDisplayed(el, win)) {
+    return false;
+  }
+
+  if (el.tagName.toLowerCase() == "body") {
+    return true;
+  }
+
+  if (!elements.inViewport(el, x, y)) {
+    if (el.scrollIntoView) {
+      el.scrollIntoView(false);
+      if (!elements.inViewport(el)) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return true;
+};
+
+elements.isXULElement = function(el) {
+  let ns = atom.getElementAttribute(el, "namespaceURI");
+  return ns.indexOf("there.is.only.xul") >= 0;
 };
