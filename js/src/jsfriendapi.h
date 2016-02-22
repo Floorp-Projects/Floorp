@@ -2676,7 +2676,7 @@ class MOZ_RAII JS_FRIEND_API(AutoCTypesActivityCallback) {
 };
 
 typedef JSObject*
-(* ObjectMetadataCallback)(JSContext* cx, JSObject* obj);
+(* ObjectMetadataCallback)(JSContext* cx, JS::HandleObject obj);
 
 /**
  * Specify a callback to invoke when creating each JS object in the current

@@ -1650,7 +1650,7 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static JSObject*
-ShellObjectMetadataCallback(JSContext* cx, JSObject*)
+ShellObjectMetadataCallback(JSContext* cx, HandleObject)
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 

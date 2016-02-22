@@ -588,7 +588,7 @@ struct JSCompartment
     void forgetObjectMetadataCallback() {
         objectMetadataCallback = nullptr;
     }
-    void setNewObjectMetadata(JSContext* cx, JSObject* obj);
+    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
     void clearObjectMetadata();
     const void* addressOfMetadataCallback() const {
         return &objectMetadataCallback;
