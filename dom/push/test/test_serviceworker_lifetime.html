@@ -75,9 +75,10 @@
     // Work around CORS for now.
     var xhr = new XMLHttpRequest();
     xhr.open('GET', "http://mochi.test:8888/tests/dom/push/test/push-server.sjs", true);
-    xhr.setRequestHeader("X-Push-Method", "PUT");
+    xhr.setRequestHeader("X-Push-Method", "POST");
     xhr.setRequestHeader("X-Push-Server", pushEndpoint);
-    xhr.send("version=24601");
+    xhr.setRequestHeader("TTL", "120");
+    xhr.send(null);
   }
 
   function unregisterPushNotification(ctx) {
