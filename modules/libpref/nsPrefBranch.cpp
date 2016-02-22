@@ -127,21 +127,7 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
-  switch (PREF_GetPrefType(pref)) {
-    case PrefType::String:
-      *_retval = PREF_STRING;
-      break;
-    case PrefType::Int:
-      *_retval = PREF_INT;
-      break;
-    case PrefType::Bool:
-      *_retval = PREF_BOOL;
-        break;
-    case PrefType::Invalid:
-    default:
-      *_retval = PREF_INVALID;
-      break;
-  }
+  *_retval = PREF_GetPrefType(pref);
   return NS_OK;
 }
 
