@@ -576,7 +576,7 @@ ModuleObject* BytecodeCompiler::compileModule()
 
     module->init(script);
 
-    ModuleBuilder builder(cx->asJSContext(), module);
+    ModuleBuilder builder(cx, module);
     ParseNode* pn = parser->standaloneModule(module, builder);
     if (!pn)
         return nullptr;
@@ -759,20 +759,32 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
 }
 
 ModuleObject*
-frontend::CompileModule(JSContext* cx, HandleObject obj,
-                        const ReadOnlyCompileOptions& optionsInput,
-                        SourceBufferHolder& srcBuf)
+frontend::CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& optionsInput,
+                        SourceBufferHolder& srcBuf, LifoAlloc* alloc)
 {
     MOZ_ASSERT(srcBuf.get());
+    MOZ_ASSERT(cx->isJSContext() == (alloc == nullptr));
+
+    if (!alloc)
+        alloc = &cx->asJSContext()->tempLifoAlloc();
 
     CompileOptions options(cx, optionsInput);
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
     options.setIsRunOnce(true);
 
     Rooted<StaticScope*> staticScope(cx, &cx->global()->lexicalScope().staticBlock());
-    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, staticScope,
+    BytecodeCompiler compiler(cx, alloc, options, srcBuf, staticScope,
                               TraceLogger_ParserCompileModule);
-    return compiler.compileModule();
+    RootedModuleObject module(cx, compiler.compileModule());
+    if (!module)
+        return nullptr;
+
+    // This happens in GlobalHelperThreadState::finishModuleParseTask() when a
+    // module is compiled off main thread.
+    if (cx->isJSContext() && !ModuleObject::FreezeArrayProperties(cx->asJSContext(), module))
+        return nullptr;
+
+    return module;
 }
 
 bool
