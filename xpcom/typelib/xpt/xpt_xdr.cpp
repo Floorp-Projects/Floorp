@@ -99,7 +99,7 @@ XPT_SkipStringInline(XPTCursor *cursor)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
+XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp, bool ignore)
 {
     uint32_t offset = 0;
     if (!XPT_Do32(cursor, &offset))
@@ -124,13 +124,15 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
     int len = end - start;
     XPT_ASSERT(len > 0);
 
-    char *ident = (char*)XPT_MALLOC(arena, len + 1u);
-    if (!ident)
-        return PR_FALSE;
+    if (!ignore) {
+        char *ident = (char*)XPT_MALLOC(arena, len + 1u);
+        if (!ident)
+            return PR_FALSE;
 
-    memcpy(ident, start, (size_t)len);
-    ident[len] = 0;
-    *identp = ident;
+        memcpy(ident, start, (size_t)len);
+        ident[len] = 0;
+        *identp = ident;
+    }
 
     return PR_TRUE;
 }
