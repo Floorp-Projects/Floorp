@@ -88,12 +88,6 @@ XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
 #  error "unknown byte order"
 #endif
 
-#define XPT_ERROR_HANDLE(arena, free_it)                                      \
- error:                                                                       \
-    XPT_FREEIF(arena, free_it);                                               \
-    return PR_FALSE;
-
-
 #ifdef __cplusplus
 }
 #endif
