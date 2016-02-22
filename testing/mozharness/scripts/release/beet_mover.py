@@ -6,17 +6,21 @@
 # ***** END LICENSE BLOCK *****
 """beet_mover.py.
 
-downloads artifacts and uploads them to s3
+downloads artifacts, scans them and uploads them to s3
 """
 import hashlib
 import sys
 import os
 import pprint
+import re
+from os import listdir
+from os.path import isfile, join
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.log import FATAL
 from mozharness.base.python import VirtualenvMixin
 from mozharness.base.script import BaseScript
+import mozharness
 
 
 def get_hash(content, hash_type="md5"):
@@ -85,7 +89,38 @@ CONFIG_OPTIONS = [
         "default": False,
         "help": "taskcluster task id to download artifacts from",
     }],
+    [["--exclude"], {
+        "dest": "excludes",
+        "action": "append",
+        "help": "List of filename patterns to exclude. See script source for default",
+    }],
+    [["-s", "--scan-parallelization"], {
+        "dest": "scan_parallelization",
+        "default": 4,
+        "type": "int",
+        "help": "Number of concurrent file scans",
+    }],
 ]
+
+DEFAULT_EXCLUDES = [
+    r"^.*tests.*$",
+    r"^.*crashreporter.*$",
+    r"^.*\.zip(\.asc)?$",
+    r"^.*\.log$",
+    r"^.*\.txt$",
+    r"^.*\.asc$",
+    r"^.*/partner-repacks.*$",
+    r"^.*.checksums(\.asc)?$",
+    r"^.*/logs/.*$",
+    r"^.*/jsshell.*$",
+    r"^.*json$",
+    r"^.*/host.*$",
+    r"^.*/mar-tools/.*$",
+    r"^.*gecko-unsigned-unaligned.apk$",
+    r"^.*robocop.apk$",
+    r"^.*contrib.*"
+]
+CACHE_DIR = 'cache'
 
 
 class BeetMover(BaseScript, VirtualenvMixin, object):
@@ -98,6 +133,8 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 'activate-virtualenv',
                 'generate-candidates-manifest',
                 'verify-bits',  # beets
+                'download-bits', # beets
+                'scan-bits',     # beets
                 'upload-bits',  # beets
             ],
             'require_config_file': False,
@@ -111,6 +148,8 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                     "boto",
                     "PyYAML",
                     "Jinja2",
+                    "redo",
+                    "mar",
                 ],
                 "virtualenv_path": "venv",
                 'buckets': {
@@ -120,6 +159,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 'product': 'firefox',
             },
         }
+        #todo do excludes need to be configured via command line for specific builds?
         super(BeetMover, self).__init__(**beetmover_kwargs)
 
         c = self.config
@@ -128,6 +168,10 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         self.virtualenv_imports = None
         self.bucket = c['buckets']['production'] if c['production'] else c['buckets']['development']
         self.aws_key_id, self.aws_secret_key = aws_creds
+        # if excludes is set from command line, use it otherwise use defaults
+        self.excludes = self.config.get('excludes', DEFAULT_EXCLUDES)
+        dirs = self.query_abs_dirs()
+        self.dest_dir = os.path.join(dirs['abs_work_dir'], CACHE_DIR)
 
     def activate_virtualenv(self):
         """
@@ -172,7 +216,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             # mirror current release folder structure
             "s3_prefix": 'pub/{}/candidates'.format(self.config['product']),
             "artifact_base_url": self.config['artifact_base_url'].format(
-                    taskid=self.config['taskid'], subdir=self.config['artifact_sudbir']
+                    taskid=self.config['taskid'], subdir=self.config['artifact_subdir']
             )
         }
         self.manifest = yaml.safe_load(template.render(**template_vars))
@@ -187,37 +231,60 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         # TODO
         self.log('skipping verification. unimplemented...')
 
+    def download_bits(self):
+        """
+        downloads list of artifacts to self.dest_dir dir based on a given manifest
+        """
+        self.log('downloading and uploading artifacts to self_dest_dir...')
+
+        # TODO - do we want to mirror/upload to more than one region?
+        dirs = self.query_abs_dirs()
+
+        for locale in self.manifest['mapping']:
+            for deliverable in self.manifest['mapping'][locale]:
+                self.log("downloading '{}' deliverable for '{}' locale".format(deliverable, locale))
+                # download locally to working dir
+                source=self.manifest['mapping'][locale][deliverable]['artifact']
+                file_name = self.retry(self.download_file,
+                    args=[source],
+                    kwargs={'parent_dir': dirs['abs_work_dir']},
+                    error_level=FATAL)
+        self.log('Success!')
+
     def upload_bits(self):
         """
-        downloads and uploads list of artifacts to s3 candidates dir based on a given manifest
+        uploads list of artifacts to s3 candidates dir based on a given manifest
         """
-        self.log('downloading and uploading artifacts to s3...')
+        self.log('uploading artifacts to s3...')
+        dirs = self.query_abs_dirs()
 
         # connect to s3
         boto = self.virtualenv_imports['boto']
         conn = boto.connect_s3(self.aws_key_id, self.aws_secret_key)
         bucket = conn.get_bucket(self.bucket)
 
+        #todo change so this is not every entry in manifest - should exclude those that don't pass virus sign
+        #not sure how to determine this
         for locale in self.manifest['mapping']:
             for deliverable in self.manifest['mapping'][locale]:
                 self.log("uploading '{}' deliverable for '{}' locale".format(deliverable, locale))
+                #we have already downloaded the files locally so we can use that version
+                source = self.manifest['mapping'][locale][deliverable]['artifact']
+                downloaded_file = os.path.join(dirs['abs_work_dir'], self.get_filename_from_url(source))
                 self.upload_bit(
-                    source=self.manifest['mapping'][locale][deliverable]['artifact'],
+                    source=downloaded_file,
                     s3_key=self.manifest['mapping'][locale][deliverable]['s3_key'],
                     bucket=bucket,
                 )
         self.log('Success!')
+
 
     def upload_bit(self, source, s3_key, bucket):
         # TODO - do we want to mirror/upload to more than one region?
         dirs = self.query_abs_dirs()
         boto = self.virtualenv_imports['boto']
 
-        # download locally
-        file_name = self.retry(self.download_file,
-                               args=[source],
-                               kwargs={'parent_dir': dirs['abs_work_dir']},
-                               error_level=FATAL)
+        #todo need to copy from dir to s3
 
         self.info('uploading to s3 with key: {}'.format(s3_key))
         key = boto.s3.key.Key(bucket)  # create new key
@@ -230,20 +297,46 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             key = bucket.new_key(s3_key)
 
             # set key value
-            self.retry(key.set_contents_from_filename, args=[file_name], error_level=FATAL),
+            self.retry(key.set_contents_from_filename, args=[source], error_level=FATAL),
 
             # key.make_public() may lead to race conditions, because
             # it doesn't pass version_id, so it may not set permissions
             bucket.set_canned_acl(acl_str='public-read', key_name=s3_key,
                                   version_id=key.version_id)
         else:
-            if not get_hash(key.get_contents_as_string()) == get_hash(open(file_name).read()):
+            if not get_hash(key.get_contents_as_string()) == get_hash(open(source).read()):
                 # for now, let's halt. If necessary, we can revisit this and allow for overwrites
                 #  to the same buildnum release with different bits
                 self.fatal("`{}` already exists with different checksum.".format(s3_key))
             self.log("`{}` has the same MD5 checksum, not uploading".format(s3_key))
 
+    def scan_bits(self):
 
+        dirs = self.query_abs_dirs()
+
+        filenames = [f for f in listdir(dirs['abs_work_dir']) if isfile(join(dirs['abs_work_dir'], f))]
+        self.mkdir_p(self.dest_dir)
+        for file_name in filenames:
+            if self._matches_exclude(file_name):
+                self.info("Excluding {} from virus scan".format(file_name))
+            else:
+                self.info('Copying {} to {}'.format(file_name,self.dest_dir))
+                self.copyfile(os.path.join(dirs['abs_work_dir'], file_name), os.path.join(self.dest_dir,file_name))
+        self._scan_files()
+        self.info('Emptying {}'.format(self.dest_dir))
+        self.rmtree(self.dest_dir)
+
+    def _scan_files(self):
+        """Scan the files we've collected. We do the download and scan concurrently to make
+        it easier to have a coherent log afterwards. Uses the venv python."""
+        external_tools_path = os.path.join(
+                              os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))), 'external_tools')
+        self.run_command([self.query_python_path(), os.path.join(external_tools_path,'extract_and_run_command.py'),
+                         '-j{}'.format(self.config['scan_parallelization']),
+                         'clamscan', '--no-summary', '--', self.dest_dir])
+
+    def _matches_exclude(self, keyname):
+         return any(re.search(exclude, keyname) for exclude in self.excludes)
 
 if __name__ == '__main__':
     beet_mover = BeetMover(get_aws_auth())
