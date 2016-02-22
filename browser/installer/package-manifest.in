@@ -375,8 +375,8 @@
 @RESPATH@/browser/components/nsBrowserGlue.js
 @RESPATH@/browser/components/nsSetDefaultBrowser.manifest
 @RESPATH@/browser/components/nsSetDefaultBrowser.js
-@RESPATH@/browser/components/devtools-startup.manifest
-@RESPATH@/browser/components/devtools-startup.js
+@RESPATH@/browser/components/devtools-clhandler.manifest
+@RESPATH@/browser/components/devtools-clhandler.js
 @RESPATH@/browser/components/webideCli.js
 @RESPATH@/browser/components/webideComponents.manifest
 @RESPATH@/browser/components/Experiments.manifest

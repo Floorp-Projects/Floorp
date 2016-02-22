@@ -4,14 +4,6 @@
 
 "use strict";
 
-/**
- * This is the main module loaded in Firefox desktop that handles browser
- * windows and coordinates devtools around each window.
- *
- * This module is loaded lazily by devtools-clhandler.js, once the first
- * browser window is ready (i.e. fired browser-delayed-startup-finished event)
- **/
-
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
@@ -124,17 +116,10 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   observe: function(subject, topic, prefName) {
-    switch (topic) {
-      case "browser-delayed-startup-finished":
-        this._registerBrowserWindow(subject);
-        break;
-      case "nsPref:changed":
-        if (prefName.endsWith("enabled")) {
-          for (let win of this._trackedBrowserWindows) {
-            this.updateCommandAvailability(win);
-          }
-        }
-        break;
+    if (prefName.endsWith("enabled")) {
+      for (let win of this._trackedBrowserWindows) {
+        this.updateCommandAvailability(win);
+      }
     }
   },
 
@@ -334,11 +319,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param {XULDocument} doc
    *        The document to which menuitems and handlers are to be added
    */
-  _registerBrowserWindow: function(win) {
+  // Used by browser.js
+  registerBrowserWindow: function DT_registerBrowserWindow(win) {
     this.updateCommandAvailability(win);
     this.ensurePrefObserver();
     gDevToolsBrowser._trackedBrowserWindows.add(win);
-    win.addEventListener("unload", this);
     gDevToolsBrowser._addAllToolsToMenu(win.document);
 
     if (this._isFirebugInstalled()) {
@@ -764,9 +749,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param  {XULWindow} win
    *         The window containing the menu entry
    */
-  _forgetBrowserWindow: function(win) {
+  forgetBrowserWindow: function DT_forgetBrowserWindow(win) {
     gDevToolsBrowser._trackedBrowserWindows.delete(win);
-    win.removeEventListener("unload", this);
 
     // Destroy toolboxes for closed window
     for (let [target, toolbox] of gDevTools._toolboxes) {
@@ -808,11 +792,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       break;
       case "TabSelect":
         gDevToolsBrowser._updateMenuCheckbox();
-      break;
-      case "unload":
-        // top-level browser window unload
-        gDevToolsBrowser._forgetBrowserWindow(event.target.defaultView);
-      break;
     }
   },
 
@@ -821,12 +800,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   destroy: function() {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
-    Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
-
-    for (let win of gDevToolsBrowser._trackedBrowserWindows) {
-      gDevToolsBrowser._forgetBrowserWindow(win);
-    }
   },
 }
 
@@ -846,16 +820,6 @@ gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
-Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
-// Fake end of browser window load event for all already opened windows
-// that is already fully loaded.
-let enumerator = Services.wm.getEnumerator("navigator:browser");
-while (enumerator.hasMoreElements()) {
-  let win = enumerator.getNext();
-  if (win.gBrowserInit && win.gBrowserInit.delayedStartupFinished) {
-    gDevToolsBrowser._registerBrowserWindow(win);
-  }
-}
 
 // Load the browser devtools main module as the loader's main module.
 // This is done precisely here as main.js ends up dispatching the
