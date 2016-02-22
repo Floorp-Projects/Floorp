@@ -55,7 +55,7 @@ XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, ui
 
     for (i = 0; i < sizeof(header->magic); i++) {
         if (!XPT_Do8(cursor, &header->magic[i]))
-            goto error;
+            return PR_FALSE;
     }
 
     if (strncmp((const char*)header->magic, XPT_MAGIC, 16) != 0) {
@@ -64,12 +64,12 @@ XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, ui
                 "libxpt: bad magic header in input file; "
                 "found '%s', expected '%s'\n",
                 header->magic, XPT_MAGIC_STRING);
-        goto error;
+        return PR_FALSE;
     }
 
     if (!XPT_Do8(cursor, &header->major_version) ||
         !XPT_Do8(cursor, &header->minor_version)) {
-        goto error;
+        return PR_FALSE;
     }
 
     if (header->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
@@ -84,11 +84,9 @@ XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, ui
     if (!XPT_Do16(cursor, &header->num_interfaces) ||
         !XPT_Do32(cursor, &header->file_length) ||
         (ide_offset != NULL && !XPT_Do32(cursor, ide_offset))) {
-        goto error;
+        return PR_FALSE;
     }
     return PR_TRUE;
-    /* XXX need to free child data sometimes! */
-    XPT_ERROR_HANDLE(arena, header);    
 }
 
 XPT_PUBLIC_API(PRBool)
@@ -109,11 +107,11 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
         cursor->state->pool_allocated < header->file_length) {
         fputs("libxpt: File length in header does not match actual length. File may be corrupt\n",
             stderr);
-        goto error;
+        return PR_FALSE;
     }
 
     if (!XPT_Do32(cursor, &header->data_pool))
-        goto error;
+        return PR_FALSE;
 
     XPT_SetDataOffset(cursor->state, header->data_pool);
 
@@ -122,11 +120,11 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
             (XPTInterfaceDirectoryEntry*)XPT_CALLOC(arena, header->num_interfaces * 
                                                     sizeof(XPTInterfaceDirectoryEntry));
         if (!header->interface_directory)
-            goto error;
+            return PR_FALSE;
     }
 
     if (!DoAnnotations(cursor))
-        goto error;
+        return PR_FALSE;
 
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset); 
@@ -134,13 +132,10 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
     for (i = 0; i < header->num_interfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor, 
                                        &header->interface_directory[i]))
-            goto error;
+            return PR_FALSE;
     }
     
     return PR_TRUE;
-
-    /* XXX need to free child data sometimes! */
-    XPT_ERROR_HANDLE(arena, header);    
 }   
 
 /* InterfaceDirectoryEntry records go in the header */
@@ -161,12 +156,10 @@ DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
         
         /* do InterfaceDescriptors */
         !DoInterfaceDescriptor(arena, cursor, &ide->interface_descriptor)) {
-        goto error;
+        return PR_FALSE;
     }
 
     return PR_TRUE;
-
-    XPT_ERROR_HANDLE(arena, ide);    
 }
 
 XPT_PUBLIC_API(PRBool)
@@ -183,9 +176,7 @@ XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
     if (!new_)
         return PR_FALSE;
     if (old) {
-        if (old_size)
-            memcpy(new_, old, old_size);
-        XPT_FREE(arena, old);
+        memcpy(new_, old, old_size);
     }
     id->additional_types = new_;
     id->num_additional_types += num;
@@ -206,55 +197,52 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     *idp = id;
 
     if (!XPT_MakeCursor(outer->state, XPT_DATA, id_sz, cursor))
-        goto error;
+        return PR_FALSE;
 
     if (!XPT_Do32(outer, &cursor->offset))
-        goto error;
+        return PR_FALSE;
     if (!cursor->offset) {
-        XPT_DELETE(arena, *idp);
         return PR_TRUE;
     }
     if(!XPT_Do16(cursor, &id->parent_interface) ||
        !XPT_Do16(cursor, &id->num_methods)) {
-        goto error;
+        return PR_FALSE;
     }
 
     if (id->num_methods) {
         id->method_descriptors = (XPTMethodDescriptor*)XPT_CALLOC(arena, id->num_methods *
                                                                   sizeof(XPTMethodDescriptor));
         if (!id->method_descriptors)
-            goto error;
+            return PR_FALSE;
     }
     
     for (i = 0; i < id->num_methods; i++) {
         if (!DoMethodDescriptor(arena, cursor, &id->method_descriptors[i], id))
-            goto error;   
+            return PR_FALSE;
     }
     
     if (!XPT_Do16(cursor, &id->num_constants)) {
-        goto error;
+        return PR_FALSE;
     }
     
     if (id->num_constants) {
         id->const_descriptors = (XPTConstDescriptor*)XPT_CALLOC(arena, id->num_constants * 
                                                                 sizeof(XPTConstDescriptor));
         if (!id->const_descriptors)
-            goto error;
+            return PR_FALSE;
     }
     
     for (i = 0; i < id->num_constants; i++) {
         if (!DoConstDescriptor(arena, cursor, &id->const_descriptors[i], id)) {
-            goto error;
+            return PR_FALSE;
         }
     }
 
     if (!XPT_Do8(cursor, &id->flags)) {
-        goto error;
+        return PR_FALSE;
     }
     
     return PR_TRUE;
-
-    XPT_ERROR_HANDLE(arena, id);    
 }
 
 PRBool
@@ -329,15 +317,13 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
 
     for(i = 0; i < md->num_args; i++) {
         if (!DoParamDescriptor(arena, cursor, &md->params[i], id))
-            goto error;
+            return PR_FALSE;
     }
     
     if (!DoParamDescriptor(arena, cursor, &md->result, id))
-        goto error;
+        return PR_FALSE;
     
     return PR_TRUE;
-    
-    XPT_ERROR_HANDLE(arena, md->params);    
 }
 
 PRBool
@@ -362,37 +348,37 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
                  XPTInterfaceDescriptor *id)
 {
     if (!DoTypeDescriptorPrefix(arena, cursor, &td->prefix)) {
-        goto error;
+        return PR_FALSE;
     }
     
     switch (XPT_TDP_TAG(td->prefix)) {
       case TD_INTERFACE_TYPE:
         if (!XPT_Do16(cursor, &td->type.iface))
-            goto error;
+            return PR_FALSE;
         break;
       case TD_INTERFACE_IS_TYPE:
         if (!XPT_Do8(cursor, &td->argnum))
-            goto error;
+            return PR_FALSE;
         break;
       case TD_ARRAY:
         if (!XPT_Do8(cursor, &td->argnum) ||
             !XPT_Do8(cursor, &td->argnum2))
-            goto error;
+            return PR_FALSE;
 
         if (!XPT_InterfaceDescriptorAddTypes(arena, id, 1))
-            goto error;
+            return PR_FALSE;
         td->type.additional_type = id->num_additional_types - 1;
 
         if (!DoTypeDescriptor(arena, cursor, 
                               &id->additional_types[td->type.additional_type], 
                               id))
-            goto error;
+            return PR_FALSE;
         break;
       case TD_PSTRING_SIZE_IS:
       case TD_PWSTRING_SIZE_IS:
         if (!XPT_Do8(cursor, &td->argnum) ||
             !XPT_Do8(cursor, &td->argnum2))
-            goto error;
+            return PR_FALSE;
         break;
 
       default:
@@ -400,8 +386,6 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
         break;
     }
     return PR_TRUE;
-    
-    XPT_ERROR_HANDLE(arena, td);    
 }
 
 PRBool
