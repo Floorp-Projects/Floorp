@@ -1,5 +1,4 @@
 --enable-optimize
 --enable-debug
 --enable-stdcxx-compat
---disable-shared-js
 --enable-simulator=arm64

@@ -91,8 +91,27 @@ function fieldCallCannotGC(csu, fullfield)
     return false;
 }
 
-function ignoreEdgeUse(edge, variable)
+function ignoreEdgeUse(edge, variable, body)
 {
+    // Horrible special case for ignoring a false positive in xptcstubs: there
+    // is a local variable 'paramBuffer' holding an array of nsXPTCMiniVariant
+    // on the stack, which appears to be live across a GC call because its
+    // constructor is called when the array is initialized, even though the
+    // constructor is a no-op. So we'll do a very narrow exclusion for the use
+    // that incorrectly started the live range, which was basically "__temp_1 =
+    // paramBuffer".
+    //
+    // By scoping it so narrowly, we can detect most hazards that would be
+    // caused by modifications in the PrepareAndDispatch code. It just barely
+    // avoids having a hazard already.
+    if (('Name' in variable) && (variable.Name[0] == 'paramBuffer')) {
+        if (body.BlockId.Kind == 'Function' && body.BlockId.Variable.Name[0] == 'PrepareAndDispatch')
+            if (edge.Kind == 'Assign' && edge.Type.Kind == 'Pointer')
+                if (edge.Exp[0].Kind == 'Var' && edge.Exp[1].Kind == 'Var')
+                    if (edge.Exp[1].Variable.Kind == 'Local' && edge.Exp[1].Variable.Name[0] == 'paramBuffer')
+                        return true;
+    }
+
     // Functions which should not be treated as using variable.
     if (edge.Kind == "Call") {
         var callee = edge.Exp[0];
@@ -292,13 +311,16 @@ function isUnsafeStorage(typeName)
     return typeName.startsWith('UniquePtr<');
 }
 
-function isSuppressConstructor(name)
+function isSuppressConstructor(varName)
 {
-    return name.indexOf("::AutoSuppressGC") != -1
-        || name.indexOf("::AutoAssertGCCallback") != -1
-        || name.indexOf("::AutoEnterAnalysis") != -1
-        || name.indexOf("::AutoSuppressGCAnalysis") != -1
-        || name.indexOf("::AutoIgnoreRootingHazards") != -1;
+    // varName[1] contains the unqualified name
+    return [
+        "AutoSuppressGC",
+        "AutoAssertGCCallback",
+        "AutoEnterAnalysis",
+        "AutoSuppressGCAnalysis",
+        "AutoIgnoreRootingHazards"
+    ].indexOf(varName[1]) != -1;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden

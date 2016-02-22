@@ -6,7 +6,7 @@
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-const errors = [
+const ERRORS = [
   "ElementNotAccessibleError",
   "ElementNotVisibleError",
   "InvalidArgumentError",
@@ -29,9 +29,20 @@ const errors = [
   "WebDriverError",
 ];
 
-this.EXPORTED_SYMBOLS = ["error"].concat(errors);
+this.EXPORTED_SYMBOLS = ["error"].concat(ERRORS);
 
 this.error = {};
+
+error.BuiltinErrors = {
+  Error: 0,
+  EvalError: 1,
+  InternalError: 2,
+  RangeError: 3,
+  ReferenceError: 4,
+  SyntaxError: 5,
+  TypeError: 6,
+  URIError: 7,
+};
 
 /**
  * Checks if obj is an instance of the Error prototype in a safe manner.
@@ -50,7 +61,7 @@ error.isError = function(val) {
   } else if (val instanceof Ci.nsIException) {
     return true;
   } else {
-    return Object.getPrototypeOf(val) == "Error";
+    return Object.getPrototypeOf(val) in error.BuiltinErrors;
   }
 };
 
@@ -59,7 +70,18 @@ error.isError = function(val) {
  */
 error.isWebDriverError = function(obj) {
   return error.isError(obj) &&
-      ("name" in obj && errors.indexOf(obj.name) >= 0);
+      ("name" in obj && ERRORS.indexOf(obj.name) >= 0);
+};
+
+/**
+ * Wraps an Error prototype in a WebDriverError.  If the given error is
+ * already a WebDriverError, this is effectively a no-op.
+ */
+error.wrap = function(err) {
+  if (error.isWebDriverError(err)) {
+    return err;
+  }
+  return new WebDriverError(`${err.name}: ${err.message}`, err.stack);
 };
 
 /**
@@ -140,11 +162,12 @@ error.fromJson = function(json) {
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
  */
-this.WebDriverError = function(msg) {
+this.WebDriverError = function(msg, stack = undefined) {
   Error.call(this, msg);
   this.name = "WebDriverError";
   this.message = msg;
   this.status = "webdriver error";
+  this.stack = stack;
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
@@ -328,7 +351,7 @@ UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
 
 const nameLookup = new Map();
 const statusLookup = new Map();
-for (let s of errors) {
+for (let s of ERRORS) {
   let cls = this[s];
   let inst = new cls();
   nameLookup.set(inst.name, cls);
