@@ -65,7 +65,6 @@
   list-style: none;
   background-color: #EBEBF0;
   border-top: 1px solid #D7D9DB;
-  display: none;
 }
 
 .toolbar[visible] {
@@ -244,14 +243,6 @@
   display: none;
 }
 
-.toggle-button.on {
-  background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-mdpi.png');
-}
-
-.toggle-button {
-  background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
-}
-
 .style-button {
   background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
 }
@@ -269,14 +260,6 @@
 }
 
 @media screen and (min-resolution: 1.25dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
   }
@@ -295,14 +278,6 @@
 }
 
 @media screen and (min-resolution: 2dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
   }
@@ -321,14 +296,6 @@
 }
 
 @media screen and (min-resolution: 3dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xxhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xxhdpi.png');
   }
