@@ -68,16 +68,18 @@ always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'alert_emails', 'keyed', 'releaseChannelCollection',
                        'bug_numbers']
 
-n_buckets_whitelist = None;
+whitelists = None;
 try:
-    whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))), 'bucket-whitelist.json')
+    whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))), 'histogram-whitelists.json')
     with open(whitelist_path, 'r') as f:
         try:
-            n_buckets_whitelist = set(json.load(f))
+            whitelists = json.load(f)
+            for name, whitelist in whitelists.iteritems():
+              whitelists[name] = set(whitelist)
         except ValueError, e:
-            raise BaseException, 'error parsing bucket whitelist (%s)' % whitelist_path
+            raise BaseException, 'error parsing whitelist (%s)' % whitelist_path
 except IOError:
-    n_buckets_whitelist = None
+    whitelists = None
     print 'Unable to parse whitelist (%s). Assuming all histograms are acceptable.' % whitelist_path
 
 class Histogram:
@@ -279,9 +281,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self._low = low
         self._high = high
         self._n_buckets = n_buckets
-        if n_buckets_whitelist is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
-            if self._name not in n_buckets_whitelist:
-                raise KeyError, ('New histogram %s is not permitted to have more than 100 buckets. '
+        if whitelists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
+            if self._name not in whitelists['n_buckets']:
+                raise KeyError, ('New histogram "%s" is not permitted to have more than 100 buckets. '
                                 'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
                                 'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
 
