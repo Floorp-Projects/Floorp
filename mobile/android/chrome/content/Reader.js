@@ -163,14 +163,6 @@ var Reader = {
         });
         break;
 
-      case "Reader:Share":
-        Messaging.sendRequest({
-          type: "Reader:Share",
-          url: message.data.url,
-          title: message.data.title
-        });
-        break;
-
       case "Reader:SystemUIVisibility":
         Messaging.sendRequest({
           type: "SystemUI:Visibility",

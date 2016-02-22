@@ -198,7 +198,6 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
     ["Reader:FaviconRequest", false],
     ["Reader:ListStatusRequest", false],
     ["Reader:RemoveFromList", false],
-    ["Reader:Share", false],
     ["Reader:ToolbarHidden", false],
     ["Reader:SystemUIVisibility", false],
     ["Reader:UpdateReaderButton", false],

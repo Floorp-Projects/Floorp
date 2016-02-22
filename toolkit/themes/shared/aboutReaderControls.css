@@ -327,11 +327,6 @@
 
 /*======= Toolbar icons =======*/
 
-/* Android-only controls */
-.share-button {
-  display: none;
-}
-
 .close-button {
   background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close");
   height: 68px;
