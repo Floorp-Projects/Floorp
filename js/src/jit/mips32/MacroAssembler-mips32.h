@@ -427,8 +427,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branchTestValue(cond, val, MagicValue(why), label);
     }
 
-    void branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label);
-
     void branchTestStringTruthy(bool b, const ValueOperand& value, Label* label);
 
     void branchTestDoubleTruthy(bool b, FloatRegister value, Label* label);

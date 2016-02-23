@@ -809,6 +809,13 @@ MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* 
     branchTestInt32Impl(cond, src, label);
 }
 
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+{
+    Condition c = testInt32Truthy(truthy, operand);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

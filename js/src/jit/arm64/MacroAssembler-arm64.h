@@ -1969,10 +1969,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Tst(payload32, payload32);
         return truthy ? NonZero : Zero;
     }
-    void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testInt32Truthy(truthy, operand);
-        B(label, c);
-    }
 
     void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
         Fcmp(ARMFPRegister(reg, 64), 0.0);

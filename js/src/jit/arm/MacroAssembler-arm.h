@@ -818,10 +818,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestValue(cond, val, MagicValue(why), label);
     }
-    void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testInt32Truthy(truthy, operand);
-        ma_b(label, c);
-    }
     void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
         Condition c = testBooleanTruthy(truthy, operand);
         ma_b(label, c);
