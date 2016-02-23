@@ -91,6 +91,8 @@ public:
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
 
 protected:
+  virtual bool RecvSyncWithCompositor() override { return true; }
+
   virtual bool RecvShutdown() override;
 
   virtual bool RecvUpdate(EditArray&& cset,
