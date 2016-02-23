@@ -7,8 +7,6 @@
 // Tests that the rule view selector text is highlighted correctly according
 // to the components of the selector.
 
-const SEARCH = "00F";
-
 const TEST_URI = [
   "<style type='text/css'>",
   "  h1 {}",

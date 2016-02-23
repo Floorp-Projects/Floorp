@@ -1,6 +1,8 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../test/head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -12,7 +14,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
 });
 
-var {CssLogic} = require("devtools/shared/inspector/css-logic");
 var {getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/client/shared/inplace-editor");
 
@@ -38,7 +39,7 @@ addTab = function(url) {
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     return tab;
   });
-}
+};
 
 /**
  * Open the toolbox, with the inspector tool visible, and the rule-view
@@ -149,7 +150,8 @@ function waitForContentMessage(name) {
  * @return {Promise} Resolves to the response data if a response is expected,
  * immediately resolves otherwise
  */
-function executeInContent(name, data={}, objects={}, expectResponse=true) {
+function executeInContent(name, data = {}, objects = {},
+                          expectResponse = true) {
   info("Sending message " + name + " to content");
   let mm = gBrowser.selectedBrowser.messageManager;
 
@@ -223,8 +225,8 @@ function* waitForComputedStyleProperty(selector, pseudo, name, expected) {
  *
  * @return a promise that resolves to the inplace-editor element when ready
  */
-var focusEditableField = Task.async(function*(ruleView, editable, xOffset=1,
-    yOffset=1, options={}) {
+var focusEditableField = Task.async(function*(ruleView, editable, xOffset = 1,
+    yOffset = 1, options = {}) {
   let onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
   EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
