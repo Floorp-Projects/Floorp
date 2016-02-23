@@ -76,6 +76,8 @@ public:
     aPortIndex.AppendElement(OutputPortIndex());
   }
 
+  virtual OMX_VIDEO_CODINGTYPE CompressionFormat();
+
   // Check if the platform implementation supports given MIME type.
   static bool SupportsMimeType(const nsACString& aMimeType);
 

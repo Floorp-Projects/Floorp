@@ -6,6 +6,8 @@
 
 #include "OmxPlatformLayer.h"
 
+#include "OMX_VideoExt.h" // For VP8.
+
 #if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 20 || ANDROID_VERSION == 19)
 #define OMX_PLATFORM_GONK
 #include "GonkOmxPlatformLayer.h"
@@ -189,9 +191,8 @@ ConfigForMime(const nsACString& aMimeType)
 class OmxCommonVideoConfig : public OmxVideoConfig
 {
 public:
-  explicit OmxCommonVideoConfig(OMX_VIDEO_CODINGTYPE aCodec)
+  explicit OmxCommonVideoConfig()
     : OmxVideoConfig()
-    , mCodec(aCodec)
   {}
 
   OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const VideoInfo& aInfo) override
@@ -214,7 +215,7 @@ public:
       def.format.video.nSliceHeight = aInfo.mImage.height;
 
       if (def.eDir == OMX_DirInput) {
-        def.format.video.eCompressionFormat = mCodec;
+        def.format.video.eCompressionFormat = aOmx.CompressionFormat();
         def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
         if (def.nBufferSize < MIN_VIDEO_INPUT_BUFFER_SIZE) {
           def.nBufferSize = aInfo.mImage.width * aInfo.mImage.height;
@@ -228,9 +229,6 @@ public:
     }
     return err;
   }
-
-private:
-  const OMX_VIDEO_CODINGTYPE mCodec;
 };
 
 template<>
@@ -240,14 +238,7 @@ ConfigForMime(const nsACString& aMimeType)
   UniquePtr<OmxVideoConfig> conf;
 
   if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
-    if (aMimeType.EqualsLiteral("video/avc")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingAVC));
-    } else if (aMimeType.EqualsLiteral("video/mp4v-es") ||
-         aMimeType.EqualsLiteral("video/mp4")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingMPEG4));
-    } else if (aMimeType.EqualsLiteral("video/3gpp")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingH263));
-    }
+    conf.reset(new OmxCommonVideoConfig());
   }
   return Move(conf);
 }
@@ -273,6 +264,26 @@ OmxPlatformLayer::Config()
   } else {
     MOZ_ASSERT_UNREACHABLE("non-AV data (text?) is not supported.");
     return OMX_ErrorNotImplemented;
+  }
+}
+
+OMX_VIDEO_CODINGTYPE
+OmxPlatformLayer::CompressionFormat()
+{
+  MOZ_ASSERT(mInfo);
+
+  if (mInfo->mMimeType.EqualsLiteral("video/avc")) {
+    return OMX_VIDEO_CodingAVC;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/mp4v-es") ||
+       mInfo->mMimeType.EqualsLiteral("video/mp4")) {
+    return OMX_VIDEO_CodingMPEG4;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/3gpp")) {
+    return OMX_VIDEO_CodingH263;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+    return static_cast<OMX_VIDEO_CODINGTYPE>(OMX_VIDEO_CodingVP8);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unsupported compression format");
+    return OMX_VIDEO_CodingUnused;
   }
 }
 
