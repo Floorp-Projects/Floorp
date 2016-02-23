@@ -38,6 +38,8 @@ class Proxy
     static bool getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop);
     static bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                              ObjectOpResult& result);
+    static bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                       MutableHandleObject protop);
     static bool setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded);
     static bool has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp);
     static bool get(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,

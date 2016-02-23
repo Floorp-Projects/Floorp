@@ -165,33 +165,152 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
     return true;
 }
 
-// ES6 implements both getPrototype and setPrototype traps. We don't have them yet (see bug
-// 888969). For now, use these, to account for proxy revocation.
+// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.1 Proxy.[[GetPrototypeOf]].
 bool
 ScriptedDirectProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
                                          MutableHandleObject protop) const
 {
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-    // Though handler is used elsewhere, spec mandates that both get set to null.
-    if (!target) {
+    // Steps 1-3.
+    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    return GetPrototype(cx, target, protop);
+    // Step 4.
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    MOZ_ASSERT(target);
+
+    // Step 5.
+    RootedValue trap(cx);
+    if (!GetProxyTrap(cx, handler, cx->names().getPrototypeOf, &trap))
+        return false;
+
+    // Step 6.
+    if (trap.isUndefined())
+        return GetPrototype(cx, target, protop);
+
+    // Step 7.
+    RootedValue handlerProto(cx);
+    {
+        FixedInvokeArgs<1> args(cx);
+
+        args[0].setObject(*target);
+
+        handlerProto.setObject(*handler);
+
+        if (!js::Call(cx, trap, handlerProto, args, &handlerProto))
+            return false;
+    }
+
+    // Step 8.
+    if (!handlerProto.isObjectOrNull()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GETPROTOTYPEOF_TRAP_RETURN);
+        return false;
+    }
+
+    // Step 9.
+    bool extensibleTarget;
+    if (!IsExtensible(cx, target, &extensibleTarget))
+        return false;
+
+    // Step 10.
+    if (extensibleTarget) {
+        protop.set(handlerProto.toObjectOrNull());
+        return true;
+    }
+
+    // Step 11.
+    RootedObject targetProto(cx);
+    if (!GetPrototype(cx, target, &targetProto))
+        return false;
+
+    // Step 12.
+    if (handlerProto.toObjectOrNull() != targetProto) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCONSISTENT_GETPROTOTYPEOF_TRAP);
+        return false;
+    }
+
+    // Step 13.
+    protop.set(handlerProto.toObjectOrNull());
+    return true;
 }
 
+// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.2 Proxy.[[SetPrototypeOf]].
 bool
 ScriptedDirectProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                                          ObjectOpResult& result) const
 {
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!target) {
+    // Steps 1-4.
+    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    return SetPrototype(cx, target, proto, result);
+    // Step 5.
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    MOZ_ASSERT(target);
+
+    // Step 6.
+    RootedValue trap(cx);
+    if (!GetProxyTrap(cx, handler, cx->names().setPrototypeOf, &trap))
+        return false;
+
+    // Step 7.
+    if (trap.isUndefined())
+        return SetPrototype(cx, target, proto, result);
+
+    // Step 8.
+    bool booleanTrapResult;
+    {
+        FixedInvokeArgs<2> args(cx);
+
+        args[0].setObject(*target);
+        args[1].setObjectOrNull(proto);
+
+        RootedValue hval(cx, ObjectValue(*handler));
+        if (!js::Call(cx, trap, hval, args, &hval))
+            return false;
+
+        booleanTrapResult = ToBoolean(hval);
+    }
+
+    // Step 9.
+    if (!booleanTrapResult)
+        return result.fail(JSMSG_PROXY_SETPROTOTYPEOF_RETURNED_FALSE);
+
+    // Step 10.
+    bool extensibleTarget;
+    if (!IsExtensible(cx, target, &extensibleTarget))
+        return false;
+
+    // Step 11.
+    if (extensibleTarget)
+        return result.succeed();
+
+    // Step 12.
+    RootedObject targetProto(cx);
+    if (!GetPrototype(cx, target, &targetProto))
+        return false;
+
+    // Step 13.
+    if (proto != targetProto) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCONSISTENT_SETPROTOTYPEOF_TRAP);
+        return false;
+    }
+
+    // Step 14.
+    return result.succeed();
+}
+
+bool
+ScriptedDirectProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy,
+                                                   bool* isOrdinary,
+                                                   MutableHandleObject protop) const
+{
+    *isOrdinary = false;
+    return true;
 }
 
 // Not yet part of ES6, but hopefully to be standards-tracked -- and needed to

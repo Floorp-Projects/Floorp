@@ -127,6 +127,7 @@
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
+    macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
     macro(global, global, "global") \
     macro(Handle, Handle, "Handle") \
     macro(has, has, "has") \
@@ -238,6 +239,7 @@
     macro(separator, separator, "separator") \
     macro(set, set, "set") \
     macro(setPrefix, setPrefix, "set ") \
+    macro(setPrototypeOf, setPrototypeOf, "setPrototypeOf") \
     macro(shape, shape, "shape") \
     macro(size, size, "size") \
     macro(source, source, "source") \
