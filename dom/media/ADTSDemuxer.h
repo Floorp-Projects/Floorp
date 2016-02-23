@@ -59,12 +59,6 @@ public:
   // or a 0-duration if unknown.
   media::TimeUnit Duration(int64_t aNumFrames) const;
 
-#ifdef ENABLE_TESTS
-  const adts::Frame& LastFrame() const;
-  RefPtr<MediaRawData> DemuxSample();
-  media::TimeUnit SeekPosition() const;
-#endif
-
   // MediaTrackDemuxer interface.
   UniquePtr<TrackInfo> GetInfo() const override;
   RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
