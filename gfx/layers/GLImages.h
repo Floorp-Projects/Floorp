@@ -6,6 +6,7 @@
 #ifndef GFX_GLIMAGES_H
 #define GFX_GLIMAGES_H
 
+#include "AndroidSurfaceTexture.h"
 #include "GLContextTypes.h"
 #include "GLTypes.h"
 #include "ImageContainer.h"             // for Image
@@ -14,9 +15,6 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 
 namespace mozilla {
-namespace gl {
-class AndroidSurfaceTexture;
-} // namespace gl
 namespace layers {
 
 class GLImage : public Image {
@@ -79,7 +77,7 @@ public:
   }
 
 private:
-  gl::AndroidSurfaceTexture* mSurfaceTexture;
+  RefPtr<gl::AndroidSurfaceTexture> mSurfaceTexture;
   gfx::IntSize mSize;
   gl::OriginPos mOriginPos;
 };
