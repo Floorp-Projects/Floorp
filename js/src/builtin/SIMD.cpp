@@ -200,7 +200,6 @@ namespace {
 #define DEFINE_DEFN_(TypeName)                                       \
 class TypeName##Defn {                                               \
   public:                                                            \
-    static const SimdType type = SimdType::TypeName;                 \
     static const JSFunctionSpec Methods[];                           \
 };
 
