@@ -19,7 +19,7 @@ interface Request {
 
   [Func="mozilla::dom::Request::RequestContextEnabled"]
   readonly attribute RequestContext context;
-  readonly attribute DOMString referrer;
+  readonly attribute USVString referrer;
   readonly attribute RequestMode mode;
   readonly attribute RequestCredentials credentials;
   [Func="mozilla::dom::Request::RequestCacheEnabled"]
