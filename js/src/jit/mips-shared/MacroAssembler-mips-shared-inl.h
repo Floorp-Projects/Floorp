@@ -346,6 +346,31 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, SecondScratchReg, rhs, label);
 }
 
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
+{
+    movePtr(rhs, ScratchRegister);
+    Label skipJump;
+    ma_b(lhs, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
+    CodeOffsetJump off = jumpWithPatch(label);
+    bind(&skipJump);
+    return off;
+}
+
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    movePtr(rhs, ScratchRegister);
+    Label skipJump;
+    ma_b(SecondScratchReg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
+    CodeOffsetJump off = jumpWithPatch(label);
+    bind(&skipJump);
+    return off;
+}
+
 void
 MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                             Label* label)

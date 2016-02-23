@@ -585,6 +585,24 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, scratch, rhs, label);
 }
 
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
+{
+    ma_cmp(lhs, rhs);
+    return jumpWithPatch(label, cond);
+}
+
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    ma_ldr(lhs, scratch2);
+    ma_cmp(scratch2, rhs);
+    return jumpWithPatch(label, cond);
+}
+
 void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
