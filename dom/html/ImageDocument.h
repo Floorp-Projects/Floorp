@@ -114,6 +114,9 @@ protected:
 
   float                         mVisibleWidth;
   float                         mVisibleHeight;
+  // XXX: The image width/height isn't invalidated to reflect the up-to-date
+  //      width/height of the image frame. In particular when the
+  //      StyleVisibility orientation changes this value isn't updated.
   int32_t                       mImageWidth;
   int32_t                       mImageHeight;
 
