@@ -224,7 +224,7 @@ HostHasPermission(nsIURI &docURI)
       end = domainWhiteList.Length();
     }
 
-    rv = idnService->ConvertUTF8toACE(Substring(domainWhiteList, begin, end),
+    rv = idnService->ConvertUTF8toACE(Substring(domainWhiteList, begin, end - begin),
                                       domainName);
     if (NS_SUCCEEDED(rv)) {
       if (HostInDomain(hostName, domainName)) {
