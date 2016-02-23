@@ -901,22 +901,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     inline void incrementInt32Value(const Address& addr);
 
-    template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label* overflow) {
-        switch (cond) {
-          case Overflow:
-            ma_subTestOverflow(dest, dest, src, overflow);
-            break;
-          case NonZero:
-          case Zero:
-            ma_subu(dest, src);
-            ma_b(dest, dest, overflow, cond);
-            break;
-          default:
-            MOZ_CRASH("NYI");
-        }
-    }
-
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
 
