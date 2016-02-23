@@ -359,7 +359,7 @@ GetLine(FILE* file, const char * prompt)
         return nullptr;
 
     char* current = buffer;
-    while (true) {
+    do {
         while (true) {
             if (fgets(current, size - len, file))
                 break;
@@ -387,11 +387,7 @@ GetLine(FILE* file, const char * prompt)
             buffer = tmp;
         }
         current = buffer + len;
-    }
-
-    if (len && !ferror(file))
-        return buffer;
-    free(buffer);
+    } while (true);
     return nullptr;
 }
 
