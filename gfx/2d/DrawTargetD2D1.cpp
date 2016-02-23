@@ -31,7 +31,8 @@ ID2D1Factory1 *D2DFactory1()
 }
 
 DrawTargetD2D1::DrawTargetD2D1()
-  : mClipsArePushed(false)
+  : mCommandListsCreated(0)
+  , mClipsArePushed(false)
 {
 }
 
@@ -90,7 +91,13 @@ DrawTargetD2D1::Snapshot()
 void
 DrawTargetD2D1::Flush()
 {
-  mDC->Flush();
+  if (mCommandListsCreated > 50) {
+    mDC->EndDraw();
+    mDC->BeginDraw();
+    mCommandListsCreated = 0;
+  } else {
+    mDC->Flush();
+  }
 
   // We no longer depend on any target.
   for (TargetSet::iterator iter = mDependingOnTargets.begin();
@@ -256,6 +263,7 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
 
   RefPtr<ID2D1CommandList> list;
   mDC->CreateCommandList(getter_AddRefs(list));
+  mCommandListsCreated++;
   mDC->SetTarget(list);
 
   IntRect addClipRect;
@@ -1029,6 +1037,7 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
   PopAllClips();
 
   mDC->CreateCommandList(getter_AddRefs(mCommandList));
+  mCommandListsCreated++;
   mDC->SetTarget(mCommandList);
 
   PushAllClips();
