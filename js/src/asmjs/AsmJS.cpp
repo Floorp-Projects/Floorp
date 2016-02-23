@@ -653,30 +653,6 @@ ComparisonRight(ParseNode* pn)
     return BinaryOpRight(pn);
 }
 
-static inline ParseNode*
-AndOrLeft(ParseNode* pn)
-{
-    return BinaryOpLeft(pn);
-}
-
-static inline ParseNode*
-AndOrRight(ParseNode* pn)
-{
-    return BinaryOpRight(pn);
-}
-
-static inline ParseNode*
-RelationalLeft(ParseNode* pn)
-{
-    return BinaryOpLeft(pn);
-}
-
-static inline ParseNode*
-RelationalRight(ParseNode* pn)
-{
-    return BinaryOpRight(pn);
-}
-
 static inline bool
 IsExpressionStatement(ParseNode* pn)
 {
