@@ -15,7 +15,7 @@ function countPermissions() {
   return result;
 }
 
-add_task(function* test() {
+function test() {
   // sanitize before we start so we have a good baseline.
   // Set up the sanitizer to just clear siteSettings
   let s = new Sanitizer();
@@ -45,8 +45,8 @@ add_task(function* test() {
   ok(pm.enumerator.hasMoreElements(), "Permission manager should have elements, since we just added one");
 
   // Clear it
-  yield s.sanitize();
+  s.sanitize();
 
   // Make sure it's gone
   is(numAtStart, countPermissions(), "Permission manager should have the same count it started with");
-});
+}
