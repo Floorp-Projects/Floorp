@@ -32,7 +32,8 @@
       anchor = getAccessible("bottom2");
       var [x, y] = getPos(anchor);
       var wnd = getRootAccessible().DOMDocument.defaultView;
-      var scrollToX = docX - wnd.screenX, scrollToY = docY - wnd.screenY;
+      var [screenX, screenY] = CSSToDevicePixels(wnd, wnd.screenX, wnd.screenY);
+      var scrollToX = docX - screenX, scrollToY = docY - screenY;
 
       anchor.scrollToPoint(COORDTYPE_WINDOW_RELATIVE, scrollToX, scrollToY);
       testPos(anchor, [x, docY]);
