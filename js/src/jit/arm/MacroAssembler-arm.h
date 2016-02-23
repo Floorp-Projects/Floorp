@@ -973,7 +973,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Common interface.
     /////////////////////////////////////////////////////////////////
   public:
-    template <typename T> inline void branchAdd32(Condition cond, T src, Register dest, Label* label);
     template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
         ma_sub(src, dest, SetCC);

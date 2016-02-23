@@ -410,6 +410,19 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
 }
 
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* overflow)
+{
+    switch (cond) {
+      case Overflow:
+        ma_addTestOverflow(dest, dest, src, overflow);
+        break;
+      default:
+        MOZ_CRASH("NYI");
+    }
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
