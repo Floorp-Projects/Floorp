@@ -308,7 +308,7 @@ struct FullObjectStoreMetadata
 
   // These two members are only ever touched on a transaction thread!
   int64_t mNextAutoIncrementId;
-  int64_t mComittedAutoIncrementId;
+  int64_t mCommittedAutoIncrementId;
 
   bool mDeleted;
 
@@ -316,7 +316,7 @@ public:
   FullObjectStoreMetadata()
     : mCommonMetadata(0, nsString(), KeyPath(0), false)
     , mNextAutoIncrementId(0)
-    , mComittedAutoIncrementId(0)
+    , mCommittedAutoIncrementId(0)
     , mDeleted(false)
   {
     // This can happen either on the QuotaManager IO thread or on a
@@ -12602,7 +12602,7 @@ FullDatabaseMetadata::Duplicate() const
 
     newOSMetadata->mCommonMetadata = value->mCommonMetadata;
     newOSMetadata->mNextAutoIncrementId = value->mNextAutoIncrementId;
-    newOSMetadata->mComittedAutoIncrementId = value->mComittedAutoIncrementId;
+    newOSMetadata->mCommittedAutoIncrementId = value->mCommittedAutoIncrementId;
 
     for (auto iter = value->mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
       auto key = iter.Key();
@@ -15122,7 +15122,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
   RefPtr<FullObjectStoreMetadata> newMetadata = new FullObjectStoreMetadata();
   newMetadata->mCommonMetadata = aMetadata;
   newMetadata->mNextAutoIncrementId = aMetadata.autoIncrement() ? 1 : 0;
-  newMetadata->mComittedAutoIncrementId = newMetadata->mNextAutoIncrementId;
+  newMetadata->mCommittedAutoIncrementId = newMetadata->mNextAutoIncrementId;
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.Put(aMetadata.id(), newMetadata,
                                                 fallible))) {
@@ -20257,7 +20257,7 @@ OpenDatabaseOp::LoadDatabaseInformation(mozIStorageConnection* aConnection)
 
     metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
     metadata->mNextAutoIncrementId = nextAutoIncrementId;
-    metadata->mComittedAutoIncrementId = nextAutoIncrementId;
+    metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
 
     if (NS_WARN_IF(!objectStores.Put(objectStoreId, metadata, fallible))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -21049,13 +21049,16 @@ OpenDatabaseOp::AssertMetadataConsistency(const FullDatabaseMetadata* aMetadata)
                  otherObjectStore->mCommonMetadata.autoIncrement());
     MOZ_ASSERT(thisObjectStore->mCommonMetadata.keyPath() ==
                  otherObjectStore->mCommonMetadata.keyPath());
-    // mNextAutoIncrementId and mComittedAutoIncrementId may be modified
+    // mNextAutoIncrementId and mCommittedAutoIncrementId may be modified
     // concurrently with this OpenOp, so it is not possible to assert equality
-    // here.
+    // here. It's also possible that we've written the new ids to disk but not
+    // yet updated the in-memory count.
     MOZ_ASSERT(thisObjectStore->mNextAutoIncrementId <=
                  otherObjectStore->mNextAutoIncrementId);
-    MOZ_ASSERT(thisObjectStore->mComittedAutoIncrementId <=
-                 otherObjectStore->mComittedAutoIncrementId);
+    MOZ_ASSERT(thisObjectStore->mCommittedAutoIncrementId <=
+                 otherObjectStore->mCommittedAutoIncrementId ||
+               thisObjectStore->mCommittedAutoIncrementId ==
+                 otherObjectStore->mNextAutoIncrementId);
     MOZ_ASSERT(!otherObjectStore->mDeleted);
 
     MOZ_ASSERT(thisObjectStore->mIndexes.Count() ==
@@ -22138,9 +22141,9 @@ CommitOp::CommitOrRollbackAutoIncrementCounts()
       RefPtr<FullObjectStoreMetadata>& metadata = metadataArray[index];
 
       if (committed) {
-        metadata->mComittedAutoIncrementId = metadata->mNextAutoIncrementId;
+        metadata->mCommittedAutoIncrementId = metadata->mNextAutoIncrementId;
       } else {
-        metadata->mNextAutoIncrementId = metadata->mComittedAutoIncrementId;
+        metadata->mNextAutoIncrementId = metadata->mCommittedAutoIncrementId;
       }
     }
   }
