@@ -242,9 +242,9 @@ protected:
   nsresult InitFunctions();
 
   /**
-   * Initializes triggers defined in nsPlacesTriggers.h
+   * Initializes temp entities, like triggers, tables, views...
    */
-  nsresult InitTempTriggers();
+  nsresult InitTempEntities();
 
   /**
    * Helpers used by schema upgrades.
