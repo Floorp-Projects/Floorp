@@ -6,14 +6,14 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "React",
-  "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "Target",
-  "devtools/client/aboutdebugging/components/target", true);
-loader.lazyRequireGetter(this, "Services");
+const Services = require("Services");
+
+const React = require("devtools/client/shared/vendor/react");
+const { Target } = require("./target");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
+
 const LocaleCompare = (a, b) => {
   return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 };
