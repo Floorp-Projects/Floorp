@@ -30,16 +30,6 @@ const nsIID kWorkerRunnableIID = {
   0x320cc0b5, 0xef12, 0x4084, { 0x88, 0x6e, 0xca, 0x6a, 0x81, 0xe4, 0x1d, 0x68 }
 };
 
-void
-MaybeReportMainThreadException(JSContext* aCx, bool aResult)
-{
-  AssertIsOnMainThread();
-
-  if (aCx && !aResult) {
-    JS_ReportPendingException(aCx);
-  }
-}
-
 } // namespace
 
 #ifdef DEBUG
@@ -421,7 +411,15 @@ WorkerDebuggerRunnable::PostDispatch(JSContext* aCx,
                                      WorkerPrivate* aWorkerPrivate,
                                      bool aDispatchResult)
 {
-  MaybeReportMainThreadException(aCx, aDispatchResult);
+  // The only way aDispatchResult can be false here is if either PreDispatch or
+  // DispatchInternal returned false.
+  //
+  // Our PreDispatch always returns true and is final.  We inherit
+  // DispatchInternal from WorkerRunnable and don't allow overriding it in our
+  // subclasses.  WorkerRunnable::DispatchInternal only fails if one of its
+  // runnable dispatching functions fails, and none of those cases can throw a
+  // JS exception.  So we can never have a JS exception here.
+  MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
 WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
