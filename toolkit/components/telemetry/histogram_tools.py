@@ -238,7 +238,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     def check_bug_numbers(name, definition):
         bug_numbers = definition.get('bug_numbers')
         if not bug_numbers:
-            return
+            if whitelists is None or name in whitelists['bug_numbers']:
+                return
+            else:
+                raise KeyError, 'New histogram "%s" must have a bug_numbers field.' % name
 
         if not isinstance(bug_numbers, list):
             raise ValueError, 'bug_numbers field for "%s" should be an array' % (name)
