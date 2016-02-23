@@ -72,6 +72,10 @@ function makeMemoryTest(url, generator) {
   });
 }
 
+function dumpn(msg) {
+  dump(`MEMORY-TEST: ${msg}\n`);
+}
+
 /**
  * Returns a promise that will resolve when the provided store matches
  * the expected array. expectedStates is an array of dominatorTree states.

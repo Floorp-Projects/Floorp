@@ -329,6 +329,10 @@ html, body, #app, #memory-tool {
   line-height: var(--heap-tree-row-height);
 }
 
+.children-pointer {
+  padding-inline-end: 5px;
+}
+
 /**
  * Heap tree view columns
  */
