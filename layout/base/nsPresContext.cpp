@@ -2051,6 +2051,39 @@ nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
+struct MediaFeatureHints
+{
+  nsRestyleHint restyleHint;
+  nsChangeHint changeHint;
+};
+
+static bool
+MediaFeatureValuesChangedAllDocumentsCallback(nsIDocument* aDocument, void* aHints)
+{
+  MediaFeatureHints* hints = static_cast<MediaFeatureHints*>(aHints);
+  if (nsIPresShell* shell = aDocument->GetShell()) {
+    if (nsPresContext* pc = shell->GetPresContext()) {
+      pc->MediaFeatureValuesChangedAllDocuments(hints->restyleHint,
+                                                hints->changeHint);
+    }
+  }
+  return true;
+}
+
+void
+nsPresContext::MediaFeatureValuesChangedAllDocuments(nsRestyleHint aRestyleHint,
+                                                     nsChangeHint aChangeHint)
+{
+    MediaFeatureValuesChanged(aRestyleHint, aChangeHint);
+    MediaFeatureHints hints = {
+      aRestyleHint,
+      aChangeHint
+    };
+
+    mDocument->EnumerateSubDocuments(MediaFeatureValuesChangedAllDocumentsCallback,
+                                     &hints);
+}
+
 void
 nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
                                          nsChangeHint aChangeHint)
@@ -2154,6 +2187,25 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   // event is the only thing holding the pres context alive).
   if (mPendingMediaFeatureValuesChanged && mShell) {
     MediaFeatureValuesChanged(nsRestyleHint(0));
+  }
+}
+
+static void
+NotifyTabSizeModeChanged(TabParent* aTab, void* aArg)
+{
+  nsSizeMode* sizeMode = static_cast<nsSizeMode*>(aArg);
+  aTab->SizeModeChanged(*sizeMode);
+}
+
+void
+nsPresContext::SizeModeChanged(nsSizeMode aSizeMode)
+{
+  if (HasCachedStyleData()) {
+    nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
+                                            NotifyTabSizeModeChanged,
+                                            &aSizeMode);
+    MediaFeatureValuesChangedAllDocuments(eRestyle_Subtree,
+                                          NS_STYLE_HINT_REFLOW);
   }
 }
 
