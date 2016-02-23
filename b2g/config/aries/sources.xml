@@ -156,7 +156,7 @@
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="a558dc844bf5144fc38603fd8f4df8d9557052a5"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="57ee1320ed7b4a1a1274d8f3f6c177cd6b9becb2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
-  <project name="timekeep" path="hardware/sony/timekeep" remote="b2g" revision="4cbb0abc00681f116f043584661307b5c4855a31"/>
+  <project name="timekeep" path="hardware/sony/timekeep" remote="b2g" revision="460869402e019b122c4e5ffce19bfbbad026c0fe"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="42839aedcf70bf6bc92a3b7ea4a5cc9bf9aef3f9"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
