@@ -650,14 +650,15 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                                 halt_on_failure=halt_on_failure,
                                 output_parser=output_parser)
 
-    def _get_output_from_make(self, target, cwd, env, halt_on_failure=True):
+    def _get_output_from_make(self, target, cwd, env, halt_on_failure=True, ignore_errors=False):
         """runs make and returns the output of the command"""
         make = self._get_make_executable()
         return self.get_output_from_command(make + target,
                                             cwd=cwd,
                                             env=env,
                                             silent=True,
-                                            halt_on_failure=halt_on_failure)
+                                            halt_on_failure=halt_on_failure,
+                                            ignore_errors=ignore_errors)
 
     def make_unpack_en_US(self):
         """wrapper for make unpack"""
@@ -711,7 +712,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         target = ['echo-variable-UPLOAD_FILES', 'AB_CD=%s' % (locale)]
         dirs = self.query_abs_dirs()
         cwd = dirs['abs_locales_dir']
-        output = self._get_output_from_make(target=target, cwd=cwd, env=env)
+        # Bug 1242771 - echo-variable-UPLOAD_FILES via mozharness fails when stderr is found
+        #    we should ignore stderr as unfortunately it's expected when parsing for values
+        output = self._get_output_from_make(target=target, cwd=cwd, env=env, ignore_errors=True)
         self.info('UPLOAD_FILES is "%s"' % (output))
         files = shlex.split(output)
         if not files:
