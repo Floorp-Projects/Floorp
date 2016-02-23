@@ -138,9 +138,6 @@ private: // constructor && distructor
   nsresult CreateAndDispatchSimpleEvent(const nsAString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool aIsBinary);
-  nsresult CreateAndDispatchMessageEvent(JSContext* aCx,
-                                         const nsACString& aData,
-                                         bool aIsBinary);
   nsresult CreateAndDispatchCloseEvent(bool aWasClean,
                                        uint16_t aCode,
                                        const nsAString& aReason);
