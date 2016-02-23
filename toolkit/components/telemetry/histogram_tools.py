@@ -206,9 +206,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
-        if ('alert_emails' in definition
-            and not isinstance(definition['alert_emails'], list)):
-            raise KeyError, 'alert_emails must be an array if present (in Histogram %s)' % name
+        if 'alert_emails' not in definition:
+            if whitelists is not None and name not in whitelists['alert_emails']:
+                raise KeyError, 'New histogram "%s" must have an alert_emails field.' % name
+        elif not isinstance(definition['alert_emails'], list):
+            raise KeyError, 'alert_emails must be an array (in histogram "%s")' % name
 
         Histogram.check_name(name)
         Histogram.check_field_types(name, definition)
