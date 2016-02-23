@@ -324,6 +324,22 @@ Function Properties of the `Debugger.Memory.prototype` Object
         types. When the census cannot find the byte size for a given type, it
         returns zero.
 
+    <code>{ by: "bucket" }</code>
+    :   Do not do any filtering or categorizing. Instead, accumulate a bucket of
+        each node's ID for every node that matches. The resulting report is an
+        array of the IDs.
+
+        For example, to find the ID of all nodes whose internal object
+        `[[class]]` property is named "RegExp", you could use the following code:
+
+            const report = dbg.memory.takeCensus({
+              breakdown: {
+                by: "objectClass",
+                then: { by: "bucket" }
+              }
+            });
+            doStuffWithRegExpIDs(report.RegExp);
+
     <code>{ by: "allocationStack", then:<i>breakdown</i>, noStack:<i>noStackBreakdown</i> }</code>
     :   Group items by the full JavaScript stack trace at which they were
         allocated.
