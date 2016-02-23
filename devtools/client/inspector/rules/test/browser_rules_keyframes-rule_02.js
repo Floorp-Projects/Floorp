@@ -29,6 +29,8 @@ function* testPacman(inspector, view) {
   );
 
   // Dynamic changes test disabled because of Bug 1050940
+  // If this part of the test is ever enabled again, it should be changed to
+  // use addProperty (in head.js) and stop using _applyingModifications
 
   // info("Test dynamic changes to keyframe rule for #pacman");
 

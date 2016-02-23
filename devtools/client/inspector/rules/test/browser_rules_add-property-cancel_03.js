@@ -36,8 +36,6 @@ add_task(function*() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield onBlur;
 
-  ok(!elementRuleEditor.rule._applyingModifications,
-    "Shouldn't have an outstanding modification request after a cancel.");
   is(elementRuleEditor.rule.textProps.length, 1,
     "Should have canceled creating a new text property.");
   is(view.styleDocument.documentElement, view.styleDocument.activeElement,
