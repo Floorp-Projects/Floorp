@@ -31,7 +31,7 @@ config = {
     'balrog_credentials_file': 'oauth.txt',
 
     # l10n
-    "ignore_locales": ["en-US"],
+    "ignore_locales": ["en-US", "ja-JP-mac"],
     "l10n_dir": "l10n",
     "locales_file": "%(branch)s/browser/locales/all-locales",
     "locales_dir": "browser/locales",

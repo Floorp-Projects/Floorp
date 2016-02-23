@@ -2777,8 +2777,12 @@ Assembler::bind(Label* label, BufferOffset boff)
         BufferOffset b(label);
         do {
             // Even a 0 offset may be invalid if we're out of memory.
-            if (oom())
+            if (oom()) {
+                // Ensure we always bind the label. This matches what we do on
+                // x86/x64 and silences the assert in ~Label.
+                label->bind(0);
                 return;
+            }
             BufferOffset next;
             more = nextLink(b, &next);
             Instruction branch = *editSrc(b);

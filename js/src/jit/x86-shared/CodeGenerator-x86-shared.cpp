@@ -3433,24 +3433,11 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift* ins)
     FloatRegister out = ToFloatRegister(ins->output());
     MOZ_ASSERT(ToFloatRegister(ins->vector()) == out); // defineReuseInput(0);
 
-    // If the shift count is greater than 31, this will just zero all lanes by
-    // default for lsh and ursh, and for rsh extend the sign bit to all bits,
-    // per the SIMD.js spec (as of March 19th 2015).
+    // If the shift count is out of range, only use the low 5 bits.
     const LAllocation* val = ins->value();
     if (val->isConstant()) {
-        uint32_t c = uint32_t(ToInt32(val));
-        if (c > 31) {
-            switch (ins->operation()) {
-              case MSimdShift::lsh:
-              case MSimdShift::ursh:
-                masm.zeroInt32x4(out);
-                return;
-              default:
-                c = 31;
-                break;
-            }
-        }
-        Imm32 count(c);
+        MOZ_ASSERT(ins->temp()->isBogusTemp());
+        Imm32 count(uint32_t(ToInt32(val)) % 32);
         switch (ins->operation()) {
           case MSimdShift::lsh:
             masm.packedLeftShiftByScalar(count, out);
@@ -3465,9 +3452,13 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift* ins)
         MOZ_CRASH("unexpected SIMD bitwise op");
     }
 
+    // Truncate val to 5 bits. We should have a temp register for that.
     MOZ_ASSERT(val->isRegister());
+    Register count = ToRegister(ins->temp());
+    masm.mov(ToRegister(val), count);
+    masm.andl(Imm32(31), count);
     ScratchFloat32Scope scratch(masm);
-    masm.vmovd(ToRegister(val), scratch);
+    masm.vmovd(count, scratch);
 
     switch (ins->operation()) {
       case MSimdShift::lsh:

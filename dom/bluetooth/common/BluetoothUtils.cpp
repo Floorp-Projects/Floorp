@@ -278,6 +278,86 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
 }
 
 nsresult
+BytesToUuid(const nsTArray<uint8_t>& aArray,
+            nsTArray<uint8_t>::index_type aOffset,
+            BluetoothUuidType aType,
+            BluetoothProfileEndian aEndian,
+            BluetoothUuid& aUuid)
+{
+  MOZ_ASSERT(aType == UUID_16_BIT ||
+             aType == UUID_32_BIT ||
+             aType == UUID_128_BIT);
+  MOZ_ASSERT(aEndian == ENDIAN_BIG || aEndian == ENDIAN_LITTLE);
+
+  size_t index = (aType == UUID_16_BIT) ? 2 : 0;
+  size_t length = 0;
+
+  if (aType == UUID_16_BIT) {
+    length =  sizeof(uint16_t);
+  } else if (aType == UUID_32_BIT) {
+    length = sizeof(uint32_t);
+  } else {
+    length = MOZ_ARRAY_LENGTH(aUuid.mUuid);
+  }
+
+  if (aArray.Length() < aOffset + length) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  aUuid = BluetoothUuid::BASE;
+
+  if (aEndian == ENDIAN_BIG) {
+    for (size_t i = 0; i < length; ++i) {
+      aUuid.mUuid[index + i] = aArray[aOffset + i];
+    }
+  } else {
+    for (size_t i = 0; i < length; ++i) {
+      aUuid.mUuid[index + i] = aArray[aOffset + length - i - 1];
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UuidToBytes(const BluetoothUuid& aUuid,
+            BluetoothUuidType aType,
+            BluetoothProfileEndian aEndian,
+            nsTArray<uint8_t>& aArray,
+            nsTArray<uint8_t>::index_type aOffset)
+{
+  MOZ_ASSERT(aType == UUID_16_BIT ||
+             aType == UUID_32_BIT ||
+             aType == UUID_128_BIT);
+  MOZ_ASSERT(aEndian == ENDIAN_BIG || aEndian == ENDIAN_LITTLE);
+
+  size_t index = (aType == UUID_16_BIT) ? 2 : 0;
+  size_t length = 0;
+
+  if (aType == UUID_16_BIT) {
+    length =  sizeof(uint16_t);
+  } else if (aType == UUID_32_BIT) {
+    length = sizeof(uint32_t);
+  } else {
+    length = MOZ_ARRAY_LENGTH(aUuid.mUuid);
+  }
+
+  aArray.SetCapacity(aOffset + length);
+
+  if (aEndian == ENDIAN_BIG) {
+    for (size_t i = 0; i < length; ++i) {
+      aArray[aOffset + i] = aUuid.mUuid[index + i];
+    }
+  } else {
+    for (size_t i = 0; i < length; ++i) {
+      aArray[aOffset + length - i - 1] = aUuid.mUuid[index + i];
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 GenerateUuid(BluetoothUuid &aUuid)
 {
   nsresult rv;

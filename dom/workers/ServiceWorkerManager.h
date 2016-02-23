@@ -499,6 +499,9 @@ public:
                 const nsACString& aScope,
                 Maybe<nsTArray<uint8_t>> aData);
 
+  nsresult
+  NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -637,14 +640,6 @@ private:
 
   void
   MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
-
-  // Does all cleanup except removing the registration from
-  // mServiceWorkerRegistrationInfos. This is useful when we clear
-  // registrations via remove()/removeAll() since we are iterating over the
-  // hashtable and can cleanly remove within the hashtable enumeration
-  // function.
-  void
-  RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
 
   // Removes all service worker registrations that matches the given pattern.
   void

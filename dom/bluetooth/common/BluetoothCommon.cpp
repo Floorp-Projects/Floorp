@@ -25,4 +25,27 @@ const BluetoothAddress BluetoothAddress::ALL(0xff, 0xff, 0xff,
 const BluetoothAddress BluetoothAddress::LOCAL(0x00, 0x00, 0x00,
                                                0xff, 0xff, 0xff);
 
+//
+// |BluetoothUuid|
+//
+
+const BluetoothUuid BluetoothUuid::ZERO(0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00);
+
+/*
+ * [Bluetooth Specification Version 4.2, Volume 3, Part B, Section 2.5.1]
+ *
+ * To reduce the burden of storing and transferring 128-bit UUID values, a
+ * range of UUID values has been pre-allocated for assignment to often-used,
+ * registered purposes. The first UUID in this pre-allocated range is known as
+ * the Bluetooth Base UUID and has the value 00000000-0000-1000-8000-
+ * 00805F9B34FB, from the Bluetooth Assigned Numbers document.
+ */
+const BluetoothUuid BluetoothUuid::BASE(0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x10, 0x00,
+                                        0x80, 0x00, 0x00, 0x80,
+                                        0x5f, 0x9b, 0x34, 0xfb);
+
 END_BLUETOOTH_NAMESPACE

@@ -23,7 +23,8 @@ public:
   explicit VRDeviceProxyOrientationFallBack(const VRDeviceUpdate& aDeviceUpdate);
 
   virtual void ZeroSensor() override;
-  virtual VRHMDSensorState GetSensorState(double timeOffset = 0.0) override;
+  virtual VRHMDSensorState GetSensorState() override;
+  virtual VRHMDSensorState GetImmediateSensorState() override;
 
   // ISensorObserver interface
   void Notify(const hal::SensorData& SensorData) override;

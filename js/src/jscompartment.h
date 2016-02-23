@@ -588,7 +588,7 @@ struct JSCompartment
     void forgetObjectMetadataCallback() {
         objectMetadataCallback = nullptr;
     }
-    void setNewObjectMetadata(JSContext* cx, JSObject* obj);
+    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
     void clearObjectMetadata();
     const void* addressOfMetadataCallback() const {
         return &objectMetadataCallback;
@@ -938,6 +938,27 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
   private:
     WrapperValue value;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class MOZ_RAII AutoSuppressObjectMetadataCallback {
+    JS::Zone* zone;
+    bool saved;
+
+  public:
+    explicit AutoSuppressObjectMetadataCallback(ExclusiveContext* cx)
+      : AutoSuppressObjectMetadataCallback(cx->compartment()->zone())
+    { }
+
+    explicit AutoSuppressObjectMetadataCallback(JS::Zone* zone)
+      : zone(zone),
+        saved(zone->suppressObjectMetadataCallback)
+    {
+        zone->suppressObjectMetadataCallback = true;
+    }
+
+    ~AutoSuppressObjectMetadataCallback() {
+        zone->suppressObjectMetadataCallback = saved;
+    }
 };
 
 } /* namespace js */

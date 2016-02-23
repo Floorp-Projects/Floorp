@@ -195,10 +195,10 @@ static const JSClass parseTaskGlobalClass = {
     JS_GlobalObjectTraceHook
 };
 
-ParseTask::ParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal, JSContext* initCx,
-                     const char16_t* chars, size_t length,
+ParseTask::ParseTask(ParseTaskKind kind, ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
+                     JSContext* initCx, const char16_t* chars, size_t length,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-  : cx(cx), options(initCx), chars(chars), length(length),
+  : kind(kind), cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     exclusiveContextGlobal(initCx->runtime(), exclusiveContextGlobal),
     callback(callback), callbackData(callbackData),
@@ -244,6 +244,52 @@ ParseTask::~ParseTask()
         js_delete(errors[i]);
 }
 
+ScriptParseTask::ScriptParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
+                                 JSContext* initCx, const char16_t* chars, size_t length,
+                                 JS::OffThreadCompileCallback callback, void* callbackData)
+  : ParseTask(ParseTaskKind::Script, cx, exclusiveContextGlobal, initCx, chars, length, callback,
+              callbackData)
+{
+}
+
+void
+ScriptParseTask::parse()
+{
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+
+    // ! WARNING WARNING WARNING !
+    //
+    // See comment in Parser::bindLexical about optimizing global lexical
+    // bindings. If we start optimizing them, passing in task->cx's
+    // global lexical scope would be incorrect!
+    //
+    // ! WARNING WARNING WARNING !
+    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
+    Rooted<StaticScope*> staticScope(cx, &globalLexical->staticBlock());
+    script = frontend::CompileScript(cx, &alloc, globalLexical, staticScope, nullptr,
+                                     options, srcBuf,
+                                     /* source_ = */ nullptr,
+                                     /* extraSct = */ nullptr,
+                                     /* sourceObjectOut = */ sourceObject.address());
+}
+
+ModuleParseTask::ModuleParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal,
+                                 JSContext* initCx, const char16_t* chars, size_t length,
+                                 JS::OffThreadCompileCallback callback, void* callbackData)
+  : ParseTask(ParseTaskKind::Module, cx, exclusiveContextGlobal, initCx, chars, length, callback,
+              callbackData)
+{
+}
+
+void
+ModuleParseTask::parse()
+{
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, &alloc);
+    if (module)
+        script = module->script();
+}
+
 void
 js::CancelOffThreadParses(JSRuntime* rt)
 {
@@ -285,7 +331,8 @@ js::CancelOffThreadParses(JSRuntime* rt)
             if (task->runtimeMatches(rt)) {
                 found = true;
                 AutoUnlockHelperThreadState unlock;
-                HelperThreadState().finishParseTask(/* maybecx = */ nullptr, rt, task);
+                HelperThreadState().finishParseTask(/* maybecx = */ nullptr, rt, task->kind,
+                                                    task);
             }
         }
         if (!found)
@@ -319,7 +366,7 @@ EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
 // Initialize all classes potentially created during parsing for use in parser
 // data structures, template objects, &c.
 static bool
-EnsureParserCreatedClasses(JSContext* cx)
+EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
 {
     Handle<GlobalObject*> global = cx->global();
 
@@ -338,18 +385,15 @@ EnsureParserCreatedClasses(JSContext* cx)
     if (!GlobalObject::initStarGenerators(cx, global))
         return false; // needed by function*() {} and generator comprehensions
 
+    if (kind == ParseTaskKind::Module && !GlobalObject::ensureModulePrototypesCreated(cx, global))
+        return false;
+
     return true;
 }
 
-bool
-js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              const char16_t* chars, size_t length,
-                              JS::OffThreadCompileCallback callback, void* callbackData)
+static JSObject*
+CreateGlobalForOffThreadParse(JSContext* cx, ParseTaskKind kind, const gc::AutoSuppressGC& nogc)
 {
-    // Suppress GC so that calls below do not trigger a new incremental GC
-    // which could require barriers on the atoms compartment.
-    gc::AutoSuppressGC suppress(cx);
-
     JSCompartment* currentCompartment = cx->compartment();
 
     JS::CompartmentOptions compartmentOptions(currentCompartment->creationOptions(),
@@ -367,20 +411,59 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     JSObject* global = JS_NewGlobalObject(cx, &parseTaskGlobalClass, nullptr,
                                           JS::FireOnNewGlobalHook, compartmentOptions);
     if (!global)
-        return false;
+        return nullptr;
 
     JS_SetCompartmentPrincipals(global->compartment(), currentCompartment->principals());
 
     // Initialize all classes required for parsing while still on the main
     // thread, for both the target and the new global so that prototype
     // pointers can be changed infallibly after parsing finishes.
-    if (!EnsureParserCreatedClasses(cx))
-        return false;
+    if (!EnsureParserCreatedClasses(cx, kind))
+        return nullptr;
     {
         AutoCompartment ac(cx, global);
-        if (!EnsureParserCreatedClasses(cx))
-            return false;
+        if (!EnsureParserCreatedClasses(cx, kind))
+            return nullptr;
     }
+
+    return global;
+}
+
+static bool
+QueueOffThreadParseTask(JSContext* cx, ParseTask* task)
+{
+    if (OffThreadParsingMustWaitForGC(cx->runtime())) {
+        AutoLockHelperThreadState lock;
+        if (!HelperThreadState().parseWaitingOnGC().append(task)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    } else {
+        AutoLockHelperThreadState lock;
+        if (!HelperThreadState().parseWorklist().append(task)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        task->activate(cx->runtime());
+        HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER);
+    }
+
+    return true;
+}
+
+bool
+js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+                              const char16_t* chars, size_t length,
+                              JS::OffThreadCompileCallback callback, void* callbackData)
+{
+    // Suppress GC so that calls below do not trigger a new incremental GC
+    // which could require barriers on the atoms compartment.
+    gc::AutoSuppressGC nogc(cx);
+
+    JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Script, nogc);
+    if (!global)
+        return false;
 
     ScopedJSDeletePtr<ExclusiveContext> helpercx(
         cx->new_<ExclusiveContext>(cx->runtime(), (PerThreadData*) nullptr,
@@ -389,32 +472,50 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
         return false;
 
     ScopedJSDeletePtr<ParseTask> task(
-        cx->new_<ParseTask>(helpercx.get(), global, cx, chars, length,
-                            callback, callbackData));
+        cx->new_<ScriptParseTask>(helpercx.get(), global, cx, chars, length,
+                                  callback, callbackData));
     if (!task)
         return false;
 
     helpercx.forget();
 
-    if (!task->init(cx, options))
+    if (!task->init(cx, options) || !QueueOffThreadParseTask(cx, task))
         return false;
 
-    if (OffThreadParsingMustWaitForGC(cx->runtime())) {
-        AutoLockHelperThreadState lock;
-        if (!HelperThreadState().parseWaitingOnGC().append(task.get())) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-    } else {
-        AutoLockHelperThreadState lock;
-        if (!HelperThreadState().parseWorklist().append(task.get())) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+    task.forget();
 
-        task->activate(cx->runtime());
-        HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER);
-    }
+    return true;
+}
+
+bool
+js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
+                              const char16_t* chars, size_t length,
+                              JS::OffThreadCompileCallback callback, void* callbackData)
+{
+    // Suppress GC so that calls below do not trigger a new incremental GC
+    // which could require barriers on the atoms compartment.
+    gc::AutoSuppressGC nogc(cx);
+
+    JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Module, nogc);
+    if (!global)
+        return false;
+
+    ScopedJSDeletePtr<ExclusiveContext> helpercx(
+        cx->new_<ExclusiveContext>(cx->runtime(), (PerThreadData*) nullptr,
+                                   ExclusiveContext::Context_Exclusive));
+    if (!helpercx)
+        return false;
+
+    ScopedJSDeletePtr<ParseTask> task(
+        cx->new_<ModuleParseTask>(helpercx.get(), global, cx, chars, length,
+                                  callback, callbackData));
+    if (!task)
+        return false;
+
+    helpercx.forget();
+
+    if (!task->init(cx, options) || !QueueOffThreadParseTask(cx, task))
+        return false;
 
     task.forget();
 
@@ -1015,7 +1116,8 @@ LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
 }
 
 JSScript*
-GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
+GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, ParseTaskKind kind,
+                                         void* token)
 {
     ScopedJSDeletePtr<ParseTask> parseTask;
 
@@ -1033,6 +1135,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
         }
     }
     MOZ_ASSERT(parseTask);
+    MOZ_ASSERT(parseTask->kind == kind);
 
     if (!maybecx) {
         LeaveParseTaskZone(rt, parseTask);
@@ -1045,7 +1148,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
     Rooted<GlobalObject*> global(cx, &cx->global()->as<GlobalObject>());
-    if (!EnsureParserCreatedClasses(cx)) {
+    if (!EnsureParserCreatedClasses(cx, kind)) {
         LeaveParseTaskZone(rt, parseTask);
         return nullptr;
     }
@@ -1091,6 +1194,34 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     return script;
 }
 
+JSScript*
+GlobalHelperThreadState::finishScriptParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
+{
+    JSScript* script = finishParseTask(maybecx, rt, ParseTaskKind::Script, token);
+    MOZ_ASSERT_IF(script, script->isGlobalCode());
+    return script;
+}
+
+JSObject*
+GlobalHelperThreadState::finishModuleParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
+{
+    JSScript* script = finishParseTask(maybecx, rt, ParseTaskKind::Module, token);
+    if (!script)
+        return nullptr;
+
+    MOZ_ASSERT(script->module());
+    if (!maybecx)
+        return nullptr;
+
+    JSContext* cx = maybecx;
+    RootedModuleObject module(cx, script->module());
+    module->fixScopesAfterCompartmentMerge(cx);
+    if (!ModuleObject::FreezeArrayProperties(cx, module))
+        return nullptr;
+
+    return module;
+}
+
 JSObject*
 GlobalObject::getStarGeneratorFunctionPrototype()
 {
@@ -1118,8 +1249,13 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
         // Generator functions don't have Function.prototype as prototype but a
         // different function object, so the IdentifyStandardPrototype trick
         // below won't work.  Just special-case it.
-        JSObject* parseTaskStarGenFunctionProto =
-            parseTask->exclusiveContextGlobal->as<GlobalObject>().getStarGeneratorFunctionPrototype();
+        GlobalObject* parseGlobal = &parseTask->exclusiveContextGlobal->as<GlobalObject>();
+        JSObject* parseTaskStarGenFunctionProto = parseGlobal->getStarGeneratorFunctionPrototype();
+
+        // Module objects don't have standard prototypes either.
+        JSObject* moduleProto = parseGlobal->maybeGetModulePrototype();
+        JSObject* importEntryProto = parseGlobal->maybeGetImportEntryPrototype();
+        JSObject* exportEntryProto = parseGlobal->maybeGetExportEntryPrototype();
 
         // Point the prototypes of any objects in the script's compartment to refer
         // to the corresponding prototype in the new compartment. This will briefly
@@ -1134,21 +1270,24 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
             JSObject* protoObj = proto.toObject();
 
             JSObject* newProto;
-            if (protoObj == parseTaskStarGenFunctionProto) {
-                newProto = global->getStarGeneratorFunctionPrototype();
-            } else {
-                JSProtoKey key = JS::IdentifyStandardPrototype(protoObj);
-                if (key == JSProto_Null)
-                    continue;
-
+            JSProtoKey key = JS::IdentifyStandardPrototype(protoObj);
+            if (key != JSProto_Null) {
                 MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
                            key == JSProto_Function || key == JSProto_RegExp ||
                            key == JSProto_Iterator);
-
                 newProto = GetBuiltinPrototypePure(global, key);
+            } else if (protoObj == parseTaskStarGenFunctionProto) {
+                newProto = global->getStarGeneratorFunctionPrototype();
+            } else if (protoObj == moduleProto) {
+                newProto = global->getModulePrototype();
+            } else if (protoObj == importEntryProto) {
+                newProto = global->getImportEntryPrototype();
+            } else if (protoObj == exportEntryProto) {
+                newProto = global->getExportEntryPrototype();
+            } else {
+                continue;
             }
 
-            MOZ_ASSERT(newProto);
             group->setProtoUnchecked(TaggedProto(newProto));
         }
     }
@@ -1389,25 +1528,7 @@ HelperThread::handleParseWorkload()
         AutoUnlockHelperThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(),
                                               task->exclusiveContextGlobal->runtimeFromAnyThread());
-        SourceBufferHolder srcBuf(task->chars, task->length,
-                                  SourceBufferHolder::NoOwnership);
-
-        // ! WARNING WARNING WARNING !
-        //
-        // See comment in Parser::bindLexical about optimizing global lexical
-        // bindings. If we start optimizing them, passing in task->cx's
-        // global lexical scope would be incorrect!
-        //
-        // ! WARNING WARNING WARNING !
-        ExclusiveContext* parseCx = task->cx;
-        Rooted<ClonedBlockObject*> globalLexical(parseCx, &parseCx->global()->lexicalScope());
-        Rooted<StaticScope*> staticScope(parseCx, &globalLexical->staticBlock());
-        task->script = frontend::CompileScript(parseCx, &task->alloc,
-                                               globalLexical, staticScope, nullptr,
-                                               task->options, srcBuf,
-                                               /* source_ = */ nullptr,
-                                               /* extraSct = */ nullptr,
-                                               /* sourceObjectOut = */ task->sourceObject.address());
+        task->parse();
     }
 
     // The callback is invoked while we are still off the main thread.

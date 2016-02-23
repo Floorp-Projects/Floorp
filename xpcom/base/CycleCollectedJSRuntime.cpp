@@ -996,7 +996,7 @@ CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTrace
   mJSHolders.Put(aHolder, aTracer);
 }
 
-struct ClearJSHolder : TraceCallbacks
+struct ClearJSHolder : public TraceCallbacks
 {
   virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const override
   {

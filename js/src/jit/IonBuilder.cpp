@@ -13430,7 +13430,7 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
         return true;
 
     TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject())
+    if (!types || types->unknownObject() || types->getKnownMIRType() != MIRType_Object)
         return true;
 
     for (unsigned i = 0, count = types->getObjectCount(); i < count; i++) {

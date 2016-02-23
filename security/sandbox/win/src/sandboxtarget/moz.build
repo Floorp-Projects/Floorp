@@ -7,3 +7,14 @@
 EXPORTS.mozilla += [
     'sandboxTarget.h',
 ]
+
+SOURCES += [
+    'sandboxTarget.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/security/sandbox/chromium',
+    '/security/sandbox/chromium-shim',
+]
+
+FINAL_LIBRARY = 'xul'

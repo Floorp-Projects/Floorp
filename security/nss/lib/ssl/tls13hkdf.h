@@ -17,15 +17,15 @@ extern "C" {
 #endif
 
 SECStatus tls13_HkdfExtract(
-    PK11SymKey* ikm1, PK11SymKey* ikm2, SSLHashType baseHash,
+    PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
     PK11SymKey **prkp);
 SECStatus tls13_HkdfExpandLabelRaw(
-    PK11SymKey* prk, SSLHashType baseHash,
+    PK11SymKey *prk, SSLHashType baseHash,
     const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
     const char *label, unsigned int labelLen,
     unsigned char *output, unsigned int outputLen);
 SECStatus tls13_HkdfExpandLabel(
-    PK11SymKey* prk, SSLHashType baseHash,
+    PK11SymKey *prk, SSLHashType baseHash,
     const PRUint8 *handshakeHash, unsigned int handshakeHashLen,
     const char *label, unsigned int labelLen,
     CK_MECHANISM_TYPE algorithm, unsigned int keySize,

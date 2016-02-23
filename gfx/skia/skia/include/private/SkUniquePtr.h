@@ -15,6 +15,11 @@
 #ifdef MOZ_SKIA
 #include "mozilla/UniquePtr.h"
 
+namespace std {
+    using mozilla::DefaultDelete;
+    using mozilla::UniquePtr;
+}
+
 namespace skstd {
     using mozilla::DefaultDelete;
     using mozilla::UniquePtr;

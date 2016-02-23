@@ -561,7 +561,7 @@ class Preprocessor:
         m = re.match('(?P<name>\w+)(?:\s(?P<value>.*))?', args, re.U)
         if not m:
             raise Preprocessor.Error(self, 'SYNTAX_DEF', args)
-        val = 1
+        val = ''
         if m.group('value'):
             val = self.applyFilters(m.group('value'))
             try:

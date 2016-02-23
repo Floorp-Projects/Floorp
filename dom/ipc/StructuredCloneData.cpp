@@ -41,6 +41,8 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
     NS_ENSURE_TRUE(mSharedData, false);
   }
 
+  PortIdentifiers().AppendElements(aData.PortIdentifiers());
+
   MOZ_ASSERT(BlobImpls().IsEmpty());
   BlobImpls().AppendElements(aData.BlobImpls());
 
@@ -67,9 +69,18 @@ StructuredCloneData::Write(JSContext* aCx,
                            JS::Handle<JS::Value> aValue,
                            ErrorResult &aRv)
 {
+  Write(aCx, aValue, JS::UndefinedHandleValue, aRv);
+}
+
+void
+StructuredCloneData::Write(JSContext* aCx,
+                           JS::Handle<JS::Value> aValue,
+                           JS::Handle<JS::Value> aTransfer,
+                           ErrorResult &aRv)
+{
   MOZ_ASSERT(!Data());
 
-  StructuredCloneHolder::Write(aCx, aValue, aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

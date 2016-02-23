@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0311
+#define FREEBL_VERSION 0x0312
 
 struct FREEBLVectorStr {
 
@@ -706,6 +706,33 @@ struct FREEBLVectorStr {
                                const ECParams *srcParams);
 
   /* Version 3.017 came to here */
+
+ SECStatus (* p_ChaCha20Poly1305_InitContext)(ChaCha20Poly1305Context *ctx,
+                                              const unsigned char *key,
+                                              unsigned int keyLen,
+                                              unsigned int tagLen);
+
+ ChaCha20Poly1305Context *(* p_ChaCha20Poly1305_CreateContext)(
+     const unsigned char *key, unsigned int keyLen, unsigned int tagLen);
+
+ void (* p_ChaCha20Poly1305_DestroyContext)(ChaCha20Poly1305Context *ctx,
+                                            PRBool freeit);
+
+ SECStatus (* p_ChaCha20Poly1305_Seal)(
+     const ChaCha20Poly1305Context *ctx, unsigned char *output,
+     unsigned int *outputLen, unsigned int maxOutputLen,
+     const unsigned char *input, unsigned int inputLen,
+     const unsigned char *nonce, unsigned int nonceLen,
+     const unsigned char *ad, unsigned int adLen);
+
+ SECStatus (* p_ChaCha20Poly1305_Open)(
+     const ChaCha20Poly1305Context *ctx, unsigned char *output,
+     unsigned int *outputLen, unsigned int maxOutputLen,
+     const unsigned char *input, unsigned int inputLen,
+     const unsigned char *nonce, unsigned int nonceLen,
+     const unsigned char *ad, unsigned int adLen);
+
+  /* Version 3.018 came to here */
 
   /* Add new function pointers at the end of this struct and bump
    * FREEBL_VERSION at the beginning of this file. */
