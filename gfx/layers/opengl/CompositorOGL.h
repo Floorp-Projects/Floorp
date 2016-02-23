@@ -215,6 +215,12 @@ public:
                                GetMaxTextureSize(),
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
+    result.mSupportedBlendModes += gfx::CompositionOp::OP_SOURCE;
+    for (uint8_t op = 0; op < uint8_t(gfx::CompositionOp::OP_COUNT); op++) {
+      if (BlendOpIsMixBlendMode(gfx::CompositionOp(op))) {
+        result.mSupportedBlendModes += gfx::CompositionOp(op);
+      }
+    }
     return result;
   }
 
