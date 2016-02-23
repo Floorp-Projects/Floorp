@@ -185,11 +185,20 @@ private:
   }
 
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override final
   {
     AssertIsOnMainThread();
 
     return true;
+  }
+
+  // We want to be able to assert in PostDispatch that no exceptions were thrown
+  // on aCx.  We can do that if we know no one is subclassing our
+  // DispatchInternal to do weird things.
+  virtual bool
+  DispatchInternal() override final
+  {
+    return WorkerRunnable::DispatchInternal();
   }
 
   virtual void
