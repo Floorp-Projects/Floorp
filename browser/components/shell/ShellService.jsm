@@ -11,6 +11,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
@@ -54,11 +56,30 @@ let ShellServiceInternal = {
       return false;
     }
 
-    return Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser");
+    if (!Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser")) {
+      return false;
+    }
+
+    if (AppConstants.platform == "win") {
+      let optOutValue = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                                   "Software\\Mozilla\\Firefox",
+                                                   "DefaultBrowserOptOut");
+      WindowsRegistry.removeRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                   "Software\\Mozilla\\Firefox",
+                                   "DefaultBrowserOptOut");
+      if (optOutValue == "True") {
+        Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", false);
+        return false;
+      }
+    }
+
+    return true;
   },
+
   set shouldCheckDefaultBrowser(shouldCheck) {
     Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", !!shouldCheck);
   },
+
   isDefaultBrowser(startupCheck, forAllTypes) {
     // If this is the first browser window, maintain internal state that we've
     // checked this session (so that subsequent window opens don't show the

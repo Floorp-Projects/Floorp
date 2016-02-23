@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
   this);
 
 var { snapshotState: states } = require("devtools/client/memory/constants");
-var { breakdownEquals, breakdownNameToSpec } = require("devtools/client/memory/utils");
+var { breakdownEquals, breakdownNameToSpec, L10N } = require("devtools/client/memory/utils");
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
 

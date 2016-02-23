@@ -19,13 +19,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   info("Check coarse type heap view");
   ["objects", "other", "scripts", "strings"].forEach(findNameCell);
 
-  yield setBreakdown(panel.panelWin, "objectClass");
-  info("Check object class heap view");
-  ["Function", "Object"].forEach(findNameCell);
-
-  yield setBreakdown(panel.panelWin, "internalType");
-  info("Check internal type heap view");
-  ["JSObject"].forEach(findNameCell);
+  yield setBreakdown(panel.panelWin, "allocationStack");
+  info("Check allocation stack heap view");
+  [L10N.getStr("tree-item.nostack")].forEach(findNameCell);
 
   function findNameCell (name) {
     let el = Array.prototype.find.call($$(".tree .heap-tree-item-name span"), el => el.textContent === name);

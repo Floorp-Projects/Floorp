@@ -51,7 +51,7 @@ function checkResults(histIdFocus, Telemetry) {
     if (histId.endsWith("OPENED_PER_USER_FLAG")) {
       ok(value.length === 1 && value[0] === true,
          "Per user value " + histId + " has a single value of true");
-    } else if (histId.endsWith("OPENED_BOOLEAN")) {
+    } else if (histId.endsWith("OPENED_COUNT")) {
       is(value.length, 1, histId + " has one entry");
 
       let okay = value.every(element => element === true);
