@@ -12,7 +12,7 @@
 #include "signaling/src/sdp/SdpAttributeList.h"
 #include <string>
 #include <vector>
-#include <iostream>
+#include <sstream>
 
 namespace mozilla
 {
