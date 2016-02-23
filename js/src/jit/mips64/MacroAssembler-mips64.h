@@ -1119,7 +1119,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         as_movs(dest, src);
     }
 
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                     Label* label);
 
