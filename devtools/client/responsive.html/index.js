@@ -30,8 +30,6 @@ let bootstrap = {
   store: null,
 
   init() {
-    // TODO: Should we track this as a separate tool from the old version?
-    // See bug 1242057.
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let app = createElement(App);

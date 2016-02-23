@@ -7450,11 +7450,13 @@
     "bug_numbers": [1214352]
   },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
-    "expires_in_version": "never",
+    "expires_in_version": "55",
     "kind": "exponential",
     "high": 10000000,
     "n_buckets": 100,
-    "description": "How long has the responsive view been active (seconds)"
+    "bug_numbers": [1242057],
+    "description": "How long has the responsive view been active (seconds)",
+    "releaseChannelCollection": "opt-out"
   },
   "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
