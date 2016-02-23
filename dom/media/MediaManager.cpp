@@ -179,19 +179,19 @@ HostInDomain(const nsCString &aHost, const nsCString &aPattern)
 }
 
 static bool
-HostHasPermission(nsIURI &docURI)
+HostIsHttps(nsIURI &docURI)
 {
-  nsresult rv;
-
   bool isHttps;
-  rv = docURI.SchemeIs("https",&isHttps);
+  nsresult rv = docURI.SchemeIs("https", &isHttps);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-  if (!isHttps) {
-    return false;
-  }
+  return isHttps;
+}
 
+static bool
+HostHasPermission(nsIURI &docURI)
+{
   nsAdoptingCString hostName;
   docURI.GetAsciiHost(hostName); //normalize UTF8 to ASCII equivalent
   nsAdoptingCString domainWhiteList =
@@ -203,6 +203,7 @@ HostHasPermission(nsIURI &docURI)
   }
 
   // Get UTF8 to ASCII domain name normalization service
+  nsresult rv;
   nsCOMPtr<nsIIDNService> idnService =
     do_GetService("@mozilla.org/network/idn-service;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1900,7 +1901,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 #endif
               ) ||
 #endif
-            (!privileged && !HostHasPermission(*docURI))) {
+            (!privileged && !HostIsHttps(*docURI)) ||
+            !(loop || HostHasPermission(*docURI))) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
                                    NS_LITERAL_STRING("SecurityError"));
