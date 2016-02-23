@@ -407,6 +407,8 @@ XULMenupopupAccessible::
   mSelectControl = do_QueryInterface(mContent->GetFlattenedTreeParent());
   if (!mSelectControl)
     mGenericTypes &= ~eSelect;
+
+  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t
