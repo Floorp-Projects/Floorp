@@ -51,7 +51,8 @@ function* testMarginIncrements(view) {
     5: {down: true, start: "0px", end: "-1px", selectAll: true},
     6: {down: true, shift: true, start: "0px", end: "-10px", selectAll: true},
     7: {pageUp: true, shift: true, start: "0px", end: "100px", selectAll: true},
-    8: {pageDown: true, shift: true, start: "0px", end: "-100px", selectAll: true},
+    8: {pageDown: true, shift: true, start: "0px", end: "-100px",
+        selectAll: true},
     9: {start: "0", end: "1px", selectAll: true},
     10: {down: true, start: "0", end: "-1px", selectAll: true},
   });
@@ -90,7 +91,8 @@ function* testHexIncrements(view) {
     3: {start: "#CCCCCC", end: "#CDCCCC", selection: [1, 3]},
     4: {shift: true, start: "#CCCCCC", end: "#DCCCCC", selection: [1, 3]},
     5: {start: "#FFFFFF", end: "#FFFFFF", selectAll: true},
-    6: {down: true, shift: true, start: "#000000", end: "#000000", selectAll: true}
+    6: {down: true, shift: true, start: "#000000", end: "#000000",
+        selectAll: true}
   });
 }
 
@@ -102,11 +104,14 @@ function* testRgbIncrements(view) {
 
   yield runIncrementTest(rgbColorPropEditor, view, {
     1: {start: "rgb(0,0,0)", end: "rgb(0,1,0)", selection: [6, 7]},
-    2: {shift: true, start: "rgb(0,0,0)", end: "rgb(0,10,0)", selection: [6, 7]},
+    2: {shift: true, start: "rgb(0,0,0)", end: "rgb(0,10,0)",
+        selection: [6, 7]},
     3: {start: "rgb(0,255,0)", end: "rgb(0,255,0)", selection: [6, 9]},
-    4: {shift: true, start: "rgb(0,250,0)", end: "rgb(0,255,0)", selection: [6, 9]},
+    4: {shift: true, start: "rgb(0,250,0)", end: "rgb(0,255,0)",
+        selection: [6, 9]},
     5: {down: true, start: "rgb(0,0,0)", end: "rgb(0,0,0)", selection: [6, 7]},
-    6: {down: true, shift: true, start: "rgb(0,5,0)", end: "rgb(0,0,0)", selection: [6, 7]}
+    6: {down: true, shift: true, start: "rgb(0,5,0)", end: "rgb(0,0,0)",
+        selection: [6, 7]}
   });
 }
 
@@ -118,14 +123,21 @@ function* testShorthandIncrements(view) {
 
   yield runIncrementTest(paddingPropEditor, view, {
     1: {start: "0px 0px 0px 0px", end: "0px 1px 0px 0px", selection: [4, 7]},
-    2: {shift: true, start: "0px 0px 0px 0px", end: "0px 10px 0px 0px", selection: [4, 7]},
+    2: {shift: true, start: "0px 0px 0px 0px", end: "0px 10px 0px 0px",
+        selection: [4, 7]},
     3: {start: "0px 0px 0px 0px", end: "1px 0px 0px 0px", selectAll: true},
-    4: {shift: true, start: "0px 0px 0px 0px", end: "10px 0px 0px 0px", selectAll: true},
-    5: {down: true, start: "0px 0px 0px 0px", end: "0px 0px -1px 0px", selection: [8, 11]},
-    6: {down: true, shift: true, start: "0px 0px 0px 0px", end: "-10px 0px 0px 0px", selectAll: true},
-    7: {up: true, start: "0.1em .1em 0em 0em", end: "0.1em 1.1em 0em 0em", selection: [6, 9]},
-    8: {up: true, alt: true, start: "0.1em .9em 0em 0em", end: "0.1em 1em 0em 0em", selection: [6, 9]},
-    9: {up: true, shift: true, start: "0.2em .2em 0em 0em", end: "0.2em 10.2em 0em 0em", selection: [6, 9]}
+    4: {shift: true, start: "0px 0px 0px 0px", end: "10px 0px 0px 0px",
+        selectAll: true},
+    5: {down: true, start: "0px 0px 0px 0px", end: "0px 0px -1px 0px",
+        selection: [8, 11]},
+    6: {down: true, shift: true, start: "0px 0px 0px 0px",
+        end: "-10px 0px 0px 0px", selectAll: true},
+    7: {up: true, start: "0.1em .1em 0em 0em", end: "0.1em 1.1em 0em 0em",
+        selection: [6, 9]},
+    8: {up: true, alt: true, start: "0.1em .9em 0em 0em",
+        end: "0.1em 1em 0em 0em", selection: [6, 9]},
+    9: {up: true, shift: true, start: "0.2em .2em 0em 0em",
+        end: "0.2em 10.2em 0em 0em", selection: [6, 9]}
   });
 }
 
@@ -143,13 +155,19 @@ function* testOddCases(view) {
     5: {start: "'a=-1'", end: "'a=0'", selection: [4, 4]},
     6: {start: "0 -1px", end: "0 0px", selection: [2, 2]},
     7: {start: "url(-1)", end: "url(-1)", selection: [4, 4]},
-    8: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11, 11]},
+    8: {start: "url('test1.1.png')", end: "url('test1.2.png')",
+        selection: [11, 11]},
     9: {start: "url('test1.png')", end: "url('test2.png')", selection: [9, 9]},
-    10: {shift: true, start: "url('test1.1.png')", end: "url('test11.1.png')", selection: [9, 9]},
-    11: {down: true, start: "url('test-1.png')", end: "url('test-2.png')", selection: [9, 11]},
-    12: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11, 12]},
-    13: {down: true, alt: true, start: "url('test-0.png')", end: "url('test--0.1.png')", selection: [10, 11]},
-    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')", selection: [10, 14]},
+    10: {shift: true, start: "url('test1.1.png')", end: "url('test11.1.png')",
+         selection: [9, 9]},
+    11: {down: true, start: "url('test-1.png')", end: "url('test-2.png')",
+         selection: [9, 11]},
+    12: {start: "url('test1.1.png')", end: "url('test1.2.png')",
+         selection: [11, 12]},
+    13: {down: true, alt: true, start: "url('test-0.png')",
+         end: "url('test--0.1.png')", selection: [10, 11]},
+    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')",
+         selection: [10, 14]}
   });
 }
 
@@ -216,9 +234,15 @@ function* testIncrement(editor, options, view) {
 
   let onRuleViewChanged = view.once("ruleview-changed");
   let onKeyUp = once(input, "keyup");
+
   let key;
   key = options.down ? "VK_DOWN" : "VK_UP";
-  key = options.pageDown ? "VK_PAGE_DOWN" : options.pageUp ? "VK_PAGE_UP" : key;
+  if (options.pageDown) {
+    key = "VK_PAGE_DOWN";
+  } else if (options.pageUp) {
+    key = "VK_PAGE_UP";
+  }
+
   EventUtils.synthesizeKey(key, {altKey: options.alt, shiftKey: options.shift},
     view.styleWindow);
   yield onKeyUp;

@@ -140,14 +140,14 @@ function* changeElementStyle(selector, style, inspector, testActor) {
   yield onRefreshed;
 }
 
-function validateTextProp(aProp, aEnabled, aName, aValue, aDesc) {
-  is(aProp.enabled, aEnabled, aDesc + ": enabled.");
-  is(aProp.name, aName, aDesc + ": name.");
-  is(aProp.value, aValue, aDesc + ": value.");
+function validateTextProp(prop, enabled, name, value, desc) {
+  is(prop.enabled, enabled, desc + ": enabled.");
+  is(prop.name, name, desc + ": name.");
+  is(prop.value, value, desc + ": value.");
 
-  is(aProp.editor.enable.hasAttribute("checked"), aEnabled,
-    aDesc + ": enabled checkbox.");
-  is(aProp.editor.nameSpan.textContent, aName, aDesc + ": name span.");
-  is(aProp.editor.valueSpan.textContent,
-    aValue, aDesc + ": value span.");
+  is(prop.editor.enable.hasAttribute("checked"), enabled,
+    desc + ": enabled checkbox.");
+  is(prop.editor.nameSpan.textContent, name, desc + ": name span.");
+  is(prop.editor.valueSpan.textContent,
+    value, desc + ": value span.");
 }
