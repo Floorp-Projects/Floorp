@@ -4392,7 +4392,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
       const nsCSSValuePair& textAlignValuePair = textAlignValue->GetPairValue();
       textAlignValue = &textAlignValuePair.mXValue;
       if (eCSSUnit_Enumerated == textAlignValue->GetUnit()) {
-        if (textAlignValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
+        if (textAlignValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
           textAlignValue = &textAlignValuePair.mYValue;
         }
       } else if (eCSSUnit_String == textAlignValue->GetUnit()) {
@@ -4417,7 +4417,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     const nsCSSValuePair& textAlignLastValuePair = textAlignLastValue->GetPairValue();
     textAlignLastValue = &textAlignLastValuePair.mXValue;
     if (eCSSUnit_Enumerated == textAlignLastValue->GetUnit()) {
-      if (textAlignLastValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
+      if (textAlignLastValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
         textAlignLastValue = &textAlignLastValuePair.mYValue;
       }
     }
