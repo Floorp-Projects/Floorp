@@ -752,6 +752,10 @@ SessionStore.prototype = {
       entry.referrer = aEntry.referrerURI.spec;
     }
 
+    if (aEntry.originalURI) {
+      entry.originalURI = aEntry.originalURI.spec;
+    }
+
     if (aEntry.contentType) {
       entry.contentType = aEntry.contentType;
     }
@@ -834,6 +838,10 @@ SessionStore.prototype = {
     }
     if (aEntry.referrer) {
       shEntry.referrerURI = Services.io.newURI(aEntry.referrer, null, null);
+    }
+
+    if (aEntry.originalURI) {
+      shEntry.originalURI =  Services.io.newURI(aEntry.originalURI, null, null);
     }
 
     if (aEntry.cacheKey) {
