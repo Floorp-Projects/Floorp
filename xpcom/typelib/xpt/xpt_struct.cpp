@@ -356,26 +356,31 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
     
     switch (XPT_TDP_TAG(td->prefix)) {
       case TD_INTERFACE_TYPE:
-        if (!XPT_Do16(cursor, &td->type.iface))
+        uint16_t iface;
+        if (!XPT_Do16(cursor, &iface))
             return PR_FALSE;
+        td->u.iface.iface_hi8 = (iface >> 8) & 0xff;
+        td->u.iface.iface_lo8 = iface & 0xff;
         break;
       case TD_INTERFACE_IS_TYPE:
-        if (!XPT_Do8(cursor, &td->argnum))
+        if (!XPT_Do8(cursor, &td->u.interface_is.argnum))
             return PR_FALSE;
         break;
       case TD_ARRAY: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->argnum) ||
+        if (!XPT_Do8(cursor, &td->u.array.argnum) ||
             !XPT_Do8(cursor, &argnum2))
             return PR_FALSE;
 
         if (!XPT_InterfaceDescriptorAddTypes(arena, id, 1))
             return PR_FALSE;
-        td->type.additional_type = id->num_additional_types - 1;
+        if ((id->num_additional_types - 1) > 255)
+            return PR_FALSE;
+        td->u.array.additional_type = id->num_additional_types - 1;
 
         if (!DoTypeDescriptor(arena, cursor, 
-                              &id->additional_types[td->type.additional_type], 
+                              &id->additional_types[td->u.array.additional_type],
                               id))
             return PR_FALSE;
         break;
@@ -384,7 +389,7 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
       case TD_PWSTRING_SIZE_IS: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->argnum) ||
+        if (!XPT_Do8(cursor, &td->u.pstring_is.argnum) ||
             !XPT_Do8(cursor, &argnum2))
             return PR_FALSE;
         break;
