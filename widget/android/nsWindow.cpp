@@ -3263,6 +3263,45 @@ nsWindow::GetIMEUpdatePreference()
         nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE);
 }
 
+nsresult
+nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                     TouchPointerState aPointerState,
+                                     ScreenIntPoint aPointerScreenPoint,
+                                     double aPointerPressure,
+                                     uint32_t aPointerOrientation,
+                                     nsIObserver* aObserver)
+{
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "touchpoint");
+
+    int eventType;
+    switch (aPointerState) {
+    case TOUCH_CONTACT:
+        // This could be a ACTION_DOWN or ACTION_MOVE depending on the
+        // existing state; it is mapped to the right thing in Java.
+        eventType = sdk::MotionEvent::ACTION_POINTER_DOWN;
+        break;
+    case TOUCH_REMOVE:
+        // This could be turned into a ACTION_UP in Java
+        eventType = sdk::MotionEvent::ACTION_POINTER_UP;
+        break;
+    case TOUCH_CANCEL:
+        eventType = sdk::MotionEvent::ACTION_CANCEL;
+        break;
+    case TOUCH_HOVER:   // not supported for now
+    default:
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    MOZ_ASSERT(mGLControllerSupport);
+    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    client->SynthesizeNativeTouchPoint(aPointerId, eventType,
+        aPointerScreenPoint.x, aPointerScreenPoint.y, aPointerPressure,
+        aPointerOrientation);
+
+    return NS_OK;
+}
+
+
 void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
                              LayoutDeviceIntRect aRect)
