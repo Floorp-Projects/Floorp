@@ -1,0 +1,80 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIAsyncInputStream;
+
+/**
+ * An instance of this interface can be used to throttle the uploads
+ * of a group of associated channels.
+ */
+[scriptable, uuid(6b4b96fe-3c67-4587-af7b-58b6b17da411)]
+interface nsIInputChannelThrottleQueue : nsISupports
+{
+    /**
+     * Initialize this object with the mean and maximum bytes per
+     * second that will be allowed.  Neither value may be zero, and
+     * the maximum must not be less than the mean.
+     *
+     * @param aMeanBytesPerSecond
+     *        Mean number of bytes per second.
+     * @param aMaxBytesPerSecond
+     *        Maximum number of bytes per second.
+     */
+    void init(in unsigned long aMeanBytesPerSecond, in unsigned long aMaxBytesPerSecond);
+
+    /**
+     * Return the number of bytes that are available to the caller in
+     * this time slice.
+     *
+     * @param aRemaining
+     *        The number of bytes available to be processed
+     * @return the number of bytes allowed to be processed during this
+     *        time slice; this will never be greater than aRemaining.
+     */
+    unsigned long available(in unsigned long aRemaining);
+
+    /**
+     * Record a successful read.
+     *
+     * @param aBytesRead
+     *        The number of bytes actually read.
+     */
+    void recordRead(in unsigned long aBytesRead);
+
+    /**
+     * Return the number of bytes allowed through this queue.  This is
+     * the sum of all the values passed to recordRead.  This method is
+     * primarily useful for testing.
+     */
+    unsigned long long bytesProcessed();
+
+    /**
+     * Wrap the given input stream in a new input stream which
+     * throttles the incoming data.
+     *
+     * @param aInputStream the input stream to wrap
+     * @return a new input stream that throttles the data.
+     */
+    nsIAsyncInputStream wrapStream(in nsIInputStream aInputStream);
+};
+
+/**
+ * A throttled input channel can be managed by an
+ * nsIInputChannelThrottleQueue to limit how much data is sent during
+ * a given time slice.
+ */
+[scriptable, uuid(0a32a100-c031-45b6-9e8b-0444c7d4a143)]
+interface nsIThrottledInputChannel : nsISupports
+{
+    /**
+     * The queue that manages this channel.  Multiple channels can
+     * share a single queue.  A null value means that no throttling
+     * will be done.
+     */
+    attribute nsIInputChannelThrottleQueue throttleQueue;
+};
