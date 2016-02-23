@@ -164,9 +164,9 @@ DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
     return PR_TRUE;
 }
 
-XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                uint16_t num)
+static PRBool
+InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
+                            uint16_t num)
 {
     XPTTypeDescriptor *old = id->additional_types;
     XPTTypeDescriptor *new_;
@@ -181,6 +181,10 @@ XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
         memcpy(new_, old, old_size);
     }
     id->additional_types = new_;
+
+    if (num + uint16_t(id->num_additional_types) > 256)
+        return PR_FALSE;
+
     id->num_additional_types += num;
     return PR_TRUE;
 }
@@ -246,7 +250,7 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     if (!XPT_Do8(cursor, &id->flags)) {
         return PR_FALSE;
     }
-    
+
     return PR_TRUE;
 }
 
@@ -376,9 +380,7 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
             !XPT_Do8(cursor, &argnum2))
             return PR_FALSE;
 
-        if (!XPT_InterfaceDescriptorAddTypes(arena, id, 1))
-            return PR_FALSE;
-        if ((id->num_additional_types - 1) > 255)
+        if (!InterfaceDescriptorAddTypes(arena, id, 1))
             return PR_FALSE;
         td->u.array.additional_type = id->num_additional_types - 1;
 
