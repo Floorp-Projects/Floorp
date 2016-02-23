@@ -1268,32 +1268,26 @@ function refresh(msg) {
  * Find an element in the current browsing context's document using the
  * given search strategy.
  */
-function findElementContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curContainer,
-        opts,
-        opts.searchTimeout,
-        false /* all */,
-        resolve,
-        reject);
-  });
+function findElementContent(strategy, selector, opts = {}) {
+  opts.all = false;
+  return elementManager.find(
+      curContainer,
+      strategy,
+      selector,
+      opts);
 }
 
 /**
  * Find elements in the current browsing context's document using the
  * given search strategy.
  */
-function findElementsContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curContainer,
-        opts,
-        opts.searchTimeout,
-        true /* all */,
-        resolve,
-        reject);
-  });
+function findElementsContent(strategy, selector, opts = {}) {
+  opts.all = true;
+  return elementManager.find(
+      curContainer,
+      strategy,
+      selector,
+      opts);
 }
 
 /**
