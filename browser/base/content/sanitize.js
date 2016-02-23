@@ -432,13 +432,6 @@ Sanitizer.prototype = {
             }
           }
           let tabBrowser = currentWindow.gBrowser;
-          if (!tabBrowser) {
-            // No tab browser? This means that it's too early during startup (typically,
-            // Session Restore hasn't completed yet). Since we don't have find
-            // bars at that stage and since Session Restore will not restore
-            // find bars further down during startup, we have nothing to clear.
-            continue;
-          }
           let findBarCanClear = Array.some(tabBrowser.tabs, function (aTab) {
             return tabBrowser.isFindBarInitialized(aTab) &&
                    tabBrowser.getFindBar(aTab).canClear;
@@ -814,13 +807,13 @@ Sanitizer.onStartup = Task.async(function*() {
   let deferredSanitization = PromiseUtils.defer();
   let sanitizationInProgress = false;
   let doSanitize = function() {
-    if (!sanitizationInProgress) {
-      sanitizationInProgress = true;
-      Sanitizer.onShutdown().catch(er => {Promise.reject(er) /* Do not return rejected promise */;}).then(() =>
-        deferredSanitization.resolve()
-      );
+    if (sanitizationInProgress) {
+      return deferredSanitization.promise;
     }
-    return deferredSanitization.promise;
+    sanitizationInProgress = true;
+    Sanitizer.onShutdown().catch(er => {Promise.reject(er) /* Do not return rejected promise */;}).then(() =>
+      deferredSanitization.resolve()
+    );
   }
   placesClient.addBlocker("sanitize.js: Sanitize on shutdown", doSanitize);
 
