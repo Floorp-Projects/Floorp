@@ -39,7 +39,6 @@ manifest := $(srcdir)/AndroidManifest.xml.in
 manifest_TARGET := export
 manifest_FLAGS += \
   -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
-  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE='$(ANDROID_PACKAGE_NAME)_sync' \
   $(NULL)
 
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml

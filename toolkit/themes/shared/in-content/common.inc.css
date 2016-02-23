@@ -596,7 +596,8 @@ xul|*.radio-label-box {
   background-color: var(--in-content-category-background-hover);
 }
 
-*|*.category[selected] {
+*|*.category[selected],
+*|*.category.selected {
   background-color: var(--in-content-category-background-active);
   color: var(--in-content-category-text-selected);
   -moz-padding-start: 11px; /* compensate the 4px border */
