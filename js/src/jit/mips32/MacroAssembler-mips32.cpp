@@ -2328,20 +2328,6 @@ MacroAssemblerMIPSCompat::toggledCall(JitCode* target, bool enabled)
 }
 
 void
-MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                                     Register temp, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    Label done;
-
-    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    asMasm().branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
-
-    bind(&done);
-}
-
-void
 MacroAssemblerMIPSCompat::profilerEnterFrame(Register framePtr, Register scratch)
 {
     AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
@@ -2524,6 +2510,23 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(t9);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+
+    bind(&done);
 }
 
 //}}} check_macroassembler_style

@@ -218,28 +218,6 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler)
 }
 
 void
-MacroAssemblerCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
-                                                 Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2); // Both may be used internally.
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-
-    // Avoid creating a bogus ObjectValue below.
-    if (!nursery.exists())
-        return;
-
-    // 'Value' representing the start of the nursery tagged as a JSObject
-    Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
-
-    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), temp);
-    asMasm().addPtr(value.valueReg(), temp);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       temp, ImmWord(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerCompat::breakpoint()
 {
     static int code = 0xA77;
@@ -719,6 +697,28 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
     addPtr(ptr, temp);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              temp, ImmWord(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                           Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2); // Both may be used internally.
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+
+    // Avoid creating a bogus ObjectValue below.
+    if (!nursery.exists())
+        return;
+
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
+
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), temp);
+    addPtr(value.valueReg(), temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, ImmWord(nursery.nurserySize()), label);
 }

@@ -2500,22 +2500,6 @@ MacroAssemblerMIPS64Compat::toggledCall(JitCode* target, bool enabled)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                                       Register temp, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    // 'Value' representing the start of the nursery tagged as a JSObject
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
-
-    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
-    asMasm().addPtr(value.valueReg(), SecondScratchReg);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerMIPS64Compat::profilerEnterFrame(Register framePtr, Register scratch)
 {
     AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
@@ -2681,6 +2665,25 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(t9);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
+
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
+    addPtr(value.valueReg(), SecondScratchReg);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 //}}} check_macroassembler_style

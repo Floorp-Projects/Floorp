@@ -831,6 +831,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
 
     // This function compares a Value (lhs) which is having a private pointer
     // boxed inside a js::Value, with a raw pointer (rhs).

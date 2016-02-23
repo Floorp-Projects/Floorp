@@ -949,8 +949,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandlerTail(void* handler);
 
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
-
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame();

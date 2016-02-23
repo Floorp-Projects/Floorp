@@ -4011,20 +4011,6 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label, Condition cond, Labe
     return ret;
 }
 
-void
-MacroAssemblerARMCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                                    Register temp, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    Label done;
-
-    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    asMasm().branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
-
-    bind(&done);
-}
-
 namespace js {
 namespace jit {
 
@@ -5066,6 +5052,20 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
     as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
     branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
              scratch2, Imm32(nursery.numChunks()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+
+    bind(&done);
 }
 
 //}}} check_macroassembler_style
