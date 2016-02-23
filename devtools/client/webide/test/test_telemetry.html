@@ -172,10 +172,10 @@
             ok(value.length === 1 && !!value[0],
                histId + " has 1 successful entry");
           } else if (histId ===
-                     "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_BOOLEAN") {
+                     "DEVTOOLS_WEBIDE_PROJECT_EDITOR_OPENED_COUNT") {
             ok(value.length === 1 && !!value[0],
                histId + " has 1 successful entry");
-          } else if (histId === "DEVTOOLS_WEBIDE_OPENED_BOOLEAN") {
+          } else if (histId === "DEVTOOLS_WEBIDE_OPENED_COUNT") {
             ok(value.length > 1, histId + " has more than one entry");
 
             let okay = value.every(function(element) {

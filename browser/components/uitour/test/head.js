@@ -147,13 +147,14 @@ function hideInfoPromise(...args) {
  */
 function showInfoPromise(target, title, text, icon, buttonsFunctionName, optionsFunctionName) {
   let popup = document.getElementById("UITourTooltip");
+  let shownPromise = promisePanelElementShown(window, popup);
   return ContentTask.spawn(gTestTab.linkedBrowser, [...arguments], args => {
     let contentWin = Components.utils.waiveXrays(content);
     let [target, title, text, icon, buttonsFunctionName, optionsFunctionName] = args;
     let buttons = buttonsFunctionName ? contentWin[buttonsFunctionName]() : null;
     let options = optionsFunctionName ? contentWin[optionsFunctionName]() : null;
     contentWin.Mozilla.UITour.showInfo(target, title, text, icon, buttons, options);
-  }).then(() => promisePanelElementShown(window, popup));
+  }).then(() => shownPromise);
 }
 
 function showHighlightPromise(...args) {
@@ -193,7 +194,7 @@ function promisePanelElementEvent(win, aPanel, aEvent) {
   return new Promise((resolve, reject) => {
     let timeoutId = win.setTimeout(() => {
       aPanel.removeEventListener(aEvent, onPanelEvent);
-      reject("Event did not happen within 5 seconds.");
+      reject(aEvent + " event did not happen within 5 seconds.");
     }, 5000);
 
     function onPanelEvent(e) {
