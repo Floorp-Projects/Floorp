@@ -27,7 +27,7 @@ Cu.import("chrome://marionette/content/error.js");
  */
 
 this.EXPORTED_SYMBOLS = [
-  "elements",
+  "element",
   "ElementManager",
   "CLASS_NAME",
   "SELECTOR",
@@ -85,14 +85,14 @@ ElementManager.prototype = {
   * @return string
   *        Returns the server-assigned reference ID
   */
-  addToKnownElements: function EM_addToKnownElements(element) {
+  addToKnownElements: function EM_addToKnownElements(el) {
     for (let i in this.seenItems) {
       let foundEl = null;
       try {
         foundEl = this.seenItems[i].get();
       } catch (e) {}
       if (foundEl) {
-        if (XPCNativeWrapper(foundEl) == XPCNativeWrapper(element)) {
+        if (XPCNativeWrapper(foundEl) == XPCNativeWrapper(el)) {
           return i;
         }
       } else {
@@ -100,8 +100,8 @@ ElementManager.prototype = {
         delete this.seenItems[i];
       }
     }
-    let id = elements.generateUUID();
-    this.seenItems[id] = Cu.getWeakReference(element);
+    let id = element.generateUUID();
+    this.seenItems[id] = Cu.getWeakReference(el);
     return id;
   },
 
@@ -597,9 +597,9 @@ ElementManager.prototype = {
   },
 };
 
-this.elements = {};
 
-elements.generateUUID = function() {
+this.element = {};
+element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
 };
@@ -619,7 +619,7 @@ elements.generateUUID = function() {
  *     the target's bounding box.
  */
 // TODO(ato): Replicated from listener.js for the time being
-elements.coordinates = function(node, x = undefined, y = undefined) {
+element.coordinates = function(node, x = undefined, y = undefined) {
   let box = node.getBoundingClientRect();
   if (!x) {
     x = box.width / 2.0;
@@ -645,9 +645,9 @@ elements.coordinates = function(node, x = undefined, y = undefined) {
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
  */
-elements.inViewport = function(el, x = undefined, y = undefined) {
+element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
-  let c = elements.coordinates(el, x, y);
+  let c = element.coordinates(el, x, y);
   let vp = {
     top: win.pageYOffset,
     left: win.pageXOffset,
@@ -676,7 +676,7 @@ elements.inViewport = function(el, x = undefined, y = undefined) {
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
  */
-elements.checkVisible = function(el, win, x = undefined, y = undefined) {
+element.checkVisible = function(el, win, x = undefined, y = undefined) {
   // Bug 1094246: Webdriver's isShown doesn't work with content xul
   let ns = atom.getElementAttribute(el, "namespaceURI", win);
   if (ns.indexOf("there.is.only.xul") < 0 &&
@@ -688,10 +688,10 @@ elements.checkVisible = function(el, win, x = undefined, y = undefined) {
     return true;
   }
 
-  if (!elements.inViewport(el, x, y)) {
+  if (!element.inViewport(el, x, y)) {
     if (el.scrollIntoView) {
       el.scrollIntoView(false);
-      if (!elements.inViewport(el)) {
+      if (!element.inViewport(el)) {
         return false;
       }
     } else {
@@ -701,7 +701,7 @@ elements.checkVisible = function(el, win, x = undefined, y = undefined) {
   return true;
 };
 
-elements.isXULElement = function(el) {
+element.isXULElement = function(el) {
   let ns = atom.getElementAttribute(el, "namespaceURI");
   return ns.indexOf("there.is.only.xul") >= 0;
 };
