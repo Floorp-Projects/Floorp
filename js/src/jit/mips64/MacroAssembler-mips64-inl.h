@@ -237,13 +237,6 @@ MacroAssemblerMIPS64Compat::retn(Imm32 n)
     as_nop();
 }
 
-void
-MacroAssemblerMIPS64Compat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
-{
-    asMasm().subPtr(imm, lhs);
-    asMasm().branchPtr(cond, lhs, Imm32(0), label);
-}
-
 } // namespace jit
 } // namespace js
 

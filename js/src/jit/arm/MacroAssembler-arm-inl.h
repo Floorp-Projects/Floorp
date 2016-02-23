@@ -705,6 +705,13 @@ MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
     j(cond, label);
 }
 
+void
+MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    ma_sub(rhs, lhs, SetCC);
+    as_b(label, cond);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
