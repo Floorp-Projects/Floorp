@@ -47,7 +47,7 @@
 #define I64(v)  static_cast<int64_t>(v)
 #define U64(v)  static_cast<uint64_t>(v)
 #define I128(v) static_cast<__int128_t>(v)
-#define U128(v) static_cast<unsigned __int128_t>(v)
+#define U128(v) static_cast<__uint128_t>(v)
 
 namespace js {
 namespace jit {
