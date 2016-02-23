@@ -16,8 +16,6 @@
 
 "use strict";
 
-const {setBaseCssDocsUrl} = require("devtools/client/shared/widgets/MdnDocsWidget");
-
 /**
  * The test document tries to confuse the context menu
  * code by having a tag called "padding" and a property
