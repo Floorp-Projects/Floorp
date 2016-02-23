@@ -428,6 +428,13 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+{
+    Condition cond = testInt32Truthy(truthy, operand);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

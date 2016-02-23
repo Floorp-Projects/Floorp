@@ -1639,13 +1639,6 @@ MacroAssemblerMIPSCompat::loadConstantDouble(double dp, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
-{
-    as_and(ScratchRegister, value.payloadReg(), value.payloadReg());
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
-}
-
-void
 MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
 {
     Register string = value.payloadReg();
