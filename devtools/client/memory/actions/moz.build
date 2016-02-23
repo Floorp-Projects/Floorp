@@ -12,6 +12,7 @@ DevToolsModules(
     'inverted.js',
     'io.js',
     'refresh.js',
+    'sizes.js',
     'snapshot.js',
     'view.js',
 )
