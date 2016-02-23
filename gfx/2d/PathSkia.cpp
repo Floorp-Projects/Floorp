@@ -190,7 +190,9 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
   }
 
   SkPaint paint;
-  StrokeOptionsToPaint(paint, aStrokeOptions);
+  if (!StrokeOptionsToPaint(paint, aStrokeOptions)) {
+    return false;
+  }
 
   SkPath strokePath;
   paint.getFillPath(mPath, &strokePath);
@@ -218,8 +220,10 @@ PathSkia::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
   }
 
   SkPaint paint;
-  StrokeOptionsToPaint(paint, aStrokeOptions);
-  
+  if (!StrokeOptionsToPaint(paint, aStrokeOptions)) {
+    return Rect();
+  }
+
   SkPath result;
   paint.getFillPath(mPath, &result);
 
