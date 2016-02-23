@@ -785,6 +785,30 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    branchTestInt32Impl(cond, src, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

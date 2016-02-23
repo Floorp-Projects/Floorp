@@ -2942,7 +2942,7 @@ MacroAssemblerARMCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
 {
     if (dest.isFloat()) {
         Label notInt32, end;
-        branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
         convertInt32ToDouble(src.payloadReg(), dest.fpu());
         ma_b(&end);
         bind(&notInt32);
@@ -3031,7 +3031,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(const Address& src, FloatRegister des
         ScratchRegisterScope scratch(asMasm());
 
         ma_ldr(ToType(src), scratch);
-        branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
+        asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
         ma_ldr(ToPayload(src), scratch);
         convertInt32ToDouble(scratch, dest);
         ma_b(&end);
@@ -3059,7 +3059,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index,
     // Since we only have one scratch register, we need to stomp over it with
     // the tag.
     ma_ldr(Address(scratch, NUNBOX32_TYPE_OFFSET), scratch);
-    branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
+    asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
 
     // Implicitly requires NUNBOX32_PAYLOAD_OFFSET == 0: no offset provided
     ma_ldr(DTRAddr(base, DtrRegImmShift(index, LSL, shift)), scratch);
@@ -3449,7 +3449,7 @@ MacroAssemblerARMCompat::ensureDouble(const ValueOperand& source, FloatRegister 
 {
     Label isDouble, done;
     branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
-    branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
+    asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
 
     convertInt32ToDouble(source.payloadReg(), dest);
     jump(&done);

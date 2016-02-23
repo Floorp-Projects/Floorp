@@ -72,6 +72,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Address ToPayload(Address base) {
         return base;
     }
+    BaseIndex ToPayload(BaseIndex base) {
+        return base;
+    }
     Operand ToType(Operand base) {
         switch (base.kind()) {
           case Operand::MEM_REG_DISP:
@@ -658,7 +661,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     template <typename T>
-    void branchTestInt32(Condition cond, const T& t, Label* label) {
+    void branchTestInt32Impl(Condition cond, const T& t, Label* label) {
         cond = testInt32(cond, t);
         j(cond, label);
     }
@@ -787,20 +790,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             vunpcklps(ScratchDoubleReg, dest, dest);
         }
     }
-    void unboxValue(const ValueOperand& src, AnyRegister dest) {
-        if (dest.isFloat()) {
-            Label notInt32, end;
-            branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            convertInt32ToDouble(src.payloadReg(), dest.fpu());
-            jump(&end);
-            bind(&notInt32);
-            unboxDouble(src, dest.fpu());
-            bind(&end);
-        } else {
-            if (src.payloadReg() != dest.gpr())
-                movl(src.payloadReg(), dest.gpr());
-        }
-    }
+    inline void unboxValue(const ValueOperand& src, AnyRegister dest);
     void unboxPrivate(const ValueOperand& src, Register dest) {
         if (src.payloadReg() != dest)
             movl(src.payloadReg(), dest);
@@ -874,23 +864,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    void loadInt32OrDouble(const Operand& operand, FloatRegister dest) {
-        Label notInt32, end;
-        branchTestInt32(Assembler::NotEqual, operand, &notInt32);
-        convertInt32ToDouble(ToPayload(operand), dest);
-        jump(&end);
-        bind(&notInt32);
-        loadDouble(operand, dest);
-        bind(&end);
-    }
+    template <typename T>
+    inline void loadInt32OrDouble(const T& src, FloatRegister dest);
 
     template <typename T>
-    void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest) {
-        if (dest.isFloat())
-            loadInt32OrDouble(Operand(src), dest.fpu());
-        else
-            movl(Operand(src), dest.gpr());
-    }
+    inline void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest);
 
     template <typename T>
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
@@ -925,21 +903,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         addl(Imm32(1), payloadOf(addr));
     }
 
-    // If source is a double, load it into dest. If source is int32,
-    // convert it to double. Else, branch to failure.
-    void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure) {
-        Label isDouble, done;
-        branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
-        branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
-
-        convertInt32ToDouble(source.payloadReg(), dest);
-        jump(&done);
-
-        bind(&isDouble);
-        unboxDouble(source, dest);
-
-        bind(&done);
-    }
+    inline void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
   public:
     // Used from within an Exit frame to handle a pending exception.

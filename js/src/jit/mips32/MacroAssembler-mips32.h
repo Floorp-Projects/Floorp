@@ -375,11 +375,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    void branchTestInt32(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestInt32(Condition cond, Register tag, Label* label);
-    void branchTestInt32(Condition cond, const Address& address, Label* label);
-    void branchTestInt32(Condition cond, const BaseIndex& src, Label* label);
-
     void branchTestBoolean(Condition cond, const ValueOperand& value, Label* label);
     void branchTestBoolean(Condition cond, Register tag, Label* label);
     void branchTestBoolean(Condition cond, const Address& address, Label* label);

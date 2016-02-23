@@ -763,7 +763,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadConstantFloat32(float f, FloatRegister dest);
 
     template<typename T>
-    void branchTestInt32(Condition cond, const T & t, Label* label) {
+    void branchTestInt32Impl(Condition cond, const T & t, Label* label) {
         Condition c = testInt32(cond, t);
         ma_b(label, c);
     }
