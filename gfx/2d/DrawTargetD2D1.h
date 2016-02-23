@@ -202,6 +202,7 @@ private:
   RefPtr<ID2D1Bitmap1> mBitmap;
   RefPtr<ID2D1CommandList> mCommandList;
   RefPtr<ID2D1Effect> mBlendEffect;
+  uint32_t mCommandListsCreated;
 
   RefPtr<ID2D1SolidColorBrush> mSolidColorBrush;
 
