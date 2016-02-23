@@ -104,8 +104,8 @@ struct XPTInterfaceDirectoryEntry {
 };
 
 /*
- * An InterfaceDescriptor is a variable-size record used to describe a 
- * single XPCOM interface, including all of its methods. 
+ * An InterfaceDescriptor describes a single XPCOM interface, including all of
+ * its methods.
  */
 struct XPTInterfaceDescriptor {
     /* This field ordering minimizes the size of this struct.
@@ -135,7 +135,7 @@ struct XPTInterfaceDescriptor {
     *  them to be of fixed size. This additional_types scheme is here to allow 
     *  for that.
     */
-    uint16_t                num_additional_types;
+    uint8_t                 num_additional_types;
 };
 
 #define XPT_ID_SCRIPTABLE           0x80
@@ -148,10 +148,6 @@ struct XPTInterfaceDescriptor {
 #define XPT_ID_IS_FUNCTION(flags) (!!(flags & XPT_ID_FUNCTION))
 #define XPT_ID_IS_BUILTINCLASS(flags) (!!(flags & XPT_ID_BUILTINCLASS))
 #define XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(flags) (!!(flags & XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY))
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                uint16_t num);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
