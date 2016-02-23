@@ -75,6 +75,7 @@
 #include "js/TrackedOptimizationInfo.h"
 #include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
+#include "shell/jsshell.h"
 #include "shell/OSObject.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
