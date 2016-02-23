@@ -1276,4 +1276,19 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     return retAddr;
 }
 
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != SecondScratchReg);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
+    addPtr(ptr, SecondScratchReg);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
+}
+
 //}}} check_macroassembler_style

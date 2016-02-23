@@ -4012,25 +4012,6 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label, Condition cond, Labe
 }
 
 void
-MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                                 Label* label)
-{
-    AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(ptr != scratch2);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
-
-    ma_mov(Imm32(startChunk), scratch2);
-    as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
-    asMasm().branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                      scratch2, Imm32(nursery.numChunks()), label);
-}
-
-void
 MacroAssemblerARMCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                                     Register temp, Label* label)
 {
@@ -4039,7 +4020,7 @@ MacroAssemblerARMCompat::branchValueIsNurseryObject(Condition cond, ValueOperand
     Label done;
 
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+    asMasm().branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }
@@ -5063,6 +5044,28 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 
     MOZ_ASSERT_IF(!oom(), pseudoReturnOffset - offsetBeforePush == 8);
     return pseudoReturnOffset;
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != scratch2);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
+
+    ma_mov(Imm32(startChunk), scratch2);
+    as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
+    branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+             scratch2, Imm32(nursery.numChunks()), label);
 }
 
 //}}} check_macroassembler_style

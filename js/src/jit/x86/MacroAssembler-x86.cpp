@@ -329,21 +329,6 @@ MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
                                      MIRType slotType);
 
 void
-MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                           Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    asMasm().addPtr(ptr, temp);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       temp, Imm32(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerX86::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                               Label* label)
 {
@@ -352,7 +337,7 @@ MacroAssemblerX86::branchValueIsNurseryObject(Condition cond, ValueOperand value
     Label done;
 
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+    asMasm().branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }
@@ -496,6 +481,24 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(fun);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+    addPtr(ptr, temp);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              temp, Imm32(nursery.nurserySize()), label);
 }
 
 //}}} check_macroassembler_style
