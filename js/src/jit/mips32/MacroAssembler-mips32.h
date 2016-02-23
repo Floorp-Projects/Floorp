@@ -1111,9 +1111,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_movs(dest, src);
     }
 
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
-                                    Label* label);
-
     void loadWasmActivation(Register dest) {
         loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
