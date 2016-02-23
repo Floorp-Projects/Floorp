@@ -108,9 +108,9 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
     XPT_SetDataOffset(cursor->state, data_pool);
 
     if (header->num_interfaces) {
-        header->interface_directory = 
-            (XPTInterfaceDirectoryEntry*)XPT_CALLOC(arena, header->num_interfaces * 
-                                                    sizeof(XPTInterfaceDirectoryEntry));
+        size_t n = header->num_interfaces * sizeof(XPTInterfaceDirectoryEntry);
+        header->interface_directory =
+            static_cast<XPTInterfaceDirectoryEntry*>(XPT_CALLOC8(arena, n));
         if (!header->interface_directory)
             return PR_FALSE;
     }
@@ -174,7 +174,7 @@ XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
     size_t new_size = (num * sizeof(XPTTypeDescriptor)) + old_size;
 
     /* XXX should grow in chunks to minimize alloc overhead */
-    new_ = (XPTTypeDescriptor*)XPT_CALLOC(arena, new_size);
+    new_ = static_cast<XPTTypeDescriptor*>(XPT_CALLOC8(arena, new_size));
     if (!new_)
         return PR_FALSE;
     if (old) {
@@ -213,8 +213,9 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     }
 
     if (id->num_methods) {
-        id->method_descriptors = (XPTMethodDescriptor*)XPT_CALLOC(arena, id->num_methods *
-                                                                  sizeof(XPTMethodDescriptor));
+        size_t n = id->num_methods * sizeof(XPTMethodDescriptor);
+        id->method_descriptors =
+            static_cast<XPTMethodDescriptor*>(XPT_CALLOC8(arena, n));
         if (!id->method_descriptors)
             return PR_FALSE;
     }
@@ -229,8 +230,9 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     }
     
     if (id->num_constants) {
-        id->const_descriptors = (XPTConstDescriptor*)XPT_CALLOC(arena, id->num_constants * 
-                                                                sizeof(XPTConstDescriptor));
+        size_t n = id->num_constants * sizeof(XPTConstDescriptor);
+        id->const_descriptors =
+            static_cast<XPTConstDescriptor*>(XPT_CALLOC8(arena, n));
         if (!id->const_descriptors)
             return PR_FALSE;
     }
@@ -313,7 +315,8 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
         return PR_FALSE;
 
     if (md->num_args) {
-        md->params = (XPTParamDescriptor*)XPT_CALLOC(arena, md->num_args * sizeof(XPTParamDescriptor));
+        size_t n = md->num_args * sizeof(XPTParamDescriptor);
+        md->params = static_cast<XPTParamDescriptor*>(XPT_CALLOC8(arena, n));
         if (!md->params)
             return PR_FALSE;
     }

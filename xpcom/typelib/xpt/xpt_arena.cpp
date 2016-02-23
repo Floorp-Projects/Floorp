@@ -29,49 +29,55 @@ struct BLK_HDR
 /* XXX this is lame. Should clone the code to do this bitwise */
 #define ALIGN_RND(s,a) ((a)==1?(s):((((s)+(a)-1)/(a))*(a)))
 
-struct XPTArena
+struct XPTSubArena
 {
     BLK_HDR *first;
     uint8_t *next;
     size_t   space;
-    size_t   alignment;
     size_t   block_size;
 };
 
-XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(uint32_t block_size, size_t alignment)
+struct XPTArena
 {
-    XPTArena *arena = (XPTArena*)calloc(1, sizeof(XPTArena));
+    // We have one sub-arena with 8-byte alignment for most allocations, and
+    // one with 1-byte alignment for C string allocations. The latter sub-arena
+    // avoids significant amounts of unnecessary padding between C strings.
+    XPTSubArena subarena8;
+    XPTSubArena subarena1;
+};
+
+XPT_PUBLIC_API(XPTArena *)
+XPT_NewArena(size_t block_size8, size_t block_size1)
+{
+    XPTArena *arena = static_cast<XPTArena*>(calloc(1, sizeof(XPTArena)));
     if (arena) {
-        XPT_ASSERT(alignment);
-        if (alignment > sizeof(double))
-            alignment = sizeof(double);
-        arena->alignment = alignment;
+        if (block_size8 < XPT_MIN_BLOCK_SIZE)
+            block_size8 = XPT_MIN_BLOCK_SIZE;
+        arena->subarena8.block_size = ALIGN_RND(block_size8, 8);
 
-        if (block_size < XPT_MIN_BLOCK_SIZE)
-            block_size = XPT_MIN_BLOCK_SIZE;
-        arena->block_size = ALIGN_RND(block_size, alignment);
-
-        /* must have room for at least one item! */
-        XPT_ASSERT(arena->block_size >= 
-                   ALIGN_RND(sizeof(BLK_HDR), alignment) +
-                   ALIGN_RND(1, alignment));
+        if (block_size1 < XPT_MIN_BLOCK_SIZE)
+            block_size1 = XPT_MIN_BLOCK_SIZE;
+        arena->subarena1.block_size = block_size1;
     }
-    return arena;        
+    return arena;
+}
+
+static void
+DestroySubArena(XPTSubArena *subarena)
+{
+    BLK_HDR* cur = subarena->first;
+    while (cur) {
+        BLK_HDR* next = cur->next;
+        free(cur);
+        cur = next;
+    }
 }
 
 XPT_PUBLIC_API(void)
 XPT_DestroyArena(XPTArena *arena)
 {
-    BLK_HDR* cur;
-    BLK_HDR* next;
-        
-    cur = arena->first;
-    while (cur) {
-        next = cur->next;
-        free(cur);
-        cur = next;
-    }
+    DestroySubArena(&arena->subarena8);
+    DestroySubArena(&arena->subarena1);
     free(arena);
 }
 
@@ -81,11 +87,8 @@ XPT_DestroyArena(XPTArena *arena)
 */
 
 XPT_PUBLIC_API(void *)
-XPT_ArenaMalloc(XPTArena *arena, size_t size)
+XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
 {
-    uint8_t *cur;
-    size_t bytes;
-
     if (!size)
         return NULL;
 
@@ -94,55 +97,66 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
         return NULL;
     }
 
-    bytes = ALIGN_RND(size, arena->alignment);
+    XPTSubArena *subarena;
+    if (alignment == 8) {
+        subarena = &arena->subarena8;
+    } else if (alignment == 1) {
+        subarena = &arena->subarena1;
+    } else {
+        XPT_ASSERT(0);
+        return NULL;
+    }
 
-    if (bytes > arena->space) {
+    size_t bytes = ALIGN_RND(size, alignment);
+
+    if (bytes > subarena->space) {
         BLK_HDR* new_block;
-        size_t block_header_size = ALIGN_RND(sizeof(BLK_HDR), arena->alignment);
-        size_t new_space = arena->block_size;
-         
-        while (bytes > new_space - block_header_size)
-            new_space += arena->block_size;
+        size_t block_header_size = ALIGN_RND(sizeof(BLK_HDR), alignment);
+        size_t new_space = subarena->block_size;
 
-        new_block = (BLK_HDR*) calloc(new_space/arena->alignment, 
-                                      arena->alignment);
+        while (bytes > new_space - block_header_size)
+            new_space += subarena->block_size;
+
+        new_block =
+            static_cast<BLK_HDR*>(calloc(new_space / alignment, alignment));
         if (!new_block) {
-            arena->next = NULL;
-            arena->space = 0;
+            subarena->next = NULL;
+            subarena->space = 0;
             return NULL;
         }
 
         /* link block into the list of blocks for use when we destroy */
-        new_block->next = arena->first;
-        arena->first = new_block;
+        new_block->next = subarena->first;
+        subarena->first = new_block;
 
         /* set info for current block */
-        arena->next  = ((uint8_t*)new_block) + block_header_size;
-        arena->space = new_space - block_header_size;
+        subarena->next =
+            reinterpret_cast<uint8_t*>(new_block) + block_header_size;
+        subarena->space = new_space - block_header_size;
 
 #ifdef DEBUG
         /* mark block for corruption check */
-        memset(arena->next, 0xcd, arena->space);
+        memset(subarena->next, 0xcd, subarena->space);
 #endif
-    } 
-    
+    }
+
 #ifdef DEBUG
     {
         /* do corruption check */
         size_t i;
         for (i = 0; i < bytes; ++i) {
-            XPT_ASSERT(arena->next[i] == 0xcd);        
+            XPT_ASSERT(subarena->next[i] == 0xcd);
         }
         /* we guarantee that the block will be filled with zeros */
-        memset(arena->next, 0, bytes);
-    }        
+        memset(subarena->next, 0, bytes);
+    }
 #endif
 
-    cur = arena->next;
-    arena->next  += bytes;
-    arena->space -= bytes;
-    
-    return cur;    
+    uint8_t* p = subarena->next;
+    subarena->next  += bytes;
+    subarena->space -= bytes;
+
+    return p;
 }
 
 /***************************************************************************/
@@ -157,17 +171,26 @@ XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
 }        
 #endif
 
-XPT_PUBLIC_API(size_t)
-XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf)
+static size_t
+SizeOfSubArenaExcludingThis(XPTSubArena *subarena, MozMallocSizeOf mallocSizeOf)
 {
-    size_t n = mallocSizeOf(arena);
+    size_t n = 0;
 
-    BLK_HDR* cur = arena->first;
+    BLK_HDR* cur = subarena->first;
     while (cur) {
         BLK_HDR* next = cur->next;
         n += mallocSizeOf(cur);
         cur = next;
     }
 
+    return n;
+}
+
+XPT_PUBLIC_API(size_t)
+XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf)
+{
+    size_t n = mallocSizeOf(arena);
+    n += SizeOfSubArenaExcludingThis(&arena->subarena8, mallocSizeOf);
+    n += SizeOfSubArenaExcludingThis(&arena->subarena1, mallocSizeOf);
     return n;
 }
