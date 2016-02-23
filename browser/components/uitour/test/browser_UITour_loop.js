@@ -112,29 +112,6 @@ var tests = [
 
     checkLoopPanelIsHidden();
   }),
-  taskify(function* test_menu_show_hide() {
-    // The targets to highlight only appear after getting started is launched.
-    // Set latestFTUVersion to lower number to show FTU panel.
-    Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 0);
-    is(loopButton.open, false, "Menu should initially be closed");
-    gContentAPI.showMenu("loop");
-
-    yield waitForConditionPromise(() => {
-      return loopButton.open;
-    }, "Menu should be visible after showMenu()");
-
-    ok(loopPanel.hasAttribute("noautohide"), "@noautohide should be on the loop panel");
-    ok(loopPanel.hasAttribute("panelopen"), "The panel should have @panelopen");
-    is(loopPanel.state, "open", "The panel should be open");
-    ok(loopButton.hasAttribute("open"), "Loop button should know that the menu is open");
-
-    gContentAPI.hideMenu("loop");
-    yield waitForConditionPromise(() => {
-        return !loopButton.open;
-    }, "Menu should be hidden after hideMenu()");
-
-    checkLoopPanelIsHidden();
-  }),
   // Test the menu was cleaned up in teardown.
   taskify(function* setup_menu_cleanup() {
     gContentAPI.showMenu("loop");
