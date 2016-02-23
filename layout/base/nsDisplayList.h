@@ -1056,26 +1056,11 @@ public:
    */
   bool IsInWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
 
-  void SetCommittedScrollInfoItemList(nsDisplayList* aScrollInfoItemStorage) {
-    mCommittedScrollInfoItems = aScrollInfoItemStorage;
-  }
-  nsDisplayList* CommittedScrollInfoItems() const {
-    return mCommittedScrollInfoItems;
-  }
-  bool ShouldBuildScrollInfoItemsForHoisting() const {
-    return IsPaintingToWindow();
-  }
+  void EnterSVGEffectsContents(nsDisplayList* aHoistedItemsStorage);
+  void ExitSVGEffectsContents();
 
-  // When building display lists for stacking contexts, we append scroll info
-  // items to a temporary list. If the stacking context would create an
-  // inactive layer, we commit these items to the final hoisted scroll items
-  // list. Otherwise, we propagate these items to the parent stacking
-  // context's list of pending scroll info items.
-  //
-  // EnterScrollInfoItemHoisting returns the parent stacking context's pending
-  // item list.
-  nsDisplayList* EnterScrollInfoItemHoisting(nsDisplayList* aScrollInfoItemStorage);
-  void LeaveScrollInfoItemHoisting(nsDisplayList* aScrollInfoItemStorage);
+  bool ShouldBuildScrollInfoItemsForHoisting() const
+  { return mSVGEffectsBuildingDepth > 0; }
 
   void AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLayer* aScrollInfoItem);
 
@@ -1240,14 +1225,12 @@ private:
   LayoutDeviceIntRegion          mWindowDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
-  // When encountering inactive layers, we need to hoist scroll info items
-  // above these layers so APZ can deliver events to content. Such scroll
-  // info items are considered "committed" to the final hoisting list. If
-  // no hoisting is needed immediately, it may be needed later if a blend
-  // mode is introduced in a higher stacking context, so we keep all scroll
-  // info items until the end of display list building.
-  nsDisplayList*                 mPendingScrollInfoItems;
-  nsDisplayList*                 mCommittedScrollInfoItems;
+  // A temporary list that we append scroll info items to while building
+  // display items for the contents of frames with SVG effects.
+  // Only non-null when ShouldBuildScrollInfoItemsForHoisting() is true.
+  // This is a pointer and not a real nsDisplayList value because the
+  // nsDisplayList class is defined below this class, so we can't use it here.
+  nsDisplayList*                 mScrollInfoItemsForHoisting;
   nsTArray<DisplayItemScrollClip*> mScrollClipsToDestroy;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   Mode                           mMode;
@@ -1257,6 +1240,7 @@ private:
   BlendModeSet                   mContainedBlendModes;
   Preserves3DContext             mPreserves3DCtx;
   uint32_t                       mPerspectiveItemIndex;
+  int32_t                        mSVGEffectsBuildingDepth;
   bool                           mIsBuildingScrollbar;
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
@@ -3665,20 +3649,10 @@ public:
   mozilla::UniquePtr<FrameMetrics> ComputeFrameMetrics(Layer* aLayer,
                                                        const ContainerLayerParameters& aContainerParameters);
 
-  void IgnoreIfCompositorSupportsBlending(BlendModeSet aBlendModes);
-  void UnsetIgnoreIfCompositorSupportsBlending();
-  bool ContainedInMixBlendMode() const;
-
 protected:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
   ViewID mScrollParentId;
-
-  // If the only reason for the ScrollInfoLayer is a blend mode, the blend
-  // mode may be supported in the compositor. We track it here to determine
-  // if so during layer construction.
-  BlendModeSet mContainedBlendModes;
-  bool mIgnoreIfCompositorSupportsBlending;
 };
 
 /**
