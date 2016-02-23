@@ -60,8 +60,6 @@ this.ANON_ATTRIBUTE = "anon attribute";
 this.ElementManager = function ElementManager(notSupported) {
   this.seenItems = {};
   this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  this.elementKey = 'ELEMENT';
-  this.w3cElementKey = 'element-6066-11e4-a52e-4f735466cecf';
   this.elementStrategies = [CLASS_NAME, SELECTOR, ID, NAME, LINK_TEXT, PARTIAL_LINK_TEXT, TAG, XPATH, ANON, ANON_ATTRIBUTE];
   for (let i = 0; i < notSupported.length; i++) {
     this.elementStrategies.splice(this.elementStrategies.indexOf(notSupported[i]), 1);
@@ -220,7 +218,7 @@ ElementManager.prototype = {
         }
         else if (val.nodeType == 1) {
           let elementId = this.addToKnownElements(val);
-          result = {[this.elementKey]: elementId, [this.w3cElementKey]: elementId};
+          result = {[element.LegacyKey]: elementId, [element.Key]: elementId};
         }
         else {
           result = {};
@@ -264,10 +262,10 @@ ElementManager.prototype = {
             converted.push(this.convertWrappedArguments(args[i], container));
           }
         }
-        else if (((typeof(args[this.elementKey]) === 'string') && args.hasOwnProperty(this.elementKey)) ||
-                 ((typeof(args[this.w3cElementKey]) === 'string') &&
-                     args.hasOwnProperty(this.w3cElementKey))) {
-          let elementUniqueIdentifier = args[this.w3cElementKey] ? args[this.w3cElementKey] : args[this.elementKey];
+        else if (((typeof(args[element.LegacyKey]) === 'string') && args.hasOwnProperty(element.LegacyKey)) ||
+                 ((typeof(args[element.Key]) === 'string') &&
+                     args.hasOwnProperty(element.Key))) {
+          let elementUniqueIdentifier = args[element.Key] ? args[element.Key] : args[element.LegacyKey];
           converted = this.getKnownElement(elementUniqueIdentifier, container);
           if (converted == null) {
             throw new WebDriverError(`Unknown element: ${elementUniqueIdentifier}`);
@@ -599,6 +597,8 @@ ElementManager.prototype = {
 
 
 this.element = {};
+element.LegacyKey = "ELEMENT";
+element.Key = "element-6066-11e4-a52e-4f735466cecf";
 element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
@@ -631,7 +631,7 @@ element.coordinates = function(node, x = undefined, y = undefined) {
     x: box.left + x,
     y: box.top + y,
   };
-}
+};
 
 /**
  * This function returns true if the node is in the viewport.
