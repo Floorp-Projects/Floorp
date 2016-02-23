@@ -381,7 +381,7 @@ static bool
 DecodeStore(FunctionDecoder& f, ExprType expected, ExprType type)
 {
     return DecodeLoadStoreAddress(f) &&
-           DecodeExpr(f, expected) &&
+           DecodeExpr(f, type) &&
            CheckType(f, type, expected);
 }
 
