@@ -128,17 +128,6 @@ GetDirectProxyHandlerObject(JSObject* proxy)
     return proxy->as<ProxyObject>().extra(ScriptedDirectProxyHandler::HANDLER_EXTRA).toObjectOrNull();
 }
 
-static inline void
-ReportInvalidTrapResult(JSContext* cx, JSObject* proxy, JSAtom* atom)
-{
-    RootedValue v(cx, ObjectOrNullValue(proxy));
-    JSAutoByteString bytes;
-    if (!AtomToPrintableString(cx, atom, &bytes))
-        return;
-    ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK, v,
-                      nullptr, bytes.ptr());
-}
-
 // ES6 implements both getPrototype and setPrototype traps. We don't have them yet (see bug
 // 888969). For now, use these, to account for proxy revocation.
 bool
