@@ -5,24 +5,21 @@
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
-add_task(function* test() {
+function test() {
+  waitForExplicitFinish();
+
   // This test relies on the form history being empty to start with delete
   // all the items first.
-  yield new Promise(resolve => {
-    FormHistory.update({ op: "remove" },
-                       { handleError(error) {
-                           do_throw("Error occurred updating form history: " + error);
-                         },
-                         handleCompletion(reason) {
-                           if (!reason) {
-                             resolve();
-                           } else {
-                             reject();
-                           }
-                         },
-                       });
-  });
+  FormHistory.update({ op: "remove" },
+                     { handleError: function (error) {
+                         do_throw("Error occurred updating form history: " + error);
+                       },
+                       handleCompletion: function (reason) { if (!reason) test2(); },
+                     });
+}
 
+function test2()
+{
   let prefService = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefService);
 
@@ -47,14 +44,30 @@ add_task(function* test() {
   prefBranch.setBoolPref("sessions", false);
   prefBranch.setBoolPref("siteSettings", false);
 
-  // Sanitize now so we can test the baseline point.
-  yield s.sanitize();
-  ok(!gFindBar.hasTransactions, "pre-test baseline for sanitizer");
+  // Sanitize now so we can test that canClear is correct. Formdata is cleared asynchronously.
+  s.sanitize().then(function() {
+    s.canClearItem("formdata", clearDone1, s);
+  });
+}
 
+function clearDone1(aItemName, aResult, aSanitizer)
+{
+  ok(!aResult, "pre-test baseline for sanitizer");
   gFindBar.getElement("findbar-textbox").value = "m";
-  ok(gFindBar.hasTransactions, "formdata can be cleared after input");
+  aSanitizer.canClearItem("formdata", inputEntered, aSanitizer);
+}
 
-  yield s.sanitize();
+function inputEntered(aItemName, aResult, aSanitizer)
+{
+  ok(aResult, "formdata can be cleared after input");
+  aSanitizer.sanitize().then(function() {
+    aSanitizer.canClearItem("formdata", clearDone2);
+  });
+}
+
+function clearDone2(aItemName, aResult)
+{
   is(gFindBar.getElement("findbar-textbox").value, "", "findBar textbox should be empty after sanitize");
-  ok(!gFindBar.hasTransactions, "No transactions after sanitize");
-});
+  ok(!aResult, "canClear now false after sanitize");
+  finish();
+}
