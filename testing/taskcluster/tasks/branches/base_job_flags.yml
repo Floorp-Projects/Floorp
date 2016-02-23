@@ -30,6 +30,8 @@ flags:
     crashtest: /crashtest.*/
     crashtest-e10s: /crashtest-e10s.*/
     e10s: /.*e10s.*/
+    firefox-ui: /firefox-ui.*/
+    firefox-ui-e10s: /firefox-ui-e10s.*/
     gaia-js-integration: /.*gaia-js-integration.*/
     gtest: /gtest.*/
     jittest: /jittest.*/
@@ -115,6 +117,8 @@ flags:
     - crashtest
     - crashtest-e10s
     - crashtest-ipc
+    - firefox-ui
+    - firefox-ui-e10s
     - gaia-build
     - gaia-build-unit
     - gaia-js-integration
