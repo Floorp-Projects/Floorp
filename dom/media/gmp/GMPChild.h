@@ -13,7 +13,6 @@
 #include "gmp-async-shutdown.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
-#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {
@@ -32,9 +31,6 @@ public:
             base::ProcessId aParentPid,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
-#ifdef XP_WIN
-  bool PreLoadLibraries();
-#endif
   MessageLoop* GMPMessageLoop();
 
   // Main thread only.
@@ -58,6 +54,7 @@ private:
 
   bool RecvSetNodeId(const nsCString& aNodeId) override;
   bool AnswerStartPlugin() override;
+  bool RecvPreloadLibs(const nsCString& aLibs) override;
 
   PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) override;
   bool DeallocPCrashReporterChild(PCrashReporterChild*) override;
@@ -94,7 +91,6 @@ private:
   GMPLoader* mGMPLoader;
   nsTArray<uint8_t> mPluginVoucher;
   nsTArray<uint8_t> mSandboxVoucher;
-  GMPInfoFileParser mInfoParser;
 };
 
 } // namespace gmp
