@@ -2176,8 +2176,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         storeValue(JSVAL_TYPE_INT32, scratch, dest);
     }
 
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
-
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
         loadPtr(activation, scratch);

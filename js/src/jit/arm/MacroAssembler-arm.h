@@ -1536,8 +1536,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay());
     }
 
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
-
     void loadWasmActivation(Register dest) {
         loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
