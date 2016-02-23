@@ -366,6 +366,14 @@ MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
     j(cond, label);
 }
 
+template <typename T>
+void
+MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
+{
+    subl(src, dest);
+    j(cond, label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)

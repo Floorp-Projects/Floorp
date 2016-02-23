@@ -423,6 +423,24 @@ MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* overflo
     }
 }
 
+template <typename T>
+void
+MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* overflow)
+{
+    switch (cond) {
+      case Overflow:
+        ma_subTestOverflow(dest, dest, src, overflow);
+        break;
+      case NonZero:
+      case Zero:
+        ma_subu(dest, src);
+        ma_b(dest, dest, overflow, cond);
+        break;
+      default:
+        MOZ_CRASH("NYI");
+    }
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
