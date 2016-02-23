@@ -23,7 +23,7 @@ enum JSShellErrNum {
 const JSErrorFormatString*
 my_GetErrorMessage(void* userRef, const unsigned errorNumber);
 
-static void
+void
 my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report);
 
 JSString*
