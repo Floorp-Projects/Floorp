@@ -2,21 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global React */
-
 "use strict";
 
-loader.lazyRequireGetter(this, "Ci",
-  "chrome", true);
-loader.lazyRequireGetter(this, "React",
-  "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "TargetList",
-  "devtools/client/aboutdebugging/components/target-list", true);
-loader.lazyRequireGetter(this, "TabHeader",
-  "devtools/client/aboutdebugging/components/tab-header", true);
-loader.lazyRequireGetter(this, "Services");
+const { Ci } = require("chrome");
+const { Task } = require("resource://gre/modules/Task.jsm");
+const Services = require("Services");
 
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
+const React = require("devtools/client/shared/vendor/react");
+const { TargetList } = require("./target-list");
+const { TabHeader } = require("./tab-header");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
