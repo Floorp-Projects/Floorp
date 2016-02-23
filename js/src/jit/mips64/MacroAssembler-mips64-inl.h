@@ -218,6 +218,13 @@ MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label
     ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
 }
 
+void
+MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
+{
+    ma_dext(ScratchRegister, value.valueReg(), Imm32(0), Imm32(32));
+    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

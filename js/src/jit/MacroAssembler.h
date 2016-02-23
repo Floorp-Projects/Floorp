@@ -926,6 +926,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
     inline void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) PER_ARCH;
 
+    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
     //}}} check_macroassembler_style
   public:
 

@@ -846,10 +846,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         test32(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
     }
-    void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition cond = testInt32Truthy(truthy, operand);
-        j(cond, label);
-    }
     void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
         test32(operand.payloadReg(), operand.payloadReg());
         j(truthy ? NonZero : Zero, label);
