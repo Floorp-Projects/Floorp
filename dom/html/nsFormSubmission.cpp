@@ -57,9 +57,7 @@ SendJSWarning(nsIDocument* aDocument,
 static void
 RetrieveFileName(Blob* aBlob, nsAString& aFilename)
 {
-  if (!aBlob) {
-    return;
-  }
+  MOZ_ASSERT(aBlob);
 
   RefPtr<File> file = aBlob->ToFile();
   if (file) {
@@ -90,8 +88,8 @@ public:
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream)
                                                                        override;
@@ -177,9 +175,11 @@ nsFSURLEncoded::AddIsindex(const nsAString& aValue)
 }
 
 nsresult
-nsFSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
-                                      Blob* aBlob)
+nsFSURLEncoded::AddNameBlobPair(const nsAString& aName,
+                                Blob* aBlob)
 {
+  MOZ_ASSERT(aBlob);
+
   if (!mWarnedFileControl) {
     SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nullptr, 0);
     mWarnedFileControl = true;
@@ -436,7 +436,7 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
   // Make MIME block for name/value pair
 
   // XXX: name parameter should be encoded per RFC 2231
-  // RFC 2388 specifies that RFC 2047 be used, but I think it's not
+  // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with MIME standard.
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
                  + NS_LITERAL_CSTRING(CRLF)
@@ -448,69 +448,66 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
 }
 
 nsresult
-nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
-                                             Blob* aBlob)
+nsFSMultipartFormData::AddNameBlobPair(const nsAString& aName,
+                                       Blob* aBlob)
 {
+  MOZ_ASSERT(aBlob);
+
   // Encode the control name
   nsAutoCString nameStr;
   nsresult rv = EncodeVal(aName, nameStr, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString filename;
-  nsAutoCString contentType;
-  nsCOMPtr<nsIInputStream> fileStream;
+  nsAutoString filename16;
+  RetrieveFileName(aBlob, filename16);
 
-  if (aBlob) {
-    nsAutoString filename16;
-    RetrieveFileName(aBlob, filename16);
-
-    ErrorResult error;
-    nsAutoString filepath16;
-    RefPtr<File> file = aBlob->ToFile();
-    if (file) {
-      file->GetPath(filepath16, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    }
-
-    if (!filepath16.IsEmpty()) {
-      // File.path includes trailing "/"
-      filename16 = filepath16 + filename16;
-    }
-
-    rv = EncodeVal(filename16, filename, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Get content type
-    nsAutoString contentType16;
-    aBlob->GetType(contentType16);
-    if (contentType16.IsEmpty()) {
-      contentType16.AssignLiteral("application/octet-stream");
-    }
-
-    contentType.Adopt(nsLinebreakConverter::
-                      ConvertLineBreaks(NS_ConvertUTF16toUTF8(contentType16).get(),
-                                        nsLinebreakConverter::eLinebreakAny,
-                                        nsLinebreakConverter::eLinebreakSpace));
-
-    // Get input stream
-    aBlob->GetInternalStream(getter_AddRefs(fileStream), error);
+  ErrorResult error;
+  nsAutoString filepath16;
+  RefPtr<File> file = aBlob->ToFile();
+  if (file) {
+    file->GetPath(filepath16, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
+  }
 
-    if (fileStream) {
-      // Create buffered stream (for efficiency)
-      nsCOMPtr<nsIInputStream> bufferedStream;
-      rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                     fileStream, 8192);
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (!filepath16.IsEmpty()) {
+    // File.path includes trailing "/"
+    filename16 = filepath16 + filename16;
+  }
 
-      fileStream = bufferedStream;
-    }
-  } else {
-    contentType.AssignLiteral("application/octet-stream");
+  nsAutoCString filename;
+  rv = EncodeVal(filename16, filename, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get content type
+  nsAutoString contentType16;
+  aBlob->GetType(contentType16);
+  if (contentType16.IsEmpty()) {
+    contentType16.AssignLiteral("application/octet-stream");
+  }
+
+  nsAutoCString contentType;
+  contentType.Adopt(nsLinebreakConverter::
+                    ConvertLineBreaks(NS_ConvertUTF16toUTF8(contentType16).get(),
+                                      nsLinebreakConverter::eLinebreakAny,
+                                      nsLinebreakConverter::eLinebreakSpace));
+
+  // Get input stream
+  nsCOMPtr<nsIInputStream> fileStream;
+  aBlob->GetInternalStream(getter_AddRefs(fileStream), error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  if (fileStream) {
+    // Create buffered stream (for efficiency)
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                   fileStream, 8192);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    fileStream = bufferedStream;
   }
 
   //
@@ -520,7 +517,7 @@ nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
                  + NS_LITERAL_CSTRING(CRLF);
   // XXX: name/filename parameter should be encoded per RFC 2231
-  // RFC 2388 specifies that RFC 2047 be used, but I think it's not
+  // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with the MIME standard.
   mPostDataChunk +=
          NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
@@ -579,7 +576,7 @@ nsresult
 nsFSMultipartFormData::AddPostDataStream()
 {
   nsresult rv = NS_OK;
-
+  
   nsCOMPtr<nsIInputStream> postDataChunkStream;
   rv = NS_NewCStringInputStream(getter_AddRefs(postDataChunkStream),
                                 mPostDataChunk);
@@ -606,8 +603,8 @@ public:
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream)
                                                                        override;
@@ -630,9 +627,11 @@ nsFSTextPlain::AddNameValuePair(const nsAString& aName,
 }
 
 nsresult
-nsFSTextPlain::AddNameBlobOrNullPair(const nsAString& aName,
-                                     Blob* aBlob)
+nsFSTextPlain::AddNameBlobPair(const nsAString& aName,
+                               Blob* aBlob)
 {
+  MOZ_ASSERT(aBlob);
+
   nsAutoString filename;
   RetrieveFileName(aBlob, filename);
   AddNameValuePair(aName, filename);
