@@ -18,11 +18,12 @@ function notifyAndPromiseUIUpdated(topic) {
     // Instrument gSyncUI so we know when the update is complete.
     let oldPromiseUpdateUI = gSyncUI._promiseUpdateUI.bind(gSyncUI);
     gSyncUI._promiseUpdateUI = function() {
+      let calledAt = Date.now();
       return oldPromiseUpdateUI().then(() => {
         // Restore our override.
         gSyncUI._promiseUpdateUI = oldPromiseUpdateUI;
         // Resolve the promise so the caller knows the update is done.
-        resolve();
+        resolve(calledAt);
       });
     };
     // Now send the notification.
@@ -144,14 +145,19 @@ function checkButtonsStatus(shouldBeActive) {
   }
 }
 
-function* testButtonActions(startNotification, endNotification, expectActive = true) {
+function* testButtonActions(startNotification, endNotification, expectActive = true, updateDelay = 0) {
   checkButtonsStatus(false);
   // pretend a sync is starting.
+  let startTime = Date.now();
   yield notifyAndPromiseUIUpdated(startNotification);
   checkButtonsStatus(expectActive);
   // and has stopped
-  yield notifyAndPromiseUIUpdated(endNotification);
+  let endTime = yield notifyAndPromiseUIUpdated(endNotification);
   checkButtonsStatus(false);
+  let actualDelay = endTime - startTime;
+  Assert.ok(actualDelay >= updateDelay, `Expected a minimum ${
+    updateDelay}ms delay before updating UI, but only waited ${
+      actualDelay}`);
 }
 
 function *doTestButtonActivities() {
@@ -161,8 +167,8 @@ function *doTestButtonActivities() {
   yield testButtonActions("weave:service:login:start", "weave:service:login:error", false);
 
   // But notifications for Sync itself should activate it.
-  yield testButtonActions("weave:service:sync:start", "weave:service:sync:finish");
-  yield testButtonActions("weave:service:sync:start", "weave:service:sync:error");
+  yield testButtonActions("weave:service:sync:start", "weave:service:sync:finish", true, 1600);
+  yield testButtonActions("weave:service:sync:start", "weave:service:sync:error", true, 1600);
 
   // and ensure the counters correctly handle multiple in-flight syncs
   yield notifyAndPromiseUIUpdated("weave:service:sync:start");
