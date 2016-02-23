@@ -464,7 +464,7 @@ Database::Init()
   // like views, temp triggers or temp tables.  The database should not be
   // considered corrupt if any of the following fails.
 
-  rv = InitTempTriggers();
+  rv = InitTempEntities();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Notify we have finished database initialization.
@@ -1015,7 +1015,7 @@ Database::InitFunctions()
 }
 
 nsresult
-Database::InitTempTriggers()
+Database::InitTempEntities()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1026,6 +1026,10 @@ Database::InitTempTriggers()
 
   // Add the triggers that update the moz_hosts table as necessary.
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERINSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTS_TEMP);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTS_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
