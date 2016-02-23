@@ -5582,11 +5582,14 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     const nsTArray<RefPtr<File>>& files = GetFilesInternal();
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
-      aFormSubmission->AddNameBlobOrNullPair(name, files[i]);
+      aFormSubmission->AddNameBlobPair(name, files[i]);
     }
 
     if (files.IsEmpty()) {
-      aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
+      RefPtr<BlobImpl> blobImpl =
+        new EmptyBlobImpl(NS_LITERAL_STRING("application/octet-stream"));
+      RefPtr<Blob> blob = Blob::Create(OwnerDoc()->GetInnerWindow(), blobImpl);
+      aFormSubmission->AddNameBlobPair(name, blob);
     }
 
     return NS_OK;

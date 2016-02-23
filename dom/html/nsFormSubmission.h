@@ -49,11 +49,10 @@ public:
    *
    * @param aName the name of the parameter
    * @param aBlob the blob to submit. The file's name will be used if the Blob
-   * is actually a File, otherwise 'blob' string is used instead if the aBlob is
-   * not null.
+   * is actually a File, otherwise 'blob' string is used instead.
    */
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) = 0;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   mozilla::dom::Blob* aBlob) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -161,8 +160,8 @@ public:
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   mozilla::dom::Blob* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream) override;
 
