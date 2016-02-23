@@ -25,6 +25,7 @@ Zone * const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 JS::Zone::Zone(JSRuntime* rt)
   : JS::shadow::Zone(rt, &rt->gc.marker),
     debuggers(nullptr),
+    suppressObjectMetadataCallback(false),
     arenas(rt),
     types(this),
     compartments(),
@@ -131,29 +132,6 @@ Zone::getOrCreateDebuggers(JSContext* cx)
     if (!debuggers)
         ReportOutOfMemory(cx);
     return debuggers;
-}
-
-void
-Zone::logPromotionsToTenured()
-{
-    auto* dbgs = getDebuggers();
-    if (MOZ_LIKELY(!dbgs))
-        return;
-
-    auto now = JS_GetCurrentEmbedderTime();
-    JSRuntime* rt = runtimeFromAnyThread();
-
-    for (auto** dbgp = dbgs->begin(); dbgp != dbgs->end(); dbgp++) {
-        if (!(*dbgp)->isEnabled() || !(*dbgp)->isTrackingTenurePromotions())
-            continue;
-
-        for (auto range = awaitingTenureLogging.all(); !range.empty(); range.popFront()) {
-            if ((*dbgp)->isDebuggeeUnbarriered(range.front()->compartment()))
-                (*dbgp)->logTenurePromotion(rt, *range.front(), now);
-        }
-    }
-
-    awaitingTenureLogging.clear();
 }
 
 void

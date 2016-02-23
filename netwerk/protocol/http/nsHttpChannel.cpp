@@ -2419,12 +2419,13 @@ nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
                            bool ignoreMissingPartialLen) const
 {
     bool hasContentEncoding =
-        mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding)
-        != nullptr;
+        (mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding) != nullptr);
+    const char *etag = mCachedResponseHead->PeekHeader(nsHttp::ETag);
+    bool hasWeakEtag = etag && !strncmp(etag, "W/", 2);
 
     return (partialLen < contentLength) &&
            (partialLen > 0 || ignoreMissingPartialLen) &&
-           !hasContentEncoding &&
+           !hasContentEncoding && !hasWeakEtag &&
            mCachedResponseHead->IsResumable() &&
            !mCustomConditionalRequest &&
            !mCachedResponseHead->NoStore();
@@ -5226,6 +5227,11 @@ nsHttpChannel::BeginConnect()
 
     // notify "http-on-modify-request" observers
     CallOnModifyRequestObservers();
+
+    // If mLoadGroup is null, e10s is enabled and this will be handled by HttpChannelChild.
+    if (mLoadGroup) {
+      HttpBaseChannel::SetLoadGroupUserAgentOverride();
+    }
 
     // Check to see if we should redirect this channel elsewhere by
     // nsIHttpChannel.redirectTo API request

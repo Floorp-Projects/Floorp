@@ -687,13 +687,6 @@ var each = Math.floor(N/numBatches);
 var start = minStream + each * (batch - 1);
 var end = Math.min(minStream + each * batch - 1, maxStream);
 
-// For debugging: Set this variable to the function name you're interested in
-// debugging and run once. That will print out the nameIndex of that function.
-// Insert that into the following statement to go directly to just that
-// function. Add your debugging printouts or debugger; statements or whatever.
-var theFunctionNameToFind;
-// var start = end = 12345;
-
 function process(name, json) {
     functionName = name;
     functionBodies = JSON.parse(json);

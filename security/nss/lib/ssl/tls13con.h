@@ -15,7 +15,7 @@ typedef enum {
 } SharedSecretType;
 
 SECStatus tls13_UnprotectRecord(
-    sslSocket* ss, SSL3Ciphertext *cText, sslBuffer *plaintext,
+    sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext,
     SSL3AlertDescription *alert);
 unsigned char *
 tls13_EncodeUintX(PRUint32 value, unsigned int bytes, unsigned char *to);

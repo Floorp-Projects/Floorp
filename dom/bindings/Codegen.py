@@ -16609,9 +16609,7 @@ class CGEventClass(CGBindingImplClass):
         for m in self.descriptor.interface.members:
             if m.isAttr():
                 name = CGDictionary.makeMemberName(m.identifier.name)
-                if m.type.isAny():
-                    retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(" + name + ")\n"
-                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                if m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface():
                     retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(" + name + ")\n"
                 elif typeNeedsRooting(m.type):
                     raise TypeError("Need to implement tracing for event "

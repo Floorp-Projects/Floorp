@@ -9,8 +9,12 @@
 
 #include "prio.h"
 #include "seccomon.h"
+#include "sslt.h"
 
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
+
+PRUint32 SSLInt_DetermineKEABits(PRUint16 serverKeyBits,
+                                 SSLAuthType authAlgorithm);
 
 #endif
 

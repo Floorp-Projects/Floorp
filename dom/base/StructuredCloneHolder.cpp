@@ -1041,16 +1041,12 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
   MOZ_ASSERT(mSupportsTransferring);
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
-    // This can be null.
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mParent);
-
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];
 
-    // aExtraData is the index of this port identifier.
     ErrorResult rv;
     RefPtr<MessagePort> port =
-      MessagePort::Create(window, portIdentifier, rv);
+      MessagePort::Create(mParent, portIdentifier, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return false;
     }

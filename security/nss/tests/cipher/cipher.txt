@@ -31,6 +31,8 @@
 	0	seed_ecb_-D	SEED_ECB_Decrypt
 	0	seed_cbc_-E	SEED_CBC_Encrypt
 	0	seed_cbc_-D	SEED_CBC_Decrypt
+	0	chacha20_poly1305_-E ChaCha20_Poly1305_Encrypt
+	0	chacha20_poly1305_-D ChaCha20_Poly1305_Decrypt
 	0	rc2_ecb_-E	RC2_ECB_Encrypt
 	0	rc2_ecb_-D	RC2_ECB_Decrypt
 	0	rc2_cbc_-E	RC2_CBC_Encrypt

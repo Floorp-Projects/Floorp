@@ -264,7 +264,8 @@ public:
 
   virtual bool KeepSensorTracking() = 0;
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp) = 0;
-  virtual VRHMDSensorState GetSensorState(double timeOffset = 0.0) = 0;
+  virtual VRHMDSensorState GetSensorState() = 0;
+  virtual VRHMDSensorState GetImmediateSensorState() = 0;
 
   virtual void ZeroSensor() = 0;
 

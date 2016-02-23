@@ -27,8 +27,8 @@ TreeWalker::
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
-  mChildFilter = mContext->CanHaveAnonChildren() ?
-    nsIContent::eAllChildren : nsIContent::eAllButXBL;
+  mChildFilter = mContext->NoXBLKids() ?
+    nsIContent::eAllButXBL : nsIContent::eAllChildren;
   mChildFilter |= nsIContent::eSkipPlaceholderContent;
 
   if (aContent)

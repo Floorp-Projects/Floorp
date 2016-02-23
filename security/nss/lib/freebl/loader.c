@@ -2128,3 +2128,59 @@ SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
   return (vector->p_EC_CopyParams)(arena, dstParams,  srcParams);
 }
 
+SECStatus
+ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,
+                             const unsigned char *key, unsigned int keyLen,
+                             unsigned int tagLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ChaCha20Poly1305_InitContext)(ctx, key, keyLen, tagLen);
+}
+
+ChaCha20Poly1305Context *
+ChaCha20Poly1305_CreateContext(const unsigned char *key, unsigned int keyLen,
+                               unsigned int tagLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_ChaCha20Poly1305_CreateContext)(key, keyLen, tagLen);
+}
+
+void
+ChaCha20Poly1305_DestroyContext(ChaCha20Poly1305Context *ctx, PRBool freeit)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_ChaCha20Poly1305_DestroyContext)(ctx, freeit);
+}
+
+SECStatus
+ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx,
+                      unsigned char *output, unsigned int *outputLen,
+                      unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen,
+                      const unsigned char *nonce, unsigned int nonceLen,
+                      const unsigned char *ad, unsigned int adLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ChaCha20Poly1305_Seal)(
+      ctx, output, outputLen, maxOutputLen, input, inputLen,
+      nonce, nonceLen, ad, adLen);
+}
+
+SECStatus
+ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx,
+                      unsigned char *output, unsigned int *outputLen,
+                      unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen,
+                      const unsigned char *nonce, unsigned int nonceLen,
+                      const unsigned char *ad, unsigned int adLen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ChaCha20Poly1305_Open)(
+      ctx, output, outputLen, maxOutputLen, input, inputLen,
+      nonce, nonceLen, ad, adLen);
+}

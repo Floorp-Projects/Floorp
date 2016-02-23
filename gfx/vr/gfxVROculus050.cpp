@@ -462,14 +462,20 @@ HMDInfoOculus050::ZeroSensor()
 }
 
 VRHMDSensorState
-HMDInfoOculus050::GetSensorState(double timeOffset)
+HMDInfoOculus050::GetImmediateSensorState()
+{
+  return GetSensorState();
+}
+
+VRHMDSensorState
+HMDInfoOculus050::GetSensorState()
 {
   VRHMDSensorState result;
   result.Clear();
 
   // XXX this is the wrong time base for timeOffset; we need to figure out how to synchronize
   // the Oculus time base and the browser one.
-  ovrTrackingState state = ovrHmd_GetTrackingState(mHMD, ovr_GetTimeInSeconds() + timeOffset);
+  ovrTrackingState state = ovrHmd_GetTrackingState(mHMD, ovr_GetTimeInSeconds());
   ovrPoseStatef& pose(state.HeadPose);
 
   result.timestamp = pose.TimeInSeconds;

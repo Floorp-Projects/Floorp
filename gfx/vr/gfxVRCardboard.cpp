@@ -51,7 +51,7 @@ HMDInfoCardboard::HMDInfoCardboard()
 
 
 VRHMDSensorState
-HMDInfoCardboard::GetSensorState(double timeOffset)
+HMDInfoCardboard::GetSensorState()
 {
   // Actual sensor state is calculated on the main thread,
   // within VRDeviceProxyOrientationFallBack
@@ -59,6 +59,13 @@ HMDInfoCardboard::GetSensorState(double timeOffset)
   result.Clear();
   return result;
 }
+
+VRHMDSensorState
+HMDInfoCardboard::GetImmediateSensorState()
+{
+  return GetSensorState();
+}
+
 
 void
 HMDInfoCardboard::ZeroSensor()

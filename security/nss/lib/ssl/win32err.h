@@ -1,11 +1,11 @@
 /*
  * This file essentially replicates NSPR's source for the functions that
- * map system-specific error codes to NSPR error codes.  We would use 
+ * map system-specific error codes to NSPR error codes.  We would use
  * NSPR's functions, instead of duplicating them, but they're private.
  * As long as SSL's server session cache code must do platform native I/O
  * to accomplish its job, and NSPR's error mapping functions remain private,
  * This code will continue to need to be replicated.
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */

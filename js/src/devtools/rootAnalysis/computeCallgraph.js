@@ -6,6 +6,12 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('CFG.js');
 
+var theFunctionNameToFind;
+if (scriptArgs[0] == '--function') {
+    theFunctionNameToFind = scriptArgs[1];
+    scriptArgs = scriptArgs.slice(2);
+}
+
 var subclasses = {};
 var superclasses = {};
 var classFunctions = {};
@@ -257,6 +263,15 @@ printErr("Finished loading data structures");
 
 var minStream = xdb.min_data_stream();
 var maxStream = xdb.max_data_stream();
+
+if (theFunctionNameToFind) {
+    var index = xdb.lookup_key(theFunctionNameToFind);
+    if (!index) {
+        printErr("Function not found");
+        quit(1);
+    }
+    minStream = maxStream = index;
+}
 
 for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
     var name = xdb.read_key(nameIndex);

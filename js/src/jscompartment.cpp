@@ -886,7 +886,7 @@ JSCompartment::clearObjectMetadata()
 }
 
 void
-JSCompartment::setNewObjectMetadata(JSContext* cx, JSObject* obj)
+JSCompartment::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
 
@@ -1193,13 +1193,26 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
         return;
 
     if (!cx_->isExceptionPending() && cx_->compartment()->hasObjectPendingMetadata()) {
+        // This destructor often runs upon exit from a function that is
+        // returning an unrooted pointer to a Cell. The allocation metadata
+        // callback often allocates; if it causes a GC, then the Cell pointer
+        // being returned won't be traced or relocated.
+        //
+        // The only extant callbacks are those internal to SpiderMonkey that
+        // capture the JS stack. In fact, we're considering removing general
+        // callbacks altogther in bug 1236748. Since it's not running arbitrary
+        // code, it's adequate to simply suppress GC while we run the callback.
+        AutoSuppressGC autoSuppressGC(cx_);
+
         JSObject* obj = cx_->compartment()->objectMetadataState.as<PendingMetadata>();
+
         // Make sure to restore the previous state before setting the object's
         // metadata. SetNewObjectMetadata asserts that the state is not
         // PendingMetadata in order to ensure that metadata callbacks are called
         // in order.
         cx_->compartment()->objectMetadataState = prevState_;
-        SetNewObjectMetadata(cx_, obj);
+
+        obj = SetNewObjectMetadata(cx_, obj);
     } else {
         cx_->compartment()->objectMetadataState = prevState_;
     }

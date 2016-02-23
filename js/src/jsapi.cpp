@@ -4133,11 +4133,11 @@ JS::FinishOffThreadScript(JSContext* maybecx, JSRuntime* rt, void* token)
         RootedScript script(maybecx);
         {
             AutoLastFrameCheck lfc(maybecx);
-            script = HelperThreadState().finishParseTask(maybecx, rt, token);
+            script = HelperThreadState().finishScriptParseTask(maybecx, rt, token);
         }
         return script;
     } else {
-        return HelperThreadState().finishParseTask(maybecx, rt, token);
+        return HelperThreadState().finishScriptParseTask(maybecx, rt, token);
     }
 }
 

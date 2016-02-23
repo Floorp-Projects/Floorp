@@ -688,7 +688,7 @@ HandleExceptionBaseline(JSContext* cx, const JitFrameIterator& frame, ResumeFrom
         }
 
         frameOk = HandleClosingGeneratorReturn(cx, frame.baselineFrame(), frameOk);
-        frameOk = Debugger::onLeaveFrame(cx, frame.baselineFrame(), frameOk);
+        frameOk = Debugger::onLeaveFrame(cx, frame.baselineFrame(), pc, frameOk);
     } else if (script->hasTrynotes()) {
         CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
     }

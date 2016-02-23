@@ -2427,6 +2427,7 @@ class ServiceWorkerUnregisterJob final : public ServiceWorkerJob
   const nsCString mScope;
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  const bool mSendToParent;
 
   ~ServiceWorkerUnregisterJob()
   {}
@@ -2435,11 +2436,13 @@ public:
   ServiceWorkerUnregisterJob(ServiceWorkerJobQueue* aQueue,
                              const nsACString& aScope,
                              nsIServiceWorkerUnregisterCallback* aCallback,
-                             nsIPrincipal* aPrincipal)
+                             nsIPrincipal* aPrincipal,
+                             bool aSendToParent = true)
     : ServiceWorkerJob(aQueue, Type::UnregisterJob)
     , mScope(aScope)
     , mCallback(aCallback)
     , mPrincipal(aPrincipal)
+    , mSendToParent(aSendToParent)
   {
     AssertIsOnMainThread();
   }
@@ -2472,16 +2475,6 @@ private:
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    // Note, we send the message to remove the registration from disk now even
-    // though we may only set the mPendingUninstall flag below.  This is
-    // necessary to ensure the registration is removed if the controlled
-    // clients are closed by shutting down the browser.  If the registration
-    // is resurrected by clearing mPendingUninstall then it should be saved
-    // to disk again.
-    if (swm->mActor) {
-      swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
-    }
-
     nsAutoCString scopeKey;
     nsresult rv = swm->PrincipalToScopeKey(mPrincipal, scopeKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2504,6 +2497,16 @@ private:
 
     MOZ_ASSERT(registration);
 
+    // Note, we send the message to remove the registration from disk now even
+    // though we may only set the mPendingUninstall flag below.  This is
+    // necessary to ensure the registration is removed if the controlled
+    // clients are closed by shutting down the browser.  If the registration
+    // is resurrected by clearing mPendingUninstall then it should be saved
+    // to disk again.
+    if (mSendToParent && !registration->mPendingUninstall && swm->mActor) {
+      swm->mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(mScope));
+    }
+
     // "Set registration's uninstalling flag."
     registration->mPendingUninstall = true;
     // "Resolve promise with true"
@@ -2520,7 +2523,6 @@ private:
       }
 
       // "Invoke [[Clear Registration]]..."
-      registration->Clear();
       swm->RemoveRegistration(registration);
     }
 
@@ -2572,6 +2574,47 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
 
   RefPtr<ServiceWorkerUnregisterJob> job =
     new ServiceWorkerUnregisterJob(queue, scope, aCallback, aPrincipal);
+
+  if (mActor) {
+    queue->Append(job);
+    return NS_OK;
+  }
+
+  AppendPendingOperation(queue, job);
+  return NS_OK;
+}
+
+nsresult
+ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
+                                       const nsAString& aScope)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+
+  nsresult rv;
+
+// This is not accessible by content, and callers should always ensure scope is
+// a correct URI, so this is wrapped in DEBUG
+#ifdef DEBUG
+  nsCOMPtr<nsIURI> scopeURI;
+  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
+
+  nsAutoCString originSuffix;
+  rv = PrincipalToScopeKey(aPrincipal, originSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  NS_ConvertUTF16toUTF8 scope(aScope);
+  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, scope);
+  MOZ_ASSERT(queue);
+
+  RefPtr<ServiceWorkerUnregisterJob> job =
+    new ServiceWorkerUnregisterJob(queue, scope, nullptr, aPrincipal, false);
 
   if (mActor) {
     queue->Append(job);
@@ -3357,7 +3400,6 @@ ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aR
   aRegistration->StopControllingADocument();
   if (!aRegistration->IsControllingDocuments()) {
     if (aRegistration->mPendingUninstall) {
-      aRegistration->Clear();
       RemoveRegistration(aRegistration);
     } else {
       // If the registration has an active worker that is running
@@ -4258,46 +4300,35 @@ ServiceWorkerManager::MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRe
   MOZ_ASSERT(aRegistration);
   RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
   if (!newest && HasScope(aRegistration->mPrincipal, aRegistration->mScope)) {
-    aRegistration->Clear();
     RemoveRegistration(aRegistration);
   }
 }
 
 void
-ServiceWorkerManager::RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration)
-{
-  MOZ_ASSERT(aRegistration);
-  MOZ_ASSERT(!aRegistration->IsControllingDocuments());
-
-  if (mShuttingDown) {
-    return;
-  }
-
-  // All callers should be either from a job in which case the actor is
-  // available, or from MaybeStopControlling(), in which case, this will only be
-  // called if a valid registration is found. If a valid registration exists,
-  // it means the actor is available since the original map of registrations is
-  // populated by it, and any new registrations wait until the actor is
-  // available before proceeding (See ServiceWorkerRegisterJob::Start).
-  MOZ_ASSERT(mActor);
-
-  PrincipalInfo principalInfo;
-  if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(aRegistration->mPrincipal,
-                                                    &principalInfo)))) {
-    //XXXnsm I can't think of any other reason a stored principal would fail to
-    //convert.
-    NS_WARNING("Unable to unregister serviceworker due to possible OOM");
-    return;
-  }
-
-  mActor->SendUnregister(principalInfo, NS_ConvertUTF8toUTF16(aRegistration->mScope));
-}
-
-void
 ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  RemoveRegistrationInternal(aRegistration);
+  // Note, we do not need to call mActor->SendUnregister() here.  There are a few
+  // ways we can get here:
+  // 1) Through a normal unregister which calls SendUnregister() in the unregister
+  //    job Start() method.
+  // 2) Through origin storage being purged.  These result in ForceUnregister()
+  //    starting unregister jobs which in turn call SendUnregister().
+  // 3) Through the failure to install a new service worker.  Since we don't store
+  //    the registration until install succeeds, we do not need to call
+  //    SendUnregister here.
+  // Assert these conditions by testing for pending uninstall (cases 1 and 2) or
+  // null workers (case 3).
+#ifdef DEBUG
+  RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
+  MOZ_ASSERT(aRegistration->mPendingUninstall || !newest);
+#endif
+
   MOZ_ASSERT(HasScope(aRegistration->mPrincipal, aRegistration->mScope));
+
+  // When a registration is removed, we must clear its contents since the DOM
+  // object may be held by content script.
+  aRegistration->Clear();
+
   RemoveScopeAndRegistration(aRegistration);
 }
 
