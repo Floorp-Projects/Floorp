@@ -20,13 +20,15 @@ const TEST_URI = `
 
 const TEST_DATA = [
   {
-    desc: "Tests that the search filter works properly for a single rule selector",
+    desc: "Tests that the search filter works properly for a single rule " +
+          "selector",
     search: "#test",
     selectorText: "#testid",
     index: 0
   },
   {
-    desc: "Tests that the search filter works properly for multiple rule selectors",
+    desc: "Tests that the search filter works properly for multiple rule " +
+          "selectors",
     search: "body",
     selectorText: "html, body, div",
     index: 2
