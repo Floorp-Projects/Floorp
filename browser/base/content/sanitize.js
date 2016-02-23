@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
@@ -389,13 +387,6 @@ Sanitizer.prototype = {
           if (searchBar)
             searchBar.textbox.reset();
           let tabBrowser = currentWindow.gBrowser;
-          if (!tabBrowser) {
-            // No tab browser? This means that it's too early during startup (typically,
-            // Session Restore hasn't completed yet). Since we don't have find
-            // bars at that stage and since Session Restore will not restore
-            // find bars further down during startup, we have nothing to clear.
-            continue;
-          }
           for (let tab of tabBrowser.tabs) {
             if (tabBrowser.isFindBarInitialized(tab))
               tabBrowser.getFindBar(tab).clear();
@@ -798,24 +789,14 @@ Sanitizer.sanitize = function(aParentWindow)
 };
 
 Sanitizer.onStartup = Task.async(function*() {
-  // Make sure that we are triggered during shutdown, at the right time,
-  // and only once.
-  let placesClient = Cc["@mozilla.org/browser/nav-history-service;1"]     .getService(Ci.nsPIPlacesDatabase)
+  // Make sure that we are triggered during shutdown, at the right time.
+  let shutdownClient = Cc["@mozilla.org/browser/nav-history-service;1"]
+     .getService(Ci.nsPIPlacesDatabase)
      .shutdownClient
      .jsclient;
 
-  let deferredSanitization = PromiseUtils.defer();
-  let sanitizationInProgress = false;
-  let doSanitize = function() {
-    if (sanitizationInProgress) {
-      return deferredSanitization.promise;
-    }
-    sanitizationInProgress = true;
-    Sanitizer.onShutdown().catch(er => {Promise.reject(er) /* Do not return rejected promise */;}).then(() =>
-      deferredSanitization.resolve()
-    );
-  }
-  placesClient.addBlocker("sanitize.js: Sanitize on shutdown", doSanitize);
+  shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
+    () => Sanitizer.onShutdown());
 
     // One time migration to remove support for the clear saved passwords on exit feature.
     if (!Services.prefs.getBoolPref("privacy.sanitize.migrateClearSavedPwdsOnExit")) {
