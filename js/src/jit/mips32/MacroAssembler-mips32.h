@@ -888,16 +888,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     inline void incrementInt32Value(const Address& addr);
 
     template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* overflow) {
-        switch (cond) {
-          case Overflow:
-            ma_addTestOverflow(dest, dest, src, overflow);
-            break;
-          default:
-            MOZ_CRASH("NYI");
-        }
-    }
-    template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* overflow) {
         switch (cond) {
           case Overflow:

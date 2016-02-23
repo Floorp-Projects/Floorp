@@ -166,11 +166,6 @@ class MacroAssemblerX86Shared : public Assembler
         return cmplWithPatch(rhs, lhs);
     }
     template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        addl(src, dest);
-        j(cond, label);
-    }
-    template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
         subl(src, dest);
         j(cond, label);

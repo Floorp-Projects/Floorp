@@ -689,6 +689,14 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     ma_b(fail, Assembler::Equal);
 }
 
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    add32(src, dest);
+    j(cond, label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
@@ -764,14 +772,6 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 
 //}}} check_macroassembler_style
 // ===============================================================
-
-template <typename T>
-void
-MacroAssemblerARMCompat::branchAdd32(Condition cond, T src, Register dest, Label* label)
-{
-    asMasm().add32(src, dest);
-    j(cond, label);
-}
 
 void
 MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)
