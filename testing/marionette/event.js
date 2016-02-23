@@ -931,10 +931,10 @@ function focusElement(element) {
  * @param {Window=} window
  */
 event.sendKeysToElement = function(
-    keySequence, element, opts = {}, window = undefined) {
+    keySequence, el, opts = {}, window = undefined) {
 
-  if (opts.ignoreVisibility || elements.checkVisible(element, window)) {
-    focusElement(element);
+  if (opts.ignoreVisibility || element.checkVisible(el, window)) {
+    focusElement(el);
 
     // make Object.<modifier, false> map
     let modifiers = Object.create(event.Modifiers);

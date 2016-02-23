@@ -96,7 +96,7 @@ Interactions.prototype = {
    */
   clickElement(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
-    let visible = elements.checkVisible(el, container.frame);
+    let visible = element.checkVisible(el, container.frame);
     if (!visible) {
       throw new ElementNotVisibleError('Element is not visible');
     }
@@ -105,7 +105,7 @@ Interactions.prototype = {
       if (atom.isElementEnabled(el)) {
         this.accessibility.checkEnabled(acc, el, true, container);
         this.accessibility.checkActionable(acc, el);
-        if (elements.isXULElement(el)) {
+        if (element.isXULElement(el)) {
           el.click();
         } else {
           let rects = el.getClientRects();
@@ -188,7 +188,7 @@ Interactions.prototype = {
   isElementEnabled(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
     let enabled = true;
-    if (elements.isXULElement(el)) {
+    if (element.isXULElement(el)) {
       // Check if XUL element supports disabled attribute
       if (DISABLED_ATTRIBUTE_SUPPORTED_XUL.has(el.tagName.toUpperCase())) {
         let disabled = atom.getElementAttribute(el, 'disabled', container.frame);
@@ -222,7 +222,7 @@ Interactions.prototype = {
   isElementSelected(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
     let selected = true;
-    if (elements.isXULElement(el)) {
+    if (element.isXULElement(el)) {
       let tagName = el.tagName.toUpperCase();
       if (CHECKED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
         selected = el.checked;
