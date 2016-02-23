@@ -2875,6 +2875,17 @@ extern JS_PUBLIC_API(bool)
 JS_GetPrototype(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject result);
 
 /**
+ * If |obj| (underneath any functionally-transparent wrapper proxies) has as
+ * its [[GetPrototypeOf]] trap the ordinary [[GetPrototypeOf]] behavior defined
+ * for ordinary objects, set |*isOrdinary = true| and store |obj|'s prototype
+ * in |result|.  Otherwise set |*isOrdinary = false|.  In case of error, both
+ * outparams have unspecified value.
+ */
+extern JS_PUBLIC_API(bool)
+JS_GetPrototypeIfOrdinary(JSContext* cx, JS::HandleObject obj, bool* isOrdinary,
+                          JS::MutableHandleObject result);
+
+/**
  * Change the prototype of obj.
  *
  * Implements: ES6 [[SetPrototypeOf]] internal method.
