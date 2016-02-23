@@ -3534,7 +3534,7 @@ nsComputedDOMStyle::CreateTextAlignValue(uint8_t aAlign, bool aAlignTrue,
   }
 
   RefPtr<nsROCSSPrimitiveValue> first = new nsROCSSPrimitiveValue;
-  first->SetIdent(eCSSKeyword_true);
+  first->SetIdent(eCSSKeyword_unsafe);
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   valueList->AppendCSSValue(first.forget());
