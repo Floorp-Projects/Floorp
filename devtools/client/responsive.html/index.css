@@ -7,10 +7,14 @@
 
 .theme-light {
   --viewport-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+  --viewport-dimension-color: var(--theme-splitter-color);
+  --viewport-dimension-editing-color: var(--theme-body-color);
 }
 
 .theme-dark {
   --viewport-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+  --viewport-dimension-color: var(--theme-body-color);
+  --viewport-dimension-editing-color: var(--theme-selection-color);
 }
 
 * {
@@ -57,11 +61,11 @@ body {
   display: inline-block;
   /* Align all viewports to the top */
   vertical-align: top;
-  border: 1px solid var(--theme-splitter-color);
-  box-shadow: var(--viewport-box-shadow);
 }
 
 .resizable-viewport {
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: var(--viewport-box-shadow);
   position: relative;
 }
 
@@ -151,4 +155,48 @@ body {
   left: 0;
   bottom: -4px;
   cursor: s-resize;
+}
+
+/**
+ * Viewport Dimension Label
+ */
+
+.viewport-dimension {
+  display: flex;
+  justify-content: center;
+  font: 10px sans-serif;
+  margin-top: 10px;
+}
+
+.viewport-dimension-editable {
+  border-bottom: 1px solid transparent;
+}
+
+.viewport-dimension-editable,
+.viewport-dimension-input {
+  color: var(--viewport-dimension-color);
+  transition: all 0.25s ease;
+}
+
+.viewport-dimension-editable.editing,
+.viewport-dimension-input.editing {
+  color: var(--viewport-dimension-editing-color);
+}
+
+.viewport-dimension-editable.editing {
+  border-bottom: 1px solid var(--theme-selection-background);
+}
+
+.viewport-dimension-editable.editing.invalid {
+  border-bottom: 1px solid #d92215;
+}
+
+.viewport-dimension-input {
+  background: transparent;
+  border: none;
+  text-align: center;
+}
+
+.viewport-dimension-separator {
+  -moz-user-select: none;
 }

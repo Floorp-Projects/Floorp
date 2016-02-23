@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global React, TargetListComponent */
+/* global React */
 
 "use strict";
 
@@ -10,8 +10,10 @@ loader.lazyRequireGetter(this, "Ci",
   "chrome", true);
 loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "TargetListComponent",
+loader.lazyRequireGetter(this, "TargetList",
   "devtools/client/aboutdebugging/components/target-list", true);
+loader.lazyRequireGetter(this, "TabHeader",
+  "devtools/client/aboutdebugging/components/tab-header", true);
 loader.lazyRequireGetter(this, "Services");
 
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
@@ -20,8 +22,8 @@ const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 
-exports.WorkersComponent = React.createClass({
-  displayName: "WorkersComponent",
+exports.WorkersTab = React.createClass({
+  displayName: "WorkersTab",
 
   getInitialState() {
     return {
@@ -47,22 +49,30 @@ exports.WorkersComponent = React.createClass({
   },
 
   render() {
-    let client = this.props.client;
-    let workers = this.state.workers;
-    return React.createElement("div", { className: "inverted-icons" },
-      React.createElement(TargetListComponent, {
-        id: "service-workers",
-        name: Strings.GetStringFromName("serviceWorkers"),
-        targets: workers.service, client }),
-      React.createElement(TargetListComponent, {
-        id: "shared-workers",
-        name: Strings.GetStringFromName("sharedWorkers"),
-        targets: workers.shared, client }),
-      React.createElement(TargetListComponent, {
-        id: "other-workers",
-        name: Strings.GetStringFromName("otherWorkers"),
-        targets: workers.other, client })
-    );
+    let { client } = this.props;
+    let { workers } = this.state;
+
+    return React.createElement(
+      "div", { id: "tab-workers", className: "tab", role: "tabpanel",
+        "aria-labelledby": "tab-workers-header-name" },
+        React.createElement(TabHeader, {
+          id: "tab-workers-header-name",
+          name: Strings.GetStringFromName("workers")}),
+        React.createElement(
+          "div", { id: "workers", className: "inverted-icons" },
+          React.createElement(TargetList, {
+            id: "service-workers",
+            name: Strings.GetStringFromName("serviceWorkers"),
+            targets: workers.service, client }),
+          React.createElement(TargetList, {
+            id: "shared-workers",
+            name: Strings.GetStringFromName("sharedWorkers"),
+            targets: workers.shared, client }),
+          React.createElement(TargetList, {
+            id: "other-workers",
+            name: Strings.GetStringFromName("otherWorkers"),
+            targets: workers.other, client }))
+      );
   },
 
   update() {
