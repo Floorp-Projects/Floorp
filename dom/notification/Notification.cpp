@@ -1095,9 +1095,9 @@ Notification::ConstructFromFields(
   options.mTag = aTag;
   options.mIcon = aIcon;
   RefPtr<Notification> notification = CreateInternal(aGlobal, aID, aTitle,
-                                                       options);
+                                                     options);
 
-  notification->InitFromBase64(jsapi.cx(), aData, aRv);
+  notification->InitFromBase64(aData, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2385,8 +2385,7 @@ Notification::InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
   dataObjectContainer->GetDataAsBase64(mDataAsBase64);
 }
 
-void Notification::InitFromBase64(JSContext* aCx, const nsAString& aData,
-                                  ErrorResult& aRv)
+void Notification::InitFromBase64(const nsAString& aData, ErrorResult& aRv)
 {
   if (!mDataAsBase64.IsEmpty() || aData.IsEmpty()) {
     return;
