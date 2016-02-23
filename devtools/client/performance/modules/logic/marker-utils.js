@@ -212,8 +212,17 @@ const DOM = {
     container.className = "marker-details-stack";
     container.appendChild(labelName);
 
+    // Workaround for profiles that have looping stack traces.  See
+    // bug 1246555.
     let wasAsyncParent = false;
+    let seen = new Set();
+
     while (frameIndex > 0) {
+      if (seen.has(frameIndex)) {
+        break;
+      }
+      seen.add(frameIndex);
+
       let frame = frames[frameIndex];
       let url = frame.source;
       let displayName = frame.functionDisplayName;
