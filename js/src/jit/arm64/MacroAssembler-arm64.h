@@ -1350,23 +1350,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
         return jumpWithPatch(label, Always, documentation);
     }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
-        cmpPtr(reg, ptr);
-        return jumpWithPatch(label, cond);
-    }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel* label) {
-        // The scratch register is unused after the condition codes are set.
-        {
-            vixl::UseScratchRegisterScope temps(this);
-            const Register scratch = temps.AcquireX().asUnsized();
-            MOZ_ASSERT(scratch != addr.base);
-            loadPtr(addr, scratch);
-            cmpPtr(scratch, ptr);
-        }
-        return jumpWithPatch(label, cond);
-    }
 
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(imm.value));
