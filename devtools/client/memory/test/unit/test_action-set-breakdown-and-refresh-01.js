@@ -25,8 +25,8 @@ add_task(function *() {
 
   // Test default breakdown with no snapshots
   equal(getState().breakdown.by, "coarseType", "default coarseType breakdown selected at start.");
-  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.objectClass.breakdown));
-  equal(getState().breakdown.by, "objectClass", "breakdown changed with no snapshots");
+  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.allocationStack.breakdown));
+  equal(getState().breakdown.by, "allocationStack", "breakdown changed with no snapshots");
 
   // Test invalid breakdowns
   ok(getState().errors.length === 0, "No error actions in the queue.");
@@ -34,13 +34,13 @@ add_task(function *() {
   yield waitUntilState(store, () => getState().errors.length === 1);
   ok(true, "Emits an error action when passing in an invalid breakdown object");
 
-  equal(getState().breakdown.by, "objectClass",
+  equal(getState().breakdown.by, "allocationStack",
     "current breakdown unchanged when passing invalid breakdown");
 
   // Test new snapshots
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
-  ok(isBreakdownType(getState().snapshots[0].census.report, "objectClass"),
+  ok(isBreakdownType(getState().snapshots[0].census.report, "allocationStack"),
     "New snapshots use the current, non-default breakdown");
 
 
@@ -57,20 +57,23 @@ add_task(function *() {
   // Updates when changing breakdown during `SAVING_CENSUS`
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS, states.SAVING_CENSUS]);
-  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.objectClass.breakdown));
+  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.allocationStack.breakdown));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS, states.SAVED_CENSUS]);
 
-  ok(breakdownEquals(getState().snapshots[2].census.breakdown, breakdowns.objectClass.breakdown),
+  ok(breakdownEquals(getState().snapshots[2].census.breakdown, breakdowns.allocationStack.breakdown),
     "Breakdown can be changed while saving census, stores updated breakdown in snapshot");
-  ok(isBreakdownType(getState().snapshots[2].census.report, "objectClass"),
+  ok(isBreakdownType(getState().snapshots[2].census.report, "allocationStack"),
     "Breakdown can be changed while saving census, uses updated breakdown in census");
 
   // Updates census on currently selected snapshot when changing breakdown
   ok(getState().snapshots[2].selected, "Third snapshot currently selected");
-  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.internalType.breakdown));
-  yield waitUntilState(store, () => isBreakdownType(getState().snapshots[2].census.report, "internalType"));
-  ok(isBreakdownType(getState().snapshots[2].census.report, "internalType"),
+  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.coarseType.breakdown));
+  yield waitUntilState(store, () => isBreakdownType(getState().snapshots[2].census.report, "coarseType"));
+  ok(isBreakdownType(getState().snapshots[2].census.report, "coarseType"),
     "Snapshot census updated when changing breakdowns after already generating one census");
+
+  dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.allocationStack.breakdown));
+  yield waitUntilState(store, () => isBreakdownType(getState().snapshots[2].census.report, "allocationStack"));
 
   // Does not update unselected censuses
   ok(!getState().snapshots[1].selected, "Second snapshot unselected currently");
@@ -85,10 +88,10 @@ add_task(function *() {
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS, states.SAVED_CENSUS]);
 
   ok(getState().snapshots[1].selected, "Second snapshot selected currently");
-  ok(breakdownEquals(getState().snapshots[1].census.breakdown, breakdowns.internalType.breakdown),
-    "Second snapshot using `internalType` breakdown and updated to correct breakdown");
-  ok(isBreakdownType(getState().snapshots[1].census.report, "internalType"),
-     "Second snapshot using `internalType` for census and updated to correct breakdown");
+  ok(breakdownEquals(getState().snapshots[1].census.breakdown, breakdowns.allocationStack.breakdown),
+    "Second snapshot using `allocationStack` breakdown and updated to correct breakdown");
+  ok(isBreakdownType(getState().snapshots[1].census.report, "allocationStack"),
+     "Second snapshot using `allocationStack` for census and updated to correct breakdown");
 
   heapWorker.destroy();
   yield front.detach();

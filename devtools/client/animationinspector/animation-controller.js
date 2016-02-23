@@ -184,7 +184,7 @@ var AnimationsController = {
     this.nodeFront = null;
 
     // Finish releasing players that haven't been released yet.
-    yield Promise.all(this.nonBlockingPlayerReleases);
+    yield promise.all(this.nonBlockingPlayerReleases);
 
     if (this.animationsFront) {
       this.animationsFront.destroy();

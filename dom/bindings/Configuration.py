@@ -228,6 +228,8 @@ class Configuration:
                 getter = lambda x: x.interface.getNavigatorProperty() is not None
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: x.interface.isExposedInAnyWorker()
+            elif key == 'isExposedInWorkerDebugger':
+                getter = lambda x: x.interface.isExposedInWorkerDebugger()
             elif key == 'isExposedInSystemGlobals':
                 getter = lambda x: x.interface.isExposedInSystemGlobals()
             elif key == 'isExposedInWindow':
