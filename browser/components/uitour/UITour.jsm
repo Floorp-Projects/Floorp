@@ -1700,7 +1700,7 @@ this.UITour = {
 
       // An event object is expected but we don't want to toggle the panel with a click if the panel
       // is already open.
-      aWindow.LoopUI.openCallPanel({ target: toolbarButton.node, }, "rooms").then(() => {
+      aWindow.LoopUI.openPanel({ target: toolbarButton.node, }, "rooms").then(() => {
         if (aOpenCallback) {
           aOpenCallback();
         }
