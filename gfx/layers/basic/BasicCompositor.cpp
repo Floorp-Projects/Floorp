@@ -116,6 +116,11 @@ BasicCompositor::GetTextureFactoryIdentifier()
   TextureFactoryIdentifier ident(LayersBackend::LAYERS_BASIC,
                                  XRE_GetProcessType(),
                                  GetMaxTextureSize());
+
+  // All composition ops are supported in software.
+  for (uint8_t op = 0; op < uint8_t(CompositionOp::OP_COUNT); op++) {
+    ident.mSupportedBlendModes += CompositionOp(op);
+  }
   return ident;
 }
 
