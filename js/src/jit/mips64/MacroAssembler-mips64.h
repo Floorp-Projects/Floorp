@@ -481,8 +481,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void branchTestBooleanTruthy(bool b, const ValueOperand& operand, Label* label);
 
-    inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
-
     // higher level tag testing code
     Address ToPayload(Address value) {
         return value;

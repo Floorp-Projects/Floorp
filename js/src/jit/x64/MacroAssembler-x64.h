@@ -545,11 +545,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return jumpWithPatch(label);
     }
 
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        subq(imm, lhs);
-        j(cond, label);
-    }
-
     void movePtr(Register src, Register dest) {
         movq(src, dest);
     }

@@ -1351,11 +1351,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(imm.value));
-        B(cond, label);
-    }
-
     void branchTestUndefined(Condition cond, Register tag, Label* label) {
         Condition c = testUndefined(cond, tag);
         B(label, c);
