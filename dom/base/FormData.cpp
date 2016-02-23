@@ -125,7 +125,7 @@ FormData::Append(const nsAString& aName, Blob& aBlob,
     return;
   }
 
-  AddNameBlobOrNullPair(aName, file);
+  AddNameBlobPair(aName, file);
 }
 
 void
@@ -179,18 +179,12 @@ FormData::Has(const nsAString& aName)
 }
 
 nsresult
-FormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
+FormData::AddNameBlobPair(const nsAString& aName, Blob* aBlob)
 {
-  RefPtr<File> file;
-
-  if (!aBlob) {
-    FormDataTuple* data = mFormData.AppendElement();
-    SetNameValuePair(data, aName, EmptyString(), true /* aWasNullBlob */);
-    return NS_OK;
-  }
+  MOZ_ASSERT(aBlob);
 
   ErrorResult rv;
-  file = GetOrCreateFileCalledBlob(*aBlob, rv);
+  RefPtr<File> file = GetOrCreateFileCalledBlob(*aBlob, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
@@ -275,12 +269,10 @@ FormData::GetValueAtIndex(uint32_t aIndex) const
 void
 FormData::SetNameValuePair(FormDataTuple* aData,
                            const nsAString& aName,
-                           const nsAString& aValue,
-                           bool aWasNullBlob)
+                           const nsAString& aValue)
 {
   MOZ_ASSERT(aData);
   aData->name = aName;
-  aData->wasNullBlob = aWasNullBlob;
   aData->value.SetAsUSVString() = aValue;
 }
 
@@ -374,16 +366,13 @@ FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
-    if (mFormData[i].wasNullBlob) {
-      MOZ_ASSERT(mFormData[i].value.IsUSVString());
-      fs.AddNameBlobOrNullPair(mFormData[i].name, nullptr);
+    if (mFormData[i].value.IsBlob()) {
+      fs.AddNameBlobPair(mFormData[i].name, mFormData[i].value.GetAsBlob());
     } else if (mFormData[i].value.IsUSVString()) {
       fs.AddNameValuePair(mFormData[i].name,
                           mFormData[i].value.GetAsUSVString());
     } else {
-      MOZ_ASSERT(mFormData[i].value.IsBlob());
-      fs.AddNameBlobOrNullPair(mFormData[i].name,
-                               mFormData[i].value.GetAsBlob());
+      MOZ_CRASH("This should no be possible.");
     }
   }
 
