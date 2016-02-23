@@ -3306,7 +3306,7 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
             defVal = constant(DoubleNaNValue());
         } else {
             MOZ_ASSERT(laneType == MIRType_Float32);
-            defVal = MConstant::NewFloat32(alloc(), GenericNaN());
+            defVal = MConstant::NewFloat32(alloc(), JS::GenericNaN());
             current->add(defVal);
         }
     }
