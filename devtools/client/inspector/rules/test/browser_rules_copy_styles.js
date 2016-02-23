@@ -268,11 +268,8 @@ function* checkCopyStyle(view, node, menuItem, expectedPattern, hidden) {
 
 function* disableProperty(view, index) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[index].editor;
-
-  info("Disabling a property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  let textProp = ruleEditor.rule.textProps[index];
+  yield togglePropStatus(view, textProp);
 }
 
 function checkClipboardData(expectedPattern) {
