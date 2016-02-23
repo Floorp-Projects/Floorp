@@ -462,27 +462,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr);
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr);
 
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
-        movePtr(ptr, ScratchRegister);
-        Label skipJump;
-        ma_b(reg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
-        CodeOffsetJump off = jumpWithPatch(label);
-        bind(&skipJump);
-        return off;
-    }
-
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel* label) {
-        loadPtr(addr, SecondScratchReg);
-        movePtr(ptr, ScratchRegister);
-        Label skipJump;
-        ma_b(SecondScratchReg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
-        CodeOffsetJump off = jumpWithPatch(label);
-        bind(&skipJump);
-        return off;
-    }
-
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(address, dest.fpu());

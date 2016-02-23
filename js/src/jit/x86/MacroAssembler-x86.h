@@ -575,11 +575,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return jumpWithPatch(label);
     }
 
-    template <typename S, typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel* label) {
-        branchPtr(cond, lhs, ptr, label);
-        return CodeOffsetJump(size());
-    }
     void branchPtr(Condition cond, Register lhs, Register rhs, RepatchLabel* label) {
         cmpPtr(lhs, rhs);
         j(cond, label);
