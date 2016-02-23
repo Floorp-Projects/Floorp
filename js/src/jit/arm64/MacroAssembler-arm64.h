@@ -2539,12 +2539,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        adds32(src, dest);
-        branch(cond, label);
-    }
-
-    template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
         subs32(src, dest);
         branch(cond, label);

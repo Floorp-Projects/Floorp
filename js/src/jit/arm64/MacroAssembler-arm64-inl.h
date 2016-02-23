@@ -772,6 +772,14 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     And(dest64, dest64, Operand(0xffffffff));
 }
 
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    adds32(src, dest);
+    branch(cond, label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
