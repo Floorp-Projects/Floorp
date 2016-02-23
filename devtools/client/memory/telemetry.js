@@ -61,10 +61,6 @@ exports.countCensus = makeInfallible(function ({ inverted, filter, diffing, brea
     histogram.add(COARSE_TYPE);
   } else if (breakdown === breakdowns.allocationStack.breakdown) {
     histogram.add(ALLOCATION_STACK);
-  } else if (breakdown === breakdowns.objectClass.breakdown) {
-    histogram.add(OBJECT_CLASS);
-  } else if (breakdown === breakdowns.internalType.breakdown) {
-    histogram.add(INTERNAL_TYPE);
   } else {
     histogram.add(CUSTOM);
   }
@@ -91,8 +87,6 @@ exports.countDominatorTree = makeInfallible(function ({ breakdown }) {
     histogram.add(COARSE_TYPE);
   } else if (breakdown === dominatorTreeBreakdowns.allocationStack.breakdown) {
     histogram.add(ALLOCATION_STACK);
-  } else if (breakdown === dominatorTreeBreakdowns.internalType.breakdown) {
-    histogram.add(INTERNAL_TYPE);
   } else {
     histogram.add(CUSTOM);
   }

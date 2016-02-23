@@ -413,7 +413,7 @@ WebContentConverterRegistrar.prototype = {
     let notificationValue = "Protocol Registration: " + aProtocol;
     let addButton = {
       label: this._getString("addProtocolHandlerAddButton"),
-      accessKey: this._getString("addHandlerAddButtonAccesskey"),
+      accessKey: this._getString("addProtocolHandlerAddButtonAccesskey"),
       protocolInfo: { protocol: aProtocol, uri: uri.spec, name: aTitle },
 
       callback(aNotification, aButtonInfo) {

@@ -9,6 +9,7 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
 
 const Types = require("../types");
 const ResizableViewport = createFactory(require("./resizable-viewport"));
+const ViewportDimension = createFactory(require("./viewport-dimension"));
 
 module.exports = createClass({
 
@@ -38,6 +39,10 @@ module.exports = createClass({
         viewport,
         onResizeViewport,
         onRotateViewport,
+      }),
+      ViewportDimension({
+        viewport,
+        onResizeViewport,
       })
     );
   },

@@ -10,10 +10,10 @@ Services.telemetry.canRecordExtended = true;
 registerCleanupFunction(function() {
   Services.telemetry.canRecordExtended = oldCanRecord;
 });
-const HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_BOOLEAN";
+const HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
 const FLAG_HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG";
 const EXPECTED_TELEMETRY = {
-  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_BOOLEAN": 2,
+  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT": 2,
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG": 1
 };
 
@@ -122,7 +122,7 @@ function checkTelemetry() {
     let histogram = Services.telemetry.getHistogramById(histogramId);
     let snapshot = histogram.snapshot();
 
-    is(snapshot.counts[1], expected,
+    is(snapshot.sum, expected,
       "eyedropper telemetry value correct for " + histogramId);
   }
 }

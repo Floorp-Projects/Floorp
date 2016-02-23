@@ -6440,13 +6440,17 @@ WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
 
   JSAutoCompartment ac(aCx, global);
 
-  if (!JS_DefineDebuggerObject(aCx, global)) {
+  // RegisterDebuggerBindings() can spin a nested event loop so we have to set
+  // mDebuggerScope before calling it, and we have to make sure to unset
+  // mDebuggerScope if it fails.
+  mDebuggerScope = Move(globalScope);
+
+  if (!RegisterDebuggerBindings(aCx, global)) {
+    mDebuggerScope = nullptr;
     return nullptr;
   }
 
   JS_FireOnNewGlobalObject(aCx, global);
-
-  mDebuggerScope = globalScope.forget();
 
   return mDebuggerScope;
 }
