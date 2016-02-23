@@ -20,6 +20,7 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.log import FATAL
 from mozharness.base.python import VirtualenvMixin
 from mozharness.base.script import BaseScript
+from mozharness.mozilla.aws import pop_aws_auth_from_env
 import mozharness
 
 
@@ -27,22 +28,6 @@ def get_hash(content, hash_type="md5"):
     h = hashlib.new(hash_type)
     h.update(content)
     return h.hexdigest()
-
-
-def get_aws_auth():
-    """
-    retrieves aws creds and deletes them from os.environ if present.
-    """
-    aws_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-    aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-
-    if aws_key_id and aws_secret_key:
-        del os.environ['AWS_ACCESS_KEY_ID']
-        del os.environ['AWS_SECRET_ACCESS_KEY']
-    else:
-        exit("could not determine aws credentials from os environment")
-
-    return aws_key_id, aws_secret_key
 
 
 CONFIG_OPTIONS = [
@@ -141,9 +126,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             # Default configuration
             'config': {
                 # base index url where to find taskcluster artifact based on taskid
-                # TODO - find out if we need to support taskcluster run number other than 0.
-                # e.g. maybe we could end up with artifacts in > 'run 0' in a re-trigger situation?
-                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/runs/0/artifacts/public/{subdir}',
+                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/{subdir}',
                 "virtualenv_modules": [
                     "boto",
                     "PyYAML",
@@ -167,6 +150,8 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         # assigned in _post_create_virtualenv
         self.virtualenv_imports = None
         self.bucket = c['buckets']['production'] if c['production'] else c['buckets']['development']
+        if not all(aws_creds):
+            self.fatal('credentials must be passed in env: "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"')
         self.aws_key_id, self.aws_secret_key = aws_creds
         # if excludes is set from command line, use it otherwise use defaults
         self.excludes = self.config.get('excludes', DEFAULT_EXCLUDES)
@@ -339,5 +324,5 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
          return any(re.search(exclude, keyname) for exclude in self.excludes)
 
 if __name__ == '__main__':
-    beet_mover = BeetMover(get_aws_auth())
+    beet_mover = BeetMover(pop_aws_auth_from_env())
     beet_mover.run_and_exit()
