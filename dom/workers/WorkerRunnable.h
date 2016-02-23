@@ -286,8 +286,10 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
+  // If this stops being final, reevaluate the assumptions
+  // MainThreadWorkerSyncRunnable::PostDispatch makes.
   virtual bool
-  DispatchInternal() override;
+  DispatchInternal() override final;
 };
 
 // This runnable is identical to StopSyncLoopRunnable except it is meant to be
@@ -310,8 +312,10 @@ protected:
   { }
 
 private:
+  // If this function stops being final, reevaluate the assumptions PostDispatch
+  // makes.
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override final
   {
     AssertIsOnMainThread();
     return true;
