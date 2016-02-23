@@ -441,6 +441,13 @@ MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* overflo
     }
 }
 
+void
+MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    subPtr(rhs, lhs);
+    branchPtr(cond, lhs, Imm32(0), label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)

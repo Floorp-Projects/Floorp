@@ -834,10 +834,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testStringTruthy(truthy, value);
         ma_b(label, c);
     }
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        ma_sub(imm, lhs, SetCC);
-        as_b(label, cond);
-    }
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
