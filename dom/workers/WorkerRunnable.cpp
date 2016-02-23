@@ -527,7 +527,14 @@ MainThreadStopSyncLoopRunnable::PostDispatch(JSContext* aCx,
                                              WorkerPrivate* aWorkerPrivate,
                                              bool aDispatchResult)
 {
-  MaybeReportMainThreadException(aCx, aDispatchResult);
+  // The only way aDispatchResult can be false here is if either PreDispatch or
+  // DispatchInternal returned false.
+  //
+  // Our PreDispatch always returns true and is final.  We inherit
+  // DispatchInternal from StopSyncLoopRunnable, and that itself is final and
+  // only returns false if dispatch to the syncloop target fails.  So we can
+  // never have a JS exception here.
+  MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
 #ifdef DEBUG
