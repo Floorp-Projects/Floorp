@@ -388,7 +388,9 @@ NetworkResponseListener.prototype = {
 
     if (!response.mimeType || !NetworkHelper.isTextMimeType(response.mimeType)) {
       response.encoding = "base64";
-      response.text = btoa(response.text);
+      try {
+        response.text = btoa(response.text);
+      } catch (err) { }
     }
 
     if (response.mimeType && this.request.contentCharset) {
