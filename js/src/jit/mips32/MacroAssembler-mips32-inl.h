@@ -274,6 +274,13 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(value.typeReg(), ImmType(JSVAL_TYPE_INT32), label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

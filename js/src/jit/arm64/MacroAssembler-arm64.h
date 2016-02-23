@@ -439,30 +439,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return scratch;
     }
 
-    // If source is a double, load into dest.
-    // If source is int32, convert to double and store in dest.
-    // Else, branch to failure.
-    void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure) {
-        Label isDouble, done;
-
-        // TODO: splitTagForTest really should not leak a scratch register.
-        Register tag = splitTagForTest(source);
-        {
-            vixl::UseScratchRegisterScope temps(this);
-            temps.Exclude(ARMRegister(tag, 64));
-
-            branchTestDouble(Assembler::Equal, tag, &isDouble);
-            branchTestInt32(Assembler::NotEqual, tag, failure);
-        }
-
-        convertInt32ToDouble(source.valueReg(), dest);
-        jump(&done);
-
-        bind(&isDouble);
-        unboxDouble(source, dest);
-
-        bind(&done);
-    }
+    inline void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
     void emitSet(Condition cond, Register dest) {
         Cset(ARMRegister(dest, 64), cond);
@@ -1355,8 +1332,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testUndefined(cond, tag);
         B(label, c);
     }
-    void branchTestInt32(Condition cond, Register tag, Label* label) {
-        Condition c = testInt32(cond, tag);
+
+    template<typename T>
+    void branchTestInt32Impl(Condition cond, T& t, Label* label) {
+        Condition c = testInt32(cond, t);
         B(label, c);
     }
     void branchTestDouble(Condition cond, Register tag, Label* label) {
@@ -1390,10 +1369,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void branchTestUndefined(Condition cond, const Address& address, Label* label) {
         Condition c = testUndefined(cond, address);
-        B(label, c);
-    }
-    void branchTestInt32(Condition cond, const Address& address, Label* label) {
-        Condition c = testInt32(cond, address);
         B(label, c);
     }
     void branchTestDouble(Condition cond, const Address& address, Label* label) {
@@ -1431,10 +1406,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testUndefined(cond, src);
         B(label, c);
     }
-    void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testInt32(cond, src);
-        B(label, c);
-    }
     void branchTestBoolean(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testBoolean(cond, src);
         B(label, c);
@@ -1468,10 +1439,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Clobbers the ScratchReg.
     void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) {
         Condition c = testUndefined(cond, address);
-        B(label, c);
-    }
-    void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) {
-        Condition c = testInt32(cond, address);
         B(label, c);
     }
     void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
@@ -1627,20 +1594,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         unboxNonDouble(dest, dest);
     }
 
-    void unboxValue(const ValueOperand& src, AnyRegister dest) {
-        if (dest.isFloat()) {
-            Label notInt32, end;
-            branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            convertInt32ToDouble(src.valueReg(), dest.fpu());
-            jump(&end);
-            bind(&notInt32);
-            unboxDouble(src, dest.fpu());
-            bind(&end);
-        } else {
-            unboxNonDouble(src, dest.gpr());
-        }
+    inline void unboxValue(const ValueOperand& src, AnyRegister dest);
 
-    }
     void unboxString(const ValueOperand& operand, Register dest) {
         unboxNonDouble(operand, dest);
     }

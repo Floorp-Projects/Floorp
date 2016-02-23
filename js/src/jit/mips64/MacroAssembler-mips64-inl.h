@@ -210,6 +210,14 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    splitTag(value, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
