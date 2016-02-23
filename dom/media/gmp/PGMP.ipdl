@@ -36,6 +36,7 @@ child:
   async CrashPluginNow();
   intr StartPlugin();
   async SetNodeId(nsCString nodeId);
+  async PreloadLibs(nsCString libs);
   async CloseActive();
 };
 
