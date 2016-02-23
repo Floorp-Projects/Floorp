@@ -202,6 +202,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_crashtest_e10s.yml
+  firefox-ui:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui.yml
+  firefox-ui-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_e10s.yml
   gaia-build:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
