@@ -1111,7 +1111,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_movs(dest, src);
     }
 
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                     Label* label);
 

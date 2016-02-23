@@ -2328,21 +2328,6 @@ MacroAssemblerMIPSCompat::toggledCall(JitCode* target, bool enabled)
 }
 
 void
-MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                                  Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(ptr != SecondScratchReg);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    asMasm().addPtr(ptr, SecondScratchReg);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                                      Register temp, Label* label)
 {
@@ -2351,7 +2336,7 @@ MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperan
     Label done;
 
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+    asMasm().branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
 }

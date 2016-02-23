@@ -829,6 +829,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     inline CodeOffsetJump branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
 
+    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
     // This function compares a Value (lhs) which is having a private pointer
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;

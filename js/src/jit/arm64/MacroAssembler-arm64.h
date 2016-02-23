@@ -2176,7 +2176,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         storeValue(JSVAL_TYPE_INT32, scratch, dest);
     }
 
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
     void profilerEnterFrame(Register framePtr, Register scratch) {
