@@ -1026,11 +1026,16 @@
 
             if (!aForceUpdate) {
               TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
-              if (!Services.appinfo.browserTabsRemoteAutostart) {
-                // old way of measuring tab paint which is not
-                // valid with e10s.
-                window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
-                                                               .beginTabSwitch();
+              if (!gMultiProcessBrowser) {
+                // old way of measuring tab paint which is not valid with e10s.
+                // Waiting until the next MozAfterPaint ensures that we capture
+                // the time it takes to paint, upload the textures to the compositor,
+                // and then composite.
+                TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_MS");
+                window.addEventListener("MozAfterPaint", function onMozAfterPaint() {
+                  TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_MS");
+                  window.removeEventListener("MozAfterPaint", onMozAfterPaint);
+                });
               }
             }
 
