@@ -2301,8 +2301,8 @@ this.XPIProvider = {
   minCompatiblePlatformVersion: null,
   // A dictionary of the file descriptors for bootstrappable add-ons by ID
   bootstrappedAddons: {},
-  // A dictionary of JS scopes of loaded bootstrappable add-ons by ID
-  bootstrapScopes: {},
+  // A Map of active addons to their bootstrapScope by ID
+  activeAddons: new Map(),
   // True if the platform could have activated extensions
   extensionsActive: false,
   // True if all of the add-ons found during startup were installed in the
@@ -2695,7 +2695,7 @@ this.XPIProvider = {
             // If no scope has been loaded for this add-on then there is no need
             // to shut it down (should only happen when a bootstrapped add-on is
             // pending enable)
-            if (!(id in XPIProvider.bootstrapScopes))
+            if (!XPIProvider.activeAddons.has(id))
               continue;
 
             let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -2757,7 +2757,7 @@ this.XPIProvider = {
     this.cancelAll();
 
     this.bootstrappedAddons = {};
-    this.bootstrapScopes = {};
+    this.activeAddons.clear();
     this.enabledAddons = null;
     this.allAppGlobal = true;
 
@@ -4159,8 +4159,9 @@ this.XPIProvider = {
     if (aWhat != "opened")
       return;
 
-    for (let id of Object.keys(this.bootstrapScopes)) {
-      aConnection.setAddonOptions(id, { global: this.bootstrapScopes[id] });
+    for (let [id, val] of this.activeAddons) {
+      aConnection.setAddonOptions(
+        id, { global: val.bootstrapScope });
     }
   },
 
@@ -4448,9 +4449,13 @@ this.XPIProvider = {
     this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
 
+    this.activeAddons.set(aId, {
+      bootstrapScope: null,
+    });
+    let activeAddon = this.activeAddons.get(aId);
+
     // Locales only contain chrome and can't have bootstrap scripts
     if (aType == "locale") {
-      this.bootstrapScopes[aId] = null;
       return;
     }
 
@@ -4465,7 +4470,7 @@ this.XPIProvider = {
     }
 
     if (!aFile.exists()) {
-      this.bootstrapScopes[aId] =
+      activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: aFile.path,
                                     wantGlobalProperties: ["indexedDB"],
                                     addonId: aId,
@@ -4480,7 +4485,7 @@ this.XPIProvider = {
     else if (aType == "webextension")
       uri = "resource://gre/modules/addons/WebExtensionBootstrap.js"
 
-    this.bootstrapScopes[aId] =
+    activeAddon.bootstrapScope =
       new Cu.Sandbox(principal, { sandboxName: uri,
                                   wantGlobalProperties: ["indexedDB"],
                                   addonId: aId,
@@ -4492,25 +4497,27 @@ this.XPIProvider = {
     try {
       // Copy the reason values from the global object into the bootstrap scope.
       for (let name in BOOTSTRAP_REASONS)
-        this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
+        activeAddon.bootstrapScope[name] = BOOTSTRAP_REASONS[name];
 
       // Add other stuff that extensions want.
       const features = [ "Worker", "ChromeWorker" ];
 
       for (let feature of features)
-        this.bootstrapScopes[aId][feature] = gGlobalScope[feature];
+        activeAddon.bootstrapScope[feature] = gGlobalScope[feature];
 
       // Define a console for the add-on
-      this.bootstrapScopes[aId]["console"] = new ConsoleAPI({ consoleID: "addon/" + aId });
+      activeAddon.bootstrapScope["console"] = new ConsoleAPI(
+        { consoleID: "addon/" + aId });
 
       // As we don't want our caller to control the JS version used for the
       // bootstrap file, we run loadSubScript within the context of the
       // sandbox with the latest JS version set explicitly.
-      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = uri;
+      activeAddon.bootstrapScope.__SCRIPT_URI_SPEC__ = uri;
       Components.utils.evalInSandbox(
         "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
                    .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
-                   .loadSubScript(__SCRIPT_URI_SPEC__);", this.bootstrapScopes[aId], "ECMAv5");
+                   .loadSubScript(__SCRIPT_URI_SPEC__);",
+                   activeAddon.bootstrapScope, "ECMAv5");
     }
     catch (e) {
       logger.warn("Error loading bootstrap.js for " + aId, e);
@@ -4520,7 +4527,8 @@ this.XPIProvider = {
     // initialized as otherwise, when it will be initialized, all addons'
     // globals will be added anyways
     if (this._toolboxProcessLoaded) {
-      BrowserToolboxProcess.setAddonOptions(aId, { global: this.bootstrapScopes[aId] });
+      BrowserToolboxProcess.setAddonOptions(aId,
+        { global: activeAddon.bootstrapScope });
     }
   },
 
@@ -4536,7 +4544,7 @@ this.XPIProvider = {
     // any interpositions for it.
     Cu.setAddonInterposition(aId, null);
 
-    delete this.bootstrapScopes[aId];
+    this.activeAddons.delete(aId);
     delete this.bootstrappedAddons[aId];
     this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
@@ -4582,10 +4590,12 @@ this.XPIProvider = {
 
     try {
       // Load the scope if it hasn't already been loaded
-      if (!(aAddon.id in this.bootstrapScopes)) {
+      let activeAddon = this.activeAddons.get(aAddon.id);
+      if (!activeAddon) {
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
                                 aAddon.multiprocessCompatible || false,
                                 runInSafeMode);
+        activeAddon = this.activeAddons.get(aAddon.id);
       }
 
       // Nothing to call for locales
@@ -4595,8 +4605,7 @@ this.XPIProvider = {
       let method = undefined;
       try {
         method = Components.utils.evalInSandbox(`${aMethod};`,
-                                                this.bootstrapScopes[aAddon.id],
-                                                "ECMAv5");
+          activeAddon.bootstrapScope, "ECMAv5");
       }
       catch (e) {
         // An exception will be caught if the expected method is not defined.
