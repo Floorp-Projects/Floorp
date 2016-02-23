@@ -1,19 +1,21 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* globals getTestActorWithoutToolbox */
 "use strict";
 
 // Test the rule-view content when the inspector gets opened via the page
 // ctx-menu "inspect element"
 
-const CONTENT = '<body style="color:red;">\
-                   <div style="color:blue;">\
-                     <p style="color:green;">\
-                       <span style="color:yellow;">test element</span>\
-                     </p>\
-                   </div>\
-                 </body>';
+const CONTENT = `
+  <body style="color:red;">
+    <div style="color:blue;">
+      <p style="color:green;">
+        <span style="color:yellow;">test element</span>
+      </p>
+    </div>
+  </body>
+`;
 
 const STRINGS = Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
@@ -53,10 +55,12 @@ function checkRuleViewContent({styleDocument}) {
       "The rule's selector is correct");
 
     let propertyNames = [...rule.querySelectorAll(".ruleview-propertyname")];
-    is(propertyNames.length, 1, "There's only one property name, as expected");
+    is(propertyNames.length, 1,
+       "There's only one property name, as expected");
 
     let propertyValues = [...rule.querySelectorAll(".ruleview-propertyvalue")];
-    is(propertyValues.length, 1, "There's only one property value, as expected");
+    is(propertyValues.length, 1,
+       "There's only one property value, as expected");
   }
 }
 
