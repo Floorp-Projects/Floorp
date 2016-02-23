@@ -197,6 +197,16 @@ Proxy::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto, Objec
 }
 
 /* static */ bool
+Proxy::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                              MutableHandleObject proto)
+{
+    MOZ_ASSERT(proxy->hasLazyPrototype());
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->getPrototypeIfOrdinary(cx, proxy, isOrdinary,
+                                                                      proto);
+}
+
+/* static */ bool
 Proxy::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded)
 {
     JS_CHECK_RECURSION(cx, return false);
