@@ -6,10 +6,8 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "React",
-  "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "TabMenuEntry",
-  "devtools/client/aboutdebugging/components/tab-menu-entry", true);
+const React = require("devtools/client/shared/vendor/react");
+const { TabMenuEntry } = require("./tab-menu-entry");
 
 exports.TabMenu = React.createClass({
   displayName: "TabMenu",
