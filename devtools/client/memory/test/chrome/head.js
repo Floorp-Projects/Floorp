@@ -35,6 +35,7 @@ var models = require("devtools/client/memory/models");
 var React = require("devtools/client/shared/vendor/react");
 var ReactDOM = require("devtools/client/shared/vendor/react-dom");
 var Heap = React.createFactory(require("devtools/client/memory/components/heap"));
+var CensusTreeItem = React.createFactory(require("devtools/client/memory/components/census-tree-item"));
 var DominatorTreeComponent = React.createFactory(require("devtools/client/memory/components/dominator-tree"));
 var DominatorTreeItem = React.createFactory(require("devtools/client/memory/components/dominator-tree-item"));
 var Toolbar = React.createFactory(require("devtools/client/memory/components/toolbar"));
@@ -43,6 +44,33 @@ var Toolbar = React.createFactory(require("devtools/client/memory/components/too
 SimpleTest.waitForExplicitFinish();
 
 var noop = () => {};
+
+var TEST_CENSUS_TREE_ITEM_PROPS = Object.freeze({
+  item: Object.freeze({
+    bytes: 10,
+    count: 1,
+    totalBytes: 10,
+    totalCount: 1,
+    name: "foo",
+    children: [
+      Object.freeze({
+        bytes: 10,
+        count: 1,
+        totalBytes: 10,
+        totalCount: 1,
+        name: "bar",
+      })
+    ]
+  }),
+  depth: 0,
+  arrow: ">",
+  focused: true,
+  getPercentBytes: () => 50,
+  getPercentCount: () => 50,
+  showSign: false,
+  onViewSourceInDebugger: noop,
+  inverted: false,
+});
 
 // Counter for mock DominatorTreeNode ids.
 var TEST_NODE_ID_COUNTER = 0;
