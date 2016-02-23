@@ -501,8 +501,12 @@ var removePagesById = Task.async(function*(db, idList) {
   if (idList.length == 0) {
     return;
   }
+  // Note, we are already in a transaction, since callers create it.
   yield db.execute(`DELETE FROM moz_places
                     WHERE id IN ( ${ sqlList(idList) } )`);
+  // Hosts accumulated during the places delete are updated through a trigger
+  // (see nsPlacesTriggers.h).
+  yield db.execute(`DELETE FROM moz_updatehosts_temp`);
 });
 
 /**
