@@ -125,7 +125,7 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp, bool ignore)
     XPT_ASSERT(len > 0);
 
     if (!ignore) {
-        char *ident = (char*)XPT_MALLOC(arena, len + 1u);
+        char *ident = (char*)XPT_CALLOC1(arena, len + 1u);
         if (!ident)
             return PR_FALSE;
 

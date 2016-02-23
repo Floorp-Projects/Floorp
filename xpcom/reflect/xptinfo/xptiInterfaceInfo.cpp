@@ -48,9 +48,10 @@ xptiInterfaceEntry::Create(const char* name, const nsID& iid,
                            xptiTypelibGuts* aTypelib)
 {
     int namelen = strlen(name);
-    return new (XPT_MALLOC(gXPTIStructArena,
-                           sizeof(xptiInterfaceEntry) + namelen))
-        xptiInterfaceEntry(name, namelen, iid, aDescriptor, aTypelib);
+    void* place =
+        XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
+    return new (place) xptiInterfaceEntry(name, namelen, iid, aDescriptor,
+                                          aTypelib);
 }
 
 xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
