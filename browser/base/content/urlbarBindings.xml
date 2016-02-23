@@ -839,12 +839,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="_parseActionUrl">
         <parameter name="aUrl"/>
         <body><![CDATA[
-          if (!aUrl.startsWith("moz-action:"))
+          const MOZ_ACTION_REGEX = /^moz-action:([^,]+),(.*)$/;
+          if (!MOZ_ACTION_REGEX.test(aUrl))
             return null;
 
           // URL is in the format moz-action:ACTION,PARAMS
           // Where PARAMS is a JSON encoded object.
-          let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
+          let [, type, params] = aUrl.match(MOZ_ACTION_REGEX);
 
           let action = {
             type: type,
