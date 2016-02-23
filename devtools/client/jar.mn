@@ -216,6 +216,7 @@ devtools.jar:
     skin/styleeditor.css (themes/styleeditor.css)
     skin/webaudioeditor.css (themes/webaudioeditor.css)
     skin/components-frame.css (themes/components-frame.css)
+    skin/components-h-split-box.css (themes/components-h-split-box.css)
     skin/jit-optimizations.css (themes/jit-optimizations.css)
     skin/images/magnifying-glass.png (themes/images/magnifying-glass.png)
     skin/images/magnifying-glass@2x.png (themes/images/magnifying-glass@2x.png)
