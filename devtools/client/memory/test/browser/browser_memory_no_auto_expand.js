@@ -26,10 +26,19 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   const nameElems = [...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name")];
   is(nameElems.length, 4, "Should get 4 items, one for each coarse type");
-  ok(nameElems.some(e => e.textContent.trim() === "objects"), "One for coarse type 'objects'");
-  ok(nameElems.some(e => e.textContent.trim() === "scripts"), "One for coarse type 'scripts'");
-  ok(nameElems.some(e => e.textContent.trim() === "strings"), "One for coarse type 'strings'");
-  ok(nameElems.some(e => e.textContent.trim() === "other"), "One for coarse type 'other'");
+
+  for (let el of nameElems) {
+    dumpn(`Found ${el.textContent.trim()}`);
+  }
+
+  ok(nameElems.some(e => e.textContent.indexOf("objects") >= 0),
+     "One for coarse type 'objects'");
+  ok(nameElems.some(e => e.textContent.indexOf("scripts") >= 0),
+     "One for coarse type 'scripts'");
+  ok(nameElems.some(e => e.textContent.indexOf("strings") >= 0),
+     "One for coarse type 'strings'");
+  ok(nameElems.some(e => e.textContent.indexOf("other") >= 0),
+     "One for coarse type 'other'");
 
   for (let e of nameElems) {
     is(e.style.marginLeft, "0px",
