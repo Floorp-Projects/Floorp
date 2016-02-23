@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test garbage collection of captured stream (bug 1248229)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="doTest()">
+<video id="v" src="black100x100-aspect3to2.ogv"></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  window.oak = v.mozCaptureStreamUntilEnded();
+  v.mozCaptureStreamUntilEnded();
+  v.play();
+
+  v.onended = function() {
+    info("Got ended.");
+    v.onended = null;
+    SpecialPowers.exactGC(window, function() {
+      info("GC completed.");
+      v.play();
+      SimpleTest.finish();
+    });
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

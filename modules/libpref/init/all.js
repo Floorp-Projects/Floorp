@@ -4782,6 +4782,11 @@ pref("dom.vr.oculus050.enabled", true);
 pref("dom.vr.cardboard.enabled", false);
 // 0 = never; 1 = only if real devices aren't there; 2 = always
 pref("dom.vr.add-test-devices", 0);
+// Pose prediction reduces latency effects by returning future predicted HMD
+// poses to callers of the WebVR API.  This currently only has an effect for
+// Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
+// frame uniformity issues with e10s.
+pref("dom.vr.poseprediction.enabled", false);
 // true = show the VR textures in our compositing output; false = don't.
 // true might have performance impact
 pref("gfx.vr.mirror-textures", false);

@@ -58,40 +58,52 @@ void
 TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  if (aPtr->get()) {
+    mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  }
 }
 
 void
 TraceCallbackFunc::Trace(JSObject** aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
+  if (*aPtr) {
+    mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
+  }
 }
 
 void
 TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(aPtr->getPtr()), aName, aClosure);
+  if (aPtr->getPtr()) {
+    mCallback(JS::GCCellPtr(aPtr->getPtr()), aName, aClosure);
+  }
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  if (aPtr->get()) {
+    mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  }
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSString*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  if (aPtr->get()) {
+    mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  }
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  if (aPtr->get()) {
+    mCallback(JS::GCCellPtr(aPtr->get()), aName, aClosure);
+  }
 }

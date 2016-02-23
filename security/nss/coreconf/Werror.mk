@@ -7,6 +7,7 @@
 
 ifndef CC_IS_GCC
   CC_IS_GCC := $(shell $(CC) -x c -E -Wall -Werror /dev/null >/dev/null 2>&1 && echo 1)
+  # Export CC_IS_GCC to save a shell invocation when recursing.
   export CC_IS_GCC
 endif
 
@@ -16,7 +17,16 @@ ifndef CC_NAME
   else
     CC_NAME := $(notdir $(CC))
   endif
+  # Export CC_NAME to save a shell invocation when recursing.
   export CC_NAME
+endif
+
+ifndef GCC_VERSION
+  ifeq (1,$(CC_IS_GCC))
+    GCC_VERSION := $(subst ., ,$(shell $(CC) -dumpversion || echo x.x.x))
+    # Export GCC_VERSION to save a shell invocation when recursing.
+    export GCC_VERSION
+  endif
 endif
 
 ifndef WARNING_CFLAGS
@@ -55,18 +65,17 @@ ifndef WARNING_CFLAGS
         ifeq ($(CC_NAME),clang)
           # Clang reports its version as an older gcc, but it's OK
           NSS_ENABLE_WERROR = 1
-        else
-          CC_VERSION := $(subst ., ,$(shell $(CC) -dumpversion))
-          ifneq (,$(filter 4.8 4.9,$(word 1,$(CC_VERSION)).$(word 2,$(CC_VERSION))))
+        else ifeq ($(CC_NAME),gcc)
+          ifneq (,$(filter 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
             NSS_ENABLE_WERROR = 1
           endif
-          ifeq (,$(filter 0 1 2 3 4,$(word 1,$(CC_VERSION))))
+          ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
             NSS_ENABLE_WERROR = 1
           endif
-          ifndef NSS_ENABLE_WERROR
-            $(warning Unable to find gcc 4.8 or greater, disabling -Werror)
-            NSS_ENABLE_WERROR = 0
-          endif
+        endif
+        ifndef NSS_ENABLE_WERROR
+          $(warning Unable to find gcc 4.8 or greater, disabling -Werror)
+          NSS_ENABLE_WERROR = 0
         endif
       endif
     endif #ndef NSS_ENABLE_WERROR

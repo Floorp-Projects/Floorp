@@ -50,6 +50,8 @@ OSXVersionToOperatingSystem(uint32_t aOSXVersion)
         return DRIVER_OS_OS_X_10_9;
       case 10:
         return DRIVER_OS_OS_X_10_10;
+      case 11:
+        return DRIVER_OS_OS_X_10_11;
     }
   }
 

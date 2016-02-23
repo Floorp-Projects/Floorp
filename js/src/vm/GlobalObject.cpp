@@ -120,6 +120,12 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
+    // Prohibit collection of allocation metadata. Metadata builders shouldn't
+    // need to observe lazily-constructed prototype objects coming into
+    // existence. And assertions start to fail when the builder itself attempts
+    // an allocation that re-entrantly tries to create the same prototype.
+    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
+
     // There are two different kinds of initialization hooks. One of them is
     // the class js::InitFoo hook, defined in a JSProtoKey-keyed table at the
     // top of this file. The other lives in the ClassSpec for classes that
@@ -178,6 +184,13 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         proto = clasp->spec.createPrototypeHook()(cx, key);
         if (!proto)
             return false;
+
+        // Make sure that creating the prototype didn't recursively resolve our
+        // own constructor. We can't just assert that there's no prototype; OOMs
+        // can result in incomplete resolutions in which the prototype is saved
+        // but not the constructor. So use the same criteria that protects entry
+        // into this function.
+        MOZ_ASSERT(!global->isStandardClassResolved(key));
 
         global->setPrototype(key, ObjectValue(*proto));
     }
@@ -434,6 +447,7 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
     return InitBareBuiltinCtor(cx, global, JSProto_Array) &&
            InitBareBuiltinCtor(cx, global, JSProto_TypedArray) &&
            InitBareBuiltinCtor(cx, global, JSProto_Uint8Array) &&
+           InitBareBuiltinCtor(cx, global, JSProto_Int32Array) &&
            InitBareWeakMapCtor(cx, global) &&
            InitStopIterationClass(cx, global) &&
            InitSelfHostingCollectionIteratorFunctions(cx, global) &&
@@ -743,5 +757,20 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
         return false;
 
     holder->setSlot(shape->slot(), value);
+    return true;
+}
+
+/* static */ bool
+GlobalObject::ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global)
+{
+    if (global->getSlot(MODULE_PROTO).isUndefined()) {
+        MOZ_ASSERT(global->getSlot(IMPORT_ENTRY_PROTO).isUndefined() &&
+                   global->getSlot(EXPORT_ENTRY_PROTO).isUndefined());
+        if (!js::InitModuleClasses(cx, global))
+            return false;
+    }
+    MOZ_ASSERT(global->getSlot(MODULE_PROTO).isObject() &&
+               global->getSlot(IMPORT_ENTRY_PROTO).isObject() &&
+               global->getSlot(EXPORT_ENTRY_PROTO).isObject());
     return true;
 }

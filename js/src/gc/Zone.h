@@ -260,9 +260,6 @@ struct Zone : public JS::shadow::Zone,
   private:
     DebuggerVector* debuggers;
 
-    using LogTenurePromotionQueue = js::Vector<JSObject*, 0, js::SystemAllocPolicy>;
-    LogTenurePromotionQueue awaitingTenureLogging;
-
     void sweepBreakpoints(js::FreeOp* fop);
     void sweepUniqueIds(js::FreeOp* fop);
     void sweepWeakMaps();
@@ -282,14 +279,16 @@ struct Zone : public JS::shadow::Zone,
     DebuggerVector* getDebuggers() const { return debuggers; }
     DebuggerVector* getOrCreateDebuggers(JSContext* cx);
 
-    void enqueueForPromotionToTenuredLogging(JSObject& obj) {
-        MOZ_ASSERT(hasDebuggers());
-        MOZ_ASSERT(!IsInsideNursery(&obj));
-        js::AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!awaitingTenureLogging.append(&obj))
-            oomUnsafe.crash("Zone::enqueueForPromotionToTenuredLogging");
-    }
-    void logPromotionsToTenured();
+    /*
+     * When true, skip calling the metadata callback. We use this:
+     * - to avoid invoking the callback recursively;
+     * - to avoid observing lazy prototype setup (which confuses callbacks that
+     *   want to use the types being set up!);
+     * - to avoid attaching allocation stacks to allocation stack nodes, which
+     *   is silly
+     * And so on.
+     */
+    bool suppressObjectMetadataCallback;
 
     js::gc::ArenaLists arenas;
 

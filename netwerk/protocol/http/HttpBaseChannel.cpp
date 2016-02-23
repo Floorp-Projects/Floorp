@@ -2476,6 +2476,41 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   return shouldIntercept;
 }
 
+void
+HttpBaseChannel::SetLoadGroupUserAgentOverride()
+{
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  nsAutoCString uriScheme;
+  if (uri) {
+    uri->GetScheme(uriScheme);
+  }
+  nsCOMPtr<nsILoadGroupChild> childLoadGroup = do_QueryInterface(mLoadGroup);
+  nsCOMPtr<nsILoadGroup> rootLoadGroup;
+  if (childLoadGroup) {
+    childLoadGroup->GetRootLoadGroup(getter_AddRefs(rootLoadGroup));
+  }
+  if (rootLoadGroup && !uriScheme.EqualsLiteral("file")) {
+    nsAutoCString ua;
+    if (nsContentUtils::IsNonSubresourceRequest(this)) {
+      gHttpHandler->OnUserAgentRequest(this);
+      GetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua);
+      rootLoadGroup->SetUserAgentOverrideCache(ua);
+    } else {
+      GetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua);
+      // Don't overwrite the UA if it is already set (eg by an XHR with explicit UA).
+      if (ua.IsEmpty()) {
+        rootLoadGroup->GetUserAgentOverrideCache(ua);
+        SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua, false);
+      }
+    }
+  } else {
+    // If the root loadgroup doesn't exist or if the channel's URI's scheme is "file",
+    // fall back on getting the UA override per channel.
+    gHttpHandler->OnUserAgentRequest(this);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel
 //-----------------------------------------------------------------------------

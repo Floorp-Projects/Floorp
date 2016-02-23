@@ -338,6 +338,42 @@ function received_partial_8(request, data) {
   chan.asyncOpen2(new FailedChannelListener(testFinished, null, CL_EXPECT_LATE_FAILURE));
 }
 
+var case_9_request_no = 0;
+function handler_9(metadata, response) {
+  switch (case_9_request_no) {
+    case 0:
+      do_check_false(metadata.hasHeader("Range"));
+      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("ETag", "W/test9WeakEtag");
+      response.setHeader("Accept-Ranges", "bytes");
+      response.setHeader("Cache-Control", "max-age=360000");
+      response.setHeader("Content-Length", "10");
+      response.processAsync();
+      response.bodyOutputStream.write(simpleBody.slice(0, 4), 4);
+      response.finish(); // truncated response
+      break;
+    case 1:
+      do_check_false(metadata.hasHeader("Range"));
+      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("ETag", "W/test9WeakEtag");
+      response.setHeader("Accept-Ranges", "bytes");
+      response.setHeader("Cache-Control", "max-age=360000");
+      response.setHeader("Content-Length", "10");
+      response.processAsync();
+      response.bodyOutputStream.write(simpleBody, 10);
+      response.finish(); // full response
+      break;
+    default:
+      response.setStatusLine(metadata.httpVersion, 404, "Not Found");
+  }
+  case_9_request_no++;
+}
+function received_partial_9(request, data) {
+  do_check_eq(partial_data_length, data.length);
+  var chan = make_channel("http://localhost:" + port + "/test_9");
+  chan.asyncOpen2(new ChannelListener(received_simple, null));
+}
+
 // Simple mechanism to keep track of tests and stop the server
 var numTestsFinished = 0;
 function testFinished() {
@@ -354,6 +390,7 @@ function run_test() {
   httpserver.registerPathHandler("/test_6", handler_6);
   httpserver.registerPathHandler("/test_7", handler_7);
   httpserver.registerPathHandler("/test_8", handler_8);
+  httpserver.registerPathHandler("/test_9", handler_9);
   httpserver.start(-1);
 
   port = httpserver.identity.primaryPort;
@@ -388,6 +425,10 @@ function run_test() {
   // Case 8: check that mismatched 206 and 200 sizes throw error
   var chan = make_channel("http://localhost:" + port + "/test_8");
   chan.asyncOpen2(new MyListener(received_partial_8));
+
+  // Case 9: check that weak etag is not used for a range request
+  var chan = make_channel("http://localhost:" + port + "/test_9");
+  chan.asyncOpen2(new MyListener(received_partial_9));
 
   do_test_pending();
 }

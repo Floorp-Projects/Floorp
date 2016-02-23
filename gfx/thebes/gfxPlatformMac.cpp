@@ -430,7 +430,8 @@ bool
 gfxPlatformMac::UseAcceleratedSkiaCanvas()
 {
   // Lion or later is required
-  return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseAcceleratedSkiaCanvas();
+  // Bug 1249659 - Lion has some gfx issues so disabled on lion and earlier
+  return nsCocoaFeatures::OnMountainLionOrLater() && gfxPlatform::UseAcceleratedSkiaCanvas();
 }
 
 bool

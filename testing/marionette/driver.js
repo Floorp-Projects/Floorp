@@ -1859,13 +1859,10 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
             "Command 'actionChain' is not available in chrome context");
       }
 
-      let cbs = {};
-      cbs.onSuccess = val => resp.body.value = val;
-      cbs.onError = err => { throw err; };
-
       let win = this.getCurrentWindow();
       let elm = this.curBrowser.elementManager;
-      this.actions.dispatchActions(chain, nextId, {frame: win}, elm, cbs);
+      resp.body.value = yield this.actions.dispatchActions(
+          chain, nextId, {frame: win}, elm);
       break;
 
     case Context.CONTENT:

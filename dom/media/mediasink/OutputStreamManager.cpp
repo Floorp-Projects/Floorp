@@ -25,14 +25,18 @@ OutputStreamData::Init(OutputStreamManager* aOwner, ProcessedMediaStream* aStrea
   mStream = aStream;
 }
 
-void
+bool
 OutputStreamData::Connect(MediaStream* aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mPort, "Already connected?");
-  MOZ_ASSERT(!mStream->IsDestroyed(), "Can't connect a destroyed stream.");
+
+  if (mStream->IsDestroyed()) {
+    return false;
+  }
 
   mPort = mStream->AllocateInputPort(aStream);
+  return true;
 }
 
 bool
@@ -106,8 +110,11 @@ OutputStreamManager::Connect(MediaStream* aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mInputStream = aStream;
-  for (auto&& os : mStreams) {
-    os.Connect(aStream);
+  for (int32_t i = mStreams.Length() - 1; i >= 0; --i) {
+    if (!mStreams[i].Connect(aStream)) {
+      // Probably the DOMMediaStream was GCed. Clean up.
+      mStreams.RemoveElementAt(i);
+    }
   }
 }
 

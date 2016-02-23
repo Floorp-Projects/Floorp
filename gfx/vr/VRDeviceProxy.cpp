@@ -79,11 +79,19 @@ VRDeviceProxy::ZeroSensor()
 }
 
 VRHMDSensorState
-VRDeviceProxy::GetSensorState(double timeOffset)
+VRDeviceProxy::GetSensorState()
 {
   VRManagerChild *vm = VRManagerChild::Get();
   Unused << vm->SendKeepSensorTracking(mDeviceInfo.mDeviceID);
   return mSensorState;
+}
+
+VRHMDSensorState
+VRDeviceProxy::GetImmediateSensorState()
+{
+  // XXX TODO - Need to perform IPC call to get the current sensor
+  // state rather than the predictive state used for the frame rendering.
+  return GetSensorState();
 }
 
 void

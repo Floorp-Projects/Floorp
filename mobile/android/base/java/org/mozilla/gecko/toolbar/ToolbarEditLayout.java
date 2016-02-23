@@ -79,6 +79,8 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
 
     @Override
     public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
         if (HardwareUtils.isTablet()) {
             mSearchIcon.setVisibility(View.VISIBLE);
         }

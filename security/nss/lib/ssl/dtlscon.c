@@ -11,7 +11,7 @@
 #include "sslproto.h"
 
 #ifndef PR_ARRAY_SIZE
-#define PR_ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+#define PR_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
 static SECStatus dtls_TransmitMessageFlight(sslSocket *ss);
@@ -20,10 +20,10 @@ static SECStatus dtls_SendSavedWriteData(sslSocket *ss);
 
 /* -28 adjusts for the IP/UDP header */
 static const PRUint16 COMMON_MTU_VALUES[] = {
-    1500 - 28,  /* Ethernet MTU */
-    1280 - 28,  /* IPv6 minimum MTU */
-    576 - 28,   /* Common assumption */
-    256 - 28    /* We're in serious trouble now */
+    1500 - 28, /* Ethernet MTU */
+    1280 - 28, /* IPv6 minimum MTU */
+    576 - 28,  /* Common assumption */
+    256 - 28   /* We're in serious trouble now */
 };
 
 #define DTLS_COOKIE_BYTES 32
@@ -104,9 +104,9 @@ dtls_DTLSVersionToTLSVersion(SSL3ProtocolVersion dtlsv)
 
 /* On this socket, Disable non-DTLS cipher suites in the argument's list */
 SECStatus
-ssl3_DisableNonDTLSSuites(sslSocket * ss)
+ssl3_DisableNonDTLSSuites(sslSocket *ss)
 {
-    const ssl3CipherSuite * suite;
+    const ssl3CipherSuite *suite;
 
     for (suite = nonDTLSSuites; *suite; ++suite) {
         PORT_CheckSuccess(ssl3_CipherPrefSet(ss, *suite, PR_FALSE));
@@ -190,8 +190,8 @@ dtls_FreeHandshakeMessages(PRCList *list)
  * the state of reassembly (i.e., whether one is in progress). That
  * is carried in recvdHighWater and recvdFragments.
  */
-#define OFFSET_BYTE(o) (o/8)
-#define OFFSET_MASK(o) (1 << (o%8))
+#define OFFSET_BYTE(o) (o / 8)
+#define OFFSET_MASK(o) (1 << (o % 8))
 
 SECStatus
 dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
@@ -229,7 +229,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
         fragment_offset = (buf.buf[6] << 16) | (buf.buf[7] << 8) | buf.buf[8];
         fragment_length = (buf.buf[9] << 16) | (buf.buf[10] << 8) | buf.buf[11];
 
-#define MAX_HANDSHAKE_MSG_LEN 0x1ffff   /* 128k - 1 */
+#define MAX_HANDSHAKE_MSG_LEN 0x1ffff /* 128k - 1 */
         if (message_length > MAX_HANDSHAKE_MSG_LEN) {
             (void)ssl3_DecodeError(ss);
             PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
@@ -263,9 +263,9 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
          * If it's the complete next message we accept it right away.
          * This is the common case for short messages
          */
-        if ((message_seq == ss->ssl3.hs.recvMessageSeq)
-            && (fragment_offset == 0)
-            && (fragment_length == message_length)) {
+        if ((message_seq == ss->ssl3.hs.recvMessageSeq) &&
+            (fragment_offset == 0) &&
+            (fragment_length == message_length)) {
             /* Complete next message. Process immediately */
             ss->ssl3.hs.msg_type = (SSL3HandshakeType)type;
             ss->ssl3.hs.msg_len = message_length;
@@ -287,13 +287,15 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                 /* Do not attempt to process rest of messages in this record */
                 break;
             }
-        } else {
+        }
+        else {
             if (message_seq < ss->ssl3.hs.recvMessageSeq) {
                 /* Case 3: we do an immediate retransmit if we're
                  * in a waiting state*/
                 if (ss->ssl3.hs.rtTimerCb == NULL) {
                     /* Ignore */
-                } else if (ss->ssl3.hs.rtTimerCb ==
+                }
+                else if (ss->ssl3.hs.rtTimerCb ==
                          dtls_RetransmitTimerExpiredCb) {
                     SSL_TRC(30, ("%d: SSL3[%d]: Retransmit detected",
                                  SSL_GETPID(), ss->fd));
@@ -304,24 +306,26 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                      */
                     if ((PR_IntervalNow() - ss->ssl3.hs.rtTimerStarted) >
                         (ss->ssl3.hs.rtTimeoutMs / 4)) {
-                            SSL_TRC(30,
-                            ("%d: SSL3[%d]: Shortcutting retransmit timer",
-                            SSL_GETPID(), ss->fd));
+                        SSL_TRC(30,
+                                ("%d: SSL3[%d]: Shortcutting retransmit timer",
+                                 SSL_GETPID(), ss->fd));
 
-                            /* Cancel the timer and call the CB,
-                             * which re-arms the timer */
-                            dtls_CancelTimer(ss);
-                            dtls_RetransmitTimerExpiredCb(ss);
-                            rv = SECSuccess;
-                            break;
-                        } else {
-                            SSL_TRC(30,
-                            ("%d: SSL3[%d]: We just retransmitted. Ignoring.",
-                            SSL_GETPID(), ss->fd));
-                            rv = SECSuccess;
-                            break;
-                        }
-                } else if (ss->ssl3.hs.rtTimerCb == dtls_FinishedTimerCb) {
+                        /* Cancel the timer and call the CB,
+                         * which re-arms the timer */
+                        dtls_CancelTimer(ss);
+                        dtls_RetransmitTimerExpiredCb(ss);
+                        rv = SECSuccess;
+                        break;
+                    }
+                    else {
+                        SSL_TRC(30,
+                                ("%d: SSL3[%d]: We just retransmitted. Ignoring.",
+                                 SSL_GETPID(), ss->fd));
+                        rv = SECSuccess;
+                        break;
+                    }
+                }
+                else if (ss->ssl3.hs.rtTimerCb == dtls_FinishedTimerCb) {
                     /* Retransmit the messages and re-arm the timer
                      * Note that we are not backing off the timer here.
                      * The spec isn't clear and my reasoning is that this
@@ -336,7 +340,8 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                         return rv;
                     break;
                 }
-            } else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
+            }
+            else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
                 /* Case 2
                  *
                  * Ignore this message. This means we don't handle out of
@@ -345,7 +350,8 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                  *
                  * XXX OK for now. Maybe do something smarter at some point?
                  */
-            } else {
+            }
+            else {
                 /* Case 1
                  *
                  * Buffer the fragment for reassembly
@@ -404,7 +410,8 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                      * fragment */
                     ss->ssl3.hs.recvdHighWater = fragment_offset +
                                                  fragment_length;
-                } else {
+                }
+                else {
                     for (offset = fragment_offset;
                          offset < fragment_offset + fragment_length;
                          offset++) {
@@ -422,7 +429,8 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                     if (ss->ssl3.hs.recvdFragments.buf[OFFSET_BYTE(offset)] &
                         OFFSET_MASK(offset)) {
                         ss->ssl3.hs.recvdHighWater++;
-                    } else {
+                    }
+                    else {
                         break;
                     }
                 }
@@ -455,7 +463,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
         buf.len -= fragment_length;
     }
 
-    origBuf->len = 0;   /* So ssl3_GatherAppDataRecord will keep looping. */
+    origBuf->len = 0; /* So ssl3_GatherAppDataRecord will keep looping. */
 
     /* XXX OK for now. In future handle rv == SECWouldBlock safely in order
      * to deal with asynchronous certificate verification */
@@ -468,8 +476,9 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
  *              dtls_StageHandshakeMessage()
  *              ssl3_SendChangeCipherSpecs()
  */
-SECStatus dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
-    const SSL3Opaque *pIn, PRInt32 nIn)
+SECStatus
+dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
+                  const SSL3Opaque *pIn, PRInt32 nIn)
 {
     SECStatus rv = SECSuccess;
     DTLSQueuedMessage *msg = NULL;
@@ -482,7 +491,8 @@ SECStatus dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
     if (!msg) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         rv = SECFailure;
-    } else {
+    }
+    else {
         PR_APPEND_LINK(&msg->link, &ss->ssl3.hs.lastMessageFlight);
     }
 
@@ -639,7 +649,7 @@ dtls_TransmitMessageFlight(sslSocket *ss)
             sent = ssl3_SendRecord(ss, msg->epoch, msg->type,
                                    msg->data, msg->len,
                                    ssl_SEND_FLAG_FORCE_INTO_BUFFER |
-                                   ssl_SEND_FLAG_USE_EPOCH);
+                                       ssl_SEND_FLAG_USE_EPOCH);
             if (sent != msg->len) {
                 rv = SECFailure;
                 if (sent != -1) {
@@ -649,7 +659,8 @@ dtls_TransmitMessageFlight(sslSocket *ss)
             }
 
             room_left = ss->ssl3.mtu - ss->pendingBuf.len;
-        } else {
+        }
+        else {
             /* The message will not fit, so fragment.
              *
              * XXX OK for now. Arrange to coalesce the last fragment
@@ -699,12 +710,12 @@ dtls_TransmitMessageFlight(sslSocket *ss)
                 /* Offset */
                 fragment[6] = (fragment_offset >> 16) & 0xff;
                 fragment[7] = (fragment_offset >> 8) & 0xff;
-                fragment[8] = (fragment_offset) & 0xff;
+                fragment[8] = (fragment_offset)&0xff;
 
                 /* Fragment length */
                 fragment[9] = (fragment_len >> 16) & 0xff;
                 fragment[10] = (fragment_len >> 8) & 0xff;
-                fragment[11] = (fragment_len) & 0xff;
+                fragment[11] = (fragment_len)&0xff;
 
                 PORT_Memcpy(fragment + 12, content + fragment_offset,
                             fragment_len);
@@ -716,7 +727,7 @@ dtls_TransmitMessageFlight(sslSocket *ss)
                 sent = ssl3_SendRecord(ss, msg->epoch, msg->type,
                                        fragment, fragment_len + 12,
                                        ssl_SEND_FLAG_FORCE_INTO_BUFFER |
-                                       ssl_SEND_FLAG_USE_EPOCH);
+                                           ssl_SEND_FLAG_USE_EPOCH);
                 if (sent != (fragment_len + 12)) {
                     rv = SECFailure;
                     if (sent != -1) {
@@ -752,8 +763,8 @@ dtls_TransmitMessageFlight(sslSocket *ss)
  *
  * Called from dtls_TransmitMessageFlight()
  */
-static
-SECStatus dtls_SendSavedWriteData(sslSocket *ss)
+static SECStatus
+dtls_SendSavedWriteData(sslSocket *ss)
 {
     PRInt32 sent;
 
@@ -784,18 +795,18 @@ SECStatus dtls_SendSavedWriteData(sslSocket *ss)
  * Called from ssl3_SendRecord()
  */
 SECStatus
-dtls_CompressMACEncryptRecord(sslSocket *        ss,
-                              DTLSEpoch          epoch,
-                              PRBool             use_epoch,
-                              SSL3ContentType    type,
-                              const SSL3Opaque * pIn,
-                              PRUint32           contentLen,
-                              sslBuffer        * wrBuf)
+dtls_CompressMACEncryptRecord(sslSocket *ss,
+                              DTLSEpoch epoch,
+                              PRBool use_epoch,
+                              SSL3ContentType type,
+                              const SSL3Opaque *pIn,
+                              PRUint32 contentLen,
+                              sslBuffer *wrBuf)
 {
     SECStatus rv = SECFailure;
-    ssl3CipherSpec *          cwSpec;
+    ssl3CipherSpec *cwSpec;
 
-    ssl_GetSpecReadLock(ss);    /********************************/
+    ssl_GetSpecReadLock(ss); /********************************/
 
     /* The reason for this switch-hitting code is that we might have
      * a flight of records spanning an epoch boundary, e.g.,
@@ -814,7 +825,8 @@ dtls_CompressMACEncryptRecord(sslSocket *        ss,
             cwSpec = ss->ssl3.pwSpec;
         else
             cwSpec = NULL;
-    } else {
+    }
+    else {
         cwSpec = ss->ssl3.cwSpec;
     }
 
@@ -823,10 +835,12 @@ dtls_CompressMACEncryptRecord(sslSocket *        ss,
             rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
                                                PR_FALSE, type, pIn, contentLen,
                                                wrBuf);
-        } else {
+        }
+        else {
             rv = tls13_ProtectRecord(ss, type, pIn, contentLen, wrBuf);
         }
-    } else {
+    }
+    else {
         PR_NOT_REACHED("Couldn't find a cipher spec matching epoch");
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     }
@@ -965,7 +979,7 @@ dtls_SetMTU(sslSocket *ss, PRUint16 advertised)
     }
 
     /* Fallback */
-    ss->ssl3.mtu = COMMON_MTU_VALUES[PR_ARRAY_SIZE(COMMON_MTU_VALUES)-1];
+    ss->ssl3.mtu = COMMON_MTU_VALUES[PR_ARRAY_SIZE(COMMON_MTU_VALUES) - 1];
     SSL_TRC(30, ("Resetting MTU to %d", ss->ssl3.mtu));
 }
 
@@ -976,27 +990,27 @@ dtls_SetMTU(sslSocket *ss, PRUint16 advertised)
 SECStatus
 dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
-    int                 errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
-    SECStatus           rv;
-    PRInt32             temp;
-    SECItem             cookie = {siBuffer, NULL, 0};
-    SSL3AlertDescription desc   = illegal_parameter;
+    int errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
+    SECStatus rv;
+    PRInt32 temp;
+    SECItem cookie = { siBuffer, NULL, 0 };
+    SSL3AlertDescription desc = illegal_parameter;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle hello_verify_request handshake",
-        SSL_GETPID(), ss->fd));
+                SSL_GETPID(), ss->fd));
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     if (ss->ssl3.hs.ws != wait_server_hello) {
         errCode = SSL_ERROR_RX_UNEXPECTED_HELLO_VERIFY_REQUEST;
-        desc    = unexpected_message;
+        desc = unexpected_message;
         goto alert_loser;
     }
 
     /* The version */
     temp = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
     if (temp < 0) {
-        goto loser;     /* alert has been sent */
+        goto loser; /* alert has been sent */
     }
 
     if (temp != SSL_LIBRARY_VERSION_DTLS_1_0_WIRE &&
@@ -1007,23 +1021,22 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     /* The cookie */
     rv = ssl3_ConsumeHandshakeVariable(ss, &cookie, 1, &b, &length);
     if (rv != SECSuccess) {
-        goto loser;     /* alert has been sent */
+        goto loser; /* alert has been sent */
     }
     if (cookie.len > DTLS_COOKIE_BYTES) {
         desc = decode_error;
-        goto alert_loser;       /* malformed. */
+        goto alert_loser; /* malformed. */
     }
 
     PORT_Memcpy(ss->ssl3.hs.cookie, cookie.data, cookie.len);
     ss->ssl3.hs.cookieLen = cookie.len;
 
-
-    ssl_GetXmitBufLock(ss);             /*******************************/
+    ssl_GetXmitBufLock(ss); /*******************************/
 
     /* Now re-send the client hello */
     rv = ssl3_SendClientHello(ss, PR_TRUE);
 
-    ssl_ReleaseXmitBufLock(ss);         /*******************************/
+    ssl_ReleaseXmitBufLock(ss); /*******************************/
 
     if (rv == SECSuccess)
         return rv;
@@ -1127,7 +1140,7 @@ dtls_RecordSetRecvd(DTLSRecvdRecords *records, PRUint64 seq)
 SECStatus
 DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
 {
-    sslSocket * ss = NULL;
+    sslSocket *ss = NULL;
     PRIntervalTime elapsed;
     PRIntervalTime desired;
 
@@ -1147,7 +1160,8 @@ DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
     if (elapsed > desired) {
         /* Timer expired */
         *timeout = PR_INTERVAL_NO_WAIT;
-    } else {
+    }
+    else {
         *timeout = desired - elapsed;
     }
 
@@ -1175,7 +1189,8 @@ dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
 
     if (crSpec->epoch != epoch) {
         SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, received packet "
-                 "from irrelevant epoch %d", SSL_GETPID(), ss->fd, epoch));
+                 "from irrelevant epoch %d",
+                 SSL_GETPID(), ss->fd, epoch));
         return PR_FALSE;
     }
 
@@ -1184,7 +1199,8 @@ dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
 
     if (dtls_RecordGetRecvd(&crSpec->recvdRecords, dtls_seq_num) != 0) {
         SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, rejecting "
-                 "potentially replayed packet", SSL_GETPID(), ss->fd));
+                 "potentially replayed packet",
+                 SSL_GETPID(), ss->fd));
         return PR_FALSE;
     }
 

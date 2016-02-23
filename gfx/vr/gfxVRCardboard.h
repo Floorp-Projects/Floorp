@@ -25,7 +25,8 @@ public:
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar) override;
 
-  VRHMDSensorState GetSensorState(double timeOffset) override;
+  virtual VRHMDSensorState GetSensorState() override;
+  virtual VRHMDSensorState GetImmediateSensorState() override;
   void ZeroSensor() override;
   bool KeepSensorTracking() override;
   void NotifyVsync(const TimeStamp& aVsyncTimestamp) override;

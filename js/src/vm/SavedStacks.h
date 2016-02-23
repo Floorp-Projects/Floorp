@@ -149,7 +149,7 @@ namespace js {
 
 class SavedStacks {
     friend class SavedFrame;
-    friend JSObject* SavedStacksMetadataCallback(JSContext* cx, JSObject* target);
+    friend JSObject* SavedStacksMetadataCallback(JSContext* cx, HandleObject target);
     friend bool JS::ubi::ConstructSavedFrameStackSlow(JSContext* cx,
                                                       JS::ubi::StackFrame& ubiFrame,
                                                       MutableHandleObject outSavedFrameStack);
@@ -300,7 +300,7 @@ class SavedStacks {
     bool getLocation(JSContext* cx, const FrameIter& iter, MutableHandle<LocationValue> locationp);
 };
 
-JSObject* SavedStacksMetadataCallback(JSContext* cx, JSObject* target);
+JSObject* SavedStacksMetadataCallback(JSContext* cx, HandleObject target);
 
 template <>
 class RootedBase<SavedStacks::LocationValue>

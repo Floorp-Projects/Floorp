@@ -4375,7 +4375,10 @@ LIRGenerator::visitSimdShift(MSimdShift* ins)
 
     LUse vector = useRegisterAtStart(ins->lhs());
     LAllocation value = useRegisterOrConstant(ins->rhs());
-    LSimdShift* lir = new(alloc()) LSimdShift(vector, value);
+    // We need a temp register to mask the shift amount, but not if the shift
+    // amount is a constant.
+    LDefinition tempReg = value.isConstant() ? LDefinition::BogusTemp() : temp();
+    LSimdShift* lir = new(alloc()) LSimdShift(vector, value, tempReg);
     defineReuseInput(lir, ins, 0);
 }
 

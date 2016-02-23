@@ -282,7 +282,8 @@ interface nsIMessageSender : nsIMessageListenerManager
   void sendAsyncMessage([optional] in AString messageName,
                         [optional] in jsval obj,
                         [optional] in jsval objects,
-                        [optional] in nsIPrincipal principal);
+                        [optional] in nsIPrincipal principal,
+                        [optional] in jsval transfers);
 };
 
 /**

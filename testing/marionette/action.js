@@ -34,9 +34,6 @@ action.Chain = function(checkForInterrupted) {
   this.mouseEventsOnly = false;
   this.checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-  // callbacks for command completion
-  this.onSuccess = null;
-  this.onError = null;
   if (typeof checkForInterrupted == "function") {
     this.checkForInterrupted = checkForInterrupted;
   } else {
@@ -52,7 +49,6 @@ action.Chain.prototype.dispatchActions = function(
     touchId,
     container,
     elementManager,
-    callbacks,
     touchProvider) {
   // Some touch events code in the listener needs to do ipc, so we can't
   // share this code across chrome/content.
@@ -62,8 +58,6 @@ action.Chain.prototype.dispatchActions = function(
 
   this.elementManager = elementManager;
   let commandArray = elementManager.convertWrappedArguments(args, container);
-  this.onSuccess = callbacks.onSuccess;
-  this.onError = callbacks.onError;
   this.container = container;
 
   if (touchId == null) {
@@ -78,15 +72,12 @@ action.Chain.prototype.dispatchActions = function(
     shiftKey: false,
     ctrlKey: false,
     altKey: false,
-    metaKey: false
+    metaKey: false,
   };
 
-  try {
-    this.actions(commandArray, touchId, 0, keyModifiers);
-  } catch (e) {
-    callbacks.onError(e);
-    this.resetValues();
-  }
+  return new Promise(resolve => {
+    this.actions(commandArray, touchId, 0, keyModifiers, resolve);
+  }).catch(this.resetValues);
 };
 
 /**
@@ -115,10 +106,10 @@ action.Chain.prototype.emitMouseEvent = function(
     modifiers) {
   if (!this.checkForInterrupted()) {
     logger.debug(`Emitting ${type} mouse event ` +
-      `at coordinates (${elClientX}, ${elClientY}) ` +
-      `relative to the viewport, ` +
-      `button: ${button}, ` +
-      `clickCount: ${clickCount}`);
+        `at coordinates (${elClientX}, ${elClientY}) ` +
+        `relative to the viewport, ` +
+        `button: ${button}, ` +
+        `clickCount: ${clickCount}`);
 
     let win = doc.defaultView;
     let domUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -148,8 +139,6 @@ action.Chain.prototype.emitMouseEvent = function(
  * Reset any persisted values after a command completes.
  */
 action.Chain.prototype.resetValues = function() {
-  this.onSuccess = null;
-  this.onError = null;
   this.container = null;
   this.elementManager = null;
   this.touchProvider = null;
@@ -157,15 +146,28 @@ action.Chain.prototype.resetValues = function() {
 };
 
 /**
- * Function to emit touch events for each finger. e.g.
- * finger=[['press', id], ['wait', 5], ['release']] touchId represents
- * the finger id, i keeps track of the current action of the chain
- * keyModifiers is an object keeping track keyDown/keyUp pairs through
- * an action chain.
+ * Emit events for each action in the provided chain.
+ *
+ * To emit touch events for each finger, one might send a [["press", id],
+ * ["wait", 5], ["release"]] chain.
+ *
+ * @param {Array.<Array<?>>} chain
+ *     A multi-dimensional array of actions.
+ * @param {Object.<string, number>} touchId
+ *     Represents the finger ID.
+ * @param {number} i
+ *     Keeps track of the current action of the chain.
+ * @param {Object.<string, boolean>} keyModifiers
+ *     Keeps track of keyDown/keyUp pairs through an action chain.
+ * @param {function(?)} cb
+ *     Called on success.
+ *
+ * @return {Object.<string, number>}
+ *     Last finger ID, or an empty object.
  */
-action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
+action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
   if (i == chain.length) {
-    this.onSuccess(touchId || null);
+    cb(touchId || null);
     this.resetValues();
     return;
   }
@@ -184,15 +186,15 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
     }
   }
 
-  switch(command) {
+  switch (command) {
     case "keyDown":
       event.sendKeyDown(pack[1], keyModifiers, this.container.frame);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "keyUp":
       event.sendKeyUp(pack[1], keyModifiers, this.container.frame);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "click":
@@ -205,7 +207,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
         this.emitMouseEvent(el.ownerDocument, "contextmenu", c.x, c.y,
             button, clickCount, keyModifiers);
       }
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "press":
@@ -230,7 +232,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
       el = this.elementManager.getKnownElement(pack[1], this.container);
       c = this.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "release":
@@ -241,7 +243,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           touchId,
           null,
           keyModifiers);
-      this.actions(chain, null, i, keyModifiers);
+      this.actions(chain, null, i, keyModifiers, cb);
       this.scrolling =  false;
       break;
 
@@ -249,7 +251,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
       el = this.elementManager.getKnownElement(pack[1], this.container);
       c = this.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "moveByOffset":
@@ -260,7 +262,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           touchId,
           null,
           keyModifiers);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
     case "wait":
@@ -277,10 +279,10 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           time = standard;
         }
         this.checkTimer.initWithCallback(
-            () => this.actions(chain, touchId, i, keyModifiers),
+            () => this.actions(chain, touchId, i, keyModifiers, cb),
             time, Ci.nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.actions(chain, touchId, i, keyModifiers);
+        this.actions(chain, touchId, i, keyModifiers, cb);
       }
       break;
 
@@ -292,7 +294,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           touchId,
           null,
           keyModifiers);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       this.scrolling = false;
       break;
 
@@ -304,7 +306,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           touchId,
           null,
           keyModifiers);
-      this.actions(chain, touchId, i, keyModifiers);
+      this.actions(chain, touchId, i, keyModifiers, cb);
       break;
   }
 };

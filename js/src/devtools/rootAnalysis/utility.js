@@ -135,7 +135,7 @@ function readable(fullname)
 function xdbLibrary()
 {
     var lib = ctypes.open(os.getenv('XDB'));
-    return {
+    var api = {
         open: lib.declare("xdb_open", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr),
         min_data_stream: lib.declare("xdb_min_data_stream", ctypes.default_abi, ctypes.int),
         max_data_stream: lib.declare("xdb_max_data_stream", ctypes.default_abi, ctypes.int),
@@ -143,6 +143,12 @@ function xdbLibrary()
         read_entry: lib.declare("xdb_read_entry", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr),
         free_string: lib.declare("xdb_free", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr)
     };
+    try {
+        api.lookup_key = lib.declare("xdb_lookup_key", ctypes.default_abi, ctypes.int, ctypes.char.ptr);
+    } catch (e) {
+        // lookup_key is for development use only and is not strictly necessary.
+    }
+    return api;
 }
 
 function cLibrary()
