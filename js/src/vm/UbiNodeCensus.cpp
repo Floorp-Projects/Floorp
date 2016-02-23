@@ -122,6 +122,60 @@ SimpleCount::report(JSContext* cx, CountBase& countBase, MutableHandleValue repo
 }
 
 
+// A count type that collects all matching nodes in a bucket.
+class BucketCount : public CountType {
+
+    struct Count : CountBase {
+        mozilla::Vector<JS::ubi::Node::Id> ids_;
+
+        explicit Count(BucketCount& count)
+          : CountBase(count),
+            ids_()
+        { }
+    };
+
+  public:
+    explicit BucketCount()
+      : CountType()
+    { }
+
+    void destructCount(CountBase& countBase) override {
+        Count& count = static_cast<Count&>(countBase);
+        count.~Count();
+    }
+
+    CountBasePtr makeCount() override { return CountBasePtr(js_new<Count>(*this)); }
+    void traceCount(CountBase& countBase, JSTracer* trc) final { }
+    bool count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node) override;
+    bool report(JSContext* cx, CountBase& countBase, MutableHandleValue report) override;
+};
+
+bool
+BucketCount::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node)
+{
+    Count& count = static_cast<Count&>(countBase);
+    return count.ids_.append(node.identifier());
+}
+
+bool
+BucketCount::report(JSContext* cx, CountBase& countBase, MutableHandleValue report)
+{
+    Count& count = static_cast<Count&>(countBase);
+
+    size_t length = count.ids_.length();
+    RootedArrayObject arr(cx, NewDenseFullyAllocatedArray(cx, length));
+    if (!arr)
+        return false;
+    arr->ensureDenseInitializedLength(cx, 0, length);
+
+    for (size_t i = 0; i < length; i++)
+        arr->setDenseElement(i, NumberValue(count.ids_[i]));
+
+    report.setObject(*arr);
+    return true;
+}
+
+
 // A type that categorizes nodes by their JavaScript type -- 'objects',
 // 'strings', 'scripts', and 'other' -- and then passes the nodes to child
 // types.
@@ -976,6 +1030,9 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
                                                 ToBoolean(bytesValue)));
         return simple;
     }
+
+    if (StringEqualsAscii(by, "bucket"))
+        return CountTypePtr(js_new<BucketCount>());
 
     if (StringEqualsAscii(by, "objectClass")) {
         CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
