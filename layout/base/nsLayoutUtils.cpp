@@ -299,11 +299,11 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   if (!sIsInitialized) {
     // First run: find the position of "true" in kTextAlignKTable.
     sIndexOfTrueInTextAlignTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_true,
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_unsafe,
                                      nsCSSProps::kTextAlignKTable);
     // First run: find the position of "true" in kTextAlignLastKTable.
     sIndexOfTrueInTextAlignLastTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_true,
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_unsafe,
                                      nsCSSProps::kTextAlignLastKTable);
     sIsInitialized = true;
   }
@@ -312,10 +312,10 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   // depending on whether the pref is enabled vs. disabled.
   MOZ_ASSERT(sIndexOfTrueInTextAlignTable >= 0);
   nsCSSProps::kTextAlignKTable[sIndexOfTrueInTextAlignTable].mKeyword =
-    isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
+    isTextAlignTrueEnabled ? eCSSKeyword_unsafe : eCSSKeyword_UNKNOWN;
   MOZ_ASSERT(sIndexOfTrueInTextAlignLastTable >= 0);
   nsCSSProps::kTextAlignLastKTable[sIndexOfTrueInTextAlignLastTable].mKeyword =
-    isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
+    isTextAlignTrueEnabled ? eCSSKeyword_unsafe : eCSSKeyword_UNKNOWN;
 }
 
 // When the pref "layout.css.float-logical-values.enabled" changes, this
