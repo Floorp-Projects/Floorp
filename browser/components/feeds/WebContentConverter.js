@@ -901,28 +901,6 @@ WebContentConverterRegistrarContent.prototype = {
         // do nothing, the next branch might have values
       }
     }
-
-    // We need to do this _after_ registering all of the available handlers,
-    // so that getWebContentHandlerByURI can return successfully.
-    let autoBranch;
-    try {
-      autoBranch = ps.getBranch(PREF_CONTENTHANDLERS_AUTO);
-    } catch (e) {
-      // No auto branch yet, that's fine
-      //LOG("WCCR.init: There is no auto branch, benign");
-    }
-
-    if (autoBranch) {
-      for (let type of autoBranch.getChildList("")) {
-        let uri = autoBranch.getCharPref(type);
-        if (uri) {
-          let handler = this.getWebContentHandlerByURI(type, uri);
-          if (handler) {
-            this._setAutoHandler(type, handler);
-          }
-        }
-      }
-    }
   },
 
   _typeIsRegistered(contentType, uri) {
