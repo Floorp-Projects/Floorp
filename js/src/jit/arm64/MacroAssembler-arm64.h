@@ -2538,11 +2538,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }
 
-    template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        subs32(src, dest);
-        branch(cond, label);
-    }
     void clampCheck(Register r, Label* handleNotAnInt) {
         MOZ_CRASH("clampCheck");
     }
