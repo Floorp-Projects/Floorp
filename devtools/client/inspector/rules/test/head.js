@@ -485,7 +485,9 @@ function getRuleViewSelectorHighlighterIcon(view, selectorText) {
 
 /**
  * Simulate a color change in a given color picker tooltip, and optionally wait
- * for a given element in the page to have its style changed as a result
+ * for a given element in the page to have its style changed as a result.
+ * Note that this function assumes that the colorpicker popup is already open
+ * and it won't close it after having selected the new color.
  *
  * @param {RuleView} ruleView
  *        The related rule view instance
@@ -515,11 +517,96 @@ var simulateColorPickerChange = Task.async(function*(ruleView, colorPicker,
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
-    yield waitForSuccess(function*() {
-      let {selector, name, value} = expectedChange;
-      return (yield getComputedStyleProperty(selector, null, name)) === value;
-    }, `Color picker change applied on element "${expectedChange.selector}"`);
+    let {selector, name, value} = expectedChange;
+    yield waitForComputedStyleProperty(selector, null, name, value);
   }
+});
+
+/**
+ * Open the color picker popup for a given property in a given rule and
+ * simulate a color change. Optionally wait for a given element in the page to
+ * have its style changed as a result.
+ *
+ * @param {RuleView} view
+ *        The related rule view instance
+ * @param {Number} ruleIndex
+ *        Which rule to target in the rule view
+ * @param {Number} propIndex
+ *        Which property to target in the rule
+ * @param {Array} newRgba
+ *        The new color to be set [r, g, b, a]
+ * @param {Object} expectedChange
+ *        Optional object that needs the following props:
+ *          - {String} selector The selector to the element in the page that
+ *            will have its style changed.
+ *          - {String} name The style name that will be changed
+ *          - {String} value The expected style value
+ * The style will be checked like so: getComputedStyle(element)[name] === value
+ */
+var openColorPickerAndSelectColor = Task.async(function*(view, ruleIndex,
+    propIndex, newRgba, expectedChange) {
+  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  let propEditor = ruleEditor.rule.textProps[propIndex].editor;
+  let swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
+  let cPicker = view.tooltips.colorPicker;
+
+  info("Opening the colorpicker by clicking the color swatch");
+  let onShown = cPicker.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
+
+  yield simulateColorPickerChange(view, cPicker, newRgba, expectedChange);
+
+  return {propEditor, swatch, cPicker};
+});
+
+/**
+ * Open the cubicbezier popup for a given property in a given rule and
+ * simulate a curve change. Optionally wait for a given element in the page to
+ * have its style changed as a result.
+ *
+ * @param {RuleView} view
+ *        The related rule view instance
+ * @param {Number} ruleIndex
+ *        Which rule to target in the rule view
+ * @param {Number} propIndex
+ *        Which property to target in the rule
+ * @param {Array} coords
+ *        The new coordinates to be used, e.g. [0.1, 2, 0.9, -1]
+ * @param {Object} expectedChange
+ *        Optional object that needs the following props:
+ *          - {String} selector The selector to the element in the page that
+ *            will have its style changed.
+ *          - {String} name The style name that will be changed
+ *          - {String} value The expected style value
+ * The style will be checked like so: getComputedStyle(element)[name] === value
+ */
+var openCubicBezierAndChangeCoords = Task.async(function*(view, ruleIndex,
+    propIndex, coords, expectedChange) {
+  let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  let propEditor = ruleEditor.rule.textProps[propIndex].editor;
+  let swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
+  let bezierTooltip = view.tooltips.cubicBezier;
+
+  info("Opening the cubicBezier by clicking the swatch");
+  let onShown = bezierTooltip.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
+
+  let widget = yield bezierTooltip.widget;
+
+  info("Simulating a change of curve in the widget");
+  let onRuleViewChanged = view.once("ruleview-changed");
+  widget.coordinates = coords;
+  yield onRuleViewChanged;
+
+  if (expectedChange) {
+    info("Waiting for the style to be applied on the page");
+    let {selector, name, value} = expectedChange;
+    yield waitForComputedStyleProperty(selector, null, name, value);
+  }
+
+  return {propEditor, swatch, bezierTooltip};
 });
 
 /**
@@ -583,7 +670,7 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
  * @param {String} commitValueWith
  *        Which key should be used to commit the new value. VK_RETURN is used by
  *        default, but tests might want to use another key to test cancelling
- *        for exmple.
+ *        for exemple.
  * @param {Boolean} blurNewProperty
  *        After the new value has been added, a new property would have been
  *        focused. This parameter is true by default, and that causes the new
@@ -641,17 +728,32 @@ var addProperty = Task.async(function*(view, ruleIndex, name, value,
  * @param {TextProperty} textProp
  *        The instance of the TextProperty to be changed
  * @param {String} value
- *        The new value to be used
+ *        The new value to be used. If null is passed, then the value will be
+ *        deleted
+ * @param {Boolean} blurNewProperty
+ *        After the value has been changed, a new property would have been
+ *        focused. This parameter is true by default, and that causes the new
+ *        property to be blurred. Set to false if you don't want this.
  */
-var setProperty = Task.async(function*(view, textProp, value) {
-  let editor = yield focusEditableField(view, textProp.editor.valueSpan);
+var setProperty = Task.async(function*(view, textProp, value,
+                                       blurNewProperty = true) {
+  yield focusEditableField(view, textProp.editor.valueSpan);
 
-  let onRuleViewRefreshed = view.once("ruleview-changed");
-  editor.input.value = value;
+  let onPreview = view.once("ruleview-changed");
+  if (value === null) {
+    EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
+  } else {
+    EventUtils.sendString(value, view.styleWindow);
+  }
+  yield onPreview;
+
+  let onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onRuleViewRefreshed;
+  yield onValueDone;
 
-  view.styleDocument.activeElement.blur();
+  if (blurNewProperty) {
+    view.styleDocument.activeElement.blur();
+  }
 });
 
 /**
@@ -661,8 +763,13 @@ var setProperty = Task.async(function*(view, textProp, value) {
  *        The instance of the rule-view panel
  * @param {TextProperty} textProp
  *        The instance of the TextProperty to be removed
+ * @param {Boolean} blurNewProperty
+ *        After the property has been removed, a new property would have been
+ *        focused. This parameter is true by default, and that causes the new
+ *        property to be blurred. Set to false if you don't want this.
  */
-var removeProperty = Task.async(function*(view, textProp) {
+var removeProperty = Task.async(function*(view, textProp,
+                                          blurNewProperty = true) {
   yield focusEditableField(view, textProp.editor.nameSpan);
 
   let onModifications = view.once("ruleview-changed");
@@ -671,8 +778,9 @@ var removeProperty = Task.async(function*(view, textProp) {
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onModifications;
 
-  // Blur the new property field that was focused by default.
-  view.styleDocument.activeElement.blur();
+  if (blurNewProperty) {
+    view.styleDocument.activeElement.blur();
+  }
 });
 
 /**

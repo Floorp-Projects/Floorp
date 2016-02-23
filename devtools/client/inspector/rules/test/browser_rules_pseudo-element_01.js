@@ -58,7 +58,6 @@ function* testTopLeft(inspector, view) {
   ok(!view.element.firstChild.classList.contains("show-expandable-container"),
      "Pseudo Elements are collapsed by dblclicking");
 
-  let elementRule = rules.elementRules[0];
   let elementRuleView = getRuleViewRuleEditor(view, 3);
 
   let elementFirstLineRule = rules.firstLineRules[0];
@@ -71,10 +70,15 @@ function* testTopLeft(inspector, view) {
      "color: orange",
      "TopLeft firstLine properties are correct");
 
+  let onAdded = view.once("ruleview-changed");
   let firstProp = elementFirstLineRuleView.addProperty("background-color",
     "rgb(0, 255, 0)", "");
+  yield onAdded;
+
+  onAdded = view.once("ruleview-changed");
   let secondProp = elementFirstLineRuleView.addProperty("font-style",
     "italic", "");
+  yield onAdded;
 
   is(firstProp,
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
@@ -83,8 +87,6 @@ function* testTopLeft(inspector, view) {
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
      "Second added property is on back of array");
 
-  yield elementFirstLineRule._applyingModifications;
-
   is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
   is((yield getComputedStyleProperty(id, ":first-line", "font-style")),
@@ -92,25 +94,24 @@ function* testTopLeft(inspector, view) {
   is((yield getComputedStyleProperty(id, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
-  firstProp.setEnabled(false);
-  yield elementFirstLineRule._applyingModifications;
+  yield togglePropStatus(view, firstProp);
 
   is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(255, 0, 0)", "Disabled property should now have been used.");
   is((yield getComputedStyleProperty(id, null, "background-color")),
      "rgb(221, 221, 221)", "Added property should not apply to element");
 
-  firstProp.setEnabled(true);
-  yield elementFirstLineRule._applyingModifications;
+  yield togglePropStatus(view, firstProp);
 
   is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
   is((yield getComputedStyleProperty(id, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
+  onAdded = view.once("ruleview-changed");
   firstProp = elementRuleView.addProperty("background-color",
                                           "rgb(0, 0, 255)", "");
-  yield elementRule._applyingModifications;
+  yield onAdded;
 
   is((yield getComputedStyleProperty(id, null, "background-color")),
      "rgb(0, 0, 255)", "Added property should have been used.");
