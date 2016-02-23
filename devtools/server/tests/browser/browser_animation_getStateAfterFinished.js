@@ -36,14 +36,14 @@ add_task(function*() {
 
   is(players.length, 2, "2 animations remain on the node");
 
-  is(players[0].state.duration, 1000,
+  is(players[0].state.duration, 100000,
      "The duration of the first animation is correct");
   is(players[0].state.delay, 2000,
      "The delay of the first animation is correct");
   is(players[0].state.iterationCount, null,
      "The iterationCount of the first animation is correct");
 
-  is(players[1].state.duration, 3000,
+  is(players[1].state.duration, 300000,
      "The duration of the second animation is correct");
   is(players[1].state.delay, 1000,
      "The delay of the second animation is correct");

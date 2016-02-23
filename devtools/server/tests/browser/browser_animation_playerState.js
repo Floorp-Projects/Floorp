@@ -44,7 +44,7 @@ function* playerStateIsCorrect(walker, animations) {
   let state = yield getAnimationStateForNode(walker, animations,
                                              ".simple-animation", 0);
   is(state.name, "move", "Name is correct");
-  is(state.duration, 2000, "Duration is correct");
+  is(state.duration, 200000, "Duration is correct");
   // null = infinite count
   is(state.iterationCount, null, "Iteration count is correct");
   is(state.playState, "running", "PlayState is correct");
@@ -55,7 +55,7 @@ function* playerStateIsCorrect(walker, animations) {
 
   state = yield getAnimationStateForNode(walker, animations, ".transition", 0);
   is(state.name, "width", "Transition name matches transition property");
-  is(state.duration, 5000, "Transition duration is correct");
+  is(state.duration, 500000, "Transition duration is correct");
   // transitions run only once
   is(state.iterationCount, 1, "Transition iteration count is correct");
   is(state.playState, "running", "Transition playState is correct");
@@ -68,7 +68,7 @@ function* playerStateIsCorrect(walker, animations) {
   state = yield getAnimationStateForNode(walker, animations,
                                          ".multiple-animations", 1);
   is(state.name, "glow", "The 2nd animation's name is correct");
-  is(state.duration, 1000, "The 2nd animation's duration is correct");
+  is(state.duration, 100000, "The 2nd animation's duration is correct");
   is(state.iterationCount, 5, "The 2nd animation's iteration count is correct");
   is(state.playState, "running", "The 2nd animation's playState is correct");
   is(state.playbackRate, 1, "The 2nd animation's playbackRate is correct");
