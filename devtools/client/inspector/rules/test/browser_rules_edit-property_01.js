@@ -36,46 +36,46 @@ add_task(function*() {
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let rule = getRuleViewRuleEditor(view, 1).rule;
   for (let {name, value, isValid} of TEST_DATA) {
-    yield testEditProperty(ruleEditor, name, value, isValid);
+    yield testEditProperty(view, rule, name, value, isValid);
   }
 });
 
-function* testEditProperty(ruleEditor, name, value, isValid) {
+function* testEditProperty(view, rule, name, value, isValid) {
   info("Test editing existing property name/value fields");
 
-  let doc = ruleEditor.doc;
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let doc = rule.editor.doc;
+  let prop = rule.textProps[0];
 
   info("Focusing an existing property name in the rule-view");
-  let editor = yield focusEditableField(ruleEditor.ruleView,
-    propEditor.nameSpan, 32, 1);
+  let editor = yield focusEditableField(view, prop.editor.nameSpan, 32, 1);
 
-  is(inplaceEditor(propEditor.nameSpan), editor,
+  is(inplaceEditor(prop.editor.nameSpan), editor,
     "The property name editor got focused");
   let input = editor.input;
 
   info("Entering a new property name, including : to commit and " +
     "focus the value");
-  let onValueFocus = once(ruleEditor.element, "focus", true);
-  let onModifications = ruleEditor.ruleView.once("ruleview-changed");
+  let onValueFocus = once(rule.editor.element, "focus", true);
+  let onNameDone = view.once("ruleview-changed");
   EventUtils.sendString(name + ":", doc.defaultView);
   yield onValueFocus;
-  yield onModifications;
+  yield onNameDone;
 
   // Getting the value editor after focus
   editor = inplaceEditor(doc.activeElement);
   input = editor.input;
-  is(inplaceEditor(propEditor.valueSpan), editor, "Focus moved to the value.");
+  is(inplaceEditor(prop.editor.valueSpan), editor, "Focus moved to the value.");
 
   info("Entering a new value, including ; to commit and blur the value");
+  let onValueDone = view.once("ruleview-changed");
   let onBlur = once(input, "blur");
   EventUtils.sendString(value + ";", doc.defaultView);
   yield onBlur;
-  yield ruleEditor.rule._applyingModifications;
+  yield onValueDone;
 
-  is(propEditor.isValid(), isValid,
+  is(prop.editor.isValid(), isValid,
     value + " is " + isValid ? "valid" : "invalid");
 
   info("Checking that the style property was changed on the content page");
@@ -90,10 +90,4 @@ function* testEditProperty(ruleEditor, name, value, isValid) {
   } else {
     isnot(propValue, value, name + " shouldn't have been set.");
   }
-
-  info("Wait for remaining modifications to be applied");
-  yield ruleEditor.rule._applyingModifications;
-
-  is(ruleEditor.rule._applyingModifications, null,
-    "Reference to rule modification promise was removed after completion");
 }

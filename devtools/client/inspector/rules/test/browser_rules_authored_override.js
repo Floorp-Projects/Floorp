@@ -42,8 +42,7 @@ add_task(function* () {
     is(prop.overridden, i !== 2, "check overridden for " + i);
   }
 
-  rule.textProps[2].setEnabled(false);
-  yield rule._applyingModifications;
+  yield togglePropStatus(view, rule.textProps[2]);
 
   // Now the first property should be active.
   for (let i = 0; i < 3; ++i) {
