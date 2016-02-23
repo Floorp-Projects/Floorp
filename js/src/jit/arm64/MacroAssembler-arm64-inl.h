@@ -868,6 +868,30 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    branchTestInt32Impl(cond, src, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -933,6 +957,49 @@ void
 MacroAssemblerCompat::branchTestStackPtr(Condition cond, T t, Label* label)
 {
     asMasm().branchTestPtr(cond, getStackPointer(), t, label);
+}
+
+// If source is a double, load into dest.
+// If source is int32, convert to double and store in dest.
+// Else, branch to failure.
+void
+MacroAssemblerCompat::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+
+    // TODO: splitTagForTest really should not leak a scratch register.
+    Register tag = splitTagForTest(source);
+    {
+        vixl::UseScratchRegisterScope temps(this);
+        temps.Exclude(ARMRegister(tag, 64));
+
+        branchTestDouble(Assembler::Equal, tag, &isDouble);
+        asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    }
+
+    convertInt32ToDouble(source.valueReg(), dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
+}
+
+void
+MacroAssemblerCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
+{
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.valueReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        unboxNonDouble(src, dest.gpr());
+    }
 }
 
 } // namespace jit

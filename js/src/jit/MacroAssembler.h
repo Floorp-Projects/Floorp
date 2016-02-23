@@ -918,6 +918,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
+    inline void branchTestInt32(Condition cond, Register tag, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTestInt32(Condition cond, const Address& address, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) PER_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
@@ -1028,15 +1036,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             moveDouble(ReturnDoubleReg, reg);
     }
 
-    void storeCallResultValue(AnyRegister dest) {
-#if defined(JS_NUNBOX32)
-        unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);
-#elif defined(JS_PUNBOX64)
-        unboxValue(ValueOperand(JSReturnReg), dest);
-#else
-#error "Bad architecture"
-#endif
-    }
+    inline void storeCallResultValue(AnyRegister dest);
 
     void storeCallResultValue(ValueOperand dest) {
 #if defined(JS_NUNBOX32)
@@ -1067,12 +1067,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResultValue(TypedOrValueRegister dest) {
-        if (dest.hasValue())
-            storeCallResultValue(dest.valueReg());
-        else
-            storeCallResultValue(dest.typedReg());
-    }
+    inline void storeCallResultValue(TypedOrValueRegister dest);
 
     template <typename T>
     Register extractString(const T& source, Register scratch) {
