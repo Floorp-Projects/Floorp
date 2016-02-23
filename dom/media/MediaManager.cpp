@@ -2052,6 +2052,17 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       RemoveFromWindowList(windowID, listener);
       return NS_OK;
     }
+  } else if (loop) {
+    // Record that we gave Loop permission to use camera access.
+    nsCOMPtr<nsIPermissionManager> permManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = permManager->Add(docURI, "camera",
+                          nsIPermissionManager::ALLOW_ACTION,
+                          nsIPermissionManager::EXPIRE_SESSION,
+                          0);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
