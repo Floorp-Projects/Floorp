@@ -4322,9 +4322,7 @@ nsDisplayMixBlendMode::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   CompositionOp op =
     nsCSSRendering::GetGFXBlendMode(mFrame->StyleDisplay()->mMixBlendMode);
-  return aManager->SupportsMixBlendMode(op)
-       ? LAYER_ACTIVE
-       : LAYER_INACTIVE;
+  return LAYER_ACTIVE;
 }
 
 // nsDisplayMixBlendMode uses layers for rendering
@@ -4428,10 +4426,7 @@ nsDisplayBlendContainer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  if (mCanBeActive && aManager->SupportsMixBlendModes(mContainedBlendModes)) {
-    return mozilla::LAYER_ACTIVE;
-  }
-  return mozilla::LAYER_INACTIVE;
+  return mCanBeActive ? mozilla::LAYER_ACTIVE : mozilla::LAYER_INACTIVE;
 }
 
 bool nsDisplayBlendContainer::TryMerge(nsDisplayItem* aItem) {
@@ -4928,9 +4923,7 @@ nsDisplayScrollInfoLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     // building, we encountered a mix blend mode. If our layer manager
     // supports compositing this mix blend mode, we don't actually need to
     // create a scroll info layer.
-    if (aManager->SupportsMixBlendModes(mContainedBlendModes)) {
-      return nullptr;
-    }
+    return nullptr;
   }
 
   ContainerLayerParameters params = aContainerParameters;
