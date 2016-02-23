@@ -217,17 +217,38 @@ enum XPTTypeDescriptorTags {
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
-    uint8_t argnum;               // used for TD_ARRAY, TD_PSTRING_SIZE_IS,
-                                  // TD_PWSTRING_SIZE_IS, TD_INTERFACE_IS_TYPE
 
-    // This field exists (for the appropriate types) in the on-disk format. But
-    // it isn't used so we don't allocated space for it in memory.
-    //uint8_t argnum2;
-
+    // The memory layout here doesn't exactly match (for the appropriate types)
+    // the on-disk format. This is to save memory.
     union {
-        uint16_t iface;           // used for TD_INTERFACE_TYPE
-        uint16_t additional_type; // used for TD_ARRAY
-    } type;
+        // Used for TD_INTERFACE_IS_TYPE.
+        struct {
+            uint8_t argnum;
+        } interface_is;
+
+        // Used for TD_PSTRING_SIZE_IS, TD_PWSTRING_SIZE_IS.
+        struct {
+            uint8_t argnum;
+            //uint8_t argnum2;          // Present on disk, omitted here.
+        } pstring_is;
+
+        // Used for TD_ARRAY.
+        struct {
+            uint8_t argnum;
+            //uint8_t argnum2;          // Present on disk, omitted here.
+            uint8_t additional_type;    // uint16_t on disk, uint8_t here;
+                                        // in practice it never exceeds 20.
+        } array;
+
+        // Used for TD_INTERFACE_TYPE.
+        struct {
+            // We store the 16-bit iface value as two 8-bit values in order to
+            // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
+            // reduces its size and also the size of XPTParamDescriptor.
+            uint8_t iface_hi8;
+            uint8_t iface_lo8;
+        } iface;
+    } u;
 };
 
 /*
