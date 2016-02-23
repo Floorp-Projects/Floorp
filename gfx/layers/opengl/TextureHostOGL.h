@@ -374,7 +374,7 @@ public:
 
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> const mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
@@ -419,7 +419,7 @@ public:
   virtual const char* Name() { return "SurfaceTextureHost"; }
 
 protected:
-  mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> const mSurfTex;
   const gfx::IntSize mSize;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
