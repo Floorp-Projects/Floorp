@@ -295,7 +295,6 @@ StructuredCloneHolder::Read(nsISupports* aParent,
 {
   MOZ_ASSERT_IF(mSupportedContext == SameProcessSameThread,
                 mCreationThread == NS_GetCurrentThread());
-  MOZ_ASSERT(aParent);
 
   mozilla::AutoRestore<nsISupports*> guard(mParent);
   mParent = aParent;
@@ -1045,11 +1044,9 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];
 
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
-
     ErrorResult rv;
     RefPtr<MessagePort> port =
-      MessagePort::Create(global, portIdentifier, rv);
+      MessagePort::Create(mParent, portIdentifier, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return false;
     }

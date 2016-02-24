@@ -13,14 +13,14 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
-#include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
+#include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MessageChannel, mGlobal, mPort1, mPort2)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MessageChannel, mWindow, mPort1, mPort2)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MessageChannel)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MessageChannel)
 
@@ -29,10 +29,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MessageChannel::MessageChannel(nsIGlobalObject* aGlobal)
-  : mGlobal(aGlobal)
+MessageChannel::MessageChannel(nsPIDOMWindowInner* aWindow)
+  : mWindow(aWindow)
 {
-  MOZ_ASSERT(aGlobal);
 }
 
 MessageChannel::~MessageChannel()
@@ -48,15 +47,14 @@ MessageChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 /* static */ already_AddRefed<MessageChannel>
 MessageChannel::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  return Constructor(global, aRv);
+  // window can be null in workers.
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+  return Constructor(window, aRv);
 }
 
 /* static */ already_AddRefed<MessageChannel>
-MessageChannel::Constructor(nsIGlobalObject* aGlobal, ErrorResult& aRv)
+MessageChannel::Constructor(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
-  MOZ_ASSERT(aGlobal);
-
   nsID portUUID1;
   aRv = nsContentUtils::GenerateUUIDInPlace(portUUID1);
   if (aRv.Failed()) {
@@ -69,14 +67,14 @@ MessageChannel::Constructor(nsIGlobalObject* aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<MessageChannel> channel = new MessageChannel(aGlobal);
+  RefPtr<MessageChannel> channel = new MessageChannel(aWindow);
 
-  channel->mPort1 = MessagePort::Create(aGlobal, portUUID1, portUUID2, aRv);
+  channel->mPort1 = MessagePort::Create(aWindow, portUUID1, portUUID2, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  channel->mPort2 = MessagePort::Create(aGlobal, portUUID2, portUUID1, aRv);
+  channel->mPort2 = MessagePort::Create(aWindow, portUUID2, portUUID1, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
