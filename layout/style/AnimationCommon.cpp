@@ -188,15 +188,6 @@ AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
 }
 
 void
-AnimationCollection::Tick()
-{
-  for (size_t animIdx = 0, animEnd = mAnimations.Length();
-       animIdx != animEnd; animIdx++) {
-    mAnimations[animIdx]->Tick();
-  }
-}
-
-void
 AnimationCollection::UpdateCheckGeneration(
   nsPresContext* aPresContext)
 {
