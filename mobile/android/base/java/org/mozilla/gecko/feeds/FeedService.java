@@ -16,6 +16,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.feeds.action.CheckAction;
 import org.mozilla.gecko.feeds.action.EnrollAction;
 import org.mozilla.gecko.feeds.action.SubscribeAction;
+import org.mozilla.gecko.feeds.action.WithdrawAction;
 import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
 import org.mozilla.gecko.util.Experiments;
 
@@ -28,6 +29,7 @@ public class FeedService extends IntentService {
     public static final String ACTION_SUBSCRIBE = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.SUBSCRIBE";
     public static final String ACTION_CHECK = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.CHECK";
     public static final String ACTION_ENROLL = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.ENROLL";
+    public static final String ACTION_WITHDRAW = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.WITHDRAW";
 
     public static void subscribe(Context context, String guid, String feedUrl) {
         Intent intent = new Intent(context, FeedService.class);
@@ -72,6 +74,10 @@ public class FeedService extends IntentService {
 
             case ACTION_ENROLL:
                 new EnrollAction(this).perform();
+                break;
+
+            case ACTION_WITHDRAW:
+                new WithdrawAction(this, storage).perform();
                 break;
 
             default:
