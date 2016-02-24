@@ -778,3 +778,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY eol_notification_title2 "&brandShortName; will no longer update">
 <!ENTITY eol_notification_summary "Tap to learn more">
+
+<!-- LOCALIZATION NOTE (whatsnew_notification_title, whatsnew_notification_summary): These strings
+     are used for a system notification that's shown to users after the app updates. -->
+<!ENTITY whatsnew_notification_title "&brandShortName; is up to date">
+<!ENTITY whatsnew_notification_summary "Find out what\'s new in this version">
