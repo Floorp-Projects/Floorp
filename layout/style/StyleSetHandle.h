@@ -75,7 +75,7 @@ public:
     ServoStyleSet* AsServo()
     {
       MOZ_ASSERT(IsServo());
-      return reinterpret_cast<ServoStyleSet*>(mValue);
+      return reinterpret_cast<ServoStyleSet*>(mValue & ~SERVO_BIT);
     }
 
     nsStyleSet* GetAsGecko() { return IsGecko() ? AsGecko() : nullptr; }
