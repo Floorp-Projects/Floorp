@@ -22,6 +22,7 @@ class Element;
 class CSSStyleSheet;
 class ServoStyleSheet;
 } // namespace mozilla
+class nsIDocument;
 class nsStyleContext;
 class nsPresContext;
 struct TreeMatchContext;
@@ -35,6 +36,8 @@ namespace mozilla {
 class ServoStyleSet
 {
 public:
+  ServoStyleSet();
+
   void Init(nsPresContext* aPresContext);
   void BeginShutdown();
   void Shutdown();
@@ -105,6 +108,9 @@ public:
                                        mozilla::CSSPseudoElementType aPseudoType,
                                        dom::Element* aPseudoElement,
                                        EventStates aStateMask);
+
+private:
+  int32_t mBatching;
 };
 
 } // namespace mozilla

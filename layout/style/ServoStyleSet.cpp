@@ -11,28 +11,30 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+ServoStyleSet::ServoStyleSet()
+  : mBatching(0)
+{
+}
+
 void
 ServoStyleSet::Init(nsPresContext* aPresContext)
 {
-  MOZ_CRASH("stylo: not implemented");
 }
 
 void
 ServoStyleSet::BeginShutdown()
 {
-  MOZ_CRASH("stylo: not implemented");
 }
 
 void
 ServoStyleSet::Shutdown()
 {
-  MOZ_CRASH("stylo: not implemented");
 }
 
 bool
 ServoStyleSet::GetAuthorStyleDisabled() const
 {
-  MOZ_CRASH("stylo: not implemented");
+  return false;
 }
 
 nsresult
@@ -44,13 +46,19 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 void
 ServoStyleSet::BeginUpdate()
 {
-  MOZ_CRASH("stylo: not implemented");
+  ++mBatching;
 }
 
 nsresult
 ServoStyleSet::EndUpdate()
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(mBatching > 0);
+  if (--mBatching > 0) {
+    return NS_OK;
+  }
+
+  // ... do something ...
+  return NS_OK;
 }
 
 // resolve a style context
