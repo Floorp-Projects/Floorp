@@ -3822,12 +3822,7 @@ this.XPIProvider = {
     let oldAddon = yield new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
     if (oldAddon) {
-      if (oldAddon.location == KEY_APP_TEMPORARY) {
-        logger.warn("temporary add-on already installed:", addon.id);
-        throw new Error("Add-on with ID " + oldAddon.id + " is already"
-                        + " temporarily installed");
-      }
-      else if (!oldAddon.bootstrap) {
+      if (!oldAddon.bootstrap) {
         logger.warn("Non-restartless Add-on is already installed", addon.id);
         throw new Error("Non-restartless add-on with ID "
                         + oldAddon.id + " is already installed");

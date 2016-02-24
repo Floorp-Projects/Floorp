@@ -66,6 +66,7 @@ const Census = module.exports = createClass({
           getPercentBytes,
           getPercentCount,
           showSign: !!diffing,
+          inverted: census.inverted,
         }),
       getRoots: () => report.children || [],
       getKey: node => node.id,

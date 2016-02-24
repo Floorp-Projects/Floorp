@@ -13,6 +13,7 @@ add_task(function* () {
   yield new Promise(resolve => {
     let options = {"set": [
       ["devtools.chrome.enabled", false],
+      ["devtools.debugger.remote-enabled", false],
     ]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
