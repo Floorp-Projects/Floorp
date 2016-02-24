@@ -252,13 +252,15 @@ public:
       return BackendTypeBit(aType) & mContentBackendBitmask;
     }
 
-    /// This function also lets us know if the current preferences/platform
+    /// This function lets us know if the current preferences/platform
     /// combination allows for both accelerated and not accelerated canvas
     /// implementations.  If it does, and other relevant preferences are
     /// asking for it, we will examine the commands in the first few seconds
     /// of the canvas usage, and potentially change to accelerated or
     /// non-accelerated canvas.
-    virtual bool UseAcceleratedCanvas();
+    virtual bool HaveChoiceOfHWAndSWCanvas();
+
+    virtual bool UseAcceleratedSkiaCanvas();
     virtual void InitializeSkiaCacheLimits();
 
     /// These should be used instead of directly accessing the preference,
@@ -269,7 +271,7 @@ public:
 
     virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
-      aObj.DefineProperty("AzureCanvasAccelerated", UseAcceleratedCanvas());
+      aObj.DefineProperty("AzureSkiaAccelerated", UseAcceleratedSkiaCanvas());
       aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
       aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
     }
