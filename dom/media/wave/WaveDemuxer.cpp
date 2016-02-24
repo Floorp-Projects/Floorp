@@ -427,7 +427,8 @@ WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const
   if (!mSamplesPerSecond) {
     return TimeUnit();
   }
-  const double usPerDataChunk = USECS_PER_S * mSamplesPerChunk /
+  const double usPerDataChunk = USECS_PER_S *
+                                static_cast<double>(mSamplesPerChunk) /
                                 mSamplesPerSecond;
   return TimeUnit::FromMicroseconds(aNumDataChunks * usPerDataChunk);
 }
