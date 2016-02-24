@@ -11,7 +11,7 @@ function test() {
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
-      URL: TESTROOT + "unsigned.xpi",
+      URL: TESTROOT + "amosigned.xpi",
       Hash: "sha1:643b08418599ddbd1ea8a511c90696578fb844b9",
       toString: function() { return this.URL; }
     }
