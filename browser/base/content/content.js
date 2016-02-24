@@ -100,6 +100,7 @@ var handleContentContextMenu = function (event) {
 
   let doc = event.target.ownerDocument;
   let docLocation = doc.mozDocumentURIIfNotForErrorPages;
+  docLocation = docLocation && docLocation.spec;
   let charSet = doc.characterSet;
   let baseURI = doc.baseURI;
   let referrer = doc.referrer;
