@@ -379,6 +379,11 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
+    @Override
+    public boolean hasBookmarkWithGuid(ContentResolver cr, String guid) {
+        return false;
+    }
+
     public void setSuggestedSites(SuggestedSites suggestedSites) {
         this.suggestedSites = suggestedSites;
     }
