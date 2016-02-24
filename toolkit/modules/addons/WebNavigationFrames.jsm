@@ -97,8 +97,6 @@ function findFrame(windowId, rootDocShell) {
 }
 
 var WebNavigationFrames = {
-  iterateDocShellTree,
-
   getFrame(docShell, frameId) {
     if (frameId == 0) {
       return convertDocShellToFrameDetail(docShell);

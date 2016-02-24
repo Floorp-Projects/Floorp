@@ -345,6 +345,7 @@
       },
       {
         "name": "onHistoryStateUpdated",
+        "unsupported": true,
         "type": "function",
         "description": "Fired when the frame's history was updated to a new URL. All future events for that frame will use the updated URL.",
         "filters": [
