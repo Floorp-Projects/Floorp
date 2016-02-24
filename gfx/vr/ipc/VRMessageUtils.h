@@ -16,57 +16,15 @@
 namespace IPC {
 
 template<>
-struct ParamTraits<mozilla::gfx::VRHMDType> :
-  public ContiguousEnumSerializer<mozilla::gfx::VRHMDType,
-                                  mozilla::gfx::VRHMDType(0),
-                                  mozilla::gfx::VRHMDType(mozilla::gfx::VRHMDType::NumHMDTypes)> {};
+struct ParamTraits<mozilla::gfx::VRDisplayType> :
+  public ContiguousEnumSerializer<mozilla::gfx::VRDisplayType,
+                                  mozilla::gfx::VRDisplayType(0),
+                                  mozilla::gfx::VRDisplayType(mozilla::gfx::VRDisplayType::NumVRDisplayTypes)> {};
 
 template<>
 struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags> :
   public BitFlagsEnumSerializer<mozilla::gfx::VRDisplayCapabilityFlags,
                                 mozilla::gfx::VRDisplayCapabilityFlags::Cap_All> {};
-
-template <>
-struct ParamTraits<mozilla::gfx::VRDisplayUpdate>
-{
-  typedef mozilla::gfx::VRDisplayUpdate paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mDeviceInfo);
-    WriteParam(aMsg, aParam.mSensorState);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &(aResult->mDeviceInfo)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mSensorState))) {
-      return false;
-    }
-    return true;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::gfx::VRSensorUpdate>
-{
-  typedef mozilla::gfx::VRSensorUpdate paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mDeviceID);
-    WriteParam(aMsg, aParam.mSensorState);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &(aResult->mDeviceID)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mSensorState))) {
-      return false;
-    }
-    return true;
-  }
-};
 
 template <>
 struct ParamTraits<mozilla::gfx::VRDisplayInfo>
@@ -76,38 +34,32 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mType);
-    WriteParam(aMsg, aParam.mDeviceID);
-    WriteParam(aMsg, aParam.mDeviceName);
+    WriteParam(aMsg, aParam.mDisplayID);
+    WriteParam(aMsg, aParam.mDisplayName);
     WriteParam(aMsg, aParam.mCapabilityFlags);
     WriteParam(aMsg, aParam.mEyeResolution);
-    WriteParam(aMsg, aParam.mScreenRect);
-    WriteParam(aMsg, aParam.mIsFakeScreen);
+    WriteParam(aMsg, aParam.mIsConnected);
+    WriteParam(aMsg, aParam.mIsPresenting);
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
-      WriteParam(aMsg, aParam.mMaximumEyeFOV[i]);
-      WriteParam(aMsg, aParam.mRecommendedEyeFOV[i]);
       WriteParam(aMsg, aParam.mEyeFOV[i]);
       WriteParam(aMsg, aParam.mEyeTranslation[i]);
-      WriteParam(aMsg, aParam.mEyeProjectionMatrix[i]);
     }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &(aResult->mType)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mDeviceID)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mDeviceName)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mDisplayID)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mDisplayName)) ||
         !ReadParam(aMsg, aIter, &(aResult->mCapabilityFlags)) ||
         !ReadParam(aMsg, aIter, &(aResult->mEyeResolution)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mScreenRect)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIsFakeScreen))) {
+        !ReadParam(aMsg, aIter, &(aResult->mIsConnected)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIsPresenting))) {
       return false;
     }
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mMaximumEyeFOV[i])) ||
-          !ReadParam(aMsg, aIter, &(aResult->mRecommendedEyeFOV[i])) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeFOV[i])) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i])) ||
-          !ReadParam(aMsg, aIter, &(aResult->mEyeProjectionMatrix[i]))) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mEyeFOV[i])) ||
+          !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i]))) {
         return false;
       }
     }

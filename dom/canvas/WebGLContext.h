@@ -116,6 +116,7 @@ template<typename> struct Nullable;
 
 namespace gfx {
 class SourceSurface;
+class VRLayerChild;
 } // namespace gfx
 
 namespace webgl {
@@ -539,6 +540,9 @@ public:
     void LinkProgram(WebGLProgram* prog);
     void PixelStorei(GLenum pname, GLint param);
     void PolygonOffset(GLfloat factor, GLfloat units);
+
+    already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+    bool StartVRPresentation();
 protected:
     bool ReadPixels_SharedPrecheck(ErrorResult* const out_error);
     void ReadPixelsImpl(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
@@ -1474,6 +1478,7 @@ protected:
     bool mNeedsFakeNoDepth;
     bool mNeedsFakeNoStencil;
     bool mNeedsEmulatedLoneDepthStencil;
+    bool mVRPresentationActive;
 
     bool HasTimestampBits() const;
 
