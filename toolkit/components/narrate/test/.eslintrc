@@ -1,0 +1,21 @@
+{
+  "extends": [
+    "../.eslintrc"
+  ],
+
+  "globals": {
+    "is": true,
+    "isnot": true,
+    "ok": true,
+    "NarrateTestUtils": true,
+    "content": true,
+    "ContentTaskUtils": true,
+    "ContentTask": true,
+    "BrowserTestUtils": true,
+    "gBrowser": true,
+  },
+
+  "rules": {
+    "mozilla/import-headjs-globals": 1
+  }
+}
