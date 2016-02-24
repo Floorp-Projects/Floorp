@@ -467,9 +467,15 @@ loop.panel = function (_, mozL10n) {
       }));
 
       // Open url if needed.
-      loop.request("getSelectedTabMetadata").then(function (metadata) {
+      loop.requestMulti(
+        ["getSelectedTabMetadata"],
+        ["GettingStartedURL", null, {}]
+      ).then(function(results) {
         var contextURL = this.props.room.decryptedContext.urls && this.props.room.decryptedContext.urls[0].location;
-        if (contextURL && metadata.url !== contextURL) {
+
+        contextURL = contextURL || (results[1] + "?noopenpanel=1");
+
+        if (results[0].url !== contextURL) {
           loop.request("OpenURL", contextURL);
         }
         this.closeWindow();
