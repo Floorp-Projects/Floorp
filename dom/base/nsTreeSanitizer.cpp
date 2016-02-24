@@ -1415,8 +1415,8 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
       }
       if (MustFlatten(ns, localName)) {
         RemoveAllAttributes(node);
-        nsIContent* next = node->GetNextNode(aRoot);
-        nsIContent* parent = node->GetParent();
+        nsCOMPtr<nsIContent> next = node->GetNextNode(aRoot);
+        nsCOMPtr<nsIContent> parent = node->GetParent();
         nsCOMPtr<nsIContent> child; // Must keep the child alive during move
         ErrorResult rv;
         while ((child = node->GetFirstChild())) {

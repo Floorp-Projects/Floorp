@@ -2042,7 +2042,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     } else if (nodeToResult) {
       nsMutationGuard guard;
       nsCOMPtr<nsINode> node = nodeToResult;
-      nsINode* parent = node->GetParentNode();
+      nsCOMPtr<nsINode> parent = node->GetParentNode();
       if (parent) {
         mozilla::ErrorResult error;
         parent->RemoveChild(*node, error);
