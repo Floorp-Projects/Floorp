@@ -33,9 +33,10 @@ DisplayItemScrollClip::ToString(const DisplayItemScrollClip* aScrollClip)
   nsAutoCString str;
   for (const DisplayItemScrollClip* scrollClip = aScrollClip;
        scrollClip; scrollClip = scrollClip->mParent) {
-    str.AppendPrintf("<%s>", scrollClip->mClip ? scrollClip->mClip->ToString().get() : "null");
+    str.AppendPrintf("<%s>%s", scrollClip->mClip ? scrollClip->mClip->ToString().get() : "null",
+                     scrollClip->mIsAsyncScrollable ? " [async-scrollable]" : "");
     if (scrollClip->mParent) {
-      str.Append(" ");
+      str.Append(", ");
     }
   }
   return str;
