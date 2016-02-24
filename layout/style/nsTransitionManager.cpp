@@ -32,7 +32,7 @@
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsDOMMutationObserver.h"
 
 using mozilla::TimeStamp;

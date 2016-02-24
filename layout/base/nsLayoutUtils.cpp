@@ -119,7 +119,7 @@
 #include "GeckoProfiler.h"
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "LayoutLogging.h"
 
 // Make sure getpid() works.

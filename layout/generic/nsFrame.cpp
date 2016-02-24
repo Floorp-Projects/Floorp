@@ -40,7 +40,7 @@
 #include "mozilla/Snprintf.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
