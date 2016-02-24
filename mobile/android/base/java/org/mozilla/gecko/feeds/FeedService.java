@@ -15,6 +15,7 @@ import com.keepsafe.switchboard.SwitchBoard;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.feeds.action.CheckAction;
 import org.mozilla.gecko.feeds.action.EnrollAction;
+import org.mozilla.gecko.feeds.action.SetupAction;
 import org.mozilla.gecko.feeds.action.SubscribeAction;
 import org.mozilla.gecko.feeds.action.WithdrawAction;
 import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
@@ -26,6 +27,7 @@ import org.mozilla.gecko.util.Experiments;
 public class FeedService extends IntentService {
     private static final String LOGTAG = "GeckoFeedService";
 
+    public static final String ACTION_SETUP = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.SETUP";
     public static final String ACTION_SUBSCRIBE = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.SUBSCRIBE";
     public static final String ACTION_CHECK = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.CHECK";
     public static final String ACTION_ENROLL = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.ENROLL";
@@ -64,6 +66,10 @@ public class FeedService extends IntentService {
         }
 
         switch (intent.getAction()) {
+            case ACTION_SETUP:
+                new SetupAction(this).perform();
+                break;
+
             case ACTION_SUBSCRIBE:
                 new SubscribeAction(storage).perform(intent);
                 break;
@@ -85,5 +91,7 @@ public class FeedService extends IntentService {
         }
 
         storage.persistChanges();
+
+        FeedAlarmReceiver.completeWakefulIntent(intent);
     }
 }
