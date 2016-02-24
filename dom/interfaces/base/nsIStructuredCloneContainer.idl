@@ -42,8 +42,7 @@ interface nsIStructuredCloneContainer : nsISupports
    * stream, stored in aData.  aFormatVersion should be the version of the
    * structured clone algorithm which was used to generate aData.
    */
-  [implicit_jscontext]
-  void initFromBase64(in AString aData,in unsigned long aFormatVersion);
+  void initFromBase64(in AString aData, in unsigned long aFormatVersion);
 
   /**
    * Deserializes this structured clone container returning it as a jsval.
