@@ -26,6 +26,9 @@ mapping:
     socorroinfo:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.txt
+    jsshell:
+      artifact: {{ artifact_base_url }}/jsshell-{{ platform }}.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/jsshell-{{ platform }}.zip
 
   {% if platform == "win32" %}
     full_installer:
@@ -43,6 +46,15 @@ mapping:
     buildid_info:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win32_info.txt
+    sdk:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/mar.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win32/mar.exe
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/mbsdiff.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win32/mbsdiff.exe
   {% endif %}
 
   {% if platform == "win64" %}
@@ -58,6 +70,15 @@ mapping:
     buildid_info:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/win64_info.txt
+    sdk:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.zip
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/mar.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win64/mar.exe
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/mbsdiff.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/win64/mbsdiff.exe
   {% endif %}
 
   {% if platform == "linux-i686" %}
@@ -70,6 +91,15 @@ mapping:
     buildid_info:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux_info.txt
+    sdk:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/mar
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux/mar
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/mbsdiff
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux/mbsdiff
   {% endif %}
 
   {% if platform == "linux-x86_64" %}
@@ -82,6 +112,15 @@ mapping:
     buildid_info:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/linux64_info.txt
+    sdk:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.sdk.tar.bz2
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/mar
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux64/mar
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/mbsdiff
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/linux64/mbsdiff
   {% endif %}
 
   {% if platform == "mac" %}
@@ -94,6 +133,15 @@ mapping:
     buildid_info:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}_info.txt
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/macosx64_info.txt
+    sdk:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}-x86_64.sdk.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}-x86_64.sdk.tar.bz2
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/mar
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/macosx64/mar
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/mbsdiff
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/mar-tools/macosx64/mbsdiff
   {% endif %}
 
 {% endfor %}
