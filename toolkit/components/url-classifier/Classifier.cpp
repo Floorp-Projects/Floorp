@@ -692,7 +692,7 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
   }
 
-  LookupCache *cache = new LookupCache(aTable, mStoreDirectory);
+  UniquePtr<LookupCache> cache(new LookupCache(aTable, mStoreDirectory));
   nsresult rv = cache->Init();
   if (NS_FAILED(rv)) {
     return nullptr;
@@ -704,8 +704,8 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
     return nullptr;
   }
-  mLookupCaches.AppendElement(cache);
-  return cache;
+  mLookupCaches.AppendElement(cache.get());
+  return cache.release();
 }
 
 nsresult
