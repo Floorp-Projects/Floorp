@@ -549,7 +549,10 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
     nsCOMArray<nsIStyleRule> rules;
     rules.AppendObject(aKeyframeDeclaration);
-    RefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->
+    MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSet should not use nsAnimationManager for "
+               "animations");
+    RefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->AsGecko()->
       ResolveStyleByAddingRules(aParentStyleContext, rules);
     mCache.Put(aKeyframeDeclaration, resultStrong);
     result = resultStrong;
@@ -580,10 +583,13 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
     // not generate a corresponding Animation for them.
+    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSet should not use nsAnimationManager for "
+               "animations");
     nsCSSKeyframesRule* rule =
       src.GetName().IsEmpty()
       ? nullptr
-      : mPresContext->StyleSet()->KeyframesRuleForName(src.GetName());
+      : mPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(src.GetName());
     if (!rule) {
       continue;
     }
@@ -726,7 +732,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
             // There's no data for this property at 0%, so use the
             // cascaded value above us.
             if (!styleWithoutAnimation) {
-              styleWithoutAnimation = mPresContext->StyleSet()->
+              MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+                         "ServoStyleSet should not use nsAnimationManager for "
+                         "animations");
+              styleWithoutAnimation = mPresContext->StyleSet()->AsGecko()->
                 ResolveStyleWithoutAnimation(aTarget, aStyleContext,
                                              eRestyle_AllHintsWithAnimations);
             }
@@ -745,7 +754,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         // There's no data for this property at 100%, so use the
         // cascaded value above us.
         if (!styleWithoutAnimation) {
-          styleWithoutAnimation = mPresContext->StyleSet()->
+          MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+                     "ServoStyleSet should not use nsAnimationManager for "
+                     "animations");
+          styleWithoutAnimation = mPresContext->StyleSet()->AsGecko()->
             ResolveStyleWithoutAnimation(aTarget, aStyleContext,
                                          eRestyle_AllHintsWithAnimations);
         }

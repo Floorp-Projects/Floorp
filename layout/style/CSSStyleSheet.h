@@ -34,6 +34,7 @@ class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
+class nsStyleSet;
 class nsPresContext;
 class nsXMLNameSpaceMap;
 

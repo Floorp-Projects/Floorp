@@ -534,7 +534,9 @@ inline
 void nsRuleNode::AddRef()
 {
   if (mRefCnt++ == 0 && !IsRoot()) {
-    mPresContext->StyleSet()->RuleNodeInUse();
+    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSets should not have rule nodes");
+    mPresContext->StyleSet()->AsGecko()->RuleNodeInUse();
   }
 }
 
@@ -542,7 +544,9 @@ inline
 void nsRuleNode::Release()
 {
   if (--mRefCnt == 0 && !IsRoot()) {
-    mPresContext->StyleSet()->RuleNodeUnused();
+    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSets should not have rule nodes");
+    mPresContext->StyleSet()->AsGecko()->RuleNodeUnused();
   }
 }
 #endif
