@@ -43,7 +43,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsIXULRuntime.h"
 
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/CompositorChild.h"
 #include "ClientLayerManager.h"
 
 #include "nsUXThemeData.h"
@@ -165,13 +164,6 @@ nsIWidgetListener* nsWindow::GetPaintListener()
   if (mDestroyCalled)
     return nullptr;
   return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
-}
-
-void nsWindow::ForcePresent()
-{
-  if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
-    remoteRenderer->SendForcePresent();
-  }
 }
 
 bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
@@ -524,13 +516,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
-        {
-          result = listener->PaintWindow(
-            this, LayoutDeviceIntRegion::FromUnknownRegion(region));
-          nsCOMPtr<nsIRunnable> event =
-            NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
-          NS_DispatchToMainThread(event);
-        }
+        result = listener->PaintWindow(
+          this, LayoutDeviceIntRegion::FromUnknownRegion(region));
         break;
       default:
         NS_ERROR("Unknown layers backend used!");

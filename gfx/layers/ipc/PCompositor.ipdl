@@ -140,10 +140,6 @@ parent:
   // block until they are completed.
   sync FlushRendering();
 
-  // Force an additional frame presentation to be executed. This is used to
-  // work around a windows presentation bug (See Bug 1232042)
-  async ForcePresent();
-
   // Get the size of the tiles. This number should not change at runtime.
   sync GetTileSize()
     returns (int32_t tileWidth, int32_t tileHeight);
