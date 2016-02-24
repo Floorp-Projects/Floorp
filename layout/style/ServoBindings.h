@@ -25,7 +25,6 @@ using mozilla::dom::Element;
 typedef mozilla::dom::Element RawGeckoElement;
 class nsIDocument;
 typedef nsIDocument RawGeckoDocument;
-struct ServoNodeData;
 #else
 struct RawGeckoNode;
 typedef struct RawGeckoNode RawGeckoNode;
@@ -33,8 +32,6 @@ struct RawGeckoElement;
 typedef struct RawGeckoElement RawGeckoElement;
 struct RawGeckoDocument;
 typedef struct RawGeckoDocument RawGeckoDocument;
-struct ServoNodeData;
-typedef struct ServoNodeData ServoNodeData;
 #endif
 
 #ifdef __cplusplus
@@ -63,11 +60,6 @@ int Gecko_IsTextNode(RawGeckoNode* node);
 int Gecko_IsVisitedLink(RawGeckoElement* element);
 int Gecko_IsUnvisitedLink(RawGeckoElement* element);
 int Gecko_IsRootElement(RawGeckoElement* element);
-
-// Node data.
-ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
-void Gecko_SetNodeData(RawGeckoNode* node, ServoNodeData* data);
-void Servo_DropNodeData(ServoNodeData* data);
 
 // Servo API.
 void Servo_RestyleDocument(RawGeckoDocument* aDoc);

@@ -20,7 +20,6 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/css/StyleRule.h"
@@ -149,12 +148,6 @@ nsINode::~nsINode()
 {
   MOZ_ASSERT(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
   MOZ_ASSERT(mSubtreeRoot == this, "Didn't restore state properly?");
-
-#ifdef MOZ_STYLO
-  if (mServoNodeData) {
-    Servo_DropNodeData(mServoNodeData);
-  }
-#endif
 }
 
 void*
