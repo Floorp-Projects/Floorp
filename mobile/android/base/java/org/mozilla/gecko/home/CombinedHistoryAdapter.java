@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.home;
 
-import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
+
+import android.content.Context;
+import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +25,36 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     private List<RemoteClient> remoteClients = Collections.emptyList();
     private Cursor historyCursor;
+    private final Context context;
+
+    public CombinedHistoryAdapter(Context context) {
+        super();
+        this.context = context;
+    }
+
+    public void setClients(List<RemoteClient> clients) {
+        remoteClients = clients;
+        notifyDataSetChanged();
+    }
+
+    public void setHistory(Cursor history) {
+        historyCursor = history;
+        notifyDataSetChanged();
+    }
+
+    private int transformPosition(ItemType type, int position) {
+        if (type == ItemType.CLIENT) {
+            return position;
+        } else {
+            return position - (remoteClients == null ? 0 : remoteClients.size());
+        }
+    }
 
     @Override
     public CombinedHistoryItem onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
         final View view;
+
         if (viewType == ItemType.CLIENT.ordinal()) {
             view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
             return new CombinedHistoryItem.ClientItem(view);
@@ -51,6 +78,23 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     @Override
-    public void onBindViewHolder(CombinedHistoryItem viewHolder, int position) {}
+    public void onBindViewHolder(CombinedHistoryItem viewHolder, int position) {
+        final ItemType itemType = ItemType.values()[getItemViewType(position)];
+        final int localPosition = transformPosition(itemType, position);
 
+        switch (itemType) {
+            case CLIENT:
+                final CombinedHistoryItem.ClientItem clientItem = (CombinedHistoryItem.ClientItem) viewHolder;
+                final RemoteClient client = remoteClients.get(localPosition);
+                clientItem.bind(client, context);
+                break;
+
+            case HISTORY:
+                if (historyCursor == null || !historyCursor.moveToPosition(localPosition)) {
+                    throw new IllegalStateException("Couldn't move cursor to position " + localPosition);
+                }
+                ((CombinedHistoryItem.HistoryItem) viewHolder).bind(historyCursor);
+                break;
+        }
+    }
 }
