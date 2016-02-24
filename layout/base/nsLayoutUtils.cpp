@@ -286,7 +286,7 @@ DisplayContentsEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 
 // When the pref "layout.css.text-align-unsafe-value.enabled" changes, this
 // function is called to let us update kTextAlignKTable & kTextAlignLastKTable,
-// to selectively disable or restore the entries for "true" in those tables.
+// to selectively disable or restore the entries for "unsafe" in those tables.
 static void
 TextAlignUnsafeEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
@@ -294,30 +294,30 @@ TextAlignUnsafeEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
                "Did you misspell " TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME " ?");
 
   static bool sIsInitialized;
-  static int32_t sIndexOfTrueInTextAlignTable;
-  static int32_t sIndexOfTrueInTextAlignLastTable;
+  static int32_t sIndexOfUnsafeInTextAlignTable;
+  static int32_t sIndexOfUnsafeInTextAlignLastTable;
   bool isTextAlignUnsafeEnabled =
     Preferences::GetBool(TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME, false);
 
   if (!sIsInitialized) {
-    // First run: find the position of "true" in kTextAlignKTable.
-    sIndexOfTrueInTextAlignTable =
+    // First run: find the position of "unsafe" in kTextAlignKTable.
+    sIndexOfUnsafeInTextAlignTable =
       nsCSSProps::FindIndexOfKeyword(eCSSKeyword_unsafe,
                                      nsCSSProps::kTextAlignKTable);
-    // First run: find the position of "true" in kTextAlignLastKTable.
-    sIndexOfTrueInTextAlignLastTable =
+    // First run: find the position of "unsafe" in kTextAlignLastKTable.
+    sIndexOfUnsafeInTextAlignLastTable =
       nsCSSProps::FindIndexOfKeyword(eCSSKeyword_unsafe,
                                      nsCSSProps::kTextAlignLastKTable);
     sIsInitialized = true;
   }
 
-  // OK -- now, stomp on or restore the "true" entry in the keyword tables,
+  // OK -- now, stomp on or restore the "unsafe" entry in the keyword tables,
   // depending on whether the pref is enabled vs. disabled.
-  MOZ_ASSERT(sIndexOfTrueInTextAlignTable >= 0);
-  nsCSSProps::kTextAlignKTable[sIndexOfTrueInTextAlignTable].mKeyword =
+  MOZ_ASSERT(sIndexOfUnsafeInTextAlignTable >= 0);
+  nsCSSProps::kTextAlignKTable[sIndexOfUnsafeInTextAlignTable].mKeyword =
     isTextAlignUnsafeEnabled ? eCSSKeyword_unsafe : eCSSKeyword_UNKNOWN;
-  MOZ_ASSERT(sIndexOfTrueInTextAlignLastTable >= 0);
-  nsCSSProps::kTextAlignLastKTable[sIndexOfTrueInTextAlignLastTable].mKeyword =
+  MOZ_ASSERT(sIndexOfUnsafeInTextAlignLastTable >= 0);
+  nsCSSProps::kTextAlignLastKTable[sIndexOfUnsafeInTextAlignLastTable].mKeyword =
     isTextAlignUnsafeEnabled ? eCSSKeyword_unsafe : eCSSKeyword_UNKNOWN;
 }
 
