@@ -131,8 +131,13 @@ enum {
     JS_TELEMETRY_GC_MINOR_US,
     JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT,
     JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS,
-    JS_TELEMETRY_ADDON_EXCEPTIONS
+    JS_TELEMETRY_ADDON_EXCEPTIONS,
+    JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED,
+    JS_TELEMETRY_END
 };
+
+static_assert(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED == 25,
+              "This value needs to be kept in sync with SelfHostingDefines.h");
 
 typedef void
 (*JSAccumulateTelemetryDataCallback)(int id, uint32_t sample, const char* key);
