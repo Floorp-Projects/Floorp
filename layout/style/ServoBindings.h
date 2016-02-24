@@ -57,6 +57,7 @@ RawGeckoElement* Gecko_GetNextSiblingElement(RawGeckoElement* element);
 RawGeckoElement* Gecko_GetDocumentElement(RawGeckoDocument* document);
 
 // Selector Matching.
+uint8_t Gecko_ElementState(RawGeckoElement* element);
 int Gecko_IsHTMLElementInHTMLDocument(RawGeckoElement* element);
 int Gecko_IsLink(RawGeckoElement* element);
 int Gecko_IsTextNode(RawGeckoNode* node);
