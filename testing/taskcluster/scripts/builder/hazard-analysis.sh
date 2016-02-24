@@ -16,8 +16,19 @@ fi
 export CC="$GECKO_DIR/gcc/bin/gcc"
 export CXX="$GECKO_DIR/gcc/bin/g++"
 
+function check_commit_msg () {
+    hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -q -- "$1"
+}
+
+if check_commit_msg "--dep"; then
+    HAZ_DEP=1
+fi
+
 function build_js_shell () {
     ( cd $JS_SRCDIR; autoconf-2.13 )
+    if [[ -z "$HAZ_DEP" ]]; then
+        [ -d $HAZARD_SHELL_OBJDIR ] && rm -rf $HAZARD_SHELL_OBJDIR
+    fi
     mkdir -p $HAZARD_SHELL_OBJDIR || true
     cd $HAZARD_SHELL_OBJDIR
     $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api --with-ccache
@@ -27,6 +38,10 @@ function build_js_shell () {
 function configure_analysis () {
     local analysis_dir
     analysis_dir="$1"
+
+    if [[ -z "$HAZ_DEP" ]]; then
+        [ -d "$analysis_dir" ] && rm -rf "$analysis_dir"
+    fi
 
     mkdir -p "$analysis_dir" || true
     (
@@ -47,6 +62,10 @@ function run_analysis () {
     analysis_dir="$1"
     local build_type
     build_type="$2"
+
+    if [[ -z "$HAZ_DEP" ]]; then
+        [ -d $MOZ_OBJDIR ] && rm -rf $MOZ_OBJDIR
+    fi
 
     (
         cd "$analysis_dir"
@@ -72,8 +91,11 @@ function grab_artifacts () {
         done
 
         # Check whether the user requested .xdb file upload in the top commit comment
+        if check_commit_msg "--upload-xdbs"; then
+            HAZ_UPLOAD_XDBS=1
+        fi
 
-        if hg --cwd "$GECKO_DIR" log -l1 --template '{desc}\n' | grep -q -- '--upload-xdbs'; then
+        if [ -n "$HAZ_UPLOAD_XDBS" ]; then
             for f in *.xdb; do
                 bzip2 -c "$f" > "${artifacts}/$f.bz2"
             done
