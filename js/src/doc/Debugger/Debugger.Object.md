@@ -544,3 +544,7 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     Debugger API: adapted portions of the code can use `Debugger.Object`
     instances, but use this method to pass direct object references to code
     that has not yet been updated.
+
+<code>forceLexicalInitializationByName(<i>binding</i>)</code>
+:  If <i>binding</i> is in an uninitialized state initialize it to undefined
+   and return true, otherwise do nothing and return false.
