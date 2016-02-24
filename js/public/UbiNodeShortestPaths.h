@@ -112,7 +112,7 @@ struct JS_PUBLIC_API(ShortestPaths)
                    BackEdge* back, bool first)
         {
             MOZ_ASSERT(back);
-            MOZ_ASSERT(traversal.visited.has(origin));
+            MOZ_ASSERT(origin == shortestPaths.root_ || traversal.visited.has(origin));
             MOZ_ASSERT(totalPathsRecorded < totalMaxPathsToRecord);
 
             if (first && !back->init(origin, edge))
@@ -128,9 +128,7 @@ struct JS_PUBLIC_API(ShortestPaths)
             // `back->clone()` in the first branch, and the `init` call in the
             // second branch.
 
-            auto ptr = shortestPaths.paths_.lookupForAdd(edge.referent);
             if (first) {
-                MOZ_ASSERT(!ptr);
                 BackEdgeVector paths;
                 if (!paths.reserve(shortestPaths.maxNumPaths_))
                     return false;
@@ -138,16 +136,23 @@ struct JS_PUBLIC_API(ShortestPaths)
                 if (!cloned)
                     return false;
                 paths.infallibleAppend(mozilla::Move(cloned));
-                if (!shortestPaths.paths_.add(ptr, edge.referent, mozilla::Move(paths)))
+                if (!shortestPaths.paths_.putNew(edge.referent, mozilla::Move(paths)))
                     return false;
                 totalPathsRecorded++;
-            } else if (ptr->value().length() < shortestPaths.maxNumPaths_) {
-                MOZ_ASSERT(ptr);
-                BackEdge::Ptr thisBackEdge(js_new<BackEdge>());
-                if (!thisBackEdge || !thisBackEdge->init(origin, edge))
-                    return false;
-                ptr->value().infallibleAppend(mozilla::Move(thisBackEdge));
-                totalPathsRecorded++;
+            } else {
+                auto ptr = shortestPaths.paths_.lookup(edge.referent);
+                MOZ_ASSERT(ptr,
+                           "This isn't the first time we have seen the target node `edge.referent`. "
+                           "We should have inserted it into shortestPaths.paths_ the first time we "
+                           "saw it.");
+
+                if (ptr->value().length() < shortestPaths.maxNumPaths_) {
+                    BackEdge::Ptr thisBackEdge(js_new<BackEdge>());
+                    if (!thisBackEdge || !thisBackEdge->init(origin, edge))
+                        return false;
+                    ptr->value().infallibleAppend(mozilla::Move(thisBackEdge));
+                    totalPathsRecorded++;
+                }
             }
 
             MOZ_ASSERT(totalPathsRecorded <= totalMaxPathsToRecord);
@@ -251,7 +256,7 @@ struct JS_PUBLIC_API(ShortestPaths)
         Handler handler(paths);
         Traversal traversal(rt, handler, noGC);
         traversal.wantNames = true;
-        if (!traversal.init() || !traversal.addStartVisited(root) || !traversal.traverse())
+        if (!traversal.init() || !traversal.addStart(root) || !traversal.traverse())
             return mozilla::Nothing();
 
         // Take ownership of the back edges we created while traversing the

@@ -170,3 +170,10 @@ function synthesizeNativeDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = nu
   synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
   return synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, aObserver, aTouchId);
 }
+
+function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
+  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
+  utils.sendNativeTouchTap(pt.x, pt.y, false, aObserver);
+  return true;
+}

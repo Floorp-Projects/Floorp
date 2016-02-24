@@ -165,16 +165,6 @@ class MacroAssemblerX86Shared : public Assembler
     CodeOffset cmp32WithPatch(Register lhs, Imm32 rhs) {
         return cmplWithPatch(rhs, lhs);
     }
-    template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        addl(src, dest);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        subl(src, dest);
-        j(cond, label);
-    }
     void atomic_inc32(const Operand& addr) {
         lock_incl(addr);
     }

@@ -23,7 +23,7 @@ FakeSSLStatus.prototype = {
     }
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-}
+};
 
 // This is a template to help porting global private browsing tests
 // to per-window private browsing tests

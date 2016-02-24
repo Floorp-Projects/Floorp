@@ -75,6 +75,7 @@
 #include "js/TrackedOptimizationInfo.h"
 #include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
+#include "shell/jsshell.h"
 #include "shell/OSObject.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
@@ -359,7 +360,7 @@ GetLine(FILE* file, const char * prompt)
         return nullptr;
 
     char* current = buffer;
-    while (true) {
+    do {
         while (true) {
             if (fgets(current, size - len, file))
                 break;
@@ -387,11 +388,7 @@ GetLine(FILE* file, const char * prompt)
             buffer = tmp;
         }
         current = buffer + len;
-    }
-
-    if (len && !ferror(file))
-        return buffer;
-    free(buffer);
+    } while (true);
     return nullptr;
 }
 
@@ -4407,6 +4404,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
     mozilla::DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
     uint32_t frameNo = 0;
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
         MOZ_ASSERT(i.stackAddress() != nullptr);
         MOZ_ASSERT(lastStackAddress <= i.stackAddress());
@@ -4414,9 +4412,12 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
         JS::ProfilingFrameIterator::Frame frames[16];
         uint32_t nframes = i.extractStack(frames, 0, 16);
         for (uint32_t i = 0; i < nframes; i++) {
-            if (frameNo > 0)
-                stack.append(",", 1);
-            stack.append(frames[i].label, strlen(frames[i].label));
+            if (frameNo > 0) {
+                if (!stack.append(",", 1))
+                    oomUnsafe.crash("stack.append");
+            }
+            if (!stack.append(frames[i].label, strlen(frames[i].label)))
+                oomUnsafe.crash("stack.append");
             frameNo++;
         }
     }
@@ -4426,7 +4427,8 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
         stacks.back().length() != stack.length() ||
         !PodEqual(stacks.back().begin(), stack.begin(), stack.length()))
     {
-        stacks.append(Move(stack));
+        if (!stacks.append(Move(stack)))
+            oomUnsafe.crash("stacks.append");
     }
 }
 #endif
