@@ -502,12 +502,29 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
     ErrorResult rv;
     scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript, rv);
+    // If rv has a JS exception, put it right back on aCx, so that our PostRun
+    // can report it.  Otherwise, I guess suppress the exception since that's
+    // what we used to do, though this seems moderately weird.
+    rv.WouldReportJSException();
     if (NS_WARN_IF(rv.Failed())) {
-      // I guess suppress the exception since that's what we used to
-      // do, though this seems moderately weird.
-      rv.SuppressException();
+      if (rv.IsJSException()) {
+        // This is a little dumb, but aCx is in the null compartment here
+        // because we set it up that way in our Run(), since we had not created
+        // the global at that point yet.  So we need to enter the compartment
+        // of our global, because setting a pending exception on aCx involves
+        // wrapping into its current compartment.  Luckily we have a global now
+        // (else how would we have a JS exception?) so we can just enter its
+        // compartment.
+        JSAutoCompartment ac(aCx,
+          aWorkerPrivate->GlobalScope()->GetGlobalJSObject());
+        rv.MaybeSetPendingException(aCx);
+      } else {
+        rv.SuppressException();
+      }
       return false;
     }
 
@@ -531,6 +548,8 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
     WorkerDebuggerGlobalScope* globalScope =
       aWorkerPrivate->CreateDebuggerGlobalScope(aCx);
     if (!globalScope) {
@@ -543,10 +562,16 @@ private:
     ErrorResult rv;
     JSAutoCompartment ac(aCx, global);
     scriptloader::LoadMainScript(aCx, mScriptURL, DebuggerScript, rv);
+    // If rv has a JS exception, put it right back on aCx, so that our PostRun
+    // can report it.  Otherwise, I guess suppress the exception since that's
+    // what we used to do, though this seems moderately weird.
+    rv.WouldReportJSException();
     if (NS_WARN_IF(rv.Failed())) {
-      // I guess suppress the exception since that's what we used to
-      // do, though this seems moderately weird.
-      rv.SuppressException();
+      if (rv.IsJSException()) {
+        rv.MaybeSetPendingException(aCx);
+      } else {
+        rv.SuppressException();
+      }
       return false;
     }
 
