@@ -116,6 +116,7 @@ EXPORTS.mozilla.css += [
     'Loader.h',
     'NameSpaceRule.h',
     'Rule.h',
+    'SheetParsingMode.h',
     'StyleRule.h',
 ]
 
