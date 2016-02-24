@@ -8,7 +8,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.search.providers.SearchEngine;
+import org.mozilla.gecko.search.SearchEngine;
 
 import android.content.Context;
 import android.graphics.Bitmap;
