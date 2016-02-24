@@ -44,6 +44,7 @@ public final class HomeConfig {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         HISTORY("history", HistoryPanel.class),
+        COMBINED_HISTORY("combined_history", CombinedHistoryPanel.class),
         REMOTE_TABS("remote_tabs", RemoteTabsPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
         RECENT_TABS("recent_tabs", RecentTabsPanel.class),
@@ -1594,6 +1595,7 @@ public final class HomeConfig {
     private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
     private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
     private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
+    private static final String COMBINED_HISTORY_PANEL_ID = "4d716ce2-e063-486d-9e7c-b190d7b04dc6";
     private static final String RECENT_TABS_PANEL_ID = "5c2601a5-eedc-4477-b297-ce4cef52adf8";
     private static final String REMOTE_TABS_PANEL_ID = "72429afd-8d8b-43d8-9189-14b779c563d0";
 
@@ -1634,6 +1636,7 @@ public final class HomeConfig {
         case BOOKMARKS:
             return R.string.bookmarks_title;
 
+        case COMBINED_HISTORY:
         case HISTORY:
             return R.string.home_history_title;
 
@@ -1661,6 +1664,9 @@ public final class HomeConfig {
 
         case HISTORY:
             return HISTORY_PANEL_ID;
+
+        case COMBINED_HISTORY:
+            return COMBINED_HISTORY_PANEL_ID;
 
         case REMOTE_TABS:
             return REMOTE_TABS_PANEL_ID;
