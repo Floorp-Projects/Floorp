@@ -388,13 +388,7 @@ NetworkResponseListener.prototype = {
 
     if (!response.mimeType || !NetworkHelper.isTextMimeType(response.mimeType)) {
       response.encoding = "base64";
-
-      try {
-        response.text = unescape(encodeURIComponent(response.text));
-      } catch (err) {
-        console.error(err);
-      }
-
+      response.text = btoa(response.text);
     }
 
     if (response.mimeType && this.request.contentCharset) {
