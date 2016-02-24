@@ -40,6 +40,7 @@ namespace {
 
 static const char* gSupportedRegistrarVersions[] = {
   SERVICEWORKERREGISTRAR_VERSION,
+  "3",
   "2"
 };
 
@@ -330,6 +331,7 @@ ServiceWorkerRegistrar::ReadData()
   nsTArray<ServiceWorkerRegistrationData> tmpData;
 
   bool overwrite = false;
+  bool dedupe = false;
   while (hasMoreLines) {
     ServiceWorkerRegistrationData* entry = tmpData.AppendElement();
 
@@ -343,6 +345,7 @@ ServiceWorkerRegistrar::ReadData()
     }
 
     nsAutoCString line;
+    nsAutoCString unused;
     if (version.EqualsLiteral(SERVICEWORKERREGISTRAR_VERSION)) {
       nsAutoCString suffix;
       GET_LINE(suffix);
@@ -352,18 +355,19 @@ ServiceWorkerRegistrar::ReadData()
         return NS_ERROR_INVALID_ARG;
       }
 
-      GET_LINE(line);
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, line);
-
       GET_LINE(entry->scope());
+
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, entry->scope());
+
       GET_LINE(entry->currentWorkerURL());
 
       nsAutoCString cacheName;
       GET_LINE(cacheName);
       CopyUTF8toUTF16(cacheName, entry->cacheName());
-    } else if (version.EqualsLiteral("2")) {
+    } else if (version.EqualsLiteral("3")) {
       overwrite = true;
+      dedupe = true;
 
       nsAutoCString suffix;
       GET_LINE(suffix);
@@ -373,14 +377,40 @@ ServiceWorkerRegistrar::ReadData()
         return NS_ERROR_INVALID_ARG;
       }
 
-      GET_LINE(line);
-      entry->principal() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, line);
+      // principal spec is no longer used; we use scope directly instead
+      GET_LINE(unused);
 
       GET_LINE(entry->scope());
 
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, entry->scope());
+
+      GET_LINE(entry->currentWorkerURL());
+
+      nsAutoCString cacheName;
+      GET_LINE(cacheName);
+      CopyUTF8toUTF16(cacheName, entry->cacheName());
+    } else if (version.EqualsLiteral("2")) {
+      overwrite = true;
+      dedupe = true;
+
+      nsAutoCString suffix;
+      GET_LINE(suffix);
+
+      PrincipalOriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(suffix)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      // principal spec is no longer used; we use scope directly instead
+      GET_LINE(unused);
+
+      GET_LINE(entry->scope());
+
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, entry->scope());
+
       // scriptSpec is no more used in latest version.
-      nsAutoCString unused;
       GET_LINE(unused);
 
       GET_LINE(entry->currentWorkerURL());
@@ -409,22 +439,32 @@ ServiceWorkerRegistrar::ReadData()
 
   stream->Close();
 
-  // Dedupe data in file.  Old profiles had many duplicates.  In theory
-  // we can remove this in the future. (Bug 1248449)
+  // Copy data over to mData.
   for (uint32_t i = 0; i < tmpData.Length(); ++i) {
     bool match = false;
-    for (uint32_t j = 0; j < mData.Length(); ++j) {
-      // Use same comparison as RegisterServiceWorker. Scope contains
-      // basic origin information.  Combine with any principal attributes.
-      if (Equivalent(tmpData[i], mData[j])) {
-        // Last match wins, just like legacy loading used to do in
-        // the ServiceWorkerManager.
-        mData[j] = tmpData[i];
-        // Dupe found, so overwrite file with reduced list.
-        overwrite = true;
-        match = true;
-        break;
+    if (dedupe) {
+      MOZ_ASSERT(overwrite);
+      // If this is an old profile, then we might need to deduplicate.  In
+      // theory this can be removed in the future (Bug 1248449)
+      for (uint32_t j = 0; j < mData.Length(); ++j) {
+        // Use same comparison as RegisterServiceWorker. Scope contains
+        // basic origin information.  Combine with any principal attributes.
+        if (Equivalent(tmpData[i], mData[j])) {
+          // Last match wins, just like legacy loading used to do in
+          // the ServiceWorkerManager.
+          mData[j] = tmpData[i];
+          // Dupe found, so overwrite file with reduced list.
+          match = true;
+          break;
+        }
       }
+    } else {
+#ifdef DEBUG
+      // Otherwise assert no duplications in debug builds.
+      for (uint32_t j = 0; j < mData.Length(); ++j) {
+        MOZ_ASSERT(!Equivalent(tmpData[i], mData[j]));
+      }
+#endif
     }
     if (!match) {
       mData.AppendElement(tmpData[i]);
@@ -645,9 +685,6 @@ ServiceWorkerRegistrar::WriteData()
 
     buffer.Truncate();
     buffer.Append(suffix.get());
-    buffer.Append('\n');
-
-    buffer.Append(cInfo.spec());
     buffer.Append('\n');
 
     buffer.Append(data[i].scope());

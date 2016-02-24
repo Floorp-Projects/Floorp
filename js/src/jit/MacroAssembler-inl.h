@@ -619,6 +619,21 @@ MacroAssembler::assertStackAlignment(uint32_t alignment, int32_t offset /* = 0 *
 #endif
 }
 
+void
+MacroAssembler::storeCallResultValue(AnyRegister dest)
+{
+    unboxValue(JSReturnOperand, dest);
+}
+
+void
+MacroAssembler::storeCallResultValue(TypedOrValueRegister dest)
+{
+    if (dest.hasValue())
+        storeCallResultValue(dest.valueReg());
+    else
+        storeCallResultValue(dest.typedReg());
+}
+
 } // namespace jit
 } // namespace js
 

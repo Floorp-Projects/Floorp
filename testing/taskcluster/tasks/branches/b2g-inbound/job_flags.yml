@@ -4,17 +4,3 @@
 
 $inherits:
   from: tasks/branches/base_jobs.yml
-
-tests:
-  gaia-ui-test-functional:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/b2g_e2e_tests.yml
-  gaia-ui-test-functional-dsds:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/b2g_e2e_dsds_tests.yml
-  gaia-ui-test-unit:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/b2g_e2e_api_tests.yml

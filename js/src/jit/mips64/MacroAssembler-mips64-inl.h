@@ -210,6 +210,21 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    splitTag(value, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+}
+
+void
+MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
+{
+    ma_dext(ScratchRegister, value.valueReg(), Imm32(0), Imm32(32));
+    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -235,13 +250,6 @@ MacroAssemblerMIPS64Compat::retn(Imm32 n)
     asMasm().addPtr(n, StackPointer);
     as_jr(ra);
     as_nop();
-}
-
-void
-MacroAssemblerMIPS64Compat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
-{
-    asMasm().subPtr(imm, lhs);
-    asMasm().branchPtr(cond, lhs, Imm32(0), label);
 }
 
 } // namespace jit

@@ -654,6 +654,29 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, scratch, rhs, label);
 }
 
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
+{
+    cmpPtr(lhs, rhs);
+    return jumpWithPatch(label, cond);
+}
+
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
+{
+    // The scratch register is unused after the condition codes are set.
+    {
+        vixl::UseScratchRegisterScope temps(this);
+        const Register scratch = temps.AcquireX().asUnsized();
+        MOZ_ASSERT(scratch != lhs.base);
+        loadPtr(lhs, scratch);
+        cmpPtr(scratch, rhs);
+    }
+    return jumpWithPatch(label, cond);
+}
+
 void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
@@ -749,6 +772,29 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     And(dest64, dest64, Operand(0xffffffff));
 }
 
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    adds32(src, dest);
+    branch(cond, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
+{
+    subs32(src, dest);
+    branch(cond, label);
+}
+
+void
+MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
+    B(cond, label);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
@@ -822,6 +868,37 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    branchTestInt32Impl(cond, src, label);
+}
+
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+{
+    Condition c = testInt32Truthy(truthy, operand);
+    B(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -887,6 +964,49 @@ void
 MacroAssemblerCompat::branchTestStackPtr(Condition cond, T t, Label* label)
 {
     asMasm().branchTestPtr(cond, getStackPointer(), t, label);
+}
+
+// If source is a double, load into dest.
+// If source is int32, convert to double and store in dest.
+// Else, branch to failure.
+void
+MacroAssemblerCompat::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+
+    // TODO: splitTagForTest really should not leak a scratch register.
+    Register tag = splitTagForTest(source);
+    {
+        vixl::UseScratchRegisterScope temps(this);
+        temps.Exclude(ARMRegister(tag, 64));
+
+        branchTestDouble(Assembler::Equal, tag, &isDouble);
+        asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    }
+
+    convertInt32ToDouble(source.valueReg(), dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
+}
+
+void
+MacroAssemblerCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
+{
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.valueReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        unboxNonDouble(src, dest.gpr());
+    }
 }
 
 } // namespace jit

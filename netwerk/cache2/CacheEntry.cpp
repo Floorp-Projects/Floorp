@@ -545,7 +545,6 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
       mUseDisk && !aMemoryOnly,
       mSkipSizeCheck,
       mPinned,
-      true, // always create
       true, // truncate existing (this one)
       getter_AddRefs(handle));
 
@@ -1072,13 +1071,12 @@ NS_IMETHODIMP CacheEntry::GetIsForcedValid(bool *aIsForcedValid)
   }
 
   nsAutoCString key;
-
-  nsresult rv = HashingKeyWithStorage(key);
+  nsresult rv = HashingKey(key);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  *aIsForcedValid = CacheStorageService::Self()->IsForcedValidEntry(key);
+  *aIsForcedValid = CacheStorageService::Self()->IsForcedValidEntry(mStorageID, key);
   LOG(("CacheEntry::GetIsForcedValid [this=%p, IsForcedValid=%d]", this, *aIsForcedValid));
 
   return NS_OK;
@@ -1089,12 +1087,12 @@ NS_IMETHODIMP CacheEntry::ForceValidFor(uint32_t aSecondsToTheFuture)
   LOG(("CacheEntry::ForceValidFor [this=%p, aSecondsToTheFuture=%d]", this, aSecondsToTheFuture));
 
   nsAutoCString key;
-  nsresult rv = HashingKeyWithStorage(key);
+  nsresult rv = HashingKey(key);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  CacheStorageService::Self()->ForceEntryValidFor(key, aSecondsToTheFuture);
+  CacheStorageService::Self()->ForceEntryValidFor(mStorageID, key, aSecondsToTheFuture);
 
   return NS_OK;
 }
@@ -1324,6 +1322,8 @@ NS_IMETHODIMP CacheEntry::AsyncDoom(nsICacheEntryDoomCallback *aCallback)
 
     if (mIsDoomed || mDoomCallback)
       return NS_ERROR_IN_PROGRESS; // to aggregate have DOOMING state
+
+    RemoveForcedValidity();
 
     mIsDoomed = true;
     mDoomCallback = aCallback;
@@ -1623,6 +1623,8 @@ void CacheEntry::DoomAlreadyRemoved()
 
   mozilla::MutexAutoLock lock(mLock);
 
+  RemoveForcedValidity();
+
   mIsDoomed = true;
 
   // Pretend pinning is know.  This entry is now doomed for good, so don't
@@ -1664,6 +1666,25 @@ void CacheEntry::DoomFile()
 
   // Always posts to the main thread.
   OnFileDoomed(rv);
+}
+
+void CacheEntry::RemoveForcedValidity()
+{
+  mLock.AssertCurrentThreadOwns();
+
+  nsresult rv;
+
+  if (mIsDoomed) {
+    return;
+  }
+
+  nsAutoCString entryKey;
+  rv = HashingKey(entryKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  CacheStorageService::Self()->RemoveEntryForceValid(mStorageID, entryKey);
 }
 
 void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)

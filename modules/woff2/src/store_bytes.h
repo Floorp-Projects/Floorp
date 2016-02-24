@@ -37,7 +37,7 @@ inline size_t Store16(uint8_t* dst, size_t offset, int x) {
   *reinterpret_cast<uint16_t*>(dst + offset) =
       ((x & 0xFF) << 8) | ((x & 0xFF00) >> 8);
 #elif (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
-  *reinterpret_cast<uint16_t*>(dst + offset) = reinterpret_cast<uint16_t>(x);
+  *reinterpret_cast<uint16_t*>(dst + offset) = static_cast<uint16_t>(x);
 #else
   dst[offset] = x >> 8;
   dst[offset + 1] = x;
@@ -59,7 +59,7 @@ inline void Store16(int val, size_t* offset, uint8_t* dst) {
   *offset += 2;
 #elif (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
   *reinterpret_cast<uint16_t*>(dst + *offset) =
-      reinterpret_cast<uint16_t>(val);
+      static_cast<uint16_t>(val);
   *offset += 2;
 #else
   dst[(*offset)++] = val >> 8;
