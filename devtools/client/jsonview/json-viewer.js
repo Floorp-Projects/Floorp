@@ -8,7 +8,7 @@ define(function(require, exports, module) {
 
 // ReactJS
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { createFactories } = require("./components/reps/rep-utils");
+const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
 
 const json = document.getElementById("json");

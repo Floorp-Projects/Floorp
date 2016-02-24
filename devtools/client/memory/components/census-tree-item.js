@@ -25,11 +25,11 @@ const CensusTreeItem = module.exports = createClass({
       depth,
       arrow,
       focused,
-      toolbox,
       getPercentBytes,
       getPercentCount,
       showSign,
       onViewSourceInDebugger,
+      inverted,
     } = this.props;
 
     const bytes = formatNumber(item.bytes, showSign);
@@ -44,7 +44,14 @@ const CensusTreeItem = module.exports = createClass({
     const totalCount = formatNumber(item.totalCount, showSign);
     const percentTotalCount = formatPercent(getPercentCount(item.totalCount), showSign);
 
-    return dom.div({ className: `heap-tree-item ${focused ? "focused" :""}` },
+    let pointer;
+    if (inverted && depth > 0) {
+      pointer = dom.span({ className: "children-pointer" }, "↖");
+    } else if (!inverted && item.children && item.children.length) {
+      pointer = dom.span({ className: "children-pointer" }, "↘");
+    }
+
+    return dom.div({ className: `heap-tree-item ${focused ? "focused" : ""}` },
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" },
                dom.span({ className: "heap-tree-number" }, bytes),
                dom.span({ className: "heap-tree-percent" }, percentBytes)),
@@ -60,6 +67,7 @@ const CensusTreeItem = module.exports = createClass({
                dom.span({ className: "heap-tree-item-field heap-tree-item-name",
                           style: { marginLeft: depth * TREE_ROW_HEIGHT }},
         arrow,
+        pointer,
         this.toLabel(item.name, onViewSourceInDebugger)
       )
     );
