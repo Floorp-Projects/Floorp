@@ -41,6 +41,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
     @Override
     public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
+        // TODO: open context menu if not a date title
         return showContextMenuForChild(this);
     }
 }
