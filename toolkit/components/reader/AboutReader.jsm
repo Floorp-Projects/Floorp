@@ -616,7 +616,7 @@ AboutReader.prototype = {
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
 
-    Services.obs.notifyObservers(null, "AboutReader:Ready", "");
+    Services.obs.notifyObservers(this._win, "AboutReader:Ready", "");
   },
 
   _hideContent: function() {
