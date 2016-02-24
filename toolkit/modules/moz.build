@@ -79,6 +79,7 @@ EXTRA_JS_MODULES += [
     'SpatialNavigation.jsm',
     'Sqlite.jsm',
     'Task.jsm',
+    'third_party',
     'Timer.jsm',
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
