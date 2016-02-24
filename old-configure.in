@@ -2194,7 +2194,7 @@ ia64*-hpux*)
         PROFILE_GEN_CFLAGS="-GL"
         num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
         cgthreads="-CGTHREADS:${num_cores}"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT $cgthreads"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT -PogoSafeMode $cgthreads"
         dnl XXX: PGO builds can fail with warnings treated as errors,
         dnl specifically "no profile data available" appears to be
         dnl treated as an error sometimes. This might be a consequence
