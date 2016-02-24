@@ -114,6 +114,7 @@ public interface BrowserDB {
     public abstract void removeBookmarksWithURL(ContentResolver cr, String uri);
     public abstract void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
     public abstract void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
+    public abstract boolean hasBookmarkWithGuid(ContentResolver cr, String guid);
 
     /**
      * Can return <code>null</code>.
