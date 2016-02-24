@@ -202,6 +202,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'ANRReporter.java',
     'AppNotificationClient.java',
     'BaseGeckoInterface.java',
+    'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
     'ContactService.java',

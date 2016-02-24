@@ -33,6 +33,12 @@ public class FeedService extends IntentService {
     public static final String ACTION_ENROLL = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.ENROLL";
     public static final String ACTION_WITHDRAW = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.WITHDRAW";
 
+    public static void setup(Context context) {
+        Intent intent = new Intent(context, FeedService.class);
+        intent.setAction(ACTION_SETUP);
+        context.startService(intent);
+    }
+
     public static void subscribe(Context context, String guid, String feedUrl) {
         Intent intent = new Intent(context, FeedService.class);
         intent.setAction(ACTION_SUBSCRIBE);

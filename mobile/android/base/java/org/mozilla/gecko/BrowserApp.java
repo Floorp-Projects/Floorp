@@ -26,6 +26,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
@@ -1942,6 +1943,8 @@ public class BrowserApp extends GeckoApp
                 if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
                     DownloadContentService.startVerification(this);
                 }
+
+                FeedService.setup(this);
 
                 super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
