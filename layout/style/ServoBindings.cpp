@@ -129,3 +129,14 @@ Gecko_IsRootElement(RawGeckoElement* aElement)
   return aElement->OwnerDoc()->GetRootElement() == aElement;
 }
 
+ServoNodeData*
+Gecko_GetNodeData(RawGeckoNode* aNode)
+{
+  return aNode->GetServoNodeData();
+}
+
+void
+Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
+{
+  aNode->SetServoNodeData(aData);
+}
