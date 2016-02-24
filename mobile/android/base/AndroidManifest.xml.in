@@ -358,6 +358,10 @@
             android:name="org.mozilla.gecko.feeds.FeedService">
         </service>
 
+        <receiver
+            android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
+            android:exported="false" />
+
         <service
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>
