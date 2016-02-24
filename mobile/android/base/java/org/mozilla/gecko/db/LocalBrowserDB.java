@@ -1582,6 +1582,22 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
+    public Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl) {
+        Cursor c = cr.query(mBookmarksUriWithProfile,
+                new String[] { Bookmarks.GUID, Bookmarks._ID, Bookmarks.URL },
+                Bookmarks.URL + " LIKE '%" + partialUrl + "%'", // TODO: Escaping!
+                null,
+                null);
+
+        if (c != null && c.getCount() == 0) {
+            c.close();
+            c = null;
+        }
+
+        return c;
+    }
+
+    @Override
     public void setSuggestedSites(SuggestedSites suggestedSites) {
         mSuggestedSites = suggestedSites;
     }
