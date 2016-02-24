@@ -532,10 +532,11 @@ LoaderReusableStyleSheets::FindReusableStyleSheet(nsIURI* aURL,
  * Loader Implementation *
  *************************/
 
-Loader::Loader(void)
+Loader::Loader(StyleBackendType aType)
   : mDocument(nullptr)
   , mDatasToNotifyOn(0)
   , mCompatMode(eCompatibility_FullStandards)
+  , mStyleBackendType(Some(aType))
   , mEnabled(true)
 #ifdef DEBUG
   , mSyncCallback(false)
@@ -1088,7 +1089,7 @@ Loader::CreateSheet(nsIURI* aURI,
   *aIsAlternate = IsAlternate(aTitle, aHasAlternateRel);
 
   // XXXheycam Cached sheets currently must be CSSStyleSheets.
-  if (aURI) {
+  if (aURI && GetStyleBackendType() == StyleBackendType::Gecko) {
     aSheetState = eSheetComplete;
     StyleSheetHandle::RefPtr sheet;
 
@@ -2626,6 +2627,18 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mPreferredSheet, because it can be a shared string
 
   return n;
+}
+
+StyleBackendType
+Loader::GetStyleBackendType() const
+{
+  MOZ_ASSERT(mStyleBackendType || mDocument,
+             "you must construct a Loader with a document or set a "
+             "StyleBackendType on it before calling GetStyleBackendType");
+  if (mStyleBackendType) {
+    return *mStyleBackendType;
+  }
+  return mDocument->GetStyleBackendType();
 }
 
 } // namespace css

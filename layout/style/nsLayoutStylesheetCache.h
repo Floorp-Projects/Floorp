@@ -75,14 +75,14 @@ private:
 
   void InitFromProfile();
   void InitMemoryReporter();
-  static void LoadSheetURL(const char* aURL,
-                           mozilla::StyleSheetHandle::RefPtr& aSheet,
-                           mozilla::css::SheetParsingMode aParsingMode);
-  static void LoadSheetFile(nsIFile* aFile,
-                            mozilla::StyleSheetHandle::RefPtr& aSheet,
-                            mozilla::css::SheetParsingMode aParsingMode);
-  static void LoadSheet(nsIURI* aURI, mozilla::StyleSheetHandle::RefPtr& aSheet,
-                        mozilla::css::SheetParsingMode aParsingMode);
+  void LoadSheetURL(const char* aURL,
+                    mozilla::StyleSheetHandle::RefPtr& aSheet,
+                    mozilla::css::SheetParsingMode aParsingMode);
+  void LoadSheetFile(nsIFile* aFile,
+                     mozilla::StyleSheetHandle::RefPtr& aSheet,
+                     mozilla::css::SheetParsingMode aParsingMode);
+  void LoadSheet(nsIURI* aURI, mozilla::StyleSheetHandle::RefPtr& aSheet,
+                 mozilla::css::SheetParsingMode aParsingMode);
   static void InvalidateSheet(mozilla::StyleSheetHandle::RefPtr* aGeckoSheet,
                               mozilla::StyleSheetHandle::RefPtr* aServoSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
@@ -91,7 +91,8 @@ private:
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Gecko;
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Servo;
-  static mozilla::css::Loader* gCSSLoader;
+  static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Gecko;
+  static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Servo;
   mozilla::StyleBackendType mBackendType;
   mozilla::StyleSheetHandle::RefPtr mChromePreferenceSheet;
   mozilla::StyleSheetHandle::RefPtr mContentEditableSheet;
