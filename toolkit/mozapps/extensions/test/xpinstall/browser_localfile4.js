@@ -19,7 +19,7 @@ function test() {
     var xpipath = chromeroot; //scenario where we are running from a .jar and already extracted
   }
   var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": TESTROOT + "unsigned.xpi"
+    "Unsigned XPI": TESTROOT + "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(xpipath + "installtrigger.html?" + triggers);
