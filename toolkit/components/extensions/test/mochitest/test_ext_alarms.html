@@ -112,45 +112,56 @@ add_task(function* test_get_get_all_clear_all_alarms() {
 
     let suffixes = [0, 1, 2];
 
-    suffixes.forEach(suffix => {
-      chrome.alarms.create(ALARM_NAME + suffix, {when: Date.now() + (suffix + 1) * 10000});
+    // Wrap API methods in promise-based variants.
+    let promiseAlarms = {};
+    Object.keys(browser.alarms).forEach(method => {
+      promiseAlarms[method] = (...args) => {
+        return new Promise(resolve => {
+          browser.alarms[method](...args, resolve);
+        });
+      };
     });
 
-    chrome.alarms.getAll(alarms => {
+    suffixes.forEach(suffix => {
+      browser.alarms.create(ALARM_NAME + suffix, {when: Date.now() + (suffix + 1) * 10000});
+    });
+
+    promiseAlarms.getAll().then(alarms => {
       browser.test.assertEq(suffixes.length, alarms.length);
       alarms.forEach((alarm, index) => {
         browser.test.assertEq(ALARM_NAME + index, alarm.name, "expected alarm returned");
       });
 
-      suffixes.forEach(suffix => {
-        chrome.alarms.get(ALARM_NAME + suffix, alarm => {
-          browser.test.assertEq(ALARM_NAME + suffix, alarm.name, "expected alarm returned");
-          browser.test.sendMessage(`get-${suffix}`);
-        });
-      });
-
-      chrome.alarms.clear(ALARM_NAME + suffixes[0], wasCleared => {
-        browser.test.assertTrue(wasCleared, "alarm was cleared");
-        chrome.alarms.getAll(alarms => {
-          browser.test.assertEq(2, alarms.length, "alarm was removed");
-        });
-
-        chrome.alarms.get(ALARM_NAME + suffixes[0], alarm => {
-          browser.test.assertEq(undefined, alarm, "non-existent alarm should be undefined");
-          browser.test.sendMessage(`get-invalid`);
-        });
-
-        chrome.alarms.clearAll(wasCleared => {
-          browser.test.assertTrue(wasCleared, "alarms were cleared");
-          chrome.alarms.getAll(alarms => {
-            browser.test.assertEq(0, alarms.length, "no alarms exist");
+      return Promise.all(
+        suffixes.map(suffix => {
+          return promiseAlarms.get(ALARM_NAME + suffix).then(alarm => {
+            browser.test.assertEq(ALARM_NAME + suffix, alarm.name, "expected alarm returned");
+            browser.test.sendMessage(`get-${suffix}`);
           });
-          browser.test.sendMessage("clearAll");
-        });
+        }));
+    }).then(() => {
+      return promiseAlarms.clear(ALARM_NAME + suffixes[0]);
+    }).then(wasCleared => {
+      browser.test.assertTrue(wasCleared, "alarm was cleared");
 
-        browser.test.sendMessage("clear");
-      });
+      return promiseAlarms.getAll();
+    }).then(alarms => {
+      browser.test.assertEq(2, alarms.length, "alarm was removed");
 
+      return promiseAlarms.get(ALARM_NAME + suffixes[0]);
+    }).then(alarm => {
+      browser.test.assertEq(undefined, alarm, "non-existent alarm should be undefined");
+      browser.test.sendMessage(`get-invalid`);
+
+      return promiseAlarms.clearAll();
+    }).then(wasCleared => {
+      browser.test.assertTrue(wasCleared, "alarms were cleared");
+
+      return promiseAlarms.getAll();
+    }).then(alarms => {
+      browser.test.assertEq(0, alarms.length, "no alarms exist");
+      browser.test.sendMessage("clearAll");
+      browser.test.sendMessage("clear");
       browser.test.sendMessage("getAll");
     });
   }
