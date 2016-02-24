@@ -6,6 +6,7 @@
 package org.mozilla.gecko.feeds;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -13,6 +14,7 @@ import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.feeds.action.CheckAction;
+import org.mozilla.gecko.feeds.action.EnrollAction;
 import org.mozilla.gecko.feeds.action.SubscribeAction;
 import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
 import org.mozilla.gecko.util.Experiments;
@@ -25,6 +27,15 @@ public class FeedService extends IntentService {
 
     public static final String ACTION_SUBSCRIBE = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.SUBSCRIBE";
     public static final String ACTION_CHECK = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.CHECK";
+    public static final String ACTION_ENROLL = AppConstants.ANDROID_PACKAGE_NAME + ".FEEDS.ENROLL";
+
+    public static void subscribe(Context context, String guid, String feedUrl) {
+        Intent intent = new Intent(context, FeedService.class);
+        intent.setAction(ACTION_SUBSCRIBE);
+        intent.putExtra(SubscribeAction.EXTRA_GUID, guid);
+        intent.putExtra(SubscribeAction.EXTRA_FEED_URL, feedUrl);
+        context.startService(intent);
+    }
 
     private SubscriptionStorage storage;
 
@@ -57,6 +68,10 @@ public class FeedService extends IntentService {
 
             case ACTION_CHECK:
                 new CheckAction(this, storage).perform();
+                break;
+
+            case ACTION_ENROLL:
+                new EnrollAction(this).perform();
                 break;
 
             default:
