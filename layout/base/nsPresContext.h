@@ -40,6 +40,7 @@
 #include "mozilla/RestyleLogging.h"
 #include "Units.h"
 #include "mozilla/RestyleManagerHandle.h"
+#include "prenv.h"
 
 class nsAString;
 class nsIPrintSettings;
@@ -1066,6 +1067,16 @@ public:
 
   void SetHasWarnedAboutPositionedTableParts() {
     mHasWarnedAboutPositionedTableParts = true;
+  }
+
+  static bool StyloEnabled()
+  {
+#ifdef MOZ_STYLO
+    static bool enabled = PR_GetEnv("MOZ_STYLO");
+    return enabled;
+#else
+    return false;
+#endif
   }
 
 protected:
