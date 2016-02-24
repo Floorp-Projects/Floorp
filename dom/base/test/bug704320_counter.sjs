@@ -41,7 +41,7 @@ function handleRequest(request, response)
     let referrer = request.getHeader('Referer');
     if (referrer.indexOf("bug704320") > 0) {
       referrerLevel = "full";
-    } else if (referrer == "http://mochi.test:8888") {
+    } else if (referrer == "http://mochi.test:8888/") {
       referrerLevel = "origin";
     }
   }
