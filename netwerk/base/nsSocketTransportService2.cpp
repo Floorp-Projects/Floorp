@@ -1067,9 +1067,9 @@ nsSocketTransportService::DoPollIteration(bool wait, TimeDuration *pollDuration)
 #endif
 
     // Measures seconds spent while blocked on PR_Poll
-    uint32_t pollInterval;
-
+    uint32_t pollInterval = 0;
     int32_t n = 0;
+    *pollDuration = 0;    
 #if !defined(MOZILLA_XPCOMRT_API)
     if (!gIOService->IsNetTearingDown()) {
         // Let's not do polling during shutdown.
