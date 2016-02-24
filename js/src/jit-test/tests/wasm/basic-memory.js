@@ -94,6 +94,18 @@ testLoad('i32', '8_s', 16, 0, 0, -0x10);
 testLoad('i32', '8_u', 16, 0, 0, 0xf0);
 testLoad('i32', '16_s', 16, 0, 0, -0xe10);
 testLoad('i32', '16_u', 16, 0, 0, 0xf1f0);
+
+// When these tests fail, uncomment the load/store tests below.
+function testLoadNYI(ext) {
+    assertErrorMessage(() => wasmEvalText(`(module (memory 0x10000) (func (i64.load${ext} (i32.const 0))))`), TypeError, /NYI/);
+}
+testLoadNYI('');
+testLoadNYI('8_s');
+testLoadNYI('8_u');
+testLoadNYI('16_s');
+testLoadNYI('16_u');
+testLoadNYI('32_s');
+testLoadNYI('32_u');
 //testLoad('i64', '8_s', 16, 0, 0, -0x8); // TODO: i64 NYI
 //testLoad('i64', '8_u', 16, 0, 0, 0x8); // TODO: i64 NYI
 //testLoad('i64', '16_s', 16, 0, 0, -0x707); // TODO: i64 NYI
@@ -105,10 +117,22 @@ testStore('i32', '', 0, 0, 0, -0x3f3e2c2c);
 //testStore('i32', '', 1, 0, 0, -0x3f3e2c2c); // TODO: unaligned NYI
 //testStore('i32', '', 0, 1, 0, 0xc0c1d3d4); // TODO: offset NYI
 //testStore('i32', '', 1, 1, 4, 0xc0c1d3d4); // TODO: offset NYI
+
+function testStoreNYI(ext) {
+    assertErrorMessage(() => wasmEvalText(`(module (memory 0x10000) (func (i64.store${ext} (i32.const 0) (i32.const 0))))`), TypeError, /NYI/);
+}
+testStoreNYI('');
+testStoreNYI('8');
+testStoreNYI('16');
+testStoreNYI('32');
 //testStore('i64', '', 0, 0, 0, 0xc0c1d3d4e6e7090a); // TODO: i64 NYI
 //testStore('i64', '', 1, 0, 0, 0xc0c1d3d4e6e7090a); // TODO: i64 NYI
 //testStore('i64', '', 0, 1, 0, 0xc0c1d3d4e6e7090a); // TODO: i64 NYI
 //testStore('i64', '', 1, 1, 4, 0xc0c1d3d4e6e7090a); // TODO: i64 NYI
+//testStore('i64', '8', 0, 0, 0, 0x23); // TODO: i64 NYI
+//testStore('i64', '16', 0, 0, 0, 0x23); // TODO: i64 NYI
+//testStore('i64', '32', 0, 0, 0, 0x23); // TODO: i64 NYI
+
 testStore('f32', '', 0, 0, 0, 0.01234566979110241);
 //testStore('f32', '', 1, 0, 0, 0.01234566979110241); // TODO: unaligned NYI
 //testStore('f32', '', 0, 1, 0, 0.01234567); // TODO: offsets NYI
@@ -120,9 +144,6 @@ testStore('f64', '', 0, 0, 0, 0.89012345);
 
 testStore('i32', '8', 0, 0, 0, 0x23);
 testStore('i32', '16', 0, 0, 0, 0x2345);
-//testStore('i64', '8', 0, 0, 0, 0x23); // TODO: i64 NYI
-//testStore('i64', '16', 0, 0, 0, 0x23); // TODO: i64 NYI
-//testStore('i64', '32', 0, 0, 0, 0x23); // TODO: i64 NYI
 
 testLoadError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
 testStoreError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
