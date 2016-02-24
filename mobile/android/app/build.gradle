@@ -138,6 +138,9 @@ android {
                     exclude 'org/mozilla/gecko/push/**/*.java'
                 }
             }
+            resources {
+                srcDir "${topsrcdir}/mobile/android/tests/background/junit4/resources"
+            }
         }
 
         androidTest {
