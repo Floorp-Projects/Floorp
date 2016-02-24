@@ -62,9 +62,9 @@ function run_test() {
   prefs.setIntPref("network.http.referer.trimmingPolicy", 1);
   do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/path3");
   prefs.setIntPref("network.http.referer.trimmingPolicy", 2);
-  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/");
   // https test
-  do_check_eq(getTestReferrer(server_uri_https, referer_uri_https), "https://bar.example.com");
+  do_check_eq(getTestReferrer(server_uri_https, referer_uri_https), "https://bar.example.com/");
   prefs.setIntPref("network.http.referer.trimmingPolicy", 0);
   // test that anchor is lopped off in ordinary case
   do_check_eq(getTestReferrer(server_uri, referer_uri_2_anchor), referer_uri_2);

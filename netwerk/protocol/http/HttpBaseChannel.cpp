@@ -1494,8 +1494,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     break;
   }
   case 2:
-    // scheme+host+port
+    // scheme+host+port+/
     rv = clone->GetPrePath(spec);
+    spec.AppendLiteral("/");
     if (NS_FAILED(rv)) return rv;
     break;
 

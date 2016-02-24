@@ -28,7 +28,7 @@ function create2ndLevelIframeUrl(schemeFrom, schemeTo, policy, type) {
 //   <iframe>
 //   <audio>
 //   <video>
-//   <object type="bogus"> 
+//   <object type="bogus">
 //   <object type="image/svg+xml">
 //   <a>
 //   <a ping>
