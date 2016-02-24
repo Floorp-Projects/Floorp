@@ -1719,6 +1719,8 @@ ScriptExecutorRunnable::IsDebuggerRunnable() const
 bool
 ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
   nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
 
   // Don't run if something else has already failed.
@@ -1733,6 +1735,9 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
+  // If nothing else has failed, our ErrorResult better not be a failure either.
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+
   JS::Rooted<JSObject*> global(aCx);
 
   if (mIsWorkerScript) {
@@ -1745,6 +1750,8 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     global.set(globalScope->GetWrapper());
   } else {
+    // XXXbz Icky action at a distance...  Would be better to capture this state
+    // in mScriptLoader!
     global.set(JS::CurrentGlobalOrNull(aCx));
   }
 
@@ -1759,8 +1766,14 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
     NS_ASSERTION(!loadInfo.mExecutionResult, "Should not have executed yet!");
 
+    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+    mScriptLoader.mRv.MightThrowJSException();
     if (NS_FAILED(loadInfo.mLoadResult)) {
       scriptloader::ReportLoadError(aCx, loadInfo.mLoadResult);
+      // Don't try to steal if ReportLoadError didn't actually throw.
+      if (JS_IsExceptionPending(aCx)) {
+        mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
+      }
       // Top level scripts only!
       if (mIsWorkerScript) {
         aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
@@ -1787,8 +1800,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     loadInfo.mScriptTextBuf = nullptr;
     loadInfo.mScriptTextLength = 0;
 
+    // Our ErrorResult still shouldn't be a failure.
+    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
     JS::Rooted<JS::Value> unused(aCx);
     if (!JS::Evaluate(aCx, options, srcBuf, &unused)) {
+      mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
       return true;
     }
 
@@ -1802,6 +1818,9 @@ void
 ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                                 bool aRunResult)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
+
   nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
 
   if (mLastIndex == loadInfos.Length() - 1) {
@@ -1825,6 +1844,13 @@ ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       }
     }
 
+    // The only way we can get here with "result" false but without either
+    // mScriptLoader.mRv or loadResult being failures is if we're loading the
+    // main worker script and GetOrCreateGlobalScope() fails.  In that case we
+    // would have returned false from WorkerRun, so assert that.
+    MOZ_ASSERT_IF(!result && !mScriptLoader.mRv.Failed() &&
+                  NS_SUCCEEDED(loadResult),
+                  !aRunResult);
     ShutdownScriptLoader(aCx, aWorkerPrivate, result, loadResult, mutedError);
   }
 }
@@ -1846,6 +1872,8 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
                                              nsresult aLoadResult,
                                              bool aMutedError)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
 
   if (mIsWorkerScript && aWorkerPrivate->IsServiceWorker()) {
@@ -1853,11 +1881,30 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
   }
 
   if (!aResult) {
-    // If this error has to be muted, we have to clear the pending exception,
-    // if any, and use the ErrorResult object to throw a new exception.
-    if (aMutedError && JS_IsExceptionPending(aCx)) {
-      LogExceptionToConsole(aCx, aWorkerPrivate);
-      mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
+    // At this point there are three possibilities:
+    //
+    // 1) mScriptLoader.mRv.Failed().  In that case we just want to leave it
+    //    as-is, except if it has a JS exception and we need to mute JS
+    //    exceptions.  In that case, we log the exception without firing any
+    //    events and then replace it on the ErrorResult with a generic
+    //    NS_ERROR_FAILURE for lack of anything better.  XXXbz: This should
+    //    throw a NetworkError per spec updates.  See bug 1249673.
+    //
+    // 2) mScriptLoader.mRv succeeded, but aLoadResult is a failure status.
+    //    This indicates some failure somewhere along the way (e.g. network
+    //    failure).  Just throw that failure status.  XXXbz: Shouldn't this also
+    //    generally become NetworkError?
+    //
+    // 3) mScriptLoader.mRv succeeded and aLoadResult is also success.  As far
+    //    as I can tell, this can only happen when loading the main worker
+    //    script and GetOrCreateGlobalScope() fails or if
+    //    ScriptExecutorRunnable::Cancel got called.  Does it matter what we
+    //    throw in this case?  I'm not sure...
+    if (mScriptLoader.mRv.Failed()) {
+      if (aMutedError && mScriptLoader.mRv.IsJSException()) {
+        LogExceptionToConsole(aCx, aWorkerPrivate);
+        mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
+      }
     } else if (NS_FAILED(aLoadResult)) {
       mScriptLoader.mRv.Throw(aLoadResult);
     } else {
@@ -1875,12 +1922,16 @@ ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
+  MOZ_ASSERT(mScriptLoader.mRv.IsJSException());
+
   JS::Rooted<JS::Value> exn(aCx);
-  if (!JS_GetPendingException(aCx, &exn)) {
+  if (!ToJSValue(aCx, mScriptLoader.mRv, &exn)) {
     return;
   }
 
-  JS_ClearPendingException(aCx);
+  // Now the exception state should all be in exn.
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
   js::ErrorReport report(aCx);
   if (!report.init(aCx, exn)) {
