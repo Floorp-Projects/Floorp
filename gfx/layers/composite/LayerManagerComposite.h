@@ -285,6 +285,8 @@ public:
   // overlay.
   void SetWindowOverlayChanged() { mWindowOverlayChanged = true; }
 
+  void ForcePresent() { mCompositor->ForcePresent(); }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
