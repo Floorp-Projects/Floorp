@@ -240,9 +240,14 @@ DistributionCustomizer.prototype = {
     }
   }),
 
+  _newProfile: false,
   _customizationsApplied: false,
   applyCustomizations: function DIST_applyCustomizations() {
     this._customizationsApplied = true;
+
+    if (!Services.prefs.prefHasUserValue("browser.migration.version"))
+      this._newProfile = true;
+
     if (!this._ini)
       return this._checkCustomizationComplete();
 
@@ -408,6 +413,25 @@ DistributionCustomizer.prototype = {
   },
 
   _checkCustomizationComplete: function DIST__checkCustomizationComplete() {
+    const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+
+    if (this._newProfile) {
+      let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+
+      try {
+        var showPersonalToolbar = Services.prefs.getBoolPref("browser.showPersonalToolbar");
+        if (showPersonalToolbar) {
+          xulStore.setValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed", "false");
+        }
+      } catch(e) {}
+      try {
+        var showMenubar = Services.prefs.getBoolPref("browser.showMenubar");
+        if (showMenubar) {
+          xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "collapsed", "false");
+        }
+      } catch(e) {}
+    }
+
     let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;
     if (this._customizationsApplied && this._bookmarksApplied &&
         prefDefaultsApplied) {
