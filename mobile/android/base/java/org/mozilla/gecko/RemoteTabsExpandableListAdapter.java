@@ -169,7 +169,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         // It's OK to access the DB on the main thread here, as we're just
         // getting a string.
         final GeckoProfile profile = GeckoProfile.get(context);
-        holder.lastModifiedView.setText(this.getLastSyncedString(context, now, client.lastModified));
+        holder.lastModifiedView.setText(getLastSyncedString(context, now, client.lastModified));
 
         // These views exists only in some of our group views: they are present
         // for the home panel groups and not for the tabs panel groups.
@@ -236,7 +236,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
      * @param time to format string for.
      * @return string describing time span
      */
-    public String getLastSyncedString(Context context, long now, long time) {
+    public static String getLastSyncedString(Context context, long now, long time) {
         if (new Date(time).before(EARLIEST_VALID_SYNCED_DATE)) {
             return context.getString(R.string.remote_tabs_never_synced);
         }
