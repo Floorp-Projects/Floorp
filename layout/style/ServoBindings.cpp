@@ -94,13 +94,6 @@ Gecko_GetDocumentElement(RawGeckoDocument* aDoc)
   return aDoc->GetDocumentElement();
 }
 
-uint8_t
-Gecko_ElementState(RawGeckoElement* aElement)
-{
-  return aElement->StyleState().GetInternalValue() &
-         ((1 << (NS_EVENT_STATE_HIGHEST_SERVO_BIT + 1)) - 1);
-}
-
 int
 Gecko_IsHTMLElementInHTMLDocument(RawGeckoElement* aElement)
 {
