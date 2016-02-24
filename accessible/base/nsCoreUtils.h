@@ -330,6 +330,11 @@ public:
    * Notify accessible event observers of an event.
    */
   static void DispatchAccEvent(RefPtr<nsIAccessibleEvent> aEvent);
+
+  /**
+   * Return a role attribute on XBL bindings of the element.
+   */
+  static void XBLBindingRole(const nsIContent* aEl, nsAString& aRole);
 };
 
 #endif

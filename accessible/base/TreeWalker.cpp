@@ -107,9 +107,14 @@ TreeWalker::Next(ChildrenIterator* aIter, Accessible** aAccesible,
   *aSkipSubtree = false;
 
   if (childEl) {
-    Accessible* accessible = mFlags & eWalkCache ?
-      mDoc->GetAccessible(childEl) :
-      GetAccService()->GetOrCreateAccessible(childEl, mContext, aSkipSubtree);
+    Accessible* accessible = nullptr;
+    if (mFlags & eWalkCache) {
+      accessible = mDoc->GetAccessible(childEl);
+    }
+    else if (mContext->IsAcceptableChild(childEl)) {
+      accessible = GetAccService()->
+        GetOrCreateAccessible(childEl, mContext, aSkipSubtree);
+    }
 
     // Ignore the accessible and its subtree if it was repositioned by means of
     // aria-owns.
