@@ -307,7 +307,7 @@ fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing.html osx-font
 fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
 
-pref(layout.css.text-align-unsafe-value.enabled,true) == text-align-true.html text-align-true-ref.html
+pref(layout.css.text-align-unsafe-value.enabled,true) == text-align-unsafe.html text-align-unsafe-ref.html
 
 # stray control chars should be visible by default, bug 1099557
 != control-chars-01a.html control-chars-01-notref.html
