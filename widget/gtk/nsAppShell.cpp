@@ -49,7 +49,7 @@ PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
 // For bug 726483.
 static decltype(GtkContainerClass::check_resize) sReal_gtk_window_check_resize;
 
-void
+static void
 wrap_gtk_window_check_resize(GtkContainer *container)
 {
     GdkWindow* gdk_window = gtk_widget_get_window(&container->widget);
