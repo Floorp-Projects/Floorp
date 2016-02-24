@@ -18,7 +18,7 @@ function test() {
   Harness.setup();
 
   setup_redirect({
-    "Location": "data:text/html,<script>window.location.href='" + TESTROOT + "unsigned.xpi'</script>"
+    "Location": "data:text/html,<script>window.location.href='" + TESTROOT + "amosigned.xpi'</script>"
   });
 
   gBrowser.selectedTab = gBrowser.addTab();

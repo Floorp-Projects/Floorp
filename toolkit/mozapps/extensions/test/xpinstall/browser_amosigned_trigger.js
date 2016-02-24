@@ -1,5 +1,6 @@
 // ----------------------------------------------------------------------------
-// Tests that InstallTrigger deals with relative urls correctly.
+// Tests installing an unsigned add-on through an InstallTrigger call in web
+// content.
 function test() {
   Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
@@ -12,8 +13,8 @@ function test() {
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
-      URL: "amosigned.xpi",
-      IconURL: "icon.png",
+      URL: TESTROOT + "amosigned.xpi",
+      IconURL: TESTROOT + "icon.png",
       toString: function() { return this.URL; }
     }
   }));
