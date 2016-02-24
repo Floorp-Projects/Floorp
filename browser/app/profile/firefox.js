@@ -1592,6 +1592,11 @@ pref("layers.async-pan-zoom.enabled", true);
 pref("extensions.interposition.enabled", true);
 pref("extensions.interposition.prefetching", true);
 
+// Enable blocking of e10s for add-on users on beta/release.
+#ifdef RELEASE_BUILD
+pref("extensions.e10sBlocksEnabling", true);
+#endif
+
 pref("browser.defaultbrowser.notificationbar", false);
 
 // How often to check for CPOW timeouts. CPOWs are only timed out by
