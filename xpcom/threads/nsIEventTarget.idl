@@ -41,18 +41,6 @@ interface nsIEventTarget : nsISupports
   const unsigned long DISPATCH_SYNC = 1;
 
   /**
-   * This flag specifies that the dispatch is occurring from a running event
-   * that was dispatched to the same event target, and that event is about to
-   * finish.
-   *
-   * A thread pool can use this as an optimization hint to not spin up
-   * another thread, since the current thread is about to become idle.
-   *
-   * These events are always async.
-   */
-  const unsigned long DISPATCH_TAIL = 2;
-
-  /**
    * Check to see if this event target is associated with the current thread.
    *
    * @returns
@@ -103,5 +91,4 @@ interface nsIEventTarget : nsISupports
 // convenient aliases:
 #define NS_DISPATCH_NORMAL nsIEventTarget::DISPATCH_NORMAL
 #define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
-#define NS_DISPATCH_TAIL   nsIEventTarget::DISPATCH_TAIL
 %}
