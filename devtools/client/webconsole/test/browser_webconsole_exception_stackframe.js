@@ -11,7 +11,7 @@
 // On e10s, the exception is triggered in child process
 // and is ignored by test harness
 if (!Services.appinfo.browserTabsRemoteAutostart) {
-  expectUncaughtException();
+  SimpleTest.ignoreAllUncaughtExceptions();
 }
 
 function test() {
@@ -49,6 +49,37 @@ function test() {
         severity: SEVERITY_ERROR,
         collapsible: true,
         stacktrace: stack,
+      }, {
+        text: "An invalid or illegal string was specified",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+        collapsible: true,
+        stacktrace: [{
+          file: TEST_FILE,
+            fn: "domAPI",
+            line: 25,
+          }, {
+            file: TEST_FILE,
+            fn: "onLoadDomAPI",
+            line: 33,
+          }
+        ]
+      }, {
+        text: "DOMException",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+        collapsible: true,
+        stacktrace: [{
+            file: TEST_FILE,
+            fn: "domException",
+            line: 29,
+          }, {
+            file: TEST_FILE,
+            fn: "onLoadDomException",
+            line: 36,
+          },
+
+        ]
       }],
     });
 
