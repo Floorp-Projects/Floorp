@@ -64,7 +64,7 @@ function IsAcceleratedSkia() {
 
   try {
     var props = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo();
-    enabled = props.AzureCanvasBackend == "skia" && props.AzureCanvasAccelerated;
+    enabled = props.AzureCanvasBackend == "skia" && props.AzureSkiaAccelerated;
   } catch(e) { }
 
   return enabled;

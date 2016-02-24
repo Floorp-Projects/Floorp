@@ -1207,24 +1207,22 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
   return SupportsAzureContentForType(aTarget->GetBackendType());
 }
 
-bool gfxPlatform::UseAcceleratedCanvas()
+bool
+gfxPlatform::UseAcceleratedSkiaCanvas()
 {
-  // Allow acceleration on Skia if the preference is set, unless it's blocked
-  if (mPreferredCanvasBackend == BackendType::SKIA && gfxPrefs::CanvasAzureAccelerated()) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    int32_t status;
-    return !gfxInfo ||
-      (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
-                                              &status)) &&
-       status == nsIGfxInfo::FEATURE_STATUS_OK);
-  }
-  return false;
+  return gfxPrefs::CanvasAzureAccelerated() &&
+         mPreferredCanvasBackend == BackendType::SKIA;
+}
+
+bool gfxPlatform::HaveChoiceOfHWAndSWCanvas()
+{
+  return mPreferredCanvasBackend == BackendType::SKIA;
 }
 
 void
 gfxPlatform::InitializeSkiaCacheLimits()
 {
-  if (UseAcceleratedCanvas()) {
+  if (UseAcceleratedSkiaCanvas()) {
 #ifdef USE_SKIA_GPU
     bool usingDynamicCache = gfxPrefs::CanvasSkiaGLDynamicCache();
     int cacheItemLimit = gfxPrefs::CanvasSkiaGLCacheItems();
@@ -1256,7 +1254,7 @@ SkiaGLGlue*
 gfxPlatform::GetSkiaGLGlue()
 {
 #ifdef USE_SKIA_GPU
-  if (!UseAcceleratedCanvas()) {
+  if (!gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
     gfxCriticalNote << "Accelerated Skia canvas is disabled";
     return nullptr;
   }
