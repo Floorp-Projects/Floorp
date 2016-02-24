@@ -1513,8 +1513,7 @@ pref("media.eme.apiVisible", true);
 
 // Decode using Gecko Media Plugins in <video>, if a system decoder is not
 // availble and the preferred GMP is available.
-// NOTE: Disabled until Bug 1236756 is fixed by Adobe.
-pref("media.gmp.decoder.enabled", false);
+pref("media.gmp.decoder.enabled", true);
 
 // If decoding-via-GMP is turned on for <video>, use Adobe's GMP for decoding,
 // if it's available. Note: We won't fallback to another GMP if Adobe's is not
