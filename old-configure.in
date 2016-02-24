@@ -2192,7 +2192,9 @@ ia64*-hpux*)
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
+        cgthreads="-CGTHREADS:${num_cores}"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT $cgthreads"
         dnl XXX: PGO builds can fail with warnings treated as errors,
         dnl specifically "no profile data available" appears to be
         dnl treated as an error sometimes. This might be a consequence
@@ -2203,7 +2205,7 @@ ia64*-hpux*)
         PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
         dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
         dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
         if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" = "31101"; then
