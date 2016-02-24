@@ -185,11 +185,20 @@ private:
   }
 
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override final
   {
     AssertIsOnMainThread();
 
     return true;
+  }
+
+  // We want to be able to assert in PostDispatch that no exceptions were thrown
+  // on aCx.  We can do that if we know no one is subclassing our
+  // DispatchInternal to do weird things.
+  virtual bool
+  DispatchInternal() override final
+  {
+    return WorkerRunnable::DispatchInternal();
   }
 
   virtual void
@@ -213,7 +222,6 @@ protected:
 
   virtual ~WorkerSyncRunnable();
 
-private:
   virtual bool
   DispatchInternal() override;
 };
@@ -242,12 +250,32 @@ protected:
   virtual ~MainThreadWorkerSyncRunnable()
   { }
 
+  // Hook for subclasses that want to override our PreDispatch.  This override
+  // must be infallible and must not leave an exception hanging out on the
+  // JSContext.  We pass the JSContext through so callees that expect to be able
+  // to do something with script have a way to do it.  We'd pass an AutoJSAPI,
+  // but some of our subclasses are dispatched with a null JSContext*, so we
+  // can't do that sort of thing ourselves.
+  virtual void InfalliblePreDispatch(JSContext* aCx)
+  {}
+
 private:
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override final
   {
     AssertIsOnMainThread();
+    InfalliblePreDispatch(aCx);
+    MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
     return true;
+  }
+
+  // We want to be able to assert in PostDispatch that no exceptions were thrown
+  // on aCx.  We can do that if we know no one is subclassing our
+  // DispatchInternal to do weird things.
+  virtual bool
+  DispatchInternal() override final
+  {
+    return WorkerSyncRunnable::DispatchInternal();
   }
 
   virtual void
@@ -286,8 +314,10 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
+  // If this stops being final, reevaluate the assumptions
+  // MainThreadWorkerSyncRunnable::PostDispatch makes.
   virtual bool
-  DispatchInternal() override;
+  DispatchInternal() override final;
 };
 
 // This runnable is identical to StopSyncLoopRunnable except it is meant to be
@@ -310,8 +340,10 @@ protected:
   { }
 
 private:
+  // If this function stops being final, reevaluate the assumptions PostDispatch
+  // makes.
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override final
   {
     AssertIsOnMainThread();
     return true;

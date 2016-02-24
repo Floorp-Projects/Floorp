@@ -295,16 +295,13 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
     if (NS_WARN_IF(aOuter && !aIID.Equals(NS_GET_IID(nsISupports))))        \
         return NS_ERROR_INVALID_ARG;                                        \
                                                                             \
-    _InstanceClass* inst = new _InstanceClass(aOuter);                      \
+    RefPtr<_InstanceClass> inst = new _InstanceClass(aOuter);               \
     if (!inst) {                                                            \
         return NS_ERROR_OUT_OF_MEMORY;                                      \
     }                                                                       \
                                                                             \
     nsISupports* inner = inst->InnerObject();                               \
     nsresult rv = inner->QueryInterface(aIID, aResult);                     \
-    if (NS_FAILED(rv)) {                                                    \
-        delete inst;                                                        \
-    }                                                                       \
                                                                             \
     return rv;                                                              \
 }                                                                           \
@@ -318,7 +315,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
     if (NS_WARN_IF(aOuter && !aIID.Equals(NS_GET_IID(nsISupports))))        \
         return NS_ERROR_INVALID_ARG;                                        \
                                                                             \
-    _InstanceClass* inst = new _InstanceClass(aOuter);                      \
+    RefPtr<_InstanceClass> inst = new _InstanceClass(aOuter);               \
     if (!inst) {                                                            \
         return NS_ERROR_OUT_OF_MEMORY;                                      \
     }                                                                       \

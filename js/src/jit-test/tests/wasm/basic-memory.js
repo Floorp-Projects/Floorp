@@ -3,11 +3,6 @@ load(libdir + "wasm.js");
 if (!wasmIsSupported())
     quit();
 
-function mismatchError(actual, expect) {
-    var str = "type mismatch: expression has type " + actual + " but expected " + expect;
-    return RegExp(str);
-}
-
 function testLoad(type, ext, base, offset, align, expect) {
   assertEq(wasmEvalText(
     '(module' +
@@ -131,3 +126,12 @@ testStore('i32', '16', 0, 0, 0, 0x2345);
 
 testLoadError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
 testStoreError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
+
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
+
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "f32"));
+
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));

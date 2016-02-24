@@ -3,10 +3,12 @@ import os
 import re
 import sys
 
+
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.script import BaseScript
+from mozharness.mozilla.aws import pop_aws_auth_from_env
 
 
 class ReleasePusher(BaseScript, VirtualenvMixin):
@@ -45,7 +47,7 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         }],
     ] + virtualenv_config_options
 
-    def __init__(self):
+    def __init__(self, aws_creds):
         BaseScript.__init__(self,
             config_options=self.config_options,
             require_config_file=False,
@@ -68,9 +70,20 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
             ],
         )
 
-        # set the env var for boto to read our special config file
-        # rather than anything else we have at ~/.boto
-        os.environ["BOTO_CONFIG"] = os.path.abspath(self.config["credentials"])
+        # validate aws credentials
+        if not (all(aws_creds) or self.config.get('credentials')):
+            self.fatal("aws creds not defined. please add them to your config or env.")
+        if any(aws_creds) and self.config.get('credentials'):
+            self.fatal("aws creds found in env and self.config. please declare in one place only.")
+
+        # set aws credentials
+        if aws_creds:
+            self.aws_key_id, self.aws_secret_key = aws_creds
+        else:  # use
+            self.aws_key_id, self.aws_secret_key = None, None
+            # set the env var for boto to read our special config file
+            # rather than anything else we have at ~/.boto
+            os.environ["BOTO_CONFIG"] = os.path.abspath(self.config["credentials"])
 
     def _pre_config_lock(self, rw_config):
         super(ReleasePusher, self)._pre_config_lock(rw_config)
@@ -128,7 +141,8 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         logging.getLogger('boto').setLevel(logging.INFO)
 
         self.info("Connecting to S3")
-        conn = S3Connection()
+        conn = S3Connection(aws_access_key_id=self.aws_key_id,
+                            aws_secret_access_key=self.aws_secret_key)
         self.info("Getting bucket {}".format(self.config["bucket_name"]))
         bucket = conn.get_bucket(self.config["bucket_name"])
 
@@ -167,5 +181,5 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         pool.map(worker, find_release_files())
 
 if __name__ == "__main__":
-    myScript = ReleasePusher()
+    myScript = ReleasePusher(pop_aws_auth_from_env())
     myScript.run_and_exit()

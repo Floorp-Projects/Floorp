@@ -145,13 +145,7 @@ void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   }
   completion->FreezePrerequisites();
 
-  RefPtr<EventObject> waitForCompletion = new EventObject();
-  auto evtJob = new SetEventJob(waitForCompletion, completion);
-  JobScheduler::SubmitJob(evtJob);
-
-  MaybeYieldThread();
-
-  waitForCompletion->Wait();
+  JobScheduler::Join(completion);
 
   MaybeYieldThread();
 
@@ -205,13 +199,7 @@ void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   }
   completion->FreezePrerequisites();
 
-  RefPtr<EventObject> waitForCompletion = new EventObject();
-  auto evtJob = new SetEventJob(waitForCompletion, completion);
-  JobScheduler::SubmitJob(evtJob);
-
-  MaybeYieldThread();
-
-  waitForCompletion->Wait();
+  JobScheduler::Join(completion);
 
   for (auto advancement : check.mAdvancements) {
     EXPECT_TRUE(advancement == numJobs);
