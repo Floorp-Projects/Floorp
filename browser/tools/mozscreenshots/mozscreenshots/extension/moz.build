@@ -15,3 +15,7 @@ FINAL_TARGET_PP_FILES += [
     'bootstrap.js',
     'install.rdf',
 ]
+
+TEST_HARNESS_FILES.testing.mochitest.extensions += [
+    'mozscreenshots-signed.xpi',
+]
