@@ -273,6 +273,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'favicons/LoadFaviconTask.java',
     'favicons/OnFaviconLoadedListener.java',
     'favicons/RemoteFavicon.java',
+    'feeds/FeedFetcher.java',
     'feeds/parser/Feed.java',
     'feeds/parser/Item.java',
     'feeds/parser/SimpleFeedParser.java',
