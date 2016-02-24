@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on through a navigation. Should not be
 // blocked since the referer is whitelisted.
-var URL = TESTROOT2 + "navigate.html?" + encodeURIComponent(TESTROOT + "unsigned.xpi");
+var URL = TESTROOT2 + "navigate.html?" + encodeURIComponent(TESTROOT + "amosigned.xpi");
 
 function test() {
   Harness.installConfirmCallback = confirm_install;

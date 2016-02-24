@@ -4,7 +4,7 @@
 function test() {
   waitForExplicitFinish();
 
-  var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "unsigned.xpi"));
+  var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "amosigned.xpi"));
   gBrowser.selectedTab = gBrowser.addTab();
 
   function loadListener() {

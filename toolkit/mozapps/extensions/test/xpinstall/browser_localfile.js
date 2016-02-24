@@ -10,9 +10,9 @@ function test() {
 
   var chromeroot = extractChromeRoot(gTestPath);
   try {
-    var xpipath = cr.convertChromeURL(makeURI(chromeroot + "unsigned.xpi")).spec;
+    var xpipath = cr.convertChromeURL(makeURI(chromeroot + "amosigned.xpi")).spec;
   } catch (ex) {
-    var xpipath = chromeroot + "unsigned.xpi"; //scenario where we are running from a .jar and already extracted
+    var xpipath = chromeroot + "amosigned.xpi"; //scenario where we are running from a .jar and already extracted
   }
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
