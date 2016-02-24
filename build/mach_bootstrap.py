@@ -27,6 +27,8 @@ If you would like to use a different directory, hit CTRL+c and set the
 MOZBUILD_STATE_PATH environment variable to the directory you would like to
 use and re-run mach. For this change to take effect forever, you'll likely
 want to export this environment variable from your shell's init scripts.
+
+Press ENTER/RETURN to continue or CTRL+c to abort.
 '''.lstrip()
 
 NO_MERCURIAL_SETUP = '''
@@ -401,25 +403,18 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             if is_environ:
                 if not os.path.exists(state_dir):
                     print('Creating global state directory from environment variable: %s'
-                        % state_dir)
+                          % state_dir)
                     os.makedirs(state_dir, mode=0o770)
-                    print('Please re-run mach.')
-                    sys.exit(1)
             else:
                 if not os.path.exists(state_dir):
                     print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
                     try:
-                        for i in range(20, -1, -1):
-                            time.sleep(1)
-                            sys.stdout.write('%d ' % i)
-                            sys.stdout.flush()
+                        sys.stdin.readline()
                     except KeyboardInterrupt:
                         sys.exit(1)
 
                     print('\nCreating default state directory: %s' % state_dir)
-                    os.mkdir(state_dir)
-                    print('Please re-run mach.')
-                    sys.exit(1)
+                    os.makedirs(state_dir, mode=0o770)
 
             return state_dir
 
