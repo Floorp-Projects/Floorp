@@ -822,6 +822,22 @@ const kMessageHandlers = {
   },
 
   /**
+   * Retrieves the Getting Started tour url.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [aSrc, aAdditionalParams]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GettingStartedURL: function(message, reply) {
+    let aSrc = message.data[0] || null;
+    let aAdditionalParams = message.data[1] || {};
+    reply(MozLoopService.getTourURL(aSrc, aAdditionalParams).href);
+  },
+
+  /**
    * Open the FxA profile/ settings page.
    *
    * @param {Object}   message Message meant for the handler function, containing
