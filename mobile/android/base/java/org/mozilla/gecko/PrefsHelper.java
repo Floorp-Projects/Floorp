@@ -26,6 +26,7 @@ public final class PrefsHelper {
     // Map pref name to ArrayList for multiple observers or PrefHandler for single observer.
     private static final SimpleArrayMap<String, Object> OBSERVERS = new SimpleArrayMap<>();
     private static final HashSet<String> INT_TO_STRING_PREFS = new HashSet<>(8);
+    private static final HashSet<String> INT_TO_BOOL_PREFS = new HashSet<>(2);
 
     static {
         INT_TO_STRING_PREFS.add("browser.chrome.titlebarMode");
@@ -33,6 +34,7 @@ public final class PrefsHelper {
         INT_TO_STRING_PREFS.add("font.size.inflation.minTwips");
         INT_TO_STRING_PREFS.add("home.sync.updateMode");
         INT_TO_STRING_PREFS.add("browser.image_blocking");
+        INT_TO_BOOL_PREFS.add("browser.display.use_document_fonts");
     }
 
     @WrapForJNI
@@ -89,6 +91,9 @@ public final class PrefsHelper {
             // actual types so we can store them.
             type = PREF_INT;
             intVal = Integer.parseInt(String.valueOf(value));
+        } else if (INT_TO_BOOL_PREFS.contains(pref)) {
+            type = PREF_INT;
+            intVal = (Boolean) value ? 1 : 0;
         } else if (value instanceof Boolean) {
             type = PREF_BOOL;
             boolVal = (Boolean) value;
@@ -214,6 +219,9 @@ public final class PrefsHelper {
         if (INT_TO_STRING_PREFS.contains(pref)) {
             type = PREF_STRING;
             strVal = String.valueOf(intVal);
+        } else if (INT_TO_BOOL_PREFS.contains(pref)) {
+            type = PREF_BOOL;
+            boolVal = intVal == 1;
         }
 
         switch (type) {

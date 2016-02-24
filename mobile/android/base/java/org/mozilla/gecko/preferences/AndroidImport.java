@@ -151,13 +151,14 @@ public class AndroidImport implements Runnable {
         flushBatchOperations();
     }
 
-    protected Cursor query (Uri mainUri, Uri fallbackUri, String condition) {
-        Cursor cursor = mCr.query(mainUri, null, condition, null, null);
-
+    protected Cursor query(Uri mainUri, Uri fallbackUri, String condition) {
+        final Cursor cursor = mCr.query(mainUri, null, condition, null, null);
         if (Build.MANUFACTURER.equals(SAMSUNG_MANUFACTURER) && (cursor == null || cursor.getCount() == 0)) {
-            cursor = mCr.query(fallbackUri, null, null, null, null);
+            if (cursor != null) {
+                cursor.close();
+            }
+            return mCr.query(fallbackUri, null, null, null, null);
         }
-
         return cursor;
     }
 
