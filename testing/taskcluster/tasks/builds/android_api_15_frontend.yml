@@ -45,6 +45,24 @@ task:
 
     command: ["/bin/bash", "bin/build.sh"]
 
+    artifacts:
+      'public/android/unittest':
+        type: directory
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/android/lint/lint-results-automationDebug.html':
+        type: file
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/android/lint/lint-results-automationDebug.xml':
+        type: file
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.xml'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/android/lint/lint-results-automationDebug_files':
+        type: directory
+        path: '/home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug_files'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
   extra:
     treeherderEnv:
       - production
