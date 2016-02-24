@@ -86,8 +86,15 @@ private:
   nsresult
   DispatchMessage() const
   {
-    nsCOMPtr<nsIGlobalObject> globalObject = mPort->GetParentObject();
-    MOZ_ASSERT(globalObject);
+    nsCOMPtr<nsIGlobalObject> globalObject;
+
+    if (NS_IsMainThread()) {
+      globalObject = do_QueryInterface(mPort->GetParentObject());
+    } else {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+      globalObject = workerPrivate->GlobalScope();
+    }
 
     AutoJSAPI jsapi;
     if (!globalObject || !jsapi.Init(globalObject)) {
@@ -252,17 +259,20 @@ NS_IMPL_ISUPPORTS(ForceCloseHelper, nsIIPCBackgroundChildCreateCallback)
 
 } // namespace
 
-MessagePort::MessagePort(nsIGlobalObject* aGlobal)
-  : DOMEventTargetHelper(aGlobal)
-  , mInnerID(0)
+MessagePort::MessagePort(nsISupports* aSupports)
+  : mInnerID(0)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
 {
-  MOZ_ASSERT(aGlobal);
-
   mIdentifier = new MessagePortIdentifier();
   mIdentifier->neutered() = true;
   mIdentifier->sequenceId() = 0;
+
+  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aSupports);
+  if (NS_WARN_IF(!globalObject)) {
+    return;
+  }
+  BindToOwner(globalObject);
 }
 
 MessagePort::~MessagePort()
@@ -272,25 +282,21 @@ MessagePort::~MessagePort()
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsIGlobalObject* aGlobal, const nsID& aUUID,
+MessagePort::Create(nsISupports* aSupport, const nsID& aUUID,
                     const nsID& aDestinationUUID, ErrorResult& aRv)
 {
-  MOZ_ASSERT(aGlobal);
-
-  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
+  RefPtr<MessagePort> mp = new MessagePort(aSupport);
   mp->Initialize(aUUID, aDestinationUUID, 1 /* 0 is an invalid sequence ID */,
                  false /* Neutered */, eStateUnshippedEntangled, aRv);
   return mp.forget();
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsIGlobalObject* aGlobal,
+MessagePort::Create(nsISupports* aSupport,
                     const MessagePortIdentifier& aIdentifier,
                     ErrorResult& aRv)
 {
-  MOZ_ASSERT(aGlobal);
-
-  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
+  RefPtr<MessagePort> mp = new MessagePort(aSupport);
   mp->Initialize(aIdentifier.uuid(), aIdentifier.destinationUuid(),
                  aIdentifier.sequenceId(), aIdentifier.neutered(),
                  eStateEntangling, aRv);

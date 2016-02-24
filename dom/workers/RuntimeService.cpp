@@ -2386,14 +2386,13 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
 
   // We don't actually care about this MessageChannel, but we use it to 'steal'
   // its 2 connected ports.
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
-  RefPtr<MessageChannel> channel = MessageChannel::Constructor(global, rv);
+  RefPtr<MessageChannel> channel = MessageChannel::Constructor(window, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
-                                                       channel->Port1());
+                                                         channel->Port1());
 
   if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker,
                                            channel->Port2())) {
