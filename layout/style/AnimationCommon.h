@@ -62,17 +62,11 @@ public:
                   nsStyleContext* aStyleContext,
                   StyleAnimationValue& aComputedValue);
 
-  virtual bool IsAnimationManager() {
-    return false;
-  }
-
 protected:
   virtual ~CommonAnimationManager();
 
   void AddElementCollection(AnimationCollection* aCollection);
   void RemoveAllElementCollections();
-
-  bool NeedsRefresh() const;
 
   virtual nsIAtom* GetAnimationsAtom() = 0;
   virtual nsIAtom* GetAnimationsBeforeAtom() = 0;
@@ -130,23 +124,7 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
-  void Tick();
-
 public:
-  // True if this animation can be performed on the compositor thread.
-  //
-  // Returns whether the state of this element's animations at the current
-  // refresh driver time contains animation data that can be done on the
-  // compositor thread.  (This is used for determining whether a layer
-  // should be active, or whether to send data to the layer.)
-  //
-  // Note that this does not test whether the element's layer uses
-  // off-main-thread compositing, although it does check whether
-  // off-main-thread compositing is enabled as a whole.
-  bool CanPerformOnCompositorThread(const nsIFrame* aFrame) const;
-
-  bool HasCurrentAnimationOfProperty(nsCSSProperty aProperty) const;
-
   bool IsForElement() const { // rather than for a pseudo-element
     return mElementProperty == nsGkAtoms::animationsProperty ||
            mElementProperty == nsGkAtoms::transitionsProperty;
@@ -160,18 +138,6 @@ public:
   bool IsForAfterPseudo() const {
     return mElementProperty == nsGkAtoms::animationsOfAfterProperty ||
            mElementProperty == nsGkAtoms::transitionsOfAfterProperty;
-  }
-
-  bool IsForTransitions() const {
-    return mElementProperty == nsGkAtoms::transitionsProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfBeforeProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfAfterProperty;
-  }
-
-  bool IsForAnimations() const {
-    return mElementProperty == nsGkAtoms::animationsProperty ||
-           mElementProperty == nsGkAtoms::animationsOfBeforeProperty ||
-           mElementProperty == nsGkAtoms::animationsOfAfterProperty;
   }
 
   CSSPseudoElementType PseudoElementType() const
@@ -188,8 +154,6 @@ public:
   }
 
   static nsString PseudoTypeAsString(CSSPseudoElementType aPseudoType);
-
-  dom::Element* GetElementToRestyle() const;
 
   dom::Element *mElement;
 

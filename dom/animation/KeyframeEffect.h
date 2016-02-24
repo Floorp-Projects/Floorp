@@ -35,7 +35,6 @@ class nsPresContext;
 
 namespace mozilla {
 
-struct AnimationCollection;
 class AnimValuesStyleRule;
 enum class CSSPseudoElementType : uint8_t;
 
@@ -138,7 +137,7 @@ struct AnimationProperty
   // If true, the propery is currently being animated on the compositor.
   //
   // Note that when the owning Animation requests a non-throttled restyle, in
-  // between calling RequestRestyle on its AnimationCollection and when the
+  // between calling RequestRestyle on its EffectCompositor and when the
   // restyle is performed, this member may temporarily become false even if
   // the animation remains on the layer after the restyle.
   //
@@ -322,8 +321,6 @@ public:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
-
-  inline AnimationCollection* GetCollection() const;
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
