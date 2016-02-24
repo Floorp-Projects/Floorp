@@ -45,7 +45,7 @@ var _referrerTests = [
     fromScheme: "https://",
     toScheme: "http://",
     policy: "origin",
-    result: "https://test1.example.com"  // origin, even on downgrade
+    result: "https://test1.example.com/"  // origin, even on downgrade
   },
   {
     fromScheme: "https://",
