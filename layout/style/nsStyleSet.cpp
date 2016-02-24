@@ -745,11 +745,15 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
     if (sheetDocIndex < 0) {
       if (sheetService) {
         auto& authorSheets = *sheetService->AuthorStyleSheets();
-        if (authorSheets.IndexOf(sheet) != authorSheets.NoIndex) {
+        StyleSheetHandle handle = sheet;
+        if (authorSheets.IndexOf(handle) != authorSheets.NoIndex) {
           break;
         }
       }
-      if (sheet == aDocument->FirstAdditionalAuthorSheet()) {
+      MOZ_ASSERT(!aDocument->FirstAdditionalAuthorSheet() ||
+                 aDocument->FirstAdditionalAuthorSheet()->IsGecko(),
+                 "why do we have a ServoStyleSheet for an nsStyleSet?");
+      if (sheet == aDocument->FirstAdditionalAuthorSheet()->GetAsGecko()) {
         break;
       }
     }
@@ -762,6 +766,23 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
   }
 
   return DirtyRuleProcessors(type);
+}
+
+void
+nsStyleSet::AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) const
+{
+  if (mBindingManager) {
+    // XXXheycam stylo: AppendAllSheets will need to be able to return either
+    // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
+    // CSSStyleSheets).
+    AutoTArray<StyleSheetHandle, 32> sheets;
+    mBindingManager->AppendAllSheets(sheets);
+    for (StyleSheetHandle handle : sheets) {
+      MOZ_ASSERT(handle->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
+                                    "ServoStyleSheets yet");
+      aArray.AppendElement(handle->AsGecko());
+    }
+  }
 }
 
 nsresult
@@ -2497,7 +2518,16 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
   }
 
   if (mBindingManager) {
-    mBindingManager->AppendAllSheets(queue);
+    AutoTArray<StyleSheetHandle, 32> sheets;
+    // XXXheycam stylo: AppendAllSheets will need to be able to return either
+    // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
+    // CSSStyleSheets).
+    mBindingManager->AppendAllSheets(sheets);
+    for (StyleSheetHandle sheet : sheets) {
+      MOZ_ASSERT(sheet->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
+                                   "ServoStyleSheets yet");
+      queue.AppendElement(sheet->AsGecko());
+    }
   }
 
   while (!queue.IsEmpty()) {

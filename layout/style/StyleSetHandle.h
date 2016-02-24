@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StyleBackendType.h"
+#include "mozilla/StyleSheetHandle.h"
 #include "nsChangeHint.h"
 #include "nsCSSPseudoElements.h"
 #include "nsTArray.h"
@@ -127,18 +128,18 @@ public:
     inline already_AddRefed<nsStyleContext>
     ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext,
                              uint32_t aFlags = 0);
-    inline nsresult AppendStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
-    inline nsresult PrependStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
-    inline nsresult RemoveStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
+    inline nsresult AppendStyleSheet(SheetType aType, StyleSheetHandle aSheet);
+    inline nsresult PrependStyleSheet(SheetType aType, StyleSheetHandle aSheet);
+    inline nsresult RemoveStyleSheet(SheetType aType, StyleSheetHandle aSheet);
     inline nsresult ReplaceSheets(SheetType aType,
-                           const nsTArray<RefPtr<CSSStyleSheet>>& aNewSheets);
+                           const nsTArray<StyleSheetHandle::RefPtr>& aNewSheets);
     inline nsresult InsertStyleSheetBefore(SheetType aType,
-                                    CSSStyleSheet* aNewSheet,
-                                    CSSStyleSheet* aReferenceSheet);
+                                    StyleSheetHandle aNewSheet,
+                                    StyleSheetHandle aReferenceSheet);
     inline int32_t SheetCount(SheetType aType) const;
-    inline CSSStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
-    inline nsresult RemoveDocStyleSheet(CSSStyleSheet* aSheet);
-    inline nsresult AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument);
+    inline StyleSheetHandle StyleSheetAt(SheetType aType, int32_t aIndex) const;
+    inline nsresult RemoveDocStyleSheet(StyleSheetHandle aSheet);
+    inline nsresult AddDocStyleSheet(StyleSheetHandle aSheet, nsIDocument* aDocument);
     inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,

@@ -7,11 +7,19 @@
 #ifndef mozilla_StyleSetHandleInlines_h
 #define mozilla_StyleSetHandleInlines_h
 
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSheet.h"
 #include "nsStyleSet.h"
 
-#define FORWARD(method_, args_) \
-  return IsGecko() ? AsGecko()->method_ args_ : AsServo()->method_ args_;
+#define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
+  if (IsGecko()) { \
+    return AsGecko()->method_ geckoargs_; \
+  } else { \
+    return AsServo()->method_ servoargs_; \
+  }
+
+#define FORWARD(method_, args_) FORWARD_CONCRETE(method_, args_, args_)
 
 namespace mozilla {
 
@@ -112,36 +120,54 @@ StyleSetHandle::Ptr::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
 
 // manage the set of style sheets in the style set
 nsresult
-StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
+StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, StyleSheetHandle aSheet)
 {
-  FORWARD(AppendStyleSheet, (aType, aSheet));
+  FORWARD_CONCRETE(AppendStyleSheet, (aType, aSheet->AsGecko()),
+                                     (aType, aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::PrependStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
+StyleSetHandle::Ptr::PrependStyleSheet(SheetType aType, StyleSheetHandle aSheet)
 {
-  FORWARD(PrependStyleSheet, (aType, aSheet));
+  FORWARD_CONCRETE(PrependStyleSheet, (aType, aSheet->AsGecko()),
+                                      (aType, aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::RemoveStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
+StyleSetHandle::Ptr::RemoveStyleSheet(SheetType aType, StyleSheetHandle aSheet)
 {
-  FORWARD(RemoveStyleSheet, (aType, aSheet));
+  FORWARD_CONCRETE(RemoveStyleSheet, (aType, aSheet->AsGecko()),
+                                     (aType, aSheet->AsServo()));
 }
 
 nsresult
 StyleSetHandle::Ptr::ReplaceSheets(SheetType aType,
-                       const nsTArray<RefPtr<CSSStyleSheet>>& aNewSheets)
+                       const nsTArray<StyleSheetHandle::RefPtr>& aNewSheets)
 {
-  FORWARD(ReplaceSheets, (aType, aNewSheets));
+  if (IsGecko()) {
+    nsTArray<RefPtr<CSSStyleSheet>> newSheets(aNewSheets.Length());
+    for (auto& sheet : aNewSheets) {
+      newSheets.AppendElement(sheet->AsGecko());
+    }
+    return AsGecko()->ReplaceSheets(aType, newSheets);
+  } else {
+    nsTArray<RefPtr<ServoStyleSheet>> newSheets(aNewSheets.Length());
+    for (auto& sheet : aNewSheets) {
+      newSheets.AppendElement(sheet->AsServo());
+    }
+    return AsServo()->ReplaceSheets(aType, newSheets);
+  }
 }
 
 nsresult
 StyleSetHandle::Ptr::InsertStyleSheetBefore(SheetType aType,
-                                CSSStyleSheet* aNewSheet,
-                                CSSStyleSheet* aReferenceSheet)
+                                StyleSheetHandle aNewSheet,
+                                StyleSheetHandle aReferenceSheet)
 {
-  FORWARD(InsertStyleSheetBefore, (aType, aNewSheet, aReferenceSheet));
+  FORWARD_CONCRETE(
+    InsertStyleSheetBefore,
+    (aType, aNewSheet->AsGecko(), aReferenceSheet->AsGecko()),
+    (aType, aReferenceSheet->AsServo(), aReferenceSheet->AsServo()));
 }
 
 int32_t
@@ -150,23 +176,25 @@ StyleSetHandle::Ptr::SheetCount(SheetType aType) const
   FORWARD(SheetCount, (aType));
 }
 
-CSSStyleSheet*
+StyleSheetHandle
 StyleSetHandle::Ptr::StyleSheetAt(SheetType aType, int32_t aIndex) const
 {
   FORWARD(StyleSheetAt, (aType, aIndex));
 }
 
 nsresult
-StyleSetHandle::Ptr::RemoveDocStyleSheet(CSSStyleSheet* aSheet)
+StyleSetHandle::Ptr::RemoveDocStyleSheet(StyleSheetHandle aSheet)
 {
-  FORWARD(RemoveDocStyleSheet, (aSheet));
+  FORWARD_CONCRETE(RemoveDocStyleSheet, (aSheet->AsGecko()),
+                                        (aSheet->AsServo()));
 }
 
 nsresult
-StyleSetHandle::Ptr::AddDocStyleSheet(CSSStyleSheet* aSheet,
+StyleSetHandle::Ptr::AddDocStyleSheet(StyleSheetHandle aSheet,
                                       nsIDocument* aDocument)
 {
-  FORWARD(AddDocStyleSheet, (aSheet, aDocument));
+  FORWARD_CONCRETE(AddDocStyleSheet, (aSheet->AsGecko(), aDocument),
+                                     (aSheet->AsServo(), aDocument));
 }
 
 // check whether there is ::before/::after style for an element

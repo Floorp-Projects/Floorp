@@ -96,36 +96,36 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
 // manage the set of style sheets in the style set
 nsresult
 ServoStyleSet::AppendStyleSheet(SheetType aType,
-                                CSSStyleSheet* aSheet)
+                                ServoStyleSheet* aSheet)
 {
   MOZ_CRASH("stylo: not implemented");
 }
 
 nsresult
 ServoStyleSet::PrependStyleSheet(SheetType aType,
-                                 CSSStyleSheet* aSheet)
+                                 ServoStyleSheet* aSheet)
 {
   MOZ_CRASH("stylo: not implemented");
 }
 
 nsresult
 ServoStyleSet::RemoveStyleSheet(SheetType aType,
-                                CSSStyleSheet* aSheet)
+                                ServoStyleSheet* aSheet)
 {
   MOZ_CRASH("stylo: not implemented");
 }
 
 nsresult
 ServoStyleSet::ReplaceSheets(SheetType aType,
-                             const nsTArray<RefPtr<CSSStyleSheet>>& aNewSheets)
+                             const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets)
 {
   MOZ_CRASH("stylo: not implemented");
 }
 
 nsresult
 ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
-                                      CSSStyleSheet* aNewSheet,
-                                      CSSStyleSheet* aReferenceSheet)
+                                      ServoStyleSheet* aNewSheet,
+                                      ServoStyleSheet* aReferenceSheet)
 {
   MOZ_CRASH("stylo: not implemented");
 }
@@ -136,7 +136,7 @@ ServoStyleSet::SheetCount(SheetType aType) const
   MOZ_CRASH("stylo: not implemented");
 }
 
-CSSStyleSheet*
+ServoStyleSheet*
 ServoStyleSet::StyleSheetAt(SheetType aType,
                             int32_t aIndex) const
 {
@@ -144,13 +144,13 @@ ServoStyleSet::StyleSheetAt(SheetType aType,
 }
 
 nsresult
-ServoStyleSet::RemoveDocStyleSheet(CSSStyleSheet* aSheet)
+ServoStyleSet::RemoveDocStyleSheet(ServoStyleSheet* aSheet)
 {
   MOZ_CRASH("stylo: not implemented");
 }
 
 nsresult
-ServoStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet,
+ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
   MOZ_CRASH("stylo: not implemented");
