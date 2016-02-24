@@ -285,20 +285,5 @@
       <driverVersionComparator> BETWEEN_INCLUSIVE_START </driverVersionComparator>
     </gfxBlacklistEntry>
 
-    <gfxBlacklistEntry>
-      <os>All</os>
-      <vendor>0xdcdc</vendor>
-      <devices>
-        <device>0x2783</device>
-        <device>0x1234</device>
-        <device>0x2782</device>
-      </devices>
-      <feature> CANVAS2D_ACCELERATION </feature>
-      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
-      <driverVersion> 8.52.322.1000 </driverVersion>
-      <driverVersionMax> 9.52.322.1000 </driverVersionMax>
-      <driverVersionComparator> BETWEEN_EXCLUSIVE </driverVersionComparator>
-    </gfxBlacklistEntry>
-
   </gfxItems>
 </blocklist>
