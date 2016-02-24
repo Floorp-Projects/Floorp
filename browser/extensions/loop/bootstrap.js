@@ -791,6 +791,11 @@ function loadDefaultPrefs() {
   var branch = Services.prefs.getDefaultBranch("");
   Services.scriptloader.loadSubScript("chrome://loop/content/preferences/prefs.js", {
     pref: (key, val) => {
+      // If a previously set default pref exists don't overwrite it.  This can
+      // happen for ESR or distribution.ini.
+      if (branch.getPrefType(key) != branch.PREF_INVALID) {
+        return;
+      }
       switch (typeof val) {
         case "boolean":
           branch.setBoolPref(key, val);
@@ -811,6 +816,9 @@ function loadDefaultPrefs() {
  */
 function startup() {
   loadDefaultPrefs();
+  if (!Services.prefs.getBoolPref("loop.enabled")) {
+    return;
+  }
 
   createLoopButton();
 
