@@ -67,7 +67,7 @@
 #include "LayersLogging.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/EventStateManager.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsCaret.h"
 #include "nsISelection.h"
 #include "nsDOMTokenList.h"

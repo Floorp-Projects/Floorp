@@ -8,8 +8,9 @@
  * changes need to happen, scheduling them, and doing them.
  */
 
+#include "mozilla/RestyleManager.h"
+
 #include <algorithm> // For std::max
-#include "RestyleManager.h"
 #include "mozilla/EventStates.h"
 #include "nsLayoutUtils.h"
 #include "AnimationCommon.h" // For GetLayerAnimationInfo

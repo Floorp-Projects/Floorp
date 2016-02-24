@@ -105,6 +105,7 @@ EXPORTS.mozilla += [
     'GeometryUtils.h',
     'PaintTracker.h',
     'RestyleLogging.h',
+    'RestyleManager.h',
 ]
 
 UNIFIED_SOURCES += [

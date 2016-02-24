@@ -18,7 +18,7 @@
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
 #include "nsCSSRules.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
