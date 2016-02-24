@@ -40,6 +40,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 #include "nsViewManager.h"
 #include "nsView.h"
@@ -2170,13 +2172,14 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     return NS_OK;
   }
 
+  auto cache = nsLayoutStylesheetCache::For(styleSet->BackendType());
+
   // Handle the user sheets.
-  CSSStyleSheet* sheet = nullptr;
+  StyleSheetHandle sheet = nullptr;
   if (nsContentUtils::IsInChromeDocshell(aDocument)) {
-    sheet = nsLayoutStylesheetCache::UserChromeSheet();
-  }
-  else {
-    sheet = nsLayoutStylesheetCache::UserContentSheet();
+    sheet = cache->UserChromeSheet();
+  } else {
+    sheet = cache->UserContentSheet();
   }
 
   if (sheet)
@@ -2189,7 +2192,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   nsCOMPtr<nsIDocShell> ds(mContainer);
   nsCOMPtr<nsIDOMEventTarget> chromeHandler;
   nsCOMPtr<nsIURI> uri;
-  RefPtr<CSSStyleSheet> csssheet;
+  StyleSheetHandle::RefPtr chromeSheet;
 
   if (ds) {
     ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
@@ -2213,10 +2216,10 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
                     baseURI);
           if (!uri) continue;
 
-          cssLoader->LoadSheetSync(uri, getter_AddRefs(csssheet));
-          if (!csssheet) continue;
+          cssLoader->LoadSheetSync(uri, &chromeSheet);
+          if (!chromeSheet) continue;
 
-          styleSet->PrependStyleSheet(SheetType::Agent, csssheet);
+          styleSet->PrependStyleSheet(SheetType::Agent, chromeSheet);
           shouldOverride = true;
         }
         free(str);
@@ -2225,7 +2228,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   }
 
   if (!shouldOverride) {
-    sheet = nsLayoutStylesheetCache::ScrollbarsSheet();
+    sheet = cache->ScrollbarsSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
@@ -2241,12 +2244,12 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     // an SVG document, and excluding xul.css which will be loaded on demand by
     // nsXULElement::BindToTree.)
 
-    sheet = nsLayoutStylesheetCache::NumberControlSheet();
+    sheet = cache->NumberControlSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
-    sheet = nsLayoutStylesheetCache::FormsSheet();
+    sheet = cache->FormsSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
@@ -2254,33 +2257,33 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     if (aDocument->LoadsFullXULStyleSheetUpFront()) {
       // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
       // up-front here.
-      sheet = nsLayoutStylesheetCache::XULSheet();
+      sheet = cache->XULSheet();
       if (sheet) {
         styleSet->PrependStyleSheet(SheetType::Agent, sheet);
       }
     }
 
-    sheet = nsLayoutStylesheetCache::MinimalXULSheet();
+    sheet = cache->MinimalXULSheet();
     if (sheet) {
       // Load the minimal XUL rules for scrollbars and a few other XUL things
       // that non-XUL (typically HTML) documents commonly use.
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
-    sheet = nsLayoutStylesheetCache::CounterStylesSheet();
+    sheet = cache->CounterStylesSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
     if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
-      sheet = nsLayoutStylesheetCache::NoScriptSheet();
+      sheet = cache->NoScriptSheet();
       if (sheet) {
         styleSet->PrependStyleSheet(SheetType::Agent, sheet);
       }
     }
 
     if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
-      sheet = nsLayoutStylesheetCache::NoFramesSheet();
+      sheet = cache->NoFramesSheet();
       if (sheet) {
         styleSet->PrependStyleSheet(SheetType::Agent, sheet);
       }
@@ -2289,16 +2292,16 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
     // append it if needed.
 
-    sheet = nsLayoutStylesheetCache::HTMLSheet();
+    sheet = cache->HTMLSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
     styleSet->PrependStyleSheet(SheetType::Agent,
-                                nsLayoutStylesheetCache::UASheet());
+                                cache->UASheet());
   } else {
     // SVG documents may have scrollbars and need the scrollbar styling.
-    sheet = nsLayoutStylesheetCache::MinimalXULSheet();
+    sheet = cache->MinimalXULSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
@@ -2306,10 +2309,10 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
-    for (CSSStyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
       styleSet->AppendStyleSheet(SheetType::Agent, sheet);
     }
-    for (CSSStyleSheet* sheet : Reversed(*sheetService->UserStyleSheets())) {
+    for (StyleSheetHandle sheet : Reversed(*sheetService->UserStyleSheets())) {
       styleSet->PrependStyleSheet(SheetType::User, sheet);
     }
   }
