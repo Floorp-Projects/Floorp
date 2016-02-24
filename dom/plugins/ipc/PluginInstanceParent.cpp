@@ -68,10 +68,6 @@ extern const wchar_t* kFlashFullscreenClass;
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
 
-// This is the pref used to determine whether to use Shumway on a Flash object
-// (when Shumway is enabled).
-static const char kShumwayWhitelistPref[] = "shumway.swf.whitelist";
-
 using namespace mozilla::plugins;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -122,7 +118,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mUseSurrogate(true)
     , mNPP(npp)
     , mNPNIface(npniface)
-    , mIsWhitelistedForShumway(false)
     , mWindowType(NPWindowTypeWindow)
     , mDrawingModel(kDefaultDrawingModel)
     , mLastRecordedDrawingModel(-1)

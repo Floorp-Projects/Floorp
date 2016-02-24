@@ -1135,24 +1135,6 @@ PluginModuleChromeParent::AnnotateHang(mozilla::HangMonitor::HangAnnotations& aA
         aAnnotations.AddAnnotation(NS_LITERAL_STRING("pluginName"), mPluginName);
         aAnnotations.AddAnnotation(NS_LITERAL_STRING("pluginVersion"),
                                    mPluginVersion);
-        if (mIsFlashPlugin) {
-            bool isWhitelistedForShumway = false;
-            { // Scope for lock
-                mozilla::MutexAutoLock lock(mHangAnnotatorMutex);
-                if (!mProtocolCallStack.IsEmpty()) {
-                    mozilla::ipc::IProtocol* topProtocol =
-                        mProtocolCallStack.LastElement();
-                    PluginInstanceParent* instance =
-                        GetManagingInstance(topProtocol);
-                    if (instance) {
-                        isWhitelistedForShumway =
-                            instance->IsWhitelistedForShumway();
-                    }
-                }
-            }
-            aAnnotations.AddAnnotation(NS_LITERAL_STRING("pluginIsWhitelistedForShumway"),
-                                       isWhitelistedForShumway);
-        }
     }
 }
 
