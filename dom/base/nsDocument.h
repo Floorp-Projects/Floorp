@@ -1200,7 +1200,6 @@ public:
     mozilla::UniquePtr<FullscreenRequest>&& aRequest) override;
   virtual void RestorePreviousFullScreenState() override;
   virtual bool IsFullscreenLeaf() override;
-  virtual bool IsFullScreenDoc() override;
   virtual nsresult
     RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) override;
 
