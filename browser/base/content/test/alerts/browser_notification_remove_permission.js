@@ -1,7 +1,6 @@
 "use strict";
 
 var tab;
-var notification;
 var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 var alertWindowClosed = false;
 var permRemoved = false;
@@ -25,20 +24,16 @@ function test () {
 
 function onLoad() {
   tab.linkedBrowser.removeEventListener("load", onLoad, true);
-  let win = tab.linkedBrowser.contentWindow.wrappedJSObject;
-  notification = win.showNotification2();
-  notification.addEventListener("show", onAlertShowing);
+  openNotification(tab.linkedBrowser, "showNotification2").then(onAlertShowing);
 }
 
 function onAlertShowing() {
   info("Notification alert showing");
-  notification.removeEventListener("show", onAlertShowing);
 
   let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
   if (!alertWindow) {
     ok(true, "Notifications don't use XUL windows on all platforms.");
-    notification.close();
-    finish();
+    closeNotification(tab.linkedBrowser).then(finish);
     return;
   }
   ok(Services.perms.testExactPermission(makeURI(notificationURL), "desktop-notification"),
@@ -75,5 +70,3 @@ function onAlertClosing(event) {
     finish();
   }
 }
-
-
