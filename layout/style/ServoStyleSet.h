@@ -20,6 +20,7 @@ namespace dom {
 class Element;
 } // namespace dom
 class CSSStyleSheet;
+class ServoStyleSheet;
 } // namespace mozilla
 class nsStyleContext;
 class nsPresContext;
@@ -69,20 +70,20 @@ public:
                            uint32_t aFlags = 0);
 
   // manage the set of style sheets in the style set
-  nsresult AppendStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
-  nsresult PrependStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
-  nsresult RemoveStyleSheet(SheetType aType, CSSStyleSheet* aSheet);
+  nsresult AppendStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
+  nsresult PrependStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
+  nsresult RemoveStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
   nsresult ReplaceSheets(SheetType aType,
-                         const nsTArray<RefPtr<CSSStyleSheet>>& aNewSheets);
+                         const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
   nsresult InsertStyleSheetBefore(SheetType aType,
-                                  CSSStyleSheet* aNewSheet,
-                                  CSSStyleSheet* aReferenceSheet);
+                                  ServoStyleSheet* aNewSheet,
+                                  ServoStyleSheet* aReferenceSheet);
 
   int32_t SheetCount(SheetType aType) const;
-  CSSStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
+  ServoStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
 
-  nsresult RemoveDocStyleSheet(CSSStyleSheet* aSheet);
-  nsresult AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument);
+  nsresult RemoveDocStyleSheet(ServoStyleSheet* aSheet);
+  nsresult AddDocStyleSheet(ServoStyleSheet* aSheet, nsIDocument* aDocument);
 
   // check whether there is ::before/::after style for an element
   already_AddRefed<nsStyleContext>

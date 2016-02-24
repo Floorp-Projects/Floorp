@@ -248,7 +248,7 @@ public:
   nsIURI* GetOriginalURI() const { return mInner->mOriginalSheetURI; }
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(CSSStyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
   void EnsureUniqueInner();
@@ -282,7 +282,7 @@ public:
   ReferrerPolicy GetReferrerPolicy() const { return mInner->mReferrerPolicy; }
 
   // Get this style sheet's integrity metadata
-  dom::SRIMetadata GetIntegrity() const { return mInner->mIntegrity; }
+  void GetIntegrity(dom::SRIMetadata& aResult) const { aResult = mInner->mIntegrity; }
 
   dom::Element* GetScopeElement() const { return mScopeElement; }
   void SetScopeElement(dom::Element* aScopeElement)

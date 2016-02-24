@@ -17,7 +17,6 @@
 #include "nsString.h"
 #include "nsQueryObject.h"
 
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/dom/URL.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
@@ -30,12 +29,14 @@
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"
 #include "nsIPrefService.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 // DO NOT use namespace mozilla; it'll break due to a naming conflict between
 // mozilla::TextRange and a TextRange in OSX headers.
-using mozilla::CSSStyleSheet;
+using mozilla::StyleSheetHandle;
 using mozilla::dom::IsChromeURI;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,19 +402,18 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   nsCOMPtr<nsIPresShell> shell = document->GetShell();
   if (shell) {
     // Reload only the chrome URL agent style sheets.
-    nsTArray<RefPtr<CSSStyleSheet>> agentSheets;
+    nsTArray<StyleSheetHandle::RefPtr> agentSheets;
     rv = shell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsTArray<RefPtr<CSSStyleSheet>> newAgentSheets;
-    for (CSSStyleSheet* sheet : agentSheets) {
+    nsTArray<StyleSheetHandle::RefPtr> newAgentSheets;
+    for (StyleSheetHandle sheet : agentSheets) {
       nsIURI* uri = sheet->GetSheetURI();
 
       if (IsChromeURI(uri)) {
         // Reload the sheet.
-        RefPtr<CSSStyleSheet> newSheet;
-        rv = document->LoadChromeSheetSync(uri, true,
-                                           getter_AddRefs(newSheet));
+        StyleSheetHandle::RefPtr newSheet;
+        rv = document->LoadChromeSheetSync(uri, true, &newSheet);
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
           rv = newAgentSheets.AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
@@ -433,27 +433,27 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   int32_t count = document->GetNumberOfStyleSheets();
 
   // Build an array of style sheets we need to reload.
-  nsTArray<RefPtr<CSSStyleSheet>> oldSheets(count);
-  nsTArray<RefPtr<CSSStyleSheet>> newSheets(count);
+  nsTArray<StyleSheetHandle::RefPtr> oldSheets(count);
+  nsTArray<StyleSheetHandle::RefPtr> newSheets(count);
 
   // Iterate over the style sheets.
   for (int32_t i = 0; i < count; i++) {
     // Get the style sheet
-    CSSStyleSheet* styleSheet = document->GetStyleSheetAt(i);
+    StyleSheetHandle styleSheet = document->GetStyleSheetAt(i);
     oldSheets.AppendElement(styleSheet);
   }
 
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a chrome URL.
-  for (CSSStyleSheet* sheet : oldSheets) {
+  for (StyleSheetHandle sheet : oldSheets) {
     nsIURI* uri = sheet ? sheet->GetOriginalURI() : nullptr;
 
     if (uri && IsChromeURI(uri)) {
       // Reload the sheet.
-      RefPtr<CSSStyleSheet> newSheet;
+      StyleSheetHandle::RefPtr newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
-      document->LoadChromeSheetSync(uri, false, getter_AddRefs(newSheet));
+      document->LoadChromeSheetSync(uri, false, &newSheet);
       // Even if it's null, we put in in there.
       newSheets.AppendElement(newSheet);
     } else {

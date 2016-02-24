@@ -213,7 +213,7 @@ nsContentSink::Init(nsIDocument* aDoc,
 }
 
 NS_IMETHODIMP
-nsContentSink::StyleSheetLoaded(CSSStyleSheet* aSheet,
+nsContentSink::StyleSheetLoaded(StyleSheetHandle aSheet,
                                 bool aWasAlternate,
                                 nsresult aStatus)
 {

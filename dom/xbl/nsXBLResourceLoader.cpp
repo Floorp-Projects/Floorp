@@ -17,7 +17,8 @@
 #include "nsIDocumentObserver.h"
 #include "imgILoader.h"
 #include "imgRequestProxy.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -139,8 +140,8 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
           CheckLoadURIWithPrincipal(docPrincipal, url,
                                     nsIScriptSecurityManager::ALLOW_CHROME);
         if (NS_SUCCEEDED(rv)) {
-          RefPtr<CSSStyleSheet> sheet;
-          rv = cssLoader->LoadSheetSync(url, getter_AddRefs(sheet));
+          StyleSheetHandle::RefPtr sheet;
+          rv = cssLoader->LoadSheetSync(url, &sheet);
           NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
           if (NS_SUCCEEDED(rv))
           {
@@ -168,7 +169,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
 
 // nsICSSLoaderObserver
 NS_IMETHODIMP
-nsXBLResourceLoader::StyleSheetLoaded(CSSStyleSheet* aSheet,
+nsXBLResourceLoader::StyleSheetLoaded(StyleSheetHandle aSheet,
                                       bool aWasAlternate,
                                       nsresult aStatus)
 {

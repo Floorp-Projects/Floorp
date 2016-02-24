@@ -39,6 +39,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StyleSheetHandle.h"
 
 class nsDocumentFragment;
 class nsIDOMKeyEvent;
@@ -333,7 +334,7 @@ public:
   NS_IMETHOD GetRootElement(nsIDOMElement **aRootElement) override;
 
   /* ------------ nsICSSLoaderObserver -------------- */
-  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheetHandle aSheet,
                               bool aWasAlternate, nsresult aStatus) override;
 
   /* ------------ Utility Routines, not part of public API -------------- */
@@ -378,14 +379,13 @@ public:
   bool     EnableExistingStyleSheet(const nsAString& aURL);
 
   // Dealing with the internal style sheet lists:
-  NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
-                                 mozilla::CSSStyleSheet** _retval) override;
-  NS_IMETHOD GetURLForStyleSheet(mozilla::CSSStyleSheet* aStyleSheet,
-                                 nsAString& aURL) override;
+  mozilla::StyleSheetHandle GetStyleSheetForURL(const nsAString& aURL);
+  void GetURLForStyleSheet(mozilla::StyleSheetHandle aStyleSheet,
+                           nsAString& aURL);
 
   // Add a url + known style sheet to the internal lists:
   nsresult AddNewStyleSheetToList(const nsAString &aURL,
-                                  mozilla::CSSStyleSheet* aStyleSheet);
+                                  mozilla::StyleSheetHandle aStyleSheet);
 
   nsresult RemoveStyleSheetFromList(const nsAString &aURL);
 
@@ -782,7 +782,7 @@ protected:
 
   // Maintain a list of associated style sheets and their urls.
   nsTArray<nsString> mStyleSheetURLs;
-  nsTArray<RefPtr<mozilla::CSSStyleSheet>> mStyleSheets;
+  nsTArray<mozilla::StyleSheetHandle::RefPtr> mStyleSheets;
 
   // an array for holding default style settings
   nsTArray<PropItem*> mDefaultStyles;

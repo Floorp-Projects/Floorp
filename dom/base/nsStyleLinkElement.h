@@ -24,6 +24,7 @@ class nsIDocument;
 class nsIURI;
 
 namespace mozilla {
+class CSSStyleSheet;
 namespace dom {
 class ShadowRoot;
 } // namespace dom
@@ -37,11 +38,19 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override = 0;
 
-  mozilla::CSSStyleSheet* GetSheet() const { return mStyleSheet; }
+  mozilla::CSSStyleSheet* GetSheet() const
+  {
+    // XXXheycam Return nullptr for ServoStyleSheets until we have a way of
+    // exposing them to script.
+    NS_ASSERTION(!mStyleSheet || mStyleSheet->IsGecko(),
+                 "stylo: ServoStyleSheets can't be exposed to script yet");
+    return mStyleSheet && mStyleSheet->IsGecko() ? mStyleSheet->AsGecko() :
+                                                   nullptr;
+  }
 
   // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(mozilla::CSSStyleSheet* aStyleSheet) override;
-  NS_IMETHOD_(mozilla::CSSStyleSheet*) GetStyleSheet() override;
+  NS_IMETHOD SetStyleSheet(mozilla::StyleSheetHandle aStyleSheet) override;
+  NS_IMETHOD_(mozilla::StyleSheetHandle) GetStyleSheet() override;
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) override;
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
@@ -128,7 +137,7 @@ private:
                               bool* aIsAlternate,
                               bool aForceUpdate);
 
-  RefPtr<mozilla::CSSStyleSheet> mStyleSheet;
+  mozilla::StyleSheetHandle::RefPtr mStyleSheet;
 protected:
   bool mDontLoadStyle;
   bool mUpdatesEnabled;
