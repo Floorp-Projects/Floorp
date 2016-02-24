@@ -34,15 +34,12 @@ def run_external_media_test(tests, testtype=None, topsrcdir=None, **kwargs):
 
     parser = MediaTestArguments()
     commandline.add_logging_group(parser)
-    args = parser.parse_args()
 
     if not tests:
         tests = [os.path.join(topsrcdir,
                  'dom/media/test/external/external_media_tests/manifest.ini')]
-    args.tests = tests
 
-    if not args.binary:
-        args.binary = kwargs['binary']
+    args = parser.parse_args(args=tests)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
