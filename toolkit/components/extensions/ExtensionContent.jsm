@@ -122,11 +122,6 @@ var api = context => {
       getUILanguage: function() {
         return context.extension.localeData.uiLocale;
       },
-
-      getAcceptLanguages: function(callback) {
-        let result = context.extension.localeData.acceptLanguages;
-        return context.wrapPromise(Promise.resolve(result), callback);
-      },
     },
   };
 };
