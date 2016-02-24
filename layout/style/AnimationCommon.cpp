@@ -23,7 +23,8 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
-#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
@@ -199,7 +200,12 @@ void
 AnimationCollection::UpdateCheckGeneration(
   nsPresContext* aPresContext)
 {
-  mCheckGeneration = aPresContext->RestyleManager()->GetAnimationGeneration();
+  if (aPresContext->RestyleManager()->IsServo()) {
+    // stylo: ServoRestyleManager does not support animations yet.
+    return;
+  }
+  mCheckGeneration =
+    aPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration();
 }
 
 nsPresContext*

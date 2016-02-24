@@ -7,7 +7,8 @@
 #include "nsSVGContainerFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
