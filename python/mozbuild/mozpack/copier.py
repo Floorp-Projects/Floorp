@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import stat
+import sys
 
 from mozpack.errors import errors
 from mozpack.files import (
@@ -18,6 +19,7 @@ from collections import (
     Counter,
     OrderedDict,
 )
+import concurrent.futures as futures
 
 
 class FileRegistry(object):
@@ -375,10 +377,30 @@ class FileCopier(FileRegistry):
         dest_files = set()
 
         # Install files.
-        for p, f in self:
-            destfile = os.path.normpath(os.path.join(destination, p))
+        #
+        # Creating/appending new files on Windows/NTFS is slow. So we use a
+        # thread pool to speed it up significantly. The performance of this
+        # loop is so critical to common build operations on Linux that the
+        # overhead of the thread pool is worth avoiding, so we have 2 code
+        # paths. We also employ a low water mark to prevent thread pool
+        # creation if number of files is too small to benefit.
+        copy_results = []
+        if sys.platform == 'win32' and len(self) > 100:
+            with futures.ThreadPoolExecutor(4) as e:
+                fs = []
+                for p, f in self:
+                    destfile = os.path.normpath(os.path.join(destination, p))
+                    fs.append((destfile, e.submit(f.copy, destfile, skip_if_older)))
+
+            copy_results = [(destfile, f.result) for destfile, f in fs]
+        else:
+            for p, f in self:
+                destfile = os.path.normpath(os.path.join(destination, p))
+                copy_results.append((destfile, f.copy(destfile, skip_if_older)))
+
+        for destfile, copy_result in copy_results:
             dest_files.add(destfile)
-            if f.copy(destfile, skip_if_older):
+            if copy_result:
                 result.updated_files.add(destfile)
             else:
                 result.existing_files.add(destfile)

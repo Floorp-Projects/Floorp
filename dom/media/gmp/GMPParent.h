@@ -193,6 +193,9 @@ private:
   nsCString mDisplayName; // name of plugin displayed to users
   nsCString mDescription; // description of plugin for display to users
   nsCString mVersion;
+#ifdef XP_WIN
+  nsCString mLibs;
+#endif
   uint32_t mPluginId;
   nsTArray<nsAutoPtr<GMPCapability>> mCapabilities;
   GMPProcessParent* mProcess;

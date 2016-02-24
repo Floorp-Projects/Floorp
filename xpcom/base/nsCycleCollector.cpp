@@ -3283,6 +3283,7 @@ nsCycleCollector::CollectWhite()
     PtrInfo* pinfo = etor.GetNext();
     if (pinfo->mColor == white && pinfo->mParticipant) {
       if (pinfo->IsGrayJS()) {
+        MOZ_ASSERT(mJSRuntime);
         ++numWhiteGCed;
         JS::Zone* zone;
         if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {

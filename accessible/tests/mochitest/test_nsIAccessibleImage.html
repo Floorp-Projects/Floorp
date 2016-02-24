@@ -16,6 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
           src="role.js"></script>
   <script type="application/javascript"
           src="attributes.js"></script>
+  <script type="application/javascript"
+          src="layout.js"></script>
 
   <script type="application/javascript">
     function testCoordinates(aID, aAcc, aWidth, aHeight)
@@ -70,10 +72,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
 //           "Wrong screen y coordinate for " + aID + "!");
       }
 
+      var [expected_w, expected_h] = CSSToDevicePixels(window, aWidth, aHeight);
       var width = {}, height = {};
       aAcc.getImageSize(width, height);
-      is(width.value, aWidth, "Wrong width for " + aID + "!");
-      is(height.value, aHeight, "wrong height for " + aID + "!");
+      is(width.value, expected_w, "Wrong width for " + aID + "!");
+      is(height.value, expected_h, "wrong height for " + aID + "!");
     }
 
     function testThis(aID, aSRC, aWidth, aHeight,
