@@ -10,11 +10,6 @@ extensions.registerSchemaAPI("i18n", null, (extension, context) => {
       getUILanguage: function() {
         return extension.localeData.uiLocale;
       },
-
-      getAcceptLanguages: function() {
-        let result = extension.localeData.acceptLanguages;
-        return Promise.resolve(result);
-      },
     },
   };
 });

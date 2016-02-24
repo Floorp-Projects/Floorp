@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 
 function filterStack(error) {
   return String(error.stack).replace(/(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm, "<Promise Chain>\n");
@@ -528,16 +526,6 @@ EventManager.prototype = {
       hasListener: callback => this.hasListener(callback),
     };
   },
-
-  get acceptLanguages() {
-    let result = Preferences.get("intl.accept_languages", "", Ci.nsIPrefLocalizedString);
-    result = result.split(',');
-    result = result.map(lang => {
-      return lang.replace(/-/g, "_").trim();
-    });
-    return result;
-  },
-
 };
 
 // Similar to EventManager, but it doesn't try to consolidate event
