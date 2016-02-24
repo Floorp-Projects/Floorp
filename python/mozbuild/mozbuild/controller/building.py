@@ -251,10 +251,11 @@ class BuildMonitor(MozbuildObject):
             return
 
         try:
-            usage = self.record_resource_usage()
+            usage = self.get_resource_usage()
             if not usage:
                 return
 
+            self.log_resource_usage(usage)
             with open(self._get_state_filename('build_resources.json'), 'w') as fh:
                 json.dump(usage, fh, indent=2)
         except Exception as e:
@@ -346,11 +347,9 @@ class BuildMonitor(MozbuildObject):
         """Whether resource usage is available."""
         return self.resources.start_time is not None
 
-    def record_resource_usage(self):
-        """Record the resource usage of this build.
+    def get_resource_usage(self):
+        """ Produce a data structure containing the low-level resource usage information.
 
-        We write a log message containing a high-level summary. We also produce
-        a data structure containing the low-level resource usage information.
         This data structure can e.g. be serialized into JSON and saved for
         subsequent analysis.
 
@@ -364,17 +363,6 @@ class BuildMonitor(MozbuildObject):
         cpu_times = self.resources.aggregate_cpu_times(phase=None,
             per_cpu=False)
         io = self.resources.aggregate_io(phase=None)
-
-        self._log_resource_usage('Overall system resources', 'resource_usage',
-            self.end_time - self.start_time, cpu_percent, cpu_times, io)
-
-        excessive, sin, sout = self.have_excessive_swapping()
-        if excessive is not None and (sin or sout):
-            sin /= 1048576
-            sout /= 1048576
-            self.log(logging.WARNING, 'swap_activity',
-                {'sin': sin, 'sout': sout},
-                'Swap in/out (MB): {sin}/{sout}')
 
         o = dict(
             version=3,
@@ -430,28 +418,35 @@ class BuildMonitor(MozbuildObject):
 
         return o
 
-    def _log_resource_usage(self, prefix, m_type, duration, cpu_percent,
-        cpu_times, io, extra_params={}):
+    def log_resource_usage(self, usage):
+        """Summarize the resource usage of this build in a log message."""
+
+        if not usage:
+            return
 
         params = dict(
-            duration=duration,
-            cpu_percent=cpu_percent,
-            io_reads=io.read_count,
-            io_writes=io.write_count,
-            io_read_bytes=io.read_bytes,
-            io_write_bytes=io.write_bytes,
-            io_read_time=io.read_time,
-            io_write_time=io.write_time,
+            duration=self.end_time - self.start_time,
+            cpu_percent=usage['cpu_percent'],
+            io_read_bytes=usage['io'].read_bytes,
+            io_write_bytes=usage['io'].write_bytes,
+            io_read_time=usage['io'].read_time,
+            io_write_time=usage['io'].write_time,
         )
 
-        params.update(extra_params)
-
-        message = prefix + ' - Wall time: {duration:.0f}s; ' \
+        message = 'Overall system resources - Wall time: {duration:.0f}s; ' \
             'CPU: {cpu_percent:.0f}%; ' \
             'Read bytes: {io_read_bytes}; Write bytes: {io_write_bytes}; ' \
             'Read time: {io_read_time}; Write time: {io_write_time}'
 
-        self.log(logging.WARNING, m_type, params, message)
+        self.log(logging.WARNING, 'resource_usage', params, message)
+
+        excessive, sin, sout = self.have_excessive_swapping()
+        if excessive is not None and (sin or sout):
+            sin /= 1048576
+            sout /= 1048576
+            self.log(logging.WARNING, 'swap_activity',
+                {'sin': sin, 'sout': sout},
+                'Swap in/out (MB): {sin}/{sout}')
 
     def ccache_stats(self):
         ccache_stats = None
