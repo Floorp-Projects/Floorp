@@ -21,7 +21,20 @@
         nonExistingMethodCall();
       }
 
-      window.onload = firstCall;
+      function domAPI() {
+        document.querySelector("buggy;selector");
+      }
+
+      function domException() {
+        throw new DOMException("DOMException");
+      }
+      window.addEventListener("load", firstCall);
+      window.addEventListener("load", function onLoadDomAPI() {
+        domAPI();
+      });
+      window.addEventListener("load", function onLoadDomException() {
+        domException();
+      });
     </script>
   </head>
   <body>
