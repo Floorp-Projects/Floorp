@@ -214,6 +214,8 @@
   <string name="pref_tap_to_load_images_data">&pref_tap_to_load_images_data;</string>
   <string name="pref_tap_to_load_images_disabled2">&pref_tap_to_load_images_disabled2;</string>
 
+  <string name="pref_show_web_fonts">&pref_show_web_fonts;</string>
+
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
   <string name="pref_donottrack_title">&pref_donottrack_title;</string>

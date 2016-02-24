@@ -234,8 +234,21 @@ if (typeof Mozilla == 'undefined') {
     });
   };
 
-  Mozilla.UITour.showFirefoxAccounts = function() {
-    _sendEvent('showFirefoxAccounts');
+  /**
+   * Request the browser open the Firefox Accounts page.
+   *
+   * @param {Object} extraURLCampaignParams - An object containing additional
+   * paramaters for the URL opened by the browser for reasons of promotional
+   * campaign tracking. Each attribute of the object must have a name that
+   * begins with "utm_" and a value that is a string. Both the name and value
+   * must contain only alphanumeric characters, dashes or underscores (meaning
+   * that you are limited to values that don't need encoding, as any such
+   * characters in the name or value will be rejected.)
+   */
+  Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams) {
+    _sendEvent('showFirefoxAccounts', {
+      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
+    });
   };
 
   Mozilla.UITour.resetFirefox = function() {

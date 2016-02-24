@@ -14,14 +14,29 @@
     <link rel="stylesheet" href="chrome://devtools/skin/widgets.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/memory.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/components-frame.css" type="text/css"/>
-
-    <script type="application/javascript;version=1.8"
-            src="chrome://devtools/content/shared/theme-switching.js"/>
-    <script type="application/javascript;version=1.8"
-            src="initializer.js"></script>
+    <link rel="stylesheet" href="chrome://devtools/skin/components-h-split-box.css" type="text/css"/>
   </head>
   <body class="theme-body">
-    <div id="app">
-    </div>
+    <div id="app"></div>
+
+    <script type="application/javascript;version=1.8"
+            src="chrome://devtools/content/shared/theme-switching.js"
+            defer="true">
+    </script>
+
+    <script type="application/javascript;version=1.8"
+            src="initializer.js"
+            defer="true">
+    </script>
+
+    <script type="application/javascript"
+            src="chrome://devtools/content/shared/vendor/d3.js"
+            defer="true">
+    </script>
+
+    <script type="application/javascript"
+            src="chrome://devtools/content/shared/vendor/dagre-d3.js"
+            defer="true">
+    </script>
   </body>
 </html>

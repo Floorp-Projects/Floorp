@@ -610,8 +610,15 @@ this.UITour = {
       case "showFirefoxAccounts": {
         // 'signup' is the only action that makes sense currently, so we don't
         // accept arbitrary actions just to be safe...
+        let p = new URLSearchParams("action=signup&entrypoint=uitour");
+        // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
+        if (!this._populateCampaignParams(p, data.extraURLCampaignParams)) {
+          log.warn("showFirefoxAccounts: invalid campaign args specified");
+          return false;
+        }
+
         // We want to replace the current tab.
-        browser.loadURI("about:accounts?action=signup&entrypoint=uitour");
+        browser.loadURI("about:accounts?" + p.toString());
         break;
       }
 
@@ -803,6 +810,52 @@ this.UITour = {
         break;
       }
     }
+  },
+
+  // Given a string that is a JSONified represenation of an object with
+  // additional utm_* URL params that should be appended, validate and append
+  // them to the passed URLSearchParams object. Returns true if the params
+  // were validated and appended, and false if the request should be ignored.
+  _populateCampaignParams: function(urlSearchParams, extraURLCampaignParams) {
+    // We are extra paranoid about what params we allow to be appended.
+    if (typeof extraURLCampaignParams == "undefined") {
+      // no params, so it's all good.
+      return true;
+    }
+    if (typeof extraURLCampaignParams != "string") {
+      log.warn("_populateCampaignParams: extraURLCampaignParams is not a string");
+      return false;
+    }
+    let campaignParams;
+    try {
+      if (extraURLCampaignParams) {
+        campaignParams = JSON.parse(extraURLCampaignParams);
+        if (typeof campaignParams != "object") {
+          log.warn("_populateCampaignParams: extraURLCampaignParams is not a stringified object");
+          return false;
+        }
+      }
+    } catch (ex) {
+      log.warn("_populateCampaignParams: extraURLCampaignParams is not a JSON object");
+      return false;
+    }
+    if (campaignParams) {
+      // The regex that both the name and value of each param must match.
+      let reSimpleString = /^[-_a-zA-Z0-9]*$/;
+      for (let name in campaignParams) {
+        let value = campaignParams[name];
+        if (typeof name != "string" || typeof value != "string" ||
+            !name.startsWith("utm_") ||
+            value.length == 0 ||
+            !reSimpleString.test(name) ||
+            !reSimpleString.test(value)) {
+          log.warn("_populateCampaignParams: invalid campaign param specified");
+          return false;
+        }
+        urlSearchParams.append(name, value);
+      }
+    }
+    return true;
   },
 
   setTelemetryBucket: function(aPageID) {

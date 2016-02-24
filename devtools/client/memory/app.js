@@ -33,6 +33,7 @@ const {
   focusDominatorTreeNode,
 } = require("./actions/snapshot");
 const { changeViewAndRefresh } = require("./actions/view");
+const { resizeShortestPaths } = require("./actions/sizes");
 const {
   breakdownNameToSpec,
   getBreakdownDisplayData,
@@ -113,7 +114,7 @@ const MemoryApp = createClass({
       filter,
       diffing,
       view,
-      dominatorTreeBreakdown
+      sizes,
     } = this.props;
 
     const selectedSnapshot = snapshots.find(s => s.selected);
@@ -237,6 +238,10 @@ const MemoryApp = createClass({
                      "...and that snapshot should have a dominator tree");
               dispatch(focusDominatorTreeNode(selectedSnapshot.id, node));
             },
+            onShortestPathsResize: newSize => {
+              dispatch(resizeShortestPaths(newSize));
+            },
+            sizes,
             view,
           })
         )
