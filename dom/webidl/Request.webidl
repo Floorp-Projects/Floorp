@@ -38,7 +38,7 @@ Request implements Body;
 dictionary RequestInit {
   ByteString method;
   HeadersInit headers;
-  BodyInit body;
+  BodyInit? body;
   RequestMode mode;
   RequestCredentials credentials;
   RequestCache cache;
