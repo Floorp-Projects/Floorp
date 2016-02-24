@@ -10,7 +10,7 @@ config = {
         ("{}/{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/aurora",
         "ac_add_options --with-branding=mobile/android/branding/beta")
-        for d in ["mobile/android/config/mozconfigs/android-api-11/",
+        for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-api-9-10-constrained/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["debug", "nightly", "l10n-nightly"]
