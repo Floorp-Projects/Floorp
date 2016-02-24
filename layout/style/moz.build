@@ -80,6 +80,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AnimationCollection.h',
     'CSSStyleSheet.h',
     'CSSVariableDeclarations.h',
     'CSSVariableResolver.h',
@@ -126,6 +127,7 @@ EXPORTS.mozilla.css += [
 ]
 
 UNIFIED_SOURCES += [
+    'AnimationCollection.cpp',
     'AnimationCommon.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
