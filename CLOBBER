@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Merge day clobber
+Bug 1250616 - Removed Makefile in browser/tools/mozscreenshots/mozscreenshots/extension
