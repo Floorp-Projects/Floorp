@@ -119,6 +119,8 @@
 #include "nsFontMetrics.h"
 #include "Units.h"
 #include "CanvasUtils.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -2207,6 +2209,16 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
   }
 
   // otherwise inherit from default (10px sans-serif)
+
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  if (!styleSet) {
+    // XXXheycam ServoStyleSets do not support resolving style from a list of
+    // rules yet.
+    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   bool changed;
   RefPtr<css::Declaration> parentRule =
     CreateFontDeclaration(NS_LITERAL_STRING("10px sans-serif"),
@@ -2215,7 +2227,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
   nsTArray<nsCOMPtr<nsIStyleRule>> parentRules;
   parentRules.AppendElement(parentRule);
   RefPtr<nsStyleContext> result =
-    aPresShell->StyleSet()->ResolveStyleForRules(nullptr, parentRules);
+    styleSet->ResolveStyleForRules(nullptr, parentRules);
 
   if (!result) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -2242,6 +2254,15 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
                     nsAString& aOutUsedFont,
                     ErrorResult& aError)
 {
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  if (!styleSet) {
+    // XXXheycam ServoStyleSets do not support resolving style from a list of
+    // rules yet.
+    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   bool fontParsedSuccessfully = false;
   RefPtr<css::Declaration> decl =
     CreateFontDeclaration(aFont, aPresShell->GetDocument(),
@@ -2281,7 +2302,6 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // add a rule to prevent text zoom from affecting the style
   rules.AppendElement(new nsDisableTextZoomStyleRule);
 
-  nsStyleSet* styleSet = aPresShell->StyleSet();
   RefPtr<nsStyleContext> sc =
     styleSet->ResolveStyleForRules(parentContext, rules);
 
@@ -2311,6 +2331,15 @@ ResolveStyleForFilter(const nsAString& aFilterString,
                       nsStyleContext* aParentContext,
                       ErrorResult& aError)
 {
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  if (!styleSet) {
+    // XXXheycam ServoStyleSets do not support resolving style from a list of
+    // rules yet.
+    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   nsIDocument* document = aPresShell->GetDocument();
   bool filterChanged = false;
   RefPtr<css::Declaration> decl =
@@ -2331,7 +2360,7 @@ ResolveStyleForFilter(const nsAString& aFilterString,
   rules.AppendElement(decl);
 
   RefPtr<nsStyleContext> sc =
-    aPresShell->StyleSet()->ResolveStyleForRules(aParentContext, rules);
+    styleSet->ResolveStyleForRules(aParentContext, rules);
 
   return sc.forget();
 }

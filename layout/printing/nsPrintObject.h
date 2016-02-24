@@ -10,7 +10,6 @@
 // Interfaces
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
-#include "nsStyleSet.h"
 #include "nsViewManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"

@@ -4973,13 +4973,19 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
 nsStyleSet*
 RestyleManager::StyleSet() const
 {
-  return mPresContext->StyleSet();
+  MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+             "RestyleManager should only be used with a Gecko-flavored "
+             "style backend");
+  return mPresContext->StyleSet()->AsGecko();
 }
 
 nsStyleSet*
 ElementRestyler::StyleSet() const
 {
-  return mPresContext->StyleSet();
+  MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+             "ElementRestyler should only be used with a Gecko-flavored "
+             "style backend");
+  return mPresContext->StyleSet()->AsGecko();
 }
 
 AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(

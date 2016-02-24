@@ -220,7 +220,7 @@ public:
   }
 
 #ifdef MOZILLA_INTERNAL_API
-  nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
+  mozilla::StyleSetHandle StyleSet() { return GetPresShell()->StyleSet(); }
 
   nsFrameManager* FrameManager()
     { return PresShell()->FrameManager(); }
