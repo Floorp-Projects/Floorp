@@ -121,6 +121,7 @@ class DocumentFragment;
 class Element;
 class EventTarget;
 class IPCDataTransfer;
+class IPCDataTransferItem;
 class NodeInfo;
 class nsIContentChild;
 class nsIContentParent;
@@ -2427,6 +2428,21 @@ public:
    * The content type is returned in aType.
    */
   static bool IsFileImage(nsIFile* aFile, nsACString& aType);
+
+  /**
+   * Given an IPCDataTransferItem that has a flavor for which IsFlavorImage
+   * returns true and whose IPCDataTransferData is of type nsCString (raw image
+   * data), construct an imgIContainer for the image encoded by the transfer
+   * item.
+   */
+  static nsresult DataTransferItemToImage(const mozilla::dom::IPCDataTransferItem& aItem,
+                                          imgIContainer** aContainer);
+
+  /**
+   * Given a flavor obtained from an IPCDataTransferItem or nsITransferable,
+   * returns true if we should treat the data as an image.
+   */
+  static bool IsFlavorImage(const nsACString& aFlavor);
 
   static void TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
                                               nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
