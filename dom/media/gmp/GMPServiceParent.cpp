@@ -1222,7 +1222,11 @@ GeckoMediaPluginServiceParent::IsPersistentStorageAllowed(const nsACString& aNod
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aOutAllowed);
-  *aOutAllowed = mPersistentStorageAllowed.Get(aNodeId);
+  // We disallow persistent storage for the NodeId used for shared GMP
+  // decoding, to prevent GMP decoding being used to track what a user
+  // watches somehow.
+  *aOutAllowed = !aNodeId.Equals(SHARED_GMP_DECODING_NODE_ID) &&
+                 mPersistentStorageAllowed.Get(aNodeId);
   return NS_OK;
 }
 

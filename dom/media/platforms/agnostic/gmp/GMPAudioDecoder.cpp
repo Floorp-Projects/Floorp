@@ -136,7 +136,7 @@ GMPAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 nsCString
 GMPAudioDecoder::GetNodeId()
 {
-  return NS_LITERAL_CSTRING("");
+  return SHARED_GMP_DECODING_NODE_ID;
 }
 
 void
