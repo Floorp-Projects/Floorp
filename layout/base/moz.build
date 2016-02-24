@@ -106,6 +106,9 @@ EXPORTS.mozilla += [
     'PaintTracker.h',
     'RestyleLogging.h',
     'RestyleManager.h',
+    'RestyleManagerHandle.h',
+    'RestyleManagerHandleInlines.h',
+    'ServoRestyleManager.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -149,6 +152,7 @@ UNIFIED_SOURCES += [
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
     'ScrollbarStyles.cpp',
+    'ServoRestyleManager.cpp',
     'StackArena.cpp',
     'TouchManager.cpp',
     'ZoomConstraintsClient.cpp',
