@@ -24,7 +24,6 @@ function backgroundScript() {
     "onCompleted",
     "onErrorOccurred",
     "onReferenceFragmentUpdated",
-    "onHistoryStateUpdated",
   ];
 
   let expectedTabId = -1;
@@ -69,7 +68,6 @@ const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mo
 const URL = BASE + "/file_WebNavigation_page1.html";
 const FRAME = BASE + "/file_WebNavigation_page2.html";
 const FRAME2 = BASE + "/file_WebNavigation_page3.html";
-const FRAME_PUSHSTATE = BASE + "/file_WebNavigation_page3_pushState.html";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -157,71 +155,10 @@ add_task(function* webnav_ordering() {
 
   checkRequired(FRAME2);
 
-  let navigationSequence = [
-    {
-      action: () => { win.frames[0].document.getElementById("elt").click(); },
-      waitURL: `${FRAME2}#ref`,
-      expectedEvent: "onReferenceFragmentUpdated",
-      description: "clicked an anchor link",
-    },
-    {
-      action: () => { win.frames[0].history.pushState({}, "History PushState", `${FRAME2}#ref2`); },
-      waitURL: `${FRAME2}#ref2`,
-      expectedEvent: "onReferenceFragmentUpdated",
-      description: "history.pushState, same pathname, different hash",
-    },
-    {
-      action: () => { win.frames[0].history.pushState({}, "History PushState", `${FRAME2}#ref2`); },
-      waitURL: `${FRAME2}#ref2`,
-      expectedEvent: "onHistoryStateUpdated",
-      description: "history.pushState, same pathname, same hash",
-    },
-    {
-      action: () => {
-        win.frames[0].history.pushState({}, "History PushState", `${FRAME2}?query_param1=value#ref2`);
-      },
-      waitURL: `${FRAME2}?query_param1=value#ref2`,
-      expectedEvent: "onHistoryStateUpdated",
-      description: "history.pushState, same pathname, same hash, different query params",
-    },
-    {
-      action: () => {
-        win.frames[0].history.pushState({}, "History PushState", `${FRAME2}?query_param2=value#ref3`);
-      },
-      waitURL: `${FRAME2}?query_param2=value#ref3`,
-      expectedEvent: "onHistoryStateUpdated",
-      description: "history.pushState, same pathname, different hash, different query params",
-    },
-    {
-      action: () => { win.frames[0].history.pushState(null, "History PushState", FRAME_PUSHSTATE); },
-      waitURL: FRAME_PUSHSTATE,
-      expectedEvent: "onHistoryStateUpdated",
-      description: "history.pushState, different pathname",
-    },
-  ];
+  yield loadAndWait(win, "onReferenceFragmentUpdated", FRAME2 + "#ref",
+                    () => { win.frames[0].document.getElementById("elt").click(); });
 
-  for (let navigation of navigationSequence) {
-    let { expectedEvent, waitURL, action, description } = navigation;
-    info(`Waiting ${expectedEvent} from ${waitURL} - ${description}`);
-    yield loadAndWait(win, expectedEvent, waitURL, action);
-    info(`Received ${expectedEvent} from ${waitURL} - ${description}`);
-  }
-
-  for (let i = navigationSequence.length - 1; i > 0; i--) {
-    let { waitURL: fromURL, expectedEvent } = navigationSequence[i];
-    let { waitURL } = navigationSequence[i - 1];
-    info(`Waiting ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
-    yield loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.back(); });
-    info(`Received ${expectedEvent} from ${waitURL} - history.back() from ${fromURL} to ${waitURL}`);
-  }
-
-  for (let i = 0; i < navigationSequence.length - 1; i++) {
-    let { waitURL: fromURL } = navigationSequence[i];
-    let { waitURL, expectedEvent } = navigationSequence[i + 1];
-    info(`Waiting ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
-    yield loadAndWait(win, expectedEvent, waitURL, () => { win.frames[0].history.forward(); });
-    info(`Received ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
-  }
+  info("Received onReferenceFragmentUpdated from FRAME2");
 
   win.close();
 
