@@ -795,16 +795,10 @@ CanvasDrawObserver::FrameEnd()
     // If we don't have enough data, don't bother changing...
     if (mGPUPreferredCalls > mMinCallsBeforeDecision ||
         mSoftwarePreferredCalls > mMinCallsBeforeDecision) {
-      CanvasRenderingContext2D::RenderingMode switchToMode;
       if (mGPUPreferredCalls >= mSoftwarePreferredCalls) {
-        switchToMode = CanvasRenderingContext2D::RenderingMode::OpenGLBackendMode;
+        mCanvasContext->SwitchRenderingMode(CanvasRenderingContext2D::RenderingMode::OpenGLBackendMode);
       } else {
-        switchToMode = CanvasRenderingContext2D::RenderingMode::SoftwareBackendMode;
-      }
-      if (switchToMode != mCanvasContext->mRenderingMode) {
-        if (!mCanvasContext->SwitchRenderingMode(switchToMode)) {
-          gfxDebug() << "Canvas acceleration failed mode switch to " << switchToMode;
-        }
+        mCanvasContext->SwitchRenderingMode(CanvasRenderingContext2D::RenderingMode::SoftwareBackendMode);
       }
     }
 
@@ -974,10 +968,12 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   sNumLivingContexts++;
 
   // The default is to use OpenGL mode
-  if (gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
-    mDrawObserver = new CanvasDrawObserver(this);
-  } else {
+  if (!gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
     mRenderingMode = RenderingMode::SoftwareBackendMode;
+  }
+
+  if (gfxPlatform::GetPlatform()->HaveChoiceOfHWAndSWCanvas()) {
+    mDrawObserver = new CanvasDrawObserver(this);
   }
 }
 
@@ -1212,7 +1208,8 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 #ifdef USE_SKIA_GPU
   // Do not attempt to switch into GL mode if the platform doesn't allow it.
   if ((aRenderingMode == RenderingMode::OpenGLBackendMode) &&
-      !gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+      (!gfxPlatform::GetPlatform()->HaveChoiceOfHWAndSWCanvas() ||
+       !gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas())) {
       return false;
   }
 
@@ -1419,7 +1416,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
 
     if (layerManager) {
       if (mode == RenderingMode::OpenGLBackendMode &&
-          gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
+          gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas() &&
           CheckSizeForSkiaGL(size)) {
         DemoteOldestContextIfNecessary();
         mBufferProvider = nullptr;
