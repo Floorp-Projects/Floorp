@@ -67,7 +67,8 @@ add_task(function* () {
   let names = [...document.querySelectorAll("#service-workers .target-name")];
   let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
   ok(name, "Found the service worker in the list");
-  let debugBtn = name.parentNode.parentNode.querySelector("button");
+  let targetElement = name.parentNode.parentNode;
+  let debugBtn = targetElement.querySelector(".debug-button");
   ok(debugBtn, "Found its debug button");
 
   // Click on it and wait for the toolbox to be ready
@@ -88,16 +89,18 @@ add_task(function* () {
   });
 
   assertHasWorker(true, document, "service-workers", SERVICE_WORKER);
+  ok(targetElement.querySelector(".debug-button"),
+    "The debug button is still there");
 
   yield toolbox.destroy();
   toolbox = null;
 
   // Now ensure that the worker is correctly destroyed
   // after we destroy the toolbox.
-  // The list should update once it get destroyed.
-  yield waitForMutation(serviceWorkersElement, { childList: true });
-
-  assertHasWorker(false, document, "service-workers", SERVICE_WORKER);
+  // The DEBUG button should disappear once the worker is destroyed.
+  yield waitForMutation(targetElement, { childList: true });
+  ok(!targetElement.querySelector(".debug-button"),
+    "The debug button was removed when the worker was killed");
 
   // Finally, unregister the service worker itself
   // Use message manager to work with e10s
@@ -123,6 +126,11 @@ add_task(function* () {
     });
   });
   ok(true, "Service worker registration unregistered");
+
+  // Now ensure that the worker registration is correctly removed.
+  // The list should update once the registration is destroyed.
+  yield waitForMutation(serviceWorkersElement, { childList: true });
+  assertHasWorker(false, document, "service-workers", SERVICE_WORKER);
 
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);

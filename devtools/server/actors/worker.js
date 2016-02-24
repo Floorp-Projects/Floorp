@@ -53,12 +53,17 @@ let WorkerActor = protocol.ActorClass({
     if (detail === "actorid") {
       return this.actorID;
     }
-    return {
+    let form = {
       actor: this.actorID,
       consoleActor: this._consoleActor,
       url: this._dbg.url,
       type: this._dbg.type
     };
+    if (this._dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      let registration = this._getServiceWorkerRegistrationInfo();
+      form.scope = registration.scope;
+    }
+    return form;
   },
 
   attach: method(function () {
