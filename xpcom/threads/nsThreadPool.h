@@ -37,7 +37,7 @@ private:
 
   void ShutdownThread(nsIThread* aThread);
   nsresult PutEvent(nsIRunnable* aEvent);
-  nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags);
+  nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
 
   nsCOMArray<nsIThread> mThreads;
   mozilla::Mutex        mMutex;
