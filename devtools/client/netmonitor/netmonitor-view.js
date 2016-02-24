@@ -2223,14 +2223,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     if (!aItemsArray.length) {
       return 0;
     }
-
-    let result = 0;
-    aItemsArray.forEach(item => {
-      let size = item.attachment.contentSize;
-      result += (typeof size == "number") ? size : 0;
-    });
-
-    return result;
+    return aItemsArray.reduce((prev, curr) => prev + curr.attachment.contentSize || 0, 0);
   },
 
   /**
