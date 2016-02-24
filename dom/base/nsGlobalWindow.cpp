@@ -1743,6 +1743,7 @@ nsGlobalWindow::FreeInnerObjects()
   mHasGamepad = false;
   mGamepads.Clear();
 #endif
+  mVRDisplays.Clear();
 }
 
 //*****************************************************************************
@@ -13355,7 +13356,7 @@ nsGlobalWindow::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDev
 {
   FORWARD_TO_INNER(UpdateVRDisplays, (aDevices), false);
 
-  VRDisplay::UpdateVRDisplays(mVRDisplays, ToSupports(this));
+  VRDisplay::UpdateVRDisplays(mVRDisplays, AsInner());
   aDevices = mVRDisplays;
   return true;
 }

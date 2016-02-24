@@ -381,7 +381,6 @@ public:
 
 private:
   friend class CompositorD3D11;
-
   RefPtr<ID3D11RenderTargetView> mRTView;
 };
 

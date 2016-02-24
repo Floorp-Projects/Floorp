@@ -72,6 +72,7 @@
 #endif
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
+#include "VRManagerChild.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -352,6 +353,7 @@ nsBaseWidget::OnRenderingDeviceReset()
     lf->IdentifyTextureHost(identifier);
   }
   ImageBridgeChild::IdentifyCompositorTextureHost(identifier);
+  gfx::VRManagerChild::IdentifyTextureHost(identifier);
 }
 
 void
@@ -1385,6 +1387,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   lf->SetShadowManager(shadowManager);
   lf->IdentifyTextureHost(textureFactoryIdentifier);
   ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+  gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   WindowUsesOMTC();
 
   mLayerManager = lm.forget();

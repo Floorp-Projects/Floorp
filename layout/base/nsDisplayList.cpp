@@ -19,7 +19,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/gfx/2D.h"
-#include "VRDisplayProxy.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
