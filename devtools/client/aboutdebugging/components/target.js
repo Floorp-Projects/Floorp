@@ -26,47 +26,60 @@ const Strings = Services.strings.createBundle(
 exports.Target = React.createClass({
   displayName: "Target",
 
-  debug() {
-    let { client, target } = this.props;
-    switch (target.type) {
-      case "extension":
-        BrowserToolboxProcess.init({ addonID: target.addonID });
-        break;
-      case "serviceworker":
-        // Fall through.
-      case "sharedworker":
-        // Fall through.
-      case "worker":
-        let workerActor = this.props.target.actorID;
-        client.attachWorker(workerActor, (response, workerClient) => {
-          gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
-            "jsdebugger", Toolbox.HostType.WINDOW)
-            .then(toolbox => {
-              toolbox.once("destroy", () => workerClient.detach());
-            });
-        });
-        break;
-      default:
-        alert("Not implemented yet!");
-    }
-  },
-
   render() {
     let { target, debugDisabled } = this.props;
+    let isServiceWorker = (target.type === "serviceworker");
+    let isRunning = (!isServiceWorker || target.workerActor);
     return React.createElement("div", { className: "target" },
       React.createElement("img", {
         className: "target-icon",
         role: "presentation",
         src: target.icon }),
       React.createElement("div", { className: "target-details" },
-        React.createElement("div", { className: "target-name" }, target.name),
-        React.createElement("div", { className: "target-url" }, target.url)
+        React.createElement("div", { className: "target-name" }, target.name)
       ),
-      React.createElement("button", {
-        className: "debug-button",
-        onClick: this.debug,
-        disabled: debugDisabled,
-      }, Strings.GetStringFromName("debug"))
+      (isRunning ?
+        React.createElement("button", {
+          className: "debug-button",
+          onClick: this.debug,
+          disabled: debugDisabled,
+        }, Strings.GetStringFromName("debug")) :
+        null
+      )
     );
+  },
+
+  debug() {
+    let { target } = this.props;
+    switch (target.type) {
+      case "extension":
+        BrowserToolboxProcess.init({ addonID: target.addonID });
+        break;
+      case "serviceworker":
+        if (target.workerActor) {
+          this.openWorkerToolbox(target.workerActor);
+        }
+        break;
+      case "sharedworker":
+        this.openWorkerToolbox(target.workerActor);
+        break;
+      case "worker":
+        this.openWorkerToolbox(target.workerActor);
+        break;
+      default:
+        alert("Not implemented yet!");
+        break;
+    }
+  },
+
+  openWorkerToolbox(workerActor) {
+    let { client } = this.props;
+    client.attachWorker(workerActor, (response, workerClient) => {
+      gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+        "jsdebugger", Toolbox.HostType.WINDOW)
+        .then(toolbox => {
+          toolbox.once("destroy", () => workerClient.detach());
+        });
+    });
   },
 });

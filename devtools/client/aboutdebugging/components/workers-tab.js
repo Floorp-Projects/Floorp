@@ -38,6 +38,7 @@ exports.WorkersTab = React.createClass({
   componentDidMount() {
     let client = this.props.client;
     client.addListener("workerListChanged", this.update);
+    client.addListener("serviceWorkerRegistrationListChanged", this.update);
     client.addListener("processListChanged", this.update);
     this.update();
   },
@@ -45,6 +46,7 @@ exports.WorkersTab = React.createClass({
   componentWillUnmount() {
     let client = this.props.client;
     client.removeListener("processListChanged", this.update);
+    client.removeListener("serviceWorkerRegistrationListChanged", this.update);
     client.removeListener("workerListChanged", this.update);
   },
 
@@ -77,52 +79,90 @@ exports.WorkersTab = React.createClass({
 
   update() {
     let workers = this.getInitialState().workers;
+
     this.getWorkerForms().then(forms => {
-      forms.forEach(form => {
-        let worker = {
-          name: form.url,
+      forms.registrations.forEach(form => {
+        workers.service.push({
+          type: "serviceworker",
           icon: WorkerIcon,
-          actorID: form.actor
+          name: form.url,
+          url: form.url,
+          scope: form.scope,
+          registrationActor: form.actor
+        });
+      });
+
+      forms.workers.forEach(form => {
+        let worker = {
+          type: "worker",
+          icon: WorkerIcon,
+          name: form.url,
+          url: form.url,
+          workerActor: form.actor
         };
         switch (form.type) {
           case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-            worker.type = "serviceworker";
-            workers.service.push(worker);
+            for (let registration of workers.service) {
+              if (registration.scope === form.scope) {
+                // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
+                // have a scriptSpec, but its associated WorkerDebugger does.
+                if (!registration.url) {
+                  registration.name = registration.url = form.url;
+                }
+                registration.workerActor = form.actor;
+                break;
+              }
+            }
             break;
           case Ci.nsIWorkerDebugger.TYPE_SHARED:
             worker.type = "sharedworker";
             workers.shared.push(worker);
             break;
           default:
-            worker.type = "worker";
             workers.other.push(worker);
         }
       });
+
+      // XXX: Filter out the service worker registrations for which we couldn't
+      // find the scriptSpec.
+      workers.service = workers.service.filter(reg => !!reg.url);
+
       this.setState({ workers });
     });
   },
 
   getWorkerForms: Task.async(function*() {
     let client = this.props.client;
+    let registrations = [];
+    let workers = [];
 
-    // List workers from the Parent process
-    let result = yield client.mainRoot.listWorkers();
-    let forms = result.workers;
+    try {
+      // List service worker registrations
+      ({ registrations } =
+        yield client.mainRoot.listServiceWorkerRegistrations());
 
-    // And then from the Child processes
-    let { processes } = yield client.mainRoot.listProcesses();
-    for (let process of processes) {
-      // Ignore parent process
-      if (process.parent) {
-        continue;
+      // List workers from the Parent process
+      ({ workers } = yield client.mainRoot.listWorkers());
+
+      // And then from the Child processes
+      let { processes } = yield client.mainRoot.listProcesses();
+      for (let process of processes) {
+        // Ignore parent process
+        if (process.parent) {
+          continue;
+        }
+        let { form } = yield client.getProcess(process.id);
+        let processActor = form.actor;
+        let response = yield client.request({
+          to: processActor,
+          type: "listWorkers"
+        });
+        workers = workers.concat(response.workers);
       }
-      let { form } = yield client.getProcess(process.id);
-      let processActor = form.actor;
-      let { workers } = yield client.request({to: processActor,
-                                              type: "listWorkers"});
-      forms = forms.concat(workers);
+    } catch (e) {
+      // Something went wrong, maybe our client is disconnected?
     }
 
-    return forms;
+    return { registrations, workers };
   }),
 });
