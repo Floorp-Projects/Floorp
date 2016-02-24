@@ -704,21 +704,23 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             ret = FAILURE
         return ret
 
-    def get_upload_files(self, locale):
+    def set_upload_files(self, locale):
         # The tree doesn't have a good way of exporting the list of files
         # created during locale generation, but we can grab them by echoing the
         # UPLOAD_FILES variable for each locale.
         env = self.query_l10n_env()
-        target = ['echo-variable-UPLOAD_FILES', 'AB_CD=%s' % (locale)]
+        target = ['echo-variable-UPLOAD_FILES', 'echo-variable-CHECKSUM_FILES',
+                  'AB_CD=%s' % locale]
         dirs = self.query_abs_dirs()
         cwd = dirs['abs_locales_dir']
         # Bug 1242771 - echo-variable-UPLOAD_FILES via mozharness fails when stderr is found
         #    we should ignore stderr as unfortunately it's expected when parsing for values
-        output = self._get_output_from_make(target=target, cwd=cwd, env=env, ignore_errors=True)
-        self.info('UPLOAD_FILES is "%s"' % (output))
+        output = self._get_output_from_make(target=target, cwd=cwd, env=env,
+                                            ignore_errors=True)
+        self.info('UPLOAD_FILES is "%s"' % output)
         files = shlex.split(output)
         if not files:
-            self.error('failed to get upload file list for locale %s' % (locale))
+            self.error('failed to get upload file list for locale %s' % locale)
             return FAILURE
 
         self.upload_files[locale] = [
@@ -750,13 +752,17 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.error("make installers-%s failed" % (locale))
             return FAILURE
 
-        if self.get_upload_files(locale):
-            self.error("failed to get list of files to upload for locale %s" % (locale))
-            return FAILURE
         # now try to upload the artifacts
         if self.make_upload(locale):
             self.error("make upload for locale %s failed!" % (locale))
             return FAILURE
+
+        # set_upload_files() should be called after make upload, to make sure
+        # we have all files in place (cheksums, etc)
+        if self.set_upload_files(locale):
+            self.error("failed to get list of files to upload for locale %s" % locale)
+            return FAILURE
+
         return SUCCESS
 
     def repack(self):
