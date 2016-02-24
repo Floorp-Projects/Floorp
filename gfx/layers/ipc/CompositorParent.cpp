@@ -875,6 +875,7 @@ CompositorParent::RecvFlushRendering()
 bool
 CompositorParent::RecvForcePresent()
 {
+  // During the shutdown sequence mLayerManager may be null
   if (mLayerManager) {
     mLayerManager->ForcePresent();
   }
