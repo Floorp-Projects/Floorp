@@ -1898,8 +1898,11 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
         MOZ_ASSERT(dbg->observesNewGlobalObject());
         JSObject* obj = dbg->object;
         JS::ExposeObjectToActiveJS(obj);
-        if (!watchers.append(obj))
+        if (!watchers.append(obj)) {
+            if (cx->isExceptionPending())
+                cx->clearPendingException();
             return;
+        }
     }
 
     JSTrapStatus status = JSTRAP_CONTINUE;

@@ -3269,6 +3269,7 @@ public:
   }
 
   Type GetShapeType() const { return mType; }
+  nsCSSKeyword GetShapeTypeName() const;
 
   int32_t GetFillRule() const { return mFillRule; }
   void SetFillRule(int32_t aFillRule)

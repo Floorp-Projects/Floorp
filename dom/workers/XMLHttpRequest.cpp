@@ -591,8 +591,8 @@ private:
   ~EventRunnable()
   { }
 
-  virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+  virtual void
+  InfalliblePreDispatch(JSContext* aCx) override final;
 
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
@@ -1170,10 +1170,19 @@ LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-bool
-EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+void
+EventRunnable::InfalliblePreDispatch(JSContext* aCx)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  AutoJSAPI jsapi;
+  DebugOnly<bool> ok =
+    jsapi.Init(xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx)), aCx);
+  MOZ_ASSERT(ok);
+  MOZ_ASSERT(jsapi.cx() == aCx);
+  jsapi.TakeOwnershipOfErrorReporting();
 
   RefPtr<nsXMLHttpRequest>& xhr = mProxy->mXHR;
   MOZ_ASSERT(xhr);
@@ -1244,8 +1253,6 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   mReadyState = xhr->ReadyState();
 
   xhr->GetResponseURL(mResponseURL);
-
-  return true;
 }
 
 bool

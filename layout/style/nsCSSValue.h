@@ -1116,6 +1116,12 @@ struct nsCSSValuePair {
     MOZ_COUNT_DTOR(nsCSSValuePair);
   }
 
+  nsCSSValuePair& operator=(const nsCSSValuePair& aOther) {
+    mXValue = aOther.mXValue;
+    mYValue = aOther.mYValue;
+    return *this;
+  }
+
   bool operator==(const nsCSSValuePair& aOther) const {
     return mXValue == aOther.mXValue &&
            mYValue == aOther.mYValue;

@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This header provides smart pointers and various helpers for code that needs
+// to interact with NSS.
+
 #ifndef mozilla_ScopedNSSTypes_h
 #define mozilla_ScopedNSSTypes_h
 
@@ -70,6 +73,7 @@ MapSECStatus(SECStatus rv)
 }
 
 // Alphabetical order by NSS type
+// Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
                                           PRFileDesc,
                                           PR_Close)
@@ -88,25 +92,13 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertList,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTName,
                                           CERTName,
                                           CERT_DestroyName)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTOidSequence,
-                                          CERTOidSequence,
-                                          CERT_DestroyOidSequence)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertNicknames,
-                                          CERTCertNicknames,
-                                          CERT_FreeNicknames)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTSubjectPublicKeyInfo,
                                           CERTSubjectPublicKeyInfo,
                                           SECKEY_DestroySubjectPublicKeyInfo)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTValidity,
                                           CERTValidity,
                                           CERT_DestroyValidity)
-
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSCMSMessage,
-                                          NSSCMSMessage,
-                                          NSS_CMSMessage_Destroy)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSCMSSignedData,
-                                          NSSCMSSignedData,
-                                          NSS_CMSSignedData_Destroy)
+// Deprecated: use the equivalent UniquePtr templates instead.
 
 namespace psm {
 
@@ -115,30 +107,15 @@ PK11_DestroyContext_true(PK11Context * ctx) {
   PK11_DestroyContext(ctx, true);
 }
 
-inline void
-SGN_DestroyContext_true(SGNContext* ctx) {
-  SGN_DestroyContext(ctx, true);
-}
-
-inline void
-VFY_DestroyContext_true(VFYContext * ctx) {
-  VFY_DestroyContext(ctx, true);
-}
-
 } // namespace mozilla::psm
 
+// Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
                                           PK11Context,
                                           mozilla::psm::PK11_DestroyContext_true)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNContext,
-                                          SGNContext,
-                                          mozilla::psm::SGN_DestroyContext_true)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNDigestInfo,
                                           SGNDigestInfo,
                                           SGN_DestroyDigestInfo)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedVFYContext,
-                                          VFYContext,
-                                          mozilla::psm::VFY_DestroyContext_true)
 
 /** A more convenient way of dealing with digests calculated into
  *  stack-allocated buffers. NSS must be initialized on the main thread before
@@ -231,23 +208,16 @@ private:
   SECItem item;
 };
 
+// Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SlotInfo,
                                           PK11SlotInfo,
                                           PK11_FreeSlot)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SlotList,
-                                          PK11SlotList,
-                                          PK11_FreeSlotList)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SymKey,
                                           PK11SymKey,
                                           PK11_FreeSymKey)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11GenericObject,
                                           PK11GenericObject,
                                           PK11_DestroyGenericObject)
-
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS7ContentInfo,
-                                          SEC_PKCS7ContentInfo,
-                                          SEC_PKCS7DestroyContentInfo)
-
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS12DecoderContext,
                                           SEC_PKCS12DecoderContext,
                                           SEC_PKCS12DecoderFinish)
@@ -263,6 +233,7 @@ PORT_FreeArena_false(PLArenaPool* arena)
 
 } // namespace internal
 
+// Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPLArenaPool,
                                           PLArenaPool,
                                           internal::PORT_FreeArena_false)
@@ -325,10 +296,10 @@ inline void SECKEYEncryptedPrivateKeyInfo_true(SECKEYEncryptedPrivateKeyInfo * e
 
 } // namespace internal
 
+// Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
                                           SECItem,
                                           internal::SECITEM_FreeItem_true)
-
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
                                           SECKEYPrivateKey,
                                           SECKEY_DestroyPrivateKey)
@@ -341,8 +312,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECAlgorithmID,
                                           SECAlgorithmID,
                                           internal::SECOID_DestroyAlgorithmID_true)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECMODModule, SECMODModule,
-                                          SECMOD_DestroyModule)
 
 // Emulates MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE, but for UniquePtrs.
 #define MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(name, Type, Deleter) \
@@ -355,21 +324,40 @@ typedef UniquePtr<Type, name##DeletePolicy> name;
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificatePolicies,
                                       CERTCertificatePolicies,
                                       CERT_DestroyCertificatePoliciesExtension)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertNicknames,
+                                      CERTCertNicknames,
+                                      CERT_FreeNicknames)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTOidSequence,
                                       CERTOidSequence,
                                       CERT_DestroyOidSequence)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTUserNotice,
                                       CERTUserNotice,
                                       CERT_DestroyUserNotice)
+
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueNSSCMSMessage,
+                                      NSSCMSMessage,
+                                      NSS_CMSMessage_Destroy)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueNSSCMSSignedData,
+                                      NSSCMSSignedData,
+                                      NSS_CMSSignedData_Destroy)
+
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotList,
+                                      PK11SlotList,
+                                      PK11_FreeSlotList)
+
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePLArenaPool,
                                       PLArenaPool,
                                       internal::PORT_FreeArena_false)
+
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECItem,
                                       SECItem,
                                       internal::SECITEM_FreeItem_true)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPublicKey,
                                       SECKEYPublicKey,
                                       SECKEY_DestroyPublicKey)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECMODModule,
+                                      SECMODModule,
+                                      SECMOD_DestroyModule)
 } // namespace mozilla
 
 #endif // mozilla_ScopedNSSTypes_h

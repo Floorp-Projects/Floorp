@@ -131,6 +131,7 @@ enum class LogReason : int {
   InvalidRect,
   CannotDraw3D, // 20
   IncompatibleBasicTexturedEffect,
+  InvalidFont,
   // End
   MustBeLessThanThis = 101,
 };

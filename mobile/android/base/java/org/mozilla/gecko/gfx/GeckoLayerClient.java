@@ -23,6 +23,8 @@ import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -105,6 +107,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * is possible but risky; see https://bugzilla.mozilla.org/show_bug.cgi?id=797615#c751
      */
     private volatile boolean mContentDocumentIsDisplayed;
+
+    private SynthesizedEventState mPointerState;
 
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
@@ -707,6 +711,141 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
         return syncViewportInfo(dpX, dpY, dpWidth, dpHeight, paintedResolution,
                     layersUpdated, paintSyncId);
+    }
+
+    class PointerInfo {
+        public int pointerId;
+        public int screenX;
+        public int screenY;
+        public double pressure;
+        public int orientation;
+
+        public MotionEvent.PointerCoords getCoords() {
+            MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+            coords.orientation = orientation;
+            coords.pressure = (float)pressure;
+            coords.x = screenX;
+            coords.y = screenY;
+            return coords;
+        }
+    }
+
+    class SynthesizedEventState {
+        public final ArrayList<PointerInfo> pointers;
+        public long downTime;
+
+        SynthesizedEventState() {
+            pointers = new ArrayList<PointerInfo>();
+        }
+
+        int getPointerIndex(int pointerId) {
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).pointerId == pointerId) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        int addPointer(int pointerId) {
+            PointerInfo info = new PointerInfo();
+            info.pointerId = pointerId;
+            pointers.add(info);
+            return pointers.size() - 1;
+        }
+
+        int[] getPointerIds() {
+            int[] ids = new int[pointers.size()];
+            for (int i = 0; i < ids.length; i++) {
+                ids[i] = pointers.get(i).pointerId;
+            }
+            return ids;
+        }
+
+        MotionEvent.PointerCoords[] getPointerCoords() {
+            MotionEvent.PointerCoords[] coords = new MotionEvent.PointerCoords[pointers.size()];
+            for (int i = 0; i < coords.length; i++) {
+                coords[i] = pointers.get(i).getCoords();
+            }
+            return coords;
+        }
+    }
+
+    @WrapForJNI
+    public void synthesizeNativeTouchPoint(int pointerId, int eventType, int screenX,
+            int screenY, double pressure, int orientation)
+    {
+        if (mPointerState == null) {
+            mPointerState = new SynthesizedEventState();
+        }
+
+        // Find the pointer if it already exists
+        int pointerIndex = mPointerState.getPointerIndex(pointerId);
+
+        // Event-specific handling
+        switch (eventType) {
+            case MotionEvent.ACTION_POINTER_UP:
+                if (pointerIndex < 0) {
+                    Log.d(LOGTAG, "Requested synthesis of a pointer-up for a pointer that doesn't exist!");
+                    return;
+                }
+                if (mPointerState.pointers.size() == 1) {
+                    // Last pointer is going up
+                    eventType = MotionEvent.ACTION_UP;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                if (pointerIndex < 0) {
+                    Log.d(LOGTAG, "Requested synthesis of a pointer-cancel for a pointer that doesn't exist!");
+                    return;
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (pointerIndex < 0) {
+                    // Adding a new pointer
+                    pointerIndex = mPointerState.addPointer(pointerId);
+                    if (pointerIndex == 0) {
+                        // first pointer
+                        eventType = MotionEvent.ACTION_DOWN;
+                        mPointerState.downTime = SystemClock.uptimeMillis();
+                    }
+                } else {
+                    // We're moving an existing pointer
+                    eventType = MotionEvent.ACTION_MOVE;
+                }
+                break;
+        }
+
+        // Update the pointer with the new info
+        PointerInfo info = mPointerState.pointers.get(pointerIndex);
+        info.screenX = screenX;
+        info.screenY = screenY;
+        info.pressure = pressure;
+        info.orientation = orientation;
+
+        // Dispatch the event
+        int action = (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+        action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
+        action |= (eventType & MotionEvent.ACTION_MASK);
+        final MotionEvent event = MotionEvent.obtain(mPointerState.downTime,
+            SystemClock.uptimeMillis(), action, mPointerState.pointers.size(),
+            mPointerState.getPointerIds(), mPointerState.getPointerCoords(),
+            0, 0, 0, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+        mView.post(new Runnable() {
+            @Override
+            public void run() {
+                event.offsetLocation(0, mView.getSurfaceTranslation());
+                mView.dispatchTouchEvent(event);
+            }
+        });
+
+        // Forget about removed pointers
+        if (eventType == MotionEvent.ACTION_POINTER_UP ||
+            eventType == MotionEvent.ACTION_UP ||
+            eventType == MotionEvent.ACTION_CANCEL)
+        {
+            mPointerState.pointers.remove(pointerIndex);
+        }
     }
 
     @WrapForJNI(allowMultithread = true)

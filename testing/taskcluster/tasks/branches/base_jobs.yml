@@ -258,6 +258,10 @@ tests:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_plain.yml
+  mochitest-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_plain_e10s.yml
   mochitest-a11y:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -266,6 +270,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_bc.yml
+  mochitest-browser-chrome-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_bc_e10s.yml
   mochitest-chrome:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

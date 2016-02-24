@@ -365,6 +365,30 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    branchTestInt32Impl(cond, src, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -414,6 +438,64 @@ MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Lab
 {
     cmpPtr(Operand(lhs), rhs);
     j(cond, label);
+}
+
+void
+MacroAssemblerX86::unboxValue(const ValueOperand& src, AnyRegister dest)
+{
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.payloadReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        if (src.payloadReg() != dest.gpr())
+            movl(src.payloadReg(), dest.gpr());
+    }
+}
+
+template <typename T>
+void
+MacroAssemblerX86::loadInt32OrDouble(const T& src, FloatRegister dest)
+{
+    Label notInt32, end;
+    asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+    convertInt32ToDouble(ToPayload(src), dest);
+    jump(&end);
+    bind(&notInt32);
+    loadDouble(src, dest);
+    bind(&end);
+}
+
+template <typename T>
+void
+MacroAssemblerX86::loadUnboxedValue(const T& src, MIRType type, AnyRegister dest)
+{
+    if (dest.isFloat())
+        loadInt32OrDouble(src, dest.fpu());
+    else
+        movl(Operand(src), dest.gpr());
+}
+
+// If source is a double, load it into dest. If source is int32,
+// convert it to double. Else, branch to failure.
+void
+MacroAssemblerX86::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
+
+    convertInt32ToDouble(source.payloadReg(), dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
 }
 
 } // namespace jit
