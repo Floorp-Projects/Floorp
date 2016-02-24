@@ -1879,9 +1879,8 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     // 1) mScriptLoader.mRv.Failed().  In that case we just want to leave it
     //    as-is, except if it has a JS exception and we need to mute JS
     //    exceptions.  In that case, we log the exception without firing any
-    //    events and then replace it on the ErrorResult with a generic
-    //    NS_ERROR_FAILURE for lack of anything better.  XXXbz: This should
-    //    throw a NetworkError per spec updates.  See bug 1249673.
+    //    events and then replace it on the ErrorResult with a NetworkError,
+    //    per spec.
     //
     // 2) mScriptLoader.mRv succeeded.  As far as I can tell, this can only
     //    happen when loading the main worker script and
@@ -1891,7 +1890,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     if (mScriptLoader.mRv.Failed()) {
       if (aMutedError && mScriptLoader.mRv.IsJSException()) {
         LogExceptionToConsole(aCx, aWorkerPrivate);
-        mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
+        mScriptLoader.mRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       }
     } else {
       mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
