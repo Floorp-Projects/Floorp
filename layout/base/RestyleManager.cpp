@@ -18,6 +18,7 @@
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "nsStyleChangeList.h"
 #include "nsRuleProcessorData.h"
+#include "nsStyleSet.h"
 #include "nsStyleUtil.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsSVGEffects.h"
@@ -1029,7 +1030,7 @@ RestyleManager::RestyleElement(Element*               aElement,
       !mInRebuildAllStyleData) {
     nsStyleContext *oldContext = aPrimaryFrame->StyleContext();
     if (!oldContext->GetParent()) { // check that we're the root element
-      RefPtr<nsStyleContext> newContext = mPresContext->StyleSet()->
+      RefPtr<nsStyleContext> newContext = StyleSet()->
         ResolveStyleFor(aElement, nullptr /* == oldContext->GetParent() */);
       if (oldContext->StyleFont()->mFont.size !=
           newContext->StyleFont()->mFont.size) {
@@ -1146,7 +1147,7 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
 
   Element* aElement = aContent->AsElement();
 
-  nsStyleSet* styleSet = mPresContext->StyleSet();
+  nsStyleSet* styleSet = StyleSet();
   NS_ASSERTION(styleSet, "couldn't get style set");
 
   nsChangeHint hint = NS_STYLE_HINT_NONE;
@@ -1228,13 +1229,13 @@ RestyleManager::AttributeWillChange(Element* aElement,
 {
   RestyleHintData rsdata;
   nsRestyleHint rshint =
-    mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
-                                                         aNameSpaceID,
-                                                         aAttribute,
-                                                         aModType,
-                                                         false,
-                                                         aNewValue,
-                                                         rsdata);
+    StyleSet()->HasAttributeDependentStyle(aElement,
+                                           aNameSpaceID,
+                                           aAttribute,
+                                           aModType,
+                                           false,
+                                           aNewValue,
+                                           rsdata);
   PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE, &rsdata);
 }
 
@@ -1320,13 +1321,13 @@ RestyleManager::AttributeChanged(Element* aElement,
   // the frame's AttributeChanged() in case it does something that affects the style
   RestyleHintData rsdata;
   nsRestyleHint rshint =
-    mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
-                                                         aNameSpaceID,
-                                                         aAttribute,
-                                                         aModType,
-                                                         true,
-                                                         aOldValue,
-                                                         rsdata);
+    StyleSet()->HasAttributeDependentStyle(aElement,
+                                           aNameSpaceID,
+                                           aAttribute,
+                                           aModType,
+                                           true,
+                                           aOldValue,
+                                           rsdata);
   PostRestyleEvent(aElement, rshint, hint, &rsdata);
 }
 
@@ -1655,7 +1656,7 @@ RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
-  nsresult rv = mPresContext->StyleSet()->BeginReconstruct();
+  nsresult rv = StyleSet()->BeginReconstruct();
   if (NS_FAILED(rv)) {
     MOZ_CRASH("unable to rebuild style data");
   }
@@ -1708,7 +1709,7 @@ RestyleManager::FinishRebuildAllStyleData()
   // change list has frame reconstructs in it (since frames to be
   // reconstructed will still have their old style context pointers
   // until they are destroyed).
-  mPresContext->StyleSet()->EndReconstruct();
+  StyleSet()->EndReconstruct();
 
   mInRebuildAllStyleData = false;
 }
@@ -2412,7 +2413,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       ElementForStyleContext(parentFrame ? parentFrame->GetContent() : nullptr,
                              aFrame,
                              oldContext->GetPseudoType());
-    newContext = mPresContext->StyleSet()->
+    newContext = StyleSet()->
                    ReparentStyleContext(oldContext, newParentContext, element);
   }
 
@@ -2491,7 +2492,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
            (oldExtraContext = aFrame->GetAdditionalStyleContext(contextIndex));
            ++contextIndex) {
         RefPtr<nsStyleContext> newExtraContext;
-        newExtraContext = mPresContext->StyleSet()->
+        newExtraContext = StyleSet()->
                             ReparentStyleContext(oldExtraContext,
                                                  newContext, nullptr);
         if (newExtraContext) {
@@ -3688,7 +3689,7 @@ ElementRestyler::CanReparentStyleContext(nsRestyleHint aRestyleHint)
   return !(aRestyleHint & ~(eRestyle_Force |
                             eRestyle_ForceDescendants |
                             eRestyle_SomeDescendants)) &&
-         !mPresContext->StyleSet()->IsInRuleTreeReconstruct();
+         !StyleSet()->IsInRuleTreeReconstruct();
 }
 
 // Returns true iff any rule node that is an ancestor-or-self of the
@@ -3836,7 +3837,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
   RefPtr<nsStyleContext> oldContext = aSelf->StyleContext();
-  nsStyleSet* styleSet = mPresContext->StyleSet();
+  nsStyleSet* styleSet = StyleSet();
 
 #ifdef ACCESSIBILITY
   mWasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
@@ -4597,7 +4598,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
         nsRestyleHint(thisChildHint | undisplayedRestyleData->mRestyleHint);
     }
     RefPtr<nsStyleContext> undisplayedContext;
-    nsStyleSet* styleSet = mPresContext->StyleSet();
+    nsStyleSet* styleSet = StyleSet();
     if (MustRestyleSelf(thisChildHint, element)) {
       undisplayedContext =
         styleSet->ResolveStyleFor(element, aParentContext, mTreeMatchContext);
@@ -4967,6 +4968,18 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
                                             aRestyleHint, aRestyleHintData);
   ProcessRestyledFrames(changeList);
   ClearCachedInheritedStyleDataOnDescendants(contextsToClear);
+}
+
+nsStyleSet*
+RestyleManager::StyleSet() const
+{
+  return mPresContext->StyleSet();
+}
+
+nsStyleSet*
+ElementRestyler::StyleSet() const
+{
+  return mPresContext->StyleSet();
 }
 
 AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(
