@@ -10,12 +10,10 @@
   <script type="application/javascript">
 
 function scrollOuter() {
-  var transformEnd = function() {
-    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd", false);
+  SpecialPowers._addMessageListener("APZ:TransformEnd", function() {
     dump("Transform complete; flushing repaints...\n");
     flushApzRepaints(checkScroll);
-  };
-  SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd", false);
+  });
 
   const TOUCH_SLOP = 1;
   synthesizeNativeDrag(document.getElementById('outer'), 10, 100, 0, -(50 + TOUCH_SLOP));
