@@ -81,6 +81,33 @@ class MessageListener
         MOZ_CRASH("Intentional IPDL crash");
     }
 
+    // The code here is only useful for fuzzing. It should not be used for any
+    // other purpose.
+#ifdef DEBUG
+    // Returns true if we should simulate a timeout.
+    // WARNING: This is a testing-only function that is called with the
+    // MessageChannel monitor held. Don't do anything fancy here or we could
+    // deadlock.
+    virtual bool ArtificialTimeout() {
+        return false;
+    }
+
+    // Returns true if we want to cause the worker thread to sleep with the
+    // monitor unlocked.
+    virtual bool NeedArtificialSleep() {
+        return false;
+    }
+
+    // This function should be implemented to sleep for some amount of time on
+    // the worker thread. Will only be called if NeedArtificialSleep() returns
+    // true.
+    virtual void ArtificialSleep() {}
+#else
+    bool ArtificialTimeout() { return false; }
+    bool NeedArtificialSleep() { return false; }
+    void ArtificialSleep() {}
+#endif
+
     virtual void OnEnteredCxxStack() {
         NS_RUNTIMEABORT("default impl shouldn't be invoked");
     }
