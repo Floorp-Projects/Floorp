@@ -32,3 +32,37 @@ function promiseWindowClosed(window) {
     });
   });
 }
+
+/**
+ * These two functions work with file_dom_notifications.html to open the
+ * notification and close it.
+ *
+ * whichFunction can be showNotification1 or showNotification2.
+ */
+function openNotification(aBrowser, fn, timeout) {
+  return ContentTask.spawn(aBrowser, { fn, timeout }, function* ({ fn, timeout }) {
+    let win = content.wrappedJSObject;
+    let notification = win[fn]();
+    win._notification = notification;
+    yield new Promise((resolve, reject) => {
+      let l = () => {
+        notification.removeEventListener("show", l);
+        resolve();
+      };
+
+      notification.addEventListener("show", l);
+
+      if (timeout) {
+        content.setTimeout(() => {
+          notification.removeEventListener("show", l);
+          reject("timed out");
+        }, timeout);
+      }
+    });
+  });
+}
+function closeNotification(aBrowser) {
+  return ContentTask.spawn(aBrowser, null, function() {
+    content.wrappedJSObject._notification.close();
+  });
+}
