@@ -85,6 +85,8 @@ public:
       return true;
     }
 
+    virtual bool HaveChoiceOfHWAndSWCanvas() override;
+    virtual bool UseAcceleratedSkiaCanvas() override;
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 
 #ifdef MOZ_WIDGET_GONK
