@@ -266,6 +266,7 @@ stage-all: \
   stage-cppunittests \
   stage-luciddream \
   test-packages-manifest \
+  test-packages-manifest-tc \
   $(NULL)
 ifdef MOZ_WEBRTC
 stage-all: stage-steeplechase
@@ -287,6 +288,16 @@ TEST_PKGS += gtest
 endif
 
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
+
+test-packages-manifest-tc:
+	@rm -f $(MOZ_TEST_PACKAGES_FILE_TC)
+	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE_TC))
+	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
+      --jsshell $(JSSHELL_NAME) \
+      --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
+      --use-short-names \
+      $(call PKG_ARG,common) \
+      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
@@ -467,4 +478,6 @@ stage-extensions: make-stage-dir
   stage-instrumentation-tests \
   stage-luciddream \
   test-packages-manifest \
+  test-packages-manifest-tc \
   $(NULL)
+
