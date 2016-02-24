@@ -46,6 +46,7 @@ var {
   Messenger,
   injectAPI,
   flushJarCache,
+  detectLanguage,
 } = ExtensionUtils;
 
 function isWhenBeforeOrSame(when1, when2) {
@@ -121,6 +122,11 @@ var api = context => {
 
       getUILanguage: function() {
         return context.extension.localeData.uiLocale;
+      },
+
+      detectLanguage: function(text, callback) {
+        let result = detectLanguage(text);
+        return context.wrapPromise(result, callback);
       },
     },
   };

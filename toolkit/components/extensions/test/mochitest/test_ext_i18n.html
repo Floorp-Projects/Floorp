@@ -242,6 +242,119 @@ add_task(function* test_get_ui_language() {
   yield extension.unload();
 });
 
+
+add_task(function* test_detect_language() {
+  const af_string = " aam skukuza die naam beteken hy wat skoonvee of hy wat alles onderstebo keer wysig " +
+    "bosveldkampe boskampe is kleiner afgeleë ruskampe wat oor min fasiliteite beskik daar is geen restaurante " +
+    "of winkels nie en slegs oornagbesoekers word toegelaat bateleur";
+  // String with intermixed French/English text
+  const fr_en_string = "France is the largest country in Western Europe and the third-largest in Europe as a whole. " +
+    "A accès aux chiens et aux frontaux qui lui ont été il peut consulter et modifier ses collections et exporter " +
+    "Cet article concerne le pays européen aujourd’hui appelé République française. Pour d’autres usages du nom France, " +
+    "Pour une aide rapide et effective, veuiller trouver votre aide dans le menu ci-dessus." +
+    "Motoring events began soon after the construction of the first successful gasoline-fueled automobiles. The quick brown fox jumped over the lazy dog";
+
+  function backgroundScript() {
+    function checkResult(source, result, expected) {
+      browser.test.assertEq(expected.isReliable, result.isReliable, "result.confident is true");
+      browser.test.assertEq(
+        expected.languages.length,
+        result.languages.length,
+        `result.languages contains the expected number of languages in ${source}`);
+      expected.languages.forEach((lang, index) => {
+        browser.test.assertEq(
+          lang.percentage,
+          result.languages[index].percentage,
+          `element ${index} of result.languages array has the expected percentage in ${source}`);
+        browser.test.assertEq(
+          lang.language,
+          result.languages[index].language,
+          `element ${index} of result.languages array has the expected language in ${source}`);
+      });
+    }
+
+    let tabId;
+
+    browser.tabs.query({currentWindow: true, active: true}, tabs => {
+      tabId = tabs[0].id;
+      browser.test.sendMessage("ready");
+    });
+
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      Promise.all([
+        browser.i18n.detectLanguage(msg),
+        new Promise(
+          resolve => browser.tabs.sendMessage(tabId, msg, resolve)),
+      ]).then(([backgroundResults, contentResults]) => {
+        checkResult("background", backgroundResults, expected);
+        checkResult("contentScript", contentResults, expected);
+
+        browser.test.sendMessage("done");
+      });
+    });
+  }
+
+  function content() {
+    browser.runtime.onMessage.addListener((msg, sender, respond) => {
+      browser.i18n.detectLanguage(msg, respond);
+      return true;
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "run_at": "document_start",
+        "js": ["content_script.js"],
+      }],
+    },
+
+    background: `(${backgroundScript})()`,
+
+    files: {
+      "content_script.js": `(${content})()`,
+    },
+  });
+
+  let win = window.open("file_sample.html");
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  let expected = {
+    isReliable: true,
+    languages: [
+      {
+        language: "fr",
+        percentage: 67,
+      },
+      {
+        language: "en",
+        percentage: 32,
+      },
+    ],
+  };
+  extension.sendMessage([fr_en_string, expected]);
+  yield extension.awaitMessage("done");
+
+  expected = {
+    isReliable: true,
+    languages: [
+      {
+        language: "af",
+        percentage: 99,
+      },
+    ],
+  };
+  extension.sendMessage([af_string, expected]);
+  yield extension.awaitMessage("done");
+
+  win.close();
+
+  yield extension.unload();
+});
+
 </script>
 
 </body>
