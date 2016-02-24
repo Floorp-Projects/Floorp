@@ -88,9 +88,12 @@ EXPORTS.mozilla += [
     'LayerAnimationInfo.h',
     'RuleNodeCacheConditions.h',
     'RuleProcessorCache.h',
+    'ServoStyleSet.h',
     'SheetType.h',
     'StyleAnimationValue.h',
     'StyleBackendType.h',
+    'StyleSetHandle.h',
+    'StyleSetHandleInlines.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -172,6 +175,7 @@ UNIFIED_SOURCES += [
     'nsTransitionManager.cpp',
     'RuleNodeCacheConditions.cpp',
     'RuleProcessorCache.cpp',
+    'ServoStyleSet.cpp',
     'StyleAnimationValue.cpp',
     'StyleRule.cpp',
     'SVGAttrAnimationRuleProcessor.cpp',
