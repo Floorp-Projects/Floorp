@@ -92,7 +92,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
     static_cast<AnimationCollection*>(aElement->GetProperty(propName));
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    collection = new AnimationCollection(aElement, propName, this);
+    collection = new AnimationCollection(aElement, propName);
     nsresult rv =
       aElement->SetProperty(propName, collection,
                             &AnimationCollection::PropertyDtor, false);
