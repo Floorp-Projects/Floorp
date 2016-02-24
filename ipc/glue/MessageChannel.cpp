@@ -972,6 +972,10 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
         MOZ_RELEASE_ASSERT(mCurrentTransaction == transaction);
         bool maybeTimedOut = !WaitForSyncNotify(handleWindowsMessages);
+        if (mListener->NeedArtificialSleep()) {
+            MonitorAutoUnlock unlock(*mMonitor);
+            mListener->ArtificialSleep();
+        }
 
         if (!Connected()) {
             ReportConnectionError("MessageChannel::SendAndWait");
@@ -1376,21 +1380,27 @@ MessageChannel::DispatchMessage(const Message &aMsg)
             MonitorAutoUnlock unlock(*mMonitor);
             CxxStackFrame frame(*this, IN_MESSAGE, &aMsg);
 
+            mListener->ArtificialSleep();
+
             if (aMsg.is_sync())
                 DispatchSyncMessage(aMsg, *getter_Transfers(reply));
             else if (aMsg.is_interrupt())
                 DispatchInterruptMessage(aMsg, 0);
             else
                 DispatchAsyncMessage(aMsg);
+
+            mListener->ArtificialSleep();
         }
 
         if (mCurrentTransaction != id) {
             // The transaction has been canceled. Don't send a reply.
+            IPC_LOG("Nulling out reply due to cancellation, seqno=%d, xid=%d", aMsg.seqno(), id);
             reply = nullptr;
         }
     }
 
     if (reply && ChannelConnected == mChannelState) {
+        IPC_LOG("Sending reply seqno=%d, xid=%d", aMsg.seqno(), aMsg.transaction_id());
         mLink->SendMessage(reply.forget());
     }
 }
@@ -1634,6 +1644,15 @@ MessageChannel::WaitResponse(bool aWaitTimedOut)
 bool
 MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */)
 {
+#ifdef DEBUG
+    // WARNING: We don't release the lock here. We can't because the link thread
+    // could signal at this time and we would miss it. Instead we require
+    // ArtificialTimeout() to be extremely simple.
+    if (mListener->ArtificialTimeout()) {
+        return false;
+    }
+#endif
+
     PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
                              PR_INTERVAL_NO_TIMEOUT :
                              PR_MillisecondsToInterval(mTimeoutMs);
@@ -1670,6 +1689,7 @@ MessageChannel::ShouldContinueFromTimeout()
     {
         MonitorAutoUnlock unlock(*mMonitor);
         cont = mListener->OnReplyTimeout();
+        mListener->ArtificialSleep();
     }
 
     static enum { UNKNOWN, NOT_DEBUGGING, DEBUGGING } sDebuggingChildren = UNKNOWN;
