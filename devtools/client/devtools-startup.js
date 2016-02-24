@@ -6,6 +6,15 @@
    bug 1242893 is fixed */
 /* globals BrowserToolboxProcess */
 
+/**
+ * This XPCOM component is loaded very early.
+ * It handles command line arguments like -jsconsole, but also ensures starting
+ * core modules like devtools/devtools-browser that listen for application
+ * startup.
+ *
+ * Be careful to lazy load dependencies as much as possible.
+ **/
+
 "use strict";
 
 const { interfaces: Ci, utils: Cu } = Components;
@@ -16,9 +25,9 @@ const kDebuggerPrefs = [
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
-function devtoolsCommandlineHandler() {}
+function DevToolsStartup() {}
 
-devtoolsCommandlineHandler.prototype = {
+DevToolsStartup.prototype = {
   handle: function(cmdLine) {
     let consoleFlag = cmdLine.handleFlag("jsconsole", false);
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
@@ -29,9 +38,6 @@ devtoolsCommandlineHandler.prototype = {
     }
     if (debuggerFlag) {
       this.handleDebuggerFlag(cmdLine);
-    }
-    if (devtoolsFlag) {
-      this.handleDevToolsFlag();
     }
     let debuggerServerFlag;
     try {
@@ -45,19 +51,36 @@ devtoolsCommandlineHandler.prototype = {
     if (debuggerServerFlag) {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
+
+    let onStartup = function(window) {
+      Services.obs.removeObserver(onStartup,
+                                  "browser-delayed-startup-finished");
+      // Ensure loading core module once firefox is ready
+      this.initDevTools();
+
+      if (devtoolsFlag) {
+        this.handleDevToolsFlag(window);
+      }
+    }.bind(this);
+    Services.obs.addObserver(onStartup, "browser-delayed-startup-finished",
+                             false);
+  },
+
+  initDevTools: function() {
+    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    // Ensure loading main devtools module that hooks up into browser UI
+    // and initialize all devtools machinery.
+    // browser.xul or main top-level document used to load this module,
+    // but this code may be called without/before it.
+    require("devtools/client/framework/devtools-browser");
   },
 
   handleConsoleFlag: function(cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
-      let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      // Ensure loading main devtools module that hooks up into browser UI
-      // and initialize all devtools machinery.
-      // browser.xul or main top-level document used to load this module,
-      // but this code may be called without/before it.
-      // Bug 1247203 should ease handling this.
-      require("devtools/client/framework/devtools-browser");
+      this.initDevTools();
 
+      let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
       let hudservice = require("devtools/client/webconsole/hudservice");
       let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
       hudservice.toggleBrowserConsole().then(null, console.error);
@@ -72,16 +95,12 @@ devtoolsCommandlineHandler.prototype = {
   },
 
   // Open the toolbox on the selected tab once the browser starts up.
-  handleDevToolsFlag: function() {
-    Services.obs.addObserver(function onStartup(window) {
-      Services.obs.removeObserver(onStartup,
-                                  "browser-delayed-startup-finished");
-      const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-      const {gDevTools} = require("devtools/client/framework/devtools");
-      const {TargetFactory} = require("devtools/client/framework/target");
-      let target = TargetFactory.forTab(window.gBrowser.selectedTab);
-      gDevTools.showToolbox(target);
-    }, "browser-delayed-startup-finished", false);
+  handleDevToolsFlag: function(window) {
+    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const {gDevTools} = require("devtools/client/framework/devtools");
+    const {TargetFactory} = require("devtools/client/framework/target");
+    let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+    gDevTools.showToolbox(target);
   },
 
   _isRemoteDebuggingEnabled() {
@@ -168,4 +187,4 @@ devtoolsCommandlineHandler.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [devtoolsCommandlineHandler]);
+  [DevToolsStartup]);
