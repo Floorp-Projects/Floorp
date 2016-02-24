@@ -308,37 +308,6 @@ function getLocale() {
 }
 
 /**
- * Previously the APIs for installing add-ons from webpages accepted nsIURI
- * arguments for the installing page. They now take an nsIPrincipal but for now
- * maintain backwards compatibility by converting an nsIURI to an nsIPrincipal.
- *
- * @param  aPrincipalOrURI
- *         The argument passed to the API function. Can be null, an nsIURI or
- *         an nsIPrincipal.
- * @return an nsIPrincipal.
- */
-function ensurePrincipal(principalOrURI) {
-  if (principalOrURI instanceof Ci.nsIPrincipal)
-    return principalOrURI;
-
-  logger.warn("Deprecated API call, please pass a non-null nsIPrincipal instead of an nsIURI");
-
-  // Previously a null installing URI meant allowing the install regardless.
-  if (!principalOrURI) {
-    return Services.scriptSecurityManager.getSystemPrincipal();
-  }
-
-  if (principalOrURI instanceof Ci.nsIURI) {
-    return Services.scriptSecurityManager.createCodebasePrincipal(principalOrURI, {
-      inBrowser: true
-    });
-  }
-
-  // Just return whatever we have, the API method will log an error about it.
-  return principalOrURI;
-}
-
-/**
  * A helper class to repeatedly call a listener with each object in an array
  * optionally checking whether the object has a method in it.
  *
@@ -3215,14 +3184,13 @@ this.AddonManager = {
   },
 
   isInstallAllowed: function(aType, aInstallingPrincipal) {
-    return AddonManagerInternal.isInstallAllowed(aType, ensurePrincipal(aInstallingPrincipal));
+    return AddonManagerInternal.isInstallAllowed(aType, aInstallingPrincipal);
   },
 
-  installAddonsFromWebpage: function(aType, aBrowser,
-                                                                 aInstallingPrincipal,
-                                                                 aInstalls) {
+  installAddonsFromWebpage: function(aType, aBrowser, aInstallingPrincipal,
+                                     aInstalls) {
     AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser,
-                                                  ensurePrincipal(aInstallingPrincipal),
+                                                  aInstallingPrincipal,
                                                   aInstalls);
   },
 

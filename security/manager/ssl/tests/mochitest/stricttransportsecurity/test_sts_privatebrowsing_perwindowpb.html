@@ -195,7 +195,7 @@
   function clean_up_sts_state(isPrivate) {
     // erase all signs that this test ran.
     SimpleTest.info("Cleaning up STS data");
-    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
     SpecialPowers.cleanUpSTSData("http://example.com", flags);
     dump_STSState(isPrivate);
   }
@@ -204,7 +204,7 @@
     var sss =
       Cc["@mozilla.org/ssservice;1"].
         getService(Ci.nsISiteSecurityService);
-    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
     SimpleTest.info("State of example.com: " + sss.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "example.com", flags));
   }
 
@@ -224,7 +224,7 @@
   ];
 
   function finish() {
-    SpecialPowers.Services.prefs.clearUserPref("browser.startup.page")
+    SpecialPowers.Services.prefs.clearUserPref("browser.startup.page");
     SimpleTest.finish();
   }
   function nextTest() {

@@ -60,7 +60,7 @@ function setWindowName()
   var impactReference = document.getElementById('impact');
   document.title = title;
 
-  setText("confirm",confirm);
+  setText("confirm", confirm);
 
   let box = document.getElementById("certlist");
   for (let x = 0; x < numberOfCerts; x++) {
@@ -71,7 +71,7 @@ function setWindowName()
     box.appendChild(listItem);
   }
 
-  setText("impact",impact);
+  setText("impact", impact);
 }
 
 function doOK()

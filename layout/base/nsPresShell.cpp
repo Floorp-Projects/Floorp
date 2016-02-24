@@ -7654,7 +7654,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
         auto keyCode = aEvent->AsKeyboardEvent()->keyCode;
         if (keyCode == NS_VK_ESCAPE) {
           nsIDocument* root = nsContentUtils::GetRootDocument(doc);
-          if (root && root->IsFullScreenDoc()) {
+          if (root && root->GetFullscreenElement()) {
             // Prevent default action on ESC key press when exiting
             // DOM fullscreen mode. This prevents the browser ESC key
             // handler from stopping all loads in the document, which

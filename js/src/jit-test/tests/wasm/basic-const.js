@@ -3,11 +3,6 @@ load(libdir + "wasm.js");
 if (!wasmIsSupported())
     quit();
 
-function mismatchError(actual, expect) {
-    var str = "type mismatch: expression has type " + actual + " but expected " + expect;
-    return RegExp(str);
-}
-
 function testConst(type, str, expect) {
   assertEq(wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))')(), expect);
 }

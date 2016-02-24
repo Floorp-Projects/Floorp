@@ -142,11 +142,11 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.Append("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append("\n");
-  buffer.Append("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.Append("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -167,7 +167,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("spec 0", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -180,7 +180,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("spec 1", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
@@ -246,7 +246,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
 
     ASSERT_STREQ(expectSuffix.get(), suffix.get());
 
-    test.AppendPrintf("spec write %d", i);
+    test.AppendPrintf("scope write %d", i);
     ASSERT_STREQ(test.get(), cInfo.spec().get());
 
     test.Truncate();
@@ -283,7 +283,7 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
 
   const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
-  ASSERT_EQ((uint32_t)2, data.Length()) << "4 entries should be found";
+  ASSERT_EQ((uint32_t)2, data.Length()) << "2 entries should be found";
 
   const mozilla::ipc::PrincipalInfo& info0 = data[0].principal();
   ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -293,7 +293,7 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("spec 0", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_STREQ("activeCache 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -306,15 +306,64 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("spec 1", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_STREQ("activeCache 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
 }
 
+TEST(ServiceWorkerRegistrar, TestVersion3Migration)
+{
+  nsAutoCString buffer("3" "\n");
+
+  buffer.Append("^appId=123&inBrowser=1\n");
+  buffer.Append("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  buffer.Append("\n");
+  buffer.Append("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+
+  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+
+  nsresult rv = swr->TestReadData();
+  ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
+
+  const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
+  ASSERT_EQ((uint32_t)2, data.Length()) << "2 entries should be found";
+
+  const mozilla::ipc::PrincipalInfo& info0 = data[0].principal();
+  ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo0 = data[0].principal();
+
+  nsAutoCString suffix0;
+  cInfo0.attrs().CreateSuffix(suffix0);
+
+  ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
+  ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
+
+  const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
+  ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo1 = data[1].principal();
+
+  nsAutoCString suffix1;
+  cInfo1.attrs().CreateSuffix(suffix1);
+
+  ASSERT_STREQ("", suffix1.get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
+}
+
 TEST(ServiceWorkerRegistrar, TestDedupe)
 {
-  nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
+  nsAutoCString buffer("3" "\n");
 
   // unique entries
   buffer.Append("^appId=123&inBrowser=1\n");
@@ -356,7 +405,7 @@ TEST(ServiceWorkerRegistrar, TestDedupe)
   cInfo0.attrs().CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
-  ASSERT_STREQ("spec 2", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
@@ -369,7 +418,7 @@ TEST(ServiceWorkerRegistrar, TestDedupe)
   cInfo1.attrs().CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
-  ASSERT_STREQ("spec 3", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());

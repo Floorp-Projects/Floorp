@@ -73,7 +73,7 @@ function run_port_equivalency_test(inPort, outPort) {
   let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                               .getService(Ci.nsICertOverrideService);
   let cert = constructCertFromFile("bad_certs/default-ee.pem");
-  let expectedBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED
+  let expectedBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED;
   let expectedTemporary = true;
   certOverrideService.rememberValidityOverride("example.com", inPort, cert,
                                                expectedBits, expectedTemporary);
