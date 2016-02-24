@@ -76,6 +76,7 @@ describe("loop.panel", function() {
       LogoutFromFxA: sinon.stub(),
       NotifyUITour: sinon.stub(),
       OpenURL: sinon.stub(),
+      GettingStartedURL: sinon.stub().returns("http://fakeFTUUrl.com"),
       GetSelectedTabMetadata: sinon.stub().returns({}),
       GetUserProfile: function() { return null; }
     });
@@ -827,6 +828,40 @@ describe("loop.panel", function() {
           TestUtils.Simulate.click(roomEntry.refs.roomEntry.getDOMNode());
           sinon.assert.calledOnce(openURLStub);
           sinon.assert.calledWithExactly(openURLStub, "http://testurl.com");
+        });
+
+        it("should open a new tab with the FTU Getting Started URL if the room context is blank", function() {
+          var roomDataNoURL = {
+            roomToken: "QzBbvGmIZWU",
+            roomUrl: "http://sample/QzBbvGmIZWU",
+            decryptedContext: {
+              roomName: roomName,
+              urls: [{
+                location: ""
+              }]
+            },
+            maxSize: 2,
+            participants: [{
+              displayName: "Alexis",
+              account: "alexis@example.com",
+              roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+            }, {
+              displayName: "Adam",
+              roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+            }],
+            ctime: 1405517418
+          };
+          roomEntry = mountRoomEntry({
+            deleteRoom: sandbox.stub(),
+            isOpenedRoom: false,
+            room: new loop.store.Room(roomDataNoURL)
+          });
+          var ftuURL = requestStubs.GettingStartedURL() + "?noopenpanel=1";
+
+          TestUtils.Simulate.click(roomEntry.refs.roomEntry.getDOMNode());
+
+          sinon.assert.calledOnce(openURLStub);
+          sinon.assert.calledWithExactly(openURLStub, ftuURL);
         });
 
         it("should not open a new tab if the context is the same as the currently open tab", function() {
