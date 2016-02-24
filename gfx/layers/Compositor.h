@@ -450,8 +450,6 @@ public:
    */
   virtual bool Ready() { return true; }
 
-  virtual void ForcePresent() { }
-
   // XXX I expect we will want to move mWidget into this class and implement
   // these methods properly.
   virtual nsIWidget* GetWidget() const { return nullptr; }

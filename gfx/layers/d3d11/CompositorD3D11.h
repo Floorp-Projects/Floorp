@@ -143,8 +143,6 @@ public:
     return LayersBackend::LAYERS_D3D11;
   }
 
-  virtual void ForcePresent() { mSwapChain->Present(0, 0); }
-
   virtual nsIWidget* GetWidget() const override { return mWidget; }
 
   ID3D11Device* GetDevice() { return mDevice; }
