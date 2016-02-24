@@ -45,10 +45,6 @@ window.onload = function() {
         // events get held up. Try to prevent that by making long-taps require
         // a 10 second hold.
         ["ui.click_hold_context_menus.delay", "10000"],
-        // The subtests in this test do touch-drags to pan the page, but we don't
-        // want those pans to turn into fling animations, so we increase the
-        // fling-stop threshold velocity to absurdly high.
-        ["apz.fling_stopped_threshold", "10000"],
       ]
     }, testDone);
 };
