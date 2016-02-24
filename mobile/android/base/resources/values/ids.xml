@@ -17,5 +17,6 @@
     <item type="id" name="pref_header_privacy"/>
     <item type="id" name="pref_header_search"/>
     <item type="id" name="updateServicePermissionNotification" />
+    <item type="id" name="websiteContentNotification" />
 
 </resources>
