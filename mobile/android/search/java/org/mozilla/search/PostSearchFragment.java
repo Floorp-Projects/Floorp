@@ -12,9 +12,9 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.search.providers.SearchEngine;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
