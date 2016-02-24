@@ -9,6 +9,7 @@
 #include "gfxVR.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/unused.h"
 
 #include "gfxPrefs.h"
@@ -19,6 +20,12 @@
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROSVR.h"
 #endif
+#include "ipc/VRLayerParent.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
+using namespace mozilla::layers;
+using namespace mozilla::gl;
 
 namespace mozilla {
 namespace gfx {
@@ -42,10 +49,11 @@ VRManager::VRManager()
   MOZ_COUNT_CTOR(VRManager);
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
 
-  RefPtr<VRHMDManager> mgr;
+  RefPtr<VRDisplayManager> mgr;
 
 #if defined(XP_WIN)
-  mgr = VRHMDManagerOculus::Create();
+  // The Oculus runtime is supported only on Windows
+  mgr = VRDisplayManagerOculus::Create();
   if (mgr) {
     mManagers.AppendElement(mgr);
   }
@@ -53,11 +61,10 @@ VRManager::VRManager()
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
   // OSVR is cross platform compatible
-  mgr = VRHMDManagerOSVR::Create();
+  mgr = VRDisplayManagerOSVR::Create();
   if (mgr){
       mManagers.AppendElement(mgr);
   }
-
 #endif
 }
 
@@ -116,90 +123,129 @@ VRManager::RemoveVRManagerParent(VRManagerParent* aVRManagerParent)
 void
 VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRHMDInfo* device = iter.UserData();
-    device->NotifyVsync(aVsyncTimestamp);
+  const double kVRDisplayRefreshMaxDuration = 5000; // milliseconds
+
+  bool bHaveEventListener = false;
+
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    VRManagerParent *vmp = iter.Get()->GetKey();
+    Unused << vmp->SendNotifyVSync();
+    bHaveEventListener |= vmp->HaveEventListener();
   }
-  DispatchVRDisplaySensorUpdate();
+
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRDisplayHost* display = iter.UserData();
+    display->NotifyVSync();
+  }
+
+  if (bHaveEventListener) {
+    // If content has set an EventHandler to be notified of VR display events
+    // we must continually refresh the VR display enumeration to check
+    // for events that we must fire such as Window.onvrdisplayconnected
+    // Note that enumeration itself may activate display hardware, such
+    // as Oculus, so we only do this when we know we are displaying content
+    // that is looking for VR displays.
+    if (mLastRefreshTime.IsNull()) {
+      // This is the first vsync, must refresh VR displays
+      RefreshVRDisplays();
+    } else {
+      // We don't have to do this every frame, so check if we
+      // have refreshed recently.
+      TimeDuration duration = TimeStamp::Now() - mLastRefreshTime;
+      if (duration.ToMilliseconds() > kVRDisplayRefreshMaxDuration) {
+        RefreshVRDisplays();
+      }
+    }
+  }
 }
 
 void
-VRManager::RefreshVRDisplays()
+VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
 {
-  nsTArray<RefPtr<gfx::VRHMDInfo> > devices;
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendNotifyVRVSync(aDisplayID);
+  }
+}
+
+void
+VRManager::RefreshVRDisplays(bool aMustDispatch)
+{
+  nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
 
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
-    mManagers[i]->GetHMDs(devices);
+    mManagers[i]->GetHMDs(displays);
   }
 
-  bool deviceInfoChanged = false;
+  bool displayInfoChanged = false;
 
-  if (devices.Length() != mVRDisplays.Count()) {
-    deviceInfoChanged = true;
+  if (displays.Length() != mVRDisplays.Count()) {
+    // Catch cases where a VR display has been removed
+    displayInfoChanged = true;
   }
 
-  for (const auto& device: devices) {
-    RefPtr<VRHMDInfo> oldDevice = GetDevice(device->GetDeviceInfo().GetDeviceID());
-    if (oldDevice == nullptr) {
-      deviceInfoChanged = true;
+  for (const auto& display: displays) {
+    if (!GetDisplay(display->GetDisplayInfo().GetDisplayID())) {
+      // This is a new display
+      displayInfoChanged = true;
       break;
     }
-    if (oldDevice->GetDeviceInfo() != device->GetDeviceInfo()) {
-      deviceInfoChanged = true;
+
+    if (display->CheckClearDisplayInfoDirty()) {
+      // This display's info has changed
+      displayInfoChanged = true;
       break;
     }
   }
 
-  if (deviceInfoChanged) {
+  if (displayInfoChanged) {
     mVRDisplays.Clear();
-    for (const auto& device: devices) {
-      mVRDisplays.Put(device->GetDeviceInfo().GetDeviceID(), device);
+    for (const auto& display: displays) {
+      mVRDisplays.Put(display->GetDisplayInfo().GetDisplayID(), display);
     }
   }
 
-  DispatchVRDisplayInfoUpdate();
+  if (displayInfoChanged || aMustDispatch) {
+    DispatchVRDisplayInfoUpdate();
+  }
+
+  mLastRefreshTime = TimeStamp::Now();
 }
 
 void
 VRManager::DispatchVRDisplayInfoUpdate()
 {
-  nsTArray<VRDisplayUpdate> update;
+  nsTArray<VRDisplayInfo> update;
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRHMDInfo* device = iter.UserData();
-    update.AppendElement(VRDisplayUpdate(device->GetDeviceInfo(),
-                                        device->GetSensorState()));
+    gfx::VRDisplayHost* display = iter.UserData();
+    update.AppendElement(VRDisplayInfo(display->GetDisplayInfo()));
   }
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendUpdateDeviceInfo(update);
+    Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(update);
   }
+}
+
+RefPtr<gfx::VRDisplayHost>
+VRManager::GetDisplay(const uint32_t& aDisplayID)
+{
+  RefPtr<gfx::VRDisplayHost> display;
+  if (mVRDisplays.Get(aDisplayID, getter_AddRefs(display))) {
+    return display;
+  }
+  return nullptr;
 }
 
 void
-VRManager::DispatchVRDisplaySensorUpdate()
+VRManager::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
+                     layers::PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
+                     const gfx::Rect& aRightEyeRect)
 {
-  nsTArray<VRSensorUpdate> update;
-
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRHMDInfo* device = iter.UserData();
-    update.AppendElement(VRSensorUpdate(device->GetDeviceInfo().GetDeviceID(),
-                                        device->GetSensorState()));
+  TextureHost* th = TextureHost::AsTextureHost(aTexture);
+  mLastFrame = th;
+  RefPtr<VRDisplayHost> display = GetDisplay(aLayer->GetDisplayID());
+  if (display) {
+    display->SubmitFrame(aLayer, aInputFrameID, aTexture, aLeftEyeRect, aRightEyeRect);
   }
-  if (update.Length() > 0) {
-    for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-      Unused << iter.Get()->GetKey()->SendUpdateDeviceSensors(update);
-    }
-  }
-}
-
-RefPtr<gfx::VRHMDInfo>
-VRManager::GetDevice(const uint32_t& aDeviceID)
-{
-  RefPtr<gfx::VRHMDInfo> device;
-  if (mVRDisplays.Get(aDeviceID, getter_AddRefs(device))) {
-    return device;
-  }
-  return nullptr;
 }
 
 } // namespace gfx

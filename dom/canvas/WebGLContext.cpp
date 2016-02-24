@@ -48,6 +48,8 @@
 #include "nsSVGEffects.h"
 #include "prenv.h"
 #include "ScopedGLHelpers.h"
+#include "VRManagerChild.h"
+#include "mozilla/layers/TextureClientSharedSurface.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "mozilla/layers/ShadowLayers.h"
@@ -123,6 +125,7 @@ WebGLContext::WebGLContext()
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
     , mNeedsEmulatedLoneDepthStencil(false)
+    , mVRPresentationActive(false)
 {
     mGeneration = 0;
     mInvalidated = false;
@@ -2347,6 +2350,72 @@ WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
     totalBytes += usedBytesPerRow;
 
     return totalBytes;
+}
+
+already_AddRefed<layers::SharedSurfaceTextureClient>
+WebGLContext::GetVRFrame()
+{
+  VRManagerChild *vrmc = VRManagerChild::Get();
+  if (!vrmc) {
+    return nullptr;
+  }
+
+  PresentScreenBuffer();
+  mDrawCallsSinceLastFlush = 0;
+
+  MarkContextClean();
+  UpdateLastUseIndex();
+
+  gl::GLScreenBuffer* screen = gl->Screen();
+  if (!screen) {
+    return nullptr;
+  }
+
+  RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
+  if (!sharedSurface) {
+    return nullptr;
+  }
+
+  if (sharedSurface && sharedSurface->GetAllocator() != vrmc) {
+    RefPtr<SharedSurfaceTextureClient> dest =
+      screen->Factory()->NewTexClient(sharedSurface->GetSize());
+    if (!dest) {
+      return nullptr;
+    }
+    gl::SharedSurface* destSurf = dest->Surf();
+    destSurf->ProducerAcquire();
+    SharedSurface::ProdCopy(sharedSurface->Surf(), dest->Surf(), screen->Factory());
+    destSurf->ProducerRelease();
+
+    return dest.forget();
+  }
+
+  return sharedSurface.forget();
+}
+
+bool
+WebGLContext::StartVRPresentation()
+{
+  VRManagerChild *vrmc = VRManagerChild::Get();
+  if (!vrmc) {
+    return false;
+  }
+  gl::GLScreenBuffer* screen = gl->Screen();
+  if (!screen) {
+    return false;
+  }
+  gl::SurfaceCaps caps = screen->mCaps;
+
+  UniquePtr<gl::SurfaceFactory> factory =
+    gl::GLScreenBuffer::CreateFactory(gl,
+      caps,
+      vrmc,
+      vrmc->GetBackendType(),
+      TextureFlags::ORIGIN_BOTTOM_LEFT);
+
+  screen->Morph(Move(factory));
+  mVRPresentationActive = true;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

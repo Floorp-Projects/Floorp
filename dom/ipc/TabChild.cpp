@@ -110,6 +110,7 @@
 #include "nsDeviceContext.h"
 #include "nsSandboxFlags.h"
 #include "FrameLayerBuilder.h"
+#include "VRManagerChild.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"
@@ -2741,6 +2742,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
                "PuppetWidget should have shadow manager");
     lf->IdentifyTextureHost(mTextureFactoryIdentifier);
     ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+    gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
 
     mRemoteFrame = remoteFrame;
     if (aLayersId != 0) {

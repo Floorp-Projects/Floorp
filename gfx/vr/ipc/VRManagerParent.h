@@ -8,20 +8,24 @@
 #ifndef MOZILLA_GFX_VR_VRMANAGERPARENT_H
 #define MOZILLA_GFX_VR_VRMANAGERPARENT_H
 
+#include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/gfx/PVRManagerParent.h" // for PVRManagerParent
+#include "mozilla/gfx/PVRLayerParent.h"   // for PVRLayerParent
 #include "mozilla/ipc/ProtocolUtils.h"    // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"            // for TimeStamp
 #include "gfxVR.h"                        // for VRFieldOfView
 
 namespace mozilla {
+using namespace layers;
 namespace gfx {
 
 class VRManager;
 
 class VRManagerParent final : public PVRManagerParent
+                            , public HostIPCAllocator
+                            , public ShmemAllocator
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VRManagerParent)
 public:
   explicit VRManagerParent(ProcessId aChildProcessId);
 
@@ -35,20 +39,56 @@ public:
                 base::ProcessHandle aPeerProcess,
                 mozilla::ipc::ProtocolCloneContext* aCtx) override;
 
+  virtual base::ProcessId GetChildProcessId() override;
+
+  // ShmemAllocator
+
+  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
+
+  virtual bool AllocShmem(size_t aSize,
+    ipc::SharedMemory::SharedMemoryType aType,
+    ipc::Shmem* aShmem) override;
+
+  virtual bool AllocUnsafeShmem(size_t aSize,
+    ipc::SharedMemory::SharedMemoryType aType,
+    ipc::Shmem* aShmem) override;
+
+  virtual void DeallocShmem(ipc::Shmem& aShmem) override;
+
+  virtual bool IsSameProcess() const override;
+  bool HaveEventListener();
+
+  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
+  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+
 protected:
   ~VRManagerParent();
+
+  virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const LayersBackend& aLayersBackend,
+                                              const TextureFlags& aFlags,
+                                              const uint64_t& aSerial) override;
+  virtual bool DeallocPTextureParent(PTextureParent* actor) override;
+
+  virtual PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
+                                              const float& aLeftEyeX,
+                                              const float& aLeftEyeY,
+                                              const float& aLeftEyeWidth,
+                                              const float& aLeftEyeHeight,
+                                              const float& aRightEyeX,
+                                              const float& aRightEyeY,
+                                              const float& aRightEyeWidth,
+                                              const float& aRightEyeHeight) override;
+  virtual bool DeallocPVRLayerParent(PVRLayerParent* actor) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void OnChannelConnected(int32_t pid) override;
 
-  virtual bool RecvRefreshDevices() override;
-  virtual bool RecvResetSensor(const uint32_t& aDeviceID) override;
-  virtual bool RecvKeepSensorTracking(const uint32_t& aDeviceID) override;
-  virtual bool RecvSetFOV(const uint32_t& aDeviceID,
-                          const VRFieldOfView& aFOVLeft,
-                          const VRFieldOfView& aFOVRight,
-                          const double& zNear,
-                          const double& zFar) override;
+  virtual bool RecvRefreshDisplays() override;
+  virtual bool RecvResetSensor(const uint32_t& aDisplayID) override;
+  virtual bool RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
+  virtual bool RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
+  virtual bool RecvSetHaveEventListener(const bool& aHaveEventListener) override;
 
 private:
   void RegisterWithManager();
@@ -69,6 +109,7 @@ private:
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
+  bool mHaveEventListener;
 };
 
 } // namespace mozilla
