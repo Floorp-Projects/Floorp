@@ -6,6 +6,7 @@ package org.mozilla.gecko.search;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONException;
@@ -63,7 +64,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
     private Context context;
     private Distribution distribution;
-    private SearchEngineCallback changeCallback;
+    @Nullable private SearchEngineCallback changeCallback;
     private SearchEngine engine;
 
     // Cached version of default locale included in Gecko chrome manifest.
@@ -137,13 +138,15 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     /**
      * Runs a SearchEngineCallback on the main thread.
      */
-    private void runCallback(final SearchEngine engine, final SearchEngineCallback callback) {
+    private void runCallback(final SearchEngine engine, @Nullable final SearchEngineCallback callback) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 // Cache engine for future calls to getEngine.
                 SearchEngineManager.this.engine = engine;
-                callback.execute(engine);
+                if (callback != null) {
+                    callback.execute(engine);
+                }
             }
         });
     }
