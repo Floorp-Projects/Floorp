@@ -103,6 +103,8 @@ public:
   virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
   virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
 
+  virtual bool IsTopLevelWindowActive() = 0;
+
   // Outer windows only.
   virtual void SetActive(bool aActive)
   {
