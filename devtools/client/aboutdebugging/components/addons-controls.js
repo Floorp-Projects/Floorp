@@ -17,6 +17,9 @@ loader.lazyImporter(this, "AddonManager",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
+const MORE_INFO_URL = "https://developer.mozilla.org/docs/Tools" +
+                      "/about:debugging#Enabling_add-on_debugging";
+
 exports.AddonsControls = React.createClass({
   displayName: "AddonsControls",
 
@@ -33,9 +36,14 @@ exports.AddonsControls = React.createClass({
             onChange: this.onEnableAddonDebuggingChange,
           }),
           React.createElement("label", {
+            className: "addons-debugging-label",
             htmlFor: "enable-addon-debugging",
             title: Strings.GetStringFromName("addonDebugging.tooltip")
-          }, Strings.GetStringFromName("addonDebugging.label"))
+          }, Strings.GetStringFromName("addonDebugging.label")),
+          "(",
+          React.createElement("a", { href: MORE_INFO_URL, target: "_blank" },
+            Strings.GetStringFromName("addonDebugging.moreInfo")),
+          ")"
         ),
         React.createElement("button", {
           id: "load-addon-from-file",
@@ -47,6 +55,7 @@ exports.AddonsControls = React.createClass({
   onEnableAddonDebuggingChange(event) {
     let enabled = event.target.checked;
     Services.prefs.setBoolPref("devtools.chrome.enabled", enabled);
+    Services.prefs.setBoolPref("devtools.debugger.remote-enabled", enabled);
   },
 
   loadAddonFromFile(event) {

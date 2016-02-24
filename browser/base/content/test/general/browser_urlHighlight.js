@@ -60,6 +60,9 @@ function test() {
   testVal("<user:pass@sub1.sub2.sub3.>mozilla.org");
   testVal("<user:pass@>mozilla.org");
 
+  testVal("<https://>mozilla.org<   >");
+  testVal("mozilla.org<   >");
+
   testVal("<https://>mozilla.org</file.ext>");
   testVal("<https://>mozilla.org</sub/file.ext>");
   testVal("<https://>mozilla.org</sub/file.ext?foo>");

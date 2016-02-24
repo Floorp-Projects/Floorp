@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that children pointers show up at the correct times.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <!-- Give the container height so that the whole tree is rendered. -->
+    <div id="container" style="height: 900px;"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             const container = document.getElementById("container");
+
+             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+               inverted: true,
+               depth: 0,
+             })), container);
+
+             ok(!container.querySelector(".children-pointer"),
+                "Don't show children pointer for roots when we are inverted");
+
+             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+               inverted: true,
+               depth: 1,
+             })), container);
+
+             ok(container.querySelector(".children-pointer"),
+                "Do show children pointer for non-roots when we are inverted");
+
+             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+               inverted: false,
+               item: immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS.item, { children: undefined }),
+             })), container);
+
+             ok(!container.querySelector(".children-pointer"),
+                "Don't show children pointer when non-inverted and no children");
+
+             yield renderComponent(CensusTreeItem(immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS, {
+               inverted: false,
+               depth: 0,
+               item: immutableUpdate(TEST_CENSUS_TREE_ITEM_PROPS.item, { children: [{}] }),
+             })), container);
+
+             ok(container.querySelector(".children-pointer"),
+                "Do show children pointer when non-inverted and have children");
+
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>

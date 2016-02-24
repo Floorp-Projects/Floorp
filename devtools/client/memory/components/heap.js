@@ -8,6 +8,8 @@ const Census = createFactory(require("./census"));
 const CensusHeader = createFactory(require("./census-header"));
 const DominatorTree = createFactory(require("./dominator-tree"));
 const DominatorTreeHeader = createFactory(require("./dominator-tree-header"));
+const HSplitBox = createFactory(require("devtools/client/shared/components/h-split-box"));
+const ShortestPaths = createFactory(require("./shortest-paths"));
 const { getStatusTextFull, L10N } = require("../utils");
 const { snapshotState: states, diffingState, viewState, dominatorTreeState } = require("../constants");
 const { snapshot: snapshotModel, diffingModel } = require("../models");
@@ -145,10 +147,12 @@ const Heap = module.exports = createClass({
     onDominatorTreeCollapse: PropTypes.func.isRequired,
     onCensusFocus: PropTypes.func.isRequired,
     onDominatorTreeFocus: PropTypes.func.isRequired,
+    onShortestPathsResize: PropTypes.func.isRequired,
     snapshot: snapshotModel,
     onViewSourceInDebugger: PropTypes.func.isRequired,
     diffing: diffingModel,
     view: PropTypes.string.isRequired,
+    sizes: PropTypes.object.isRequired,
   },
 
   render() {
@@ -277,8 +281,13 @@ const Heap = module.exports = createClass({
   },
 
   _renderDominatorTree(state, onViewSourceInDebugger, dominatorTree, onLoadMoreSiblings) {
-    return this._renderHeapView(
-      state,
+    const tree = dom.div(
+      {
+        className: "vbox",
+        style: {
+          overflowY: "auto"
+        }
+      },
       DominatorTreeHeader(),
       DominatorTree({
         onViewSourceInDebugger,
@@ -287,6 +296,22 @@ const Heap = module.exports = createClass({
         onExpand: this.props.onDominatorTreeExpand,
         onCollapse: this.props.onDominatorTreeCollapse,
         onFocus: this.props.onDominatorTreeFocus,
+      })
+    );
+
+    const shortestPaths = ShortestPaths({
+      graph: dominatorTree.focused
+        ? dominatorTree.focused.shortestPaths
+        : null
+    });
+
+    return this._renderHeapView(
+      state,
+      HSplitBox({
+        start: tree,
+        end: shortestPaths,
+        startWidth: this.props.sizes.shortestPathsSize,
+        onResize: this.props.onShortestPathsResize,
       })
     );
   },
