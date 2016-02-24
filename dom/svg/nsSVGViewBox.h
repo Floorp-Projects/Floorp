@@ -47,24 +47,29 @@ public:
 
   /**
    * Returns true if the corresponding "viewBox" attribute defined a rectangle
-   * with finite values. Returns false if the viewBox was set to an invalid
+   * with finite values and nonnegative width/height.
+   * Returns false if the viewBox was set to an invalid
    * string, or if any of the four rect values were too big to store in a
-   * float.
-   *
-   * This method does not check whether the width or height values are
-   * positive, so callers must check whether the viewBox rect is valid where
-   * necessary!
+   * float, or the width/height are negative.
    */
   bool HasRect() const
-    { return (mAnimVal && !mAnimVal->none) ||
-             (!mAnimVal && mHasBaseVal && !mBaseVal.none); }
+    {
+      const nsSVGViewBoxRect& rect = GetAnimValue();
+      return !rect.none && rect.width >= 0 && rect.height >= 0;
+    }
 
   /**
    * Returns true if the corresponding "viewBox" attribute either defined a
    * rectangle with finite values or the special "none" value.
    */
   bool IsExplicitlySet() const
-    { return mAnimVal || mHasBaseVal; }
+    {
+      if (mAnimVal || mHasBaseVal) {
+        const nsSVGViewBoxRect& rect = GetAnimValue();
+        return rect.none || (rect.width >= 0 && rect.height >= 0);
+      }
+      return false;
+    }
 
   const nsSVGViewBoxRect& GetBaseValue() const
     { return mBaseVal; }
