@@ -28,6 +28,8 @@
 #include "RubyUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ArenaObjectID.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -132,9 +134,10 @@ nsStyleContext::~nsStyleContext()
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
   nsPresContext *presContext = mRuleNode->PresContext();
-  nsStyleSet* styleSet = presContext->PresShell()->StyleSet();
+  nsStyleSet* styleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
 
-  NS_ASSERTION(styleSet->GetRuleTree() == mRuleNode->RuleTree() ||
+  NS_ASSERTION(!styleSet ||
+               styleSet->GetRuleTree() == mRuleNode->RuleTree() ||
                styleSet->IsInRuleTreeReconstruct(),
                "destroying style context from old rule tree too late");
 
@@ -158,7 +161,9 @@ nsStyleContext::~nsStyleContext()
 
   mRuleNode->Release();
 
-  styleSet->NotifyStyleContextDestroyed(this);
+  if (styleSet) {
+    styleSet->NotifyStyleContextDestroyed(this);
+  }
 
   if (mParent) {
     mParent->RemoveChild(this);
