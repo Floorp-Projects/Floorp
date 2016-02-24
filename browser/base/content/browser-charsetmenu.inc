@@ -4,15 +4,9 @@
 
 <menu id="charsetMenu"
     label="&charsetMenu2.label;"
-#ifndef OMIT_ACCESSKEYS
     accesskey="&charsetMenu2.accesskey;"
-#endif
     oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
-#ifdef OMIT_ACCESSKEYS
-    onpopupshowing="CharsetMenu.build(event.target, false);"
-#else
     onpopupshowing="CharsetMenu.build(event.target);"
-#endif
     onpopupshown="UpdateCurrentCharset(this);">
   <menupopup>
   </menupopup>
