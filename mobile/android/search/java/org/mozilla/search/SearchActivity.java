@@ -11,11 +11,11 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.search.SearchEngine;
+import org.mozilla.gecko.search.SearchEngineManager;
+import org.mozilla.gecko.search.SearchEngineManager.SearchEngineCallback;
 import org.mozilla.search.autocomplete.SearchBar;
 import org.mozilla.search.autocomplete.SuggestionsFragment;
-import org.mozilla.search.providers.SearchEngine;
-import org.mozilla.search.providers.SearchEngineManager;
-import org.mozilla.search.providers.SearchEngineManager.SearchEngineCallback;
 
 import android.content.AsyncQueryHandler;
 import android.content.ContentResolver;
