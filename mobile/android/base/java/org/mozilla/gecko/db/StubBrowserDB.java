@@ -374,6 +374,11 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
+    @Override
+    public Cursor getBookmarksForPartialUrl(ContentResolver cr, String partialUrl) {
+        return null;
+    }
+
     public void setSuggestedSites(SuggestedSites suggestedSites) {
         this.suggestedSites = suggestedSites;
     }
