@@ -101,6 +101,8 @@ actions.FETCH_IMMEDIATELY_DOMINATED_END = "fetch-immediately-dominated-end";
 actions.EXPAND_DOMINATOR_TREE_NODE = "expand-dominator-tree-node";
 actions.COLLAPSE_DOMINATOR_TREE_NODE = "collapse-dominator-tree-node";
 
+actions.RESIZE_SHORTEST_PATHS = "resize-shortest-paths";
+
 /*** Breakdowns ***************************************************************/
 
 const COUNT = { by: "count", count: true, bytes: true };

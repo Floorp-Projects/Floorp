@@ -4,8 +4,16 @@
 
 package org.mozilla.gecko.util;
 
+import android.content.Context;
+
 import android.util.Log;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+import android.text.TextUtils;
+import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.GeckoSharedPrefs;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This class should reflect the experiment names found in the Switchboard experiments config here:
@@ -21,6 +29,8 @@ public class Experiments {
     public static final String ONBOARDING2_A = "onboarding2-a"; // Control: Single (blue) welcome screen
     public static final String ONBOARDING2_B = "onboarding2-b"; // 4 static Feature slides
     public static final String ONBOARDING2_C = "onboarding2-c"; // 4 static + 1 clickable (Data saving) Feature slides
+
+    public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
 
     // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
     public static final String SEARCH_TERM = "search-term";
@@ -54,5 +64,39 @@ public class Experiments {
         }
         disabled = false;
         return disabled;
+    }
+
+    /**
+     * Returns if a user is in certain local experiment.
+     * @param experiment Name of experiment to look up
+     * @return returns value for experiment or false if experiment does not exist.
+     */
+    public static boolean isInExperimentLocal(Context context, String experiment) {
+        if (SwitchBoard.isInBucket(context, 0, 33)) {
+            return Experiments.ONBOARDING2_A.equals(experiment);
+        } else if (SwitchBoard.isInBucket(context, 33, 66)) {
+            return Experiments.ONBOARDING2_B.equals(experiment);
+        } else if (SwitchBoard.isInBucket(context, 66, 100)) {
+            return Experiments.ONBOARDING2_C.equals(experiment);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns list of all active experiments, remote and local.
+     * @return List of experiment names Strings
+     */
+    public static List<String> getActiveExperiments(Context c) {
+        final List<String> experiments = new LinkedList<>();
+        experiments.addAll(SwitchBoard.getActiveExperiments(c));
+
+        // Add onboarding version.
+        final String onboardingExperiment = GeckoSharedPrefs.forProfile(c).getString(Experiments.PREF_ONBOARDING_VERSION, null);
+        if (!TextUtils.isEmpty(onboardingExperiment)) {
+            experiments.add(onboardingExperiment);
+        }
+
+        return experiments;
     }
 }

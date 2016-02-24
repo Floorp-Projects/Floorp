@@ -325,7 +325,7 @@ pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
 
 // Enable the Font Inspector
-pref("devtools.fontinspector.enabled", true);
+pref("devtools.fontinspector.enabled", false);
 
 // Pref to store the browser version at the time of a telemetry ping for an
 // opened developer tool. This allows us to ping telemetry just once per browser

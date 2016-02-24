@@ -43,13 +43,6 @@ button {
   max-width: 800px;
 }
 
-/* Prefs */
-
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-
 /* Targets */
 
 .targets {
@@ -87,4 +80,9 @@ label {
 
 .addons-options {
   flex: 1;
+}
+
+.addons-debugging-label {
+  display: inline-block;
+  margin: 0 5px 5px 0;
 }

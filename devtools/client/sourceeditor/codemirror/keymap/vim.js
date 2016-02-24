@@ -164,6 +164,7 @@
     { keys: 'v', type: 'action', action: 'toggleVisualMode' },
     { keys: 'V', type: 'action', action: 'toggleVisualMode', actionArgs: { linewise: true }},
     { keys: '<C-v>', type: 'action', action: 'toggleVisualMode', actionArgs: { blockwise: true }},
+    { keys: '<C-q>', type: 'action', action: 'toggleVisualMode', actionArgs: { blockwise: true }},
     { keys: 'gv', type: 'action', action: 'reselectLastSelection' },
     { keys: 'J', type: 'action', action: 'joinLines', isEdit: true },
     { keys: 'p', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: true, isEdit: true }},
@@ -680,6 +681,9 @@
       map: function(lhs, rhs, ctx) {
         // Add user defined key bindings.
         exCommandDispatcher.map(lhs, rhs, ctx);
+      },
+      unmap: function(lhs, ctx) {
+        exCommandDispatcher.unmap(lhs, ctx);
       },
       // TODO: Expose setOption and getOption as instance methods. Need to decide how to namespace
       // them, or somehow make them work with the existing CodeMirror setOption/getOption API.

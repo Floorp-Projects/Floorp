@@ -12,6 +12,7 @@ DevToolsModules(
     'dominator-tree.js',
     'heap.js',
     'list.js',
+    'shortest-paths.js',
     'snapshot-list-item.js',
     'toolbar.js',
 )

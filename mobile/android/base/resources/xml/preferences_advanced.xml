@@ -38,6 +38,9 @@
                     android:entryValues="@array/pref_browser_image_blocking_values"
                     android:persistent="false" />
 
+    <CheckBoxPreference android:key="browser.display.use_document_fonts"
+                        android:title="@string/pref_show_web_fonts" />
+
     <ListPreference android:key="plugin.enable"
                     android:title="@string/pref_plugins"
                     android:entries="@array/pref_plugins_entries"

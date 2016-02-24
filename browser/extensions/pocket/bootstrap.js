@@ -357,7 +357,7 @@ var PocketOverlay = {
     PocketContextMenu.init();
     PocketReader.startup();
 
-    if (reason == ADDON_ENABLE) {
+    if (reason != APP_STARTUP) {
       for (let win of allBrowserWindows()) {
         this.setWindowScripts(win);
         this.addStyles(win);
@@ -529,7 +529,7 @@ function startup(data, reason) {
 function shutdown(data, reason) {
   // For speed sake, we should only do a shutdown if we're being disabled.
   // On an app shutdown, just let it fade away...
-  if (reason == ADDON_DISABLE) {
+  if (reason != APP_SHUTDOWN) {
     Services.prefs.removeObserver("extensions.pocket.enabled", prefObserver);
     PocketOverlay.shutdown(reason);
   }
