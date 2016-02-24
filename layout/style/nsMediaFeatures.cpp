@@ -18,6 +18,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
