@@ -299,7 +299,9 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
     if (!iteratorProto)
         return false;
 
-    RootedPlainObject genObjectProto(cx, NewObjectWithGivenProto<PlainObject>(cx, iteratorProto));
+    RootedObject genObjectProto(cx, global->createBlankPrototypeInheriting(cx,
+                                                                           &PlainObject::class_,
+                                                                           iteratorProto));
     if (!genObjectProto)
         return false;
     if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
