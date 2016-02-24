@@ -988,11 +988,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #ifdef DEBUG
     // reget frame from content since it may have been regenerated...
     if (changeData->mContent) {
-      if (!CommonAnimationManager::ContentOrAncestorHasAnimation(changeData->mContent)) {
-        nsIFrame* frame = changeData->mContent->GetPrimaryFrame();
-        if (frame) {
-          DebugVerifyStyleTree(frame);
-        }
+      nsIFrame* frame = changeData->mContent->GetPrimaryFrame();
+      if (frame) {
+        DebugVerifyStyleTree(frame);
       }
     } else if (!changeData->mFrame ||
                changeData->mFrame->GetType() != nsGkAtoms::viewportFrame) {
