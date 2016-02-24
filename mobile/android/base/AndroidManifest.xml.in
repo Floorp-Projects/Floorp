@@ -254,6 +254,15 @@
         <receiver android:name="org.mozilla.gecko.AlarmReceiver" >
         </receiver>
 
+        <receiver
+            android:name="org.mozilla.gecko.notifications.WhatsNewReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" android:path="org.mozilla.gecko" />
+            </intent-filter>
+        </receiver>
+
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 #include ../search/manifests/SearchAndroidManifest_activities.xml.in
