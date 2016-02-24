@@ -13,6 +13,8 @@ Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
 Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.importGlobalProperties(["Blob"]);
 
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
+                                        "resource:///modules/NewTabURL.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
                                         "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -174,6 +176,9 @@ const kMessageHandlers = {
     let [windowId] = message.data;
 
     win.LoopUI.startBrowserSharing();
+
+    // Point new tab to load about:home to avoid accidentally sharing top sites.
+    NewTabURL.override("about:home");
 
     gBrowserSharingWindows.add(Cu.getWeakReference(win));
     gBrowserSharingListeners.add(windowId);
@@ -888,6 +893,8 @@ const kMessageHandlers = {
       }
       win.LoopUI.stopBrowserSharing();
     }
+
+    NewTabURL.reset();
 
     gBrowserSharingWindows.clear();
     reply();
