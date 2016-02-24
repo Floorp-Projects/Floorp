@@ -1752,9 +1752,8 @@ TabChild::NotifyAPZStateChange(const ViewID& aViewId,
   if (aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
     // This is used by tests to determine when the APZ is done doing whatever
     // it's doing. XXX generify this as needed when writing additional tests.
-    DispatchMessageManagerMessage(
-      NS_LITERAL_STRING("APZ:TransformEnd"),
-      NS_LITERAL_STRING("{}"));
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    observerService->NotifyObservers(nullptr, "APZ:TransformEnd", nullptr);
   }
   return true;
 }
