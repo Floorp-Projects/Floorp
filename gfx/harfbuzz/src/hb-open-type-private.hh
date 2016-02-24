@@ -739,9 +739,10 @@ struct CheckSum : ULONG
  * Version Numbers
  */
 
+template <typename FixedType=USHORT>
 struct FixedVersion
 {
-  inline uint32_t to_int (void) const { return (major << 16) + minor; }
+  inline uint32_t to_int (void) const { return (major << sizeof(FixedType)) + minor; }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -749,10 +750,10 @@ struct FixedVersion
     return_trace (c->check_struct (this));
   }
 
-  USHORT major;
-  USHORT minor;
+  FixedType major;
+  FixedType minor;
   public:
-  DEFINE_SIZE_STATIC (4);
+  DEFINE_SIZE_STATIC (2 * sizeof(FixedType));
 };
 
 
