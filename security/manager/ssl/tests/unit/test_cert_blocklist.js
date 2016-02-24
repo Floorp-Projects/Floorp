@@ -90,7 +90,7 @@ var revocations = profile.clone();
 revocations.append("revocations.txt");
 if (!revocations.exists()) {
   let existing = do_get_file("test_onecrl/sample_revocations.txt", false);
-  existing.copyTo(profile,"revocations.txt");
+  existing.copyTo(profile, "revocations.txt");
 }
 
 var certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -139,13 +139,13 @@ var updatedBlocklist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
     "<certItems>" +
     "<certItem issuerName='something new in both the issuer'>" +
     "<serialNumber>and the serial number</serialNumber></certItem>" +
-    "</certItems></blocklist>"
+    "</certItems></blocklist>";
 
 
 var blocklists = {
   "/initialBlocklist/" : initialBlocklist,
   "/updatedBlocklist/" : updatedBlocklist
-}
+};
 
 function serveResponse(request, response) {
   do_print("Serving for path " + request.path + "\n");
@@ -211,7 +211,7 @@ function fetch_blocklist(blocklistPath) {
       Services.obs.removeObserver(this, "blocklist-updated");
       run_next_test();
     }
-  }
+  };
 
   Services.obs.addObserver(certblockObserver, "blocklist-updated", false);
   Services.prefs.setCharPref("extensions.blocklist.url",
@@ -228,7 +228,7 @@ function check_revocations_txt_contents(expected) {
   ok(revocations.exists(), "the revocations file should exist");
   let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
                       .createInstance(Ci.nsIFileInputStream);
-  inputStream.init(revocations,-1, -1, 0);
+  inputStream.init(revocations, -1, -1, 0);
   inputStream.QueryInterface(Ci.nsILineInputStream);
   let contents = "";
   let hasmore = false;

@@ -585,6 +585,24 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, scratch, rhs, label);
 }
 
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
+{
+    ma_cmp(lhs, rhs);
+    return jumpWithPatch(label, cond);
+}
+
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+    ma_ldr(lhs, scratch2);
+    ma_cmp(scratch2, rhs);
+    return jumpWithPatch(label, cond);
+}
+
 void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
@@ -671,6 +689,29 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
     ma_b(fail, Assembler::Equal);
 }
 
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    add32(src, dest);
+    j(cond, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
+{
+    ma_sub(src, dest, SetCC);
+    j(cond, label);
+}
+
+void
+MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    ma_sub(rhs, lhs, SetCC);
+    as_b(label, cond);
+}
+
 template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Register rhs, L label)
@@ -744,16 +785,39 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    branchTestInt32Impl(cond, src, label);
+}
+
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+{
+    Condition c = testInt32Truthy(truthy, operand);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
-
-template <typename T>
-void
-MacroAssemblerARMCompat::branchAdd32(Condition cond, T src, Register dest, Label* label)
-{
-    asMasm().add32(src, dest);
-    j(cond, label);
-}
 
 void
 MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)

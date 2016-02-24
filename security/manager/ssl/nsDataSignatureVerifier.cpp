@@ -129,7 +129,7 @@ VerifyCMSDetachedSignatureIncludingCertificate(
     return NS_ERROR_INVALID_ARG;
   }
 
-  ScopedNSSCMSMessage
+  UniqueNSSCMSMessage
     cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr));

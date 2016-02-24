@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity touch-tapping test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function clickButton() {
+  if (!window.TouchEvent) {
+    window.opener.ok(true, "Touch events are not supported on this platform, sorry!\n");
+    window.opener.testDone();
+    return;
+  }
+
+  document.addEventListener('click', clicked, false);
+
+  synthesizeNativeTap(document.getElementById('b'), 5, 5, function() {
+    dump("Finished synthesizing tap, waiting for button to be clicked...\n");
+  });
+}
+
+function clicked(e) {
+  window.opener.is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+  window.opener.testDone();
+}
+
+window.onload = function() {
+  waitForAllPaints(function() {
+    flushApzRepaints(clickButton);
+  });
+}
+
+  </script>
+</head>
+<body>
+ <button id="b" style="width: 10px; height: 10px"></button>
+</body>
+</html>

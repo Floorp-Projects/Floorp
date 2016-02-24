@@ -439,30 +439,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return scratch;
     }
 
-    // If source is a double, load into dest.
-    // If source is int32, convert to double and store in dest.
-    // Else, branch to failure.
-    void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure) {
-        Label isDouble, done;
-
-        // TODO: splitTagForTest really should not leak a scratch register.
-        Register tag = splitTagForTest(source);
-        {
-            vixl::UseScratchRegisterScope temps(this);
-            temps.Exclude(ARMRegister(tag, 64));
-
-            branchTestDouble(Assembler::Equal, tag, &isDouble);
-            branchTestInt32(Assembler::NotEqual, tag, failure);
-        }
-
-        convertInt32ToDouble(source.valueReg(), dest);
-        jump(&done);
-
-        bind(&isDouble);
-        unboxDouble(source, dest);
-
-        bind(&done);
-    }
+    inline void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
     void emitSet(Condition cond, Register dest) {
         Cset(ARMRegister(dest, 64), cond);
@@ -1350,35 +1327,15 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
         return jumpWithPatch(label, Always, documentation);
     }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
-        cmpPtr(reg, ptr);
-        return jumpWithPatch(label, cond);
-    }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel* label) {
-        // The scratch register is unused after the condition codes are set.
-        {
-            vixl::UseScratchRegisterScope temps(this);
-            const Register scratch = temps.AcquireX().asUnsized();
-            MOZ_ASSERT(scratch != addr.base);
-            loadPtr(addr, scratch);
-            cmpPtr(scratch, ptr);
-        }
-        return jumpWithPatch(label, cond);
-    }
-
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(imm.value));
-        B(cond, label);
-    }
 
     void branchTestUndefined(Condition cond, Register tag, Label* label) {
         Condition c = testUndefined(cond, tag);
         B(label, c);
     }
-    void branchTestInt32(Condition cond, Register tag, Label* label) {
-        Condition c = testInt32(cond, tag);
+
+    template<typename T>
+    void branchTestInt32Impl(Condition cond, T& t, Label* label) {
+        Condition c = testInt32(cond, t);
         B(label, c);
     }
     void branchTestDouble(Condition cond, Register tag, Label* label) {
@@ -1412,10 +1369,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void branchTestUndefined(Condition cond, const Address& address, Label* label) {
         Condition c = testUndefined(cond, address);
-        B(label, c);
-    }
-    void branchTestInt32(Condition cond, const Address& address, Label* label) {
-        Condition c = testInt32(cond, address);
         B(label, c);
     }
     void branchTestDouble(Condition cond, const Address& address, Label* label) {
@@ -1453,10 +1406,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testUndefined(cond, src);
         B(label, c);
     }
-    void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testInt32(cond, src);
-        B(label, c);
-    }
     void branchTestBoolean(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testBoolean(cond, src);
         B(label, c);
@@ -1490,10 +1439,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Clobbers the ScratchReg.
     void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) {
         Condition c = testUndefined(cond, address);
-        B(label, c);
-    }
-    void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) {
-        Condition c = testInt32(cond, address);
         B(label, c);
     }
     void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
@@ -1649,20 +1594,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         unboxNonDouble(dest, dest);
     }
 
-    void unboxValue(const ValueOperand& src, AnyRegister dest) {
-        if (dest.isFloat()) {
-            Label notInt32, end;
-            branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            convertInt32ToDouble(src.valueReg(), dest.fpu());
-            jump(&end);
-            bind(&notInt32);
-            unboxDouble(src, dest.fpu());
-            bind(&end);
-        } else {
-            unboxNonDouble(src, dest.gpr());
-        }
+    inline void unboxValue(const ValueOperand& src, AnyRegister dest);
 
-    }
     void unboxString(const ValueOperand& operand, Register dest) {
         unboxNonDouble(operand, dest);
     }
@@ -2036,10 +1969,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Tst(payload32, payload32);
         return truthy ? NonZero : Zero;
     }
-    void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testInt32Truthy(truthy, operand);
-        B(label, c);
-    }
 
     void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
         Fcmp(ARMFPRegister(reg, 64), 0.0);
@@ -2192,9 +2121,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         load32(src, scratch);
         storeValue(JSVAL_TYPE_INT32, scratch, dest);
     }
-
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
@@ -2558,17 +2484,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }
 
-    template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        adds32(src, dest);
-        branch(cond, label);
-    }
-
-    template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        subs32(src, dest);
-        branch(cond, label);
-    }
     void clampCheck(Register r, Label* handleNotAnInt) {
         MOZ_CRASH("clampCheck");
     }

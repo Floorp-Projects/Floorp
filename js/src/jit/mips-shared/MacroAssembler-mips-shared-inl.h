@@ -346,6 +346,31 @@ MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rh
     branchPtr(cond, SecondScratchReg, rhs, label);
 }
 
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
+{
+    movePtr(rhs, ScratchRegister);
+    Label skipJump;
+    ma_b(lhs, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
+    CodeOffsetJump off = jumpWithPatch(label);
+    bind(&skipJump);
+    return off;
+}
+
+template <typename T>
+CodeOffsetJump
+MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
+{
+    loadPtr(lhs, SecondScratchReg);
+    movePtr(rhs, ScratchRegister);
+    Label skipJump;
+    ma_b(SecondScratchReg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
+    CodeOffsetJump off = jumpWithPatch(label);
+    bind(&skipJump);
+    return off;
+}
+
 void
 MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                             Label* label)
@@ -383,6 +408,44 @@ MacroAssembler::branchTruncateDouble(FloatRegister src, Register dest, Label* fa
 
     ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
     ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
+}
+
+template <typename T>
+void
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* overflow)
+{
+    switch (cond) {
+      case Overflow:
+        ma_addTestOverflow(dest, dest, src, overflow);
+        break;
+      default:
+        MOZ_CRASH("NYI");
+    }
+}
+
+template <typename T>
+void
+MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* overflow)
+{
+    switch (cond) {
+      case Overflow:
+        ma_subTestOverflow(dest, dest, src, overflow);
+        break;
+      case NonZero:
+      case Zero:
+        ma_subu(dest, src);
+        ma_b(dest, dest, overflow, cond);
+        break;
+      default:
+        MOZ_CRASH("NYI");
+    }
+}
+
+void
+MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
+{
+    subPtr(rhs, lhs);
+    branchPtr(cond, lhs, Imm32(0), label);
 }
 
 template <class L>
@@ -444,6 +507,29 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 {
     loadPtr(lhs, SecondScratchReg);
     branchTestPtr(cond, SecondScratchReg, rhs, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(tag, ImmTag(JSVAL_TAG_INT32), label, cond);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
 }
 
 //}}} check_macroassembler_style

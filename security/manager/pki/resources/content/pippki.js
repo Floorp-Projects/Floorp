@@ -21,7 +21,7 @@ function setText(id, value) {
 }
 
 const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
-const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1"
+const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1";
 
 function viewCertHelper(parent, cert) {
   if (!cert) {

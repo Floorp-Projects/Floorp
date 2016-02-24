@@ -6843,6 +6843,88 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
   return NS_OK;
 }
 
+#if GTK_CHECK_VERSION(3,4,0)
+nsresult
+nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                     TouchPointerState aPointerState,
+                                     ScreenIntPoint aPointerScreenPoint,
+                                     double aPointerPressure,
+                                     uint32_t aPointerOrientation,
+                                     nsIObserver* aObserver)
+{
+  AutoObserverNotifier notifier(aObserver, "touchpoint");
+
+  if (!mGdkWindow) {
+    return NS_OK;
+  }
+
+  GdkEvent event;
+  memset(&event, 0, sizeof(GdkEvent));
+
+  static std::map<uint32_t, GdkEventSequence*> sKnownPointers;
+
+  auto result = sKnownPointers.find(aPointerId);
+  switch (aPointerState) {
+  case TOUCH_CONTACT:
+    if (result == sKnownPointers.end()) {
+      // GdkEventSequence isn't a thing we can instantiate, and never gets
+      // dereferenced in the gtk code. It's an opaque pointer, the only
+      // requirement is that it be distinct from other instances of
+      // GdkEventSequence*.
+      event.touch.sequence = (GdkEventSequence*)((uintptr_t)aPointerId);
+      sKnownPointers[aPointerId] = event.touch.sequence;
+      event.type = GDK_TOUCH_BEGIN;
+    } else {
+      event.touch.sequence = result->second;
+      event.type = GDK_TOUCH_UPDATE;
+    }
+    break;
+  case TOUCH_REMOVE:
+    event.type = GDK_TOUCH_END;
+    if (result == sKnownPointers.end()) {
+      NS_WARNING("Tried to synthesize touch-end for unknown pointer!");
+      return NS_ERROR_UNEXPECTED;
+    }
+    event.touch.sequence = result->second;
+    sKnownPointers.erase(result);
+    break;
+  case TOUCH_CANCEL:
+    event.type = GDK_TOUCH_CANCEL;
+    if (result == sKnownPointers.end()) {
+      NS_WARNING("Tried to synthesize touch-cancel for unknown pointer!");
+      return NS_ERROR_UNEXPECTED;
+    }
+    event.touch.sequence = result->second;
+    sKnownPointers.erase(result);
+    break;
+  case TOUCH_HOVER:
+  default:
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  event.touch.window = mGdkWindow;
+  event.touch.time = GDK_CURRENT_TIME;
+
+  GdkDisplay* display = gdk_window_get_display(mGdkWindow);
+  GdkDeviceManager* device_manager = gdk_display_get_device_manager(display);
+  event.touch.device = gdk_device_manager_get_client_pointer(device_manager);
+
+  event.touch.x_root = DevicePixelsToGdkCoordRoundDown(aPointerScreenPoint.x);
+  event.touch.y_root = DevicePixelsToGdkCoordRoundDown(aPointerScreenPoint.y);
+
+  LayoutDeviceIntPoint pointInWindow =
+    ViewAs<LayoutDevicePixel>(aPointerScreenPoint,
+                              PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent)
+    - WidgetToScreenOffset();
+  event.touch.x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
+  event.touch.y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
+
+  gdk_event_put(&event);
+
+  return NS_OK;
+}
+#endif
+
 int32_t
 nsWindow::RoundsWidgetCoordinatesTo()
 {
