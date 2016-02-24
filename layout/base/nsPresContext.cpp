@@ -35,7 +35,7 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "SurfaceCache.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleNode.h"

@@ -39,7 +39,7 @@
 #include "nsCSSRules.h"
 #include "nsPrintfCString.h"
 #include "nsIFrame.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsQueryObject.h"
 
 #include <inttypes.h>
