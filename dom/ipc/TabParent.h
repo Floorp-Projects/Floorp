@@ -644,19 +644,7 @@ private:
 
   uint32_t mChromeFlags;
 
-  struct DataTransferItem
-  {
-    nsCString mFlavor;
-    nsString mStringData;
-    RefPtr<mozilla::dom::BlobImpl> mBlobData;
-    enum DataType
-    {
-      eString,
-      eBlob
-    };
-    DataType mType;
-  };
-  nsTArray<nsTArray<DataTransferItem>> mInitialDataTransferItems;
+  nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
 
   RefPtr<gfx::DataSourceSurface> mDnDVisualization;
   int32_t mDragAreaX;

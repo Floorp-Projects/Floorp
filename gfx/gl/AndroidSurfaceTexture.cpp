@@ -6,7 +6,6 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 
-#include <set>
 #include <map>
 #include <android/log.h>
 #include "AndroidSurfaceTexture.h"
@@ -27,9 +26,57 @@ using namespace mozilla::widget::sdk;
 namespace mozilla {
 namespace gl {
 
-// UGH
-static std::map<int, AndroidSurfaceTexture*> sInstances;
-static int sNextID = 0;
+// Maintains a mapping between AndroidSurfaceTexture instances and their
+// unique numerical IDs. [thread-safe]
+class InstanceMap
+{
+  typedef AndroidSurfaceTexture* InstancePtr;
+  typedef std::map<int, InstancePtr> MapType;
+
+public:
+  InstanceMap()
+    : mNextId(0)
+    , mMonitor("AndroidSurfaceTexture::InstanceMap::mMonitor")
+  {}
+
+  int Add(InstancePtr aInstance)
+  {
+    MonitorAutoLock lock(mMonitor);
+    mInstances.insert({++mNextId, aInstance});
+    return mNextId;
+  }
+
+  void Remove(int aId)
+  {
+    MonitorAutoLock lock(mMonitor);
+    mInstances.erase(aId);
+  }
+
+  InstancePtr Get(int aId) const
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    auto it = mInstances.find(aId);
+    if (it == mInstances.end()) {
+      return nullptr;
+    }
+    return it->second;
+  }
+
+private:
+  MapType mInstances;
+  int mNextId;
+
+  mutable Monitor mMonitor;
+};
+
+static InstanceMap sInstances;
+
+AndroidSurfaceTexture*
+AndroidSurfaceTexture::Find(int aId)
+{
+  return sInstances.Get(aId);
+}
 
 static bool
 IsSTSupported()
@@ -58,19 +105,6 @@ AndroidSurfaceTexture::Create(GLContext* aContext, GLuint aTexture)
 
   return st.forget();
 }
-
-AndroidSurfaceTexture*
-AndroidSurfaceTexture::Find(int id)
-{
-  std::map<int, AndroidSurfaceTexture*>::iterator it;
-
-  it = sInstances.find(id);
-  if (it == sInstances.end())
-    return nullptr;
-
-  return it->second;
-}
-
 
 nsresult
 AndroidSurfaceTexture::Attach(GLContext* aContext, PRIntervalTime aTimeout)
@@ -170,8 +204,7 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
                                                          mSurface.Get());
   MOZ_ASSERT(mNativeWindow, "Failed to create native window from surface");
 
-  mID = ++sNextID;
-  sInstances.insert(std::pair<int, AndroidSurfaceTexture*>(mID, this));
+  mID = sInstances.Add(this);
 
   return true;
 }
@@ -180,15 +213,15 @@ AndroidSurfaceTexture::AndroidSurfaceTexture()
   : mTexture(0)
   , mSurfaceTexture()
   , mSurface()
-  , mMonitor("AndroidSurfaceTexture::mContextMonitor")
   , mAttachedContext(nullptr)
   , mCanDetach(false)
+  , mMonitor("AndroidSurfaceTexture::mContextMonitor")
 {
 }
 
 AndroidSurfaceTexture::~AndroidSurfaceTexture()
 {
-  sInstances.erase(mID);
+  sInstances.Remove(mID);
 
   mFrameAvailableCallback = nullptr;
 
@@ -205,7 +238,7 @@ AndroidSurfaceTexture::UpdateTexImage()
 }
 
 void
-AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
+AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix) const
 {
   JNIEnv* const env = jni::GetEnvForThread();
 

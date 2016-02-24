@@ -77,6 +77,14 @@ JobScheduler::SubmitJob(Job* aJob)
   GetQueueForJob(aJob)->SubmitJob(aJob);
 }
 
+void
+JobScheduler::Join(SyncObject* aCompletion)
+{
+  RefPtr<EventObject> waitForCompletion = new EventObject();
+  JobScheduler::SubmitJob(new SetEventJob(waitForCompletion, aCompletion));
+  waitForCompletion->Wait();
+}
+
 MultiThreadedJobQueue*
 JobScheduler::GetQueueForJob(Job* aJob)
 {

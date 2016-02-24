@@ -55,14 +55,18 @@ function onCertSelected()
 
 function doOK()
 {
-  dialogParams.SetInt(0,1);
-  var index = parseInt(document.getElementById("nicknames").value);
+  // Signal that the user accepted.
+  dialogParams.SetInt(0, 1);
+
+  // Signal the index of the selected cert in the list of cert nicknames
+  // provided.
+  let index = parseInt(document.getElementById("nicknames").value);
   dialogParams.SetInt(1, index);
   return true;
 }
 
 function doCancel()
 {
-  dialogParams.SetInt(0,0);
+  dialogParams.SetInt(0, 0); // Signal that the user cancelled.
   return true;
 }

@@ -6,6 +6,9 @@
     // Require spacing around =>
     "arrow-spacing": 2,
 
+    // No space before always a space after a comma
+    "comma-spacing": [2, {"before": false, "after": true}],
+
     // Commas at the end of the line not the start
     "comma-style": 2,
 
@@ -104,6 +107,9 @@
 
     // No using with
     "no-with": 2,
+
+    // Always require semicolon at end of statement
+    "semi": [2, "always"],
 
     // Require space before blocks
     "space-before-blocks": 2,

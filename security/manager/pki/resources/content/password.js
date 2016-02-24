@@ -65,7 +65,7 @@ function onLoad()
     var sel = document.getElementById("tokenMenu");
     sel.setAttribute("hidden", "true");
     var tag = document.getElementById("tokenName");
-    tag.setAttribute("value",tokenName);
+    tag.setAttribute("value", tokenName);
   }
 
   process();

@@ -58,8 +58,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
 
 NS_IMETHODIMP
 nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
-                                           uint32_t aFormatVersion,
-                                           JSContext* aCx)
+                                           uint32_t aFormatVersion)
 {
   if (DataLength()) {
     return NS_ERROR_FAILURE;

@@ -156,8 +156,6 @@
 #include "nsPIWindowWatcher.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
-#include "gfxDrawable.h"
-#include "ImageOps.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
@@ -2865,75 +2863,56 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   NS_ENSURE_SUCCESS(rv, true);
 
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+  nsCOMPtr<nsITransferable> trans =
+    do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, true);
   trans->Init(nullptr);
 
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
-  for (uint32_t j = 0; j < items.Length(); ++j) {
-    const IPCDataTransferItem& item = items[j];
-
+  for (const auto& item : items) {
     trans->AddDataFlavor(item.flavor().get());
 
     if (item.data().type() == IPCDataTransferData::TnsString) {
-    nsCOMPtr<nsISupportsString> dataWrapper =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, true);
-
-    nsString text = item.data().get_nsString();
-    rv = dataWrapper->SetData(text);
-    NS_ENSURE_SUCCESS(rv, true);
-
-    rv = trans->SetTransferData(item.flavor().get(), dataWrapper,
-                                text.Length() * sizeof(char16_t));
-
-    NS_ENSURE_SUCCESS(rv, true);
-    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
-    if (item.flavor().EqualsLiteral(kNativeImageMime) ||
-        item.flavor().EqualsLiteral(kJPEGImageMime) ||
-        item.flavor().EqualsLiteral(kJPGImageMime) ||
-        item.flavor().EqualsLiteral(kPNGImageMime) ||
-        item.flavor().EqualsLiteral(kGIFImageMime)) {
-      const IPCDataTransferImage& imageDetails = item.imageDetails();
-      const gfx::IntSize size(imageDetails.width(), imageDetails.height());
-      if (!size.width || !size.height) {
-      return true;
-      }
-
-      nsCString text = item.data().get_nsCString();
-      RefPtr<gfx::DataSourceSurface> image =
-      new mozilla::gfx::SourceSurfaceRawData();
-      mozilla::gfx::SourceSurfaceRawData* raw =
-      static_cast<mozilla::gfx::SourceSurfaceRawData*>(image.get());
-      raw->InitWrappingData(
-      reinterpret_cast<uint8_t*>(const_cast<nsCString&>(text).BeginWriting()),
-      size, imageDetails.stride(),
-      static_cast<mozilla::gfx::SurfaceFormat>(imageDetails.format()), false);
-      raw->GuaranteePersistance();
-
-      RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
-      nsCOMPtr<imgIContainer> imageContainer(image::ImageOps::CreateFromDrawable(drawable));
-
-      nsCOMPtr<nsISupportsInterfacePointer>
-      imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
-
-      rv = imgPtr->SetData(imageContainer);
+      nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, true);
 
-      trans->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
-    } else {
-      nsCOMPtr<nsISupportsCString> dataWrapper =
-      do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, true);
-
-      const nsCString& text = item.data().get_nsCString();
+      const nsString& text = item.data().get_nsString();
       rv = dataWrapper->SetData(text);
       NS_ENSURE_SUCCESS(rv, true);
 
-      rv = trans->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
+      rv = trans->SetTransferData(item.flavor().get(), dataWrapper,
+                                  text.Length() * sizeof(char16_t));
 
       NS_ENSURE_SUCCESS(rv, true);
-    }
+    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+      if (nsContentUtils::IsFlavorImage(item.flavor())) {
+        nsCOMPtr<imgIContainer> imageContainer;
+        rv = nsContentUtils::DataTransferItemToImage(item,
+                                                     getter_AddRefs(imageContainer));
+        NS_ENSURE_SUCCESS(rv, true);
+
+        nsCOMPtr<nsISupportsInterfacePointer> imgPtr =
+          do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+        NS_ENSURE_TRUE(imgPtr, true);
+
+        rv = imgPtr->SetData(imageContainer);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        trans->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
+      } else {
+        nsCOMPtr<nsISupportsCString> dataWrapper =
+          do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        const nsCString& text = item.data().get_nsCString();
+        rv = dataWrapper->SetData(text);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        rv = trans->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
+
+        NS_ENSURE_SUCCESS(rv, true);
+      }
     }
   }
 

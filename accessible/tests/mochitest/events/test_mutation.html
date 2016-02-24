@@ -358,6 +358,25 @@
       }
     }
 
+    function showHiddenParentOfVisibleChild()
+    {
+      this.eventSeq = [
+        new todo_invokerChecker(EVENT_HIDE, getNode("c4_child")),
+        new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
+        new invokerChecker(EVENT_REORDER, getNode("c4"))
+      ];
+
+      this.invoke = function showHiddenParentOfVisibleChild_invoke()
+      {
+        getNode("c4_middle").style.visibility = 'visible';
+      }
+
+      this.getID = function showHiddenParentOfVisibleChild_getID()
+      {
+        return "show hidden parent of visible child";
+      }
+    }
+
     /**
      * Target getters.
      */
@@ -484,6 +503,7 @@
       gQueue.push(new test2("testContainer", "testNestedContainer"));
       gQueue.push(new test3("testContainer"));
       gQueue.push(new insertReferredElm("testContainer3"));
+      gQueue.push(new showHiddenParentOfVisibleChild());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -544,5 +564,11 @@
   </div>
   <div id="testContainer2"></div>
   <div id="testContainer3"></div>
+
+  <div id="c4">
+    <div style="visibility:hidden" id="c4_middle">
+     <div style="visibility:visible" id="c4_child"></div>
+   </div>
+  </div>
 </body>
 </html>

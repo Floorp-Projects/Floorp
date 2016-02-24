@@ -56,7 +56,7 @@ var currentResources;
  * Interface for a build resources JSON file.
  */
 function BuildResources(data) {
-  if (data.version != 1 && data.version != 2) {
+  if (data.version < 1 || data.version > 3) {
     throw new Error("Unsupported version of the JSON format: " + data.version);
   }
 

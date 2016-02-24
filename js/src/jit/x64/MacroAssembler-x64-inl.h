@@ -356,6 +356,36 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    cond = testInt32(cond, tag);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    branchTestInt32Impl(cond, Operand(address), label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    splitTag(address, scratch);
+    branchTestInt32(cond, scratch, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    splitTag(src, scratch);
+    branchTestInt32(cond, scratch, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -379,6 +409,55 @@ MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Lab
 {
     cmpPtr(Operand(lhs), rhs);
     j(cond, label);
+}
+
+void
+MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
+{
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.valueReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        unboxNonDouble(src, dest.gpr());
+    }
+}
+
+void
+MacroAssemblerX64::loadInt32OrDouble(const Operand& operand, FloatRegister dest)
+{
+    Label notInt32, end;
+    branchTestInt32Impl(Assembler::NotEqual, operand, &notInt32);
+    convertInt32ToDouble(operand, dest);
+    jump(&end);
+    bind(&notInt32);
+    loadDouble(operand, dest);
+    bind(&end);
+}
+
+// If source is a double, load it into dest. If source is int32,
+// convert it to double. Else, branch to failure.
+void
+MacroAssemblerX64::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+    Register tag = splitTagForTest(source);
+    branchTestDouble(Assembler::Equal, tag, &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+
+    ScratchRegisterScope scratch(asMasm());
+    unboxInt32(source, scratch);
+    convertInt32ToDouble(scratch, dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
 }
 
 } // namespace jit

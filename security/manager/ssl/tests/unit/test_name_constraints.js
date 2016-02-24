@@ -135,7 +135,7 @@ function run_test() {
   // Testing on a non constrainted root an intermediate name contrainted to
   // permited dirNAME:C=US and  permited DNS:foo.com
   // checks for compostability of different name constraints with same cert
-  check_ok_ca(load_cert('int-nc-perm-foo.com_c-us-ca-nc' , ',,'));
+  check_ok_ca(load_cert('int-nc-perm-foo.com_c-us-ca-nc', ',,'));
   check_fail(certFromFile('cn-www.foo.com-int-nc-perm-foo.com_c-us-ca-nc'));
   check_fail(certFromFile('cn-www.foo.org-int-nc-perm-foo.com_c-us-ca-nc'));
   check_fail(certFromFile('cn-www.foo.com-alt-foo.org-int-nc-perm-foo.com_c-us-ca-nc'));

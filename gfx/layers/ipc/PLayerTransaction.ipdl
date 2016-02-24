@@ -123,6 +123,8 @@ parent:
   async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
   async Shutdown();
+
+  sync SyncWithCompositor();
 child:
   async __delete__();
 };
