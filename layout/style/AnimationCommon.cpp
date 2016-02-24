@@ -70,7 +70,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
                                                  aPseudoType,
                                                bool aCreateIfNeeded)
 {
-  if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
+  if (!aCreateIfNeeded && !aElement->MayHaveAnimations()) {
     // Early return for the most common case.
     return nullptr;
   }
