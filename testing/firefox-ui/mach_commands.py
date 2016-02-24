@@ -23,23 +23,19 @@ def setup_argument_parser():
     return FirefoxUIArguments()
 
 
-def run_firefox_ui_test(tests, testtype=None,
-                        binary=None, topsrcdir=None, **kwargs):
+def run_firefox_ui_test(tests, testtype=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
     from firefox_ui_harness import cli_functional
     from firefox_ui_harness.arguments import FirefoxUIArguments
 
     parser = FirefoxUIArguments()
     commandline.add_logging_group(parser)
-    args = parser.parse_args()
 
     if not tests:
         tests = [os.path.join(topsrcdir,
                  'testing/firefox-ui/tests/firefox_ui_tests/manifest.ini')]
-    args.tests = tests
 
-    args.binary = binary
-    path, exe = os.path.split(args.binary)
+    args = parser.parse_args(args=tests)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
