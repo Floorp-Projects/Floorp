@@ -10,10 +10,10 @@ import java.net.URL;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.search.providers.SearchEngine;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
