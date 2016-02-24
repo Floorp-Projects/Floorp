@@ -12,6 +12,7 @@
 #define nsCSSFrameConstructor_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/RestyleManagerHandle.h"
 
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
@@ -37,8 +38,6 @@ class nsGenericDOMDataNode;
 class nsFrameConstructorState;
 
 namespace mozilla {
-
-class RestyleManager;
 
 namespace dom {
 
@@ -70,7 +69,7 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy) = delete;
 
 public:
-  mozilla::RestyleManager* RestyleManager() const
+  mozilla::RestyleManagerHandle RestyleManager() const
     { return mPresShell->GetPresContext()->RestyleManager(); }
 
   nsIFrame* ConstructRootFrame();

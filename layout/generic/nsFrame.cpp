@@ -41,6 +41,8 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "mozilla/RestyleManagerHandleInlines.h"
 
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -672,21 +674,30 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // and not only those whose current style involves CSS transitions,
     // because what matters is whether the new style (not the old)
     // specifies CSS transitions.
-    RestyleManager::ReframingStyleContexts* rsc =
-      presContext->RestyleManager()->GetReframingStyleContexts();
-    if (rsc) {
-      rsc->Put(mContent, mStyleContext);
+    if (presContext->RestyleManager()->IsGecko()) {
+      // stylo: ServoRestyleManager does not handle transitions yet, and when
+      // it does it probably won't need to track reframed style contexts to
+      // start transitions correctly.
+      RestyleManager::ReframingStyleContexts* rsc =
+        presContext->RestyleManager()->AsGecko()->GetReframingStyleContexts();
+      if (rsc) {
+        rsc->Put(mContent, mStyleContext);
+      }
     }
   }
 
   if (HasCSSAnimations()) {
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations for this frame
-    RestyleManager::AnimationsWithDestroyedFrame* adf =
-      presContext->RestyleManager()->GetAnimationsWithDestroyedFrame();
-    // AnimationsWithDestroyedFrame only lives during the restyling process.
-    if (adf) {
-      adf->Put(mContent, mStyleContext);
+    if (presContext->RestyleManager()->IsGecko()) {
+      RestyleManager::AnimationsWithDestroyedFrame* adf =
+        presContext->RestyleManager()->AsGecko()->GetAnimationsWithDestroyedFrame();
+      // AnimationsWithDestroyedFrame only lives during the restyling process.
+      if (adf) {
+        adf->Put(mContent, mStyleContext);
+      }
+    } else {
+      NS_ERROR("stylo: ServoRestyleManager does not support animations yet");
     }
   }
 
