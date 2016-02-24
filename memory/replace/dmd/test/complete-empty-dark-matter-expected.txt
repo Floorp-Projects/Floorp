@@ -1,10 +1,9 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o full-empty-dark-matter-actual.txt full-empty-dark-matter.json
+# dmd.py --filter-stacks-for-testing -o complete-empty-dark-matter-actual.txt complete-empty-dark-matter.json
 
 Invocation {
-  $DMD = '--mode=dark-matter --sample-below=1'
+  $DMD = '--mode=dark-matter --stacks=full'
   Mode = 'dark-matter'
-  Sample-below size = 1
 }
 
 #-----------------------------------------------------------------
