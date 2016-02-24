@@ -75,7 +75,7 @@ window.addEventListener("message", function(event) {
        "http://mochi.test:8888/tests/dom/base/test/test_bug1091883.html",
        "must be full referrer");
   } else {
-    is(referrer, "http://mochi.test:8888", "must be origin referrer");
+    is(referrer, "http://mochi.test:8888/", "must be origin referrer");
   }
   if (Object.keys(results).length == numTests) {
     document.getElementById("results").textContent =
