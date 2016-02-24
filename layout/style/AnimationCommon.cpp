@@ -12,7 +12,6 @@
 #include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMMutationObserver.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -23,8 +22,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
@@ -152,52 +149,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   return result;
 }
 
-/*static*/ nsString
-AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
-{
-  switch (aPseudoType) {
-    case CSSPseudoElementType::before:
-      return NS_LITERAL_STRING("::before");
-    case CSSPseudoElementType::after:
-      return NS_LITERAL_STRING("::after");
-    default:
-      MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo,
-                 "Unexpected pseudo type");
-      return EmptyString();
-  }
-}
-
-/*static*/ void
-AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
-                                  void *aPropertyValue, void *aData)
-{
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(aPropertyValue);
-#ifdef DEBUG
-  MOZ_ASSERT(!collection->mCalledPropertyDtor, "can't call dtor twice");
-  collection->mCalledPropertyDtor = true;
-#endif
-  {
-    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
-
-    for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
-      collection->mAnimations[animIdx]->CancelFromStyle();
-    }
-  }
-  delete collection;
-}
-
-void
-AnimationCollection::UpdateCheckGeneration(
-  nsPresContext* aPresContext)
-{
-  if (aPresContext->RestyleManager()->IsServo()) {
-    // stylo: ServoRestyleManager does not support animations yet.
-    return;
-  }
-  mCheckGeneration =
-    aPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration();
-}
 
 nsPresContext*
 OwningElementRef::GetRenderedPresContext() const
