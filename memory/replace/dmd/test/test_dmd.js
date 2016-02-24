@@ -128,10 +128,11 @@ function scanTest(aJsonFilePath, aExtraArgs) {
 function run_test() {
   let jsonFile, jsonFile2;
 
-  // These tests do full end-to-end testing of DMD, i.e. both the C++ code that
-  // generates the JSON output, and the script that post-processes that output.
+  // These tests do complete end-to-end testing of DMD, i.e. both the C++ code
+  // that generates the JSON output, and the script that post-processes that
+  // output.
   //
-  // Run these synchronously, because test() updates the full*.json files
+  // Run these synchronously, because test() updates the complete*.json files
   // in-place (to fix stacks) when it runs dmd.py, and that's not safe to do
   // asynchronously.
 
@@ -140,7 +141,7 @@ function run_test() {
   runProcess(gDmdTestFile, []);
 
   function test2(aTestName, aMode) {
-    let name = "full-" + aTestName + "-" + aMode;
+    let name = "complete-" + aTestName + "-" + aMode;
     jsonFile = FileUtils.getFile("CurWorkD", [name + ".json"]);
     test(name, [jsonFile.path]);
     jsonFile.remove(true);
@@ -152,13 +153,13 @@ function run_test() {
   test2("empty", "dark-matter");
   test2("empty", "cumulative");
 
-  test2("unsampled1", "live");
-  test2("unsampled1", "dark-matter");
+  test2("full1", "live");
+  test2("full1", "dark-matter");
 
-  test2("unsampled2", "dark-matter");
-  test2("unsampled2", "cumulative");
+  test2("full2", "dark-matter");
+  test2("full2", "cumulative");
 
-  test2("sampled", "live");
+  test2("partial", "live");
 
   // Heap scan testing.
   jsonFile = FileUtils.getFile("CurWorkD", ["basic-scan.json"]);
@@ -169,12 +170,12 @@ function run_test() {
   let basicScanFileName = "basic-scan-" + (is64Bit ? "64" : "32");
   test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
   ok(scanTest(jsonFile.path, ["--clamp-contents"]), "Scan with address clamping");
+
   // Run the generic test a second time to ensure that the first time produced
   // valid JSON output. "--clamp-contents" is passed in so we don't have to have
   // more variants of the files.
   test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
   jsonFile.remove(true);
-
 
   // These tests only test the post-processing script. They use hand-written
   // JSON files as input. Ideally the JSON files would contain comments
