@@ -29,13 +29,15 @@ add_task(function* test_settingsOpen_button() {
       gBrowser,
       url: notificationURL
     }, function* tabTask(aBrowser) {
+      let notification = aBrowser.contentWindow.wrappedJSObject.showNotification2();
+
       info("Waiting for notification");
-      yield openNotification(aBrowser, "showNotification2");
+      yield BrowserTestUtils.waitForEvent(notification, "show");
 
       let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
       if (!alertWindow) {
         ok(true, "Notifications don't use XUL windows on all platforms.");
-        yield closeNotification(aBrowser);
+        notification.close();
         return;
       }
 
