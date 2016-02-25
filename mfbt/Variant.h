@@ -61,6 +61,54 @@ struct IsVariant<Needle, Needle, Haystack...>
 template<typename Needle, typename T, typename... Haystack>
 struct IsVariant<Needle, T, Haystack...> : public IsVariant<Needle, Haystack...> { };
 
+/// SelectVariantTypeHelper is used in the implementation of SelectVariantType.
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper;
+
+template<typename T>
+struct SelectVariantTypeHelper<T>
+{ };
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, T, Variants...>
+{
+  typedef T Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, const T, Variants...>
+{
+  typedef const T Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, const T&, Variants...>
+{
+  typedef const T& Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, T&&, Variants...>
+{
+  typedef T&& Type;
+};
+
+template<typename T, typename Head, typename... Variants>
+struct SelectVariantTypeHelper<T, Head, Variants...>
+  : public SelectVariantTypeHelper<T, Variants...>
+{ };
+
+/**
+ * SelectVariantType takes a type T and a list of variant types Variants and
+ * yields a type Type, selected from Variants, that can store a value of type T
+ * or a reference to type T. If no such type was found, Type is not defined.
+ */
+template <typename T, typename... Variants>
+struct SelectVariantType
+  : public SelectVariantTypeHelper<typename RemoveConst<typename RemoveReference<T>::Type>::Type,
+                                   Variants...>
+{ };
+
 // TagHelper gets the given sentinel tag value for the given type T. This has to
 // be split out from VariantImplementation because you can't nest a partial template
 // specialization within a template class.
@@ -336,8 +384,7 @@ public:
            // perfect forwarding), so we have to remove those qualifiers here
            // when ensuring that T is a variant of this type, and getting T's
            // tag, etc.
-           typename T = typename RemoveReference<typename RemoveConst<RefT>::Type>::Type,
-           typename = typename EnableIf<detail::IsVariant<T, Ts...>::value, void>::Type>
+           typename T = typename detail::SelectVariantType<RefT, Ts...>::Type>
   explicit Variant(RefT&& aT)
     : tag(Impl::template tag<T>())
   {
