@@ -24,7 +24,15 @@ if sys.platform == 'win32':
     shell = shell + '.exe'
 
 
+def is_absolute_or_relative(path):
+    if os.altsep and os.altsep in path:
+        return True
+    return os.sep in path
+
+
 def find_program(file):
+    if is_absolute_or_relative(file):
+        return os.path.abspath(file) if os.path.isfile(file) else None
     try:
         return which(file)
     except WhichError:
@@ -45,10 +53,12 @@ def autoconf_refresh(configure):
         else:
             return
 
-    for ac in ('autoconf-2.13', 'autoconf2.13', 'autoconf213'):
-        autoconf = find_program(ac)
-        if autoconf:
-            break
+    for ac in (os.environ.get('AUTOCONF'), 'autoconf-2.13', 'autoconf2.13',
+               'autoconf213'):
+        if ac:
+            autoconf = find_program(ac)
+            if autoconf:
+                break
     else:
         fink = find_program('fink')
         if fink:
@@ -57,6 +67,9 @@ def autoconf_refresh(configure):
 
     if not autoconf:
         raise RuntimeError('Could not find autoconf 2.13')
+
+    # Add or adjust AUTOCONF for subprocesses, especially the js/src configure
+    os.environ['AUTOCONF'] = autoconf
 
     print('Refreshing %s' % configure, file=sys.stderr)
 
