@@ -16,7 +16,6 @@ using namespace mozilla::gl;
 NS_IMPL_ISUPPORTS(GfxTexturesReporter, nsIMemoryReporter)
 
 Atomic<size_t> GfxTexturesReporter::sAmount(0);
-Atomic<size_t> GfxTexturesReporter::sPeakAmount(0);
 Atomic<size_t> GfxTexturesReporter::sTileWasteAmount(0);
 
 /* static */ void
@@ -27,9 +26,6 @@ GfxTexturesReporter::UpdateAmount(MemoryUse action, size_t amount)
         sAmount -= amount;
     } else {
         sAmount += amount;
-        if (sAmount > sPeakAmount) {
-            sPeakAmount = sAmount;
-        }
     }
 
 #ifdef MOZ_CRASHREPORTER
