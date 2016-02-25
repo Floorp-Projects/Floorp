@@ -67,12 +67,11 @@ var gChecking = {
     this._progress = document.getElementById("checking-progress");
 
     AddonManager.getAllAddons(aAddons => {
-      if (aAddons.length == 0) {
-        window.close();
-        return;
-      }
-
       aAddons = aAddons.filter(function(aAddon) {
+        if (aAddon.hidden) {
+          return false;
+        }
+
         if (aAddon.id == AddonManager.hotfixID) {
           return false;
         }
@@ -90,6 +89,11 @@ var gChecking = {
 
         return true;
       });
+
+      if (aAddons.length == 0) {
+        window.close();
+        return;
+      }
 
       this._addonCount = aAddons.length;
       this._progress.value = 0;
