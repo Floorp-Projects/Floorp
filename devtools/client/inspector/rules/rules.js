@@ -957,7 +957,7 @@ CssRuleView.prototype = {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
       if (this._elementStyle !== elementStyle || this.isDestroyed) {
-        return null;
+        return;
       }
 
       this._clearRules();
@@ -1693,8 +1693,8 @@ RuleViewTool.prototype = {
       let target = this.inspector.target;
       if (Tools.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-          let url = source || href;
-          toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
+          let sheet = source || href;
+          toolbox.getCurrentPanel().selectStyleSheet(sheet, line, column);
         });
       }
       return;

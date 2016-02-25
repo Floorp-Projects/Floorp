@@ -65,9 +65,15 @@ function* testMoxy(inspector, view) {
   });
 }
 
-function* assertKeyframeRules(selector, inspector, view, expected) {
+function* testNode(selector, inspector, view) {
+  let element = getNode(selector);
   yield selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
+  return {element, elementStyle};
+}
+
+function* assertKeyframeRules(selector, inspector, view, expected) {
+  let {element, elementStyle} = yield testNode(selector, inspector, view);
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
@@ -87,6 +93,8 @@ function* assertKeyframeRules(selector, inspector, view, expected) {
       keyframeRule.domRule.keyText + " selector heading is correct");
     i++;
   }
+
+  return {rules, element, elementStyle};
 }
 
 function assertGutters(view, expected) {

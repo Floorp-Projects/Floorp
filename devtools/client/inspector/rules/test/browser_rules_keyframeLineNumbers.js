@@ -14,8 +14,11 @@ add_task(function*() {
   let { inspector, view } = yield openRuleView();
   yield selectNode("#outer", inspector);
 
-  info("Insert a new property, which will affect the line numbers");
-  yield addProperty(view, 1, "font-size", "72px");
+  // Insert a new property, which will affect the line numbers.
+  let elementRuleEditor = getRuleViewRuleEditor(view, 1);
+  let onRuleViewChanged = view.once("ruleview-changed");
+  yield createNewRuleViewProperty(elementRuleEditor, "font-size: 72px");
+  yield onRuleViewChanged;
 
   yield selectNode("#inner", inspector);
 

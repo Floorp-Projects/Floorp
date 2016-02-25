@@ -40,6 +40,7 @@ add_task(function*() {
   EventUtils.sendKey("RETURN", widget.styleWindow);
   yield onRuleViewChanged;
 
-  is((yield getComputedStyleProperty("body", null, "filter")), "blur(2px)",
+  const computed = content.getComputedStyle(content.document.body);
+  is(computed.filter, "blur(2px)",
      "The elemenet's filter was kept after RETURN");
 });

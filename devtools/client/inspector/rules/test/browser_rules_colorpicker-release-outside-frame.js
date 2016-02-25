@@ -44,8 +44,7 @@ add_task(function*() {
   info("Moving mouse over color picker without any buttons pressed.");
 
   EventUtils.synthesizeMouse(spectrum.dragger, 10, 10, {
-    // -1 = no buttons are pressed down
-    button: -1,
+    button: -1, // -1 = no buttons are pressed down
     type: "mousemove",
   }, spectrum.dragger.ownerDocument.defaultView);
 });

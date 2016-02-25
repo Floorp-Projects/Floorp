@@ -39,10 +39,9 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   widget.coordinates = [0.1, 2, 0.9, -1];
   let expected = "cubic-bezier(0.1, 2, 0.9, -1)";
 
-  yield waitForSuccess(function*() {
-    let func = yield getComputedStyleProperty("body", null,
-                                              "transition-timing-function");
-    return func === expected;
+  yield waitForSuccess(() => {
+    return content.getComputedStyle(content.document.body)
+      .transitionTimingFunction === expected;
   }, "Waiting for the change to be previewed on the element");
 
   ok(getRuleViewProperty(ruleView, "body", "transition").valueSpan.textContent
@@ -56,11 +55,9 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   EventUtils.sendKey("RETURN", widget.parent.ownerDocument.defaultView);
   yield onRuleViewChanged;
 
-  let style = yield getComputedStyleProperty("body", null,
-                                             "transition-timing-function");
-  is(style, expected, "The element's timing-function was kept after RETURN");
-
-  let ruleViewStyle = getRuleViewProperty(ruleView, "body", "transition")
-                      .valueSpan.textContent.indexOf("cubic-bezier(") !== -1;
-  ok(ruleViewStyle, "The text of the timing-function was kept after RETURN");
+  is(content.getComputedStyle(content.document.body).transitionTimingFunction,
+    expected, "The element's timing-function was kept after RETURN");
+  ok(getRuleViewProperty(ruleView, "body", "transition").valueSpan.textContent
+    .indexOf("cubic-bezier(") !== -1,
+    "The text of the timing-function was kept after RETURN");
 }

@@ -55,7 +55,7 @@ function* testSimpleMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      selector: "p",
+      element: content.document.querySelector("p"),
       name: "color",
       value: computed
     });
@@ -83,8 +83,8 @@ function* testComplexMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      selector: "body",
-      name: "background-color",
+      element: content.document.body,
+      name: "backgroundColor",
       value: computed
     });
   }
@@ -114,11 +114,11 @@ function* testOverriddenMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      selector: "body",
+      element: content.document.body,
       name: "color",
       value: computed
     });
-    is((yield getComputedStyleProperty("p", null, "color")),
+    is(content.getComputedStyle(content.document.querySelector("p")).color,
       "rgb(200, 200, 200)", "The color of the P tag is still correct");
   }
 }

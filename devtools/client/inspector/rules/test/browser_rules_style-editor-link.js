@@ -4,13 +4,16 @@
 
 "use strict";
 
-// FIXME: Whitelisting this test.
+///////////////////
+//
+// Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
 
 // Test the links from the rule-view to the styleeditor
 
-const STYLESHEET_URL = "data:text/css," + encodeURIComponent(
+const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
   ["#first {",
    "color: blue",
    "}"].join("\n"));
@@ -18,49 +21,48 @@ const STYLESHEET_URL = "data:text/css," + encodeURIComponent(
 const EXTERNAL_STYLESHEET_FILE_NAME = "doc_style_editor_link.css";
 const EXTERNAL_STYLESHEET_URL = URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
 
-const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(`
-  <html>
-  <head>
-  <title>Rule view style editor link test</title>
-  <style type="text/css">
-  html { color: #000000; }
-  div { font-variant: small-caps; color: #000000; }
-  .nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em;
-  font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">
-  </style>
-  <style>
-  div { font-weight: bold; }
-  </style>
-  <link rel="stylesheet" type="text/css" href="${STYLESHEET_URL}">
-  <link rel="stylesheet" type="text/css" href="${EXTERNAL_STYLESHEET_URL}">
-  </head>
-  <body>
-  <h1>Some header text</h1>
-  <p id="salutation" style="font-size: 12pt">hi.</p>
-  <p id="body" style="font-size: 12pt">I am a test-case. This text exists
-  solely to provide some things to
-  <span style="color: yellow" class="highlight">
-  highlight</span> and <span style="font-weight: bold">count</span>
-  style list-items in the box at right. If you are reading this,
-  you should go do something else instead. Maybe read a book. Or better
-  yet, write some test-cases for another bit of code.
-  <span style="font-style: italic">some text</span></p>
-  <p id="closing">more text</p>
-  <p>even more text</p>
-  </div>
-  </body>
-  </html>
-`);
+const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
+  ['<html>' +
+   '<head>' +
+   '<title>Rule view style editor link test</title>',
+   '<style type="text/css"> ',
+   'html { color: #000000; } ',
+   'div { font-variant: small-caps; color: #000000; } ',
+   '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ',
+   'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">',
+   '</style>',
+   '<style>',
+   'div { font-weight: bold; }',
+   '</style>',
+   '<link rel="stylesheet" type="text/css" href="'+STYLESHEET_URL+'">',
+   '<link rel="stylesheet" type="text/css" href="'+EXTERNAL_STYLESHEET_URL+'">',
+   '</head>',
+   '<body>',
+   '<h1>Some header text</h1>',
+   '<p id="salutation" style="font-size: 12pt">hi.</p>',
+   '<p id="body" style="font-size: 12pt">I am a test-case. This text exists ',
+   'solely to provide some things to ',
+   '<span style="color: yellow" class="highlight">',
+   'highlight</span> and <span style="font-weight: bold">count</span> ',
+   'style list-items in the box at right. If you are reading this, ',
+   'you should go do something else instead. Maybe read a book. Or better ',
+   'yet, write some test-cases for another bit of code. ',
+   '<span style="font-style: italic">some text</span></p>',
+   '<p id="closing">more text</p>',
+   '<p>even more text</p>',
+   '</div>',
+   '</body>',
+   '</html>'].join("\n"));
 
 add_task(function*() {
   yield addTab(DOCUMENT_URL);
-  let {toolbox, inspector, view, testActor} = yield openRuleView();
+  let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode("div", inspector);
 
   yield testInlineStyle(view);
-  yield testFirstInlineStyleSheet(view, toolbox, testActor);
-  yield testSecondInlineStyleSheet(view, toolbox, testActor);
-  yield testExternalStyleSheet(view, toolbox, testActor);
+  yield testFirstInlineStyleSheet(view, toolbox);
+  yield testSecondInlineStyleSheet(view, toolbox);
+  yield testExternalStyleSheet(view, toolbox);
 });
 
 function* testInlineStyle(view) {
@@ -78,7 +80,7 @@ function* testInlineStyle(view) {
   gBrowser.removeTab(tab);
 }
 
-function* testFirstInlineStyleSheet(view, toolbox, testActor) {
+function* testFirstInlineStyleSheet(view, toolbox) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
@@ -90,10 +92,10 @@ function* testFirstInlineStyleSheet(view, toolbox, testActor) {
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
-  yield validateStyleEditorSheet(editor, 0, testActor);
+  validateStyleEditorSheet(editor, 0);
 }
 
-function* testSecondInlineStyleSheet(view, toolbox, testActor) {
+function* testSecondInlineStyleSheet(view, toolbox) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -110,10 +112,10 @@ function* testSecondInlineStyleSheet(view, toolbox, testActor) {
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  yield validateStyleEditorSheet(editor, 1, testActor);
+  validateStyleEditorSheet(editor, 1);
 }
 
-function* testExternalStyleSheet(view, toolbox, testActor) {
+function* testExternalStyleSheet(view, toolbox) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -130,21 +132,17 @@ function* testExternalStyleSheet(view, toolbox, testActor) {
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  yield validateStyleEditorSheet(editor, 2, testActor);
+  validateStyleEditorSheet(editor, 2);
 }
 
-function* validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
+function validateStyleEditorSheet(editor, expectedSheetIndex) {
   info("validating style editor stylesheet");
   is(editor.styleSheet.styleSheetIndex, expectedSheetIndex,
      "loaded stylesheet index matches document stylesheet");
 
-  let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
-
-  let expectedHref = yield testActor.eval(
-    `content.document.styleSheets[${expectedSheetIndex}].href ||
-     content.document.location.href`);
-
-  is(href, expectedHref, "loaded stylesheet href matches document stylesheet");
+  let sheet = content.document.styleSheets[expectedSheetIndex];
+  is(editor.styleSheet.href, sheet.href,
+    "loaded stylesheet href matches document stylesheet");
 }
 
 function testRuleViewLinkLabel(view) {
