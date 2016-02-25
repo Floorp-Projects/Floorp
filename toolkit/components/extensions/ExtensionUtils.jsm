@@ -150,6 +150,9 @@ class BaseContext {
     if (!options.allowInheritsPrincipal) {
       flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
     }
+    if (options.dontReportErrors) {
+      flags |= ssm.DONT_REPORT_ERRORS;
+    }
 
     try {
       ssm.checkLoadURIStrWithPrincipal(this.principal, url, flags);
