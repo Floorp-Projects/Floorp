@@ -569,22 +569,15 @@ TileClient::Dump(std::stringstream& aStream)
 void
 TileClient::Flip()
 {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  if (mFrontBuffer && mFrontBuffer->GetIPDLActor() &&
-      mCompositableClient && mCompositableClient->GetIPDLActor()) {
-    // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
-        new RemoveTextureFromCompositableTracker(waiter);
-    // Hold TextureClient until transaction complete.
-    tracker->SetTextureClient(mFrontBuffer);
-    mFrontBuffer->SetRemoveFromCompositableWaiter(waiter);
-    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
-    mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
-                                                                      mCompositableClient,
-                                                                      mFrontBuffer);
+  if (mCompositableClient) {
+    if (mFrontBuffer) {
+      mFrontBuffer->RemoveFromCompositable(mCompositableClient);
+    }
+    if (mFrontBufferOnWhite) {
+      mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
+    }
   }
-#endif
+
   RefPtr<TextureClient> frontBuffer = mFrontBuffer;
   RefPtr<TextureClient> frontBufferOnWhite = mFrontBufferOnWhite;
   mFrontBuffer = mBackBuffer;
@@ -667,25 +660,14 @@ TileClient::DiscardFrontBuffer()
 {
   if (mFrontBuffer) {
     MOZ_ASSERT(mFrontLock);
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    MOZ_ASSERT(!mFrontBufferOnWhite);
-    if (mFrontBuffer->GetIPDLActor() &&
-        mCompositableClient && mCompositableClient->GetIPDLActor()) {
-      // remove old buffer from CompositableHost
-      RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-      RefPtr<AsyncTransactionTracker> tracker =
-          new RemoveTextureFromCompositableTracker(waiter);
-      // Hold TextureClient until transaction complete.
-      tracker->SetTextureClient(mFrontBuffer);
-      mFrontBuffer->SetRemoveFromCompositableWaiter(waiter);
-      // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
-      mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
-                                                                        mCompositableClient,
-                                                                        mFrontBuffer);
+
+    if (mCompositableClient) {
+      mFrontBuffer->RemoveFromCompositable(mCompositableClient);
     }
-#endif
+
     mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
     if (mFrontBufferOnWhite) {
+      mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
       mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
     }
     mFrontLock->ReadUnlock();
