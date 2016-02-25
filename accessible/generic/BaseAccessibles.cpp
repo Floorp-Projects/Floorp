@@ -53,6 +53,13 @@ LeafAccessible::RemoveChild(Accessible* aChild)
   return false;
 }
 
+bool
+LeafAccessible::IsAcceptableChild(nsIContent* aEl) const
+{
+  // No children for leaf accessible.
+  return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LeafAccessible: Accessible private
 
