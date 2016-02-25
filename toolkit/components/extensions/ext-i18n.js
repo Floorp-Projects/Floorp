@@ -12,6 +12,11 @@ extensions.registerSchemaAPI("i18n", null, (extension, context) => {
         return extension.localizeMessage(messageName, substitutions);
       },
 
+      getAcceptLanguages: function() {
+        let result = extension.localeData.acceptLanguages;
+        return Promise.resolve(result);
+      },
+
       getUILanguage: function() {
         return extension.localeData.uiLocale;
       },

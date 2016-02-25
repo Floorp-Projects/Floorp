@@ -16,18 +16,20 @@
 add_task(function* testEmptySchema() {
   function background() {
     browser.test.assertTrue(!("manifest" in browser), "browser.manifest is not defined");
+    browser.test.assertTrue("storage" in browser, "browser.storage should be defined");
+    browser.test.assertTrue(!("contextMenus" in browser), "browser.contextMenus should not be defined");
     browser.test.notifyPass("schema");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${background})()`,
+    manifest: {
+      permissions: ["storage"],
+    },
   });
 
-
   yield extension.startup();
-
   yield extension.awaitFinish("schema");
-
   yield extension.unload();
 });
 

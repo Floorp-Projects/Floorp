@@ -95,7 +95,7 @@ ChildProcessActor.prototype = {
 
   onListWorkers: function () {
     if (!this._workerList) {
-      this._workerList = new WorkerActorList({});
+      this._workerList = new WorkerActorList(this.conn, {});
     }
     return this._workerList.getList().then(actors => {
       let pool = new ActorPool(this.conn);

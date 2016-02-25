@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
                                   "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 function filterStack(error) {
   return String(error.stack).replace(/(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm, "<Promise Chain>\n");
@@ -428,6 +430,16 @@ LocaleData.prototype = {
     this.messages.set(locale, result);
     return result;
   },
+
+  get acceptLanguages() {
+    let result = Preferences.get("intl.accept_languages", "", Ci.nsIPrefLocalizedString);
+    result = result.split(",");
+    result = result.map(lang => {
+      return lang.replace(/-/g, "_").trim();
+    });
+    return result;
+  },
+
 
   get uiLocale() {
     // Return the browser locale, but convert it to a Chrome-style
