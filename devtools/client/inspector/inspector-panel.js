@@ -995,10 +995,16 @@ InspectorPanel.prototype = {
     let button = this._paneToggleButton;
     let isVisible = !button.hasAttribute("pane-collapsed");
 
-    // Make sure the sidebar has a width attribute before collapsing because
-    // ViewHelpers needs it.
-    if (isVisible && !sidePane.hasAttribute("width")) {
-      sidePane.setAttribute("width", sidePane.getBoundingClientRect().width);
+    // Make sure the sidebar has width and height attributes before collapsing
+    // because ViewHelpers needs it.
+    if (isVisible) {
+      let rect = sidePane.getBoundingClientRect();
+      if (!sidePane.hasAttribute("width")) {
+        sidePane.setAttribute("width", rect.width);
+      }
+      // always refresh the height attribute before collapsing, it could have
+      // been modified by resizing the container.
+      sidePane.setAttribute("height", rect.height);
     }
 
     ViewHelpers.togglePane({
