@@ -140,6 +140,9 @@ public:
   PurgeActiveWorker();
 
   void
+  TryToActivateAsync();
+
+  void
   TryToActivate();
 
   void
