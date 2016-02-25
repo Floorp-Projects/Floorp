@@ -619,7 +619,6 @@ class tsvgr_opacity(PageloaderTest):
     tpmanifest = '${talos}/tests/svg_opacity/svg_opacity.manifest'
     tpcycles = 1
     tppagecycles = 25
-    tpmozafterpaint = True
     sps_profile_interval = 1
     sps_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
