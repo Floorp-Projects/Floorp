@@ -2523,7 +2523,7 @@ nsStyleImageLayers::Layer::Layer()
   mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL),
   mBlendMode(NS_STYLE_BLEND_NORMAL),
   mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
-  mMaskMode(NS_STYLE_MASK_MODE_AUTO)
+  mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE)
 {
   mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   mImage.SetNull();

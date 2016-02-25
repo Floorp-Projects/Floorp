@@ -582,7 +582,7 @@ struct nsStyleImageLayers {
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
                                   // be the initial value, which is
-                                  // NS_STYLE_MASK_MODE_AUTO.
+                                  // NS_STYLE_MASK_MODE_MATCH_SOURCE.
     Repeat        mRepeat;        // [reset] See nsStyleConsts.h
 
     // Initializes only mImage
