@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-# Shortcut for mochitest* and xpcshell-tests targets
-ifdef TEST_PATH
-TEST_PATH_ARG := '$(TEST_PATH)'
-else
-TEST_PATH_ARG :=
-endif
-
 # include automation-build.mk to get the path to the binary
 TARGET_DEPTH = $(DEPTH)
 include $(topsrcdir)/build/binary-location.mk
@@ -150,81 +142,6 @@ jstestbrowser:
 	$(CHECK_TEST_ERROR)
 
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
-
-ifeq ($(OS_ARCH),Darwin)
-xpcshell_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/xpcshell
-else
-xpcshell_path = $(DIST)/bin/xpcshell
-endif
-
-# Execute all xpcshell tests in the directories listed in the manifest.
-# See also config/rules.mk 'xpcshell-tests' target for local execution.
-# Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
-xpcshell-tests:
-	$(info Have you considered running xpcshell tests via |mach xpcshell-test|? mach is easier to use and has more features than make and it will eventually be the only way to run xpcshell tests. Please consider using mach today!)
-	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(DEPTH)/build \
-	  -I$(topsrcdir)/build \
-	  -I$(DEPTH)/_tests/mozbase/mozinfo \
-	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
-	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
-	  --build-info-json=$(DEPTH)/mozinfo.json \
-	  --no-logfiles \
-	  --test-plugin-path='$(DIST)/plugins' \
-	  --xpcshell=$(xpcshell_path) \
-	  --testing-modules-dir=$(abspath _tests/modules) \
-          $(SYMBOLS_PATH) \
-	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
-
-B2G_XPCSHELL = \
-	rm -f ./@.log && \
-	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(DEPTH)/build \
-	  -I$(topsrcdir)/build \
-	  $(topsrcdir)/testing/xpcshell/runtestsb2g.py \
-	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
-	  --build-info-json=$(DEPTH)/mozinfo.json \
-	  --no-logfiles \
-	  --use-device-libs \
-	  --no-clean \
-	  --objdir=$(DEPTH) \
-	  $$EXTRA_XPCSHELL_ARGS \
-	  --b2gpath=${B2G_HOME} \
-	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
-
-xpcshell-tests-b2g: ADB_PATH?=$(shell which adb)
-xpcshell-tests-b2g:
-	@if [ '${B2G_HOME}' = '' ]; then \
-		echo 'Please set the B2G_HOME variable'; exit 1; \
-	elif [ ! -f '${ADB_PATH}' ]; then \
-		echo 'Please set the ADB_PATH variable'; exit 1; \
-	elif [ '${EMULATOR}' != '' ]; then \
-		EXTRA_XPCSHELL_ARGS=--emulator=${EMULATOR}; \
-		$(call B2G_XPCSHELL); \
-		exit 0; \
-	else \
-		EXTRA_XPCSHELL_ARGS=--address=localhost:2828; \
-		$(call B2G_XPCSHELL); \
-		exit 0; \
-	fi
-
-xpcshell-tests-remote: DM_TRANS?=adb
-xpcshell-tests-remote:
-	@if [ '${TEST_DEVICE}' != '' -o '$(DM_TRANS)' = 'adb' ]; \
-          then $(PYTHON) -u $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
-	    --manifest=$(DEPTH)/_tests/xpcshell/xpcshell_android.ini \
-	    --build-info-json=$(DEPTH)/mozinfo.json \
-	    --no-logfiles \
-	    --testing-modules-dir=$(abspath _tests/modules) \
-	    --dm_trans=$(DM_TRANS) \
-	    --deviceIP=${TEST_DEVICE} \
-	    --objdir=$(DEPTH) \
-	    $(SYMBOLS_PATH) \
-	    $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS); \
-	    $(CHECK_TEST_ERROR); \
-        else \
-          echo 'please prepare your host with environment variables for TEST_DEVICE'; \
-        fi
 
 REMOTE_CPPUNITTESTS = \
 	$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
