@@ -8,9 +8,10 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointer event has pointerType as pen"); // set up test harness
@@ -23,6 +24,8 @@
             function eventHandler(event) {
                 detected_pointertypes[event.pointerType] = true;
                 if(!eventTested) {
+                    if("pen" != event.pointerType)
+                        return;
                     check_PointerEvent(event);
                     test_pointerEvent.step(function () {
                         assert_equals(event.pointerType, "pen", "Verify event.pointerType is 'pen'.");
@@ -45,10 +48,12 @@
     </head>
     <body onload="run()">
         <h1>Pointer Event: Dispatch pointer events with pointerType equal to "pen"</h1>
+        <!--
         <h4>Test Description:
             If a pointer event is initiated by a pen device, then the pointerType must be 'pen'.
         </h4>
         <br />
+        -->
         <div id="target0">
             Using pen, tap here.
         </div>

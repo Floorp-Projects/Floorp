@@ -5,11 +5,13 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <meta name="viewport" content="width=device-width">
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <script src="pointerevent_support.js"></script>
+        <script src="mochitest_support_internal.js"></script>
     </head>
     <body onload="run()">
         <h1>setPointerCapture</h1>
+        <!--
         <h4>
             Test Description: This test checks if setPointerCapture works properly.
             <ol>
@@ -18,7 +20,9 @@
             </ol>
         </h4>
         <p>
+        -->
         <div id="target0" style="background:black; color:white;"></div>
+        <div id="target1" style="background:yellow;"></div>
         <script>
             var detected_pointertypes = {};
 
