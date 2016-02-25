@@ -99,8 +99,11 @@ var Manager = {
 
   onLocationChange(browser, data) {
     let url = data.location;
-    if (data.flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+
+    if (data.isReferenceFragmentUpdated) {
       this.fire("onReferenceFragmentUpdated", browser, data, {url});
+    } else if (data.isHistoryStateUpdated) {
+      this.fire("onHistoryStateUpdated", browser, data, {url});
     } else {
       this.fire("onCommitted", browser, data, {url});
     }
@@ -142,9 +145,8 @@ const EVENTS = [
   "onCompleted",
   "onErrorOccurred",
   "onReferenceFragmentUpdated",
-
+  "onHistoryStateUpdated",
   // "onCreatedNavigationTarget",
-  // "onHistoryStateUpdated",
 ];
 
 var WebNavigation = {};
