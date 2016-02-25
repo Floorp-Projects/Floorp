@@ -68,6 +68,7 @@
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
+#include "nsCSSPseudoElements.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
@@ -3361,15 +3362,21 @@ Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
     doc->FlushPendingNotifications(Flush_Style);
   }
 
-  GetAnimationsUnsorted(aAnimations);
+  GetAnimationsUnsorted(this, CSSPseudoElementType::NotPseudo, aAnimations);
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
-void
-Element::GetAnimationsUnsorted(nsTArray<RefPtr<Animation>>& aAnimations)
+/* static */ void
+Element::GetAnimationsUnsorted(Element* aElement,
+                               CSSPseudoElementType aPseudoType,
+                               nsTArray<RefPtr<Animation>>& aAnimations)
 {
-  EffectSet* effects = EffectSet::GetEffectSet(this,
-                                               CSSPseudoElementType::NotPseudo);
+  MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo ||
+             aPseudoType == CSSPseudoElementType::after ||
+             aPseudoType == CSSPseudoElementType::before,
+             "Unsupported pseudo type");
+
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects) {
     return;
   }

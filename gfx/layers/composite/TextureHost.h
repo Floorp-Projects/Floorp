@@ -232,7 +232,8 @@ class DataTextureSource : public TextureSource
 {
 public:
   DataTextureSource()
-    : mUpdateSerial(0)
+    : mOwner(0)
+    , mUpdateSerial(0)
   {}
 
   virtual const char* Name() const override { return "DataTextureSource"; }
@@ -277,7 +278,23 @@ public:
   virtual already_AddRefed<gfx::DataSourceSurface> ReadBack() { return nullptr; };
 #endif
 
+  void SetOwner(TextureHost* aOwner)
+  {
+    auto newOwner = (uintptr_t)aOwner;
+    if (newOwner != mOwner) {
+      mOwner = newOwner;
+      SetUpdateSerial(0);
+    }
+  }
+
+  bool IsOwnedBy(TextureHost* aOwner) const { return mOwner == (uintptr_t)aOwner; }
+
+  bool HasOwner() const { return !IsOwnedBy(nullptr); }
+
 private:
+  // We store mOwner as an integer rather than as a pointer to make it clear
+  // it is not intended to be dereferenced.
+  uintptr_t mOwner;
   uint32_t mUpdateSerial;
 };
 
@@ -513,7 +530,7 @@ public:
    * in-memory buffer. The consequence of this is that locking the
    * TextureHost does not contend with locking the texture on the client side.
    */
-  virtual bool HasInternalBuffer() const { return false; }
+  virtual bool HasIntermediateBuffer() const { return false; }
 
   void AddCompositableRef() { ++mCompositableCount; }
 
@@ -592,6 +609,8 @@ public:
 
   virtual void Unlock() override;
 
+  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
+
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override;
@@ -611,11 +630,12 @@ public:
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual bool HasInternalBuffer() const override { return true; }
+  virtual bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
   bool MaybeUpload(nsIntRegion *aRegion = nullptr);
+  bool EnsureWrappingTextureSource();
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
@@ -628,6 +648,7 @@ protected:
   uint32_t mUpdateSerial;
   bool mLocked;
   bool mNeedsFullUpdate;
+  bool mHasIntermediateBuffer;
 };
 
 /**

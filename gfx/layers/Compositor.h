@@ -112,6 +112,7 @@ namespace mozilla {
 namespace gfx {
 class Matrix;
 class DrawTarget;
+class DataSourceSurface;
 } // namespace gfx
 
 namespace layers {
@@ -192,6 +193,10 @@ public:
   }
 
   virtual already_AddRefed<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) = 0;
+
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) { return nullptr; }
+
   virtual bool Initialize() = 0;
   virtual void Destroy() = 0;
 

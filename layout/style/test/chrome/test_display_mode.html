@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1104916
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Display Mode</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+/** Test for Display Mode **/
+SimpleTest.waitForExplicitFinish();
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+function waitOneEvent(element, name) {
+  return new Promise(function(resolve, reject) {
+    element.addEventListener(name, function listener() {
+      element.removeEventListener(name, listener);
+      resolve();
+    });
+  });
+}
+
+add_task(function* () {
+  yield waitOneEvent(window, "load");
+
+  var iframe = document.getElementById("subdoc");
+  var subdoc = iframe.contentDocument;
+  var style = subdoc.getElementById("style");
+  var bodyComputedStyled = subdoc.defaultView.getComputedStyle(subdoc.body, "");
+  var win = Services.wm.getMostRecentWindow("navigator:browser");
+
+  function queryApplies(q) {
+    style.setAttribute("media", q);
+    return bodyComputedStyled.getPropertyValue("text-decoration") == "underline";
+  }
+
+  function shouldApply(q) {
+    ok(queryApplies(q), q + " should apply");
+  }
+
+  function shouldNotApply(q) {
+    ok(!queryApplies(q), q + " should not apply");
+  }
+
+  shouldApply("all and (display-mode: browser)");
+  shouldNotApply("all and (display-mode: fullscreen)");
+  shouldNotApply("all and (display-mode: standalone)");
+  shouldNotApply("all and (display-mode: minimal-ui)");
+
+  // Test entering the OS's fullscreen mode.
+  var fullScreenEntered = waitOneEvent(win, "sizemodechange");
+  synthesizeKey("VK_F11", {});
+  yield fullScreenEntered;
+  shouldApply("all and (display-mode: fullscreen)");
+  shouldNotApply("all and (display-mode: browser)");
+  var fullScreenExited = waitOneEvent(win, "sizemodechange");
+  synthesizeKey("VK_F11", {});
+  yield fullScreenExited;
+  shouldNotApply("all and (display-mode: fullscreen)");
+  shouldApply("all and (display-mode: browser)");
+
+  // Test entering fullscreen through document requestFullScreen.
+  fullScreenEntered = waitOneEvent(document, "mozfullscreenchange");
+  document.body.mozRequestFullScreen();
+  yield fullScreenEntered
+  ok(document.mozFullScreenElement, "window entered fullscreen");
+  shouldApply("all and (display-mode: fullscreen)");
+  shouldNotApply("all and (display-mode: browser)");
+  fullScreenExited = waitOneEvent(document, "mozfullscreenchange");
+  document.mozCancelFullScreen();
+  yield fullScreenExited;
+  ok(!document.mozFullScreenElement, "window exited fullscreen");
+  shouldNotApply("all and (display-mode: fullscreen)");
+  shouldApply("all and (display-mode: browser)");
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1104916">Mozilla Bug 1104916</a>
+<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/media_queries_iframe.html"></iframe>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

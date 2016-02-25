@@ -7,7 +7,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsIMutableArray.h"
 #include "nsPK11TokenDB.h"
 #include "secmod.h"
 
@@ -318,34 +318,35 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11Module::ListSlots(nsIEnumerator **_retval)
+NS_IMETHODIMP
+nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  nsresult rv = NS_OK;
-  int i;
-  /* get isupports array */
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!array) {
+    return NS_ERROR_FAILURE;
+  }
+
   /* applications which allow new slot creation (which Firefox now does
    * since it uses the WaitForSlotEvent call) need to hold the
    * ModuleList Read lock to prevent the slot array from changing out
    * from under it. */
-  SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
-  SECMOD_GetReadLock(lock);
-  for (i=0; i<mModule->slotCount; i++) {
+  AutoSECMODListReadLock lock;
+  for (int i = 0; i < mModule->slotCount; i++) {
     if (mModule->slots[i]) {
       nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(mModule->slots[i]);
-      array->AppendElement(slot);
+      nsresult rv = array->AppendElement(slot, false);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
   }
-  SECMOD_ReleaseReadLock(lock);
-  rv = array->Enumerate(_retval);
-  return rv;
+
+  return array->Enumerate(_retval);
 }
 
 NS_IMPL_ISUPPORTS(nsPKCS11ModuleDB, nsIPKCS11ModuleDB, nsICryptoFIPSInfo)
@@ -417,35 +418,37 @@ nsPKCS11ModuleDB::FindSlotByName(const char16_t *aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
+NS_IMETHODIMP
+nsPKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 {
   nsNSSShutDownPreventionLock locker;
-  nsresult rv = NS_OK;
-  /* get isupports array */
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
-  if (NS_FAILED(rv)) return rv;
-  /* get the default list of modules */
-  SECMODModuleList *list = SECMOD_GetDefaultModuleList();
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!array) {
+    return NS_ERROR_FAILURE;
+  }
+
   /* lock down the list for reading */
-  SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
-  SECMOD_GetReadLock(lock);
-  while (list) {
+  AutoSECMODListReadLock lock;
+  for (SECMODModuleList* list = SECMOD_GetDefaultModuleList(); list;
+       list = list->next) {
     nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(list->module);
-    array->AppendElement(module);
-    list = list->next;
+    nsresult rv = array->AppendElement(module, false);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
+
   /* Get the modules in the database that didn't load */
-  list = SECMOD_GetDeadModuleList();
-  while (list) {
+  for (SECMODModuleList* list = SECMOD_GetDeadModuleList(); list;
+       list = list->next) {
     nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(list->module);
-    array->AppendElement(module);
-    list = list->next;
+    nsresult rv = array->AppendElement(module, false);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-  SECMOD_ReleaseReadLock(lock);
-  rv = array->Enumerate(_retval);
-  return rv;
+
+  return array->Enumerate(_retval);
 }
 
 NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(bool *aCanToggleFIPS)

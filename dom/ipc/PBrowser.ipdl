@@ -520,7 +520,8 @@ child:
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId,
                nullable PRenderFrame renderFrame,
-               bool parentIsActive);
+               bool parentIsActive,
+               nsSizeMode sizeMode);
 
     async LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
@@ -528,9 +529,11 @@ child:
 
     async CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    async UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
+    async UpdateDimensions(CSSRect rect, CSSSize size,
                            ScreenOrientationInternal orientation,
                            LayoutDeviceIntPoint chromeDisp) compressall;
+
+    async SizeModeChanged(nsSizeMode sizeMode);
 
     /**
      * Sending an activate message moves focus to the child.

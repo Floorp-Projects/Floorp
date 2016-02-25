@@ -1808,6 +1808,7 @@ MCompare::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, 
                    CompareType compareType)
 {
     MOZ_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
+               compareType == Compare_Int64 || compareType == Compare_UInt64 ||
                compareType == Compare_Double || compareType == Compare_Float32);
     MCompare* comp = new(alloc) MCompare(left, right, op);
     comp->compareType_ = compareType;
@@ -2473,15 +2474,17 @@ MBinaryBitwiseInstruction::infer(BaselineInspector*, jsbytecode*)
     {
         specialization_ = MIRType_None;
     } else {
-        specializeAsInt32();
+        specializeAs(MIRType_Int32);
     }
 }
 
 void
-MBinaryBitwiseInstruction::specializeAsInt32()
+MBinaryBitwiseInstruction::specializeAs(MIRType type)
 {
-    specialization_ = MIRType_Int32;
-    MOZ_ASSERT(type() == MIRType_Int32);
+    MOZ_ASSERT(type == MIRType_Int32 || type == MIRType_Int64);
+    MOZ_ASSERT(this->type() == type);
+
+    specialization_ = type;
 
     if (isBitOr() || isBitAnd() || isBitXor())
         setCommutative();
@@ -3407,84 +3410,84 @@ MTypeOf::cacheInputMaybeCallableOrEmulatesUndefined(CompilerConstraintList* cons
 MBitAnd*
 MBitAnd::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MBitAnd(left, right);
+    return new(alloc) MBitAnd(left, right, MIRType_Int32);
 }
 
 MBitAnd*
-MBitAnd::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MBitAnd::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MBitAnd* ins = new(alloc) MBitAnd(left, right);
-    ins->specializeAsInt32();
+    MBitAnd* ins = new(alloc) MBitAnd(left, right, type);
+    ins->specializeAs(type);
     return ins;
 }
 
 MBitOr*
 MBitOr::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MBitOr(left, right);
+    return new(alloc) MBitOr(left, right, MIRType_Int32);
 }
 
 MBitOr*
-MBitOr::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MBitOr::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MBitOr* ins = new(alloc) MBitOr(left, right);
-    ins->specializeAsInt32();
+    MBitOr* ins = new(alloc) MBitOr(left, right, type);
+    ins->specializeAs(type);
     return ins;
 }
 
 MBitXor*
 MBitXor::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MBitXor(left, right);
+    return new(alloc) MBitXor(left, right, MIRType_Int32);
 }
 
 MBitXor*
-MBitXor::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MBitXor::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MBitXor* ins = new(alloc) MBitXor(left, right);
-    ins->specializeAsInt32();
+    MBitXor* ins = new(alloc) MBitXor(left, right, type);
+    ins->specializeAs(type);
     return ins;
 }
 
 MLsh*
 MLsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MLsh(left, right);
+    return new(alloc) MLsh(left, right, MIRType_Int32);
 }
 
 MLsh*
-MLsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MLsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MLsh* ins = new(alloc) MLsh(left, right);
-    ins->specializeAsInt32();
+    MLsh* ins = new(alloc) MLsh(left, right, type);
+    ins->specializeAs(type);
     return ins;
 }
 
 MRsh*
 MRsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MRsh(left, right);
+    return new(alloc) MRsh(left, right, MIRType_Int32);
 }
 
 MRsh*
-MRsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MRsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MRsh* ins = new(alloc) MRsh(left, right);
-    ins->specializeAsInt32();
+    MRsh* ins = new(alloc) MRsh(left, right, type);
+    ins->specializeAs(type);
     return ins;
 }
 
 MUrsh*
 MUrsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right)
 {
-    return new(alloc) MUrsh(left, right);
+    return new(alloc) MUrsh(left, right, MIRType_Int32);
 }
 
 MUrsh*
-MUrsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right)
+MUrsh::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type)
 {
-    MUrsh* ins = new(alloc) MUrsh(left, right);
-    ins->specializeAsInt32();
+    MUrsh* ins = new(alloc) MUrsh(left, right, type);
+    ins->specializeAs(type);
 
     // Since Ion has no UInt32 type, we use Int32 and we have a special
     // exception to the type rules: we can return values in
@@ -3945,6 +3948,21 @@ MCompare::tryFold(bool* result)
     return false;
 }
 
+template <typename T>
+static bool
+FoldComparison(JSOp op, T left, T right)
+{
+    switch (op) {
+      case JSOP_LT: return left < right;
+      case JSOP_LE: return left <= right;
+      case JSOP_GT: return left > right;
+      case JSOP_GE: return left >= right;
+      case JSOP_STRICTEQ: case JSOP_EQ: return left == right;
+      case JSOP_STRICTNE: case JSOP_NE: return left != right;
+      default: MOZ_CRASH("Unexpected op.");
+    }
+}
+
 bool
 MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result)
 {
@@ -4046,96 +4064,31 @@ MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result)
         int32_t comp = 0; // Default to equal.
         if (left != right)
             comp = CompareAtoms(&lhs->toString()->asAtom(), &rhs->toString()->asAtom());
-
-        switch (jsop_) {
-          case JSOP_LT:
-            *result = (comp < 0);
-            break;
-          case JSOP_LE:
-            *result = (comp <= 0);
-            break;
-          case JSOP_GT:
-            *result = (comp > 0);
-            break;
-          case JSOP_GE:
-            *result = (comp >= 0);
-            break;
-          case JSOP_STRICTEQ: // Fall through.
-          case JSOP_EQ:
-            *result = (comp == 0);
-            break;
-          case JSOP_STRICTNE: // Fall through.
-          case JSOP_NE:
-            *result = (comp != 0);
-            break;
-          default:
-            MOZ_CRASH("Unexpected op.");
-        }
-
+        *result = FoldComparison(jsop_, comp, 0);
         return true;
     }
 
     if (compareType_ == Compare_UInt32) {
-        uint32_t lhsUint = uint32_t(lhs->toInt32());
-        uint32_t rhsUint = uint32_t(rhs->toInt32());
-
-        switch (jsop_) {
-          case JSOP_LT:
-            *result = (lhsUint < rhsUint);
-            break;
-          case JSOP_LE:
-            *result = (lhsUint <= rhsUint);
-            break;
-          case JSOP_GT:
-            *result = (lhsUint > rhsUint);
-            break;
-          case JSOP_GE:
-            *result = (lhsUint >= rhsUint);
-            break;
-          case JSOP_STRICTEQ: // Fall through.
-          case JSOP_EQ:
-            *result = (lhsUint == rhsUint);
-            break;
-          case JSOP_STRICTNE: // Fall through.
-          case JSOP_NE:
-            *result = (lhsUint != rhsUint);
-            break;
-          default:
-            MOZ_CRASH("Unexpected op.");
-        }
-
+        *result = FoldComparison(jsop_, uint32_t(lhs->toInt32()), uint32_t(rhs->toInt32()));
         return true;
     }
 
-    if (!lhs->isTypeRepresentableAsDouble() || !rhs->isTypeRepresentableAsDouble())
-        return false;
-
-    switch (jsop_) {
-      case JSOP_LT:
-        *result = (lhs->numberToDouble() < rhs->numberToDouble());
-        break;
-      case JSOP_LE:
-        *result = (lhs->numberToDouble() <= rhs->numberToDouble());
-        break;
-      case JSOP_GT:
-        *result = (lhs->numberToDouble() > rhs->numberToDouble());
-        break;
-      case JSOP_GE:
-        *result = (lhs->numberToDouble() >= rhs->numberToDouble());
-        break;
-      case JSOP_STRICTEQ: // Fall through.
-      case JSOP_EQ:
-        *result = (lhs->numberToDouble() == rhs->numberToDouble());
-        break;
-      case JSOP_STRICTNE: // Fall through.
-      case JSOP_NE:
-        *result = (lhs->numberToDouble() != rhs->numberToDouble());
-        break;
-      default:
-        return false;
+    if (compareType_ == Compare_Int64) {
+        *result = FoldComparison(jsop_, lhs->toInt64(), rhs->toInt64());
+        return true;
     }
 
-    return true;
+    if (compareType_ == Compare_UInt64) {
+        *result = FoldComparison(jsop_, uint64_t(lhs->toInt64()), uint64_t(rhs->toInt64()));
+        return true;
+    }
+
+    if (lhs->isTypeRepresentableAsDouble() && rhs->isTypeRepresentableAsDouble()) {
+        *result = FoldComparison(jsop_, lhs->numberToDouble(), rhs->numberToDouble());
+        return true;
+    }
+
+    return false;
 }
 
 MDefinition*

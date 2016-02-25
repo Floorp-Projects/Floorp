@@ -2262,6 +2262,76 @@ class LCompare : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LCompare64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0>
+{
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(Compare64)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    LCompare64(JSOp jsop, const LInt64Allocation& left, const LInt64Allocation& right)
+      : jsop_(jsop)
+    {
+        setInt64Operand(Lhs, left);
+        setInt64Operand(Rhs, right);
+    }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
+    MCompare* mir() {
+        return mir_->toCompare();
+    }
+    const char* extraName() const {
+        return CodeName[jsop_];
+    }
+};
+
+class LCompare64AndBranch : public LControlInstructionHelper<2, 2 * INT64_PIECES, 0>
+{
+    MCompare* cmpMir_;
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(Compare64AndBranch)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    LCompare64AndBranch(MCompare* cmpMir, JSOp jsop,
+                        const LInt64Allocation& left, const LInt64Allocation& right,
+                        MBasicBlock* ifTrue, MBasicBlock* ifFalse)
+      : cmpMir_(cmpMir), jsop_(jsop)
+    {
+        setInt64Operand(Lhs, left);
+        setInt64Operand(Rhs, right);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
+    MBasicBlock* ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock* ifFalse() const {
+        return getSuccessor(1);
+    }
+    MTest* mir() const {
+        return mir_->toTest();
+    }
+    MCompare* cmpMir() const {
+        return cmpMir_;
+    }
+    const char* extraName() const {
+        return CodeName[jsop_];
+    }
+};
+
 // Compares two integral values of the same JS type, either integer or object.
 // For objects, both operands are in registers.
 class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
@@ -2878,6 +2948,29 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LBitOpI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(BitOpI64)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    explicit LBitOpI64(JSOp op)
+      : op_(op)
+    { }
+
+    const char* extraName() const {
+        return CodeName[op_];
+    }
+
+    JSOp bitop() const {
+        return op_;
+    }
+};
+
 // Call a VM function to perform a bitwise operation.
 class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 {
@@ -2915,6 +3008,30 @@ class LShiftI : public LBinaryMath<0>
     LIR_HEADER(ShiftI)
 
     explicit LShiftI(JSOp op)
+      : op_(op)
+    { }
+
+    JSOp bitop() {
+        return op_;
+    }
+
+    MInstruction* mir() {
+        return mir_->toInstruction();
+    }
+
+    const char* extraName() const {
+        return CodeName[op_];
+    }
+};
+
+class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(ShiftI64)
+
+    explicit LShiftI64(JSOp op)
       : op_(op)
     { }
 

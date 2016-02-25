@@ -33,7 +33,7 @@ public:
 
   virtual bool SupportsMoz2D() const override { return true; }
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual void Deallocate(ISurfaceAllocator*) override;
 

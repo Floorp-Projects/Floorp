@@ -11861,7 +11861,7 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mSize->mYValue.SetAutoValue();
   aState.mComposite->mValue.SetIntValue(NS_STYLE_MASK_COMPOSITE_ADD,
                                         eCSSUnit_Enumerated);
-  aState.mMode->mValue.SetIntValue(NS_STYLE_MASK_MODE_AUTO,
+  aState.mMode->mValue.SetIntValue(NS_STYLE_MASK_MODE_MATCH_SOURCE,
                                    eCSSUnit_Enumerated);
   bool haveColor = false,
        haveImage = false,

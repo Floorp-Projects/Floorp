@@ -427,10 +427,10 @@ TextureClient::Unlock()
 }
 
 bool
-TextureClient::HasInternalBuffer() const
+TextureClient::HasIntermediateBuffer() const
 {
   MOZ_ASSERT(IsValid());
-  return mData->HasInternalBuffer();
+  return mData->HasIntermediateBuffer();
 }
 
 gfx::IntSize
@@ -949,6 +949,30 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
                                  aRect ? *aRect : gfx::IntRect(gfx::IntPoint(0, 0), GetSize()),
                                  aPoint ? *aPoint : gfx::IntPoint(0, 0));
   return true;
+}
+
+void
+TextureClient::RemoveFromCompositable(CompositableClient* aCompositable,
+                                      AsyncTransactionWaiter* aWaiter)
+{
+  MOZ_ASSERT(aCompositable);
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  if (mActor && aCompositable->GetIPDLActor()
+      && mData->AsGrallocTextureData()) {
+    // remove old buffer from CompositableHost
+    RefPtr<AsyncTransactionWaiter> waiter = aWaiter ? aWaiter
+                                                    : new AsyncTransactionWaiter();
+    RefPtr<AsyncTransactionTracker> tracker =
+        new RemoveTextureFromCompositableTracker(waiter);
+    // Hold TextureClient until transaction complete.
+    tracker->SetTextureClient(this);
+    mRemoveFromCompositableWaiter = waiter;
+    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+    mActor->GetForwarder()->RemoveTextureFromCompositableAsync(tracker, aCompositable, this);
+  }
+#endif
+
 }
 
 void

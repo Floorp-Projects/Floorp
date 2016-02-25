@@ -133,9 +133,12 @@ nsPNGDecoder::CheckForTransparency(SurfaceFormat aFormat,
     PostHasTransparency();
   }
 
-  // PNGs shouldn't have first-frame padding.
-  MOZ_ASSERT_IF(mNumFrames == 0,
-                IntRect(IntPoint(), GetSize()).IsEqualEdges(aFrameRect));
+  // If the first frame of animated image doesn't draw into the whole image,
+  // then record that it is transparent.
+  if (mNumFrames == 0 && !IntRect(IntPoint(), GetSize()).IsEqualEdges(aFrameRect)) {
+    MOZ_ASSERT(HasAnimation());
+    PostHasTransparency();
+  }
 }
 
 // CreateFrame() is used for both simple and animated images
@@ -597,6 +600,12 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   if (decoder->IsMetadataDecode()) {
+    // If we are animated then the first frame rect is either: 1) the whole image
+    // if the IDAT chunk is part of the animation 2) the frame rect of the first
+    // fDAT chunk otherwise. If we are not animated then we want to make sure to
+    // call PostHasTransparency in the metadata decode if we need to. So it's okay
+    // to pass IntRect(0, 0, width, height) here for animated images; they will
+    // call with the proper first frame rect in the full decode.
     decoder->CheckForTransparency(decoder->format,
                                   IntRect(0, 0, width, height));
 
