@@ -1242,7 +1242,7 @@ public:
 
     Done(NS_OK);
     // Activate() is invoked out of band of atomic.
-    mRegistration->TryToActivate();
+    mRegistration->TryToActivateAsync();
   }
 
 private:
@@ -1854,9 +1854,23 @@ ServiceWorkerManager::AppendPendingOperation(nsIRunnable* aRunnable)
 }
 
 void
+ServiceWorkerRegistrationInfo::TryToActivateAsync()
+{
+  nsCOMPtr<nsIRunnable> r =
+  NS_NewRunnableMethod(this,
+                       &ServiceWorkerRegistrationInfo::TryToActivate);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+}
+
+/*
+ * TryToActivate should not be called directly, use TryToACtivateAsync instead.
+ */
+void
 ServiceWorkerRegistrationInfo::TryToActivate()
 {
-  if (!IsControllingDocuments() || mWaitingWorker->SkipWaitingFlag()) {
+  if (!IsControllingDocuments() ||
+      // Waiting worker will be removed if the registration is removed
+      (mWaitingWorker && mWaitingWorker->SkipWaitingFlag())) {
     Activate();
   }
 }
@@ -3409,7 +3423,7 @@ ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aR
           aRegistration->mActiveWorker->WorkerPrivate();
         serviceWorkerPrivate->NoteStoppedControllingDocuments();
       }
-      aRegistration->TryToActivate();
+      aRegistration->TryToActivateAsync();
     }
   }
 }
@@ -4190,7 +4204,7 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
              (registration->mWaitingWorker->ID() == aServiceWorkerID)) {
     registration->mWaitingWorker->SetSkipWaitingFlag();
     if (registration->mWaitingWorker->State() == ServiceWorkerState::Installed) {
-      registration->TryToActivate();
+      registration->TryToActivateAsync();
     }
   } else {
     NS_WARNING("Failed to set skipWaiting flag, no matching worker.");
