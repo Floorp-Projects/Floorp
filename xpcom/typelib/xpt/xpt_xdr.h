@@ -20,6 +20,9 @@ typedef struct XPTState         XPTState;
 typedef struct XPTCursor        XPTCursor;
 
 extern XPT_PUBLIC_API(PRBool)
+XPT_SkipStringInline(XPTCursor *cursor);
+
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp);
 
 extern XPT_PUBLIC_API(PRBool)
