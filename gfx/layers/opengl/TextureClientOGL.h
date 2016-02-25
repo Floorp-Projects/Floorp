@@ -28,7 +28,7 @@ public:
   CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
                       ISurfaceAllocator* aAllocator, TextureFlags aFlags);
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
@@ -69,7 +69,7 @@ public:
 
   ~AndroidSurfaceTextureData();
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 

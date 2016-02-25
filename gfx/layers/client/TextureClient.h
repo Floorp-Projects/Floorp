@@ -193,7 +193,7 @@ public:
 
   virtual bool CanExposeMappedData() const { return false; }
 
-  virtual bool HasInternalBuffer() const = 0;
+  virtual bool HasIntermediateBuffer() const = 0;
 
   virtual bool HasSynchronization() const { return false; }
 
@@ -413,7 +413,7 @@ public:
    * in-memory buffer. The consequence of this is that locking the
    * TextureClient does not contend with locking the texture on the host side.
    */
-  bool HasInternalBuffer() const;
+  bool HasIntermediateBuffer() const;
 
   /**
    * Allocate and deallocate a TextureChild actor.
