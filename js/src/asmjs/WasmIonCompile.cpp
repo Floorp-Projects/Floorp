@@ -2821,6 +2821,8 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitUnary<MTruncateToInt32>(f, ExprType::F64, def);
       case Expr::I32Clz:
         return EmitUnary<MClz>(f, ExprType::I32, def);
+      case Expr::I32Ctz:
+        return EmitUnary<MCtz>(f, ExprType::I32, def);
       case Expr::I32Popcnt:
         return EmitUnary<MPopcnt>(f, ExprType::I32, def);
       case Expr::I32Abs:
@@ -3059,7 +3061,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::Select:
       case Expr::Br:
       case Expr::BrIf:
-      case Expr::I32Ctz:
       case Expr::F32CopySign:
       case Expr::F32Trunc:
       case Expr::F32Nearest:

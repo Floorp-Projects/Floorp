@@ -5103,6 +5103,19 @@ MClz::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MCtz::foldsTo(TempAllocator& alloc)
+{
+    if (num()->isConstant()) {
+        int32_t n = num()->toConstant()->toInt32();
+        if (n == 0)
+            return MConstant::New(alloc, Int32Value(32));
+        return MConstant::New(alloc, Int32Value(mozilla::CountTrailingZeroes32(n)));
+    }
+
+    return this;
+}
+
+MDefinition*
 MPopcnt::foldsTo(TempAllocator& alloc)
 {
     if (num()->isConstant()) {
