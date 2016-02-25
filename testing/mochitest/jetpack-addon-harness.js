@@ -27,68 +27,58 @@ function realPath(chrome) {
                .replace(".xpi", "");
 }
 
+const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+      .getService(Ci.nsIChromeRegistry);
+
 // Installs a single add-on returning a promise for when install is completed
 function installAddon(url) {
-  return new Promise(function(resolve, reject) {
-    AddonManager.getInstallForURL(url, function(install) {
-      install.addListener({
-        onDownloadEnded: function(install) {
-          // Set add-on's test options
-          const options = {
-            test: {
-              iterations: 1,
-              stop: false,
-              keepOpen: true,
-            },
-            profile: {
-              memory: false,
-              leaks: false,
-            },
-            output: {
-              logLevel: "verbose",
-              format: "tbpl",
-            },
-            console: {
-              logLevel: "info",
-            },
-          }
-          setPrefs("extensions." + install.addon.id + ".sdk", options);
+  let chromeURL = Services.io.newURI(url, null, null);
+  let file = chromeRegistry.convertChromeURL(chromeURL)
+      .QueryInterface(Ci.nsIFileURL).file;
 
-          // If necessary override the add-ons module paths to point somewhere
-          // else
-          if (sdkpath) {
-            let paths = {}
-            for (let path of ["dev", "diffpatcher", "framescript", "method", "node", "sdk", "toolkit"]) {
-              paths[path] = sdkpath + path;
-            }
-            setPrefs("extensions.modules." + install.addon.id + ".path", paths);
-          }
+  let addon;
+  const listener = {
+    onInstalling(_addon) {
+      addon = _addon;
+      // Set add-on's test options
+      const options = {
+        test: {
+          iterations: 1,
+          stop: false,
+          keepOpen: true,
         },
-
-        onInstallEnded: function(install, addon) {
-          resolve(addon);
+        profile: {
+          memory: false,
+          leaks: false,
         },
-
-        onDownloadCancelled: function(install) {
-          reject("Download cancelled: " + install.error);
+        output: {
+          logLevel: "verbose",
+          format: "tbpl",
         },
-
-        onDownloadFailed: function(install) {
-          reject("Download failed: " + install.error);
+        console: {
+          logLevel: "info",
         },
+      }
+      setPrefs("extensions." + addon.id + ".sdk", options);
 
-        onInstallCancelled: function(install) {
-          reject("Install cancelled: " + install.error);
-        },
-
-        onInstallFailed: function(install) {
-          reject("Install failed: " + install.error);
+      // If necessary override the add-ons module paths to point somewhere
+      // else
+      if (sdkpath) {
+        let paths = {}
+        for (let path of ["dev", "diffpatcher", "framescript", "method", "node", "sdk", "toolkit"]) {
+          paths[path] = sdkpath + path;
         }
-      });
+        setPrefs("extensions.modules." + addon.id + ".path", paths);
+      }
+    },
+  };
+  AddonManager.addAddonListener(listener);
 
-      install.install();
-    }, "application/x-xpinstall");
-  });
+  return AddonManager.installTemporaryAddon(file)
+    .then(() => {
+      AddonManager.removeAddonListener(listener);
+      return addon;
+    });
 }
 
 // Uninstalls an add-on returning a promise for when it is gone
