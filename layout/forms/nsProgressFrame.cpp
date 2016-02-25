@@ -21,6 +21,8 @@
 #include "nsContentList.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsThemeConstants.h"
 #include <algorithm>
 
@@ -54,6 +56,12 @@ nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mBarDiv);
   nsContainerFrame::DestroyFrom(aDestructRoot);
+}
+
+nsIAtom*
+nsProgressFrame::GetType() const
+{
+  return nsGkAtoms::progressFrame;
 }
 
 nsresult

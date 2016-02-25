@@ -60,13 +60,13 @@ skip-if(B2G||Mulet) == 28811-2a.html 28811-2-ref.html # Initial mulet triage: pa
 fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
-!= 40596-1c.html 40596-1-ref.html
+== 40596-1c.html 40596-1-ref.html
 != 40596-1d.html 40596-1-ref.html
 != 40596-1e.html 40596-1-ref.html
 != 40596-1f.html 40596-1-ref.html
 != 40596-1g.html 40596-1-ref.html
 != 40596-1h.html 40596-1-ref.html
-!= 40596-1i.html 40596-1-ref.html
+== 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
 == 50630-1a.html 50630-1-ref.html
 == 50630-1b.html 50630-1-ref.html

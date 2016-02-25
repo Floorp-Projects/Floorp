@@ -14,7 +14,8 @@
 #include "nsMathMLElement.h"
 
 // used to map attributes into CSS rules
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"

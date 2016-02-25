@@ -3833,7 +3833,7 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
     if (rt->gc.numActiveZoneIters)
         return;
 
-    AutoLockGC lock(rt); // Avoid race with background sweeping.
+    assertBackgroundSweepingFinished();
 
     JSZoneCallback callback = rt->destroyZoneCallback;
 
@@ -3848,15 +3848,16 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
         Zone* zone = *read++;
 
         if (zone->wasGCStarted()) {
-            if ((!zone->isQueuedForBackgroundSweep() &&
-                 zone->arenas.arenaListsAreEmpty() &&
-                 !zone->hasMarkedCompartments()) || destroyingRuntime)
+            MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
+            const bool zoneIsDead = zone->arenas.arenaListsAreEmpty() &&
+                                    !zone->hasMarkedCompartments();
+            if (zoneIsDead || destroyingRuntime)
             {
                 zone->arenas.checkEmptyFreeLists();
-                AutoUnlockGC unlock(lock);
 
                 if (callback)
                     callback(zone);
+
                 zone->sweepCompartments(fop, false, destroyingRuntime);
                 MOZ_ASSERT(zone->compartments.empty());
                 fop->delete_(zone);
@@ -5655,13 +5656,6 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
             jitRuntime->execAlloc().purge();
             jitRuntime->backedgeExecAlloc().purge();
         }
-
-        /*
-         * This removes compartments from rt->compartment, so we do it last to make
-         * sure we don't miss sweeping any compartments.
-         */
-        if (!destroyingRuntime)
-            sweepZones(&fop, destroyingRuntime);
     }
 
     {
@@ -5689,10 +5683,6 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
             AutoLockGC lock(rt);
             expireChunksAndArenas(invocationKind == GC_SHRINK, lock);
         }
-
-        /* Ensure the compartments get swept if it's the last GC. */
-        if (destroyingRuntime)
-            sweepZones(&fop, destroyingRuntime);
     }
 
     finishMarkingValidation();
@@ -5717,19 +5707,12 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
 #endif
 }
 
-GCRuntime::IncrementalProgress
+void
 GCRuntime::beginCompactPhase()
 {
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
+    MOZ_ASSERT(!isBackgroundSweeping());
 
-    if (isIncremental) {
-        // Poll for end of background sweeping
-        AutoLockGC lock(rt);
-        if (isBackgroundSweeping())
-            return NotFinished;
-    } else {
-        waitBackgroundSweepEnd();
-    }
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
     MOZ_ASSERT(zonesToMaybeCompact.isEmpty());
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -5739,7 +5722,6 @@ GCRuntime::beginCompactPhase()
 
     MOZ_ASSERT(!relocatedArenasToRelease);
     startedCompacting = true;
-    return Finished;
 }
 
 GCRuntime::IncrementalProgress
@@ -5971,12 +5953,24 @@ GCRuntime::resetIncrementalGC(const char* reason)
         break;
       }
 
-      case COMPACT: {
+      case FINALIZE: {
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
             rt->gc.waitBackgroundSweepOrAllocEnd();
         }
 
+        bool wasCompacting = isCompacting;
+        isCompacting = false;
+
+        auto unlimited = SliceBudget::unlimited();
+        incrementalCollectSlice(unlimited, JS::gcreason::RESET);
+
+        isCompacting = wasCompacting;
+
+        break;
+      }
+
+      case COMPACT: {
         bool wasCompacting = isCompacting;
 
         isCompacting = true;
@@ -6203,8 +6197,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         endSweepPhase(destroyingRuntime);
 
-        incrementalState = COMPACT;
-        MOZ_ASSERT(!startedCompacting);
+        incrementalState = FINALIZE;
 
         /* Yield before compacting since it is not incremental. */
         if (isCompacting && isIncremental)
@@ -6212,10 +6205,40 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         MOZ_FALLTHROUGH;
 
+      case FINALIZE:
+        {
+            gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
+
+            // Yield until background finalization is done.
+            if (isIncremental) {
+                // Poll for end of background sweeping
+                AutoLockGC lock(rt);
+                if (isBackgroundSweeping())
+                    break;
+            } else {
+                waitBackgroundSweepEnd();
+            }
+        }
+
+        {
+            // Re-sweep the zones list, now that background finalization is
+            // finished to actually remove and free dead zones.
+            gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP);
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_DESTROY);
+            AutoSetThreadIsSweeping threadIsSweeping;
+            FreeOp fop(rt);
+            sweepZones(&fop, destroyingRuntime);
+        }
+
+        MOZ_ASSERT(!startedCompacting);
+        incrementalState = COMPACT;
+
+        MOZ_FALLTHROUGH;
+
       case COMPACT:
         if (isCompacting) {
-            if (!startedCompacting && beginCompactPhase() == NotFinished)
-                break;
+            if (!startedCompacting)
+                beginCompactPhase();
 
             if (compactPhase(reason, budget) == NotFinished)
                 break;

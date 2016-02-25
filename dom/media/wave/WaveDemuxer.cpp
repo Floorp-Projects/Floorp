@@ -427,7 +427,8 @@ WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const
   if (!mSamplesPerSecond) {
     return TimeUnit();
   }
-  const double usPerDataChunk = USECS_PER_S * mSamplesPerChunk /
+  const double usPerDataChunk = USECS_PER_S *
+                                static_cast<double>(mSamplesPerChunk) /
                                 mSamplesPerSecond;
   return TimeUnit::FromMicroseconds(aNumDataChunks * usPerDataChunk);
 }
@@ -653,6 +654,7 @@ RIFFParser::RIFFHeader::RIFFHeader()
 void
 RIFFParser::RIFFHeader::Reset()
 {
+  memset(mRaw, 0, sizeof(mRaw));
   mPos = 0;
 }
 
@@ -731,6 +733,7 @@ HeaderParser::ChunkHeader::ChunkHeader()
 void
 HeaderParser::ChunkHeader::Reset()
 {
+  memset(mRaw, 0, sizeof(mRaw));
   mPos = 0;
 }
 
@@ -807,6 +810,7 @@ FormatParser::FormatChunk::FormatChunk()
 void
 FormatParser::FormatChunk::Reset()
 {
+  memset(mRaw, 0, sizeof(mRaw));
   mPos = 0;
 }
 

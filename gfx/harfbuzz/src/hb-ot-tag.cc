@@ -927,6 +927,7 @@ hb_ot_tag_to_language (hb_tag_t tag)
   }
 }
 
+#ifdef MAIN
 static inline void
 test_langs_sorted (void)
 {
@@ -942,7 +943,6 @@ test_langs_sorted (void)
   }
 }
 
-#ifdef MAIN
 int
 main (void)
 {

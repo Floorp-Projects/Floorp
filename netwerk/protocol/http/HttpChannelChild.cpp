@@ -698,7 +698,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
     LOG(("UnknownDecoder is involved queue OnDataAvailable call. [this=%p]",
          this));
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnDataHttpEvent(this, data, offset, count));
+      MakeUnique<MaybeDivertOnDataHttpEvent>(this, data, offset, count));
   }
 
   // Hold queue lock throughout all three calls, else we might process a later
@@ -885,7 +885,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
    LOG(("UnknownDecoder is involved queue OnStopRequest call. [this=%p]",
         this));
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnStopHttpEvent(this, channelStatus));
+      MakeUnique<MaybeDivertOnStopHttpEvent>(this, channelStatus));
   }
 
   nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);

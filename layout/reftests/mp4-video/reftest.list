@@ -1,0 +1,1 @@
+skip-if(B2G||Mulet||winWidget) == canvas-1.xhtml canvas-1-ref.xhtml

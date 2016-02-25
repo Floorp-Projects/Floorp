@@ -452,9 +452,17 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
   return false;
 }
 
-void
-KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
+bool
+KeyframeEffectReadOnly::UpdateProperties(
+    const InfallibleTArray<AnimationProperty>& aProperties)
 {
+  // AnimationProperty::operator== does not compare mWinsInCascade and
+  // mIsRunningOnCompositor, we don't need to update anything here because
+  // we want to preserve
+  if (mProperties == aProperties) {
+    return false;
+  }
+
   nsCSSPropertySet winningInCascadeProperties;
   nsCSSPropertySet runningOnCompositorProperties;
 
@@ -467,7 +475,7 @@ KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
     }
   }
 
-  mProperties = aOther.mProperties;
+  mProperties = aProperties;
 
   for (AnimationProperty& property : mProperties) {
     property.mWinsInCascade =
@@ -475,6 +483,18 @@ KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
+
+  if (mAnimation) {
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType,
+                       EffectCompositor::RestyleType::Layer,
+                       mAnimation->CascadeLevel());
+    }
+  }
+
+  return true;
 }
 
 void

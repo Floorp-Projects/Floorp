@@ -76,6 +76,7 @@ public:
   virtual bool Lock() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override;
+  virtual gfx::SurfaceFormat GetReadFormat() const override;
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override
   {

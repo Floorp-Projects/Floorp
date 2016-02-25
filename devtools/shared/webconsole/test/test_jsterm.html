@@ -66,7 +66,8 @@ function onAttach(aState, aResponse)
 
   let tests = [doSimpleEval, doWindowEval, doEvalWithException,
                doEvalWithHelper, doEvalString, doEvalLongString,
-               doEvalWithBinding, doEvalWithBindingFrame].map(t => {
+               doEvalWithBinding, doEvalWithBindingFrame,
+               forceLexicalInit].map(t => {
                  return Task.async(t);
                });
 
@@ -221,6 +222,25 @@ function* doEvalWithBindingFrame() {
     "Global doesn't match the object's global with bindObjectActor");
 
   nextTest()
+}
+
+function* forceLexicalInit() {
+  info("test `let x = SomeError` results in x being initialized to undefined");
+  let response = yield evaluateJS("let foopie = wubbalubadubdub;");
+  checkObject(response, {
+    from: gState.actor,
+    input: "let foopie = wubbalubadubdub;",
+    result: undefined,
+  });
+  ok(response.exception, "expected exception");
+  let response2 = yield evaluateJS("foopie;");
+  checkObject(response2, {
+    from: gState.actor,
+    input: "foopie;",
+    result: undefined,
+  });
+  ok(!response2.exception, "unexpected exception");
+  nextTest();
 }
 
 function testEnd()

@@ -54,4 +54,10 @@ moz_Xruntime_error(const char* what)
     abort_from_exception("runtime_error", what);
 }
 
+MFBT_API __declspec(noreturn) void
+moz_Xbad_function_call()
+{
+    abort_from_exception("bad_function_call", "bad function call");
+}
+
 } // namespace std

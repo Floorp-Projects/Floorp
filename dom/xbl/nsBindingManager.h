@@ -17,6 +17,7 @@
 #include "nsXBLBinding.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/StyleSheetHandle.h"
 
 struct ElementDependentRuleProcessorData;
 class nsIXPConnectWrappedJS;
@@ -30,10 +31,6 @@ class nsXBLBinding;
 typedef nsTArray<RefPtr<nsXBLBinding> > nsBindingList;
 class nsIPrincipal;
 class nsITimer;
-
-namespace mozilla {
-class CSSStyleSheet;
-} // namespace mozilla
 
 class nsBindingManager final : public nsStubMutationObserver
 {
@@ -129,7 +126,7 @@ public:
   nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
                                  bool* aRulesChanged);
 
-  void AppendAllSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray);
+  void AppendAllSheets(nsTArray<mozilla::StyleSheetHandle>& aArray);
 
   void Traverse(nsIContent *aContent,
                             nsCycleCollectionTraversalCallback &cb);
