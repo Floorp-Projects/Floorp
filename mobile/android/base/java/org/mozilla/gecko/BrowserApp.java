@@ -161,6 +161,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
@@ -2430,6 +2431,11 @@ public class BrowserApp extends GeckoApp
      */
     private void storeSearchQuery(final String query) {
         if (TextUtils.isEmpty(query)) {
+            return;
+        }
+
+        // Filter out URLs and long suggestions
+        if (query.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", query)) {
             return;
         }
 
