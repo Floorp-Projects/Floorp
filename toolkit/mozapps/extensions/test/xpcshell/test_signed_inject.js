@@ -342,7 +342,6 @@ add_task(function*() {
 
   startupManager();
 
-  // Currently we leave the sideloaded add-on there but just don't run it
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_false(addon.appDisabled);
@@ -358,6 +357,7 @@ add_task(function*() {
   clearCache(file);
 });
 
+// Preliminarily-signed sideloaded add-ons should work via staged install
 add_task(function*() {
   let stage = profileDir.clone();
   stage.append("staged");
@@ -366,14 +366,17 @@ add_task(function*() {
 
   startupManager();
 
-  // Should have refused to install preliminarily signed version
   let addon = yield promiseAddonByID(ID);
-  do_check_eq(addon, null);
-  do_check_eq(getActiveVersion(), -1);
+  do_check_neq(addon, null);
+  do_check_false(addon.appDisabled);
+  do_check_true(addon.isActive);
+  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
+  do_check_eq(getActiveVersion(), 2);
+
+  addon.uninstall();
+  yield promiseShutdownManager();
+  resetPrefs();
 
   do_check_false(file.exists());
   clearCache(file);
-
-  yield promiseShutdownManager();
-  resetPrefs();
 });
