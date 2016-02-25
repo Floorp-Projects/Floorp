@@ -139,7 +139,7 @@
                        tooltiptext="&toolboxCloseButton.tooltip;"/>
       </hbox>
     </toolbar>
-    <vbox flex="1">
+    <vbox flex="1" class="theme-body">
       <!-- Set large flex to allow the toolbox-panel-webconsole to have a
            height set to a small value without flexing to fill up extra
            space. There must be a flex on both to ensure that the console

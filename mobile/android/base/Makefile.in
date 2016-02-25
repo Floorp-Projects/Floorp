@@ -211,7 +211,6 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .gradle.deps: .aapt.deps FORCE
 	@$(TOUCH) $@
 	$(topsrcdir)/mach gradle \
-		$(if $(MOZILLA_OFFICIAL),--no-daemon --offline --info) \
 		app:assembleAutomationDebug app:assembleAutomationDebugAndroidTest -x lint
 
 classes.dex: .gradle.deps

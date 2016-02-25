@@ -52,6 +52,8 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptNameSpaceManager.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "nsAXPCNativeCallContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -221,6 +223,41 @@ ProcessNameForCollectorLog()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default ?
     "default" : "content";
+}
+
+// This handles JS Exceptions (via ExceptionStackOrNull), as well as DOM and XPC Exceptions.
+//
+// Note that the returned object is _not_ wrapped into the compartment of cx.
+static JSObject*
+FindExceptionStack(JSContext* cx, JS::HandleObject exceptionObject)
+{
+  JSAutoCompartment ac(cx, exceptionObject);
+  JS::RootedObject stackObject(cx, ExceptionStackOrNull(cx, exceptionObject));
+  if (stackObject) {
+    return stackObject;
+  }
+
+  // It is not a JS Exception, try DOM Exception.
+  RefPtr<Exception> exception;
+  UNWRAP_OBJECT(DOMException, exceptionObject, exception);
+  if (!exception) {
+    // Not a DOM Exception, try XPC Exception.
+    UNWRAP_OBJECT(Exception, exceptionObject, exception);
+    if (!exception) {
+      return nullptr;
+    }
+  }
+
+  nsCOMPtr<nsIStackFrame> stack = exception->GetLocation();
+  if (!stack) {
+    return nullptr;
+  }
+  JS::RootedValue value(cx);
+  stack->GetNativeSavedFrame(&value);
+  if (value.isObject()) {
+    stackObject = &value.toObject();
+  }
+  return stackObject;
 }
 
 static PRTime
@@ -426,7 +463,7 @@ public:
         }
         JSContext* cx = jsapi.cx();
         JS::Rooted<JSObject*> exObj(cx, mError.toObjectOrNull());
-        JS::RootedObject stack(cx, ExceptionStackOrNull(cx, exObj));
+        JS::RootedObject stack(cx, FindExceptionStack(cx, exObj));
         mReport->LogToConsoleWithStack(stack);
       } else {
         mReport->LogToConsole();
@@ -512,7 +549,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
       if (exception.isObject()) {
         JS::RootedObject exObj(cx, exception.toObjectOrNull());
         JSAutoCompartment ac(cx, exObj);
-        JS::RootedObject stackVal(cx, ExceptionStackOrNull(cx, exObj));
+        JS::RootedObject stackVal(cx, FindExceptionStack(cx, exObj));
         xpcReport->LogToConsoleWithStack(stackVal);
       } else {
         xpcReport->LogToConsole();
