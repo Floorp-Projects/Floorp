@@ -13,6 +13,9 @@ load 844403-1.html
 load 856616.gif
 skip-if(B2G) load 944353.jpg
 load 1205923-1.html
+# Ensure we handle detecting that an image is animated, then failing to decode
+# it. (See bug 1210745.)
+load 1210745-1.gif
 load 1212954-1.svg
 load 1235605.gif
 load 1241728-1.html
