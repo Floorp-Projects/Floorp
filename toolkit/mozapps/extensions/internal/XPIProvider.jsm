@@ -3252,8 +3252,7 @@ this.XPIProvider = {
         }
 
         if (mustSign(addon.type) &&
-            (addon.signedState <= AddonManager.SIGNEDSTATE_MISSING ||
-            (foreignInstall && addon.signedState < AddonManager.SIGNEDSTATE_SIGNED))) {
+            addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
           logger.warn("Refusing to install staged add-on " + id + " with signed state " + addon.signedState);
           seenFiles.push(stageDirEntry.leafName);
           seenFiles.push(jsonfile.leafName);
