@@ -999,7 +999,7 @@ var MozLoopServiceInternal = {
 
           // Handle window.close correctly on the chatbox.
           mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
-          messageName = "DOMWindowClose";
+          messageName = "Social:DOMWindowClose";
           mm.addMessageListener(messageName, listeners[messageName] = () => {
             // Remove message listeners.
             for (let name of Object.getOwnPropertyNames(listeners)) {
