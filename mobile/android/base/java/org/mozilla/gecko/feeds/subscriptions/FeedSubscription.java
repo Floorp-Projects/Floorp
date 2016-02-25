@@ -56,8 +56,8 @@ public class FeedSubscription {
         subscription.lastItemTitle = object.getString(JSON_KEY_LAST_ITEM_TITLE);
         subscription.lastItemUrl = object.getString(JSON_KEY_LAST_ITEM_URL);
         subscription.lastItemTimestamp = object.getLong(JSON_KEY_LAST_ITEM_TIMESTAMP);
-        subscription.etag = object.getString(JSON_KEY_ETAG);
-        subscription.lastModified = object.getString(JSON_KEY_LAST_MODIFIED);
+        subscription.etag = object.optString(JSON_KEY_ETAG);
+        subscription.lastModified = object.optString(JSON_KEY_LAST_MODIFIED);
         subscription.bookmarkGuid = object.getString(JSON_KEY_BOOKMARK_GUID);
 
         return subscription;
