@@ -285,6 +285,11 @@
   <string name="tab_queue_notification_title">&tab_queue_notification_title;</string>
   <string name="tab_queue_notification_settings">&tab_queue_notification_settings;</string>
 
+  <string name="content_notification_summary">&content_notification_summary;</string>
+  <string name="content_notification_title_plural">&content_notification_title_plural;</string>
+  <string name="content_notification_action_settings">&content_notification_action_settings;</string>
+  <string name="content_notification_updated_on">&content_notification_updated_on;</string>
+
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
   <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>

@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import org.mozilla.gecko.BrowserApp;
@@ -22,7 +23,10 @@ import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.parser.Feed;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
+import org.mozilla.gecko.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -44,6 +48,8 @@ public class CheckAction {
 
         Log.d(LOGTAG, "Checking feeds for updates (" + subscriptions.size() + " feeds) ..");
 
+        List<Feed> updatedFeeds = new ArrayList<>();
+
         for (FeedSubscription subscription : subscriptions) {
             Log.i(LOGTAG, "Checking feed: " + subscription.getFeedTitle());
 
@@ -57,16 +63,30 @@ public class CheckAction {
 
                 storage.updateSubscription(subscription, response);
 
-                notify(response.feed);
+                updatedFeeds.add(response.feed);
             }
+        }
+
+        notify(updatedFeeds);
+    }
+
+    private void notify(List<Feed> updatedFeeds) {
+        final int feedCount = updatedFeeds.size();
+
+        if (feedCount == 1) {
+            notifySingle(updatedFeeds.get(0));
+        } else if (feedCount > 1) {
+            notifyMultiple(updatedFeeds);
         }
     }
 
-    private void notify(Feed feed) {
+    private void notifySingle(Feed feed) {
+        final String date = DateFormat.getMediumDateFormat(context).format(new Date(feed.getLastItem().getTimestamp()));
+
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle()
                 .bigText(feed.getLastItem().getTitle())
                 .setBigContentTitle(feed.getTitle())
-                .setSummaryText(feed.getLastItem().getURL());
+                .setSummaryText(context.getString(R.string.content_notification_updated_on, date));
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setComponent(new ComponentName(context, BrowserApp.class));
@@ -79,9 +99,40 @@ public class CheckAction {
                 .setContentTitle(feed.getTitle())
                 .setContentText(feed.getLastItem().getTitle())
                 .setStyle(style)
-                .setColor(ContextCompat.getColor(context, R.color.link_blue))
+                .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
+                .build();
+
+        NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
+    }
+
+    private void notifyMultiple(List<Feed> feeds) {
+        final ArrayList<String> urls = new ArrayList<>();
+
+        final NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        for (Feed feed : feeds) {
+            final String url = feed.getLastItem().getURL();
+
+            inboxStyle.addLine(StringUtils.stripScheme(url, StringUtils.UrlFlags.STRIP_HTTPS));
+            urls.add(url);
+        }
+        inboxStyle.setSummaryText(context.getString(R.string.content_notification_summary));
+
+        Intent intent = new Intent(context, BrowserApp.class);
+        intent.setAction(BrowserApp.ACTION_VIEW_MULTIPLE);
+        intent.putStringArrayListExtra("urls", urls);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+        Notification notification = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.ic_status_logo)
+                .setContentTitle(context.getString(R.string.content_notification_title_plural, feeds.size()))
+                .setContentText(context.getString(R.string.content_notification_summary))
+                .setStyle(inboxStyle)
+                .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .setNumber(feeds.size())
                 .build();
 
         NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
