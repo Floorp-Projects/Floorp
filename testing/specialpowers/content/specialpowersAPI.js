@@ -573,6 +573,11 @@ SpecialPowersAPI.prototype = {
                               { id: id, name: name, message: message });
       },
 
+      sendSyncMessage: (name, message) => {
+        return this._sendSyncMessage("SPChromeScriptMessage",
+                                     { id, name, message });
+      },
+
       destroy: () => {
         listeners = [];
         this._removeMessageListener("SPChromeScriptMessage", chromeScript);
