@@ -62,7 +62,7 @@ function backgroundScript() {
     browser.webNavigation[event].addListener(listeners[event]);
   }
 
-  browser.test.sendMessage("ready", browser.webRequest.ResourceType);
+  browser.test.sendMessage("ready");
 }
 
 const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
