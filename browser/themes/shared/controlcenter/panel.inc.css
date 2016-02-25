@@ -11,6 +11,7 @@
 
 /* Show the right elements for the right connection states. */
 #identity-popup[connection=not-secure] [when-connection~=not-secure],
+#identity-popup[connection=secure-cert-user-overridden] [when-connection~=secure-cert-user-overridden],
 #identity-popup[connection=secure-ev] [when-connection~=secure-ev],
 #identity-popup[connection=secure] [when-connection~=secure],
 #identity-popup[connection=chrome] [when-connection~=chrome],
@@ -232,6 +233,11 @@
 #identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-securityView,
 #identity-popup[mixedcontent~=passive-loaded][isbroken] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
+}
+
+#identity-popup[connection=secure-cert-user-overridden] #identity-popup-securityView,
+#identity-popup[connection=secure-cert-user-overridden] #identity-popup-security-content {
+  background-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
 }
 
 #identity-popup[loginforms=insecure] #identity-popup-securityView,
