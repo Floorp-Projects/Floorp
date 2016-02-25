@@ -4,10 +4,6 @@ self.addEventListener('install', function() {
     self.state = 'installing';
   });
 
-self.addEventListener('activate', function() {
-    self.state = 'activating';
-  });
-
 self.addEventListener('message', function(event) {
     var port = event.data.port;
     if (self.state !== 'installing') {
@@ -18,11 +14,6 @@ self.addEventListener('message', function(event) {
       .then(function(result) {
           if (result !== undefined) {
             port.postMessage('FAIL: Promise should be resolved with undefined');
-            return;
-          }
-          if (self.state !== 'activating') {
-            port.postMessage(
-                'FAIL: Promise should be resolved after worker activated');
             return;
           }
           port.postMessage('PASS');
