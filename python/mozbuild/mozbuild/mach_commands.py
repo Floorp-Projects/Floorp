@@ -466,6 +466,7 @@ class Build(MachCommandBase):
 
         ccache_end = monitor.ccache_stats()
 
+        ccache_diff = None
         if ccache_start and ccache_end:
             ccache_diff = ccache_end - ccache_start
             if ccache_diff:
@@ -508,14 +509,24 @@ class Build(MachCommandBase):
             # Record build configuration data. For now, we cherry pick
             # items we need rather than grabbing everything, in order
             # to avoid accidentally disclosing PII.
+            telemetry_data['substs'] = {}
             try:
-                moz_artifact_builds = self.substs.get('MOZ_ARTIFACT_BUILDS',
-                                                      False)
-                telemetry_data['substs'] = {
-                    'MOZ_ARTIFACT_BUILDS': moz_artifact_builds,
-                }
+                for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE']:
+                    value = self.substs.get(key, False)
+                    telemetry_data['substs'][key] = value
             except BuildEnvironmentNotFoundException:
                 pass
+
+            # Grab ccache stats if available. We need to be careful not
+            # to capture information that can potentially identify the
+            # user (such as the cache location)
+            if ccache_diff:
+                telemetry_data['ccache'] = {}
+                for key in [key[0] for key in ccache_diff.STATS_KEYS]:
+                    try:
+                        telemetry_data['ccache'][key] = ccache_diff._values[key]
+                    except KeyError:
+                        pass
 
             telemetry_handler(self._mach_context, telemetry_data)
 
