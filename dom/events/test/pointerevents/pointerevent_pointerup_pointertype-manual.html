@@ -5,17 +5,20 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <script src="pointerevent_support.js"></script>
+        <script src="mochitest_support_internal.js"></script>
     </head>
     <body onload="run()">
         <h1>pointerType conservation</h1>
+        <!--
         <h4>Test Description: This test checks if pointerType attribute defined properly.</h4>
         <div id="instructions">
             Press and release a mouse button, touch contact or pen contact on the black rectangle. Only use one device per test run.
         </div>
         <p>Note: This test may be run with different pointer devices, however only one device should be used per test run.
         <p>
+        -->
         <div id="target0"></div>
         <script>
             var eventTested = false;
