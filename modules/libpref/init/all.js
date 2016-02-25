@@ -730,9 +730,6 @@ pref("gfx.prefer-mesa-llvmpipe", false);
 
 pref("gfx.draw-color-bars", false);
 
-pref("gfx.logging.texture-usage.enabled", false);
-pref("gfx.logging.peak-texture-usage.enabled", false);
-
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
