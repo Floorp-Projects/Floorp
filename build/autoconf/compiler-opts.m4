@@ -447,7 +447,6 @@ AC_DEFUN([MOZ_SET_WARNINGS_CFLAGS],
     # -Wclass-varargs - catches objects passed by value to variadic functions.
     # -Wloop-analysis - catches issues around loops
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wsometimes-initialized - catches some uninitialized values
     # -Wthread-safety - catches inconsistent use of mutexes
     # -Wunreachable-code-aggressive - catches lots of dead code
     #
@@ -464,27 +463,11 @@ AC_DEFUN([MOZ_SET_WARNINGS_CFLAGS],
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
     fi
-    MOZ_C_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_c_has_sometimes_uninitialized)
+
     MOZ_C_SUPPORTS_WARNING(-W, thread-safety, ac_c_has_wthread_safety)
     MOZ_C_SUPPORTS_WARNING(-W, unreachable-code-aggressive, ac_c_has_wunreachable_code_aggressive)
 
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
-
     # Turn off some non-useful warnings that -Wall turns on.
-
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
-    MOZ_C_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_c_has_wno_unused_local_typedef)
 
     # Prevent the following GCC warnings from being treated as errors:
     # -Wmaybe-uninitialized - too many false positives
@@ -529,8 +512,6 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     # -Wclass-varargs - catches objects passed by value to variadic functions.
     # -Wloop-analysis - catches issues around loops
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wrange-loop-analysis - catches copies during range-based for loops.
-    # -Wsometimes-initialized - catches some uninitialized values
     # -Wthread-safety - catches inconsistent use of mutexes
     # -Wunreachable-code - catches some dead code
     # -Wunreachable-code-return - catches dead code after return call
@@ -552,24 +533,10 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_non_literal_null_conversion)
     fi
-    MOZ_CXX_SUPPORTS_WARNING(-W, range-loop-analysis, ac_cxx_has_range_loop_analysis)
-    MOZ_CXX_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_cxx_has_sometimes_uninitialized)
+
     MOZ_CXX_SUPPORTS_WARNING(-W, thread-safety, ac_cxx_has_wthread_safety)
     MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code, ac_cxx_has_wunreachable_code)
     MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code-return, ac_cxx_has_wunreachable_code_return)
-
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
 
     # Turn off some non-useful warnings that -Wall turns on.
 
@@ -577,20 +544,7 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
 
     # -Wno-inline-new-delete - we inline 'new' and 'delete' in mozalloc
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
     MOZ_CXX_SUPPORTS_WARNING(-Wno-, inline-new-delete, ac_cxx_has_wno_inline_new_delete)
-    MOZ_CXX_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_cxx_has_wno_unused_local_typedef)
-
-    # Recent clang and gcc support C++11 deleted functions without warnings if
-    # compiling with -std=c++0x or -std=gnu++0x (or c++11 or gnu++11 in very new
-    # versions).  We can't use -std=c++0x yet, so gcc's support must remain
-    # unused.  But clang's warning can be disabled, so when compiling with clang
-    # we use it to opt out of the warning, enabling (macro-encapsulated) use of
-    # deleted function syntax.
-    if test "$CLANG_CXX"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
-        MOZ_CXX_SUPPORTS_WARNING(-Wno-, extended-offsetof, ac_cxx_has_wno_extended_offsetof)
-    fi
 
     # Prevent the following GCC warnings from being treated as errors:
     # -Wmaybe-uninitialized - too many false positives
