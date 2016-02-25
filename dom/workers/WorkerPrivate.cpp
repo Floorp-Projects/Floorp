@@ -471,7 +471,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    return aWorkerPrivate->ModifyBusyCount(aCx, mIncrease);
+    return aWorkerPrivate->ModifyBusyCount(mIncrease);
   }
 
   virtual void
@@ -862,7 +862,7 @@ private:
     aWorkerPrivate->AssertIsOnParentThread();
     // Modify here, but not in PostRun! This busy count addition will be matched
     // by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(aCx, true);
+    return aWorkerPrivate->ModifyBusyCount(true);
   }
 
   virtual void
@@ -873,7 +873,7 @@ private:
     if (!aDispatchResult) {
       // We couldn't dispatch to the worker, which means it's already dead.
       // Undo the busy count modification.
-      aWorkerPrivate->ModifyBusyCount(aCx, false);
+      aWorkerPrivate->ModifyBusyCount(false);
     }
   }
 
@@ -896,7 +896,7 @@ private:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     // This busy count will be matched by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(aCx, true) &&
+    return aWorkerPrivate->ModifyBusyCount(true) &&
            aWorkerPrivate->Close();
   }
 };
@@ -2788,8 +2788,7 @@ WorkerPrivateParent<Derived>::Close()
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::ModifyBusyCount(JSContext* /* unused */,
-                                              bool aIncrease)
+WorkerPrivateParent<Derived>::ModifyBusyCount(bool aIncrease)
 {
   AssertIsOnParentThread();
 
