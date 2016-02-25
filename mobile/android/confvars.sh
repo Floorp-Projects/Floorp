@@ -55,9 +55,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 MOZ_ENABLE_SZIP=1
 fi
 
-# Enable navigator.mozPay
-MOZ_PAY=1
-
 # Enable UI for healthreporter
 MOZ_SERVICES_HEALTHREPORT=1
 

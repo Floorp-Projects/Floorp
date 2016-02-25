@@ -46,11 +46,6 @@ chrome.jar:
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
-#ifdef MOZ_PAY
-  skin/payment.css                         (payment.css)
-#endif
-#
-
   skin/aboutLogins.css                      (aboutLogins.css)
 
   skin/images/search.png                    (images/search.png)
