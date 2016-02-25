@@ -478,14 +478,14 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I64DivU:
       case Expr::I64RemS:
       case Expr::I64RemU:
+        return f.fail("NYI: i64");
       case Expr::I64And:
       case Expr::I64Or:
       case Expr::I64Xor:
       case Expr::I64Shl:
       case Expr::I64ShrS:
       case Expr::I64ShrU:
-        return f.fail("NYI: i64") &&
-               DecodeBinaryOperator(f, expected, ExprType::I64);
+        return DecodeBinaryOperator(f, expected, ExprType::I64);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:

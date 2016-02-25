@@ -1121,9 +1121,17 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction* ins)
     MDefinition* lhs = ins->getOperand(0);
     MDefinition* rhs = ins->getOperand(1);
 
-    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+    if (lhs->type() == MIRType_Int32) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs, ins);
         lowerForALU(new(alloc()) LBitOpI(op), ins, lhs, rhs);
+        return;
+    }
+
+    if (lhs->type() == MIRType_Int64) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int64);
+        ReorderCommutative(&lhs, &rhs, ins);
+        lowerForALUInt64(new(alloc()) LBitOpI64(op), ins, lhs, rhs);
         return;
     }
 
@@ -1220,7 +1228,9 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins)
     MDefinition* lhs = ins->getOperand(0);
     MDefinition* rhs = ins->getOperand(1);
 
-    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+    if (lhs->type() == MIRType_Int32) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int32);
+
         if (ins->type() == MIRType_Double) {
             MOZ_ASSERT(op == JSOP_URSH);
             lowerUrshD(ins->toUrsh());
@@ -1233,6 +1243,12 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins)
                 assignSnapshot(lir, Bailout_OverflowInvalidate);
         }
         lowerForShift(lir, ins, lhs, rhs);
+        return;
+    }
+
+    if (lhs->type() == MIRType_Int64) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int64);
+        lowerForShiftInt64(new(alloc()) LShiftI64(op), ins, lhs, rhs);
         return;
     }
 
