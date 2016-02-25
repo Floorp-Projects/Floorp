@@ -69,10 +69,9 @@ CONFIG_OPTIONS = [
         "dest": "taskid",
         "help": "taskcluster task id to download artifacts from",
     }],
-    [["--production"], {
-        "dest": "production",
-        "default": False,
-        "help": "taskcluster task id to download artifacts from",
+    [["--bucket"], {
+        "dest": "bucket",
+        "help": "s3 bucket to move beets to.",
     }],
     [["--exclude"], {
         "dest": "excludes",
@@ -135,10 +134,6 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                     "mar",
                 ],
                 "virtualenv_path": "venv",
-                'buckets': {
-                    'development': "mozilla-releng-beet-mover-dev",
-                    'production': "mozilla-releng-beet-mover",
-                },
                 'product': 'firefox',
             },
         }
@@ -149,7 +144,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         self.manifest = {}
         # assigned in _post_create_virtualenv
         self.virtualenv_imports = None
-        self.bucket = c['buckets']['production'] if c['production'] else c['buckets']['development']
+        self.bucket = c['bucket']
         if not all(aws_creds):
             self.fatal('credentials must be passed in env: "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"')
         self.aws_key_id, self.aws_secret_key = aws_creds
