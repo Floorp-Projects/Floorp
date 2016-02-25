@@ -3,22 +3,40 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Test that the inspector panel has its toggle pane button hidden by default
-// when it is opened in a "side" host, and that the button becomes visible when
-// the toolbox is switched to a "bottom" host.
+// Test that the inspector toggled panel is visible by default, is hidden after
+// clicking on the toggle button and remains expanded/collapsed when switching
+// hosts.
 
 add_task(function* () {
   info("Open the inspector in a side toolbox host");
   let {toolbox, inspector} = yield openInspectorForURL("about:blank", "side");
 
+  let panel = inspector.panelDoc.querySelector("#inspector-sidebar");
   let button = inspector.panelDoc.getElementById("inspector-pane-toggle");
-  ok(button, "The toggle button exists in the DOM");
-  is(button.parentNode.id, "inspector-toolbar", "The toggle button is in the toolbar");
-  ok(!button.hasAttribute("pane-collapsed"), "The button is in expanded state");
-  ok(!button.getClientRects().length, "The button is hidden");
+  ok(!panel.hasAttribute("pane-collapsed"), "The panel is in expanded state");
+
+  info("Listen to the end of the animation on the sidebar panel");
+  let onTransitionEnd = once(panel, "transitionend");
+
+  info("Click on the toggle button");
+  EventUtils.synthesizeMouseAtCenter(button, {type: "mousedown"},
+    inspector.panelDoc.defaultView);
+
+  yield onTransitionEnd;
+  ok(panel.hasAttribute("pane-collapsed"), "The panel is in collapsed state");
+  ok(!panel.hasAttribute("animated"),
+    "The collapsed panel will not perform unwanted animations");
 
   info("Switch the host to bottom type");
   yield toolbox.switchHost("bottom");
+  ok(panel.hasAttribute("pane-collapsed"), "The panel is in collapsed state");
 
-  ok(!!button.getClientRects().length, "The button is visible");
+  info("Click on the toggle button to expand the panel again");
+
+  onTransitionEnd = once(panel, "transitionend");
+  EventUtils.synthesizeMouseAtCenter(button, {type: "mousedown"},
+    inspector.panelDoc.defaultView);
+  yield onTransitionEnd;
+
+  ok(!panel.hasAttribute("pane-collapsed"), "The panel is in expanded state");
 });
