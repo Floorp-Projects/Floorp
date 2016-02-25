@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * CheckAction: Check if feeds we subscribed to have new content available.
  */
-public class CheckAction {
+public class CheckAction implements BaseAction {
     private static final String LOGTAG = "FeedCheckAction";
 
     private Context context;
@@ -43,7 +43,8 @@ public class CheckAction {
         this.storage = storage;
     }
 
-    public void perform() {
+    @Override
+    public void perform(Intent intent) {
         final List<FeedSubscription> subscriptions = storage.getSubscriptions();
 
         Log.d(LOGTAG, "Checking feeds for updates (" + subscriptions.size() + " feeds) ..");
@@ -144,5 +145,10 @@ public class CheckAction {
                 subscription.getETag(),
                 subscription.getLastModified()
         );
+    }
+
+    @Override
+    public boolean requiresNetwork() {
+        return true;
     }
 }

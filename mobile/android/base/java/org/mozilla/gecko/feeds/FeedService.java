@@ -10,12 +10,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.Nullable;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.feeds.action.BaseAction;
 import org.mozilla.gecko.feeds.action.CheckAction;
 import org.mozilla.gecko.feeds.action.EnrollAction;
 import org.mozilla.gecko.feeds.action.SetupAction;
@@ -65,60 +67,68 @@ public class FeedService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        try {
+            if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
+                Log.d(LOGTAG, "Not in content notifications experiment. Skipping.");
+                return;
+            }
+
+            BaseAction action = createActionForIntent(intent);
+            if (action == null) {
+                Log.d(LOGTAG, "No action to process");
+                return;
+            }
+
+            if (action.requiresNetwork() && !isConnectedToUnmeteredNetwork()) {
+                // For now just skip if we are not connected or the network is metered. We do not want
+                // to use precious mobile traffic.
+                Log.d(LOGTAG, "Not connected to a network or network is metered. Skipping.");
+                return;
+            }
+
+            action.perform(intent);
+
+            storage.persistChanges();
+        } finally {
+            FeedAlarmReceiver.completeWakefulIntent(intent);
+        }
+    }
+
+    @Nullable
+    private BaseAction createActionForIntent(Intent intent) {
         if (intent == null) {
-            return;
-        }
-
-        if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
-            Log.d(LOGTAG, "Not in content notifications experiment. Skipping.");
-            return;
-        }
-
-        if (!isConnectedToNetwork() || isActiveNetworkMetered()) {
-            // For now just skip if we are not connected or the network is metered. We do not want
-            // to use precious mobile traffic.
-            Log.d(LOGTAG, "Not connected to a network or network is metered. Skipping.");
-            return;
+            return null;
         }
 
         switch (intent.getAction()) {
             case ACTION_SETUP:
-                new SetupAction(this).perform();
-                break;
+                return new SetupAction(this);
 
             case ACTION_SUBSCRIBE:
-                new SubscribeAction(storage).perform(intent);
-                break;
+                return new SubscribeAction(storage);
 
             case ACTION_CHECK:
-                new CheckAction(this, storage).perform();
-                break;
+                return new CheckAction(this, storage);
 
             case ACTION_ENROLL:
-                new EnrollAction(this).perform();
-                break;
+                return new EnrollAction(this);
 
             case ACTION_WITHDRAW:
-                new WithdrawAction(this, storage).perform();
-                break;
+                return new WithdrawAction(this, storage);
 
             default:
                 Log.e(LOGTAG, "Unknown action: " + intent.getAction());
+                return null;
         }
-
-        storage.persistChanges();
-
-        FeedAlarmReceiver.completeWakefulIntent(intent);
     }
 
-    private boolean isConnectedToNetwork() {
+    private boolean isConnectedToUnmeteredNetwork() {
         ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
-    }
+        if (networkInfo == null || !networkInfo.isConnected()) {
+            return false;
+        }
 
-    private boolean isActiveNetworkMetered() {
-        return ConnectivityManagerCompat.isActiveNetworkMetered(
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE));
+        return !ConnectivityManagerCompat.isActiveNetworkMetered(manager);
     }
 }
