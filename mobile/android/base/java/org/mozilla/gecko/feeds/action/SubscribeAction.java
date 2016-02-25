@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * SubscribeAction: Try to fetch a feed and create a subscription if successful.
  */
-public class SubscribeAction {
+public class SubscribeAction implements BaseAction {
     private static final String LOGTAG = "FeedSubscribeAction";
 
     public static final String EXTRA_GUID = "guid";
@@ -30,6 +30,7 @@ public class SubscribeAction {
         this.storage = storage;
     }
 
+    @Override
     public void perform(Intent intent) {
         Log.d(LOGTAG, "Subscribing to feed..");
 
@@ -45,6 +46,11 @@ public class SubscribeAction {
         }
 
         subscribe(guid, feedUrl);
+    }
+
+    @Override
+    public boolean requiresNetwork() {
+        return true;
     }
 
     private void subscribe(String guid, String feedUrl) {
