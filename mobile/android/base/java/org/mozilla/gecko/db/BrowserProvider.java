@@ -508,6 +508,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
+            case URL_ANNOTATIONS: {
+                trace("Insert on URL_ANNOTATIONS: " + uri);
+                id = insertUrlAnnotation(uri, values);
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -1211,6 +1217,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
+        final String url = values.getAsString(UrlAnnotations.URL);
+        trace("Inserting url annotations for URL: " + url);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_URL_ANNOTATIONS, null, values);
     }
 
     private int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,
