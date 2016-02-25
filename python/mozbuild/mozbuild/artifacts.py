@@ -599,6 +599,7 @@ class ArtifactCache(CacheManager):
         file_limit = 4 # But always keep at least 4 old artifacts around.
         persist_limit = PersistLimit(size_limit, file_limit)
         self._download_manager = DownloadManager(self._cache_dir, persist_limit=persist_limit)
+        self._last_dl_update = -1
 
     def delete_file(self, key, value):
         try:
@@ -639,7 +640,19 @@ class ArtifactCache(CacheManager):
             'Downloading to temporary location {path}')
         try:
             dl = self._download_manager.download(url, fname)
+
+            def download_progress(dl, bytes_so_far, total_size):
+                percent = (float(bytes_so_far) / total_size) * 100
+                now = int(percent / 5)
+                if now == self._last_dl_update:
+                    return
+                self._last_dl_update = now
+                self.log(logging.DEBUG, 'artifact',
+                         {'bytes_so_far': bytes_so_far, 'total_size': total_size, 'percent': percent},
+                         'Downloading... {percent:02.1f} %')
+
             if dl:
+                dl.set_progress(download_progress)
                 dl.wait()
             self.log(logging.INFO, 'artifact',
                 {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
