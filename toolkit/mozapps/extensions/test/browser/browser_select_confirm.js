@@ -39,13 +39,14 @@ function setupUI(aAppDisabled, aUpdateAvailable, aCallback) {
 
   gProvider = new MockProvider();
 
-  for (var i = 1; i < 5; i++) {
+  for (var i = 1; i < 6; i++) {
     var addon = new MockAddon("test" + i + "@tests.mozilla.org",
                               "Test Add-on " + i, "extension");
     addon.version = "1.0";
     addon.userDisabled = (i > 2);
     addon.appDisabled = aAppDisabled;
     addon.isActive = !addon.userDisabled && !addon.appDisabled;
+    addon.hidden = i == 5;
 
     addon.findUpdates = function(aListener, aReason, aAppVersion, aPlatformVersion) {
       if (aUpdateAvailable) {
