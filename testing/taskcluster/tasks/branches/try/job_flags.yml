@@ -17,6 +17,12 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_emulator_x86_l_opt.yml
+  linux64-mulet-haz:
+    platforms:
+      - Mulet Linux
+    types:
+      debug:
+        task: tasks/builds/mulet_haz_linux.yml
   dolphin:
     platforms:
       - b2g

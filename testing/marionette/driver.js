@@ -511,7 +511,7 @@ GeckoDriver.prototype.listeningPromise = function() {
 GeckoDriver.prototype.newSession = function*(cmd, resp) {
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
-      elements.generateUUID();
+      element.generateUUID();
 
   this.newSessionCommandId = cmd.id;
   this.setSessionCapabilities(cmd.parameters.capabilities);
@@ -1901,26 +1901,27 @@ GeckoDriver.prototype.multiAction = function*(cmd, resp) {
  *     Value the client is looking for.
  */
 GeckoDriver.prototype.findElement = function*(cmd, resp) {
+  let opts = {
+    startNode: cmd.parameters.element,
+    timeout: this.searchTimeout,
+    all: false,
+  };
+
   switch (this.context) {
     case Context.CHROME:
-      resp.body.value = yield new Promise((resolve, reject) => {
-        let win = this.getCurrentWindow();
-        this.curBrowser.elementManager.find(
-            {frame: win},
-            cmd.parameters,
-            this.searchTimeout,
-            false /* all */,
-            resolve,
-            reject);
-      }).then(null, e => { throw e; });
+      let container = {frame: this.getCurrentWindow()};
+      resp.body.value = yield this.curBrowser.elementManager.find(
+          container,
+          cmd.parameters.using,
+          cmd.parameters.value,
+          opts);
       break;
 
     case Context.CONTENT:
-      resp.body.value = yield this.listener.findElementContent({
-        value: cmd.parameters.value,
-        using: cmd.parameters.using,
-        element: cmd.parameters.element,
-        searchTimeout: this.searchTimeout});
+      resp.body.value = yield this.listener.findElementContent(
+          cmd.parameters.using,
+          cmd.parameters.value,
+          opts);
       break;
   }
 };
@@ -1934,26 +1935,27 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
  *     Value the client is looking for.
  */
 GeckoDriver.prototype.findElements = function*(cmd, resp) {
+  let opts = {
+    startNode: cmd.parameters.element,
+    timeout: this.searchTimeout,
+    all: true,
+  };
+
   switch (this.context) {
     case Context.CHROME:
-      resp.body = yield new Promise((resolve, reject) => {
-        let win = this.getCurrentWindow();
-        this.curBrowser.elementManager.find(
-            {frame: win},
-            cmd.parameters,
-            this.searchTimeout,
-            true /* all */,
-            resolve,
-            reject);
-      }).then(null, e => { throw new NoSuchElementError(e.message); });
+      let container = {frame: this.getCurrentWindow()};
+      resp.body = yield this.curBrowser.elementManager.find(
+          container,
+          cmd.parameters.using,
+          cmd.parameters.value,
+          opts);
       break;
 
     case Context.CONTENT:
-      resp.body = yield this.listener.findElementsContent({
-        value: cmd.parameters.value,
-        using: cmd.parameters.using,
-        element: cmd.parameters.element,
-        searchTimeout: this.searchTimeout});
+      resp.body = yield this.listener.findElementsContent(
+          cmd.parameters.using,
+          cmd.parameters.value,
+          opts);
       break;
   }
 };

@@ -56,6 +56,7 @@
 #include "gfxFontFamilyList.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
@@ -118,9 +119,9 @@ struct CSSParserInputState {
   bool mHavePushBack;
 };
 
-static_assert(eAuthorSheetFeatures == 0 &&
-              eUserSheetFeatures == 1 &&
-              eAgentSheetFeatures == 2,
+static_assert(css::eAuthorSheetFeatures == 0 &&
+              css::eUserSheetFeatures == 1 &&
+              css::eAgentSheetFeatures == 2,
               "sheet parsing mode constants won't fit "
               "in CSSParserImpl::mParsingMode");
 
@@ -148,8 +149,8 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      SheetParsingMode aParsingMode,
-                      LoaderReusableStyleSheets* aReusableSheets);
+                      css::SheetParsingMode aParsingMode,
+                      css::LoaderReusableStyleSheets* aReusableSheets);
 
   already_AddRefed<css::Declaration>
            ParseStyleAttribute(const nsAString&  aAttributeValue,
@@ -344,11 +345,11 @@ public:
                                            uint32_t aLineOffset);
 
   bool AgentRulesEnabled() const {
-    return mParsingMode == eAgentSheetFeatures;
+    return mParsingMode == css::eAgentSheetFeatures;
   }
   bool UserRulesEnabled() const {
-    return mParsingMode == eAgentSheetFeatures ||
-           mParsingMode == eUserSheetFeatures;
+    return mParsingMode == css::eAgentSheetFeatures ||
+           mParsingMode == css::eUserSheetFeatures;
   }
 
   nsCSSProps::EnabledState PropertyEnabledState() const {
@@ -1356,10 +1357,10 @@ protected:
   RefPtr<CSSStyleSheet> mSheet;
 
   // Used for @import rules
-  mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
+  css::Loader* mChildLoader; // not ref counted, it owns us
 
   // Any sheets we may reuse when parsing an @import.
-  LoaderReusableStyleSheets* mReusableSheets;
+  css::LoaderReusableStyleSheets* mReusableSheets;
 
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
@@ -1393,7 +1394,7 @@ protected:
   // useful in user sheets.  The only values stored in this field are
   // 0, 1, and 2; three bits are allocated to avoid issues should the
   // enum type be signed.
-  SheetParsingMode mParsingMode : 3;
+  css::SheetParsingMode mParsingMode : 3;
 
   // True if we are in parsing rules for the chrome.
   bool mIsChrome : 1;
@@ -1523,7 +1524,7 @@ CSSParserImpl::CSSParserImpl()
     mNavQuirkMode(false),
     mHashlessColorQuirk(false),
     mUnitlessLengthQuirk(false),
-    mParsingMode(eAuthorSheetFeatures),
+    mParsingMode(css::eAuthorSheetFeatures),
     mIsChrome(false),
     mViewportUnitsEnabled(true),
     mHTMLMediaMode(false),
@@ -1630,8 +1631,8 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
                           nsIURI*          aBaseURI,
                           nsIPrincipal*    aSheetPrincipal,
                           uint32_t         aLineNumber,
-                          SheetParsingMode aParsingMode,
-                          LoaderReusableStyleSheets* aReusableSheets)
+                          css::SheetParsingMode aParsingMode,
+                          css::LoaderReusableStyleSheets* aReusableSheets)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
@@ -1701,7 +1702,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
   ReleaseScanner();
 
-  mParsingMode = eAuthorSheetFeatures;
+  mParsingMode = css::eAuthorSheetFeatures;
   mIsChrome = false;
   mReusableSheets = nullptr;
 
@@ -1853,7 +1854,7 @@ CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
   MOZ_ASSERT(aPropID < eCSSProperty_COUNT_no_shorthands,
              "ParseLonghandProperty must only take a longhand property");
 
-  RefPtr<Declaration> declaration = new Declaration;
+  RefPtr<css::Declaration> declaration = new css::Declaration;
   declaration->InitializeEmpty();
 
   bool changed;
@@ -1874,7 +1875,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
                                       bool aDisallowRelativeValues,
                                       nsCSSValue& aValue)
 {
-  RefPtr<Declaration> declaration = new Declaration();
+  RefPtr<css::Declaration> declaration = new css::Declaration();
   declaration->InitializeEmpty();
 
   mData.AssertInitialState();
@@ -14887,7 +14888,7 @@ CSSParserImpl::ParseTextAlign(nsCSSValue& aValue, const KTableEntry aTable[])
     return false;
   }
 
-  if (!nsLayoutUtils::IsTextAlignTrueValueEnabled()) {
+  if (!nsLayoutUtils::IsTextAlignUnsafeValueEnabled()) {
     aValue = left;
     return true;
   }
@@ -14895,14 +14896,14 @@ CSSParserImpl::ParseTextAlign(nsCSSValue& aValue, const KTableEntry aTable[])
   nsCSSValue right;
   if (ParseSingleTokenVariant(right, VARIANT_KEYWORD, aTable)) {
     // 'true' must be combined with some other value than 'true'.
-    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE &&
-        right.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE &&
+        right.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
       return false;
     }
     aValue.SetPairValue(left, right);
   } else {
     // Single value 'true' is not allowed.
-    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
       return false;
     }
     aValue = left;
@@ -17213,8 +17214,8 @@ nsCSSParser::ParseSheet(const nsAString& aInput,
                         nsIURI*          aBaseURI,
                         nsIPrincipal*    aSheetPrincipal,
                         uint32_t         aLineNumber,
-                        SheetParsingMode aParsingMode,
-                        LoaderReusableStyleSheets* aReusableSheets)
+                        css::SheetParsingMode aParsingMode,
+                        css::LoaderReusableStyleSheets* aReusableSheets)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,

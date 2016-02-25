@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
  <head>
-  <title>text-align-true</title>
+  <title>text-align-unsafe</title>
   <meta charset="utf-8">
   <style type="text/css">
    p {
@@ -11,21 +11,21 @@
      margin:0;
    }
 .test1 p {
-   text-align: true right;
+   text-align: unsafe right;
    -moz-text-align-last: end;
 }
 .test2 p {
-   text-align: true right;
+   text-align: unsafe right;
 }
 .test3 p {
-   text-align: end true;
+   text-align: end unsafe;
 }
 .test4 p {
-   text-align: true left;
+   text-align: unsafe left;
 }
 .test5 p {
    text-align: left;
-   -moz-text-align-last: true right;
+   -moz-text-align-last: unsafe right;
 }
   </style>
  </head>

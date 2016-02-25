@@ -522,7 +522,7 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
       /* TODO Set glyph_props? */
 
       /* Insert dottedcircle after possible Repha. */
-      while (buffer->idx < buffer->len &&
+      while (buffer->idx < buffer->len && !buffer->in_error &&
 	     last_syllable == buffer->cur().syllable() &&
 	     buffer->cur().use_category() == USE_R)
         buffer->next_glyph ();
@@ -583,6 +583,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_use =
   NULL, /* decompose */
   compose_use,
   setup_masks_use,
-  HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
+  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY,
   false, /* fallback_position */
 };

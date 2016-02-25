@@ -888,6 +888,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       const char16_t* params[] = { reportURIs[r].get() };
       logToConsole(MOZ_UTF16("reportURInotHttpsOrHttp2"), params, ArrayLength(params),
                    aSourceFile, aScriptSample, aLineNum, 0, nsIScriptError::errorFlag);
+      continue;
     }
 
     // make sure this is an anonymous request (no cookies) so in case the

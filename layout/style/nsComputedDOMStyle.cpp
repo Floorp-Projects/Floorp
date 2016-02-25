@@ -36,7 +36,8 @@
 #include "nsIDocument.h"
 
 #include "nsCSSPseudoElements.h"
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
@@ -484,7 +485,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   if (!presContext)
     return nullptr;
 
-  nsStyleSet *styleSet = presShell->StyleSet();
+  StyleSetHandle styleSet = presShell->StyleSet();
 
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
@@ -502,6 +503,11 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   }
 
   if (aStyleType == eDefaultOnly) {
+    if (styleSet->IsServo()) {
+      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      return nullptr;
+    }
+
     // We really only want the user and UA rules.  Filter out the other ones.
     nsTArray< nsCOMPtr<nsIStyleRule> > rules;
     for (nsRuleNode* ruleNode = sc->RuleNode();
@@ -522,7 +528,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
       rules[i].swap(rules[length - i - 1]);
     }
     
-    sc = styleSet->ResolveStyleForRules(parentContext, rules);
+    sc = styleSet->AsGecko()->ResolveStyleForRules(parentContext, rules);
   }
 
   return sc.forget();
@@ -3534,7 +3540,7 @@ nsComputedDOMStyle::CreateTextAlignValue(uint8_t aAlign, bool aAlignTrue,
   }
 
   RefPtr<nsROCSSPrimitiveValue> first = new nsROCSSPrimitiveValue;
-  first->SetIdent(eCSSKeyword_true);
+  first->SetIdent(eCSSKeyword_unsafe);
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   valueList->AppendCSSValue(first.forget());

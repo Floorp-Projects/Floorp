@@ -350,8 +350,10 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
     DebugOnly<size_t> ret;
     if (atom) {
         UniqueChars atomStr = StringToNewUTF8CharsZ(nullptr, *atom);
-        if (!atomStr)
+        if (!atomStr) {
+            js_free(cstr);
             return nullptr;
+        }
         ret = JS_snprintf(cstr, len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
     } else {
         ret = JS_snprintf(cstr, len + 1, "%s:%" PRIu64, filename, lineno);

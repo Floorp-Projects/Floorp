@@ -218,11 +218,12 @@ public:
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
 
-  /* Like GetTableFrame, but will return nullptr if we don't pass through
-   * aMustPassThrough on the way to the table.
+  /* Like GetTableFrame, but will set *aDidPassThrough to false if we don't
+   * pass through aMustPassThrough on the way to the table.
    */
   static nsTableFrame* GetTableFramePassingThrough(nsIFrame* aMustPassThrough,
-                                                   nsIFrame* aSourceFrame);
+                                                   nsIFrame* aSourceFrame,
+                                                   bool* aDidPassThrough);
 
   typedef void (* DisplayGenericTablePartTraversal)
       (nsDisplayListBuilder* aBuilder, nsFrame* aFrame,

@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
+#include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
 #include "mozilla/dom/Text.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
@@ -55,7 +56,6 @@ class nsTransactionManager;
 struct DOMPoint;
 
 namespace mozilla {
-class CSSStyleSheet;
 class ErrorResult;
 class TextComposition;
 
@@ -311,12 +311,12 @@ protected:
 
   /** create a transaction for adding a style sheet
     */
-  NS_IMETHOD CreateTxnForAddStyleSheet(mozilla::CSSStyleSheet* aSheet,
+  NS_IMETHOD CreateTxnForAddStyleSheet(mozilla::StyleSheetHandle aSheet,
                                        AddStyleSheetTxn* *aTxn);
 
   /** create a transaction for removing a style sheet
     */
-  NS_IMETHOD CreateTxnForRemoveStyleSheet(mozilla::CSSStyleSheet* aSheet,
+  NS_IMETHOD CreateTxnForRemoveStyleSheet(mozilla::StyleSheetHandle aSheet,
                                           RemoveStyleSheetTxn* *aTxn);
 
   nsresult DeleteText(nsGenericDOMDataNode& aElement,

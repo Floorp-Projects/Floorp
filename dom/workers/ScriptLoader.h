@@ -47,7 +47,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                  const nsAString& aScriptURL,
                                  nsIChannel** aChannel);
 
-void ReportLoadError(JSContext* aCx, nsresult aLoadResult);
+void ReportLoadError(JSContext* aCx, ErrorResult& aRv, nsresult aLoadResult);
 
 void LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
                     WorkerScriptType aWorkerScriptType,

@@ -1,0 +1,16 @@
+<pre>Sensor events testing</pre>
+<script>
+
+window.onmessage = function (event) {
+  if (event.data.command == "addEventListener") {
+    window.addEventListener(
+      "devicemotion", function() {
+          event.source.postMessage({ result: event.data.expected,
+                                     message: event.data.message },
+                                   "*");
+        }
+      );
+  }
+}
+
+</script>

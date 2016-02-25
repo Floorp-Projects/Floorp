@@ -61,9 +61,9 @@ struct head
   }
 
   protected:
-  FixedVersion	version;		/* Version of the head table--currently
+  FixedVersion<>version;		/* Version of the head table--currently
 					 * 0x00010000u for version 1.0. */
-  FixedVersion	fontRevision;		/* Set by font manufacturer. */
+  FixedVersion<>fontRevision;		/* Set by font manufacturer. */
   ULONG		checkSumAdjustment;	/* To compute: set it to 0, sum the
 					 * entire font as ULONG, then store
 					 * 0xB1B0AFBAu - sum. */

@@ -590,7 +590,6 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 
   bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aOptions.mAntialiasMode);
   paint.mPaint.setLCDRenderText(shouldLCDRenderText);
-  paint.mPaint.setSubpixelText(true);
 
   if (aRenderingOptions && aRenderingOptions->GetType() == FontType::CAIRO) {
     const GlyphRenderingOptionsCairo* cairoOptions =
@@ -605,11 +604,16 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     if (cairoOptions->GetAntialiasMode() == AntialiasMode::NONE) {
       paint.mPaint.setAntiAlias(false);
     }
-  } else if (aFont->GetType() == FontType::MAC && shouldLCDRenderText) {
-    // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
-    paint.mPaint.setHinting(SkPaint::kNo_Hinting);
   } else {
-    paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+    // SkFontHost_cairo does not support subpixel text, so only enable it for other font hosts.
+    paint.mPaint.setSubpixelText(true);
+
+    if (aFont->GetType() == FontType::MAC && shouldLCDRenderText) {
+      // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
+      paint.mPaint.setHinting(SkPaint::kNo_Hinting);
+    } else {
+      paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+    }
   }
 
   std::vector<uint16_t> indices;

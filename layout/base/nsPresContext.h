@@ -39,6 +39,8 @@
 #include "nsIMessageManager.h"
 #include "mozilla/RestyleLogging.h"
 #include "Units.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "prenv.h"
 
 class nsAString;
 class nsIPrintSettings;
@@ -67,7 +69,6 @@ class gfxMissingFontRecorder;
 namespace mozilla {
 class EffectCompositor;
 class EventStateManager;
-class RestyleManager;
 class CounterStyleManager;
 namespace layers {
 class ContainerLayer;
@@ -220,7 +221,7 @@ public:
   }
 
 #ifdef MOZILLA_INTERNAL_API
-  nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
+  mozilla::StyleSetHandle StyleSet() { return GetPresShell()->StyleSet(); }
 
   nsFrameManager* FrameManager()
     { return PresShell()->FrameManager(); }
@@ -234,7 +235,7 @@ public:
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 
-  mozilla::RestyleManager* RestyleManager() { return mRestyleManager; }
+  mozilla::RestyleManagerHandle RestyleManager() { return mRestyleManager; }
 
   mozilla::CounterStyleManager* CounterStyleManager() {
     return mCounterStyleManager;
@@ -1068,6 +1069,16 @@ public:
     mHasWarnedAboutPositionedTableParts = true;
   }
 
+  static bool StyloEnabled()
+  {
+#ifdef MOZ_STYLO
+    static bool enabled = PR_GetEnv("MOZ_STYLO");
+    return enabled;
+#else
+    return false;
+#endif
+  }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
@@ -1219,7 +1230,7 @@ protected:
   RefPtr<mozilla::EffectCompositor> mEffectCompositor;
   RefPtr<nsTransitionManager> mTransitionManager;
   RefPtr<nsAnimationManager> mAnimationManager;
-  RefPtr<mozilla::RestyleManager> mRestyleManager;
+  mozilla::RestyleManagerHandle::RefPtr mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   nsIAtom* MOZ_UNSAFE_REF("always a static atom") mMedium; // initialized by subclass ctors
   nsCOMPtr<nsIAtom> mMediaEmulated;
