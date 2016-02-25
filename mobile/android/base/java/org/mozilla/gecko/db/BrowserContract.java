@@ -485,10 +485,12 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "suggestedsites");
     }
 
+    @RobocopTarget
     public static final class UrlAnnotations implements CommonColumns, DateSyncColumns {
         private UrlAnnotations() {}
 
         public static final String TABLE_NAME = "urlannotations";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, TABLE_NAME);
 
         public static final String URL = "url";
         public static final String KEY = "key";
