@@ -431,7 +431,8 @@ class CacheManager(object):
     Provide simple logging.
     '''
 
-    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None, log=None):
+    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None, log=None, skip_cache=False):
+        self._skip_cache = skip_cache
         self._cache = pylru.lrucache(cache_size, callback=cache_callback)
         self._cache_filename = mozpath.join(cache_dir, cache_name + '-cache.pickle')
         self._log = log
@@ -441,6 +442,12 @@ class CacheManager(object):
             self._log(*args, **kwargs)
 
     def load_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring load_cache!')
+            return
+
         try:
             items = pickle.load(open(self._cache_filename, 'rb'))
             for key, value in items:
@@ -455,10 +462,22 @@ class CacheManager(object):
             pass
 
     def dump_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring dump_cache!')
+            return
+
         ensureParentDir(self._cache_filename)
         pickle.dump(list(reversed(list(self._cache.items()))), open(self._cache_filename, 'wb'), -1)
 
     def clear_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring clear_cache!')
+            return
+
         with self:
             self._cache.clear()
 
@@ -496,8 +515,8 @@ class CacheManager(object):
 class TreeCache(CacheManager):
     '''Map pushhead revisions to trees with tasks/artifacts known to taskcluster.'''
 
-    def __init__(self, cache_dir, log=None):
-        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log)
+    def __init__(self, cache_dir, log=None, skip_cache=False):
+        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
         self._index = taskcluster.Index()
 
@@ -523,8 +542,8 @@ class TreeCache(CacheManager):
 class TaskCache(CacheManager):
     '''Map candidate pushheads to Task Cluster task IDs and artifact URLs.'''
 
-    def __init__(self, cache_dir, log=None):
-        CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log)
+    def __init__(self, cache_dir, log=None, skip_cache=False):
+        CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
         self._index = taskcluster.Index()
         self._queue = taskcluster.Queue()
 
@@ -572,9 +591,9 @@ class TaskCache(CacheManager):
 class ArtifactCache(CacheManager):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
 
-    def __init__(self, cache_dir, log=None):
+    def __init__(self, cache_dir, log=None, skip_cache=False):
         # TODO: instead of storing N artifact packages, store M megabytes.
-        CacheManager.__init__(self, cache_dir, 'fetch', MAX_CACHED_ARTIFACTS, cache_callback=self.delete_file, log=log)
+        CacheManager.__init__(self, cache_dir, 'fetch', MAX_CACHED_ARTIFACTS, cache_callback=self.delete_file, log=log, skip_cache=skip_cache)
         self._cache_dir = cache_dir
         size_limit = 1024 * 1024 * 1024 # 1Gb in bytes.
         file_limit = 4 # But always keep at least 4 old artifacts around.
@@ -607,8 +626,16 @@ class ArtifactCache(CacheManager):
         # (especially on Mac OS X, where we must mount a large DMG file).
         hash = hashlib.sha256(url).hexdigest()[:16]
         fname = hash + '-' + os.path.basename(url)
+
+        path = os.path.abspath(mozpath.join(self._cache_dir, fname))
+        if self._skip_cache and os.path.exists(path):
+            self.log(logging.DEBUG, 'artifact',
+                {'path': path},
+                'Skipping cache: removing cached downloaded artifact {path}')
+            os.remove(path)
+
         self.log(logging.INFO, 'artifact',
-            {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
+            {'path': path},
             'Downloading to temporary location {path}')
         try:
             dl = self._download_manager.download(url, fname)
@@ -638,12 +665,13 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg'):
+    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg', skip_cache=False):
         self._tree = tree
         self._job = job or self._guess_artifact_job()
         self._log = log
         self._hg = hg
         self._cache_dir = cache_dir
+        self._skip_cache = skip_cache
 
         try:
             self._artifact_job = get_job_details(self._job, log=self._log)
@@ -653,9 +681,9 @@ class Artifacts(object):
                 'Unknown job {job}')
             raise KeyError("Unknown job")
 
-        self._task_cache = TaskCache(self._cache_dir, log=self._log)
-        self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log)
-        self._tree_cache = TreeCache(self._cache_dir, log=self._log)
+        self._task_cache = TaskCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._tree_cache = TreeCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
         # A "tree" according to mozext and an integration branch isn't always
         # an exact match. For example, pushhead("central") refers to pushheads
         # with artifacts under the taskcluster namespace "mozilla-central".
@@ -763,6 +791,13 @@ class Artifacts(object):
 
         # Do we need to post-process?
         processed_filename = filename + PROCESSED_SUFFIX
+
+        if self._skip_cache and os.path.exists(processed_filename):
+            self.log(logging.DEBUG, 'artifact',
+                {'path': processed_filename},
+                'Skipping cache: removing cached processed artifact {path}')
+            os.remove(processed_filename)
+
         if not os.path.exists(processed_filename):
             self.log(logging.INFO, 'artifact',
                 {'filename': filename},

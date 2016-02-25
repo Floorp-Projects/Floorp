@@ -1491,7 +1491,7 @@ class PackageFrontend(MachCommandBase):
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
-    def _make_artifacts(self, tree=None, job=None):
+    def _make_artifacts(self, tree=None, job=None, skip_cache=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('pylru==1.0.9')
         self.virtualenv_manager.install_pip_package('taskcluster==0.0.32')
@@ -1514,7 +1514,7 @@ class PackageFrontend(MachCommandBase):
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg)
+        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg, skip_cache=skip_cache)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
@@ -1524,9 +1524,12 @@ class PackageFrontend(MachCommandBase):
             'which case the current hg repository is inspected; an hg revision; '
             'a remote URL; or a local file.',
         default=None)
-    def artifact_install(self, source=None, tree=None, job=None, verbose=False):
+    @CommandArgument('--skip-cache', action='store_true',
+        help='Skip all local caches to force re-fetching remote artifacts.',
+        default=False)
+    def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        artifacts = self._make_artifacts(tree=tree, job=job)
+        artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache)
 
         return artifacts.install_from(source, self.distdir)
 
