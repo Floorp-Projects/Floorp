@@ -6018,7 +6018,7 @@ nsComputedDOMStyle::DoGetMask()
       firstLayer.mClip != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
       firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
-      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_AUTO ||
+      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
       !firstLayer.mPosition.IsInitialValue() ||
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
