@@ -730,10 +730,14 @@ class Artifacts(object):
             return 'macosx64'
         raise Exception('Cannot determine default job for |mach artifact|!')
 
-    def _find_pushheads(self):
-        # Return an ordered dict associating revisions that are pushheads with
-        # trees they are known to be in (starting with the first tree they're
-        # known to be in).
+    def _find_hg_pushheads(self):
+        """Return an iterator of (hg_hash, {tree-set}) associating hg revision
+        hashes that might be pushheads with the trees they are known
+        to be in.
+
+        More recent hashes should come earlier in the list.  We always
+        have the pushlog locally, so we'll never yield an empty tree-set.
+        """
 
         try:
             output = subprocess.check_output([
@@ -751,7 +755,7 @@ class Artifacts(object):
                                 'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
             raise
 
-        rev_trees = collections.OrderedDict()
+        count = 0
         for line in output.splitlines():
             if not line:
                 continue
@@ -760,15 +764,14 @@ class Artifacts(object):
                 # If pushhead() is true, it would seem "trees" should be
                 # non-empty, but this is defensive.
                 continue
-            rev_trees[rev_info[0]] = tuple(rev_info[1:])
+            count += 1
+            yield rev_info[0], tuple(rev_info[1:])
 
-        if not rev_trees:
+        if not count:
             raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n\n'
                             'Try running |hg pushlogsync|;\n'
                             'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
                                 num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
-
-        return rev_trees
 
     def find_pushhead_artifacts(self, task_cache, tree_cache, job, pushhead, trees):
         known_trees = set(tree_cache.artifact_trees(pushhead, trees))
@@ -854,42 +857,50 @@ class Artifacts(object):
             filename = artifact_cache.fetch(url)
         return self.install_from_file(filename, distdir)
 
-    def _install_from_pushheads(self, rev_pushheads, distdir):
+    def _install_from_hg_pushheads(self, hg_pushheads, distdir):
+        """Iterate pairs (hg_hash, {tree-set}) associating hg revision hashes
+        and tree-sets they are known to be in, trying to download and
+        install from each.
+        """
+
         urls = None
+        count = 0
         # with blocks handle handle persistence.
         with self._task_cache as task_cache, self._tree_cache as tree_cache:
-            for rev, trees in rev_pushheads.items():
+            for hg_hash, trees in hg_pushheads:
+                count += 1
                 self.log(logging.DEBUG, 'artifact',
-                         {'rev': rev},
-                         'Trying to find artifacts for pushhead {rev}.')
+                         {'hg_hash': hg_hash},
+                         'Trying to find artifacts for hg revision {hg_hash}.')
                 urls = self.find_pushhead_artifacts(task_cache, tree_cache,
-                                                    self._job, rev, trees)
+                                                    self._job, hg_hash, trees)
                 if urls:
                     for url in urls:
                         if self.install_from_url(url, distdir):
                             return 1
                     return 0
+
         self.log(logging.ERROR, 'artifact',
-                 {'count': len(rev_pushheads)},
+                 {'count': count},
                  'Tried {count} pushheads, no built artifacts found.')
         return 1
 
-    def install_from_recent(self, distdir):
-        rev_pushheads = self._find_pushheads()
-        return self._install_from_pushheads(rev_pushheads, distdir)
+    def install_from_hg_recent(self, distdir):
+        hg_pushheads = self._find_hg_pushheads()
+        return self._install_from_hg_pushheads(hg_pushheads, distdir)
 
-    def install_from_revset(self, revset, distdir):
+    def install_from_hg_revset(self, revset, distdir):
         revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
                                             '-r', revset]).strip()
         if len(revision.split('\n')) != 1:
             raise ValueError('hg revision specification must resolve to exactly one commit')
-        rev_pushheads = {revision: None}
+        hg_pushheads = [(revision, tuple())]
         self.log(logging.INFO, 'artifact',
                  {'revset': revset,
                   'revision': revision},
                  'Will only accept artifacts from a pushhead at {revision} '
                  '(matched revset "{revset}").')
-        return self._install_from_pushheads(rev_pushheads, distdir)
+        return self._install_from_hg_pushheads(hg_pushheads, distdir)
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
@@ -903,9 +914,9 @@ class Artifacts(object):
                 source = os.environ['MOZ_ARTIFACT_REVISION']
 
             if source:
-                return self.install_from_revset(source, distdir)
+                return self.install_from_hg_revset(source, distdir)
 
-            return self.install_from_recent(distdir)
+            return self.install_from_hg_recent(distdir)
 
 
     def print_last(self):
