@@ -323,10 +323,8 @@ public:
   bool
   Close();
 
-  // The JSContext argument can be null, since it's not used for anything.  It's
-  // about to go away.
   bool
-  ModifyBusyCount(JSContext* /* unused */, bool aIncrease);
+  ModifyBusyCount(bool aIncrease);
 
   void
   ForgetOverridenLoadGroup(nsCOMPtr<nsILoadGroup>& aLoadGroupOut);
