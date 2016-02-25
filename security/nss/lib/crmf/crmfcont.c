@@ -19,8 +19,7 @@ crmf_modify_control_array(CRMFCertRequest *inCertReq, int count)
             return SECFailure;
         }
         inCertReq->controls = dummy;
-    }
-    else {
+    } else {
         inCertReq->controls = PORT_ZNewArray(CRMFControl *, 2);
     }
     return (inCertReq->controls == NULL) ? SECFailure : SECSuccess;
@@ -593,8 +592,7 @@ crmf_get_public_value(SECKEYPublicKey *pubKey, SECItem *dest)
         if (rv != SECSuccess) {
             dest = NULL;
         }
-    }
-    else {
+    } else {
         dest = SECITEM_ArenaDupItem(NULL, src);
     }
     return dest;
@@ -673,8 +671,7 @@ crmf_encrypted_value_unwrap_priv_key(PLArenaPool *poolp,
     if (wrappingKey == NULL) {
         goto loser;
     } /* Make the length a byte length instead of bit length*/
-    params = (encValue->symmAlg != NULL) ?
-                                         crmf_decode_params(&encValue->symmAlg->parameters)
+    params = (encValue->symmAlg != NULL) ? crmf_decode_params(&encValue->symmAlg->parameters)
                                          : NULL;
     origLen = encValue->encValue.len;
     encValue->encValue.len = CRMF_BITS_TO_BYTES(origLen);

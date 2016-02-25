@@ -54,8 +54,7 @@ AddToArray(PLArenaPool *arena, void **array, void *element)
         array =
             (void **)PORT_ArenaGrow(arena, array, (count + 1) * sizeof(void *),
                                     (count + 2) * sizeof(void *));
-    }
-    else {
+    } else {
         array = (void **)PORT_ArenaAlloc(arena, (count + 2) * sizeof(void *));
     }
     if (array) {
@@ -346,8 +345,7 @@ CERT_CreateName(CERTRDN *rdn0, ...)
         /* Count number of RDNs going into the Name */
         if (!rdn0) {
             count = 0;
-        }
-        else {
+        } else {
             count = 1;
             va_start(ap, rdn0);
             while ((rdn = va_arg(ap, CERTRDN *)) != 0) {
@@ -468,8 +466,7 @@ canonicalize(SECItem *foo)
             ch = ' ';
             if (ch == lastch)
                 continue;
-        }
-        else if (ch >= 'A' && ch <= 'Z') {
+        } else if (ch >= 'A' && ch <= 'Z') {
             ch |= 0x20; /* downshift */
         }
         foo->data[dest++] = lastch = ch;
@@ -522,8 +519,7 @@ CERT_CompareAVA(const CERTAVA *a, const CERTAVA *b)
             }
             SECITEM_FreeItem(aVal, PR_TRUE);
             SECITEM_FreeItem(bVal, PR_TRUE);
-        }
-        else if (a->value.data[0] == 0x13) { /* both are printable strings. */
+        } else if (a->value.data[0] == 0x13) { /* both are printable strings. */
             /* printable strings */
             rv = CERT_CompareDERPrintableStrings(&a->value, &b->value);
         }

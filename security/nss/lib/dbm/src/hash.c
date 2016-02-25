@@ -173,8 +173,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
         if (errno == ENOENT)
             errno = 0; /* Just in case someone looks at errno */
         new_table = 1;
-    }
-    else if (statbuf.st_mtime && statbuf.st_size == 0) {
+    } else if (statbuf.st_mtime && statbuf.st_size == 0) {
         /* check for a zero length file and delete it
          * if it exists
          */
@@ -195,8 +194,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
     if (new_table) {
         if (!init_hash(hashp, file, (HASHINFO *)info))
             RETURN_ERROR(errno, error1);
-    }
-    else {
+    } else {
         /* Table already exists */
         if (info && info->hash)
             hashp->hash = info->hash;
@@ -706,10 +704,8 @@ hash_put(
         return (DBM_ERROR);
     }
 
-    rv = hash_access(hashp, flag == R_NOOVERWRITE ?
-                                                  HASH_PUTNEW
-                                                  :
-                                                  HASH_PUT,
+    rv = hash_access(hashp, flag == R_NOOVERWRITE ? HASH_PUTNEW
+                                                  : HASH_PUT,
                      (DBT *)key, (DBT *)data);
 
     if (rv == DATABASE_CORRUPTED_ERROR) {
@@ -802,8 +798,7 @@ hash_access(
 #endif
             bp += 2;
             ndx += 2;
-        }
-        else if (bp[1] == OVFLPAGE) {
+        } else if (bp[1] == OVFLPAGE) {
 
             /* database corruption: overflow loop detection */
             if (last_overflow_page_no == (int32)*bp)
@@ -826,8 +821,7 @@ hash_access(
             n = *bp++;
             ndx = 1;
             off = hashp->BSIZE;
-        }
-        else if (bp[1] < REAL_KEY) {
+        } else if (bp[1] < REAL_KEY) {
             if ((ndx =
                      __find_bigpair(hashp, rbufp, ndx, kp, (int)size)) > 0)
                 goto found;
@@ -849,8 +843,7 @@ hash_access(
                 n = *bp++;
                 ndx = 1;
                 off = hashp->BSIZE;
-            }
-            else {
+            } else {
                 save_bufp->flags &= ~BUF_PIN;
                 return (DBM_ERROR);
             }
@@ -864,8 +857,7 @@ hash_access(
             if (__addel(hashp, rbufp, key, val)) {
                 save_bufp->flags &= ~BUF_PIN;
                 return (DBM_ERROR);
-            }
-            else {
+            } else {
                 save_bufp->flags &= ~BUF_PIN;
                 return (SUCCESS);
             }
@@ -886,8 +878,7 @@ found:
             if (bp[ndx + 1] < REAL_KEY) {
                 if (__big_return(hashp, rbufp, ndx, val, 0))
                     return (DBM_ERROR);
-            }
-            else {
+            } else {
                 val->data = (uint8 *)rbufp->page + (int)bp[ndx + 1];
                 val->size = bp[ndx] - bp[ndx + 1];
             }
@@ -956,8 +947,7 @@ hash_seq(
                 hashp->cbucket = -1;
                 return (ABNORMAL);
             }
-        }
-        else
+        } else
             bp = (uint16 *)hashp->cpage->page;
 
 #ifdef DEBUG
@@ -981,8 +971,7 @@ hash_seq(
     if (bp[ndx + 1] < REAL_KEY) {
         if (__big_keydata(hashp, bufp, key, data, 1))
             return (DBM_ERROR);
-    }
-    else {
+    } else {
         key->data = (uint8 *)hashp->cpage->page + bp[ndx];
         key->size = (ndx > 1 ? bp[ndx - 1] : hashp->BSIZE) - bp[ndx];
         data->data = (uint8 *)hashp->cpage->page + bp[ndx + 1];
@@ -992,8 +981,7 @@ hash_seq(
             hashp->cpage = NULL;
             hashp->cbucket++;
             hashp->cndx = 1;
-        }
-        else
+        } else
             hashp->cndx = ndx;
     }
     return (SUCCESS);

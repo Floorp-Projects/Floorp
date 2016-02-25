@@ -177,8 +177,7 @@ SGN_End(SGNContext *cx, SECItem *result)
         if (rv != SECSuccess) {
             goto loser;
         }
-    }
-    else {
+    } else {
         digder.data = digest;
         digder.len = part1;
     }
@@ -215,8 +214,7 @@ SGN_End(SGNContext *cx, SECItem *result)
         PORT_Free(sigitem.data);
         if (rv != SECSuccess)
             goto loser;
-    }
-    else {
+    } else {
         result->len = sigitem.len;
         result->data = sigitem.data;
     }
@@ -396,8 +394,7 @@ SGN_Digest(SECKEYPrivateKey *privKey,
         if (rv != SECSuccess) {
             goto loser;
         }
-    }
-    else {
+    } else {
         digder.data = digest->data;
         digder.len = digest->len;
     }
