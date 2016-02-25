@@ -718,11 +718,18 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg', skip_cache=False):
+    def __init__(self, tree, job=None, log=None, cache_dir='.', hg=None, git=None, skip_cache=False):
+        if (hg and git) or (not hg and not git):
+            raise ValueError("Must provide path to exactly one of hg and git")
+
         self._tree = tree
         self._job = job or self._guess_artifact_job()
         self._log = log
         self._hg = hg
+        self._git = git
+        if self._git:
+            import which
+            self._cinnabar = which.which('git-cinnabar')
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
 
@@ -805,10 +812,37 @@ class Artifacts(object):
 
         return candidate_pushheads
 
+    def _get_hg_revisions_from_git(self):
+
+        # First commit is HEAD, next is HEAD~1, etc.
+        rev_list = subprocess.check_output([
+            self._git, 'rev-list', '--topo-order',
+            'HEAD~{num}..HEAD'.format(num=NUM_REVISIONS_TO_QUERY),
+        ])
+
+        hg_hash_list = subprocess.check_output([
+            self._cinnabar, 'git2hg'
+        ] + rev_list.splitlines())
+
+        zeroes = "0" * 40
+
+        hashes = []
+        for hg_hash in hg_hash_list.splitlines():
+            hg_hash = hg_hash.strip()
+            if not hg_hash or hg_hash == zeroes:
+                continue
+            hashes.append(hg_hash)
+        return hashes
+
     def _get_recent_public_revisions(self):
         """Returns recent ancestors of the working parent that are likely to
         to be known to Mozilla automation.
+
+        If we're using git, retrieves hg revisions from git-cinnabar.
         """
+        if self._git:
+            return self._get_hg_revisions_from_git()
+
         return subprocess.check_output([
             self._hg, 'log',
             '--template', '{node}\n',
@@ -945,15 +979,24 @@ class Artifacts(object):
                  'Tried {count} pushheads, no built artifacts found.')
         return 1
 
-    def install_from_hg_recent(self, distdir):
+    def install_from_recent(self, distdir):
         hg_pushheads = self._find_pushheads()
         return self._install_from_hg_pushheads(hg_pushheads, distdir)
 
-    def install_from_hg_revset(self, revset, distdir):
-        revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
-                                            '-r', revset]).strip()
-        if len(revision.split('\n')) != 1:
-            raise ValueError('hg revision specification must resolve to exactly one commit')
+    def install_from_revset(self, revset, distdir):
+        if self._hg:
+            revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
+                                                '-r', revset]).strip()
+            if len(revision.split('\n')) != 1:
+                raise ValueError('hg revision specification must resolve to exactly one commit')
+        else:
+            revision = subprocess.check_output([self._git, 'rev-parse', revset]).strip()
+            revision = subprocess.check_output([self._cinnabar, 'git2hg', revision]).strip()
+            if len(revision.split('\n')) != 1:
+                raise ValueError('hg revision specification must resolve to exactly one commit')
+            if revision == "0" * 40:
+                raise ValueError('git revision specification must resolve to a commit known to hg')
+
         self.log(logging.INFO, 'artifact',
                  {'revset': revset,
                   'revision': revision},
@@ -973,9 +1016,9 @@ class Artifacts(object):
                 source = os.environ['MOZ_ARTIFACT_REVISION']
 
             if source:
-                return self.install_from_hg_revset(source, distdir)
+                return self.install_from_revset(source, distdir)
 
-            return self.install_from_hg_recent(distdir)
+            return self.install_from_recent(distdir)
 
 
     def print_last(self):
