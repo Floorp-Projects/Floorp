@@ -115,6 +115,8 @@ public:
     return mIsActive;
   }
 
+  virtual bool IsTopLevelWindowActive() = 0;
+
   // Outer windows only.
   void SetDesktopModeViewport(bool aDesktopModeViewport)
   {
