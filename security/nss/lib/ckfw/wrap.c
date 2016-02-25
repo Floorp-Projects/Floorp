@@ -365,7 +365,8 @@ NSSCKFWC_GetSlotList(
         *pulCount = nSlots;
         error = CKR_BUFFER_TOO_SMALL;
         goto loser;
-    } else {
+    }
+    else {
         CK_ULONG i;
         *pulCount = nSlots;
 
@@ -802,7 +803,8 @@ NSSCKFWC_GetMechanismList(
 
     if (0 != count) {
         error = nssCKFWToken_GetMechanismTypes(fwToken, pMechanismList);
-    } else {
+    }
+    else {
         error = CKR_OK;
     }
 
@@ -1096,7 +1098,8 @@ NSSCKFWC_InitPIN(
 
     if ((CK_CHAR_PTR)CK_NULL_PTR == pPin) {
         arg = (NSSItem *)NULL;
-    } else {
+    }
+    else {
         arg = &pin;
         pin.size = (PRUint32)ulPinLen;
         pin.data = (void *)pPin;
@@ -1170,7 +1173,8 @@ NSSCKFWC_SetPIN(
 
     if ((CK_CHAR_PTR)CK_NULL_PTR == pOldPin) {
         oldArg = (NSSItem *)NULL;
-    } else {
+    }
+    else {
         oldArg = &oldPin;
         oldPin.size = (PRUint32)ulOldLen;
         oldPin.data = (void *)pOldPin;
@@ -1178,7 +1182,8 @@ NSSCKFWC_SetPIN(
 
     if ((CK_CHAR_PTR)CK_NULL_PTR == pNewPin) {
         newArg = (NSSItem *)NULL;
-    } else {
+    }
+    else {
         newArg = &newPin;
         newPin.size = (PRUint32)ulNewLen;
         newPin.data = (void *)pNewPin;
@@ -1261,13 +1266,15 @@ NSSCKFWC_OpenSession(
 
     if (flags & CKF_RW_SESSION) {
         rw = CK_TRUE;
-    } else {
+    }
+    else {
         rw = CK_FALSE;
     }
 
     if (flags & CKF_SERIAL_SESSION) {
         ;
-    } else {
+    }
+    else {
         error = CKR_SESSION_PARALLEL_NOT_SUPPORTED;
         goto loser;
     }
@@ -1692,7 +1699,8 @@ NSSCKFWC_SetOperationState(
 
     if ((CK_OBJECT_HANDLE)0 == hEncryptionKey) {
         eKey = (NSSCKFWObject *)NULL;
-    } else {
+    }
+    else {
         eKey = nssCKFWInstance_ResolveObjectHandle(fwInstance, hEncryptionKey);
         if (!eKey) {
             error = CKR_KEY_HANDLE_INVALID;
@@ -1702,7 +1710,8 @@ NSSCKFWC_SetOperationState(
 
     if ((CK_OBJECT_HANDLE)0 == hAuthenticationKey) {
         aKey = (NSSCKFWObject *)NULL;
-    } else {
+    }
+    else {
         aKey = nssCKFWInstance_ResolveObjectHandle(fwInstance, hAuthenticationKey);
         if (!aKey) {
             error = CKR_KEY_HANDLE_INVALID;
@@ -1778,7 +1787,8 @@ NSSCKFWC_Login(
 
     if ((CK_CHAR_PTR)CK_NULL_PTR == pPin) {
         arg = (NSSItem *)NULL;
-    } else {
+    }
+    else {
         arg = &pin;
         pin.size = (PRUint32)ulPinLen;
         pin.data = (void *)pPin;
@@ -2267,7 +2277,8 @@ NSSCKFWC_GetAttributeValue(
 
         if ((CK_VOID_PTR)CK_NULL_PTR == pTemplate[i].pValue) {
             pTemplate[i].ulValueLen = size;
-        } else {
+        }
+        else {
             NSSItem it, *p;
 
             if (pTemplate[i].ulValueLen < size) {
@@ -2306,10 +2317,12 @@ NSSCKFWC_GetAttributeValue(
     if (sensitive) {
         error = CKR_ATTRIBUTE_SENSITIVE;
         goto loser;
-    } else if (invalid) {
+    }
+    else if (invalid) {
         error = CKR_ATTRIBUTE_TYPE_INVALID;
         goto loser;
-    } else if (tooSmall) {
+    }
+    else if (tooSmall) {
         error = CKR_BUFFER_TOO_SMALL;
         goto loser;
     }

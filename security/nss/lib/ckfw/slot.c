@@ -336,7 +336,8 @@ nssCKFWSlot_GetSlotDescription(
             if ((!fwSlot->slotDescription) && (CKR_OK != error)) {
                 goto done;
             }
-        } else {
+        }
+        else {
             fwSlot->slotDescription = (NSSUTF8 *)"";
         }
     }
@@ -384,7 +385,8 @@ nssCKFWSlot_GetManufacturerID(
             if ((!fwSlot->manufacturerID) && (CKR_OK != error)) {
                 goto done;
             }
-        } else {
+        }
+        else {
             fwSlot->manufacturerID = (NSSUTF8 *)"";
         }
     }
@@ -494,7 +496,8 @@ nssCKFWSlot_GetHardwareVersion(
     if (fwSlot->mdSlot->GetHardwareVersion) {
         fwSlot->hardwareVersion = fwSlot->mdSlot->GetHardwareVersion(
             fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, fwSlot->fwInstance);
-    } else {
+    }
+    else {
         fwSlot->hardwareVersion.major = 0;
         fwSlot->hardwareVersion.minor = 1;
     }
@@ -536,7 +539,8 @@ nssCKFWSlot_GetFirmwareVersion(
     if (fwSlot->mdSlot->GetFirmwareVersion) {
         fwSlot->firmwareVersion = fwSlot->mdSlot->GetFirmwareVersion(
             fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, fwSlot->fwInstance);
-    } else {
+    }
+    else {
         fwSlot->firmwareVersion.major = 0;
         fwSlot->firmwareVersion.minor = 1;
     }
@@ -593,7 +597,8 @@ nssCKFWSlot_GetToken(
 
         fwToken = nssCKFWToken_Create(fwSlot, mdToken, pError);
         fwSlot->fwToken = fwToken;
-    } else {
+    }
+    else {
         fwToken = fwSlot->fwToken;
     }
 

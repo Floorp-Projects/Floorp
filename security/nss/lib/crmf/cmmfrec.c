@@ -107,7 +107,8 @@ CMMF_KeyRecRepContentSetCACerts(CMMFKeyRecRepContent *inKeyRecRep,
                                    &inKeyRecRep->caCerts);
     if (rv != SECSuccess) {
         PORT_ArenaRelease(inKeyRecRep->poolp, mark);
-    } else {
+    }
+    else {
         PORT_ArenaUnmark(inKeyRecRep->poolp, mark);
     }
     return rv;

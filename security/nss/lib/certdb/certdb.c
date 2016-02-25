@@ -400,7 +400,8 @@ GetKeyUsage(CERTCertificate *cert)
 
         PORT_Free(tmpitem.data);
         tmpitem.data = NULL;
-    } else {
+    }
+    else {
         /* if the extension is not present, then we allow all uses */
         cert->keyUsage = KU_ALL;
         cert->rawKeyUsage = KU_ALL;
@@ -482,7 +483,8 @@ cert_ComputeCertType(CERTCertificate *cert)
     if (tmpitem.data != NULL || extKeyUsage != NULL) {
         if (tmpitem.data == NULL) {
             nsCertType = 0;
-        } else {
+        }
+        else {
             nsCertType = tmpitem.data[0];
         }
 
@@ -515,7 +517,8 @@ cert_ComputeCertType(CERTCertificate *cert)
             SECSuccess) {
             if (basicConstraintPresent == PR_TRUE && (basicConstraint.isCA)) {
                 nsCertType |= NS_CERT_TYPE_EMAIL_CA;
-            } else {
+            }
+            else {
                 nsCertType |= NS_CERT_TYPE_EMAIL;
             }
         }
@@ -523,7 +526,8 @@ cert_ComputeCertType(CERTCertificate *cert)
                 extKeyUsage, SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) == SECSuccess) {
             if (basicConstraintPresent == PR_TRUE && (basicConstraint.isCA)) {
                 nsCertType |= NS_CERT_TYPE_SSL_CA;
-            } else {
+            }
+            else {
                 nsCertType |= NS_CERT_TYPE_SSL_SERVER;
             }
         }
@@ -536,7 +540,8 @@ cert_ComputeCertType(CERTCertificate *cert)
             SECSuccess) {
             if (basicConstraintPresent == PR_TRUE && (basicConstraint.isCA)) {
                 nsCertType |= NS_CERT_TYPE_SSL_CA;
-            } else {
+            }
+            else {
                 nsCertType |= NS_CERT_TYPE_SSL_SERVER;
             }
         }
@@ -544,7 +549,8 @@ cert_ComputeCertType(CERTCertificate *cert)
                 extKeyUsage, SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH) == SECSuccess) {
             if (basicConstraintPresent == PR_TRUE && (basicConstraint.isCA)) {
                 nsCertType |= NS_CERT_TYPE_SSL_CA;
-            } else {
+            }
+            else {
                 nsCertType |= NS_CERT_TYPE_SSL_CLIENT;
             }
         }
@@ -552,7 +558,8 @@ cert_ComputeCertType(CERTCertificate *cert)
                 extKeyUsage, SEC_OID_EXT_KEY_USAGE_CODE_SIGN) == SECSuccess) {
             if (basicConstraintPresent == PR_TRUE && (basicConstraint.isCA)) {
                 nsCertType |= NS_CERT_TYPE_OBJECT_SIGNING_CA;
-            } else {
+            }
+            else {
                 nsCertType |= NS_CERT_TYPE_OBJECT_SIGNING;
             }
         }
@@ -564,7 +571,8 @@ cert_ComputeCertType(CERTCertificate *cert)
             SECSuccess) {
             nsCertType |= EXT_KEY_USAGE_STATUS_RESPONDER;
         }
-    } else {
+    }
+    else {
         /* If no NS Cert Type extension and no EKU extension, then */
         nsCertType = 0;
         if (CERT_IsCACert(cert, &nsCertType))
@@ -666,7 +674,8 @@ cert_IsRootCert(CERTCertificate *cert)
                 PORT_Free(tmpitem.data);
                 if (!match)
                     return PR_FALSE; /* else fall through */
-            } else {
+            }
+            else {
                 /* the subject key ID is required when AKI is present */
                 return PR_FALSE;
             }
@@ -734,7 +743,8 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
         cert->derCert.data = (unsigned char *)data;
         cert->derCert.len = derSignedCert->len;
         PORT_Memcpy(data, derSignedCert->data, derSignedCert->len);
-    } else {
+    }
+    else {
         /* point to passed in DER data */
         cert->derCert = *derSignedCert;
     }
@@ -761,7 +771,8 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     /* set the nickname */
     if (nickname == NULL) {
         cert->nickname = NULL;
-    } else {
+    }
+    else {
         /* copy and install the nickname */
         len = PORT_Strlen(nickname) + 1;
         cert->nickname = (char *)PORT_ArenaAlloc(arena, len);
@@ -996,7 +1007,8 @@ SEC_GetCrlTimes(CERTCrl *date, PRTime *notBefore, PRTime *notAfter)
         if (rv) {
             return (SECFailure);
         }
-    } else {
+    }
+    else {
         LL_I2L(*notAfter, 0L);
     }
     return (SECSuccess);
@@ -1120,7 +1132,8 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage, PRBool ca,
                 PORT_Assert(0);
                 goto loser;
         }
-    } else {
+    }
+    else {
         switch (usage) {
             case certUsageSSLClient:
                 /*
@@ -1343,13 +1356,15 @@ cert_TestHostName(char *cn, const char *hn)
 
             if (match == 0) {
                 rv = SECSuccess;
-            } else {
+            }
+            else {
                 PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
                 rv = SECFailure;
             }
             return rv;
         }
-    } else {
+    }
+    else {
         /* New approach conforms to RFC 6125. */
         char *wildcard = PORT_Strchr(cn, '*');
         char *firstcndot = PORT_Strchr(cn, '.');
@@ -1364,8 +1379,9 @@ cert_TestHostName(char *cn, const char *hn)
          * - must not be preceded by an IDNA ACE prefix (xn--)
          */
         if (wildcard && secondcndot && secondcndot[1] && firsthndot &&
-            firstcndot - wildcard == 1           /* wildcard is last char in first component */
-            && secondcndot - firstcndot > 1      /* second component is non-empty */
+            firstcndot - wildcard ==
+                1 /* wildcard is last char in first component */
+            && secondcndot - firstcndot > 1 /* second component is non-empty */
             && PORT_Strrchr(cn, '*') == wildcard /* only one wildcard in cn */
             && !PORT_Strncasecmp(cn, hn, wildcard - cn) &&
             !PORT_Strcasecmp(firstcndot, firsthndot)
@@ -1457,20 +1473,23 @@ cert_VerifySubjectAltName(const CERTCertificate *cert, const char *hn)
                         netAddr.inet.family == PR_AF_INET) {
                         match = !memcmp(&netAddr.inet.ip,
                                         current->name.other.data, 4);
-                    } else if (current->name.other.len ==
-                                   16 && /* IP v6 address */
-                               netAddr.ipv6.family == PR_AF_INET6) {
+                    }
+                    else if (current->name.other.len ==
+                                 16 && /* IP v6 address */
+                             netAddr.ipv6.family == PR_AF_INET6) {
                         match = !memcmp(&netAddr.ipv6.ip,
                                         current->name.other.data, 16);
-                    } else if (current->name.other.len ==
-                                   16 && /* IP v6 address */
-                               netAddr.inet.family == PR_AF_INET) {
+                    }
+                    else if (current->name.other.len ==
+                                 16 && /* IP v6 address */
+                             netAddr.inet.family == PR_AF_INET) {
                         /* convert netAddr to ipv6, then compare. */
                         /* ipv4 must be in Network Byte Order on input. */
                         PR_ConvertIPv4AddrToIPv6(netAddr.inet.ip, &v6Addr);
                         match = !memcmp(&v6Addr, current->name.other.data, 16);
-                    } else if (current->name.other.len == 4 && /* IP v4 address */
-                               netAddr.inet.family == PR_AF_INET6) {
+                    }
+                    else if (current->name.other.len == 4 && /* IP v4 address */
+                             netAddr.inet.family == PR_AF_INET6) {
                         /* convert netAddr to ipv6, then compare. */
                         PRUint32 ipv4 = (current->name.other.data[0] << 24) |
                                         (current->name.other.data[1] << 16) |
@@ -1498,7 +1517,8 @@ fail:
     if (!(isIPaddr ? IPextCount : DNSextCount)) {
         /* no relevant value in the extension was found. */
         PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
-    } else {
+    }
+    else {
         PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
     }
     rv = SECFailure;
@@ -1628,7 +1648,8 @@ cert_GetDNSPatternsFromGeneralNames(CERTGeneralName *firstName,
                     addr.inet.family = PR_AF_INET;
                     memcpy(&addr.inet.ip, currentInput->name.other.data,
                            currentInput->name.other.len);
-                } else if (currentInput->name.other.len == 16) {
+                }
+                else if (currentInput->name.other.len == 16) {
                     addr.ipv6.family = PR_AF_INET6;
                     memcpy(&addr.ipv6.ip, currentInput->name.other.data,
                            currentInput->name.other.len);
@@ -1766,15 +1787,18 @@ CERT_VerifyCertName(const CERTCertificate *cert, const char *hn)
         if (isIPaddr) {
             if (PORT_Strcasecmp(hn, cn) == 0) {
                 rv = SECSuccess;
-            } else {
+            }
+            else {
                 PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
                 rv = SECFailure;
             }
-        } else {
+        }
+        else {
             rv = cert_TestHostName(cn, hn);
         }
         PORT_Free(cn);
-    } else
+    }
+    else
         PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
     return rv;
 }
@@ -1787,7 +1811,8 @@ CERT_CompareCerts(const CERTCertificate *c1, const CERTCertificate *c2)
     comp = SECITEM_CompareItem(&c1->derCert, &c2->derCert);
     if (comp == SECEqual) { /* certs are the same */
         return (PR_TRUE);
-    } else {
+    }
+    else {
         return (PR_FALSE);
     }
 }
@@ -1941,7 +1966,8 @@ CERT_MakeCANickname(CERTCertificate *cert)
             if (firstname) {
                 org = firstname;
                 firstname = NULL;
-            } else {
+            }
+            else {
                 org = PORT_Strdup("Unknown CA");
             }
         }
@@ -1959,13 +1985,16 @@ CERT_MakeCANickname(CERTCertificate *cert)
         if (firstname) {
             if (count == 1) {
                 nickname = PR_smprintf("%s - %s", firstname, org);
-            } else {
+            }
+            else {
                 nickname = PR_smprintf("%s - %s #%d", firstname, org, count);
             }
-        } else {
+        }
+        else {
             if (count == 1) {
                 nickname = PR_smprintf("%s", org);
-            } else {
+            }
+            else {
                 nickname = PR_smprintf("%s #%d", org, count);
             }
         }
@@ -2075,7 +2104,8 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
     if (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
                  NS_CERT_TYPE_OBJECT_SIGNING_CA)) {
         ret = PR_TRUE;
-    } else {
+    }
+    else {
         SECStatus rv;
         CERTBasicConstraints constraints;
 
@@ -2224,7 +2254,8 @@ CERT_IsNewer(CERTCertificate *certa, CERTCertificate *certb)
             return (PR_FALSE);
         }
         return (PR_TRUE);
-    } else {
+    }
+    else {
         /* cert B was issued after cert A, but expires sooner */
         /* if B is expired, then pick A */
         if (LL_CMP(notAfterB, <, now)) {
@@ -2340,7 +2371,8 @@ CERT_DecodeTrustString(CERTCertTrust *trust, const char *trusts)
             case ',':
                 if (pflags == &trust->sslFlags) {
                     pflags = &trust->emailFlags;
-                } else {
+                }
+                else {
                     pflags = &trust->objectSigningFlags;
                 }
                 break;
@@ -2457,7 +2489,8 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
                      */
                     /* Bug 1192442 - propagate errors from these calls. */
                     (void)CERT_AddTempCertToPerm(certs[i], canickname, NULL);
-                } else {
+                }
+                else {
                     (void)CERT_AddTempCertToPerm(
                         certs[i], nickname ? nickname : canickname, NULL);
                 }
@@ -2470,7 +2503,8 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 
     if (retCerts) {
         *retCerts = certs;
-    } else {
+    }
+    else {
         if (certs) {
             CERT_DestroyCertArray(certs, fcerts);
         }
@@ -2666,7 +2700,8 @@ CERT_SortCBValidity(CERTCertificate *certa, CERTCertificate *certb, void *arg)
     if (newerbefore) {
         /* cert A was issued after cert B, but expires sooner */
         return (PR_TRUE);
-    } else {
+    }
+    else {
         /* cert B was issued after cert A, but expires sooner */
         return (PR_FALSE);
     }
@@ -2765,7 +2800,8 @@ CERT_FilterCertListByUsage(CERTCertList *certList, SECCertUsage usage,
                  * fix the cert decoding code to do this.
                  */
                 (void)CERT_IsCACert(node->cert, &certType);
-            } else {
+            }
+            else {
                 certType = node->cert->nsCertType;
             }
             if (!(certType & requiredCertType)) {
@@ -2778,7 +2814,8 @@ CERT_FilterCertListByUsage(CERTCertList *certList, SECCertUsage usage,
             savenode = CERT_LIST_NEXT(node);
             CERT_RemoveCertListNode(node);
             node = savenode;
-        } else {
+        }
+        else {
             node = CERT_LIST_NEXT(node);
         }
     }
@@ -2799,7 +2836,8 @@ CERT_IsUserCert(CERTCertificate *cert)
         ((trust.sslFlags & CERTDB_USER) || (trust.emailFlags & CERTDB_USER) ||
          (trust.objectSigningFlags & CERTDB_USER))) {
         return PR_TRUE;
-    } else {
+    }
+    else {
         return PR_FALSE;
     }
 }
@@ -2823,7 +2861,8 @@ CERT_FilterCertListForUserCerts(CERTCertList *certList)
             freenode = node;
             node = CERT_LIST_NEXT(node);
             CERT_RemoveCertListNode(freenode);
-        } else {
+        }
+        else {
             /* Is a User cert, so leave it in the list */
             node = CERT_LIST_NEXT(node);
         }
@@ -2915,7 +2954,8 @@ cert_DestroyLocks(void)
     if (certRefCountLock) {
         PZ_DestroyLock(certRefCountLock);
         certRefCountLock = NULL;
-    } else {
+    }
+    else {
         rv = SECFailure;
     }
 
@@ -2923,7 +2963,8 @@ cert_DestroyLocks(void)
     if (certTrustLock) {
         PZ_DestroyLock(certTrustLock);
         certTrustLock = NULL;
-    } else {
+    }
+    else {
         rv = SECFailure;
     }
     return rv;

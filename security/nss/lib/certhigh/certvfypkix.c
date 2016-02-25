@@ -696,7 +696,8 @@ cleanup:
     if (PKIX_ERROR_RECEIVED) {
         if (validChain) {
             CERT_DestroyCertList(validChain);
-        } else if (arena) {
+        }
+        else if (arena) {
             PORT_FreeArena(arena, PR_FALSE);
         }
         if (nssCert) {
@@ -837,7 +838,8 @@ cert_PkixErrorToNssCode(
     PORT_Assert(nssErr);
     if (!nssErr) {
         *pNssErr = SEC_ERROR_LIBPKIX_INTERNAL;
-    } else {
+    }
+    else {
         *pNssErr = nssErr;
     }
 
@@ -896,7 +898,8 @@ cert_GetLogFromVerifyNode(
             }
         }
         PKIX_RETURN(CERTVFYPKIX);
-    } else {
+    }
+    else {
         PRUint32 i = 0;
         PKIX_UInt32 length = 0;
 
@@ -1134,8 +1137,9 @@ cert_VerifyCertChainPkix(
     fnStackNameArr[0] = "cert_VerifyCertChainPkix";
     fnStackInvCountArr[0] = 0;
     PKIX_Boolean abortOnLeak =
-        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ? PKIX_FALSE
-                                                                         : PKIX_TRUE;
+        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
+                                                                   PKIX_FALSE
+                                                                   : PKIX_TRUE;
     runningLeakTest = PKIX_TRUE;
 
     /* Prevent multi-threaded run of object leak test */
@@ -1497,7 +1501,8 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
                     errCode = SEC_ERROR_INVALID_TIME;
                     break;
                 }
-            } else {
+            }
+            else {
                 error = pkix_pl_Date_CreateFromPRTime(param->value.scalar.time,
                                                       &date, plContext);
                 if (error != NULL) {
@@ -2014,8 +2019,9 @@ CERT_PKIXVerifyCert(
     fnStackNameArr[0] = "CERT_PKIXVerifyCert";
     fnStackInvCountArr[0] = 0;
     PKIX_Boolean abortOnLeak =
-        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ? PKIX_FALSE
-                                                                         : PKIX_TRUE;
+        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
+                                                                   PKIX_FALSE
+                                                                   : PKIX_TRUE;
     runningLeakTest = PKIX_TRUE;
 
     /* Prevent multi-threaded run of object leak test */
@@ -2143,7 +2149,8 @@ CERT_PKIXVerifyCert(
             if (trustAnchorCert != NULL) {
                 oparam->value.pointer.cert =
                     cert_NSSCertFromPKIXCert(trustAnchorCert);
-            } else {
+            }
+            else {
                 oparam->value.pointer.cert = NULL;
             }
         }

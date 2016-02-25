@@ -40,7 +40,8 @@ CERT_MatchNickname(char *name1, char *name2)
     if (token1) {
         nickname1 = token1;
         nickname2 = name2;
-    } else {
+    }
+    else {
         nickname1 = token2;
         nickname2 = name1;
     }
@@ -166,7 +167,8 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
                         freenode = node;
                         node = CERT_LIST_NEXT(node);
                         CERT_RemoveCertListNode(freenode);
-                    } else {
+                    }
+                    else {
                         /* keep the first cert for each nickname, but set the
 			 * flag so we know to delete any others with the same
 			 * nickname.
@@ -906,7 +908,8 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
             trust.sslFlags = CERTDB_VALID_CA;
             trust.emailFlags = CERTDB_VALID_CA;
             trust.objectSigningFlags = CERTDB_VALID_CA;
-        } else {
+        }
+        else {
             /* SSL ca's must have the ssl bit set */
             if ((certUsage == certUsageSSLCA) &&
                 ((certtype & NS_CERT_TYPE_SSL_CA) != NS_CERT_TYPE_SSL_CA)) {
@@ -956,7 +959,8 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
             if (nickname) {
                 PORT_Free(nickname);
             }
-        } else {
+        }
+        else {
             rv = SECSuccess;
         }
 
@@ -1089,7 +1093,8 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
     }
     if (!includeRoot && len > 1) {
         chain->len = len - 1;
-    } else {
+    }
+    else {
         chain->len = len;
     }
 

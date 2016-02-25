@@ -584,7 +584,8 @@ nssCKFWObject_GetAttribute(
             *pError = CKR_HOST_MEMORY;
             goto done;
         }
-    } else {
+    }
+    else {
         rv = itemOpt;
     }
 
@@ -599,10 +600,12 @@ nssCKFWObject_GetAttribute(
             rv = (NSSItem *)NULL;
             goto done;
         }
-    } else {
+    }
+    else {
         if (rv->size >= mdItem.item->size) {
             rv->size = mdItem.item->size;
-        } else {
+        }
+        else {
             *pError = CKR_BUFFER_TOO_SMALL;
             /* Should we set rv->size to mdItem->size? */
             /* rv can't have been allocated */
@@ -711,7 +714,8 @@ nssCKFWObject_SetAttribute(
              * not in the list.  Add it.
              */
             nssCKFWSession_RegisterSessionObject(fwSession, fwObject);
-        } else {
+        }
+        else {
             /*
              * New one is a token object, except since we "stole" the fwObject, it's
              * in the list.  Remove it.
@@ -727,7 +731,8 @@ nssCKFWObject_SetAttribute(
         nssCKFWObject_Destroy(newFwObject);
 
         return CKR_OK;
-    } else {
+    }
+    else {
         /*
          * An "ordinary" change.
          */

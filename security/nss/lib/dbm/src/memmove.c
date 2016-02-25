@@ -111,7 +111,8 @@ register size_t length;
         TLOOP(*(word *)dst = *(word *)src; src += wsize; dst += wsize);
         t = length & wmask;
         TLOOP(*dst++ = *src++);
-    } else {
+    }
+    else {
         /*
          * Copy backwards.  Otherwise essentially the same.
          * Alignment works as before, except that it takes
