@@ -8,9 +8,10 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerleave event"); // set up test harness;
@@ -36,11 +37,13 @@
     </head>
     <body onload="run()">
         <h1>Pointer Event: Dispatch pointerleave (mouse)</h1>
+        <!--
         <h4>
             Test Description:
             When a pointing device that has continuous position (such as a mouse) leaves the hit test boundaries of an element, the pointerleave event must be dispatched.
         </h4>
         <br />
+        -->
         <div id="target0">
             Use a mouse to move over then out of this element
         </div>

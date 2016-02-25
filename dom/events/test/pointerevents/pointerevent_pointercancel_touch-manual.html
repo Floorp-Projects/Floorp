@@ -4,19 +4,22 @@
         <title>PointerCancel - touch</title>
         <meta name="viewport" content="width=device-width">
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
     </head>
     <body class="scrollable" onload="run()">
         <h1>pointercancel test</h1>
+        <!--
         <h3>Warning: this test works properly only for devices that have touchscreen</h3>
         <h4>
         Test Description: This test checks if pointercancel event triggers.
         <p>Start touch over the black rectangle and then move your finger to scroll the page.</p>
         </h4>
         <p>
+        -->
         <div id="target0" style="background: black"></div>
         <script>
             var detected_pointertypes = {};

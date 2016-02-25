@@ -9,9 +9,10 @@ or one of its descendants as a result of a pointerdown event, the pointerenter e
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <!-- /resources/testharness.js -->
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerenter event"); // set up test harness
@@ -56,12 +57,14 @@ or one of its descendants as a result of a pointerdown event, the pointerenter e
     </head>
     <body onload="run()">
         <h1>Pointer Event: Dispatch pointerenter (nohover)</h1>
+        <!--
         <h4>
             Test Description:
             When a pointing device that does not support hover is moved into the hit test boundaries of an element or one of its
             descendants as a result of a pointerdown event, the pointerenter event must be dispatched.
         </h4>
         <br />
+        -->
         <div id="target0">
             Tap here.
         </div>
