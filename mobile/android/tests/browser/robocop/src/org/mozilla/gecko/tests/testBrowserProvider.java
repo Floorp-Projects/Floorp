@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.mozilla.gecko.background.db.CursorDumper;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.SyncStatus;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -187,6 +188,17 @@ public class testBrowserProvider extends ContentProviderTest {
         return thumbnailEntry;
     }
 
+    private ContentValues createUrlAnnotationEntry(final String url, final String key, final String value,
+                final long dateCreated) {
+        final ContentValues values = new ContentValues();
+        values.put(BrowserContract.UrlAnnotations.URL, url);
+        values.put(BrowserContract.UrlAnnotations.KEY, key);
+        values.put(BrowserContract.UrlAnnotations.VALUE, value);
+        values.put(BrowserContract.UrlAnnotations.DATE_CREATED, dateCreated);
+        values.put(BrowserContract.UrlAnnotations.DATE_MODIFIED, dateCreated);
+        return values;
+    }
+
     private ContentValues createOneHistoryEntry() throws Exception {
         return createHistoryEntry("Example", "http://example.com", 10, System.currentTimeMillis());
     }
@@ -224,6 +236,13 @@ public class testBrowserProvider extends ContentProviderTest {
                                null);
     }
 
+    private Cursor getUrlAnnotationByUrl(final String url) throws Exception {
+        return mProvider.query(BrowserContract.UrlAnnotations.CONTENT_URI, null,
+                BrowserContract.UrlAnnotations.URL + " = ?",
+                new String[] { url },
+                null);
+    }
+
     @Override
     public void setUp() throws Exception {
         super.setUp(sBrowserProviderCallable, BrowserContract.AUTHORITY, "browser.db");
@@ -248,6 +267,8 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestInsertHistoryThumbnails());
         mTests.add(new TestUpdateHistoryThumbnails());
         mTests.add(new TestDeleteHistoryThumbnails());
+
+        mTests.add(new TestInsertUrlAnnotations());
 
         mTests.add(new TestBatchOperations());
 
@@ -1407,6 +1428,36 @@ public class testBrowserProvider extends ContentProviderTest {
             c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), false, "Thumbnail is deleted with last reference to it");
             c.close();
+        }
+    }
+
+    private class TestInsertUrlAnnotations extends TestCase {
+        @Override
+        public void test() throws Exception {
+            final String url = "http://mozilla.org";
+            final String key = "todo";
+            final String value = "v";
+            final long dateCreated = System.currentTimeMillis();
+
+            mProvider.insert(BrowserContract.UrlAnnotations.CONTENT_URI, createUrlAnnotationEntry(url, key, value, dateCreated));
+
+            final Cursor c = getUrlAnnotationByUrl(url);
+            try {
+                mAsserter.is(c.moveToFirst(), true, "Inserted url annotation found");
+
+                mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.KEY)), key,
+                        "Inserted url annotation has correct key");
+                mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.VALUE)), value,
+                        "Inserted url annotation has correct value");
+                mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_CREATED)), dateCreated,
+                        "Inserted url annotation has correct created");
+                mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_MODIFIED)), dateCreated,
+                        "Inserted url annotation has correct date modified");
+                mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.UrlAnnotations.SYNC_STATUS)), SyncStatus.NEW.getDBValue(),
+                        "Inserted url annotation has default sync status");
+            } finally {
+                c.close();
+            }
         }
     }
 
