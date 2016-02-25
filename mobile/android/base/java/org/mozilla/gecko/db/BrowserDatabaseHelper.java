@@ -36,7 +36,8 @@ import android.os.Build;
 import android.util.Log;
 
 
-final class BrowserDatabaseHelper extends SQLiteOpenHelper {
+// public for robocop testing
+public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
