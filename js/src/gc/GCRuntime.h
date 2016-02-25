@@ -708,6 +708,13 @@ class GCRuntime
         --noGCOrAllocationCheck;
     }
 
+    bool isNurseryAllocAllowed() { return noNurseryAllocationCheck == 0; }
+    void disallowNurseryAlloc() { ++noNurseryAllocationCheck; }
+    void allowNurseryAlloc() {
+        MOZ_ASSERT(!isNurseryAllocAllowed());
+        --noNurseryAllocationCheck;
+    }
+
     bool isInsideUnsafeRegion() { return inUnsafeRegion != 0; }
     void enterUnsafeRegion() { ++inUnsafeRegion; }
     void leaveUnsafeRegion() {
@@ -1312,6 +1319,7 @@ class GCRuntime
     int inUnsafeRegion;
 
     size_t noGCOrAllocationCheck;
+    size_t noNurseryAllocationCheck;
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */

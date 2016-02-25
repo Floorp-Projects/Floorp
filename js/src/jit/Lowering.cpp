@@ -839,6 +839,19 @@ LIRGenerator::visitTest(MTest* test)
             return;
         }
 
+        // Compare and branch Int64.
+        if (comp->compareType() == MCompare::Compare_Int64 ||
+            comp->compareType() == MCompare::Compare_UInt64)
+        {
+            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+            LCompare64AndBranch* lir = new(alloc()) LCompare64AndBranch(comp, op,
+                                                                        useInt64Register(left),
+                                                                        useInt64OrConstant(right),
+                                                                        ifTrue, ifFalse);
+            add(lir, test);
+            return;
+        }
+
         // Compare and branch doubles.
         if (comp->isDoubleComparison()) {
             LAllocation lhs = useRegister(left);
@@ -1069,6 +1082,16 @@ LIRGenerator::visitCompare(MCompare* comp)
         return;
     }
 
+    // Compare Int64.
+    if (comp->compareType() == MCompare::Compare_Int64 ||
+        comp->compareType() == MCompare::Compare_UInt64)
+    {
+        JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+        define(new(alloc()) LCompare64(op, useInt64Register(left), useInt64OrConstant(right)),
+               comp);
+        return;
+    }
+
     // Compare doubles.
     if (comp->isDoubleComparison()) {
         define(new(alloc()) LCompareD(useRegister(left), useRegister(right)), comp);
@@ -1098,9 +1121,17 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction* ins)
     MDefinition* lhs = ins->getOperand(0);
     MDefinition* rhs = ins->getOperand(1);
 
-    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+    if (lhs->type() == MIRType_Int32) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs, ins);
         lowerForALU(new(alloc()) LBitOpI(op), ins, lhs, rhs);
+        return;
+    }
+
+    if (lhs->type() == MIRType_Int64) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int64);
+        ReorderCommutative(&lhs, &rhs, ins);
+        lowerForALUInt64(new(alloc()) LBitOpI64(op), ins, lhs, rhs);
         return;
     }
 
@@ -1197,7 +1228,9 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins)
     MDefinition* lhs = ins->getOperand(0);
     MDefinition* rhs = ins->getOperand(1);
 
-    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+    if (lhs->type() == MIRType_Int32) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int32);
+
         if (ins->type() == MIRType_Double) {
             MOZ_ASSERT(op == JSOP_URSH);
             lowerUrshD(ins->toUrsh());
@@ -1210,6 +1243,12 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins)
                 assignSnapshot(lir, Bailout_OverflowInvalidate);
         }
         lowerForShift(lir, ins, lhs, rhs);
+        return;
+    }
+
+    if (lhs->type() == MIRType_Int64) {
+        MOZ_ASSERT(rhs->type() == MIRType_Int64);
+        lowerForShiftInt64(new(alloc()) LShiftI64(op), ins, lhs, rhs);
         return;
     }
 
@@ -1708,12 +1747,13 @@ LIRGenerator::visitFromCharCode(MFromCharCode* ins)
 void
 LIRGenerator::visitStart(MStart* start)
 {
-    // Create a snapshot that captures the initial state of the function.
     LStart* lir = new(alloc()) LStart;
-    assignSnapshot(lir, Bailout_InitialState);
 
-    if (start->startType() == MStart::StartType_Default && lir->snapshot())
+    // Create a snapshot that captures the initial state of the function.
+    assignSnapshot(lir, Bailout_ArgumentCheck);
+    if (start->block()->graph().entryBlock() == start->block())
         lirGraph_.setEntrySnapshot(lir->snapshot());
+
     add(lir);
 }
 

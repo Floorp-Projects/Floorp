@@ -172,6 +172,8 @@ public:
 
   SyncObject* GetSyncObject() { return mSyncObject; }
 
+  virtual CompositableForwarder* AsCompositableForwarder() override { return this; }
+
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;

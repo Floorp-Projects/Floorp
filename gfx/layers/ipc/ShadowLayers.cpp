@@ -415,7 +415,7 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID, t.mInputFrameID));
     if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
-        && t.mTextureClient->HasInternalBuffer()) {
+        && t.mTextureClient->HasIntermediateBuffer()) {
 
       // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
       // race with updates on the main thread. In this case we want the transaction

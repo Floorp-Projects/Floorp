@@ -306,7 +306,7 @@ enum class FillMode : uint32_t;
 // Mask mode
 #define NS_STYLE_MASK_MODE_ALPHA                0
 #define NS_STYLE_MASK_MODE_LUMINANCE            1
-#define NS_STYLE_MASK_MODE_AUTO                 2
+#define NS_STYLE_MASK_MODE_MATCH_SOURCE         2
 
 // See nsStyleBackground
 #define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0
@@ -1204,6 +1204,12 @@ enum class FillMode : uint32_t;
 // scan
 #define NS_STYLE_SCAN_PROGRESSIVE               0
 #define NS_STYLE_SCAN_INTERLACE                 1
+
+// display-mode
+#define NS_STYLE_DISPLAY_MODE_BROWSER           0
+#define NS_STYLE_DISPLAY_MODE_MINIMAL_UI        1
+#define NS_STYLE_DISPLAY_MODE_STANDALONE        2
+#define NS_STYLE_DISPLAY_MODE_FULLSCREEN        3
 
 } // namespace mozilla
 

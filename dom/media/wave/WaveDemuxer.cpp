@@ -120,7 +120,10 @@ WAVTrackDemuxer::Init()
       }
     } else if (aChunkName == LIST_CODE) {
       mHeaderParser.Reset();
-      uint32_t endOfListChunk = mOffset + aChunkSize;
+      uint64_t endOfListChunk = static_cast<uint64_t>(mOffset) + aChunkSize;
+      if (endOfListChunk > UINT32_MAX) {
+        return false;
+      }
       if (!ListChunkParserInit(aChunkSize)) {
         mOffset = endOfListChunk;
       }
@@ -234,9 +237,9 @@ WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize)
       return false;
     }
 
-    const char* mRawData = reinterpret_cast<const char*>(mChunkData->Data());
+    const char* rawData = reinterpret_cast<const char*>(mChunkData->Data());
 
-    nsCString val(mRawData, length);
+    nsCString val(rawData, length);
     if (length > 0 && val[length - 1] == '\0') {
       val.SetLength(length - 1);
     }
@@ -406,11 +409,12 @@ WAVTrackDemuxer::StreamLength() const
 TimeUnit
 WAVTrackDemuxer::Duration() const
 {
-  if (!mDataLength) {
+  if (!mDataLength ||!mChannels || !mSampleFormat) {
     return TimeUnit();
   }
 
-  int64_t numSamples = mDataLength * 8 / mChannels / mSampleFormat;
+  int64_t numSamples =
+    static_cast<int64_t>(mDataLength) * 8 / mChannels / mSampleFormat;
 
   int64_t numUSeconds = USECS_PER_S * numSamples / mSamplesPerSecond;
 
@@ -424,7 +428,7 @@ WAVTrackDemuxer::Duration() const
 TimeUnit
 WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const
 {
-  if (!mSamplesPerSecond) {
+  if (!mSamplesPerSecond || !mSamplesPerChunk) {
     return TimeUnit();
   }
   const double usPerDataChunk = USECS_PER_S *
@@ -436,7 +440,7 @@ WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const
 TimeUnit
 WAVTrackDemuxer::DurationFromBytes(uint32_t aNumBytes) const
 {
-  if (!mSamplesPerSecond) {
+  if (!mSamplesPerSecond || !mChannels || !mSampleFormat) {
     return TimeUnit();
   }
 
@@ -587,6 +591,9 @@ WAVTrackDemuxer::ChunkIndexFromOffset(int64_t aOffset) const
 int64_t
 WAVTrackDemuxer::ChunkIndexFromTime(const media::TimeUnit& aTime) const
 {
+  if (!mSamplesPerChunk || !mSamplesPerSecond) {
+    return 0;
+  }
   int64_t chunkIndex =
     (aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerChunk) - 1;
   return chunkIndex;

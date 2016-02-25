@@ -8,7 +8,10 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'MathML')
 
 if CONFIG['ENABLE_TESTS']:
-    MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+    MOCHITEST_MANIFESTS += [
+        'imptests/mochitest.ini',
+        'tests/mochitest.ini',
+]
 
 UNIFIED_SOURCES += [
     'nsMathMLChar.cpp',

@@ -1218,6 +1218,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
 #ifdef DEBUG
     inUnsafeRegion(0),
     noGCOrAllocationCheck(0),
+    noNurseryAllocationCheck(0),
 #endif
     lock(nullptr),
     allocTask(rt, emptyChunks_),
@@ -7356,6 +7357,17 @@ JS::AutoAssertNoAlloc::~AutoAssertNoAlloc()
 {
     if (gc)
         gc->allowAlloc();
+}
+
+AutoAssertNoNurseryAlloc::AutoAssertNoNurseryAlloc(JSRuntime* rt)
+  : gc(rt->gc)
+{
+    gc.disallowNurseryAlloc();
+}
+
+AutoAssertNoNurseryAlloc::~AutoAssertNoNurseryAlloc()
+{
+    gc.allowNurseryAlloc();
 }
 #endif
 

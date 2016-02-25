@@ -39,28 +39,24 @@ function onLoad()
   }
 
   if (tokenName == "") {
-     var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
-     var tokenList = sectokdb.listTokens();
-     var enumElement;
-     let i = 0;
-     var menu = document.getElementById("tokenMenu");
-     try {
-        for (; !tokenList.isDone(); tokenList.next()) {
-           enumElement = tokenList.currentItem();
-           var token = enumElement.QueryInterface(nsIPK11Token);
-           if(token.needsLogin() || !(token.needsUserInit)) {
-              var menuItemNode = document.createElement("menuitem");
-              menuItemNode.setAttribute("value", token.tokenName);
-              menuItemNode.setAttribute("label", token.tokenName);
-              menu.firstChild.appendChild(menuItemNode);
-              if (i == 0) {
-                 menu.selectedItem = menuItemNode;
-                 tokenName = token.tokenName;
-              }
-              i++;
-           }
+    let tokenDB = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+    let tokenList = tokenDB.listTokens();
+    let i = 0;
+    let menu = document.getElementById("tokenMenu");
+    while (tokenList.hasMoreElements()) {
+      let token = tokenList.getNext().QueryInterface(nsIPK11Token);
+      if (token.needsLogin() || !(token.needsUserInit)) {
+        let menuItemNode = document.createElement("menuitem");
+        menuItemNode.setAttribute("value", token.tokenName);
+        menuItemNode.setAttribute("label", token.tokenName);
+        menu.firstChild.appendChild(menuItemNode);
+        if (i == 0) {
+          menu.selectedItem = menuItemNode;
+          tokenName = token.tokenName;
         }
-     } catch (exception) {}
+        i++;
+      }
+    }
   } else {
     var sel = document.getElementById("tokenMenu");
     sel.setAttribute("hidden", "true");

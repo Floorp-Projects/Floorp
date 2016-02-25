@@ -395,12 +395,14 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
       const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.ySize();
       mFormat = gfx::SurfaceFormat::YUV;
+      mHasIntermediateBuffer = true;
       break;
     }
     case BufferDescriptor::TRGBDescriptor: {
       const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
+      mHasIntermediateBuffer = rgb.hasIntermediateBuffer();
       break;
     }
     default: MOZ_CRASH();
@@ -445,6 +447,9 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
     it->SetCompositor(aCompositor);
     it = it->GetNextSibling();
   }
+  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
+    mFirstSource->SetOwner(nullptr);
+  }
   mFirstSource = nullptr;
   mCompositor = aCompositor;
 }
@@ -452,6 +457,17 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
 void
 BufferTextureHost::DeallocateDeviceData()
 {
+  if (mFirstSource && mFirstSource->NumCompositableRefs() > 0) {
+    return;
+  }
+
+  if (!mFirstSource || !mFirstSource->IsOwnedBy(this)) {
+    mFirstSource = nullptr;
+    return;
+  }
+
+  mFirstSource->SetOwner(nullptr);
+
   RefPtr<TextureSource> it = mFirstSource;
   while (it) {
     it->DeallocateDeviceData();
@@ -475,6 +491,73 @@ BufferTextureHost::Unlock()
 {
   MOZ_ASSERT(mLocked);
   mLocked = false;
+}
+
+bool
+BufferTextureHost::EnsureWrappingTextureSource()
+{
+  MOZ_ASSERT(!mHasIntermediateBuffer);
+  MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV);
+
+  if (mFirstSource) {
+    return true;
+  }
+
+  if (!mCompositor) {
+    return false;
+  }
+
+  RefPtr<gfx::DataSourceSurface> surf =
+    gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
+      ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width), mSize, mFormat);
+
+  if (!surf) {
+    return false;
+  }
+
+  mFirstSource = mCompositor->CreateDataTextureSourceAround(surf);
+  mFirstSource->SetUpdateSerial(mUpdateSerial);
+  mFirstSource->SetOwner(this);
+
+  return true;
+}
+
+void
+BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
+{
+  if (!mHasIntermediateBuffer) {
+    EnsureWrappingTextureSource();
+  }
+
+  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
+    // We are already attached to a TextureSource, nothing to do except tell
+    // the compositable to use it.
+    aTexture = mFirstSource.get();
+    return;
+  }
+
+  // We don't own it, apparently.
+  mFirstSource = nullptr;
+
+  DataTextureSource* texture = aTexture.get() ? aTexture->AsDataTextureSource() : nullptr;
+  bool compatibleFormats = texture
+                         && (mFormat == texture->GetFormat()
+                             || (mFormat == gfx::SurfaceFormat::YUV
+                                 && mCompositor->SupportsEffect(EffectTypes::YCBCR)
+                                 && texture->GetNextSibling())
+                             || (mFormat == gfx::SurfaceFormat::YUV
+                                 && !mCompositor->SupportsEffect(EffectTypes::YCBCR)
+                                 && texture->GetFormat() == gfx::SurfaceFormat::B8G8R8X8));
+
+  bool shouldCreateTexture = !compatibleFormats
+                           || texture->NumCompositableRefs() > 1
+                           || texture->HasOwner()
+                           || texture->GetSize() != mSize;
+
+  if (!shouldCreateTexture) {
+    mFirstSource = texture;
+    mFirstSource->SetOwner(this);
+  }
 }
 
 bool
@@ -505,9 +588,17 @@ BufferTextureHost::GetFormat() const
 bool
 BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 {
-  if (mFirstSource && mFirstSource->GetUpdateSerial() == mUpdateSerial) {
+  auto serial = mFirstSource ? mFirstSource->GetUpdateSerial() : 0;
+
+  if (serial == mUpdateSerial) {
     return true;
   }
+
+  if (serial == 0) {
+    // 0 means the source has no valid content
+    aRegion = nullptr;
+  }
+
   if (!Upload(aRegion)) {
     return false;
   }
@@ -538,6 +629,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     // attached to a layer.
     return false;
   }
+  if (!mHasIntermediateBuffer && EnsureWrappingTextureSource()) {
+    return true;
+  }
+
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return false;
@@ -552,6 +647,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       }
       if (!mFirstSource) {
         mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
+        mFirstSource->SetOwner(this);
       }
       mFirstSource->Update(surf, aRegion);
       return true;
@@ -566,6 +662,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       srcU = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
       srcV = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
       mFirstSource = srcY;
+      mFirstSource->SetOwner(this);
       srcY->SetNextSibling(srcU);
       srcU->SetNextSibling(srcV);
     } else {
@@ -611,6 +708,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     nsIntRegion* regionToUpdate = aRegion;
     if (!mFirstSource) {
       mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
+      mFirstSource->SetOwner(this);
       if (mFlags & TextureFlags::COMPONENT_ALPHA) {
         // Update the full region the first time for component alpha textures.
         regionToUpdate = nullptr;
