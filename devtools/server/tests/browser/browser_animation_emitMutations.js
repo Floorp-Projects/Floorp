@@ -30,10 +30,10 @@ add_task(function*() {
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
   ok(changes.every(({type}) => type === "added"), "Both changes are additions");
-  is(changes[0].player.initialState.name, "move",
-    "The first added animation is 'move'");
-  is(changes[1].player.initialState.name, "glow",
-    "The first added animation is 'glow'");
+
+  let names = changes.map(c => c.player.initialState.name).sort();
+  is(names[0], "glow", "The animation 'glow' was added");
+  is(names[1], "move", "The animation 'move' was added");
 
   info("Store the 2 new players for comparing later");
   let p1 = changes[0].player;

@@ -1170,6 +1170,21 @@ struct Device
   inline hb_position_t get_y_delta (hb_font_t *font) const
   { return get_delta (font->y_ppem, font->y_scale); }
 
+  inline unsigned int get_size (void) const
+  {
+    unsigned int f = deltaFormat;
+    if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * USHORT::static_size;
+    return USHORT::static_size * (4 + ((endSize - startSize) >> (4 - f)));
+  }
+
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (c->check_struct (this) && c->check_range (this, this->get_size ()));
+  }
+
+  private:
+
   inline int get_delta (unsigned int ppem, int scale) const
   {
     if (!ppem) return 0;
@@ -1180,8 +1195,6 @@ struct Device
 
     return (int) (pixels * (int64_t) scale / ppem);
   }
-
-
   inline int get_delta_pixels (unsigned int ppem_size) const
   {
     unsigned int f = deltaFormat;
@@ -1203,19 +1216,6 @@ struct Device
       delta -= mask + 1;
 
     return delta;
-  }
-
-  inline unsigned int get_size (void) const
-  {
-    unsigned int f = deltaFormat;
-    if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * USHORT::static_size;
-    return USHORT::static_size * (4 + ((endSize - startSize) >> (4 - f)));
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) && c->check_range (this, this->get_size ()));
   }
 
   protected:

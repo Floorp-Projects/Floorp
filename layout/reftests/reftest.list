@@ -262,6 +262,9 @@ skip-if(!B2G&&browserIsRemote) include ogg-video/reftest.list
 # webm-video/
 skip-if(!B2G&&browserIsRemote) include webm-video/reftest.list
 
+# mp4-video/
+skip-if(!B2G&&browserIsRemote) include mp4-video/reftest.list
+
 # parser/
 include ../../parser/htmlparser/tests/reftest/reftest.list
 

@@ -12,7 +12,6 @@
 #include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMMutationObserver.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -23,7 +22,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
-#include "RestyleManager.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
@@ -72,7 +70,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
                                                  aPseudoType,
                                                bool aCreateIfNeeded)
 {
-  if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
+  if (!aCreateIfNeeded && !aElement->MayHaveAnimations()) {
     // Early return for the most common case.
     return nullptr;
   }
@@ -94,7 +92,7 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
     static_cast<AnimationCollection*>(aElement->GetProperty(propName));
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    collection = new AnimationCollection(aElement, propName, this);
+    collection = new AnimationCollection(aElement, propName);
     nsresult rv =
       aElement->SetProperty(propName, collection,
                             &AnimationCollection::PropertyDtor, false);
@@ -151,56 +149,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   return result;
 }
 
-/*static*/ nsString
-AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
-{
-  switch (aPseudoType) {
-    case CSSPseudoElementType::before:
-      return NS_LITERAL_STRING("::before");
-    case CSSPseudoElementType::after:
-      return NS_LITERAL_STRING("::after");
-    default:
-      MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo,
-                 "Unexpected pseudo type");
-      return EmptyString();
-  }
-}
-
-/*static*/ void
-AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
-                                  void *aPropertyValue, void *aData)
-{
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(aPropertyValue);
-#ifdef DEBUG
-  MOZ_ASSERT(!collection->mCalledPropertyDtor, "can't call dtor twice");
-  collection->mCalledPropertyDtor = true;
-#endif
-  {
-    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
-
-    for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
-      collection->mAnimations[animIdx]->CancelFromStyle();
-    }
-  }
-  delete collection;
-}
-
-void
-AnimationCollection::Tick()
-{
-  for (size_t animIdx = 0, animEnd = mAnimations.Length();
-       animIdx != animEnd; animIdx++) {
-    mAnimations[animIdx]->Tick();
-  }
-}
-
-void
-AnimationCollection::UpdateCheckGeneration(
-  nsPresContext* aPresContext)
-{
-  mCheckGeneration = aPresContext->RestyleManager()->GetAnimationGeneration();
-}
 
 nsPresContext*
 OwningElementRef::GetRenderedPresContext() const

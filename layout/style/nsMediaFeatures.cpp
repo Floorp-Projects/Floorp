@@ -18,6 +18,9 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 using namespace mozilla;
 

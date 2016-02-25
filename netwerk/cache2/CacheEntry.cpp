@@ -928,6 +928,13 @@ void CacheEntry::OnHandleClosed(CacheEntryHandle const* aHandle)
 
   mozilla::MutexAutoLock lock(mLock);
 
+  if (IsDoomed() && mHandlesCount == 0 && NS_SUCCEEDED(mFileStatus)) {
+    // This entry is no longer referenced from outside and is doomed.
+    // Tell the file to kill the handle, i.e. bypass any I/O operations
+    // on it except removing the file.
+    mFile->Kill();
+  }
+
   if (mWriter != aHandle) {
     LOG(("  not the writer"));
     return;
@@ -1117,8 +1124,10 @@ NS_IMETHODIMP CacheEntry::OpenInputStream(int64_t offset, nsIInputStream * *_ret
 
   nsresult rv;
 
+  RefPtr<CacheEntryHandle> selfHandle = NewHandle();
+
   nsCOMPtr<nsIInputStream> stream;
-  rv = mFile->OpenInputStream(getter_AddRefs(stream));
+  rv = mFile->OpenInputStream(selfHandle, getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISeekableStream> seekable =

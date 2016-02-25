@@ -35,7 +35,6 @@ class nsPresContext;
 
 namespace mozilla {
 
-struct AnimationCollection;
 class AnimValuesStyleRule;
 enum class CSSPseudoElementType : uint8_t;
 
@@ -138,7 +137,7 @@ struct AnimationProperty
   // If true, the propery is currently being animated on the compositor.
   //
   // Note that when the owning Animation requests a non-throttled restyle, in
-  // between calling RequestRestyle on its AnimationCollection and when the
+  // between calling RequestRestyle on its EffectCompositor and when the
   // restyle is performed, this member may temporarily become false even if
   // the animation remains on the layer after the restyle.
   //
@@ -287,10 +286,12 @@ public:
   InfallibleTArray<AnimationProperty>& Properties() {
     return mProperties;
   }
-  // Copies the properties from another keyframe effect whilst preserving
-  // the mWinsInCascade and mIsRunningOnCompositor state of matching
+  // Updates the set of properties using the supplied list whilst preserving
+  // the mWinsInCascade and mIsRunningOnCompositor state of any matching
   // properties.
-  void CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther);
+  // Returns true if we updated anything in the properties.
+  bool UpdateProperties(
+    const InfallibleTArray<AnimationProperty>& aProperties);
 
   // Updates |aStyleRule| with the animation values produced by this
   // AnimationEffect for the current time except any properties already
@@ -320,8 +321,6 @@ public:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
-
-  inline AnimationCollection* GetCollection() const;
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,

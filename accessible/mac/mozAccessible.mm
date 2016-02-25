@@ -100,7 +100,7 @@ a11y::GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
 
     // If element is ignored, then add its children as substitutes.
     if (IsProxyIgnored(childProxy)) {
-      GetProxyUnignoredChildren(aProxy, aChildrenArray);
+      GetProxyUnignoredChildren(childProxy, aChildrenArray);
       continue;
     }
 

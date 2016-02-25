@@ -1105,9 +1105,6 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     }
 
     newAcc = CreateAccessibleByFrameType(frame, content, aContext);
-    if (!aContext->IsAcceptableChild(newAcc))
-      return nullptr;
-
     document->BindToDocument(newAcc, nullptr);
     newAcc->AsTextLeaf()->SetText(text.mString);
     return newAcc;
@@ -1131,9 +1128,6 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     }
 
     newAcc = new HyperTextAccessibleWrap(content, document);
-    if (!aContext->IsAcceptableChild(newAcc))
-      return nullptr;
-
     document->BindToDocument(newAcc, aria::GetRoleMap(aNode));
     return newAcc;
   }
@@ -1291,10 +1285,9 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     }
   }
 
-  if (!newAcc || !aContext->IsAcceptableChild(newAcc))
-    return nullptr;
-
-  document->BindToDocument(newAcc, roleMapEntry);
+  if (newAcc) {
+    document->BindToDocument(newAcc, roleMapEntry);
+  }
   return newAcc;
 }
 
@@ -1414,13 +1407,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
                                                DocAccessible* aDoc)
 {
   nsAutoString role;
-  for (const nsXBLBinding* binding = aContent->GetXBLBinding(); binding; binding = binding->GetBaseBinding()) {
-    nsIContent* bindingElm = binding->PrototypeBinding()->GetBindingElement();
-    bindingElm->GetAttr(kNameSpaceID_None, nsGkAtoms::role, role);
-    if (!role.IsEmpty())
-      break;
-  }
-
+  nsCoreUtils::XBLBindingRole(aContent, role);
   if (role.IsEmpty() || role.EqualsLiteral("none"))
     return nullptr;
 

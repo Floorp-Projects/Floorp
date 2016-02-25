@@ -219,6 +219,11 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+#if (MOZ_WIDGET_GTK == 3)
+static void     scale_changed_cb          (GtkWidget* widget,
+                                           GParamSpec* aPSpec,
+                                           gpointer aPointer);
+#endif
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean touch_event_cb            (GtkWidget* aWidget,
                                            GdkEventTouch* aEvent);
@@ -3348,6 +3353,19 @@ nsWindow::ThemeChanged()
 }
 
 void
+nsWindow::OnDPIChanged()
+{
+  if (mWidgetListener) {
+    nsIPresShell* presShell = mWidgetListener->GetPresShell();
+    if (presShell) {
+      presShell->BackingScaleFactorChanged();
+      // Update menu's font size etc
+      presShell->ThemeChanged();
+    }
+  }
+}
+
+void
 nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3822,6 +3840,10 @@ nsWindow::Create(nsIWidget* aParent,
                                G_CALLBACK(size_allocate_cb), nullptr);
         g_signal_connect(mContainer, "hierarchy-changed",
                          G_CALLBACK(hierarchy_changed_cb), nullptr);
+#if (MOZ_WIDGET_GTK == 3)
+        g_signal_connect(mContainer, "notify::scale-factor",
+                         G_CALLBACK(scale_changed_cb), nullptr);
+#endif
         // Initialize mHasMappedToplevel.
         hierarchy_changed_cb(GTK_WIDGET(mContainer), nullptr);
         // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
@@ -5969,6 +5991,24 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
     RefPtr<nsWindow> window = data;
     window->ThemeChanged();
 }
+
+#if (MOZ_WIDGET_GTK == 3)
+static void
+scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
+{
+    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    if (!window) {
+      return;
+    }
+    window->OnDPIChanged();
+
+    // configure_event is already fired before scale-factor signal,
+    // but size-allocate isn't fired by changing scale
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    window->OnSizeAllocate(&allocation);
+}
+#endif
 
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean

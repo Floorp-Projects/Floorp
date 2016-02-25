@@ -67,12 +67,6 @@
 #include "WorkerRunnable.h"
 #include "WorkerThread.h"
 
-#ifdef ENABLE_TESTS
-#include "BackgroundChildImpl.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "prrng.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -161,10 +155,6 @@ RuntimeService* gRuntimeService = nullptr;
 
 // Only true during the call to Init.
 bool gRuntimeServiceDuringInit = false;
-
-#ifdef ENABLE_TESTS
-bool gTestPBackground = false;
-#endif // ENABLE_TESTS
 
 class LiteralRebindingCString : public nsDependentCString
 {
@@ -986,58 +976,6 @@ private:
   WorkerPrivate* mWorkerPrivate;
 };
 
-#ifdef ENABLE_TESTS
-
-class TestPBackgroundCreateCallback final :
-  public nsIIPCBackgroundChildCreateCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    MOZ_RELEASE_ASSERT(aActor);
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    MOZ_CRASH("TestPBackground() should not fail "
-              "GetOrCreateForCurrentThread()");
-  }
-
-private:
-  ~TestPBackgroundCreateCallback()
-  { }
-};
-
-NS_IMPL_ISUPPORTS(TestPBackgroundCreateCallback,
-                  nsIIPCBackgroundChildCreateCallback);
-
-void
-TestPBackground()
-{
-  using namespace mozilla::ipc;
-
-  if (gTestPBackground) {
-    // Randomize value to validate workers are not cross-posting messages.
-    uint32_t testValue;
-    size_t randomSize = PR_GetRandomNoise(&testValue, sizeof(testValue));
-    MOZ_RELEASE_ASSERT(randomSize == sizeof(testValue));
-    nsCString testStr;
-    testStr.AppendInt(testValue);
-    testStr.AppendInt(reinterpret_cast<int64_t>(PR_GetCurrentThread()));
-    PBackgroundChild* existingBackgroundChild =
-      BackgroundChild::GetForCurrentThread();
-    MOZ_RELEASE_ASSERT(existingBackgroundChild);
-    bool ok = existingBackgroundChild->SendPBackgroundTestConstructor(testStr);
-    MOZ_RELEASE_ASSERT(ok);
-  }
-}
-
-#endif // ENABLE_TESTS
-
 class WorkerBackgroundChildCallback final :
   public nsIIPCBackgroundChildCreateCallback
 {
@@ -1421,10 +1359,6 @@ RuntimeService::GetOrCreateService()
       gRuntimeService = nullptr;
       return nullptr;
     }
-
-#ifdef ENABLE_TESTS
-    gTestPBackground = mozilla::Preferences::GetBool("pbackground.testing", false);
-#endif // ENABLE_TESTS
   }
 
   return gRuntimeService;
@@ -2703,10 +2637,6 @@ WorkerThreadPrimaryRunnable::Run()
 
   mWorkerPrivate->SetThread(mThread);
 
-#ifdef ENABLE_TESTS
-  TestPBackground();
-#endif
-
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   {
@@ -2742,10 +2672,6 @@ WorkerThreadPrimaryRunnable::Run()
 
         JS_ReportPendingException(cx);
       }
-
-#ifdef ENABLE_TESTS
-      TestPBackground();
-#endif
 
       BackgroundChild::CloseForCurrentThread();
 

@@ -595,6 +595,12 @@ CacheFileChunk::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
 }
 
 bool
+CacheFileChunk::IsKilled()
+{
+  return mFile->IsKilled();
+}
+
+bool
 CacheFileChunk::IsReady() const
 {
   mFile->AssertOwnsLock();

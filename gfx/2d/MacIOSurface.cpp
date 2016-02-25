@@ -10,6 +10,7 @@
 #include <dlfcn.h>
 #include "mozilla/RefPtr.h"
 #include "mozilla/Assertions.h"
+#include "GLConsts.h"
 
 using namespace mozilla;
 // IOSurface signatures
@@ -476,6 +477,21 @@ MacIOSurface::GetFormat()
   OSType pixelFormat = GetPixelFormat();
   if (pixelFormat == '420v') {
     return SurfaceFormat::NV12;
+  } else if (pixelFormat == '2vuy') {
+    return SurfaceFormat::YUV422;
+  } else  {
+    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
+  }
+}
+
+SurfaceFormat
+MacIOSurface::GetReadFormat()
+{
+  OSType pixelFormat = GetPixelFormat();
+  if (pixelFormat == '420v') {
+    return SurfaceFormat::NV12;
+  } else if (pixelFormat == '2vuy') {
+    return SurfaceFormat::R8G8B8X8;
   } else  {
     return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
   }
@@ -500,6 +516,12 @@ MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, size_t plane)
       internalFormat = format = GL_LUMINANCE_ALPHA;
     }
     type = GL_UNSIGNED_BYTE;
+  } else if (pixelFormat == '2vuy') {
+    MOZ_ASSERT(plane == 0);
+
+    internalFormat = GL_RGB;
+    format = LOCAL_GL_YCBCR_422_APPLE;
+    type = GL_UNSIGNED_SHORT_8_8_APPLE;
   } else  {
     MOZ_ASSERT(plane == 0);
 

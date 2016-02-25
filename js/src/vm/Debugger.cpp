@@ -4767,6 +4767,7 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+
 bool
 Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -8032,6 +8033,48 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
     return true;
 }
 
+// Lookup a binding on the referent's global scope and change it to undefined
+// if it is an uninitialized lexical, otherwise do nothing. The method's return
+// value is true _only_ when an uninitialized lexical has been altered, otherwise
+// it is false.
+bool
+DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "forceLexicalInitializationByname", args, referent);
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
+        return false;
+    if (!RequireGlobalObject(cx, args.thisv(), referent))
+        return false;
+
+    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
+
+    if (!args[0].isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NOT_EXPECTED_TYPE, "Debugger.Object.prototype.forceLexicalInitializationByName",
+                             "string", InformalValueTypeName(args[0]));
+        return false;
+    }
+
+    PropertyName* name = args[0].toString()->asAtom().asPropertyName();
+
+    bool initialized = false;
+
+    Shape* s = nullptr;
+    JSObject* scope = nullptr;
+    JSObject* pobj = nullptr;
+
+    if (LookupNameNoGC(cx, name, globalLexical, &scope, &pobj, &s)) {
+        Value v = globalLexical->as<NativeObject>().getSlot(s->slot());
+        if (s->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+            globalLexical->as<NativeObject>().setSlot(s->slot(), UndefinedValue());
+            initialized = true;
+         }
+    }
+
+    args.rval().setBoolean(initialized);
+    return true;
+}
+
 static bool
 DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -8151,6 +8194,7 @@ static const JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
     JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
     JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
+    JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
     JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),

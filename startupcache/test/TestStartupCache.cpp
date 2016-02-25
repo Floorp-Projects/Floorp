@@ -23,6 +23,7 @@
 #include "nsIXPConnect.h"
 #include "prio.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace JS;
 
@@ -30,7 +31,7 @@ namespace mozilla {
 namespace scache {
 
 NS_IMPORT nsresult
-NewObjectInputStreamFromBuffer(char* buffer, uint32_t len, 
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
@@ -41,11 +42,12 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 
 NS_IMPORT nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream, 
-                           char** buffer, uint32_t* len);
+                           UniquePtr<char[]>* buffer, uint32_t* len);
 } // namespace scache
 } // namespace mozilla
 
 using namespace mozilla::scache;
+using mozilla::UniquePtr;
 
 #define NS_ENSURE_STR_MATCH(str1, str2, testname)  \
 PR_BEGIN_MACRO                                     \
@@ -90,26 +92,23 @@ TestStartupWriteRead() {
   
   const char* buf = "Market opportunities for BeardBook";
   const char* id = "id";
-  char* outbufPtr = nullptr;
-  nsAutoArrayPtr<char> outbuf;  
+  UniquePtr<char[]> outbuf;  
   uint32_t len;
   
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = sc->GetBuffer(id, &outbufPtr, &len);
+  rv = sc->GetBuffer(id, &outbuf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
-  outbuf = outbufPtr;
-  NS_ENSURE_STR_MATCH(buf, outbuf, "pre-write read");
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "pre-write read");
 
   rv = sc->ResetStartupWriteTimer();
   rv = WaitForStartupTimer();
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = sc->GetBuffer(id, &outbufPtr, &len);
+  rv = sc->GetBuffer(id, &outbuf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
-  outbuf = outbufPtr;
-  NS_ENSURE_STR_MATCH(buf, outbuf, "simple write/read");
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "simple write/read");
 
   return NS_OK;
 }
@@ -119,7 +118,7 @@ TestWriteInvalidateRead() {
   nsresult rv;
   const char* buf = "BeardBook competitive analysis";
   const char* id = "id";
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   uint32_t len;
   nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
@@ -131,7 +130,6 @@ TestWriteInvalidateRead() {
   sc->InvalidateCache();
 
   rv = sc->GetBuffer(id, &outbuf, &len);
-  delete[] outbuf;
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     passed("buffer not available after invalidate");
   } else if (NS_SUCCEEDED(rv)) {
@@ -195,37 +193,33 @@ TestWriteObject() {
     return rv;
   }
 
-  char* bufPtr = nullptr;
-  nsAutoArrayPtr<char> buf;
+  UniquePtr<char[]> buf;
   uint32_t len;
-  NewBufferFromStorageStream(storageStream, &bufPtr, &len);
-  buf = bufPtr;
+  NewBufferFromStorageStream(storageStream, &buf, &len);
 
   // Since this is a post-startup write, it should be written and
   // available.
-  rv = sc->PutBuffer(id, buf, len);
+  rv = sc->PutBuffer(id, buf.get(), len);
   if (NS_FAILED(rv)) {
     fail("failed to insert input stream");
     return rv;
   }
     
-  char* buf2Ptr = nullptr;
-  nsAutoArrayPtr<char> buf2;
+  UniquePtr<char[]> buf2;
   uint32_t len2;
   nsCOMPtr<nsIObjectInputStream> objectInput;
-  rv = sc->GetBuffer(id, &buf2Ptr, &len2);
+  rv = sc->GetBuffer(id, &buf2, &len2);
   if (NS_FAILED(rv)) {
     fail("failed to retrieve buffer");
     return rv;
   }
-  buf2 = buf2Ptr;
 
-  rv = NewObjectInputStreamFromBuffer(buf2, len2, getter_AddRefs(objectInput));
+  rv = NewObjectInputStreamFromBuffer(Move(buf2), len2,
+                                      getter_AddRefs(objectInput));
   if (NS_FAILED(rv)) {
     fail("failed to created input stream");
     return rv;
   }  
-  buf2.forget();
 
   nsCOMPtr<nsISupports> deserialized;
   rv = objectInput->ReadObject(true, getter_AddRefs(deserialized));
@@ -314,7 +308,7 @@ TestIgnoreDiskCache(nsIFile* profileDir) {
   
   const char* buf = "Get a Beardbook app for your smartphone";
   const char* id = "id";
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   uint32_t len;
   
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
@@ -333,8 +327,6 @@ TestIgnoreDiskCache(nsIFile* profileDir) {
 
   nsresult r = LockCacheFile(false, profileDir);
   NS_ENSURE_SUCCESS(r, r);
-
-  delete[] outbuf;
 
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     passed("buffer not available after ignoring disk cache");
@@ -360,7 +352,7 @@ TestEarlyShutdown() {
   const char* buf = "Find your soul beardmate on BeardBook";
   const char* id = "id";
   uint32_t len;
-  char* outbuf = nullptr;
+  UniquePtr<char[]> outbuf;
   
   sc->ResetStartupWriteTimer();
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
@@ -373,7 +365,6 @@ TestEarlyShutdown() {
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = sc->GetBuffer(id, &outbuf, &len);
-  delete[] outbuf;
 
   if (NS_SUCCEEDED(rv)) {
     passed("GetBuffer succeeded after early shutdown");

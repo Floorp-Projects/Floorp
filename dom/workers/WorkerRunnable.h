@@ -227,7 +227,8 @@ protected:
 };
 
 // This runnable is identical to WorkerSyncRunnable except it is meant to be
-// used on the main thread only.
+// created on and dispatched from the main thread only.  Its WorkerRun/PostRun
+// will run on the worker thread.
 class MainThreadWorkerSyncRunnable : public WorkerSyncRunnable
 {
 protected:

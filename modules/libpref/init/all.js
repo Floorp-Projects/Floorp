@@ -505,7 +505,7 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediasource.mp4.enabled", true);
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GONK)
 pref("media.mediasource.webm.enabled", false);
 #else
 pref("media.mediasource.webm.enabled", true);
@@ -610,9 +610,9 @@ pref("apz.velocity_bias", "1.0");
 pref("apz.velocity_relevance_time_ms", 150);
 pref("apz.x_skate_highmem_adjust", "0.0");
 pref("apz.y_skate_highmem_adjust", "0.0");
-pref("apz.x_skate_size_multiplier", "2.5");
+pref("apz.x_skate_size_multiplier", "1.25");
 pref("apz.y_skate_size_multiplier", "3.5");
-pref("apz.x_stationary_size_multiplier", "3.0");
+pref("apz.x_stationary_size_multiplier", "1.5");
 pref("apz.y_stationary_size_multiplier", "3.5");
 pref("apz.zoom_animation_duration_ms", 250);
 
@@ -620,9 +620,7 @@ pref("apz.zoom_animation_duration_ms", 250);
 // Mobile prefs
 pref("apz.allow_zooming", true);
 pref("apz.enlarge_displayport_when_clipped", true);
-pref("apz.x_skate_size_multiplier", "1.25");
 pref("apz.y_skate_size_multiplier", "1.5");
-pref("apz.x_stationary_size_multiplier", "1.5");
 pref("apz.y_stationary_size_multiplier", "1.8");
 #endif
 
@@ -2346,8 +2344,8 @@ pref("layout.css.convertFromNode.enabled", false);
 pref("layout.css.convertFromNode.enabled", true);
 #endif
 
-// Is support for CSS "text-align: true X" enabled?
-pref("layout.css.text-align-true-value.enabled", false);
+// Is support for CSS "text-align: unsafe X" enabled?
+pref("layout.css.text-align-unsafe-value.enabled", false);
 
 // Is support for CSS "float: inline-{start,end}" and
 // "clear: inline-{start,end}" enabled?

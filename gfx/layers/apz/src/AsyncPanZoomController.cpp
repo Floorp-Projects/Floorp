@@ -3544,11 +3544,30 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     FrameMetrics endZoomToMetrics = mFrameMetrics;
     if (aFlags & PAN_INTO_VIEW_ONLY) {
       targetZoom = currentZoom;
+    } else if(aFlags & ONLY_ZOOM_TO_DEFAULT_SCALE) {
+      CSSToParentLayerScale zoomAtDefaultScale =
+        mFrameMetrics.GetDevPixelsPerCSSPixel() * LayoutDeviceToParentLayerScale(1.0);
+      if (targetZoom.scale > zoomAtDefaultScale.scale) {
+        // Only change the zoom if we are less than the default zoom
+        if (currentZoom.scale < zoomAtDefaultScale.scale) {
+          targetZoom = zoomAtDefaultScale;
+        } else {
+          targetZoom = currentZoom;
+        }
+      }
     }
     endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
 
     // Adjust the zoomToRect to a sensible position to prevent overscrolling.
     CSSSize sizeAfterZoom = endZoomToMetrics.CalculateCompositedSizeInCssPixels();
+
+    // Vertically center the zoomed element in the screen.
+    if (!zoomOut && (sizeAfterZoom.height > aRect.height)) {
+      aRect.y -= (sizeAfterZoom.height - aRect.height) * 0.5f;
+      if (aRect.y < 0.0f) {
+        aRect.y = 0.0f;
+      }
+    }
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
@@ -3559,14 +3578,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     if (aRect.x + sizeAfterZoom.width > cssPageRect.width) {
       aRect.x = cssPageRect.width - sizeAfterZoom.width;
       aRect.x = aRect.x > 0 ? aRect.x : 0;
-    }
-
-    // Vertically center the zoomed element in the screen.
-    if (!zoomOut && (sizeAfterZoom.height > aRect.height)) {
-      aRect.y -= (sizeAfterZoom.height - aRect.height) * 0.5f;
-      if (aRect.y < 0.0f) {
-        aRect.y = 0.0f;
-      }
     }
 
     endZoomToMetrics.SetScrollOffset(aRect.TopLeft());

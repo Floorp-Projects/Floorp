@@ -138,11 +138,6 @@ public:
     MOZ_ASSERT(IsTiedToMarkup());
     mAnimationIndex = aIndex;
   }
-  void CopyAnimationIndex(const CSSAnimation& aOther)
-  {
-    MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup());
-    mAnimationIndex = aOther.mAnimationIndex;
-  }
 
   // Sets the owning element which is used for determining the composite
   // order of CSSAnimation objects generated from CSS markup.
@@ -325,10 +320,6 @@ public:
   void StopAnimationsForElement(mozilla::dom::Element* aElement,
                                 mozilla::CSSPseudoElementType aPseudoType);
 
-  bool IsAnimationManager() override {
-    return true;
-  }
-
 protected:
   virtual ~nsAnimationManager() {}
 
@@ -347,15 +338,8 @@ protected:
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
-                       mozilla::dom::AnimationTimeline* aTimeline,
+                       mozilla::AnimationCollection* aCollection,
                        mozilla::AnimationPtrArray& aAnimations);
-  bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
-                      aSegments,
-                    nsCSSProperty aProperty,
-                    const mozilla::StyleAnimation& aAnimation,
-                    float aFromKey, nsStyleContext* aFromContext,
-                    mozilla::css::Declaration* aFromDeclaration,
-                    float aToKey, nsStyleContext* aToContext);
 };
 
 #endif /* !defined(nsAnimationManager_h_) */

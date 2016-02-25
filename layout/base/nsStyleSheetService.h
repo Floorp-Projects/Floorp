@@ -15,10 +15,8 @@
 #include "nsIStyleSheetService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleSheetHandle.h"
 
-namespace mozilla {
-class CSSStyleSheet;
-}
 class nsICategoryManager;
 class nsIMemoryReporter;
 class nsISimpleEnumerator;
@@ -43,15 +41,15 @@ class nsStyleSheetService final
 
   nsresult Init();
 
-  nsTArray<RefPtr<mozilla::CSSStyleSheet>>* AgentStyleSheets()
+  nsTArray<mozilla::StyleSheetHandle::RefPtr>* AgentStyleSheets()
   {
     return &mSheets[AGENT_SHEET];
   }
-  nsTArray<RefPtr<mozilla::CSSStyleSheet>>* UserStyleSheets()
+  nsTArray<mozilla::StyleSheetHandle::RefPtr>* UserStyleSheets()
   {
     return &mSheets[USER_SHEET];
   }
-  nsTArray<RefPtr<mozilla::CSSStyleSheet>>* AuthorStyleSheets()
+  nsTArray<mozilla::StyleSheetHandle::RefPtr>* AuthorStyleSheets()
   {
     return &mSheets[AUTHOR_SHEET];
   }
@@ -69,7 +67,7 @@ class nsStyleSheetService final
                                           nsISimpleEnumerator *aEnumerator,
                                           uint32_t             aSheetType);
 
-  int32_t FindSheetByURI(const nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aSheets,
+  int32_t FindSheetByURI(const nsTArray<mozilla::StyleSheetHandle::RefPtr>& aSheets,
                          nsIURI* aSheetURI);
 
   // Like LoadAndRegisterSheet, but doesn't notify.  If successful, the
@@ -77,7 +75,7 @@ class nsStyleSheetService final
   nsresult LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                         uint32_t aSheetType);
 
-  nsTArray<RefPtr<mozilla::CSSStyleSheet>> mSheets[3];
+  nsTArray<mozilla::StyleSheetHandle::RefPtr> mSheets[3];
 };
 
 #endif

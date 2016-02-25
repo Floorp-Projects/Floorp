@@ -94,6 +94,7 @@ public:
   NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
+  virtual bool IsKilled() override;
 
   bool   IsReady() const;
   bool   IsDirty() const;

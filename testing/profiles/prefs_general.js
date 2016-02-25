@@ -201,9 +201,6 @@ user_pref("browser.download.panel.shown", true);
 // which test runs first and happens to open about:newtab
 user_pref("browser.newtabpage.introShown", true);
 
-// Tell the PBackground infrastructure to run a test at startup.
-user_pref("pbackground.testing", true);
-
 // Enable webapps testing mode, which bypasses native installation.
 user_pref("browser.webapps.testing", true);
 

@@ -49,6 +49,13 @@ __throw_bad_typeid(void)
     mozalloc_abort("fatal: STL threw bad_typeid");
 }
 
+// used by <functional>
+MOZ_NORETURN MOZ_ALWAYS_INLINE void
+__throw_bad_function_call(void)
+{
+    mozalloc_abort("fatal: STL threw bad_function_call");
+}
+
 MOZ_NORETURN MOZ_ALWAYS_INLINE void
 __throw_logic_error(const char* msg)
 {
