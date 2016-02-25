@@ -586,7 +586,6 @@ var BrowserApp = {
       BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
 
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
-      InitLater(() => Cu.import("resource://gre/modules/Payment.jsm"));
       InitLater(() => Cu.import("resource://gre/modules/PresentationDeviceInfoManager.jsm"));
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
