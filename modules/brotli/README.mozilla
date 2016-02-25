@@ -15,3 +15,7 @@ The in-tree copy is updated by running
 from within the modules/brotli directory.
 
 Current version: [commit 33aa40220b96cf95ad2b9ba61dc8d7fd2f964f2c].
+
+dec/port.h was patched to fix false positive warning in Brotli and a
+corresponding change will be done upstream.
+See https://bugzilla.mozilla.org/show_bug.cgi?id=1247301
