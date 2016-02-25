@@ -30,7 +30,7 @@ public:
  
   virtual bool SupportsMoz2D() const override { return true; }
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual bool HasSynchronization() const override { return mHasSynchronization; }
 
@@ -142,7 +142,7 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   // TODO - DXGIYCbCrTextureClient returned true but that looks like a mistake
-  virtual bool HasInternalBuffer() const override{ return false; }
+  virtual bool HasIntermediateBuffer() const override{ return false; }
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 

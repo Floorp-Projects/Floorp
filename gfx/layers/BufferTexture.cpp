@@ -206,12 +206,12 @@ BufferTextureData::GetFormat() const
 
 
 bool
-BufferTextureData::HasInternalBuffer() const
+BufferTextureData::HasIntermediateBuffer() const
 {
   if (mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor) {
     return true;
   }
-  return mDescriptor.get_RGBDescriptor().hasInternalBuffer();
+  return mDescriptor.get_RGBDescriptor().hasIntermediateBuffer();
 }
 
 bool
@@ -441,13 +441,13 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   auto fwd = aAllocator ? aAllocator->AsCompositableForwarder() : nullptr;
-  bool hasInternalBuffer = fwd ? ComputeHasIntermediateBuffer(aFormat,
+  bool hasIntermediateBuffer = fwd ? ComputeHasIntermediateBuffer(aFormat,
                                               fwd->GetCompositorBackendType())
-                               : true;
+                                   : true;
 
   GfxMemoryImageReporter::DidAlloc(buf);
 
-  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasInternalBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
 
   return new MemoryTextureData(descriptor, aMoz2DBackend, buf, bufSize);
 }
@@ -518,11 +518,11 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   auto fwd = aAllocator->AsCompositableForwarder();
-  bool hasInternalBuffer = fwd ? ComputeHasIntermediateBuffer(aFormat,
+  bool hasIntermediateBuffer = fwd ? ComputeHasIntermediateBuffer(aFormat,
                                               fwd->GetCompositorBackendType())
-                               : true;
+                                   : true;
 
-  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasInternalBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
 
   return new ShmemTextureData(descriptor, aMoz2DBackend, shm);
 

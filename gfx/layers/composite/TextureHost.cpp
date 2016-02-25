@@ -395,14 +395,14 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
       const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.ySize();
       mFormat = gfx::SurfaceFormat::YUV;
-      mHasInternalBuffer = true;
+      mHasIntermediateBuffer = true;
       break;
     }
     case BufferDescriptor::TRGBDescriptor: {
       const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
-      mHasInternalBuffer = rgb.hasInternalBuffer();
+      mHasIntermediateBuffer = rgb.hasIntermediateBuffer();
       break;
     }
     default: MOZ_CRASH();
@@ -496,7 +496,7 @@ BufferTextureHost::Unlock()
 bool
 BufferTextureHost::EnsureWrappingTextureSource()
 {
-  MOZ_ASSERT(!mHasInternalBuffer);
+  MOZ_ASSERT(!mHasIntermediateBuffer);
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV);
 
   if (mFirstSource) {
@@ -525,7 +525,7 @@ BufferTextureHost::EnsureWrappingTextureSource()
 void
 BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
 {
-  if (!mHasInternalBuffer) {
+  if (!mHasIntermediateBuffer) {
     EnsureWrappingTextureSource();
   }
 
@@ -629,7 +629,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     // attached to a layer.
     return false;
   }
-  if (!mHasInternalBuffer && EnsureWrappingTextureSource()) {
+  if (!mHasIntermediateBuffer && EnsureWrappingTextureSource()) {
     return true;
   }
 

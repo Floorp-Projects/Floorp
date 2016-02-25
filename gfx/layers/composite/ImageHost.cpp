@@ -108,7 +108,7 @@ ImageHost::SetCurrentTextureHost(TextureHost* aTexture)
   }
 
   bool swapTextureSources = !!mCurrentTextureHost && !!mCurrentTextureSource
-                            && mCurrentTextureHost->HasInternalBuffer();
+                            && mCurrentTextureHost->HasIntermediateBuffer();
 
   if (swapTextureSources) {
     auto dataSource = mCurrentTextureSource->AsDataTextureSource();

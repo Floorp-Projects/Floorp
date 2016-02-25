@@ -184,7 +184,7 @@ public:
 
   virtual bool SupportsMoz2D() const override { return true; }
 
-  virtual bool HasInternalBuffer() const override { return true; }
+  virtual bool HasIntermediateBuffer() const override { return true; }
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
 
@@ -246,7 +246,7 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual void Deallocate(ISurfaceAllocator* aAllocator) override {}
 
@@ -297,7 +297,7 @@ public:
     return nullptr;
   }
 
-  virtual bool HasInternalBuffer() const override { return true; }
+  virtual bool HasIntermediateBuffer() const override { return true; }
 
 protected:
   TextureHostD3D9(TextureFlags aFlags);
