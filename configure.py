@@ -9,10 +9,13 @@ import itertools
 import os
 import subprocess
 import sys
+import re
 
 base_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(base_dir, 'python', 'which'))
+sys.path.append(os.path.join(base_dir, 'python', 'mozbuild'))
 from which import which, WhichError
+from mozbuild.mozconfig import MozconfigLoader
 
 
 # If feel dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
@@ -53,8 +56,25 @@ def autoconf_refresh(configure):
         else:
             return
 
-    for ac in (os.environ.get('AUTOCONF'), 'autoconf-2.13', 'autoconf2.13',
-               'autoconf213'):
+    mozconfig_autoconf = None
+    configure_dir = os.path.dirname(configure)
+    # Don't read the mozconfig for the js configure (yay backwards
+    # compatibility)
+    if not configure_dir.replace(os.sep, '/').endswith('/js/src'):
+        loader = MozconfigLoader(os.path.dirname(configure))
+        project = os.environ.get('MOZ_CURRENT_PROJECT')
+        mozconfig = loader.find_mozconfig(env=os.environ)
+        mozconfig = loader.read_mozconfig(mozconfig, moz_build_app=project)
+        make_extra = mozconfig['make_extra']
+        if make_extra:
+            for assignment in make_extra:
+                m = re.match('(?:export\s+)?AUTOCONF\s*:?=\s*(.+)$',
+                             assignment)
+                if m:
+                    mozconfig_autoconf = m.group(1)
+
+    for ac in (mozconfig_autoconf, os.environ.get('AUTOCONF'), 'autoconf-2.13',
+               'autoconf2.13', 'autoconf213'):
         if ac:
             autoconf = find_program(ac)
             if autoconf:
@@ -71,7 +91,7 @@ def autoconf_refresh(configure):
     # Add or adjust AUTOCONF for subprocesses, especially the js/src configure
     os.environ['AUTOCONF'] = autoconf
 
-    print('Refreshing %s' % configure, file=sys.stderr)
+    print('Refreshing %s with %s' % (configure, autoconf), file=sys.stderr)
 
     with open(configure, 'wb') as fh:
         subprocess.check_call([
