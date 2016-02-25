@@ -1291,9 +1291,6 @@ var gBrowserInit = {
 
     gBrowserThumbnails.init();
 
-    // Add Devtools menuitems and listeners
-    gDevToolsBrowser.registerBrowserWindow(window);
-
     gMenuButtonBadgeManager.init();
 
     gMenuButtonUpdateBadge.init();
@@ -1406,8 +1403,6 @@ var gBrowserInit = {
     // load completes). In that case, there's nothing to do here.
     if (!this._loadHandled)
       return;
-
-    gDevToolsBrowser.forgetBrowserWindow(window);
 
     let desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
     if (desc && !desc.get) {
@@ -2702,8 +2697,7 @@ var BrowserOnClick = {
       break;
       case "Browser:SendSSLErrorReport":
         this.onSSLErrorReport(msg.target,
-                              msg.data.documentURI,
-                              msg.data.location,
+                              msg.data.uri,
                               msg.data.securityInfo);
       break;
       case "Browser:SetSSLErrorReportAuto":
@@ -2723,7 +2717,7 @@ var BrowserOnClick = {
         let weakCryptoOverride = Cc["@mozilla.org/security/weakcryptooverride;1"]
                                    .getService(Ci.nsIWeakCryptoOverride);
         weakCryptoOverride.addWeakCryptoOverride(
-          msg.data.location.hostname,
+          msg.data.uri.host,
           PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
       break;
       case "Browser:SSLErrorGoBack":
@@ -2732,7 +2726,7 @@ var BrowserOnClick = {
     }
   },
 
-  onSSLErrorReport: function(browser, documentURI, location, securityInfo) {
+  onSSLErrorReport: function(browser, uri, securityInfo) {
     if (!Services.prefs.getBoolPref("security.ssl.errorReporting.enabled")) {
       Cu.reportError("User requested certificate error report sending, but certificate error reporting is disabled");
       return;
@@ -2745,11 +2739,8 @@ var BrowserOnClick = {
 
     let errorReporter = Cc["@mozilla.org/securityreporter;1"]
                           .getService(Ci.nsISecurityReporter);
-    // if location.port is the empty string, set to -1 (for consistency with
-    // port values from nsIURI)
-    let port = location.port === "" ? -1 : location.port;
     errorReporter.reportTLSError(transportSecurityInfo,
-                                 location.hostname, port);
+                                 uri.host, uri.port);
   },
 
   onAboutCertError: function (browser, elementId, isTopFrame, location, securityInfoAsString) {
@@ -6543,6 +6534,10 @@ var gIdentityHandler = {
     return this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
   },
 
+  get _isCertUserOverridden() {
+    return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
+  },
+
   get _hasInsecureLoginForms() {
     // checks if the page has been flagged for an insecure login. Also checks
     // if the pref to degrade the UI is set to true
@@ -6832,23 +6827,14 @@ var gIdentityHandler = {
       if (this._isMixedActiveContentBlocked) {
         this._identityBox.classList.add("mixedActiveBlocked");
       }
-
-      let iData = this.getIdentityData();
-
-      // Verifier is either the CA Org, for a normal cert, or a special string
-      // for certs that are trusted because of a security exception.
-      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
-                                                    [iData.caOrg]);
-
-      let host = this._uri.host;
-      let port = 443;
-      try {
-        if (this._uri.port > 0)
-          port = this._uri.port;
-      } catch (e) {}
-
-      if (this._overrideService.hasMatchingOverride(host, port, iData.cert, {}, {})) {
+      if (this._isCertUserOverridden) {
+        this._identityBox.classList.add("certUserOverridden");
+        // Cert is trusted because of a security exception, verifier is a special string.
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
+      } else {
+        // It's a normal cert, verifier is the CA Org.
+        tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                      [this.getIdentityData().caOrg]);
       }
     } else {
       this._identityBox.className = "unknownIdentity";
@@ -6952,6 +6938,8 @@ var gIdentityHandler = {
       connection = "file";
     } else if (this._isEV) {
       connection = "secure-ev";
+    } else if (this._isCertUserOverridden) {
+      connection = "secure-cert-user-overridden";
     } else if (this._isSecure) {
       connection = "secure";
     }

@@ -4,6 +4,8 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
+requestLongerTimeout(2);
+
 var chatbar = document.getElementById("pinnedchats");
 
 add_chat_task(function* testOpenCloseChat() {

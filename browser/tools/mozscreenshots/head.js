@@ -33,8 +33,7 @@ function shouldCapture() {
   // Automation isn't able to schedule test jobs to only run on nightlies so we handle it here
   // (see also: bug 1116275).
   let capture = AppConstants.MOZ_UPDATE_CHANNEL == "nightly" ||
-                AppConstants.SOURCE_REVISION_URL == "" ||
-                AppConstants.SOURCE_REVISION_URL == "1"; // bug 1248027
+                AppConstants.SOURCE_REVISION_URL == "";
   if (!capture) {
     ok(true, "Capturing is disabled for this MOZ_UPDATE_CHANNEL or REPO");
   }
