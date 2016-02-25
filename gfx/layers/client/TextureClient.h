@@ -47,6 +47,7 @@ namespace layers {
 
 class AsyncTransactionWaiter;
 class CompositableForwarder;
+class GrallocTextureData;
 class ISurfaceAllocator;
 class CompositableClient;
 struct PlanarYCbCrData;
@@ -231,6 +232,8 @@ public:
     return nullptr;
   }
 #endif
+
+  virtual GrallocTextureData* AsGrallocTextureData() { return nullptr; }
 };
 
 /**
@@ -576,6 +579,9 @@ public:
   /// If you add new code that uses this method, you are probably doing something wrong.
   TextureData* GetInternalData() { return mData; }
   const TextureData* GetInternalData() const { return mData; }
+
+  virtual void RemoveFromCompositable(CompositableClient* aCompositable,
+                                      AsyncTransactionWaiter* aWaiter = nullptr);
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
