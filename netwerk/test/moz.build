@@ -55,3 +55,5 @@ RESOURCE_FILES += [
 USE_LIBS += ['static:js']
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
+
+include('/ipc/chromium/chromium-config.mozbuild')
