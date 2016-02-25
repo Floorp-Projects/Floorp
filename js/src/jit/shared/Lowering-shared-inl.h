@@ -664,6 +664,52 @@ LIRGeneratorShared::useBoxOrTypedOrConstant(MDefinition* mir, bool useConstant)
 #endif
 }
 
+LInt64Allocation
+LIRGeneratorShared::useInt64(MDefinition* mir, LUse::Policy policy, bool useAtStart)
+{
+    MOZ_ASSERT(mir->type() == MIRType_Int64);
+
+    ensureDefined(mir);
+
+    uint32_t vreg = mir->virtualRegister();
+#if JS_BITS_PER_WORD == 32
+    return LInt64Allocation(LUse(vreg + 1, policy, useAtStart),
+                            LUse(vreg, policy, useAtStart));
+#else
+    return LInt64Allocation(LUse(vreg, policy, useAtStart));
+#endif
+}
+
+LInt64Allocation
+LIRGeneratorShared::useInt64(MDefinition* mir)
+{
+    // On 32-bit platforms, always load the value in registers.
+#if JS_BITS_PER_WORD == 32
+    return useInt64(mir, LUse::REGISTER, /* useAtStart = */ false);
+#else
+    return useInt64(mir, LUse::ANY, /* useAtStart = */ false);
+#endif
+}
+
+LInt64Allocation
+LIRGeneratorShared::useInt64Register(MDefinition* mir, bool useAtStart)
+{
+    return useInt64(mir, LUse::REGISTER, useAtStart);
+}
+
+LInt64Allocation
+LIRGeneratorShared::useInt64OrConstant(MDefinition* mir)
+{
+    if (mir->isConstant()) {
+#if defined(JS_NUNBOX32)
+        return LInt64Allocation(LAllocation(mir->toConstant()), LAllocation());
+#else
+        return LInt64Allocation(LAllocation(mir->toConstant()));
+#endif
+    }
+    return useInt64(mir);
+}
+
 } // namespace jit
 } // namespace js
 

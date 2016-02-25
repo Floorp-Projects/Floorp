@@ -839,6 +839,19 @@ LIRGenerator::visitTest(MTest* test)
             return;
         }
 
+        // Compare and branch Int64.
+        if (comp->compareType() == MCompare::Compare_Int64 ||
+            comp->compareType() == MCompare::Compare_UInt64)
+        {
+            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+            LCompare64AndBranch* lir = new(alloc()) LCompare64AndBranch(comp, op,
+                                                                        useInt64Register(left),
+                                                                        useInt64OrConstant(right),
+                                                                        ifTrue, ifFalse);
+            add(lir, test);
+            return;
+        }
+
         // Compare and branch doubles.
         if (comp->isDoubleComparison()) {
             LAllocation lhs = useRegister(left);
@@ -1066,6 +1079,16 @@ LIRGenerator::visitCompare(MCompare* comp)
             rhs = useRegister(right);
         }
         define(new(alloc()) LCompare(op, lhs, rhs), comp);
+        return;
+    }
+
+    // Compare Int64.
+    if (comp->compareType() == MCompare::Compare_Int64 ||
+        comp->compareType() == MCompare::Compare_UInt64)
+    {
+        JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+        define(new(alloc()) LCompare64(op, useInt64Register(left), useInt64OrConstant(right)),
+               comp);
         return;
     }
 
