@@ -397,16 +397,20 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       create: function(createProperties) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           function createInWindow(window) {
             let url;
+
             if (createProperties.url !== null) {
               url = context.uri.resolve(createProperties.url);
-            } else {
-              url = window.BROWSER_NEW_TAB_URL;
+
+              if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+                reject({message: `URL not allowed: ${url}`});
+                return;
+              }
             }
 
-            let tab = window.gBrowser.addTab(url);
+            let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
 
             let active = true;
             if (createProperties.active !== null) {
@@ -460,10 +464,23 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       update: function(tabId, updateProperties) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
-        let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-        if (updateProperties.url !== null) {
-          tab.linkedBrowser.loadURI(updateProperties.url);
+
+        if (!tab) {
+          return Promise.reject({message: `No tab found with tabId: ${tabId}`});
         }
+
+        let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
+
+        if (updateProperties.url !== null) {
+          let url = context.uri.resolve(updateProperties.url);
+
+          if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+            return Promise.reject({message: `URL not allowed: ${url}`});
+          }
+
+          tab.linkedBrowser.loadURI(url);
+        }
+
         if (updateProperties.active !== null) {
           if (updateProperties.active) {
             tabbrowser.selectedTab = tab;
