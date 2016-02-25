@@ -207,7 +207,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
             int nextStartSpanIndex = 0;
             // Done to make sure that the stretch of text after the last occurrence, till the end of the suggestion, is made bold
             occurrences.add(suggestion.length());
-            for(int occurrence : occurrences) {
+            for (int occurrence : occurrences) {
                 // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
                 StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
                 sb.setSpan(boldSpan, nextStartSpanIndex, occurrence, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
