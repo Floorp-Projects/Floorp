@@ -7,7 +7,7 @@
 "use strict";
 
 const Services = require("Services");
-const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
+const { Cc, Ci, Cu, Cr, components, ChromeWorker } = require("chrome");
 const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { BreakpointActor } = require("devtools/server/actors/breakpoint");
 const { FrameActor } = require("devtools/server/actors/frame");
@@ -1846,10 +1846,17 @@ ThreadActor.prototype = {
       return undefined;
     }
 
+    // NS_ERROR_NO_INTERFACE exceptions are a special case in browser code,
+    // since they're almost always thrown by QueryInterface functions, and
+    // handled cleanly by native code.
+    if (aValue == Cr.NS_ERROR_NO_INTERFACE) {
+      return undefined;
+    }
+
     const generatedLocation = this.sources.getFrameLocation(aFrame);
-    const { sourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
+    const { originalSourceActor } = this.unsafeSynchronize(this.sources.getOriginalLocation(
       generatedLocation));
-    const url = sourceActor ? sourceActor.url : null;
+    const url = originalSourceActor ? originalSourceActor.url : null;
 
     if (this.sources.isBlackBoxed(url)) {
       return undefined;

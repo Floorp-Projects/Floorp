@@ -293,16 +293,27 @@ public class AndroidFxAccount {
   }
 
   public String getProfileServerURI() {
-    return accountManager.getUserData(account, ACCOUNT_KEY_PROFILE_SERVER);
+    String profileURI = accountManager.getUserData(account, ACCOUNT_KEY_PROFILE_SERVER);
+    if (profileURI == null) {
+      if (isStaging()) {
+        return FxAccountConstants.STAGE_PROFILE_SERVER_ENDPOINT;
+      }
+      return FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT;
+    }
+    return profileURI;
   }
 
   public String getOAuthServerURI() {
     // Allow testing against stage.
-    if (FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(getAccountServerURI())) {
+    if (isStaging()) {
       return FxAccountConstants.STAGE_OAUTH_SERVER_ENDPOINT;
     } else {
       return FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
     }
+  }
+
+  private boolean isStaging() {
+    return FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(getAccountServerURI());
   }
 
   private String constructPrefsPath(String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {

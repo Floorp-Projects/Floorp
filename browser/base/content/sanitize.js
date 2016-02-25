@@ -688,8 +688,9 @@ Sanitizer.PREF_SANITIZE_ON_SHUTDOWN = "privacy.sanitize.sanitizeOnShutdown";
 // by a crash.
 Sanitizer.PREF_SANITIZE_IN_PROGRESS = "privacy.sanitize.sanitizeInProgress";
 // Whether the previous shutdown sanitization completed successfully.
-// Note that PREF_SANITIZE_IN_PROGRESS would be enough to detect an interrupted
-// sanitization, but this is still supported for backwards compatibility.
+// This is used to detect cases where we were supposed to sanitize on shutdown
+// but due to a crash we were unable to.  In such cases there may not be any
+// sanitization in progress, cause we didn't have a chance to start it yet.
 Sanitizer.PREF_SANITIZE_DID_SHUTDOWN = "privacy.sanitize.didShutdownSanitize";
 
 // Time span constants corresponding to values of the privacy.sanitize.timeSpan
@@ -779,10 +780,14 @@ Sanitizer.onStartup = Task.async(function*() {
   let shutownSanitizationWasInterrupted =
     Preferences.get(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
     !Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
-  // Regardless, reset the pref, since we want to check it at the next startup
-  // even if the browser exits abruptly.
-  Preferences.reset(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
-  Services.prefs.savePrefFile(null);
+
+  if (Preferences.has(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
+    // Reset the pref, so that if we crash before having a chance to
+    // sanitize on shutdown, we will do at the next startup.
+    // Flushing prefs has a cost, so do this only if necessary.
+    Preferences.reset(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
+    Services.prefs.savePrefFile(null);
+  }
 
   // Make sure that we are triggered during shutdown, at the right time,
   // and only once.
@@ -804,7 +809,7 @@ Sanitizer.onStartup = Task.async(function*() {
   }
   placesClient.addBlocker("sanitize.js: Sanitize on shutdown", doSanitize);
 
-  // Check if Firefox crashed before completing a sanitization.
+  // Check if Firefox crashed during a sanitization.
   let lastInterruptedSanitization = Preferences.get(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
   if (lastInterruptedSanitization) {
     let s = new Sanitizer();
@@ -812,11 +817,9 @@ Sanitizer.onStartup = Task.async(function*() {
     let itemsToClear = JSON.parse(lastInterruptedSanitization);
     yield s.sanitize(itemsToClear);
   } else if (shutownSanitizationWasInterrupted) {
-    // Ideally lastInterruptedSanitization should always be set when a
-    // sanitization is interrupted, but some add-ons or Firefox previous
-    // versions may not set the pref.
-    // In such a case, we can still detect an interrupted shutdown sanitization,
-    // and just redo it.
+    // Otherwise, could be we were supposed to sanitize on shutdown but we
+    // didn't have a chance, due to an earlier crash.
+    // In such a case, just redo a shutdown sanitize now, during startup.
     yield Sanitizer.onShutdown();
   }
 });

@@ -262,9 +262,13 @@ interface nsIWebProgressListener : nsISupports
     *
     * STATE_USES_WEAK_CRYPTO
     *   The topmost document uses a weak cipher suite such as RC4.
+    *
+    * STATE_CERT_USER_OVERRIDDEN
+    *   The user has added a security exception for the site.
     */
   const unsigned long STATE_USES_SSL_3                = 0x01000000;
   const unsigned long STATE_USES_WEAK_CRYPTO          = 0x02000000;
+  const unsigned long STATE_CERT_USER_OVERRIDDEN      = 0x04000000;
 
   /**
    * Notification indicating the state has changed for one of the requests

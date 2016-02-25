@@ -16,7 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
+                                  "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 
@@ -433,7 +434,6 @@ LocaleData.prototype = {
     // locale code.
     return Locale.getLocale().replace(/-/g, "_");
   },
-
 };
 
 // This is a generic class for managing event listeners. Example usage:
@@ -961,6 +961,18 @@ const PlatformInfo = Object.freeze({
   })(),
 });
 
+function detectLanguage(text) {
+  return LanguageDetector.detectLanguage(text).then(result => ({
+    isReliable: result.confident,
+    languages: result.languages.map(lang => {
+      return {
+        language: lang.languageCode,
+        percentage: lang.percent,
+      };
+    }),
+  }));
+}
+
 this.ExtensionUtils = {
   runSafeWithoutClone,
   runSafeSyncWithoutClone,
@@ -980,4 +992,5 @@ this.ExtensionUtils = {
   extend,
   flushJarCache,
   instanceOf,
+  detectLanguage,
 };

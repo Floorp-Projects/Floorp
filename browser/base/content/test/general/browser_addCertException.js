@@ -8,7 +8,7 @@
 // a bad certificate, being redirected to the internal about:certerror page,
 // using the button contained therein to load the certificate exception
 // dialog, using that to add an exception, and finally successfully visiting
-// the site.
+// the site, including showing the right identity box and control center icons.
 function test() {
   waitForExplicitFinish();
   whenNewTabLoaded(window, loadBadCertPage);
@@ -67,6 +67,7 @@ var certExceptionDialogObserver = {
 var successfulLoadListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
+    checkControlPanelIcons();
     let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                                 .getService(Ci.nsICertOverrideService);
     certOverrideService.clearValidityOverride("expired.example.com", -1);
@@ -74,6 +75,35 @@ var successfulLoadListener = {
     finish();
   }
 };
+
+// Check for the correct icons in the identity box and control center.
+function checkControlPanelIcons() {
+  let { gIdentityHandler } = gBrowser.ownerGlobal;
+  gIdentityHandler._identityBox.click();
+  document.getElementById("identity-popup-security-expander").click();
+
+  is_element_visible(document.getElementById("connection-icon"));
+  let connectionIconImage = gBrowser.ownerGlobal
+        .getComputedStyle(document.getElementById("connection-icon"), "")
+        .getPropertyValue("list-style-image");
+  let securityViewBG = gBrowser.ownerGlobal
+        .getComputedStyle(document.getElementById("identity-popup-securityView"), "")
+        .getPropertyValue("background-image");
+  let securityContentBG = gBrowser.ownerGlobal
+        .getComputedStyle(document.getElementById("identity-popup-security-content"), "")
+        .getPropertyValue("background-image");
+  is(connectionIconImage,
+     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "Using expected icon image in the identity block");
+  is(securityViewBG,
+     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "Using expected icon image in the Control Center main view");
+  is(securityContentBG,
+     "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+     "Using expected icon image in the Control Center subview");
+
+  gIdentityHandler._identityPopup.hidden = true;
+}
 
 // Utility function to get a handle on the certificate exception dialog.
 // Modified from toolkit/components/passwordmgr/test/prompt_common.js
