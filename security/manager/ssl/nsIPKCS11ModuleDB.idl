@@ -8,7 +8,7 @@
 
 interface nsIPKCS11Module;
 interface nsIPKCS11Slot;
-interface nsIEnumerator;
+interface nsISimpleEnumerator;
 
 %{C++
 #define NS_PKCS11MODULEDB_CONTRACTID "@mozilla.org/security/pkcs11moduledb;1"
@@ -25,7 +25,7 @@ interface nsIPKCS11ModuleDB : nsISupports
 
   nsIPKCS11Slot findSlotByName(in wstring name);
 
-  nsIEnumerator listModules();
+  nsISimpleEnumerator listModules();
 
   readonly attribute boolean canToggleFIPS;
 
@@ -33,4 +33,3 @@ interface nsIPKCS11ModuleDB : nsISupports
 
   readonly attribute boolean isFIPSEnabled;
 };
-
