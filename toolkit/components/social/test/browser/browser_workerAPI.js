@@ -111,8 +111,8 @@ var tests = {
         is(data[0].value, "burger", "cookie has the correct value");
         is(data[1].name, "moar", "cookie has the correct name");
         is(data[1].value, "bacon", "cookie has the correct value");
-        Services.cookies.remove('.example.com', '/', 'cheez', false);
-        Services.cookies.remove('.example.com', '/', 'moar', false);
+        Services.cookies.remove('.example.com', '/', 'cheez', {}, false);
+        Services.cookies.remove('.example.com', '/', 'moar', {}, false);
         port.close();
         next();
       }
