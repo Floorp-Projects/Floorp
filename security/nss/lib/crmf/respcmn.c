@@ -218,8 +218,7 @@ cmmf_copy_secitem(PLArenaPool *poolp, SECItem *dest, SECItem *src)
 
     if (src->data != NULL) {
         rv = SECITEM_CopyItem(poolp, dest, src);
-    }
-    else {
+    } else {
         dest->data = NULL;
         dest->len = 0;
         rv = SECSuccess;
