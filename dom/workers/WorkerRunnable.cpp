@@ -84,7 +84,7 @@ WorkerRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 #endif
 
   if (mBehavior == WorkerThreadModifyBusyCount) {
-    return aWorkerPrivate->ModifyBusyCount(true);
+    return aWorkerPrivate->ModifyBusyCount(aCx, true);
   }
 
   return true;
@@ -178,7 +178,7 @@ WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   if (!aDispatchResult) {
     if (mBehavior == WorkerThreadModifyBusyCount) {
-      aWorkerPrivate->ModifyBusyCount(false);
+      aWorkerPrivate->ModifyBusyCount(aCx, false);
     }
     if (aCx) {
       JS_ReportPendingException(aCx);

@@ -471,7 +471,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    return aWorkerPrivate->ModifyBusyCount(mIncrease);
+    return aWorkerPrivate->ModifyBusyCount(aCx, mIncrease);
   }
 
   virtual void
@@ -847,33 +847,23 @@ public:
                aStatus == Canceling || aStatus == Killing);
   }
 
-  // We can be dispatched without a JSContext, because all we do with the
-  // JSContext passed to Dispatch() normally for worker runnables is call
-  // ModifyBusyCount... but that doesn't actually use its JSContext argument.
-  bool Dispatch()
-  {
-    return WorkerControlRunnable::Dispatch(nullptr);
-  }
-
 private:
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    aWorkerPrivate->AssertIsOnParentThread();
     // Modify here, but not in PostRun! This busy count addition will be matched
     // by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(true);
+    return aWorkerPrivate->ModifyBusyCount(aCx, true);
   }
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) override
   {
-    aWorkerPrivate->AssertIsOnParentThread();
     if (!aDispatchResult) {
       // We couldn't dispatch to the worker, which means it's already dead.
       // Undo the busy count modification.
-      aWorkerPrivate->ModifyBusyCount(false);
+      aWorkerPrivate->ModifyBusyCount(aCx, false);
     }
   }
 
@@ -896,7 +886,7 @@ private:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     // This busy count will be matched by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(true) &&
+    return aWorkerPrivate->ModifyBusyCount(aCx, true) &&
            aWorkerPrivate->Close();
   }
 };
@@ -2529,7 +2519,7 @@ WorkerPrivateParent<Derived>::Start()
 // aCx is null when called from the finalizer
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::NotifyPrivate(Status aStatus)
+WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
 {
   AssertIsOnParentThread();
 
@@ -2581,7 +2571,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(Status aStatus)
 
   RefPtr<NotifyRunnable> runnable =
     new NotifyRunnable(ParentAsWorkerPrivate(), aStatus);
-  return runnable->Dispatch();
+  return runnable->Dispatch(aCx);
 }
 
 template <class Derived>
@@ -2788,7 +2778,7 @@ WorkerPrivateParent<Derived>::Close()
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::ModifyBusyCount(bool aIncrease)
+WorkerPrivateParent<Derived>::ModifyBusyCount(JSContext* aCx, bool aIncrease)
 {
   AssertIsOnParentThread();
 
@@ -2807,7 +2797,7 @@ WorkerPrivateParent<Derived>::ModifyBusyCount(bool aIncrease)
       shouldCancel = mParentStatus == Terminating;
     }
 
-    if (shouldCancel && !Cancel()) {
+    if (shouldCancel && !Cancel(aCx)) {
       return false;
     }
   }
@@ -3342,8 +3332,8 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
     if (!Freeze(cx, nullptr)) {
       JS_ReportPendingException(cx);
     }
-  } else {
-    Cancel();
+  } else if (!Cancel(cx)) {
+    JS_ReportPendingException(cx);
   }
 }
 
@@ -3360,7 +3350,10 @@ WorkerPrivateParent<Derived>::CloseAllSharedWorkers()
 
   mSharedWorkers.Clear();
 
-  Cancel();
+  AutoSafeJSContext cx;
+  if (!Cancel(cx)) {
+    JS_ReportPendingException(cx);
+  }
 }
 
 template <class Derived>
@@ -5192,7 +5185,7 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
   children.AppendElements(mChildWorkers);
 
   for (uint32_t index = 0; index < children.Length(); index++) {
-    if (!children[index]->Notify(aStatus)) {
+    if (!children[index]->Notify(aCx, aStatus)) {
       NS_WARNING("Failed to notify child worker!");
     }
   }
