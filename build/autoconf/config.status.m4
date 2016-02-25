@@ -83,11 +83,9 @@ dnl Replace AC_OUTPUT to create and call a python config.status
 define([MOZ_CREATE_CONFIG_STATUS],
 [dnl Top source directory in Windows format (as opposed to msys format).
 WIN_TOP_SRC=
-encoding=utf-8
 case "$host_os" in
 mingw*)
     WIN_TOP_SRC=`cd $srcdir; pwd -W`
-    encoding=mbcs
     ;;
 esac
 AC_SUBST(WIN_TOP_SRC)
@@ -101,7 +99,7 @@ trap '' 1 2 15
 AC_CACHE_SAVE
 
 trap 'rm -f $CONFIG_STATUS conftest*; exit 1' 1 2 15
-: ${CONFIG_STATUS=./config.status}
+: ${CONFIG_STATUS=./config.data}
 
 dnl We're going to need [ ] for python syntax.
 changequote(<<<, >>>)dnl
@@ -110,21 +108,6 @@ echo creating $CONFIG_STATUS
 extra_python_path=${COMM_BUILD:+"'mozilla', "}
 
 cat > $CONFIG_STATUS <<EOF
-#!${PYTHON}
-# coding=$encoding
-
-import os
-import types
-dnl topsrcdir is the top source directory in native form, as opposed to a
-dnl form suitable for make.
-topsrcdir = '''${WIN_TOP_SRC:-$srcdir}'''
-if not os.path.isabs(topsrcdir):
-    rel = os.path.join(os.path.dirname(<<<__file__>>>), topsrcdir)
-    topsrcdir = os.path.abspath(rel)
-topsrcdir = os.path.normpath(topsrcdir)
-
-topobjdir = os.path.abspath(os.path.dirname(<<<__file__>>>))
-
 def unique_list(l):
     result = []
     for i in l:
@@ -135,7 +118,7 @@ def unique_list(l):
 dnl All defines and substs are stored with an additional space at the beginning
 dnl and at the end of the string, to avoid any problem with values starting or
 dnl ending with quotes.
-defines = [(name[1:-1], value[1:-1]) for name, value in [
+defines = [
 EOF
 
 dnl confdefs.pytmp contains AC_DEFINEs, in the expected format, but
@@ -144,9 +127,9 @@ sed 's/$/,/' confdefs.pytmp >> $CONFIG_STATUS
 rm confdefs.pytmp confdefs.h
 
 cat >> $CONFIG_STATUS <<\EOF
-] ]
+]
 
-substs = [(name[1:-1], value[1:-1] if isinstance(value, types.StringTypes) else value) for name, value in [
+substs = [
 EOF
 
 dnl The MOZ_DIVERSION_SUBST output diversion contains AC_SUBSTs, in the
@@ -162,7 +145,7 @@ for ac_subst_arg in $_subconfigure_ac_subst_args; do
 done
 
 cat >> $CONFIG_STATUS <<\EOF
-] ]
+]
 
 dnl List of AC_DEFINEs that aren't to be exposed in ALLDEFINES
 non_global_defines = [
@@ -176,39 +159,9 @@ fi
 
 cat >> $CONFIG_STATUS <<EOF
 ]
-
-__all__ = ['topobjdir', 'topsrcdir', 'defines', 'non_global_defines', 'substs']
 EOF
-
-# We don't want js/src/config.status to do anything in gecko builds.
-if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
-
-    cat >> $CONFIG_STATUS <<EOF
-dnl Do the actual work
-if __name__ == '__main__':
-    args = dict([(name, globals()[name]) for name in __all__])
-    from mozbuild.config_status import config_status
-    config_status(**args)
-EOF
-
-fi
 
 changequote([, ])
-
-chmod +x $CONFIG_STATUS
-])
-
-define([MOZ_RUN_CONFIG_STATUS],
-[
-
-MOZ_RUN_ALL_SUBCONFIGURES()
-
-rm -fr confdefs* $ac_clean_files
-dnl Execute config.status, unless --no-create was passed to configure.
-if test "$no_create" != yes && ! ${PYTHON} $CONFIG_STATUS; then
-    trap '' EXIT
-    exit 1
-fi
 ])
 
 define([m4_fatal],[
