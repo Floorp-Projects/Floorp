@@ -185,6 +185,8 @@
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
 #include "nsIBlocklistService.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -240,13 +242,6 @@ using namespace mozilla::system;
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
-
-#ifdef ENABLE_TESTS
-#include "BackgroundChildImpl.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
-#endif
-
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
 #include "mozilla/SandboxInfo.h"
@@ -304,130 +299,6 @@ using namespace mozilla::net;
 using namespace mozilla::jsipc;
 using namespace mozilla::psm;
 using namespace mozilla::widget;
-
-#ifdef ENABLE_TESTS
-
-class BackgroundTester final : public nsIIPCBackgroundChildCreateCallback,
-                               public nsIObserver
-{
-  static uint32_t sCallbackCount;
-
-private:
-  ~BackgroundTester()
-  { }
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    MOZ_RELEASE_ASSERT(aActor,
-                       "Failed to create a PBackgroundChild actor!");
-
-    NS_NAMED_LITERAL_CSTRING(testStr, "0123456789");
-
-    PBackgroundTestChild* testActor =
-      aActor->SendPBackgroundTestConstructor(testStr);
-    MOZ_RELEASE_ASSERT(testActor);
-
-    if (!sCallbackCount) {
-      PBackgroundChild* existingBackgroundChild =
-        BackgroundChild::GetForCurrentThread();
-
-      MOZ_RELEASE_ASSERT(existingBackgroundChild);
-      MOZ_RELEASE_ASSERT(existingBackgroundChild == aActor);
-
-      bool ok =
-        existingBackgroundChild->
-          SendPBackgroundTestConstructor(testStr);
-      MOZ_RELEASE_ASSERT(ok);
-
-      // Callback 3.
-      ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-      MOZ_RELEASE_ASSERT(ok);
-    }
-
-    sCallbackCount++;
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-  }
-
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-      override
-  {
-    nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-    MOZ_RELEASE_ASSERT(observerService);
-
-    nsresult rv = observerService->RemoveObserver(this, aTopic);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-    if (!strcmp(aTopic, "profile-after-change")) {
-      if (mozilla::Preferences::GetBool("pbackground.testing", false)) {
-        rv = observerService->AddObserver(this, "xpcom-shutdown", false);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-        // Callback 1.
-        bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-        MOZ_RELEASE_ASSERT(ok);
-
-        BackgroundChildImpl::ThreadLocal* threadLocal =
-          BackgroundChildImpl::GetThreadLocalForCurrentThread();
-        MOZ_RELEASE_ASSERT(threadLocal);
-
-        // Callback 2.
-        ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-        MOZ_RELEASE_ASSERT(ok);
-      }
-
-      return NS_OK;
-    }
-
-    if (!strcmp(aTopic, "xpcom-shutdown")) {
-      MOZ_RELEASE_ASSERT(sCallbackCount == 3);
-
-      return NS_OK;
-    }
-
-    MOZ_CRASH("Unknown observer topic!");
-  }
-
-public:
-  NS_DECL_ISUPPORTS
-};
-
-uint32_t BackgroundTester::sCallbackCount = 0;
-
-NS_IMPL_ISUPPORTS(BackgroundTester, nsIIPCBackgroundChildCreateCallback,
-                  nsIObserver)
-
-#endif // ENABLE_TESTS
-
-void
-MaybeTestPBackground()
-{
-#ifdef ENABLE_TESTS
-  // This test relies on running the event loop and XPCShell does not always
-  // do so. Bail out here if we detect that we're running in XPCShell.
-  if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
-    return;
-  }
-
-  // This is called too early at startup to test preferences directly. We have
-  // to install an observer to be notified when preferences are available.
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  MOZ_RELEASE_ASSERT(observerService);
-
-  nsCOMPtr<nsIObserver> observer = new BackgroundTester();
-  nsresult rv = observerService->AddObserver(observer, "profile-after-change",
-                                             false);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-#endif
-}
 
 // XXX Workaround for bug 986973 to maintain the existing broken semantics
 template<>
@@ -861,10 +732,6 @@ ContentParent::StartUp()
 
   // Try to preallocate a process that we can transform into an app later.
   PreallocatedProcessManager::AllocateAfterDelay();
-
-  // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
-  // testing preference is set.
-  MaybeTestPBackground();
 
   sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 
@@ -2697,19 +2564,19 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // This looks like a lot of work, but in a normal browser session we just
     // send two loads.
 
-    for (CSSStyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (CSSStyleSheet* sheet : *sheetService->UserStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->UserStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (CSSStyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->AuthorStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
@@ -3674,13 +3541,11 @@ ContentParent::DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParen
 /* static */ void
 ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-#ifdef ENABLE_TESTS
   // We don't want to time out the content process during XPCShell tests. This
   // is the easiest way to ensure that.
   if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
     return;
   }
-#endif
 
   auto self = static_cast<ContentParent*>(aClosure);
   self->KillHard("ShutDownKill");

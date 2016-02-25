@@ -379,6 +379,20 @@ void
 DispatchReplyError(BluetoothReplyRunnable* aRunnable,
                    const enum BluetoothStatus aStatus);
 
+/**
+ * Dispatch failed bluetooth reply with error bluetooth gatt status and
+ * string.
+ *
+ * This function is for bluetooth to return Promise as the error status is
+ * bluetooth gatt status.
+ *
+ * @param aRunnable   the runnable to reply bluetooth request.
+ * @param aGattStatus the bluettoh gatt error status to reply failed request.
+ */
+void
+DispatchReplyError(BluetoothReplyRunnable* aRunnable,
+                   const enum BluetoothGattStatus aGattStatus);
+
 void
 DispatchStatusChangedEvent(const nsAString& aType,
                            const BluetoothAddress& aDeviceAddress,

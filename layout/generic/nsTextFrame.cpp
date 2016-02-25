@@ -64,6 +64,8 @@
 #include "nsIWordBreaker.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsIFrameInlines.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 #include <algorithm>
 #ifdef ACCESSIBILITY

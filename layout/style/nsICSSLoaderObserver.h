@@ -9,14 +9,11 @@
 #define nsICSSLoaderObserver_h___
 
 #include "nsISupports.h"
+#include "mozilla/StyleSheetHandle.h"
 
-#define NS_ICSSLOADEROBSERVER_IID     \
-{ 0x7eb90c74, 0xea0c, 0x4df5,       \
-{0xa1, 0x5f, 0x95, 0xf0, 0x6a, 0x98, 0xb9, 0x40} }
-
-namespace mozilla {
-class CSSStyleSheet;
-} // namespace mozilla
+#define NS_ICSSLOADEROBSERVER_IID \
+{ 0xf51fbf2c, 0xfe4b, 0x4a15, \
+  { 0xaf, 0x7e, 0x5e, 0x20, 0x64, 0x5f, 0xaf, 0x58 } }
 
 class nsICSSLoaderObserver : public nsISupports {
 public:
@@ -37,7 +34,7 @@ public:
    *        as CSS, and doesn't indicate anything about the status of any child
    *        sheets of aSheet.
    */
-  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheetHandle aSheet,
                               bool aWasAlternate,
                               nsresult aStatus) = 0;
 };

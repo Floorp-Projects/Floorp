@@ -411,7 +411,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::StyleSheetLoaded(CSSStyleSheet* aSheet,
+nsXMLContentSink::StyleSheetLoaded(StyleSheetHandle aSheet,
                                    bool aWasAlternate,
                                    nsresult aStatus)
 {

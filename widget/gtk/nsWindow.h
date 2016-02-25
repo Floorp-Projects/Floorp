@@ -252,6 +252,7 @@ public:
 #endif /* MOZ_X11 */
 
     void               ThemeChanged(void);
+    void               OnDPIChanged(void);
 
 #ifdef MOZ_X11
     Window             mOldFocusWindow;

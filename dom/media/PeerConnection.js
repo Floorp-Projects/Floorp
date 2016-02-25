@@ -1092,6 +1092,9 @@ RTCPeerConnection.prototype = {
     var encodings = parameters.encodings || [];
 
     encodings.reduce((uniqueRids, encoding) => {
+      if (encoding.scaleResolutionDownBy < 1.0) {
+        throw new this._win.RangeError("scaleResolutionDownBy must be >= 1.0");
+      }
       if (!encoding.rid && encodings.length > 1) {
         throw new this._win.DOMException("Missing rid", "TypeError");
       }

@@ -65,6 +65,19 @@ public:
 
   virtual ~OmxPlatformLayer() {}
 
+  // For decoders, input port index is start port number and output port is next.
+  // See OpenMAX IL spec v1.1.2 section 8.6.1 & 8.8.1.
+  OMX_U32 InputPortIndex() { return mStartPortNumber; }
+
+  OMX_U32 OutputPortIndex() { return mStartPortNumber + 1; }
+
+  void GetPortIndices(nsTArray<uint32_t>& aPortIndex) {
+    aPortIndex.AppendElement(InputPortIndex());
+    aPortIndex.AppendElement(OutputPortIndex());
+  }
+
+  virtual OMX_VIDEO_CODINGTYPE CompressionFormat();
+
   // Check if the platform implementation supports given MIME type.
   static bool SupportsMimeType(const nsACString& aMimeType);
 
@@ -75,10 +88,11 @@ public:
                                   layers::ImageContainer* aImageContainer);
 
 protected:
-  OmxPlatformLayer() : mInfo(nullptr) {}
+  OmxPlatformLayer() : mInfo(nullptr), mStartPortNumber(0) {}
 
   // The pointee is held by |OmxDataDecoder::mTrackInfo| and will outlive this pointer.
   const TrackInfo* mInfo;
+  OMX_U32 mStartPortNumber;
 };
 
 }

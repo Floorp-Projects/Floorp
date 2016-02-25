@@ -363,6 +363,11 @@ public:
    * format and produce 3 "alpha" textures sources.
    */
   virtual gfx::SurfaceFormat GetFormat() const = 0;
+  /**
+   * Return the format used for reading the texture.
+   * Apple's YCBCR_422 is R8G8B8X8.
+   */
+  virtual gfx::SurfaceFormat GetReadFormat() const { return GetFormat(); }
 
   /**
    * Called during the transaction. The TextureSource may or may not be composited.

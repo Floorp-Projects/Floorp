@@ -367,6 +367,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattAdvertisingData>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattStatus>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothGattStatus,
+             mozilla::dom::bluetooth::GATT_STATUS_SUCCESS,
+             mozilla::dom::bluetooth::GATT_STATUS_END_OF_ERROR>
+{ };
+
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_BluetoothMessageUtils_h

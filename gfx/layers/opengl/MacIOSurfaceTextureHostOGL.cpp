@@ -80,6 +80,11 @@ MacIOSurfaceTextureHostOGL::GetFormat() const {
   return mSurface->GetFormat();
 }
 
+gfx::SurfaceFormat
+MacIOSurfaceTextureHostOGL::GetReadFormat() const {
+  return mSurface->GetReadFormat();
+}
+
 gfx::IntSize
 MacIOSurfaceTextureHostOGL::GetSize() const {
   if (!mSurface) {

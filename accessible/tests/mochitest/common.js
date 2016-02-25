@@ -380,14 +380,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
   var accTree = aAccTree;
 
   // Support of simplified accessible tree object.
-  var key = Object.keys(accTree)[0];
-  var roleName = "ROLE_" + key;
-  if (roleName in nsIAccessibleRole) {
-    accTree = {
-      role: nsIAccessibleRole[roleName],
-      children: accTree[key]
-    };
-  }
+  accTree = normalizeAccTreeObj(accTree);
 
   // Test accessible properties.
   for (var prop in accTree) {
@@ -486,15 +479,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
             continue;
           }
 
-          var key = Object.keys(testChild)[0];
-          var roleName = "ROLE_" + key;
-          if (roleName in nsIAccessibleRole) {
-            testChild = {
-              role: nsIAccessibleRole[roleName],
-              children: testChild[key]
-            };
-          }
-
+          testChild = normalizeAccTreeObj(testChild);
           if (accChild.role !== testChild.role) {
             ok(false, prettyName(accTree) + " and " + prettyName(acc) +
               " have different children at index " + i + " : " +
@@ -505,7 +490,8 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 
         } catch (e) {
           ok(false, prettyName(accTree) + " is expected to have a child at index " + i +
-             " : " + prettyName(testChild) + ", " + e);
+             " : " + prettyName(testChild) + ", original tested: " +
+             prettyName(aAccOrElmOrID) + ", " + e);
         }
       }
     } else {
@@ -776,6 +762,23 @@ function prettyName(aIdentifier)
     return "[ " + getNodePrettyName(aIdentifier) + " ]";
 
   if (aIdentifier && typeof aIdentifier === "object" ) {
+    var treeObj = normalizeAccTreeObj(aIdentifier);
+    if ("role" in treeObj) {
+      function stringifyTree(aObj) {
+        var text = roleToString(aObj.role) + ": [ ";
+        if ("children" in aObj) {
+          for (var i = 0; i < aObj.children.length; i++) {
+            var c = normalizeAccTreeObj(aObj.children[i]);
+            text += stringifyTree(c);
+            if (i < aObj.children.length - 1) {
+              text += ", ";
+            }
+          }
+        }
+        return text + "] ";
+      }
+      return `{ ${stringifyTree(treeObj)} }`;
+    }
     return JSON.stringify(aIdentifier);
   }
 
@@ -879,4 +882,17 @@ function getTestPluginTag(aPluginName)
 
   ok(false, "Could not find plugin tag with plugin name '" + name + "'");
   return null;
+}
+
+function normalizeAccTreeObj(aObj)
+{
+  var key = Object.keys(aObj)[0];
+  var roleName = "ROLE_" + key;
+  if (roleName in nsIAccessibleRole) {
+    return {
+      role: nsIAccessibleRole[roleName],
+      children: aObj[key]
+    };
+  }
+  return aObj;
 }

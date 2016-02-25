@@ -48,6 +48,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
+    FINALIZE,
     COMPACT
 };
 

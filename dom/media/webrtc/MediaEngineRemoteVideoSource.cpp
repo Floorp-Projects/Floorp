@@ -90,8 +90,6 @@ MediaEngineRemoteVideoSource::Shutdown()
     Deallocate();
   }
 
-  mozilla::camera::Shutdown();
-
   mState = kReleased;
   mInitDone = false;
   return;

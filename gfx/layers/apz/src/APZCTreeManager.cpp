@@ -665,7 +665,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
-      touchInput.mHandledByAPZ = true;
       result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
       break;
     } case MOUSE_INPUT: {
@@ -864,6 +863,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
                                    ScrollableLayerGuid* aOutTargetGuid,
                                    uint64_t* aOutInputBlockId)
 {
+  aInput.mHandledByAPZ = true;
   if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
     // If we are panned into overscroll and a second finger goes down,
     // ignore that second touch point completely. The touch-start for it is
@@ -1125,6 +1125,7 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
       for (size_t i = 0; i < touchInput.mTouches.Length(); i++) {
         *touchEvent.touches.AppendElement() = touchInput.mTouches[i].ToNewDOMTouch();
       }
+      touchEvent.mFlags.mHandledByAPZ = touchInput.mHandledByAPZ;
       return result;
     }
     case eWheelEventClass: {
