@@ -1117,6 +1117,14 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_FAILURE;
   }
 
+  // Initialize the cert override service
+  nsCOMPtr<nsICertOverrideService> coService =
+    do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+  if (!coService) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Cannot initialize cert override service\n"));
+    return NS_ERROR_FAILURE;
+  }
+
   if (PK11_IsFIPS()) {
     Telemetry::Accumulate(Telemetry::FIPS_ENABLED, true);
   }
