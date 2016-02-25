@@ -10,13 +10,16 @@ promise_test(function(t) {
     var scope = 'resources/blank.html';
     var url1 = 'resources/empty.js';
     var url2 = 'resources/skip-waiting-installed-worker.js';
-    var frame, frame_sw, service_worker, onmessage, oncontrollerchanged;
+    var frame, frame_sw, service_worker, registration, onmessage, oncontrollerchanged;
     var saw_message = new Promise(function(resolve) {
         onmessage = function(e) {
             var message = e.data;
             assert_equals(
                 message, 'PASS',
-                'skipWaiting promise should be resolved after activated');
+                'skipWaiting promise should be resolved with undefined');
+
+            assert_equals(registration.active.scriptURL, normalizeURL(url2),
+                          "skipWaiting should make worker become active");
             resolve();
         };
       });
@@ -29,8 +32,8 @@ promise_test(function(t) {
         };
       });
     return service_worker_unregister_and_register(t, url1, scope)
-      .then(function(registration) {
-          return wait_for_state(t, registration.installing, 'activated');
+      .then(function(r) {
+          return wait_for_state(t, r.installing, 'activated');
         })
       .then(function() {
           return with_iframe(scope);
@@ -44,8 +47,9 @@ promise_test(function(t) {
           frame_sw.oncontrollerchange = t.step_func(oncontrollerchanged);
           return navigator.serviceWorker.register(url2, {scope: scope});
         })
-      .then(function(registration) {
-          service_worker = registration.installing;
+      .then(function(r) {
+          registration = r;
+          service_worker = r.installing;
           return wait_for_state(t, service_worker, 'installed');
         })
       .then(function() {

@@ -38,13 +38,18 @@
 
     var p = new Promise(function(res, rej) {
       registration.installing.onstatechange = function(e) {
+        ok(registration.waiting, "Worker should be in waitinging state");
+
         // The worker will become active only if claim will reject inside the
         // install handler.
+        registration.waiting.onstatechange = function(e) {
+          ok(registration.active, "Claim should reject if the worker is not active");
+          ok(navigator.serviceWorker.controller === null, "Client is not controlled.");
+          e.target.onstatechange = null;
+          res();
+        }
 
-        ok(registration.active, "Claim should reject if the worker is not active");
-        ok(navigator.serviceWorker.controller === null, "Client is not controlled.");
         e.target.onstatechange = null;
-        res();
       }
     });
 
