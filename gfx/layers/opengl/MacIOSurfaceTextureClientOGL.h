@@ -30,7 +30,7 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual void Deallocate(ISurfaceAllocator* aAllocator) override { mSurface = nullptr; }
 

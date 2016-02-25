@@ -427,10 +427,10 @@ TextureClient::Unlock()
 }
 
 bool
-TextureClient::HasInternalBuffer() const
+TextureClient::HasIntermediateBuffer() const
 {
   MOZ_ASSERT(IsValid());
-  return mData->HasInternalBuffer();
+  return mData->HasIntermediateBuffer();
 }
 
 gfx::IntSize

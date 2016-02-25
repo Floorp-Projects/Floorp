@@ -530,7 +530,7 @@ public:
    * in-memory buffer. The consequence of this is that locking the
    * TextureHost does not contend with locking the texture on the client side.
    */
-  virtual bool HasInternalBuffer() const { return false; }
+  virtual bool HasIntermediateBuffer() const { return false; }
 
   void AddCompositableRef() { ++mCompositableCount; }
 
@@ -630,7 +630,7 @@ public:
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual bool HasInternalBuffer() const override { return mHasInternalBuffer; }
+  virtual bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
@@ -648,7 +648,7 @@ protected:
   uint32_t mUpdateSerial;
   bool mLocked;
   bool mNeedsFullUpdate;
-  bool mHasInternalBuffer;
+  bool mHasIntermediateBuffer;
 };
 
 /**
