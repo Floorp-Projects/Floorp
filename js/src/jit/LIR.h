@@ -1312,9 +1312,6 @@ class LSnapshot : public TempObject
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
-    void setBailoutKind(BailoutKind kind) {
-        bailoutKind_ = kind;
-    }
     void rewriteRecoveredInput(LUse input);
 };
 
@@ -1833,8 +1830,6 @@ class LIRGraph
     }
     void setEntrySnapshot(LSnapshot* snapshot) {
         MOZ_ASSERT(!entrySnapshot_);
-        MOZ_ASSERT(snapshot->bailoutKind() == Bailout_InitialState);
-        snapshot->setBailoutKind(Bailout_ArgumentCheck);
         entrySnapshot_ = snapshot;
     }
     LSnapshot* entrySnapshot() const {
