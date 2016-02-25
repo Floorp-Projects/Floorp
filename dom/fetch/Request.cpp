@@ -91,9 +91,9 @@ Request::GetInternalRequest()
 }
 
 namespace {
-void
-GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
-                          nsAString& aRequestURL, ErrorResult& aRv)
+already_AddRefed<nsIURI>
+ParseURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
+                     ErrorResult& aRv)
 {
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(NS_IsMainThread());
@@ -103,6 +103,16 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr, baseURI);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+  }
+  return resolvedURI.forget();
+}
+
+void
+GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
+                          nsAString& aRequestURL, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIURI> resolvedURI = ParseURLFromDocument(aDocument, aInput, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -132,9 +142,8 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   CopyUTF8toUTF16(spec, aRequestURL);
 }
 
-void
-GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
-                        ErrorResult& aRv)
+already_AddRefed<nsIURI>
+ParseURLFromChrome(const nsAString& aInput, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -142,6 +151,16 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   aRv = NS_NewURI(getter_AddRefs(uri), aInput, nullptr, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+  }
+  return uri.forget();
+}
+
+void
+GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
+                        ErrorResult& aRv)
+{
+  nsCOMPtr<nsIURI> uri = ParseURLFromChrome(aInput, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -171,9 +190,9 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   CopyUTF8toUTF16(spec, aRequestURL);
 }
 
-void
-GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
-                        nsAString& aRequestURL, ErrorResult& aRv)
+already_AddRefed<workers::URL>
+ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
+                   ErrorResult& aRv)
 {
   workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
@@ -184,6 +203,16 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
     workers::URL::Constructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
+  }
+  return url.forget();
+}
+
+void
+GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
+                        nsAString& aRequestURL, ErrorResult& aRv)
+{
+  RefPtr<workers::URL> url = ParseURLFromWorker(aGlobal, aInput, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -214,6 +243,38 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
     return;
   }
 }
+
+class ReferrerSameOriginChecker final : public workers::WorkerMainThreadRunnable
+{
+public:
+  ReferrerSameOriginChecker(workers::WorkerPrivate* aWorkerPrivate,
+                            const nsAString& aReferrerURL,
+                            nsresult& aResult)
+    : workers::WorkerMainThreadRunnable(aWorkerPrivate),
+      mReferrerURL(aReferrerURL),
+      mResult(aResult)
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  bool
+  MainThreadRun() override
+  {
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mReferrerURL))) {
+      nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
+      if (principal) {
+        mResult = principal->CheckMayLoad(uri, /* report */ false,
+                                          /* allowIfInheritsPrincipal */ false);
+      }
+    }
+    return true;
+  }
+
+private:
+  const nsString mReferrerURL;
+  nsresult& mResult;
+};
 
 } // namespace
 
@@ -288,6 +349,74 @@ Request::Constructor(const GlobalObject& aGlobal,
       (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate)) {
     aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(NS_LITERAL_STRING("navigate"));
     return nullptr;
+  }
+
+  if (aInit.IsAnyMemberPresent()) {
+    request->SetReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR));
+  }
+  if (aInit.mReferrer.WasPassed()) {
+    const nsString& referrer = aInit.mReferrer.Value();
+    if (referrer.IsEmpty()) {
+      request->SetReferrer(NS_LITERAL_STRING(""));
+    } else {
+      nsAutoString referrerURL;
+      if (NS_IsMainThread()) {
+        nsIDocument* doc = GetEntryDocument();
+        nsCOMPtr<nsIURI> uri;
+        if (doc) {
+          uri = ParseURLFromDocument(doc, referrer, aRv);
+        } else {
+          // If we don't have a document, we must assume that this is a full URL.
+          uri = ParseURLFromChrome(referrer, aRv);
+        }
+        if (NS_WARN_IF(aRv.Failed())) {
+          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+          return nullptr;
+        }
+        nsAutoCString spec;
+        uri->GetSpec(spec);
+        CopyUTF8toUTF16(spec, referrerURL);
+        if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
+          nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
+          if (principal) {
+            nsresult rv = principal->CheckMayLoad(uri, /* report */ false,
+                                                  /* allowIfInheritsPrincipal */ false);
+            if (NS_FAILED(rv)) {
+              aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+              return nullptr;
+            }
+          }
+        }
+      } else {
+        RefPtr<workers::URL> url = ParseURLFromWorker(aGlobal, referrer, aRv);
+        if (NS_WARN_IF(aRv.Failed())) {
+          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+          return nullptr;
+        }
+        url->Stringify(referrerURL, aRv);
+        if (NS_WARN_IF(aRv.Failed())) {
+          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+          return nullptr;
+        }
+        if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
+          workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+          nsresult rv = NS_OK;
+          // ReferrerSameOriginChecker uses a sync loop to get the main thread
+          // to perform the same-origin check.  Overall, on Workers this method
+          // can create 3 sync loops (two for constructing URLs and one here) so
+          // in the future we may want to optimize it all by off-loading all of
+          // this work in a single sync loop.
+          RefPtr<ReferrerSameOriginChecker> checker =
+            new ReferrerSameOriginChecker(worker, referrerURL, rv);
+          checker->Dispatch(aRv);
+          if (aRv.Failed() || NS_FAILED(rv)) {
+            aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
+            return nullptr;
+          }
+        }
+      }
+      request->SetReferrer(referrerURL);
+    }
   }
 
   if (mode != RequestMode::EndGuard_) {
