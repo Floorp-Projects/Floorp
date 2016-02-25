@@ -3,7 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Test that the sidebar panel toggle button actually works.
+// Test that the toggle button can collapse and expand the inspector side/bottom
+// panel, and that the appropriate attributes are updated in the process.
 
 add_task(function* () {
   let {inspector} = yield openInspectorForURL("about:blank");
