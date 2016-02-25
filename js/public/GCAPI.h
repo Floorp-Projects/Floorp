@@ -474,14 +474,6 @@ extern JS_PUBLIC_API(size_t)
 GetGCNumber();
 
 /**
- * The GC does not immediately return the unused memory freed by a collection
- * back to the system incase it is needed soon afterwards. This call forces the
- * GC to return this memory immediately.
- */
-extern JS_PUBLIC_API(void)
-ShrinkGCBuffers(JSContext* cx);
-
-/**
  * Assert if a GC occurs while this class is live. This class does not disable
  * the static rooting hazard analysis.
  */
