@@ -2,18 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global React */
+/* eslint-env browser */
 
 "use strict";
 
-loader.lazyRequireGetter(this, "React",
-  "devtools/client/shared/vendor/react");
-loader.lazyRequireGetter(this, "AddonsTab",
-  "devtools/client/aboutdebugging/components/addons-tab", true);
-loader.lazyRequireGetter(this, "TabMenu",
-  "devtools/client/aboutdebugging/components/tab-menu", true);
-loader.lazyRequireGetter(this, "WorkersTab",
-  "devtools/client/aboutdebugging/components/workers-tab", true);
+const Services = require("Services");
+
+const React = require("devtools/client/shared/vendor/react");
+const { TabMenu } = require("./tab-menu");
+
+loader.lazyRequireGetter(this, "AddonsTab", "./components/addons-tab", true);
+loader.lazyRequireGetter(this, "WorkersTab", "./components/workers-tab", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -38,13 +37,13 @@ exports.AboutDebuggingApp = React.createClass({
   },
 
   componentDidMount() {
-    this.props.window.addEventListener("hashchange", this.onHashChange);
+    window.addEventListener("hashchange", this.onHashChange);
     this.onHashChange();
     this.props.telemetry.toolOpened("aboutdebugging");
   },
 
   componentWillUnmount() {
-    this.props.window.removeEventListener("hashchange", this.onHashChange);
+    window.removeEventListener("hashchange", this.onHashChange);
     this.props.telemetry.toolClosed("aboutdebugging");
     this.props.telemetry.destroy();
   },
@@ -65,7 +64,7 @@ exports.AboutDebuggingApp = React.createClass({
   },
 
   onHashChange() {
-    let tabId = this.props.window.location.hash.substr(1);
+    let tabId = window.location.hash.substr(1);
 
     let isValid = tabs.some(t => t.id == tabId);
     if (isValid) {
@@ -78,7 +77,6 @@ exports.AboutDebuggingApp = React.createClass({
   },
 
   selectTab(tabId) {
-    let win = this.props.window;
-    win.location.hash = "#" + tabId;
+    window.location.hash = "#" + tabId;
   }
 });

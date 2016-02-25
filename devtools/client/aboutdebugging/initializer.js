@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* global DebuggerClient, DebuggerServer, React */
+/* global DebuggerClient, DebuggerServer */
 
 "use strict";
 
@@ -16,8 +16,14 @@ loader.lazyRequireGetter(this, "DebuggerServer",
   "devtools/server/main", true);
 loader.lazyRequireGetter(this, "Telemetry",
   "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "AboutDebuggingApp",
-  "devtools/client/aboutdebugging/components/aboutdebugging", true);
+
+const { BrowserLoader } = Components.utils.import(
+  "resource://devtools/client/shared/browser-loader.js", {});
+const { require } =
+  BrowserLoader("resource://devtools/client/aboutdebugging/", window);
+
+const React = require("devtools/client/shared/vendor/react");
+const { AboutDebuggingApp } = require("./components/aboutdebugging");
 
 var AboutDebugging = {
   init() {
@@ -31,8 +37,9 @@ var AboutDebugging = {
     this.client.connect().then(() => {
       let client = this.client;
       let telemetry = new Telemetry();
-      React.render(React.createElement(AboutDebuggingApp,
-        { client, telemetry, window }), document.querySelector("#body"));
+
+      let app = React.createElement(AboutDebuggingApp, { client, telemetry });
+      React.render(app, document.querySelector("#body"));
     });
   },
 
