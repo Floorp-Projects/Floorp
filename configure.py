@@ -4,14 +4,18 @@
 
 from __future__ import print_function, unicode_literals
 
+import codecs
 import glob
 import itertools
+import json
 import os
 import subprocess
 import sys
 import re
+import types
 
-base_dir = os.path.dirname(__file__)
+
+base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(base_dir, 'python', 'which'))
 sys.path.append(os.path.join(base_dir, 'python', 'mozbuild'))
 from which import which, WhichError
@@ -116,8 +120,70 @@ def main(args):
         print(e.message, file=sys.stderr)
         return 1
 
-    return subprocess.call([shell, old_configure] + args)
+    ret = subprocess.call([shell, old_configure] + args)
+    # We don't want to create and run config.status if --help was one of the
+    # command line arguments.
+    if ret or '--help' in args:
+        return ret
 
+    raw_config = {}
+    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
+    with codecs.open('config.data', 'r', encoding) as fh:
+        code = compile(fh.read(), 'config.data', 'exec')
+        # Every variation of the exec() function I tried led to:
+        # SyntaxError: unqualified exec is not allowed in function 'main' it
+        # contains a nested function with free variables
+        exec code in raw_config
+    # If the code execution above fails, we want to keep the file around for
+    # debugging.
+    os.remove('config.data')
+
+    # Sanitize config data
+    config = {}
+    substs = config['substs'] = {
+        k[1:-1]: v[1:-1] if isinstance(v, types.StringTypes) else v
+        for k, v in raw_config['substs']
+    }
+    config['defines'] = {
+        k[1:-1]: v[1:-1]
+        for k, v in raw_config['defines']
+    }
+    config['non_global_defines'] = raw_config['non_global_defines']
+    config['topsrcdir'] = base_dir
+    config['topobjdir'] = os.path.abspath(os.getcwd())
+
+    # Create config.status. Eventually, we'll want to just do the work it does
+    # here, when we're able to skip configure tests/use cached results/not rely
+    # on autoconf.
+    print("Creating config.status", file=sys.stderr)
+    with codecs.open('config.status', 'w', encoding) as fh:
+        fh.write('#!%s\n' % config['substs']['PYTHON'])
+        fh.write('# coding=%s\n' % encoding)
+        for k, v in config.iteritems():
+            fh.write('%s = ' % k)
+            json.dump(v, fh, sort_keys=True, indent=4, ensure_ascii=False)
+            fh.write('\n')
+        fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
+                 "'non_global_defines', 'substs']")
+
+        if not substs.get('BUILDING_JS') or substs.get('JS_STANDALONE'):
+            fh.write('''
+if __name__ == '__main__':
+    args = dict([(name, globals()[name]) for name in __all__])
+    from mozbuild.config_status import config_status
+    config_status(**args)
+''')
+
+    # Other things than us are going to run this file, so we need to give it
+    # executable permissions.
+    os.chmod('config.status', 0755)
+    if not substs.get('BUILDING_JS') or substs.get('JS_STANDALONE'):
+        if not substs.get('JS_STANDALONE'):
+            os.environ['WRITE_MOZINFO'] = '1'
+        # Until we have access to the virtualenv from this script, execute
+        # config.status externally, with the virtualenv python.
+        return subprocess.call([config['substs']['PYTHON'], 'config.status'])
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
