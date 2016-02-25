@@ -663,8 +663,8 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
       port = (isStuns || isTurns)? 5349 : 3478;
 
     if (isTurn || isTurns) {
-      NS_ConvertUTF16toUTF8 credential(aServer.mCredential);
-      NS_ConvertUTF16toUTF8 username(aServer.mUsername);
+      NS_ConvertUTF16toUTF8 credential(aServer.mCredential.Value());
+      NS_ConvertUTF16toUTF8 username(aServer.mUsername.Value());
 
       if (!addTurnServer(host.get(), port,
                          username.get(),
