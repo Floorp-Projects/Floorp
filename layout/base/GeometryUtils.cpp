@@ -140,8 +140,8 @@ GetBoxRectForFrame(nsIFrame** aFrame, CSSBoxType aType)
 {
   nsRect r;
   nsIFrame* f = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(*aFrame, &r);
-  if (f) {
-    // For SVG, the BoxType is ignored.
+  if (f && f != *aFrame) {
+    // For non-outer SVG frames, the BoxType is ignored.
     *aFrame = f;
     return r;
   }
