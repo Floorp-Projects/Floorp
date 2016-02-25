@@ -13,7 +13,23 @@ function testBinary(type, opcode, lhs, rhs, expect) {
 }
 
 function testComparison(type, opcode, lhs, rhs, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
+  if (type == 'i64') {
+    // i64 cannot be imported/exported, so we use a wrapper function.
+    assertEq(wasmEvalText(`(module
+                            (func (param i64) (param i64) (result i32) (i64.${opcode} (get_local 0) (get_local 1)))
+                            (func (result i32) (call 0 (i64.const ${lhs}) (i64.const ${rhs})))
+                            (export "" 1))`)(), expect);
+    // Also test if_else, for the compare-and-branch path.
+    assertEq(wasmEvalText(`(module
+                            (func (param i64) (param i64) (result i32)
+                              (if_else (i64.${opcode} (get_local 0) (get_local 1))
+                                (i32.const 1)
+                                (i32.const 0)))
+                            (func (result i32) (call 0 (i64.const ${lhs}) (i64.const ${rhs})))
+                            (export "" 1))`)(), expect);
+  } else {
+    assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
+  }
 }
 
 testUnary('i32', 'clz', 40, 26);
@@ -63,16 +79,38 @@ testComparison('i32', 'ge_u', 40, 40, 1);
 //testBinary('i64', 'shr_s', -40, 2, -10); // TODO: NYI
 //testBinary('i64', 'shr_u', -40, 2, 1073741814); // TODO: NYI
 
-//testComparison('i64', 'eq', 40, 40, 1); // TODO: NYI
-//testComparison('i64', 'ne', 40, 40, 0); // TODO: NYI
-//testComparison('i64', 'lt_s', 40, 40, 0); // TODO: NYI
-//testComparison('i64', 'lt_u', 40, 40, 0); // TODO: NYI
-//testComparison('i64', 'le_s', 40, 40, 1); // TODO: NYI
-//testComparison('i64', 'le_u', 40, 40, 1); // TODO: NYI
-//testComparison('i64', 'gt_s', 40, 40, 0); // TODO: NYI
-//testComparison('i64', 'gt_u', 40, 40, 0); // TODO: NYI
-//testComparison('i64', 'ge_s', 40, 40, 1); // TODO: NYI
-//testComparison('i64', 'ge_u', 40, 40, 1); // TODO: NYI
+if (getBuildConfiguration().x64) {
+    testComparison('i64', 'eq', 40, 40, 1);
+    testComparison('i64', 'ne', 40, 40, 0);
+    testComparison('i64', 'lt_s', 40, 40, 0);
+    testComparison('i64', 'lt_u', 40, 40, 0);
+    testComparison('i64', 'le_s', 40, 40, 1);
+    testComparison('i64', 'le_u', 40, 40, 1);
+    testComparison('i64', 'gt_s', 40, 40, 0);
+    testComparison('i64', 'gt_u', 40, 40, 0);
+    testComparison('i64', 'ge_s', 40, 40, 1);
+    testComparison('i64', 'ge_u', 40, 40, 1);
+    testComparison('i64', 'eq', "0x400012345678", "0x400012345678", 1);
+    testComparison('i64', 'ne', "0x400012345678", "0x400012345678", 0);
+    testComparison('i64', 'ne', "0x400012345678", "0x500012345678", 1);
+    testComparison('i64', 'eq', "0xffffffffffffffff", "-1", 1);
+    testComparison('i64', 'lt_s', "0x8000000012345678", "0x1", 1);
+    testComparison('i64', 'lt_u', "0x8000000012345678", "0x1", 0);
+    testComparison('i64', 'le_s', "-1", "0", 1);
+    testComparison('i64', 'le_u', "-1", "-1", 1);
+    testComparison('i64', 'gt_s', "1", "0x8000000000000000", 1);
+    testComparison('i64', 'gt_u', "1", "0x8000000000000000", 0);
+    testComparison('i64', 'ge_s', "1", "0x8000000000000000", 1);
+    testComparison('i64', 'ge_u', "1", "0x8000000000000000", 0);
+} else {
+    // Sleeper test: once i64 works on more platforms, remove this if-else.
+    try {
+        testComparison('i64', 'eq', 40, 40, 1);
+        assertEq(0, 1);
+    } catch(e) {
+        assertEq(e.toString().indexOf("NYI on this platform") >= 0, true);
+    }
+}
 
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.clz (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.clz (get_local 0))))'), TypeError, mismatchError("i32", "f32"));

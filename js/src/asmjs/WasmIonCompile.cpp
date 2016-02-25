@@ -2226,6 +2226,30 @@ EmitComparison(FunctionCompiler& f, Expr expr, MDefinition** def)
           default: MOZ_CRASH("impossibru opcode");
         }
         break;
+      case Expr::I64Eq:
+      case Expr::I64Ne:
+      case Expr::I64LeS:
+      case Expr::I64LtS:
+      case Expr::I64LeU:
+      case Expr::I64LtU:
+      case Expr::I64GeS:
+      case Expr::I64GtS:
+      case Expr::I64GeU:
+      case Expr::I64GtU:
+        if (!EmitExpr(f, ExprType::I64, &lhs) || !EmitExpr(f, ExprType::I64, &rhs))
+            return false;
+        switch (expr) {
+          case Expr::I64LeS: case Expr::I64LtS: case Expr::I64GeS: case Expr::I64GtS:
+          case Expr::I64Eq: case Expr::I64Ne:
+            compareType = MCompare::Compare_Int64;
+            break;
+          case Expr::I64GeU: case Expr::I64GtU: case Expr::I64LeU: case Expr::I64LtU:
+            compareType = MCompare::Compare_UInt64;
+            break;
+          default:
+            MOZ_CRASH("unexpected opcode");
+        }
+        break;
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Le:
@@ -2252,35 +2276,45 @@ EmitComparison(FunctionCompiler& f, Expr expr, MDefinition** def)
     JSOp compareOp;
     switch (expr) {
       case Expr::I32Eq:
+      case Expr::I64Eq:
       case Expr::F32Eq:
       case Expr::F64Eq:
         compareOp = JSOP_EQ;
         break;
       case Expr::I32Ne:
+      case Expr::I64Ne:
       case Expr::F32Ne:
       case Expr::F64Ne:
         compareOp = JSOP_NE;
         break;
       case Expr::I32LeS:
       case Expr::I32LeU:
+      case Expr::I64LeS:
+      case Expr::I64LeU:
       case Expr::F32Le:
       case Expr::F64Le:
         compareOp = JSOP_LE;
         break;
       case Expr::I32LtS:
       case Expr::I32LtU:
+      case Expr::I64LtS:
+      case Expr::I64LtU:
       case Expr::F32Lt:
       case Expr::F64Lt:
         compareOp = JSOP_LT;
         break;
       case Expr::I32GeS:
       case Expr::I32GeU:
+      case Expr::I64GeS:
+      case Expr::I64GeU:
       case Expr::F32Ge:
       case Expr::F64Ge:
         compareOp = JSOP_GE;
         break;
       case Expr::I32GtS:
       case Expr::I32GtU:
+      case Expr::I64GtS:
+      case Expr::I64GtU:
       case Expr::F32Gt:
       case Expr::F64Gt:
         compareOp = JSOP_GT;
@@ -2825,6 +2859,16 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I32LeU:
       case Expr::I32GtU:
       case Expr::I32GeU:
+      case Expr::I64Eq:
+      case Expr::I64Ne:
+      case Expr::I64LtS:
+      case Expr::I64LeS:
+      case Expr::I64LtU:
+      case Expr::I64LeU:
+      case Expr::I64GtS:
+      case Expr::I64GeS:
+      case Expr::I64GtU:
+      case Expr::I64GeU:
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -3033,16 +3077,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64Shl:
       case Expr::I64ShrU:
       case Expr::I64ShrS:
-      case Expr::I64Eq:
-      case Expr::I64Ne:
-      case Expr::I64LtS:
-      case Expr::I64LeS:
-      case Expr::I64LtU:
-      case Expr::I64LeU:
-      case Expr::I64GtS:
-      case Expr::I64GeS:
-      case Expr::I64GtU:
-      case Expr::I64GeU:
         MOZ_CRASH("NYI");
       case Expr::Unreachable:
         break;

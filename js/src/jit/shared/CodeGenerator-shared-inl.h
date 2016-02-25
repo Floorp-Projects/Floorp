@@ -25,6 +25,16 @@ ToInt32(const LAllocation* a)
     MOZ_CRASH("this is not a constant!");
 }
 
+static inline int64_t
+ToInt64(const LAllocation* a)
+{
+    if (a->isConstantValue())
+        return a->toConstant()->toInt64();
+    if (a->isConstantIndex())
+        return a->toConstantIndex()->index();
+    MOZ_CRASH("this is not a constant!");
+}
+
 static inline double
 ToDouble(const LAllocation* a)
 {

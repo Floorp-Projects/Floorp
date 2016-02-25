@@ -212,6 +212,44 @@ CodeGeneratorX64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
+CodeGeneratorX64::visitCompare64(LCompare64* lir)
+{
+    MCompare* mir = lir->mir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    if (rhs->isConstant())
+        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
+    else
+        masm.cmpPtr(lhs, ToOperand(rhs));
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), ToRegister(lir->output()));
+}
+
+void
+CodeGeneratorX64::visitCompare64AndBranch(LCompare64AndBranch* lir)
+{
+    MCompare* mir = lir->cmpMir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    if (rhs->isConstant())
+        masm.cmpPtr(lhs, ImmWord(ToInt64(rhs)));
+    else
+        masm.cmpPtr(lhs, ToOperand(rhs));
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    emitBranch(JSOpToCondition(lir->jsop(), isSigned), lir->ifTrue(), lir->ifFalse());
+}
+
+void
 CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
