@@ -218,13 +218,13 @@ private:
 
   // aCx is null when called from the finalizer
   bool
-  NotifyPrivate(JSContext* aCx, Status aStatus);
+  NotifyPrivate(Status aStatus);
 
   // aCx is null when called from the finalizer
   bool
   TerminatePrivate(JSContext* aCx)
   {
-    return NotifyPrivate(aCx, Terminating);
+    return NotifyPrivate(Terminating);
   }
 
   void
@@ -282,21 +282,21 @@ public:
 
   // Called on the parent thread.
   bool
-  Notify(JSContext* aCx, Status aStatus)
+  Notify(Status aStatus)
   {
-    return NotifyPrivate(aCx, aStatus);
+    return NotifyPrivate(aStatus);
   }
 
   bool
-  Cancel(JSContext* aCx)
+  Cancel()
   {
-    return Notify(aCx, Canceling);
+    return Notify(Canceling);
   }
 
   bool
   Kill(JSContext* aCx)
   {
-    return Notify(aCx, Killing);
+    return Notify(Killing);
   }
 
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
@@ -323,8 +323,10 @@ public:
   bool
   Close();
 
+  // The JSContext argument can be null, since it's not used for anything.  It's
+  // about to go away.
   bool
-  ModifyBusyCount(JSContext* aCx, bool aIncrease);
+  ModifyBusyCount(JSContext* /* unused */, bool aIncrease);
 
   void
   ForgetOverridenLoadGroup(nsCOMPtr<nsILoadGroup>& aLoadGroupOut);
