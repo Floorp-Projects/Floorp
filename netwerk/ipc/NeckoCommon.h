@@ -90,13 +90,8 @@ IsNeckoChild()
   static bool amChild = false;
 
   if (!didCheck) {
-    // This allows independent necko-stacks (instead of single stack in chrome)
-    // to still be run.  
-    // TODO: Remove eventually when no longer supported (bug 571126)
-    const char * e = PR_GetEnv("NECKO_SEPARATE_STACKS");
-    if (!e) 
-      amChild = XRE_IsContentProcess();
     didCheck = true;
+    amChild = (XRE_GetProcessType() == GeckoProcessType_Content);
   }
   return amChild;
 }
