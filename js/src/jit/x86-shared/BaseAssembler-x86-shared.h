@@ -1285,6 +1285,12 @@ public:
         m_formatter.twoByteOp(OP2_BSR_GvEv, src, dst);
     }
 
+    void bsf_rr(RegisterID src, RegisterID dst)
+    {
+        spew("bsf        %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp(OP2_BSF_GvEv, src, dst);
+    }
+
     void popcnt_rr(RegisterID src, RegisterID dst)
     {
         spew("popcnt     %s, %s", GPReg32Name(src), GPReg32Name(dst));

@@ -1394,6 +1394,15 @@ LIRGenerator::visitClz(MClz* ins)
 }
 
 void
+LIRGenerator::visitCtz(MCtz* ins)
+{
+    MDefinition* num = ins->num();
+
+    LCtzI* lir = new(alloc()) LCtzI(useRegisterAtStart(num));
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitPopcnt(MPopcnt* ins)
 {
     MDefinition* num = ins->num();

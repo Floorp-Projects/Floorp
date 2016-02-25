@@ -142,6 +142,7 @@
     _(AbsD)                         \
     _(AbsF)                         \
     _(ClzI)                         \
+    _(CtzI)                         \
     _(PopcntI)                      \
     _(SqrtD)                        \
     _(SqrtF)                        \
