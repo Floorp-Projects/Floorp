@@ -94,7 +94,8 @@ nss_dbm_db_get_format_version(
             (void)PR_sscanf(v.data, "%ld.%ld", &major, &minor);
             rv.major = major;
             rv.minor = minor;
-        } else if (dbrv > 0) {
+        }
+        else if (dbrv > 0) {
             (void)PR_snprintf(buffer, sizeof(buffer), "%ld.%ld", nss_dbm_db_format_version.major,
                               nss_dbm_db_format_version.minor);
             v.data = buffer;
@@ -102,7 +103,8 @@ nss_dbm_db_get_format_version(
             dbrv = db->db->put(db->db, &k, &v, 0);
             (void)db->db->sync(db->db, 0);
             rv = nss_dbm_db_format_version;
-        } else {
+        }
+        else {
             /* No error return.. */
             ;
         }
@@ -175,10 +177,12 @@ nss_dbm_db_get_label(
             if ((NSSUTF8 *)NULL == rv) {
                 *pError = CKR_HOST_MEMORY;
             }
-        } else if (dbrv > 0) {
+        }
+        else if (dbrv > 0) {
             /* Just return null */
             ;
-        } else {
+        }
+        else {
             *pError = CKR_DEVICE_ERROR;
             ;
         }
@@ -252,9 +256,11 @@ nss_dbm_db_new_handle(
         if (0 == rv) {
             (void)memcpy(&align, v.data, sizeof(CK_ULONG));
             id = ntohl(align);
-        } else if (rv > 0) {
+        }
+        else if (rv > 0) {
             id = 0;
-        } else {
+        }
+        else {
             goto done;
         }
 
@@ -756,7 +762,8 @@ nss_dbm_db_object_still_exists(
     dbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
     if (0 == dbrv) {
         rv = CK_TRUE;
-    } else {
+    }
+    else {
         rv = CK_FALSE;
     }
 
@@ -785,10 +792,12 @@ nss_dbm_db_get_object_attribute_count(
         *pdbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
         if (0 == *pdbrv) {
             ;
-        } else if (*pdbrv > 0) {
+        }
+        else if (*pdbrv > 0) {
             *pError = CKR_OBJECT_HANDLE_INVALID;
             goto done;
-        } else {
+        }
+        else {
             *pError = CKR_DEVICE_ERROR;
             goto done;
         }
@@ -825,10 +834,12 @@ nss_dbm_db_get_object_attribute_types(
         *pdbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
         if (0 == *pdbrv) {
             ;
-        } else if (*pdbrv > 0) {
+        }
+        else if (*pdbrv > 0) {
             rv = CKR_OBJECT_HANDLE_INVALID;
             goto done;
-        } else {
+        }
+        else {
             rv = CKR_DEVICE_ERROR;
             goto done;
         }
@@ -874,10 +885,12 @@ nss_dbm_db_get_object_attribute_size(
         *pdbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
         if (0 == *pdbrv) {
             ;
-        } else if (*pdbrv > 0) {
+        }
+        else if (*pdbrv > 0) {
             *pError = CKR_OBJECT_HANDLE_INVALID;
             goto done;
-        } else {
+        }
+        else {
             *pError = CKR_DEVICE_ERROR;
             goto done;
         }
@@ -887,7 +900,8 @@ nss_dbm_db_get_object_attribute_size(
 
         for (i = 0; i < n; i++) {
             if (type == ntohl(pulData[1 + i * 3])) {
-                rv = ntohl(pulData[2 + i * 3]);
+                rv = ntohl(pulData[2 + i *
+                                           3]);
             }
         }
 
@@ -928,10 +942,12 @@ nss_dbm_db_get_object_attribute(
         *pdbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
         if (0 == *pdbrv) {
             ;
-        } else if (*pdbrv > 0) {
+        }
+        else if (*pdbrv > 0) {
             *pError = CKR_OBJECT_HANDLE_INVALID;
             goto done;
-        } else {
+        }
+        else {
             *pError = CKR_DEVICE_ERROR;
             goto done;
         }
@@ -1001,10 +1017,12 @@ nss_dbm_db_set_object_attribute(
         *pdbrv = dbt->my_db->db->get(dbt->my_db->db, &dbt->dbt, &object, 0);
         if (0 == *pdbrv) {
             ;
-        } else if (*pdbrv > 0) {
+        }
+        else if (*pdbrv > 0) {
             rv = CKR_OBJECT_HANDLE_INVALID;
             goto done;
-        } else {
+        }
+        else {
             rv = CKR_DEVICE_ERROR;
             goto done;
         }

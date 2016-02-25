@@ -182,7 +182,8 @@ CMMF_POPODecKeyChallContentGetRandomNumber(CMMFPOPODecKeyChallContent *inKeyChal
     CMMFChallenge *challenge;
 
     PORT_Assert(inKeyChallCont != NULL);
-    if (inKeyChallCont == NULL || inIndex > 0 || inIndex >= inKeyChallCont->numChallenges) {
+    if (inKeyChallCont == NULL || inIndex > 0 || inIndex >=
+                                                     inKeyChallCont->numChallenges) {
         return SECFailure;
     }
     challenge = inKeyChallCont->challenges[inIndex];

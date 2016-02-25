@@ -43,8 +43,10 @@ crmf_copy_cert_request_validity(PLArenaPool *poolp,
     CRMFOptionalValidity *myValidity = NULL;
     SECStatus rv;
 
-    *destValidity = myValidity = (poolp == NULL) ? PORT_ZNew(CRMFOptionalValidity)
-                                                 : PORT_ArenaZNew(poolp, CRMFOptionalValidity);
+    *destValidity = myValidity = (poolp == NULL) ?
+                                                 PORT_ZNew(CRMFOptionalValidity)
+                                                 :
+                                                 PORT_ArenaZNew(poolp, CRMFOptionalValidity);
     if (myValidity == NULL) {
         goto loser;
     }

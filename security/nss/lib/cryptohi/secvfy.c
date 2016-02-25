@@ -105,7 +105,8 @@ recoverPKCS1DigestInfo(SECOidTag givenDigestAlg,
     if (rv == SECSuccess) {
         *digestInfoLen = it.len;
         *digestInfo = (unsigned char *)it.data;
-    } else {
+    }
+    else {
         if (it.data) {
             PORT_Free(it.data);
         }
@@ -194,7 +195,8 @@ decodeECorDSASignature(SECOidTag algid, const SECItem *sig, unsigned char *dsig,
 
     if ((dsasig == NULL) || (dsasig->len != len)) {
         rv = SECFailure;
-    } else {
+    }
+    else {
         PORT_Memcpy(dsig, dsasig->data, dsasig->len);
     }
 
@@ -294,13 +296,17 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
             len = SECKEY_PublicKeyStrength(key);
             if (len < 28) { /* 28 bytes == 224 bits */
                 *hashalg = SEC_OID_SHA1;
-            } else if (len < 32) { /* 32 bytes == 256 bits */
+            }
+            else if (len < 32) { /* 32 bytes == 256 bits */
                 *hashalg = SEC_OID_SHA224;
-            } else if (len < 48) { /* 48 bytes == 384 bits */
+            }
+            else if (len < 48) { /* 48 bytes == 384 bits */
                 *hashalg = SEC_OID_SHA256;
-            } else if (len < 64) { /* 48 bytes == 512 bits */
+            }
+            else if (len < 64) { /* 48 bytes == 512 bits */
                 *hashalg = SEC_OID_SHA384;
-            } else {
+            }
+            else {
                 /* use the largest in this case */
                 *hashalg = SEC_OID_SHA512;
             }
@@ -661,7 +667,8 @@ vfy_VerifyDigest(const SECItem *digest, const SECKEYPublicKey *key,
                 if (PK11_Verify(cx->key, &dsasig, (SECItem *)digest, cx->wincx) !=
                     SECSuccess) {
                     PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-                } else {
+                }
+                else {
                     rv = SECSuccess;
                 }
                 break;

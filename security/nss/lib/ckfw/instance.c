@@ -190,11 +190,13 @@ nssCKFWInstance_Create(
         fwInstance->pInitArgs = &fwInstance->initArgs;
         if (pInitArgs->flags & CKF_LIBRARY_CANT_CREATE_OS_THREADS) {
             fwInstance->mayCreatePthreads = CK_FALSE;
-        } else {
+        }
+        else {
             fwInstance->mayCreatePthreads = CK_TRUE;
         }
         fwInstance->configurationData = (NSSUTF8 *)(pInitArgs->pReserved);
-    } else {
+    }
+    else {
         fwInstance->mayCreatePthreads = CK_TRUE;
     }
 
@@ -219,7 +221,8 @@ nssCKFWInstance_Create(
     if (mdInstance->ModuleHandlesSessionObjects) {
         fwInstance->moduleHandlesSessionObjects =
             mdInstance->ModuleHandlesSessionObjects(mdInstance, fwInstance);
-    } else {
+    }
+    else {
         fwInstance->moduleHandlesSessionObjects = CK_FALSE;
     }
 
@@ -876,7 +879,8 @@ nssCKFWInstance_GetCryptokiVersion(
     if (fwInstance->mdInstance->GetCryptokiVersion) {
         fwInstance->cryptokiVersion = fwInstance->mdInstance->GetCryptokiVersion(
             fwInstance->mdInstance, fwInstance);
-    } else {
+    }
+    else {
         fwInstance->cryptokiVersion.major = 2;
         fwInstance->cryptokiVersion.minor = 1;
     }
@@ -922,7 +926,8 @@ nssCKFWInstance_GetManufacturerID(
             if ((!fwInstance->manufacturerID) && (CKR_OK != error)) {
                 goto done;
             }
-        } else {
+        }
+        else {
             fwInstance->manufacturerID = (NSSUTF8 *)"";
         }
     }
@@ -987,7 +992,8 @@ nssCKFWInstance_GetLibraryDescription(
             if ((!fwInstance->libraryDescription) && (CKR_OK != error)) {
                 goto done;
             }
-        } else {
+        }
+        else {
             fwInstance->libraryDescription = (NSSUTF8 *)"";
         }
     }
@@ -1031,7 +1037,8 @@ nssCKFWInstance_GetLibraryVersion(
     if (fwInstance->mdInstance->GetLibraryVersion) {
         fwInstance->libraryVersion = fwInstance->mdInstance->GetLibraryVersion(
             fwInstance->mdInstance, fwInstance);
-    } else {
+    }
+    else {
         fwInstance->libraryVersion.major = 0;
         fwInstance->libraryVersion.minor = 3;
     }

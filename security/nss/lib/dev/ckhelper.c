@@ -145,7 +145,8 @@ loser:
         if (arenaOpt) {
             /* release all arena memory allocated before the failure. */
             (void)nssArena_Release(arenaOpt, mark);
-        } else {
+        }
+        else {
             CK_ULONG j;
             /* free each heap object that was allocated before the failure. */
             for (j = 0; j < i; j++) {
@@ -221,7 +222,8 @@ nssCKObject_SetAttributes(
     nssSession_ExitMonitor(session);
     if (ckrv == CKR_OK) {
         return PR_SUCCESS;
-    } else {
+    }
+    else {
         return PR_FAILURE;
     }
 }
@@ -309,8 +311,10 @@ nssCryptokiCertificate_GetAttributes(
                                                 cert_template, template_size);
     if (status != PR_SUCCESS) {
 
-        session = sessionOpt ? sessionOpt
-                             : nssToken_GetDefaultSession(certObject->token);
+        session = sessionOpt ?
+                             sessionOpt
+                             :
+                             nssToken_GetDefaultSession(certObject->token);
         if (!session) {
             nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
             return PR_FAILURE;
@@ -425,8 +429,10 @@ nssCryptokiTrust_GetAttributes(
                                                 CKO_NSS_TRUST,
                                                 trust_template, trust_size);
     if (status != PR_SUCCESS) {
-        session = sessionOpt ? sessionOpt
-                             : nssToken_GetDefaultSession(trustObject->token);
+        session = sessionOpt ?
+                             sessionOpt
+                             :
+                             nssToken_GetDefaultSession(trustObject->token);
         if (!session) {
             nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
             return PR_FAILURE;
@@ -497,8 +503,10 @@ nssCryptokiCRL_GetAttributes(
                                                 CKO_NSS_CRL,
                                                 crl_template, crl_size);
     if (status != PR_SUCCESS) {
-        session = sessionOpt ? sessionOpt
-                             : nssToken_GetDefaultSession(crlObject->token);
+        session = sessionOpt ?
+                             sessionOpt
+                             :
+                             nssToken_GetDefaultSession(crlObject->token);
         if (session == NULL) {
             nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
             return PR_FAILURE;
@@ -567,9 +575,11 @@ nssCryptokiPrivateKey_SetCertificate(
             return PR_FAILURE;
         }
         session = sessionOpt;
-    } else if (defaultSession && nssSession_IsReadWrite(defaultSession)) {
+    }
+    else if (defaultSession && nssSession_IsReadWrite(defaultSession)) {
         session = defaultSession;
-    } else {
+    }
+    else {
         NSSSlot *slot = nssToken_GetSlot(token);
         session = nssSlot_CreateSession(token->slot, NULL, PR_TRUE);
         nssSlot_Destroy(slot);

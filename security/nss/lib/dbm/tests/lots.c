@@ -249,16 +249,19 @@ VerifyRange(int32 low, int32 high, int32 should_exist, key_type_enum key_type)
             /* got the item */
             if (!should_exist) {
                 ReportError("Item exists but shouldn't: %ld", num);
-            } else {
+            }
+            else {
                 /* else verify the data */
                 VerifyData(&data, num, key_type);
             }
-        } else if (status > 0) {
+        }
+        else if (status > 0) {
             /* item not found */
             if (should_exist) {
                 ReportError("Item not found but should be: %ld", num);
             }
-        } else {
+        }
+        else {
             /* database error */
             ReportError("Database error");
             return (-1);
@@ -282,7 +285,8 @@ GenData(int32 num)
         data = (DBT *)malloc(sizeof(DBT));
         data->size = 0;
         data->data = 0;
-    } else if (data->data) {
+    }
+    else if (data->data) {
         free(data->data);
     }
 
@@ -324,7 +328,8 @@ AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
     if (action == ADD_RANGE) {
         TraceMe(1, ("Adding: %ld to %ld: %s keys", low, high,
                     key_type == USE_SMALL_KEY ? "SMALL" : "LARGE"));
-    } else {
+    }
+    else {
         TraceMe(1, ("Deleting: %ld to %ld: %s keys", low, high,
                     key_type == USE_SMALL_KEY ? "SMALL" : "LARGE"));
     }
@@ -336,7 +341,8 @@ AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
         if (action == ADD_RANGE) {
             data = GenData(num);
             status = (*database->put)(database, key, data, 0);
-        } else {
+        }
+        else {
             status = (*database->del)(database, key, 0);
         }
 
@@ -344,11 +350,13 @@ AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
             ReportError("Database error %s item: %ld",
                         action == ADD_RANGE ? "ADDING" : "DELETING",
                         num);
-        } else if (status > 0) {
+        }
+        else if (status > 0) {
             ReportError("Could not %s item: %ld",
                         action == ADD_RANGE ? "ADD" : "DELETE",
                         num);
-        } else if (action == ADD_RANGE) {
+        }
+        else if (action == ADD_RANGE) {
 #define SYNC_EVERY_TIME
 #ifdef SYNC_EVERY_TIME
             status = (*database->sync)(database, 0);
@@ -380,7 +388,8 @@ AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
 
     if (action == ADD_RANGE) {
         TraceMe(1, ("Successfully added: %ld to %ld", low, high));
-    } else {
+    }
+    else {
         TraceMe(1, ("Successfully deleted: %ld to %ld", low, high));
     }
 
@@ -515,7 +524,8 @@ main(int argc, char **argv)
         if (1 || j) {
             TestRange(START_RANGE, i, USE_LARGE_KEY);
             j = 0;
-        } else {
+        }
+        else {
             TestRange(START_RANGE, i, USE_SMALL_KEY);
             j = 1;
         }
@@ -535,7 +545,8 @@ main(int argc, char **argv)
 #endif
                 exit(1);
             }
-        } else {
+        }
+        else {
             /* reopen database without closeing the other */
             database = dbopen("test.db", O_RDWR | O_CREAT, 0644, DB_HASH, 0);
             if (!database) {

@@ -59,12 +59,14 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 
         if (nb > 0) {
             PRINT_BUF(60, (ss, "raw gather data:", bp, nb));
-        } else if (nb == 0) {
+        }
+        else if (nb == 0) {
             /* EOF */
             SSL_TRC(30, ("%d: SSL3[%d]: EOF", SSL_GETPID(), ss->fd));
             rv = 0;
             break;
-        } else /* if (nb < 0) */ {
+        }
+        else /* if (nb < 0) */ {
             SSL_DBG(("%d: SSL3[%d]: recv error %d", SSL_GETPID(), ss->fd,
                      PR_GetError()));
             rv = SECFailure;
@@ -192,12 +194,14 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
 
         if (nb > 0) {
             PRINT_BUF(60, (ss, "raw gather data:", gs->dtlsPacket.buf, nb));
-        } else if (nb == 0) {
+        }
+        else if (nb == 0) {
             /* EOF */
             SSL_TRC(30, ("%d: SSL3[%d]: EOF", SSL_GETPID(), ss->fd));
             rv = 0;
             return rv;
-        } else /* if (nb < 0) */ {
+        }
+        else /* if (nb < 0) */ {
             SSL_DBG(("%d: SSL3[%d]: recv error %d", SSL_GETPID(), ss->fd,
                      PR_GetError()));
             rv = SECFailure;
@@ -310,7 +314,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
         if (ss->ssl3.hs.msgState.buf) {
             if (ss->ssl3.hs.msgState.len == 0) {
                 ss->ssl3.hs.msgState.buf = NULL;
-            } else {
+            }
+            else {
                 handleRecordNow = PR_TRUE;
             }
         }
@@ -324,7 +329,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
              * handshake record.
              */
             rv = ssl3_HandleRecord(ss, NULL, &ss->gs.buf);
-        } else {
+        }
+        else {
             /* bring in the next sslv3 record. */
             if (ss->recvdCloseNotify) {
                 /* RFC 5246 Section 7.2.1:
@@ -334,7 +340,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             }
             if (!IS_DTLS(ss)) {
                 rv = ssl3_GatherData(ss, &ss->gs, flags);
-            } else {
+            }
+            else {
                 rv = dtls_GatherData(ss, &ss->gs, flags);
 
                 /* If we got a would block error, that means that no data was
@@ -405,7 +412,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             PORT_Assert(ss->firstHsDone);
             PORT_Assert(!ss->ssl3.hs.canFalseStart);
             keepGoing = PR_FALSE;
-        } else if (ss->ssl3.hs.canFalseStart) {
+        }
+        else if (ss->ssl3.hs.canFalseStart) {
             /* Prioritize sending application data over trying to complete
              * the handshake if we're false starting.
              *
@@ -418,7 +426,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 
             if (ssl3_WaitingForServerSecondRound(ss)) {
                 keepGoing = PR_FALSE;
-            } else {
+            }
+            else {
                 ss->ssl3.hs.canFalseStart = PR_FALSE;
             }
         }

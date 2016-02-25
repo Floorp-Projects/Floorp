@@ -203,7 +203,8 @@ crmf_create_poposignkey(PLArenaPool *poolp,
 
     if (useSignKeyInput) {
         goto loser;
-    } else {
+    }
+    else {
         rv = crmf_sign_certreq(poolp, signKey, certReq, inPrivKey, inAlgID);
         if (rv != SECSuccess) {
             goto loser;
