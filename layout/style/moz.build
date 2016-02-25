@@ -166,7 +166,6 @@ UNIFIED_SOURCES += [
     'nsFontFaceUtils.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
-    'nsLayoutStylesheetCache.cpp',
     'nsMediaFeatures.cpp',
     'nsNthIndexCache.cpp',
     'nsROCSSPrimitiveValue.cpp',
@@ -190,8 +189,11 @@ UNIFIED_SOURCES += [
 ]
 
 # nsCSSRuleProcessor.cpp needs to be built separately because it uses plarena.h.
+# nsLayoutStylesheetCache.cpp needs to be built separately because it uses
+# nsExceptionHandler.h, which includes windows.h.
 SOURCES += [
     'nsCSSRuleProcessor.cpp',
+    'nsLayoutStylesheetCache.cpp',
 ]
 
 EXTRA_COMPONENTS += [

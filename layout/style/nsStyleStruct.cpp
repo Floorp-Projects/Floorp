@@ -3762,7 +3762,7 @@ nsStyleText::TextEmphasisSide(WritingMode aWM) const
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)) &&
     (!(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER) !=
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER)));
-  Side side = aWM.IsVertical() ?
+  mozilla::Side side = aWM.IsVertical() ?
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT
      ? eSideLeft : eSideRight) :
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER
