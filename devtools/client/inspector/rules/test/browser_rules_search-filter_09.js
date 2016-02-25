@@ -30,7 +30,7 @@ add_task(function*() {
   info("Start entering a new property in the rule");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
-  let editor = yield focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusEditableField(view, ruleEditor.closeBrace);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");

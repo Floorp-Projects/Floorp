@@ -51,24 +51,23 @@ function* testPickingNewColor(view) {
   let swatchEl = ruleEl.valueSpan.querySelector(".ruleview-colorswatch");
   let colorEl = ruleEl.valueSpan.querySelector(".ruleview-color");
 
-  info("Get the color picker tooltip and clicking on the swatch to show it");
+  info("Getting the color picker tooltip and clicking on the swatch to show it");
   let cPicker = view.tooltips.colorPicker;
   let onShown = cPicker.tooltip.once("shown");
   swatchEl.click();
   yield onShown;
 
   let change = {
-    selector: "body",
-    name: "background-image",
-    value: "linear-gradient(to left, rgb(1, 1, 1) 25%, " +
-           "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
+    element: content.document.body,
+    name: "backgroundImage",
+    value: "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
   };
   yield simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
 
   is(swatchEl.style.backgroundColor, "rgb(1, 1, 1)",
     "The color swatch's background was updated");
   is(colorEl.textContent, "#010101", "The color text was updated");
-  is((yield getComputedStyleProperty("body", null, "background-image")),
+  is(content.getComputedStyle(content.document.body).backgroundImage,
     "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, " +
       "rgb(0, 0, 0) 100%)",
     "The gradient has been updated correctly");

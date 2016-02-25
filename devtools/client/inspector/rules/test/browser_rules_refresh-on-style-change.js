@@ -13,7 +13,7 @@ add_task(function*() {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "name");
 
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#testdiv", inspector);
 
   let fontSize = getRuleViewPropertyValue(view, "element", "font-size");
@@ -21,9 +21,9 @@ add_task(function*() {
 
   info("Changing the node's style and waiting for the update");
   let onUpdated = inspector.once("rule-view-refreshed");
-  yield testActor.setAttribute("#testdiv", "style",
-    "font-size: 3em; color: lightgoldenrodyellow; " +
-    "text-align: right; text-transform: uppercase");
+  let div = getNode("#testdiv");
+  div.style.cssText = "font-size: 3em; color: lightgoldenrodyellow; " +
+    "text-align: right; text-transform: uppercase";
   yield onUpdated;
 
   let textAlign = getRuleViewPropertyValue(view, "element", "text-align");

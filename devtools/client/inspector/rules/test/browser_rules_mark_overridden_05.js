@@ -20,14 +20,18 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
+  yield testMarkOverridden(inspector, view);
+});
 
-  let rule = getRuleViewRuleEditor(view, 1).rule;
+function* testMarkOverridden(inspector, view) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  yield addProperty(view, 1, "background-color", "red");
+  yield createNewRuleViewProperty(ruleEditor, "background-color: red;");
+  yield ruleEditor.rule._applyingModifications;
 
-  let firstProp = rule.textProps[0];
-  let secondProp = rule.textProps[1];
+  let firstProp = ruleEditor.rule.textProps[0];
+  let secondProp = ruleEditor.rule.textProps[1];
 
   ok(firstProp.overridden, "First property should be overridden.");
   ok(!secondProp.overridden, "Second property should not be overridden.");
-});
+}

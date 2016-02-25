@@ -10,7 +10,7 @@ const TEST_URI = "<h1 style='font: 24px serif'></h1>";
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   info("Test autocompletion popup is hidden after page navigation");
 
@@ -28,12 +28,12 @@ add_task(function*() {
 
   info("Waiting for autocomplete popup to be displayed");
   yield onSuggest;
-  yield waitForTick();
+  yield wait(1);
 
   ok(view.popup && view.popup.isOpen, "Popup should be opened");
 
   info("Reloading the page");
-  yield reloadPage(inspector, testActor);
+  yield reloadPage(inspector);
 
   ok(!(view.popup && view.popup.isOpen), "Popup should be closed");
 });

@@ -20,6 +20,10 @@ const TEST_URI = `
   Testing the color picker tooltip!
 `;
 
+const PAGE_CONTENT = [
+
+].join("\n");
+
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
@@ -37,8 +41,8 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   yield onShown;
 
   yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
-    selector: "body",
-    name: "background-color",
+    element: content.document.body,
+    name: "backgroundColor",
     value: "rgb(0, 0, 0)"
   });
 

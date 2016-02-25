@@ -26,8 +26,8 @@ add_task(function*() {
 });
 
 function* testTopLeft(inspector, view) {
-  let id = "#topleft";
-  let rules = yield assertPseudoElementRulesNumbers(id,
+  let selector = "#topleft";
+  let {rules} = yield assertPseudoElementRulesNumbers(selector,
     inspector, view, {
       elementRulesNb: 4,
       firstLineRulesNb: 2,
@@ -58,27 +58,22 @@ function* testTopLeft(inspector, view) {
   ok(!view.element.firstChild.classList.contains("show-expandable-container"),
      "Pseudo Elements are collapsed by dblclicking");
 
+  let elementRule = rules.elementRules[0];
   let elementRuleView = getRuleViewRuleEditor(view, 3);
 
   let elementFirstLineRule = rules.firstLineRules[0];
-  let elementFirstLineRuleView =
-    [...view.element.children[1].children].filter(e => {
-      return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
-    })[0]._ruleEditor;
+  let elementFirstLineRuleView = [...view.element.children[1].children].filter(e => {
+    return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
+  })[0]._ruleEditor;
 
   is(convertTextPropsToString(elementFirstLineRule.textProps),
      "color: orange",
      "TopLeft firstLine properties are correct");
 
-  let onAdded = view.once("ruleview-changed");
   let firstProp = elementFirstLineRuleView.addProperty("background-color",
     "rgb(0, 255, 0)", "");
-  yield onAdded;
-
-  onAdded = view.once("ruleview-changed");
   let secondProp = elementFirstLineRuleView.addProperty("font-style",
     "italic", "");
-  yield onAdded;
 
   is(firstProp,
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
@@ -87,35 +82,37 @@ function* testTopLeft(inspector, view) {
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
      "Second added property is on back of array");
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  yield elementFirstLineRule._applyingModifications;
+
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, ":first-line", "font-style")),
+  is((yield getComputedStyleProperty(selector, ":first-line", "font-style")),
      "italic", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, null, "text-decoration")),
+  is((yield getComputedStyleProperty(selector, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
-  yield togglePropStatus(view, firstProp);
+  firstProp.setEnabled(false);
+  yield elementFirstLineRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
      "rgb(255, 0, 0)", "Disabled property should now have been used.");
-  is((yield getComputedStyleProperty(id, null, "background-color")),
+  is((yield getComputedStyleProperty(selector, null, "background-color")),
      "rgb(221, 221, 221)", "Added property should not apply to element");
 
-  yield togglePropStatus(view, firstProp);
+  firstProp.setEnabled(true);
+  yield elementFirstLineRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, null, "text-decoration")),
+  is((yield getComputedStyleProperty(selector, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
-  onAdded = view.once("ruleview-changed");
-  firstProp = elementRuleView.addProperty("background-color",
-                                          "rgb(0, 0, 255)", "");
-  yield onAdded;
+  firstProp = elementRuleView.addProperty("background-color", "rgb(0, 0, 255)", "");
+  yield elementRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(id, null, "background-color")),
+  is((yield getComputedStyleProperty(selector, null, "background-color")),
      "rgb(0, 0, 255)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added prop does not apply to pseudo");
 }
 
@@ -158,13 +155,12 @@ function* testBottomLeft(inspector, view) {
 }
 
 function* testParagraph(inspector, view) {
-  let rules =
-    yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
-      elementRulesNb: 3,
-      firstLineRulesNb: 1,
-      firstLetterRulesNb: 1,
-      selectionRulesNb: 1
-    });
+  let {rules} = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
+    elementRulesNb: 3,
+    firstLineRulesNb: 1,
+    firstLetterRulesNb: 1,
+    selectionRulesNb: 1
+  });
 
   assertGutters(view);
 
@@ -196,13 +192,14 @@ function convertTextPropsToString(textProps) {
 }
 
 function* testNode(selector, inspector, view) {
+  let element = getNode(selector);
   yield selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
-  return elementStyle;
+  return {element: element, elementStyle: elementStyle};
 }
 
 function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
-  let elementStyle = yield testNode(selector, inspector, view);
+  let {element, elementStyle} = yield testNode(selector, inspector, view);
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
@@ -223,7 +220,7 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
   is(rules.selectionRules.length, ruleNbs.selectionRulesNb,
      selector + " has the correct number of :selection rules");
 
-  return rules;
+  return {rules, element, elementStyle};
 }
 
 function getGutters(view) {

@@ -46,8 +46,10 @@ function* basicTest(view, name, result) {
   swatch.click();
   yield onShown;
 
+  let testNode = getNode("#testid");
+
   yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
-    selector: "#testid",
+    element: testNode,
     name: "color",
     value: "rgb(0, 255, 0)"
   });

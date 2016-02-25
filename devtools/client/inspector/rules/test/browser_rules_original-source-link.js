@@ -78,7 +78,8 @@ function editorSelected(editor) {
 function verifyLinkText(text, view) {
   info("Verifying that the rule-view stylesheet link is " + text);
   let label = getRuleViewLinkByIndex(view, 1).querySelector("label");
-  return waitForSuccess(function*() {
-    return label.getAttribute("value") == text;
-  }, "Link text changed to display correct location: " + text);
+  return waitForSuccess(
+    () => label.getAttribute("value") == text,
+    "Link text changed to display correct location: " + text
+  );
 }

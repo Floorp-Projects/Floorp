@@ -21,8 +21,7 @@ const TEST_URI = `
 
 const TEST_DATA = [
   {
-    desc: "Tests that the strict search filter works properly in the " +
-          "computed list for property names",
+    desc: "Tests that the strict search filter works properly in the computed list for property names",
     search: "`margin-left`",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -33,8 +32,7 @@ const TEST_DATA = [
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the strict search filter works properly in the " +
-          "computed list for property values",
+    desc: "Tests that the strict search filter works properly in the computed list for property values",
     search: "`0px`",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -45,8 +43,7 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the strict search filter works properly in the " +
-          "computed list for parsed property names",
+    desc: "Tests that the strict search filter works properly in the computed list for parsed property names",
     search: "`margin-left`:",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -57,8 +54,7 @@ const TEST_DATA = [
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the strict search filter works properly in the " +
-          "computed list for parsed property values",
+    desc: "Tests that the strict search filter works properly in the computed list for parsed property values",
     search: ":`4px`",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -69,8 +65,7 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the strict search filter works properly in the " +
-          "computed list for property line input",
+    desc: "Tests that the strict search filter works properly in the computed list for property line input",
     search: "`margin-top`:`4px`",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -82,8 +77,7 @@ const TEST_DATA = [
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
-          "computed list for a parsed strict property name and non-strict " +
-          "property value",
+          "computed list for a parsed strict property name and non-strict property value",
     search: "`margin-top`:4px",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -95,8 +89,7 @@ const TEST_DATA = [
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
-          "computed list for a parsed strict property value and non-strict " +
-          "property name",
+          "computed list for a parsed strict property value and non-strict property name",
     search: "i:`4px`",
     isExpanderOpen: true,
     isFilterOpen: true,
