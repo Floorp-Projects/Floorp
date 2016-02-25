@@ -6,6 +6,7 @@
 package org.mozilla.gecko.feeds.action;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,7 +22,7 @@ import org.mozilla.gecko.feeds.knownsites.KnownSiteMedium;
 /**
  * EnrollAction: Search for bookmarks of known sites we can subscribe to.
  */
-public class EnrollAction {
+public class EnrollAction implements BaseAction {
     private static final String LOGTAG = "FeedEnrollAction";
 
     private static final KnownSite[] knownSites = {
@@ -35,7 +36,8 @@ public class EnrollAction {
         this.context = context;
     }
 
-    public void perform() {
+    @Override
+    public void perform(Intent intent) {
         Log.i(LOGTAG, "Searching for bookmarks to enroll in updates");
 
         BrowserDB db = GeckoProfile.get(context).getDB();
@@ -43,6 +45,11 @@ public class EnrollAction {
         for (KnownSite knownSite : knownSites) {
             searchFor(db, knownSite);
         }
+    }
+
+    @Override
+    public boolean requiresNetwork() {
+        return false;
     }
 
     private void searchFor(BrowserDB db, KnownSite knownSite) {

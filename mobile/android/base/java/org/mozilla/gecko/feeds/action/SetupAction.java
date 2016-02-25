@@ -18,7 +18,7 @@ import org.mozilla.gecko.feeds.FeedService;
 /**
  * SetupAction: Set up alarms to run various actions every now and then.
  */
-public class SetupAction {
+public class SetupAction implements BaseAction {
     private static final String LOGTAG = "FeedSetupAction";
 
     private Context context;
@@ -27,11 +27,17 @@ public class SetupAction {
         this.context = context;
     }
 
-    public void perform() {
+    @Override
+    public void perform(Intent intent) {
         final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         cancelPreviousAlarms(alarmManager);
         scheduleAlarms(alarmManager);
+    }
+
+    @Override
+    public boolean requiresNetwork() {
+        return false;
     }
 
     private void cancelPreviousAlarms(AlarmManager alarmManager) {

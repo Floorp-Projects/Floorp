@@ -6,6 +6,7 @@
 package org.mozilla.gecko.feeds.action;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoProfile;
@@ -18,7 +19,7 @@ import java.util.List;
 /**
  * WithdrawAction: Look for feeds to unsubscribe from.
  */
-public class WithdrawAction {
+public class WithdrawAction implements BaseAction {
     private static final String LOGTAG = "FeedWithdrawAction";
 
     private Context context;
@@ -29,7 +30,8 @@ public class WithdrawAction {
         this.storage = storage;
     }
 
-    public void perform() {
+    @Override
+    public void perform(Intent intent) {
         BrowserDB db = GeckoProfile.get(context).getDB();
 
         List<FeedSubscription> subscriptions = storage.getSubscriptions();
@@ -41,6 +43,11 @@ public class WithdrawAction {
                 unsubscribe(subscription);
             }
         }
+    }
+
+    @Override
+    public boolean requiresNetwork() {
+        return false;
     }
 
     private void unsubscribe(FeedSubscription subscription) {
