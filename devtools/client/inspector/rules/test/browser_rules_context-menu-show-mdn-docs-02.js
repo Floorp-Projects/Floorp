@@ -17,8 +17,7 @@
 
 "use strict";
 
-const {setBaseCssDocsUrl} =
-  require("devtools/client/shared/widgets/MdnDocsWidget");
+const {setBaseCssDocsUrl} = require("devtools/client/shared/widgets/MdnDocsWidget");
 
 const PROPERTYNAME = "color";
 
@@ -71,8 +70,6 @@ function* testShowAndHideMdnTooltip(view) {
   info("Quick check that the tooltip contents are set");
   let cssDocs = view.tooltips.cssDocs;
 
-  // FIXME: Remove the comment below when bug 1246896 is fixed.
-  /* eslint-disable mozilla/no-cpows-in-tests */
   let tooltipDocument = cssDocs.tooltip.content.contentDocument;
   let h1 = tooltipDocument.getElementById("property-name");
   is(h1.textContent, PROPERTYNAME, "The MDN docs tooltip h1 is correct");
@@ -83,3 +80,8 @@ function* testShowAndHideMdnTooltip(view) {
   yield onHidden;
   ok(true, "The MDN docs tooltip was hidden on pressing 'escape'");
 }
+
+/**
+ * Returns the root element for the rule view.
+ */
+var rootElement = view => (view.element) ? view.element : view.styleDocument;

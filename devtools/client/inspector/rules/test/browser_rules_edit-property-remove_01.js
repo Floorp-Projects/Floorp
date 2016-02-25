@@ -22,13 +22,17 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
+  yield testEditPropertyAndRemove(inspector, view);
+});
 
-  info("Getting the first property in the #testid rule");
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[0];
+function* testEditPropertyAndRemove(inspector, view) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let propEditor = ruleEditor.rule.textProps[0].editor;
 
-  info("Deleting the name of that property to remove the property");
-  yield removeProperty(view, prop, false);
+  yield focusEditableField(view, propEditor.nameSpan);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+    ["VK_DELETE", "VK_RETURN"]);
+  yield ruleEditor.rule._applyingModifications;
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -37,16 +41,15 @@ add_task(function*() {
   });
   is(newValue, "", "background-color should have been unset.");
 
-  info("Getting the new first property in the rule");
-  prop = rule.textProps[0];
+  propEditor = ruleEditor.rule.textProps[0].editor;
 
   let editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(prop.editor.nameSpan), editor,
+  is(inplaceEditor(propEditor.nameSpan), editor,
     "Focus should have moved to the next property name");
 
-  info("Deleting the name of that property to remove the property");
-  view.styleDocument.activeElement.blur();
-  yield removeProperty(view, prop, false);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+    ["VK_DELETE", "VK_RETURN"]);
+  yield ruleEditor.rule._applyingModifications;
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -56,12 +59,18 @@ add_task(function*() {
   is(newValue, "", "color should have been unset.");
 
   editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(rule.editor.newPropSpan), editor,
+  is(inplaceEditor(ruleEditor.newPropSpan), editor,
     "Focus should have moved to the new property span");
-  is(rule.textProps.length, 0,
+  is(ruleEditor.rule.textProps.length, 0,
     "All properties should have been removed.");
-  is(rule.editor.propertyList.children.length, 1,
+  is(ruleEditor.propertyList.children.length, 1,
     "Should have the new property span.");
+}
 
-  view.styleDocument.activeElement.blur();
-});
+function* sendKeysAndWaitForFocus(view, element, keys) {
+  let onFocus = once(element, "focus", true);
+  for (let key of keys) {
+    EventUtils.synthesizeKey(key, {}, view.styleWindow);
+  }
+  yield onFocus;
+}

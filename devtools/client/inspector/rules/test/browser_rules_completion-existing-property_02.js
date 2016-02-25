@@ -40,13 +40,13 @@ const TEST_URI = "<h1 style='color: red'>Header</h1>";
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view, testActor} = yield openRuleView();
+  let {toolbox, inspector, view} = yield openRuleView();
 
   info("Test autocompletion after 1st page load");
   yield runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  yield reloadPage(inspector, testActor);
+  yield reloadPage(inspector);
   yield runAutocompletionTest(toolbox, inspector, view);
 });
 
@@ -90,7 +90,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor,
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 
   yield onKeyPress;
-  yield waitForTick();
+  yield wait(1); // Equivalent of executeSoon
 
   // The key might have been a TAB or shift-TAB, in which case the editor will
   // be a new one

@@ -22,17 +22,19 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
+  yield testEditPropertyAndRemove(inspector, view);
+});
 
-  info("Getting the second property in the rule");
-  let rule = getRuleViewRuleEditor(view, 1).rule;
-  let prop = rule.textProps[1];
+function* testEditPropertyAndRemove(inspector, view) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let propEditor = ruleEditor.rule.textProps[1].editor;
 
-  info("Clearing the property value and pressing shift-tab");
-  let editor = yield focusEditableField(view, prop.editor.valueSpan);
-  let onValueDone = view.once("ruleview-changed");
-  editor.input.value = "";
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  yield onValueDone;
+  yield focusEditableField(view, propEditor.valueSpan);
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element, [
+    { key: "VK_DELETE", modifiers: {} },
+    { key: "VK_TAB", modifiers: { shiftKey: true } }
+  ]);
+  yield ruleEditor.rule._applyingModifications;
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -40,31 +42,28 @@ add_task(function*() {
     name: "color"
   });
   is(newValue, "", "color should have been unset.");
-  is(prop.editor.valueSpan.textContent, "",
+  is(propEditor.valueSpan.textContent, "",
     "'' property value is correctly set.");
 
-  info("Pressing shift-tab again to focus the previous property value");
-  let onValueFocused = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  yield onValueFocused;
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element, [
+    { key: "VK_TAB", modifiers: { shiftKey: true } }
+  ]);
+  yield ruleEditor.rule._applyingModifications;
 
-  info("Getting the first property in the rule");
-  prop = rule.textProps[0];
+  propEditor = ruleEditor.rule.textProps[0].editor;
 
-  editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(prop.editor.valueSpan), editor,
+  let editor = inplaceEditor(view.styleDocument.activeElement);
+  is(inplaceEditor(propEditor.valueSpan), editor,
     "Focus should have moved to the previous property value");
 
-  info("Pressing shift-tab again to focus the property name");
-  let onNameFocused = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  yield onNameFocused;
+  info("Focus the property name and remove the property");
+  yield sendKeysAndWaitForFocus(view, ruleEditor.element, [
+    { key: "VK_TAB", modifiers: { shiftKey: true } },
+    { key: "VK_DELETE", modifiers: {} },
+    { key: "VK_TAB", modifiers: { shiftKey: true } }
+  ]);
 
-  info("Removing the name and pressing shift-tab to focus the selector");
-  let onNameDeleted = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  yield onNameDeleted;
+  yield ruleEditor.rule._applyingModifications;
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -74,10 +73,18 @@ add_task(function*() {
   is(newValue, "", "background-color should have been unset.");
 
   editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(rule.editor.selectorText), editor,
+  is(inplaceEditor(ruleEditor.selectorText), editor,
     "Focus should have moved to the selector text.");
-  is(rule.textProps.length, 0,
+  is(ruleEditor.rule.textProps.length, 0,
     "All properties should have been removed.");
-  ok(!rule.editor.propertyList.hasChildNodes(),
+  ok(!ruleEditor.propertyList.hasChildNodes(),
     "Should not have any properties.");
-});
+}
+
+function* sendKeysAndWaitForFocus(view, element, keys) {
+  let onFocus = once(element, "focus", true);
+  for (let {key, modifiers} of keys) {
+    EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
+  }
+  yield onFocus;
+}

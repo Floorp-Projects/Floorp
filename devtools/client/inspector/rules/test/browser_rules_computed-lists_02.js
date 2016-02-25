@@ -31,7 +31,7 @@ function* testComputedList(inspector, view) {
 
   ok(!expander.hasAttribute("open"), "margin computed list is closed");
 
-  info("Opening the computed list of margin property");
+  info("Opening the computed list of margin property")
   expander.click();
   ok(expander.hasAttribute("open"), "margin computed list is open");
 
@@ -45,28 +45,22 @@ function* testComputedList(inspector, view) {
   ];
 
   is(computed.length, propNames.length, "There should be 4 computed values");
-  is(computedDom.children.length, propNames.length,
-     "There should be 4 nodes in the DOM");
-
+  is(computedDom.children.length, propNames.length, "There should be 4 nodes in the DOM");
   propNames.forEach((propName, i) => {
     let propValue = i + "px";
-    is(computed[i].name, propName,
-       "Computed property #" + i + " has name " + propName);
-    is(computed[i].value, propValue,
-       "Computed property #" + i + " has value " + propValue);
-    is(computedDom.querySelectorAll(".ruleview-propertyname")[i].textContent,
-       propName,
-       "Computed property #" + i + " in DOM has correct name");
-    is(computedDom.querySelectorAll(".ruleview-propertyvalue")[i].textContent,
-       propValue,
-       "Computed property #" + i + " in DOM has correct value");
+    is(computed[i].name, propName, "Computed property #" + i + " has name " + propName);
+    is(computed[i].value, propValue, "Computed property #" + i + " has value " + propValue);
+    is(computedDom.getElementsByClassName("ruleview-propertyname")[i].textContent, propName,
+        "Computed property #" + i + " in DOM has correct name");
+    is(computedDom.getElementsByClassName("ruleview-propertyvalue")[i].textContent, propValue,
+        "Computed property #" + i + " in DOM has correct value");
   });
 
-  info("Closing the computed list of margin property");
+  info("Closing the computed list of margin property")
   expander.click();
   ok(!expander.hasAttribute("open"), "margin computed list is closed");
 
-  info("Opening the computed list of margin property");
+  info("Opening the computed list of margin property")
   expander.click();
   ok(expander.hasAttribute("open"), "margin computed list is open");
   is(computed.length, propNames.length, "Still 4 computed values");

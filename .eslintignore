@@ -92,6 +92,7 @@ devtools/client/framework/**
 devtools/client/inspector/computed/**
 devtools/client/inspector/fonts/**
 devtools/client/inspector/markup/test/**
+devtools/client/inspector/rules/**
 devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js

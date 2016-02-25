@@ -23,14 +23,20 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
+  yield testMarkOverridden(inspector, view);
+});
 
-  let idRule = getRuleViewRuleEditor(view, 1).rule;
+function* testMarkOverridden(inspector, view) {
+  let elementStyle = view._elementStyle;
+
+  let idRule = elementStyle.rules[1];
   let idProp = idRule.textProps[0];
 
-  yield togglePropStatus(view, idProp);
+  idProp.setEnabled(false);
+  yield idRule._applyingModifications;
 
-  let classRule = getRuleViewRuleEditor(view, 2).rule;
+  let classRule = elementStyle.rules[2];
   let classProp = classRule.textProps[0];
   ok(!classProp.overridden,
     "Class prop should not be overridden after id prop was disabled.");
-});
+}
