@@ -39,7 +39,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 class SearchEngineRow extends AnimatedHeightLayout {
     // Duration for fade-in animation
@@ -383,6 +385,18 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
         // Remove duplicates of search engine suggestions from saved searches.
         List<String> searchHistorySuggestions = (rawSearchHistorySuggestions != null) ? rawSearchHistorySuggestions : new ArrayList<String>();
+
+        // Filter out URLs and long search suggestions
+        Iterator<String> searchistoryIterator = searchHistorySuggestions.iterator();
+        while (searchistoryIterator.hasNext()) {
+            final String currentSearchHistory = searchistoryIterator.next();
+
+            if (currentSearchHistory.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", currentSearchHistory)) {
+                searchHistorySuggestions.remove(currentSearchHistory);
+            }
+        }
+
+
         List<String> searchEngineSuggestions = new ArrayList<String>();
         for (String suggestion : searchEngine.getSuggestions()) {
             searchHistorySuggestions.remove(suggestion);
