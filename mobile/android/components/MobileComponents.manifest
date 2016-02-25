@@ -99,12 +99,6 @@ contract @mozilla.org/nsClientAuthDialogs;1 {cbc08081-49b6-4561-9c18-a7707a50bda
 component {d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6} SiteSpecificUserAgent.js
 contract @mozilla.org/dom/site-specific-user-agent;1 {d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6}
 
-# Payments
-component {3c6c9575-f57e-427b-a8aa-57bc3cbff48f} PaymentsUI.js
-contract @mozilla.org/payment/ui-glue;1 {3c6c9575-f57e-427b-a8aa-57bc3cbff48f}
-component {a497520d-37e7-4f18-8c27-5b8938e9490d} PaymentProviderStrategy.js
-contract @mozilla.org/payment/provider-strategy;1 {a497520d-37e7-4f18-8c27-5b8938e9490d}
-
 # FilePicker.js
 component {18a4e042-7c7c-424b-a583-354e68553a7f} FilePicker.js
 contract @mozilla.org/filepicker;1 {18a4e042-7c7c-424b-a583-354e68553a7f}

@@ -38,15 +38,6 @@ if not CONFIG['MOZ_B2GDROID']:
         'WebappsUpdateTimer.js',
     ]
 
-if CONFIG['MOZ_PAY']:
-    if not CONFIG['MOZ_B2GDROID']:
-        EXTRA_COMPONENTS += [
-            'PaymentProviderStrategy.js',
-        ]
-    EXTRA_COMPONENTS += [
-        'PaymentsUI.js'
-    ]
-
 # Keep it this way if at all possible.  If you need preprocessing,
 # consider adding fields to AppConstants.jsm.
 EXTRA_PP_COMPONENTS += [
