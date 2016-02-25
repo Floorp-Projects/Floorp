@@ -9,8 +9,11 @@
 #include "ContentProcess.h"
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/Preferences.h"
 #include "mozilla/WindowsVersion.h"
+#endif
+
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/Preferences.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #endif
@@ -21,29 +24,60 @@ namespace mozilla {
 namespace dom {
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+static bool
+IsSandboxTempDirRequired()
+{
+  // On Windows, a sandbox-writable temp directory is only used
+  // for Vista or later with sandbox pref level >= 1.
+  return (IsVistaOrLater() &&
+    (Preferences::GetInt("security.sandbox.content.level") >= 1));
+}
+
+static const char*
+SandboxTempDirParent()
+{
+  // On Windows, the sandbox-writable temp directory resides in the
+  // low integrity sandbox base directory.
+  return NS_WIN_LOW_INTEGRITY_TEMP_BASE;
+}
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+static bool
+IsSandboxTempDirRequired()
+{
+  // On OSX, use the sandbox-writable temp when the pref level >= 1.
+  return (Preferences::GetInt("security.sandbox.content.level") >= 1);
+}
+
+static const char*
+SandboxTempDirParent()
+{
+  return NS_OS_TEMP_DIR;
+}
+#endif
+
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 static void
 SetUpSandboxEnvironment()
 {
   MOZ_ASSERT(nsDirectoryService::gService,
     "SetUpSandboxEnvironment relies on nsDirectoryService being initialized");
 
-  // A low integrity temp only currently makes sense for Vista or Later and
-  // sandbox pref level >= 1.
-  if (!IsVistaOrLater() ||
-      Preferences::GetInt("security.sandbox.content.level") < 1) {
+  if (!IsSandboxTempDirRequired()) {
     return;
   }
 
   nsAdoptingString tempDirSuffix =
     Preferences::GetString("security.sandbox.content.tempDirSuffix");
   if (tempDirSuffix.IsEmpty()) {
-    NS_WARNING("Low integrity temp suffix pref not set.");
+    NS_WARNING("Sandbox-writable temp directory suffix pref not set.");
     return;
   }
 
-  // Get the base low integrity Mozilla temp directory.
+  // Get the parent of our sandbox writable temp directory.
   nsCOMPtr<nsIFile> lowIntegrityTemp;
-  nsresult rv = nsDirectoryService::gService->Get(NS_WIN_LOW_INTEGRITY_TEMP_BASE,
+  nsresult rv = nsDirectoryService::gService->Get(SandboxTempDirParent(),
                                                   NS_GET_IID(nsIFile),
                                                   getter_AddRefs(lowIntegrityTemp));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -56,7 +90,7 @@ SetUpSandboxEnvironment()
     return;
   }
 
-  // Change the gecko defined temp directory to our low integrity one.
+  // Change the gecko defined temp directory to our sandbox-writable one.
   // Undefine returns a failure if the property is not already set.
   Unused << nsDirectoryService::gService->Undefine(NS_OS_TEMP_DIR);
   rv = nsDirectoryService::gService->Set(NS_OS_TEMP_DIR, lowIntegrityTemp);
@@ -82,10 +116,10 @@ ContentProcess::Init()
     mContent.InitXPCOM();
     mContent.InitGraphicsDeviceData();
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
     SetUpSandboxEnvironment();
 #endif
-    
+
     return true;
 }
 
