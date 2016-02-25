@@ -244,10 +244,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       rv = ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal);
 
       // We received 'Content-Range', so the server accepts range requests.
-      acceptsRanges = NS_SUCCEEDED(rv);
+      bool gotRangeHeader = NS_SUCCEEDED(rv);
 
       if (!mByteRange.IsEmpty()) {
-        if (!acceptsRanges) {
+        if (!gotRangeHeader) {
           // Content-Range header text should be parse-able when processing a
           // range requests.
           CMLOG("Error processing \'Content-Range' for "
@@ -275,10 +275,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         }
         mCacheStream.NotifyDataStarted(rangeStart);
         mOffset = rangeStart;
-      } else if (contentLength < 0 && acceptsRanges && rangeTotal > 0) {
-        // Content-Length was unknown, use content-range instead.
-        contentLength = rangeTotal;
+      } else if (gotRangeHeader && rangeTotal > 0) {
+        contentLength = std::max(contentLength, rangeTotal);
       }
+      acceptsRanges = gotRangeHeader;
     } else if (((mOffset > 0) || !mByteRange.IsEmpty())
                && (responseStatus == HTTP_OK_CODE)) {
       // If we get an OK response but we were seeking, or requesting a byte
