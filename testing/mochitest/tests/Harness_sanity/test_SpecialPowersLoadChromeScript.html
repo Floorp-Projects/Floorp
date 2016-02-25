@@ -33,6 +33,16 @@ function endOfTest() {
 }
 
 script.sendAsyncMessage("foo", MESSAGE);
+
+/*
+ * [0][0] is because we're using one real message listener in SpecialPowersObserverAPI.js
+ * and dispatching that to multiple _chromeScriptListeners. The outer array comes
+ * from the message manager since there can be multiple real listeners. The inner
+ * array is for the return values of _chromeScriptListeners.
+ */
+is(script.sendSyncMessage("sync-message")[0][0], "Received a synchronous message.",
+   "Check sync return value");
+
 </script>
 </pre>
 </body>
