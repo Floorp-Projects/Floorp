@@ -9,11 +9,19 @@ function testUnary(type, opcode, op, expect) {
 }
 
 function testBinary(type, opcode, lhs, rhs, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
+  if (type === 'i64') {
+    // i64 cannot be imported/exported, so we use a wrapper function.
+    assertEq(wasmEvalText(`(module
+                            (func (param i64) (param i64) (result i64) (i64.${opcode} (get_local 0) (get_local 1)))
+                            (func (result i32) (i64.eq (call 0 (i64.const ${lhs}) (i64.const ${rhs})) (i64.const ${expect})))
+                            (export "" 1))`)(), 1);
+  } else {
+    assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
+  }
 }
 
 function testComparison(type, opcode, lhs, rhs, expect) {
-  if (type == 'i64') {
+  if (type === 'i64') {
     // i64 cannot be imported/exported, so we use a wrapper function.
     assertEq(wasmEvalText(`(module
                             (func (param i64) (param i64) (result i32) (i64.${opcode} (get_local 0) (get_local 1)))
@@ -72,14 +80,23 @@ testComparison('i32', 'ge_u', 40, 40, 1);
 //testBinary('i64', 'div_u', -40, 2, 2147483628); // TODO: NYI
 //testBinary('i64', 'rem_s', 40, -3, 1); // TODO: NYI
 //testBinary('i64', 'rem_u', 40, -3, 40); // TODO: NYI
-//testBinary('i64', 'and', 42, 6, 2); // TODO: NYI
-//testBinary('i64', 'or', 42, 6, 46); // TODO: NYI
-//testBinary('i64', 'xor', 42, 2, 40); // TODO: NYI
-//testBinary('i64', 'shl', 40, 2, 160); // TODO: NYI
-//testBinary('i64', 'shr_s', -40, 2, -10); // TODO: NYI
-//testBinary('i64', 'shr_u', -40, 2, 1073741814); // TODO: NYI
 
 if (getBuildConfiguration().x64) {
+    testBinary('i64', 'and', 42, 6, 2);
+    testBinary('i64', 'or', 42, 6, 46);
+    testBinary('i64', 'xor', 42, 2, 40);
+    testBinary('i64', 'and', "0x8765432112345678", "0xffff0000ffff0000", "0x8765000012340000");
+    testBinary('i64', 'or', "0x8765432112345678", "0xffff0000ffff0000", "0xffff4321ffff5678");
+    testBinary('i64', 'xor', "0x8765432112345678", "0xffff0000ffff0000", "0x789a4321edcb5678");
+    testBinary('i64', 'shl', 40, 2, 160);
+    testBinary('i64', 'shr_s', -40, 2, -10);
+    testBinary('i64', 'shr_u', -40, 2, "0x3ffffffffffffff6");
+    testBinary('i64', 'shl', 0xff00ff, 28, "0xff00ff0000000");
+    testBinary('i64', 'shl', 1, 63, "0x8000000000000000");
+    testBinary('i64', 'shl', 1, 64, 1);
+    testBinary('i64', 'shr_s', "0xff00ff0000000", 28, 0xff00ff);
+    testBinary('i64', 'shr_u', "0x8ffff00ff0000000", 56, 0x8f);
+
     testComparison('i64', 'eq', 40, 40, 1);
     testComparison('i64', 'ne', 40, 40, 0);
     testComparison('i64', 'lt_s', 40, 40, 0);

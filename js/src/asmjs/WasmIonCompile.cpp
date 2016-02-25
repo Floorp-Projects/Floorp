@@ -445,11 +445,11 @@ class FunctionCompiler
     }
 
     template <class T>
-    MDefinition* bitwise(MDefinition* lhs, MDefinition* rhs)
+    MDefinition* bitwise(MDefinition* lhs, MDefinition* rhs, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), lhs, rhs);
+        T* ins = T::NewAsmJS(alloc(), lhs, rhs, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -786,7 +786,7 @@ class FunctionCompiler
             MOZ_ASSERT(IsPowerOfTwo(length));
             MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
             curBlock_->add(mask);
-            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask);
+            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType_Int32);
             curBlock_->add(maskedIndex);
             ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
             curBlock_->add(ptrFun);
@@ -2328,21 +2328,21 @@ EmitComparison(FunctionCompiler& f, Expr expr, MDefinition** def)
 
 template<class T>
 static bool
-EmitBitwise(FunctionCompiler& f, MDefinition** def)
+EmitBitwise(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
     MDefinition* lhs;
-    if (!EmitExpr(f, ExprType::I32, &lhs))
+    if (!EmitExpr(f, type, &lhs))
         return false;
     MDefinition* rhs;
-    if (!EmitExpr(f, ExprType::I32, &rhs))
+    if (!EmitExpr(f, type, &rhs))
         return false;
-    *def = f.bitwise<T>(lhs, rhs);
+    MIRType mirType = ToMIRType(type);
+    *def = f.bitwise<T>(lhs, rhs, mirType);
     return true;
 }
 
-template<>
-bool
-EmitBitwise<MBitNot>(FunctionCompiler& f, MDefinition** def)
+static bool
+EmitBitwiseNot(FunctionCompiler& f, MDefinition** def)
 {
     MDefinition* in;
     if (!EmitExpr(f, ExprType::I32, &in))
@@ -2820,19 +2820,19 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I32Neg:
         return EmitUnaryMir<MAsmJSNeg>(f, ExprType::I32, def);
       case Expr::I32Or:
-        return EmitBitwise<MBitOr>(f, def);
+        return EmitBitwise<MBitOr>(f, ExprType::I32, def);
       case Expr::I32And:
-        return EmitBitwise<MBitAnd>(f, def);
+        return EmitBitwise<MBitAnd>(f, ExprType::I32, def);
       case Expr::I32Xor:
-        return EmitBitwise<MBitXor>(f, def);
+        return EmitBitwise<MBitXor>(f, ExprType::I32, def);
       case Expr::I32Shl:
-        return EmitBitwise<MLsh>(f, def);
+        return EmitBitwise<MLsh>(f, ExprType::I32, def);
       case Expr::I32ShrS:
-        return EmitBitwise<MRsh>(f, def);
+        return EmitBitwise<MRsh>(f, ExprType::I32, def);
       case Expr::I32ShrU:
-        return EmitBitwise<MUrsh>(f, def);
+        return EmitBitwise<MUrsh>(f, ExprType::I32, def);
       case Expr::I32BitNot:
-        return EmitBitwise<MBitNot>(f, def);
+        return EmitBitwiseNot(f, def);
       case Expr::I32LoadMem8S:
         return EmitLoad(f, Scalar::Int8, def);
       case Expr::I32LoadMem8U:
@@ -2895,6 +2895,18 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       // I64
       case Expr::I64Const:
         return EmitLiteral(f, ExprType::I64, def);
+      case Expr::I64Or:
+        return EmitBitwise<MBitOr>(f, ExprType::I64, def);
+      case Expr::I64And:
+        return EmitBitwise<MBitAnd>(f, ExprType::I64, def);
+      case Expr::I64Xor:
+        return EmitBitwise<MBitXor>(f, ExprType::I64, def);
+      case Expr::I64Shl:
+        return EmitBitwise<MLsh>(f, ExprType::I64, def);
+      case Expr::I64ShrS:
+        return EmitBitwise<MRsh>(f, ExprType::I64, def);
+      case Expr::I64ShrU:
+        return EmitBitwise<MUrsh>(f, ExprType::I64, def);
       // F32
       case Expr::F32Const:
         return EmitLiteral(f, ExprType::F32, def);
@@ -3071,12 +3083,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64DivU:
       case Expr::I64RemS:
       case Expr::I64RemU:
-      case Expr::I64Or:
-      case Expr::I64And:
-      case Expr::I64Xor:
-      case Expr::I64Shl:
-      case Expr::I64ShrU:
-      case Expr::I64ShrS:
         MOZ_CRASH("NYI");
       case Expr::Unreachable:
         break;

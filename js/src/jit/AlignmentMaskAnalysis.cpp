@@ -65,7 +65,7 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
         return;
 
     // The pattern was matched! Produce the replacement expression.
-    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs);
+    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs, MIRType_Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), and_);
     MInstruction* add = MAdd::NewAsmJS(graph.alloc(), and_, op1, MIRType_Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), add);

@@ -29,6 +29,7 @@ LIRGeneratorShared::use(MDefinition* mir, LUse policy)
     // It is illegal to call use() on an instruction with two defs.
 #if BOX_PIECES > 1
     MOZ_ASSERT(mir->type() != MIRType_Value);
+    MOZ_ASSERT(mir->type() != MIRType_Int64);
 #endif
     ensureDefined(mir);
     policy.setVirtualRegister(mir->virtualRegister());
@@ -87,11 +88,41 @@ LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDe
 }
 
 template <size_t Ops, size_t Temps> void
+LIRGeneratorShared::defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,
+                                          MDefinition* mir, uint32_t operand)
+{
+    // The input should be used at the start of the instruction, to avoid moves.
+    MOZ_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
+    MOZ_ASSERT(!lir->isCall());
+
+    uint32_t vreg = getVirtualRegister();
+
+    LDefinition def1(LDefinition::GENERAL, LDefinition::MUST_REUSE_INPUT);
+    def1.setReusedInput(operand);
+    lir->setDef(0, def1);
+    lir->getDef(0)->setVirtualRegister(vreg);
+
+#if JS_BITS_PER_WORD == 32
+    getVirtualRegister();
+    LDefinition def2(LDefinition::GENERAL, LDefinition::MUST_REUSE_INPUT);
+    def2.setReusedInput(operand + 1);
+    lir->setDef(1, def2);
+    lir->getDef(1)->setVirtualRegister(vreg + 1);
+#endif
+
+    lir->setMir(mir);
+    mir->setVirtualRegister(vreg);
+    add(lir);
+
+}
+
+template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, MDefinition* mir,
                               LDefinition::Policy policy)
 {
     // Call instructions should use defineReturn.
     MOZ_ASSERT(!lir->isCall());
+    MOZ_ASSERT(mir->type() == MIRType_Value);
 
     uint32_t vreg = getVirtualRegister();
 
@@ -114,6 +145,7 @@ LIRGeneratorShared::defineInt64(LInstructionHelper<INT64_PIECES, Ops, Temps>* li
 {
     // Call instructions should use defineReturn.
     MOZ_ASSERT(!lir->isCall());
+    MOZ_ASSERT(mir->type() == MIRType_Int64);
 
     uint32_t vreg = getVirtualRegister();
 
@@ -681,13 +713,13 @@ LIRGeneratorShared::useInt64(MDefinition* mir, LUse::Policy policy, bool useAtSt
 }
 
 LInt64Allocation
-LIRGeneratorShared::useInt64(MDefinition* mir)
+LIRGeneratorShared::useInt64(MDefinition* mir, bool useAtStart)
 {
     // On 32-bit platforms, always load the value in registers.
 #if JS_BITS_PER_WORD == 32
-    return useInt64(mir, LUse::REGISTER, /* useAtStart = */ false);
+    return useInt64(mir, LUse::REGISTER, useAtStart);
 #else
-    return useInt64(mir, LUse::ANY, /* useAtStart = */ false);
+    return useInt64(mir, LUse::ANY, useAtStart);
 #endif
 }
 
@@ -698,7 +730,7 @@ LIRGeneratorShared::useInt64Register(MDefinition* mir, bool useAtStart)
 }
 
 LInt64Allocation
-LIRGeneratorShared::useInt64OrConstant(MDefinition* mir)
+LIRGeneratorShared::useInt64OrConstant(MDefinition* mir, bool useAtStart)
 {
     if (mir->isConstant()) {
 #if defined(JS_NUNBOX32)
@@ -707,7 +739,7 @@ LIRGeneratorShared::useInt64OrConstant(MDefinition* mir)
         return LInt64Allocation(LAllocation(mir->toConstant()));
 #endif
     }
-    return useInt64(mir);
+    return useInt64(mir, useAtStart);
 }
 
 } // namespace jit

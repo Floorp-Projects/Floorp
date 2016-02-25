@@ -53,6 +53,20 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::or64(Imm64 imm, Register64 dest)
+{
+    or32(Imm32(imm.value & LOW_32_MASK), dest.low);
+    or32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+}
+
+void
+MacroAssembler::xor64(Imm64 imm, Register64 dest)
+{
+    xor32(Imm32(imm.value & LOW_32_MASK), dest.low);
+    xor32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+}
+
+void
 MacroAssembler::orPtr(Register src, Register dest)
 {
     ma_or(dest, src);

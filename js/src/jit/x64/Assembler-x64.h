@@ -562,6 +562,15 @@ class Assembler : public AssemblerX86Shared
     void sarq(Imm32 imm, Register dest) {
         masm.sarq_ir(imm.value, dest.encoding());
     }
+    void shlq_cl(Register dest) {
+        masm.shlq_CLr(dest.encoding());
+    }
+    void shrq_cl(Register dest) {
+        masm.shrq_CLr(dest.encoding());
+    }
+    void sarq_cl(Register dest) {
+        masm.sarq_CLr(dest.encoding());
+    }
     void orq(Imm32 imm, Register dest) {
         masm.orq_ir(imm.value, dest.encoding());
     }
@@ -588,6 +597,21 @@ class Assembler : public AssemblerX86Shared
     }
     void xorq(Imm32 imm, Register dest) {
         masm.xorq_ir(imm.value, dest.encoding());
+    }
+    void xorq(const Operand& src, Register dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.xorq_rr(src.reg(), dest.encoding());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.xorq_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.xorq_mr(src.address(), dest.encoding());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
 
     void imulq(Register src, Register dest) {
