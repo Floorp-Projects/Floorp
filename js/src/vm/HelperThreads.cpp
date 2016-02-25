@@ -285,7 +285,8 @@ void
 ModuleParseTask::parse()
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, &alloc);
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, &alloc,
+                                                   sourceObject.address());
     if (module)
         script = module->script();
 }
