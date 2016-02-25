@@ -42,12 +42,12 @@ public:
 
   SurfaceFormat GetFormat() const override
   {
-    return mSurface->GetFormat();
+    return mSurface ? mSurface->GetFormat() : gfx::SurfaceFormat::UNKNOWN;
   }
 
   virtual IntSize GetSize() const override
   {
-    return mSurface->GetSize();
+    return mSurface ? mSurface->GetSize() : gfx::IntSize(0, 0);
   }
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
