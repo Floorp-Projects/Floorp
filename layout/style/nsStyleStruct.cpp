@@ -1306,6 +1306,11 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
+  if (HasFilters() != aOther.HasFilters()) {
+    // A change from/to being a containing block for position:fixed.
+    NS_UpdateHint(hint, nsChangeHint_UpdateContainingBlock);
+  }
+
   if (mClipPath != aOther.mClipPath ||
       mFilters != aOther.mFilters) {
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
