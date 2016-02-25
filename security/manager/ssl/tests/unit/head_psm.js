@@ -662,7 +662,11 @@ function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
 function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
   add_connection_test(aHost, aExpectedError, null,
                       add_cert_override.bind(this, aHost, aExpectedBits));
-  add_connection_test(aHost, PRErrorCodeSuccess);
+  add_connection_test(aHost, PRErrorCodeSuccess, null, aSecurityInfo => {
+    Assert.ok(aSecurityInfo.securityState &
+              Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
+              "Cert override flag should be set on the security state");
+  });
 }
 
 // Helper function for add_prevented_cert_override_test. This is much like
