@@ -395,12 +395,14 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
       const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.ySize();
       mFormat = gfx::SurfaceFormat::YUV;
+      mHasInternalBuffer = true;
       break;
     }
     case BufferDescriptor::TRGBDescriptor: {
       const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
+      mHasInternalBuffer = rgb.hasInternalBuffer();
       break;
     }
     default: MOZ_CRASH();
@@ -491,9 +493,42 @@ BufferTextureHost::Unlock()
   mLocked = false;
 }
 
+bool
+BufferTextureHost::EnsureWrappingTextureSource()
+{
+  MOZ_ASSERT(!mHasInternalBuffer);
+  MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV);
+
+  if (mFirstSource) {
+    return true;
+  }
+
+  if (!mCompositor) {
+    return false;
+  }
+
+  RefPtr<gfx::DataSourceSurface> surf =
+    gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
+      ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width), mSize, mFormat);
+
+  if (!surf) {
+    return false;
+  }
+
+  mFirstSource = mCompositor->CreateDataTextureSourceAround(surf);
+  mFirstSource->SetUpdateSerial(mUpdateSerial);
+  mFirstSource->SetOwner(this);
+
+  return true;
+}
+
 void
 BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
 {
+  if (!mHasInternalBuffer) {
+    EnsureWrappingTextureSource();
+  }
+
   if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
     // We are already attached to a TextureSource, nothing to do except tell
     // the compositable to use it.
@@ -594,6 +629,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     // attached to a layer.
     return false;
   }
+  if (!mHasInternalBuffer && EnsureWrappingTextureSource()) {
+    return true;
+  }
+
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return false;

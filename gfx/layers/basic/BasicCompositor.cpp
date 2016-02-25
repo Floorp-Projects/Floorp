@@ -36,6 +36,18 @@ class DataTextureSourceBasic : public DataTextureSource
 public:
   virtual const char* Name() const override { return "DataTextureSourceBasic"; }
 
+  explicit DataTextureSourceBasic(DataSourceSurface* aSurface)
+  : mSurface(aSurface)
+  , mWrappingExistingData(!!aSurface)
+  {}
+
+  virtual DataTextureSource* AsDataTextureSource() override
+  {
+    // If the texture wraps someone else's memory we'd rather not use it as
+    // a DataTextureSource per say (that is call Update on it).
+    return mWrappingExistingData ? nullptr : this;
+  }
+
   virtual TextureSourceBasic* AsSourceBasic() override { return this; }
 
   virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override { return mSurface; }
@@ -54,6 +66,10 @@ public:
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) override
   {
+    MOZ_ASSERT(!mWrappingExistingData);
+    if (mWrappingExistingData) {
+      return false;
+    }
     mSurface = aSurface;
     return true;
   }
@@ -66,6 +82,7 @@ public:
 
 public:
   RefPtr<gfx::DataSourceSurface> mSurface;
+  bool mWrappingExistingData;
 };
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
@@ -182,7 +199,14 @@ BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMo
 already_AddRefed<DataTextureSource>
 BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
-  RefPtr<DataTextureSource> result = new DataTextureSourceBasic();
+  RefPtr<DataTextureSource> result = new DataTextureSourceBasic(nullptr);
+  return result.forget();
+}
+
+already_AddRefed<DataTextureSource>
+BasicCompositor::CreateDataTextureSourceAround(DataSourceSurface* aSurface)
+{
+  RefPtr<DataTextureSource> result = new DataTextureSourceBasic(aSurface);
   return result.forget();
 }
 
