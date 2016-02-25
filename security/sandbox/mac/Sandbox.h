@@ -47,6 +47,7 @@ typedef struct _MacSandboxInfo {
   std::string appPath;
   std::string appBinaryPath;
   std::string appDir;
+  std::string appTempDir;
 } MacSandboxInfo;
 
 namespace mozilla {
