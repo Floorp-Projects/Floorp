@@ -8,6 +8,9 @@ package org.mozilla.gecko.feeds;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
 import com.keepsafe.switchboard.SwitchBoard;
@@ -71,6 +74,13 @@ public class FeedService extends IntentService {
             return;
         }
 
+        if (!isConnectedToNetwork() || isActiveNetworkMetered()) {
+            // For now just skip if we are not connected or the network is metered. We do not want
+            // to use precious mobile traffic.
+            Log.d(LOGTAG, "Not connected to a network or network is metered. Skipping.");
+            return;
+        }
+
         switch (intent.getAction()) {
             case ACTION_SETUP:
                 new SetupAction(this).perform();
@@ -99,5 +109,16 @@ public class FeedService extends IntentService {
         storage.persistChanges();
 
         FeedAlarmReceiver.completeWakefulIntent(intent);
+    }
+
+    private boolean isConnectedToNetwork() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
+    private boolean isActiveNetworkMetered() {
+        return ConnectivityManagerCompat.isActiveNetworkMetered(
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE));
     }
 }
