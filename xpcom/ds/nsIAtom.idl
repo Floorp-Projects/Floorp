@@ -53,10 +53,12 @@ interface nsIAtom : nsISupports
   }
 
   inline void ToString(nsAString& aBuf) {
+    // See the comment on |mString|'s declaration.
     nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   }
 
   inline nsStringBuffer* GetStringBuffer() const {
+    // See the comment on |mString|'s declaration.
     return nsStringBuffer::FromData(mString);
   }
 
@@ -72,6 +74,11 @@ interface nsIAtom : nsISupports
 protected:
   uint32_t mLength;
   uint32_t mHash;
+  /**
+   * WARNING! There is an invisible constraint on |mString|: the chars it
+   * points to must belong to an nsStringBuffer. This is so that the
+   * nsStringBuffer::FromData() calls above are valid.
+   */
   char16_t* mString;
 %}
 };

@@ -593,7 +593,6 @@ CSS_KEY(translatez, translatez)
 CSS_KEY(transparent, transparent) // for nsComputedDOMStyle only
 CSS_KEY(triangle, triangle)
 CSS_KEY(tri-state, tri_state)
-CSS_KEY(true, true)
 CSS_KEY(ultra-condensed, ultra_condensed)
 CSS_KEY(ultra-expanded, ultra_expanded)
 CSS_KEY(under, under)

@@ -319,7 +319,6 @@ private:
   ShutdownScriptLoader(JSContext* aCx,
                        WorkerPrivate* aWorkerPrivate,
                        bool aResult,
-                       nsresult aLoadResult,
                        bool aMutedError);
 
   void LogExceptionToConsole(JSContext* aCx,
@@ -573,8 +572,9 @@ private:
   {
     AssertIsOnMainThread();
 
-    if (NS_FAILED(RunInternal())) {
-      CancelMainThread();
+    nsresult rv = RunInternal();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      CancelMainThread(rv);
     }
 
     return NS_OK;
@@ -711,7 +711,8 @@ private:
       mCanceled = true;
 
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &ScriptLoaderRunnable::CancelMainThread);
+        NS_NewRunnableMethod(this,
+          &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted);
       NS_ASSERTION(runnable, "This should never fail!");
 
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
@@ -730,7 +731,13 @@ private:
   }
 
   void
-  CancelMainThread()
+  CancelMainThreadWithBindingAborted()
+  {
+    CancelMainThread(NS_BINDING_ABORTED);
+  }
+
+  void
+  CancelMainThread(nsresult aCancelResult)
   {
     AssertIsOnMainThread();
 
@@ -755,13 +762,13 @@ private:
 
       if (loadInfo.mCachePromise) {
         MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-        loadInfo.mCachePromise->MaybeReject(NS_BINDING_ABORTED);
+        loadInfo.mCachePromise->MaybeReject(aCancelResult);
         loadInfo.mCachePromise = nullptr;
         callLoadingFinished = false;
       }
 
       if (loadInfo.mChannel) {
-        if (NS_SUCCEEDED(loadInfo.mChannel->Cancel(NS_BINDING_ABORTED))) {
+        if (NS_SUCCEEDED(loadInfo.mChannel->Cancel(aCancelResult))) {
           callLoadingFinished = false;
         } else {
           NS_WARNING("Failed to cancel channel!");
@@ -769,7 +776,7 @@ private:
       }
 
       if (callLoadingFinished && !loadInfo.Finished()) {
-        LoadingFinished(index, NS_BINDING_ABORTED);
+        LoadingFinished(index, aCancelResult);
       }
     }
 
@@ -1719,6 +1726,8 @@ ScriptExecutorRunnable::IsDebuggerRunnable() const
 bool
 ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
   nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
 
   // Don't run if something else has already failed.
@@ -1733,6 +1742,9 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
+  // If nothing else has failed, our ErrorResult better not be a failure either.
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+
   JS::Rooted<JSObject*> global(aCx);
 
   if (mIsWorkerScript) {
@@ -1745,6 +1757,8 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     global.set(globalScope->GetWrapper());
   } else {
+    // XXXbz Icky action at a distance...  Would be better to capture this state
+    // in mScriptLoader!
     global.set(JS::CurrentGlobalOrNull(aCx));
   }
 
@@ -1759,8 +1773,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
     NS_ASSERTION(!loadInfo.mExecutionResult, "Should not have executed yet!");
 
+    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+    mScriptLoader.mRv.MightThrowJSException();
     if (NS_FAILED(loadInfo.mLoadResult)) {
-      scriptloader::ReportLoadError(aCx, loadInfo.mLoadResult);
+      scriptloader::ReportLoadError(aCx, mScriptLoader.mRv,
+                                    loadInfo.mLoadResult);
       // Top level scripts only!
       if (mIsWorkerScript) {
         aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
@@ -1787,8 +1804,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     loadInfo.mScriptTextBuf = nullptr;
     loadInfo.mScriptTextLength = 0;
 
+    // Our ErrorResult still shouldn't be a failure.
+    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
     JS::Rooted<JS::Value> unused(aCx);
     if (!JS::Evaluate(aCx, options, srcBuf, &unused)) {
+      mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
       return true;
     }
 
@@ -1802,30 +1822,30 @@ void
 ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                                 bool aRunResult)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
+
   nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
 
   if (mLastIndex == loadInfos.Length() - 1) {
     // All done. If anything failed then return false.
     bool result = true;
-    nsresult loadResult = NS_OK;
     bool mutedError = false;
     for (uint32_t index = 0; index < loadInfos.Length(); index++) {
       if (!loadInfos[index].mExecutionResult) {
-        mutedError = mutedError || loadInfos[index].mMutedErrorFlag.valueOr(true);
-        loadResult = loadInfos[index].mLoadResult;
+        mutedError = loadInfos[index].mMutedErrorFlag.valueOr(true);
         result = false;
-
-        // If we have more than one loadInfos and one of them fails, the others
-        // are marked as NS_BINDING_ABORTED, but what we want to report is the
-        // error result of the 'real' failing one.
-        if (loadInfos[index].mLoadResult != NS_BINDING_ABORTED) {
-          loadResult = loadInfos[index].mLoadResult;
-          break;
-        }
+        break;
       }
     }
 
-    ShutdownScriptLoader(aCx, aWorkerPrivate, result, loadResult, mutedError);
+    // The only way we can get here with "result" false but without
+    // mScriptLoader.mRv being a failure is if we're loading the main worker
+    // script and GetOrCreateGlobalScope() fails.  In that case we would have
+    // returned false from WorkerRun, so assert that.
+    MOZ_ASSERT_IF(!result && !mScriptLoader.mRv.Failed(),
+                  !aRunResult);
+    ShutdownScriptLoader(aCx, aWorkerPrivate, result, mutedError);
   }
 }
 
@@ -1834,7 +1854,7 @@ ScriptExecutorRunnable::Cancel()
 {
   if (mLastIndex == mScriptLoader.mLoadInfos.Length() - 1) {
     ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate,
-                         false, NS_OK, false);
+                         false, false);
   }
   return MainThreadWorkerSyncRunnable::Cancel();
 }
@@ -1843,9 +1863,10 @@ void
 ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
                                              WorkerPrivate* aWorkerPrivate,
                                              bool aResult,
-                                             nsresult aLoadResult,
                                              bool aMutedError)
 {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
 
   if (mIsWorkerScript && aWorkerPrivate->IsServiceWorker()) {
@@ -1853,13 +1874,24 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
   }
 
   if (!aResult) {
-    // If this error has to be muted, we have to clear the pending exception,
-    // if any, and use the ErrorResult object to throw a new exception.
-    if (aMutedError && JS_IsExceptionPending(aCx)) {
-      LogExceptionToConsole(aCx, aWorkerPrivate);
-      mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
-    } else if (NS_FAILED(aLoadResult)) {
-      mScriptLoader.mRv.Throw(aLoadResult);
+    // At this point there are two possibilities:
+    //
+    // 1) mScriptLoader.mRv.Failed().  In that case we just want to leave it
+    //    as-is, except if it has a JS exception and we need to mute JS
+    //    exceptions.  In that case, we log the exception without firing any
+    //    events and then replace it on the ErrorResult with a NetworkError,
+    //    per spec.
+    //
+    // 2) mScriptLoader.mRv succeeded.  As far as I can tell, this can only
+    //    happen when loading the main worker script and
+    //    GetOrCreateGlobalScope() fails or if ScriptExecutorRunnable::Cancel
+    //    got called.  Does it matter what we throw in this case?  I'm not
+    //    sure...
+    if (mScriptLoader.mRv.Failed()) {
+      if (aMutedError && mScriptLoader.mRv.IsJSException()) {
+        LogExceptionToConsole(aCx, aWorkerPrivate);
+        mScriptLoader.mRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
+      }
     } else {
       mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     }
@@ -1875,12 +1907,16 @@ ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
+  MOZ_ASSERT(mScriptLoader.mRv.IsJSException());
+
   JS::Rooted<JS::Value> exn(aCx);
-  if (!JS_GetPendingException(aCx, &exn)) {
+  if (!ToJSValue(aCx, mScriptLoader.mRv, &exn)) {
     return;
   }
 
-  JS_ClearPendingException(aCx);
+  // Now the exception state should all be in exn.
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
   js::ErrorReport report(aCx);
   if (!report.init(aCx, exn)) {
@@ -1983,28 +2019,36 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
   return getter->GetResult();
 }
 
-void ReportLoadError(JSContext* aCx, nsresult aLoadResult)
+void ReportLoadError(JSContext* aCx, ErrorResult& aRv, nsresult aLoadResult)
 {
-  switch (aLoadResult) {
-    case NS_BINDING_ABORTED:
-      // Canceled, don't set an exception.
-      break;
+  MOZ_ASSERT(!aRv.Failed());
 
+  switch (aLoadResult) {
     case NS_ERROR_FILE_NOT_FOUND:
     case NS_ERROR_NOT_AVAILABLE:
-      Throw(aCx, NS_ERROR_DOM_NETWORK_ERR);
+      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       break;
 
     case NS_ERROR_MALFORMED_URI:
       aLoadResult = NS_ERROR_DOM_SYNTAX_ERR;
       MOZ_FALLTHROUGH;
+    case NS_BINDING_ABORTED:
+      // Note: we used to pretend like we didn't set an exception for
+      // NS_BINDING_ABORTED, but then ShutdownScriptLoader did it anyway.  The
+      // other callsite, in WorkerPrivate::Constructor, never passed in
+      // NS_BINDING_ABORTED.  So just throw it directly here.  Consumers will
+      // deal as needed.
+      MOZ_FALLTHROUGH;
     case NS_ERROR_DOM_SECURITY_ERR:
     case NS_ERROR_DOM_SYNTAX_ERR:
-      Throw(aCx, aLoadResult);
+      aRv.Throw(aLoadResult);
       break;
 
     default:
+      // We _could_ probably just throw aLoadResult on aRv, but let's preserve
+      // the old behavior for now and throw this string as an Error instead.
       JS_ReportError(aCx, "Failed to load script (nsresult = 0x%x)", aLoadResult);
+      aRv.StealExceptionFromJSContext(aCx);
   }
 }
 

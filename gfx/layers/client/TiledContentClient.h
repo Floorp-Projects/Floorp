@@ -318,10 +318,10 @@ struct BasicTiledLayerPaintData {
 
   /*
    * The critical displayport of the content from the nearest ancestor layer
-   * that represents scrollable content with a display port set. Empty if a
-   * critical displayport is not set.
+   * that represents scrollable content with a display port set. isNothing()
+   * if a critical displayport is not set.
    */
-  LayerIntRect mCriticalDisplayPort;
+  Maybe<LayerIntRect> mCriticalDisplayPort;
 
   /*
    * The render resolution of the document that the content this layer

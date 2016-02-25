@@ -20,9 +20,11 @@ new
 algorithm
 atomic
 deque
+functional
 ios
 iosfwd
 iostream
+istream
 iterator
 limits
 list

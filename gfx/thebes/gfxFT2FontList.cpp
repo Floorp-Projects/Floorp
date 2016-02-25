@@ -667,14 +667,14 @@ public:
             return;
         }
         uint32_t size;
-        char* buf;
+        UniquePtr<char[]> buf;
         if (NS_FAILED(mCache->GetBuffer(CACHE_KEY, &buf, &size))) {
             return;
         }
 
-        LOG(("got: %s from the cache", nsDependentCString(buf, size).get()));
+        LOG(("got: %s from the cache", nsDependentCString(buf.get(), size).get()));
 
-        const char* beginning = buf;
+        const char* beginning = buf.get();
         const char* end = strchr(beginning, ';');
         while (end) {
             nsCString filename(beginning, end - beginning);
@@ -709,9 +709,6 @@ public:
             beginning = end + 1;
             end = strchr(beginning, ';');
         }
-
-        // Should we use free() or delete[] here? See bug 684700.
-        free(buf);
     }
 
     virtual void
@@ -953,7 +950,7 @@ gfxFT2FontList::FindFontsInOmnijar(FontNameCache *aCache)
 
     mozilla::scache::StartupCache* cache =
         mozilla::scache::StartupCache::GetSingleton();
-    char *cachedModifiedTimeBuf;
+    UniquePtr<char[]> cachedModifiedTimeBuf;
     uint32_t longSize;
     int64_t jarModifiedTime;
     if (cache &&
@@ -964,7 +961,7 @@ gfxFT2FontList::FindFontsInOmnijar(FontNameCache *aCache)
     {
         nsCOMPtr<nsIFile> jarFile = Omnijar::GetPath(Omnijar::Type::GRE);
         jarFile->GetLastModifiedTime(&jarModifiedTime);
-        if (jarModifiedTime > *(int64_t*)cachedModifiedTimeBuf) {
+        if (jarModifiedTime > *(int64_t*)cachedModifiedTimeBuf.get()) {
             jarChanged = true;
         }
     }

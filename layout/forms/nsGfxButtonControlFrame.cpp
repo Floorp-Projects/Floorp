@@ -7,7 +7,8 @@
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsContentUtils.h"
 // MouseEvent suppression in PP
 #include "nsContentList.h"

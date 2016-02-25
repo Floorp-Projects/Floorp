@@ -10,6 +10,13 @@
     title: "getUserMedia Basic Screenshare Test",
     bug: "1211656"
   });
+
+  var mustFailWith = (msg, reason, f) =>
+    f().then(() => ok(false, msg + " must fail"),
+             e => is(e.name, reason, msg + " must fail: " + e.message));
+
+  var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+
   /**
    * Run a test to verify that we can complete a start and stop media playback
    * cycle for a screenshare LocalMediaStream on a video HTMLMediaElement.
@@ -55,10 +62,20 @@
         }
       }
     ];
-    return getUserMedia(constraints).then(stream => {
-      var playback = new LocalMediaStreamPlayback(testVideo, stream);
+    return Promise.resolve()
+      .then(() => pushPrefs(["media.getusermedia.screensharing.allowed_domains",
+                             "mozilla.github.io,*.bugzilla.mozilla.org"]))
+      .then(() => mustFailWith("Screensharing if absent in allowed_domains",
+                               "SecurityError",
+                               () => navigator.mediaDevices.getUserMedia({
+                                 video: videoConstraints[0], fake: false
+                               })))
+      .then(() => pushPrefs(["media.getusermedia.screensharing.allowed_domains",
+                             "mozilla.github.io,mochi.test,*.bugzilla.mozilla.org"]))
+      .then(() => getUserMedia(constraints).then(stream => {
+        var playback = new LocalMediaStreamPlayback(testVideo, stream);
         return playback.playMediaWithDeprecatedStreamStop(false);
-      })
+      }))
       .then(() => getUserMedia({video: videoConstraints[0], fake: false}))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);

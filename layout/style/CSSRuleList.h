@@ -6,13 +6,12 @@
 #ifndef mozilla_dom_CSSRuleList_h
 #define mozilla_dom_CSSRuleList_h
 
+#include "mozilla/CSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
-class CSSStyleSheet;
-
 namespace dom {
 
 // IID for the CSSRuleList interface

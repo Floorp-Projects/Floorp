@@ -37,7 +37,6 @@
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
 
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "nsIDOMStyleSheet.h"
 
@@ -75,6 +74,8 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
 #include "nsContentList.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2825,13 +2826,11 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
 {
-  RefPtr<CSSStyleSheet> sheet;
-  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
+  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
   RefPtr<RemoveStyleSheetTxn> txn;
-  rv = CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(txn));
+  nsresult rv = CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(txn));
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
@@ -2865,11 +2864,11 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // We MUST ONLY load synchronous local files (no @import)
   // XXXbz Except this will actually try to load remote files
   // synchronously, of course..
-  RefPtr<CSSStyleSheet> sheet;
+  StyleSheetHandle::RefPtr sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
   rv = ps->GetDocument()->CSSLoader()->
     LoadSheetSync(uaURI, mozilla::css::eAgentSheetFeatures, true,
-                  getter_AddRefs(sheet));
+                  &sheet);
 
   // Synchronous loads should ALWAYS return completed
   NS_ENSURE_TRUE(sheet, NS_ERROR_NULL_POINTER);
@@ -2910,8 +2909,7 @@ nsHTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 {
-  RefPtr<CSSStyleSheet> sheet;
-  GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
+  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
 
   // Make sure we remove the stylesheet from our internal list in all
   // cases.
@@ -2933,24 +2931,25 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 NS_IMETHODIMP
 nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, bool aEnable)
 {
-  RefPtr<CSSStyleSheet> sheet;
-  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
+  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_OK); // Don't fail if sheet not found
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   sheet->SetOwningDocument(doc);
 
-  return sheet->SetDisabled(!aEnable);
+  if (sheet->IsServo()) {
+    // XXXheycam ServoStyleSheets don't support being enabled/disabled yet.
+    NS_ERROR("stylo: ServoStyleSheets can't be disabled yet");
+    return NS_ERROR_FAILURE;
+  }
+  return sheet->AsGecko()->SetDisabled(!aEnable);
 }
 
 bool
 nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 {
-  RefPtr<CSSStyleSheet> sheet;
-  nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, false);
+  StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
 
   // Enable sheet if already loaded.
   if (sheet)
@@ -2959,7 +2958,12 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
     sheet->SetOwningDocument(doc);
 
-    sheet->SetDisabled(false);
+    if (sheet->IsServo()) {
+      // XXXheycam ServoStyleSheets don't support being enabled/disabled yet.
+      NS_ERROR("stylo: ServoStyleSheets can't be disabled yet");
+      return true;
+    }
+    sheet->AsGecko()->SetDisabled(false);
     return true;
   }
   return false;
@@ -2967,7 +2971,7 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 
 nsresult
 nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
-                                     CSSStyleSheet* aStyleSheet)
+                                     StyleSheetHandle aStyleSheet)
 {
   uint32_t countSS = mStyleSheets.Length();
   uint32_t countU = mStyleSheetURLs.Length();
@@ -2997,41 +3001,33 @@ nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
-                                  CSSStyleSheet** aStyleSheet)
+StyleSheetHandle
+nsHTMLEditor::GetStyleSheetForURL(const nsAString& aURL)
 {
-  NS_ENSURE_ARG_POINTER(aStyleSheet);
-  *aStyleSheet = 0;
-
   // is it already in the list?
   size_t foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
-  if (foundIndex == mStyleSheetURLs.NoIndex)
-    return NS_OK; //No sheet -- don't fail!
+  if (foundIndex == mStyleSheetURLs.NoIndex) {
+    return nullptr;
+  }
 
-  *aStyleSheet = mStyleSheets[foundIndex];
-  NS_ENSURE_TRUE(*aStyleSheet, NS_ERROR_FAILURE);
-
-  NS_ADDREF(*aStyleSheet);
-
-  return NS_OK;
+  MOZ_ASSERT(mStyleSheets[foundIndex]);
+  return mStyleSheets[foundIndex];
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::GetURLForStyleSheet(CSSStyleSheet* aStyleSheet,
-                                  nsAString &aURL)
+void
+nsHTMLEditor::GetURLForStyleSheet(StyleSheetHandle aStyleSheet,
+                                  nsAString& aURL)
 {
   // is it already in the list?
   int32_t foundIndex = mStyleSheets.IndexOf(aStyleSheet);
 
   // Don't fail if we don't find it in our list
   if (foundIndex == -1)
-    return NS_OK;
+    return;
 
   // Found it in the list!
   aURL = mStyleSheetURLs[foundIndex];
-  return NS_OK;
 }
 
 /*
@@ -3395,7 +3391,7 @@ nsHTMLEditor::DebugUnitTests(int32_t *outNumTests, int32_t *outNumTestsFailed)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::StyleSheetLoaded(CSSStyleSheet* aSheet, bool aWasAlternate,
+nsHTMLEditor::StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
                                nsresult aStatus)
 {
   nsresult rv = NS_OK;

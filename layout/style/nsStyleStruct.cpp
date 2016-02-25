@@ -1306,6 +1306,11 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
+  if (HasFilters() != aOther.HasFilters()) {
+    // A change from/to being a containing block for position:fixed.
+    NS_UpdateHint(hint, nsChangeHint_UpdateContainingBlock);
+  }
+
   if (mClipPath != aOther.mClipPath ||
       mFilters != aOther.mFilters) {
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
@@ -3757,7 +3762,7 @@ nsStyleText::TextEmphasisSide(WritingMode aWM) const
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)) &&
     (!(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER) !=
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER)));
-  Side side = aWM.IsVertical() ?
+  mozilla::Side side = aWM.IsVertical() ?
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT
      ? eSideLeft : eSideRight) :
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER

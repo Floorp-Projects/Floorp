@@ -813,6 +813,20 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
 }
 
 void
+DispatchReplyError(BluetoothReplyRunnable* aRunnable,
+                   const enum BluetoothGattStatus aGattStatus)
+{
+  MOZ_ASSERT(aRunnable);
+
+  // Reply will be deleted by the runnable after running on main thread
+  BluetoothReply* reply =
+    new BluetoothReply(BluetoothReplyError(aGattStatus, EmptyString()));
+
+  aRunnable->SetReply(reply);
+  NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(aRunnable)));
+}
+
+void
 DispatchStatusChangedEvent(const nsAString& aType,
                            const BluetoothAddress& aAddress,
                            bool aStatus)

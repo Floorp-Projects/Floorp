@@ -48,7 +48,7 @@ public:
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
 
-  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const override;
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 };
 
 } // namespace a11y

@@ -497,7 +497,8 @@ public:
   /**
    * Return true if the accessible is an acceptable child.
    */
-  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const { return true; }
+  virtual bool IsAcceptableChild(nsIContent* aEl) const
+    { return true; }
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty

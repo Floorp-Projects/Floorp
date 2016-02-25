@@ -29,12 +29,12 @@ onmessage = function(a) {
   var fileName2 = 42;
 
   if (a.data.test == 'none') {
-    importScripts([crossOriginURL.href]);
+    importScripts(crossOriginURL.href);
     return;
   }
 
   try {
-    importScripts([sameOriginURL.href]);
+    importScripts(sameOriginURL.href);
   } catch(e) {
     if (!(e instanceof SyntaxError)) {
       postMessage({ result: false });
@@ -50,13 +50,17 @@ onmessage = function(a) {
   }
 
   if (a.data.test == 'try') {
+    var exception;
     try {
-      importScripts([crossOriginURL.href]);
+      importScripts(crossOriginURL.href);
     } catch(e) {
       fileName2 = e.filename;
+      exception = e;
     }
 
-    postMessage({ result: fileName2 == workerURL });
+    postMessage({ result: fileName2 == workerURL &&
+                          exception.name == "NetworkError" &&
+                          exception.code == DOMException.NETWORK_ERR });
     return;
   }
 
@@ -74,5 +78,5 @@ onmessage = function(a) {
     }
   }
 
-  importScripts([crossOriginURL.href]);
+  importScripts(crossOriginURL.href);
 }

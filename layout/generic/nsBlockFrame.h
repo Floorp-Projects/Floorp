@@ -16,7 +16,6 @@
 #include "nsHTMLParts.h"
 #include "nsLineBox.h"
 #include "nsCSSPseudoElements.h"
-#include "nsStyleSet.h"
 #include "nsFloatManager.h"
 
 enum LineReflowStatus {
@@ -363,13 +362,7 @@ protected:
   virtual ~nsBlockFrame();
 
 #ifdef DEBUG
-  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
-  {
-    return aPresContext->StyleSet()->
-      ProbePseudoElementStyle(mContent->AsElement(),
-                              mozilla::CSSPseudoElementType::firstLetter,
-                              mStyleContext);
-  }
+  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext);
 #endif
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)

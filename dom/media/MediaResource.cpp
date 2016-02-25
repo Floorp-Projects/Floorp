@@ -236,43 +236,49 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // Content-Range header tells us otherwise.
     bool boundedSeekLimit = true;
     // Check response code for byte-range requests (seeking, chunk requests).
-    if (!mByteRange.IsEmpty() && (responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
+    if (responseStatus == HTTP_PARTIAL_RESPONSE_CODE) {
       // Parse Content-Range header.
       int64_t rangeStart = 0;
       int64_t rangeEnd = 0;
       int64_t rangeTotal = 0;
       rv = ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal);
-      if (NS_FAILED(rv)) {
-        // Content-Range header text should be parse-able.
-        CMLOG("Error processing \'Content-Range' for "
-              "HTTP_PARTIAL_RESPONSE_CODE: rv[%x] channel[%p] decoder[%p]",
-              rv, hc.get(), mCallback.get());
-        mCallback->NotifyNetworkError();
-        CloseChannel();
-        return NS_OK;
-      }
 
-      // Give some warnings if the ranges are unexpected.
-      // XXX These could be error conditions.
-      NS_WARN_IF_FALSE(mByteRange.mStart == rangeStart,
-                       "response range start does not match request");
-      NS_WARN_IF_FALSE(mOffset == rangeStart,
-                       "response range start does not match current offset");
-      NS_WARN_IF_FALSE(mByteRange.mEnd == rangeEnd,
-                       "response range end does not match request");
-      // Notify media cache about the length and start offset of data received.
-      // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
-      //       For now, tell the decoder that the stream is infinite.
-      if (rangeTotal == -1) {
-        boundedSeekLimit = false;
-      } else {
-        mCacheStream.NotifyDataLength(rangeTotal);
-      }
-      mCacheStream.NotifyDataStarted(rangeStart);
-
-      mOffset = rangeStart;
       // We received 'Content-Range', so the server accepts range requests.
-      acceptsRanges = true;
+      acceptsRanges = NS_SUCCEEDED(rv);
+
+      if (!mByteRange.IsEmpty()) {
+        if (!acceptsRanges) {
+          // Content-Range header text should be parse-able when processing a
+          // range requests.
+          CMLOG("Error processing \'Content-Range' for "
+                "HTTP_PARTIAL_RESPONSE_CODE: rv[%x] channel[%p] decoder[%p]",
+                rv, hc.get(), mCallback.get());
+          mCallback->NotifyNetworkError();
+          CloseChannel();
+          return NS_OK;
+        }
+        // Give some warnings if the ranges are unexpected.
+        // XXX These could be error conditions.
+        NS_WARN_IF_FALSE(mByteRange.mStart == rangeStart,
+                         "response range start does not match request");
+        NS_WARN_IF_FALSE(mOffset == rangeStart,
+                         "response range start does not match current offset");
+        NS_WARN_IF_FALSE(mByteRange.mEnd == rangeEnd,
+                         "response range end does not match request");
+        // Notify media cache about the length and start offset of data received.
+        // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
+        //       For now, tell the decoder that the stream is infinite.
+        if (rangeTotal == -1) {
+          boundedSeekLimit = false;
+        } else {
+          mCacheStream.NotifyDataLength(rangeTotal);
+        }
+        mCacheStream.NotifyDataStarted(rangeStart);
+        mOffset = rangeStart;
+      } else if (contentLength < 0 && acceptsRanges && rangeTotal > 0) {
+        // Content-Length was unknown, use content-range instead.
+        contentLength = rangeTotal;
+      }
     } else if (((mOffset > 0) || !mByteRange.IsEmpty())
                && (responseStatus == HTTP_OK_CODE)) {
       // If we get an OK response but we were seeking, or requesting a byte
@@ -283,12 +289,11 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 
       // The server claimed it supported range requests.  It lied.
       acceptsRanges = false;
-    } else if (mOffset == 0 &&
-               (responseStatus == HTTP_OK_CODE ||
-                responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
-      if (contentLength >= 0) {
-        mCacheStream.NotifyDataLength(contentLength);
-      }
+    }
+    if (mOffset == 0 && contentLength >= 0 &&
+        (responseStatus == HTTP_OK_CODE ||
+         responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
+      mCacheStream.NotifyDataLength(contentLength);
     }
     // XXX we probably should examine the Content-Range header in case
     // the server gave us a range which is not quite what we asked for

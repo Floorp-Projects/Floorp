@@ -85,7 +85,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_DECL_NSITIMERCALLBACK
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheetHandle aSheet,
                               bool aWasAlternate,
                               nsresult aStatus) override;
 

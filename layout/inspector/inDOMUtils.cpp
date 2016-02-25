@@ -81,8 +81,16 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
 
   // Get the agent, then user and finally xbl sheets in the style set.
   nsIPresShell* presShell = document->GetShell();
+
+  if (presShell && presShell->StyleSet()->IsServo()) {
+    // XXXheycam ServoStyleSets don't have the ability to expose their
+    // sheets in a script-accessible way yet.
+    NS_ERROR("stylo: ServoStyleSets cannot expose their sheets to script yet");
+    return NS_ERROR_FAILURE;
+  }
+
   if (presShell) {
-    nsStyleSet* styleSet = presShell->StyleSet();
+    nsStyleSet* styleSet = presShell->StyleSet()->AsGecko();
     SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
@@ -106,7 +114,9 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
 
   // Get the document sheets.
   for (int32_t i = 0; i < document->GetNumberOfStyleSheets(); i++) {
-    sheets.AppendElement(document->GetStyleSheetAt(i));
+    // XXXheycam ServoStyleSets don't have the ability to expose their
+    // sheets in a script-accessible way yet.
+    sheets.AppendElement(document->GetStyleSheetAt(i)->AsGecko());
   }
 
   nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(sheets.Length() *

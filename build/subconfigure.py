@@ -303,7 +303,22 @@ def run(objdir):
     relobjdir = os.path.relpath(objdir, os.getcwd())
 
     if not skip_configure:
-        command = [data['shell'], configure]
+        if mozpath.normsep(relobjdir) == 'js/src':
+            # Because configure is a shell script calling a python script
+            # calling a shell script, on Windows, with msys screwing the
+            # environment, we lose the benefits from our own efforts in this
+            # script to get past the msys problems. So manually call the python
+            # script instead, so that we don't do a native->msys transition
+            # here. Then the python configure will still have the right
+            # environment when calling the shell configure.
+            command = [
+                sys.executable,
+                os.path.join(os.path.dirname(__file__), '..', 'configure.py'),
+            ]
+            data['env']['OLD_CONFIGURE'] = os.path.join(
+                os.path.dirname(configure), 'old-configure')
+        else:
+            command = [data['shell'], configure]
         for kind in ('target', 'build', 'host'):
             if data.get(kind) is not None:
                 command += ['--%s=%s' % (kind, data[kind])]

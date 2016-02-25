@@ -207,12 +207,6 @@ void InitOmxParameter(T* aParam)
   aParam->nVersion.s.nVersionMajor = 1;
 }
 
-// There should be 2 ports and port number start from 0.
-void GetOmxPortIndex(nsTArray<uint32_t>& aPortIndex) {
-  aPortIndex.AppendElement(0);
-  aPortIndex.AppendElement(1);
-}
-
 }
 
 #endif /* OmxDataDecoder_h_ */

@@ -185,6 +185,30 @@ class DebuggerWeakMap : private WeakMap<RelocatablePtr<UnbarrieredKey>, Relocata
 
 class LeaveDebuggeeNoExecute;
 
+// Suppresses all debuggee NX checks, i.e., allow all execution. Used to allow
+// certain whitelisted operations to execute code.
+//
+// WARNING
+// WARNING Do not use this unless you know what you are doing!
+// WARNING
+class AutoSuppressDebuggeeNoExecuteChecks
+{
+    EnterDebuggeeNoExecute** stack_;
+    EnterDebuggeeNoExecute* prev_;
+
+  public:
+    explicit AutoSuppressDebuggeeNoExecuteChecks(JSContext* cx) {
+        stack_ = &cx->runtime()->noExecuteDebuggerTop;
+        prev_ = *stack_;
+        *stack_ = nullptr;
+    }
+
+    ~AutoSuppressDebuggeeNoExecuteChecks() {
+        MOZ_ASSERT(!*stack_);
+        *stack_ = prev_;
+    }
+};
+
 /*
  * Env is the type of what ES5 calls "lexical environments" (runtime
  * activations of lexical scopes). This is currently just JSObject, and is

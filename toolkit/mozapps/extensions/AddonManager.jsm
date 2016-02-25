@@ -2246,6 +2246,28 @@ var AddonManagerInternal = {
                                .installTemporaryAddon(aFile);
   },
 
+  /**
+   * Returns an Addon corresponding to an instance ID.
+   * @param aInstanceID
+   *        An Addon Instance ID symbol
+   * @return {Promise}
+   * @resolves The found Addon or null if no such add-on exists.
+   * @rejects  Never
+   * @throws if the aInstanceID argument is not specified
+   *         or the AddonManager is not initialized
+   */
+   getAddonByInstanceID: function(aInstanceID) {
+     if (!gStarted)
+       throw Components.Exception("AddonManager is not initialized",
+                                  Cr.NS_ERROR_NOT_INITIALIZED);
+
+     if (!aInstanceID || typeof aInstanceID != "symbol")
+       throw Components.Exception("aInstanceID must be a Symbol()",
+                                  Cr.NS_ERROR_INVALID_ARG);
+
+     return AddonManagerInternal._getProviderByName("XPIProvider")
+                                .getAddonByInstanceID(aInstanceID);
+   },
 
   /**
    * Gets an icon from the icon set provided by the add-on
@@ -3196,6 +3218,10 @@ this.AddonManager = {
 
   installTemporaryAddon: function(aDirectory) {
     return AddonManagerInternal.installTemporaryAddon(aDirectory);
+  },
+
+  getAddonByInstanceID: function(aInstanceID) {
+    return AddonManagerInternal.getAddonByInstanceID(aInstanceID);
   },
 
   addManagerListener: function(aListener) {
