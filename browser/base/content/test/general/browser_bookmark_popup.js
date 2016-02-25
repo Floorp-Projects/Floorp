@@ -51,6 +51,7 @@ function* test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
 
     if (!shouldAutoClose) {
       yield new Promise(resolve => setTimeout(resolve, 400));
+      is(bookmarkPanel.state, "open", "Panel should still be 'open' for non-autoclose");
     }
 
     let hiddenPromise = promisePopupHidden(bookmarkPanel);
@@ -144,7 +145,8 @@ add_task(function* panel_shown_for_new_bookmarks_mouseover_mouseout() {
 
       yield new Promise(resolve => setTimeout(resolve, 400));
       is(bookmarkPanel.state, "open", "Panel should still be open on mouseover");
-
+    },
+    *popupHideFn() {
       let mouseOutPromise = new Promise(resolve => {
         bookmarkPanel.addEventListener("mouseout", function onmouseout() {
           bookmarkPanel.removeEventListener("mouseout", onmouseout);
@@ -158,7 +160,7 @@ add_task(function* panel_shown_for_new_bookmarks_mouseover_mouseout() {
       yield mouseOutPromise;
       info("Got mouseout event, should autoclose now");
     },
-    shouldAutoClose: true,
+    shouldAutoClose: false,
     isBookmarkRemoved: false,
   });
 });
@@ -208,7 +210,7 @@ add_task(function* panel_shown_for_new_bookmark_keypress_no_autoclose() {
   });
 });
 
-add_task(function* contextmenu_new_bookmark_click_no_autoclose() {
+add_task(function* contextmenu_new_bookmark_keypress_no_autoclose() {
   yield test_bookmarks_popup({
     isNewBookmark: true,
     *popupShowFn(browser) {
@@ -227,7 +229,7 @@ add_task(function* contextmenu_new_bookmark_click_no_autoclose() {
       yield awaitPopupHidden;
     },
     popupEditFn() {
-      bookmarkPanelTitle.click();
+      EventUtils.sendChar("VK_TAB", window);
     },
     shouldAutoClose: false,
     popupHideFn() {
