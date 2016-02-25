@@ -59,7 +59,7 @@ WorkerRunnable::DefaultGlobalObject() const
 }
 
 bool
-WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
+WorkerRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 {
 #ifdef DEBUG
   MOZ_ASSERT(aWorkerPrivate);
@@ -71,6 +71,7 @@ WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
 
     case WorkerThreadModifyBusyCount:
       aWorkerPrivate->AssertIsOnParentThread();
+      MOZ_ASSERT(aCx);
       break;
 
     case WorkerThreadUnchangedBusyCount:
@@ -95,7 +96,7 @@ WorkerRunnable::Dispatch(JSContext* aCx)
   bool ok;
 
   if (!aCx) {
-    ok = PreDispatch(mWorkerPrivate);
+    ok = PreDispatch(nullptr, mWorkerPrivate);
     if (ok) {
       ok = DispatchInternal();
     }
@@ -112,8 +113,7 @@ WorkerRunnable::Dispatch(JSContext* aCx)
     ac.emplace(aCx, global);
   }
 
-  ok = PreDispatch(mWorkerPrivate);
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+  ok = PreDispatch(aCx, mWorkerPrivate);
 
   if (ok && !DispatchInternal()) {
     ok = false;
@@ -414,11 +414,11 @@ WorkerDebuggerRunnable::PostDispatch(JSContext* aCx,
   // The only way aDispatchResult can be false here is if either PreDispatch or
   // DispatchInternal returned false.
   //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from WorkerRunnable and don't allow overriding it in our subclasses.
-  // WorkerRunnable::DispatchInternal only fails if one of its runnable
-  // dispatching functions fails, and none of those cases can throw a JS
-  // exception.  So we can never have a JS exception here.
+  // Our PreDispatch always returns true and is final.  We inherit
+  // DispatchInternal from WorkerRunnable and don't allow overriding it in our
+  // subclasses.  WorkerRunnable::DispatchInternal only fails if one of its
+  // runnable dispatching functions fails, and none of those cases can throw a
+  // JS exception.  So we can never have a JS exception here.
   MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
@@ -470,10 +470,10 @@ MainThreadWorkerSyncRunnable::PostDispatch(JSContext* aCx,
   // The only way aDispatchResult can be false here is if either PreDispatch or
   // DispatchInternal returned false.
   //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from WorkerSyncRunnable and don't allow overriding it in our subclasses.
-  // WorkerSyncRunnable::DispatchInternal only returns false if if dispatch to
-  // the syncloop target fails or if calling up to
+  // Our PreDispatch always returns true and is final.  We inherit
+  // DispatchInternal from WorkerSyncRunnable and don't allow overriding it in
+  // our subclasses.  WorkerSyncRunnable::DispatchInternal only returns false if
+  // if dispatch to the syncloop target fails or if calling up to
   // WorkerRunnable::DispatchInternal fails.  WorkerRunnable::DispatchInternal
   // only fails if one of its runnable dispatching functions fails, and none of
   // those cases can throw a JS exception.  So we can never have a JS exception
@@ -539,10 +539,10 @@ MainThreadStopSyncLoopRunnable::PostDispatch(JSContext* aCx,
   // The only way aDispatchResult can be false here is if either PreDispatch or
   // DispatchInternal returned false.
   //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from StopSyncLoopRunnable, and that itself is final and only returns false
-  // if dispatch to the syncloop target fails.  So we can never have a JS
-  // exception here.
+  // Our PreDispatch always returns true and is final.  We inherit
+  // DispatchInternal from StopSyncLoopRunnable, and that itself is final and
+  // only returns false if dispatch to the syncloop target fails.  So we can
+  // never have a JS exception here.
   MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
@@ -655,7 +655,8 @@ WorkerCheckAPIExposureOnMainThreadRunnable::Dispatch()
 }
 
 bool
-WorkerSameThreadRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
+WorkerSameThreadRunnable::PreDispatch(JSContext* aCx,
+                                      WorkerPrivate* aWorkerPrivate)
 {
   // We don't call WorkerRunnable::PreDispatch, because we're using
   // WorkerThreadModifyBusyCount for mBehavior, and WorkerRunnable will assert
