@@ -176,6 +176,12 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_15_b2gdroid.yml
+  linux64-mulet-haz:
+    platforms:
+      - Mulet Linux
+    types:
+      debug:
+        task: tasks/builds/mulet_haz_linux.yml
 
 tests:
   cppunit:
