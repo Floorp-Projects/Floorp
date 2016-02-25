@@ -6,6 +6,8 @@
 #include "nsTreeStyleCache.h"
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 nsTreeStyleCache::Transition::Transition(DFAState aState, nsIAtom* aSymbol)
   : mState(aState), mInputSymbol(aSymbol)
@@ -76,7 +78,11 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    RefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
+    // XXXheycam ServoStyleSets do not support XUL tree styles.
+    if (aPresContext->StyleSet()->IsServo()) {
+      MOZ_CRASH("stylo: ServoStyleSets should not support XUL tree styles yet");
+    }
+    RefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->AsGecko()->
       ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
                                 aContext, aComparator);
 

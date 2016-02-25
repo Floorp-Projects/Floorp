@@ -331,7 +331,7 @@ ImageHost::Composite(LayerComposite* aLayer,
     bool isAlphaPremultiplied =
         !(img->mFrontBuffer->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
     RefPtr<TexturedEffect> effect =
-        CreateTexturedEffect(img->mFrontBuffer->GetFormat(),
+        CreateTexturedEffect(img->mFrontBuffer->GetReadFormat(),
             img->mTextureSource.get(), aFilter, isAlphaPremultiplied,
             GetRenderState());
     if (!effect) {
@@ -566,7 +566,7 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
     isAlphaPremultiplied = false;
   }
 
-  return CreateTexturedEffect(img->mFrontBuffer->GetFormat(),
+  return CreateTexturedEffect(img->mFrontBuffer->GetReadFormat(),
                               img->mTextureSource,
                               aFilter,
                               isAlphaPremultiplied,

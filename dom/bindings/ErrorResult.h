@@ -184,6 +184,18 @@ public:
     return true;
   }
 
+  // Use StealExceptionFromJSContext to convert a pending exception on a
+  // JSContext to an ErrorResult.  This function must be called only when a
+  // JSAPI operation failed.  It assumes that lack of pending exception on the
+  // JSContext means an uncatchable exception was thrown.
+  //
+  // Codepaths that might call this method must call MightThrowJSException even
+  // if the relevant JSAPI calls do not fail.
+  //
+  // When this function returns, JS_IsExceptionPending(cx) will definitely be
+  // false.
+  void StealExceptionFromJSContext(JSContext* cx);
+
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowTypeError(Ts&&... messageArgs)
   {
@@ -202,10 +214,10 @@ public:
 
   // Facilities for throwing a preexisting JS exception value via this
   // ErrorResult.  The contract is that any code which might end up calling
-  // ThrowJSException() must call MightThrowJSException() even if no exception
-  // is being thrown.  Code that conditionally calls ToJSValue on this
-  // ErrorResult only if Failed() must first call WouldReportJSException even if
-  // this ErrorResult has not failed.
+  // ThrowJSException() or StealExceptionFromJSContext() must call
+  // MightThrowJSException() even if no exception is being thrown.  Code that
+  // conditionally calls ToJSValue on this ErrorResult only if Failed() must
+  // first call WouldReportJSException even if this ErrorResult has not failed.
   //
   // The exn argument to ThrowJSException can be in any compartment.  It does
   // not have to be in the compartment of cx.  If someone later uses it, they

@@ -12,7 +12,10 @@
 #  error "Unable to wrap _RAISE(); CRT _RAISE() already defined"
 #endif
 #ifdef _XUTILITY_
-#  error "Unabled to wrap _X[exception]"(); CRT versions already declared"
+#  error "Unable to wrap _X[exception](); CRT versions already declared"
+#endif
+#ifdef _FUNCTIONAL_
+#  error "Unable to wrap _Xbad_function_call(); CRT version already declared"
 #endif
 
 #include "mozilla/mozalloc_abort.h"
@@ -26,6 +29,8 @@
 #  define _Xout_of_range      moz_Xout_of_range
 #  define _Xoverflow_error    moz_Xoverflow_error
 #  define _Xruntime_error     moz_Xruntime_error
+// used by <functional>
+#  define _Xbad_function_call moz_Xbad_function_call
 
 #  include <xstddef>
 #  include <xutility>

@@ -451,7 +451,7 @@ DOMStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
 
   nsAutoCString origin;
   rv = AppendOriginNoSuffix(aPrincipal, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 

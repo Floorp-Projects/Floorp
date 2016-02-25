@@ -690,6 +690,8 @@ struct SimulcastStream {
   unsigned int        minBitrate;  // kilobits/sec.
   unsigned int        qpMax; // minimum quality
   char                rid[kRIDSize];
+  unsigned int        jsMaxBitrate; // user-controlled max bitrate
+  double              jsScaleDownBy; // user-controlled downscale
 
   bool operator==(const SimulcastStream& other) const {
     return width == other.width &&
@@ -699,7 +701,9 @@ struct SimulcastStream {
            targetBitrate == other.targetBitrate &&
            minBitrate == other.minBitrate &&
            qpMax == other.qpMax &&
-           strcmp(rid, other.rid) == 0;
+           strcmp(rid, other.rid) == 0 &&
+           jsMaxBitrate == other.jsMaxBitrate &&
+           jsScaleDownBy == other.jsScaleDownBy;
   }
 
   bool operator!=(const SimulcastStream& other) const {

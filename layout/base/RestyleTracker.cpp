@@ -15,7 +15,7 @@
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "RestyleTrackerInlines.h"
 #include "nsTransitionManager.h"
 #include "mozilla/RestyleTimelineMarker.h"

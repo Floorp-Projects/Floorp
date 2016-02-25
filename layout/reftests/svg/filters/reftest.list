@@ -45,7 +45,7 @@ fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlu
 == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
 == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
 == feGaussianBlur-6.svg feGaussianBlur-6-ref.svg
-skip-if(d2d) pref(layers.acceleration.disabled,true) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
+skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
 
 != feImage-1.svg about:blank # (Make sure our image renders at all)
 == feImage-1.svg feImage-1-ref.svg

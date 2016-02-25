@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/StyleSheetList.h"
+#include "mozilla/StyleSheetHandle.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTHashtable.h"
@@ -45,8 +46,8 @@ public:
 
   void AddToIdTable(Element* aElement, nsIAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
-  void InsertSheet(CSSStyleSheet* aSheet, nsIContent* aLinkingContent);
-  void RemoveSheet(CSSStyleSheet* aSheet);
+  void InsertSheet(StyleSheetHandle aSheet, nsIContent* aLinkingContent);
+  void RemoveSheet(StyleSheetHandle aSheet);
   bool ApplyAuthorStyles();
   void SetApplyAuthorStyles(bool aApplyAuthorStyles);
   StyleSheetList* StyleSheets();

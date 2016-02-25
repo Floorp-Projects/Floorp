@@ -116,6 +116,7 @@ public:
 
   NS_IMETHOD OnMetadataRead(nsresult aResult) = 0;
   NS_IMETHOD OnMetadataWritten(nsresult aResult) = 0;
+  virtual bool IsKilled() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileMetadataListener,
@@ -183,6 +184,7 @@ public:
   NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
+  virtual bool IsKilled() override { return mListener && mListener->IsKilled(); }
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

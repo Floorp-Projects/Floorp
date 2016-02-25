@@ -27,7 +27,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
-#include "nsStyleSet.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"

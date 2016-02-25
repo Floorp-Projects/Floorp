@@ -813,7 +813,7 @@ public:
   static const KTableEntry kStackSizingKTable[];
   static const KTableEntry kTableLayoutKTable[];
   // Not const because we modify its entries when the pref
-  // "layout.css.text-align-true-value.enabled" changes:
+  // "layout.css.text-align-unsafe-value.enabled" changes:
   static KTableEntry kTextAlignKTable[];
   static KTableEntry kTextAlignLastKTable[];
   static const KTableEntry kTextCombineUprightKTable[];

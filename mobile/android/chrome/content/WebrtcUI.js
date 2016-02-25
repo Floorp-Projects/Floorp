@@ -133,7 +133,7 @@ var WebrtcUI = {
       aSubject.callID);
   },
 
-  getDeviceButtons: function(audioDevices, videoDevices, aCallID) {
+  getDeviceButtons: function(audioDevices, videoDevices, aCallID, aUri) {
     return [{
       label: Strings.browser.GetStringFromName("getUserMedia.denyRequest.label"),
       callback: function() {
@@ -154,8 +154,13 @@ var WebrtcUI = {
         let videoId = 0;
         if (inputs && inputs.videoSource != undefined)
           videoId = inputs.videoSource;
-        if (videoDevices[videoId])
+        if (videoDevices[videoId]) {
           allowedDevices.AppendElement(videoDevices[videoId]);
+          let perms = Services.perms;
+          // Although the lifetime is "session" it will be removed upon
+          // use so it's more of a one-shot.
+          perms.add(aUri, "camera", perms.EXPIRE_SESSION);
+        }
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
       },
@@ -270,7 +275,8 @@ var WebrtcUI = {
     else
       return;
 
-    let host = aContentWindow.document.documentURIObject.host;
+    let uri = aContentWindow.document.documentURIObject;
+    let host = uri.host;
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name  + "'" : host;
     let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
@@ -294,7 +300,7 @@ var WebrtcUI = {
       this._addDevicesToOptions(audioDevices, "audioDevice", options, extraItems);
     }
 
-    let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID);
+    let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID, uri);
 
     NativeWindow.doorhanger.show(message, "webrtc-request", buttons, BrowserApp.selectedTab.id, options);
   }

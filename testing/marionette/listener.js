@@ -893,7 +893,7 @@ function coordinates(target, x, y) {
 function singleTap(id, corx, cory) {
   let el = elementManager.getKnownElement(id, curContainer);
   // after this block, the element will be scrolled into view
-  let visible = elements.checkVisible(el, curContainer.frame, corx, cory);
+  let visible = element.checkVisible(el, curContainer.frame, corx, cory);
   if (!visible) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
@@ -1268,32 +1268,26 @@ function refresh(msg) {
  * Find an element in the current browsing context's document using the
  * given search strategy.
  */
-function findElementContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curContainer,
-        opts,
-        opts.searchTimeout,
-        false /* all */,
-        resolve,
-        reject);
-  });
+function findElementContent(strategy, selector, opts = {}) {
+  opts.all = false;
+  return elementManager.find(
+      curContainer,
+      strategy,
+      selector,
+      opts);
 }
 
 /**
  * Find elements in the current browsing context's document using the
  * given search strategy.
  */
-function findElementsContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curContainer,
-        opts,
-        opts.searchTimeout,
-        true /* all */,
-        resolve,
-        reject);
-  });
+function findElementsContent(strategy, selector, opts = {}) {
+  opts.all = true;
+  return elementManager.find(
+      curContainer,
+      strategy,
+      selector,
+      opts);
 }
 
 /**

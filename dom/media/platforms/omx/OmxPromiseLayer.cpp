@@ -357,6 +357,18 @@ OmxPromiseLayer::SetParameter(OMX_INDEXTYPE aParamIndex,
                                       aComponentParameterSize);
 }
 
+OMX_U32
+OmxPromiseLayer::InputPortIndex()
+{
+  return mPlatformLayer->InputPortIndex();
+}
+
+OMX_U32
+OmxPromiseLayer::OutputPortIndex()
+{
+  return mPlatformLayer->OutputPortIndex();
+}
+
 nsresult
 OmxPromiseLayer::Shutdown()
 {

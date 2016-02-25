@@ -19,8 +19,8 @@ USING_BLUETOOTH_NAMESPACE
 
 BluetoothReplyRunnable::BluetoothReplyRunnable(nsIDOMDOMRequest* aReq,
                                                Promise* aPromise)
-  : mDOMRequest(aReq)
-  , mPromise(aPromise)
+  : mPromise(aPromise)
+  , mDOMRequest(aReq)
   , mErrorStatus(STATUS_FAIL)
 {}
 
@@ -97,8 +97,7 @@ BluetoothReplyRunnable::Run()
 
   nsresult rv;
   if (mReply->type() != BluetoothReply::TBluetoothReplySuccess) {
-    SetError(mReply->get_BluetoothReplyError().errorString(),
-             mReply->get_BluetoothReplyError().errorStatus());
+    ParseErrorStatus();
     rv = FireErrorString();
   } else if (!ParseSuccessfulReply(&v)) {
     rv = FireErrorString();
@@ -128,6 +127,22 @@ BluetoothReplyRunnable::OnSuccessFired()
 void
 BluetoothReplyRunnable::OnErrorFired()
 {}
+
+void
+BluetoothReplyRunnable::ParseErrorStatus()
+{
+  MOZ_ASSERT(mReply);
+  MOZ_ASSERT(mReply->type() == BluetoothReply::TBluetoothReplyError);
+
+  if (mReply->get_BluetoothReplyError().errorStatus().type() ==
+      BluetoothErrorStatus::TBluetoothStatus) {
+    SetError(
+      mReply->get_BluetoothReplyError().errorString(),
+      mReply->get_BluetoothReplyError().errorStatus().get_BluetoothStatus());
+  } else {
+    SetError(mReply->get_BluetoothReplyError().errorString(), STATUS_FAIL);
+  }
+}
 
 BluetoothVoidReplyRunnable::BluetoothVoidReplyRunnable(nsIDOMDOMRequest* aReq,
                                                        Promise* aPromise)

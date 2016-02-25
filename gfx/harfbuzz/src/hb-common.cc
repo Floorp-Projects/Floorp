@@ -540,7 +540,7 @@ hb_user_data_array_t::set (hb_user_data_key_t *key,
 void *
 hb_user_data_array_t::get (hb_user_data_key_t *key)
 {
-  hb_user_data_item_t item = {NULL };
+  hb_user_data_item_t item = {NULL, NULL, NULL};
 
   return items.find (key, &item, lock) ? item.data : NULL;
 }
