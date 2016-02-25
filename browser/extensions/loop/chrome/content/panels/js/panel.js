@@ -28,8 +28,8 @@ loop.panel = function (_, mozL10n) {
     },
 
     componentWillMount: function () {
-      // Set 553 pixel height to show the full FTU panel content.
-      loop.request("SetPanelHeight", 553);
+      // Show the full FTU panel content.
+      loop.request("SetPanelHeight", 442);
     },
 
     render: function () {
