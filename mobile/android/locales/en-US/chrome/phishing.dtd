@@ -4,7 +4,6 @@
 
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
-<!ENTITY safeb.palm.notforgery.label2 "This isn't a web forgery…">
 <!ENTITY safeb.palm.reportPage.label "Why was this page blocked?">
 <!ENTITY safeb.palm.whyForbidden.label "Why was this page blocked?">
 
