@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -166,7 +167,15 @@ class SearchEngineRow extends AnimatedHeightLayout {
      */
     private List<Integer> findAllOccurrencesOf(String pattern, String string) {
         List<Integer> occurrences = new ArrayList<>();
+
+        // Don't try to search for an empty string - String.indexOf will return 0, which would result
+        // in us iterating with lastIndexOfMatch = 0, which eventually results in an OOM.
+        if (TextUtils.isEmpty(pattern)) {
+            return;
+        }
+
         final int patternLength = pattern.length();
+
         int indexOfMatch = 0;
         int lastIndexOfMatch = 0;
         while(indexOfMatch != -1) {
