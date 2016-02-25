@@ -62,8 +62,8 @@ following:
 '''.strip()
 
 
-def config_status(topobjdir='.', topsrcdir='.',
-        defines=[], non_global_defines=[], substs=[], source=None):
+def config_status(topobjdir='.', topsrcdir='.', defines=None,
+                  non_global_defines=None, substs=None, source=None):
     '''Main function, providing config.status functionality.
 
     Contrary to config.status, it doesn't use CONFIG_FILES or CONFIG_HEADERS
@@ -95,13 +95,7 @@ def config_status(topobjdir='.', topsrcdir='.',
             '%s' % topsrcdir)
 
     default_backends = ['RecursiveMake']
-    # We have a chicken/egg problem, where we only have a dict for substs after
-    # creating the ConfigEnvironment, which requires argument parsing to have
-    # occurred.
-    for name, value in substs:
-        if name == 'BUILD_BACKENDS':
-            default_backends = value
-            break
+    default_backends = (substs or {}).get('BUILD_BACKENDS', ['RecursiveMake'])
 
     parser = ArgumentParser()
     parser.add_argument('--recheck', dest='recheck', action='store_true',
