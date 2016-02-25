@@ -541,6 +541,10 @@ class EventRunnable final : public MainThreadProxyRunnable
   nsresult mResponseTextResult;
   nsresult mStatusResult;
   nsresult mResponseResult;
+  // mScopeObj is used in PreDispatch.  It's passed to our constructor as a
+  // handle, and we only use it while under Dispatch.  Also, the caller ensures
+  // that this scope outlives us.
+  JS::Handle<JSObject*> mScopeObj;
 
 public:
   class MOZ_RAII StateDataAutoRooter : private JS::CustomAutoRooter
@@ -565,7 +569,8 @@ public:
   };
 
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
-                bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal)
+                bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal,
+                JS::Handle<JSObject*> aScopeObj)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
     StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                           SameProcessDifferentThread),
@@ -573,10 +578,12 @@ public:
     mTotal(aTotal), mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0),
     mReadyState(0), mUploadEvent(aUploadEvent), mProgressEvent(true),
     mLengthComputable(aLengthComputable), mUseCachedArrayBufferResponse(false),
-    mResponseTextResult(NS_OK), mStatusResult(NS_OK), mResponseResult(NS_OK)
+    mResponseTextResult(NS_OK), mStatusResult(NS_OK), mResponseResult(NS_OK),
+    mScopeObj(aScopeObj)
   { }
 
-  EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType)
+  EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
+                JS::Handle<JSObject*> aScopeObj)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
     StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                           SameProcessDifferentThread),
@@ -584,15 +591,19 @@ public:
     mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0), mReadyState(0),
     mUploadEvent(aUploadEvent), mProgressEvent(false), mLengthComputable(0),
     mUseCachedArrayBufferResponse(false), mResponseTextResult(NS_OK),
-    mStatusResult(NS_OK), mResponseResult(NS_OK)
+    mStatusResult(NS_OK), mResponseResult(NS_OK), mScopeObj(aScopeObj)
   { }
 
+  void Dispatch()
+  {
+    MainThreadProxyRunnable::Dispatch(nullptr);
+  }
 private:
   ~EventRunnable()
   { }
 
-  virtual void
-  InfalliblePreDispatch(JSContext* aCx) override final;
+  virtual bool
+  PreDispatch(WorkerPrivate* /* unused */) override final;
 
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
@@ -1055,24 +1066,12 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIXMLHttpRequestUpload> uploadTarget = do_QueryInterface(target);
   ProgressEvent* progressEvent = aEvent->InternalDOMEvent()->AsProgressEvent();
 
-  RefPtr<EventRunnable> runnable;
-
   if (mInOpen && type.EqualsASCII(sEventStrings[STRING_readystatechange])) {
     uint16_t readyState = 0;
     if (NS_SUCCEEDED(mXHR->GetReadyState(&readyState)) &&
         readyState == nsIXMLHttpRequest::OPENED) {
       mInnerEventStreamId++;
     }
-  }
-
-  if (progressEvent) {
-    runnable = new EventRunnable(this, !!uploadTarget, type,
-                                 progressEvent->LengthComputable(),
-                                 progressEvent->Loaded(),
-                                 progressEvent->Total());
-  }
-  else {
-    runnable = new EventRunnable(this, !!uploadTarget, type);
   }
 
   {
@@ -1085,9 +1084,20 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
     }
 
     JS::Rooted<JSObject*> scope(cx, &value.toObject());
-    JSAutoCompartment ac(cx, scope);
 
-    runnable->Dispatch(cx);
+    RefPtr<EventRunnable> runnable;
+    if (progressEvent) {
+      runnable = new EventRunnable(this, !!uploadTarget, type,
+                                   progressEvent->LengthComputable(),
+                                   progressEvent->Loaded(),
+                                   progressEvent->Total(),
+                                   scope);
+    }
+    else {
+      runnable = new EventRunnable(this, !!uploadTarget, type, scope);
+    }
+
+    runnable->Dispatch();
   }
 
   if (!uploadTarget) {
@@ -1170,19 +1180,16 @@ LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-void
-EventRunnable::InfalliblePreDispatch(JSContext* aCx)
+bool
+EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
 
   AutoJSAPI jsapi;
-  DebugOnly<bool> ok =
-    jsapi.Init(xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx)), aCx);
+  DebugOnly<bool> ok = jsapi.Init(xpc::NativeGlobal(mScopeObj));
   MOZ_ASSERT(ok);
-  MOZ_ASSERT(jsapi.cx() == aCx);
   jsapi.TakeOwnershipOfErrorReporting();
+  JSContext* cx = jsapi.cx();
 
   RefPtr<nsXMLHttpRequest>& xhr = mProxy->mXHR;
   MOZ_ASSERT(xhr);
@@ -1199,15 +1206,15 @@ EventRunnable::InfalliblePreDispatch(JSContext* aCx)
     }
   }
   else {
-    JS::Rooted<JS::Value> response(aCx);
-    mResponseResult = xhr->GetResponse(aCx, &response);
+    JS::Rooted<JS::Value> response(cx);
+    mResponseResult = xhr->GetResponse(cx, &response);
     if (NS_SUCCEEDED(mResponseResult)) {
       if (!response.isGCThing()) {
         mResponse = response;
       } else {
         bool doClone = true;
-        JS::Rooted<JS::Value> transferable(aCx);
-        JS::Rooted<JSObject*> obj(aCx, response.isObjectOrNull() ?
+        JS::Rooted<JS::Value> transferable(cx);
+        JS::Rooted<JSObject*> obj(cx, response.isObjectOrNull() ?
                                   response.toObjectOrNull() : nullptr);
         if (obj && JS_IsArrayBufferObject(obj)) {
           // Use cached response if the arraybuffer has been transfered.
@@ -1217,9 +1224,9 @@ EventRunnable::InfalliblePreDispatch(JSContext* aCx)
             doClone = false;
           } else {
             MOZ_ASSERT(!JS_IsDetachedArrayBufferObject(obj));
-            JS::AutoValueArray<1> argv(aCx);
+            JS::AutoValueArray<1> argv(cx);
             argv[0].set(response);
-            obj = JS_NewArrayObject(aCx, argv);
+            obj = JS_NewArrayObject(cx, argv);
             if (obj) {
               transferable.setObject(*obj);
               // Only cache the response when the readyState is DONE.
@@ -1235,7 +1242,7 @@ EventRunnable::InfalliblePreDispatch(JSContext* aCx)
 
         if (doClone) {
           ErrorResult rv;
-          Write(aCx, response, transferable, rv);
+          Write(cx, response, transferable, rv);
           if (NS_WARN_IF(rv.Failed())) {
             NS_WARNING("Failed to clone response!");
             mResponseResult = rv.StealNSResult();
@@ -1253,6 +1260,8 @@ EventRunnable::InfalliblePreDispatch(JSContext* aCx)
   mReadyState = xhr->ReadyState();
 
   xhr->GetResponseURL(mResponseURL);
+
+  return true;
 }
 
 bool
