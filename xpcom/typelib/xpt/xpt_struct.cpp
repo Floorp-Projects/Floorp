@@ -202,6 +202,7 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
     if (!XPT_Do32(outer, &cursor->offset))
         return PR_FALSE;
     if (!cursor->offset) {
+        *idp = NULL;
         return PR_TRUE;
     }
     if(!XPT_Do16(cursor, &id->parent_interface) ||
