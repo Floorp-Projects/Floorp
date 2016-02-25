@@ -1069,7 +1069,7 @@ public:
 
 private:
   virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     // May be called on any thread!
     return true;
