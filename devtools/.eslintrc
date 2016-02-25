@@ -1,4 +1,7 @@
 {
+  "plugins": [
+    "react"
+  ],
   "globals": {
     "Cc": true,
     "Ci": true,
@@ -29,6 +32,23 @@
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": 1,
     "mozilla/var-only-at-top-level": 1,
+
+    // Rules from the React plugin
+    "react/display-name": 1,
+    "react/no-danger": 1,
+    "react/no-did-mount-set-state": 1,
+    "react/no-did-update-set-state": 1,
+    "react/no-direct-mutation-state": 1,
+    "react/no-unknown-property": 1,
+    "react/prefer-es6-class": 1,
+    "react/prop-types": 1,
+    "react/sort-comp": [1, {
+      order: [
+        "propTypes",
+        "everything-else",
+        "render"
+      ]
+    }],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
