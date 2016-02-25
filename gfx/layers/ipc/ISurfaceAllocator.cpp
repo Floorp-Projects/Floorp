@@ -147,7 +147,11 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
     bufferDesc = shmem;
   }
 
-  *aBuffer = SurfaceDescriptorBuffer(RGBDescriptor(aSize, format), bufferDesc);
+  // Use an intermediate buffer by default. Skipping the intermediate buffer is
+  // only possible in certain configurations so let's keep it simple here for now.
+  const bool hasIntermediateBuffer = true;
+  *aBuffer = SurfaceDescriptorBuffer(RGBDescriptor(aSize, format, hasIntermediateBuffer),
+                                     bufferDesc);
 
   return true;
 }

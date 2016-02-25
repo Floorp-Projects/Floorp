@@ -633,8 +633,13 @@ Range::Range(const MDefinition* def)
     // bailouts. If range analysis hasn't ruled out values in
     // (INT32_MAX,UINT32_MAX], set the range to be conservatively correct for
     // use as either a uint32 or an int32.
-    if (!hasInt32UpperBound() && def->isUrsh() && def->toUrsh()->bailoutsDisabled())
+    if (!hasInt32UpperBound() &&
+        def->isUrsh() &&
+        def->toUrsh()->bailoutsDisabled() &&
+        def->type() != MIRType_Int64)
+    {
         lower_ = INT32_MIN;
+    }
 
     assertInvariants();
 }
@@ -1316,6 +1321,9 @@ MClampToUint8::computeRange(TempAllocator& alloc)
 void
 MBitAnd::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
     left.wrapAroundToInt32();
@@ -1327,6 +1335,9 @@ MBitAnd::computeRange(TempAllocator& alloc)
 void
 MBitOr::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
     left.wrapAroundToInt32();
@@ -1338,6 +1349,9 @@ MBitOr::computeRange(TempAllocator& alloc)
 void
 MBitXor::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
     left.wrapAroundToInt32();
@@ -1358,6 +1372,9 @@ MBitNot::computeRange(TempAllocator& alloc)
 void
 MLsh::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
     left.wrapAroundToInt32();
@@ -1376,6 +1393,9 @@ MLsh::computeRange(TempAllocator& alloc)
 void
 MRsh::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
     left.wrapAroundToInt32();
@@ -1394,6 +1414,9 @@ MRsh::computeRange(TempAllocator& alloc)
 void
 MUrsh::computeRange(TempAllocator& alloc)
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range left(getOperand(0));
     Range right(getOperand(1));
 
@@ -3323,6 +3346,9 @@ MPowHalf::collectRangeInfoPreTrunc()
 void
 MUrsh::collectRangeInfoPreTrunc()
 {
+    if (specialization_ == MIRType_Int64)
+        return;
+
     Range lhsRange(lhs()), rhsRange(rhs());
 
     // As in MUrsh::computeRange(), convert the inputs.

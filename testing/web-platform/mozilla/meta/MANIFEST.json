@@ -34,6 +34,12 @@
             "url": "/_mozilla/service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html"
           }
         ],
+        "service-workers/service-worker/activate-event-after-install-state-change.https.html": [
+          {
+            "path": "service-workers/service-worker/activate-event-after-install-state-change.https.html",
+            "url": "/_mozilla/service-workers/service-worker/activate-event-after-install-state-change.https.html"
+          }
+        ],
         "service-workers/service-worker/activation-after-registration.https.html": [
           {
             "path": "service-workers/service-worker/activation-after-registration.https.html",

@@ -285,7 +285,8 @@ void
 ModuleParseTask::parse()
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, &alloc);
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, &alloc,
+                                                   sourceObject.address());
     if (module)
         script = module->script();
 }
@@ -460,6 +461,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     // Suppress GC so that calls below do not trigger a new incremental GC
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC nogc(cx);
+    gc::AutoAssertNoNurseryAlloc noNurseryAlloc(cx->runtime());
 
     JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Script, nogc);
     if (!global)

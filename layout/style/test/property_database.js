@@ -4117,9 +4117,9 @@ var gCSSProperties = {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     /* FIXME: All mask-border-* should be added when we implement them. */
     subproperties: ["mask-clip", "mask-image", "mask-mode", "mask-origin", "mask-position", "mask-repeat", "mask-size" , "mask-composite"],
-    initial_values: [ "auto", "none", "repeat", "add", "0% 0%", "top left", "left top", "0% 0% / auto", "top left / auto", "left top / auto", "0% 0% / auto auto",
+    initial_values: [ "match-source", "none", "repeat", "add", "0% 0%", "top left", "left top", "0% 0% / auto", "top left / auto", "left top / auto", "0% 0% / auto auto",
       "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "left top / auto none", "left top / auto auto none",
-      "auto none repeat add top left", "left top repeat none add", "none repeat add top left / auto", "left top / auto repeat none add auto", "none repeat add 0% 0% / auto auto auto" ],
+      "match-source none repeat add top left", "left top repeat none add", "none repeat add top left / auto", "left top / auto repeat none add match-source", "none repeat add 0% 0% / auto auto match-source" ],
     other_values: [
       "none alpha repeat add left top",
       "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
@@ -4183,6 +4183,7 @@ var gCSSProperties = {
       "alpha padding-box url(404.png) border-box",
       "alpha padding-box url(404.png) padding-box",
       "-moz-element(#a rubbish)",
+      "left top / match-source"
     ]
   },
   "mask-clip": {
@@ -4216,9 +4217,9 @@ var gCSSProperties = {
     domProp: "maskMode",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "alpha", "luminance", "auto, auto", "auto, alpha", "alpha, luminance, auto"],
-    invalid_values: [ "auto auto", "alpha auto" ]
+    initial_values: [ "match-source" ],
+    other_values: [ "alpha", "luminance", "match-source, match-source", "match-source, alpha", "alpha, luminance, match-source"],
+    invalid_values: [ "match-source match-source", "alpha match-source" ]
   },
   "mask-composite": {
     domProp: "maskComposite",

@@ -370,7 +370,8 @@ Request::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  if (aInit.mBody.WasPassed() || temporaryBody) {
+  if ((aInit.mBody.WasPassed() && !aInit.mBody.Value().IsNull()) ||
+      temporaryBody) {
     // HEAD and GET are not allowed to have a body.
     nsAutoCString method;
     request->GetMethod(method);
@@ -382,29 +383,34 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aInit.mBody.WasPassed()) {
-    const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
-    nsCOMPtr<nsIInputStream> stream;
-    nsAutoCString contentType;
-    aRv = ExtractByteStreamFromBody(bodyInit,
-                                    getter_AddRefs(stream), contentType);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+    const Nullable<OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& bodyInitNullable =
+      aInit.mBody.Value();
+    if (!bodyInitNullable.IsNull()) {
+      const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& bodyInit =
+        bodyInitNullable.Value();
+      nsCOMPtr<nsIInputStream> stream;
+      nsAutoCString contentType;
+      aRv = ExtractByteStreamFromBody(bodyInit,
+                                      getter_AddRefs(stream), contentType);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+
+      temporaryBody = stream;
+
+      if (!contentType.IsVoid() &&
+          !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
+        requestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
+                               contentType, aRv);
+      }
+
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+
+      request->ClearCreatedByFetchEvent();
+      request->SetBody(temporaryBody);
     }
-
-    temporaryBody = stream;
-
-    if (!contentType.IsVoid() &&
-        !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
-      requestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
-                             contentType, aRv);
-    }
-
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    request->ClearCreatedByFetchEvent();
-    request->SetBody(temporaryBody);
   }
 
   RefPtr<Request> domRequest = new Request(global, request);

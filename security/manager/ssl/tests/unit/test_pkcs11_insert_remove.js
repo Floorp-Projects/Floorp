@@ -16,6 +16,9 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 const gExpectedTokenLabel = "Test PKCS11 Tokeñ Label";
 
+const gTokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                   .getService(Ci.nsIPK11TokenDB);
+
 function SmartcardObserver(type) {
   this.type = type;
   do_test_pending();
@@ -26,6 +29,25 @@ SmartcardObserver.prototype = {
     equal(topic, this.type, "Observed and expected types should match");
     equal(gExpectedTokenLabel, data,
           "Expected and observed token labels should match");
+
+    // Test that the token list contains the test token only when the test
+    // module is loaded.
+    // Note: This test is located here out of convenience. In particular,
+    //       observing the "smartcard-insert" event is the only time where it
+    //       is reasonably certain for the test token to be present (see the top
+    //       level comment for this file for why).
+    let tokenList = gTokenDB.listTokens();
+    let testTokenLabelFound = false;
+    while (tokenList.hasMoreElements()) {
+      let token = tokenList.getNext().QueryInterface(Ci.nsIPK11Token);
+      if (token.tokenLabel == gExpectedTokenLabel) {
+        testTokenLabelFound = true;
+        break;
+      }
+    }
+    equal(testTokenLabelFound, this.type == "smartcard-insert",
+          "Should find test token only when the test module is loaded");
+
     Services.obs.removeObserver(this, this.type);
     do_test_finished();
   }

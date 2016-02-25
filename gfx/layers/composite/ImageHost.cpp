@@ -52,15 +52,6 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 
   nsTArray<TimedImage> newImages;
 
-  // Remove all mImages without an mTextureSource to recycle.
-  for (int32_t i = mImages.Length() - 1; i >= 0; --i) {
-    if (!mImages[i].mTextureSource) {
-      mImages.RemoveElementAt(i);
-    }
-  }
-
-  // Create new TimedImage entries and recycle any mTextureSources that match
-  // our mFrontBuffers.
   for (uint32_t i = 0; i < aTextures.Length(); ++i) {
     const TimedTexture& t = aTextures[i];
     MOZ_ASSERT(t.mTexture);
@@ -73,34 +64,24 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
       continue;
     }
     TimedImage& img = *newImages.AppendElement();
-    img.mFrontBuffer = t.mTexture;
-    for (uint32_t i = 0; i < mImages.Length(); ++i) {
-      if (mImages[i].mFrontBuffer == img.mFrontBuffer) {
-        img.mTextureSource = mImages[i].mTextureSource;
-        mImages.RemoveElementAt(i);
-        break;
-      }
-    }
+    img.mTextureHost = t.mTexture;
     img.mTimeStamp = t.mTimeStamp;
     img.mPictureRect = t.mPictureRect;
     img.mFrameID = t.mFrameID;
     img.mProducerID = t.mProducerID;
     img.mInputFrameID = t.mInputFrameID;
+    img.mTextureHost->SetCropRect(img.mPictureRect);
+    img.mTextureHost->Updated();
   }
-  // Recycle any leftover mTextureSources and call PrepareTextureSource on all
-  // images.
-  for (auto& img : newImages) {
-    if (!img.mTextureSource && !mImages.IsEmpty()) {
-      img.mTextureSource = mImages.LastElement().mTextureSource;
-      mImages.RemoveElementAt(mImages.Length() - 1);
-    }
-    // SetCropRect() affects only on a specific platform.
-    // If it is not implemented, it does nothing.
-    img.mFrontBuffer->SetCropRect(img.mPictureRect);
-    img.mFrontBuffer->Updated();
-    img.mFrontBuffer->PrepareTextureSource(img.mTextureSource);
-  }
+
   mImages.SwapElements(newImages);
+  newImages.Clear();
+
+  // If we only have one image we can upload it right away, otherwise we'll upload
+  // on-demand during composition after we have picked the proper timestamp.
+  if (mImages.Length() == 1) {
+    SetCurrentTextureHost(mImages[0].mTextureHost);
+  }
 
   // Video producers generally send replacement images with the same frameID but
   // slightly different timestamps in order to sync with the audio clock. This
@@ -120,6 +101,48 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 }
 
 void
+ImageHost::SetCurrentTextureHost(TextureHost* aTexture)
+{
+  if (aTexture == mCurrentTextureHost.get()) {
+    return;
+  }
+
+  bool swapTextureSources = !!mCurrentTextureHost && !!mCurrentTextureSource
+                            && mCurrentTextureHost->HasIntermediateBuffer();
+
+  if (swapTextureSources) {
+    auto dataSource = mCurrentTextureSource->AsDataTextureSource();
+    if (dataSource) {
+      // The current textureHost has an internal buffer in the form of the
+      // DataTextureSource. Removing the ownership of the texture source
+      // will enable the next texture host we bind to the texture source to
+      // acquire it instead of creating a new one. This is desirable in
+      // ImageHost because the current texture won't be used again with the
+      // same content. It wouldn't be desirable with ContentHost for instance,
+      // because the latter reuses the texture's valid regions.
+      dataSource->SetOwner(nullptr);
+    }
+
+    RefPtr<TextureSource> tmp = mExtraTextureSource;
+    mExtraTextureSource = mCurrentTextureSource.get();
+    mCurrentTextureSource = tmp;
+  } else {
+    mExtraTextureSource = nullptr;
+  }
+
+  mCurrentTextureHost = aTexture;
+  mCurrentTextureHost->PrepareTextureSource(mCurrentTextureSource);
+}
+
+void
+ImageHost::CleanupResources()
+{
+  mExtraTextureSource = nullptr;
+  mCurrentTextureSource = nullptr;
+  mCurrentTextureHost = nullptr;
+}
+
+void
 ImageHost::RemoveTextureHost(TextureHost* aTexture)
 {
   MOZ_ASSERT(!mLocked);
@@ -127,7 +150,7 @@ ImageHost::RemoveTextureHost(TextureHost* aTexture)
   CompositableHost::RemoveTextureHost(aTexture);
 
   for (int32_t i = mImages.Length() - 1; i >= 0; --i) {
-    if (mImages[i].mFrontBuffer == aTexture) {
+    if (mImages[i].mTextureHost == aTexture) {
       aTexture->UnbindTextureSource();
       mImages.RemoveElementAt(i);
     }
@@ -245,10 +268,13 @@ TextureHost*
 ImageHost::GetAsTextureHost(IntRect* aPictureRect)
 {
   TimedImage* img = ChooseImage();
+  if (img) {
+    SetCurrentTextureHost(img->mTextureHost);
+  }
   if (aPictureRect && img) {
     *aPictureRect = img->mPictureRect;
   }
-  return img ? img->mFrontBuffer.get() : nullptr;
+  return img ? img->mTextureHost.get() : nullptr;
 }
 
 void ImageHost::Attach(Layer* aLayer,
@@ -258,10 +284,9 @@ void ImageHost::Attach(Layer* aLayer,
   CompositableHost::Attach(aLayer, aCompositor, aFlags);
   for (auto& img : mImages) {
     if (GetCompositor()) {
-      img.mFrontBuffer->SetCompositor(GetCompositor());
+      img.mTextureHost->SetCompositor(GetCompositor());
     }
-    img.mFrontBuffer->Updated();
-    img.mFrontBuffer->PrepareTextureSource(img.mTextureSource);
+    img.mTextureHost->Updated();
   }
 }
 
@@ -305,10 +330,11 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   TimedImage* img = &mImages[imageIndex];
+  SetCurrentTextureHost(img->mTextureHost);
   // Make sure the front buffer has a compositor
-  img->mFrontBuffer->SetCompositor(GetCompositor());
-  if (img->mTextureSource) {
-    img->mTextureSource->SetCompositor(GetCompositor());
+  mCurrentTextureHost->SetCompositor(GetCompositor());
+  if (mCurrentTextureSource) {
+    mCurrentTextureSource->SetCompositor(GetCompositor());
   }
 
   {
@@ -318,21 +344,21 @@ ImageHost::Composite(LayerComposite* aLayer,
       return;
     }
 
-    if (!img->mFrontBuffer->BindTextureSource(img->mTextureSource)) {
+    if (!mCurrentTextureHost->BindTextureSource(mCurrentTextureSource)) {
       return;
     }
 
-    if (!img->mTextureSource) {
+    if (!mCurrentTextureSource) {
       // BindTextureSource above should have returned false!
       MOZ_ASSERT(false);
       return;
     }
 
     bool isAlphaPremultiplied =
-        !(img->mFrontBuffer->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
+        !(mCurrentTextureHost->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
     RefPtr<TexturedEffect> effect =
-        CreateTexturedEffect(img->mFrontBuffer->GetReadFormat(),
-            img->mTextureSource.get(), aFilter, isAlphaPremultiplied,
+        CreateTexturedEffect(mCurrentTextureHost->GetFormat(),
+            mCurrentTextureSource.get(), aFilter, isAlphaPremultiplied,
             GetRenderState());
     if (!effect) {
       return;
@@ -363,7 +389,7 @@ ImageHost::Composite(LayerComposite* aLayer,
     }
     aEffectChain.mPrimaryEffect = effect;
     gfx::Rect pictureRect(0, 0, img->mPictureRect.width, img->mPictureRect.height);
-    BigImageIterator* it = img->mTextureSource->AsBigImageIterator();
+    BigImageIterator* it = mCurrentTextureSource->AsBigImageIterator();
     if (it) {
 
       // This iteration does not work if we have multiple texture sources here
@@ -379,7 +405,7 @@ ImageHost::Composite(LayerComposite* aLayer,
       // the corresponding source tiles from all planes, with appropriate
       // per-plane per-tile texture coords.
       // DrawQuad currently assumes that all planes use the same texture coords.
-      MOZ_ASSERT(it->GetTileCount() == 1 || !img->mTextureSource->GetNextSibling(),
+      MOZ_ASSERT(it->GetTileCount() == 1 || !mCurrentTextureSource->GetNextSibling(),
                  "Can't handle multi-plane BigImages");
 
       it->BeginBigImageIteration();
@@ -391,7 +417,7 @@ ImageHost::Composite(LayerComposite* aLayer,
                                       Float(rect.y - tileRect.y) / tileRect.height,
                                       Float(rect.width) / tileRect.width,
                                       Float(rect.height) / tileRect.height);
-        if (img->mFrontBuffer->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
+        if (img->mTextureHost->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
           effect->mTextureCoords.y = effect->mTextureCoords.YMost();
           effect->mTextureCoords.height = -effect->mTextureCoords.height;
         }
@@ -405,13 +431,13 @@ ImageHost::Composite(LayerComposite* aLayer,
       GetCompositor()->DrawDiagnostics(diagnosticFlags, pictureRect,
                                        aClipRect, aTransform, mFlashCounter);
     } else {
-      IntSize textureSize = img->mTextureSource->GetSize();
+      IntSize textureSize = mCurrentTextureSource->GetSize();
       effect->mTextureCoords = Rect(Float(img->mPictureRect.x) / textureSize.width,
                                     Float(img->mPictureRect.y) / textureSize.height,
                                     Float(img->mPictureRect.width) / textureSize.width,
                                     Float(img->mPictureRect.height) / textureSize.height);
 
-      if (img->mFrontBuffer->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
+      if (img->mTextureHost->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
         effect->mTextureCoords.y = effect->mTextureCoords.YMost();
         effect->mTextureCoords.height = -effect->mTextureCoords.height;
       }
@@ -441,7 +467,7 @@ ImageHost::SetCompositor(Compositor* aCompositor)
 {
   if (mCompositor != aCompositor) {
     for (auto& img : mImages) {
-      img.mFrontBuffer->SetCompositor(aCompositor);
+      img.mTextureHost->SetCompositor(aCompositor);
     }
   }
   if (mImageHostOverlay) {
@@ -460,7 +486,7 @@ ImageHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   pfx += "  ";
   for (auto& img : mImages) {
     aStream << "\n";
-    img.mFrontBuffer->PrintInfo(aStream, pfx.get());
+    img.mTextureHost->PrintInfo(aStream, pfx.get());
     AppendToString(aStream, img.mPictureRect, " [picture-rect=", "]");
   }
 
@@ -478,7 +504,7 @@ ImageHost::Dump(std::stringstream& aStream,
     aStream << aPrefix;
     aStream << (aDumpHtml ? "<ul><li>TextureHost: "
                              : "TextureHost: ");
-    DumpTextureHost(aStream, img.mFrontBuffer);
+    DumpTextureHost(aStream, img.mTextureHost);
     aStream << (aDumpHtml ? " </li></ul> " : " ");
   }
 }
@@ -492,7 +518,8 @@ ImageHost::GetRenderState()
 
   TimedImage* img = ChooseImage();
   if (img) {
-    return img->mFrontBuffer->GetRenderState();
+    SetCurrentTextureHost(img->mTextureHost);
+    return img->mTextureHost->GetRenderState();
   }
   return LayerRenderState();
 }
@@ -506,7 +533,7 @@ ImageHost::GetAsSurface()
 
   TimedImage* img = ChooseImage();
   if (img) {
-    return img->mFrontBuffer->GetAsSurface();
+    return img->mTextureHost->GetAsSurface();
   }
   return nullptr;
 }
@@ -519,7 +546,10 @@ ImageHost::Lock()
   if (!img) {
     return false;
   }
-  if (!img->mFrontBuffer->Lock()) {
+
+  SetCurrentTextureHost(img->mTextureHost);
+
+  if (!mCurrentTextureHost->Lock()) {
     return false;
   }
   mLocked = true;
@@ -530,9 +560,9 @@ void
 ImageHost::Unlock()
 {
   MOZ_ASSERT(mLocked);
-  TimedImage* img = ChooseImage();
-  if (img) {
-    img->mFrontBuffer->Unlock();
+
+  if (mCurrentTextureHost) {
+    mCurrentTextureHost->Unlock();
   }
   mLocked = false;
 }
@@ -558,16 +588,17 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
   if (!img) {
     return nullptr;
   }
-  if (!img->mFrontBuffer->BindTextureSource(img->mTextureSource)) {
+  SetCurrentTextureHost(img->mTextureHost);
+  if (!mCurrentTextureHost->BindTextureSource(mCurrentTextureSource)) {
     return nullptr;
   }
   bool isAlphaPremultiplied = true;
-  if (img->mFrontBuffer->GetFlags() & TextureFlags::NON_PREMULTIPLIED) {
+  if (mCurrentTextureHost->GetFlags() & TextureFlags::NON_PREMULTIPLIED) {
     isAlphaPremultiplied = false;
   }
 
-  return CreateTexturedEffect(img->mFrontBuffer->GetReadFormat(),
-                              img->mTextureSource,
+  return CreateTexturedEffect(mCurrentTextureHost->GetFormat(),
+                              mCurrentTextureSource,
                               aFilter,
                               isAlphaPremultiplied,
                               GetRenderState());

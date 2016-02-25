@@ -337,6 +337,8 @@ public:
 
   void UpdateDimensions(const nsIntRect& aRect, const ScreenIntSize& aSize);
 
+  void SizeModeChanged(const nsSizeMode& aSizeMode);
+
   void UIResolutionChanged();
 
   void ThemeChanged();
@@ -600,6 +602,7 @@ protected:
   float mDPI;
   CSSToLayoutDeviceScale mDefaultScale;
   bool mUpdatedDimensions;
+  nsSizeMode mSizeMode;
   LayoutDeviceIntPoint mChromeOffset;
 
 private:

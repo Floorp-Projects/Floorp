@@ -9837,7 +9837,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mLayers,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mMaskMode,
-                    uint8_t(NS_STYLE_MASK_MODE_AUTO),
+                    uint8_t(NS_STYLE_MASK_MODE_MATCH_SOURCE),
                     parentSVGReset->mMask.mMaskModeCount,
                     svgReset->mMask.mMaskModeCount, maxItemCount, rebuild, conditions);
 

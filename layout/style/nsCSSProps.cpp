@@ -933,10 +933,7 @@ const KTableEntry nsCSSProps::kImageLayerSizeKTable[] = {
 const KTableEntry nsCSSProps::kImageLayerModeKTable[] = {
   { eCSSKeyword_alpha, NS_STYLE_MASK_MODE_ALPHA },
   { eCSSKeyword_luminance, NS_STYLE_MASK_MODE_LUMINANCE },
-  // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1224424
-  // It's ambigious at mask shorthand parsing while we have both mask-mode:auto
-  // and mask-size:auto.
-  { eCSSKeyword_auto, NS_STYLE_MASK_MODE_AUTO },
+  { eCSSKeyword_match_source, NS_STYLE_MASK_MODE_MATCH_SOURCE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

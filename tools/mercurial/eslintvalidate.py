@@ -7,7 +7,7 @@ import re
 import json
 from subprocess import check_output, CalledProcessError
 
-lintable = re.compile(r'.+\.(?:js|jsm|jsx|xml)$')
+lintable = re.compile(r'.+\.(?:js|jsm|jsx|xml|html)$')
 ignored = "File ignored because of your .eslintignore file. Use --no-ignore to override."
 
 def is_lintable(filename):
@@ -35,7 +35,7 @@ def eslinthook(ui, repo, node=None, **opts):
         return
 
     try:
-        output = check_output(["eslint", "--format", "json"] + files)
+        output = check_output(["eslint", "--format", "json", "--plugin", "html"] + files)
         display(ui, output)
     except CalledProcessError as ex:
         display(ui, ex.output)

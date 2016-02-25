@@ -1107,6 +1107,14 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
         operands_[index] = alloc.value();
 #endif
     }
+    void setInt64Operand(size_t index, const LInt64Allocation& alloc) {
+#if JS_BITS_PER_WORD == 32
+        operands_[index] = alloc.low();
+        operands_[index + 1] = alloc.high();
+#else
+        operands_[index] = alloc.value();
+#endif
+    }
 };
 
 template<size_t Defs, size_t Temps>
@@ -1303,9 +1311,6 @@ class LSnapshot : public TempObject
     }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
-    }
-    void setBailoutKind(BailoutKind kind) {
-        bailoutKind_ = kind;
     }
     void rewriteRecoveredInput(LUse input);
 };
@@ -1825,8 +1830,6 @@ class LIRGraph
     }
     void setEntrySnapshot(LSnapshot* snapshot) {
         MOZ_ASSERT(!entrySnapshot_);
-        MOZ_ASSERT(snapshot->bailoutKind() == Bailout_InitialState);
-        snapshot->setBailoutKind(Bailout_ArgumentCheck);
         entrySnapshot_ = snapshot;
     }
     LSnapshot* entrySnapshot() const {

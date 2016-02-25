@@ -97,8 +97,10 @@
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \
+    _(BitOpI64)                     \
     _(BitOpV)                       \
     _(ShiftI)                       \
+    _(ShiftI64)                     \
     _(UrshD)                        \
     _(Return)                       \
     _(Throw)                        \
@@ -112,6 +114,8 @@
     _(ObjectGroupDispatch)          \
     _(Compare)                      \
     _(CompareAndBranch)             \
+    _(Compare64)                    \
+    _(Compare64AndBranch)           \
     _(CompareD)                     \
     _(CompareDAndBranch)            \
     _(CompareF)                     \

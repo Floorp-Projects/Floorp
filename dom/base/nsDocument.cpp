@@ -31,6 +31,7 @@
 #include "nsILoadContext.h"
 #include "nsUnicharUtils.h"
 #include "nsContentList.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "mozilla/css/Loader.h"
@@ -3140,13 +3141,6 @@ nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
 {
   FlushPendingNotifications(Flush_Style);
 
-  // Bug 1174575: Until we implement a suitable PseudoElement interface we
-  // don't have anything to return for the |target| attribute of
-  // KeyframeEffect(ReadOnly) objects that refer to pseudo-elements.
-  // Rather than return some half-baked version of these objects (e.g.
-  // we a null effect attribute) we simply don't provide access to animations
-  // whose effect refers to a pseudo-element until we can support them
-  // properly.
   for (nsIContent* node = nsINode::GetFirstChild();
        node;
        node = node->GetNextNode(this)) {
@@ -3154,7 +3148,13 @@ nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
       continue;
     }
 
-    node->AsElement()->GetAnimationsUnsorted(aAnimations);
+    Element* element = node->AsElement();
+    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::NotPseudo,
+                                   aAnimations);
+    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::before,
+                                   aAnimations);
+    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::after,
+                                   aAnimations);
   }
 
   // Sort animations by priority
