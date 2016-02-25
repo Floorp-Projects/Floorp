@@ -72,6 +72,15 @@ const GMP_PLUGINS = [
     isEME:           true,
     missingKey:      "VIDEO_ADOBE_GMP_DISAPPEARED",
     missingFilesKey: "VIDEO_ADOBE_GMP_MISSING_FILES",
+  },
+  {
+    id:              WIDEVINE_ID,
+    name:            "widevine_name",
+    description:     "widevine_description",
+    licenseURL:      "http://www.google.com/policies/terms/",
+    homepageURL:     "http://www.widevine.com/",
+    optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
+    isEME:           true
   }];
 XPCOMUtils.defineConstant(this, "GMP_PLUGINS", GMP_PLUGINS);
 
@@ -477,10 +486,16 @@ GMPWrapper.prototype = {
 
     let id = this._plugin.id.substring(4);
     let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
+    let infoName;
+    if (this._plugin.id == WIDEVINE_ID) {
+      infoName = "manifest.json";
+    } else {
+      infoName = id + ".info";
+    }
 
     return {
       libraryMissing: !fileExists(this.gmpPath, libName),
-      infoMissing: !fileExists(this.gmpPath, id + ".info"),
+      infoMissing: !fileExists(this.gmpPath, infoName),
       voucherMissing: this._plugin.id == EME_ADOBE_ID
                       && !fileExists(this.gmpPath, id + ".voucher"),
     };
@@ -560,13 +575,15 @@ var GMPProvider = {
           wrapper.uninstallPlugin();
           continue;
         }
-        if (validation.installed) {
+        if (validation.installed && wrapper.missingFilesKey) {
           telemetryService.getHistogramById(wrapper.missingFilesKey).add(validation.telemetry);
         }
         if (!validation.valid) {
           this._log.info("startup - gmp " + plugin.id +
                          " missing [" + validation.missing + "], uninstalling");
-          telemetryService.getHistogramById(wrapper.missingKey).add(true);
+          if (wrapper.missingKey) {
+            telemetryService.getHistogramById(wrapper.missingKey).add(true);
+          }
           wrapper.uninstallPlugin();
           continue;
         }
