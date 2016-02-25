@@ -166,6 +166,7 @@
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);

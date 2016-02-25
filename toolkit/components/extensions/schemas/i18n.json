@@ -78,7 +78,6 @@
       },
       {
         "name": "detectLanguage",
-        "unsupported": true,
         "type": "function",
         "description": "Detects the language of the provided text using CLD.",
         "async": "callback",

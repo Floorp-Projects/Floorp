@@ -693,8 +693,6 @@ function isUsableAddon(aAddon) {
        mustSign(aAddon.type)) {
     if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
       return false;
-    if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
-      return false;
   }
 
   if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
@@ -8015,6 +8013,12 @@ Object.assign(SystemAddonInstallLocation.prototype, {
    * to cleanup again next time.
    */
   cleanDirectories: Task.async(function*() {
+
+    // System add-ons directory does not exist
+    if (!(yield OS.File.exists(this._baseDir.path))) {
+      return;
+    }
+
     let iterator;
     try {
       iterator = new OS.File.DirectoryIterator(this._baseDir.path);

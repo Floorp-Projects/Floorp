@@ -1881,6 +1881,26 @@ or run without that action (ie: --no-{action})"
         if self.config.get('enable_ccache'):
             self._ccache_s()
 
+        # A list of argument lists.  Better names gratefully accepted!
+        mach_commands = self.config.get('postflight_build_mach_commands', [])
+        for mach_command in mach_commands:
+            self._execute_postflight_build_mach_command(mach_command)
+
+    def _execute_postflight_build_mach_command(self, mach_command_args):
+        env = self.query_build_env()
+        env.update(self.query_mach_build_env())
+        python = self.query_exe('python2.7')
+
+        command = [python, 'mach', '--log-no-times']
+        command.extend(mach_command_args)
+
+        self.run_command_m(
+            command=command,
+            cwd=self.query_abs_dirs()['abs_src_dir'],
+            env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 20),
+            halt_on_failure=True,
+        )
+
     def preflight_package_source(self):
         self._get_mozconfig()
 

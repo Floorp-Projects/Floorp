@@ -868,13 +868,11 @@ add_test(function() {
         is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
         is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+        is_element_visible(get("detail-warning"), "Warning message should be visible");
+        is(get("detail-warning").textContent, "Test add-on 11 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
         is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-        is_element_visible(get("detail-error"), "Error message should be visible");
-        is(get("detail-error").textContent, "Test add-on 11 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-        is_element_visible(get("detail-error-link"), "Error link should be visible");
-        is(get("detail-error-link").value, "More Information", "Error link text should be correct");
-        is(get("detail-error-link").href, infoURL, "Error link should be correct");
+        is_element_hidden(get("detail-error"), "Error message should be hidden");
+        is_element_hidden(get("detail-error-link"), "Error link should be hidden");
 
         close_manager(gManagerWindow, function() {
           Services.prefs.setBoolPref("xpinstall.signatures.required", false);

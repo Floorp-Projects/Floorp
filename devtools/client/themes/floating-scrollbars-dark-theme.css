@@ -27,24 +27,15 @@ xul|scrollbar[orient="horizontal"] {
   max-height: 10px;
 }
 
-:root[platform="mac"] xul|slider {
-  -moz-appearance: none !important;
-}
-
-:root[platform="mac"] xul|thumb {
-  -moz-appearance: none !important;
-  border-radius: 3px;
-}
-
 xul|scrollbar xul|thumb {
   background-color: rgba(170,170,170,0.2) !important;
-}
-
-:root[platform="win"] xul|thumb,
-:root[platform="linux"] xul|thumb {
   -moz-appearance: none !important;
   border-width: 0px !important;
   border-radius: 3px !important;
+}
+
+:root[platform="mac"] xul|slider {
+  -moz-appearance: none !important;
 }
 
 :root[platform="win"] xul|scrollbar xul|scrollbarbutton,
