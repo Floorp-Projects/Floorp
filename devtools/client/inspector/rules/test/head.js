@@ -111,20 +111,6 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
 }
 
 /**
- * This shouldn't be used in the tests, but is useful when writing new tests or
- * debugging existing tests in order to introduce delays in the test steps
- *
- * @param {Number} ms
- *        The time to wait
- * @return A promise that resolves when the time is passed
- */
-function wait(ms) {
-  let def = promise.defer();
-  content.setTimeout(def.resolve, ms);
-  return def.promise;
-}
-
-/**
  * Wait for a content -> chrome message on the message manager (the window
  * messagemanager is used).
  *
@@ -750,15 +736,14 @@ var setSearchFilter = Task.async(function*(view, searchValue) {
  *
  * @param {InspectorPanel} inspector
  *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves after page reload and inspector
- * initialization
+ * @param {TestActor} testActor
+ *        The current instance of the TestActor
  */
-function reloadPage(inspector) {
+function* reloadPage(inspector, testActor) {
   let onNewRoot = inspector.once("new-root");
-  content.location.reload();
-  return onNewRoot.then(() => {
-    inspector.markup._waitForChildren();
-  });
+  yield testActor.eval("content.location.reload();");
+  yield onNewRoot;
+  yield inspector.markup._waitForChildren();
 }
 
 /**
