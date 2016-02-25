@@ -238,6 +238,11 @@ public:
 
   virtual int32_t GetLastInputFrameID() const { return -1; }
 
+  /// Called when shutting down the layer tree.
+  /// This is a good place to clear all potential gpu resources before the widget
+  /// is is destroyed.
+  virtual void CleanupResources() {}
+
 protected:
   TextureInfo mTextureInfo;
   uint64_t mAsyncID;
