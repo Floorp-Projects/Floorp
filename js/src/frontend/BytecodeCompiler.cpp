@@ -760,13 +760,15 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
 
 ModuleObject*
 frontend::CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& optionsInput,
-                        SourceBufferHolder& srcBuf, LifoAlloc* alloc)
+                        SourceBufferHolder& srcBuf, LifoAlloc* alloc,
+                        ScriptSourceObject** sourceObjectOut /* = nullptr */)
 {
     MOZ_ASSERT(srcBuf.get());
     MOZ_ASSERT(cx->isJSContext() == (alloc == nullptr));
 
     if (!alloc)
         alloc = &cx->asJSContext()->tempLifoAlloc();
+    MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
 
     CompileOptions options(cx, optionsInput);
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
@@ -783,6 +785,10 @@ frontend::CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& opti
     // module is compiled off main thread.
     if (cx->isJSContext() && !ModuleObject::FreezeArrayProperties(cx->asJSContext(), module))
         return nullptr;
+
+    // See the comment about sourceObjectOut above.
+    if (sourceObjectOut)
+        *sourceObjectOut = compiler.sourceObjectPtr();
 
     return module;
 }

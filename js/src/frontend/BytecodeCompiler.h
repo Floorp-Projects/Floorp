@@ -34,7 +34,8 @@ CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
 
 ModuleObject*
 CompileModule(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
-              SourceBufferHolder &srcBuf, LifoAlloc* alloc = nullptr);
+              SourceBufferHolder &srcBuf, LifoAlloc* alloc = nullptr,
+              ScriptSourceObject** sourceObjectOut = nullptr);
 
 bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
