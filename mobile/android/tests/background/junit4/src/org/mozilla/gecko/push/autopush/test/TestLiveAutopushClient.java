@@ -42,7 +42,7 @@ public class TestLiveAutopushClient {
     @Before
     public void setUp() throws Exception {
         BaseResource.rewriteLocalhost = false;
-        client = new AutopushClient(serverURL, WaitHelper.newSynchronousExecutor());
+        client = new AutopushClient(serverURL, Utils.newSynchronousExecutor());
     }
 
     protected <T> T assertSuccess(RequestDelegate<T> delegate, Class<T> klass) {
