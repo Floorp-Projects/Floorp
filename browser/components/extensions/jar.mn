@@ -5,7 +5,6 @@
 browser.jar:
     content/browser/extension.svg
     content/browser/ext-utils.js
-    content/browser/ext-commands.js
     content/browser/ext-contextMenus.js
     content/browser/ext-browserAction.js
     content/browser/ext-pageAction.js
