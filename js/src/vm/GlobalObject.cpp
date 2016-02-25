@@ -126,6 +126,11 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // an allocation that re-entrantly tries to create the same prototype.
     AutoSuppressObjectMetadataCallback suppressMetadata(cx);
 
+    // Constructor resolution may execute self-hosted scripts. These
+    // self-hosted scripts do not call out to user code by construction. Allow
+    // all scripts to execute, even in debuggee compartments that are paused.
+    AutoSuppressDebuggeeNoExecuteChecks suppressNX(cx);
+
     // There are two different kinds of initialization hooks. One of them is
     // the class js::InitFoo hook, defined in a JSProtoKey-keyed table at the
     // top of this file. The other lives in the ClassSpec for classes that
