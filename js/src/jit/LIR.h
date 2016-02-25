@@ -1107,6 +1107,14 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
         operands_[index] = alloc.value();
 #endif
     }
+    void setInt64Operand(size_t index, const LInt64Allocation& alloc) {
+#if JS_BITS_PER_WORD == 32
+        operands_[index] = alloc.low();
+        operands_[index + 1] = alloc.high();
+#else
+        operands_[index] = alloc.value();
+#endif
+    }
 };
 
 template<size_t Defs, size_t Temps>

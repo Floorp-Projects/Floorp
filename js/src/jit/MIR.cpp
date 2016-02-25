@@ -1808,6 +1808,7 @@ MCompare::NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, 
                    CompareType compareType)
 {
     MOZ_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
+               compareType == Compare_Int64 || compareType == Compare_UInt64 ||
                compareType == Compare_Double || compareType == Compare_Float32);
     MCompare* comp = new(alloc) MCompare(left, right, op);
     comp->compareType_ = compareType;
@@ -3945,6 +3946,21 @@ MCompare::tryFold(bool* result)
     return false;
 }
 
+template <typename T>
+static bool
+FoldComparison(JSOp op, T left, T right)
+{
+    switch (op) {
+      case JSOP_LT: return left < right;
+      case JSOP_LE: return left <= right;
+      case JSOP_GT: return left > right;
+      case JSOP_GE: return left >= right;
+      case JSOP_STRICTEQ: case JSOP_EQ: return left == right;
+      case JSOP_STRICTNE: case JSOP_NE: return left != right;
+      default: MOZ_CRASH("Unexpected op.");
+    }
+}
+
 bool
 MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result)
 {
@@ -4046,96 +4062,31 @@ MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result)
         int32_t comp = 0; // Default to equal.
         if (left != right)
             comp = CompareAtoms(&lhs->toString()->asAtom(), &rhs->toString()->asAtom());
-
-        switch (jsop_) {
-          case JSOP_LT:
-            *result = (comp < 0);
-            break;
-          case JSOP_LE:
-            *result = (comp <= 0);
-            break;
-          case JSOP_GT:
-            *result = (comp > 0);
-            break;
-          case JSOP_GE:
-            *result = (comp >= 0);
-            break;
-          case JSOP_STRICTEQ: // Fall through.
-          case JSOP_EQ:
-            *result = (comp == 0);
-            break;
-          case JSOP_STRICTNE: // Fall through.
-          case JSOP_NE:
-            *result = (comp != 0);
-            break;
-          default:
-            MOZ_CRASH("Unexpected op.");
-        }
-
+        *result = FoldComparison(jsop_, comp, 0);
         return true;
     }
 
     if (compareType_ == Compare_UInt32) {
-        uint32_t lhsUint = uint32_t(lhs->toInt32());
-        uint32_t rhsUint = uint32_t(rhs->toInt32());
-
-        switch (jsop_) {
-          case JSOP_LT:
-            *result = (lhsUint < rhsUint);
-            break;
-          case JSOP_LE:
-            *result = (lhsUint <= rhsUint);
-            break;
-          case JSOP_GT:
-            *result = (lhsUint > rhsUint);
-            break;
-          case JSOP_GE:
-            *result = (lhsUint >= rhsUint);
-            break;
-          case JSOP_STRICTEQ: // Fall through.
-          case JSOP_EQ:
-            *result = (lhsUint == rhsUint);
-            break;
-          case JSOP_STRICTNE: // Fall through.
-          case JSOP_NE:
-            *result = (lhsUint != rhsUint);
-            break;
-          default:
-            MOZ_CRASH("Unexpected op.");
-        }
-
+        *result = FoldComparison(jsop_, uint32_t(lhs->toInt32()), uint32_t(rhs->toInt32()));
         return true;
     }
 
-    if (!lhs->isTypeRepresentableAsDouble() || !rhs->isTypeRepresentableAsDouble())
-        return false;
-
-    switch (jsop_) {
-      case JSOP_LT:
-        *result = (lhs->numberToDouble() < rhs->numberToDouble());
-        break;
-      case JSOP_LE:
-        *result = (lhs->numberToDouble() <= rhs->numberToDouble());
-        break;
-      case JSOP_GT:
-        *result = (lhs->numberToDouble() > rhs->numberToDouble());
-        break;
-      case JSOP_GE:
-        *result = (lhs->numberToDouble() >= rhs->numberToDouble());
-        break;
-      case JSOP_STRICTEQ: // Fall through.
-      case JSOP_EQ:
-        *result = (lhs->numberToDouble() == rhs->numberToDouble());
-        break;
-      case JSOP_STRICTNE: // Fall through.
-      case JSOP_NE:
-        *result = (lhs->numberToDouble() != rhs->numberToDouble());
-        break;
-      default:
-        return false;
+    if (compareType_ == Compare_Int64) {
+        *result = FoldComparison(jsop_, lhs->toInt64(), rhs->toInt64());
+        return true;
     }
 
-    return true;
+    if (compareType_ == Compare_UInt64) {
+        *result = FoldComparison(jsop_, uint64_t(lhs->toInt64()), uint64_t(rhs->toInt64()));
+        return true;
+    }
+
+    if (lhs->isTypeRepresentableAsDouble() && rhs->isTypeRepresentableAsDouble()) {
+        *result = FoldComparison(jsop_, lhs->numberToDouble(), rhs->numberToDouble());
+        return true;
+    }
+
+    return false;
 }
 
 MDefinition*

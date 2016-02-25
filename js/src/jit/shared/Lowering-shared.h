@@ -171,6 +171,12 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // a constant (if useConstant is true).
     inline LBoxAllocation useBoxOrTypedOrConstant(MDefinition* mir, bool useConstant);
 
+    // Returns an int64 allocation for an Int64-typed instruction.
+    inline LInt64Allocation useInt64(MDefinition* mir, LUse::Policy policy, bool useAtStart);
+    inline LInt64Allocation useInt64(MDefinition* mir);
+    inline LInt64Allocation useInt64OrConstant(MDefinition* mir);
+    inline LInt64Allocation useInt64Register(MDefinition* mir, bool useAtStart = false);
+
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.
     inline void redefine(MDefinition* ins, MDefinition* as);
