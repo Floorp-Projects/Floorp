@@ -30,7 +30,6 @@
     "functions": [
       {
         "name": "getAcceptLanguages",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the accept-languages of the browser. This is different from the locale used by the browser; to get the locale, use $(ref:i18n.getUILanguage).",
         "async": "callback",
