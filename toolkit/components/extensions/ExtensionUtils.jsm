@@ -433,11 +433,7 @@ LocaleData.prototype = {
 
   get acceptLanguages() {
     let result = Preferences.get("intl.accept_languages", "", Ci.nsIPrefLocalizedString);
-    result = result.split(",");
-    result = result.map(lang => {
-      return lang.replace(/-/g, "_").trim();
-    });
-    return result;
+    return result.split(/\s*,\s*/g);
   },
 
 
