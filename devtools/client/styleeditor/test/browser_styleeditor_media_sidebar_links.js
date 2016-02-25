@@ -7,25 +7,29 @@
 /* Tests responsive mode links for
  * @media sidebar width and height related conditions */
 
-const {ResponsiveUIManager} =
-      Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+const mgr = "resource://devtools/client/responsivedesign/responsivedesign.jsm";
+const {ResponsiveUIManager} = Cu.import(mgr, {});
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
-
-waitForExplicitFinish();
+const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
 add_task(function*() {
   let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
 
-  let mediaEditor = ui.editors[1];
-  yield openEditor(mediaEditor);
+  let editor = ui.editors[1];
+  yield openEditor(editor);
 
-  yield testLinkifiedConditions(mediaEditor, gBrowser.selectedTab, ui);
+  let tab = gBrowser.selectedTab;
+  testNumberOfLinks(editor);
+  yield testMediaLink(editor, tab, ui, 2, "width", 400);
+  yield testMediaLink(editor, tab, ui, 3, "height", 200);
+
+  yield closeRDM(tab, ui);
+  doFinalChecks(editor);
 });
 
-function* testLinkifiedConditions(editor, tab, ui) {
+function testNumberOfLinks(editor) {
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
-  let responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
   info("Testing if media rules have the appropriate number of links");
   ok(!conditions[0].querySelector(responsiveModeToggleClass),
@@ -35,36 +39,69 @@ function* testLinkifiedConditions(editor, tab, ui) {
   ok(conditions[2].querySelector(responsiveModeToggleClass),
      "There should be 1 responsive mode link in the media rule");
   is(conditions[3].querySelectorAll(responsiveModeToggleClass).length, 2,
-       "There should be 2 resposnive mode links in the media rule");
+       "There should be 2 responsive mode links in the media rule");
+}
+
+function* testMediaLink(editor, tab, ui, itemIndex, type, value) {
+  let sidebar = editor.details.querySelector(".stylesheet-sidebar");
+  let conditions = sidebar.querySelectorAll(".media-rule-condition");
+
+  let onMediaChange = once("media-list-changed", ui);
+  let ruiEvent = !ResponsiveUIManager.isActiveForTab(tab) ?
+                    once("on", ResponsiveUIManager) :
+                    once("contentResize", ResponsiveUIManager);
 
   info("Launching responsive mode");
-  conditions[2].querySelector(responsiveModeToggleClass).click();
+  conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
 
   info("Waiting for the @media list to update");
-  let onMediaChange = once("media-list-changed", ui);
-  yield once("on", ResponsiveUIManager);
+  yield ruiEvent;
   yield onMediaChange;
+
+  ResponsiveUIManager.getResponsiveUIForTab(tab).transitionsEnabled = false;
 
   ok(ResponsiveUIManager.isActiveForTab(tab),
     "Responsive mode should be active.");
   conditions = sidebar.querySelectorAll(".media-rule-condition");
-  ok(!conditions[2].classList.contains("media-condition-unmatched"),
+  ok(!conditions[itemIndex].classList.contains("media-condition-unmatched"),
      "media rule should now be matched after responsive mode is active");
 
+  let dimension = (yield getSizing())[type];
+  is(dimension, value, `${type} should be properly set.`);
+}
+
+function* closeRDM(tab, ui) {
   info("Closing responsive mode");
   ResponsiveUIManager.toggle(window, tab);
-  onMediaChange = once("media-list-changed", ui);
+  let onMediaChange = once("media-list-changed", ui);
   yield once("off", ResponsiveUIManager);
   yield onMediaChange;
-
   ok(!ResponsiveUIManager.isActiveForTab(tab),
      "Responsive mode should no longer be active.");
+}
+
+function doFinalChecks(editor) {
+  let sidebar = editor.details.querySelector(".stylesheet-sidebar");
+  let conditions = sidebar.querySelectorAll(".media-rule-condition");
   conditions = sidebar.querySelectorAll(".media-rule-condition");
   ok(conditions[2].classList.contains("media-condition-unmatched"),
-       "media rule should now be unmatched after responsive mode is closed");
+     "The width condition should now be unmatched");
+  ok(conditions[3].classList.contains("media-condition-unmatched"),
+     "The height condition should now be unmatched");
 }
 
 /* Helpers */
+function* getSizing() {
+  let browser = gBrowser.selectedBrowser;
+  let sizing = yield ContentTask.spawn(browser, {}, function*() {
+    return {
+      width: content.innerWidth,
+      height: content.innerHeight
+    };
+  });
+  return sizing;
+}
+
 function once(event, target) {
   let deferred = promise.defer();
   target.once(event, () => {
