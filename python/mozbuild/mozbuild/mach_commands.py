@@ -1470,10 +1470,7 @@ class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
 
     @Command('artifact', category='post-build',
-        description='Use pre-built artifacts to build Firefox.',
-        conditions=[
-            conditions.is_hg,  # mercurial only for now.
-        ])
+        description='Use pre-built artifacts to build Firefox.')
     def artifact(self):
         '''Download, cache, and install pre-built binary artifacts to build Firefox.
 
@@ -1507,14 +1504,27 @@ class PackageFrontend(MachCommandBase):
                 raise
 
         import which
-        if self._is_windows():
-          hg = which.which('hg.exe')
-        else:
-          hg = which.which('hg')
+
+        here = os.path.abspath(os.path.dirname(__file__))
+        build_obj = MozbuildObject.from_environment(cwd=here)
+
+        hg = None
+        if conditions.is_hg(build_obj):
+            if self._is_windows():
+                hg = which.which('hg.exe')
+            else:
+                hg = which.which('hg')
+
+        git = None
+        if conditions.is_git(build_obj):
+            if self._is_windows():
+                git = which.which('git.exe')
+            else:
+                git = which.which('git')
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg, skip_cache=skip_cache)
+        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, skip_cache=skip_cache, hg=hg, git=git)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
