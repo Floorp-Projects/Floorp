@@ -198,6 +198,7 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   overflow: visible;
 }
 
+.cui-widget-panel > .panel-arrowcontainer > .panel-arrowcontent,
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
 }

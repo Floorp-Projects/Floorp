@@ -107,6 +107,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mIsViewSource(false)
   , mSubRequestsBrokenSecurity(0)
   , mSubRequestsNoSecurity(0)
+  , mCertUserOverridden(false)
   , mRestoreSubrequests(false)
   , mOnLocationChangeSeen(false)
 #ifdef DEBUG
@@ -233,6 +234,10 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
   if (ev && (*aState & STATE_IS_SECURE))
     *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
 
+  if (mCertUserOverridden && (*aState & STATE_IS_SECURE)) {
+    *aState |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
+  }
+
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
   if (!docShell)
     return NS_OK;
@@ -259,6 +264,9 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
     *aState = STATE_IS_SECURE;
     if (ev) {
       *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
+    }
+    if (mCertUserOverridden) {
+      *aState |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
     }
   }
   // * If so, the state should be broken or insecure; overriding the previous
@@ -793,6 +801,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     f -= nsIWebProgressListener::STATE_SECURE_HIGH;
     info.AppendLiteral("SECURE_HIGH ");
   }
+  if (f & nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN)
+  {
+    f -= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
+    info.AppendLiteral("STATE_CERT_USER_OVERRIDDEN ");
+  }
   if (f & nsIWebProgressListener::STATE_RESTORING)
   {
     f -= nsIWebProgressListener::STATE_RESTORING;
@@ -1130,6 +1143,9 @@ nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
   if (mNewToplevelSecurityState & STATE_IS_BROKEN) {
     newSecurityState = lis_broken_security;
   }
+
+  mCertUserOverridden =
+    mNewToplevelSecurityState & STATE_CERT_USER_OVERRIDDEN;
 
   MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,

@@ -25,7 +25,7 @@
           <label observes="identity-popup-content-host"/>
           <description class="identity-popup-connection-not-secure"
                        value="&identity.connectionNotSecure;"
-                       when-connection="not-secure"/>
+                       when-connection="not-secure secure-cert-user-overridden"/>
           <description class="identity-popup-connection-secure"
                        value="&identity.connectionSecure;"
                        when-connection="secure secure-ev"/>
@@ -47,14 +47,14 @@
         </vbox>
         <button id="identity-popup-security-expander"
                 class="identity-popup-expander"
-                when-connection="not-secure secure secure-ev"
+                when-connection="not-secure secure secure-ev secure-cert-user-overridden"
                 oncommand="gIdentityHandler.toggleSubView('security', this)"/>
       </hbox>
 
       <!-- Tracking Protection Section -->
       <hbox id="tracking-protection-container"
             class="identity-popup-section"
-            when-connection="not-secure secure secure-ev file">
+            when-connection="not-secure secure secure-ev secure-cert-user-overridden file">
         <vbox id="tracking-protection-content" flex="1">
           <description class="identity-popup-headline"
                        crop="end"
@@ -99,7 +99,7 @@
         <label observes="identity-popup-content-host"/>
         <description class="identity-popup-connection-not-secure"
                      value="&identity.connectionNotSecure;"
-                     when-connection="not-secure"/>
+                     when-connection="not-secure secure-cert-user-overridden"/>
         <description class="identity-popup-connection-secure"
                      value="&identity.connectionSecure;"
                      when-connection="secure secure-ev"/>
@@ -115,7 +115,7 @@
         <description id="identity-popup-content-supplemental"
                      when-connection="secure-ev"/>
         <description id="identity-popup-content-verifier"
-                     when-connection="secure secure-ev"/>
+                     when-connection="secure secure-ev secure-cert-user-overridden"/>
 
         <!-- Connection is Not Secure -->
         <description when-connection="not-secure"
