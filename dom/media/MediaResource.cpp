@@ -246,41 +246,25 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // We received 'Content-Range', so the server accepts range requests.
       bool gotRangeHeader = NS_SUCCEEDED(rv);
 
-      if (!mByteRange.IsEmpty()) {
-        if (!gotRangeHeader) {
-          // Content-Range header text should be parse-able when processing a
-          // range requests.
-          CMLOG("Error processing \'Content-Range' for "
-                "HTTP_PARTIAL_RESPONSE_CODE: rv[%x] channel[%p] decoder[%p]",
-                rv, hc.get(), mCallback.get());
-          mCallback->NotifyNetworkError();
-          CloseChannel();
-          return NS_OK;
-        }
-        // Give some warnings if the ranges are unexpected.
-        // XXX These could be error conditions.
-        NS_WARN_IF_FALSE(mByteRange.mStart == rangeStart,
-                         "response range start does not match request");
-        NS_WARN_IF_FALSE(mOffset == rangeStart,
-                         "response range start does not match current offset");
-        NS_WARN_IF_FALSE(mByteRange.mEnd == rangeEnd,
-                         "response range end does not match request");
+      if (gotRangeHeader) {
+        // We received 'Content-Range', so the server accepts range requests.
         // Notify media cache about the length and start offset of data received.
         // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
         //       For now, tell the decoder that the stream is infinite.
         if (rangeTotal == -1) {
           boundedSeekLimit = false;
         } else {
-          mCacheStream.NotifyDataLength(rangeTotal);
+          contentLength = std::max(contentLength, rangeTotal);
         }
-        mCacheStream.NotifyDataStarted(rangeStart);
+        // Give some warnings if the ranges are unexpected.
+        // XXX These could be error conditions.
+        NS_WARN_IF_FALSE(mOffset == rangeStart,
+                         "response range start does not match current offset");
         mOffset = rangeStart;
-      } else if (gotRangeHeader && rangeTotal > 0) {
-        contentLength = std::max(contentLength, rangeTotal);
+        mCacheStream.NotifyDataStarted(rangeStart);
       }
       acceptsRanges = gotRangeHeader;
-    } else if (((mOffset > 0) || !mByteRange.IsEmpty())
-               && (responseStatus == HTTP_OK_CODE)) {
+    } else if (mOffset > 0 && responseStatus == HTTP_OK_CODE) {
       // If we get an OK response but we were seeking, or requesting a byte
       // range, then we have to assume that seeking doesn't work. We also need
       // to tell the cache that it's getting data for the start of the stream.
@@ -301,8 +285,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // If we get an HTTP_OK_CODE response to our byte range request,
     // and the server isn't sending Accept-Ranges:bytes then we don't
     // support seeking.
-    seekable =
-      responseStatus == HTTP_PARTIAL_RESPONSE_CODE || acceptsRanges;
+    seekable = acceptsRanges;
     if (seekable && boundedSeekLimit) {
       // If range requests are supported, and we did not see an unbounded
       // upper range limit, we assume the resource is bounded.
@@ -539,17 +522,15 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     *aStreamListener = nullptr;
   }
 
-  if (mByteRange.IsEmpty()) {
-    // We're not making a byte range request, so set the content length,
-    // if it's available as an HTTP header. This ensures that MediaResource
-    // wrapping objects for platform libraries that expect to know
-    // the length of a resource can get it before OnStartRequest() fires.
-    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-    if (hc) {
-      int64_t cl = -1;
-      if (NS_SUCCEEDED(hc->GetContentLength(&cl)) && cl != -1) {
-        mCacheStream.NotifyDataLength(cl);
-      }
+  // Set the content length, if it's available as an HTTP header.
+  // This ensures that MediaResource wrapping objects for platform libraries
+  // that expect to know the length of a resource can get it before
+  // OnStartRequest() fires.
+  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+  if (hc) {
+    int64_t cl = -1;
+    if (NS_SUCCEEDED(hc->GetContentLength(&cl)) && cl != -1) {
+      mCacheStream.NotifyDataLength(cl);
     }
   }
 
@@ -585,19 +566,10 @@ nsresult ChannelMediaResource::SetupChannelHeaders()
   // requests, and therefore seeking, early.
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
   if (hc) {
-    // Use |mByteRange| for a specific chunk, or |mOffset| if seeking in a
-    // complete file download.
+    // Use |mOffset| if seeking in a complete file download.
     nsAutoCString rangeString("bytes=");
-    if (!mByteRange.IsEmpty()) {
-      rangeString.AppendInt(mByteRange.mStart);
-      mOffset = mByteRange.mStart;
-    } else {
-      rangeString.AppendInt(mOffset);
-    }
+    rangeString.AppendInt(mOffset);
     rangeString.Append('-');
-    if (!mByteRange.IsEmpty()) {
-      rangeString.AppendInt(mByteRange.mEnd);
-    }
     nsresult rv = hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
