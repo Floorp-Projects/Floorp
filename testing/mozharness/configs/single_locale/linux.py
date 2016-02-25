@@ -19,7 +19,6 @@ config = {
     "log_name": "single_locale",
     "objdir": "obj-l10n",
     "js_src_dir": "js/src",
-    "make_dirs": ['config'],
     "vcs_share_base": "/builds/hg-shared",
 
     # tooltool
