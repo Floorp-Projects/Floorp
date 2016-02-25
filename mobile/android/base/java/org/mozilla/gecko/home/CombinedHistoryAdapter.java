@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,9 +19,20 @@ import java.util.Collections;
 import java.util.List;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> {
-    // These ordinal positions are used in CombinedHistoryAdapter as viewType.
+    private static final String LOGTAG = "GeckoCombinedHistAdapt";
     private enum ItemType {
-        CLIENT, HISTORY
+        CLIENT, HISTORY;
+
+        public static ItemType viewTypeToItemType(int viewType) {
+            if (viewType >= ItemType.values().length) {
+                Log.e(LOGTAG, "No corresponding ItemType!");
+            }
+            return ItemType.values()[viewType];
+        }
+
+        public static int itemTypeToViewType(ItemType itemType) {
+            return itemType.ordinal();
+        }
     }
 
     private List<RemoteClient> remoteClients = Collections.emptyList();
@@ -46,7 +58,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         if (type == ItemType.CLIENT) {
             return position;
         } else {
-            return position - (remoteClients == null ? 0 : remoteClients.size());
+            return position - remoteClients.size();
         }
     }
 
@@ -55,19 +67,24 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         final LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
         final View view;
 
-        if (viewType == ItemType.CLIENT.ordinal()) {
-            view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
-            return new CombinedHistoryItem.ClientItem(view);
-        } else {
-            view = inflater.inflate(R.layout.home_item_row, viewGroup, false);
-            return new CombinedHistoryItem.HistoryItem(view);
+        final ItemType itemType = ItemType.viewTypeToItemType(viewType);
+
+        switch (itemType) {
+            case CLIENT:
+                view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
+                return new CombinedHistoryItem.ClientItem(view);
+            case HISTORY:
+                view = inflater.inflate(R.layout.home_item_row, viewGroup, false);
+                return new CombinedHistoryItem.HistoryItem(view);
+            default:
+                throw new IllegalArgumentException("Unexpected Home Panel item type");
         }
     }
 
     @Override
     public int getItemViewType(int position) {
         final int numClients = remoteClients.size();
-        return (position < numClients) ? ItemType.CLIENT.ordinal() : ItemType.HISTORY.ordinal();
+        return (position < numClients) ? ItemType.itemTypeToViewType(ItemType.CLIENT) : ItemType.itemTypeToViewType(ItemType.HISTORY);
     }
 
     @Override
@@ -79,7 +96,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public void onBindViewHolder(CombinedHistoryItem viewHolder, int position) {
-        final ItemType itemType = ItemType.values()[getItemViewType(position)];
+        final ItemType itemType = ItemType.viewTypeToItemType(getItemViewType(position));
         final int localPosition = transformPosition(itemType, position);
 
         switch (itemType) {
