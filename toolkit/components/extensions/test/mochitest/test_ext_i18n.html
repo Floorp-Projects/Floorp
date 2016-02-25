@@ -228,11 +228,11 @@ add_task(function* test_get_accept_languages() {
   yield extension.startup();
   yield extension.awaitMessage("ready");
 
-  let expectedLangs = ["en_US", "en"];
+  let expectedLangs = ["en-US", "en"];
   extension.sendMessage(["expect-results", expectedLangs]);
   yield extension.awaitMessage("done");
 
-  expectedLangs = ["en_US", "en", "fr_CA", "fr"];
+  expectedLangs = ["en-US", "en", "fr-CA", "fr"];
   SpecialPowers.setCharPref("intl.accept_languages", expectedLangs.toString());
   extension.sendMessage(["expect-results", expectedLangs]);
   yield extension.awaitMessage("done");
