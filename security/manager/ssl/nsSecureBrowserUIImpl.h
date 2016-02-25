@@ -74,6 +74,7 @@ protected:
   int32_t mDocumentRequestsInProgress;
   int32_t mSubRequestsBrokenSecurity;
   int32_t mSubRequestsNoSecurity;
+  bool mCertUserOverridden;
   bool mRestoreSubrequests;
   bool mOnLocationChangeSeen;
 #ifdef DEBUG

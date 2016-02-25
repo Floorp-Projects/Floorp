@@ -658,6 +658,15 @@ nsWindowsShellService::LaunchModernSettingsDialogDefaultApps()
            L"windows.immersivecontrolpanel_cw5n1h2txyewy"
            L"!microsoft.windows.immersivecontrolpanel",
            L"page=SettingsPageAppsDefaults", AO_NONE, &pid);
+    if (SUCCEEDED(hr)) {
+      // Do not check error because we could at least open
+      // the "Default apps" setting.
+      pActivator->ActivateApplication(
+             L"windows.immersivecontrolpanel_cw5n1h2txyewy"
+             L"!microsoft.windows.immersivecontrolpanel",
+             L"page=SettingsPageAppsDefaults"
+             L"&target=SystemSettings_DefaultApps_Browser", AO_NONE, &pid);
+    }
     pActivator->Release();
     return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
   }

@@ -1,5 +1,10 @@
 "use strict";
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+var {
+  detectLanguage,
+} = ExtensionUtils;
+
 extensions.registerSchemaAPI("i18n", null, (extension, context) => {
   return {
     i18n: {
@@ -9,6 +14,10 @@ extensions.registerSchemaAPI("i18n", null, (extension, context) => {
 
       getUILanguage: function() {
         return extension.localeData.uiLocale;
+      },
+
+      detectLanguage: function(text) {
+        return detectLanguage(text);
       },
     },
   };

@@ -117,9 +117,16 @@ var SessionCookiesInternal = {
   restore(cookies) {
     for (let cookie of cookies) {
       let expiry = "expiry" in cookie ? cookie.expiry : MAX_EXPIRY;
-      Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
-                           cookie.value, !!cookie.secure, !!cookie.httponly,
-                           /* isSession = */ true, expiry);
+      let cookieObj = {
+        host: cookie.host,
+        path: cookie.path || "",
+        name: cookie.name || ""
+      };
+      if (!Services.cookies.cookieExists(cookieObj)) {
+        Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
+                             cookie.value, !!cookie.secure, !!cookie.httponly,
+                             /* isSession = */ true, expiry);
+      }
     }
   },
 
@@ -241,6 +248,8 @@ var SessionCookiesInternal = {
 
     if (cookie.isSession) {
       CookieStore.set(cookie);
+    } else {
+      CookieStore.delete(cookie);
     }
   },
 
