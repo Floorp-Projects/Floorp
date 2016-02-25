@@ -586,6 +586,13 @@ RTCPeerConnection.prototype = {
             throw new this._win.DOMException(msg + " - missing credential: " + urlStr,
                                              "InvalidAccessError");
           }
+          if (server.credentialType != "password") {
+            this.logWarning("RTCConfiguration TURN credentialType \""+
+                            server.credentialType +
+                            "\" is not yet implemented. Treating as password."+
+                            " https://bugzil.la/1247616",
+                            null, 0);
+          }
         }
         else if (!(url.scheme in { stun:1, stuns:1 })) {
           throw new this._win.DOMException(msg + " - improper scheme: " + url.scheme,

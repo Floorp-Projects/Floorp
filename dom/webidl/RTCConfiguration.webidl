@@ -7,11 +7,17 @@
  * http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCConfiguration
  */
 
+enum RTCIceCredentialType {
+    "password",
+    "token"
+};
+
 dictionary RTCIceServer {
     (DOMString or sequence<DOMString>) urls;
     DOMString  url; //deprecated
-    DOMString? credential = null;
-    DOMString? username = null;
+    DOMString username;
+    DOMString credential;
+    RTCIceCredentialType credentialType = "password";
 };
 
 enum RTCIceTransportPolicy {
