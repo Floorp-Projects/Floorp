@@ -782,7 +782,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROGS(UNZIP, unzip)
 if test -z "$UNZIP" -o "$UNZIP" = ":"; then
     AC_MSG_ERROR([unzip not found in \$PATH])
