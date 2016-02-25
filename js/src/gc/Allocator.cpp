@@ -150,6 +150,8 @@ template <AllowGC allowGC>
 JSObject*
 GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicSlots, const Class* clasp)
 {
+    MOZ_ASSERT(isNurseryAllocAllowed());
+    MOZ_ASSERT(!cx->zone()->usedByExclusiveThread);
     MOZ_ASSERT(!IsAtomsCompartment(cx->compartment()));
     JSObject* obj = nursery.allocateObject(cx, thingSize, nDynamicSlots, clasp);
     if (obj)
