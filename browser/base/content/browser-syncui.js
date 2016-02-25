@@ -12,8 +12,6 @@ if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
 
-const MIN_STATUS_ANIMATION_DURATION = 1600;
-
 // gSyncUI handles updating the tools menu and displaying notifications.
 var gSyncUI = {
   _obs: ["weave:service:sync:start",
@@ -33,10 +31,8 @@ var gSyncUI = {
   ],
 
   _unloaded: false,
-  // The last sync start time. Used to calculate the leftover animation time
-  // once syncing completes (bug 1239042).
-  _syncStartTime: 0,
-  _syncAnimationTimer: 0,
+  // The number of "active" syncs - while this is non-zero, our button will spin
+  _numActiveSyncTasks: 0,
 
   init: function () {
     Cu.import("resource://services-common/stringbundle.js");
@@ -190,43 +186,36 @@ var gSyncUI = {
     if (!gBrowser)
       return;
 
-    this.log.debug("onActivityStart");
-
-    clearTimeout(this._syncAnimationTimer);
-    this._syncStartTime = Date.now();
-
-    let broadcaster = document.getElementById("sync-status");
-    broadcaster.setAttribute("syncstatus", "active");
-    broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncing2.label"));
-    broadcaster.setAttribute("disabled", "true");
-
+    this.log.debug("onActivityStart with numActive", this._numActiveSyncTasks);
+    if (++this._numActiveSyncTasks == 1) {
+      let broadcaster = document.getElementById("sync-status");
+      broadcaster.setAttribute("syncstatus", "active");
+      broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncing2.label"));
+      broadcaster.setAttribute("disabled", "true");
+    }
     this.updateUI();
   },
 
   onActivityStop() {
     if (!gBrowser)
       return;
-    this.log.debug("onActivityStop");
-
-    let updateStatus = () => {
-      let broadcaster = document.getElementById("sync-status");
-      broadcaster.removeAttribute("syncstatus");
-      broadcaster.removeAttribute("disabled");
-      broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncnow.label"));
-      this.updateUI();
-    };
-
-    let now = Date.now();
-    let syncDuration = now - this._syncStartTime;
-    if (syncDuration < MIN_STATUS_ANIMATION_DURATION) {
-      let animationTime = MIN_STATUS_ANIMATION_DURATION - syncDuration;
-      this.log.debug("onActivityStop: waiting " + animationTime + "ms to reset sync status");
-
-      clearTimeout(this._syncAnimationTimer);
-      this._syncAnimationTimer = setTimeout(updateStatus, animationTime);
-    } else {
-      updateStatus();
+    this.log.debug("onActivityStop with numActive", this._numActiveSyncTasks);
+    if (--this._numActiveSyncTasks) {
+      if (this._numActiveSyncTasks < 0) {
+        // This isn't particularly useful (it seems more likely we'll set a
+        // "start" without a "stop" meaning it forever remains > 0) but it
+        // might offer some value...
+        this.log.error("mismatched onActivityStart/Stop calls",
+                       new Error("active=" + this._numActiveSyncTasks));
+      }
+      return; // active tasks are still ongoing...
     }
+
+    let broadcaster = document.getElementById("sync-status");
+    broadcaster.removeAttribute("syncstatus");
+    broadcaster.removeAttribute("disabled");
+    broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncnow.label"));
+    this.updateUI();
   },
 
   onLoginError: function SUI_onLoginError() {
