@@ -696,7 +696,8 @@ nssCKFWSession_Login(
             default:
                 return CKR_GENERAL_ERROR;
         }
-    } else /* CKU_USER == userType */ {
+    }
+    else /* CKU_USER == userType */ {
         switch (oldState) {
             case CKS_RO_PUBLIC_SESSION:
                 newState =
@@ -731,7 +732,8 @@ nssCKFWSession_Login(
          * it'll just rely on the Framework as needed.
          */
         ;
-    } else {
+    }
+    else {
         error = fwSession->mdSession->Login(fwSession->mdSession, fwSession,
                                             fwSession->mdToken, fwSession->fwToken, fwSession->mdInstance,
                                             fwSession->fwInstance, userType, pin, oldState, newState);
@@ -800,7 +802,8 @@ nssCKFWSession_Logout(
          * The Module doesn't want to be informed.  Okay.
          */
         ;
-    } else {
+    }
+    else {
         error = fwSession->mdSession->Logout(fwSession->mdSession, fwSession,
                                              fwSession->mdToken, fwSession->fwToken, fwSession->mdInstance,
                                              fwSession->fwInstance, oldState, newState);
@@ -1120,13 +1123,15 @@ nssCKFWSession_SetOperationState(
 
     if (encryptionKey) {
         mdek = nssCKFWObject_GetMDObject(encryptionKey);
-    } else {
+    }
+    else {
         mdek = (NSSCKMDObject *)NULL;
     }
 
     if (authenticationKey) {
         mdak = nssCKFWObject_GetMDObject(authenticationKey);
-    } else {
+    }
+    else {
         mdak = (NSSCKMDObject *)NULL;
     }
 
@@ -1159,7 +1164,8 @@ nss_attributes_form_token_object(
             if (sizeof(CK_BBOOL) == pTemplate[i].ulValueLen) {
                 (void)nsslibc_memcpy(&rv, pTemplate[i].pValue, sizeof(CK_BBOOL));
                 return rv;
-            } else {
+            }
+            else {
                 return CK_FALSE;
             }
         }
@@ -1227,7 +1233,8 @@ nssCKFWSession_CreateObject(
         }
 
         goto callmdcreateobject;
-    } else {
+    }
+    else {
         /* === SESSION OBJECT === */
 
         arena = nssCKFWSession_GetArena(fwSession, pError);
@@ -1248,7 +1255,8 @@ nssCKFWSession_CreateObject(
             }
 
             goto callmdcreateobject;
-        } else {
+        }
+        else {
             /* --- framework handles the session object -- */
             mdObject = nssCKMDSessionObject_Create(fwSession->fwToken,
                                                    arena, pTemplate, ulAttributeCount, pError);
@@ -1271,8 +1279,10 @@ gotmdobject:
     }
 
     fwObject = nssCKFWObject_Create(arena, mdObject,
-                                    isTokenObject ? NULL
-                                                  : fwSession,
+                                    isTokenObject ?
+                                                  NULL
+                                                  :
+                                                  fwSession,
                                     fwSession->fwToken, fwSession->fwInstance, pError);
     if (!fwObject) {
         if (CKR_OK == *pError) {
@@ -1377,7 +1387,8 @@ nssCKFWSession_CopyObject(
 
         if (CK_TRUE == newIsToken) {
             arena = nssCKFWToken_GetArena(fwSession->fwToken, pError);
-        } else {
+        }
+        else {
             arena = nssCKFWSession_GetArena(fwSession, pError);
         }
         if (!arena) {
@@ -1399,8 +1410,10 @@ nssCKFWSession_CopyObject(
         }
 
         rv = nssCKFWObject_Create(arena, mdObject,
-                                  newIsToken ? NULL
-                                             : fwSession,
+                                  newIsToken ?
+                                             NULL
+                                             :
+                                             fwSession,
                                   fwSession->fwToken, fwSession->fwInstance, pError);
 
         if (CK_FALSE == newIsToken) {
@@ -1414,7 +1427,8 @@ nssCKFWSession_CopyObject(
         }
 
         return rv;
-    } else {
+    }
+    else {
         /* use create object */
         NSSArena *tmpArena;
         CK_ATTRIBUTE_PTR newTemplate;
@@ -1479,7 +1493,8 @@ nssCKFWSession_CopyObject(
                         pTemplate[i].pValue) {
                         /* This attribute is being deleted */
                         ;
-                    } else {
+                    }
+                    else {
                         /* This attribute is being replaced */
                         newTemplate[k].type =
                             pTemplate[i].type;
@@ -1596,7 +1611,8 @@ nssCKFWSession_FindObjectsInit(
                                                               fwSession, fwSession->mdToken, fwSession->fwToken,
                                                               fwSession->mdInstance, fwSession->fwInstance,
                                                               pTemplate, ulAttributeCount, pError);
-                } else {
+                }
+                else {
                     /* Do the search ourselves */
                     mdfo1 =
                         nssCKMDFindSessionObjects_Create(fwSession->fwToken,
@@ -1649,7 +1665,8 @@ nssCKFWSession_FindObjectsInit(
             goto wrap;
         }
         /*NOTREACHED*/
-    } else {
+    }
+    else {
         /* Module handles all its own objects.  Pass on to module's search */
         mdfo1 = fwSession->mdSession->FindObjectsInit(fwSession->mdSession,
                                                       fwSession, fwSession->mdToken, fwSession->fwToken,
@@ -1749,7 +1766,8 @@ nssCKFWSession_GetRandom(
     if (!fwSession->mdSession->GetRandom) {
         if (CK_TRUE == nssCKFWToken_GetHasRNG(fwSession->fwToken)) {
             return CKR_GENERAL_ERROR;
-        } else {
+        }
+        else {
             return CKR_RANDOM_NO_RNG;
         }
     }
@@ -1862,7 +1880,8 @@ nssCKFWSession_Final(
             error = CKR_ARGUMENTS_BAD;
             goto done;
         }
-    } else {
+    }
+    else {
         CK_ULONG len = nssCKFWCryptoOperation_GetFinalLength(fwOperation, &error);
         CK_ULONG maxBufLen = *outBufLen;
 
@@ -2108,13 +2127,16 @@ nssCKFWSession_UpdateFinal(
             error = CKR_ARGUMENTS_BAD;
             goto done;
         }
-    } else {
+    }
+    else {
         CK_ULONG maxBufLen = *outBufLen;
         CK_ULONG len;
 
-        len = (isEncryptDecrypt) ? nssCKFWCryptoOperation_GetOperationLength(fwOperation,
-                                                                             &inputBuffer, &error)
-                                 : nssCKFWCryptoOperation_GetFinalLength(fwOperation, &error);
+        len = (isEncryptDecrypt) ?
+                                 nssCKFWCryptoOperation_GetOperationLength(fwOperation,
+                                                                           &inputBuffer, &error)
+                                 :
+                                 nssCKFWCryptoOperation_GetFinalLength(fwOperation, &error);
 
         if (CKR_OK != error) {
             goto done;
@@ -2137,8 +2159,10 @@ nssCKFWSession_UpdateFinal(
 
     /* UpdateFinal isn't support, manually use Update and Final */
     if (CKR_FUNCTION_FAILED == error) {
-        error = isEncryptDecrypt ? nssCKFWCryptoOperation_Update(fwOperation, &inputBuffer, &outputBuffer)
-                                 : nssCKFWCryptoOperation_DigestUpdate(fwOperation, &inputBuffer);
+        error = isEncryptDecrypt ?
+                                 nssCKFWCryptoOperation_Update(fwOperation, &inputBuffer, &outputBuffer)
+                                 :
+                                 nssCKFWCryptoOperation_DigestUpdate(fwOperation, &inputBuffer);
 
         if (CKR_OK == error) {
             error = nssCKFWCryptoOperation_Final(fwOperation, &outputBuffer);

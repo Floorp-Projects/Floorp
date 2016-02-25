@@ -126,7 +126,8 @@ builtins_attrmatch(
 
     if (PR_TRUE == prb) {
         return CK_TRUE;
-    } else {
+    }
+    else {
         return CK_FALSE;
     }
 }
@@ -146,7 +147,8 @@ builtins_match(
             if (o->types[j] == pTemplate[i].type) {
                 if (CK_FALSE == builtins_attrmatch(&pTemplate[i], &o->items[j])) {
                     return CK_FALSE;
-                } else {
+                }
+                else {
                     break;
                 }
             }

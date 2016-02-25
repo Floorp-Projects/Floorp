@@ -120,7 +120,8 @@ __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
             bp = NULL;
         if (!newpage)
             is_disk = BUF_DISK;
-    } else {
+    }
+    else {
         /* Grab buffer out of directory */
         segment_ndx = addr & (hashp->SGSIZE - 1);
 
@@ -172,7 +173,8 @@ __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
             segp[segment_ndx] = bp;
 #endif
         }
-    } else {
+    }
+    else {
         BUF_REMOVE(bp);
         MRU_INSERT(bp);
     }
@@ -223,7 +225,8 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 
         if (hashp->nbufs)
             hashp->nbufs--;
-    } else {
+    }
+    else {
         /* Kick someone out */
         BUF_REMOVE(bp);
         /*
@@ -328,7 +331,8 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 #endif
         prev_bp->ovfl = bp;
         bp->flags = 0;
-    } else
+    }
+    else
         bp->flags = BUF_BUCKET;
     MRU_INSERT(bp);
     return (bp);
@@ -390,7 +394,8 @@ __buf_free(HTAB *hashp, int do_free, int to_disk)
             BUF_REMOVE(bp);
             free(bp);
             bp = LRU;
-        } else
+        }
+        else
             bp = bp->prev;
     }
     return (0);

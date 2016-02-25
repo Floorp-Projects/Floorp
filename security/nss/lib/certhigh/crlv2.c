@@ -80,14 +80,16 @@ CERT_FindCRLNumberExten(PLArenaPool *arena, CERTCrl *crl,
         rv = SEC_QuickDERDecodeItem(arena, value,
                                     SEC_ASN1_GET(SEC_IntegerTemplate),
                                     tmpItem);
-    } else {
+    }
+    else {
         rv = SECFailure;
     }
 
     PORT_Free(encodedExtenValue.data);
     if (rv == SECFailure) {
         PORT_ArenaRelease(arena, mark);
-    } else {
+    }
+    else {
         PORT_ArenaUnmark(arena, mark);
     }
     return (rv);

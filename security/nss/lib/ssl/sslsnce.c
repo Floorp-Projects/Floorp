@@ -491,7 +491,8 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
                     to->creationTime, to->addr.pr_s6_addr32[0],
                     to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
                     to->addr.pr_s6_addr32[3], to->u.ssl2.cipherType));
-    } else {
+    }
+    else {
         /* This is an SSL v3 session */
 
         to->u.ssl3.cipherSuite = from->u.ssl3.cipherSuite;
@@ -565,7 +566,8 @@ ConvertToSID(sidCacheEntry *from,
                     to->addr.pr_s6_addr32[0], to->addr.pr_s6_addr32[1],
                     to->addr.pr_s6_addr32[2], to->addr.pr_s6_addr32[3],
                     to->u.ssl2.cipherType));
-    } else {
+    }
+    else {
         /* This is an SSL v3 session */
 
         to->u.ssl3.sessionIDLength = from->sessionIDLength;
@@ -641,7 +643,8 @@ loser:
                 PORT_Free(to->u.ssl2.masterKey.data);
             if (to->u.ssl2.cipherArg.data)
                 PORT_Free(to->u.ssl2.cipherArg.data);
-        } else {
+        }
+        else {
             SECITEM_FreeItem(&to->u.ssl3.srvName, PR_FALSE);
         }
         PORT_Free(to);
@@ -767,7 +770,8 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                         !PORT_Memcmp(pcce->sessionID, psce->sessionID,
                                      pcce->sessionIDLength)) {
                         cce = *pcce;
-                    } else {
+                    }
+                    else {
                         /* The cert doesen't match the SID cache entry,
                         ** so invalidate the SID cache entry.
                         */
@@ -776,7 +780,8 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                         pcce = 0;
                     }
                     UnlockSidCacheLock(cache->certCacheLock);
-                } else {
+                }
+                else {
                     /* what the ??.  Didn't get the cert cache lock.
                     ** Don't invalidate the SID cache entry, but don't find it.
                     */
@@ -794,7 +799,8 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                     if (!PORT_Memcmp(psnce->nameHash, psce->u.ssl3.srvNameHash,
                                      SHA256_LENGTH)) {
                         snce = *psnce;
-                    } else {
+                    }
+                    else {
                         /* The name doesen't match the SID cache entry,
                         ** so invalidate the SID cache entry.
                         */
@@ -803,7 +809,8 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                         psnce = 0;
                     }
                     UnlockSidCacheLock(cache->srvNameCacheLock);
-                } else {
+                }
+                else {
                     /* what the ??.  Didn't get the cert cache lock.
                     ** Don't invalidate the SID cache entry, but don't find it.
                     */
@@ -867,7 +874,8 @@ ServerSessionIDCache(sslSessionID *sid)
                           sid->u.ssl2.masterKey.len));
             PRINT_BUF(8, (0, "cipherArg:", sid->u.ssl2.cipherArg.data,
                           sid->u.ssl2.cipherArg.len));
-        } else {
+        }
+        else {
             /* override caller's expiration time, which uses client timeout
              * duration, not server timeout duration.
              */
@@ -949,7 +957,8 @@ ServerSessionIDUncache(sslSessionID *sid)
                       sid->u.ssl2.masterKey.len));
         PRINT_BUF(8, (0, "cipherArg:", sid->u.ssl2.cipherArg.data,
                       sid->u.ssl2.cipherArg.len));
-    } else {
+    }
+    else {
         sessionID = sid->u.ssl3.sessionID;
         sessionIDLength = sid->u.ssl3.sessionIDLength;
         SSL_TRC(8, ("%d: SSL3: UncacheMT: valid=%d addr=0x%08x%08x%08x%08x time=%x "
@@ -1008,7 +1017,8 @@ CloseCache(cacheDesc *cache)
         }
         if (cache->shared) {
             PR_MemUnmap(cache->cacheMem, cache->cacheMemSize);
-        } else {
+        }
+        else {
             PORT_Free(cache->cacheMem);
         }
         cache->cacheMem = NULL;
@@ -1152,7 +1162,8 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
             ssl2_timeout = MIN_SSL2_TIMEOUT;
         }
         cache->ssl2Timeout = ssl2_timeout;
-    } else {
+    }
+    else {
         cache->ssl2Timeout = DEF_SSL2_TIMEOUT;
     }
 
@@ -1164,7 +1175,8 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
             ssl3_timeout = MIN_SSL3_TIMEOUT;
         }
         cache->ssl3Timeout = ssl3_timeout;
-    } else {
+    }
+    else {
         cache->ssl3Timeout = DEF_SSL3_TIMEOUT;
     }
 
@@ -1199,7 +1211,8 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
         }
 
         cacheMem = PR_MemMap(cacheMemMap, 0, cache->cacheMemSize);
-    } else {
+    }
+    else {
         cacheMem = PORT_Alloc(cache->cacheMemSize);
     }
 
@@ -1462,7 +1475,8 @@ SSL_ConfigServerSessionIDCacheWithOpt(
         return ssl_ConfigServerSessionIDCacheInstanceWithOpt(&globalCache,
                                                              ssl2_timeout, ssl3_timeout, directory, PR_FALSE,
                                                              maxCacheEntries, maxCertCacheEntries, maxSrvNameCacheEntries);
-    } else {
+    }
+    else {
         return ssl_ConfigMPServerSIDCacheWithOpt(ssl2_timeout, ssl3_timeout,
                                                  directory, maxCacheEntries, maxCertCacheEntries,
                                                  maxSrvNameCacheEntries);
@@ -1808,7 +1822,8 @@ ssl_GetWrappingKey(PRInt32 symWrapMechIndex,
         (unsigned)symWrapMechIndex < SSL_NUM_WRAP_MECHS) {
         rv = getSvrWrappingKey(symWrapMechIndex, exchKeyType, wswk,
                                &globalCache, 0);
-    } else {
+    }
+    else {
         rv = PR_FALSE;
     }
 
@@ -1853,7 +1868,8 @@ GenerateTicketKeys(void *pwArg, unsigned char *keyName, PK11SymKey **aesKey,
     if (!cache->cacheMem) {
         /* cache is not initalized. Use stack buffer */
         ticketKeyNameSuffix = ticketKeyNameSuffixLocal;
-    } else {
+    }
+    else {
         ticketKeyNameSuffix = cache->ticketKeyNameSuffix;
     }
 
@@ -2026,7 +2042,8 @@ ssl_GetSessionTicketKeys(unsigned char *keyName, unsigned char *encKey,
         ticketKeyNameSuffix = ticketKeyNameSuffixLocal;
         ticketEncKeyPtr = ticketEncKey;
         ticketMacKeyPtr = ticketMacKey;
-    } else {
+    }
+    else {
         /* these values have constant memory locations in the cache.
          * Ok to reference them without holding the lock. */
         ticketKeyNameSuffix = cache->ticketKeyNameSuffix;
@@ -2117,7 +2134,8 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
         if (rv) {
             /* we found it on disk, copy it out to the caller. */
             PORT_Memcpy(wswk, &myWswk, sizeof *wswk);
-        } else {
+        }
+        else {
             /* Wasn't on disk, and we're still holding the lock, so write it. */
             cache->keyCacheData[ndx] = *wswk;
         }

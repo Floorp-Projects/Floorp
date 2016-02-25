@@ -52,7 +52,8 @@ cmmf_CertOrEncCertSetCertificate(CMMFCertOrEncCert *certOrEncCert,
         if (derDest == NULL) {
             goto loser;
         }
-    } else {
+    }
+    else {
         derDest = SECITEM_DupItem(&inCert->derCert);
         if (derDest == NULL) {
             goto loser;
@@ -66,7 +67,8 @@ cmmf_CertOrEncCertSetCertificate(CMMFCertOrEncCert *certOrEncCert,
         if (rv != SECSuccess) {
             goto loser;
         }
-    } else {
+    }
+    else {
         certOrEncCert->derValue = *derDest;
     }
     PORT_Free(derDest);
@@ -216,7 +218,8 @@ CMMF_CertResponseSetCertificate(CMMFCertResponse *inCertResp,
     if (inCertResp->certifiedKeyPair == NULL) {
         keyPair = inCertResp->certifiedKeyPair =
             PORT_ZNew(CMMFCertifiedKeyPair);
-    } else {
+    }
+    else {
         keyPair = inCertResp->certifiedKeyPair;
     }
     if (keyPair == NULL) {
@@ -263,7 +266,8 @@ CMMF_CertRepContentSetCAPubs(CMMFCertRepContent *inCertRepContent,
 
     if (rv != SECSuccess) {
         PORT_ArenaRelease(poolp, mark);
-    } else {
+    }
+    else {
         PORT_ArenaUnmark(poolp, mark);
     }
     return rv;

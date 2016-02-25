@@ -135,7 +135,8 @@ nssToken_DeleteStoredObject(
         if (token->defaultSession &&
             nssSession_IsReadWrite(token->defaultSession)) {
             session = token->defaultSession;
-        } else {
+        }
+        else {
             session = nssSlot_CreateSession(token->slot, NULL, PR_TRUE);
             createdSession = PR_TRUE;
         }
@@ -179,14 +180,17 @@ import_object(
                 return NULL;
             }
             session = sessionOpt;
-        } else if (tok->defaultSession &&
-                   nssSession_IsReadWrite(tok->defaultSession)) {
+        }
+        else if (tok->defaultSession &&
+                 nssSession_IsReadWrite(tok->defaultSession)) {
             session = tok->defaultSession;
-        } else {
+        }
+        else {
             session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
             createdSession = PR_TRUE;
         }
-    } else {
+    }
+    else {
         session = (sessionOpt) ? sessionOpt : tok->defaultSession;
     }
     if (session == NULL) {
@@ -200,7 +204,8 @@ import_object(
     nssSession_ExitMonitor(session);
     if (ckrv == CKR_OK) {
         object = nssCryptokiObject_Create(tok, session, handle);
-    } else {
+    }
+    else {
         nss_SetError(ckrv);
         nss_SetError(NSS_ERROR_PKCS11);
     }
@@ -263,13 +268,15 @@ find_objects(
     /* the arena is only for the array of object handles */
     if (maximumOpt > 0) {
         arraySize = maximumOpt;
-    } else {
+    }
+    else {
         arraySize = OBJECT_STACK_SIZE;
     }
     numHandles = 0;
     if (arraySize <= OBJECT_STACK_SIZE) {
         objectHandles = staticObjects;
-    } else {
+    }
+    else {
         objectHandles = nss_ZNEWARRAY(NULL, CK_OBJECT_HANDLE, arraySize);
     }
     if (!objectHandles) {
@@ -311,7 +318,8 @@ find_objects(
                 PORT_Memcpy(objectHandles, staticObjects,
                             OBJECT_STACK_SIZE * sizeof(objectHandles[1]));
             }
-        } else {
+        }
+        else {
             objectHandles = nss_ZREALLOCARRAY(objectHandles,
                                               CK_OBJECT_HANDLE,
                                               arraySize);
@@ -330,7 +338,8 @@ find_objects(
     if (numHandles > 0) {
         objects = create_objects_from_handles(tok, session,
                                               objectHandles, numHandles);
-    } else {
+    }
+    else {
         nss_SetError(NSS_ERROR_NOT_FOUND);
         objects = NULL;
     }
@@ -359,7 +368,8 @@ loser:
         nss_SetError(NSS_ERROR_NOT_FOUND);
         if (statusOpt)
             *statusOpt = PR_SUCCESS;
-    } else {
+    }
+    else {
         nss_SetError(ckrv);
         nss_SetError(NSS_ERROR_PKCS11);
         if (statusOpt)
@@ -453,14 +463,16 @@ nssToken_ImportCertificate(
     }
     if (certType == NSSCertificateType_PKIX) {
         cert_type = CKC_X_509;
-    } else {
+    }
+    else {
         return (nssCryptokiObject *)NULL;
     }
     NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
     if (asTokenObject) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
         searchType = nssTokenSearchType_TokenOnly;
-    } else {
+    }
+    else {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
         searchType = nssTokenSearchType_SessionOnly;
     }
@@ -534,7 +546,8 @@ nssToken_ImportCertificate(
         }
         nssSession_Destroy(session);
         nssSlot_Destroy(slot);
-    } else {
+    }
+    else {
         /* Import the certificate onto the token */
         rvObject = import_object(tok, sessionOpt, cert_tmpl, ctsize);
     }
@@ -569,8 +582,9 @@ nssToken_FindObjects(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly ||
-               searchType == nssTokenSearchType_TokenForced) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly ||
+             searchType == nssTokenSearchType_TokenForced) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_CLASS, objclass);
@@ -580,7 +594,8 @@ nssToken_FindObjects(
         objects = find_objects(token, sessionOpt,
                                obj_template, obj_size,
                                maximumOpt, statusOpt);
-    } else {
+    }
+    else {
         objects = find_objects_by_template(token, sessionOpt,
                                            obj_template, obj_size,
                                            maximumOpt, statusOpt);
@@ -605,7 +620,8 @@ nssToken_FindCertificatesBySubject(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
@@ -636,7 +652,8 @@ nssToken_FindCertificatesByNickname(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
@@ -684,7 +701,8 @@ nssToken_FindCertificatesByEmail(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
@@ -726,7 +744,8 @@ nssToken_FindCertificatesByID(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
@@ -806,8 +825,9 @@ nssToken_FindCertificateByIssuerAndSerialNumber(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if ((searchType == nssTokenSearchType_TokenOnly) ||
-               (searchType == nssTokenSearchType_TokenForced)) {
+    }
+    else if ((searchType == nssTokenSearchType_TokenOnly) ||
+             (searchType == nssTokenSearchType_TokenForced)) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     /* Set the unique id */
@@ -821,7 +841,8 @@ nssToken_FindCertificateByIssuerAndSerialNumber(
         objects = find_objects(token, sessionOpt,
                                cert_template, ctsize,
                                1, statusOpt);
-    } else {
+    }
+    else {
         objects = find_objects_by_template(token, sessionOpt,
                                            cert_template, ctsize,
                                            1, statusOpt);
@@ -848,7 +869,8 @@ nssToken_FindCertificateByIssuerAndSerialNumber(
             objects = find_objects(token, sessionOpt,
                                    cert_template, ctsize,
                                    1, statusOpt);
-        } else {
+        }
+        else {
             objects = find_objects_by_template(token, sessionOpt,
                                                cert_template, ctsize,
                                                1, statusOpt);
@@ -878,7 +900,8 @@ nssToken_FindCertificateByEncodedCertificate(
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
@@ -912,7 +935,8 @@ nssToken_FindPrivateKeys(
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_privkey);
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_TEMPLATE_FINISH(key_template, attr, ktsize);
@@ -1070,7 +1094,8 @@ nssToken_ImportTrust(
     NSS_CK_TEMPLATE_START(trust_tmpl, attr, tsize);
     if (asTokenObject) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    } else {
+    }
+    else {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
     }
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_CLASS, tobjc);
@@ -1086,7 +1111,8 @@ nssToken_ImportTrust(
     if (stepUpApproved) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TRUST_STEP_UP_APPROVED,
                                   &g_ck_true);
-    } else {
+    }
+    else {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TRUST_STEP_UP_APPROVED,
                                   &g_ck_false);
     }
@@ -1159,7 +1185,8 @@ nssToken_ImportCRL(
     NSS_CK_TEMPLATE_START(crl_tmpl, attr, crlsize);
     if (asTokenObject) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    } else {
+    }
+    else {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
     }
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_CLASS, crlobjc);
@@ -1168,7 +1195,8 @@ nssToken_ImportCRL(
     NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NSS_URL, url);
     if (isKRL) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NSS_KRL, &g_ck_true);
-    } else {
+    }
+    else {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_NSS_KRL, &g_ck_false);
     }
     NSS_CK_TEMPLATE_FINISH(crl_tmpl, attr, crlsize);
@@ -1207,8 +1235,9 @@ nssToken_FindCRLsBySubject(
     NSS_CK_TEMPLATE_START(crlobj_template, attr, crlobj_size);
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly ||
-               searchType == nssTokenSearchType_TokenForced) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly ||
+             searchType == nssTokenSearchType_TokenForced) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_CLASS, crlobjc);
@@ -1459,8 +1488,9 @@ nssToken_TraverseCertificates(
     NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
     if (searchType == nssTokenSearchType_SessionOnly) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly ||
-               searchType == nssTokenSearchType_TokenForced) {
+    }
+    else if (searchType == nssTokenSearchType_TokenOnly ||
+             searchType == nssTokenSearchType_TokenForced) {
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);

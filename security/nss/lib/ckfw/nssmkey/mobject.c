@@ -322,7 +322,8 @@ ckmk_encodeInt(NSSItem *dest, void *src, int srcLen)
     data[0] = DER_INTEGER;
     if (1 == lenLen) {
         data[1] = dataLen;
-    } else {
+    }
+    else {
         data[1] = 0x80 + lenLen;
         for (i = 0; i < lenLen; i++) {
             data[i + 1] = ((dataLen >> ((lenLen -
@@ -504,7 +505,7 @@ loser:
 
 #define CKMK_HANDLE_OPT_ITEM(func, io, type, loc, item, error, str) \
     if (0 == (item)->loc.size) {                                    \
-        (void)func(io, type, &(item)->loc, str);                    \
+        (void) func(io, type, &(item)->loc, str);                   \
     }                                                               \
     return &(item)->loc;
 
@@ -527,7 +528,8 @@ ckmk_FetchHashKey(
     if (io->objClass == CKO_CERTIFICATE) {
         ckmk_GetCommonAttribute(io, kSecCertEncodingItemAttr,
                                 PR_TRUE, key, "Fetching HashKey (cert)");
-    } else {
+    }
+    else {
         ckmk_GetCommonAttribute(io, kSecKeyLabel,
                                 PR_FALSE, key, "Fetching HashKey (key)");
     }
@@ -990,7 +992,8 @@ ckmk_mdObject_GetAttributeTypes(
     }
     if (io->type == ckmkRaw) {
         attrs = io->u.raw.types;
-    } else
+    }
+    else
         switch (io->objClass) {
             case CKO_CERTIFICATE:
                 attrs =
@@ -1181,7 +1184,8 @@ nss_ckmk_CreateMDObject(
             nssHash_Lookup(ckmkInternalObjectHash, key);
         if (!old_o) {
             nssHash_Add(ckmkInternalObjectHash, key, io);
-        } else if (old_o != io) {
+        }
+        else if (old_o != io) {
             nss_ckmk_DestroyInternalObject(io);
             io = old_o;
         }
@@ -1781,7 +1785,8 @@ nss_ckmk_CreatePrivateKey(
     if (nickname) {
         ckmk_updateAttribute(itemRef, kSecKeyPrintName, nickname,
                              strlen(nickname) + 1, "Modify Key Label");
-    } else {
+    }
+    else {
 #define DEFAULT_NICKNAME "NSS Imported Key"
         ckmk_updateAttribute(itemRef, kSecKeyPrintName, DEFAULT_NICKNAME,
                              sizeof(DEFAULT_NICKNAME), "Modify Key Label");
@@ -1847,10 +1852,12 @@ nss_ckmk_CreateObject(
     if (objClass == CKO_CERTIFICATE) {
         io = nss_ckmk_CreateCertificate(fwSession, pTemplate,
                                         ulAttributeCount, pError);
-    } else if (objClass == CKO_PRIVATE_KEY) {
+    }
+    else if (objClass == CKO_PRIVATE_KEY) {
         io = nss_ckmk_CreatePrivateKey(fwSession, pTemplate,
                                        ulAttributeCount, pError);
-    } else {
+    }
+    else {
         *pError = CKR_ATTRIBUTE_VALUE_INVALID;
     }
 

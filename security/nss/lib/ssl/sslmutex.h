@@ -34,7 +34,8 @@
 
 #include <wtypes.h>
 
-typedef struct {
+typedef struct
+    {
     PRBool isMultiProcess;
 #ifdef WINNT
     /* on WINNT we need both the PRLock and the Win32 mutex for fibers */
@@ -72,7 +73,8 @@ typedef pid_t sslPID;
 #include <sys/types.h> /* for pid_t */
 #include <semaphore.h> /* for sem_t, and sem_* functions */
 
-typedef struct {
+typedef struct
+    {
     PRBool isMultiProcess;
     union {
         PRLock *sslLock;

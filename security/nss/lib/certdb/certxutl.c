@@ -202,7 +202,8 @@ CERT_AddExtensionByOID(void *exthandle, SECItem *oid, SECItem *value,
         if (rv) {
             return (SECFailure);
         }
-    } else {
+    }
+    else {
         ext->value = *value;
     }
 
@@ -361,7 +362,8 @@ CERT_MergeExtensions(void *exthandle, CERTCertExtension **extensions)
             if (tag == 0) {
                 if (SECITEM_ItemsAreEqual(&ext->id, &node->ext->id))
                     break;
-            } else {
+            }
+            else {
                 if (SECOID_FindOIDTag(&node->ext->id) == tag) {
                     break;
                 }

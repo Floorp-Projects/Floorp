@@ -123,7 +123,8 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
     if (ss->opt.useSecurity && ss->enoughFirstHsDone) {
         if (ss->version < SSL_LIBRARY_VERSION_3_0) {
             cipherName = ssl_cipherName[ss->sec.cipherType];
-        } else {
+        }
+        else {
             cipherName = ssl3_cipherName[ss->sec.cipherType];
         }
         PORT_Assert(cipherName);
@@ -149,9 +150,11 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
         if (op) {
             if (ss->sec.keyBits == 0) {
                 *op = SSL_SECURITY_STATUS_OFF;
-            } else if (ss->sec.secretKeyBits < 90) {
+            }
+            else if (ss->sec.secretKeyBits < 90) {
                 *op = SSL_SECURITY_STATUS_ON_LOW;
-            } else {
+            }
+            else {
                 *op = SSL_SECURITY_STATUS_ON_HIGH;
             }
         }
@@ -167,7 +170,8 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
                 if (sp) {
                     *sp = CERT_NameToAscii(&cert->subject);
                 }
-            } else {
+            }
+            else {
                 if (ip) {
                     *ip = PORT_Strdup("no certificate");
                 }

@@ -44,7 +44,8 @@ ssl_PrintBuf(sslSocket *ss, const char *msg, const void *vp, int len)
     if (ss) {
         SSL_TRACE(("%d: SSL[%d]: %s [Len: %d]", SSL_GETPID(), ss->fd,
                    msg, len));
-    } else {
+    }
+    else {
         SSL_TRACE(("%d: SSL: %s [Len: %d]", SSL_GETPID(), msg, len));
     }
     memset(buf, ' ', sizeof buf);
@@ -77,7 +78,8 @@ PrintType(sslSocket *ss, char *msg)
 {
     if (ss) {
         SSL_TRACE(("%d: SSL[%d]: dump-msg: %s", SSL_GETPID(), ss->fd, msg));
-    } else {
+    }
+    else {
         SSL_TRACE(("%d: SSL: dump-msg: %s", SSL_GETPID(), msg));
     }
 }
@@ -87,7 +89,8 @@ PrintInt(sslSocket *ss, char *msg, unsigned v)
 {
     if (ss) {
         SSL_TRACE(("%d: SSL[%d]:           %s=%u", SSL_GETPID(), ss->fd, msg, v));
-    } else {
+    }
+    else {
         SSL_TRACE(("%d: SSL:           %s=%u", SSL_GETPID(), msg, v));
     }
 }
@@ -105,7 +108,8 @@ PrintBuf(sslSocket *ss, char *msg, unsigned char *cp, int len)
     if (ss) {
         SSL_TRACE(("%d: SSL[%d]:           %s [Len: %d]",
                    SSL_GETPID(), ss->fd, msg, len));
-    } else {
+    }
+    else {
         SSL_TRACE(("%d: SSL:           %s [Len: %d]",
                    SSL_GETPID(), msg, len));
     }
@@ -120,7 +124,8 @@ PrintBuf(sslSocket *ss, char *msg, unsigned char *cp, int len)
             if (ss) {
                 SSL_TRACE(("%d: SSL[%d]:             %s",
                            SSL_GETPID(), ss->fd, buf));
-            } else {
+            }
+            else {
                 SSL_TRACE(("%d: SSL:             %s", SSL_GETPID(), buf));
             }
             bp = buf;
@@ -131,7 +136,8 @@ PrintBuf(sslSocket *ss, char *msg, unsigned char *cp, int len)
         if (ss) {
             SSL_TRACE(("%d: SSL[%d]:             %s",
                        SSL_GETPID(), ss->fd, buf));
-        } else {
+        }
+        else {
             SSL_TRACE(("%d: SSL:             %s", SSL_GETPID(), buf));
         }
     }
