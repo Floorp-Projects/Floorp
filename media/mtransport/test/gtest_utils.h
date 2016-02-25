@@ -36,8 +36,8 @@
  */
 
 // Original author: ekr@rtfm.com
-#ifndef gtest_utils_h__
-#define gtest_utils_h__
+#ifndef gtest_utils__h__
+#define gtest_utils__h__
 
 #include <iostream>
 
@@ -47,6 +47,15 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
+
+#include "mtransport_test_utils.h"
+#include "nss.h"
+#include "ssl.h"
+
+extern "C" {
+#include "registry.h"
+#include "transport_addr.h"
+}
 
 // Wait up to timeout seconds for expression to be true
 #define WAIT(expression, timeout) \
@@ -88,4 +97,94 @@
     ASSERT_EQ(expected, actual); \
   } while(0)
 
+class MtransportTest : public ::testing::Test {
+public:
+  MtransportTest()
+    : test_utils_(nullptr)
+  {
+  }
+
+  void SetUp() {
+    test_utils_ = new MtransportTestUtils();
+    NSS_NoDB_Init(nullptr);
+    NSS_SetDomesticPolicy();
+
+    NR_reg_init(NR_REG_MODE_LOCAL);
+
+    // Attempt to load env vars used by tests.
+    GetEnvironment("TURN_SERVER_ADDRESS", turn_server_);
+    GetEnvironment("TURN_SERVER_USER", turn_user_);
+    GetEnvironment("TURN_SERVER_PASSWORD", turn_password_);
+    GetEnvironment("STUN_SERVER_ADDRESS", stun_server_address_);
+    GetEnvironment("STUN_SERVER_HOSTNAME", stun_server_hostname_);
+
+    std::string disable_non_local;
+    GetEnvironment("MOZ_DISABLE_NONLOCAL_CONNECTIONS", disable_non_local);
+    std::string upload_dir;
+    GetEnvironment("MOZ_UPLOAD_DIR", upload_dir);
+
+    if ((!disable_non_local.empty() && disable_non_local != "0") ||
+        !upload_dir.empty()) {
+      // We're assuming that MOZ_UPLOAD_DIR is only set on tbpl;
+      // MOZ_DISABLE_NONLOCAL_CONNECTIONS probably should be set when running the
+      // cpp unit-tests, but is not presently.
+      stun_server_address_ = "";
+      stun_server_hostname_ = "";
+      turn_server_ = "";
+    }
+
+    // Some tests are flaky and need to check if they're supposed to run.
+    webrtc_enabled_ = CheckEnvironmentFlag("MOZ_WEBRTC_TESTS");
+  }
+
+  void TearDown() {
+    delete test_utils_;
+  }
+
+  void GetEnvironment(const char* aVar, std::string& out) {
+    char* value = getenv(aVar);
+    if (value) {
+      out = value;
+    }
+  }
+
+  bool CheckEnvironmentFlag(const char* aVar) {
+    std::string value;
+    GetEnvironment(aVar, value);
+    return value == "1";
+  }
+
+  bool WarnIfTurnNotConfigured() const {
+    bool configured =
+        !turn_server_.empty() &&
+        !turn_user_.empty() &&
+        !turn_password_.empty();
+
+    if (configured) {
+      nr_transport_addr addr;
+      if (nr_str_port_to_transport_addr(turn_server_.c_str(), 3478,
+                                        IPPROTO_UDP, &addr)) {
+        printf("Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
+               turn_server_.c_str());
+        configured = false;
+      }
+    } else {
+      printf(
+        "Set TURN_SERVER_ADDRESS, TURN_SERVER_USER, and TURN_SERVER_PASSWORD\n"
+        "environment variables to run this test\n");
+    }
+
+    return !configured;
+  }
+
+  MtransportTestUtils* test_utils_;
+
+  std::string turn_server_;
+  std::string turn_user_;
+  std::string turn_password_;
+  std::string stun_server_address_;
+  std::string stun_server_hostname_;
+
+  bool webrtc_enabled_;
+};
 #endif
