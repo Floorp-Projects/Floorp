@@ -52,4 +52,6 @@ RESOURCE_FILES += [
     'urlparse_unx.dat',
 ]
 
+USE_LIBS += ['static:js']
+
 CXXFLAGS += CONFIG['TK_CFLAGS']
