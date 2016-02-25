@@ -427,10 +427,9 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::IfElse:
         return DecodeIfElse(f, /* hasElse */ true, expected);
       case Expr::I32Clz:
+      case Expr::I32Ctz:
       case Expr::I32Popcnt:
         return DecodeUnaryOperator(f, expected, ExprType::I32);
-      case Expr::I32Ctz:
-        return f.fail("NYI: ctz");
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:

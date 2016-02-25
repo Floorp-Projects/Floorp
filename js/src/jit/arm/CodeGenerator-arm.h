@@ -123,6 +123,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitUrshD(LUrshD* ins);
 
     virtual void visitClzI(LClzI* ins);
+    virtual void visitCtzI(LCtzI* ins);
     virtual void visitPopcntI(LPopcntI* ins);
 
     virtual void visitTestIAndBranch(LTestIAndBranch* test);

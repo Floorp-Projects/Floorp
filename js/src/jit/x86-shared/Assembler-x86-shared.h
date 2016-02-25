@@ -1548,6 +1548,9 @@ class AssemblerX86Shared : public AssemblerShared
     void bsr(const Register& src, const Register& dest) {
         masm.bsr_rr(src.encoding(), dest.encoding());
     }
+    void bsf(const Register& src, const Register& dest) {
+        masm.bsf_rr(src.encoding(), dest.encoding());
+    }
     void popcnt(const Register& src, const Register& dest) {
         masm.popcnt_rr(src.encoding(), dest.encoding());
     }

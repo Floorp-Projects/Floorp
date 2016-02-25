@@ -955,6 +955,19 @@ CodeGeneratorARM::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorARM::visitCtzI(LCtzI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+    ScratchRegisterScope scratch(masm);
+
+    masm.ma_rsb(input, Imm32(0), scratch, SetCC);
+    masm.ma_and(input, scratch, input);
+    masm.ma_clz(input, output);
+    masm.ma_rsb(input, Imm32(0x1f), output, LeaveCC, Assembler::NotEqual);
+}
+
+void
 CodeGeneratorARM::visitPopcntI(LPopcntI* ins)
 {
     Register input = ToRegister(ins->input());

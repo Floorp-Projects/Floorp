@@ -725,6 +725,26 @@ CodeGeneratorX86Shared::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitCtzI(LCtzI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // bsf is undefined on 0
+    Label done, nonzero;
+    if (!ins->mir()->operandIsNeverZero()) {
+        masm.test32(input, input);
+        masm.j(Assembler::NonZero, &nonzero);
+        masm.move32(Imm32(32), output);
+        masm.jump(&done);
+    }
+
+    masm.bind(&nonzero);
+    masm.bsf(input, output);
+    masm.bind(&done);
+}
+
+void
 CodeGeneratorX86Shared::visitPopcntI(LPopcntI* ins)
 {
     Register input = ToRegister(ins->input());

@@ -1473,6 +1473,12 @@ MClz::computeRange(TempAllocator& alloc)
 }
 
 void
+MCtz::computeRange(TempAllocator& alloc)
+{
+    setRange(Range::NewUInt32Range(alloc, 0, 32));
+}
+
+void
 MPopcnt::computeRange(TempAllocator& alloc)
 {
     setRange(Range::NewUInt32Range(alloc, 0, 32));
@@ -3212,6 +3218,14 @@ MStoreTypedArrayElementStatic::collectRangeInfoPreTrunc()
 
 void
 MClz::collectRangeInfoPreTrunc()
+{
+    Range inputRange(input());
+    if (!inputRange.canBeZero())
+        operandIsNeverZero_ = true;
+}
+
+void
+MCtz::collectRangeInfoPreTrunc()
 {
     Range inputRange(input());
     if (!inputRange.canBeZero())

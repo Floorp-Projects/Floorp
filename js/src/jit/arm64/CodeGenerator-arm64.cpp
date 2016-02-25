@@ -353,6 +353,12 @@ CodeGeneratorARM64::visitClzI(LClzI* lir)
 }
 
 void
+CodeGeneratorARM64::visitCtzI(LCtzI* lir)
+{
+    MOZ_CRASH("visitCtzI");
+}
+
+void
 CodeGeneratorARM64::emitRoundDouble(FloatRegister src, Register dest, Label* fail)
 {
     MOZ_CRASH("CodeGeneratorARM64::emitRoundDouble");
