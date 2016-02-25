@@ -135,7 +135,8 @@ exports.items = [
         let cookie = enm.getNext().QueryInterface(Ci.nsICookie);
         if (isCookieAtHost(cookie, host)) {
           if (cookie.name == args.name) {
-            cookieMgr.remove(cookie.host, cookie.name, cookie.path, false);
+            cookieMgr.remove(cookie.host, cookie.name, cookie.path,
+                             cookie.originAttributes, false);
           }
         }
       }
