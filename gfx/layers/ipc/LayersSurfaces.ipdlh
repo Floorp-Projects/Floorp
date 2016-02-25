@@ -101,6 +101,7 @@ struct SurfaceDescriptorGralloc {
 struct RGBDescriptor {
   IntSize size;
   SurfaceFormat format;
+  bool hasInternalBuffer;
 };
 
 struct YCbCrDescriptor {
