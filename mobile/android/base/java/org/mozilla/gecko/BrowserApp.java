@@ -199,6 +199,8 @@ public class BrowserApp extends GeckoApp
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
     private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
 
+    public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
+
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
     private static final String EOL_NOTIFIED = "eol_notified";
@@ -3721,6 +3723,7 @@ public class BrowserApp extends GeckoApp
         final boolean isViewAction = Intent.ACTION_VIEW.equals(action);
         final boolean isBookmarkAction = GeckoApp.ACTION_HOMESCREEN_SHORTCUT.equals(action);
         final boolean isTabQueueAction = TabQueueHelper.LOAD_URLS_ACTION.equals(action);
+        final boolean isViewMultipleAction = ACTION_VIEW_MULTIPLE.equals(action);
 
         if (mInitialized && (isViewAction || isBookmarkAction)) {
             // Dismiss editing mode if the user is loading a URL from an external app.
@@ -3761,6 +3764,14 @@ public class BrowserApp extends GeckoApp
             });
         }
 
+        // Custom intent action for opening multiple URLs at once
+        if (isViewMultipleAction) {
+            List<String> urls = intent.getStringArrayListExtra("urls");
+            if (urls != null) {
+                openUrls(urls);
+            }
+        }
+
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
             return;
         }
@@ -3785,6 +3796,22 @@ public class BrowserApp extends GeckoApp
             }
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
+        }
+    }
+
+    private void openUrls(List<String> urls) {
+        try {
+            JSONArray array = new JSONArray();
+            for (String url : urls) {
+                array.put(url);
+            }
+
+            JSONObject object = new JSONObject();
+            object.put("urls", array);
+
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tabs:OpenMultiple", object.toString()));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Unable to create JSON for opening multiple URLs");
         }
     }
 
