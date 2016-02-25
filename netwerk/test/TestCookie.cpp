@@ -755,4 +755,6 @@ main(int32_t argc, char *argv[])
 
 // Stubs to make this test happy
 
-mozilla::dom::OriginAttributesDictionary::OriginAttributesDictionary() {}
+mozilla::dom::OriginAttributesDictionary::OriginAttributesDictionary()
+  : mAppId(0), mInBrowser(false), mUserContextId(0)
+{}
