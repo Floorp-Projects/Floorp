@@ -2948,6 +2948,29 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LBitOpI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(BitOpI64)
+
+    static const size_t Lhs = 0;
+    static const size_t Rhs = INT64_PIECES;
+
+    explicit LBitOpI64(JSOp op)
+      : op_(op)
+    { }
+
+    const char* extraName() const {
+        return CodeName[op_];
+    }
+
+    JSOp bitop() const {
+        return op_;
+    }
+};
+
 // Call a VM function to perform a bitwise operation.
 class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 {
@@ -2985,6 +3008,30 @@ class LShiftI : public LBinaryMath<0>
     LIR_HEADER(ShiftI)
 
     explicit LShiftI(JSOp op)
+      : op_(op)
+    { }
+
+    JSOp bitop() {
+        return op_;
+    }
+
+    MInstruction* mir() {
+        return mir_->toInstruction();
+    }
+
+    const char* extraName() const {
+        return CodeName[op_];
+    }
+};
+
+class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>
+{
+    JSOp op_;
+
+  public:
+    LIR_HEADER(ShiftI64)
+
+    explicit LShiftI64(JSOp op)
       : op_(op)
     { }
 

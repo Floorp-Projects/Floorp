@@ -693,6 +693,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void andPtr(Imm32 imm, Register dest) PER_ARCH;
 
     inline void and64(Imm64 imm, Register64 dest) PER_ARCH;
+    inline void or64(Imm64 imm, Register64 dest) PER_ARCH;
+    inline void xor64(Imm64 imm, Register64 dest) PER_ARCH;
 
     inline void or32(Register src, Register dest) PER_SHARED_ARCH;
     inline void or32(Imm32 imm, Register dest) PER_SHARED_ARCH;

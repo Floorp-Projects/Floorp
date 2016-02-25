@@ -250,6 +250,78 @@ CodeGeneratorX64::visitCompare64AndBranch(LCompare64AndBranch* lir)
 }
 
 void
+CodeGeneratorX64::visitBitOpI64(LBitOpI64* lir)
+{
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    switch (lir->bitop()) {
+      case JSOP_BITOR:
+        if (rhs->isConstant())
+            masm.or64(Imm64(ToInt64(rhs)), Register64(lhs));
+        else
+            masm.orq(ToOperand(rhs), lhs);
+        break;
+      case JSOP_BITXOR:
+        if (rhs->isConstant())
+            masm.xor64(Imm64(ToInt64(rhs)), Register64(lhs));
+        else
+            masm.xorq(ToOperand(rhs), lhs);
+        break;
+      case JSOP_BITAND:
+        if (rhs->isConstant())
+            masm.and64(Imm64(ToInt64(rhs)), Register64(lhs));
+        else
+            masm.andq(ToOperand(rhs), lhs);
+        break;
+      default:
+        MOZ_CRASH("unexpected binary opcode");
+    }
+}
+
+void
+CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
+{
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    if (rhs->isConstant()) {
+        int32_t shift = ToInt32(rhs) & 0x3F;
+        switch (lir->bitop()) {
+          case JSOP_LSH:
+            if (shift)
+                masm.shlq(Imm32(shift), lhs);
+            break;
+          case JSOP_RSH:
+            if (shift)
+                masm.sarq(Imm32(shift), lhs);
+            break;
+          case JSOP_URSH:
+            if (shift)
+                masm.shrq(Imm32(shift), lhs);
+            break;
+          default:
+            MOZ_CRASH("Unexpected shift op");
+        }
+    } else {
+        MOZ_ASSERT(ToRegister(rhs) == ecx);
+        switch (lir->bitop()) {
+          case JSOP_LSH:
+            masm.shlq_cl(lhs);
+            break;
+          case JSOP_RSH:
+            masm.sarq_cl(lhs);
+            break;
+          case JSOP_URSH:
+            masm.shrq_cl(lhs);
+            break;
+          default:
+            MOZ_CRASH("Unexpected shift op");
+        }
+    }
+}
+
+void
 CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));

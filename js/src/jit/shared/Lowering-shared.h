@@ -163,6 +163,10 @@ class LIRGeneratorShared : public MDefinitionVisitor
     template <size_t Ops, size_t Temps>
     inline void defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand);
 
+    template <size_t Ops, size_t Temps>
+    inline void defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,
+                                      MDefinition* mir, uint32_t operand);
+
     // Returns a box allocation for a Value-typed instruction.
     inline LBoxAllocation useBox(MDefinition* mir, LUse::Policy policy = LUse::REGISTER,
                                  bool useAtStart = false);
@@ -173,9 +177,16 @@ class LIRGeneratorShared : public MDefinitionVisitor
 
     // Returns an int64 allocation for an Int64-typed instruction.
     inline LInt64Allocation useInt64(MDefinition* mir, LUse::Policy policy, bool useAtStart);
-    inline LInt64Allocation useInt64(MDefinition* mir);
-    inline LInt64Allocation useInt64OrConstant(MDefinition* mir);
+    inline LInt64Allocation useInt64(MDefinition* mir, bool useAtStart = false);
+    inline LInt64Allocation useInt64OrConstant(MDefinition* mir, bool useAtStart = false);
     inline LInt64Allocation useInt64Register(MDefinition* mir, bool useAtStart = false);
+
+    LInt64Allocation useInt64RegisterAtStart(MDefinition* mir) {
+        return useInt64Register(mir, /* useAtStart = */ true);
+    }
+    LInt64Allocation useInt64OrConstantAtStart(MDefinition* mir) {
+        return useInt64OrConstant(mir, /* useAtStart = */ true);
+    }
 
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.

@@ -44,8 +44,37 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
-    movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
-    andq(ScratchReg, dest.reg);
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        andq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        andq(scratch, dest.reg);
+    }
+}
+
+void
+MacroAssembler::or64(Imm64 imm, Register64 dest)
+{
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        orq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        orq(scratch, dest.reg);
+    }
+}
+
+void
+MacroAssembler::xor64(Imm64 imm, Register64 dest)
+{
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        xorq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        xorq(scratch, dest.reg);
+    }
 }
 
 void

@@ -51,6 +51,20 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::or64(Imm64 imm, Register64 dest)
+{
+    ma_li(ScratchRegister, ImmWord(imm.value));
+    ma_or(dest.reg, ScratchRegister);
+}
+
+void
+MacroAssembler::xor64(Imm64 imm, Register64 dest)
+{
+    ma_li(ScratchRegister, ImmWord(imm.value));
+    ma_xor(dest.reg, ScratchRegister);
+}
+
+void
 MacroAssembler::orPtr(Register src, Register dest)
 {
     ma_or(dest, src);
