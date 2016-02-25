@@ -1134,6 +1134,7 @@ void
 CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const Rect* aClipRectIn,
                             const Rect& aRenderBounds,
+                            bool aOpaque,
                             Rect* aClipRectOut,
                             Rect* aRenderBoundsOut)
 {
