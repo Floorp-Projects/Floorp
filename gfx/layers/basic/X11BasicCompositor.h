@@ -52,6 +52,9 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) override { return nullptr; }
+
   virtual void EndFrame() override;
 };
 
