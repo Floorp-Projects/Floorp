@@ -186,11 +186,14 @@ BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMo
   MOZ_ASSERT(mDrawTarget);
 
   // Adjust bounds rect to account for new origin at (0, 0).
-  IntRect rect(0, 0, aRect.XMost(), aRect.YMost());
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, rect);
+  IntRect windowRect = aRect;
+  if (aRect.Size() != mDrawTarget->GetSize()) {
+    windowRect.ExpandToEnclose(IntPoint(0, 0));
+  }
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
 
   if (aInit == INIT_MODE_CLEAR) {
-    mDrawTarget->ClearRect(gfx::Rect(aRect));
+    mDrawTarget->ClearRect(Rect(aRect - rt->GetOrigin()));
   }
 
   return rt.forget();
