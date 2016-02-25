@@ -5,6 +5,14 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+namespace mozilla {
+class NeckoOriginAttributes;
+} // mozilla namespace
+%}
+
+[ptr] native NeckoOriginAttributesPtr(mozilla::NeckoOriginAttributes);
+
 interface nsISimpleEnumerator;
 
 /** 
@@ -49,4 +57,11 @@ interface nsICookieManager : nsISupports
               in AUTF8String   aPath,
               in jsval         aOriginAttributes,
               in boolean       aBlocked);
+
+  [notxpcom]
+  nsresult removeNative(in AUTF8String   aHost,
+                        in ACString      aName,
+                        in AUTF8String   aPath,
+                        in NeckoOriginAttributesPtr aOriginAttributes,
+                        in boolean       aBlocked);
 };

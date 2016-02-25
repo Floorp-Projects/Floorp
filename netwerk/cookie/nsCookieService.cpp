@@ -2375,7 +2375,26 @@ nsCookieService::Remove(const nsACString &aHost,
     return NS_ERROR_FAILURE;
   }
 
-  return Remove(aHost, attrs, aName, aPath, aBlocked);
+  return RemoveNative(aHost, aName, aPath, &attrs, aBlocked);
+}
+
+NS_IMETHODIMP_(nsresult)
+nsCookieService::RemoveNative(const nsACString &aHost,
+                              const nsACString &aName,
+                              const nsACString &aPath,
+                              NeckoOriginAttributes* aOriginAttributes,
+                              bool aBlocked)
+{
+  if (NS_WARN_IF(!aOriginAttributes)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = Remove(aHost, *aOriginAttributes, aName, aPath, aBlocked);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 /******************************************************************************
