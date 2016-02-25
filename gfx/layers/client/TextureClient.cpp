@@ -952,6 +952,30 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
 }
 
 void
+TextureClient::RemoveFromCompositable(CompositableClient* aCompositable,
+                                      AsyncTransactionWaiter* aWaiter)
+{
+  MOZ_ASSERT(aCompositable);
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  if (GetIPDLActor() && aCompositable->GetIPDLActor()
+      && mData->AsGrallocTextureData()) {
+    // remove old buffer from CompositableHost
+    RefPtr<AsyncTransactionWaiter> waiter = waiter ? waiter
+                                                   : new AsyncTransactionWaiter();
+    RefPtr<AsyncTransactionTracker> tracker =
+        new RemoveTextureFromCompositableTracker(waiter);
+    // Hold TextureClient until transaction complete.
+    tracker->SetTextureClient(this);
+    mRemoveFromCompositableWaiter = waiter;
+    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+    GetForwarder()->RemoveTextureFromCompositableAsync(tracker, aCompositable, this);
+  }
+#endif
+
+}
+
+void
 TextureClient::SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) {
   mRemoveFromCompositableWaiter = aWaiter;
 }

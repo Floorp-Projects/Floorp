@@ -109,6 +109,8 @@ public:
 
   virtual TextureFlags GetTextureFlags() const override;
 
+  virtual GrallocTextureData* AsGrallocTextureData() { return this; }
+
 protected:
   GrallocTextureData(MaybeMagicGrallocBufferHandle aGrallocHandle,
                      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
