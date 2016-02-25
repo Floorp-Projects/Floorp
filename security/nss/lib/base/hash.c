@@ -92,8 +92,7 @@ nssHash_Create(NSSArena *arenaOpt, PRUint32 numBuckets, PLHashFunction keyHash,
     if (arenaOpt) {
         arena = arenaOpt;
         i_alloced = PR_FALSE;
-    }
-    else {
+    } else {
         arena = nssArena_Create();
         i_alloced = PR_TRUE;
     }
@@ -170,8 +169,7 @@ nssHash_Destroy(nssHash *hash)
     PL_HashTableDestroy(hash->plHashTable);
     if (hash->i_alloced_arena) {
         nssArena_Destroy(hash->arena);
-    }
-    else {
+    } else {
         nss_ZFreeIf(hash);
     }
 }
@@ -191,11 +189,9 @@ nssHash_Add(nssHash *hash, const void *key, const void *value)
     he = PL_HashTableAdd(hash->plHashTable, key, (void *)value);
     if ((PLHashEntry *)NULL == he) {
         nss_SetError(NSS_ERROR_NO_MEMORY);
-    }
-    else if (he->value != value) {
+    } else if (he->value != value) {
         nss_SetError(NSS_ERROR_HASH_COLLISION);
-    }
-    else {
+    } else {
         hash->count++;
         error = PR_SUCCESS;
     }
@@ -260,8 +256,7 @@ nssHash_Exists(nssHash *hash, const void *it)
 
     if ((void *)NULL == value) {
         return PR_FALSE;
-    }
-    else {
+    } else {
         return PR_TRUE;
     }
 }

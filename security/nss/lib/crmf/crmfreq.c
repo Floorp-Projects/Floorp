@@ -351,8 +351,7 @@ crmf_template_add_extensions(PLArenaPool *poolp, CRMFCertTemplate *inTemplate,
     if (inTemplate->extensions == NULL) {
         newSize = extensions->numExtensions;
         extArray = PORT_ZNewArray(CRMFCertExtension *, newSize + 1);
-    }
-    else {
+    } else {
         newSize = inTemplate->numExtensions + extensions->numExtensions;
         extArray = PORT_Realloc(inTemplate->extensions,
                                 sizeof(CRMFCertExtension *) * (newSize + 1));
@@ -459,8 +458,7 @@ CRMF_CertRequestSetTemplateField(CRMFCertRequest *inCertReq,
     }
     if (rv != SECSuccess) {
         PORT_ArenaRelease(poolp, mark);
-    }
-    else {
+    } else {
         PORT_ArenaUnmark(poolp, mark);
     }
     return rv;
@@ -551,10 +549,8 @@ crmf_create_cert_extension(PLArenaPool *poolp,
     }
 
     if (isCritical) {
-        newExt->critical.data = (poolp == NULL) ?
-                                                PORT_New(unsigned char)
-                                                :
-                                                PORT_ArenaNew(poolp, unsigned char);
+        newExt->critical.data = (poolp == NULL) ? PORT_New(unsigned char)
+                                                : PORT_ArenaNew(poolp, unsigned char);
         if (newExt->critical.data == NULL) {
             goto loser;
         }

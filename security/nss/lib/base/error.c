@@ -95,13 +95,11 @@ error_get_my_stack(void)
     if ((error_stack *)NULL == rv) {
         /* Doesn't exist; create one */
         new_size = 16;
-    }
-    else if (rv->header.count == rv->header.space &&
-             rv->header.count < NSS_MAX_ERROR_STACK_COUNT) {
+    } else if (rv->header.count == rv->header.space &&
+               rv->header.count < NSS_MAX_ERROR_STACK_COUNT) {
         /* Too small, expand it */
         new_size = PR_MIN(rv->header.space * 2, NSS_MAX_ERROR_STACK_COUNT);
-    }
-    else {
+    } else {
         /* Okay, return it */
         return rv;
     }
@@ -227,8 +225,7 @@ nss_SetError(PRUint32 error)
 
     if (es->header.count < es->header.space) {
         es->stack[es->header.count++] = error;
-    }
-    else {
+    } else {
         memmove(es->stack, es->stack + 1,
                 (es->header.space - 1) * (sizeof es->stack[0]));
         es->stack[es->header.space - 1] = error;

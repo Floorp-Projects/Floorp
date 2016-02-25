@@ -460,16 +460,14 @@ CERT_CreateEncodedOCSPSuccessResponse(
 
         /* convert len-in-bytes to len-in-bits */
         br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
-    }
-    else {
+    } else {
         rid->responderIDType = responderIDType;
         if (responderIDType == ocspResponderID_byName) {
             responderIDTemplate = ocsp_ResponderIDByNameTemplate;
             if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
                               &responderCert->subject) != SECSuccess)
                 goto done;
-        }
-        else {
+        } else {
             responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
             if (!CERT_GetSubjectPublicKeyDigest(tmpArena, responderCert,
                                                 SEC_OID_SHA1, &rid->responderIDValue.keyHash))

@@ -471,8 +471,7 @@ nss_ckcapi_FetchKeyContainer(
                 if (!rc) {
                     goto loser;
                 }
-            }
-            else {
+            } else {
                 *hProv =
                     ko->hProv;
             }
@@ -684,8 +683,7 @@ ckcapi_PopulateModulusExponent(
 {
     if (ckcapiCert == io->type) {
         ckcapi_CertPopulateModulusExponent(io);
-    }
-    else {
+    } else {
         ckcapi_FetchPublicKey(io);
     }
     return;
@@ -713,8 +711,7 @@ ckcapi_FetchLabel(
         co->labelData = nss_ckcapi_WideToUTF8((LPCWSTR)labelDataUTF16);
         if ((CHAR *)NULL == co->labelData) {
             rv = 0;
-        }
-        else {
+        } else {
             size = strlen(co->labelData);
         }
     }
@@ -862,8 +859,7 @@ ckcapi_FetchHashKey(
 {
     if (ckcapiCert == io->type) {
         ckcapi_CertFetchHashKey(io);
-    }
-    else {
+    } else {
         ckcapi_KeyFetchHashKey(io);
     }
     return;
@@ -1336,8 +1332,7 @@ ckcapi_mdObject_Destroy(
             goto loser;
         }
         rc = CertDeleteCertificateFromStore(certContext);
-    }
-    else {
+    } else {
         char *provName = NULL;
         char *containerName = NULL;
         HCRYPTPROV hProv;
@@ -1353,8 +1348,7 @@ ckcapi_mdObject_Destroy(
             containerName = nss_ckcapi_WideToUTF8(provInfo->pwszContainerName);
             provType = provInfo->dwProvType;
             nss_ZFreeIf(provInfo);
-        }
-        else {
+        } else {
             provName = io->u.key.provName;
             containerName = io->u.key.containerName;
             provType = io->u.key.provInfo.dwProvType;
@@ -1461,8 +1455,7 @@ ckcapi_mdObject_GetAttributeTypes(
     }
     if (io->type == ckcapiRaw) {
         attrs = io->u.raw.types;
-    }
-    else
+    } else
         switch (io->objClass) {
             case CKO_CERTIFICATE:
                 attrs =
@@ -1613,8 +1606,7 @@ nss_ckcapi_CreateMDObject(
             nssHash_Lookup(ckcapiInternalObjectHash, key);
         if (!old_o) {
             nssHash_Add(ckcapiInternalObjectHash, key, io);
-        }
-        else if (old_o != io) {
+        } else if (old_o != io) {
             nss_ckcapi_DestroyInternalObject(io);
             io = old_o;
         }
@@ -1751,15 +1743,12 @@ nss_ckcapi_CreateCertificate(
         }
 
         /* does it look like a CA */
-    }
-    else if (ckcapi_cert_isCA(certContext)) {
+    } else if (ckcapi_cert_isCA(certContext)) {
         storeStr = ckcapi_cert_isRoot(certContext) ? "CA" : "Root";
         /* does it look like an S/MIME cert */
-    }
-    else if (ckcapi_cert_hasEmail(certContext)) {
+    } else if (ckcapi_cert_hasEmail(certContext)) {
         storeStr = "AddressBook";
-    }
-    else {
+    } else {
         /* just pick a store */
         storeStr = "CA";
     }
@@ -2223,12 +2212,10 @@ nss_ckcapi_CreateObject(
     if (objClass == CKO_CERTIFICATE) {
         io = nss_ckcapi_CreateCertificate(fwSession, pTemplate,
                                           ulAttributeCount, pError);
-    }
-    else if (objClass == CKO_PRIVATE_KEY) {
+    } else if (objClass == CKO_PRIVATE_KEY) {
         io = nss_ckcapi_CreatePrivateKey(fwSession, pTemplate,
                                          ulAttributeCount, pError);
-    }
-    else {
+    } else {
         *pError = CKR_ATTRIBUTE_VALUE_INVALID;
     }
 

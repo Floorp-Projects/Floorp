@@ -645,8 +645,7 @@ tls13_SendServerHelloSequence(sslSocket *ss)
     if ((ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa) ||
         (ss->ssl3.hs.kea_def->kea == kea_dhe_rsa)) {
         certIndex = kt_rsa;
-    }
-    else {
+    } else {
         certIndex = ss->ssl3.hs.kea_def->exchKeyType;
     }
     rv = ssl3_SendCertificateVerify(ss, ss->serverCerts[certIndex].SERVERKEY);
@@ -748,8 +747,7 @@ tls13_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (ss->sec.isServer) {
         rv = TLS13_CHECK_HS_STATE(ss, SSL_ERROR_RX_UNEXPECTED_CERTIFICATE,
                                   wait_client_cert);
-    }
-    else {
+    } else {
         rv = TLS13_CHECK_HS_STATE(ss, SSL_ERROR_RX_UNEXPECTED_CERTIFICATE,
                                   wait_cert_request, wait_server_cert);
     }
@@ -767,8 +765,7 @@ tls13_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
                         illegal_parameter);
             return SECFailure;
         }
-    }
-    else {
+    } else {
         if (!context.len || context.len != ss->ssl3.hs.certReqContextLen ||
             (NSS_SecureMemcmp(ss->ssl3.hs.certReqContext,
                               context.data, context.len) != 0)) {
@@ -1074,8 +1071,7 @@ tls13_InitCipherSpec(sslSocket *ss, TrafficKeyType type, InstallCipherSpecDirect
     /* Generic behaviors -- common to all crypto methods */
     if (!IS_DTLS(ss)) {
         pwSpec->read_seq_num.high = pwSpec->write_seq_num.high = 0;
-    }
-    else {
+    } else {
         if (cwSpec->epoch == PR_UINT16_MAX) {
             /* The problem here is that we have rehandshaked too many
              * times (you are not allowed to wrap the epoch). The
@@ -1231,7 +1227,7 @@ void
 tls13_DestroyKeyShareEntry(TLS13KeyShareEntry *offer)
 {
     SECITEM_ZfreeItem(&offer->key_exchange, PR_FALSE);
-    PORT_ZFree(offer, sizeof(offer));
+    PORT_ZFree(offer, sizeof(*offer));
 }
 
 void
@@ -1310,8 +1306,7 @@ tls13_AESGCM(ssl3KeyMaterial *keys,
     if (doDecrypt) {
         rv = PK11_Decrypt(keys->write_key, CKM_AES_GCM, &param, out, &uOutLen,
                           maxout, in, inlen);
-    }
-    else {
+    } else {
         rv = PK11_Encrypt(keys->write_key, CKM_AES_GCM, &param, out, &uOutLen,
                           maxout, in, inlen);
     }
@@ -1599,7 +1594,7 @@ tls13_SendFinished(sslSocket *ss)
     /* TODO(ekr@rtfm.com): Record key log */
     return SECSuccess;
 
-  alert_loser:
+alert_loser:
     (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
     PORT_SetError(errCode); /* Restore error code */
     return rv;
@@ -1660,8 +1655,7 @@ tls13_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
         }
 
         rv = tls13_FinishHandshake(ss);
-    }
-    else {
+    } else {
         if (ss->ssl3.hs.authCertificatePending) {
             /* TODO(ekr@rtfm.com): Handle pending auth */
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
@@ -1739,8 +1733,7 @@ tls13_SendClientSecondRound(sslSocket *ss)
         if (rv != SECSuccess) {
             goto loser; /* error code is set. */
         }
-    }
-    else if (sendClientCert) {
+    } else if (sendClientCert) {
         rv = ssl3_SendCertificate(ss);
         if (rv != SECSuccess) {
             goto loser; /* error code is set. */
@@ -1933,8 +1926,7 @@ tls13_ProtectRecord(sslSocket *ss,
     if (cipher_def->calg == ssl_calg_null) {
         /* Shortcut for plaintext */
         cipherBytes = contentLen;
-    }
-    else {
+    } else {
         unsigned char aad[8];
         PORT_Assert(cipher_def->type == type_aead);
 
@@ -1972,8 +1964,7 @@ tls13_ProtectRecord(sslSocket *ss,
         (void)tls13_EncodeUintX(cwSpec->write_seq_num.high, 4, &wrBuf->buf[3]);
         (void)tls13_EncodeUintX(cwSpec->write_seq_num.low, 4, &wrBuf->buf[7]);
         (void)tls13_EncodeUintX(cipherBytes, 2, &wrBuf->buf[11]);
-    }
-    else {
+    } else {
         (void)tls13_EncodeUintX(kRecordVersion, 2, &wrBuf->buf[1]);
         (void)tls13_EncodeUintX(cipherBytes, 2, &wrBuf->buf[3]);
     }
@@ -2029,10 +2020,8 @@ tls13_UnprotectRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext
     /* Decrypt */
     PORT_Assert(cipher_def->type == type_aead);
     tls13_FormatAdditionalData(aad, sizeof(aad),
-                               IS_DTLS(ss) ?
-                                           cText->seq_num
-                                           :
-                                           crSpec->read_seq_num);
+                               IS_DTLS(ss) ? cText->seq_num
+                                           : crSpec->read_seq_num);
     rv = crSpec->aead(
         ss->sec.isServer ? &crSpec->client : &crSpec->server,
         PR_TRUE,                /* do decrypt */
