@@ -18,14 +18,14 @@
 
 /* Generic pane helpers */
 
-.generic-toggled-side-pane {
+.generic-toggled-pane {
   -moz-margin-start: 0 !important;
   /* Unfortunately, transitions don't work properly with locale-aware properties,
      so both the left and right margins are set via js, while the start margin
      is always overridden here. */
 }
 
-.generic-toggled-side-pane[animated] {
+.generic-toggled-pane[animated] {
   transition: margin 0.25s ease-in-out;
 }
 
@@ -43,6 +43,17 @@
 .devtools-sidebar-tabs {
   /* Prevent some children that should be hidden from remaining visible as this is shrunk (Bug 971959) */
   position: relative;
+}
+
+@media (min-width: 701px) {
+  .devtools-responsive-container .generic-toggled-pane {
+    /* To hide generic-toggled-pane, negative margins are applied dynamically.
+     * In the default horizontal layout, the pane is on the side and should be
+     * hidden using negative -moz-margin-end only.
+     */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
 }
 
 @media (max-width: 700px) {
@@ -72,6 +83,14 @@
   .devtools-responsive-container > .devtools-sidebar-tabs {
     min-height: 35vh;
     max-height: 75vh;
+  }
+
+  .devtools-responsive-container .generic-toggled-pane {
+    /* To hide generic-toggled-pane, negative margins are applied dynamically.
+     * If a vertical layout, the pane is on the bottom and should be hidden
+     * using negative bottom margin only.
+     */
+    -moz-margin-end: 0 !important;
   }
 }
 
