@@ -199,8 +199,7 @@ cert_CopyOneGeneralName(PLArenaPool *arena, CERTGeneralName *dest,
     }
     if (rv != SECSuccess) {
         PORT_ArenaRelease(arena, mark);
-    }
-    else {
+    } else {
         PORT_ArenaUnmark(arena, mark);
     }
     return rv;
@@ -218,8 +217,7 @@ CERT_DestroyGeneralNameList(CERTGeneralNameList *list)
             PORT_FreeArena(list->arena, PR_FALSE);
             PZ_Unlock(lock);
             PZ_DestroyLock(lock);
-        }
-        else {
+        } else {
             PZ_Unlock(lock);
         }
     }
@@ -438,8 +436,7 @@ CERT_DecodeGeneralName(PLArenaPool *reqArena, SECItem *encodedName,
         genName = CERT_NewGeneralName(reqArena, genNameType);
         if (!genName)
             goto loser;
-    }
-    else {
+    } else {
         genName->type = genNameType;
         genName->l.prev = genName->l.next = &genName->l;
     }
@@ -706,8 +703,7 @@ cert_DecodeNameConstraintSubTree(PLArenaPool *arena, SECItem **subTree,
         }
         if (first == NULL) {
             first = current;
-        }
-        else {
+        } else {
             current->l.prev = &(last->l);
             last->l.next = &(current->l);
         }
@@ -816,8 +812,7 @@ CERT_CopyGeneralName(PLArenaPool *arena, CERTGeneralName *dest,
                 destHead->l.prev = &temp->l;
                 dest->l.next = &temp->l;
                 dest = temp;
-            }
-            else {
+            } else {
                 dest = CERT_GetNextGeneralName(dest);
             }
         }
@@ -889,11 +884,9 @@ cert_CombineNamesLists(CERTGeneralName *list1, CERTGeneralName *list2)
 
     if (list1 == NULL) {
         return list2;
-    }
-    else if (list2 == NULL) {
+    } else if (list2 == NULL) {
         return list1;
-    }
-    else {
+    } else {
         begin1 = &list1->l;
         begin2 = &list2->l;
         end1 = list1->l.prev;
@@ -917,11 +910,9 @@ cert_CombineConstraintsLists(CERTNameConstraint *list1,
 
     if (list1 == NULL) {
         return list2;
-    }
-    else if (list2 == NULL) {
+    } else if (list2 == NULL) {
         return list1;
-    }
-    else {
+    } else {
         begin1 = &list1->l;
         begin2 = &list2->l;
         end1 = list1->l.prev;
@@ -1548,16 +1539,14 @@ CERT_AddNameConstraintByGeneralName(PLArenaPool *arena,
     if (first == NULL) {
         *constraints = current;
         PR_INIT_CLIST(&current->l);
-    }
-    else {
+    } else {
         PR_INSERT_BEFORE(&current->l, &first->l);
     }
 
 done:
     if (rv == SECFailure) {
         PORT_ArenaRelease(arena, mark);
-    }
-    else {
+    } else {
         PORT_ArenaUnmark(arena, mark);
     }
     return rv;
@@ -1694,8 +1683,7 @@ CERT_FindNameConstraintsExten(PLArenaPool *arena, CERTCertificate *cert,
 
     if (rv == SECFailure) {
         PORT_ArenaRelease(arena, mark);
-    }
-    else {
+    } else {
         PORT_ArenaUnmark(arena, mark);
     }
 

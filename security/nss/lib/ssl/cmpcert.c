@@ -52,8 +52,7 @@ NSS_CmpCertChainWCANames(CERTCertificate *cert, CERTDistNames *caNames)
         if (rv == SECSuccess) {
             compatIssuerName.data = &issuerName.data[headerlen];
             compatIssuerName.len = issuerName.len - headerlen;
-        }
-        else {
+        } else {
             compatIssuerName.data = NULL;
             compatIssuerName.len = 0;
         }
@@ -64,8 +63,7 @@ NSS_CmpCertChainWCANames(CERTCertificate *cert, CERTDistNames *caNames)
                 rv = SECSuccess;
                 CERT_DestroyCertificate(curcert);
                 goto done;
-            }
-            else if (SECITEM_CompareItem(&compatIssuerName, caname) == SECEqual) {
+            } else if (SECITEM_CompareItem(&compatIssuerName, caname) == SECEqual) {
                 rv = SECSuccess;
                 CERT_DestroyCertificate(curcert);
                 goto done;
@@ -79,8 +77,7 @@ NSS_CmpCertChainWCANames(CERTCertificate *cert, CERTDistNames *caNames)
                                           &curcert->derIssuer);
             CERT_DestroyCertificate(oldcert);
             depth++;
-        }
-        else {
+        } else {
             CERT_DestroyCertificate(curcert);
             curcert = NULL;
         }

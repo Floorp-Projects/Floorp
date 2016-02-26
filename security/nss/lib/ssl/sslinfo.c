@@ -30,7 +30,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     /* Check if we can properly return the length of data written and that
      * we're not asked to return more information than we know how to provide.
      */
-    if (!info || len < sizeof inf.length || len > sizeof inf) { 
+    if (!info || len < sizeof inf.length || len > sizeof inf) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -54,8 +54,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             inf.cipherSuite = ss->sec.cipherType | 0xff00;
             inf.compressionMethod = ssl_compression_null;
             inf.compressionMethodName = "N/A";
-        }
-        else if (ss->ssl3.initialized) { /* SSL3 and TLS */
+        } else if (ss->ssl3.initialized) { /* SSL3 and TLS */
             ssl_GetSpecReadLock(ss);
             /* XXX  The cipher suite should be in the specs and this
              * function should get it from cwSpec rather than from the "hs".
@@ -81,8 +80,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
                 inf.sessionIDLength = SSL2_SESSIONID_BYTES;
                 memcpy(inf.sessionID, sid->u.ssl2.sessionID,
                        SSL2_SESSIONID_BYTES);
-            }
-            else {
+            } else {
                 unsigned int sidLen = sid->u.ssl3.sessionIDLength;
                 sidLen = PR_MIN(sidLen, sizeof inf.sessionID);
                 inf.sessionIDLength = sidLen;
@@ -442,8 +440,7 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
     if (!ss->ssl3.cwSpec->master_secret && !ss->ssl3.cwSpec->msItem.len) {
         PORT_SetError(SSL_ERROR_HANDSHAKE_NOT_COMPLETED);
         rv = SECFailure;
-    }
-    else {
+    } else {
         rv = ssl3_TLSPRFWithMasterSecret(ss->ssl3.cwSpec, label, labelLen, val,
                                          valLen, out, outLen);
     }

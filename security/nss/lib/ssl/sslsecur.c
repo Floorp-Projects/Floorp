@@ -221,8 +221,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     if (asServer) {
         ss->handshake = ssl2_BeginServerHandshake;
         ss->handshaking = sslHandshakingAsServer;
-    }
-    else {
+    } else {
         ss->handshake = ssl2_BeginClientHandshake;
         ss->handshaking = sslHandshakingAsClient;
     }
@@ -283,8 +282,7 @@ SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache)
     if (ss->version < SSL_LIBRARY_VERSION_3_0) {
         PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
         rv = SECFailure;
-    }
-    else {
+    } else {
         ssl_GetSSL3HandshakeLock(ss);
         rv = ssl3_RedoHandshake(ss, flushCache); /* force full handshake. */
         ssl_ReleaseSSL3HandshakeLock(ss);
@@ -462,18 +460,14 @@ SSL_ForceHandshake(PRFileDesc *fd)
         ssl_ReleaseRecvBufLock(ss);
         if (gatherResult > 0) {
             rv = SECSuccess;
-        }
-        else if (gatherResult == 0) {
+        } else if (gatherResult == 0) {
             PORT_SetError(PR_END_OF_FILE_ERROR);
-        }
-        else if (gatherResult == SECWouldBlock) {
+        } else if (gatherResult == SECWouldBlock) {
             PORT_SetError(PR_WOULD_BLOCK_ERROR);
         }
-    }
-    else if (!ss->firstHsDone) {
+    } else if (!ss->firstHsDone) {
         rv = ssl_Do1stHandshake(ss);
-    }
-    else {
+    } else {
         /* tried to force handshake on an SSL 2 socket that has
         ** already completed the handshake. */
         rv = SECSuccess; /* just pretend we did it. */
@@ -512,8 +506,7 @@ sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
         unsigned char *newBuf;
         if (b->buf) {
             newBuf = (unsigned char *)PORT_Realloc(b->buf, newLen);
-        }
-        else {
+        } else {
             newBuf = (unsigned char *)PORT_Alloc(newLen);
         }
         if (!newBuf) {
@@ -622,8 +615,7 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
         if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
             /* Wait for application data to arrive.  */
             rv = ssl3_GatherAppDataRecord(ss, 0);
-        }
-        else {
+        } else {
             /* See if we have a complete record */
             rv = ssl2_GatherRecord(ss, 0);
         }
@@ -644,8 +636,7 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
             ** Gather record is blocked waiting for more record data to
             ** arrive. Try to process what we have already received
             */
-        }
-        else {
+        } else {
             /* Gather record has finished getting a complete record */
         }
 
@@ -995,8 +986,7 @@ ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
         ss->sec.hashcx = os->sec.hash->clone(os->sec.hashcx);
         if (os->sec.hashcx && !ss->sec.hashcx)
             goto loser;
-    }
-    else {
+    } else {
         ss->sec.hash = NULL;
         ss->sec.hashcx = NULL;
     }
@@ -1046,8 +1036,7 @@ ssl_ResetSecurityInfo(sslSecurityInfo *sec, PRBool doMemset)
         (*sec->destroy)(sec->writecx, PR_TRUE);
         sec->readcx = NULL;
         sec->writecx = NULL;
-    }
-    else {
+    } else {
         PORT_Assert(sec->readcx == 0);
         PORT_Assert(sec->writecx == 0);
     }
@@ -1104,8 +1093,7 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
     if (ss->opt.handshakeAsServer) {
         ss->securityHandshake = ssl2_BeginServerHandshake;
         ss->handshaking = sslHandshakingAsServer;
-    }
-    else {
+    } else {
         ss->securityHandshake = ssl2_BeginClientHandshake;
         ss->handshaking = sslHandshakingAsClient;
     }
@@ -1114,8 +1102,7 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
     rv = osfd->methods->connect(osfd, sa, ss->cTimeout);
     if (rv == PR_SUCCESS) {
         ss->TCPconnected = 1;
-    }
-    else {
+    } else {
         int err = PR_GetError();
         SSL_DBG(("%d: SSL[%d]: connect failed, errno=%d",
                  SSL_GETPID(), ss->fd, err));
@@ -1357,8 +1344,7 @@ done:
     if (rv < 0) {
         SSL_TRC(2, ("%d: SSL[%d]: SecureSend: returning %d count, error %d",
                     SSL_GETPID(), ss->fd, rv, PORT_GetError()));
-    }
-    else {
+    } else {
         SSL_TRC(2, ("%d: SSL[%d]: SecureSend: returning %d count",
                     SSL_GETPID(), ss->fd, rv));
     }
@@ -1519,8 +1505,7 @@ SSL_GetSessionID(PRFileDesc *fd)
                     item->len = SSL2_SESSIONID_BYTES;
                     item->data = (unsigned char *)PORT_Alloc(item->len);
                     PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
-                }
-                else {
+                } else {
                     item->len = sid->u.ssl3.sessionIDLength;
                     item->data = (unsigned char *)PORT_Alloc(item->len);
                     PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
@@ -1591,12 +1576,10 @@ SSL_AuthCertificateComplete(PRFileDesc *fd, PRErrorCode error)
     if (!ss->ssl3.initialized) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
-    }
-    else if (ss->version < SSL_LIBRARY_VERSION_3_0) {
+    } else if (ss->version < SSL_LIBRARY_VERSION_3_0) {
         PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
         rv = SECFailure;
-    }
-    else {
+    } else {
         rv = ssl3_AuthCertificateComplete(ss, error);
     }
 

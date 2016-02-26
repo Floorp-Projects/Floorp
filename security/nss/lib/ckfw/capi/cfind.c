@@ -109,8 +109,7 @@ ckcapi_attrmatch(
 
     if (PR_TRUE == prb) {
         return CK_TRUE;
-    }
-    else {
+    } else {
         return CK_FALSE;
     }
 }
@@ -135,25 +134,23 @@ ckcapi_match(
 
 #define CKAPI_ITEM_CHUNK 20
 
-#define PUT_Object(obj, err)                                                  \
-    {                                                                         \
-        if (count >= size) {                                                  \
-            *listp = *listp ?                                                 \
-                            nss_ZREALLOCARRAY(*listp, ckcapiInternalObject *, \
-                                              (size +                         \
-                                               CKAPI_ITEM_CHUNK))             \
-                            :                                                 \
-                            nss_ZNEWARRAY(NULL, ckcapiInternalObject *,       \
-                                          (size +                             \
-                                           CKAPI_ITEM_CHUNK));                \
-            if ((ckcapiInternalObject **)NULL == *listp) {                    \
-                err = CKR_HOST_MEMORY;                                        \
-                goto loser;                                                   \
-            }                                                                 \
-            size += CKAPI_ITEM_CHUNK;                                         \
-        }                                                                     \
-        (*listp)[count] = (obj);                                              \
-        count++;                                                              \
+#define PUT_Object(obj, err)                                                    \
+    {                                                                           \
+        if (count >= size) {                                                    \
+            *listp = *listp ? nss_ZREALLOCARRAY(*listp, ckcapiInternalObject *, \
+                                                (size +                         \
+                                                 CKAPI_ITEM_CHUNK))             \
+                            : nss_ZNEWARRAY(NULL, ckcapiInternalObject *,       \
+                                            (size +                             \
+                                             CKAPI_ITEM_CHUNK));                \
+            if ((ckcapiInternalObject **)NULL == *listp) {                      \
+                err = CKR_HOST_MEMORY;                                          \
+                goto loser;                                                     \
+            }                                                                   \
+            size += CKAPI_ITEM_CHUNK;                                           \
+        }                                                                       \
+        (*listp)[count] = (obj);                                                \
+        count++;                                                                \
     }
 
 /*
@@ -338,8 +335,7 @@ collect_class(
                                                             1) != 0)) {
                         continue;
                     }
-                }
-                else {
+                } else {
                     int reason =
                         GetLastError();
                     /* we only care if it exists, we don't really need to fetch it yet */
@@ -375,8 +371,7 @@ collect_class(
             next->u.cert.certStore = storeStr;
             PUT_Object(next, *pError);
             next = NULL; /* need to allocate a new one now */
-        }
-        else {
+        } else {
             /* don't cache the values we just loaded */
             memset(&next->u.cert, 0, sizeof(next->u.cert));
         }

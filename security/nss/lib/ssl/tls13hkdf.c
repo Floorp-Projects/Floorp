@@ -60,8 +60,7 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
         params.pSalt = salt->data;
         params.ulSaltLen = salt->len;
         PORT_Assert(salt->len > 0);
-    }
-    else {
+    } else {
         /* Per documentation for CKM_NSS_HKDF_*:
          *
          *  If the optional salt is given, it is used; otherwise, the salt is
@@ -104,8 +103,7 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
 
     if (handshakeHash) {
         PORT_Assert(handshakeHashLen == kTlsHkdfInfo[baseHash].hashSize);
-    }
-    else {
+    } else {
         PORT_Assert(!handshakeHashLen);
     }
 
@@ -185,6 +183,10 @@ tls13_HkdfExpandLabelRaw(PK11SymKey *prk, SSLHashType baseHash,
                                label, labelLen,
                                kTlsHkdfInfo[baseHash].pkcs11Mech, outputLen,
                                &derived);
+    if (rv != SECSuccess || !derived) {
+        goto abort;
+    }
+
     rv = PK11_ExtractKeyValue(derived);
     if (rv != SECSuccess) {
         goto abort;

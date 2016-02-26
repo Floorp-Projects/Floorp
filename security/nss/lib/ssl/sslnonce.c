@@ -174,8 +174,7 @@ ssl_DestroySID(sslSessionID *sid)
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
         SECITEM_ZfreeItem(&sid->u.ssl2.masterKey, PR_FALSE);
         SECITEM_ZfreeItem(&sid->u.ssl2.cipherArg, PR_FALSE);
-    }
-    else {
+    } else {
         if (sid->u.ssl3.locked.sessionTicket.ticket.data) {
             SECITEM_FreeItem(&sid->u.ssl3.locked.sessionTicket.ticket,
                              PR_FALSE);
@@ -277,28 +276,26 @@ ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID,
             SSL_TRC(7, ("SSL: lookup1, throwing sid out, age=%d refs=%d",
                         now - sid->creationTime, sid->references));
 
-            *sidp = sid->next;           /* delink it from the list. */
-            sid->cached = invalid_cache; /* mark not on list. */
-            ssl_FreeLockedSID(sid);      /* drop ref count, free. */
-        }
-        else if (!memcmp(&sid->addr, addr, sizeof(PRIPv6Addr)) && /* server IP addr matches */
-                 (sid->port == port) &&                           /* server port matches */
-                 /* proxy (peerID) matches */
-                 (((peerID == NULL) && (sid->peerID == NULL)) ||
-                  ((peerID != NULL) && (sid->peerID != NULL) &&
-                   PORT_Strcmp(sid->peerID, peerID) == 0)) &&
-                 /* is cacheable */
-                 (sid->version < SSL_LIBRARY_VERSION_3_0 ||
-                  sid->u.ssl3.keys.resumable) &&
-                 /* server hostname matches. */
-                 (sid->urlSvrName != NULL) &&
-                 (0 == PORT_Strcmp(urlSvrName, sid->urlSvrName))) {
+            *sidp = sid->next;                                      /* delink it from the list. */
+            sid->cached = invalid_cache;                            /* mark not on list. */
+            ssl_FreeLockedSID(sid);                                 /* drop ref count, free. */
+        } else if (!memcmp(&sid->addr, addr, sizeof(PRIPv6Addr)) && /* server IP addr matches */
+                   (sid->port == port) &&                           /* server port matches */
+                   /* proxy (peerID) matches */
+                   (((peerID == NULL) && (sid->peerID == NULL)) ||
+                    ((peerID != NULL) && (sid->peerID != NULL) &&
+                     PORT_Strcmp(sid->peerID, peerID) == 0)) &&
+                   /* is cacheable */
+                   (sid->version < SSL_LIBRARY_VERSION_3_0 ||
+                    sid->u.ssl3.keys.resumable) &&
+                   /* server hostname matches. */
+                   (sid->urlSvrName != NULL) &&
+                   (0 == PORT_Strcmp(urlSvrName, sid->urlSvrName))) {
             /* Hit */
             sid->lastAccessTime = now;
             sid->references++;
             break;
-        }
-        else {
+        } else {
             sidp = &sid->next;
         }
     }
@@ -338,8 +335,7 @@ CacheSID(sslSessionID *sid)
                       sid->u.ssl2.masterKey.data, sid->u.ssl2.masterKey.len));
         PRINT_BUF(8, (0, "cipherArg:",
                       sid->u.ssl2.cipherArg.data, sid->u.ssl2.cipherArg.len));
-    }
-    else {
+    } else {
         if (sid->u.ssl3.sessionIDLength == 0 &&
             sid->u.ssl3.locked.sessionTicket.ticket.data == NULL)
             return;
@@ -447,8 +443,7 @@ ssl_ChooseSessionIDProcs(sslSecurityInfo *sec)
     if (sec->isServer) {
         sec->cache = ssl_sid_cache;
         sec->uncache = ssl_sid_uncache;
-    }
-    else {
+    } else {
         sec->cache = CacheSID;
         sec->uncache = LockAndUncacheSID;
     }
