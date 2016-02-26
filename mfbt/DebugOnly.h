@@ -24,18 +24,19 @@ namespace mozilla {
  *   DebugOnly<bool> check = func();
  *   MOZ_ASSERT(check);
  *
- * more concisely than declaring |check| conditional on #ifdef DEBUG, but also
- * without allocating storage space for |check| in release builds.
+ * more concisely than declaring |check| conditional on #ifdef DEBUG.
  *
  * DebugOnly instances can only be coerced to T in debug builds.  In release
  * builds they don't have a value, so type coercion is not well defined.
  *
- * NOTE! DebugOnly instances still take up one byte of space, plus padding, even
- * in optimized, non-DEBUG builds.  Don't use DebugOnly for struct/class members
- * unless that really doesn't matter to you.
+ * NOTE: DebugOnly instances still take up one byte of space, plus padding, even
+ * in optimized, non-DEBUG builds (see bug 1253094 comment 37 for more info).
+ * For this reason the class is MOZ_STACK_CLASS to prevent consumers using
+ * DebugOnly for struct/class members and unwittingly inflating the size of
+ * their objects in release builds.
  */
 template<typename T>
-class DebugOnly
+class MOZ_STACK_CLASS DebugOnly
 {
 public:
 #ifdef DEBUG
