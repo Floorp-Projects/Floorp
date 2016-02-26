@@ -91,38 +91,6 @@ nsScreenGtk :: GetDPIScale()
   return dpiScale;
 }
 
-NS_IMETHODIMP
-nsScreenGtk :: GetRectDisplayPix(int32_t *outLeft,  int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
-{
-  int32_t left, top, width, height;
-
-  GetRect(&left, &top, &width, &height);
-
-  double scaleFactor = 1.0 / GetDPIScale();
-  *outLeft = NSToIntRound(left * scaleFactor);
-  *outTop = NSToIntRound(top * scaleFactor);
-  *outWidth = NSToIntRound(width * scaleFactor);
-  *outHeight = NSToIntRound(height * scaleFactor);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScreenGtk :: GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,  int32_t *outWidth, int32_t *outHeight)
-{
-  int32_t left, top, width, height;
-
-  GetAvailRect(&left, &top, &width, &height);
-
-  double scaleFactor = 1.0 / GetDPIScale();
-  *outLeft = NSToIntRound(left * scaleFactor);
-  *outTop = NSToIntRound(top * scaleFactor);
-  *outWidth = NSToIntRound(width * scaleFactor);
-  *outHeight = NSToIntRound(height * scaleFactor);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsScreenGtk :: GetPixelDepth(int32_t *aPixelDepth)
 {
@@ -133,7 +101,6 @@ nsScreenGtk :: GetPixelDepth(int32_t *aPixelDepth)
 
 } // GetPixelDepth
 
-
 NS_IMETHODIMP 
 nsScreenGtk :: GetColorDepth(int32_t *aColorDepth)
 {
@@ -141,6 +108,12 @@ nsScreenGtk :: GetColorDepth(int32_t *aColorDepth)
 
 } // GetColorDepth
 
+NS_IMETHODIMP
+nsScreenGtk::GetDefaultCSSScaleFactor(double* aScaleFactor)
+{
+  *aScaleFactor = GetDPIScale();
+  return NS_OK;
+}
 
 void
 nsScreenGtk :: Init (GdkWindow *aRootWindow)
