@@ -868,6 +868,8 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   }
   if (NS_FAILED(rv) || !retval) {  //  was || user == '\0' || pass == '\0'
     g_mount_operation_reply(mount_op, G_MOUNT_OPERATION_ABORTED);
+    free(user);
+    free(pass);
     return;
   }
   /* GIO should accept UTF8 */
