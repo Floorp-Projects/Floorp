@@ -32,53 +32,62 @@ add_task(function* themeRegistration() {
 });
 
 add_task(function* themeInOptionsPanel() {
-  let panel = toolbox.getCurrentPanel();
   let panelWin = toolbox.getCurrentPanel().panelWin;
   let doc = panelWin.frameElement.contentDocument;
-  let themeOption = doc.querySelector("#devtools-theme-box > radio[value=test-theme]");
+  let themeBox = doc.getElementById("devtools-theme-box");
+  let testThemeOption = themeBox.querySelector(
+    "input[type=radio][value=test-theme]");
 
-  ok(themeOption, "new theme exists in the Options panel");
+  ok(testThemeOption, "new theme exists in the Options panel");
 
-  let testThemeOption = doc.querySelector("#devtools-theme-box > radio[value=test-theme]");
-  let lightThemeOption = doc.querySelector("#devtools-theme-box > radio[value=light]");
+  let lightThemeOption = themeBox.querySelector(
+    "input[type=radio][value=light]");
 
-  let color = panelWin.getComputedStyle(testThemeOption).color;
+  let color = panelWin.getComputedStyle(themeBox).color;
   isnot(color, "rgb(255, 0, 0)", "style unapplied");
+
+  let onThemeSwithComplete = once(panelWin, "theme-switch-complete");
 
   // Select test theme.
   testThemeOption.click();
 
   info("Waiting for theme to finish loading");
-  yield once(panelWin, "theme-switch-complete");
+  yield onThemeSwithComplete;
 
-  color = panelWin.getComputedStyle(testThemeOption).color;
+  color = panelWin.getComputedStyle(themeBox).color;
   is(color, "rgb(255, 0, 0)", "style applied");
+
+  onThemeSwithComplete = once(panelWin, "theme-switch-complete");
 
   // Select light theme
   lightThemeOption.click();
 
   info("Waiting for theme to finish loading");
-  yield once(panelWin, "theme-switch-complete");
+  yield onThemeSwithComplete;
 
-  color = panelWin.getComputedStyle(testThemeOption).color;
+  color = panelWin.getComputedStyle(themeBox).color;
   isnot(color, "rgb(255, 0, 0)", "style unapplied");
 
+  onThemeSwithComplete = once(panelWin, "theme-switch-complete");
   // Select test theme again.
   testThemeOption.click();
+  yield onThemeSwithComplete;
 });
 
 add_task(function* themeUnregistration() {
+  let onUnRegisteredTheme = once(gDevTools, "theme-unregistered");
   gDevTools.unregisterTheme("test-theme");
+  yield onUnRegisteredTheme;
 
   ok(!gDevTools.getThemeDefinitionMap().has("test-theme"), "theme removed from map");
 
   let panelWin = toolbox.getCurrentPanel().panelWin;
   let doc = panelWin.frameElement.contentDocument;
-  let themeBox = doc.querySelector("#devtools-theme-box");
+  let themeBox = doc.getElementById("devtools-theme-box");
 
   // The default light theme must be selected now.
-  is(themeBox.selectedItem, themeBox.querySelector("[value=light]"),
-    "theme light must be selected");
+  is(themeBox.querySelector("#devtools-theme-box [value=light]").checked, true,
+    "light theme must be selected");
 });
 
 add_task(function* cleanup() {

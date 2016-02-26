@@ -57,7 +57,7 @@ function testSelectTool(aToolbox) {
 }
 
 function testPreferenceAndUIStateIsConsistent() {
-  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
+  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box input[type=checkbox]")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   toolboxButtonNodes.push(doc.getElementById("command-button-frames"));
   let toggleableTools = toolbox.toolboxButtons;
@@ -77,7 +77,7 @@ function testPreferenceAndUIStateIsConsistent() {
 }
 
 function testToggleToolboxButtons() {
-  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
+  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box input[type=checkbox]")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let toggleableTools = toolbox.toolboxButtons;
 
@@ -99,7 +99,7 @@ function testToggleToolboxButtons() {
     is (matchedButtons[0], tool.button,
       "DOM buttons should match for: " + id);
 
-    is (matchedCheckboxes[0].getAttribute("label"), tool.label,
+    is (matchedCheckboxes[0].nextSibling.textContent, tool.label,
       "The label for checkbox matches the tool definition.");
     is (matchedButtons[0].getAttribute("tooltiptext"), tool.label,
       "The tooltip for button matches the tool definition.");
@@ -117,7 +117,7 @@ function testToggleToolboxButtons() {
     let isVisible = getBoolPref(tool.visibilityswitch);
 
     testPreferenceAndUIStateIsConsistent();
-    toggleButton(node);
+    node.click();
     testPreferenceAndUIStateIsConsistent();
 
     let isVisibleAfterClick = getBoolPref(tool.visibilityswitch);
@@ -131,11 +131,6 @@ function testToggleToolboxButtons() {
 
 function getBoolPref(key) {
   return Services.prefs.getBoolPref(key);
-}
-
-function toggleButton(node) {
-  node.scrollIntoView();
-  EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
 }
 
 function cleanup() {
