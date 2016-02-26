@@ -31,7 +31,9 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
                             BASE + "/redirection.sjs",
-                            BASE + "/xhr_resource"];
+                            BASE + "/dummy_page.html",
+                            BASE + "/xhr_resource",
+                            "data:text/plain,webRequestTest"];
 
 const expected_beforeSendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_style_good.css",
@@ -53,7 +55,7 @@ const expected_sendHeaders = expected_beforeSendHeaders.filter(u => !/_redirect\
 const expected_redirect = expected_beforeSendHeaders.filter(u => /_redirect\./.test(u))
                             .concat(BASE + "/redirection.sjs");
 
-const expected_complete = [BASE + "/file_WebRequest_page1.html",
+const expected_response = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/file_style_good.css",
                            BASE + "/file_image_good.png",
                            BASE + "/file_script_good.js",
@@ -62,6 +64,8 @@ const expected_complete = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/nonexistent_script_url.js",
                            BASE + "/dummy_page.html",
                            BASE + "/xhr_resource"];
+
+const expected_complete = expected_response.concat("data:text/plain,webRequestTest");
 
 function removeDupes(list) {
   let j = 0;
@@ -85,10 +89,12 @@ function compareLists(list1, list2, kind) {
 }
 
 function backgroundScript() {
-  const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
-
   let checkCompleted = true;
   let savedTabId = -1;
+
+  function shouldRecord(url) {
+    return url.startsWith(BASE) || /^data:.*\bwebRequestTest\b/.test(url);
+  }
 
   function checkType(details) {
     let expected_type = "???";
@@ -100,12 +106,22 @@ function backgroundScript() {
       expected_type = "script";
     } else if (details.url.indexOf("page1") != -1) {
       expected_type = "main_frame";
-    } else if (/page2|redirection|dummy_page/.test(details.url)) {
+    } else if (/page2|redirection|dummy_page|data:text\/(?:plain|html),/.test(details.url)) {
       expected_type = "sub_frame";
     } else if (details.url.indexOf("xhr") != -1) {
       expected_type = "xmlhttprequest";
     }
     browser.test.assertEq(details.type, expected_type, "resource type is correct");
+  }
+
+  let requestIDs = new Map();
+  let idDisposalEvents = new Set(["completed", "error", "redirect"]);
+  function checkRequestId(details, event = "unknown") {
+    let ids = requestIDs.get(details.url);
+    browser.test.assertTrue(ids && ids.has(details.requestId), `correct requestId for ${details.url} (${details.requestId} in [${ids && [...ids].join(", ")}])`);
+    if (ids && idDisposalEvents.has(event)) {
+      ids.delete(details.requestId);
+    }
   }
 
   let frameIDs = new Map();
@@ -119,13 +135,21 @@ function backgroundScript() {
 
   function checkResourceType(type) {
     let key = type.toUpperCase();
-    browser.test.assertTrue(key in browser.webRequest.ResourceType);
+    browser.test.assertTrue(key in browser.webRequest.ResourceType, `valid resource type ${key}`);
   }
 
   function onBeforeRequest(details) {
-    browser.test.log(`onBeforeRequest ${details.url}`);
+    browser.test.log(`onBeforeRequest ${details.requestId} ${details.url}`);
+
+    browser.test.assertTrue(details.requestId > 0, `valid requestId ${details.requestId}`);
+    let ids = requestIDs.get(details.url);
+    if (ids) {
+      ids.add(details.requestId);
+    } else {
+      requestIDs.set(details.url, new Set([details.requestId]));
+    }
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    if (shouldRecord(details.url)) {
       recorded.requested.push(details.url);
 
       if (savedTabId == -1) {
@@ -155,8 +179,9 @@ function backgroundScript() {
 
   function onBeforeSendHeaders(details) {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
+    checkRequestId(details);
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    if (shouldRecord(details.url)) {
       recorded.beforeSendHeaders.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
@@ -173,8 +198,9 @@ function backgroundScript() {
 
   function onBeforeRedirect(details) {
     browser.test.log(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
+    checkRequestId(details, "redirect");
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    if (shouldRecord(details.url)) {
       recorded.beforeRedirect.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
@@ -192,8 +218,10 @@ function backgroundScript() {
   }
 
   function onRecord(kind, details) {
+    browser.test.log(`${kind} ${details.url}`);
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    checkRequestId(details, kind);
+    if (shouldRecord(details.url)) {
       recorded[kind].push(details.url);
     }
   }
@@ -209,7 +237,10 @@ function backgroundScript() {
     // When resources are cached, the ip property is not present,
     // so only check for the ip property the first time around.
     if (checkCompleted && !completedUrls[kind].has(details.url)) {
-      browser.test.assertEq(details.ip, "127.0.0.1", "correct ip");
+      // We can only tell IPs for HTTP requests.
+      if (/^https?:/.test(details.url)) {
+        browser.test.assertEq(details.ip, "127.0.0.1", "correct ip");
+      }
       completedUrls[kind].add(details.url);
     }
   }
@@ -243,7 +274,7 @@ function* test_once(skipCompleted) {
         "webRequestBlocking",
       ],
     },
-    background: "(" + backgroundScript.toString() + ")()",
+    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript.toString()})()`,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -297,7 +328,7 @@ function* test_once(skipCompleted) {
   compareLists(recorded.beforeSendHeaders, expected_beforeSendHeaders, "beforeSendHeaders");
   compareLists(recorded.sendHeaders, expected_sendHeaders, "sendHeaders");
   compareLists(recorded.beforeRedirect, expected_redirect, "beforeRedirect");
-  compareLists(recorded.responseStarted, expected_complete, "responseStarted");
+  compareLists(recorded.responseStarted, expected_response, "responseStarted");
   compareLists(recorded.completed, expected_complete, "completed");
 
   yield extension.unload();
