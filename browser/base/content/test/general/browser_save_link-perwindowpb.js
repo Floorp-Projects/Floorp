@@ -35,7 +35,7 @@ function triggerSave(aWindow, aCallback) {
                                          { type: "contextmenu", button: 2 },
                                          testBrowser.contentWindow);
       info("right clicked!");
-    }, testBrowser.contentWindow);
+    }, testBrowser);
   }, false);
 
   function contextMenuOpened(event) {
