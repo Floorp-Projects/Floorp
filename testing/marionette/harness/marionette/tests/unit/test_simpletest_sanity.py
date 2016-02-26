@@ -5,8 +5,13 @@
 from marionette import MarionetteTestCase
 
 class SimpletestSanityTest(MarionetteTestCase):
-
     callFinish = "return finish();"
+
+    def run_sync(self, test):
+        return self.marionette.execute_js_script(test, async=False)
+
+    def run_async(self, test):
+        return self.marionette.execute_js_script(test)
 
     def test_is(self):
         def runtests():
@@ -15,16 +20,16 @@ class SimpletestSanityTest(MarionetteTestCase):
             sentPass1 = "is(true, true, 'isTest3');" + self.callFinish
             sentPass2 = "is(true, true, 'isTest4');" + self.callFinish
 
-            self.assertEqual(1, len(self.marionette.execute_script(sentFail1)["failures"]))
-            self.assertEqual(0, self.marionette.execute_script(sentFail2)["passed"])
-            self.assertEqual(1, self.marionette.execute_script(sentPass1)["passed"])
-            self.assertEqual(0, len(self.marionette.execute_script(sentPass2)["failures"]))
+            self.assertEqual(1, len(self.run_sync(sentFail1)["failures"]))
+            self.assertEqual(0, self.run_sync(sentFail2)["passed"])
+            self.assertEqual(1, self.run_sync(sentPass1)["passed"])
+            self.assertEqual(0, len(self.run_sync(sentPass2)["failures"]))
 
             self.marionette.set_script_timeout(1000)
-            self.assertEqual(1, len(self.marionette.execute_async_script(sentFail1)["failures"]))
-            self.assertEqual(0, self.marionette.execute_async_script(sentFail2)["passed"])
-            self.assertEqual(1, self.marionette.execute_async_script(sentPass1)["passed"])
-            self.assertEqual(0, len(self.marionette.execute_async_script(sentPass2)["failures"]))
+            self.assertEqual(1, len(self.run_async(sentFail1)["failures"]))
+            self.assertEqual(0, self.run_async(sentFail2)["passed"])
+            self.assertEqual(1, self.run_async(sentPass1)["passed"])
+            self.assertEqual(0, len(self.run_async(sentPass2)["failures"]))
 
         self.marionette.set_context("content")
         runtests()
@@ -38,16 +43,16 @@ class SimpletestSanityTest(MarionetteTestCase):
            sentPass1 = "isnot(true, false, 'isnotTest1');" + self.callFinish
            sentPass2 = "isnot(true, false, 'isnotTest2');" + self.callFinish
 
-           self.assertEqual(1, len(self.marionette.execute_script(sentFail1)["failures"]));
-           self.assertEqual(0, self.marionette.execute_script(sentFail2)["passed"]);
-           self.assertEqual(0, len(self.marionette.execute_script(sentPass1)["failures"]));
-           self.assertEqual(1, self.marionette.execute_script(sentPass2)["passed"]);
+           self.assertEqual(1, len(self.run_sync(sentFail1)["failures"]));
+           self.assertEqual(0, self.run_sync(sentFail2)["passed"]);
+           self.assertEqual(0, len(self.run_sync(sentPass1)["failures"]));
+           self.assertEqual(1, self.run_sync(sentPass2)["passed"]);
 
            self.marionette.set_script_timeout(1000)
-           self.assertEqual(1, len(self.marionette.execute_async_script(sentFail1)["failures"]));
-           self.assertEqual(0, self.marionette.execute_async_script(sentFail2)["passed"]);
-           self.assertEqual(0, len(self.marionette.execute_async_script(sentPass1)["failures"]));
-           self.assertEqual(1, self.marionette.execute_async_script(sentPass2)["passed"]);
+           self.assertEqual(1, len(self.run_async(sentFail1)["failures"]));
+           self.assertEqual(0, self.run_async(sentFail2)["passed"]);
+           self.assertEqual(0, len(self.run_async(sentPass1)["failures"]));
+           self.assertEqual(1, self.run_async(sentPass2)["passed"]);
 
         self.marionette.set_context("content")
         runtests()
@@ -61,16 +66,16 @@ class SimpletestSanityTest(MarionetteTestCase):
             sentPass1 = "ok(1==1, 'testOk3');" + self.callFinish
             sentPass2 = "ok(1==1, 'testOk4');" + self.callFinish
 
-            self.assertEqual(1, len(self.marionette.execute_script(sentFail1)["failures"]));
-            self.assertEqual(0, self.marionette.execute_script(sentFail2)["passed"]);
-            self.assertEqual(0, len(self.marionette.execute_script(sentPass1)["failures"]));
-            self.assertEqual(1, self.marionette.execute_script(sentPass2)["passed"]);
+            self.assertEqual(1, len(self.run_sync(sentFail1)["failures"]));
+            self.assertEqual(0, self.run_sync(sentFail2)["passed"]);
+            self.assertEqual(0, len(self.run_sync(sentPass1)["failures"]));
+            self.assertEqual(1, self.run_sync(sentPass2)["passed"]);
 
             self.marionette.set_script_timeout(1000)
-            self.assertEqual(1, len(self.marionette.execute_async_script(sentFail1)["failures"]));
-            self.assertEqual(0, self.marionette.execute_async_script(sentFail2)["passed"]);
-            self.assertEqual(0, len(self.marionette.execute_async_script(sentPass1)["failures"]));
-            self.assertEqual(1, self.marionette.execute_async_script(sentPass2)["passed"]);
+            self.assertEqual(1, len(self.run_async(sentFail1)["failures"]));
+            self.assertEqual(0, self.run_async(sentFail2)["passed"]);
+            self.assertEqual(0, len(self.run_async(sentPass1)["failures"]));
+            self.assertEqual(1, self.run_async(sentPass2)["passed"]);
 
         self.marionette.set_context("content")
         runtests()
@@ -84,16 +89,16 @@ class SimpletestSanityTest(MarionetteTestCase):
             sentPass1 = "todo(1==2, 'testTodo3');" + self.callFinish
             sentPass2 = "todo(1==2, 'testTodo4');" + self.callFinish
 
-            self.assertEqual(1, len(self.marionette.execute_script(sentFail1)["unexpectedSuccesses"]));
-            self.assertEqual(0, len(self.marionette.execute_script(sentFail2)["expectedFailures"]));
-            self.assertEqual(0, len(self.marionette.execute_script(sentPass1)["unexpectedSuccesses"]));
-            self.assertEqual(1, len(self.marionette.execute_script(sentPass2)["expectedFailures"]));
+            self.assertEqual(1, len(self.run_sync(sentFail1)["unexpectedSuccesses"]));
+            self.assertEqual(0, len(self.run_sync(sentFail2)["expectedFailures"]));
+            self.assertEqual(0, len(self.run_sync(sentPass1)["unexpectedSuccesses"]));
+            self.assertEqual(1, len(self.run_sync(sentPass2)["expectedFailures"]));
 
             self.marionette.set_script_timeout(1000)
-            self.assertEqual(1, len(self.marionette.execute_async_script(sentFail1)["unexpectedSuccesses"]));
-            self.assertEqual(0, len(self.marionette.execute_async_script(sentFail2)["expectedFailures"]));
-            self.assertEqual(0, len(self.marionette.execute_async_script(sentPass1)["unexpectedSuccesses"]));
-            self.assertEqual(1, len(self.marionette.execute_async_script(sentPass2)["expectedFailures"]));
+            self.assertEqual(1, len(self.run_async(sentFail1)["unexpectedSuccesses"]));
+            self.assertEqual(0, len(self.run_async(sentFail2)["expectedFailures"]));
+            self.assertEqual(0, len(self.run_async(sentPass1)["unexpectedSuccesses"]));
+            self.assertEqual(1, len(self.run_async(sentPass2)["expectedFailures"]));
 
         self.marionette.set_context("content")
         runtests()

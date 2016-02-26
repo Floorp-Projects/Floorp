@@ -85,6 +85,17 @@ error.wrap = function(err) {
 };
 
 /**
+ * Wraps an Error as a WebDriverError type.  If the given error is already
+ * in the WebDriverError prototype chain, this function acts as a no-op.
+ */
+error.wrap = function(err) {
+  if (error.isWebDriverError(err)) {
+    return err;
+  }
+  return new WebDriverError(err.message, err.stacktrace);
+};
+
+/**
  * Unhandled error reporter.  Dumps the error and its stacktrace to console,
  * and reports error to the Browser Console.
  */
@@ -166,6 +177,7 @@ this.WebDriverError = function(msg, stack = undefined) {
   Error.call(this, msg);
   this.name = "WebDriverError";
   this.message = msg;
+  this.stack = stack;
   this.status = "webdriver error";
   this.stack = stack;
 };
