@@ -79,7 +79,7 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
               surface->GetFormat() == SurfaceFormat::B8G8R8A8);
   EXPECT_EQ(aTestCase.mSize, surface->GetSize());
   EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green(),
-                           aTestCase.mFlags & TEST_CASE_IS_FUZZY));
+                           aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
 }
 
 static void
