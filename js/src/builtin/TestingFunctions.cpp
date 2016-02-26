@@ -798,6 +798,8 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
         state = "finalize";
     else if (globalState == gc::COMPACT)
         state = "compact";
+    else if (globalState == gc::DECOMMIT)
+        state = "decommit";
     else
         MOZ_CRASH("Unobserveable global GC state");
 
