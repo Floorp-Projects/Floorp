@@ -33,6 +33,8 @@
   }, true);
 
   div.addEventListener("touchend", function(evt) {
-    div.style.transform = "none";
+    if (!evt.touches.length) {
+      div.style.transform = "none";
+    }
   }, true);
 </script>

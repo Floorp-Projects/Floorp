@@ -284,9 +284,16 @@ var simulator = {
                                      evt.screenX, evt.screenY,
                                      evt.clientX, evt.clientY,
                                      1, 1, 0, 0);
+
     let touches = document.createTouchList(point);
     let targetTouches = touches;
     let changedTouches = touches;
+    if (name === "touchend" || name === "touchcancel") {
+      // "touchend" and "touchcancel" events should not have the removed touch
+      // neither in touches nor in targetTouches
+      touches = targetTouches = document.createTouchList();
+    }
+
     touchEvent.initTouchEvent(name, true, true, content, 0,
                               false, false, false, false,
                               touches, targetTouches, changedTouches);
