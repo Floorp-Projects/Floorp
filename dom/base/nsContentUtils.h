@@ -2523,7 +2523,8 @@ public:
    */
   static nsresult SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
                                                 nsIDocument* aDoc,
-                                                nsIHttpChannel* aChannel);
+                                                nsIHttpChannel* aChannel,
+                                                mozilla::net::ReferrerPolicy aReferrerPolicy);
 
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
 

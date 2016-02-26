@@ -99,6 +99,12 @@ public:
     mRequest->GetReferrer(aReferrer);
   }
 
+  ReferrerPolicy
+  ReferrerPolicy_() const
+  {
+    return mRequest->ReferrerPolicy_();
+  }
+
   InternalHeaders*
   GetInternalHeaders() const
   {

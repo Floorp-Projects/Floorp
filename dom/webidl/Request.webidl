@@ -20,6 +20,7 @@ interface Request {
   [Func="mozilla::dom::Request::RequestContextEnabled"]
   readonly attribute RequestContext context;
   readonly attribute USVString referrer;
+  readonly attribute ReferrerPolicy referrerPolicy;
   readonly attribute RequestMode mode;
   readonly attribute RequestCredentials credentials;
   [Func="mozilla::dom::Request::RequestCacheEnabled"]
@@ -40,6 +41,7 @@ dictionary RequestInit {
   HeadersInit headers;
   BodyInit? body;
   USVString referrer;
+  ReferrerPolicy referrerPolicy;
   RequestMode mode;
   RequestCredentials credentials;
   RequestCache cache;
@@ -60,3 +62,4 @@ enum RequestMode { "same-origin", "no-cors", "cors", "navigate" };
 enum RequestCredentials { "omit", "same-origin", "include" };
 enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache" };
 enum RequestRedirect { "follow", "error", "manual" };
+enum ReferrerPolicy { "", "no-referrer", "no-referrer-when-downgrade", "origin-only", "origin-when-cross-origin", "unsafe-url" };
