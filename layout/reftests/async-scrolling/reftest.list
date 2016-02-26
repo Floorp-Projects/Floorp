@@ -36,6 +36,9 @@ fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-1.html offscreen-clipped-bl
 fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,6,4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
 fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,7,4) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
+fuzzy-if(Android,7,4) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
+fuzzy-if(Android,7,4) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
