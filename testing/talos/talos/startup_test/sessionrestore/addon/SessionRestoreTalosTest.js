@@ -16,11 +16,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "StartupPerformance",
-  "resource://gre/modules/sessionstore/StartupPerformance.jsm");
 
 // Observer Service topics.
 const STARTUP_TOPIC = "profile-after-change";
+const RESTORED_TOPIC = "sessionstore-windows-restored";
 
 // Process Message Manager topics.
 const MSG_REQUEST = "session-restore-test?duration";
@@ -46,7 +45,7 @@ nsSessionRestoreTalosTest.prototype = {
       case STARTUP_TOPIC:
         this.init();
         break;
-      case StartupPerformance.RESTORED_TOPIC:
+      case RESTORED_TOPIC:
         this.onRestored();
         break;
       default:
@@ -58,7 +57,7 @@ nsSessionRestoreTalosTest.prototype = {
    * Perform initialization on profile-after-change.
    */
   init: function() {
-    Services.obs.addObserver(this, StartupPerformance.RESTORED_TOPIC, false);
+    Services.obs.addObserver(this, RESTORED_TOPIC, false);
   },
 
   /**
@@ -66,9 +65,9 @@ nsSessionRestoreTalosTest.prototype = {
    */
   onRestored: function() {
     setTimeout(function() {
-      // `StartupPerformance.latestRestoredTimeStamp` actually becomes available only on the next tick.
+      // `sessionRestored` actually becomes available only on the next tick.
       let startup_info = Services.startup.getStartupInfo();
-      let duration = StartupPerformance.latestRestoredTimeStamp - startup_info.sessionRestoreInit;
+      let duration = startup_info.sessionRestored - startup_info.sessionRestoreInit;
 
       // Broadcast startup duration information immediately, in case the talos
       // page is already loaded.

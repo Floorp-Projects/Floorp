@@ -23,14 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 
 const COLLECT_RESULTS_AFTER_MS = 10000;
 
-const OBSERVED_TOPICS = ["sessionstore-restoring-on-startup", "sessionstore-initiating-manual-restore"];
+const TOPICS = ["sessionstore-restoring-on-startup", "sessionstore-initiating-manual-restore"];
 
 this.StartupPerformance = {
-  /**
-   * Once we have finished restoring initial tabs, we broadcast on this topic.
-   */
-  RESTORED_TOPIC: "sessionstore-finished-restoring-initial-tabs",
-
   // Instant at which we have started restoration (notification "sessionstore-restoring-on-startup")
   _startTimeStamp: null,
 
@@ -55,26 +50,16 @@ this.StartupPerformance = {
   _totalNumberOfWindows: 0,
 
   init: function() {
-    for (let topic of OBSERVED_TOPICS) {
+    for (let topic of TOPICS) {
       Services.obs.addObserver(this, topic, false);
     }
-  },
-
-  /**
-   * Return the timestamp at which we finished restoring the latest tab.
-   *
-   * This information is not really interesting until we have finished restoring
-   * tabs.
-   */
-  get latestRestoredTimeStamp() {
-    return this._latestRestoredTimeStamp;
   },
 
   // Called when restoration starts.
   // Record the start timestamp, setup the timer and `this._promiseFinished`.
   // Behavior is unspecified if there was already an ongoing measure.
   _onRestorationStarts: function(isAutoRestore) {
-    this._latestRestoredTimeStamp = this._startTimeStamp = Date.now();
+    this._startTimeStamp = Date.now();
     this._totalNumberOfEagerTabs = 0;
     this._totalNumberOfTabs = 0;
     this._totalNumberOfWindows = 0;
@@ -83,7 +68,7 @@ this.StartupPerformance = {
     // that's a very unusual case, and not really worth measuring, so let's
     // stop listening for further restorations.
 
-    for (let topic of OBSERVED_TOPICS) {
+    for (let topic of TOPICS) {
       Services.obs.removeObserver(this, topic);
     }
 
@@ -93,9 +78,7 @@ this.StartupPerformance = {
     });
     this._promiseFinished.then(() => {
       try {
-        Services.obs.notifyObservers(null, this.RESTORED_TOPIC, "");
-
-        if (this._latestRestoredTimeStamp == this._startTimeStamp) {
+        if (!this._latestRestoredTimeStamp) {
           // Apparently, we haven't restored any tab.
           return;
         }
@@ -111,6 +94,7 @@ this.StartupPerformance = {
         Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_EAGER_TABS_RESTORED").add(this._totalNumberOfEagerTabs);
         Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_TABS_RESTORED").add(this._totalNumberOfTabs);
         Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_WINDOWS_RESTORED").add(this._totalNumberOfWindows);
+
 
         // Reset
         this._startTimeStamp = null;
