@@ -15,7 +15,7 @@ var gSafeBrowsing = {
     // will point to the internal error page we loaded instead.
     var docURI = gBrowser.selectedBrowser.documentURI;
     var isPhishingPage =
-      docURI && docURI.spec.startsWith("about:blocked?e=deceptiveBlocked");
+      docURI && docURI.spec.startsWith("about:blocked?e=phishingBlocked");
 
     // Show/hide the appropriate menu item.
     document.getElementById("menu_HelpPopup_reportPhishingtoolmenu")

@@ -4,8 +4,7 @@
 
 <!ENTITY safeb.palm.accept.label "Get me out of here!">
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
-<!-- Localization note (safeb.palm.notdeceptive.label) - Label of the Help menu item. -->
-<!ENTITY safeb.palm.notdeceptive.label "This isn't a deceptive site…">
+<!ENTITY safeb.palm.notforgery.label2 "This isn't a web forgery…">
 <!ENTITY safeb.palm.reportPage.label "Why was this page blocked?">
 <!ENTITY safeb.palm.whyForbidden.label "Why was this page blocked?">
 
@@ -19,10 +18,10 @@
 <!ENTITY safeb.blocked.unwantedPage.shortDesc "This web page at <span id='unwanted_sitename'/> has been reported to contain unwanted software and has been blocked based on your security preferences.">
 <!ENTITY safeb.blocked.unwantedPage.longDesc "<p>Unwanted software pages try to install software that can be deceptive and affect your system in unexpected ways.</p>">
 
-<!ENTITY safeb.blocked.phishingPage.title2 "Deceptive Site!">
-<!-- Localization note (safeb.blocked.phishingPage.shortDesc2) - Please don't translate the contents of the <span id="phishing_sitename"/> tag. It will be replaced at runtime with a domain name (e.g. www.badsite.com) -->
-<!ENTITY safeb.blocked.phishingPage.shortDesc2 "This web page at <span id='phishing_sitename'/> has been reported as a deceptive site and has been blocked based on your security preferences.">
-<!ENTITY safeb.blocked.phishingPage.longDesc2 "<p>Deceptive sites are designed to trick you into doing something dangerous, like installing software, or revealing your personal information, like passwords, phone numbers or credit cards.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>">
+<!ENTITY safeb.blocked.phishingPage.title "Reported Web Forgery!">
+<!-- Localization note (safeb.blocked.phishingPage.shortDesc) - Please don't translate the contents of the <span id="phishing_sitename"/> tag. It will be replaced at runtime with a domain name (e.g. www.badsite.com) -->
+<!ENTITY safeb.blocked.phishingPage.shortDesc "This web page at <span id='phishing_sitename'/> has been reported as a web forgery and has been blocked based on your security preferences.">
+<!ENTITY safeb.blocked.phishingPage.longDesc "<p>Web forgeries are designed to trick you into revealing personal or financial information by imitating sources you may trust.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>">
 
 <!ENTITY safeb.blocked.forbiddenPage.title2 "Blocked Site">
 <!-- Localization note (safeb.blocked.forbiddenPage.shortDesc2) - Please don't translate the contents of the <span id="forbidden_sitename"/> tag.  It will be replaced at runtime with a domain name (e.g. www.badsite.com) -->
