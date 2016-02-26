@@ -936,7 +936,7 @@ public:
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
   // aTarget is the worker object that we are going to fire an error at
   // (if any).
-  static bool
+  static void
   ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
               bool aFireAtScope, WorkerPrivate* aTarget,
               const nsString& aMessage, const nsString& aFilename,
@@ -949,18 +949,6 @@ public:
       aWorkerPrivate->AssertIsOnWorkerThread();
     } else {
       AssertIsOnMainThread();
-    }
-
-    JS::Rooted<JSString*> message(aCx, JS_NewUCStringCopyN(aCx, aMessage.get(),
-                                                           aMessage.Length()));
-    if (!message) {
-      return false;
-    }
-
-    JS::Rooted<JSString*> filename(aCx, JS_NewUCStringCopyN(aCx, aFilename.get(),
-                                                            aFilename.Length()));
-    if (!filename) {
-      return false;
     }
 
     // We should not fire error events for warnings but instead make sure that
@@ -989,7 +977,7 @@ public:
         aTarget->DispatchDOMEvent(nullptr, event, nullptr, &status);
 
         if (status == nsEventStatus_eConsumeNoDefault) {
-          return true;
+          return;
         }
       }
 
@@ -1015,7 +1003,7 @@ public:
 
             aWorkerPrivate->ReportErrorToDebugger(aFilename, aLineNumber,
                                                   aMessage);
-            return true;
+            return;
           }
 
           MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
@@ -1043,7 +1031,7 @@ public:
 
         // Was preventDefault() called?
         if (status == nsEventStatus_eConsumeNoDefault) {
-          return true;
+          return;
         }
       }
     }
@@ -1054,13 +1042,13 @@ public:
         new ReportErrorRunnable(aWorkerPrivate, aMessage, aFilename, aLine,
                                 aLineNumber, aColumnNumber, aFlags,
                                 aErrorNumber, aExnType, aMutedError);
-      return runnable->Dispatch();
+      runnable->Dispatch();
+      return;
     }
 
     // Otherwise log an error to the error console.
     LogErrorToConsole(aMessage, aFilename, aLine, aLineNumber, aColumnNumber,
                       aFlags, aInnerWindowId);
-    return true;
   }
 
 private:
@@ -1144,9 +1132,10 @@ private:
       return true;
     }
 
-    return ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mMessage,
-                       mFilename, mLine, mLineNumber, mColumnNumber, mFlags,
-                       mErrorNumber, mExnType, mMutedError, innerWindowId);
+    ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mMessage,
+                mFilename, mLine, mLineNumber, mColumnNumber, mFlags,
+                mErrorNumber, mExnType, mMutedError, innerWindowId);
+    return true;
   }
 };
 
@@ -5785,12 +5774,10 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
                      errorNumber != JSMSG_OUT_OF_MEMORY &&
                      JS::CurrentGlobalOrNull(aCx);
 
-  if (!ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
-                                        filename, line, lineNumber,
-                                        columnNumber, flags, errorNumber, exnType,
-                                        mutedError, 0)) {
-    JS_ReportPendingException(aCx);
-  }
+  ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
+                                   filename, line, lineNumber,
+                                   columnNumber, flags, errorNumber, exnType,
+                                   mutedError, 0);
 
   mErrorHandlerRecursionCount--;
 }
