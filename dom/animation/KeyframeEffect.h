@@ -428,6 +428,8 @@ public:
                                                    aTiming, aRv);
   }
 
+  void NotifySpecifiedTimingUpdated();
+
 protected:
   ~KeyframeEffect() override;
 };

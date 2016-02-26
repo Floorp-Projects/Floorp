@@ -39,6 +39,10 @@ AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
   } else {
     mTiming.mDuration.SetAsString() = aDuration.GetAsString();
   }
+
+  if (mEffect) {
+    mEffect->NotifySpecifiedTimingUpdated();
+  }
 }
 
 } // namespace dom
