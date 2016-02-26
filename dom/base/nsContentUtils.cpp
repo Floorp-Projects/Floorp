@@ -8130,7 +8130,8 @@ nsContentUtils::IsPreloadType(nsContentPolicyType aType)
 nsresult
 nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
                                               nsIDocument* aDoc,
-                                              nsIHttpChannel* aChannel)
+                                              nsIHttpChannel* aChannel,
+                                              mozilla::net::ReferrerPolicy aReferrerPolicy)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aChannel);
@@ -8144,7 +8145,7 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
   aPrincipal->GetURI(getter_AddRefs(principalURI));
 
   if (!aDoc) {
-    return aChannel->SetReferrerWithPolicy(principalURI, net::RP_Default);
+    return aChannel->SetReferrerWithPolicy(principalURI, aReferrerPolicy);
   }
 
   // If it weren't for history.push/replaceState, we could just use the
@@ -8173,7 +8174,10 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
     referrerURI = principalURI;
   }
 
-  net::ReferrerPolicy referrerPolicy = aDoc->GetReferrerPolicy();
+  net::ReferrerPolicy referrerPolicy = aReferrerPolicy;
+  if (referrerPolicy == net::RP_Default) {
+    referrerPolicy = aDoc->GetReferrerPolicy();
+  }
   return aChannel->SetReferrerWithPolicy(referrerURI, referrerPolicy);
 }
 
