@@ -70,9 +70,6 @@ WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
       break;
 
     case WorkerThreadModifyBusyCount:
-      aWorkerPrivate->AssertIsOnParentThread();
-      break;
-
     case WorkerThreadUnchangedBusyCount:
       aWorkerPrivate->AssertIsOnParentThread();
       break;
@@ -99,7 +96,7 @@ WorkerRunnable::Dispatch(JSContext* aCx)
     if (ok) {
       ok = DispatchInternal();
     }
-    PostDispatch(nullptr, mWorkerPrivate, ok);
+    PostDispatch(mWorkerPrivate, ok);
     return ok;
   }
 
@@ -112,12 +109,18 @@ WorkerRunnable::Dispatch(JSContext* aCx)
     ac.emplace(aCx, global);
   }
 
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
   ok = PreDispatch(mWorkerPrivate);
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
   if (ok && !DispatchInternal()) {
     ok = false;
   }
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
-  PostDispatch(aCx, mWorkerPrivate, ok);
+  PostDispatch(mWorkerPrivate, ok);
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   return ok;
 }
@@ -149,7 +152,7 @@ WorkerRunnable::DispatchInternal()
 }
 
 void
-WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+WorkerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                              bool aDispatchResult)
 {
   MOZ_ASSERT(aWorkerPrivate);
@@ -162,7 +165,6 @@ WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
     case WorkerThreadModifyBusyCount:
       aWorkerPrivate->AssertIsOnParentThread();
-      MOZ_ASSERT(aCx);
       break;
 
     case WorkerThreadUnchangedBusyCount:
@@ -177,9 +179,6 @@ WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (!aDispatchResult) {
     if (mBehavior == WorkerThreadModifyBusyCount) {
       aWorkerPrivate->ModifyBusyCount(false);
-    }
-    if (aCx) {
-      JS_ReportPendingException(aCx);
     }
   }
 }
@@ -405,19 +404,9 @@ WorkerRunnable::Cancel()
 }
 
 void
-WorkerDebuggerRunnable::PostDispatch(JSContext* aCx,
-                                     WorkerPrivate* aWorkerPrivate,
+WorkerDebuggerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                      bool aDispatchResult)
 {
-  // The only way aDispatchResult can be false here is if either PreDispatch or
-  // DispatchInternal returned false.
-  //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from WorkerRunnable and don't allow overriding it in our subclasses.
-  // WorkerRunnable::DispatchInternal only fails if one of its runnable
-  // dispatching functions fails, and none of those cases can throw a JS
-  // exception.  So we can never have a JS exception here.
-  MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
 WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
@@ -461,22 +450,9 @@ WorkerSyncRunnable::DispatchInternal()
 }
 
 void
-MainThreadWorkerSyncRunnable::PostDispatch(JSContext* aCx,
-                                           WorkerPrivate* aWorkerPrivate,
+MainThreadWorkerSyncRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                            bool aDispatchResult)
 {
-  // The only way aDispatchResult can be false here is if either PreDispatch or
-  // DispatchInternal returned false.
-  //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from WorkerSyncRunnable and don't allow overriding it in our subclasses.
-  // WorkerSyncRunnable::DispatchInternal only returns false if if dispatch to
-  // the syncloop target fails or if calling up to
-  // WorkerRunnable::DispatchInternal fails.  WorkerRunnable::DispatchInternal
-  // only fails if one of its runnable dispatching functions fails, and none of
-  // those cases can throw a JS exception.  So we can never have a JS exception
-  // here.
-  MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
 StopSyncLoopRunnable::StopSyncLoopRunnable(
@@ -530,18 +506,9 @@ StopSyncLoopRunnable::DispatchInternal()
 }
 
 void
-MainThreadStopSyncLoopRunnable::PostDispatch(JSContext* aCx,
-                                             WorkerPrivate* aWorkerPrivate,
+MainThreadStopSyncLoopRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                              bool aDispatchResult)
 {
-  // The only way aDispatchResult can be false here is if either PreDispatch or
-  // DispatchInternal returned false.
-  //
-  // PreDispatch can never throw on a JSContext.  We inherit DispatchInternal
-  // from StopSyncLoopRunnable, and that itself is final and only returns false
-  // if dispatch to the syncloop target fails.  So we can never have a JS
-  // exception here.
-  MOZ_ASSERT_IF(aCx, !JS_IsExceptionPending(aCx));
 }
 
 #ifdef DEBUG
@@ -586,15 +553,10 @@ WorkerControlRunnable::DispatchInternal()
 }
 
 void
-MainThreadWorkerControlRunnable::PostDispatch(JSContext* aCx,
-                                              WorkerPrivate* aWorkerPrivate,
+MainThreadWorkerControlRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                               bool aDispatchResult)
 {
   AssertIsOnMainThread();
-
-  if (aCx && !aDispatchResult) {
-    JS_ReportPendingException(aCx);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
@@ -663,8 +625,7 @@ WorkerSameThreadRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
 }
 
 void
-WorkerSameThreadRunnable::PostDispatch(JSContext* aCx,
-                                       WorkerPrivate* aWorkerPrivate,
+WorkerSameThreadRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                        bool aDispatchResult)
 {
   // We don't call WorkerRunnable::PostDispatch, because we're using
