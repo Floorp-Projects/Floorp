@@ -1061,6 +1061,7 @@ public:
     mContainerLayer(aContainerLayer),
     mContainerBounds(aContainerBounds),
     mContainerScrollClip(aContainerScrollClip),
+    mScrollClipForPerspectiveChild(aParameters.mScrollClipForPerspectiveChild),
     mParameters(aParameters),
     mPaintedLayerDataTree(*this, aBackgroundColor),
     mFlattenToSingleLayer(aFlattenToSingleLayer)
@@ -1390,6 +1391,7 @@ protected:
   ContainerLayer*                  mContainerLayer;
   nsRect                           mContainerBounds;
   const DisplayItemScrollClip*     mContainerScrollClip;
+  const DisplayItemScrollClip*     mScrollClipForPerspectiveChild;
   DebugOnly<nsRect>                mAccumulatedChildBounds;
   ContainerLayerParameters         mParameters;
   /**
@@ -4047,6 +4049,22 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         continue;
       }
 
+      if (mScrollClipForPerspectiveChild) {
+        // We are the single transform child item of an nsDisplayPerspective.
+        // Our parent forwarded a scroll clip to us. Pick it up.
+        // We do this after any clipping has been applied, because this
+        // forwarded scroll clip is only used for scrolling (in the form of
+        // APZ frame metrics), not for clipping - the clip still belongs on
+        // the perspective item.
+        MOZ_ASSERT(itemType == nsDisplayItem::TYPE_TRANSFORM);
+        MOZ_ASSERT(!itemScrollClip);
+        MOZ_ASSERT(!agrScrollClip);
+        MOZ_ASSERT(DisplayItemScrollClip::IsAncestor(mContainerScrollClip,
+                                                      mScrollClipForPerspectiveChild));
+        itemScrollClip = mScrollClipForPerspectiveChild;
+        agrScrollClip = mScrollClipForPerspectiveChild;
+      }
+
       // 3D-transformed layers don't necessarily draw in the order in which
       // they're added to their parent container layer.
       bool mayDrawOutOfOrder = itemType == nsDisplayItem::TYPE_TRANSFORM &&
@@ -4100,6 +4118,21 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       mParameters.mBackgroundColor = uniformColor;
       mParameters.mScrollClip = agrScrollClip;
+      mParameters.mScrollClipForPerspectiveChild = nullptr;
+
+      if (itemType == nsDisplayItem::TYPE_PERSPECTIVE) {
+        // Perspective items have a single child item, an nsDisplayTransform.
+        // If the perspective item is scrolled, but the perspective-inducing
+        // frame is outside the scroll frame (indicated by this items AGR
+        // being outside that scroll frame), we have to take special care to
+        // make APZ scrolling work properly. APZ needs us to put the scroll
+        // frame's FrameMetrics on our child transform ContainerLayer instead.
+        // Our agrScrollClip is the scroll clip that's applicable to our
+        // perspective frame, so it won't be the scroll clip for the scrolled
+        // frame in the case that we care about, and we'll forward that scroll
+        // clip to our child.
+        mParameters.mScrollClipForPerspectiveChild = itemScrollClip;
+      }
 
       // Just use its layer.
       // Set layerContentsVisibleRect.width/height to -1 to indicate we
