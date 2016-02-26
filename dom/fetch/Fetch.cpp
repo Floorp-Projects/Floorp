@@ -326,9 +326,7 @@ WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
     new WorkerFetchResponseRunnable(mPromiseProxy->GetWorkerPrivate(), this,
                                     aResponse);
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  if (!r->Dispatch(jsapi.cx())) {
+  if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response");
   }
 }
@@ -345,9 +343,7 @@ WorkerFetchResolver::OnResponseEnd()
   RefPtr<WorkerFetchResponseEndRunnable> r =
     new WorkerFetchResponseEndRunnable(mPromiseProxy->GetWorkerPrivate(), this);
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  if (!r->Dispatch(jsapi.cx())) {
+  if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response end");
   }
 }
@@ -611,8 +607,7 @@ public:
       if (mBody->mWorkerPrivate) {
         RefPtr<FailConsumeBodyWorkerRunnable<Derived>> r =
           new FailConsumeBodyWorkerRunnable<Derived>(mBody);
-        AutoSafeJSContext cx;
-        if (!r->Dispatch(cx)) {
+        if (!r->Dispatch()) {
           MOZ_CRASH("We are going to leak");
         }
       } else {
@@ -662,8 +657,7 @@ public:
                                         aStatus,
                                         aResultLength,
                                         nonconstResult);
-      AutoSafeJSContext cx;
-      if (!r->Dispatch(cx)) {
+      if (!r->Dispatch()) {
         // XXXcatalinb: The worker is shutting down, the pump will be canceled
         // by FetchBodyFeature::Notify.
         NS_WARNING("Could not dispatch ConsumeBodyRunnable");

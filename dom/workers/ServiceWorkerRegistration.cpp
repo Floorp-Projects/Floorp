@@ -388,12 +388,9 @@ public:
       return;
     }
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-
     RefPtr<UpdateResultRunnable> r =
       new UpdateResultRunnable(proxy, aStatus);
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
   }
 };
 
@@ -555,9 +552,7 @@ private:
     RefPtr<WorkerRunnable> r =
       new FulfillUnregisterPromiseRunnable(proxy, aState);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
   }
 };
 
@@ -1201,10 +1196,7 @@ WorkerListener::UpdateFound()
   if (mWorkerPrivate) {
     RefPtr<FireUpdateFoundRunnable> r =
       new FireUpdateFoundRunnable(mWorkerPrivate, this);
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
-    }
+    NS_WARN_IF(!r->Dispatch());
   }
 }
 

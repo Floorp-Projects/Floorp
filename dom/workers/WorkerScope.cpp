@@ -599,9 +599,7 @@ public:
     RefPtr<SkipWaitingResultRunnable> runnable =
       new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    if (!runnable->Dispatch(jsapi.cx())) {
+    if (!runnable->Dispatch()) {
       NS_WARNING("Failed to dispatch SkipWaitingResultRunnable to the worker.");
     }
     return NS_OK;

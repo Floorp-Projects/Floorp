@@ -87,41 +87,13 @@ WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
 }
 
 bool
-WorkerRunnable::Dispatch(JSContext* aCx)
+WorkerRunnable::Dispatch()
 {
-  bool ok;
-
-  if (!aCx) {
-    ok = PreDispatch(mWorkerPrivate);
-    if (ok) {
-      ok = DispatchInternal();
-    }
-    PostDispatch(mWorkerPrivate, ok);
-    return ok;
+  bool ok = PreDispatch(mWorkerPrivate);
+  if (ok) {
+    ok = DispatchInternal();
   }
-
-  JSAutoRequest ar(aCx);
-
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  Maybe<JSAutoCompartment> ac;
-  if (global) {
-    ac.emplace(aCx, global);
-  }
-
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
-  ok = PreDispatch(mWorkerPrivate);
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
-  if (ok && !DispatchInternal()) {
-    ok = false;
-  }
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
   PostDispatch(mWorkerPrivate, ok);
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
   return ok;
 }
 
@@ -599,7 +571,7 @@ WorkerMainThreadRunnable::Run()
                                        mSyncLoopTarget.forget(),
                                        runResult);
 
-  MOZ_ALWAYS_TRUE(response->Dispatch(nullptr));
+  MOZ_ALWAYS_TRUE(response->Dispatch());
 
   return NS_OK;
 }
