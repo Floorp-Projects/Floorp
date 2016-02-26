@@ -1390,7 +1390,7 @@ public:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    aWorkerPrivate->UpdatePreferenceInternal(aCx, mPref, mValue);
+    aWorkerPrivate->UpdatePreferenceInternal(mPref, mValue);
     return true;
   }
 };
@@ -1409,7 +1409,7 @@ public:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    aWorkerPrivate->UpdateLanguagesInternal(aCx, mLanguages);
+    aWorkerPrivate->UpdateLanguagesInternal(mLanguages);
     return true;
   }
 };
@@ -1510,7 +1510,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    aWorkerPrivate->CycleCollectInternal(aCx, mCollectChildren);
+    aWorkerPrivate->CycleCollectInternal(mCollectChildren);
     return true;
   }
 };
@@ -1527,7 +1527,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    aWorkerPrivate->OfflineStatusChangeEventInternal(aCx, mIsOffline);
+    aWorkerPrivate->OfflineStatusChangeEventInternal(mIsOffline);
     return true;
   }
 
@@ -2938,7 +2938,6 @@ WorkerPrivateParent<Derived>::PostMessageToServiceWorker(
 template <class Derived>
 void
 WorkerPrivateParent<Derived>::UpdateRuntimeOptions(
-                                    JSContext* aCx,
                                     const JS::RuntimeOptions& aRuntimeOptions)
 {
   AssertIsOnParentThread();
@@ -2957,7 +2956,7 @@ WorkerPrivateParent<Derived>::UpdateRuntimeOptions(
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue)
+WorkerPrivateParent<Derived>::UpdatePreference(WorkerPreference aPref, bool aValue)
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
@@ -2971,8 +2970,7 @@ WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference 
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateLanguages(JSContext* aCx,
-                                              const nsTArray<nsString>& aLanguages)
+WorkerPrivateParent<Derived>::UpdateLanguages(const nsTArray<nsString>& aLanguages)
 {
   AssertIsOnParentThread();
 
@@ -2985,8 +2983,7 @@ WorkerPrivateParent<Derived>::UpdateLanguages(JSContext* aCx,
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
-                                                            JSGCParamKey aKey,
+WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSGCParamKey aKey,
                                                             uint32_t aValue)
 {
   AssertIsOnParentThread();
@@ -3011,8 +3008,7 @@ WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
 #ifdef JS_GC_ZEAL
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateGCZeal(JSContext* aCx, uint8_t aGCZeal,
-                                           uint32_t aFrequency)
+WorkerPrivateParent<Derived>::UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
 {
   AssertIsOnParentThread();
 
@@ -3032,7 +3028,7 @@ WorkerPrivateParent<Derived>::UpdateGCZeal(JSContext* aCx, uint8_t aGCZeal,
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::GarbageCollect(JSContext* aCx, bool aShrinking)
+WorkerPrivateParent<Derived>::GarbageCollect(bool aShrinking)
 {
   AssertIsOnParentThread();
 
@@ -3046,7 +3042,7 @@ WorkerPrivateParent<Derived>::GarbageCollect(JSContext* aCx, bool aShrinking)
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::CycleCollect(JSContext* aCx, bool aDummy)
+WorkerPrivateParent<Derived>::CycleCollect(bool aDummy)
 {
   AssertIsOnParentThread();
 
@@ -3060,7 +3056,7 @@ WorkerPrivateParent<Derived>::CycleCollect(JSContext* aCx, bool aDummy)
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline)
+WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(bool aIsOffline)
 {
   AssertIsOnParentThread();
 
@@ -3072,7 +3068,7 @@ WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(JSContext* aCx, bool aIsO
 }
 
 void
-WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
+WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
 {
   AssertIsOnWorkerThread();
 
@@ -3082,7 +3078,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
   }
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); ++index) {
-    mChildWorkers[index]->OfflineStatusChangeEvent(aCx, aIsOffline);
+    mChildWorkers[index]->OfflineStatusChangeEvent(aIsOffline);
   }
 
   mOnLine = !aIsOffline;
@@ -3109,8 +3105,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
-                                                   SharedWorker* aSharedWorker,
+WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
                                                    MessagePort* aPort)
 {
   AssertIsOnMainThread();
@@ -6119,13 +6114,12 @@ WorkerPrivate::UpdateRuntimeOptionsInternal(
   JS::RuntimeOptionsRef(aCx) = aRuntimeOptions;
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateRuntimeOptions(aCx, aRuntimeOptions);
+    mChildWorkers[index]->UpdateRuntimeOptions(aRuntimeOptions);
   }
 }
 
 void
-WorkerPrivate::UpdateLanguagesInternal(JSContext* aCx,
-                                       const nsTArray<nsString>& aLanguages)
+WorkerPrivate::UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages)
 {
   WorkerGlobalScope* globalScope = GlobalScope();
   if (globalScope) {
@@ -6136,12 +6130,12 @@ WorkerPrivate::UpdateLanguagesInternal(JSContext* aCx,
   }
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateLanguages(aCx, aLanguages);
+    mChildWorkers[index]->UpdateLanguages(aLanguages);
   }
 }
 
 void
-WorkerPrivate::UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue)
+WorkerPrivate::UpdatePreferenceInternal(WorkerPreference aPref, bool aValue)
 {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
@@ -6149,7 +6143,7 @@ WorkerPrivate::UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, 
   mPreferences[aPref] = aValue;
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdatePreference(aCx, aPref, aValue);
+    mChildWorkers[index]->UpdatePreference(aPref, aValue);
   }
 }
 
@@ -6169,7 +6163,7 @@ WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
   }
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateJSWorkerMemoryParameter(aCx, aKey, aValue);
+    mChildWorkers[index]->UpdateJSWorkerMemoryParameter(aKey, aValue);
   }
 }
 
@@ -6183,7 +6177,7 @@ WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal,
   JS_SetGCZeal(aCx, aGCZeal, aFrequency);
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdateGCZeal(aCx, aGCZeal, aFrequency);
+    mChildWorkers[index]->UpdateGCZeal(aGCZeal, aFrequency);
   }
 }
 #endif
@@ -6222,13 +6216,13 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
 
   if (aCollectChildren) {
     for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-      mChildWorkers[index]->GarbageCollect(aCx, aShrinking);
+      mChildWorkers[index]->GarbageCollect(aShrinking);
     }
   }
 }
 
 void
-WorkerPrivate::CycleCollectInternal(JSContext* aCx, bool aCollectChildren)
+WorkerPrivate::CycleCollectInternal(bool aCollectChildren)
 {
   AssertIsOnWorkerThread();
 
@@ -6236,7 +6230,7 @@ WorkerPrivate::CycleCollectInternal(JSContext* aCx, bool aCollectChildren)
 
   if (aCollectChildren) {
     for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-      mChildWorkers[index]->CycleCollect(aCx, /* dummy = */ false);
+      mChildWorkers[index]->CycleCollect(/* dummy = */ false);
     }
   }
 }
