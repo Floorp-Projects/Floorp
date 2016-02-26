@@ -91,7 +91,7 @@ needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android&&AndroidVersion<15) random-if(B2G||Mulet) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html # Initial mulet triage: parity with B2G
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android) random-if(B2G||Mulet) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html # Initial mulet triage: parity with B2G
 skip-if(!browserIsRemote||((B2G&&browserIsRemote)||Mulet)) == 656041-1.html 656041-1-ref.html # Initial mulet triage: parity with B2G
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
 
