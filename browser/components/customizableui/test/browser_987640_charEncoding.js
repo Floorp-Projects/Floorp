@@ -5,7 +5,6 @@
 "use strict";
 
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
-var newTab = null;
 
 add_task(function*() {
   info("Check Character Encoding panel functionality");
@@ -14,14 +13,15 @@ add_task(function*() {
   CustomizableUI.addWidgetToArea("characterencoding-button",
                                   CustomizableUI.AREA_PANEL);
 
-  newTab = gBrowser.addTab(TEST_PAGE);
-  yield promiseTabLoadEvent(gBrowser.selectedTab, TEST_PAGE);
+  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
   yield PanelUI.show();
   let charEncodingButton = document.getElementById("characterencoding-button");
-  charEncodingButton.click();
-
   let characterEncodingView = document.getElementById("PanelUI-characterEncodingView");
+  let subviewShownPromise = subviewShown(characterEncodingView);
+  charEncodingButton.click();
+  yield subviewShownPromise;
+
   let checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   let initialEncoding = checkedButtons[0];
   is(initialEncoding.getAttribute("label"), "Unicode", "The unicode encoding is initially selected");
@@ -50,13 +50,11 @@ add_task(function*() {
   charEncodingButton.click();
   checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   is(checkedButtons[0].getAttribute("label"), "Unicode", "The encoding was reset to Unicode");
+  yield BrowserTestUtils.removeTab(newTab);
 });
 
 add_task(function* asyncCleanup() {
   // reset the panel to the default state
   yield resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");
-
-  // remove the added tab
-  gBrowser.removeTab(newTab);
 });
