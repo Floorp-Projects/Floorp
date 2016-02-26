@@ -509,6 +509,12 @@ protected:
     bool IsOverOnePageScrollAllowedX(WidgetWheelEvent* aEvent);
     bool IsOverOnePageScrollAllowedY(WidgetWheelEvent* aEvent);
 
+    /**
+     * WheelEventsEnabledOnPlugins() returns true if user wants to use mouse
+     * wheel on plugins.
+     */
+    static bool WheelEventsEnabledOnPlugins();
+
   private:
     WheelPrefs();
     ~WheelPrefs();
@@ -572,6 +578,8 @@ protected:
     Action mOverriddenActionsX[COUNT_OF_MULTIPLIERS];
 
     static WheelPrefs* sInstance;
+
+    static bool sWheelEventsEnabledOnPlugins;
   };
 
   /**
@@ -662,12 +670,14 @@ protected:
     // Default action prefers the scrolled element immediately before if it's
     // still under the mouse cursor.  Otherwise, it prefers the nearest
     // scrollable ancestor which will be scrolled actually.
+    COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN  =
+      (PREFER_MOUSE_WHEEL_TRANSACTION |
+       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS |
+       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS),
     // When this is specified, the result may be nsPluginFrame.  In such case,
     // the frame doesn't have nsIScrollableFrame interface.
     COMPUTE_DEFAULT_ACTION_TARGET                =
-      (PREFER_MOUSE_WHEEL_TRANSACTION |
-       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS |
-       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS |
+      (COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN |
        INCLUDE_PLUGIN_AS_TARGET),
     // Look for the nearest scrollable ancestor which can be scrollable with
     // aEvent.
@@ -676,6 +686,17 @@ protected:
     COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS     =
       (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
   };
+  static ComputeScrollTargetOptions RemovePluginFromTarget(
+                                      ComputeScrollTargetOptions aOptions)
+  {
+    switch (aOptions) {
+      case COMPUTE_DEFAULT_ACTION_TARGET:
+        return COMPUTE_DEFAULT_ACTION_TARGET_EXCEPT_PLUGIN;
+      default:
+        MOZ_ASSERT(!(aOptions & INCLUDE_PLUGIN_AS_TARGET));
+        return aOptions;
+    }
+  }
   nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
                                 WidgetWheelEvent* aEvent,
                                 ComputeScrollTargetOptions aOptions);
