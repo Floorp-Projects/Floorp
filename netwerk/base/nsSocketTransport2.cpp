@@ -1544,7 +1544,8 @@ nsSocketTransport::RecoverFromError()
 
     bool tryAgain = false;
 
-    if (mSocketTransportService->IsTelemetryEnabled()) {
+    if ((mState == STATE_CONNECTING) && mDNSRecord &&
+        mSocketTransportService->IsTelemetryEnabled()) {
         if (mNetAddr.raw.family == AF_INET) {
             Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
                                   UNSUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
