@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <searchresults total_results="1">
   <addon_compatibility hosted="false">
-    <guid>addon10@tests.mozilla.org</guid>
+    <guid>bug557956-10@tests.mozilla.org</guid>
     <name>Addon10</name>
     <version_ranges>
       <version_range type="incompatible">
