@@ -42,7 +42,9 @@ Mutex* AsyncTransactionTracker::sLock = nullptr;
 AsyncTransactionTracker::AsyncTransactionTracker(AsyncTransactionWaiter* aWaiter)
     : mSerial(GetNextSerial())
     , mWaiter(aWaiter)
+#ifdef DEBUG
     , mCompleted(false)
+#endif
 {
   if (mWaiter) {
     mWaiter->IncrementWaitCount();
@@ -57,7 +59,9 @@ void
 AsyncTransactionTracker::NotifyComplete()
 {
   MOZ_ASSERT(!mCompleted);
+#ifdef DEBUG
   mCompleted = true;
+#endif
   Complete();
   if (mWaiter) {
     mWaiter->DecrementWaitCount();
@@ -68,7 +72,9 @@ void
 AsyncTransactionTracker::NotifyCancel()
 {
   MOZ_ASSERT(!mCompleted);
+#ifdef DEBUG
   mCompleted = true;
+#endif
   Cancel();
   if (mWaiter) {
     mWaiter->DecrementWaitCount();
