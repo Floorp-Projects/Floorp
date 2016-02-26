@@ -23,9 +23,8 @@
  *
  * - |ScopedFreePtr| - a container for a pointer, that automatically calls
  *   |free()| at the end of the scope;
- * - |ScopedDeletePtr| - a container for a pointer, that automatically calls
- *   |delete| at the end of the scope;
  *
+ * |ScopedDeletePtr| is removed in favor of |UniquePtr<T>|.
  * |ScopedDeleteArray| is removed in favor of |UniquePtr<T[]>|.
  *
  * The general scenario for each of the RAII classes is the following:
@@ -234,19 +233,6 @@ struct ScopedFreePtrTraits
   static void release(T* aPtr) { free(aPtr); }
 };
 SCOPED_TEMPLATE(ScopedFreePtr, ScopedFreePtrTraits)
-
-/*
- * ScopedDeletePtr is a RAII wrapper for pointers that need to be deleted.
- *
- *   struct S { ... };
- *   ScopedDeletePtr<S> foo = new S();
- */
-template<typename T>
-struct ScopedDeletePtrTraits : public ScopedFreePtrTraits<T>
-{
-  static void release(T* aPtr) { delete aPtr; }
-};
-SCOPED_TEMPLATE(ScopedDeletePtr, ScopedDeletePtrTraits)
 
 /*
  * MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE makes it easy to create scoped
