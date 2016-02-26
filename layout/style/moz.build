@@ -98,6 +98,7 @@ EXPORTS.mozilla += [
     'StyleBackendType.h',
     'StyleSetHandle.h',
     'StyleSetHandleInlines.h',
+    'StyleSheet.h',
     'StyleSheetHandle.h',
     'StyleSheetHandleInlines.h',
     'StyleSheetInfo.h',
@@ -188,6 +189,7 @@ UNIFIED_SOURCES += [
     'ServoStyleSheet.cpp',
     'StyleAnimationValue.cpp',
     'StyleRule.cpp',
+    'StyleSheet.cpp',
     'StyleSheetInfo.cpp',
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
