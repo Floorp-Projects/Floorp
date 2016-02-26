@@ -348,36 +348,33 @@ public:
                              ErrorResult& aRv);
 
   void
-  UpdateRuntimeOptions(JSContext* aCx,
-                       const JS::RuntimeOptions& aRuntimeOptions);
+  UpdateRuntimeOptions(const JS::RuntimeOptions& aRuntimeOptions);
 
   void
-  UpdateLanguages(JSContext* aCx, const nsTArray<nsString>& aLanguages);
+  UpdateLanguages(const nsTArray<nsString>& aLanguages);
 
   void
-  UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue);
+  UpdatePreference(WorkerPreference aPref, bool aValue);
 
   void
-  UpdateJSWorkerMemoryParameter(JSContext* aCx, JSGCParamKey key,
-                                uint32_t value);
+  UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
 
 #ifdef JS_GC_ZEAL
   void
-  UpdateGCZeal(JSContext* aCx, uint8_t aGCZeal, uint32_t aFrequency);
+  UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency);
 #endif
 
   void
-  GarbageCollect(JSContext* aCx, bool aShrinking);
+  GarbageCollect(bool aShrinking);
 
   void
-  CycleCollect(JSContext* aCx, bool aDummy);
+  CycleCollect(bool aDummy);
 
   void
-  OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline);
+  OfflineStatusChangeEvent(bool aIsOffline);
 
   bool
-  RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker,
-                       MessagePort* aPort);
+  RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
 
   void
   BroadcastErrorToSharedWorkers(JSContext* aCx,
@@ -1163,10 +1160,10 @@ public:
   UpdateRuntimeOptionsInternal(JSContext* aCx, const JS::RuntimeOptions& aRuntimeOptions);
 
   void
-  UpdateLanguagesInternal(JSContext* aCx, const nsTArray<nsString>& aLanguages);
+  UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages);
 
   void
-  UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue);
+  UpdatePreferenceInternal(WorkerPreference aPref, bool aValue);
 
   void
   UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key, uint32_t aValue);
@@ -1192,10 +1189,10 @@ public:
                          bool aCollectChildren);
 
   void
-  CycleCollectInternal(JSContext* aCx, bool aCollectChildren);
+  CycleCollectInternal(bool aCollectChildren);
 
   void
-  OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline);
+  OfflineStatusChangeEventInternal(bool aIsOffline);
 
   JSContext*
   GetJSContext() const
