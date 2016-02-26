@@ -33,7 +33,6 @@ function WebRequestEventManager(context, eventName) {
       }
 
       let data2 = {
-        requestId: data.requestId,
         url: data.url,
         method: data.method,
         type: data.type,

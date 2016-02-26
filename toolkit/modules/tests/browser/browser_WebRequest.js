@@ -117,7 +117,6 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
                             BASE +  "/WebRequest_redirection.sjs",
-                            BASE + "/dummy_page.html",
                             BASE + "/xhr_resource"];
 
 const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
