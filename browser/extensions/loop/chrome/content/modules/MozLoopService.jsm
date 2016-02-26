@@ -613,7 +613,9 @@ var MozLoopServiceInternal = {
                                           2 * 32, true);
     }
 
-    if (payloadObj) {
+    // Later versions of Firefox will do utf-8 encoding of the request, but
+    // we need to do it ourselves for older versions.
+    if (!gHawkClient.willUTF8EncodeRequests && payloadObj) {
       // Note: we must copy the object rather than mutate it, to avoid
       // mutating the values of the object passed in.
       let newPayloadObj = {};
