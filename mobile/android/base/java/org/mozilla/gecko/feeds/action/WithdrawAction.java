@@ -50,6 +50,11 @@ public class WithdrawAction implements BaseAction {
         return false;
     }
 
+    @Override
+    public boolean requiresPreferenceEnabled() {
+        return true;
+    }
+
     private void unsubscribe(FeedSubscription subscription) {
         Log.d(LOGTAG, "Unsubscribing from: (" + subscription.getBookmarkGUID() + ") " + subscription.getFeedUrl());
 
