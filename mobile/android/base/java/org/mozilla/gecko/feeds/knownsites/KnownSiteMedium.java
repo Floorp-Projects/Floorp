@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class KnownSiteMedium implements KnownSite {
     @Override
     public String getURLSearchString() {
-        return "medium.com";
+        return "://medium.com/";
     }
 
     @Override

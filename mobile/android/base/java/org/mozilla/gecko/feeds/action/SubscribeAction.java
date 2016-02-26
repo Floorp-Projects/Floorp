@@ -32,8 +32,6 @@ public class SubscribeAction implements BaseAction {
 
     @Override
     public void perform(Intent intent) {
-        Log.d(LOGTAG, "Subscribing to feed..");
-
         final Bundle extras = intent.getExtras();
 
         // TODO: Using a random UUID as fallback just so that I can subscribe for things that are not bookmarks (testing)
@@ -44,6 +42,8 @@ public class SubscribeAction implements BaseAction {
             Log.d(LOGTAG, "Already subscribed to " + feedUrl + ". Skipping.");
             return;
         }
+
+        Log.d(LOGTAG, "Subscribing to feed: " + feedUrl);
 
         subscribe(guid, feedUrl);
     }
