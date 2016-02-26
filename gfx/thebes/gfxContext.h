@@ -507,7 +507,9 @@ private:
     mozilla::gfx::Float mBlendOpacity;
     RefPtr<SourceSurface> mBlendMask;
     Matrix mBlendMaskTransform;
-    mozilla::DebugOnly<bool> mWasPushedForBlendBack;
+#ifdef DEBUG
+    bool mWasPushedForBlendBack;
+#endif
   };
 
   // This ensures mPath contains a valid path (in user space!)

@@ -629,7 +629,9 @@ protected:
   gl::GfxTextureWasteTracker mWasteTracker;
 
   OpenMode mOpenMode;
-  DebugOnly<uint32_t> mExpectedDtRefs;
+#ifdef DEBUG
+  uint32_t mExpectedDtRefs;
+#endif
   bool mIsLocked;
 
   bool mAddedToCompositableClient;
@@ -684,7 +686,9 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     mSucceeded = mTexture->Lock(aMode);
+#ifdef DEBUG
     mChecked = false;
+#endif
   }
   ~TextureClientAutoLock() {
     MOZ_ASSERT(mChecked);
@@ -694,13 +698,17 @@ public:
   }
 
   bool Succeeded() {
+#ifdef DEBUG
     mChecked = true;
+#endif
     return mSucceeded;
   }
 
 private:
   TextureClient* mTexture;
-  DebugOnly<bool> mChecked;
+#ifdef DEBUG
+  bool mChecked;
+#endif
   bool mSucceeded;
 };
 

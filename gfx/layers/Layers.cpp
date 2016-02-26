@@ -250,7 +250,9 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mScrollbarDirection(ScrollDirection::NONE),
   mScrollbarThumbRatio(0.0f),
   mIsScrollbarContainer(false),
+#ifdef DEBUG
   mDebugColorIndex(0),
+#endif
   mAnimationGeneration(0)
 {
   MOZ_COUNT_CTOR(Layer);
