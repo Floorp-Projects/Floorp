@@ -1762,9 +1762,17 @@ class GeckoEditableListener : public mozilla::jni::ObjectBase<GeckoEditableListe
 public:
     explicit GeckoEditableListener(const Context& ctx) : ObjectBase<GeckoEditableListener, jobject>(ctx) {}
 
+    static const int32_t NOTIFY_IME_OF_BLUR = 2;
+
+    static const int32_t NOTIFY_IME_OF_FOCUS = 1;
+
     static const int32_t NOTIFY_IME_OPEN_VKB = -2;
 
     static const int32_t NOTIFY_IME_REPLY_EVENT = -1;
+
+    static const int32_t NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
+
+    static const int32_t NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
 
     static const bool isMultithreaded = false;
 
