@@ -131,7 +131,9 @@ protected:
 
   uint64_t mSerial;
   RefPtr<AsyncTransactionWaiter> mWaiter;
-  DebugOnly<bool> mCompleted;
+#ifdef DEBUG
+  bool mCompleted;
+#endif
 
   /**
    * gecko does not provide atomic operation for uint64_t.
