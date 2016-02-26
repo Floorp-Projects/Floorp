@@ -193,7 +193,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         template = jinja_env.get_template(template_file)
         template_vars = {
             "platform": self.config['platform'],
-            "locales": self.config['locales'],
+            "locales": self.config.get('locales'),
             "version": self.config['version'],
             "app_version": self.config.get('app_version', ''),
             "partial_version": self.config.get('partial_version', ''),
