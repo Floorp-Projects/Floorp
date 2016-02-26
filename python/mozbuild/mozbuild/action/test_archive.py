@@ -213,7 +213,11 @@ ARCHIVE_FILES = {
         {
             'source': buildconfig.topobjdir,
             'base': 'dist/bin/components',
-            'pattern': 'test_necko.xpt',
+            'patterns': [
+                'httpd.js',
+                'httpd.manifest',
+                'test_necko.xpt',
+            ],
             'dest': 'bin/components',
         },
         {
@@ -350,9 +354,37 @@ ARCHIVE_FILES = {
             'dest': 'xpcshell/tests',
         },
         {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing/xpcshell',
+            'patterns': [
+                'head.js',
+                'moz-http2/**',
+                'moz-spdy/**',
+                'node-http2/**',
+                'node-spdy/**',
+                'remotexpcshelltests.py',
+                'runtestsb2g.py',
+                'runxpcshelltests.py',
+                'xpcshellcommandline.py',
+            ],
+            'dest': 'xpcshell',
+        },
+        {
             'source': STAGE,
             'base': '',
             'pattern': 'xpcshell/**',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+            'dest': 'xpcshell',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'build',
+            'pattern': 'automation.py',
+            'dest': 'xpcshell',
         },
     ],
 }
