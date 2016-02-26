@@ -1434,6 +1434,11 @@ public class testBrowserProvider extends ContentProviderTest {
     private class TestInsertUrlAnnotations extends TestCase {
         @Override
         public void test() throws Exception {
+            testInsertionViaContentProvider();
+            testInsertionViaUrlAnnotations();
+        }
+
+        private void testInsertionViaContentProvider() throws Exception {
             final String url = "http://mozilla.org";
             final String key = "todo";
             final String value = "v";
@@ -1444,20 +1449,44 @@ public class testBrowserProvider extends ContentProviderTest {
             final Cursor c = getUrlAnnotationByUrl(url);
             try {
                 mAsserter.is(c.moveToFirst(), true, "Inserted url annotation found");
-
-                mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.KEY)), key,
-                        "Inserted url annotation has correct key");
-                mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.VALUE)), value,
-                        "Inserted url annotation has correct value");
+                assertKeyValueSync(c, key, value);
                 mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_CREATED)), dateCreated,
-                        "Inserted url annotation has correct created");
+                        "Inserted url annotation has correct date created");
                 mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_MODIFIED)), dateCreated,
                         "Inserted url annotation has correct date modified");
-                mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.UrlAnnotations.SYNC_STATUS)), SyncStatus.NEW.getDBValue(),
-                        "Inserted url annotation has default sync status");
             } finally {
                 c.close();
             }
+        }
+
+        private void testInsertionViaUrlAnnotations() throws Exception {
+            final String url = "http://hello.org";
+            final String key = "toTheUniverse";
+            final String value = "42a";
+            final long timeBeforeCreation = System.currentTimeMillis();
+
+            getTestProfile().getDB().getUrlAnnotations().insertAnnotation(mResolver, url, key, value);
+
+            final Cursor c = getUrlAnnotationByUrl(url);
+            try {
+                mAsserter.is(c.moveToFirst(), true, "Inserted url annotation found");
+                assertKeyValueSync(c, key, value);
+                mAsserter.is(true, c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_CREATED)) >= timeBeforeCreation,
+                        "Inserted url annotation has date created greater than or equal to time saved before insertion");
+                mAsserter.is(true, c.getLong(c.getColumnIndex(BrowserContract.UrlAnnotations.DATE_MODIFIED)) >= timeBeforeCreation,
+                        "Inserted url annotation has correct date modified greater than or equal to time saved before insertion");
+            } finally {
+                c.close();
+            }
+        }
+
+        private void assertKeyValueSync(final Cursor c, final String key, final String value) {
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.KEY)), key,
+                    "Inserted url annotation has correct key");
+            mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.UrlAnnotations.VALUE)), value,
+                    "Inserted url annotation has correct value");
+            mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.UrlAnnotations.SYNC_STATUS)), SyncStatus.NEW.getDBValue(),
+                    "Inserted url annotation has default sync status");
         }
     }
 
