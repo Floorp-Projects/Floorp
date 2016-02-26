@@ -495,6 +495,8 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
             if (const char *file = scriptFilename.get()) {
                 CopyUTF8toUTF16(nsDependentCString(file), fileName);
             }
+        } else {
+            MOZ_ASSERT(!JS_IsExceptionPending(cx));
         }
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                  fileName,
