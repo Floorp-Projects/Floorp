@@ -4,9 +4,17 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>addon1@tests.mozilla.org</em:id>
+    <em:id>bug596336-1@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:bootstrap>true</em:bootstrap>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>0.3</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
 
     <em:targetApplication>
       <Description>

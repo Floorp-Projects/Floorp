@@ -31,7 +31,7 @@ function end_test() {
   close_manager(gManagerWindow, function() {
     Services.prefs.clearUserPref("extensions.checkUpdateSecurity");
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
+    AddonManager.getAddonByID("install1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
       finish();
     });
@@ -55,7 +55,7 @@ function installAddon(aCallback) {
 }
 
 function installUpgrade(aCallback) {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
+  AddonManager.getAddonByID("install1@tests.mozilla.org", function(aAddon) {
     aAddon.findUpdates({
       onUpdateAvailable: function(aAddon, aInstall) {
         is(get_list_item_count(), 1, "Should be only one item in the list");
@@ -103,7 +103,7 @@ function installSearchResult(aCallback) {
     let remote = gManagerWindow.document.getElementById("search-filter-remote")
     EventUtils.synthesizeMouseAtCenter(remote, { }, gManagerWindow);
 
-    let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+    let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
     ok(!!item, "Should see the search result in the list");
 
     let status = get_node(item, "install-status");
@@ -124,7 +124,7 @@ function get_list_item_count() {
 function check_undo_install() {
   is(get_list_item_count(), 1, "Should be only one item in the list");
 
-  let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
   ok(!!item, "Should see the pending install in the list");
   // Force XBL to apply
   item.clientTop;
@@ -135,14 +135,14 @@ function check_undo_install() {
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 
-  item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
   ok(!item, "Should no longer see the pending install");
 }
 
 function check_undo_upgrade() {
   is(get_list_item_count(), 1, "Should be only one item in the list");
 
-  let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
   ok(!!item, "Should see the pending upgrade in the list");
   // Force XBL to apply
   item.clientTop;
@@ -153,7 +153,7 @@ function check_undo_upgrade() {
 
   is(get_list_item_count(), 1, "Should be only one item in the list");
 
-  item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
   ok(!!item, "Should still see installed item in the list");
   is_element_hidden(get_node(item, "pending"), "Pending message should be hidden");
 }
@@ -285,7 +285,7 @@ add_test(function() {
 add_test(function() {
   cancelInstall(function() {
     is(get_list_item_count(), 1, "Should be no items in the list");
-    let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+    let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
     ok(!!item, "Should still see installed item in the list");
     is_element_hidden(get_node(item, "pending"), "Pending message should be hidden");
 
@@ -301,7 +301,7 @@ add_test(function() {
         gManagerWindow = aWindow;
         gCategoryUtilities = new CategoryUtilities(gManagerWindow);
         is(get_list_item_count(), 1, "Should be no items in the list");
-        let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+        let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");
         ok(!!item, "Should still see installed item in the list");
         is_element_hidden(get_node(item, "pending"), "Pending message should be hidden");
 
