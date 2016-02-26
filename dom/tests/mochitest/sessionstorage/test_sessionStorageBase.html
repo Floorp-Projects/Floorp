@@ -55,7 +55,7 @@ function startTest()
   }
 
   // Listen for MozSessionStorageChanged
-  SpecialPowers.addChromeEventListener("MozSessionStorageChanged", onStorageChanged, false);
+  SpecialPowers.addChromeEventListener("MozSessionStorageChanged", onStorageChanged, true);
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
@@ -160,7 +160,7 @@ function startTest()
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
   SimpleTest.executeSoon(function () {
-    SpecialPowers.removeChromeEventListener("MozSessionStorageChanged", onStorageChanged, false);
+    SpecialPowers.removeChromeEventListener("MozSessionStorageChanged", onStorageChanged, true);
     is(expectedEvents.length, 0, "received the correct number of events");
 
     sessionStorage.clear();
