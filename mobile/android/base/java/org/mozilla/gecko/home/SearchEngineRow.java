@@ -395,9 +395,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
         List<String> searchHistorySuggestions = (rawSearchHistorySuggestions != null) ? rawSearchHistorySuggestions : new ArrayList<String>();
 
         // Filter out URLs and long search suggestions
-        Iterator<String> searchistoryIterator = searchHistorySuggestions.iterator();
-        while (searchistoryIterator.hasNext()) {
-            final String currentSearchHistory = searchistoryIterator.next();
+        Iterator<String> searchHistoryIterator = searchHistorySuggestions.iterator();
+        while (searchHistoryIterator.hasNext()) {
+            final String currentSearchHistory = searchHistoryIterator.next();
 
             if (currentSearchHistory.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", currentSearchHistory)) {
                 searchHistorySuggestions.remove(currentSearchHistory);
