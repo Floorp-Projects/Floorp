@@ -6,6 +6,7 @@ from marionette import MarionetteTestCase
 
 import os
 import sys
+import time
 import urlparse
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
@@ -77,6 +78,8 @@ class Test1BrowserCall(MarionetteTestCase):
         self.marionette.set_context("chrome")
         self.marionette.switch_to_frame()
 
+        # Added time lapse to allow for DOM to catch up
+        time.sleep(2)
         # XXX should be using wait_for_element_displayed, but need to wait
         # for Marionette bug 1094246 to be fixed.
         chatbox = self.wait_for_element_exists(By.TAG_NAME, 'chatbox')
@@ -130,7 +133,7 @@ class Test1BrowserCall(MarionetteTestCase):
     # Assumes the standalone or the conversation window is selected first.
     def check_video(self, selector):
         video = self.wait_for_element_displayed(By.CSS_SELECTOR,
-                                                selector, 20)
+                                                selector, 30)
         self.wait_for_element_attribute_to_be_false(video, "paused")
         self.assertEqual(video.get_attribute("ended"), "false")
 

@@ -7,12 +7,12 @@
 // Test for as-authored styles.
 
 function* createTestContent(style) {
-  let content = `<style type="text/css">
+  let html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
   let tab = yield addTab("data:text/html;charset=utf-8," +
-                         encodeURIComponent(content));
+                         encodeURIComponent(html));
 
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
@@ -41,10 +41,8 @@ add_task(function* () {
     swatch.click();
     yield onShown;
 
-    let testNode = getNode("#testid");
-
     yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
-      element: testNode,
+      selector: "#testid",
       name: "color",
       value: "rgb(0, 255, 0)"
     });

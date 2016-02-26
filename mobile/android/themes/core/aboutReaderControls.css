@@ -55,40 +55,35 @@
 
 .toolbar {
   font-family: sans-serif;
-  transition-property: bottom;
-  transition-duration: 0.3s;
   position: fixed;
   width: 100%;
   left: 0;
   margin: 0;
   padding: 0;
-  list-style: none;
-  background-color: #EBEBF0;
-  border-top: 1px solid #D7D9DB;
-  display: none;
-}
-
-.toolbar[visible] {
   bottom: 0;
+  list-style: none;
 }
 
 .toolbar > * {
   float: right;
-  width: 33%;
 }
 
 .button {
+  width: 56px;
+  height: 56px;
   display: block;
   background-position: center;
-  background-size: 30px 28px;
+  background-size: 26px 16px;
   background-repeat: no-repeat;
-  background-color: transparent;
+  background-color: #E66000;
+  border-radius: 10000px;
+  margin: 20px;
   border: 0;
-  width: 100%;
+  box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.40);
 }
 
 .button:active {
-  background-color: #D7D7DC;
+  background-color: #DC5600;
 }
 
 /* Remove dotted border when button is focused */
@@ -110,26 +105,19 @@
   padding: 0px;
 }
 
-.dropdown li {
-  margin: 0px;
-  padding: 0px;
-}
-
-.dropdown-toggle {
-  margin: 0px;
-  padding: 0px;
-}
-
 /*======= Font style popup =======*/
 
 .dropdown-popup {
   position: absolute;
   left: 0;
-  width: 100%;
+  width: calc(100% - 30px);
+  margin: 15px;
   z-index: 1000;
   background: #EBEBF0;
   visibility: hidden;
-  border-top: 1px solid #D7D9DB;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.40);
 }
 
 /* Only used on desktop */
@@ -141,7 +129,7 @@
 
 .open > .dropdown-popup {
   visibility: visible;
-  bottom: 100%;
+  bottom: 0;
 }
 
 #font-type-buttons,
@@ -240,89 +228,25 @@
 /*======= Toolbar icons =======*/
 
 /* desktop-only controls */
-.close-button,
-.list-button,
-.footer {
+.close-button {
   display: none;
 }
 
-.toggle-button.on {
-  background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-mdpi.png');
-}
-
-.toggle-button {
-  background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
-}
-
-.share-button {
-  background-image: url('chrome://browser/skin/images/reader-share-icon-mdpi.png');
-}
-
 .style-button {
-  background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
-}
-
-.open .style-button {
-  background-image: url('chrome://browser/skin/images/reader-style-icon-active-mdpi.png');
+  background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
 }
 
 .minus-button {
-  background-image: url('chrome://browser/skin/images/reader-minus-mdpi.png');
+  background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
 }
 
 .plus-button {
-  background-image: url('chrome://browser/skin/images/reader-plus-mdpi.png');
-}
-
-@media screen and (min-resolution: 1.25dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-hdpi.png');
-  }
-
-  .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-hdpi.png');
-  }
-
-  .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
-  }
-
-  .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-hdpi.png');
-  }
+  background-image: url('chrome://browser/skin/images/reader-plus-hdpi.png');
 }
 
 @media screen and (min-resolution: 2dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xhdpi.png');
   }
 
   .minus-button {
@@ -335,24 +259,8 @@
 }
 
 @media screen and (min-resolution: 3dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xxhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
-  }
-
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xxhdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xxhdpi.png');
   }
 
   .minus-button {
@@ -364,50 +272,10 @@
   }
 }
 
-@media screen and (orientation: portrait) {
-  .button {
-    height: 56px;
-  }
-
-  .toolbar {
-    bottom: -57px;
-  }
-}
-
-@media screen and (orientation: landscape) {
-  .button {
-    height: 40px;
-  }
-
-  .toolbar {
-    bottom: -41px;
-  }
-}
-
 @media screen and (min-width: 960px) {
-  .button {
-    width: 56px;
-    height: 56px;
-  }
-
-  .toolbar {
-    bottom: -57px;
-  }
-
-  .toolbar > * {
-    width: 56px;
-  }
-
   .dropdown-popup {
-    position: absolute;
     width: 350px;
     left: auto;
-    right: 15px;
-    bottom: -12px;
-    z-index: 1000;
-    background: #EBEBF0;
-    border: 1px solid #D7D9DB;
-    border-radius: 4px;
-    box-shadow: 0px 2px 4px 2px #BFBFBF;
+    right: 0;
   }
 }

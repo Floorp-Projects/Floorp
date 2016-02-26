@@ -5,13 +5,15 @@
   <link href="./doc_content_stylesheet_linked.css" rel="stylesheet" type="text/css">
 
   <script>
+    /* eslint no-unused-vars: [2, {"vars": "local"}] */
+    "use strict";
     // Load script.css
     function loadCSS() {
-      var link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.type = 'text/css';
+      let link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.type = "text/css";
       link.href = "./doc_content_stylesheet_script.css";
-      document.getElementsByTagName('head')[0].appendChild(link);
+      document.getElementsByTagName("head")[0].appendChild(link);
     }
   </script>
 
