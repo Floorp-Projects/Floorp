@@ -33768,7 +33768,13 @@
           {
             "path": "html/semantics/embedded-content/the-img-element/update-media.html",
             "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
-          }
+	  }
+	],
+        "IndexedDB/idbkeyrange-includes.htm": [
+          {
+            "path": "IndexedDB/idbkeyrange-includes.htm",
+            "url": "/IndexedDB/idbkeyrange-includes.htm"
+	  }
         ]
       }
     },

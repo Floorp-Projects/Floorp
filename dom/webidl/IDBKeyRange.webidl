@@ -19,6 +19,10 @@ interface IDBKeyRange {
   readonly attribute boolean lowerOpen;
   [Constant]
   readonly attribute boolean upperOpen;
+  [Throws]
+  boolean includes(any key);
+
+
   [NewObject, Throws]
   static IDBKeyRange only (any value);
   [NewObject, Throws]
