@@ -498,8 +498,7 @@ nssCKFWToken_InitToken(
     if (!pin) {
         if (nssCKFWToken_GetHasProtectedAuthenticationPath(fwToken)) {
             ; /* okay */
-        }
-        else {
+        } else {
             error = CKR_PIN_INCORRECT;
             goto done;
         }
@@ -551,8 +550,7 @@ nssCKFWToken_GetLabel(
             if ((!fwToken->label) && (CKR_OK != error)) {
                 goto done;
             }
-        }
-        else {
+        } else {
             fwToken->label = (NSSUTF8 *)"";
         }
     }
@@ -599,8 +597,7 @@ nssCKFWToken_GetManufacturerID(
             if ((!fwToken->manufacturerID) && (CKR_OK != error)) {
                 goto done;
             }
-        }
-        else {
+        } else {
             fwToken->manufacturerID = (NSSUTF8 *)"";
         }
     }
@@ -647,8 +644,7 @@ nssCKFWToken_GetModel(
             if ((!fwToken->model) && (CKR_OK != error)) {
                 goto done;
             }
-        }
-        else {
+        } else {
             fwToken->model = (NSSUTF8 *)"";
         }
     }
@@ -695,8 +691,7 @@ nssCKFWToken_GetSerialNumber(
             if ((!fwToken->serialNumber) && (CKR_OK != error)) {
                 goto done;
             }
-        }
-        else {
+        } else {
             fwToken->serialNumber = (NSSUTF8 *)"";
         }
     }
@@ -1092,8 +1087,7 @@ nssCKFWToken_GetHardwareVersion(
     if (fwToken->mdToken->GetHardwareVersion) {
         fwToken->hardwareVersion = fwToken->mdToken->GetHardwareVersion(
             fwToken->mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
-    }
-    else {
+    } else {
         fwToken->hardwareVersion.major = 0;
         fwToken->hardwareVersion.minor = 1;
     }
@@ -1136,8 +1130,7 @@ nssCKFWToken_GetFirmwareVersion(
     if (fwToken->mdToken->GetFirmwareVersion) {
         fwToken->firmwareVersion = fwToken->mdToken->GetFirmwareVersion(
             fwToken->mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
-    }
-    else {
+    } else {
         fwToken->firmwareVersion.major = 0;
         fwToken->firmwareVersion.minor = 1;
     }
@@ -1218,8 +1211,7 @@ nssCKFWToken_GetUTCTime(
 
         if (D > dims[M - 1])
             goto badtime; /* per-month check */
-        if ((2 == M) && (((Y % 4) || !(Y %
-                                       100)) &&
+        if ((2 == M) && (((Y % 4) || !(Y % 100)) &&
                          (Y % 400)) &&
             (D > 28))
             goto badtime; /* leap years */
@@ -1292,8 +1284,7 @@ nssCKFWToken_OpenSession(
             *pError = CKR_TOKEN_WRITE_PROTECTED;
             goto done;
         }
-    }
-    else {
+    } else {
         /* Read-only session desired */
         if (CKS_RW_SO_FUNCTIONS == nssCKFWToken_GetSessionState(fwToken)) {
             *pError = CKR_SESSION_READ_WRITE_SO_EXISTS;

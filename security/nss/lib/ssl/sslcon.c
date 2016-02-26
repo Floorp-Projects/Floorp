@@ -142,9 +142,8 @@ ssl2_ConstructCipherSpecs(sslSocket *ss)
 
     count = 0;
     PORT_Assert(ss != 0);
-    allowed = !ss->opt.enableSSL2 ? 0 :
-                                  (ss->allowedByPolicy &
-                                   ss->chosenPreference & SSL_CB_IMPLEMENTED);
+    allowed = !ss->opt.enableSSL2 ? 0 : (ss->allowedByPolicy &
+                                         ss->chosenPreference & SSL_CB_IMPLEMENTED);
     while (allowed) {
         if (allowed & 1)
             ++count;
@@ -179,9 +178,8 @@ ssl2_ConstructCipherSpecs(sslSocket *ss)
     ss->sizeCipherSpecs = count * 3;
 
     /* fill in cipher specs for SSL2 cipher suites */
-    allowed = !ss->opt.enableSSL2 ? 0 :
-                                  (ss->allowedByPolicy &
-                                   ss->chosenPreference & SSL_CB_IMPLEMENTED);
+    allowed = !ss->opt.enableSSL2 ? 0 : (ss->allowedByPolicy &
+                                         ss->chosenPreference & SSL_CB_IMPLEMENTED);
     for (i = 0; i < ssl2_NUM_SUITES_IMPLEMENTED * 3; i += 3) {
         const PRUint8 *hs = implementedCipherSuites + i;
         int ok = allowed & (1U << hs[0]);
@@ -267,12 +265,10 @@ ssl2_SetPolicy(PRInt32 which, PRInt32 policy)
     if (policy == SSL_ALLOWED) {
         allowedByPolicy |= bitMask;
         maybeAllowedByPolicy |= bitMask;
-    }
-    else if (policy == SSL_RESTRICTED) {
+    } else if (policy == SSL_RESTRICTED) {
         allowedByPolicy &= ~bitMask;
         maybeAllowedByPolicy |= bitMask;
-    }
-    else {
+    } else {
         allowedByPolicy &= ~bitMask;
         maybeAllowedByPolicy &= ~bitMask;
     }
@@ -301,8 +297,7 @@ ssl2_GetPolicy(PRInt32 which, PRInt32 *oPolicy)
 
     if (maybeAllowedByPolicy & bitMask) {
         policy = (allowedByPolicy & bitMask) ? SSL_ALLOWED : SSL_RESTRICTED;
-    }
-    else {
+    } else {
         policy = SSL_NOT_ALLOWED;
     }
 
@@ -617,8 +612,7 @@ ssl2_SendServerFinishedMessage(sslSocket *ss)
             if (ss->sec.uncache)
                 (*ss->sec.uncache)(sid);
             rv = (SECStatus)sent;
-        }
-        else if (!ss->opt.noCache) {
+        } else if (!ss->opt.noCache) {
             if (sid->cached == never_cached) {
                 (*ss->sec.cache)(sid);
             }
@@ -873,8 +867,7 @@ ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
         if (rv < 0) {
             if (PORT_GetError() == PR_WOULD_BLOCK_ERROR) {
                 rv = 0;
-            }
-            else {
+            } else {
                 /* Return short write if some data already went out... */
                 if (count == 0)
                     count = rv;
@@ -887,8 +880,7 @@ ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
             if (ssl_SaveWriteData(ss, out + rv, amount + 2 - rv) ==
                 SECFailure) {
                 count = SECFailure;
-            }
-            else {
+            } else {
                 count += amount;
                 ss->sec.sendSequence++;
             }
@@ -973,8 +965,7 @@ ssl2_SendStream(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
                              "saving data",
                              SSL_GETPID(), ss->fd));
                 rv = 0;
-            }
-            else {
+            } else {
                 SSL_TRC(10, ("%d: SSL[%d]: send stream error %d",
                              SSL_GETPID(), ss->fd, PORT_GetError()));
                 /* Return short write if some data already went out... */
@@ -988,8 +979,7 @@ ssl2_SendStream(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
             /* Short write.  Save the data and return. */
             if (ssl_SaveWriteData(ss, out + rv, buflen - rv) == SECFailure) {
                 count = SECFailure;
-            }
-            else {
+            } else {
                 count += amount;
                 ss->sec.sendSequence++;
             }
@@ -1048,8 +1038,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
             hlen = 3;
             padding = ss->sec.blockSize - padding;
             nout += padding;
-        }
-        else {
+        } else {
             hlen = 2;
         }
         buflen = hlen + nout;
@@ -1067,8 +1056,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
             *op++ = MSB(nout);
             *op++ = LSB(nout);
             *op++ = padding;
-        }
-        else {
+        } else {
             *op++ = 0x80 | MSB(nout);
             *op++ = LSB(nout);
         }
@@ -1105,8 +1093,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
         if (rv < 0) {
             if (PORT_GetError() == PR_WOULD_BLOCK_ERROR) {
                 rv = 0;
-            }
-            else {
+            } else {
                 SSL_TRC(10, ("%d: SSL[%d]: send block error %d",
                              SSL_GETPID(), ss->fd, PORT_GetError()));
                 /* Return short write if some data already went out... */
@@ -1120,8 +1107,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
             /* Short write.  Save the data and return. */
             if (ssl_SaveWriteData(ss, out + rv, op - out - rv) == SECFailure) {
                 count = SECFailure;
-            }
-            else {
+            } else {
                 count += amount;
                 ss->sec.sendSequence++;
             }
@@ -1226,8 +1212,7 @@ ssl_GatherRecord1stHandshake(sslSocket *ss)
     if ((ss->version >= SSL_LIBRARY_VERSION_3_0) || IS_DTLS(ss)) {
         /* Wait for handshake to complete, or application data to arrive.  */
         rv = ssl3_GatherCompleteHandshake(ss, 0);
-    }
-    else {
+    } else {
         /* See if we have a complete record */
         rv = ssl2_GatherRecord(ss, 0);
     }
@@ -1886,12 +1871,10 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
         if ((ohs[0] == SSL_CK_RC4_128_WITH_MD5) ||
             (ohs[0] == SSL_CK_RC2_128_CBC_WITH_MD5)) {
             PORT_SetError(SSL_ERROR_US_ONLY_SERVER);
-        }
-        else if ((ohs[0] == SSL_CK_RC4_128_EXPORT40_WITH_MD5) ||
-                 (ohs[0] == SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5)) {
+        } else if ((ohs[0] == SSL_CK_RC4_128_EXPORT40_WITH_MD5) ||
+                   (ohs[0] == SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5)) {
             PORT_SetError(SSL_ERROR_EXPORT_ONLY_SERVER);
-        }
-        else {
+        } else {
             PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
         }
         SSL_DBG(("%d: SSL[%d]: no cipher overlap", SSL_GETPID(), ss->fd));
@@ -2223,8 +2206,7 @@ ssl2_TryToFinish(sslSocket *ss)
         if (ss->sec.isServer) {
             /* Send server finished message if we already didn't */
             rv = ssl2_SendServerFinishedMessage(ss);
-        }
-        else {
+        } else {
             /* Send client finished message if we already didn't */
             rv = ssl2_SendClientFinishedMessage(ss);
         }
@@ -2469,8 +2451,8 @@ ssl2_HandleClientCertificate(sslSocket *ss,
         goto loser;
 
     /* Now ask the server application if it likes the certificate... */
-    rv = (SECStatus) (*ss->authCertificate)(ss->authCertificateArg,
-                                            ss->fd, PR_TRUE, PR_TRUE);
+    rv = (SECStatus)(*ss->authCertificate)(ss->authCertificateArg,
+                                           ss->fd, PR_TRUE, PR_TRUE);
     /* Hey, it liked it. */
     if (SECSuccess == rv)
         goto done;
@@ -2612,8 +2594,7 @@ ssl2_HandleMessage(sslSocket *ss)
                 ss->gs.recordLen) {
                 /* prevent overflow crash. */
                 rv = SECFailure;
-            }
-            else
+            } else
                 rv = ssl2_HandleClientCertificate(ss, data[1],
                                                   data + SSL_HL_CLIENT_CERTIFICATE_HBYTES,
                                                   certLen,
@@ -2795,8 +2776,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
             SSL_TRC(3, ("%d: SSL[%d]: demoting self (%x) to server version (%x)",
                         SSL_GETPID(), ss->fd, SSL_LIBRARY_VERSION_2,
                         ss->version));
-        }
-        else {
+        } else {
             SSL_TRC(1, ("%d: SSL[%d]: server version is %x (we are %x)",
                         SSL_GETPID(), ss->fd, ss->version, SSL_LIBRARY_VERSION_2));
             /* server claims to be newer but does not follow protocol */
@@ -2845,8 +2825,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
         if (rv != SECSuccess) {
             goto loser;
         }
-    }
-    else {
+    } else {
         if (certType != SSL_CT_X509_CERTIFICATE) {
             PORT_SetError(SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE);
             goto loser;
@@ -2916,8 +2895,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
                                  SSL_GETPID(), ss->fd));
                         PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
                         rv = SECFailure;
-                    }
-                    else {
+                    } else {
                         /* cert is bad */
                         SSL_DBG(("%d: SSL[%d]: server certificate is no good: error=%d",
                                  SSL_GETPID(), ss->fd, PORT_GetError()));
@@ -2925,8 +2903,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
                     goto loser;
                 }
                 /* cert is good */
-            }
-            else {
+            } else {
                 SSL_DBG(("%d: SSL[%d]: server certificate is no good: error=%d",
                          SSL_GETPID(), ss->fd, PORT_GetError()));
                 goto loser;
@@ -3032,8 +3009,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     /* Try to find server in our session-id cache */
     if (ss->opt.noCache) {
         sid = NULL;
-    }
-    else {
+    } else {
         sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID,
                             ss->url);
     }
@@ -3434,8 +3410,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
             ** knows whats up.
             */
             ss->version = SSL_LIBRARY_VERSION_2;
-        }
-        else {
+        } else {
             SSL_TRC(1, ("%d: SSL[%d]: client version is %x (we are %x)",
                         SSL_GETPID(), ss->fd, ss->version, SSL_LIBRARY_VERSION_2));
             PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
@@ -3473,8 +3448,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
                     ss->sec.ci.peer.pr_s6_addr32[2],
                     ss->sec.ci.peer.pr_s6_addr32[3]));
         sid = (*ssl_sid_lookup)(&ss->sec.ci.peer, sd, sdLen, ss->dbHandle);
-    }
-    else {
+    } else {
         sid = NULL;
     }
     if (sid) {
@@ -3498,8 +3472,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
         if (rv != SECSuccess) {
             goto loser;
         }
-    }
-    else {
+    } else {
         SECItem *derCert = &serverCert->derCert;
 
         SSL_TRC(7, ("%d: SSL[%d]: server, lookup nonce missed",

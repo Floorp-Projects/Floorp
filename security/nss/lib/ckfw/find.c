@@ -270,8 +270,7 @@ nssCKFWFindObjects_Next(
                                             fwFindObjects->mdToken, fwFindObjects->fwToken,
                                             fwFindObjects->mdInstance, fwFindObjects->fwInstance);
                 fwFindObjects->mdfo1 = (NSSCKMDFindObjects *)NULL;
-            }
-            else {
+            } else {
                 goto wrap;
             }
         }
@@ -296,8 +295,7 @@ nssCKFWFindObjects_Next(
                                             fwFindObjects->mdToken, fwFindObjects->fwToken,
                                             fwFindObjects->mdInstance, fwFindObjects->fwInstance);
                 fwFindObjects->mdfo2 = (NSSCKMDFindObjects *)NULL;
-            }
-            else {
+            } else {
                 goto wrap;
             }
         }

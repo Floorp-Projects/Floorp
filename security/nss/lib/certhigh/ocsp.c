@@ -206,8 +206,7 @@ printHexString(const char *prefix, SECItem *hexval)
     for (i = 0; i < hexval->len; i++) {
         if (i != hexval->len - 1) {
             hexbuf = PR_sprintf_append(hexbuf, "%02x:", hexval->data[i]);
-        }
-        else {
+        } else {
             hexbuf = PR_sprintf_append(hexbuf, "%02x", hexval->data[i]);
         }
     }
@@ -358,8 +357,7 @@ ocsp_CopyRevokedInfo(PLArenaPool *arena, ocspCertStatus *dest,
         if (!dest->certStatusInfo.revokedInfo->revocationReason) {
             goto loser;
         }
-    }
-    else {
+    } else {
         dest->certStatusInfo.revokedInfo->revocationReason = NULL;
     }
 
@@ -461,15 +459,13 @@ ocsp_RemoveCacheItemFromLinkedList(OCSPCacheData *cache, OCSPCacheItem *item)
         PORT_Assert(item->moreRecent->lessRecent == item);
         cache->LRUitem = item->moreRecent;
         cache->LRUitem->lessRecent = NULL;
-    }
-    else if (item == cache->MRUitem) {
+    } else if (item == cache->MRUitem) {
         PORT_Assert(item->moreRecent == NULL);
         PORT_Assert(item->lessRecent != NULL);
         PORT_Assert(item->lessRecent->moreRecent == item);
         cache->MRUitem = item->lessRecent;
         cache->MRUitem->moreRecent = NULL;
-    }
-    else {
+    } else {
         /* remove an entry in the middle of the list */
         PORT_Assert(item->moreRecent != NULL);
         PORT_Assert(item->lessRecent != NULL);
@@ -682,8 +678,7 @@ ocsp_SetCacheItemResponse(OCSPCacheItem *item,
             rv = DER_GeneralizedTimeToTime(&item->nextUpdate,
                                            response->nextUpdate);
             item->haveNextUpdate = (rv == SECSuccess);
-        }
-        else {
+        } else {
             item->haveNextUpdate = PR_FALSE;
         }
     }
@@ -711,8 +706,7 @@ ocsp_FreshenCacheItemNextFetchAttemptTime(OCSPCacheItem *cacheItem)
                                                       MICROSECONDS_PER_SECOND;
         OCSP_TRACE_TIME("latestTimeWhenResponseIsConsideredFresh:",
                         latestTimeWhenResponseIsConsideredFresh);
-    }
-    else {
+    } else {
         latestTimeWhenResponseIsConsideredFresh = now +
                                                   OCSP_Global.minimumSecondsToNextFetchAttempt *
                                                       MICROSECONDS_PER_SECOND;
@@ -820,8 +814,7 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
         if (certIDWasConsumed) {
             myCertID = certID;
             *certIDWasConsumed = PR_TRUE;
-        }
-        else {
+        } else {
             myCertID = cert_DupOCSPCertID(certID);
             if (!myCertID) {
                 PR_ExitMonitor(OCSP_Global.monitor);
@@ -849,13 +842,11 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
                 PR_ExitMonitor(OCSP_Global.monitor);
                 return rv;
             }
-        }
-        else {
+        } else {
             OCSP_TRACE(("Not caching response because the response is not "
                         "newer than the cache"));
         }
-    }
-    else {
+    } else {
         cacheItem->missingResponseError = PORT_GetError();
         if (cacheItem->certStatusArena) {
             PORT_FreeArena(cacheItem->certStatusArena, PR_FALSE);
@@ -902,11 +893,9 @@ CERT_OCSPCacheSettings(PRInt32 maxCacheEntries,
 
     if (maxCacheEntries < 0) {
         OCSP_Global.maxCacheEntries = -1; /* disable cache */
-    }
-    else if (maxCacheEntries == 0) {
+    } else if (maxCacheEntries == 0) {
         OCSP_Global.maxCacheEntries = 0; /* unlimited cache entries */
-    }
-    else {
+    } else {
         OCSP_Global.maxCacheEntries = maxCacheEntries;
     }
 
@@ -964,8 +953,7 @@ OCSP_InitGlobal(void)
         OCSP_Global.cache.numberOfEntries = 0;
         OCSP_Global.cache.MRUitem = NULL;
         OCSP_Global.cache.LRUitem = NULL;
-    }
-    else {
+    } else {
         /*
          * NSS might call this function twice while attempting to init.
          * But it's not allowed to call this again after any activity.
@@ -1623,8 +1611,7 @@ ocsp_DigestValue(PLArenaPool *arena, SECOidTag digestAlg,
             goto loser;
         }
         digestBuff = result->data;
-    }
-    else {
+    } else {
         if (fill->len < digestObject->length) {
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             goto loser;
@@ -1649,8 +1636,7 @@ ocsp_DigestValue(PLArenaPool *arena, SECOidTag digestAlg,
 loser:
     if (arena != NULL) {
         PORT_ArenaRelease(arena, mark);
-    }
-    else {
+    } else {
         if (result != NULL) {
             SECITEM_FreeItem(result, (fill == NULL) ? PR_TRUE : PR_FALSE);
         }
@@ -2909,8 +2895,7 @@ ocsp_ParseURL(const char *url, char **pHostname, PRUint16 *pPort, char **pPath)
             goto loser;
         PORT_Memcpy(path, save, len);
         path[len] = '\0';
-    }
-    else {
+    } else {
         path = PORT_Strdup("/");
         if (path == NULL)
             goto loser;
@@ -2975,8 +2960,7 @@ ocsp_ConnectToHost(const char *host, PRUint16 port)
         } while (PR_Connect(sock, &addr, timeout) != PR_SUCCESS);
 
         PORT_Free(netdbbuf);
-    }
-    else {
+    } else {
         /*
 	 * First put the port into the address, then connect.
 	 */
@@ -3054,8 +3038,7 @@ ocsp_SendEncodedRequest(const char *location, const SECItem *encodedRequest)
          */
         if (PR_Write(sock, header, (PRInt32)PORT_Strlen(header)) < 0)
             goto loser;
-    }
-    else {
+    } else {
         header = PR_smprintf("POST %s HTTP/1.0\r\n"
                              "Host: %s%s\r\n"
                              "Content-Type: application/ocsp-request\r\n"
@@ -3111,8 +3094,7 @@ ocsp_read(PRFileDesc *fd, char *buf, int toread, PRIntervalTime timeout)
                 total = -1; /* report the error if we didn't read anything yet */
             }
             break;
-        }
-        else if (got == 0) { /* EOS */
+        } else if (got == 0) { /* EOS */
             break;
         }
 
@@ -3188,8 +3170,7 @@ ocsp_GetEncodedResponse(PLArenaPool *arena, PRFileDesc *sock)
                    EOS or there was a read error */
                 EOS = PR_TRUE;
             }
-        }
-        else {
+        } else {
             /* recv error or EOS */
             EOS = PR_TRUE;
         }
@@ -3260,15 +3241,13 @@ ocsp_GetEncodedResponse(PLArenaPool *arena, PRFileDesc *sock)
 
         if (0 == PORT_Strcasecmp(nextHeader, "content-type")) {
             contenttype = value;
-        }
-        else if (0 == PORT_Strcasecmp(nextHeader, "content-length")) {
+        } else if (0 == PORT_Strcasecmp(nextHeader, "content-length")) {
             contentlength = atoi(value);
         }
 
         if (thisHeaderEnd) {
             nextHeader = thisHeaderEnd + CRLFlen;
-        }
-        else {
+        } else {
             nextHeader = NULL;
         }
 
@@ -3308,8 +3287,7 @@ ocsp_GetEncodedResponse(PLArenaPool *arena, PRFileDesc *sock)
                    EOS or there was a read error */
                 EOS = PR_TRUE;
             }
-        }
-        else {
+        } else {
             /* recv error or EOS */
             EOS = PR_TRUE;
         }
@@ -3643,11 +3621,9 @@ ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena,
 
     if (!strcmp(method, "GET")) {
         encodedResponse = cert_GetOCSPResponse(arena, location, encodedRequest);
-    }
-    else if (!strcmp(method, "POST")) {
+    } else if (!strcmp(method, "POST")) {
         encodedResponse = CERT_PostOCSPRequest(arena, location, encodedRequest);
-    }
-    else {
+    } else {
         goto loser;
     }
 
@@ -3711,8 +3687,7 @@ cert_GetOCSPResponse(PLArenaPool *arena, const char *location,
      */
     if (arena) {
         fullGetPath = (char *)PORT_ArenaAlloc(arena, getURLLength);
-    }
-    else {
+    } else {
         fullGetPath = (char *)PORT_Alloc(getURLLength);
     }
     if (!fullGetPath) {
@@ -3757,8 +3732,7 @@ cert_FetchOCSPResponse(PLArenaPool *arena, const char *location,
             &registeredHttpClient->fcnTable.ftable1,
             location,
             encodedRequest);
-    }
-    else {
+    } else {
         /* use internal http client */
         PRFileDesc *sock = ocsp_SendEncodedRequest(location, encodedRequest);
         if (sock) {
@@ -3968,14 +3942,12 @@ ocsp_GetSignerCertificate(CERTCertDBHandle *handle, ocspResponseData *tbsData,
             if (rv != SECSuccess) {
                 if (PORT_GetError() == SEC_ERROR_BAD_DER)
                     PORT_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE);
-            }
-            else {
+            } else {
                 signerCert = CERT_FindCertByName(handle, &encodedName);
             }
             PORT_FreeArena(arena, PR_FALSE);
         }
-    }
-    else {
+    } else {
         /*
     	 * The signer is either 1) a known issuer CA we passed in,
     	 * 2) the default OCSP responder, or 3) an intermediate CA
@@ -3986,8 +3958,7 @@ ocsp_GetSignerCertificate(CERTCertDBHandle *handle, ocspResponseData *tbsData,
             ocsp_CertGetDefaultResponder(handle, NULL);
         if (responder && ocsp_matchcert(certIndex, responder)) {
             signerCert = CERT_DupCertificate(responder);
-        }
-        else if (issuer && ocsp_matchcert(certIndex, issuer)) {
+        } else if (issuer && ocsp_matchcert(certIndex, issuer)) {
             signerCert = CERT_DupCertificate(issuer);
         }
         for (i = 0; (signerCert == NULL) && (i < certCount); i++) {
@@ -4111,8 +4082,7 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
         if (signature->status == SECSuccess) {
             if (pSignerCert != NULL)
                 *pSignerCert = CERT_DupCertificate(signature->cert);
-        }
-        else {
+        } else {
             PORT_SetError(signature->failureReason);
         }
         return signature->status;
@@ -4153,13 +4123,11 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
      */
     if (ocsp_CertIsOCSPDefaultResponder(handle, signerCert)) {
         rv = SECSuccess;
-    }
-    else {
+    } else {
         SECCertUsage certUsage;
         if (CERT_IsCACert(signerCert, NULL)) {
             certUsage = certUsageAnyCA;
-        }
-        else {
+        } else {
             certUsage = certUsageStatusResponder;
         }
         rv = cert_VerifyCertWithFlags(handle, signerCert, PR_TRUE, certUsage,
@@ -4183,8 +4151,7 @@ finish:
         signature->failureReason = PORT_GetError();
         if (signerCert != NULL)
             CERT_DestroyCertificate(signerCert);
-    }
-    else {
+    } else {
         /*
     	 * Save signer's certificate in signature.
     	 */
@@ -4672,8 +4639,7 @@ ocsp_VerifySingleResponse(CERTOCSPSingleResponse *single,
         LL_ADD(tmp, tmp, nextUpdate);
         if (LL_CMP(tmp, <, now) || LL_CMP(producedAt, >, nextUpdate))
             return ocsp_HandleOldSingleResponse(single, now);
-    }
-    else if (ocsp_TimeIsRecent(thisUpdate) != PR_TRUE) {
+    } else if (ocsp_TimeIsRecent(thisUpdate) != PR_TRUE) {
         return ocsp_HandleOldSingleResponse(single, now);
     }
 
@@ -4955,8 +4921,7 @@ ocsp_GetCachedOCSPResponseStatus(CERTOCSPCertID *certID,
             if (*rvOcsp != SECSuccess) {
                 *missingResponseError = PORT_GetError();
             }
-        }
-        else {
+        } else {
             /*
              * No status cached, the previous attempt failed.
              * If OCSP is required, we never decide based on a failed attempt
@@ -5078,10 +5043,9 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
         if (ocsp_FetchingFailureIsVerificationFailure()) {
             PORT_SetError(err);
             rvOcsp = SECFailure;
-        }
-        else if (cachedResponseFreshness == ocspStale &&
-                 (cachedErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT ||
-                  cachedErrorCode == SEC_ERROR_REVOKED_CERTIFICATE)) {
+        } else if (cachedResponseFreshness == ocspStale &&
+                   (cachedErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT ||
+                    cachedErrorCode == SEC_ERROR_REVOKED_CERTIFICATE)) {
             /* If we couldn't get a response for a certificate that the OCSP
              * responder previously told us was bad, then assume it is still
              * bad until we hear otherwise, as it is very unlikely that the
@@ -5091,8 +5055,7 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
              */
             PORT_SetError(cachedErrorCode);
             rvOcsp = SECFailure;
-        }
-        else {
+        } else {
             rvOcsp = SECSuccess;
         }
     }
@@ -5267,8 +5230,7 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
     PR_EnterMonitor(OCSP_Global.monitor);
     if (OCSP_Global.forcePost) {
         currentStage = stagePOST;
-    }
-    else {
+    } else {
         currentStage = stageGET;
     }
     PR_ExitMonitor(OCSP_Global.monitor);
@@ -5327,8 +5289,7 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
 
         if (currentStage == stageGET) {
             method = "GET";
-        }
-        else {
+        } else {
             PORT_Assert(currentStage == stagePOST);
             method = "POST";
         }
@@ -5363,18 +5324,15 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
             if (validResponseWithAccurateInfo) {
                 ocsp_CacheSingleResponse(certID, singleResponse,
                                          certIDWasConsumed);
-            }
-            else {
+            } else {
                 retry = PR_TRUE;
                 currentStage = stagePOST;
             }
-        }
-        else {
+        } else {
             /* cache the POST respone, regardless of status */
             if (!singleResponse) {
                 cert_RememberOCSPProcessingFailure(certID, certIDWasConsumed);
-            }
-            else {
+            } else {
                 ocsp_CacheSingleResponse(certID, singleResponse,
                                          certIDWasConsumed);
             }
@@ -5948,8 +5906,7 @@ CERT_SetOCSPDefaultResponder(CERTCertDBHandle *handle,
         statusContext->defaultResponderCert = cert;
         /*OCSP enabled, switching responder: clear cache*/
         CERT_ClearOCSPCache();
-    }
-    else {
+    } else {
         PORT_Assert(statusContext->useDefaultResponder == PR_FALSE);
         CERT_DestroyCertificate(cert);
         /*OCSP currently not enabled, no need to clear cache*/

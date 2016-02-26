@@ -252,8 +252,7 @@ ssl_DupSocket(sslSocket *os)
             }
             PORT_Memcpy(ss->ssl3.dheGroups, os->ssl3.dheGroups,
                         sizeof(SSLDHEGroupType) * os->ssl3.numDHEGroups);
-        }
-        else {
+        } else {
             ss->ssl3.dheGroups = NULL;
         }
 
@@ -264,8 +263,7 @@ ssl_DupSocket(sslSocket *os)
                             os->sizeCipherSpecs);
             ss->sizeCipherSpecs = os->sizeCipherSpecs;
             ss->preferredCipher = os->preferredCipher;
-        }
-        else {
+        } else {
             ss->cipherSpecs = NULL; /* produced lazily */
             ss->sizeCipherSpecs = 0;
             ss->preferredCipher = NULL;
@@ -284,26 +282,20 @@ ssl_DupSocket(sslSocket *os)
                     sc->serverCertChain = CERT_DupCertList(oc->serverCertChain);
                     if (!sc->serverCertChain)
                         goto loser;
-                }
-                else {
+                } else {
                     sc->serverCert = NULL;
                     sc->serverCertChain = NULL;
                 }
-                sc->serverKeyPair = oc->serverKeyPair ?
-                                                      ssl3_GetKeyPairRef(oc->serverKeyPair)
+                sc->serverKeyPair = oc->serverKeyPair ? ssl3_GetKeyPairRef(oc->serverKeyPair)
                                                       : NULL;
                 if (oc->serverKeyPair && !sc->serverKeyPair)
                     goto loser;
                 sc->serverKeyBits = oc->serverKeyBits;
-                ss->certStatusArray[i] = !os->certStatusArray[i] ? NULL :
-                                                                 SECITEM_DupArray(NULL, os->certStatusArray[i]);
+                ss->certStatusArray[i] = !os->certStatusArray[i] ? NULL : SECITEM_DupArray(NULL, os->certStatusArray[i]);
             }
-            ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL :
-                                                       ssl3_GetKeyPairRef(os->stepDownKeyPair);
-            ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL :
-                                                                 ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
-            ss->dheKeyPair = !os->dheKeyPair ? NULL :
-                                             ssl3_GetKeyPairRef(os->dheKeyPair);
+            ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL : ssl3_GetKeyPairRef(os->stepDownKeyPair);
+            ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL : ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
+            ss->dheKeyPair = !os->dheKeyPair ? NULL : ssl3_GetKeyPairRef(os->dheKeyPair);
             ss->dheParams = os->dheParams;
 
             /*
@@ -487,8 +479,7 @@ ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled)
 
     if (osfd->methods->setsocketoption) {
         rv = (SECStatus)osfd->methods->setsocketoption(osfd, &opt);
-    }
-    else {
+    } else {
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     }
 
@@ -578,13 +569,11 @@ ssl_EnableTLS(SSLVersionRange *vrange, PRBool on)
         /* Expand the range of enabled version to include TLS 1.0 */
         vrange->min = PR_MIN(vrange->min, SSL_LIBRARY_VERSION_TLS_1_0);
         vrange->max = PR_MAX(vrange->max, SSL_LIBRARY_VERSION_TLS_1_0);
-    }
-    else {
+    } else {
         /* Disable all TLS versions, leaving only SSL 3.0 if it was enabled */
         if (vrange->min == SSL_LIBRARY_VERSION_3_0) {
             vrange->max = SSL_LIBRARY_VERSION_3_0;
-        }
-        else {
+        } else {
             /* Only TLS was enabled, so now no versions are. */
             vrange->min = SSL_LIBRARY_VERSION_NONE;
             vrange->max = SSL_LIBRARY_VERSION_NONE;
@@ -619,13 +608,11 @@ ssl_EnableSSL3(SSLVersionRange *vrange, PRBool on)
          * we don't need to change vrange->max.
          */
         vrange->min = SSL_LIBRARY_VERSION_3_0;
-    }
-    else {
+    } else {
         /* Disable SSL 3.0, leaving TLS unaffected. */
         if (vrange->max > SSL_LIBRARY_VERSION_3_0) {
             vrange->min = PR_MAX(vrange->min, SSL_LIBRARY_VERSION_TLS_1_0);
-        }
-        else {
+        } else {
             /* Only SSL 3.0 was enabled, so now no versions are. */
             vrange->min = SSL_LIBRARY_VERSION_NONE;
             vrange->max = SSL_LIBRARY_VERSION_NONE;
@@ -791,8 +778,7 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             if (ss->handshakeBegun) {
                 PORT_SetError(PR_INVALID_STATE_ERROR);
                 rv = SECFailure;
-            }
-            else {
+            } else {
                 if (PR_FALSE != on) {
                     if (PR_SUCCESS == SSL_BypassSetup()) {
 #ifdef NO_PKCS11_BYPASS
@@ -800,12 +786,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 #else
                         ss->opt.bypassPKCS11 = on;
 #endif
-                    }
-                    else {
+                    } else {
                         rv = SECFailure;
                     }
-                }
-                else {
+                } else {
                     ss->opt.bypassPKCS11 = PR_FALSE;
                 }
             }
@@ -822,8 +806,7 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             if (on) {
                 locksEverDisabled = PR_TRUE;
                 strcpy(lockStatus + LOCKSTATUS_OFFSET, "DISABLED.");
-            }
-            else if (!holdingLocks) {
+            } else if (!holdingLocks) {
                 rv = ssl_MakeLocks(ss);
                 if (rv != SECSuccess) {
                     ss->opt.noLocks = PR_TRUE;
@@ -1257,12 +1240,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 #else
                     ssl_defaults.bypassPKCS11 = on;
 #endif
-                }
-                else {
+                } else {
                     return SECFailure;
                 }
-            }
-            else {
+            } else {
                 ssl_defaults.bypassPKCS11 = PR_FALSE;
             }
             break;
@@ -1384,11 +1365,9 @@ ssl_CipherPolicySet(PRInt32 which, PRInt32 policy)
 
     if (ssl_IsRemovedCipherSuite(which)) {
         rv = SECSuccess;
-    }
-    else if (SSL_IS_SSL2_CIPHER(which)) {
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_SetPolicy(which, policy);
-    }
-    else {
+    } else {
         rv = ssl3_SetPolicy((ssl3CipherSuite)which, policy);
     }
     return rv;
@@ -1416,11 +1395,9 @@ SSL_CipherPolicyGet(PRInt32 which, PRInt32 *oPolicy)
     if (ssl_IsRemovedCipherSuite(which)) {
         *oPolicy = SSL_NOT_ALLOWED;
         rv = SECSuccess;
-    }
-    else if (SSL_IS_SSL2_CIPHER(which)) {
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_GetPolicy(which, oPolicy);
-    }
-    else {
+    } else {
         rv = ssl3_GetPolicy((ssl3CipherSuite)which, oPolicy);
     }
     return rv;
@@ -1459,8 +1436,7 @@ ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
     }
     if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_CipherPrefSetDefault(which, enabled);
-    }
-    else {
+    } else {
         rv = ssl3_CipherPrefSetDefault((ssl3CipherSuite)which, enabled);
     }
     return rv;
@@ -1489,11 +1465,9 @@ SSL_CipherPrefGetDefault(PRInt32 which, PRBool *enabled)
     if (ssl_IsRemovedCipherSuite(which)) {
         *enabled = PR_FALSE;
         rv = SECSuccess;
-    }
-    else if (SSL_IS_SSL2_CIPHER(which)) {
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_CipherPrefGetDefault(which, enabled);
-    }
-    else {
+    } else {
         rv = ssl3_CipherPrefGetDefault((ssl3CipherSuite)which, enabled);
     }
     return rv;
@@ -1517,8 +1491,7 @@ SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
     }
     if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_CipherPrefSet(ss, which, enabled);
-    }
-    else {
+    } else {
         rv = ssl3_CipherPrefSet(ss, (ssl3CipherSuite)which, enabled);
     }
     return rv;
@@ -1542,11 +1515,9 @@ SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 which, PRBool *enabled)
     if (ssl_IsRemovedCipherSuite(which)) {
         *enabled = PR_FALSE;
         rv = SECSuccess;
-    }
-    else if (SSL_IS_SSL2_CIPHER(which)) {
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
         rv = ssl2_CipherPrefGet(ss, which, enabled);
-    }
-    else {
+    } else {
         rv = ssl3_CipherPrefGet(ss, (ssl3CipherSuite)which, enabled);
     }
     return rv;
@@ -1763,13 +1734,11 @@ ssl3_SelectDHParams(sslSocket *ss)
 
     if (ss->ssl3.dheWeakGroupEnabled) {
         ss->dheParams = gWeakDHParams;
-    }
-    else {
+    } else {
         if (ss->ssl3.dheGroups) {
             selectedGroup = selectDHEGroup(ss, ss->ssl3.dheGroups,
                                            ss->ssl3.numDHEGroups);
-        }
-        else {
+        } else {
             size_t number_of_default_groups = PR_ARRAY_SIZE(ssl_default_dhe_groups);
             selectedGroup = selectDHEGroup(ss, ssl_default_dhe_groups,
                                            number_of_default_groups);
@@ -1802,8 +1771,7 @@ ssl_ImportFD(PRFileDesc *model, PRFileDesc *fd, SSLProtocolVariant variant)
     if (model == NULL) {
         /* Just create a default socket if we're given NULL for the model */
         ns = ssl_NewSocket((PRBool)(!ssl_defaults.noLocks), variant);
-    }
-    else {
+    } else {
         sslSocket *ss = ssl_FindSocket(model);
         if (ss == NULL || ss->protocolVariant != variant) {
             SSL_DBG(("%d: SSL[%d]: bad model socket in ssl_ImportFD",
@@ -1976,8 +1944,7 @@ SSL_GetNextProto(PRFileDesc *fd, SSLNextProtoState *state, unsigned char *buf,
         }
         PORT_Memcpy(buf, ss->ssl3.nextProto.data, ss->ssl3.nextProto.len);
         *bufLen = ss->ssl3.nextProto.len;
-    }
-    else {
+    } else {
         *bufLen = 0;
     }
 
@@ -2017,8 +1984,7 @@ SSL_SetSRTPCiphers(PRFileDesc *fd,
         if (*srtpCipher) {
             ss->ssl3.dtlsSRTPCiphers[ss->ssl3.dtlsSRTPCipherCount++] =
                 ciphers[i];
-        }
-        else {
+        } else {
             SSL_DBG(("%d: SSL[%d]: invalid or unimplemented SRTP cipher "
                      "suite specified: 0x%04hx",
                      SSL_GETPID(), fd,
@@ -2244,8 +2210,7 @@ ssl3_ConstrainVariantRangeByPolicy(SSLProtocolVariant protocolVariant)
     vrange.max = PR_MIN(vrange.max, pvrange.max);
     if (vrange.max >= vrange.min) {
         *VERSIONS_DEFAULTS(protocolVariant) = vrange;
-    }
-    else {
+    } else {
         /* there was no overlap, turn off range altogether */
         pvrange.min = pvrange.max = SSL_LIBRARY_VERSION_NONE;
         *VERSIONS_DEFAULTS(protocolVariant) = pvrange;
@@ -2551,8 +2516,7 @@ ssl_Accept(PRFileDesc *fd, PRNetAddr *sockaddr, PRIntervalTime timeout)
     if (newfd == NULL) {
         SSL_DBG(("%d: SSL[%d]: accept failed, errno=%d",
                  SSL_GETPID(), ss->fd, PORT_GetError()));
-    }
-    else {
+    } else {
         /* Create ssl module */
         ns = ssl_DupSocket(ss);
     }
@@ -2577,8 +2541,7 @@ ssl_Accept(PRFileDesc *fd, PRNetAddr *sockaddr, PRIntervalTime timeout)
         if (ns->opt.handshakeAsClient) {
             ns->handshake = ssl2_BeginClientHandshake;
             ss->handshaking = sslHandshakingAsClient;
-        }
-        else {
+        } else {
             ns->handshake = ssl2_BeginServerHandshake;
             ss->handshaking = sslHandshakingAsServer;
         }
@@ -2611,7 +2574,7 @@ ssl_Connect(PRFileDesc *fd, const PRNetAddr *sockaddr, PRIntervalTime timeout)
     SSL_LOCK_WRITER(ss);
 
     ss->cTimeout = timeout;
-    rv = (PRStatus) (*ss->ops->connect)(ss, sockaddr);
+    rv = (PRStatus)(*ss->ops->connect)(ss, sockaddr);
 
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
@@ -2632,7 +2595,7 @@ ssl_Bind(PRFileDesc *fd, const PRNetAddr *addr)
     SSL_LOCK_READER(ss);
     SSL_LOCK_WRITER(ss);
 
-    rv = (PRStatus) (*ss->ops->bind)(ss, addr);
+    rv = (PRStatus)(*ss->ops->bind)(ss, addr);
 
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
@@ -2652,7 +2615,7 @@ ssl_Listen(PRFileDesc *fd, PRIntn backlog)
     SSL_LOCK_READER(ss);
     SSL_LOCK_WRITER(ss);
 
-    rv = (PRStatus) (*ss->ops->listen)(ss, backlog);
+    rv = (PRStatus)(*ss->ops->listen)(ss, backlog);
 
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
@@ -2676,7 +2639,7 @@ ssl_Shutdown(PRFileDesc *fd, PRIntn how)
         SSL_LOCK_WRITER(ss);
     }
 
-    rv = (PRStatus) (*ss->ops->shutdown)(ss, how);
+    rv = (PRStatus)(*ss->ops->shutdown)(ss, how);
 
     if (how == PR_SHUTDOWN_SEND || how == PR_SHUTDOWN_BOTH) {
         SSL_UNLOCK_WRITER(ss);
@@ -2709,7 +2672,7 @@ ssl_Close(PRFileDesc *fd)
     ** where the LOCK calls and the corresponding UNLOCK calls are not in
     ** the same function scope.  The unlock calls are in ssl_FreeSocket().
     */
-    rv = (PRStatus) (*ss->ops->close)(ss);
+    rv = (PRStatus)(*ss->ops->close)(ss);
 
     return rv;
 }
@@ -2806,7 +2769,7 @@ ssl_GetPeerName(PRFileDesc *fd, PRNetAddr *addr)
         SSL_DBG(("%d: SSL[%d]: bad socket in getpeername", SSL_GETPID(), fd));
         return PR_FAILURE;
     }
-    return (PRStatus) (*ss->ops->getpeername)(ss, addr);
+    return (PRStatus)(*ss->ops->getpeername)(ss, addr);
 }
 
 /*
@@ -2829,12 +2792,10 @@ ssl_GetPeerInfo(sslSocket *ss)
     if (sin.inet.family == PR_AF_INET) {
         PR_ConvertIPv4AddrToIPv6(sin.inet.ip, &ss->sec.ci.peer);
         ss->sec.ci.port = sin.inet.port;
-    }
-    else if (sin.ipv6.family == PR_AF_INET6) {
+    } else if (sin.ipv6.family == PR_AF_INET6) {
         ss->sec.ci.peer = sin.ipv6.ip;
         ss->sec.ci.port = sin.ipv6.port;
-    }
-    else {
+    } else {
         PORT_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR);
         return SECFailure;
     }
@@ -2851,7 +2812,7 @@ ssl_GetSockName(PRFileDesc *fd, PRNetAddr *name)
         SSL_DBG(("%d: SSL[%d]: bad socket in getsockname", SSL_GETPID(), fd));
         return PR_FAILURE;
     }
-    return (PRStatus) (*ss->ops->getsockname)(ss, name);
+    return (PRStatus)(*ss->ops->getsockname)(ss, name);
 }
 
 SECStatus
@@ -2969,12 +2930,10 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                 new_flags &= ~PR_POLL_RW;
                 if (ss->handshaking == sslHandshakingAsClient) {
                     new_flags |= PR_POLL_WRITE;
-                }
-                else { /* handshaking as server */
+                } else { /* handshaking as server */
                     new_flags |= PR_POLL_READ;
                 }
-            }
-            else
+            } else
                 /* First handshake is in progress */
                 if (ss->lastWriteBlocked) {
                 if (new_flags & PR_POLL_READ) {
@@ -2986,8 +2945,7 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                     new_flags ^= PR_POLL_READ;  /* don't select on read. */
                     new_flags |= PR_POLL_WRITE; /* do    select on write. */
                 }
-            }
-            else if (new_flags & PR_POLL_WRITE) {
+            } else if (new_flags & PR_POLL_WRITE) {
                 /* The caller is trying to write, but the handshake is
                 ** blocked waiting for data to read, and the first
                 ** handshake has been sent.  So do NOT to poll on write
@@ -3000,14 +2958,12 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                 new_flags |= PR_POLL_READ; /* do    select on read. */
             }
         }
-    }
-    else if ((new_flags & PR_POLL_READ) && (SSL_DataPending(fd) > 0)) {
+    } else if ((new_flags & PR_POLL_READ) && (SSL_DataPending(fd) > 0)) {
         *p_out_flags = PR_POLL_READ; /* it's ready already. */
         return new_flags;
-    }
-    else if ((ss->lastWriteBlocked) && (how_flags & PR_POLL_READ) &&
-             (ss->pendingBuf.len != 0)) { /* write data waiting to be sent */
-        new_flags |= PR_POLL_WRITE;       /* also select on write. */
+    } else if ((ss->lastWriteBlocked) && (how_flags & PR_POLL_READ) &&
+               (ss->pendingBuf.len != 0)) { /* write data waiting to be sent */
+        new_flags |= PR_POLL_WRITE;         /* also select on write. */
     }
 
     if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
@@ -3024,8 +2980,7 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
              * of the application spinning.
              */
             new_flags &= (PR_POLL_WRITE | PR_POLL_EXCEPT);
-        }
-        else {
+        } else {
             /* Unfortunately, clearing new_flags will make it impossible for
              * the application to detect errors that it would otherwise be
              * able to detect with PR_POLL_EXCEPT, until the asynchronous
@@ -3052,8 +3007,7 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                 out_flags |= PR_POLL_READ;
             *p_out_flags = out_flags;
             new_flags = how_flags;
-        }
-        else {
+        } else {
             *p_out_flags = lower_out_flags;
             new_flags = lower_new_flags;
         }
@@ -3153,8 +3107,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
                 (PR_GetError() == PR_WOULD_BLOCK_ERROR) &&     \
                 (sent > 0)) {                                  \
                 return sent;                                   \
-            }                                                  \
-            else {                                             \
+            } else {                                           \
                 return -1;                                     \
             }                                                  \
         }                                                      \
@@ -3209,15 +3162,12 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
 
         if (!vectors || myIov.iov_len > limit) {
             addLen = 0;
-        }
-        else if ((addLen = iov->iov_len % K16) + myIov.iov_len <= limit) {
+        } else if ((addLen = iov->iov_len % K16) + myIov.iov_len <= limit) {
             /* Addlen is already computed. */;
-        }
-        else if (vectors > 1 &&
-                 iov[1].iov_len % K16 + addLen + myIov.iov_len <= 2 * limit) {
+        } else if (vectors > 1 &&
+                   iov[1].iov_len % K16 + addLen + myIov.iov_len <= 2 * limit) {
             addLen = limit - myIov.iov_len;
-        }
-        else
+        } else
             addLen = 0;
 
         if (!addLen) {
@@ -3237,17 +3187,14 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
             left = PR_MIN(limit, K16 - bufLen);
             if (!vectors             /* no more left */
                 || myIov.iov_len > 0 /* we didn't use that one all up */
-                || bufLen >= K16     /* it's full. */ ) {
+                || bufLen >= K16 /* it's full. */) {
                 addLen = 0;
-            }
-            else if ((addLen = iov->iov_len % K16) <= left) {
+            } else if ((addLen = iov->iov_len % K16) <= left) {
                 /* Addlen is already computed. */;
-            }
-            else if (vectors > 1 &&
-                     iov[1].iov_len % K16 + addLen <= left + limit) {
+            } else if (vectors > 1 &&
+                       iov[1].iov_len % K16 + addLen <= left + limit) {
                 addLen = left;
-            }
-            else
+            } else
                 addLen = 0;
 
         } while (addLen);
@@ -3552,8 +3499,7 @@ ssl_SetDefaultsFromEnvironment(void)
             ssl_keylog_iob = fopen(ev, "a");
             if (!ssl_keylog_iob) {
                 SSL_TRACE(("SSL: failed to open key log file"));
-            }
-            else {
+            } else {
                 if (ftell(ssl_keylog_iob) == 0) {
                     fputs("# SSL/TLS secrets log file, generated by NSS\n",
                           ssl_keylog_iob);
