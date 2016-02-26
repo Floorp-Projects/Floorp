@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
@@ -43,6 +44,7 @@ public interface BrowserDB {
     public abstract TabsAccessor getTabsAccessor();
     public abstract URLMetadata getURLMetadata();
     public abstract ReadingListAccessor getReadingListAccessor();
+    @RobocopTarget UrlAnnotations getUrlAnnotations();
 
     /**
      * Add default bookmarks to the database.
