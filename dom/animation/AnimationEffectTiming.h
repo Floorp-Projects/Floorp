@@ -8,6 +8,7 @@
 #define mozilla_dom_AnimationEffectTiming_h
 
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
+#include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
 
 namespace mozilla {
 namespace dom {
@@ -15,10 +16,16 @@ namespace dom {
 class AnimationEffectTiming : public AnimationEffectTimingReadOnly
 {
 public:
-  explicit AnimationEffectTiming(const TimingParams& aTiming)
-    : AnimationEffectTimingReadOnly(aTiming) { }
+  AnimationEffectTiming(const TimingParams& aTiming, KeyframeEffect* aEffect)
+    : AnimationEffectTimingReadOnly(aTiming)
+    , mEffect(aEffect) { }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  void Unlink() override { mEffect = nullptr; }
+
+private:
+  KeyframeEffect* MOZ_NON_OWNING_REF mEffect;
 };
 
 } // namespace dom
