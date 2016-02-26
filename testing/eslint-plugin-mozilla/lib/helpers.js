@@ -314,7 +314,7 @@ module.exports = {
    *         True or false
    */
   getIsHeadFile: function(scope) {
-    var pathAndFilename = scope.getFilename();
+    var pathAndFilename = this.cleanUpPath(scope.getFilename());
 
     return /.*[\\/]head(_.+)?\.js$/.test(pathAndFilename);
   },
@@ -330,7 +330,7 @@ module.exports = {
    *         True or false
    */
   getIsXpcshellTest: function(scope) {
-    var pathAndFilename = scope.getFilename();
+    var pathAndFilename = this.cleanUpPath(scope.getFilename());
 
     return /.*[\\/]test_.+\.js$/.test(pathAndFilename);
   },
@@ -346,7 +346,7 @@ module.exports = {
    *         True or false
    */
   getIsBrowserMochitest: function(scope) {
-    var pathAndFilename = scope.getFilename();
+    var pathAndFilename = this.cleanUpPath(scope.getFilename());
 
     return /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
   },
@@ -362,8 +362,6 @@ module.exports = {
    *         True or false
    */
   getIsTest: function(scope) {
-    var pathAndFilename = scope.getFilename();
-
     if (this.getIsXpcshellTest(scope)) {
       return true;
     }
@@ -405,7 +403,7 @@ module.exports = {
    * @return {String} The absolute path
    */
   getAbsoluteFilePath: function(context) {
-    var fileName = context.getFilename();
+    var fileName = this.cleanUpPath(context.getFilename());
     var cwd = process.cwd();
 
     if (path.isAbsolute(fileName)) {
@@ -420,5 +418,14 @@ module.exports = {
       var dirName = path.dirname(fileName);
       return cwd.slice(0, cwd.length - dirName.length) + fileName;
     }
+  },
+
+  /**
+   * When ESLint is run from SublimeText, paths retrieved from
+   * context.getFileName contain leading and trailing double-quote characters.
+   * These characters need to be removed.
+   */
+  cleanUpPath: function(path) {
+    return path.replace(/^"/, "").replace(/"$/, "");
   }
 };

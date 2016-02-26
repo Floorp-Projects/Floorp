@@ -8,9 +8,9 @@ function test() {
                      .getService(Components.interfaces.nsIChromeRegistry);
 
   var chromeroot = getChromeRoot(gTestPath);
-  var xpipath = chromeroot + "unsigned.xpi";
+  var xpipath = chromeroot + "amosigned.xpi";
   try {
-    xpipath = cr.convertChromeURL(makeURI(chromeroot + "unsigned.xpi")).spec;
+    xpipath = cr.convertChromeURL(makeURI(xpipath)).spec;
   } catch (ex) {
     //scenario where we are running from a .jar and already extracted
   }

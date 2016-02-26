@@ -120,6 +120,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     // Levels for displaying Tracking Protection state icons.
     private static final int LEVEL_SHIELD_ENABLED = 5;
     private static final int LEVEL_SHIELD_DISABLED = 6;
+    // Icon used for about:home
+    private static final int LEVEL_SEARCH_ICON = 999;
 
     private final ForegroundColorSpan mBlockedColor;
 
@@ -317,7 +319,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
 
         // Check to see if any protection was overridden first
-        if (loginInsecure) {
+        if (AboutPages.isTitlelessAboutPage(tab.getURL())) {
+            // We always want to just show a search icon on about:home
+            imageLevel = LEVEL_SEARCH_ICON;
+        } else if (loginInsecure) {
             imageLevel = LEVEL_LOCK_DISABLED;
         } else if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED) {
             imageLevel = LEVEL_SHIELD_DISABLED;

@@ -696,7 +696,6 @@ public class BrowserApp extends GeckoApp
             "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
-            "Reader:Share",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
@@ -1408,7 +1407,6 @@ public class BrowserApp extends GeckoApp
             "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
-            "Reader:Share",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
@@ -1729,11 +1727,6 @@ public class BrowserApp extends GeckoApp
                     removeAddonMenuItem(id);
                 }
             });
-
-        } else if ("Reader:Share".equals(event)) {
-            final String title = message.getString("title");
-            final String url = message.getString("url");
-            GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title, false);
         } else if ("Sanitize:ClearHistory".equals(event)) {
             handleClearHistory(message.optBoolean("clearSearchHistory", false));
             callback.sendSuccess(true);

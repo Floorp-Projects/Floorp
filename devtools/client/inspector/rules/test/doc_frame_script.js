@@ -1,6 +1,7 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* globals addMessageListener, sendAsyncMessage */
 
 "use strict";
 
@@ -10,12 +11,12 @@
 // then execute code upon receiving, and immediately send back a message.
 // This is so that chrome test code can execute code in content and wait for a
 // response this way:
-// let response = yield executeInContent(browser, "Test:MessageName", data, true);
-// The response message should have the same name "Test:MessageName"
+// let response = yield executeInContent(browser, "Test:msgName", data, true);
+// The response message should have the same name "Test:msgName"
 //
 // Some listeners do not send a response message back.
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {CssLogic} = require("devtools/shared/inspector/css-logic");
@@ -85,7 +86,8 @@ addMessageListener("Test:GetStyleSheetsInfoForNode", function(msg) {
 addMessageListener("Test:GetComputedStylePropertyValue", function(msg) {
   let {selector, pseudo, name} = msg.data;
   let element = content.document.querySelector(selector);
-  let value = content.document.defaultView.getComputedStyle(element, pseudo).getPropertyValue(name);
+  let value = content.document.defaultView.getComputedStyle(element, pseudo)
+                                          .getPropertyValue(name);
   sendAsyncMessage("Test:GetComputedStylePropertyValue", value);
 });
 
@@ -108,9 +110,8 @@ addMessageListener("Test:WaitForComputedStylePropertyValue", function(msg) {
     return value === expected;
   }).then(() => {
     sendAsyncMessage("Test:WaitForComputedStylePropertyValue");
-  })
+  });
 });
-
 
 var dumpn = msg => dump(msg + "\n");
 
@@ -120,19 +121,17 @@ var dumpn = msg => dump(msg + "\n");
  * @param {Function} validatorFn A validator function that returns a boolean.
  * This is called every few milliseconds to check if the result is true. When
  * it is true, the promise resolves.
- * @param {String} name Optional name of the test. This is used to generate
- * the success and failure messages.
  * @return a promise that resolves when the function returned true or rejects
  * if the timeout is reached
  */
-function waitForSuccess(validatorFn, name="untitled") {
+function waitForSuccess(validatorFn) {
   let def = promise.defer();
 
-  function wait(validatorFn) {
-    if (validatorFn()) {
+  function wait(fn) {
+    if (fn()) {
       def.resolve();
     } else {
-      setTimeout(() => wait(validatorFn), 200);
+      setTimeout(() => wait(fn), 200);
     }
   }
   wait(validatorFn);

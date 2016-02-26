@@ -19,7 +19,7 @@ function installCallback(url, status) {
 function startInstall() {
   var root = location.href.replace("concurrent_installs.html", "");
   var triggers = {
-    "Unsigned XPI": root + "unsigned.xpi"
+    "Unsigned XPI": root + "amosigned.xpi"
   };
   try {
     document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);

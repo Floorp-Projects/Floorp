@@ -13,4 +13,6 @@
     <item android:maxLevel="5" android:drawable="@drawable/shield_enabled"/>
     <item android:maxLevel="6" android:drawable="@drawable/shield_disabled"/>
 
+    <!-- Special icon used for about:home -->
+    <item android:maxLevel="999" android:drawable="@drawable/search_icon_inactive" />
 </level-list>

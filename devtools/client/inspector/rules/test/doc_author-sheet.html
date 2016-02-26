@@ -11,16 +11,16 @@
   </style>
 
   <script>
-var gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-  .getService(SpecialPowers.Ci.nsIIOService)
+    "use strict";
+    var gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                                  .getService(SpecialPowers.Ci.nsIIOService);
 
-var style = "data:text/css,a { background-color: seagreen; }";
-var uri = gIOService.newURI(style, null, null);
-var windowUtils = SpecialPowers.wrap(window)
-    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
-windowUtils.loadSheet(uri, windowUtils.AUTHOR_SHEET);
-
+    var style = "data:text/css,a { background-color: seagreen; }";
+    var uri = gIOService.newURI(style, null, null);
+    var windowUtils = SpecialPowers.wrap(window)
+        .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+        .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+    windowUtils.loadSheet(uri, windowUtils.AUTHOR_SHEET);
   </script>
 
 </head>

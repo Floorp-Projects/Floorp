@@ -22,8 +22,7 @@ const TEST_URI = `
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  let testElement = getNode("#testid");
+  let {inspector, view, testActor} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
   info("Checking that the rule-view has the element, #testid and " +
@@ -33,7 +32,7 @@ add_task(function*() {
   info("Changing the node's ID attribute and waiting for the " +
     "rule-view refresh");
   let ruleViewRefreshed = inspector.once("rule-view-refreshed");
-  testElement.setAttribute("id", "differentid");
+  yield testActor.setAttribute("#testid", "id", "differentid");
   yield ruleViewRefreshed;
 
   info("Checking that the rule-view doesn't have the #testid selector anymore");
@@ -41,7 +40,7 @@ add_task(function*() {
 
   info("Reverting the ID attribute change");
   ruleViewRefreshed = inspector.once("rule-view-refreshed");
-  testElement.setAttribute("id", "testid");
+  yield testActor.setAttribute("#differentid", "id", "testid");
   yield ruleViewRefreshed;
 
   info("Checking that the rule-view has all the selectors again");

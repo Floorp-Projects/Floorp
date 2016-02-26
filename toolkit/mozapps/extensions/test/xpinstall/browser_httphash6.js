@@ -26,7 +26,7 @@ function test() {
   // Set up the redirect to give a bad hash
   setup_redirect({
     "X-Target-Digest": "sha1:foo",
-    "Location": "http://example.com/browser/" + RELATIVE_DIR + "unsigned.xpi"
+    "Location": "http://example.com/browser/" + RELATIVE_DIR + "amosigned.xpi"
   });
 
   var url = "https://example.com/browser/" + RELATIVE_DIR + "redirect.sjs?mode=redirect";
@@ -55,8 +55,8 @@ function finish_failed_download() {
 
   // Give it the right hash this time
   setup_redirect({
-    "X-Target-Digest": "sha1:3d0dc22e1f394e159b08aaf5f0f97de4d5c65f4f",
-    "Location": "http://example.com/browser/" + RELATIVE_DIR + "unsigned.xpi"
+    "X-Target-Digest": "sha1:36ffb0acfd9c6e9682473aaebaab394d38b473c9",
+    "Location": "http://example.com/browser/" + RELATIVE_DIR + "amosigned.xpi"
   });
 
   // The harness expects onNewInstall events for all installs that are about to start

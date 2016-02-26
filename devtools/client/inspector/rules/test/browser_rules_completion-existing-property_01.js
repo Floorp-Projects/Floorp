@@ -58,13 +58,13 @@ const TEST_URI = "<h1 style='font: 24px serif'>Header</h1>";
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {toolbox, inspector, view, testActor} = yield openRuleView();
 
   info("Test autocompletion after 1st page load");
   yield runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  yield reloadPage(inspector);
+  yield reloadPage(inspector, testActor);
   yield runAutocompletionTest(toolbox, inspector, view);
 });
 
@@ -78,17 +78,22 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   let editor = yield focusEditableField(view, propertyName);
 
   info("Starting to test for css property completion");
+  let previousPopupSize = 0;
   for (let i = 0; i < testData.length; i++) {
-    yield testCompletion(testData[i], editor, view);
+    let expectPopupHiddenEvent = previousPopupSize > 0 && testData[3] === 0;
+    yield testCompletion(testData[i], expectPopupHiddenEvent, editor, view);
+    previousPopupSize = testData[3];
   }
 }
 
-function* testCompletion([key, completion, index, total], editor, view) {
+function* testCompletion([key, completion, index, total],
+                         expectPopupHiddenEvent, editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion + ", " + index + ", " + total);
 
+  // Listening for the right event that will tell us when the key has been
+  // entered and processed.
   let onSuggest;
-
   if (/(left|right|back_space|escape|home|end|page_up|page_down)/ig.test(key)) {
     info("Adding event listener for " +
       "left|right|back_space|escape|home|end|page_up|page_down keys");
@@ -98,11 +103,16 @@ function* testCompletion([key, completion, index, total], editor, view) {
     onSuggest = editor.once("after-suggest");
   }
 
+  // Also listening for popup hiding if needed.
+  let onMaybePopupHidden = expectPopupHiddenEvent
+                           ? once(editor.popup._panel, "hidden")
+                           : null;
+
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);
 
   yield onSuggest;
-  yield wait(1); // Equivalent of executeSoon
+  yield onMaybePopupHidden;
 
   info("Checking the state");
   if (completion != null) {

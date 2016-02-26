@@ -7,8 +7,6 @@
 // Check that inherited properties appear for a nested element in the
 // rule view.
 
-var {ELEMENT_STYLE} = require("devtools/server/actors/styles");
-
 const TEST_URI = `
   <style type="text/css">
     #test2 {

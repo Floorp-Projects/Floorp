@@ -9,7 +9,6 @@ var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
-
 const TEST_DATA = [{
   desc: "Formatting 0",
   time: 0,

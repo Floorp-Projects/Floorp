@@ -80,7 +80,7 @@ function* checkCopySelection(view) {
   try {
     yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
-  } catch(e) {
+  } catch (e) {
     failedClipboard(expectedPattern);
   }
 
@@ -118,7 +118,7 @@ function* checkSelectAll(view) {
   try {
     yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
-  } catch(e) {
+  } catch (e) {
     failedClipboard(expectedPattern);
   }
 

@@ -23,30 +23,17 @@ add_task(function*() {
 });
 
 function* testPressingEscapeRevertsChanges(view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
-  let bezierTooltip = view.tooltips.cubicBezier;
+  let {propEditor} = yield openCubicBezierAndChangeCoords(view, 1, 0,
+    [0.1, 2, 0.9, -1], {
+      selector: "body",
+      name: "animation-timing-function",
+      value: "cubic-bezier(0.1, 2, 0.9, -1)"
+    });
 
-  let onShown = bezierTooltip.tooltip.once("shown");
-  swatch.click();
-  yield onShown;
-
-  let widget = yield bezierTooltip.widget;
-  info("Simulating a change of curve in the widget");
-  widget.coordinates = [0.1, 2, 0.9, -1];
-  yield ruleEditor.rule._applyingModifications;
-
-  yield waitForComputedStyleProperty("body", null, "animation-timing-function",
-    "cubic-bezier(0.1, 2, 0.9, -1)");
   is(propEditor.valueSpan.textContent, "cubic-bezier(.1,2,.9,-1)",
     "Got expected property value.");
 
-  info("Pressing ESCAPE to close the tooltip");
-  let onHidden = bezierTooltip.tooltip.once("hidden");
-  EventUtils.sendKey("ESCAPE", widget.parent.ownerDocument.defaultView);
-  yield onHidden;
-  yield ruleEditor.rule._applyingModifications;
+  yield escapeTooltip(view);
 
   yield waitForComputedStyleProperty("body", null, "animation-timing-function",
     "linear");
@@ -56,13 +43,11 @@ function* testPressingEscapeRevertsChanges(view) {
 
 function* testPressingEscapeRevertsChangesAndDisables(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
-  let bezierTooltip = view.tooltips.cubicBezier;
+  let textProp = ruleEditor.rule.textProps[0];
+  let propEditor = textProp.editor;
 
   info("Disabling animation-timing-function property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield togglePropStatus(view, textProp);
 
   ok(propEditor.element.classList.contains("ruleview-overridden"),
     "property is overridden.");
@@ -75,25 +60,9 @@ function* testPressingEscapeRevertsChangesAndDisables(view) {
   let newValue = yield getRulePropertyValue("animation-timing-function");
   is(newValue, "", "animation-timing-function should have been unset.");
 
-  let onShown = bezierTooltip.tooltip.once("shown");
-  swatch.click();
-  yield onShown;
+  yield openCubicBezierAndChangeCoords(view, 1, 0, [0.1, 2, 0.9, -1]);
 
-  ok(!propEditor.element.classList.contains("ruleview-overridden"),
-    "property overridden is not displayed.");
-  is(propEditor.enable.style.visibility, "hidden",
-    "property enable checkbox is hidden.");
-
-  let widget = yield bezierTooltip.widget;
-  info("Simulating a change of curve in the widget");
-  widget.coordinates = [0.1, 2, 0.9, -1];
-  yield ruleEditor.rule._applyingModifications;
-
-  info("Pressing ESCAPE to close the tooltip");
-  let onHidden = bezierTooltip.tooltip.once("hidden");
-  EventUtils.sendKey("ESCAPE", widget.parent.ownerDocument.defaultView);
-  yield onHidden;
-  yield ruleEditor.rule._applyingModifications;
+  yield escapeTooltip(view);
 
   ok(propEditor.element.classList.contains("ruleview-overridden"),
     "property is overridden.");
@@ -116,4 +85,16 @@ function* getRulePropertyValue(name) {
     name: name
   });
   return propValue;
+}
+
+function* escapeTooltip(view) {
+  info("Pressing ESCAPE to close the tooltip");
+
+  let bezierTooltip = view.tooltips.cubicBezier;
+  let widget = yield bezierTooltip.widget;
+  let onHidden = bezierTooltip.tooltip.once("hidden");
+  let onModifications = view.once("ruleview-changed");
+  EventUtils.sendKey("ESCAPE", widget.parent.ownerDocument.defaultView);
+  yield onHidden;
+  yield onModifications;
 }
