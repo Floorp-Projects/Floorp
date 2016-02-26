@@ -20,8 +20,9 @@ function test_sendMouseEventDefaults() {
   window.addEventListener("mousedown", function listener(evt) {
     window.removeEventListener("mousedown", listener);
     // Mandatory args
-    is(evt.clientX, x, "check x");
-    is(evt.clientY, y, "check y");
+    // coordinates may change slightly due to rounding
+    ok((evt.clientX <= x+2) && (evt.clientX >= x-2), "check x");
+    ok((evt.clientY <= y+2) && (evt.clientY >= y-2), "check y");
     is(evt.button, button, "check button");
     is(evt.detail, clickCount, "check click count");
     is(evt.getModifierState("Shift"), true, "check modifiers");
