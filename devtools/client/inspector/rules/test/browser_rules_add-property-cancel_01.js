@@ -22,12 +22,9 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testCancelNew(view);
-});
 
-function* testCancelNew(view) {
   let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
+  let editor = yield focusNewRuleViewProperty(elementRuleEditor);
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "The new property editor got focused");
 
@@ -37,12 +34,10 @@ function* testCancelNew(view) {
   yield onBlur;
 
   info("Checking the state of cancelling a new property name editor");
-  ok(!elementRuleEditor.rule._applyingModifications,
-    "Shouldn't have an outstanding request after a cancel.");
   is(elementRuleEditor.rule.textProps.length, 0,
     "Should have cancelled creating a new text property.");
   ok(!elementRuleEditor.propertyList.hasChildNodes(),
     "Should not have any properties.");
   is(view.styleDocument.activeElement, view.styleDocument.documentElement,
     "Correct element has focus");
-}
+});

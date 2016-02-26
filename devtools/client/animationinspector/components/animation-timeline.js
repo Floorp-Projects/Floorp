@@ -1,3 +1,9 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -81,7 +87,8 @@ AnimationsTimeline.prototype = {
         "class": "scrubber-handle"
       }
     });
-    this.scrubberHandleEl.addEventListener("mousedown", this.onScrubberMouseDown);
+    this.scrubberHandleEl.addEventListener("mousedown",
+      this.onScrubberMouseDown);
 
     this.timeHeaderEl = createNode({
       parent: this.rootWrapperEl,
@@ -89,7 +96,8 @@ AnimationsTimeline.prototype = {
         "class": "time-header track-container"
       }
     });
-    this.timeHeaderEl.addEventListener("mousedown", this.onScrubberMouseDown);
+    this.timeHeaderEl.addEventListener("mousedown",
+      this.onScrubberMouseDown);
 
     this.animationsEl = createNode({
       parent: this.rootWrapperEl,
@@ -99,14 +107,16 @@ AnimationsTimeline.prototype = {
       }
     });
 
-    this.win.addEventListener("resize", this.onWindowResize);
+    this.win.addEventListener("resize",
+      this.onWindowResize);
   },
 
   destroy: function() {
     this.stopAnimatingScrubber();
     this.unrender();
 
-    this.win.removeEventListener("resize", this.onWindowResize);
+    this.win.removeEventListener("resize",
+      this.onWindowResize);
     this.timeHeaderEl.removeEventListener("mousedown",
       this.onScrubberMouseDown);
     this.scrubberHandleEl.removeEventListener("mousedown",
@@ -414,7 +424,8 @@ AnimationsTimeline.prototype = {
   drawHeaderAndBackground: function() {
     let width = this.timeHeaderEl.offsetWidth;
     let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
-    let minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+    let minTimeInterval = TIME_GRADUATION_MIN_SPACING *
+                          animationDuration / width;
     let intervalLength = findOptimalTimeInterval(minTimeInterval);
     let intervalWidth = intervalLength * width / animationDuration;
 

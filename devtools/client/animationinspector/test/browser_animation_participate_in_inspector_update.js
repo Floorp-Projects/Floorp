@@ -14,7 +14,8 @@ add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
 
-  info("Listen for the players-updated, ui-updated and inspector-updated events");
+  info("Listen for the players-updated, ui-updated and " +
+       "inspector-updated events");
   let receivedEvents = [];
   controller.once(controller.PLAYERS_UPDATED_EVENT, () => {
     receivedEvents.push(controller.PLAYERS_UPDATED_EVENT);

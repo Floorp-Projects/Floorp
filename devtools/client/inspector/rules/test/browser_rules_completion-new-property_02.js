@@ -50,13 +50,13 @@ const TEST_URI = `
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {toolbox, inspector, view, testActor} = yield openRuleView();
 
   info("Test autocompletion after 1st page load");
   yield runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  yield reloadPage(inspector);
+  yield reloadPage(inspector, testActor);
   yield runAutocompletionTest(toolbox, inspector, view);
 });
 
@@ -101,7 +101,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor,
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 
   yield onKeyPress;
-  yield wait(1); // Equivalent of executeSoon
+  yield waitForTick();
 
   info("Checking the state");
   if (completion != null) {

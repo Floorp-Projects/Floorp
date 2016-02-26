@@ -928,9 +928,6 @@ pref("reader.color_scheme.values", "[\"dark\",\"auto\",\"light\"]");
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", false);
 
-// Whether or not to display buttons related to reading list in reader view.
-pref("browser.readinglist.enabled", true);
-
 // Telemetry settings.
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", false);

@@ -1,6 +1,7 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 
 "use strict";
 
@@ -114,7 +115,7 @@ function getNodeFront(selector, {walker}) {
  *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-var selectNode = Task.async(function*(data, inspector, reason="test") {
+var selectNode = Task.async(function*(data, inspector, reason = "test") {
   info("Selecting the node for '" + data + "'");
   let nodeFront = data;
   if (!data._form) {
@@ -258,7 +259,7 @@ function hasSideBarTab(inspector, id) {
  * @param {Boolean} useCapture Optional, for add/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
-function once(target, eventName, useCapture=false) {
+function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   let deferred = promise.defer();
@@ -312,7 +313,8 @@ function waitForContentMessage(name) {
  * @return {Promise} Resolves to the response data if a response is expected,
  * immediately resolves otherwise
  */
-function executeInContent(name, data={}, objects={}, expectResponse=true) {
+function executeInContent(name, data = {}, objects = {},
+                          expectResponse = true) {
   info("Sending message " + name + " to content");
   let mm = gBrowser.selectedBrowser.messageManager;
 
@@ -327,7 +329,8 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
 /**
  * Get the current playState of an animation player on a given node.
  */
-var getAnimationPlayerState = Task.async(function*(selector, animationIndex=0) {
+var getAnimationPlayerState = Task.async(function*(selector,
+                                                   animationIndex = 0) {
   let playState = yield executeInContent("Test:GetAnimationPlayerState",
                                          {selector, animationIndex});
   return playState;
@@ -366,7 +369,6 @@ var waitForAllAnimationTargets = Task.async(function*(panel) {
  */
 function* assertScrubberMoving(panel, isMoving) {
   let timeline = panel.animationsTimelineComponent;
-  let scrubberEl = timeline.scrubberEl;
 
   if (isMoving) {
     // If we expect the scrubber to move, just wait for a couple of
@@ -446,8 +448,8 @@ function* changeTimelinePlaybackRate(panel, rate) {
 
   // Simulate a mousemove outside of the rate selector area to avoid subsequent
   // tests from failing because of unwanted mouseover events.
-  EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#timeline-toolbar"),
-                                     {type: "mousemove"}, win);
+  EventUtils.synthesizeMouseAtCenter(
+    win.document.querySelector("#timeline-toolbar"), {type: "mousemove"}, win);
 }
 
 /**
@@ -519,6 +521,8 @@ function getKeyframeComponent(panel, animationIndex, propertyName) {
  * @return {DOMNode} The keyframe element.
  */
 function getKeyframeEl(panel, animationIndex, propertyName, keyframeIndex) {
-  let keyframeComponent = getKeyframeComponent(panel, animationIndex, propertyName);
-  return keyframeComponent.keyframesEl.querySelectorAll(".frame")[keyframeIndex];
+  let keyframeComponent = getKeyframeComponent(panel, animationIndex,
+                                               propertyName);
+  return keyframeComponent.keyframesEl
+                          .querySelectorAll(".frame")[keyframeIndex];
 }

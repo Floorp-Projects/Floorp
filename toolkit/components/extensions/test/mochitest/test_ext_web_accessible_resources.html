@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the web_accessible_resources manifest directive</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* eslint-disable mozilla/balanced-listeners */
+
+add_task(function* test_web_accessible_resources() {
+  function background() {
+    let gotURL;
+    let tabId;
+
+    function loadFrame(url) {
+      return new Promise(resolve => {
+        browser.tabs.sendMessage(tabId, ["load-iframe", url], reply => {
+          resolve(reply);
+        });
+      });
+    }
+
+    let urls = [
+      [browser.extension.getURL("accessible.html"), true],
+      [browser.extension.getURL("accessible.html") + "?foo=bar", true],
+      [browser.extension.getURL("accessible.html") + "#!foo=bar", true],
+      [browser.extension.getURL("forbidden.html"), false],
+    ];
+
+    function runTest() {
+      if (!urls.length) {
+        browser.test.notifyPass("web-accessible-resources");
+        return;
+      }
+
+      let [url, shouldLoad] = urls.shift();
+      return loadFrame(url).then(success => {
+        browser.test.assertEq(shouldLoad, success, "Load was successful");
+        if (shouldLoad) {
+          browser.test.assertEq(url, gotURL, "Got expected url");
+        } else {
+          browser.test.assertEq(undefined, gotURL, "Got no url");
+        }
+        gotURL = undefined;
+
+        return runTest();
+      });
+    }
+
+    browser.runtime.onMessage.addListener(([msg, url], sender) => {
+      if (msg == "content-script-ready") {
+        tabId = sender.tab.id;
+        runTest();
+      } else if (msg == "page-script") {
+        browser.test.assertEq(undefined, gotURL, "Should have gotten only one message");
+        browser.test.assertEq("string", typeof(url), "URL should be a string");
+        gotURL = url;
+      }
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  function contentScript() {
+    browser.runtime.onMessage.addListener(([msg, url], sender, respond) => {
+      if (msg == "load-iframe") {
+        let iframe = document.createElement("iframe");
+        iframe.setAttribute("src", url);
+        iframe.addEventListener("load", () => { respond(true); });
+        iframe.addEventListener("error", () => { respond(false); });
+        document.body.appendChild(iframe);
+        return true;
+      }
+    });
+    browser.runtime.sendMessage(["content-script-ready"]);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://example.com/"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle",
+        },
+      ],
+
+      "web_accessible_resources": [
+        "accessible.html",
+      ],
+    },
+
+    background: `(${background})()`,
+
+    files: {
+      "content_script.js": `(${contentScript})()`,
+
+      "accessible.html": `<html><head>
+        <meta charset="utf-8">
+        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+      </head></html>`,
+
+      "inaccessible.html": `<html><head>
+        <meta charset="utf-8">
+        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+      </head></html>`,
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitMessage("ready");
+
+  let win = window.open("http://example.com/");
+
+  yield extension.awaitFinish("web-accessible-resources");
+
+  win.close();
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

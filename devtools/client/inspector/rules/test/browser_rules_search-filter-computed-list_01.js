@@ -21,7 +21,8 @@ const TEST_URI = `
 
 const TEST_DATA = [
   {
-    desc: "Tests that the search filter works properly in the computed list for property names",
+    desc: "Tests that the search filter works properly in the computed list " +
+          "for property names",
     search: "margin",
     isExpanderOpen: false,
     isFilterOpen: false,
@@ -32,7 +33,8 @@ const TEST_DATA = [
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for property values",
+    desc: "Tests that the search filter works properly in the computed list " +
+          "for property values",
     search: "0px",
     isExpanderOpen: false,
     isFilterOpen: false,
@@ -43,7 +45,8 @@ const TEST_DATA = [
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for property line input",
+    desc: "Tests that the search filter works properly in the computed list " +
+          "for property line input",
     search: "margin-top:4px",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -54,7 +57,8 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for parsed name",
+    desc: "Tests that the search filter works properly in the computed list " +
+          "for parsed name",
     search: "margin-top:",
     isExpanderOpen: true,
     isFilterOpen: true,
@@ -65,7 +69,8 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for parsed property value",
+    desc: "Tests that the search filter works properly in the computed list " +
+          "for parsed property value",
     search: ":4px",
     isExpanderOpen: false,
     isFilterOpen: false,

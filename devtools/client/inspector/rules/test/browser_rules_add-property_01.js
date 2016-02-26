@@ -4,9 +4,7 @@
 
 "use strict";
 
-// Testing various inplace-editor behaviors in the rule-view
-// FIXME: To be split in several test files, and some of the inplace-editor
-// focus/blur/commit/revert stuff should be factored out in head.js
+// Test adding an invalid property.
 
 const TEST_URI = `
   <style type='text/css'>
@@ -24,51 +22,11 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testCreateNew(view);
-});
 
-function* testCreateNew(view) {
   info("Test creating a new property");
-
-  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-
-  info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
-
-  is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
-    "The new property editor got focused");
-  let input = editor.input;
-
-  info("Entering background-color in the property name editor");
-  input.value = "background-color";
-
-  info("Pressing return to commit and focus the new value field");
-  let onModifications = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onModifications;
-
-  // Getting the new value editor after focus
-  editor = inplaceEditor(view.styleDocument.activeElement);
-  let textProp = elementRuleEditor.rule.textProps[0];
-
-  is(elementRuleEditor.rule.textProps.length, 1,
-    "Created a new text property.");
-  is(elementRuleEditor.propertyList.children.length, 1,
-    "Created a property editor.");
-  is(editor, inplaceEditor(textProp.editor.valueSpan),
-    "Editing the value span now.");
-
-  ok(!textProp.editor.element.classList.contains("ruleview-overridden"),
-    "property should not be overridden.");
-
-  info("Entering a value and bluring the field to expect a rule change");
-  editor.input.value = "#XYZ";
-
-  onModifications = view.once("ruleview-changed");
-  editor.input.blur();
-  yield onModifications;
+  let textProp = yield addProperty(view, 0, "background-color", "#XYZ");
 
   is(textProp.value, "#XYZ", "Text prop should have been changed.");
   is(textProp.overridden, true, "Property should be overridden");
   is(textProp.editor.isValid(), false, "#XYZ should not be a valid entry");
-}
+});

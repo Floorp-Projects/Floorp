@@ -248,7 +248,7 @@ function hookWindowCloseForPanelClose(targetWindow) {
     let _mozSocialSwapped;
     let mm = targetWindow.messageManager;
     mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
-    mm.addMessageListener("DOMWindowClose", _mozSocialDOMWindowClose = function() {
+    mm.addMessageListener("Social:DOMWindowClose", _mozSocialDOMWindowClose = function() {
       targetWindow.removeEventListener("SwapDocShells", _mozSocialSwapped);
       closePanel(targetWindow);
     });
@@ -257,7 +257,7 @@ function hookWindowCloseForPanelClose(targetWindow) {
       targetWindow.removeEventListener("SwapDocShells", _mozSocialSwapped);
 
       targetWindow = ev.detail;
-      targetWindow.messageManager.addMessageListener("DOMWindowClose", _mozSocialDOMWindowClose);
+      targetWindow.messageManager.addMessageListener("Social:DOMWindowClose", _mozSocialDOMWindowClose);
     });
     return;
   }

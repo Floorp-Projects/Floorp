@@ -6,14 +6,15 @@
 
 // Test that the rule view does not go blank while selecting a new node.
 
-const TESTCASE_URI = 'data:text/html;charset=utf-8,' +
-                     '<div id="testdiv" style="font-size:10px;">Test div!</div>';
+const TESTCASE_URI = "data:text/html;charset=utf-8," +
+                     "<div id=\"testdiv\" style=\"font-size:10px;\">" +
+                     "Test div!</div>";
 
 add_task(function*() {
   yield addTab(TESTCASE_URI);
 
   info("Opening the rule view and selecting the test node");
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
   let testdiv = yield getNodeFront("#testdiv", inspector);
   yield selectNode(testdiv, inspector);
 

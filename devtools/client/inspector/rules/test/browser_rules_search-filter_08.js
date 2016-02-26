@@ -31,7 +31,7 @@ add_task(function*() {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
   let propEditor = rule.textProps[1].editor;
-  let editor = yield focusEditableField(view, propEditor.valueSpan);
+  yield focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");

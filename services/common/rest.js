@@ -105,6 +105,13 @@ RESTRequest.prototype = {
   /*** Public API: ***/
 
   /**
+   * A constant boolean that indicates whether this object will automatically
+   * utf-8 encode request bodies passed as an object. Used for feature detection
+   * so, eg, loop can use the same source code for old and new Firefox versions.
+   */
+  willUTF8EncodeObjectRequests: true,
+
+  /**
    * URI for the request (an nsIURI object).
    */
   uri: null,
@@ -322,9 +329,28 @@ RESTRequest.prototype = {
 
     // Set HTTP request body.
     if (method == "PUT" || method == "POST" || method == "PATCH") {
-      // Convert non-string bodies into JSON.
+      // Convert non-string bodies into JSON with utf-8 encoding. If a string
+      // is passed we assume they've already encoded it.
+      let contentType = headers["content-type"];
       if (typeof data != "string") {
         data = JSON.stringify(data);
+        if (!contentType) {
+          contentType = "application/json";
+        }
+        if (!contentType.includes("charset")) {
+          data = CommonUtils.encodeUTF8(data);
+          contentType += "; charset=utf-8";
+        } else {
+          // If someone handed us an object but also a custom content-type
+          // it's probably confused. We could go to even further lengths to
+          // respect it, but this shouldn't happen in practice.
+          Cu.reportError("rest.js found an object to JSON.stringify but also a " +
+                         "content-type header with a charset specification. " +
+                         "This probably isn't going to do what you expect");
+        }
+      }
+      if (!contentType) {
+        contentType = "text/plain";
       }
 
       this._log.debug(method + " Length: " + data.length);
@@ -336,9 +362,8 @@ RESTRequest.prototype = {
                      .createInstance(Ci.nsIStringInputStream);
       stream.setData(data, data.length);
 
-      let type = headers["content-type"] || "text/plain";
       channel.QueryInterface(Ci.nsIUploadChannel);
-      channel.setUploadStream(stream, type, data.length);
+      channel.setUploadStream(stream, contentType, data.length);
     }
     // We must set this after setting the upload stream, otherwise it
     // will always be 'PUT'. Yeah, I know.

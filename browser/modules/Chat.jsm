@@ -198,7 +198,6 @@ var Chat = {
     // even on platforms where getZOrderDOMWindowEnumerator is broken
     // (ie. Linux).  This will handle most cases, but won't work if the
     // foreground window is a popup.
-
     let mostRecent = Services.wm.getMostRecentWindow("navigator:browser");
     if (isWindowGoodForChats(mostRecent))
       return mostRecent;

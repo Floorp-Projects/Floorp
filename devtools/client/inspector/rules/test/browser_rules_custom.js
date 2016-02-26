@@ -20,61 +20,53 @@ add_task(function*() {
 function* simpleCustomOverride(inspector, view) {
   yield selectNode("#testidSimple", inspector);
 
-  let elementStyle = view._elementStyle;
+  let idRule = getRuleViewRuleEditor(view, 1).rule;
+  let idRuleProp = idRule.textProps[0];
 
-  let idRule = elementStyle.rules[1];
-  let idProp = idRule.textProps[0];
-  is(idProp.name, "--background-color",
+  is(idRuleProp.name, "--background-color",
      "First ID prop should be --background-color");
-  ok(!idProp.overridden, "ID prop should not be overridden.");
+  ok(!idRuleProp.overridden, "ID prop should not be overridden.");
 
-  let classRule = elementStyle.rules[2];
-  let classProp = classRule.textProps[0];
-  is(classProp.name, "--background-color",
+  let classRule = getRuleViewRuleEditor(view, 2).rule;
+  let classRuleProp = classRule.textProps[0];
+
+  is(classRuleProp.name, "--background-color",
      "First class prop should be --background-color");
-  ok(classProp.overridden, "Class property should be overridden.");
+  ok(classRuleProp.overridden, "Class property should be overridden.");
 
   // Override --background-color by changing the element style.
-  let elementRule = elementStyle.rules[0];
-  elementRule.createProperty("--background-color", "purple", "");
-  yield elementRule._applyingModifications;
+  let elementProp = yield addProperty(view, 0, "--background-color", "purple");
 
-  let elementProp = elementRule.textProps[0];
-  is(classProp.name, "--background-color",
+  is(classRuleProp.name, "--background-color",
      "First element prop should now be --background-color");
   ok(!elementProp.overridden,
      "Element style property should not be overridden");
-  ok(idProp.overridden, "ID property should be overridden");
-  ok(classProp.overridden, "Class property should be overridden");
+  ok(idRuleProp.overridden, "ID property should be overridden");
+  ok(classRuleProp.overridden, "Class property should be overridden");
 }
 
 function* importantCustomOverride(inspector, view) {
   yield selectNode("#testidImportant", inspector);
 
-  let elementStyle = view._elementStyle;
+  let idRule = getRuleViewRuleEditor(view, 1).rule;
+  let idRuleProp = idRule.textProps[0];
+  ok(idRuleProp.overridden, "Not-important rule should be overridden.");
 
-  let idRule = elementStyle.rules[1];
-  let idProp = idRule.textProps[0];
-  ok(idProp.overridden, "Not-important rule should be overridden.");
-
-  let classRule = elementStyle.rules[2];
-  let classProp = classRule.textProps[0];
-  ok(!classProp.overridden, "Important rule should not be overridden.");
+  let classRule = getRuleViewRuleEditor(view, 2).rule;
+  let classRuleProp = classRule.textProps[0];
+  ok(!classRuleProp.overridden, "Important rule should not be overridden.");
 }
 
 function* disableCustomOverride(inspector, view) {
   yield selectNode("#testidDisable", inspector);
 
-  let elementStyle = view._elementStyle;
+  let idRule = getRuleViewRuleEditor(view, 1).rule;
+  let idRuleProp = idRule.textProps[0];
 
-  let idRule = elementStyle.rules[1];
-  let idProp = idRule.textProps[0];
+  yield togglePropStatus(view, idRuleProp);
 
-  idProp.setEnabled(false);
-  yield idRule._applyingModifications;
-
-  let classRule = elementStyle.rules[2];
-  let classProp = classRule.textProps[0];
-  ok(!classProp.overridden,
+  let classRule = getRuleViewRuleEditor(view, 2).rule;
+  let classRuleProp = classRule.textProps[0];
+  ok(!classRuleProp.overridden,
      "Class prop should not be overridden after id prop was disabled.");
 }

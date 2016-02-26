@@ -14,8 +14,8 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Signed XPI": TESTROOT + "signed.xpi",
-    "Signed XPI 2": TESTROOT + "signed2.xpi",
+    "Unsigned XPI": TESTROOT + "amosigned.xpi",
+    "Unsigned XPI 2": TESTROOT + "amosigned2.xpi",
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -33,17 +33,15 @@ function get_item(items, url) {
 function confirm_install(window) {
   let items = window.document.getElementById("itemList").childNodes;
   is(items.length, 2, "Should be 2 items listed in the confirmation dialog");
-  let item = get_item(items, TESTROOT + "signed.xpi");
+  let item = get_item(items, TESTROOT + "amosigned.xpi");
   if (item) {
-    is(item.name, "Signed XPI Test", "Should have seen the name from the trigger list");
-    is(item.cert, "(Object Signer)", "Should have seen the signer");
-    is(item.signed, "true", "Should have listed the item as signed");
+    is(item.name, "XPI Test", "Should have seen the name from the trigger list");
+    is(item.signed, "false", "Should have listed the item as signed");
   }
-  item = get_item(items, TESTROOT + "signed2.xpi");
+  item = get_item(items, TESTROOT + "amosigned2.xpi");
   if (item) {
     is(item.name, "Signed XPI Test", "Should have seen the name from the trigger list");
-    is(item.cert, "(Object Signer)", "Should have seen the signer");
-    is(item.signed, "true", "Should have listed the item as signed");
+    is(item.signed, "false", "Should have listed the item as signed");
   }
   return false;
 }

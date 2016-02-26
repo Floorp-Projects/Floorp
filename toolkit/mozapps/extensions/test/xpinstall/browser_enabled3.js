@@ -9,7 +9,7 @@ function test() {
   Services.prefs.setBoolPref("xpinstall.enabled", false);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": TESTROOT + "unsigned.xpi"
+    "Unsigned XPI": TESTROOT + "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
 

@@ -20,61 +20,52 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testEditingDisableProperty(inspector, view);
-});
 
-function* testEditingDisableProperty(inspector, view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
+  let prop = rule.textProps[0];
 
   info("Disabling background-color property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield togglePropStatus(view, prop);
 
   let newValue = yield getRulePropertyValue("background-color");
   is(newValue, "", "background-color should have been unset.");
 
-  yield focusEditableField(view, propEditor.nameSpan);
-
   info("Entering a new property name, including : to commit and " +
        "focus the value");
-  let onValueFocus = once(ruleEditor.element, "focus", true);
+
+  yield focusEditableField(view, prop.editor.nameSpan);
+  let onNameDone = view.once("ruleview-changed");
   EventUtils.sendString("border-color:", view.styleWindow);
-  yield onValueFocus;
-  yield ruleEditor.rule._applyingModifications;
+  yield onNameDone;
 
   info("Escape editing the property value");
+  let onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  yield ruleEditor.rule._applyingModifications;
+  yield onValueDone;
 
   newValue = yield getRulePropertyValue("border-color");
   is(newValue, "blue", "border-color should have been set.");
 
-  ok(propEditor.prop.enabled, "border-color property is enabled.");
-  ok(!propEditor.element.classList.contains("ruleview-overridden"),
+  ok(prop.enabled, "border-color property is enabled.");
+  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
     "border-color is not overridden");
 
   info("Disabling border-color property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield togglePropStatus(view, prop);
 
   newValue = yield getRulePropertyValue("border-color");
   is(newValue, "", "border-color should have been unset.");
 
   info("Enter a new property value for the border-color property");
-  let editor = yield focusEditableField(view, propEditor.valueSpan);
-  let onBlur = once(editor.input, "blur");
-  EventUtils.sendString("red;", view.styleWindow);
-  yield onBlur;
-  yield ruleEditor.rule._applyingModifications;
+  yield setProperty(view, prop, "red");
 
   newValue = yield getRulePropertyValue("border-color");
   is(newValue, "red", "new border-color should have been set.");
 
-  ok(propEditor.prop.enabled, "border-color property is enabled.");
-  ok(!propEditor.element.classList.contains("ruleview-overridden"),
+  ok(prop.enabled, "border-color property is enabled.");
+  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
     "border-color is not overridden");
-}
+});
 
 function* getRulePropertyValue(name) {
   let propValue = yield executeInContent("Test:GetRulePropertyValue", {

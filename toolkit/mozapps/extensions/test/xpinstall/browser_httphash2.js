@@ -12,7 +12,7 @@ function test() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   var url = "https://example.com/browser/" + RELATIVE_DIR + "hashRedirect.sjs";
-  url += "?sha1:foobar|" + TESTROOT + "unsigned.xpi";
+  url += "?sha1:foobar|" + TESTROOT + "amosigned.xpi";
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
