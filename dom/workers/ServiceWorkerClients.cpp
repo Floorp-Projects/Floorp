@@ -132,9 +132,7 @@ public:
                                        rv.StealNSResult());
     rv.SuppressException();
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -212,9 +210,7 @@ public:
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, result);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -292,9 +288,7 @@ public:
     RefPtr<ResolveClaimRunnable> r =
       new ResolveClaimRunnable(workerPrivate, mPromiseProxy, rv);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -405,10 +399,7 @@ public:
       new ResolveOpenWindowRunnable(mPromiseProxy,
                                     Move(clientInfo),
                                     NS_OK);
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    r->Dispatch(cx);
+    r->Dispatch();
 
     return NS_OK;
   }
@@ -553,9 +544,7 @@ public:
     RefPtr<ResolveOpenWindowRunnable> resolveRunnable =
       new ResolveOpenWindowRunnable(mPromiseProxy, nullptr, rv);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    NS_WARN_IF(!resolveRunnable->Dispatch(jsapi.cx()));
+    NS_WARN_IF(!resolveRunnable->Dispatch());
 
     return NS_OK;
   }

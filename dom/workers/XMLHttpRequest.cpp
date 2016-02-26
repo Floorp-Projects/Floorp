@@ -223,7 +223,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   bool
-  Dispatch(JSContext* aCx)
+  Dispatch()
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -231,7 +231,6 @@ public:
     mSyncLoopTarget = syncLoop.EventTarget();
 
     if (NS_FAILED(NS_DispatchToMainThread(this))) {
-      JS_ReportError(aCx, "Failed to dispatch to main thread!");
       return false;
     }
 
@@ -595,10 +594,6 @@ public:
     mScopeObj(nsContentUtils::RootingCxForThread(), aScopeObj)
   { }
 
-  void Dispatch()
-  {
-    MainThreadProxyRunnable::Dispatch(nullptr);
-  }
 private:
   ~EventRunnable()
   { }
@@ -974,7 +969,7 @@ Proxy::Teardown(bool aSendUnpin)
       if (aSendUnpin) {
         RefPtr<XHRUnpinRunnable> runnable =
           new XHRUnpinRunnable(mWorkerPrivate, mXMLHttpRequestPrivate);
-        if (!runnable->Dispatch(nullptr)) {
+        if (!runnable->Dispatch()) {
           NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
         }
       }
@@ -985,7 +980,7 @@ Proxy::Teardown(bool aSendUnpin)
           new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
                                              mSyncLoopTarget.forget(),
                                              false);
-        if (!runnable->Dispatch(nullptr)) {
+        if (!runnable->Dispatch()) {
           NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
         }
       }
@@ -1146,7 +1141,7 @@ LoadStartDetectionRunnable::Run()
       RefPtr<ProxyCompleteRunnable> runnable =
         new ProxyCompleteRunnable(mWorkerPrivate, mProxy,
                                   mXMLHttpRequestPrivate, mChannelId);
-      if (runnable->Dispatch(nullptr)) {
+      if (runnable->Dispatch()) {
         mProxy->mWorkerPrivate = nullptr;
         mProxy->mSyncLoopTarget = nullptr;
         mProxy->mOutstandingSendCount--;
@@ -1447,7 +1442,7 @@ WorkerThreadProxySyncRunnable::Run()
 
   RefPtr<ResponseRunnable> response =
     new ResponseRunnable(mWorkerPrivate, mProxy, rv);
-  if (!response->Dispatch(nullptr)) {
+  if (!response->Dispatch()) {
     MOZ_ASSERT(false, "Failed to dispatch response!");
   }
 
@@ -1692,7 +1687,7 @@ XMLHttpRequest::ReleaseProxy(ReleaseType aType)
         new SyncTeardownRunnable(mWorkerPrivate, mProxy);
       mProxy = nullptr;
 
-      if (!runnable->Dispatch(nullptr)) {
+      if (!runnable->Dispatch()) {
         NS_ERROR("Failed to dispatch teardown runnable!");
       }
     }
@@ -1869,12 +1864,10 @@ XMLHttpRequest::SendInternal(SendRunnable* aRunnable,
 
   mProxy->mOuterChannelId++;
 
-  JSContext* cx = mWorkerPrivate->GetJSContext();
-
   aRunnable->SetSyncLoopTarget(syncLoopTarget);
   aRunnable->SetHaveUploadListeners(hasUploadListeners);
 
-  if (!aRunnable->Dispatch(cx)) {
+  if (!aRunnable->Dispatch()) {
     // Dispatch() may have spun the event loop and we may have already unrooted.
     // If so we don't want autoUnpin to try again.
     if (!mRooted) {
@@ -1941,7 +1934,7 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
                      mTimeout);
 
   ++mProxy->mOpenCount;
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     if (!--mProxy->mOpenCount) {
       ReleaseProxy();
     }
@@ -1978,7 +1971,7 @@ XMLHttpRequest::SetRequestHeader(const nsACString& aHeader,
 
   RefPtr<SetRequestHeaderRunnable> runnable =
     new SetRequestHeaderRunnable(mWorkerPrivate, mProxy, aHeader, aValue);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2004,7 +1997,7 @@ XMLHttpRequest::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 
   RefPtr<SetTimeoutRunnable> runnable =
     new SetTimeoutRunnable(mWorkerPrivate, mProxy, aTimeout);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2030,7 +2023,7 @@ XMLHttpRequest::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 
   RefPtr<SetWithCredentialsRunnable> runnable =
     new SetWithCredentialsRunnable(mWorkerPrivate, mProxy, aWithCredentials);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2058,7 +2051,7 @@ XMLHttpRequest::SetMozBackgroundRequest(bool aBackgroundRequest,
   RefPtr<SetBackgroundRequestRunnable> runnable =
     new SetBackgroundRequestRunnable(mWorkerPrivate, mProxy,
                                      aBackgroundRequest);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2290,7 +2283,7 @@ XMLHttpRequest::Abort(ErrorResult& aRv)
   mProxy->mOuterEventStreamId++;
 
   RefPtr<AbortRunnable> runnable = new AbortRunnable(mWorkerPrivate, mProxy);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2316,7 +2309,7 @@ XMLHttpRequest::GetResponseHeader(const nsACString& aHeader,
   RefPtr<GetResponseHeaderRunnable> runnable =
     new GetResponseHeaderRunnable(mWorkerPrivate, mProxy, aHeader,
                                   responseHeader);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2342,7 +2335,7 @@ XMLHttpRequest::GetAllResponseHeaders(nsACString& aResponseHeaders,
   nsCString responseHeaders;
   RefPtr<GetAllResponseHeadersRunnable> runnable =
     new GetAllResponseHeadersRunnable(mWorkerPrivate, mProxy, responseHeaders);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2374,7 +2367,7 @@ XMLHttpRequest::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
 
   RefPtr<OverrideMimeTypeRunnable> runnable =
     new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, aMimeType);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2409,7 +2402,7 @@ XMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aResponseType,
 
   RefPtr<SetResponseTypeRunnable> runnable =
     new SetResponseTypeRunnable(mWorkerPrivate, mProxy, responseType);
-  if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

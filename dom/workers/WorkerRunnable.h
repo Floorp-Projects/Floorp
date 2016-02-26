@@ -73,12 +73,10 @@ public:
   // appropriately.
   NS_DECL_NSICANCELABLERUNNABLE
 
-  // Passing a JSContext here is required for the WorkerThreadModifyBusyCount
-  // behavior. It also guarantees that any failure (false return) will throw an
-  // exception on the given context. If a context is not passed then failures
-  // must be dealt with by the caller.
+  // The return value is true if and only if both PreDispatch and
+  // DispatchInternal return true.
   bool
-  Dispatch(JSContext* aCx);
+  Dispatch();
 
   // See above note about Cancel().
   virtual bool

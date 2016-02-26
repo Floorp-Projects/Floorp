@@ -943,7 +943,7 @@ public:
       RefPtr<WorkerPermissionOperationCompleted> runnable =
         new WorkerPermissionOperationCompleted(mWorkerPrivate, this);
 
-      MOZ_ALWAYS_TRUE(runnable->Dispatch(nullptr));
+      MOZ_ALWAYS_TRUE(runnable->Dispatch());
       return;
     }
 

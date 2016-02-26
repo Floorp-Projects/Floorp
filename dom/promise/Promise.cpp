@@ -2905,7 +2905,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
   RefPtr<PromiseWorkerProxyRunnable> runnable =
     new PromiseWorkerProxyRunnable(this, aFunc);
 
-  runnable->Dispatch(aCx);
+  runnable->Dispatch();
 }
 
 void
