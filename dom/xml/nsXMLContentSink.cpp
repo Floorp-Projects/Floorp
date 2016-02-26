@@ -595,24 +595,6 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
         mScriptLoader->AddExecuteBlocker();
       }
     }
-    // Look for <link rel="dns-prefetch" href="hostname">
-    // and look for <link rel="next" href="hostname"> like in HTML sink
-    if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
-      nsAutoString relVal;
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
-      if (!relVal.IsEmpty()) {
-        uint32_t linkTypes =
-          nsStyleLinkElement::ParseLinkTypes(relVal, aContent->NodePrincipal());
-        bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
-        if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
-          nsAutoString hrefVal;
-          aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, aContent, hasPrefetch);
-          }
-        }
-      }
-    }
   }
 
   return rv;
