@@ -1061,7 +1061,7 @@ public:
   TraceTimeouts(const TraceCallbacks& aCallbacks, void* aClosure) const;
 
   bool
-  ModifyBusyCountFromWorker(JSContext* aCx, bool aIncrease);
+  ModifyBusyCountFromWorker(bool aIncrease);
 
   bool
   AddChildWorker(JSContext* aCx, ParentType* aChildWorker);
