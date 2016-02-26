@@ -176,7 +176,6 @@ stage-all: \
   stage-mach \
   stage-extensions \
   stage-mochitest \
-  stage-xpcshell \
   stage-jstests \
   stage-jetpack \
   stage-marionette \
@@ -281,9 +280,6 @@ ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
 
-stage-xpcshell: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
-
 stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
@@ -385,7 +381,6 @@ stage-extensions: make-stage-dir
   stage-b2g \
   stage-config \
   stage-mochitest \
-  stage-xpcshell \
   stage-jstests \
   stage-android \
   stage-jetpack \
