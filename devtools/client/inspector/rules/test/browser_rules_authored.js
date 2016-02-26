@@ -7,11 +7,11 @@
 // Test for as-authored styles.
 
 function* createTestContent(style) {
-  let content = `<style type="text/css">
+  let html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(content));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);

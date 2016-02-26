@@ -81,7 +81,7 @@
           this._callbacks = null;
         }
 
-        mm.addMessageListener("DOMTitleChanged", this);
+        mm.addMessageListener("Social:DOMTitleChanged", this);
 
         mm.sendAsyncMessage("WaitForDOMContentLoaded");
         mm.addMessageListener("DOMContentLoaded", function DOMContentLoaded(event) {
@@ -216,7 +216,7 @@
           // attached to a browser, we'll need to add the message listeners to
           // the new messageManager. This is not a bug in swapDocShells, merely
           // a design decision.
-          content.messageManager.addMessageListener("DOMTitleChanged", content);
+          content.messageManager.addMessageListener("Social:DOMTitleChanged", content);
         ]]></body>
       </method>
 
@@ -326,7 +326,7 @@
         <parameter name="aMessage" />
         <body><![CDATA[
           switch (aMessage.name) {
-            case "DOMTitleChanged":
+            case "Social:DOMTitleChanged":
               this.setTitle();
               break;
           }

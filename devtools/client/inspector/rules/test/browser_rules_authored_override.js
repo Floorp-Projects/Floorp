@@ -7,11 +7,11 @@
 // Test for as-authored styles.
 
 function* createTestContent(style) {
-  let content = `<style type="text/css">
+  let html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(content));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
@@ -42,8 +42,7 @@ add_task(function* () {
     is(prop.overridden, i !== 2, "check overridden for " + i);
   }
 
-  rule.textProps[2].setEnabled(false);
-  yield rule._applyingModifications;
+  yield togglePropStatus(view, rule.textProps[2]);
 
   // Now the first property should be active.
   for (let i = 0; i < 3; ++i) {

@@ -27,12 +27,13 @@ addEventListener("DOMContentLoaded", function() {
 var gDOMTitleChangedByUs = false;
 addEventListener("DOMTitleChanged", function(e) {
   if (!gDOMTitleChangedByUs) {
-    sendAsyncMessage("DOMTitleChanged", {
+    sendAsyncMessage("Social:DOMTitleChanged", {
       title: e.target.title
     });
   }
   gDOMTitleChangedByUs = false;
 });
+var gHookedWindowCloseForPanelClose = false;
 
 // Error handling class used to listen for network errors in the social frames
 // and replace them with a social-specific error page
@@ -117,6 +118,10 @@ SocialErrorListener = {
         sendAsyncMessage("Social:FocusEnsured");
         break;
       case "Social:HookWindowCloseForPanelClose":
+        if (gHookedWindowCloseForPanelClose) {
+          break;
+        }
+        gHookedWindowCloseForPanelClose = true;
         // We allow window.close() to close the panel, so add an event handler for
         // this, then cancel the event (so the window itself doesn't die) and
         // close the panel instead.
@@ -127,7 +132,6 @@ SocialErrorListener = {
         dwu.allowScriptsToClose();
 
         content.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
-          sendAsyncMessage("DOMWindowClose");
           // preventDefault stops the default window.close() function being called,
           // which doesn't actually close anything but causes things to get into
           // a bad state (an internal 'closed' flag is set and debug builds start
@@ -136,6 +140,8 @@ SocialErrorListener = {
           // default close behaviour, so even if we took no action above, we avoid
           // the default close from doing anything.
           evt.preventDefault();
+
+          sendAsyncMessage("Social:DOMWindowClose");
         }, true);
         break;
       case "Social:ListenForEvents":

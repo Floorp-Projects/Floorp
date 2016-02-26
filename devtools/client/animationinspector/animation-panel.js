@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /* import-globals-from animation-controller.js */
 /* globals document */
 
@@ -140,11 +141,12 @@ var AnimationsPanel = {
     gToolbox.off("picker-started", this.onPickerStarted);
     gToolbox.off("picker-stopped", this.onPickerStopped);
 
-    this.toggleAllButtonEl.removeEventListener("click", this.onToggleAllClicked);
-    this.playTimelineButtonEl.removeEventListener(
-      "click", this.onTimelinePlayClicked);
-    this.rewindTimelineButtonEl.removeEventListener(
-      "click", this.onTimelineRewindClicked);
+    this.toggleAllButtonEl.removeEventListener("click",
+      this.onToggleAllClicked);
+    this.playTimelineButtonEl.removeEventListener("click",
+      this.onTimelinePlayClicked);
+    this.rewindTimelineButtonEl.removeEventListener("click",
+      this.onTimelineRewindClicked);
 
     document.removeEventListener("keydown", this.onKeyDown, false);
 

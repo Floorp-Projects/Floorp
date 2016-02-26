@@ -1,11 +1,14 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-const {
-  createNode,
-  TimeScale
-} = require("devtools/client/animationinspector/utils");
+const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
 
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
@@ -52,7 +55,7 @@ AnimationTimeBlock.prototype = {
     let {x, iterationW, delayX, delayW, negativeDelayW} =
       TimeScale.getAnimationDimensions(animation);
 
-    let iterations = createNode({
+    createNode({
       parent: this.containerEl,
       attributes: {
         "class": "iterations" + (state.iterationCount ? "" : " infinite"),
