@@ -97,6 +97,8 @@ public:
   const TimingParams& AsTimingParams() const { return mTiming; }
   void SetTimingParams(const TimingParams& aTiming) { mTiming = aTiming; }
 
+  virtual void Unlink() { }
+
 protected:
   nsCOMPtr<nsISupports> mParent;
   TimingParams mTiming;
