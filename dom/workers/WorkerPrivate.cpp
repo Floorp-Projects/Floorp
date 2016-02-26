@@ -5966,36 +5966,48 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     LOG(TimeoutsLog(), ("Worker %p executing timeout with original delay %f ms.\n",
                         this, info->mInterval.ToMilliseconds()));
 
-    // Always call JS_ReportPendingException if something fails, and if
-    // JS_ReportPendingException returns false (i.e. uncatchable exception) then
+    // Always check JS_IsExceptionPending if something fails, and if
+    // JS_IsExceptionPending returns false (i.e. uncatchable exception) then
     // break out of the loop.
-
-    if (!info->mTimeoutCallable.isUndefined()) {
-      JS::Rooted<JS::Value> rval(aCx);
-      JS::HandleValueArray args =
-        JS::HandleValueArray::fromMarkedLocation(info->mExtraArgVals.Length(),
-                                                 info->mExtraArgVals.Elements()->address());
-      JS::Rooted<JS::Value> callable(aCx, info->mTimeoutCallable);
-      if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
-          !JS_ReportPendingException(aCx)) {
-        retval = false;
-        break;
-      }
+    const char *reason;
+    if (info->mIsInterval) {
+      reason = "setInterval handler";
+    } else {
+      reason = "setTimeout handler";
     }
-    else {
-      nsString expression = info->mTimeoutString;
 
-      JS::CompileOptions options(aCx);
-      options.setFileAndLine(info->mFilename.get(), info->mLineNumber)
-             .setNoScriptRval(true);
+    { // scope for the AutoEntryScript, so it comes off the stack before we do
+      // Promise::PerformMicroTaskCheckpoint.
+      AutoEntryScript entryScript(xpc::NativeGlobal(global), reason,
+                                  false, aCx);
+      entryScript.TakeOwnershipOfErrorReporting();
+      if (!info->mTimeoutCallable.isUndefined()) {
+        JS::Rooted<JS::Value> rval(aCx);
+        JS::HandleValueArray args =
+          JS::HandleValueArray::fromMarkedLocation(info->mExtraArgVals.Length(),
+                                                   info->mExtraArgVals.Elements()->address());
+        JS::Rooted<JS::Value> callable(aCx, info->mTimeoutCallable);
+        if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
+            !JS_IsExceptionPending(aCx)) {
+          retval = false;
+          break;
+        }
+      }
+      else {
+        nsString expression = info->mTimeoutString;
 
-      JS::Rooted<JS::Value> unused(aCx);
-      if ((expression.IsEmpty() ||
-           !JS::Evaluate(aCx, options,
-                         expression.get(), expression.Length(), &unused)) &&
-          !JS_ReportPendingException(aCx)) {
-        retval = false;
-        break;
+        JS::CompileOptions options(aCx);
+        options.setFileAndLine(info->mFilename.get(), info->mLineNumber)
+               .setNoScriptRval(true);
+
+        JS::Rooted<JS::Value> unused(aCx);
+        if (!expression.IsEmpty() &&
+            !JS::Evaluate(aCx, options,
+                          expression.get(), expression.Length(), &unused) &&
+            !JS_IsExceptionPending(aCx)) {
+          retval = false;
+          break;
+        }
       }
     }
 
