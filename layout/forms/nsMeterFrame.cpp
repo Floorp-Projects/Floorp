@@ -56,6 +56,12 @@ nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
+nsIAtom*
+nsMeterFrame::GetType() const
+{
+  return nsGkAtoms::meterFrame;
+}
+
 nsresult
 nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {

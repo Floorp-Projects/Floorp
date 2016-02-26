@@ -55,6 +55,12 @@ nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
+nsIAtom*
+nsProgressFrame::GetType() const
+{
+  return nsGkAtoms::progressFrame;
+}
+
 nsresult
 nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
