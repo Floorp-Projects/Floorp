@@ -227,6 +227,11 @@ private:
   const SurfaceKey   mSurfaceKey;
 };
 
+static int64_t
+AreaOfIntSize(const IntSize& aSize) {
+  return static_cast<int64_t>(aSize.width) * static_cast<int64_t>(aSize.height);
+}
+
 /**
  * An ImageSurfaceCache is a per-image surface cache. For correctness we must be
  * able to remove all surfaces associated with an image when the image is
@@ -327,11 +332,9 @@ public:
       // Compare sizes. We use an area-based heuristic here instead of computing a
       // truly optimal answer, since it seems very unlikely to make a difference
       // for realistic sizes.
-      int64_t idealArea = static_cast<int64_t>(idealKey.Size().width) *
-        static_cast<int64_t>(idealKey.Size().height);
-      int64_t surfaceArea = aSurfaceKey.Size().width * aSurfaceKey.Size().height;
-      int64_t bestMatchArea =
-        bestMatchKey.Size().width * bestMatchKey.Size().height;
+      int64_t idealArea = AreaOfIntSize(idealKey.Size());
+      int64_t surfaceArea = AreaOfIntSize(aSurfaceKey.Size());
+      int64_t bestMatchArea = AreaOfIntSize(bestMatchKey.Size());
 
       // If the best match is smaller than the ideal size, prefer bigger sizes.
       if (bestMatchArea < idealArea) {
