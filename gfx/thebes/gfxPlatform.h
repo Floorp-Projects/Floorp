@@ -183,7 +183,7 @@ public:
                              gfxImageFormat aFormat) = 0;
 
     /**
-     * Beware that these methods may return DrawTargets which are not fully supported
+     * Beware that this method may return DrawTargets which are not fully supported
      * on the current platform and might fail silently in subtle ways. This is a massive
      * potential footgun. You should only use these methods for canvas drawing really.
      * Use extreme caution if you use them for content where you are not 100% sure we
@@ -192,9 +192,6 @@ public:
      */
     virtual already_AddRefed<DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
-
-    virtual already_AddRefed<DrawTarget>
-      CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
      * Creates a SourceSurface for a gfxASurface. This function does no caching,
