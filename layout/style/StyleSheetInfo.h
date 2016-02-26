@@ -35,8 +35,17 @@ public:
                  const dom::SRIMetadata& aIntegrity);
   StyleSheetInfo(const StyleSheetInfo& aCopy);
 
+  nsIURI* GetSheetURI() const { return mSheetURI; }
+  nsIURI* GetOriginalURI() const { return mOriginalSheetURI; }
+  nsIURI* GetBaseURI() const { return mBaseURI; }
   void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
+
+  nsIPrincipal* Principal() const { return mPrincipal; }
   void SetPrincipal(nsIPrincipal* aPrincipal);
+
+  CORSMode GetCORSMode() const { return mCORSMode; }
+  net::ReferrerPolicy GetReferrerPolicy() const { return mReferrerPolicy; }
+  void GetIntegrity(dom::SRIMetadata& aResult) const { aResult = mIntegrity; }
 
 protected:
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
