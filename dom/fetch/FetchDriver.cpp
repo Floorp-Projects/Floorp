@@ -50,8 +50,10 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   : mPrincipal(aPrincipal)
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
+#ifdef DEBUG
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
+#endif
 {
 }
 
@@ -66,8 +68,10 @@ nsresult
 FetchDriver::Fetch(FetchDriverObserver* aObserver)
 {
   workers::AssertIsOnMainThread();
+#ifdef DEBUG
   MOZ_ASSERT(!mFetchCalled);
   mFetchCalled = true;
+#endif
 
   mObserver = aObserver;
 
@@ -412,7 +416,9 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
   MOZ_ASSERT(filteredResponse);
   MOZ_ASSERT(mObserver);
   mObserver->OnResponseAvailable(filteredResponse);
+#ifdef DEBUG
   mResponseAvailableCalled = true;
+#endif
   return filteredResponse.forget();
 }
 
@@ -423,7 +429,9 @@ FetchDriver::FailWithNetworkError()
   RefPtr<InternalResponse> error = InternalResponse::NetworkError();
   if (mObserver) {
     mObserver->OnResponseAvailable(error);
+#ifdef DEBUG
     mResponseAvailableCalled = true;
+#endif
     mObserver->OnResponseEnd();
     mObserver = nullptr;
   }

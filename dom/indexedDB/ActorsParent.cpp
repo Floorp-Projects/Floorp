@@ -5653,7 +5653,9 @@ struct ConnectionPool::TransactionInfo final
   const bool mIsWriteTransaction;
   bool mRunning;
 
-  DebugOnly<bool> mFinished;
+#ifdef DEBUG
+  bool mFinished;
+#endif
 
   TransactionInfo(DatabaseInfo* aDatabaseInfo,
                   const nsID& aBackgroundChildLoggingId,
@@ -5913,7 +5915,9 @@ private:
 class MOZ_STACK_CLASS DatabaseOperationBase::AutoSetProgressHandler final
 {
   mozIStorageConnection* mConnection;
-  DebugOnly<DatabaseOperationBase*> mDEBUGDatabaseOp;
+#ifdef DEBUG
+  DatabaseOperationBase* mDEBUGDatabaseOp;
+#endif
 
 public:
   AutoSetProgressHandler();
@@ -6014,7 +6018,9 @@ class Factory final
 
   RefPtr<DatabaseLoggingInfo> mLoggingInfo;
 
-  DebugOnly<bool> mActorDestroyed;
+#ifdef DEBUG
+  bool mActorDestroyed;
+#endif
 
 public:
   static already_AddRefed<Factory>
@@ -7924,7 +7930,9 @@ class NormalTransactionOp
   : public TransactionDatabaseOperationBase
   , public PBackgroundIDBRequestParent
 {
-  DebugOnly<bool> mResponseSent;
+#ifdef DEBUG
+  bool mResponseSent;
+#endif
 
 public:
   virtual void
@@ -7933,7 +7941,9 @@ public:
 protected:
   explicit NormalTransactionOp(TransactionBase* aTransaction)
     : TransactionDatabaseOperationBase(aTransaction)
+#ifdef DEBUG
     , mResponseSent(false)
+#endif
   { }
 
   virtual
@@ -8392,13 +8402,17 @@ protected:
 
   CursorResponse mResponse;
 
-  DebugOnly<bool> mResponseSent;
+#ifdef DEBUG
+  bool mResponseSent;
+#endif
 
 protected:
   explicit CursorOpBase(Cursor* aCursor)
     : TransactionDatabaseOperationBase(aCursor->mTransaction)
     , mCursor(aCursor)
+#ifdef DEBUG
     , mResponseSent(false)
+#endif
   {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aCursor);
@@ -9245,16 +9259,20 @@ class MOZ_STACK_CLASS DatabaseMaintenance::AutoProgressHandler final
 
   NS_DECL_OWNINGTHREAD
 
+#ifdef DEBUG
   // This class is stack-based so we never actually allow AddRef/Release to do
   // anything. But we need to know if any consumer *thinks* that they have a
   // reference to this object so we track the reference countin DEBUG builds.
-  DebugOnly<nsrefcnt> mDEBUGRefCnt;
+  nsrefcnt mDEBUGRefCnt;
+#endif
 
 public:
   explicit AutoProgressHandler(Maintenance* aMaintenance)
     : mMaintenance(aMaintenance)
     , mConnection(nullptr)
+#ifdef DEBUG
     , mDEBUGRefCnt(0)
+#endif
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsOnBackgroundThread());
@@ -12642,7 +12660,9 @@ TransactionInfo::TransactionInfo(
   , mObjectStoreNames(aObjectStoreNames)
   , mIsWriteTransaction(aIsWriteTransaction)
   , mRunning(false)
+#ifdef DEBUG
   , mFinished(false)
+#endif
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseInfo);
@@ -12793,7 +12813,9 @@ uint64_t Factory::sFactoryInstanceCount = 0;
 
 Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
   : mLoggingInfo(Move(aLoggingInfo))
+#ifdef DEBUG
   , mActorDestroyed(false)
+#endif
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
@@ -12882,7 +12904,9 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
+#ifdef DEBUG
   mActorDestroyed = true;
+#endif
 
   // Clean up if there are no more instances.
   if (!(--sFactoryInstanceCount)) {
@@ -18205,7 +18229,9 @@ AutoProgressHandler::AddRef()
 {
   NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
 
+#ifdef DEBUG
   mDEBUGRefCnt++;
+#endif
   return 2;
 }
 
@@ -18215,7 +18241,9 @@ AutoProgressHandler::Release()
 {
   NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
 
+#ifdef DEBUG
   mDEBUGRefCnt--;
+#endif
   return 1;
 }
 
@@ -19203,7 +19231,9 @@ DatabaseOperationBase::OnProgress(mozIStorageConnection* aConnection,
 DatabaseOperationBase::
 AutoSetProgressHandler::AutoSetProgressHandler()
   : mConnection(nullptr)
+#ifdef DEBUG
   , mDEBUGDatabaseOp(nullptr)
+#endif
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
 }
@@ -19244,7 +19274,9 @@ AutoSetProgressHandler::Register(mozIStorageConnection* aConnection,
   MOZ_ASSERT(!oldProgressHandler);
 
   mConnection = aConnection;
+#ifdef DEBUG
   mDEBUGDatabaseOp = aDatabaseOp;
+#endif
 
   return NS_OK;
 }
@@ -24352,7 +24384,9 @@ NormalTransactionOp::SendSuccessResult()
     }
   }
 
+#ifdef DEBUG
   mResponseSent = true;
+#endif
 
   return NS_OK;
 }
@@ -24371,7 +24405,9 @@ NormalTransactionOp::SendFailureResult(nsresult aResultCode)
                                                   ClampResultCode(aResultCode));
   }
 
+#ifdef DEBUG
   mResponseSent = true;
+#endif
 
   return result;
 }
@@ -26062,7 +26098,9 @@ CursorOpBase::SendFailureResult(nsresult aResultCode)
     mCursor->SendResponseInternal(mResponse, mFiles);
   }
 
+#ifdef DEBUG
   mResponseSent = true;
+#endif
   return false;
 }
 
@@ -27072,7 +27110,9 @@ OpenOp::SendSuccessResult()
 
   mCursor->SendResponseInternal(mResponse, mFiles);
 
+#ifdef DEBUG
   mResponseSent = true;
+#endif
   return NS_OK;
 }
 
@@ -27248,7 +27288,9 @@ ContinueOp::SendSuccessResult()
 
   mCursor->SendResponseInternal(mResponse, mFiles);
 
+#ifdef DEBUG
   mResponseSent = true;
+#endif
   return NS_OK;
 }
 

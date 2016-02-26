@@ -297,7 +297,9 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mCursor(nsCursor(-1))
   , mTabSetsCursor(false)
   , mHasContentOpener(false)
+#ifdef DEBUG
   , mActiveSupressDisplayportCount(0)
+#endif
 {
   MOZ_ASSERT(aManager);
 }
@@ -2835,13 +2837,14 @@ TabParent::SuppressDisplayport(bool aEnabled)
     return NS_OK;
   }
 
+#ifdef DEBUG
   if (aEnabled) {
     mActiveSupressDisplayportCount++;
   } else {
     mActiveSupressDisplayportCount--;
   }
-
   MOZ_ASSERT(mActiveSupressDisplayportCount >= 0);
+#endif
 
   Unused << SendSuppressDisplayport(aEnabled);
   return NS_OK;
