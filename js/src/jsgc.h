@@ -49,7 +49,8 @@ enum State {
     MARK,
     SWEEP,
     FINALIZE,
-    COMPACT
+    COMPACT,
+    DECOMMIT
 };
 
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
@@ -960,6 +961,7 @@ class GCParallelTask
     }
 
     // Check if a task is actively running.
+    bool isRunningWithLockHeld() const;
     bool isRunning() const;
 
     // This should be friended to HelperThread, but cannot be because it
