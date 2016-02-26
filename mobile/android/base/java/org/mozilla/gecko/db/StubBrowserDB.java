@@ -150,6 +150,11 @@ class StubTabsAccessor implements TabsAccessor {
     public synchronized void persistLocalTabs(final ContentResolver cr, final Iterable<Tab> tabs) { }
 }
 
+class StubUrlAnnotations implements UrlAnnotations {
+    @Override
+    public void insertAnnotation(ContentResolver cr, String url, String key, String value) {}
+}
+
 /*
  * This base implementation just stubs all methods. For the
  * real implementations, see LocalBrowserDB.java.
@@ -159,6 +164,7 @@ public class StubBrowserDB implements BrowserDB {
     private final StubTabsAccessor tabsAccessor = new StubTabsAccessor();
     private final StubURLMetadata urlMetadata = new StubURLMetadata();
     private final StubReadingListAccessor readingListAccessor = new StubReadingListAccessor();
+    private final StubUrlAnnotations urlAnnotations = new StubUrlAnnotations();
 
     @Override
     public Searches getSearches() {
@@ -178,6 +184,11 @@ public class StubBrowserDB implements BrowserDB {
     @Override
     public ReadingListAccessor getReadingListAccessor() {
         return readingListAccessor;
+    }
+
+    @Override
+    public UrlAnnotations getUrlAnnotations() {
+        return urlAnnotations;
     }
 
     protected static final Integer FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
