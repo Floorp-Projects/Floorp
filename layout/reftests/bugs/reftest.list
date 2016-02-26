@@ -1080,19 +1080,19 @@ fails == 428810-3e-ltr.html 428810-empty-ltr-ref.html # bug 179596
 == 428810-1b-rtl.html 428810-1-rtl-ref.html
 == 428810-1c-rtl.html 428810-empty-rtl-ref.html
 fails == 428810-1d-rtl.html 428810-empty-rtl-ref.html # bug 179596
-fails-if(Android&&AndroidVersion==18) != 428810-1-rtl-ref.html about:blank # bug 1146693
+!= 428810-1-rtl-ref.html about:blank
 != 428810-1-rtl-ref.html 428810-1-ltr-ref.html
 == 428810-2a-rtl.html 428810-2-rtl-ref.html
 == 428810-2b-rtl.html 428810-2-rtl-ref.html
 fails == 428810-2e-rtl.html 428810-empty-rtl-ref.html # bug 179596
 == 428810-2f-rtl.html 428810-empty-rtl-ref.html
-fails-if(Android&&AndroidVersion==18) != 428810-2-rtl-ref.html about:blank # bug 1146693
+!= 428810-2-rtl-ref.html about:blank
 != 428810-2-rtl-ref.html 428810-2-ltr-ref.html
 == 428810-3a-rtl.html 428810-3-rtl-ref.html
 == 428810-3b-rtl.html 428810-3-rtl-ref.html
 fails == 428810-3e-rtl.html 428810-empty-rtl-ref.html # bug 179596
 == 428810-3f-rtl.html 428810-empty-rtl-ref.html
-fails-if(Android&&AndroidVersion==18) != 428810-3-rtl-ref.html about:blank # bug 1146693
+!= 428810-3-rtl-ref.html about:blank
 != 428810-3-rtl-ref.html 428810-3-ltr-ref.html
 == 428810-1a-ltr-insets.html 428810-1-ltr-insets-ref.html
 == 428810-1b-ltr-insets.html 428810-1-ltr-insets-ref.html
@@ -1113,19 +1113,19 @@ fails == 428810-3e-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
 == 428810-1b-rtl-insets.html 428810-1-rtl-insets-ref.html
 == 428810-1c-rtl-insets.html 428810-empty-rtl-insets-ref.html
 fails == 428810-1d-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
-fails-if(Android&&AndroidVersion==18) != 428810-1-rtl-insets-ref.html about:blank # bug 1146693
+!= 428810-1-rtl-insets-ref.html about:blank
 != 428810-1-rtl-insets-ref.html 428810-1-ltr-insets-ref.html
 == 428810-2a-rtl-insets.html 428810-2-rtl-insets-ref.html
 == 428810-2b-rtl-insets.html 428810-2-rtl-insets-ref.html
 fails == 428810-2e-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
 == 428810-2f-rtl-insets.html 428810-empty-rtl-insets-ref.html
-fails-if(Android&&AndroidVersion==18) != 428810-2-rtl-insets-ref.html about:blank # bug 1146693
+!= 428810-2-rtl-insets-ref.html about:blank
 != 428810-2-rtl-insets-ref.html 428810-2-ltr-insets-ref.html
 == 428810-3a-rtl-insets.html 428810-3-rtl-insets-ref.html
 == 428810-3b-rtl-insets.html 428810-3-rtl-insets-ref.html
 fails == 428810-3e-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
 == 428810-3f-rtl-insets.html 428810-empty-rtl-insets-ref.html
-fails-if(Android&&AndroidVersion==18) != 428810-3-rtl-insets-ref.html about:blank # bug 1146693
+!= 428810-3-rtl-insets-ref.html about:blank
 != 428810-3-rtl-insets-ref.html 428810-3-ltr-insets-ref.html
 skip-if(B2G||Mulet) == 430412-1.html 430412-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 430813-1.html 430813-1-ref.html
@@ -1425,7 +1425,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,5,1656) fuzzy-if(skiaContent,1,1200) == 512
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == 513318-1.xul 513318-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android&&(!asyncPan||AndroidVersion>=15)) != 513318-2.xul 513318-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 fuzzy-if(browserIsRemote&&winWidget,73,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
