@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<title>Tests for bug 823483 / bug 1247929</title>
+<style>
+
+body, input { font-size: 10px }
+input { padding: 0 1px; border: 1px solid maroon; font-family: monospace }
+
+td:first-child {
+   background: aqua;
+   border: thin solid;
+   padding: 1px 0;
+}
+
+td:nth-child(2) {
+  width: 100%;
+}
+
+td:nth-child(1) > * { visibility: hidden; vertical-align: bottom }
+
+</style>
+
+<table><tr>
+  <td><input type="text"></td>
+  <td>input type="text"</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="button" value="Button"></td>
+  <td>input type="button"</td>
+</tr></table>
+
+<table><tr>
+  <td><button>Button</button></td>
+  <td>button</td>
+</tr></table>
+
+<table><tr>
+  <td><fieldset>Fieldset</fieldset></td>
+  <td>fieldset</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="file"></td>
+  <td>input type="file"</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="radio"></td>
+  <td>input type="radio"</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="checkbox"></td>
+  <td>input type="checkbox"</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrJLJp84zgUAgEAgEAoFAcGUBocYBP+pqhN4AAAAASUVORK5CYII=" style="width: 0"></td>
+  <td>input type="image"</td>
+</tr></table>
+
+<table><tr>
+  <td><select><option>One</option><option>Two</option></select></td>
+  <td>select</td>
+</tr></table>
+
+<table><tr>
+  <td><select size="2"><option>One</option><option>Two</option></select></td>
+  <td>select size="2"</td>
+</tr></table>
+
+<table><tr>
+  <td><meter max="10" value="5"></meter></td>
+  <td>meter</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="number"></td>
+  <td>input type="number"</td>
+</tr></table>
+
+<table><tr>
+  <td><progress></progress></td>
+  <td>progress</td>
+</tr></table>
+
+<table><tr>
+  <td><input type="range"></td>
+  <td>input type="range"</td>
+</tr></table>
+
+<table><tr>
+  <td><textarea></textarea></td>
+  <td>textarea</td>
+</tr></table>
