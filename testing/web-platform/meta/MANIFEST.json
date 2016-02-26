@@ -27412,6 +27412,18 @@
         "url": "/web-animations/animatable/animate.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/duration.html",
+        "url": "/web-animations/animation-effect-timing/duration.html"
+      },
+      {
+        "path": "web-animations/animation-effect-timing/getAnimations.html",
+        "url": "/web-animations/animation-effect-timing/getAnimations.html"
+      },
+      {
+        "path": "web-animations/animation-effect-timing/getComputedStyle.html",
+        "url": "/web-animations/animation-effect-timing/getComputedStyle.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },
