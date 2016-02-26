@@ -6,12 +6,21 @@
 #ifndef mozilla_image_test_gtest_Common_h
 #define mozilla_image_test_gtest_Common_h
 
+#include "gtest/gtest.h"
+
+#include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
+#include "Decoder.h"
+#include "gfxColor.h"
 #include "nsCOMPtr.h"
+#include "SurfacePipe.h"
+#include "SurfacePipeFactory.h"
 
 class nsIInputStream;
 
 namespace mozilla {
+namespace image {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Types
@@ -54,6 +63,10 @@ struct BGRAColor
   { }
 
   static BGRAColor Green() { return BGRAColor(0x00, 0xFF, 0x00, 0xFF); }
+  static BGRAColor Red()   { return BGRAColor(0x00, 0x00, 0xFF, 0xFF); }
+  static BGRAColor Transparent() { return BGRAColor(0x00, 0x00, 0x00, 0x00); }
+
+  uint32_t AsPixel() const { return gfxPackedPixel(mAlpha, mRed, mGreen, mBlue); }
 
   uint8_t mBlue;
   uint8_t mGreen;
@@ -63,7 +76,7 @@ struct BGRAColor
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Helpers
+// General Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Loads a file from the current directory. @return an nsIInputStream for it.
@@ -72,12 +85,206 @@ already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath);
 /**
  * @returns true if every pixel of @aSurface is @aColor.
  * 
- * If @aFuzzy is true, a tolerance of 1 is allowed in each color component. This
- * may be necessary for tests that involve JPEG images.
+ * If @aFuzz is nonzero, a tolerance of @aFuzz is allowed in each color
+ * component. This may be necessary for tests that involve JPEG images or
+ * downscaling.
  */
 bool IsSolidColor(gfx::SourceSurface* aSurface,
                   BGRAColor aColor,
-                  bool aFuzzy = false);
+                  uint8_t aFuzz = 0);
+
+/**
+ * @returns true if every pixel in the range of rows specified by @aStartRow and
+ * @aRowCount of @aSurface is @aColor.
+ *
+ * If @aFuzz is nonzero, a tolerance of @aFuzz is allowed in each color
+ * component. This may be necessary for tests that involve JPEG images or
+ * downscaling.
+ */
+bool RowsAreSolidColor(gfx::SourceSurface* aSurface,
+                       int32_t aStartRow,
+                       int32_t aRowCount,
+                       BGRAColor aColor,
+                       uint8_t aFuzz = 0);
+
+/**
+ * @returns true if every pixel in the rect specified by @aRect is @aColor.
+ *
+ * If @aFuzz is nonzero, a tolerance of @aFuzz is allowed in each color
+ * component. This may be necessary for tests that involve JPEG images or
+ * downscaling.
+ */
+bool RectIsSolidColor(gfx::SourceSurface* aSurface,
+                      const gfx::IntRect& aRect,
+                      BGRAColor aColor,
+                      uint8_t aFuzz = 0);
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SurfacePipe Helpers
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Creates a decoder with no data associated with, suitable for testing code
+ * that requires a decoder to initialize or to allocate surfaces but doesn't
+ * actually need the decoder to do any decoding.
+ *
+ * XXX(seth): We only need this because SurfaceSink and PalettedSurfaceSink
+ * defer to the decoder for surface allocation. Once all decoders use
+ * SurfacePipe we won't need to do that anymore and we can remove this function.
+ */
+already_AddRefed<Decoder> CreateTrivialDecoder();
+
+/**
+ * Creates a pipeline of SurfaceFilters from a list of Config structs and passes
+ * it to the provided lambda @aFunc. Assertions that the pipeline is constructly
+ * correctly and cleanup of any allocated surfaces is handled automatically.
+ *
+ * @param aDecoder The decoder to use for allocating surfaces.
+ * @param aFunc The lambda function to pass the filter pipeline to.
+ * @param aConfigs The configuration for the pipeline.
+ */
+template <typename Func, typename... Configs>
+void WithFilterPipeline(Decoder* aDecoder, Func aFunc, Configs... aConfigs)
+{
+  auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
+  nsresult rv = pipe->Configure(aConfigs...);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  aFunc(aDecoder, pipe.get());
+
+  RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
+  if (currentFrame) {
+    currentFrame->Finish();
+  }
+}
+
+/**
+ * Creates a pipeline of SurfaceFilters from a list of Config structs and
+ * asserts that configuring it fails. Cleanup of any allocated surfaces is
+ * handled automatically.
+ *
+ * @param aDecoder The decoder to use for allocating surfaces.
+ * @param aConfigs The configuration for the pipeline.
+ */
+template <typename... Configs>
+void AssertConfiguringPipelineFails(Decoder* aDecoder, Configs... aConfigs)
+{
+  auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
+  nsresult rv = pipe->Configure(aConfigs...);
+
+  // Callers expect configuring the pipeline to fail.
+  ASSERT_TRUE(NS_FAILED(rv));
+
+  RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
+  if (currentFrame) {
+    currentFrame->Finish();
+  }
+}
+
+/**
+ * Asserts that the provided filter pipeline is in the correct final state,
+ * which is to say, the entire surface has been written to (IsSurfaceFinished()
+ * returns true) and the invalid rects are as expected.
+ *
+ * @param aFilter The filter pipeline to check.
+ * @param aInputSpaceRect The expect invalid rect, in input space.
+ * @param aoutputSpaceRect The expect invalid rect, in output space.
+ */
+void AssertCorrectPipelineFinalState(SurfaceFilter* aFilter,
+                                     const gfx::IntRect& aInputSpaceRect,
+                                     const gfx::IntRect& aOutputSpaceRect);
+
+/**
+ * Checks a generated image for correctness. Reports any unexpected deviation
+ * from the expected image as GTest failures.
+ *
+ * @param aDecoder The decoder which contains the image. The decoder's current
+ *                 frame will be checked.
+ * @param aRect The region in the space of the output surface that the filter
+ *              pipeline will actually write to. It's expected that pixels in
+ *              this region are green, while pixels outside this region are
+ *              transparent. Defaults to the entire output rect.
+ * @param aFuzz The amount of fuzz to use in pixel comparisons.
+ */
+void CheckGeneratedImage(Decoder* aDecoder,
+                         const gfx::IntRect& aRect,
+                         uint8_t aFuzz = 0);
+
+/**
+ * Tests the result of calling WritePixels() using the provided SurfaceFilter
+ * pipeline. The pipeline must be a normal (i.e., non-paletted) pipeline.
+ *
+ * The arguments are specified in the an order intended to minimize the number
+ * of arguments that most test cases need to pass.
+ *
+ * @param aDecoder The decoder whose current frame will be written to.
+ * @param aFilter The SurfaceFilter pipeline to use.
+ * @param aOutputRect The region in the space of the output surface that will be
+ *                    invalidated by the filter pipeline. Defaults to
+ *                    (0, 0, 100, 100).
+ * @param aInputRect The region in the space of the input image that will be
+ *                   invalidated by the filter pipeline. Defaults to
+ *                   (0, 0, 100, 100).
+ * @param aInputWriteRect The region in the space of the input image that the
+ *                        filter pipeline will allow writes to. Note the
+ *                        difference from @aInputRect: @aInputRect is the actual
+ *                        region invalidated, while @aInputWriteRect is the
+ *                        region that is written to. These can differ in cases
+ *                        where the input is not clipped to the size of the image.
+ *                        Defaults to the entire input rect.
+ * @param aOutputWriteRect The region in the space of the output surface that
+ *                         the filter pipeline will actually write to. It's
+ *                         expected that pixels in this region are green, while
+ *                         pixels outside this region are transparent. Defaults
+ *                         to the entire output rect.
+ */
+void CheckWritePixels(Decoder* aDecoder,
+                      SurfaceFilter* aFilter,
+                      Maybe<gfx::IntRect> aOutputRect = Nothing(),
+                      Maybe<gfx::IntRect> aInputRect = Nothing(),
+                      Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
+                      Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
+                      uint8_t aFuzz = 0);
+
+/**
+ * Tests the result of calling WriteRows() using the provided SurfaceFilter
+ * pipeline. The pipeline must be a normal (i.e., non-paletted) pipeline.
+ * @see CheckWritePixels() for documentation of the arguments.
+ */
+void CheckWriteRows(Decoder* aDecoder,
+                    SurfaceFilter* aFilter,
+                    Maybe<gfx::IntRect> aOutputRect = Nothing(),
+                    Maybe<gfx::IntRect> aInputRect = Nothing(),
+                    Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
+                    Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
+                    uint8_t aFuzz = 0);
+
+/**
+ * Tests the result of calling WritePixels() using the provided SurfaceFilter
+ * pipeline. The pipeline must be a paletted pipeline.
+ * @see CheckWritePixels() for documentation of the arguments.
+ */
+void CheckPalettedWritePixels(Decoder* aDecoder,
+                              SurfaceFilter* aFilter,
+                              Maybe<gfx::IntRect> aOutputRect = Nothing(),
+                              Maybe<gfx::IntRect> aInputRect = Nothing(),
+                              Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
+                              Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
+                              uint8_t aFuzz = 0);
+
+/**
+ * Tests the result of calling WriteRows() using the provided SurfaceFilter
+ * pipeline. The pipeline must be a paletted pipeline.
+ * @see CheckWritePixels() for documentation of the arguments.
+ */
+void CheckPalettedWriteRows(Decoder* aDecoder,
+                            SurfaceFilter* aFilter,
+                            Maybe<gfx::IntRect> aOutputRect = Nothing(),
+                            Maybe<gfx::IntRect> aInputRect = Nothing(),
+                            Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
+                            Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
+                            uint8_t aFuzz = 0);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,6 +312,7 @@ ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
 ImageTestCase RLE4BMPTestCase();
 ImageTestCase RLE8BMPTestCase();
 
+} // namespace image
 } // namespace mozilla
 
 #endif // mozilla_image_test_gtest_Common_h
