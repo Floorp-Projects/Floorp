@@ -39,6 +39,7 @@ public class BrowserContract {
     public static final String PARAM_PROFILE = "profile";
     public static final String PARAM_PROFILE_PATH = "profilePath";
     public static final String PARAM_LIMIT = "limit";
+    public static final String PARAM_SUGGESTEDSITES_LIMIT = "suggestedsites_limit";
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
     public static final String PARAM_IS_TEST = "test";
@@ -464,6 +465,8 @@ public class BrowserContract {
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
         public static final String TYPE = "type";
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "topsites");
     }
 
     @RobocopTarget
