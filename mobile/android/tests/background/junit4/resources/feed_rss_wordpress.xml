@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+    xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+    xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:media="http://search.yahoo.com/mrss/"
+    >
+
+    <channel>
+        <title>justasimpletest2016</title>
+        <atom:link href="https://justasimpletest2016.wordpress.com/feed/" rel="self" type="application/rss+xml" />
+        <link>https://justasimpletest2016.wordpress.com</link>
+        <description></description>
+        <lastBuildDate>Fri, 26 Feb 2016 22:08:00 +0000</lastBuildDate>
+        <language>en</language>
+        <sy:updatePeriod>hourly</sy:updatePeriod>
+        <sy:updateFrequency>1</sy:updateFrequency>
+        <generator>http://wordpress.com/</generator>
+        <cloud domain='justasimpletest2016.wordpress.com' port='80' path='/?rsscloud=notify' registerProcedure='' protocol='http-post' />
+        <image>
+            <url>https://s2.wp.com/i/buttonw-com.png</url>
+            <title>justasimpletest2016</title>
+            <link>https://justasimpletest2016.wordpress.com</link>
+        </image>
+        <atom:link rel="search" type="application/opensearchdescription+xml" href="https://justasimpletest2016.wordpress.com/osd.xml" title="justasimpletest2016" />
+        <atom:link rel='hub' href='https://justasimpletest2016.wordpress.com/?pushpress=hub'/>
+        <item>
+            <title>Hello World!</title>
+            <link>https://justasimpletest2016.wordpress.com/2016/02/26/hello-world/</link>
+            <comments>https://justasimpletest2016.wordpress.com/2016/02/26/hello-world/#respond</comments>
+            <pubDate>Fri, 26 Feb 2016 22:07:46 +0000</pubDate>
+            <dc:creator><![CDATA[justasimpletest2016]]></dc:creator>
+            <category><![CDATA[Uncategorized]]></category>
+
+            <guid isPermaLink="false">http://justasimpletest2016.wordpress.com/?p=6</guid>
+            <description><![CDATA[What&#8217;s up?<img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=6&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></description>
+            <content:encoded><![CDATA[<p>What&#8217;s up?</p><br />  <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/justasimpletest2016.wordpress.com/6/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/justasimpletest2016.wordpress.com/6/" /></a> <img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=6&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></content:encoded>
+            <wfw:commentRss>https://justasimpletest2016.wordpress.com/2016/02/26/hello-world/feed/</wfw:commentRss>
+            <slash:comments>0</slash:comments>
+
+            <media:content url="https://2.gravatar.com/avatar/ba82024e6f43884f4ae0e379273b0743?s=96&#38;d=identicon&#38;r=G" medium="image">
+                <media:title type="html">justasimpletest2016</media:title>
+            </media:content>
+        </item>
+        <item>
+            <title>The second post</title>
+            <link>https://justasimpletest2016.wordpress.com/2016/02/26/the-second-post/</link>
+            <comments>https://justasimpletest2016.wordpress.com/2016/02/26/the-second-post/#respond</comments>
+            <pubDate>Fri, 26 Feb 2016 00:23:04 +0000</pubDate>
+            <dc:creator><![CDATA[justasimpletest2016]]></dc:creator>
+            <category><![CDATA[Uncategorized]]></category>
+
+            <guid isPermaLink="false">http://justasimpletest2016.wordpress.com/2016/02/26/the-second-post/</guid>
+            <description><![CDATA[Hello.<img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=4&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></description>
+            <content:encoded><![CDATA[<p>Hello.</p><br />  <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/justasimpletest2016.wordpress.com/4/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/justasimpletest2016.wordpress.com/4/" /></a> <img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=4&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></content:encoded>
+            <wfw:commentRss>https://justasimpletest2016.wordpress.com/2016/02/26/the-second-post/feed/</wfw:commentRss>
+            <slash:comments>0</slash:comments>
+
+            <media:content url="https://2.gravatar.com/avatar/ba82024e6f43884f4ae0e379273b0743?s=96&#38;d=identicon&#38;r=G" medium="image">
+                <media:title type="html">justasimpletest2016</media:title>
+            </media:content>
+        </item>
+        <item>
+            <title>This is just a test</title>
+            <link>https://justasimpletest2016.wordpress.com/2016/02/26/this-is-just-a-test/</link>
+            <comments>https://justasimpletest2016.wordpress.com/2016/02/26/this-is-just-a-test/#respond</comments>
+            <pubDate>Fri, 26 Feb 2016 00:22:58 +0000</pubDate>
+            <dc:creator><![CDATA[justasimpletest2016]]></dc:creator>
+            <category><![CDATA[Uncategorized]]></category>
+
+            <guid isPermaLink="false">http://justasimpletest2016.wordpress.com/?p=2</guid>
+            <description><![CDATA[Hello World. First blog post from WordPress.<img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=2&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></description>
+            <content:encoded><![CDATA[<p>Hello World. First blog post from WordPress.</p><br />  <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/justasimpletest2016.wordpress.com/2/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/justasimpletest2016.wordpress.com/2/" /></a> <img alt="" border="0" src="https://pixel.wp.com/b.gif?host=justasimpletest2016.wordpress.com&#038;blog=107552275&#038;post=2&#038;subd=justasimpletest2016&#038;ref=&#038;feed=1" width="1" height="1" />]]></content:encoded>
+            <wfw:commentRss>https://justasimpletest2016.wordpress.com/2016/02/26/this-is-just-a-test/feed/</wfw:commentRss>
+            <slash:comments>0</slash:comments>
+
+            <media:content url="https://2.gravatar.com/avatar/ba82024e6f43884f4ae0e379273b0743?s=96&#38;d=identicon&#38;r=G" medium="image">
+                <media:title type="html">justasimpletest2016</media:title>
+            </media:content>
+        </item>
+    </channel>
+</rss>
