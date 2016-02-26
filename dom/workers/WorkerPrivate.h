@@ -301,11 +301,15 @@ public:
 
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
   // as these are only used for globals going in and out of the bfcache.
+  //
+  // XXXbz: This is a bald-faced lie given the uses in RegisterSharedWorker and
+  // CloseSharedWorkersForWindow, which pass null for aWindow to Thaw and Freeze
+  // respectively.  See bug 1251722.
   bool
-  Freeze(JSContext* aCx, nsPIDOMWindowInner* aWindow);
+  Freeze(nsPIDOMWindowInner* aWindow);
 
   bool
-  Thaw(JSContext* aCx, nsPIDOMWindowInner* aWindow);
+  Thaw(nsPIDOMWindowInner* aWindow);
 
   void
   Suspend();
