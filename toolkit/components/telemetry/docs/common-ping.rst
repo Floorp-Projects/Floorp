@@ -27,6 +27,7 @@ Structure::
         buildId: <string>, // "20141126041045"
         name: <string>, // "Firefox"
         version: <string>, // "35.0"
+        displayVersion: <string>, // "35.0b3"
         vendor: <string>, // "Mozilla"
         platformVersion: <string>, // "35.0"
         xpcomAbi: <string>, // e.g. "x86-msvc"
