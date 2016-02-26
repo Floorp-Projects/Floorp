@@ -204,8 +204,10 @@ DisplayListClipState::InsertInactiveScrollClipForContainingBlockDescendants(
 DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBuilder)
   : mState(aBuilder->ClipState())
   , mSavedState(aBuilder->ClipState())
+#ifdef DEBUG
   , mClipUsed(false)
   , mRestored(false)
+#endif
 {}
 
 } // namespace mozilla
