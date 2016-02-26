@@ -7,13 +7,13 @@
     <em:name>IndexedDBTest</em:name>
     <em:description>IndexedDB functions for use in testing.</em:description>
     <em:creator>Mozilla</em:creator>
-    <em:version>2013.10.10</em:version>
+    <em:version>2016.02.26</em:version>
 #expand    <em:id>__XPI_NAME__-test@mozilla.org</em:id>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
     <em:targetApplication>
       <Description>
-        <em:id>toolkit@mozilla.org</em:id>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 #expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
 #expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
       </Description>
