@@ -190,7 +190,7 @@ function enableButtons()
     if (selected_token != null) {
       if (selected_token.needsLogin() || !(selected_token.needsUserInit)) {
         pw_toggle = "false";
-        if(selected_token.needsLogin()) {
+        if (selected_token.needsLogin()) {
           if (selected_token.isLoggedIn()) {
             logout_toggle = "false";
           } else {

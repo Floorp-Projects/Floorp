@@ -18,22 +18,22 @@ function check_telemetry() {
                     .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
-  equal(histogram.counts[ 0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[ 2], 8,
+  equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
+  equal(histogram.counts[2], 8,
         "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
-  equal(histogram.counts[ 3], 1,
+  equal(histogram.counts[3], 1,
         "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
-  equal(histogram.counts[ 4], 0,
+  equal(histogram.counts[4], 0,
         "Actual and expected SEC_ERROR_UNTRUSTED_ISSUER counts should match");
-  equal(histogram.counts[ 5], 1,
+  equal(histogram.counts[5], 1,
         "Actual and expected SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE counts should match");
-  equal(histogram.counts[ 6], 0,
+  equal(histogram.counts[6], 0,
         "Actual and expected SEC_ERROR_UNTRUSTED_CERT counts should match");
-  equal(histogram.counts[ 7], 0,
+  equal(histogram.counts[7], 0,
         "Actual and expected SEC_ERROR_INADEQUATE_KEY_USAGE counts should match");
-  equal(histogram.counts[ 8], 2,
+  equal(histogram.counts[8], 2,
         "Actual and expected SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED counts should match");
-  equal(histogram.counts[ 9], 10,
+  equal(histogram.counts[9], 10,
         "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN counts should match");
   equal(histogram.counts[10], 5,
         "Actual and expected SEC_ERROR_EXPIRED_CERTIFICATE counts should match");
