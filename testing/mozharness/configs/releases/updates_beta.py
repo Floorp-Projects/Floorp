@@ -31,4 +31,5 @@ config = {
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
         },
     },
+    "balrog_use_dummy_suffix": False,
 }
