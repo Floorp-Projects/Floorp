@@ -105,6 +105,13 @@ RESTRequest.prototype = {
   /*** Public API: ***/
 
   /**
+   * A constant boolean that indicates whether this object will automatically
+   * utf-8 encode request bodies passed as an object. Used for feature detection
+   * so, eg, loop can use the same source code for old and new Firefox versions.
+   */
+  willUTF8EncodeObjectRequests: true,
+
+  /**
    * URI for the request (an nsIURI object).
    */
   uri: null,
