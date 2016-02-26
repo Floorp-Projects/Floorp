@@ -26,17 +26,7 @@ var gWorkerAndCallback = {
 
   start: function(data) {
     if (!this._worker) {
-      var file = data.installPath;
-      var fileuri = file.isDirectory() ?
-                    Services.io.newFileURI(file) :
-                    Services.io.newURI('jar:' + file.path + '!/', null, null);
-      var resourceName = encodeURIComponent(data.id);
-
-      Services.io.getProtocolHandler("resource").
-                  QueryInterface(Ci.nsIResProtocolHandler).
-                  setSubstitution(resourceName, fileuri);
-
-      this._worker = new Worker("resource://" + resourceName + "/worker.js");
+      this._worker = new Worker("chrome://workerbootstrap/content/worker.js");
       this._worker.onerror = function(event) {
         Cu.reportError(event.message);
         event.preventDefault();
