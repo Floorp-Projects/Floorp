@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleSheetInfo.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
@@ -56,12 +57,11 @@ class CSSRuleList;
 // CSS Style Sheet Inner Data Container
 //
 
-class CSSStyleSheetInner
+class CSSStyleSheetInner : public StyleSheetInfo
 {
 public:
   friend class mozilla::CSSStyleSheet;
   friend class ::nsCSSRuleProcessor;
-  typedef net::ReferrerPolicy ReferrerPolicy;
 
 private:
   CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
@@ -84,10 +84,6 @@ private:
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   AutoTArray<CSSStyleSheet*, 8> mSheets;
-  nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
-  nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
-  nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   IncrementalClearCOMRuleArray mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   // Linked list of child sheets.  This is al fundamentally broken, because
@@ -96,16 +92,6 @@ private:
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
   RefPtr<CSSStyleSheet> mFirstChild;
-  CORSMode               mCORSMode;
-  // The Referrer Policy of a stylesheet is used for its child sheets, so it is
-  // stored here.
-  ReferrerPolicy         mReferrerPolicy;
-  dom::SRIMetadata       mIntegrity;
-  bool                   mComplete;
-
-#ifdef DEBUG
-  bool                   mPrincipalSet;
-#endif
 };
 
 
