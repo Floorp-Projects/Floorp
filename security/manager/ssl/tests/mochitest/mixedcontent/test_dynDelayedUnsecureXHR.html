@@ -17,19 +17,15 @@
   function runTest()
   {
     isSecurityState("secure");
-    window.setTimeout(function()
-    {
-      try
-      {
+    window.setTimeout(() => {
+      try {
         var req = new XMLHttpRequest();
         req.open("GET", "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/alloworigin.sjs", false);
         req.send(null);
 
         // Change should be immediate, the request was sent synchronously
         isSecurityState("broken", "security broken after insecure XHR");
-      }
-      catch (ex)
-      {
+      } catch (ex) {
         ok(false, ex);
       }
 

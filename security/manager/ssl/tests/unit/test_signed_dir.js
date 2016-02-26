@@ -23,7 +23,7 @@ function prepare(tamper) {
   if (tamper.copy) {
     tamper.copy.forEach(i => {
       let f = gTarget.clone();
-      i[0].split('/').forEach(seg => {f.append(seg);});
+      i[0].split("/").forEach(seg => { f.append(seg); });
       f.copyTo(null, i[1]);
     });
   }
@@ -32,7 +32,7 @@ function prepare(tamper) {
   if (tamper.delete) {
     tamper.delete.forEach(i => {
       let f = gTarget.clone();
-      i.split('/').forEach(seg => {f.append(seg);});
+      i.split("/").forEach(seg => { f.append(seg); });
       f.remove(true);
     });
   }
@@ -41,7 +41,7 @@ function prepare(tamper) {
   if (tamper.corrupt) {
     tamper.corrupt.forEach(i => {
       let f = gTarget.clone();
-      i.split('/').forEach(seg => {f.append(seg);});
+      i.split("/").forEach(seg => { f.append(seg); });
       let s = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY);
       const str = "Kilroy was here";
       s.write(str, str.length);

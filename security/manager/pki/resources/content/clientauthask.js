@@ -28,7 +28,7 @@ function onLoad()
     var rememberSetting = true;
 
     var pref = Components.classes['@mozilla.org/preferences-service;1']
-	       .getService(Components.interfaces.nsIPrefService);
+                         .getService(Components.interfaces.nsIPrefService);
     if (pref) {
       pref = pref.getBranch(null);
       try {

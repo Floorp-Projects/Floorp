@@ -238,7 +238,7 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
     if (line.length == 0 || line[0] == '#') {
       continue;
     }
-    switch(state) {
+    switch (state) {
       case PRE_NAME:
         chromeName = line;
         state = POST_NAME;

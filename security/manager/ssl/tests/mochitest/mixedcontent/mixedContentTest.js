@@ -103,17 +103,13 @@ function postMsg(message)
 
 function finish()
 {
-  if (history.length == 1 && !bypassNavigationTest)
-  {
-    window.setTimeout(function()
-    {
+  if (history.length == 1 && !bypassNavigationTest) {
+    window.setTimeout(() => {
       window.location.assign(navigateToInsecure ?
         "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/backward.html" :
         "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/backward.html");
     }, 0);
-  }
-  else
-  {
+  } else {
     postMsg("done");
     window.close();
   }
@@ -193,7 +189,11 @@ function waitForSecurityState(expectedState, callback)
   var roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
   var interval =
   window.setInterval(function() {
-    isSecurityState(expectedState, "", function(isok) {if (isok) {roundsLeft = 0;}});
+    isSecurityState(expectedState, "", isok => {
+      if (isok) {
+        roundsLeft = 0;
+      }
+    });
     if (!roundsLeft--) {
       window.clearInterval(interval);
       callback();

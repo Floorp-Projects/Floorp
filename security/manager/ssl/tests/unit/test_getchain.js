@@ -19,7 +19,7 @@ var certList = [
 // I have to grab them by enumerating all the certs and then finding
 // the ones that I am interested in.
 function get_ca_array() {
-  let ret_array = new Array();
+  let ret_array = [];
   let allCerts = certdb.getCerts();
   let enumerator = allCerts.getEnumerator();
   while (enumerator.hasMoreElements()) {
