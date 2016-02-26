@@ -181,58 +181,6 @@ var WebConsoleUtils = {
   },
 
   /**
-   * Abbreviates the given source URL so that it can be displayed flush-right
-   * without being too distracting.
-   *
-   * @param string aSourceURL
-   *        The source URL to shorten.
-   * @param object [aOptions]
-   *        Options:
-   *        - onlyCropQuery: boolean that tells if the URL abbreviation function
-   *        should only remove the query parameters and the hash fragment from
-   *        the given URL.
-   * @return string
-   *         The abbreviated form of the source URL.
-   */
-  abbreviateSourceURL:
-  function WCU_abbreviateSourceURL(aSourceURL, aOptions = {})
-  {
-    if (!aOptions.onlyCropQuery && aSourceURL.substr(0, 5) == "data:") {
-      let commaIndex = aSourceURL.indexOf(",");
-      if (commaIndex > -1) {
-        aSourceURL = "data:" + aSourceURL.substring(commaIndex + 1);
-      }
-    }
-
-    // Remove any query parameters.
-    let hookIndex = aSourceURL.indexOf("?");
-    if (hookIndex > -1) {
-      aSourceURL = aSourceURL.substring(0, hookIndex);
-    }
-
-    // Remove any hash fragments.
-    let hashIndex = aSourceURL.indexOf("#");
-    if (hashIndex > -1) {
-      aSourceURL = aSourceURL.substring(0, hashIndex);
-    }
-
-    // Remove a trailing "/".
-    if (aSourceURL[aSourceURL.length - 1] == "/") {
-      aSourceURL = aSourceURL.replace(/\/+$/, "");
-    }
-
-    // Remove all but the last path component.
-    if (!aOptions.onlyCropQuery) {
-      let slashIndex = aSourceURL.lastIndexOf("/");
-      if (slashIndex > -1) {
-        aSourceURL = aSourceURL.substring(slashIndex + 1);
-      }
-    }
-
-    return aSourceURL;
-  },
-
-  /**
    * Tells if the given function is native or not.
    *
    * @param function aFunction

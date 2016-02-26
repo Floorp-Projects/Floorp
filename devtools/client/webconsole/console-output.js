@@ -27,6 +27,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+const { getSourceNames } = require("devtools/client/shared/source-utils");
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const MAX_STRING_GRIP_LENGTH = 36;
@@ -2948,9 +2949,7 @@ Widgets.ObjectRenderers.add({
 
     if (!VariablesView.isFalsy({ value: url })) {
       this._text(" \u2192 ", container);
-      let shortUrl = WebConsoleUtils.abbreviateSourceURL(url, {
-        onlyCropQuery: !this.options.concise
-      });
+      let shortUrl = getSourceNames(url)[this.options.concise ? "short" : "long"];
       this._anchor(shortUrl, { href: url, appendTo: container });
     }
 
