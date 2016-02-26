@@ -81,9 +81,10 @@ public interface BrowserDB {
     /**
      * @return a cursor over top sites (high-ranking bookmarks and history).
      * Can return <code>null</code>.
-     * Returns no more than <code>maxLimit</code> results.
+     * Returns no more than <code>limit</code> results.
+     * Suggested sites will be limited to being within the first <code>suggestedRangeLimit</code> results.
      */
-    public abstract Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit);
+    public abstract Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit);
 
     public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 

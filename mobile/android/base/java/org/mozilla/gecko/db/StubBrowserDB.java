@@ -394,7 +394,7 @@ public class StubBrowserDB implements BrowserDB {
         return 0;
     }
 
-    public Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
+    public Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit) {
         return null;
     }
 
