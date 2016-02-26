@@ -1279,8 +1279,8 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool noLocalIndex,
 {
   uint32_t newSize = inputPair.Size();
   uint32_t headerTableSize = mHeaderTable.Length();
-  uint32_t matchedIndex;
-  uint32_t nameReference = 0;
+  uint32_t matchedIndex = 0u;
+  uint32_t nameReference = 0u;
   bool match = false;
 
   LOG(("Http2Compressor::ProcessHeader %s %s", inputPair.mName.get(),
