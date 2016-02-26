@@ -170,6 +170,31 @@ Servo_ReleaseStylesheet(RawServoStyleSheet* sheet)
             "non-MOZ_STYLO build");
 }
 
+void
+Servo_AppendStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_AppendStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void Servo_PrependStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_PrependStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_RemoveStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+int Servo_StyleSheetHasRules(RawServoStyleSheet* sheet)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_StyleSheetHasRules in a "
+            "non-MOZ_STYLO build");
+}
+
 RawServoStyleSet*
 Servo_InitStyleSet()
 {
