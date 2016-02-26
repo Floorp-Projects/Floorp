@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=580313
+-->
+<head>
+  <title>Test Prefetch (bug 580313)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=580313">Mozilla Bug 580313</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  var prefetch = SpecialPowers.Cc["@mozilla.org/prefetch-service;1"].
+                   getService(SpecialPowers.Ci.nsIPrefetchService);
+  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
+            getService(SpecialPowers.Ci.nsIIOService);
+
+  is(prefetch.hasMoreElements(), false, "No prefetches at the test start.");
+
+  var linkElem = document.createElement('link');
+  linkElem.rel = "prefetch";
+
+  // Href is empty.
+  document.head.appendChild(linkElem);
+  is(prefetch.hasMoreElements(), false,
+     "If href is not a valid uri, a prefetch has not been started.");
+
+  // Change uri of an existing link. Now it is a valid uri and
+  // a prefetch should start.
+  linkElem.href = "https://example.com/1";
+  is(prefetch.hasMoreElements(), true,
+     "Setting the href to a valid uri has started a new prefetch.");
+
+  // Removing a link, removes its prefetch.
+  document.head.removeChild(linkElem);
+  is(prefetch.hasMoreElements(), false,
+     "Removing the link has canceled the prefetch.");
+
+  // Add link again.
+  document.head.appendChild(linkElem);
+  is(prefetch.hasMoreElements(), true,
+     "Adding link again, has started the prefetch again.");
+
+  // Changing the href should cancel the current prefetch.
+  linkElem.href = "https://example.com/2";
+  is(prefetch.hasMoreElements(), true,
+     "Changing href, a new prefetch has been started.");
+  // To check if "https://example.com/1" prefetch has been canceled, we try to
+  // cancel it using PrefetService. Since the prefetch for
+  // "https://example.com/1" does not exist, the cancel will throw.
+  var cancelError = 0;
+  try {
+    var uri = ios.newURI("https://example.com/1", null, null);
+    prefetch.cancelPrefetchURI(uri, linkElem);
+  } catch(e) {
+    cancelError = 1;
+  }
+  is(cancelError, 1, "This prefetch has aleady been canceled");
+
+  // Now cancel the right uri.
+  cancelError = 0;
+  try {
+    var uri = ios.newURI("https://example.com/2", null, null);
+    prefetch.cancelPrefetchURI(uri, linkElem);
+  } catch(e) {
+    cancelError = 1;
+  }
+  is(cancelError, 0, "This prefetch has been canceled successfully");
+
+  is(prefetch.hasMoreElements(), false, "The prefetch has already been canceled.");
+
+  // Removing the link will do nothing regarding prefetch service.
+  document.head.removeChild(linkElem);
+
+  // Adding two links to the same uri and removing one will not remove the other.
+  document.head.appendChild(linkElem);
+  is(prefetch.hasMoreElements(), true,
+     "Added one prefetch for 'https://example.com/2'.");
+
+  var linkElem2 = document.createElement('link');
+  linkElem2.rel = "prefetch";
+  linkElem2.href = "https://example.com/2";
+  document.head.appendChild(linkElem2);
+  is(prefetch.hasMoreElements(), true,
+     "Added second prefetch for 'https://example.com/2'.");
+
+  // Remove first link element. This should not remove the prefetch.
+  document.head.removeChild(linkElem);
+  is(prefetch.hasMoreElements(), true,
+     "The prefetch for 'https://example.com/2' is still present.");
+
+  // Remove the second link element. This should remove the prefetch.
+  document.head.removeChild(linkElem2);
+  is(prefetch.hasMoreElements(), false,
+     "There is no prefetch.");
+
+  SimpleTest.finish();
+</script>
+</pre>
+</body>
+</html>

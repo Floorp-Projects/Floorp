@@ -82,16 +82,29 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
     , mChannel(nullptr)
     , mBytesRead(0)
 {
-    mSource = do_GetWeakReference(aSource);
+    nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+    mSources.AppendElement(source);
 }
 
 nsresult
 nsPrefetchNode::OpenChannel()
 {
-    nsCOMPtr<nsINode> source = do_QueryReferent(mSource);
+    if (mSources.IsEmpty()) {
+        // Don't attempt to prefetch if we don't have a source node
+        // (which should never happen).
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsINode> source;
+    while (!mSources.IsEmpty() && !(source = do_QueryReferent(mSources.ElementAt(0)))) {
+        // If source is null remove it.
+        // (which should never happen).
+        mSources.RemoveElementAt(0);
+    }
+
     if (!source) {
         // Don't attempt to prefetch if we don't have a source node
         // (which should never happen).
+
         return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
@@ -595,25 +608,46 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     }
 
     //
-    // cancel if being prefetched
+    // Check whether it is being prefetched.
     //
     for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
         bool equals;
-        if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) && equals) {
-            LOG(("rejected: URL is already being prefetched\n"));
-            return NS_ERROR_ABORT;
+        if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
+            equals) {
+            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            if (mCurrentNodes[i]->mSources.IndexOf(source) ==
+                mCurrentNodes[i]->mSources.NoIndex) {
+                LOG(("URL is already being prefetched, add a new reference "
+                     "document\n"));
+                mCurrentNodes[i]->mSources.AppendElement(source);
+                return NS_OK;
+            } else {
+                LOG(("URL is already being prefetched by this document"));
+                return NS_ERROR_ABORT;
+            }
         }
     }
 
     //
-    // cancel if already on the prefetch queue
+    // Check whether it is on the prefetch queue.
     //
-    for (std::deque<RefPtr<nsPrefetchNode>>::iterator node = mQueue.begin();
-         node != mQueue.end(); node++) {
+    for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt = mQueue.begin();
+         nodeIt != mQueue.end(); nodeIt++) {
         bool equals;
-        if (NS_SUCCEEDED(node->get()->mURI->Equals(aURI, &equals)) && equals) {
-            LOG(("rejected: URL is already on prefetch queue\n"));
-            return NS_ERROR_ABORT;
+        RefPtr<nsPrefetchNode> node = nodeIt->get();
+        if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
+            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            if (node->mSources.IndexOf(source) ==
+                node->mSources.NoIndex) {
+                LOG(("URL is already being prefetched, add a new reference "
+                     "document\n"));
+                node->mSources.AppendElement(do_GetWeakReference(aSource));
+                return NS_OK;
+            } else {
+                LOG(("URL is already being prefetched by this document"));
+                return NS_ERROR_ABORT;
+            }
+     
         }
     }
 
@@ -630,6 +664,72 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefetchService::CancelPrefetchURI(nsIURI* aURI,
+                                     nsIDOMNode* aSource)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    if (LOG_ENABLED()) {
+        nsAutoCString spec;
+        aURI->GetSpec(spec);
+        LOG(("CancelPrefetchURI [%s]\n", spec.get()));
+    }
+
+    //
+    // look in current prefetches
+    //
+    for (uint32_t i = 0; i < mCurrentNodes.Length(); ++i) {
+        bool equals;
+        if (NS_SUCCEEDED(mCurrentNodes[i]->mURI->Equals(aURI, &equals)) &&
+            equals) {
+            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            if (mCurrentNodes[i]->mSources.IndexOf(source) !=
+                mCurrentNodes[i]->mSources.NoIndex) {
+                mCurrentNodes[i]->mSources.RemoveElement(source);
+                if (mCurrentNodes[i]->mSources.IsEmpty()) {
+                    mCurrentNodes[i]->CancelChannel(NS_BINDING_ABORTED);
+                    mCurrentNodes.RemoveElementAt(i);
+                }
+                return NS_OK;
+            }
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    //
+    // look into the prefetch queue
+    //
+    for (std::deque<RefPtr<nsPrefetchNode>>::iterator nodeIt = mQueue.begin();
+         nodeIt != mQueue.end(); nodeIt++) {
+        bool equals;
+        RefPtr<nsPrefetchNode> node = nodeIt->get();
+        if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
+            nsCOMPtr<nsIWeakReference> source = do_GetWeakReference(aSource);
+            if (node->mSources.IndexOf(source) !=
+                node->mSources.NoIndex) {
+
+#ifdef DEBUG
+                int32_t inx = node->mSources.IndexOf(source);
+                nsCOMPtr<nsIDOMNode> domNode =
+                    do_QueryReferent(node->mSources.ElementAt(inx));
+                MOZ_ASSERT(domNode);
+#endif
+
+                node->mSources.RemoveElement(source);
+                if (node->mSources.IsEmpty()) {
+                    mQueue.erase(nodeIt);
+                }
+                return NS_OK;
+            }
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    // not found!
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
