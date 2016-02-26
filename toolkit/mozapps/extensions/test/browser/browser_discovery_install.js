@@ -8,10 +8,12 @@ const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery_install.html
 const GOOD_FRAMED_URL = "https://example.com/" + RELATIVE_DIR + "discovery_frame.html";
 const BAD_FRAMED_URL = "https://example.org/" + RELATIVE_DIR + "discovery_frame.html";
 
+const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
+
 // Temporarily enable caching
 Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 // Allow SSL from non-built-in certs
-Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
+Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 // Allow installs from the test site
 Services.perms.add(NetUtil.newURI("https://example.com/"), "install",
                    Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -21,6 +23,7 @@ Services.perms.add(NetUtil.newURI("https://example.org/"), "install",
 registerCleanupFunction(() => {
   Services.perms.remove(NetUtil.newURI("https://example.com/"), "install");
   Services.perms.remove(NetUtil.newURI("https://example.org/"), "install");
+  Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
 });
 
 function clickLink(frameLoader, id) {
