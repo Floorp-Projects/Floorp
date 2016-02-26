@@ -479,6 +479,21 @@ TEST_F(JsepTrackTest, SimulcastAnswerer)
   };  \
 }
 
+#define VERIFY_OPUS_FORCE_MONO(track, expected) \
+{ \
+  JsepTrack& copy(track); \
+  ASSERT_TRUE(copy.GetNegotiatedDetails());  \
+  ASSERT_TRUE(copy.GetNegotiatedDetails()->GetEncodingCount());  \
+  for (auto codec : copy.GetNegotiatedDetails()->GetEncoding(0).GetCodecs()) {\
+    if (codec->mName == "opus") {  \
+      JsepAudioCodecDescription* audioCodec =  \
+        static_cast<JsepAudioCodecDescription*>(codec);  \
+      /* gtest has some compiler warnings when using ASSERT_EQ with booleans. */ \
+      ASSERT_EQ((int)(expected), (int)audioCodec->mForceMono);  \
+    }  \
+  };  \
+}
+
 TEST_F(JsepTrackTest, DefaultOpusParameters)
 {
   Init(SdpMediaSection::kAudio);
@@ -489,7 +504,9 @@ TEST_F(JsepTrackTest, DefaultOpusParameters)
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mSendAns,
       SdpFmtpAttributeList::OpusParameters::kDefaultMaxPlaybackRate);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mRecvOff, 0U);
+  VERIFY_OPUS_FORCE_MONO(*mRecvOff, false);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mRecvAns, 0U);
+  VERIFY_OPUS_FORCE_MONO(*mRecvAns, false);
 }
 
 TEST_F(JsepTrackTest, NonDefaultOpusParameters)
@@ -500,6 +517,7 @@ TEST_F(JsepTrackTest, NonDefaultOpusParameters)
       JsepAudioCodecDescription* audioCodec =
         static_cast<JsepAudioCodecDescription*>(codec);
       audioCodec->mMaxPlaybackRate = 16000;
+      audioCodec->mForceMono = true;
     }
   }
   InitTracks(SdpMediaSection::kAudio);
@@ -507,10 +525,14 @@ TEST_F(JsepTrackTest, NonDefaultOpusParameters)
   OfferAnswer();
 
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mSendOff, 16000U);
+  VERIFY_OPUS_FORCE_MONO(*mSendOff, true);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mSendAns,
       SdpFmtpAttributeList::OpusParameters::kDefaultMaxPlaybackRate);
+  VERIFY_OPUS_FORCE_MONO(*mSendAns, false);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mRecvOff, 0U);
+  VERIFY_OPUS_FORCE_MONO(*mRecvOff, false);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(*mRecvAns, 16000U);
+  VERIFY_OPUS_FORCE_MONO(*mRecvAns, true);
 }
 
 } // namespace mozilla
