@@ -630,6 +630,28 @@ function injectAPI(source, dest) {
   }
 }
 
+/**
+ * Returns a Promise which resolves when the given document's DOM has
+ * fully loaded.
+ *
+ * @param {Document} doc The document to await the load of.
+ * @returns {Promise<Document>}
+ */
+function promiseDocumentReady(doc) {
+  if (doc.readyState == "interactive" || doc.readyState == "complete") {
+    return Promise.resolve(doc);
+  }
+
+  return new Promise(resolve => {
+    doc.addEventListener("DOMContentLoaded", function onReady(event) {
+      if (event.target === event.currentTarget) {
+        doc.removeEventListener("DOMContentLoaded", onReady, true);
+        resolve(doc);
+      }
+    }, true);
+  });
+}
+
 /*
  * Messaging primitives.
  */
@@ -1011,6 +1033,7 @@ this.ExtensionUtils = {
   ignoreEvent,
   injectAPI,
   instanceOf,
+  promiseDocumentReady,
   runSafe,
   runSafeSync,
   runSafeSyncWithoutClone,
