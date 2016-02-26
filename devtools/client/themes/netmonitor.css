@@ -398,21 +398,11 @@
 /* Network request details */
 
 #details-pane-toggle {
-  list-style-image: url("chrome://devtools/skin/images/debugger-collapse.png");
+  list-style-image: url("chrome://devtools/skin/images/pane-collapse.svg");
 }
 
 #details-pane-toggle[pane-collapsed] {
-  list-style-image: url("chrome://devtools/skin/images/debugger-expand.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  #details-pane-toggle {
-    list-style-image: url("chrome://devtools/skin/images/debugger-collapse@2x.png");
-  }
-
-  #details-pane-toggle[pane-collapsed] {
-    list-style-image: url("chrome://devtools/skin/images/debugger-expand@2x.png");
-  }
+  list-style-image: url("chrome://devtools/skin/images/pane-expand.svg");
 }
 
 /* Network request details tabpanels */
