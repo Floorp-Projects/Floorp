@@ -53,6 +53,11 @@ public class SubscribeAction implements BaseAction {
         return true;
     }
 
+    @Override
+    public boolean requiresPreferenceEnabled() {
+        return true;
+    }
+
     private void subscribe(String guid, String feedUrl) {
         FeedFetcher.FeedResponse response = FeedFetcher.fetchAndParseFeed(feedUrl);
         if (response == null) {

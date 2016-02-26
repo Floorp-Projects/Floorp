@@ -151,4 +151,9 @@ public class CheckAction implements BaseAction {
     public boolean requiresNetwork() {
         return true;
     }
+
+    @Override
+    public boolean requiresPreferenceEnabled() {
+        return true;
+    }
 }
