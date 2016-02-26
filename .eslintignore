@@ -197,6 +197,3 @@ toolkit/mozapps/downloads/nsHelperAppDlg.js
 toolkit/mozapps/extensions/internal/AddonConstants.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 toolkit/webapps/**
-
-# Third party
-toolkit/modules/third_party/**
