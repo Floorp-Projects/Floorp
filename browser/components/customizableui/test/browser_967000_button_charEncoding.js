@@ -25,7 +25,7 @@ add_task(function*() {
   PanelUI.hide();
   yield panelHidePromise;
 
-  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true);
+  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
   yield PanelUI.show();
   ok(!charEncodingButton.hasAttribute("disabled"), "The Character encoding button gets enabled");
