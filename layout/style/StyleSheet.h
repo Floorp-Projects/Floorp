@@ -33,6 +33,8 @@ public:
     mParsingMode = aParsingMode;
   }
 
+  nsINode* GetOwnerNode() const { return mOwningNode; }
+
 protected:
   nsINode*              mOwningNode; // weak ref
   css::SheetParsingMode mParsingMode;
