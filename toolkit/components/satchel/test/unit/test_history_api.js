@@ -58,17 +58,21 @@ function promiseUpdateEntry(op, name, value)
   return promiseUpdate(change);
 }
 
-function promiseUpdate(change)
-{
-  let deferred = Promise.defer();
-  FormHistory.update(change,
-                     { handleError: function (error) {
-                         do_throw("Error occurred updating form history: " + error);
-                         deferred.reject(error);
-                       },
-                       handleCompletion: function (reason) { if (!reason) deferred.resolve(); }
-                     });
-  return deferred.promise;
+function promiseUpdate(change) {
+  return new Promise((resolve, reject) => {
+    FormHistory.update(change, {
+      handleError(error) {
+        this._error = error;
+      },
+      handleCompletion(reason) {
+        if (reason) {
+          reject(this._error);
+        } else {
+          resolve();
+        }
+      }
+    });
+  });
 }
 
 function promiseSearchEntries(terms, params)
@@ -404,6 +408,39 @@ add_task(function* ()
   do_check_true(results[3].lastUsed > 700);
 
   yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
+
+  // ===== 21 =====
+  // Check update fails if form history is disabled and the operation is not a
+  // pure removal.
+  testnum++;
+  Services.prefs.setBoolPref("browser.formfill.enable", false);
+
+  // Cannot use arrow functions, see bug 1237961.
+  Assert.rejects(promiseUpdate(
+                   { op : "bump", fieldname: "field5", value: "value5" }),
+                 function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                 "bumping when form history is disabled should fail");
+  Assert.rejects(promiseUpdate(
+                   { op : "add", fieldname: "field5", value: "value5" }),
+                 function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                 "Adding when form history is disabled should fail");
+  Assert.rejects(promiseUpdate([
+                     { op : "update", fieldname: "field5", value: "value5" },
+                     { op : "remove", fieldname: "field5", value: "value5" }
+                   ]),
+                 function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                 "mixed operations when form history is disabled should fail");
+  Assert.rejects(promiseUpdate([
+                     null, undefined, "", 1, {},
+                     { op : "remove", fieldname: "field5", value: "value5" }
+                   ]),
+                 function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
+                 "Invalid entries when form history is disabled should fail");
+
+  // Remove should work though.
+  yield promiseUpdate([{ op: "remove", fieldname: "field5", value: null },
+                       { op: "remove", fieldname: null, value: null }]);
+  Services.prefs.clearUserPref("browser.formfill.enable");
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;

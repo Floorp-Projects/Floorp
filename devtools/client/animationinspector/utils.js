@@ -8,10 +8,8 @@
 
 const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
-loader.lazyRequireGetter(this, "EventEmitter",
-                               "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
@@ -67,7 +65,8 @@ exports.createNode = createNode;
  * Given a data-scale, draw the background for a graph (vertical lines) into a
  * canvas and set that canvas as an image-element with an ID that can be used
  * from CSS.
- * @param {Document} document The document where the image-element should be set.
+ * @param {Document} document The document where the image-element should be
+ * set.
  * @param {String} id The ID for the image-element.
  * @param {Number} graphWidth The width of the graph.
  * @param {Number} intervalWidth The width of one interval
@@ -162,10 +161,10 @@ function formatStopwatchTime(time) {
 
   let pad = (nb, max) => {
     if (nb < max) {
-      return new Array((max+"").length - (nb+"").length + 1).join("0") + nb;
+      return new Array((max + "").length - (nb + "").length + 1).join("0") + nb;
     }
     return nb;
-  }
+  };
 
   minutes = pad(minutes, 10);
   seconds = pad(seconds, 10);

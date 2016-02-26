@@ -53,7 +53,7 @@ public final class ReadingListHelper implements NativeEventListener {
         this.readingListAccessor = db.getReadingListAccessor();
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest");
 
 
         contentObserver = new ContentObserver(null) {
@@ -72,7 +72,7 @@ public final class ReadingListHelper implements NativeEventListener {
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest");
 
         context.getContentResolver().unregisterContentObserver(contentObserver);
     }
@@ -81,6 +81,7 @@ public final class ReadingListHelper implements NativeEventListener {
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
         switch(event) {
+            // Added from web context menu.
             case "Reader:AddToList": {
                 handleAddToList(callback, message);
                 break;
@@ -91,14 +92,6 @@ public final class ReadingListHelper implements NativeEventListener {
             }
             case "Reader:FaviconRequest": {
                 handleReaderModeFaviconRequest(callback, message.getString("url"));
-                break;
-            }
-            case "Reader:RemoveFromList": {
-                handleRemoveFromList(message.getString("url"));
-                break;
-            }
-            case "Reader:ListStatusRequest": {
-                handleReadingListStatusRequest(callback, message.getString("url"));
                 break;
             }
         }
@@ -228,44 +221,6 @@ public final class ReadingListHelper implements NativeEventListener {
                 callback.sendSuccess(args.toString());
             }
         }).execute();
-    }
-
-    /**
-     * A page can be removed from the ReadingList by panel context menu,
-     * or by tapping the readinglist-remove icon in the ReaderMode banner.
-     */
-    private void handleRemoveFromList(final String url) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                readingListAccessor.removeReadingListItemWithURL(context.getContentResolver(), url);
-                handleEvent(ReadingListEvent.REMOVED, url);
-            }
-        });
-    }
-
-    /**
-     * Gecko (ReaderMode) requests the page ReadingList status, to display
-     * the proper ReaderMode banner icon (readinglist-add / readinglist-remove).
-     */
-    private void handleReadingListStatusRequest(final EventCallback callback, final String url) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                final int inReadingList = readingListAccessor.isReadingListItem(context.getContentResolver(), url) ? 1 : 0;
-
-                final JSONObject json = new JSONObject();
-                try {
-                    json.put("url", url);
-                    json.put("inReadingList", inReadingList);
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "JSON error - failed to return inReadingList status", e);
-                }
-
-                // Return the json object to fulfill the promise.
-                callback.sendSuccess(json.toString());
-            }
-        });
     }
 
     /**

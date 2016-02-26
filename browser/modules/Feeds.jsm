@@ -46,7 +46,7 @@ this.Feeds = {
 
       case "WCCR:setAutoHandler": {
         let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-                          getService(Ci.nsIWebContentHandlerRegistrar);
+                          getService(Ci.nsIWebContentConverterService);
         registrar.setAutoHandler(data.contentType, data.handler);
         break;
       }

@@ -22,43 +22,31 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("body", inspector);
-  yield testEditPropertyPriorityAndDisable(inspector, view);
-});
 
-function* testEditPropertyPriorityAndDisable(inspector, view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
+  let prop = rule.textProps[0];
 
   is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
 
-  let editor = yield focusEditableField(view, propEditor.valueSpan);
-  let onBlur = once(editor.input, "blur");
-  EventUtils.sendString("red !important;", view.styleWindow);
-  yield onBlur;
-  yield ruleEditor.rule._applyingModifications;
+  yield setProperty(view, prop, "red !important");
 
-  is(propEditor.valueSpan.textContent, "red !important",
+  is(prop.editor.valueSpan.textContent, "red !important",
     "'red !important' property value is correctly set.");
   is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(255, 0, 0)", "red background color is set.");
 
   info("Disabling red background color property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield togglePropStatus(view, prop);
 
   is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
 
-  editor = yield focusEditableField(view, propEditor.valueSpan);
-  onBlur = once(editor.input, "blur");
-  EventUtils.sendString("red;", view.styleWindow);
-  yield onBlur;
-  yield ruleEditor.rule._applyingModifications;
+  yield setProperty(view, prop, "red");
 
-  is(propEditor.valueSpan.textContent, "red",
+  is(prop.editor.valueSpan.textContent, "red",
     "'red' property value is correctly set.");
-  ok(propEditor.prop.enabled, "red background-color property is enabled.");
+  ok(prop.enabled, "red background-color property is enabled.");
   is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
-}
+});

@@ -42,13 +42,15 @@
   <div class="ball css-transition"></div>
 
   <script>
-    setTimeout(function(){
+    "use strict";
+
+    setTimeout(function() {
       document.querySelector(".css-transition").style.backgroundColor = "yellow";
     }, 0);
 
     document.querySelector(".script-animation").animate([
-      {  opacity: 1, offset: 0 },
-      {  opacity: .1, offset: 1 }
+      {opacity: 1, offset: 0},
+      {opacity: .1, offset: 1}
     ], {
       duration: 10000,
       fill: "forwards"

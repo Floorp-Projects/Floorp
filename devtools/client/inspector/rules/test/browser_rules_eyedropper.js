@@ -10,8 +10,6 @@ Services.telemetry.canRecordExtended = true;
 registerCleanupFunction(function() {
   Services.telemetry.canRecordExtended = oldCanRecord;
 });
-const HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
-const FLAG_HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG";
 const EXPECTED_TELEMETRY = {
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT": 2,
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG": 1
@@ -40,8 +38,10 @@ const TEST_URI = `
   <body><div id="div1"></div><div id="div2"></div></body>
 `;
 
-const ORIGINAL_COLOR = "rgb(255, 0, 153)";  // #f09
-const EXPECTED_COLOR = "rgb(255, 255, 85)"; // #ff5
+// #f09
+const ORIGINAL_COLOR = "rgb(255, 0, 153)";
+// #ff5
+const EXPECTED_COLOR = "rgb(255, 255, 85)";
 
 // Test opening the eyedropper from the color picker. Pressing escape
 // to close it, and clicking the page to select a color.
@@ -103,8 +103,7 @@ function* testSelect(view, swatch, dropper) {
   let color = swatch.style.backgroundColor;
   is(color, EXPECTED_COLOR, "swatch changed colors");
 
-  let element = content.document.querySelector("div");
-  is(content.window.getComputedStyle(element).backgroundColor,
+  is((yield getComputedStyleProperty("div", null, "background-color")),
      EXPECTED_COLOR,
      "div's color set to body color after dropper");
 }
@@ -148,7 +147,7 @@ function openEyedropper(view, swatch) {
   return deferred.promise;
 }
 
-function inspectPage(dropper, click=true) {
+function inspectPage(dropper, click = true) {
   let target = document.documentElement;
   let win = window;
 

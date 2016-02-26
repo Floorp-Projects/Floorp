@@ -11,7 +11,7 @@ function test() {
   var chromeroot = extractChromeRoot(gTestPath);
   var xpipath = chromeroot + "unsigned.xpi";
   try {
-    xpipath = cr.convertChromeURL(makeURI(chromeroot + "unsigned.xpi")).spec;
+    xpipath = cr.convertChromeURL(makeURI(chromeroot + "amosigned.xpi")).spec;
   } catch (ex) {
     //scenario where we are running from a .jar and already extracted
   }

@@ -6,49 +6,46 @@
 
 // Test that the rule-view content is correct
 
+const TEST_URI = `
+  <style type="text/css">
+    @media screen and (min-width: 10px) {
+      #testid {
+        background-color: blue;
+      }
+    }
+    .testclass, .unmatched {
+      background-color: green;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+  <div id="testid2">Styled Node</div>
+`;
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,browser_ruleview_content.js");
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  info("Creating the test document");
-  let style = "" +
-    "@media screen and (min-width: 10px) {" +
-    "  #testid {" +
-    "    background-color: blue;" +
-    "  }" +
-    "}" +
-    ".testclass, .unmatched {" +
-    "  background-color: green;" +
-    "}";
-  let styleNode = addStyle(content.document, style);
-  content.document.body.innerHTML = "<div id='testid' class='testclass'>Styled Node</div>" +
-                                    "<div id='testid2'>Styled Node</div>";
-
-  yield testContentAfterNodeSelection(inspector, view);
-});
-
-function* testContentAfterNodeSelection(inspector, ruleView) {
   yield selectNode("#testid", inspector);
-  is(ruleView.element.querySelectorAll("#noResults").length, 0,
+  is(view.element.querySelectorAll("#noResults").length, 0,
     "After a highlight, no longer has a no-results element.");
 
-  yield clearCurrentNodeSelection(inspector)
-  is(ruleView.element.querySelectorAll("#noResults").length, 1,
+  yield clearCurrentNodeSelection(inspector);
+  is(view.element.querySelectorAll("#noResults").length, 1,
     "After highlighting null, has a no-results element again.");
 
   yield selectNode("#testid", inspector);
 
-  let linkText = getRuleViewLinkTextByIndex(ruleView, 1);
-  is(linkText, "inline:1 @screen and (min-width: 10px)",
+  let linkText = getRuleViewLinkTextByIndex(view, 1);
+  is(linkText, "inline:3 @screen and (min-width: 10px)",
     "link text at index 1 contains media query text.");
 
-  linkText = getRuleViewLinkTextByIndex(ruleView, 2);
-  is(linkText, "inline:1",
+  linkText = getRuleViewLinkTextByIndex(view, 2);
+  is(linkText, "inline:7",
     "link text at index 2 contains no media query text.");
 
-  let classEditor = getRuleViewRuleEditor(ruleView, 2);
-  is(classEditor.selectorText.querySelector(".ruleview-selector-matched").textContent,
+  let selector = getRuleViewRuleEditor(view, 2).selectorText;
+  is(selector.querySelector(".ruleview-selector-matched").textContent,
     ".testclass", ".textclass should be matched.");
-  is(classEditor.selectorText.querySelector(".ruleview-selector-unmatched").textContent,
+  is(selector.querySelector(".ruleview-selector-unmatched").textContent,
     ".unmatched", ".unmatched should not be matched.");
-}
+});

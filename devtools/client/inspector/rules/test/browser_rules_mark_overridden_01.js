@@ -23,13 +23,8 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testMarkOverridden(inspector, view);
-});
 
-function* testMarkOverridden(inspector, view) {
-  let elementStyle = view._elementStyle;
-
-  let idRule = elementStyle.rules[1];
+  let idRule = getRuleViewRuleEditor(view, 1).rule;
   let idProp = idRule.textProps[0];
   is(idProp.name, "background-color",
     "First ID property should be background-color");
@@ -38,7 +33,7 @@ function* testMarkOverridden(inspector, view) {
   ok(!idProp.editor.element.classList.contains("ruleview-overridden"),
     "ID property editor should not have ruleview-overridden class");
 
-  let classRule = elementStyle.rules[2];
+  let classRule = getRuleViewRuleEditor(view, 2).rule;
   let classProp = classRule.textProps[0];
   is(classProp.name, "background-color",
     "First class prop should be background-color");
@@ -48,11 +43,8 @@ function* testMarkOverridden(inspector, view) {
     "Class property editor should have ruleview-overridden class");
 
   // Override background-color by changing the element style.
-  let elementRule = elementStyle.rules[0];
-  elementRule.createProperty("background-color", "purple", "");
-  yield elementRule._applyingModifications;
+  let elementProp = yield addProperty(view, 0, "background-color", "purple");
 
-  let elementProp = elementRule.textProps[0];
   ok(!elementProp.overridden,
     "Element style property should not be overridden");
   ok(idProp.overridden, "ID property should be overridden");
@@ -61,4 +53,4 @@ function* testMarkOverridden(inspector, view) {
   ok(classProp.overridden, "Class property should be overridden");
   ok(classProp.editor.element.classList.contains("ruleview-overridden"),
     "Class property editor should have ruleview-overridden class");
-}
+});

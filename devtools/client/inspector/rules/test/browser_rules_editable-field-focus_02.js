@@ -29,7 +29,7 @@ add_task(function*() {
   yield testEditableFieldFocus(inspector, view, "VK_TAB", { shiftKey: true });
 });
 
-function* testEditableFieldFocus(inspector, view, commitKey, options={}) {
+function* testEditableFieldFocus(inspector, view, commitKey, options = {}) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
   let editor = yield focusEditableField(view, ruleEditor.selectorText);
   is(inplaceEditor(ruleEditor.selectorText), editor,
