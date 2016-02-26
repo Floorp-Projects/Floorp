@@ -40,4 +40,5 @@ config = {
             "rules_to_update": ["firefox-release-cdntest", "firefox-release-localtest"],
         },
     },
+    "balrog_use_dummy_suffix": False,
 }

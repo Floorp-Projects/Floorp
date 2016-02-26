@@ -31,4 +31,5 @@ config = {
             "rules_to_update": ["firefox-date-cdntest", "firefox-date-localtest"],
         }
     },
+    "balrog_use_dummy_suffix": False,
 }
