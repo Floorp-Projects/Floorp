@@ -16,15 +16,15 @@ using namespace mozilla::dom;
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const SRIMetadata& aIntegrity)
-  : mCORSMode(aCORSMode)
-  , mReferrerPolicy (aReferrerPolicy)
+  : mPrincipal(nsNullPrincipal::Create())
+  , mCORSMode(aCORSMode)
+  , mReferrerPolicy(aReferrerPolicy)
   , mIntegrity(aIntegrity)
   , mComplete(false)
 #ifdef DEBUG
   , mPrincipalSet(false)
 #endif
 {
-  mPrincipal = nsNullPrincipal::Create();
   if (!mPrincipal) {
     NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
   }
