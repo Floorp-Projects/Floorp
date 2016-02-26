@@ -1299,6 +1299,9 @@ public:
   ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
 
   void
+  ClearDebuggerEventQueue();
+
+  void
   OnProcessNextEvent();
 
   void
