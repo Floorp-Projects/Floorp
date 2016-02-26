@@ -656,6 +656,19 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
                                    message, recipient);
       },
 
+      detectLanguage: function(tabId) {
+        let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
+        if (!tab) {
+          return Promise.reject({message: `Invalid tab ID: ${tabId}`});
+        }
+
+        let browser = tab.linkedBrowser;
+        let recipient = {innerWindowID: browser.innerWindowID};
+
+        return context.sendMessage(browser.messageManager, "Extension:DetectLanguage",
+                                   {}, recipient);
+      },
+
       _execute: function(tabId, details, kind, method) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
