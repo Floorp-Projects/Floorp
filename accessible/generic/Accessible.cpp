@@ -2541,9 +2541,10 @@ Accessible::LastRelease()
 void
 Accessible::CacheChildren()
 {
-  NS_ENSURE_TRUE_VOID(Document());
+  DocAccessible* doc = Document();
+  NS_ENSURE_TRUE_VOID(doc);
 
-  TreeWalker walker(this);
+  TreeWalker walker(this, mContent);
 
   Accessible* child = nullptr;
   while ((child = walker.Next()) && AppendChild(child));
