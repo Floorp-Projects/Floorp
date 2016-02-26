@@ -25,6 +25,52 @@ import buildconfig
 
 STAGE = mozpath.join(buildconfig.topobjdir, 'dist', 'test-stage')
 
+TEST_HARNESS_BINS = [
+    'BadCertServer',
+    'GenerateOCSPResponse',
+    'OCSPStaplingServer',
+    'SmokeDMD',
+    'certutil',
+    'crashinject',
+    'fileid',
+    'minidumpwriter',
+    'pk12util',
+    'screenshot',
+    'screentopng',
+    'ssltunnel',
+    'xpcshell',
+]
+
+# The fileid utility depends on mozglue. See bug 1069556.
+TEST_HARNESS_DLLS = [
+    'crashinjectdll',
+    'mozglue'
+]
+
+TEST_PLUGIN_DLLS = [
+    'npctrltest',
+    'npsecondtest',
+    'npswftest',
+    'nptest',
+    'nptestjava',
+    'npthirdtest',
+]
+
+TEST_PLUGIN_DIRS = [
+    'JavaTest.plugin/**',
+    'SecondTest.plugin/**',
+    'Test.plugin/**',
+    'ThirdTest.plugin/**',
+    'npctrltest.plugin/**',
+    'npswftest.plugin/**',
+]
+
+GMP_TEST_PLUGIN_DIRS = [
+    'gmp-clearkey/**',
+    'gmp-fake/**',
+    'gmp-fakeopenh264/**',
+]
+
 
 ARCHIVE_FILES = {
     'common': [
@@ -120,6 +166,62 @@ ARCHIVE_FILES = {
             'pattern': '**',
             'dest': 'tools/wptserve',
         },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin',
+            'patterns': [
+                '%s%s' % (f, buildconfig.substs['BIN_SUFFIX'])
+                for f in TEST_HARNESS_BINS
+            ] + [
+                '%s%s%s' % (buildconfig.substs['DLL_PREFIX'], f, buildconfig.substs['DLL_SUFFIX'])
+                for f in TEST_HARNESS_DLLS
+            ],
+            'dest': 'bin',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/plugins',
+            'patterns': [
+                '%s%s%s' % (buildconfig.substs['DLL_PREFIX'], f, buildconfig.substs['DLL_SUFFIX'])
+                for f in TEST_PLUGIN_DLLS
+            ],
+            'dest': 'bin/plugins',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/plugins',
+            'patterns': TEST_PLUGIN_DIRS,
+            'dest': 'bin/plugins',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin',
+            'patterns': GMP_TEST_PLUGIN_DIRS,
+            'dest': 'bin/plugins',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin',
+            'patterns': [
+                'dmd.py',
+                'fix_linux_stack.py',
+                'fix_macosx_stack.py',
+                'fix_stack_using_bpsyms.py',
+            ],
+            'dest': 'bin',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin/components',
+            'pattern': 'test_necko.xpt',
+            'dest': 'bin/components',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'build/pgo/certs',
+            'pattern': '**',
+            'dest': 'certs',
+        }
     ],
     'cppunittest': [
         {
@@ -178,6 +280,12 @@ ARCHIVE_FILES = {
             'base': '',
             'pattern': 'mochitest/**',
         },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+            'dest': 'mochitest'
+        }
     ],
     'mozharness': [
         {
@@ -270,6 +378,9 @@ def find_files(archive):
         source = entry['source']
         base = entry.get('base', '')
         pattern = entry.get('pattern')
+        patterns = entry.get('patterns', [])
+        if pattern:
+            patterns.append(pattern)
         dest = entry.get('dest')
         ignore = list(entry.get('ignore', []))
         ignore.append('**/.mkdir.done')
@@ -283,10 +394,11 @@ def find_files(archive):
 
         finder = FileFinder(os.path.join(source, base), **common_kwargs)
 
-        for p, f in finder.find(pattern):
-            if dest:
-                p = mozpath.join(dest, p)
-            yield p, f
+        for pattern in patterns:
+            for p, f in finder.find(pattern):
+                if dest:
+                    p = mozpath.join(dest, p)
+                yield p, f
 
 
 def find_reftest_dirs(topsrcdir, manifests):

@@ -15,91 +15,6 @@ include $(topsrcdir)/build/automation-build.mk
 libs:: 
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - mochijar) | (cd $(_DEST_DIR) && tar -xf -)
 
-# Binaries and scripts that don't get packaged with the build,
-# but that we need for the test harness
-TEST_HARNESS_BINS := \
-  xpcshell$(BIN_SUFFIX) \
-  ssltunnel$(BIN_SUFFIX) \
-  fileid$(BIN_SUFFIX) \
-  certutil$(BIN_SUFFIX) \
-  pk12util$(BIN_SUFFIX) \
-  BadCertServer$(BIN_SUFFIX) \
-  OCSPStaplingServer$(BIN_SUFFIX) \
-  GenerateOCSPResponse$(BIN_SUFFIX) \
-  fix_stack_using_bpsyms.py \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-TEST_HARNESS_BINS += \
-  crashinject$(BIN_SUFFIX) \
-  crashinjectdll$(DLL_SUFFIX) \
-  minidumpwriter$(BIN_SUFFIX) \
-  $(NULL)
-endif
-
-# The fileid utility depends on mozglue. See bug 1069556.
-ifeq ($(OS_ARCH),Darwin)
-TEST_HARNESS_BINS += \
-  fix_macosx_stack.py \
-  $(DLL_PREFIX)mozglue$(DLL_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH),Linux)
-TEST_HARNESS_BINS += fix_linux_stack.py
-endif
-
-ifdef MOZ_X11
-ifneq (,$(filter gtk%,$(MOZ_WIDGET_TOOLKIT)))
-TEST_HARNESS_BINS += screentopng
-endif
-endif
-
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-TEST_HARNESS_BINS += screenshot$(BIN_SUFFIX)
-endif
-
-ifdef MOZ_DMD
-TEST_HARNESS_BINS += \
-  dmd.py \
-  SmokeDMD$(BIN_SUFFIX) \
-  $(NULL)
-endif
-
-# Components / typelibs that don't get packaged with
-# the build, but that we need for the test harness.
-TEST_HARNESS_COMPONENTS := \
-  test_necko.xpt \
-  $(NULL)
-
-# We need the test plugin as some tests rely on it
-ifeq (Darwin,$(OS_TARGET))
-TEST_HARNESS_PLUGINS := \
-  Test.plugin/ \
-  SecondTest.plugin/ \
-  ThirdTest.plugin/ \
-  npswftest.plugin/ \
-  npctrltest.plugin/ \
-  JavaTest.plugin/
-else
-TEST_HARNESS_PLUGINS := \
-  $(DLL_PREFIX)nptest$(DLL_SUFFIX) \
-  $(DLL_PREFIX)npsecondtest$(DLL_SUFFIX) \
-  $(DLL_PREFIX)npthirdtest$(DLL_SUFFIX) \
-  $(DLL_PREFIX)nptestjava$(DLL_SUFFIX) \
-  $(DLL_PREFIX)npswftest$(DLL_SUFFIX) \
-  $(DLL_PREFIX)npctrltest$(DLL_SUFFIX)
-endif
-
-# Rules for staging the necessary harness bits for a test package
-PKG_STAGE = $(DIST)/test-stage
-DIST_BIN = $(DIST)/bin
-
-GMP_TEST_PLUGIN_DIRS := \
-  $(DIST_BIN)/gmp-fake \
-  $(DIST_BIN)/gmp-fakeopenh264 \
-  $(DIST_BIN)/gmp-clearkey \
-  $(NULL)
-
 $(_DEST_DIR):
 	$(NSINSTALL) -D $@
 
@@ -119,13 +34,3 @@ stage-package-android:
 
 stage-package: stage-package-android
 endif
-
-stage-package:
-	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins && $(NSINSTALL) -D $(DIST)/plugins
-	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest
-	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest
-	@(cd $(DIST_BIN) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
-	@(cd $(DIST_BIN)/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
-	(cd $(topsrcdir)/build/pgo && tar $(TAR_CREATE_FLAGS) - certs) | (cd $(PKG_STAGE) && tar -xf -)
-	@(cd $(DIST)/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/bin/plugins && tar -xf -)
-	$(foreach x,$(GMP_TEST_PLUGIN_DIRS),cp -RL $(x) $(PKG_STAGE)/bin/plugins;)
