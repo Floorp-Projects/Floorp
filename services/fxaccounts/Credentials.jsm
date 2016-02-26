@@ -104,10 +104,7 @@ this.Credentials = Object.freeze({
     let stretchedPWLength = options.stretchedPassLength || STRETCHED_PW_LENGTH_BYTES;
     let pbkdf2Rounds = options.pbkdf2Rounds || PBKDF2_ROUNDS;
 
-    let result = {
-      emailUTF8: emailInput,
-      passwordUTF8: passwordInput,
-    };
+    let result = {};
 
     let password = CommonUtils.encodeUTF8(passwordInput);
     let salt = this.keyWordExtended("quickStretch", emailInput);
