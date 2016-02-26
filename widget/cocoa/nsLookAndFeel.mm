@@ -169,7 +169,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = GetColorFromNSColor([NSColor gridColor]);
       break;
     case eColorID_activeborder:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
       break;
      case eColorID_appworkspace:
       aColor = NS_RGB(0xFF,0xFF,0xFF);
