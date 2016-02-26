@@ -12,6 +12,7 @@
 #include "BorrowedContext.h"
 #include "FilterNodeSoftware.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include "cairo.h"
@@ -1703,8 +1704,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
     return surface.forget();
   }
 
-  ScopedDeletePtr<DestroyPixmapClosure> closure(
-    new DestroyPixmapClosure(pixmap, screen));
+  auto closure = MakeUnique<DestroyPixmapClosure>(pixmap, screen);
 
   ScopedCairoSurface csurf(
     cairo_xlib_surface_create_with_xrender_format(dpy, pixmap,
@@ -1715,7 +1715,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
   }
 
   cairo_surface_set_user_data(csurf, &gDestroyPixmapKey,
-                              closure.forget(), DestroyPixmap);
+                              closure.release(), DestroyPixmap);
 
   RefPtr<DrawTargetCairo> dt = new DrawTargetCairo();
   if (!dt->Init(csurf, size, &format)) {
