@@ -3768,7 +3768,7 @@ WorkerDebugger::GetServiceWorkerID(uint32_t* aResult)
 }
 
 NS_IMETHODIMP
-WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
+WorkerDebugger::Initialize(const nsAString& aURL)
 {
   AssertIsOnMainThread();
 
@@ -3790,7 +3790,7 @@ WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
 }
 
 NS_IMETHODIMP
-WorkerDebugger::PostMessageMoz(const nsAString& aMessage, JSContext* aCx)
+WorkerDebugger::PostMessageMoz(const nsAString& aMessage)
 {
   AssertIsOnMainThread();
 
@@ -5557,8 +5557,7 @@ WorkerPrivate::PostMessageToDebugger(const nsAString& aMessage)
 }
 
 void
-WorkerPrivate::SetDebuggerImmediate(JSContext* aCx, dom::Function& aHandler,
-                                    ErrorResult& aRv)
+WorkerPrivate::SetDebuggerImmediate(dom::Function& aHandler, ErrorResult& aRv)
 {
   AssertIsOnWorkerThread();
 
