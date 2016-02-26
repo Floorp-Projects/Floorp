@@ -49,7 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nss.h"
 #include "ssl.h"
 
-#include "mozilla/Scoped.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 

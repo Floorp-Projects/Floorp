@@ -12,8 +12,6 @@
 #include "nss.h"
 #include "ssl.h"
 
-#include "mozilla/Scoped.h"
-
 extern "C" {
 #include "nr_api.h"
 #include "nr_socket.h"
