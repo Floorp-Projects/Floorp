@@ -114,34 +114,11 @@ HTMLSelectListAccessible::SetCurrentItem(Accessible* aItem)
                                true);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// HTMLSelectListAccessible: Accessible protected
-
-void
-HTMLSelectListAccessible::CacheChildren()
+bool
+HTMLSelectListAccessible::IsAcceptableChild(nsIContent* aEl) const
 {
-  // Cache accessibles for <optgroup> and <option> DOM decendents as children,
-  // as well as the accessibles for them. Avoid whitespace text nodes. We want
-  // to count all the <optgroup>s and <option>s as children because we want
-  // a flat tree under the Select List.
-  for (nsIContent* childContent = mContent->GetFirstChild(); childContent;
-       childContent = childContent->GetNextSibling()) {
-    if (!childContent->IsHTMLElement()) {
-      continue;
-    }
-
-    if (childContent->IsAnyOfHTMLElements(nsGkAtoms::option,
-                                          nsGkAtoms::optgroup)) {
-
-      // Get an accessible for option or optgroup and cache it.
-      RefPtr<Accessible> accessible =
-        GetAccService()->GetOrCreateAccessible(childContent, this);
-      if (accessible)
-        AppendChild(accessible);
-    }
-  }
+  return aEl->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSelectOptionAccessible
