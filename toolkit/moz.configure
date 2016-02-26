@@ -330,7 +330,7 @@ add_old_configure_assignment('MOZ_FMP4', fmp4)
 
 # EME Support
 # ==============================================================
-option('--enable-eme', nargs='*', choices=('adobe',),
+option('--enable-eme', nargs='*', choices=('adobe','widevine',),
        help='Enable support for Encrypted Media Extensions')
 
 @depends('--enable-eme', fmp4)
