@@ -97,9 +97,9 @@ public:
     nsresult OpenChannel();
     nsresult CancelChannel(nsresult error);
 
-    nsCOMPtr<nsIURI>            mURI;
-    nsCOMPtr<nsIURI>            mReferrerURI;
-    nsCOMPtr<nsIWeakReference>  mSource;
+    nsCOMPtr<nsIURI>                      mURI;
+    nsCOMPtr<nsIURI>                      mReferrerURI;
+    nsTArray<nsCOMPtr<nsIWeakReference>>  mSources;
 
 private:
     ~nsPrefetchNode() {}
