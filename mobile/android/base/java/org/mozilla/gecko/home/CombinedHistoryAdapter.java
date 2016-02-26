@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import org.json.JSONArray;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
@@ -58,6 +59,17 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     public void setHistory(Cursor history) {
         historyCursor = history;
         notifyDataSetChanged();
+    }
+
+    public JSONArray getCurrentChildTabs() {
+        if (clientChildren != null) {
+            final JSONArray urls = new JSONArray();
+            for (int i = 1; i < clientChildren.size(); i++) {
+                urls.put(clientChildren.get(i).url);
+            }
+            return urls;
+        }
+        return null;
     }
 
     public void showChildView(int parentPosition) {

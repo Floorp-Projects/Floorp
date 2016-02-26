@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -15,8 +17,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 
@@ -32,8 +42,16 @@ public class CombinedHistoryPanel extends HomeFragment {
     private CombinedHistoryAdapter mAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
-    // The button view for clearing browsing history.
-    private View mClearHistoryButton;
+    private OnPanelLevelChangeListener.PanelLevel mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
+    private Button mPanelFooterButton;
+
+    public interface OnPanelLevelChangeListener {
+        enum PanelLevel {
+        PARENT, CHILD
+        }
+
+        void onPanelLevelChange(PanelLevel level);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -48,8 +66,12 @@ public class CombinedHistoryPanel extends HomeFragment {
         mAdapter = new CombinedHistoryAdapter(getContext());
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
-        mClearHistoryButton = view.findViewById(R.id.clear_history_button);
-        // TODO: link up click handler for clear history button
+        mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
+        mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
+        mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
+        mPanelFooterButton.setVisibility(View.VISIBLE);
+
+        // TODO: Check if empty state
         // TODO: Handle date headers.
     }
 
@@ -137,6 +159,73 @@ public class CombinedHistoryPanel extends HomeFragment {
         public void onLoaderReset(Loader<Cursor> c) {
             mAdapter.setClients(Collections.<RemoteClient>emptyList());
             mAdapter.setHistory(null);
+        }
+    }
+
+    protected class OnLevelChangeListener implements OnPanelLevelChangeListener {
+        @Override
+        public void onPanelLevelChange(PanelLevel level) {
+            mPanelLevel = level;
+            switch (mPanelLevel) {
+                case PARENT:
+                    mPanelFooterButton.setText(R.string.home_clear_history_button);
+                    break;
+                case CHILD:
+                    mPanelFooterButton.setText(R.string.home_open_all);
+                    break;
+            }
+        }
+    }
+
+    private class OnFooterButtonClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            switch (mPanelLevel) {
+                case PARENT:
+                    final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+                    dialogBuilder.setMessage(R.string.home_clear_history_confirm);
+                    dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface dialog, final int which) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    dialogBuilder.setPositiveButton(R.string.button_ok, new AlertDialog.OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface dialog, final int which) {
+                            dialog.dismiss();
+
+                            // Send message to Java to clear history.
+                            final JSONObject json = new JSONObject();
+                            try {
+                                json.put("history", true);
+                            } catch (JSONException e) {
+                                Log.e(LOGTAG, "JSON error", e);
+                            }
+
+                            GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());;
+                            Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
+                        }
+                    });
+
+                    dialogBuilder.show();
+                    break;
+
+                case CHILD:
+                    final JSONArray tabUrls = ((CombinedHistoryAdapter) mRecyclerView.getAdapter()).getCurrentChildTabs();
+                    if (tabUrls != null) {
+                        final JSONObject message = new JSONObject();
+                        try {
+                            message.put("urls", tabUrls);
+                            message.put("shouldNotifyTabsOpenedToJava", false);
+                            GeckoAppShell.notifyObservers("Tabs:OpenMultiple", message.toString());;
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "Error making JSON message to open tabs");
+                        }
+                    }
+                    break;
+            }
         }
     }
 }
