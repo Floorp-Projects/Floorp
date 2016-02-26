@@ -82,6 +82,10 @@ void Servo_DropNodeData(ServoNodeData* data);
 // generator is smart enough to handle them.
 RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length);
 void Servo_ReleaseStylesheet(RawServoStyleSheet* sheet);
+void Servo_AppendStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
+void Servo_PrependStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
+void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
+int Servo_StyleSheetHasRules(RawServoStyleSheet* sheet);
 RawServoStyleSet* Servo_InitStyleSet();
 void Servo_DropStyleSet(RawServoStyleSet* set);
 
