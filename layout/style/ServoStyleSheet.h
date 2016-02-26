@@ -53,6 +53,8 @@ public:
   void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
+  RawServoStyleSheet* RawSheet() const { return mSheet; }
+
 protected:
   ~ServoStyleSheet();
 

@@ -123,6 +123,9 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].AppendElement(aSheet);
 
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_AppendStyleSheet(aSheet->RawSheet(), mRawSet.get());
+
   return NS_OK;
 }
 
@@ -137,6 +140,9 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].InsertElementAt(0, aSheet);
 
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_PrependStyleSheet(aSheet->RawSheet(), mRawSet.get());
+
   return NS_OK;
 }
 
@@ -144,7 +150,16 @@ nsresult
 ServoStyleSet::RemoveStyleSheet(SheetType aType,
                                 ServoStyleSheet* aSheet)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(aSheet);
+  MOZ_ASSERT(aSheet->IsApplicable());
+  MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
+
+  mSheets[aType].RemoveElement(aSheet);
+
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_RemoveStyleSheet(aSheet->RawSheet(), mRawSet.get());
+
+  return NS_OK;
 }
 
 nsresult
@@ -187,7 +202,9 @@ nsresult
 ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
-  MOZ_CRASH("stylo: not implemented");
+  // XXXbholley: Implement this.
+  NS_ERROR("stylo: no support for adding doc stylesheets to ServoStyleSet");
+  return NS_OK;
 }
 
 already_AddRefed<nsStyleContext>
