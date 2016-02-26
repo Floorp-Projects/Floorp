@@ -2676,6 +2676,13 @@ WorkerThreadPrimaryRunnable::Run()
 #endif
     }
 
+    // There may still be runnables on the debugger event queue that hold a
+    // strong reference to the debugger global scope. These runnables are not
+    // visible to the cycle collector, so we need to make sure to clear the
+    // debugger event queue before we try to destroy the context. If we don't,
+    // the garbage collector will crash.
+    mWorkerPrivate->ClearDebuggerEventQueue();
+
     // Destroy the main context. This will unroot the main worker global and GC,
     // which should break all cycles that touch JS.
     JS_DestroyContext(cx);

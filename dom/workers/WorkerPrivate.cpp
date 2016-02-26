@@ -5020,6 +5020,17 @@ WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot)
   mCancelAllPendingRunnables = false;
 }
 
+void
+WorkerPrivate::ClearDebuggerEventQueue()
+{
+  while (!mDebuggerQueue.IsEmpty()) {
+    WorkerRunnable* runnable;
+    mDebuggerQueue.Pop(runnable);
+    // It should be ok to simply release the runnable, without running it.
+    runnable->Release();
+  }
+}
+
 uint32_t
 WorkerPrivate::RemainingRunTimeMS() const
 {
