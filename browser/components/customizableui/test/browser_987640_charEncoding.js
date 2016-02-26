@@ -13,7 +13,7 @@ add_task(function*() {
   CustomizableUI.addWidgetToArea("characterencoding-button",
                                   CustomizableUI.AREA_PANEL);
 
-  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true);
+  let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
   yield PanelUI.show();
   let charEncodingButton = document.getElementById("characterencoding-button");
