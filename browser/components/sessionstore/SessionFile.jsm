@@ -195,6 +195,10 @@ var SessionFileInternal = {
   // The promise never rejects.
   _deferredInitialized: PromiseUtils.defer(),
 
+  // `true` once we have started initialization, i.e. once something
+  // has been scheduled that will eventually resolve `_deferredInitialized`.
+  _initializationStarted: false,
+
   // The ID of the latest version of Gecko for which we have an upgrade backup
   // or |undefined| if no upgrade backup was ever written.
   get latestUpgradeBackupID() {
@@ -205,7 +209,10 @@ var SessionFileInternal = {
     }
   },
 
+  // Find the correct session file, read it and setup the worker.
   read: Task.async(function* () {
+    this._initializationStarted = true;
+
     let result;
     let noFilesFound = true;
     // Attempt to load by order of priority from the various backups
@@ -215,6 +222,7 @@ var SessionFileInternal = {
       try {
         let path = this.Paths[key];
         let startMs = Date.now();
+
         let source = yield OS.File.read(path, { encoding: "utf-8" });
         let parsed = JSON.parse(source);
 
@@ -269,17 +277,37 @@ var SessionFileInternal = {
 
     result.noFilesFound = noFilesFound;
 
-    // Initialize the worker to let it handle backups and also
+    // Initialize the worker (in the background) to let it handle backups and also
     // as a workaround for bug 964531.
-    let initialized = SessionWorker.post("init", [result.origin, this.Paths, {
+    let promiseInitialized = SessionWorker.post("init", [result.origin, this.Paths, {
       maxUpgradeBackups: Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3),
       maxSerializeBack: Preferences.get(PREF_MAX_SERIALIZE_BACK, 10),
       maxSerializeForward: Preferences.get(PREF_MAX_SERIALIZE_FWD, -1)
     }]);
 
-    initialized.catch(Promise.reject).then(() => this._deferredInitialized.resolve());
+    promiseInitialized.catch(err => {
+      // Ensure that we report errors but that they do not stop us.
+      Promise.reject(err);
+    }).then(() => this._deferredInitialized.resolve());
 
     return result;
+  }),
+
+  // Post a message to the worker, making sure that it has been initialized
+  // first.
+  _postToWorker: Task.async(function*(...args) {
+    if (!this._initializationStarted) {
+      // Initializing the worker is somewhat complex, as proper handling of
+      // backups requires us to first read and check the session. Consequently,
+      // the only way to initialize the worker is to first call `this.read()`.
+
+      // The call to `this.read()` causes background initialization of the worker.
+      // Initialization will be complete once `this._deferredInitialized.promise`
+      // resolves.
+      this.read();
+    }
+    yield this._deferredInitialized.promise;
+    return SessionWorker.post(...args)
   }),
 
   write: function (aData) {
@@ -300,7 +328,7 @@ var SessionFileInternal = {
 
     this._attempts++;
     let options = {isFinalWrite, performShutdownCleanup};
-    let promise = this._deferredInitialized.promise.then(() => SessionWorker.post("write", [aData, options]));
+    let promise = this._postToWorker("write", [aData, options]);
 
     // Wait until the write is done.
     promise = promise.then(msg => {
@@ -350,7 +378,7 @@ var SessionFileInternal = {
   },
 
   wipe: function () {
-    return this._deferredInitialized.promise.then(() => SessionWorker.post("wipe"));
+    return this._postToWorker("wipe");
   },
 
   _recordTelemetry: function(telemetry) {
