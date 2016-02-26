@@ -61,6 +61,15 @@ var ContentClick = {
 
     // Note: We don't need the sidebar code here.
 
+    // Mark the page as a user followed link.  This is done so that history can
+    // distinguish automatic embed visits from user activated ones.  For example
+    // pages loaded in frames are embed visits and lost with the session, while
+    // visits across frames should be preserved.
+    try {
+      if (!PrivateBrowsingUtils.isWindowPrivate(window))
+        PlacesUIUtils.markPageAsFollowedLink(json.href);
+    } catch (ex) { /* Skip invalid URIs. */ }
+
     // This part is based on handleLinkClick.
     var where = window.whereToOpenLink(json);
     if (where == "current")
@@ -73,14 +82,5 @@ var ContentClick = {
                    referrerPolicy: json.referrerPolicy,
                    noReferrer: json.noReferrer };
     window.openLinkIn(json.href, where, params);
-
-    // Mark the page as a user followed link.  This is done so that history can
-    // distinguish automatic embed visits from user activated ones.  For example
-    // pages loaded in frames are embed visits and lost with the session, while
-    // visits across frames should be preserved.
-    try {
-      if (!PrivateBrowsingUtils.isWindowPrivate(window))
-        PlacesUIUtils.markPageAsFollowedLink(json.href);
-    } catch (ex) { /* Skip invalid URIs. */ }
   }
 };
