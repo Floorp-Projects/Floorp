@@ -25,7 +25,7 @@ Tests of DOM Worker Threads
 
   worker.onerror = function(event) {
     is(event.target, worker);
-    is(event.message, ": NetworkError: A network error occurred.");
+    is(event.message, ': NetworkError: Failed to load worker script at "nonexistent_worker.js"');
     event.preventDefault();
     SimpleTest.finish();
   };
