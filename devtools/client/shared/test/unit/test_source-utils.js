@@ -57,21 +57,89 @@ add_task(function* () {
   }
 });
 
+// Test `sourceUtils.isDataScheme`.
+add_task(function* () {
+  let dataURI = "data:text/html;charset=utf-8,<!DOCTYPE html></html>";
+  ok(sourceUtils.isDataScheme(dataURI), `${dataURI} correctly identified as data scheme`);
+
+  for (let url of CHROME_URLS) {
+    ok(!sourceUtils.isDataScheme(url), `${url} correctly identified as not data scheme`);
+  }
+  for (let url of CONTENT_URLS) {
+    ok(!sourceUtils.isDataScheme(url), `${url} correctly identified as not data scheme`);
+  }
+});
+
 // Test `sourceUtils.getSourceNames`.
 add_task(function* () {
-  const url = "http://example.com:8888/foo/bar/baz.js";
-  let results = sourceUtils.getSourceNames(url);
-  equal(results.short, "baz.js");
-  equal(results.long, url);
-  equal(results.host, "example.com:8888");
 
-  results = sourceUtils.getSourceNames("self-hosted");
-  equal(results.short, "self-hosted");
-  equal(results.long, "self-hosted");
-  equal(results.host, undefined);
+  // Check length
+  let longMalformedURL = `example.com${new Array(100).fill("/a").join("")}/file.js`;
+  ok(sourceUtils.getSourceNames(longMalformedURL).short.length <= 100,
+    "`short` names are capped at 100 characters");
 
-  results = sourceUtils.getSourceNames("", "<unknown>");
-  equal(results.short, "<unknown>");
-  equal(results.long, "<unknown>");
-  equal(results.host, undefined);
+  testAbbreviation("self-hosted", "self-hosted", "self-hosted");
+  testAbbreviation("", "(unknown)", "(unknown)");
+
+  // Test shortening data URIs, stripping mime/charset
+  testAbbreviation("data:text/html;charset=utf-8,<!DOCTYPE html></html>",
+                   "data:<!DOCTYPE html></html>",
+                   "data:text/html;charset=utf-8,<!DOCTYPE html></html>");
+
+  let longDataURI = `data:image/png;base64,${new Array(100).fill("a").join("")}`;
+  let longDataURIShort = sourceUtils.getSourceNames(longDataURI).short;
+
+  // Test shortening data URIs and that the `short` result is capped
+  ok(longDataURIShort.length <= 100,
+    "`short` names are capped at 100 characters for data URIs");
+  equal(longDataURIShort.substr(0, 10), "data:aaaaa",
+    "truncated data URI short names still have `data:...`");
+
+  testAbbreviation("http://example.com/foo/bar/baz/boo.js",
+                   "boo.js",
+                   "http://example.com/foo/bar/baz/boo.js",
+                   "example.com");
+
+  // Check query and hash and port
+  testAbbreviation("http://example.com:8888/foo/bar/baz.js?q=query#go",
+                   "baz.js",
+                   "http://example.com:8888/foo/bar/baz.js",
+                   "example.com:8888");
+
+  // Trailing "/" with nothing beyond host
+  testAbbreviation("http://example.com/",
+                   "/",
+                   "http://example.com/",
+                   "example.com");
+
+  // Trailing "/"
+  testAbbreviation("http://example.com/foo/bar/",
+                   "bar",
+                   "http://example.com/foo/bar/",
+                   "example.com");
+
+  // Non-extension ending
+  testAbbreviation("http://example.com/bar",
+                   "bar",
+                   "http://example.com/bar",
+                   "example.com");
+
+  // Check query
+  testAbbreviation("http://example.com/foo.js?bar=1&baz=2",
+                   "foo.js",
+                   "http://example.com/foo.js",
+                   "example.com");
+
+  // Check query with trailing slash
+  testAbbreviation("http://example.com/foo/?bar=1&baz=2",
+                   "foo",
+                   "http://example.com/foo/",
+                   "example.com");
+
+  function testAbbreviation(source, short, long, host) {
+    let results = sourceUtils.getSourceNames(source);
+    equal(results.short, short, `${source} has correct "short" name`);
+    equal(results.long, long, `${source} has correct "long" name`);
+    equal(results.host, host, `${source} has correct "host" name`);
+  }
 });
