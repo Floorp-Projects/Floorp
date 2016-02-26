@@ -12,12 +12,13 @@
 Cu.import("resource://services-common/utils.js");
 
 add_task(function* request_with_unicode() {
-  const unicodeName = "yøü";
+  // Note unicodeName must be unicode, not utf-8
+  const unicodeName = "y\xf8\xfc"; // "yøü"
 
   loopServer.registerPathHandler("/fake", (request, response) => {
     let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
-    let jsonBody = JSON.parse(body);
-    Assert.equal(jsonBody.name, CommonUtils.encodeUTF8(unicodeName));
+    let jsonBody = JSON.parse(CommonUtils.decodeUTF8(body));
+    Assert.equal(jsonBody.name, unicodeName);
 
     response.setStatusLine(null, 200, "OK");
     response.processAsync();
