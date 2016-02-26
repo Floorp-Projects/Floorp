@@ -2334,15 +2334,26 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   MOZ_ASSERT(aURI);
 
   mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
-  RemoveDocStyleSheetsFromStyleSets();
-  RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, SheetType::Agent);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], SheetType::Agent);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], SheetType::User);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], SheetType::Doc);
+  if (mStyleSetFilled) {
+    // Skip removing style sheets from the style set if we know we haven't
+    // filled the style set.  (This allows us to avoid calling
+    // GetStyleBackendType() too early.)
+    RemoveDocStyleSheetsFromStyleSets();
+    RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, SheetType::Agent);
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], SheetType::Agent);
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], SheetType::User);
+    RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], SheetType::Doc);
 
-  nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
-  if (sheetService) {
-    RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(), SheetType::Doc);
+    if (GetStyleBackendType() == StyleBackendType::Gecko) {
+      nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
+      if (sheetService) {
+        RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(), SheetType::Doc);
+      }
+    } else {
+      NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
+    }
+
+    mStyleSetFilled = false;
   }
 
   // Release all the sheets
@@ -2398,24 +2409,30 @@ nsDocument::FillStyleSet(StyleSetHandle aStyleSet)
   NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
                   "Style set already has document sheets?");
 
+  MOZ_ASSERT(!mStyleSetFilled);
+
   for (StyleSheetHandle sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
       aStyleSet->AddDocStyleSheet(sheet, this);
     }
   }
 
-  nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
-  if (sheetService) {
-    for (StyleSheetHandle sheet : *sheetService->AuthorStyleSheets()) {
-      aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+  if (aStyleSet->IsGecko()) {
+    nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
+    if (sheetService) {
+      for (StyleSheetHandle sheet : *sheetService->AuthorStyleSheets()) {
+        aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+      }
     }
-  }
 
-  // Iterate backwards to maintain order
-  for (StyleSheetHandle sheet : Reversed(mOnDemandBuiltInUASheets)) {
-    if (sheet->IsApplicable()) {
-      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
+    // Iterate backwards to maintain order
+    for (StyleSheetHandle sheet : Reversed(mOnDemandBuiltInUASheets)) {
+      if (sheet->IsApplicable()) {
+        aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
+      }
     }
+  } else {
+    NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
   }
 
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAgentSheet],
@@ -2424,6 +2441,8 @@ nsDocument::FillStyleSet(StyleSetHandle aStyleSet)
                          SheetType::User);
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAuthorSheet],
                          SheetType::Doc);
+
+  mStyleSetFilled = true;
 }
 
 static void
@@ -3858,6 +3877,7 @@ nsDocument::DeleteShell()
   RebuildUserFontSet();
 
   mPresShell = nullptr;
+  mStyleSetFilled = false;
 }
 
 void
