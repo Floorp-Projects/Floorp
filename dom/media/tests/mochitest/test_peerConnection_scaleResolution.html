@@ -12,33 +12,37 @@
     visible: true
   });
 
-  var pc1 = new RTCPeerConnection();
-  var pc2 = new RTCPeerConnection();
-
-  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
-  pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
-  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
-
-  pc1.onnegotiationneeded = e =>
-    pc1.createOffer().then(d => pc1.setLocalDescription(d))
-    .then(() => pc2.setRemoteDescription(pc1.localDescription))
-    .then(() => pc2.createAnswer()).then(d => pc2.setLocalDescription(d))
-    .then(() => pc1.setRemoteDescription(pc2.localDescription))
-    .catch(generateErrorCallback());
-
   var mustRejectWith = (msg, reason, f) =>
     f().then(() => ok(false, msg),
              e => is(e.name, reason, msg));
-  var v1, v2;
 
-  runNetworkTest(function() {
-    v1 = createMediaElement('video', 'v1');
-    v2 = createMediaElement('video', 'v2');
+  var removeVP8 = d => (d.sdp = d.sdp.replace("a=rtpmap:120 VP8/90000\r\n", ""), d);
 
-    is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+  function testScale(codec) {
+    var pc1 = new RTCPeerConnection();
+    var pc2 = new RTCPeerConnection();
 
-    navigator.mediaDevices.getUserMedia({ video: true })
+    var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+    pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+    info("testing scaling with " + codec);
+
+    pc1.onnegotiationneeded = e =>
+      pc1.createOffer()
+      .then(d => pc1.setLocalDescription(codec == "VP8" ? d : removeVP8(d)))
+      .then(() => pc2.setRemoteDescription(pc1.localDescription))
+      .then(() => pc2.createAnswer()).then(d => pc2.setLocalDescription(d))
+      .then(() => pc1.setRemoteDescription(pc2.localDescription))
+      .catch(generateErrorCallback());
+
+    return navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
+      var v1 = createMediaElement('video', 'v1');
+      var v2 = createMediaElement('video', 'v2');
+
+      is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+
       v1.srcObject = stream;
       var sender = pc1.addTrack(stream.getVideoTracks()[0], stream);
 
@@ -46,23 +50,29 @@
                             () => sender.setParameters({ encodings:
                                                        [{ scaleResolutionDownBy: 0.5 } ] }))
       .then(() => sender.setParameters({ encodings: [{ maxBitrate: 60000,
-                                                     scaleResolutionDownBy: 2 }] }))
+                                                       scaleResolutionDownBy: 2 }] }))
+      .then(() => new Promise(resolve => pc2.ontrack = e => resolve(e)))
+      .then(e => v2.srcObject = e.streams[0])
+      .then(() => new Promise(resolve => v2.onloadedmetadata = resolve))
+      .then(() => waitUntil(() => v2.currentTime > 0 && v2.srcObject.currentTime > 0))
+      .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
+      .then(() => wait(1000)) // TODO: Bug 1248154
+      .then(() => {
+        ok(v1.videoWidth > 0, "source width is positive");
+        ok(v1.videoHeight > 0, "source height is positive");
+        is(v2.videoWidth, v1.videoWidth / 2, "sink is half the width of source");
+        is(v2.videoHeight, v1.videoHeight / 2, "sink is half the height of source");
+      })
+      .then(() => {
+        stream.getTracks().forEach(track => track.stop());
+        v1.srcObject = v2.srcObject = null;
+      })
     })
-    .then(() => new Promise(resolve => pc2.ontrack = e => resolve(e)))
-    .then(e => v2.srcObject = e.streams[0])
-    .then(() => new Promise(resolve => v2.onloadedmetadata = resolve))
-    .then(() => waitUntil(() => v2.currentTime > 0 && v2.srcObject.currentTime > 0))
-    .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
-    .then(() => wait(1000)) // TODO: Bug 1248154
-    .then(() => {
-      ok(v1.videoWidth > 0, "source width is positive");
-      ok(v1.videoHeight > 0, "source height is positive");
-      is(v2.videoWidth, v1.videoWidth / 2, "sink is half the width of source");
-      is(v2.videoHeight, v1.videoHeight / 2, "sink is half the height of source");
-    })
-    .catch(generateErrorCallback())
-    .then(networkTestFinished);
-  });
+    .catch(generateErrorCallback());
+  }
+
+  runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
+                 .then(networkTestFinished));
 </script>
 </pre>
 </body>
