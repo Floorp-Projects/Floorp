@@ -3,7 +3,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* animation-panel.js is loaded in the same scope but we don't use
+   import-globals-from to avoid infinite loops since animation-panel.js already
+   imports globals from animation-controller.js */
 /* globals AnimationsPanel */
+/* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 
 "use strict";
 
@@ -15,10 +20,8 @@ Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-                               "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "AnimationsFront",
-                               "devtools/server/actors/animation", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "AnimationsFront", "devtools/server/actors/animation", true);
 
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);

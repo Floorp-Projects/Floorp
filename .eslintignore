@@ -81,7 +81,6 @@ browser/extensions/loop/**
 
 # devtools/ exclusions
 devtools/*.js
-devtools/client/animationinspector/**
 devtools/client/canvasdebugger/**
 devtools/client/commandline/**
 devtools/client/debugger/**
