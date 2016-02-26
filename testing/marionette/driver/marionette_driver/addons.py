@@ -66,6 +66,7 @@ class Addons(object):
                 },
 
                 onInstalled: function(addon) {
+                  AddonManager.removeAddonListener(listener);
                   marionetteScriptFinished([addon.id, 0]);
                 }
               }
