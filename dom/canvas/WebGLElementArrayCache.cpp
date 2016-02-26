@@ -324,7 +324,7 @@ struct TreeForType {};
 template<>
 struct TreeForType<uint8_t>
 {
-    static ScopedDeletePtr<WebGLElementArrayCacheTree<uint8_t>>&
+    static UniquePtr<WebGLElementArrayCacheTree<uint8_t>>&
     Value(WebGLElementArrayCache* b) {
         return b->mUint8Tree;
     }
@@ -333,7 +333,7 @@ struct TreeForType<uint8_t>
 template<>
 struct TreeForType<uint16_t>
 {
-    static ScopedDeletePtr<WebGLElementArrayCacheTree<uint16_t>>&
+    static UniquePtr<WebGLElementArrayCacheTree<uint16_t>>&
     Value(WebGLElementArrayCache* b) {
         return b->mUint16Tree;
     }
@@ -342,7 +342,7 @@ struct TreeForType<uint16_t>
 template<>
 struct TreeForType<uint32_t>
 {
-    static ScopedDeletePtr<WebGLElementArrayCacheTree<uint32_t>>&
+    static UniquePtr<WebGLElementArrayCacheTree<uint32_t>>&
     Value(WebGLElementArrayCache* b) {
         return b->mUint32Tree;
     }
@@ -536,9 +536,9 @@ WebGLElementArrayCache::Validate(uint32_t maxAllowed, size_t firstElement,
     if (!mBytes.Length() || !countElements)
       return true;
 
-    ScopedDeletePtr<WebGLElementArrayCacheTree<T>>& tree = TreeForType<T>::Value(this);
+    UniquePtr<WebGLElementArrayCacheTree<T>>& tree = TreeForType<T>::Value(this);
     if (!tree) {
-        tree = new WebGLElementArrayCacheTree<T>(*this);
+        tree = MakeUnique<WebGLElementArrayCacheTree<T>>(*this);
         if (mBytes.Length()) {
             bool valid = tree->Update(0, mBytes.Length() - 1);
             if (!valid) {
