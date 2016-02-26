@@ -289,7 +289,10 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
             cmd.extend(["--partial-update", partial])
         if channel_config["requires_mirrors"]:
             cmd.append("--requires-mirrors")
-        self.retry(lambda: self.run_command(cmd))
+        if self.config["balrog_use_dummy_suffix"]:
+            cmd.append("--dummy")
+
+        self.retry(lambda: self.run_command(cmd, halt_on_failure=True))
 
 # __main__ {{{1
 if __name__ == '__main__':
