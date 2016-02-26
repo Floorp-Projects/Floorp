@@ -256,7 +256,9 @@ class GlobalHelperThreadState
      * used by all condition variables.
      */
     PRLock* helperLock;
-    mozilla::DebugOnly<mozilla::Atomic<PRThread*>> lockOwner;
+#ifdef DEBUG
+    mozilla::Atomic<PRThread*> lockOwner;
+#endif
 
     /* Condvars for threads waiting/notifying each other. */
     PRCondVar* consumerWakeup;

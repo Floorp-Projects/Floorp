@@ -672,7 +672,7 @@ class GCRuntime
     bool onBackgroundThread() { return helperState.onBackgroundThread(); }
 
     bool currentThreadOwnsGCLock() {
-        return lockOwner.value == PR_GetCurrentThread();
+        return lockOwner == PR_GetCurrentThread();
     }
 
 #endif // DEBUG
@@ -684,15 +684,15 @@ class GCRuntime
     void lockGC() {
         PR_Lock(lock);
 #ifdef DEBUG
-        MOZ_ASSERT(!lockOwner.value);
-        lockOwner.value = PR_GetCurrentThread();
+        MOZ_ASSERT(!lockOwner);
+        lockOwner = PR_GetCurrentThread();
 #endif
     }
 
     void unlockGC() {
 #ifdef DEBUG
-        MOZ_ASSERT(lockOwner.value == PR_GetCurrentThread());
-        lockOwner.value = nullptr;
+        MOZ_ASSERT(lockOwner == PR_GetCurrentThread());
+        lockOwner = nullptr;
 #endif
         PR_Unlock(lock);
     }
@@ -725,7 +725,7 @@ class GCRuntime
         MOZ_ASSERT(disableStrictProxyCheckingCount > 0);
         --disableStrictProxyCheckingCount;
     }
-#endif
+#endif // DEBUG
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
 
@@ -1116,13 +1116,15 @@ class GCRuntime
     /* The initial GC reason, taken from the first slice. */
     JS::gcreason::Reason initialReason;
 
+#ifdef DEBUG
     /*
      * If this is 0, all cross-compartment proxies must be registered in the
      * wrapper map. This checking must be disabled temporarily while creating
      * new wrappers. When non-zero, this records the recursion depth of wrapper
      * creation.
      */
-    mozilla::DebugOnly<uintptr_t> disableStrictProxyCheckingCount;
+    uintptr_t disableStrictProxyCheckingCount;
+#endif
 
     /*
      * The current incremental GC phase. This is also used internally in
@@ -1321,7 +1323,9 @@ class GCRuntime
 
     /* Synchronize GC heap access between main thread and GCHelperState. */
     PRLock* lock;
-    mozilla::DebugOnly<mozilla::Atomic<PRThread*>> lockOwner;
+#ifdef DEBUG
+    mozilla::Atomic<PRThread*> lockOwner;
+#endif
 
     BackgroundAllocTask allocTask;
     GCHelperState helperState;
