@@ -338,8 +338,7 @@ public:
   }
 
   void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aSuccess) override
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aSuccess) override
   {
     if (!aSuccess) {
       mStatus.SuppressException();
