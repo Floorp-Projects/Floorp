@@ -7,7 +7,6 @@
 #ifndef js_UbiNodePostOrder_h
 #define js_UbiNodePostOrder_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
@@ -86,7 +85,9 @@ struct PostOrder {
     JSRuntime*               rt;
     Set                      seen;
     Stack                    stack;
-    mozilla::DebugOnly<bool> traversed;
+#ifdef DEBUG
+    bool                     traversed;
+#endif
 
   private:
     bool fillEdgesFromRange(EdgeVector& edges, js::UniquePtr<EdgeRange>& range) {
@@ -117,7 +118,9 @@ struct PostOrder {
       : rt(rt)
       , seen()
       , stack()
+#ifdef DEBUG
       , traversed(false)
+#endif
     { }
 
     // Initialize this traversal object. Return false on OOM.
@@ -142,8 +145,10 @@ struct PostOrder {
     // `onEdge::operator()`.
     template<typename NodeVisitor, typename EdgeVisitor>
     bool traverse(NodeVisitor onNode, EdgeVisitor onEdge) {
+#ifdef DEBUG
         MOZ_ASSERT(!traversed, "Can only traverse() once!");
         traversed = true;
+#endif
 
         while (!stack.empty()) {
             auto& origin = stack.back().origin;
