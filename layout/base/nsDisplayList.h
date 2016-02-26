@@ -1321,6 +1321,8 @@ public:
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                const DisplayItemScrollClip* aScrollClip);
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
@@ -3187,6 +3189,9 @@ public:
    */
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    nsDisplayList* aList,
+                    const DisplayItemScrollClip* aScrollClip);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
