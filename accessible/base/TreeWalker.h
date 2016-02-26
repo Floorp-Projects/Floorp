@@ -35,14 +35,14 @@ public:
   /**
    * Used to navigate and create if needed the accessible children.
    */
-  TreeWalker(Accessible* aContext);
+  explicit TreeWalker(Accessible* aContext);
 
   /**
    * Used to navigate the accessible children relative to the anchor.
    *
    * @param aContext [in] container accessible for the given node, used to
    *                   define accessible context
-   * @param aNode    [in] the node the search will be prepared relative to
+   * @param aAnchorNode [in] the node the search will be prepared relative to
    * @param aFlags   [in] flags (see enum above)
    */
   TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = 0);
