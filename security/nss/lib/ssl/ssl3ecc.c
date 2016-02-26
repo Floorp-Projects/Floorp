@@ -252,8 +252,7 @@ ssl3_ComputeECDHKeyHash(SSLHashType hashAlg,
     bufLen = 2 * SSL3_RANDOM_LENGTH + ec_params.len + 1 + server_ecpoint.len;
     if (bufLen <= sizeof buf) {
         hashBuf = buf;
-    }
-    else {
+    } else {
         hashBuf = PORT_Alloc(bufLen);
         if (!hashBuf) {
             return SECFailure;
@@ -322,11 +321,9 @@ ssl3_SendECDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
 
     if (isTLS12) {
         target = CKM_TLS12_MASTER_KEY_DERIVE_DH;
-    }
-    else if (isTLS) {
+    } else if (isTLS) {
         target = CKM_TLS_MASTER_KEY_DERIVE_DH;
-    }
-    else {
+    } else {
         target = CKM_SSL3_MASTER_KEY_DERIVE_DH;
     }
 
@@ -449,11 +446,9 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
 
     if (isTLS12) {
         target = CKM_TLS12_MASTER_KEY_DERIVE_DH;
-    }
-    else if (isTLS) {
+    } else if (isTLS) {
         target = CKM_TLS_MASTER_KEY_DERIVE_DH;
-    }
-    else {
+    } else {
         target = CKM_SSL3_MASTER_KEY_DERIVE_DH;
     }
 
@@ -603,8 +598,7 @@ ssl3_GetCurveNameForServerSocket(sslSocket *ss)
             return ec_noName;
         }
         signatureKeyStrength = curve2bits[ec_curve];
-    }
-    else {
+    } else {
         /* RSA is our signing cert */
         int serverKeyStrengthInBits;
 
@@ -931,8 +925,7 @@ ssl3_SendECDHServerKeyExchange(
 
     if (ss->opt.reuseServerECDHEKey) {
         rv = ssl3_CreateECDHEphemeralKeys(ss, curve);
-    }
-    else {
+    } else {
         rv = ssl3_CreateECDHEphemeralKeyPair(curve, &ss->ephemeralECDHKeyPair);
     }
     if (rv != SECSuccess) {
@@ -953,8 +946,7 @@ ssl3_SendECDHServerKeyExchange(
         ec_params.data[0] = ec_type_named;
         ec_params.data[1] = 0x00;
         ec_params.data[2] = curve;
-    }
-    else {
+    } else {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
         goto loser;
     }
@@ -1153,8 +1145,7 @@ ssl3_FilterECCipherSuitesByServerCerts(sslSocket *ss)
     if (!svrCert) {
         ssl3_DisableECCSuites(ss, ecdh_suites);
         ssl3_DisableECCSuites(ss, ecdhe_ecdsa_suites);
-    }
-    else {
+    } else {
         SECOidTag sigTag = SECOID_GetAlgorithmTag(&svrCert->signature);
 
         switch (sigTag) {
@@ -1224,12 +1215,14 @@ static const PRUint8 suiteBECList[] = {
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers curves 1-25.
  */
+/* clang-format off */
 static const PRUint8 tlsECList[] = {
      1,  2,  3,  4,  5,  6,  7,  8,
      9, 10, 11, 12, 13, 14, 15, 16,
     17, 18, 19, 20, 21, 22, 23, 24,
     25
 };
+/* clang-format on */
 
 static const PRUint8 ecPtFmt[6] = {
     BE(11), /* Extension type */
@@ -1295,8 +1288,7 @@ ssl3_SendSupportedCurvesXtn(
             APPEND_CURVE(suiteBECList[i]);
         }
         ecListSize = pos;
-    }
-    else {
+    } else {
         for (i = 0; i < sizeof(tlsECList); i++) {
             APPEND_CURVE(tlsECList[i]);
         }
@@ -1343,8 +1335,7 @@ ssl3_GetSupportedECCurveMask(sslSocket *ss)
 
     if (ssl3_SuiteBOnly(ss)) {
         curves = SSL3_SUITE_B_SUPPORTED_CURVES_MASK;
-    }
-    else {
+    } else {
         curves = SSL3_ALL_SUPPORTED_CURVES_MASK;
     }
 

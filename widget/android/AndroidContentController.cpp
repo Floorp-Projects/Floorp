@@ -9,6 +9,7 @@
 #include "base/message_loop.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
 #include "nsWindow.h"
 
@@ -95,6 +96,24 @@ AndroidContentController::UpdateOverscrollOffset(const float aX,const  float aY)
 {
   if (mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
+  }
+}
+
+void
+AndroidContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
+                                               APZStateChange aChange,
+                                               int aArg)
+{
+  // This function may get invoked twice, if the first invocation is not on
+  // the main thread then the ChromeProcessController version of this function
+  // will redispatch to the main thread. We want to make sure that our handling
+  // only happens on the main thread.
+  ChromeProcessController::NotifyAPZStateChange(aGuid, aChange, aArg);
+  if (NS_IsMainThread() && aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
+    // This is used by tests to determine when the APZ is done doing whatever
+    // it's doing. XXX generify this as needed when writing additional tests.
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    observerService->NotifyObservers(nullptr, "APZ:TransformEnd", nullptr);
   }
 }
 

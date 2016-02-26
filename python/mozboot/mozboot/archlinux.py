@@ -137,6 +137,9 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
 
     def pacman_install(self, *packages):
         command = ['pacman', '-S', '--needed']
+        if self.no_interactive:
+            command.append('--noconfirm')
+
         command.extend(packages)
 
         self.run_as_root(command)
@@ -174,13 +177,14 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
 
     def aur_install(self, *packages):
         path = tempfile.mkdtemp()
-        print('WARNING! This script requires to install packages from the AUR '
-              'This is potentially unsecure so I recommend that you carefully '
-              'read each package description and check the sources.'
-              'These packages will be built in ' + path + '.')
-        choice = raw_input('Do you want to continue? (yes/no) [no]')
-        if choice != 'yes':
-            sys.exit(1)
+        if not self.no_interactive:
+            print('WARNING! This script requires to install packages from the AUR '
+                  'This is potentially unsecure so I recommend that you carefully '
+                  'read each package description and check the sources.'
+                  'These packages will be built in ' + path + '.')
+            choice = raw_input('Do you want to continue? (yes/no) [no]')
+            if choice != 'yes':
+                sys.exit(1)
 
         base_dir = os.getcwd()
         os.chdir(path)

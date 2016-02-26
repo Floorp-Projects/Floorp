@@ -2319,6 +2319,7 @@ GeckoDriver.prototype.deleteAllCookies = function*(cmd, resp) {
         cookie.host,
         cookie.name,
         cookie.path,
+        cookie.originAttributes,
         false);
     return true;
   };
@@ -2336,6 +2337,7 @@ GeckoDriver.prototype.deleteCookie = function*(cmd, resp) {
         cookie.host,
         cookie.name,
         cookie.path,
+        cookie.originAttributes,
         false);
     return true;
   };

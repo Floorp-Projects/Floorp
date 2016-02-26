@@ -365,8 +365,7 @@ public:
 
   virtual GLenum GetWrapMode() const override { return mWrapMode; }
 
-  // We don't own anything.
-  virtual void DeallocateDeviceData() override {}
+  virtual void DeallocateDeviceData() override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
@@ -374,7 +373,7 @@ public:
 
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  RefPtr<gl::AndroidSurfaceTexture> const mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
@@ -390,8 +389,7 @@ public:
 
   virtual ~SurfaceTextureHost();
 
-  // We don't own anything.
-  virtual void DeallocateDeviceData() override {}
+  virtual void DeallocateDeviceData() override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
@@ -419,7 +417,7 @@ public:
   virtual const char* Name() { return "SurfaceTextureHost"; }
 
 protected:
-  RefPtr<gl::AndroidSurfaceTexture> const mSurfTex;
+  RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;

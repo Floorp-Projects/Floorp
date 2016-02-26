@@ -348,8 +348,7 @@ seckey_UpdateCertPQGChain(CERTCertificate *subjectCert, int count)
 
             return SECSuccess;
         }
-    }
-    else {
+    } else {
         return SECFailure; /* return failure if oid is NULL */
     }
 
@@ -393,8 +392,7 @@ seckey_UpdateCertPQGChain(CERTCertificate *subjectCert, int count)
             rv = SECFailure;
             goto loser;
         }
-    }
-    else {
+    } else {
         rv = SECFailure; /* return failure if oid is NULL */
         goto loser;
     }
@@ -481,8 +479,7 @@ seckey_DSADecodePQG(PLArenaPool *arena, SECKEYPublicKey *pubk,
                                         SECKEY_PQGParamsTemplate,
                                         &newparams);
         }
-    }
-    else {
+    } else {
 
         if (SECSuccess == rv) {
             /* else the old fortezza-only wrapped format is used. */
@@ -1080,16 +1077,14 @@ SECKEY_CopyPrivateKey(const SECKEYPrivateKey *privk)
                 PK11_CopyKey(privk->pkcs11Slot, privk->pkcs11ID);
             if (copyk->pkcs11ID == CK_INVALID_HANDLE)
                 goto fail;
-        }
-        else {
+        } else {
             copyk->pkcs11ID = privk->pkcs11ID;
         }
         copyk->pkcs11IsTemp = privk->pkcs11IsTemp;
         copyk->wincx = privk->wincx;
         copyk->staticflags = privk->staticflags;
         return copyk;
-    }
-    else {
+    } else {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
     }
 
@@ -1124,8 +1119,7 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
         PK11_IsPermObject(pubk->pkcs11Slot, pubk->pkcs11ID)) {
         copyk->pkcs11Slot = PK11_ReferenceSlot(pubk->pkcs11Slot);
         copyk->pkcs11ID = pubk->pkcs11ID;
-    }
-    else {
+    } else {
         copyk->pkcs11Slot = NULL; /* go get own reference */
         copyk->pkcs11ID = CK_INVALID_HANDLE;
     }
@@ -1358,8 +1352,7 @@ seckey_CreateSubjectPublicKeyInfo_helper(SECKEYPublicKey *pubk)
             default:
                 break;
         }
-    }
-    else {
+    } else {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
     }
 
@@ -1445,8 +1438,7 @@ SECKEY_DecodeDERSubjectPublicKeyInfo(const SECItem *spkider)
         }
         if (rv == SECSuccess)
             return spki;
-    }
-    else {
+    } else {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
     }
 
@@ -1593,12 +1585,10 @@ SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
             PORT_Memset(pvk, 0, sizeof(*pvk));
             if (freeit == PR_TRUE) {
                 PORT_FreeArena(poolp, PR_TRUE);
-            }
-            else {
+            } else {
                 pvk->arena = poolp;
             }
-        }
-        else {
+        } else {
             SECITEM_ZfreeItem(&pvk->version, PR_FALSE);
             SECITEM_ZfreeItem(&pvk->privateKey, PR_FALSE);
             SECOID_DestroyAlgorithmID(&pvk->algorithm, PR_FALSE);
@@ -1626,12 +1616,10 @@ SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
             PORT_Memset(epki, 0, sizeof(*epki));
             if (freeit == PR_TRUE) {
                 PORT_FreeArena(poolp, PR_TRUE);
-            }
-            else {
+            } else {
                 epki->arena = poolp;
             }
-        }
-        else {
+        } else {
             SECITEM_ZfreeItem(&epki->encryptedData, PR_FALSE);
             SECOID_DestroyAlgorithmID(&epki->algorithm, PR_FALSE);
             PORT_Memset(epki, 0, sizeof(*epki));
@@ -1912,8 +1900,7 @@ loser:
 #define SECKEY_CacheAttribute(key, attribute)                                                   \
     if (CK_TRUE == PK11_HasAttributeSet(key->pkcs11Slot, key->pkcs11ID, attribute, PR_FALSE)) { \
         key->staticflags |= SECKEY_##attribute;                                                 \
-    }                                                                                           \
-    else {                                                                                      \
+    } else {                                                                                    \
         key->staticflags &= (~SECKEY_##attribute);                                              \
     }
 

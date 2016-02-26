@@ -84,6 +84,21 @@ XPT_SeekTo(XPTCursor *cursor, uint32_t offset)
 }
 
 XPT_PUBLIC_API(PRBool)
+XPT_SkipStringInline(XPTCursor *cursor)
+{
+    uint16_t length;
+    if (!XPT_Do16(cursor, &length))
+        return PR_FALSE;
+
+    uint8_t byte;
+    for (uint16_t i = 0; i < length; i++)
+        if (!XPT_Do8(cursor, &byte))
+            return PR_FALSE;
+
+    return PR_TRUE;
+}
+
+XPT_PUBLIC_API(PRBool)
 XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
 {
     uint32_t offset = 0;

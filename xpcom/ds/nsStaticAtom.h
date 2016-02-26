@@ -9,7 +9,6 @@
 
 #include "nsIAtom.h"
 #include "nsStringBuffer.h"
-#include "mozilla/Logging.h"
 
 #define NS_STATIC_ATOM(buffer_name, atom_ptr) \
   { (nsStringBuffer*) &buffer_name, atom_ptr }

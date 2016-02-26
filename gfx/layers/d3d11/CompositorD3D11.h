@@ -111,6 +111,7 @@ public:
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect *aClipRectIn,
                           const gfx::Rect& aRenderBounds,
+                          bool aOpaque,
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) override;
 

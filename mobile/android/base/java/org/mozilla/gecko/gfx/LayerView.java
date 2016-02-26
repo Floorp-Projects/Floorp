@@ -247,11 +247,15 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             return false;
         }
 
+        event.offsetLocation(0, -mSurfaceTranslation);
+
         return sendEventToGecko(event);
     }
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
+        event.offsetLocation(0, -mSurfaceTranslation);
+
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }

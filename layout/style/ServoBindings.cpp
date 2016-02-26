@@ -147,3 +147,33 @@ Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
 {
   aNode->SetServoNodeData(aData);
 }
+
+#ifndef MOZ_STYLO
+void
+Servo_DropNodeData(ServoNodeData* data)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_DropNodeData in a "
+            "non-MOZ_STYLO build");
+}
+
+RawServoStyleSheet*
+Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_StylesheetFromUTF8Bytes in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_ReleaseStylesheet(RawServoStyleSheet* sheet)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_ReleaseStylesheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_RestyleDocument(RawGeckoDocument* aDoc)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleDocument in a "
+            "non-MOZ_STYLO build");
+}
+#endif

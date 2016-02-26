@@ -172,7 +172,8 @@ static const SheetType gCSSSheetTypes[] = {
   SheetType::Override
 };
 
-static bool IsCSSSheetType(SheetType aSheetType)
+/* static */ bool
+nsStyleSet::IsCSSSheetType(SheetType aSheetType)
 {
   for (SheetType type : gCSSSheetTypes) {
     if (type == aSheetType) {

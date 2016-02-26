@@ -48,7 +48,7 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
 
     if not tests:
         tests = [os.path.join(topsrcdir,
-                 'testing/marionette/client/marionette/tests/unit-tests.ini')]
+                 'testing/marionette/harness/marionette/tests/unit-tests.ini')]
     args.tests = tests
 
     if b2g_path:

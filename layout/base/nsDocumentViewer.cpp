@@ -2339,14 +2339,18 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
-  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
-  if (sheetService) {
-    for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
-      styleSet->AppendStyleSheet(SheetType::Agent, sheet);
+  if (styleSet->IsGecko()) {
+    nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+    if (sheetService) {
+      for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
+        styleSet->AppendStyleSheet(SheetType::Agent, sheet);
+      }
+      for (StyleSheetHandle sheet : Reversed(*sheetService->UserStyleSheets())) {
+        styleSet->PrependStyleSheet(SheetType::User, sheet);
+      }
     }
-    for (StyleSheetHandle sheet : Reversed(*sheetService->UserStyleSheets())) {
-      styleSet->PrependStyleSheet(SheetType::User, sheet);
-    }
+  } else {
+    NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
   }
 
   // Caller will handle calling EndUpdate, per contract.

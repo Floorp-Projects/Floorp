@@ -598,7 +598,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I64LoadMem16U:
       case Expr::I64LoadMem32S:
       case Expr::I64LoadMem32U:
-        return DecodeLoad(f, expected, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeLoad(f, expected, ExprType::I64);
       case Expr::F32LoadMem:
         return DecodeLoad(f, expected, ExprType::F32);
       case Expr::F64LoadMem:

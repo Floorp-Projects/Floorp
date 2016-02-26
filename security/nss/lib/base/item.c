@@ -54,8 +54,7 @@ nssItem_Create(NSSArena *arenaOpt, NSSItem *rvOpt, PRUint32 length,
         if ((NSSItem *)NULL == rv) {
             goto loser;
         }
-    }
-    else {
+    } else {
         rv = rvOpt;
     }
 

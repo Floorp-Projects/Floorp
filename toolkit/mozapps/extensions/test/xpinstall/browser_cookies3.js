@@ -33,7 +33,7 @@ function finish_test(count) {
 
   var cm = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
-  cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, false);
+  cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, {}, false);
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
 

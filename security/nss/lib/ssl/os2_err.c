@@ -148,7 +148,7 @@ nss_MD_os2_map_send_error(PRInt32 err)
 {
     PRErrorCode prError;
     switch (err) {
-      //     case WSAEMSGSIZE:  prError = PR_INVALID_ARGUMENT_ERROR; break;
+        //     case WSAEMSGSIZE:  prError = PR_INVALID_ARGUMENT_ERROR; break;
         default:
             nss_MD_os2_map_default_error(err);
             return;

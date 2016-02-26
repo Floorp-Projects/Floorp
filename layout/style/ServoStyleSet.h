@@ -7,8 +7,10 @@
 #ifndef mozilla_ServoStyleSet_h
 #define mozilla_ServoStyleSet_h
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoStyleSheet.h"
 #include "mozilla/SheetType.h"
 #include "nsChangeHint.h"
 #include "nsCSSPseudoElements.h"
@@ -110,6 +112,8 @@ public:
                                        EventStates aStateMask);
 
 private:
+  mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
+                           nsTArray<RefPtr<mozilla::ServoStyleSheet>>> mSheets;
   int32_t mBatching;
 };
 

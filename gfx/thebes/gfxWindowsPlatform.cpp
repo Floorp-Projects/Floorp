@@ -2526,6 +2526,13 @@ gfxWindowsPlatform::InitializeD2D()
     return;
   }
 
+  // If we don't have a content device, don't init
+  // anything else below such as dwrite
+  if (!mD3D11ContentDevice) {
+    mD2D1Status = FeatureStatus::Failed;
+    return;
+  }
+
   if (!mCompositorD3D11TextureSharingWorks) {
     mD2D1Status = FeatureStatus::Failed;
     return;
@@ -2533,11 +2540,6 @@ gfxWindowsPlatform::InitializeD2D()
 
   // Using Direct2D depends on DWrite support.
   if (!mDWriteFactory && !InitDWriteSupport()) {
-    mD2D1Status = FeatureStatus::Failed;
-    return;
-  }
-
-  if (!mD3D11ContentDevice) {
     mD2D1Status = FeatureStatus::Failed;
     return;
   }
