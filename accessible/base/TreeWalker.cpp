@@ -21,18 +21,34 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 TreeWalker::
-  TreeWalker(Accessible* aContext, nsIContent* aContent, uint32_t aFlags) :
-  mDoc(aContext->Document()), mContext(aContext), mAnchorNode(aContent),
-  mFlags(aFlags)
+  TreeWalker(Accessible* aContext) :
+  mDoc(aContext->Document()), mContext(aContext), mAnchorNode(nullptr),
+  mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(0)
 {
-  NS_ASSERTION(aContent, "No node for the accessible tree walker!");
-
-  mChildFilter = mContext->NoXBLKids() ?
+  mChildFilter |= mContext->NoXBLKids() ?
     nsIContent::eAllButXBL : nsIContent::eAllChildren;
-  mChildFilter |= nsIContent::eSkipPlaceholderContent;
 
-  if (aContent)
-    PushState(aContent);
+  mAnchorNode = mContext->IsDoc() ?
+    mDoc->DocumentNode()->GetRootElement() : mContext->GetContent();
+
+  if (mAnchorNode) {
+    PushState(mAnchorNode);
+  }
+
+  MOZ_COUNT_CTOR(TreeWalker);
+}
+
+TreeWalker::
+  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags) :
+  mDoc(aContext->Document()), mContext(aContext), mAnchorNode(aAnchorNode),
+  mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(aFlags)
+{
+  MOZ_ASSERT(aAnchorNode, "No anchor node for the accessible tree walker");
+
+  mChildFilter |= mContext->NoXBLKids() ?
+    nsIContent::eAllButXBL : nsIContent::eAllChildren;
+
+  PushState(aAnchorNode);
 
   MOZ_COUNT_CTOR(TreeWalker);
 }
