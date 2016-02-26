@@ -11,9 +11,8 @@ import os.path
 
 # Don't forgot to add new mozboot modules to the bootstrap download
 # list in bin/bootstrap.py!
-from mozboot.centos import CentOSBootstrapper
+from mozboot.centosfedora import CentOSFedoraBootstrapper
 from mozboot.debian import DebianBootstrapper
-from mozboot.fedora import FedoraBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
 from mozboot.osx import OSXBootstrapper
@@ -78,12 +77,11 @@ class Bootstrapper(object):
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
 
-            if distro in ('CentOS', 'CentOS Linux'):
-                cls = CentOSBootstrapper
+            if distro in ('CentOS', 'CentOS Linux', 'Fedora'):
+                cls = CentOSFedoraBootstrapper
+                args['distro'] = distro
             elif distro in DEBIAN_DISTROS:
                 cls = DebianBootstrapper
-            elif distro == 'Fedora':
-                cls = FedoraBootstrapper
             elif distro == 'Gentoo Base System':
                 cls = GentooBootstrapper
             elif os.path.exists('/etc/arch-release'):

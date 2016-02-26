@@ -83,8 +83,7 @@ nssList_Create(NSSArena *arenaOpt, PRBool threadSafe)
     if (arenaOpt) {
         arena = arenaOpt;
         i_alloced = PR_FALSE;
-    }
-    else {
+    } else {
         arena = nssArena_Create();
         i_alloced = PR_TRUE;
     }
@@ -103,8 +102,7 @@ nssList_Create(NSSArena *arenaOpt, PRBool threadSafe)
         if (!list->lock) {
             if (arenaOpt) {
                 nss_ZFreeIf(list);
-            }
-            else {
+            } else {
                 NSSArena_Destroy(arena);
             }
             return (nssList *)NULL;
@@ -205,13 +203,11 @@ nsslist_add_element(nssList *list, void *data)
                 }
                 currNode = (nssListElement *)PR_NEXT_LINK(&currNode->link);
             }
-        }
-        else {
+        } else {
             /* not sorting */
             PR_APPEND_LINK(&node->link, &list->head->link);
         }
-    }
-    else {
+    } else {
         list->head = node;
     }
     ++list->count;

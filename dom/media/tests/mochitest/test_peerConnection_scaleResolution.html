@@ -26,15 +26,9 @@
     .then(() => pc1.setRemoteDescription(pc2.localDescription))
     .catch(generateErrorCallback());
 
-  function mustThrowWith(msg, reason, f) {
-    try {
-      f();
-      ok(false, msg + " must throw");
-    } catch (e) {
-      is(e.name, reason, msg + " must throw: " + e.message);
-    }
-  }
-
+  var mustRejectWith = (msg, reason, f) =>
+    f().then(() => ok(false, msg),
+             e => is(e.name, reason, msg));
   var v1, v2;
 
   runNetworkTest(function() {
@@ -48,11 +42,11 @@
       v1.srcObject = stream;
       var sender = pc1.addTrack(stream.getVideoTracks()[0], stream);
 
-      mustThrowWith("scaleResolutionDownBy must be valid", "RangeError",
-        () => sender.setParameters({ encodings: [{ scaleResolutionDownBy: 0.5 } ] }));
-
-      sender.setParameters({ encodings: [{ maxBitrate: 60000,
-                                           scaleResolutionDownBy: 2 }] });
+      return mustRejectWith("Invalid scaleResolutionDownBy must reject", "RangeError",
+                            () => sender.setParameters({ encodings:
+                                                       [{ scaleResolutionDownBy: 0.5 } ] }))
+      .then(() => sender.setParameters({ encodings: [{ maxBitrate: 60000,
+                                                     scaleResolutionDownBy: 2 }] }))
     })
     .then(() => new Promise(resolve => pc2.ontrack = e => resolve(e)))
     .then(e => v2.srcObject = e.streams[0])

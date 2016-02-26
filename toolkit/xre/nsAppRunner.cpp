@@ -4595,6 +4595,7 @@ enum {
   kE10sDisabledForMacGfx = 5,
   kE10sDisabledForBidi = 6,
   kE10sDisabledForAddons = 7,
+  kE10sForceDisabled = 8,
 };
 
 #ifdef XP_WIN
@@ -4602,6 +4603,7 @@ const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
 const char* kAccessibilityLoadedLastSessionPref = "accessibility.loadedInLastSession";
 #endif // XP_WIN
 const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
+const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
 #ifdef XP_WIN
 static inline uint32_t
@@ -4750,6 +4752,13 @@ mozilla::BrowserTabsRemoteAutostart()
     gBrowserTabsRemoteAutostart = true;
     prefEnabled = true;
     status = kE10sEnabledByUser;
+  }
+
+  // Uber override pref for emergency blocking
+  if (gBrowserTabsRemoteAutostart &&
+      Preferences::GetBool(kForceDisableE10sPref, false)) {
+    gBrowserTabsRemoteAutostart = false;
+    status = kE10sForceDisabled;
   }
 
   gBrowserTabsRemoteStatus = status;

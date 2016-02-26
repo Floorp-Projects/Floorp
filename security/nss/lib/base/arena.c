@@ -530,8 +530,7 @@ nssArena_Mark(NSSArena *arena)
         /* Unmarked.  Store our thread ID */
         arena->marking_thread = PR_GetCurrentThread();
         /* This call never fails. */
-    }
-    else {
+    } else {
         /* Marked.  Verify it's the current thread */
         if (PR_GetCurrentThread() != arena->marking_thread) {
             PR_Unlock(arena->lock);
@@ -556,8 +555,7 @@ nssArena_Mark(NSSArena *arena)
     if ((nssArenaMark *)NULL == arena->first_mark) {
         arena->first_mark = rv;
         arena->last_mark = rv;
-    }
-    else {
+    } else {
         arena->last_mark->next = rv;
         arena->last_mark = rv;
     }
@@ -845,8 +843,7 @@ nss_ZAlloc(NSSArena *arenaOpt, PRUint32 size)
         /* We used calloc: it's already zeroed */
 
         return (void *)((char *)h + sizeof(struct pointer_header));
-    }
-    else {
+    } else {
         void *rv;
 /* Arena allocation */
 #ifdef NSSDEBUG
@@ -940,8 +937,7 @@ nss_ZFreeIf(void *pointer)
         (void)nsslibc_memset(pointer, 0, h->size);
         PR_Free(h);
         return PR_SUCCESS;
-    }
-    else {
+    } else {
 /* Arena */
 #ifdef NSSDEBUG
         if (PR_SUCCESS != nssArena_verifyPointer(h->arena)) {
@@ -1058,8 +1054,7 @@ nss_ZRealloc(void *pointer, PRUint32 newSize)
             (void)nsslibc_memcpy(rv, pointer, h->size);
             (void)nsslibc_memset(&((char *)rv)[h->size], 0,
                                  (newSize - h->size));
-        }
-        else {
+        } else {
             (void)nsslibc_memcpy(rv, pointer, newSize);
         }
 
@@ -1068,8 +1063,7 @@ nss_ZRealloc(void *pointer, PRUint32 newSize)
         PR_Free(h);
 
         return rv;
-    }
-    else {
+    } else {
         void *p;
 /* Arena */
 #ifdef NSSDEBUG

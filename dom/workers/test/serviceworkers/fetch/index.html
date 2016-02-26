@@ -117,6 +117,15 @@
     my_ok(this.test_result, "iframe load should be intercepted");
   });
 
+  test_onload(function() {
+    var elem = document.createElement('iframe');
+    elem.id = 'intercepted-iframe-2';
+    elem.src = "navigate.html";
+    return elem;
+  }, function() {
+    my_ok(this.test_result, "iframe should successfully load");
+  });
+
   gExpected++;
   var xmlDoc = document.implementation.createDocument(null, null, null);
   xmlDoc.load('load_cross_origin_xml_document_synthetic.xml');

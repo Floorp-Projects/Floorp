@@ -26,6 +26,7 @@ typedef mozilla::dom::Element RawGeckoElement;
 class nsIDocument;
 typedef nsIDocument RawGeckoDocument;
 struct ServoNodeData;
+struct RawServoStyleSheet;
 #else
 struct RawGeckoNode;
 typedef struct RawGeckoNode RawGeckoNode;
@@ -35,6 +36,8 @@ struct RawGeckoDocument;
 typedef struct RawGeckoDocument RawGeckoDocument;
 struct ServoNodeData;
 typedef struct ServoNodeData ServoNodeData;
+struct RawServoStyleSheet;
+typedef struct RawServoStyleSheet RawServoStyleSheet;
 #endif
 
 #ifdef __cplusplus
@@ -69,6 +72,11 @@ int Gecko_IsRootElement(RawGeckoElement* element);
 ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
 void Gecko_SetNodeData(RawGeckoNode* node, ServoNodeData* data);
 void Servo_DropNodeData(ServoNodeData* data);
+
+// Stylesheet management.
+// XXXheycam: Make this return an already_AddRefed<RawServoStyleSheet>.
+RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length);
+void Servo_ReleaseStylesheet(RawServoStyleSheet* sheet);
 
 // Servo API.
 void Servo_RestyleDocument(RawGeckoDocument* aDoc);

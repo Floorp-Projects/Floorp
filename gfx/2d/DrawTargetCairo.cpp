@@ -1290,6 +1290,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
 
   if (!aFont) {
     gfxDevCrash(LogReason::InvalidFont) << "Invalid scaled font";
+    return;
   }
 
   AutoPrepareForDrawing prep(this, mContext);

@@ -252,7 +252,7 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
                          build_number=self.config["build_number"])
                 for t in tags]
         self.hg_tag(cwd=dirs["abs_tools_dir"], tags=tags,
-                    user=self.config["hg_user"])
+                    user=self.config["hg_user"], force=True)
 
     def submit_to_balrog(self):
         for _, channel_config in self.query_channel_configs():

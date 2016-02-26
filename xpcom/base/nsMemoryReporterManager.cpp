@@ -1520,6 +1520,30 @@ NS_IMPL_ISUPPORTS(nsMemoryReporterManager, nsIMemoryReporterManager)
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
 {
+  if (!NS_IsMainThread()) {
+    MOZ_CRASH();
+  }
+
+  // Under normal circumstances this function is only called once. However,
+  // we've (infrequently) seen memory report dumps in crash reports that
+  // suggest that this function is sometimes called multiple times. That in
+  // turn means that multiple reporters of each kind are registered, which
+  // leads to duplicated reports of individual measurements such as "resident",
+  // "vsize", etc.
+  //
+  // It's unclear how these multiple calls can occur. The only plausible theory
+  // so far is badly-written extensions, because this function is callable from
+  // JS code via nsIMemoryReporter.idl.
+  //
+  // Whatever the cause, it's a bad thing. So we protect against it with the
+  // following check.
+  static bool isInited = false;
+  if (isInited) {
+    NS_WARNING("nsMemoryReporterManager::Init() has already been called!");
+    return NS_OK;
+  }
+  isInited = true;
+
 #if defined(HAVE_JEMALLOC_STATS) && defined(MOZ_GLUE_IN_PROGRAM)
   if (!jemalloc_stats) {
     return NS_ERROR_FAILURE;

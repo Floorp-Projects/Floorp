@@ -102,8 +102,8 @@ def start_browser(browser_path, app_args, startup_timeout):
     return marionette
 
 
-#TODO: make marionette/client/marionette/runtests.py importable so we can
-# just use cli from there. A lot of this is copy/paste from that function.
+# TODO: make ../../marionette/harness/marionette/runtests.py importable
+# so we can just use cli from there.  A lot of this is copy/paste from that function.
 def run(browser_path=None, b2g_desktop_path=None, emulator_path=None,
         emulator_arch=None, gaia_profile=None, manifest=None, browser_args=None,
         **kwargs):

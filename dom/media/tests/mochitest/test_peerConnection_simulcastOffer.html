@@ -80,11 +80,9 @@
           var sender = senders[0];
           ok(sender.track, "Sender has a track");
 
-          sender.setParameters({
-            encodings: [
-            { rid: "foo", maxBitrate: 40000 },
-            { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 },
-            ]
+          return sender.setParameters({
+            encodings: [{ rid: "foo", maxBitrate: 40000 },
+                        { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 }]
           });
         }
       ]);

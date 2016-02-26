@@ -40,6 +40,9 @@ public:
     void PostDelayedTask(Task* aTask, int aDelayMs) override;
     void UpdateOverscrollVelocity(const float aX, const float aY) override;
     void UpdateOverscrollOffset(const float aX,const  float aY) override;
+    void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
+                              APZStateChange aChange,
+                              int aArg) override;
 
     static void NotifyDefaultPrevented(mozilla::layers::APZCTreeManager* aManager,
                                        uint64_t aInputBlockId, bool aDefaultPrevented);

@@ -6,9 +6,9 @@
 #define AndroidDecoderModule_h_
 
 #include "PlatformDecoderModule.h"
-#include "AndroidSurfaceTexture.h"
 
 #include "MediaCodec.h"
+#include "SurfaceTexture.h"
 #include "TimeUnits.h"
 #include "mozilla/Monitor.h"
 

@@ -7,44 +7,49 @@
 #ifndef mozilla_ServoStyleSheet_h
 #define mozilla_ServoStyleSheet_h
 
+#include "mozilla/dom/SRIMetadata.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/ServoBindings.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetInfo.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
 
+template<>
+struct RefPtrTraits<RawServoStyleSheet>
+{
+  static void AddRef(RawServoStyleSheet* aPtr) {
+    MOZ_CRASH("stylo: not implemented");
+  }
+  static void Release(RawServoStyleSheet* aPtr) {
+    Servo_ReleaseStylesheet(aPtr);
+  }
+};
+
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
  */
-class ServoStyleSheet
+class ServoStyleSheet : public StyleSheet
+                      , public StyleSheetInfo
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
+  ServoStyleSheet(CORSMode aCORSMode,
+                  net::ReferrerPolicy aReferrerPolicy,
+                  const dom::SRIMetadata& aIntegrity);
 
-  nsIURI* GetSheetURI() const;
-  nsIURI* GetOriginalURI() const;
-  nsIURI* GetBaseURI() const;
-  void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
+  NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
 
   bool IsApplicable() const;
   void SetComplete();
-  void SetParsingMode(css::SheetParsingMode aMode);
   bool HasRules() const;
 
   nsIDocument* GetOwningDocument() const;
   void SetOwningDocument(nsIDocument* aDocument);
 
-  void SetOwningNode(nsINode* aOwningNode);
-  nsINode* GetOwnerNode() const;
-
   StyleSheetHandle GetParentSheet() const;
   void AppendStyleSheet(StyleSheetHandle aSheet);
-
-  nsIPrincipal* Principal() const;
-  void SetPrincipal(nsIPrincipal* aPrincipal);
-
-  CORSMode GetCORSMode() const;
-  net::ReferrerPolicy GetReferrerPolicy() const;
-  void GetIntegrity(dom::SRIMetadata& aResult) const;
 
   void ParseSheet(const nsAString& aInput,
                   nsIURI* aSheetURI,
@@ -60,7 +65,12 @@ public:
 #endif
 
 protected:
-  ~ServoStyleSheet() {}
+  ~ServoStyleSheet();
+
+private:
+  void DropSheet();
+
+  RefPtr<RawServoStyleSheet> mSheet;
 };
 
 } // namespace mozilla

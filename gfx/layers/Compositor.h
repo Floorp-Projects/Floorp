@@ -363,10 +363,14 @@ public:
    * If aRenderBoundsOut is non-null, it will be set to the render bounds
    * actually used by the compositor in window space. If aRenderBoundsOut
    * is returned empty, composition should be aborted.
+   *
+   * If aOpaque is true, then all of aInvalidRegion will be drawn to with
+   * opaque content.
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect* aClipRectIn,
                           const gfx::Rect& aRenderBounds,
+                          bool aOpaque,
                           gfx::Rect* aClipRectOut = nullptr,
                           gfx::Rect* aRenderBoundsOut = nullptr) = 0;
 

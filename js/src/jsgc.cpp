@@ -963,7 +963,6 @@ void
 Chunk::addArenaToFreeList(JSRuntime* rt, ArenaHeader* aheader)
 {
     MOZ_ASSERT(!aheader->allocated());
-    MOZ_RELEASE_ASSERT(uintptr_t(info.freeArenasHead) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
     aheader->next = info.freeArenasHead;
     info.freeArenasHead = aheader;
     ++info.numArenasFreeCommitted;
@@ -2297,7 +2296,6 @@ ArenaList::relocateArenas(ArenaHeader* toRelocate, ArenaHeader* relocated, Slice
         toRelocate = arena->next;
         RelocateArena(arena, sliceBudget);
         // Prepend to list of relocated arenas
-        MOZ_RELEASE_ASSERT(uintptr_t(relocated) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
         arena->next = relocated;
         relocated = arena;
         stats.count(gcstats::STAT_ARENA_RELOCATED);
@@ -2846,8 +2844,6 @@ GCRuntime::protectAndHoldArenas(ArenaHeader* arenaList)
         ArenaHeader* next = arena->next;
         if (!next) {
             // Prepend to hold list before we protect the memory.
-            MOZ_RELEASE_ASSERT(
-                uintptr_t(relocatedArenasToRelease) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
             arena->next = relocatedArenasToRelease;
             relocatedArenasToRelease = arenaList;
         }
@@ -3477,7 +3473,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
             for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
                 AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
                 ArenaHeader* arenas = zone->arenas.arenaListsToSweep[kind];
-                MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(UINT64_C(0x4b4b4b4b4b4b4b4b)));
+                MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(-1));
                 if (arenas)
                     ArenaLists::backgroundFinalize(&fop, arenas, &emptyArenas);
             }
