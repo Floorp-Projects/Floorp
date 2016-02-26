@@ -256,7 +256,9 @@ class RespondWithHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   const RequestMode mRequestMode;
-  const DebugOnly<bool> mIsClientRequest;
+#ifdef DEBUG
+  const bool mIsClientRequest;
+#endif
   const bool mIsNavigationRequest;
   const nsCString mScriptSpec;
   const nsString mRequestURL;
@@ -277,7 +279,9 @@ public:
                      uint32_t aRespondWithColumnNumber)
     : mInterceptedChannel(aChannel)
     , mRequestMode(aRequestMode)
+#ifdef DEBUG
     , mIsClientRequest(aIsClientRequest)
+#endif
     , mIsNavigationRequest(aIsNavigationRequest)
     , mScriptSpec(aScriptSpec)
     , mRequestURL(aRequestURL)
