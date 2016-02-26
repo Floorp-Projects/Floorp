@@ -584,21 +584,11 @@
 }
 
 #instruments-pane-toggle {
-  list-style-image: url(images/debugger-collapse.png);
+  list-style-image: url(images/pane-collapse.svg);
 }
 
 #instruments-pane-toggle[pane-collapsed] {
-  list-style-image: url(images/debugger-expand.png);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #instruments-pane-toggle {
-    list-style-image: url(images/debugger-collapse@2x.png);
-  }
-
-  #instruments-pane-toggle[pane-collapsed] {
-    list-style-image: url(images/debugger-expand@2x.png);
-  }
+  list-style-image: url(images/pane-expand.svg);
 }
 
 /* Horizontal vs. vertical layout */
