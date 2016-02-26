@@ -1801,7 +1801,7 @@ AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
     return result; // nullptr (returning |result| for RVO)
   }
 
-  result.reset(new nsCSSValuePair);
+  result = MakeUnique<nsCSSValuePair>();
 
   static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
     &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
