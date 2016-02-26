@@ -1252,7 +1252,7 @@ private:
       RefPtr<ScriptExecutorRunnable> runnable =
         new ScriptExecutorRunnable(*this, mSyncLoopTarget, IsMainWorkerScript(),
                                    firstIndex, lastIndex);
-      if (!runnable->Dispatch(nullptr)) {
+      if (!runnable->Dispatch()) {
         MOZ_ASSERT(false, "This should never fail!");
       }
     }
@@ -1682,7 +1682,7 @@ public:
     RefPtr<MainThreadStopSyncLoopRunnable> runnable =
       new MainThreadStopSyncLoopRunnable(mParentWorker,
                                          mSyncLoopTarget.forget(), true);
-    if (!runnable->Dispatch(nullptr)) {
+    if (!runnable->Dispatch()) {
       NS_ERROR("This should never fail!");
     }
 

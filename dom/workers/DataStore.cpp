@@ -954,11 +954,7 @@ DataStoreChangeEventProxy::HandleEvent(nsIDOMEvent* aEvent)
   RefPtr<DispatchDataStoreChangeEventRunnable> runnable =
     new DispatchDataStoreChangeEventRunnable(this, event);
 
-  {
-    AutoSafeJSContext cx;
-    JSAutoRequest ar(cx);
-    runnable->Dispatch(cx);
-  }
+  runnable->Dispatch();
 
   return NS_OK;
 }

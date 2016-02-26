@@ -371,7 +371,7 @@ private:
 
     RefPtr<WorkerControlRunnable> runnable =
       new ConsoleReleaseRunnable(mWorkerPrivate, this);
-    runnable->Dispatch(nullptr);
+    runnable->Dispatch();
   }
 
   void

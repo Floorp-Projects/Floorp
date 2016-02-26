@@ -466,14 +466,6 @@ public:
     mIncrease(aIncrease)
   { }
 
-  // We don't need a JSContext to dispatch, since we know our PreDispatch and
-  // DispatchInternal don't throw any exceptions.
-  bool
-  Dispatch()
-  {
-    return WorkerControlRunnable::Dispatch(nullptr);
-  }
-
 private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
@@ -853,14 +845,6 @@ public:
                aStatus == Canceling || aStatus == Killing);
   }
 
-  // We can be dispatched without a JSContext, because all we do with the
-  // JSContext passed to Dispatch() normally for worker runnables is call
-  // ModifyBusyCount... but that doesn't actually use its JSContext argument.
-  bool Dispatch()
-  {
-    return WorkerControlRunnable::Dispatch(nullptr);
-  }
-
 private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
@@ -1070,7 +1054,7 @@ public:
         new ReportErrorRunnable(aWorkerPrivate, aMessage, aFilename, aLine,
                                 aLineNumber, aColumnNumber, aFlags,
                                 aErrorNumber, aExnType, aMutedError);
-      return runnable->Dispatch(aCx);
+      return runnable->Dispatch();
     }
 
     // Otherwise log an error to the error console.
@@ -1755,7 +1739,7 @@ TimerThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable, uint
 
   // This can fail if we're racing to terminate or cancel, should be handled
   // by the terminate or cancel code.
-  mWorkerRunnable->Dispatch(nullptr);
+  mWorkerRunnable->Dispatch();
 
   return NS_OK;
 }
@@ -2633,7 +2617,7 @@ WorkerPrivateParent<Derived>::Freeze(JSContext* aCx,
 
   RefPtr<FreezeRunnable> runnable =
     new FreezeRunnable(ParentAsWorkerPrivate());
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     return false;
   }
 
@@ -2715,7 +2699,7 @@ WorkerPrivateParent<Derived>::Thaw(JSContext* aCx, nsPIDOMWindowInner* aWindow)
 
   RefPtr<ThawRunnable> runnable =
     new ThawRunnable(ParentAsWorkerPrivate());
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     return false;
   }
 
@@ -2927,7 +2911,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
 
   runnable->SetMessageSource(Move(aClientInfo));
 
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 }
@@ -2969,9 +2953,8 @@ WorkerPrivateParent<Derived>::UpdateRuntimeOptions(
 
   RefPtr<UpdateRuntimeOptionsRunnable> runnable =
     new UpdateRuntimeOptionsRunnable(ParentAsWorkerPrivate(), aRuntimeOptions);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker context options!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -2984,9 +2967,8 @@ WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference 
 
   RefPtr<UpdatePreferenceRunnable> runnable =
     new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker preferences!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -2999,9 +2981,8 @@ WorkerPrivateParent<Derived>::UpdateLanguages(JSContext* aCx,
 
   RefPtr<UpdateLanguagesRunnable> runnable =
     new UpdateLanguagesRunnable(ParentAsWorkerPrivate(), aLanguages);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker languages!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -3024,9 +3005,8 @@ WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
     RefPtr<UpdateJSWorkerMemoryParameterRunnable> runnable =
       new UpdateJSWorkerMemoryParameterRunnable(ParentAsWorkerPrivate(), aKey,
                                                 aValue);
-    if (!runnable->Dispatch(aCx)) {
+    if (!runnable->Dispatch()) {
       NS_WARNING("Failed to update memory parameter!");
-      JS_ClearPendingException(aCx);
     }
   }
 }
@@ -3047,9 +3027,8 @@ WorkerPrivateParent<Derived>::UpdateGCZeal(JSContext* aCx, uint8_t aGCZeal,
 
   RefPtr<UpdateGCZealRunnable> runnable =
     new UpdateGCZealRunnable(ParentAsWorkerPrivate(), aGCZeal, aFrequency);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker gczeal!");
-    JS_ClearPendingException(aCx);
   }
 }
 #endif
@@ -3063,9 +3042,8 @@ WorkerPrivateParent<Derived>::GarbageCollect(JSContext* aCx, bool aShrinking)
   RefPtr<GarbageCollectRunnable> runnable =
     new GarbageCollectRunnable(ParentAsWorkerPrivate(), aShrinking,
                                /* collectChildren = */ true);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to GC worker!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -3078,9 +3056,8 @@ WorkerPrivateParent<Derived>::CycleCollect(JSContext* aCx, bool aDummy)
   RefPtr<CycleCollectRunnable> runnable =
     new CycleCollectRunnable(ParentAsWorkerPrivate(),
                              /* collectChildren = */ true);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to CC worker!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -3092,9 +3069,8 @@ WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(JSContext* aCx, bool aIsO
 
   RefPtr<OfflineStatusChangeRunnable> runnable =
     new OfflineStatusChangeRunnable(ParentAsWorkerPrivate(), aIsOffline);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     NS_WARNING("Failed to dispatch offline status change event!");
-    JS_ClearPendingException(aCx);
   }
 }
 
@@ -3148,7 +3124,7 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
   if (IsSharedWorker()) {
     RefPtr<MessagePortRunnable> runnable =
       new MessagePortRunnable(ParentAsWorkerPrivate(), aPort);
-    if (!runnable->Dispatch(aCx)) {
+    if (!runnable->Dispatch()) {
       return false;
     }
   }
@@ -3810,7 +3786,7 @@ WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
   if (!mIsInitialized) {
     RefPtr<CompileDebuggerScriptRunnable> runnable =
       new CompileDebuggerScriptRunnable(mWorkerPrivate, aURL);
-    if (!runnable->Dispatch(aCx)) {
+    if (!runnable->Dispatch()) {
       return NS_ERROR_FAILURE;
     }
 
@@ -3831,7 +3807,7 @@ WorkerDebugger::PostMessageMoz(const nsAString& aMessage, JSContext* aCx)
 
   RefPtr<DebuggerMessageEventRunnable> runnable =
     new DebuggerMessageEventRunnable(mWorkerPrivate, aMessage);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -4118,7 +4094,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
 
   RefPtr<CompileScriptRunnable> compiler =
     new CompileScriptRunnable(worker, aScriptURL);
-  if (!compiler->Dispatch(aCx)) {
+  if (!compiler->Dispatch()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -4778,7 +4754,7 @@ WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot)
   if (WorkerPrivate* parent = GetParent()) {
     RefPtr<WorkerFinishedRunnable> runnable =
       new WorkerFinishedRunnable(parent, this);
-    if (!runnable->Dispatch(nullptr)) {
+    if (!runnable->Dispatch()) {
       NS_WARNING("Failed to dispatch runnable!");
     }
   }
@@ -5504,7 +5480,7 @@ WorkerPrivate::PostMessageToParentInternal(
     return;
   }
 
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     aRv = NS_ERROR_FAILURE;
   }
 }
@@ -5595,7 +5571,7 @@ WorkerPrivate::SetDebuggerImmediate(JSContext* aCx, dom::Function& aHandler,
 
   RefPtr<DebuggerImmediateRunnable> runnable =
     new DebuggerImmediateRunnable(this, aHandler);
-  if (!runnable->Dispatch(aCx)) {
+  if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 }
@@ -5697,7 +5673,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   if (aStatus == Closing) {
     // Notify parent to stop sending us messages and balance our busy count.
     RefPtr<CloseRunnable> runnable = new CloseRunnable(this);
-    if (!runnable->Dispatch(aCx)) {
+    if (!runnable->Dispatch()) {
       return false;
     }
 

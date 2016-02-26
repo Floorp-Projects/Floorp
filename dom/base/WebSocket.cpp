@@ -2546,7 +2546,7 @@ WebSocketImpl::Cancel(nsresult aStatus)
     MOZ_ASSERT(mWorkerPrivate);
     RefPtr<CancelRunnable> runnable =
       new CancelRunnable(mWorkerPrivate, this);
-    if (!runnable->Dispatch(nullptr)) {
+    if (!runnable->Dispatch()) {
       return NS_ERROR_FAILURE;
     }
 
@@ -2749,7 +2749,7 @@ WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
   RefPtr<WorkerRunnableDispatcher> event =
     new WorkerRunnableDispatcher(this, mWorkerPrivate, event_ref.forget());
 
-  if (!event->Dispatch(nullptr)) {
+  if (!event->Dispatch()) {
     return NS_ERROR_FAILURE;
   }
 
