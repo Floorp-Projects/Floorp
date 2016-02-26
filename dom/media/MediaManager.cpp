@@ -694,6 +694,26 @@ public:
     }
   }
 
+  // For gUM streams, we have a trackunion which assigns TrackIDs.  However, for a
+  // single-source trackunion like we have here, the TrackUnion will assign trackids
+  // that match the source's trackids, so we can avoid needing a mapping function.
+  // XXX This will not handle more complex cases well.
+  void StopTrack(TrackID aTrackID) override
+  {
+    if (GetSourceStream()) {
+      GetSourceStream()->EndTrack(aTrackID);
+      // We could override NotifyMediaStreamTrackEnded(), and maybe should, but it's
+      // risky to do late in a release since that will affect all track ends, and not
+      // just StopTrack()s.
+      RefPtr<dom::MediaStreamTrack> ownedTrack = FindOwnedDOMTrack(mOwnedStream, aTrackID);
+      if (ownedTrack) {
+        mListener->StopTrack(aTrackID);
+      } else {
+        LOG(("StopTrack(%d) on non-existent track", aTrackID));
+      }
+    }
+  }
+
   already_AddRefed<Promise>
   ApplyConstraintsToTrack(TrackID aTrackID,
                           const MediaTrackConstraints& aConstraints,
