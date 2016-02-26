@@ -309,8 +309,5 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
         '/netwerk/system/qt',
     ]
 
-if CONFIG['ENABLE_TESTS']:
-    DEFINES['PREDICTOR_TESTS'] = True
-
 if CONFIG['MOZ_ENABLE_QTNETWORK']:
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
