@@ -265,6 +265,27 @@ public class TestSimpleFeedParser {
         Assert.assertEquals(1453915920000L, item.getTimestamp());
     }
 
+    @Test
+    public void testWordpressFeed() throws Exception {
+        InputStream stream = openFeed("feed_rss_wordpress.xml");
+
+        SimpleFeedParser parser = new SimpleFeedParser();
+        Feed feed = parser.parse(stream);
+
+        Assert.assertNotNull(feed);
+        Assert.assertEquals("justasimpletest2016", feed.getTitle());
+        Assert.assertEquals("https://justasimpletest2016.wordpress.com", feed.getWebsiteURL());
+        Assert.assertEquals("https://justasimpletest2016.wordpress.com/feed/", feed.getFeedURL());
+        Assert.assertTrue(feed.isSufficientlyComplete());
+
+        Item item = feed.getLastItem();
+
+        Assert.assertNotNull(item);
+        Assert.assertEquals("Hello World!", item.getTitle());
+        Assert.assertEquals("https://justasimpletest2016.wordpress.com/2016/02/26/hello-world/", item.getURL());
+        Assert.assertEquals(1456524466000L, item.getTimestamp());
+    }
+
     private InputStream openFeed(String fileName) throws URISyntaxException, FileNotFoundException, UnsupportedEncodingException {
         URL url = getClass().getResource("/" + fileName);
         if (url == null) {
