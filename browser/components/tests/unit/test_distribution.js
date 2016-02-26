@@ -71,11 +71,14 @@ add_task(function* () {
   Assert.equal(Services.prefs.getComplexValue("distribution.test.language.en", Ci.nsIPrefLocalizedString).data, "en");
   Assert.equal(Services.prefs.getComplexValue("distribution.test.locale.en-US", Ci.nsIPrefLocalizedString).data, "en-US");
   Assert.throws(() => Services.prefs.getComplexValue("distribution.test.locale.de", Ci.nsIPrefLocalizedString));
+  // This value was never set because of the empty language specific pref
+  Assert.throws(() => Services.prefs.getComplexValue("distribution.test.language.reset", Ci.nsIPrefLocalizedString));
   // This value was never set because of the empty locale specific pref
-  // This testcase currently fails - the value is set to "undefined" - it should not be set at all (throw)
-  // Assert.throws(() => Services.prefs.getComplexValue("distribution.test.reset", Ci.nsIPrefLocalizedString));
-  // This value was overriden by a locale specific setting
-  Assert.equal(Services.prefs.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Second Set");
-  // This value was overriden by a language specific setting
-  Assert.equal(Services.prefs.getComplexValue("distribution.test.language.set", Ci.nsIPrefLocalizedString).data, "Second Set");
+  Assert.throws(() => Services.prefs.getComplexValue("distribution.test.locale.reset", Ci.nsIPrefLocalizedString));
+  // This value was overridden by a locale specific setting
+  Assert.equal(Services.prefs.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Locale Set");
+  // This value was overridden by a language specific setting
+  Assert.equal(Services.prefs.getComplexValue("distribution.test.language.set", Ci.nsIPrefLocalizedString).data, "Language Set");
+  // Language should not override locale
+  Assert.notEqual(Services.prefs.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Language Set");
 });
