@@ -8771,15 +8771,15 @@
     "description": "Count of use of audio/video codecs in HTMLMediaElements and WebAudio. Those with 'resource' prefix are approximate; report based on HTTP ContentType or sniffing. Those with 'webaudio' prefix are for WebAudio."
   },
   "FX_SANITIZE_TOTAL": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
-    "expires_in_version": "50",
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
     "description": "Sanitize: Total time it takes to sanitize (ms)"
   },
   "FX_SANITIZE_CACHE": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8787,7 +8787,7 @@
     "description": "Sanitize: Time it takes to sanitize the cache (ms)"
   },
   "FX_SANITIZE_COOKIES": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8810,8 +8810,26 @@
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize plugin cookies (ms). A subset of FX_SANITIZE_COOKIES."
   },
+  "FX_SANITIZE_LOADED_FLASH": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1251469],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 20,
+    "description": "Sanitize: Time it takes to sanitize Flash when it's already loaded (ms). A subset of FX_SANITIZE_PLUGINS."
+  },
+  "FX_SANITIZE_UNLOADED_FLASH": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1251469],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 20,
+    "description": "Sanitize: Time it takes to sanitize Flash when it's not yet loaded (ms). A subset of FX_SANITIZE_PLUGINS."
+  },
   "FX_SANITIZE_OFFLINEAPPS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8819,7 +8837,7 @@
     "description": "Sanitize: Time it takes to sanitize stored offline app data (ms)"
   },
   "FX_SANITIZE_HISTORY": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8827,7 +8845,7 @@
     "description": "Sanitize: Time it takes to sanitize history (ms)"
   },
   "FX_SANITIZE_FORMDATA": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8835,7 +8853,7 @@
     "description": "Sanitize: Time it takes to sanitize stored form data (ms)"
   },
   "FX_SANITIZE_DOWNLOADS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8843,7 +8861,7 @@
     "description": "Sanitize: Time it takes to sanitize recent downloads (ms)"
   },
   "FX_SANITIZE_SESSIONS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8851,7 +8869,7 @@
     "description": "Sanitize: Time it takes to sanitize saved sessions (ms)"
   },
   "FX_SANITIZE_SITESETTINGS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
@@ -8859,7 +8877,7 @@
     "description": "Sanitize: Time it takes to sanitize site-specific settings (ms)"
   },
   "FX_SANITIZE_OPENWINDOWS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "50",
     "kind": "exponential",
     "high": 30000,
