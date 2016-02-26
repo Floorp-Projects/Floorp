@@ -211,6 +211,10 @@ RemoteWebProgressManager.prototype = {
     if (isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
       this._browser._documentContentType = json.documentContentType;
+      if (json.charset) {
+        this._browser._characterSet = json.charset;
+        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
+      }
     }
 
     switch (aMessage.name) {
@@ -232,11 +236,9 @@ RemoteWebProgressManager.prototype = {
 
       if (isTopLevel) {
         remoteWebNav._currentURI = location;
-        this._browser._characterSet = json.charset;
         this._browser._documentURI = newURI(json.documentURI);
         this._browser._contentTitle = json.title;
         this._browser._imageDocument = null;
-        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
         this._browser._contentPrincipal = json.principal;
         this._browser._isSyntheticDocument = json.synthetic;
         this._browser._innerWindowID = json.innerWindowID;

@@ -128,6 +128,8 @@ var WebProgressListener = {
     // the documentURI.
     if (aWebProgress && aWebProgress.isTopLevel) {
       json.documentURI = content.document.documentURIObject.spec;
+      json.charset = content.document.characterSet;
+      json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
     }
 
     this._send("Content:StateChange", json, objects);
