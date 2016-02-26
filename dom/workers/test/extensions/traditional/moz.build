@@ -17,10 +17,14 @@ EXTRA_COMPONENTS += [
 
 XPI_NAME = 'worker'
 
-FINAL_TARGET_PP_FILES += [
+JAR_MANIFESTS += ['jar.mn']
+USE_EXTENSION_MANIFEST = True
+NO_JS_MANIFEST = True
+
+FINAL_TARGET_FILES += [
     'install.rdf',
 ]
 
-FINAL_TARGET_FILES += [
-    'worker.js',
+TEST_HARNESS_FILES.testing.mochitest.extensions += [
+    'worker-test@mozilla.org.xpi',
 ]
