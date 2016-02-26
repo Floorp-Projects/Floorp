@@ -3538,8 +3538,15 @@ IonBuilder::replaceTypeSet(MDefinition* subject, TemporaryTypeSet* type, MTest* 
     if (type->unknown())
         return true;
 
-    if (subject->resultTypeSet() && type->equals(subject->resultTypeSet()))
-        return true;
+    // Don't emit MFilterTypeSet if it doesn't improve the typeset.
+    if (subject->resultTypeSet()) {
+        if (subject->resultTypeSet()->equals(type))
+            return true;
+    } else {
+        TemporaryTypeSet oldTypes(alloc_->lifoAlloc(), subject->type());
+        if (oldTypes.equals(type))
+            return true;
+    }
 
     MInstruction* replace = nullptr;
     MDefinition* ins;
