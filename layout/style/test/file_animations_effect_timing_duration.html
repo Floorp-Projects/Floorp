@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish, opener.SpecialPowers);
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)', easing: "steps(2, start)" },
+      { transform: 'translate(100px)' } ], 4000);
+  yield waitForPaints();
+
+  advance_clock(500);
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is running on compositor");
+  animation.effect.timing.duration = 2000;
+
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation remains on compositor");
+
+  advance_clock(1000);
+  omta_is(div, "transform", { tx: 100 }, RunningOn.Compositor,
+          "Animation is updated on compositor");
+
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)', easing: "steps(2, end)" },
+      { transform: 'translate(100px)' } ], 4000);
+  yield waitForPaints();
+
+  advance_clock(1000);
+  animation.effect.timing.duration = 2000;
+  advance_clock(0);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is running on compositor");
+  done_div();
+})
+
+
+</script>
+</body>
+</html>
