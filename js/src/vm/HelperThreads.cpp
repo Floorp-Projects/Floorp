@@ -671,7 +671,7 @@ GlobalHelperThreadState::lock()
     AssertCurrentThreadCanLock(HelperThreadStateLock);
     PR_Lock(helperLock);
 #ifdef DEBUG
-    lockOwner.value = PR_GetCurrentThread();
+    lockOwner = PR_GetCurrentThread();
 #endif
 }
 
@@ -680,7 +680,7 @@ GlobalHelperThreadState::unlock()
 {
     MOZ_ASSERT(isLocked());
 #ifdef DEBUG
-    lockOwner.value = nullptr;
+    lockOwner = nullptr;
 #endif
     PR_Unlock(helperLock);
 }
@@ -689,7 +689,7 @@ GlobalHelperThreadState::unlock()
 bool
 GlobalHelperThreadState::isLocked()
 {
-    return lockOwner.value == PR_GetCurrentThread();
+    return lockOwner == PR_GetCurrentThread();
 }
 #endif
 
@@ -698,14 +698,14 @@ GlobalHelperThreadState::wait(CondVar which, uint32_t millis)
 {
     MOZ_ASSERT(isLocked());
 #ifdef DEBUG
-    lockOwner.value = nullptr;
+    lockOwner = nullptr;
 #endif
     DebugOnly<PRStatus> status =
         PR_WaitCondVar(whichWakeup(which),
                        millis ? PR_MillisecondsToInterval(millis) : PR_INTERVAL_NO_TIMEOUT);
     MOZ_ASSERT(status == PR_SUCCESS);
 #ifdef DEBUG
-    lockOwner.value = PR_GetCurrentThread();
+    lockOwner = PR_GetCurrentThread();
 #endif
 }
 

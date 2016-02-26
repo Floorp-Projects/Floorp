@@ -1763,10 +1763,12 @@ GCMarker::GCMarker(JSRuntime* rt)
   : JSTracer(rt, JSTracer::TracerKindTag::Marking, ExpandWeakMaps),
     stack(size_t(-1)),
     color(BLACK),
-    unmarkedArenaStackTop(nullptr),
-    markLaterArenas(0),
-    started(false),
-    strictCompartmentChecking(false)
+    unmarkedArenaStackTop(nullptr)
+#ifdef DEBUG
+  , markLaterArenas(0)
+  , started(false)
+  , strictCompartmentChecking(false)
+#endif
 {
 }
 
@@ -1779,8 +1781,10 @@ GCMarker::init(JSGCMode gcMode)
 void
 GCMarker::start()
 {
+#ifdef DEBUG
     MOZ_ASSERT(!started);
     started = true;
+#endif
     color = BLACK;
     linearWeakMarkingDisabled_ = false;
 
@@ -1791,6 +1795,7 @@ GCMarker::start()
 void
 GCMarker::stop()
 {
+#ifdef DEBUG
     MOZ_ASSERT(isDrained());
 
     MOZ_ASSERT(started);
@@ -1798,6 +1803,7 @@ GCMarker::stop()
 
     MOZ_ASSERT(!unmarkedArenaStackTop);
     MOZ_ASSERT(markLaterArenas == 0);
+#endif
 
     /* Free non-ballast stack memory. */
     stack.reset();
@@ -1824,7 +1830,9 @@ GCMarker::reset()
         arena->unsetDelayedMarking();
         arena->markOverflow = 0;
         arena->allocatedDuringIncremental = 0;
+#ifdef DEBUG
         markLaterArenas--;
+#endif
     }
     MOZ_ASSERT(isDrained());
     MOZ_ASSERT(!markLaterArenas);
@@ -1911,7 +1919,9 @@ GCMarker::markDelayedChildren(SliceBudget& budget)
         MOZ_ASSERT(markLaterArenas);
         unmarkedArenaStackTop = arena->getNextDelayedMarking();
         arena->unsetDelayedMarking();
+#ifdef DEBUG
         markLaterArenas--;
+#endif
         markDelayedChildren(arena);
 
         budget.step(150);
