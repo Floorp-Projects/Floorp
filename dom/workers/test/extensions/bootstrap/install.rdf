@@ -7,15 +7,24 @@
     <em:name>WorkerTestBootstrap</em:name>
     <em:description>Worker functions for use in testing.</em:description>
     <em:creator>Mozilla</em:creator>
-    <em:version>2011.10.10</em:version>
-#expand    <em:id>__XPI_NAME__-test@mozilla.org</em:id>
+    <em:version>2016.03.09</em:version>
+    <em:id>workerbootstrap-test@mozilla.org</em:id>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
     <em:targetApplication>
       <Description>
-        <em:id>toolkit@mozilla.org</em:id>
-#expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
-#expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
+        <!-- Firefox -->
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>45.0</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    <em:targetApplication>
+      <Description>
+        <!-- Fennec -->
+        <em:id>{aa3c5121-dab2-40e2-81ca-7ea25febc110}</em:id>
+        <em:minVersion>45.0</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>
