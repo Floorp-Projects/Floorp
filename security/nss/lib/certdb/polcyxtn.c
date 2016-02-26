@@ -291,16 +291,14 @@ CERT_DecodePolicyConstraintsExtension(
 
         if (decodeContext.explicitPolicySkipCerts.len == 0) {
             *(PRInt32 *)decodedValue->explicitPolicySkipCerts.data = -1;
-        }
-        else {
+        } else {
             *(PRInt32 *)decodedValue->explicitPolicySkipCerts.data =
                 DER_GetInteger(&decodeContext.explicitPolicySkipCerts);
         }
 
         if (decodeContext.inhibitMappingSkipCerts.len == 0) {
             *(PRInt32 *)decodedValue->inhibitMappingSkipCerts.data = -1;
-        }
-        else {
+        } else {
             *(PRInt32 *)decodedValue->inhibitMappingSkipCerts.data =
                 DER_GetInteger(&decodeContext.inhibitMappingSkipCerts);
         }
@@ -475,8 +473,7 @@ stringFromUserNotice(SECItem *noticeItem)
                 if (policystr != NULL) {
                     if (retstr != NULL) {
                         retstr = PR_sprintf_append(retstr, "\n%s", policystr);
-                    }
-                    else {
+                    } else {
                         retstr = PR_sprintf_append(retstr, "%s", policystr);
                     }
 

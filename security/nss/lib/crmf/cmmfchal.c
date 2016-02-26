@@ -214,8 +214,7 @@ CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKey
     if (inDecKeyChall->numChallenges == 0) {
         rv = cmmf_create_first_challenge(inDecKeyChall, inRandom,
                                          genNameDER, inPubKey, passwdArg);
-    }
-    else {
+    } else {
         curChallenge = PORT_ArenaZNew(poolp, CMMFChallenge);
         if (curChallenge == NULL) {
             rv = SECFailure;

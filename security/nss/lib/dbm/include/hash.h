@@ -163,9 +163,8 @@ typedef struct htab { /* Memory resident data structure */
 #define ALL_CLEAR 0
 
 #define PTROF(X) ((ptrdiff_t)(X) == BUF_DISK ? 0 : (X))
-#define ISDISK(X) ((X) ? ((ptrdiff_t)(X) == BUF_DISK ? BUF_DISK    \
-                                                     :             \
-                                                     (X)->is_disk) \
+#define ISDISK(X) ((X) ? ((ptrdiff_t)(X) == BUF_DISK ? BUF_DISK      \
+                                                     : (X)->is_disk) \
                        : 0)
 
 #define BITS_PER_MAP 32

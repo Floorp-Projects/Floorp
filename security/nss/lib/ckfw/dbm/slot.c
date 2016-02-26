@@ -75,8 +75,7 @@ nss_dbm_mdSlot_GetTokenPresent(
 
     if ((nss_dbm_db_t *)NULL == slot->token_db) {
         return CK_FALSE;
-    }
-    else {
+    } else {
         return CK_TRUE;
     }
 }

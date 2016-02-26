@@ -61,8 +61,7 @@ nssUTF8_CaseIgnoreMatch(const NSSUTF8 *a, const NSSUTF8 *b, PRStatus *statusOpt)
      */
     if (0 == PL_strcasecmp((const char *)a, (const char *)b)) {
         return PR_TRUE;
-    }
-    else {
+    } else {
         return PR_FALSE;
     }
 }
@@ -167,8 +166,7 @@ nssUTF8_PrintableMatch(const NSSUTF8 *a, const NSSUTF8 *b, PRStatus *statusOpt)
     if (*c == *d) {
         /* And both '\0', btw */
         return PR_TRUE;
-    }
-    else {
+    } else {
         return PR_FALSE;
     }
 }
@@ -324,23 +322,17 @@ nssUTF8_Length(const NSSUTF8 *s, PRStatus *statusOpt)
         PRUint32 incr;
         if ((*c & 0x80) == 0) {
             incr = 1;
-        }
-        else if ((*c & 0xE0) == 0xC0) {
+        } else if ((*c & 0xE0) == 0xC0) {
             incr = 2;
-        }
-        else if ((*c & 0xF0) == 0xE0) {
+        } else if ((*c & 0xF0) == 0xE0) {
             incr = 3;
-        }
-        else if ((*c & 0xF8) == 0xF0) {
+        } else if ((*c & 0xF8) == 0xF0) {
             incr = 4;
-        }
-        else if ((*c & 0xFC) == 0xF8) {
+        } else if ((*c & 0xFC) == 0xF8) {
             incr = 5;
-        }
-        else if ((*c & 0xFE) == 0xFC) {
+        } else if ((*c & 0xFE) == 0xFC) {
             incr = 6;
-        }
-        else {
+        } else {
             nss_SetError(NSS_ERROR_INVALID_STRING);
             goto loser;
         }
@@ -455,8 +447,7 @@ nssUTF8_Create(NSSArena *arenaOpt, nssStringType type, const void *inputString,
 
             if (0 == size) {
                 rv = nssUTF8_Duplicate((const NSSUTF8 *)inputString, arenaOpt);
-            }
-            else {
+            } else {
                 rv = nss_ZAlloc(arenaOpt, size + 1);
                 if ((NSSUTF8 *)NULL == rv) {
                     return (NSSUTF8 *)NULL;
@@ -477,8 +468,7 @@ nssUTF8_Create(NSSArena *arenaOpt, nssStringType type, const void *inputString,
         case nssStringType_UTF8String:
             if (0 == size) {
                 rv = nssUTF8_Duplicate((const NSSUTF8 *)inputString, arenaOpt);
-            }
-            else {
+            } else {
                 rv = nss_ZAlloc(arenaOpt, size + 1);
                 if ((NSSUTF8 *)NULL == rv) {
                     return (NSSUTF8 *)NULL;
@@ -555,8 +545,7 @@ nssUTF8_GetEncoding(NSSArena *arenaOpt, NSSItem *rvOpt, nssStringType type,
                     (void)nss_ZFreeIf(dup);
                     return (NSSItem *)NULL;
                 }
-            }
-            else {
+            } else {
                 rv = rvOpt;
             }
 
@@ -640,13 +629,11 @@ nssUTF8_CopyIntoFixedBuffer(NSSUTF8 *string, char *buffer, PRUint32 bufferSize,
             if ((buffer[bs - 1] & 0xC0) != 0x80) {
                 buffer[bs - 1] = pad;
                 break;
-            }
-            else {
+            } else {
                 buffer[bs - 1] = pad;
             }
         }
-    }
-    else {
+    } else {
         (void)nsslibc_memset(buffer, pad, bufferSize);
         (void)nsslibc_memcpy(buffer, string, stringSize);
     }

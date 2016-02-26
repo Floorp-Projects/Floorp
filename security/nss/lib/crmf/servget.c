@@ -356,10 +356,8 @@ crmf_copy_poposigningkey(PLArenaPool *poolp,
         rv = SECITEM_CopyItem(poolp, &destPopoSignKey->derInput,
                               &inPopoSignKey->derInput);
     }
-    destPopoSignKey->algorithmIdentifier = (poolp == NULL) ?
-                                                           PORT_ZNew(SECAlgorithmID)
-                                                           :
-                                                           PORT_ArenaZNew(poolp, SECAlgorithmID);
+    destPopoSignKey->algorithmIdentifier = (poolp == NULL) ? PORT_ZNew(SECAlgorithmID)
+                                                           : PORT_ArenaZNew(poolp, SECAlgorithmID);
 
     if (destPopoSignKey->algorithmIdentifier == NULL) {
         goto loser;
@@ -634,8 +632,7 @@ crmf_copy_name(CERTName *destName, CERTName *srcName)
 
     if (destName->arena != NULL) {
         poolp = destName->arena;
-    }
-    else {
+    } else {
         poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
     }
     if (poolp == NULL) {
