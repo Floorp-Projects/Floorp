@@ -4032,7 +4032,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
                               aWorkerType, stackLoadInfo.ptr());
     aRv.MightThrowJSException();
     if (NS_FAILED(rv)) {
-      scriptloader::ReportLoadError(aCx, aRv, rv);
+      scriptloader::ReportLoadError(aCx, aRv, rv, aScriptURL);
       return nullptr;
     }
 
@@ -4377,6 +4377,14 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     MOZ_ASSERT(mStatus == Pending);
     mStatus = Running;
   }
+
+  // Now that we've done that, we can go ahead and set up our AutoJSAPI.  We
+  // can't before this point, because it can't find the right JSContext before
+  // then, since it gets it from our mJSContext.
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  MOZ_ASSERT(jsapi.cx() == aCx);
+  jsapi.TakeOwnershipOfErrorReporting();
 
   EnableMemoryReporter();
 
