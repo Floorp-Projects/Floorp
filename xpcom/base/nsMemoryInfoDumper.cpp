@@ -222,7 +222,9 @@ doGCCCDump(const nsCString& aInputStr)
 bool
 SetupFifo()
 {
-  static DebugOnly<bool> fifoCallbacksRegistered = false;
+#ifdef DEBUG
+  static bool fifoCallbacksRegistered = false;
+#endif
 
   if (!FifoWatcher::MaybeCreate()) {
     return false;
@@ -243,7 +245,9 @@ SetupFifo()
   fw->RegisterCallback(NS_LITERAL_CSTRING("abbreviated gc log"),
                        doGCCCDump);
 
+#ifdef DEBUG
   fifoCallbacksRegistered = true;
+#endif
   return true;
 }
 
