@@ -989,9 +989,9 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   // Prevent downgrade attacks on the symmetric cipher. We do not allow CBC
   // mode due to BEAST, POODLE, and other attacks on the MAC-then-Encrypt
   // design. See bug 1109766 for more details.
-  if (cipherInfo.symCipher != ssl_calg_aes_gcm) {
+  if (cipherInfo.macAlgorithm != ssl_mac_aead) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
+           ("CanFalseStartCallback [%p] failed - non-AEAD cipher used, %d, "
             "is not supported with False Start.\n", fd,
             static_cast<int32_t>(cipherInfo.symCipher)));
     reasonsForNotFalseStarting |= POSSIBLE_CIPHER_SUITE_DOWNGRADE;
@@ -1077,6 +1077,8 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDHE_RSA_WITH_RC4_128_SHA: value = 8; break;
     case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: value = 9; break;
     case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
+    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256: value = 11; break;
+    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256: value = 12; break;
     // DHE key exchange
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: value = 21; break;
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
