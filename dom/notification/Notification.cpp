@@ -394,7 +394,7 @@ protected:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
-    aWorkerPrivate->ModifyBusyCountFromWorker(aCx, true);
+    aWorkerPrivate->ModifyBusyCountFromWorker(true);
     WorkerRunInternal(aCx, aWorkerPrivate);
     return true;
   }
@@ -403,7 +403,7 @@ protected:
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
           bool aRunResult) override
   {
-    aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
+    aWorkerPrivate->ModifyBusyCountFromWorker(false);
   }
 
   virtual void

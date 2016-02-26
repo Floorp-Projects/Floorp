@@ -649,7 +649,7 @@ private:
     WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
 
     // Match the busy count increase from NotifyRunnable.
-    aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
+    aWorkerPrivate->ModifyBusyCountFromWorker(false);
 
     aWorkerPrivate->CloseHandlerFinished();
   }
@@ -5093,7 +5093,7 @@ WorkerPrivate::TraceTimeouts(const TraceCallbacks& aCallbacks,
 }
 
 bool
-WorkerPrivate::ModifyBusyCountFromWorker(JSContext* aCx, bool aIncrease)
+WorkerPrivate::ModifyBusyCountFromWorker(bool aIncrease)
 {
   AssertIsOnWorkerThread();
 
@@ -5134,7 +5134,7 @@ WorkerPrivate::AddChildWorker(JSContext* aCx, ParentType* aChildWorker)
   mChildWorkers.AppendElement(aChildWorker);
 
   return mChildWorkers.Length() == 1 ?
-         ModifyBusyCountFromWorker(aCx, true) :
+         ModifyBusyCountFromWorker(true) :
          true;
 }
 
@@ -5147,7 +5147,7 @@ WorkerPrivate::RemoveChildWorker(JSContext* aCx, ParentType* aChildWorker)
                "Didn't know about this one!");
   mChildWorkers.RemoveElement(aChildWorker);
 
-  if (mChildWorkers.IsEmpty() && !ModifyBusyCountFromWorker(aCx, false)) {
+  if (mChildWorkers.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
     NS_WARNING("Failed to modify busy count!");
   }
 }
@@ -5167,7 +5167,7 @@ WorkerPrivate::AddFeature(JSContext* aCx, WorkerFeature* aFeature)
 
   MOZ_ASSERT(!mFeatures.Contains(aFeature), "Already know about this one!");
 
-  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(aCx, true)) {
+  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(true)) {
     return false;
   }
 
@@ -5183,7 +5183,7 @@ WorkerPrivate::RemoveFeature(JSContext* aCx, WorkerFeature* aFeature)
   MOZ_ASSERT(mFeatures.Contains(aFeature), "Didn't know about this one!");
   mFeatures.RemoveElement(aFeature);
 
-  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(aCx, false)) {
+  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
     NS_WARNING("Failed to modify busy count!");
   }
 }
@@ -5940,7 +5940,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
     }
 
     if (!mTimerRunning) {
-      if (!ModifyBusyCountFromWorker(aCx, true)) {
+      if (!ModifyBusyCountFromWorker(true)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return 0;
       }
@@ -6108,7 +6108,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
   // Either signal the parent that we're no longer using timeouts or reschedule
   // the timer.
   if (mTimeouts.IsEmpty()) {
-    if (!ModifyBusyCountFromWorker(aCx, false)) {
+    if (!ModifyBusyCountFromWorker(false)) {
       retval = false;
     }
     mTimerRunning = false;
