@@ -35,6 +35,7 @@
 
 #include "js/TraceKind.h"
 #include "js/TracingAPI.h"
+#include "mozilla/UniquePtr.h"
 
 class JSAtom;
 class JSFunction;
@@ -108,6 +109,19 @@ struct GCPolicy<JS::Heap<T>>
     }
     static bool needsSweep(JS::Heap<T>* thingp) {
         return gc::EdgeNeedsSweep(thingp);
+    }
+};
+
+// GCPolicy<UniquePtr<T>> forwards the contained pointer to GCPolicy<T>.
+template <typename T, typename D>
+struct GCPolicy<mozilla::UniquePtr<T, D>>
+{
+    static mozilla::UniquePtr<T,D> initial() { return mozilla::UniquePtr<T,D>(); }
+    static void trace(JSTracer* trc, mozilla::UniquePtr<T,D>* tp, const char* name) {
+        GCPolicy<T>::trace(trc, tp->get(), name);
+    }
+    static bool needsSweep(mozilla::UniquePtr<T,D>* tp) {
+        return GCPolicy<T>::needsSweep(tp->get());
     }
 };
 
