@@ -117,7 +117,7 @@ function* testCookies(options) {
   yield extension.awaitMessage("change-cookies");
   cookieSvc.add(domain, "/", "x", "y", options.secure, false, false, options.expiry);
   cookieSvc.add(domain, "/", "x", "z", options.secure, false, false, options.expiry);
-  cookieSvc.remove(domain, "x", "/", false);
+  cookieSvc.remove(domain, "x", "/", {}, false);
   extension.sendMessage("cookies-changed");
 
   yield extension.awaitFinish("cookie-permissions");
@@ -168,7 +168,7 @@ function* testCookies(options) {
   }
 
   for (let cookie of cookies) {
-    cookieSvc.remove(cookie.host, cookie.name, "/", false);
+    cookieSvc.remove(cookie.host, cookie.name, "/", {}, false);
   }
   // Make sure we don't silently poison subsequent tests if something goes wrong.
   is(getCookies(options.domain).length, 0, "cookies cleared");

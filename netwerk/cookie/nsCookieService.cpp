@@ -2366,10 +2366,32 @@ NS_IMETHODIMP
 nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aName,
                         const nsACString &aPath,
-                        bool             aBlocked)
+                        JS::HandleValue  aOriginAttributes,
+                        bool             aBlocked,
+                        JSContext*       aCx)
 {
   NeckoOriginAttributes attrs;
-  return Remove(aHost, attrs, aName, aPath, aBlocked);
+  MOZ_ASSERT(attrs.Init(aCx, aOriginAttributes));
+  return RemoveNative(aHost, aName, aPath, &attrs, aBlocked);
+}
+
+NS_IMETHODIMP_(nsresult)
+nsCookieService::RemoveNative(const nsACString &aHost,
+                              const nsACString &aName,
+                              const nsACString &aPath,
+                              NeckoOriginAttributes* aOriginAttributes,
+                              bool aBlocked)
+{
+  if (NS_WARN_IF(!aOriginAttributes)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = Remove(aHost, *aOriginAttributes, aName, aPath, aBlocked);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 /******************************************************************************

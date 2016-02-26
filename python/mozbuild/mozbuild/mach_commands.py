@@ -496,7 +496,7 @@ class Build(MachCommandBase):
 
             telemetry_handler = getattr(self._mach_context,
                                         'telemetry_handler', None)
-            telemetry_data = monitor.record_resource_usage()
+            telemetry_data = monitor.get_resource_usage()
 
             # Record build configuration data. For now, we cherry pick
             # items we need rather than grabbing everything, in order

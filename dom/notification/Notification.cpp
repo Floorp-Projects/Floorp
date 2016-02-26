@@ -373,7 +373,7 @@ protected:
   }
 
   bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
     // We don't call WorkerRunnable::PreDispatch because it would assert the
     // wrong thing about which thread we're on.

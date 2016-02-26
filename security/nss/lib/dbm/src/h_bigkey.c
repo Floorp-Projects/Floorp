@@ -129,8 +129,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                 p[n - 2] = FULL_KEY_DATA;
                 FREESPACE(p) = FREESPACE(p) - move_bytes;
                 OFFSET(p) = off;
-            }
-            else
+            } else
                 p[n - 2] = FULL_KEY;
         }
         p = (uint16 *)bufp->page;
@@ -164,8 +163,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                 return (-1);
             cp = bufp->page;
             p = (uint16 *)cp;
-        }
-        else
+        } else
             p[n] = FULL_KEY_DATA;
         bufp->flags |= BUF_MOD;
     }
@@ -236,8 +234,7 @@ __big_delete(HTAB *hashp, BUFHEAD *bufp)
         bp[1] = pageno;
         bp[2] = OVFLPAGE;
         bufp->ovfl = rbufp->ovfl;
-    }
-    else
+    } else
         /* This is the last page. */
         bufp->ovfl = NULL;
     n -= 2;
@@ -295,8 +292,7 @@ __find_bigpair(HTAB *hashp, BUFHEAD *bufp, int ndx, char *key, int size)
         ++hash_collisions;
 #endif
         return (-2);
-    }
-    else
+    } else
         return (ndx);
 }
 
@@ -384,8 +380,7 @@ __big_return(
         save_addr = save_p->addr;
         off = bp[1];
         len = 0;
-    }
-    else if (!FREESPACE(bp)) {
+    } else if (!FREESPACE(bp)) {
         /*
              * This is a hack.  We can't distinguish between
              * FULL_KEY_DATA that contains complete data or
@@ -401,8 +396,7 @@ __big_return(
         if (!bufp)
             return (-1);
         bp = (uint16 *)bufp->page;
-    }
-    else {
+    } else {
         /* The data is all on one page. */
         tp = (char *)bp;
         off = bp[bp[0]];
@@ -414,8 +408,7 @@ __big_return(
                 hashp->cpage = NULL;
                 hashp->cbucket++;
                 hashp->cndx = 1;
-            }
-            else {
+            } else {
                 hashp->cpage = __get_buf(hashp,
                                          bp[bp[0] - 1], bufp, 0);
                 if (!hashp->cpage)
@@ -528,8 +521,7 @@ collect_data(
         if (bp[0] == 2) { /* No more buckets in chain */
             hashp->cpage = NULL;
             hashp->cbucket++;
-        }
-        else {
+        } else {
             hashp->cpage = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
             if (!hashp->cpage)
                 return (-1);
@@ -589,8 +581,7 @@ collect_key(
             return (-1);
         if (__big_return(hashp, bufp, 1, val, set))
             return (-1);
-    }
-    else {
+    } else {
         xbp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
         if (!xbp || ((totlen =
                           collect_key(hashp, xbp, totlen, val, set)) < 1))
@@ -639,8 +630,7 @@ __big_split(
                   __get_buf(hashp, ret->next_addr, big_keyp, 0)))
             return (-1);
         ;
-    }
-    else
+    } else
         ret->nextp = NULL;
 
 /* Now make one of np/op point to the big key/data pair */
@@ -706,8 +696,7 @@ __big_split(
         if (!tmpp)
             return (-1);
         tp[4] = n;
-    }
-    else
+    } else
         tmpp = big_keyp;
 
     if (change)

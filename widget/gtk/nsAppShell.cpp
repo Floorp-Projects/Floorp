@@ -49,7 +49,7 @@ PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
 // For bug 726483.
 static decltype(GtkContainerClass::check_resize) sReal_gtk_window_check_resize;
 
-void
+static void
 wrap_gtk_window_check_resize(GtkContainer *container)
 {
     GdkWindow* gdk_window = gtk_widget_get_window(&container->widget);
@@ -62,6 +62,46 @@ wrap_gtk_window_check_resize(GtkContainer *container)
     if (gdk_window) {
         g_object_unref(gdk_window);
     }
+}
+
+// Emit resume-events on GdkFrameClock if flush-events has not been
+// balanced by resume-events at dispose.
+// For https://bugzilla.gnome.org/show_bug.cgi?id=742636
+static decltype(GObjectClass::constructed) sRealGdkFrameClockConstructed;
+static decltype(GObjectClass::dispose) sRealGdkFrameClockDispose;
+static GQuark sPendingResumeQuark;
+
+static void
+OnFlushEvents(GObject* clock, gpointer)
+{
+    g_object_set_qdata(clock, sPendingResumeQuark, GUINT_TO_POINTER(1));
+}
+
+static void
+OnResumeEvents(GObject* clock, gpointer)
+{
+    g_object_set_qdata(clock, sPendingResumeQuark, nullptr);
+}
+
+static void
+WrapGdkFrameClockConstructed(GObject* object)
+{
+    sRealGdkFrameClockConstructed(object);
+
+    g_signal_connect(object, "flush-events",
+                     G_CALLBACK(OnFlushEvents), nullptr);
+    g_signal_connect(object, "resume-events",
+                     G_CALLBACK(OnResumeEvents), nullptr);
+}
+
+static void
+WrapGdkFrameClockDispose(GObject* object)
+{
+    if (g_object_get_qdata(object, sPendingResumeQuark)) {
+        g_signal_emit_by_name(object, "resume-events");
+    }
+
+    sRealGdkFrameClockDispose(object);
 }
 #endif
 
@@ -133,6 +173,24 @@ nsAppShell::Init()
         auto check_resize = &GTK_CONTAINER_CLASS(gtk_plug_class)->check_resize;
         sReal_gtk_window_check_resize = *check_resize;
         *check_resize = wrap_gtk_window_check_resize;
+    }
+
+    if (!sPendingResumeQuark &&
+        gtk_check_version(3,14,7) != nullptr) { // GTK 3.0 to GTK 3.14.7.
+        // GTK 3.8 - 3.14 registered this type when creating the frame clock
+        // for the root window of the display when the display was opened.
+        GType gdkFrameClockIdleType = g_type_from_name("GdkFrameClockIdle");
+        if (gdkFrameClockIdleType) { // not in versions prior to 3.8
+            sPendingResumeQuark = g_quark_from_string("moz-resume-is-pending");
+            auto gdk_frame_clock_idle_class =
+                G_OBJECT_CLASS(g_type_class_peek_static(gdkFrameClockIdleType));
+            auto constructed = &gdk_frame_clock_idle_class->constructed;
+            sRealGdkFrameClockConstructed = *constructed;
+            *constructed = WrapGdkFrameClockConstructed;
+            auto dispose = &gdk_frame_clock_idle_class->dispose;
+            sRealGdkFrameClockDispose = *dispose;
+            *dispose = WrapGdkFrameClockDispose;
+        }
     }
 
     // Workaround for bug 1209659 which is fixed by Gtk3.20

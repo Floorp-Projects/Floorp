@@ -70,8 +70,7 @@ ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     if (rv < 0) {
         DEFINE_ERROR
         MAP_ERROR(PR_SOCKET_SHUTDOWN_ERROR, PR_CONNECT_RESET_ERROR)
-    }
-    else if (rv > len) {
+    } else if (rv > len) {
         PORT_Assert(rv <= len);
         PORT_SetError(PR_BUFFER_OVERFLOW_ERROR);
         rv = SECFailure;

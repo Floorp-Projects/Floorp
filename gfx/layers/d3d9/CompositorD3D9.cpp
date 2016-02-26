@@ -687,6 +687,7 @@ void
 CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
                            const Rect *aClipRectIn,
                            const Rect& aRenderBounds,
+                           bool aOpaque,
                            Rect *aClipRectOut,
                            Rect *aRenderBoundsOut)
 {

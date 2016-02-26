@@ -11,8 +11,22 @@ UNIFIED_SOURCES = [
     'TestCopyOnWrite.cpp',
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
+    'TestDeinterlacingFilter.cpp',
     'TestMetadata.cpp',
+    'TestRemoveFrameRectFilter.cpp',
     'TestStreamingLexer.cpp',
+    'TestSurfaceSink.cpp',
+]
+
+if CONFIG['MOZ_ENABLE_SKIA']:
+    UNIFIED_SOURCES += [
+        'TestDownscalingFilter.cpp',
+        'TestSurfacePipeIntegration.cpp',
+    ]
+
+SOURCES += [
+    # Can't be unified because it manipulates the preprocessor environment.
+    'TestDownscalingFilterNoSkia.cpp',
 ]
 
 TEST_HARNESS_FILES.gtest += [
@@ -34,8 +48,14 @@ TEST_HARNESS_FILES.gtest += [
     'transparent.png',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 LOCAL_INCLUDES += [
+    '/dom/base',
+    '/gfx/2d',
     '/image',
 ]
+
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 FINAL_LIBRARY = 'xul-gtest'

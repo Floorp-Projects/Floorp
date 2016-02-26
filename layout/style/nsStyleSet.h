@@ -397,6 +397,11 @@ class nsStyleSet final
   // to drop any nsCSSSelector pointers it has.
   void ClearSelectors();
 
+  // Returns whether aSheetType represents a level of the cascade that uses
+  // CSSStyleSheets.  See gCSSSheetTypes in nsStyleSet.cpp for the list
+  // of CSS sheet types.
+  static bool IsCSSSheetType(mozilla::SheetType aSheetType);
+
 private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;

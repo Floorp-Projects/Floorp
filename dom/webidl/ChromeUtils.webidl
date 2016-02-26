@@ -37,6 +37,13 @@ interface ChromeUtils : ThreadSafeChromeUtils {
   static OriginAttributesDictionary
   createOriginAttributesWithUserContextId(DOMString origin,
                                           unsigned long userContextId);
+
+  /**
+   * Returns true if the 2 OriginAttributes are equal.
+   */
+  static boolean
+  isOriginAttributesEqual(optional OriginAttributesDictionary aA,
+                          optional OriginAttributesDictionary aB);
 };
 
 /**

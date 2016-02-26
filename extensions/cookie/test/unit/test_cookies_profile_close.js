@@ -58,7 +58,7 @@ function do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.remove("foo.com", "", "oh4", false);
+    Services.cookiemgr.remove("foo.com", "", "oh4", {}, false);
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {

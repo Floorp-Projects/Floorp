@@ -135,8 +135,7 @@ nssCKFWHash_Add(
     he = PL_HashTableAdd(hash->plHashTable, key, (void *)value);
     if (!he) {
         error = CKR_HOST_MEMORY;
-    }
-    else {
+    } else {
         hash->count++;
     }
 
@@ -211,8 +210,7 @@ nssCKFWHash_Exists(
 
     if (!value) {
         return CK_FALSE;
-    }
-    else {
+    } else {
         return CK_TRUE;
     }
 }

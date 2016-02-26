@@ -154,6 +154,8 @@ builds:
     platforms:
       - MacOSX64
     types:
+      opt:
+        task: tasks/builds/opt_macosx64.yml
       debug:
         task: tasks/builds/dbg_macosx64.yml
   macosx64-st-an:

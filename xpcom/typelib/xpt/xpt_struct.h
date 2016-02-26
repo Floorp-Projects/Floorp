@@ -323,8 +323,8 @@ struct XPTMethodDescriptor {
  * indicate an array of Annotation's that's completely empty.  If the tag 
  * is 1, the record is a PrivateAnnotation. 
  *
- * WARNING: we no longer support PrivateAnnotations. Each typelib can now only
- * contain a single EmptyAnnotation.
+ * We don't actually store annotations; we just skip over them if they are
+ * present.
  */
 
 #define XPT_ANN_LAST	                0x80

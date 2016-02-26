@@ -186,11 +186,14 @@ BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMo
   MOZ_ASSERT(mDrawTarget);
 
   // Adjust bounds rect to account for new origin at (0, 0).
-  IntRect rect(0, 0, aRect.XMost(), aRect.YMost());
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, rect);
+  IntRect windowRect = aRect;
+  if (aRect.Size() != mDrawTarget->GetSize()) {
+    windowRect.ExpandToEnclose(IntPoint(0, 0));
+  }
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
 
   if (aInit == INIT_MODE_CLEAR) {
-    mDrawTarget->ClearRect(gfx::Rect(aRect));
+    mDrawTarget->ClearRect(Rect(aRect - rt->GetOrigin()));
   }
 
   return rt.forget();
@@ -582,6 +585,7 @@ void
 BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             const gfx::Rect *aClipRectIn,
                             const gfx::Rect& aRenderBounds,
+                            bool aOpaque,
                             gfx::Rect *aClipRectOut /* = nullptr */,
                             gfx::Rect *aRenderBoundsOut /* = nullptr */)
 {
@@ -632,7 +636,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
-    CreateRenderTargetForWindow(mInvalidRect.ToUnknownRect(), INIT_MODE_CLEAR, bufferMode);
+    CreateRenderTargetForWindow(mInvalidRect.ToUnknownRect(),
+                                aOpaque ? INIT_MODE_NONE : INIT_MODE_CLEAR,
+                                bufferMode);
   if (!target) {
     if (!mTarget) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);

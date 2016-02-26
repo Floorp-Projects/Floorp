@@ -13,6 +13,7 @@
 #include "ImageFactory.h"
 #include "ShutdownTracker.h"
 #include "SurfaceCache.h"
+#include "SurfacePipe.h"
 
 #include "gfxPrefs.h"
 #include "imgLoader.h"
@@ -94,6 +95,7 @@ mozilla::image::InitModule()
   mozilla::image::ImageFactory::Initialize();
   mozilla::image::DecodePool::Initialize();
   mozilla::image::SurfaceCache::Initialize();
+  mozilla::image::SurfacePipe::Initialize();
   imgLoader::GlobalInit();
   sInitialized = true;
   return NS_OK;

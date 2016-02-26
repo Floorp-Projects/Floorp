@@ -173,7 +173,7 @@ Crash address: 0x104616900
 --browsermob-script <browsermob>/bin/browsermob-proxy --browsermob-port 999 --profile <your saved profile>
 </code></pre>
 
-You can then call browsermob to shape the network. You can find an example in external_media_tests/playback/test_playback_limiting_bandwidth.py. Another example can be found at https://dxr.mozilla.org/mozilla-central/source/testing/marionette/client/marionette/tests/unit/test_browsermobproxy.py.
+You can then call browsermob to shape the network. You can find an example in external_media_tests/playback/test_playback_limiting_bandwidth.py. Another example can be found at https://dxr.mozilla.org/mozilla-central/source/testing/marionette/harness/marionette/tests/unit/test_browsermobproxy.py.
 
 ### A warning about video URLs
 The ini files in `external_media_tests/urls` may contain URLs pulled from Firefox crash or bug data. Automated tests don't care about video content, but you might: visit these at your own risk and be aware that they may be NSFW. We do not intend to ever moderate or filter these URLs.

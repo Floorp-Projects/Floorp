@@ -12530,6 +12530,10 @@ class CGDictionary(CGThing):
             "convert": string.Template(conversionInfo.template).substitute(replacements),
             "propGet": propGet
         }
+        # The conversion code will only run where a default value or a value passed
+        # by the author needs to get converted, so we can remember if we have any
+        # members present here.
+        conversionReplacements["convert"] += "mIsAnyMemberPresent = true;\n"
         conversion = ("if (!isNull && !${propGet}) {\n"
                       "  return false;\n"
                       "}\n")
