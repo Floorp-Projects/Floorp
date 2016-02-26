@@ -400,7 +400,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
             final String currentSearchHistory = searchHistoryIterator.next();
 
             if (currentSearchHistory.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", currentSearchHistory)) {
-                searchHistorySuggestions.remove(currentSearchHistory);
+                searchHistoryIterator.remove();
             }
         }
 
