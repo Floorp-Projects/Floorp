@@ -165,15 +165,6 @@ function createReportResponseStatusPromise(expectedURI) {
   });
 }
 
-function promiseErrorPageLoaded(browser) {
-  return new Promise(resolve => {
-    browser.addEventListener("DOMContentLoaded", function onLoad() {
-      browser.removeEventListener("DOMContentLoaded", onLoad, false, true);
-      resolve();
-    }, false, true);
-  });
-}
-
 function checkErrorPage(browser, suffix) {
   return ContentTask.spawn(browser, null, function* () {
     return content.document.documentURI;
