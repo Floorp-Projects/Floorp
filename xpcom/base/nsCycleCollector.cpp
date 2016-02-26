@@ -1275,7 +1275,9 @@ private:
   nsAutoPtr<CCGraphBuilder> mBuilder;
   RefPtr<nsCycleCollectorLogger> mLogger;
 
-  DebugOnly<void*> mThread;
+#ifdef DEBUG
+  void* mThread;
+#endif
 
   nsCycleCollectorParams mParams;
 
@@ -3402,7 +3404,9 @@ nsCycleCollector::nsCycleCollector() :
   mScanInProgress(false),
   mJSRuntime(nullptr),
   mIncrementalPhase(IdlePhase),
+#ifdef DEBUG
   mThread(NS_GetCurrentThread()),
+#endif
   mWhiteNodeCount(0),
   mBeforeUnlinkCB(nullptr),
   mForgetSkippableCB(nullptr),
@@ -4025,11 +4029,13 @@ nsCycleCollector_suspectedCount()
 bool
 nsCycleCollector_init()
 {
-  static DebugOnly<bool> sInitialized;
+#ifdef DEBUG
+  static bool sInitialized;
 
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   MOZ_ASSERT(!sInitialized, "Called twice!?");
   sInitialized = true;
+#endif
 
   return sCollectorData.init();
 }
