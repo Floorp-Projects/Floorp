@@ -44,7 +44,7 @@ def get_logger():
 
 
 def check_for_crashes(dump_directory,
-                      symbols_path,
+                      symbols_path=None,
                       stackwalk_binary=None,
                       dump_save_path=None,
                       test_name=None,
@@ -163,8 +163,14 @@ class CrashInfo(object):
         self._dump_files = None
 
     def _get_symbols(self):
-        # This updates self.symbols_path so we only download once
-        if self.symbols_path and mozfile.is_url(self.symbols_path):
+        # If no symbols path has been set create a temporary folder to let the
+        # minidump stackwalk download the symbols.
+        if not self.symbols_path:
+            self.symbols_path = tempfile.mkdtemp()
+            self.remove_symbols = True
+
+        # This updates self.symbols_path so we only download once.
+        if mozfile.is_url(self.symbols_path):
             self.remove_symbols = True
             self.logger.info("Downloading symbols from: %s" % self.symbols_path)
             # Get the symbols and write them to a temporary zipfile
