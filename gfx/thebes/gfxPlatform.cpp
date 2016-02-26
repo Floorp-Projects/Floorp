@@ -2209,11 +2209,11 @@ gfxPlatform::GetScaledFontForFontWithCairoSkia(DrawTarget* aTarget, gfxFont* aFo
 /* static */ bool
 gfxPlatform::UsesOffMainThreadCompositing()
 {
-  InitLayersAccelerationPrefs();
   static bool firstTime = true;
   static bool result = false;
 
   if (firstTime) {
+    InitLayersAccelerationPrefs();
     result =
       sPrefBrowserTabsRemoteAutostart ||
       !gfxPrefs::LayersOffMainThreadCompositionForceDisabled();
