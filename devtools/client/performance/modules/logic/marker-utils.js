@@ -13,7 +13,7 @@ const { Cu, Ci } = require("chrome");
 const Services = require("Services");
 const { L10N } = require("devtools/client/performance/modules/global");
 const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
-const WebConsoleUtils = require("devtools/shared/webconsole/utils");
+const { getSourceNames } = require("devtools/client/shared/source-utils");
 const SHOW_TRIGGER_FOR_GC_TYPES_PREF = "devtools.performance.ui.show-triggers-for-gc-types";
 
 /**
@@ -259,7 +259,7 @@ const DOM = {
 
         let urlNode = doc.createElement("label");
         urlNode.className = "filename";
-        urlNode.setAttribute("value", WebConsoleUtils.Utils.abbreviateSourceURL(url));
+        urlNode.setAttribute("value", getSourceNames(url).short);
         let lineNode = doc.createElement("label");
         lineNode.className = "line-number";
         lineNode.setAttribute("value", `:${line}`);
