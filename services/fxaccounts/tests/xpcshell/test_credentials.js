@@ -71,12 +71,12 @@ add_task(function* test_client_stretch_kdf() {
   let hkdf = CryptoUtils.hkdf;
   let expected = vectors["client stretch-KDF"];
 
-  let emailUTF8 = h2s(expected.email);
-  let passwordUTF8 = h2s(expected.password);
+  let email = h2s(expected.email);
+  let password = h2s(expected.password);
 
   // Intermediate value from sjcl implementation in fxa-js-client
   // The key thing is the c3a9 sequence in "andré"
-  let salt = Credentials.keyWordExtended("quickStretch", emailUTF8);
+  let salt = Credentials.keyWordExtended("quickStretch", email);
   do_check_eq(b2h(salt), "6964656e746974792e6d6f7a696c6c612e636f6d2f7069636c2f76312f717569636b537472657463683a616e6472c3a9406578616d706c652e6f7267");
 
   let options = {
@@ -88,13 +88,7 @@ add_task(function* test_client_stretch_kdf() {
     hkdfLength: 32,
   };
 
-  let results = yield Credentials.setup(emailUTF8, passwordUTF8, options);
-
-  do_check_eq(emailUTF8, results.emailUTF8,
-      "emailUTF8 is wrong");
-
-  do_check_eq(passwordUTF8, results.passwordUTF8,
-      "passwordUTF8 is wrong");
+  let results = yield Credentials.setup(email, password, options);
 
   do_check_eq(expected.quickStretchedPW, b2h(results.quickStretchedPW),
       "quickStretchedPW is wrong");
