@@ -55,7 +55,6 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     : mLinkUp(true)  // assume true by default
     , mStatusKnown(false)
     , mAllowChangedEvent(true)
-    , mChildThreadShutdown(false)
     , mCoalescingActive(false)
 {
     mShutdownPipe[0] = -1;
@@ -289,17 +288,9 @@ nsNotifyAddrListener::Run()
     fds[1].events = POLLIN;
     fds[1].revents = 0;
 
-    // when in b2g emulator, work around bug 1112499
-    int pollTimeout = -1;
-#ifdef MOZ_WIDGET_GONK
-    char propQemu[PROPERTY_VALUE_MAX];
-    property_get("ro.kernel.qemu", propQemu, "");
-    pollTimeout = !strncmp(propQemu, "1", 1) ? 100 : -1;
-#endif
-
     nsresult rv = NS_OK;
     bool shutdown = false;
-    int pollWait = pollTimeout;
+    int pollWait = -1;
     while (!shutdown) {
         int rc = EINTR_RETRY(poll(fds, 2, pollWait));
 
@@ -322,16 +313,12 @@ nsNotifyAddrListener::Run()
             if (period >= kNetworkChangeCoalescingPeriod) {
                 SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
                 mCoalescingActive = false;
-                pollWait = pollTimeout; // restore to default
+                pollWait = -1; // restore to default
             } else {
                 // wait no longer than to the end of the period
                 pollWait = static_cast<int>
                     (kNetworkChangeCoalescingPeriod - period);
             }
-        }
-        if (mChildThreadShutdown) {
-            LOG(("thread shutdown via variable, dying...\n"));
-            shutdown = true;
         }
     }
 
@@ -380,6 +367,10 @@ nsNotifyAddrListener::Init(void)
     Preferences::AddBoolVarCache(&mAllowChangedEvent,
                                  NETWORK_NOTIFY_CHANGED_PREF, true);
 
+    if (-1 == pipe(mShutdownPipe)) {
+        return NS_ERROR_FAILURE;
+    }
+
     rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -387,10 +378,6 @@ nsNotifyAddrListener::Init(void)
     nsCOMPtr<nsIRunnable> runner = new NuwaMarkLinkMonitorThreadRunner();
     mThread->Dispatch(runner, NS_DISPATCH_NORMAL);
 #endif
-
-    if (-1 == pipe(mShutdownPipe)) {
-        return NS_ERROR_FAILURE;
-    }
 
     return NS_OK;
 }
@@ -409,8 +396,6 @@ nsNotifyAddrListener::Shutdown(void)
     // awake the thread to make it terminate
     ssize_t rc = EINTR_RETRY(write(mShutdownPipe[1], "1", 1));
     LOG(("write() returned %d, errno == %d\n", (int)rc, errno));
-
-    mChildThreadShutdown = true;
 
     nsresult rv = mThread->Shutdown();
 
