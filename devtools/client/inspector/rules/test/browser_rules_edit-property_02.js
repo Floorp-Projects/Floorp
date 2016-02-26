@@ -30,12 +30,12 @@ add_task(function*() {
 });
 
 function* testEditProperty(inspector, ruleView) {
-  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
-  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let prop = idRule.textProps[0];
 
-  let editor = yield focusEditableField(ruleView, propEditor.nameSpan);
+  let editor = yield focusEditableField(ruleView, prop.editor.nameSpan);
   let input = editor.input;
-  is(inplaceEditor(propEditor.nameSpan), editor,
+  is(inplaceEditor(prop.editor.nameSpan), editor,
     "Next focused editor should be the name editor.");
 
   ok(input.selectionStart === 0 && input.selectionEnd === input.value.length,
@@ -48,15 +48,16 @@ function* testEditProperty(inspector, ruleView) {
 
   info("Entering property name \"border-color\" followed by a colon to " +
     "focus the value");
-  let onFocus = once(idRuleEditor.element, "focus", true);
+  let onNameDone = ruleView.once("ruleview-changed");
+  let onFocus = once(idRule.editor.element, "focus", true);
   EventUtils.sendString("border-color:", ruleView.styleWindow);
   yield onFocus;
-  yield idRuleEditor.rule._applyingModifications;
+  yield onNameDone;
 
   info("Verifying that the focused field is the valueSpan");
   editor = inplaceEditor(ruleView.styleDocument.activeElement);
   input = editor.input;
-  is(inplaceEditor(propEditor.valueSpan), editor,
+  is(inplaceEditor(prop.editor.valueSpan), editor,
     "Focus should have moved to the value.");
   ok(input.selectionStart === 0 && input.selectionEnd === input.value.length,
     "Editor contents are selected.");
@@ -64,14 +65,15 @@ function* testEditProperty(inspector, ruleView) {
   info("Entering a value following by a semi-colon to commit it");
   let onBlur = once(editor.input, "blur");
   // Use sendChar() to pass each character as a string so that we can test
-  // propEditor.warning.hidden after each character.
+  // prop.editor.warning.hidden after each character.
   for (let ch of "red;") {
+    let onPreviewDone = ruleView.once("ruleview-changed");
     EventUtils.sendChar(ch, ruleView.styleWindow);
-    is(propEditor.warning.hidden, true,
+    yield onPreviewDone;
+    is(prop.editor.warning.hidden, true,
       "warning triangle is hidden or shown as appropriate");
   }
   yield onBlur;
-  yield idRuleEditor.rule._applyingModifications;
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -80,20 +82,8 @@ function* testEditProperty(inspector, ruleView) {
   });
   is(newValue, "red", "border-color should have been set.");
 
-  info("Entering property name \"color\" followed by a colon to " +
-    "focus the value");
-  onFocus = once(idRuleEditor.element, "focus", true);
-  EventUtils.sendString("color:", ruleView.styleWindow);
-  yield onFocus;
-
-  info("Verifying that the focused field is the valueSpan");
-  editor = inplaceEditor(ruleView.styleDocument.activeElement);
-
-  info("Entering a value following by a semi-colon to commit it");
-  onBlur = once(editor.input, "blur");
-  EventUtils.sendString("red;", ruleView.styleWindow);
-  yield onBlur;
-  yield idRuleEditor.rule._applyingModifications;
+  ruleView.styleDocument.activeElement.blur();
+  yield addProperty(ruleView, 1, "color", "red", ";");
 
   let props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
@@ -103,12 +93,11 @@ function* testEditProperty(inspector, ruleView) {
 }
 
 function* testDisableProperty(inspector, ruleView) {
-  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
-  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let prop = idRule.textProps[0];
 
   info("Disabling a property");
-  propEditor.enable.click();
-  yield idRuleEditor.rule._applyingModifications;
+  yield togglePropStatus(ruleView, prop);
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -118,8 +107,7 @@ function* testDisableProperty(inspector, ruleView) {
   is(newValue, "", "Border-color should have been unset.");
 
   info("Enabling the property again");
-  propEditor.enable.click();
-  yield idRuleEditor.rule._applyingModifications;
+  yield togglePropStatus(ruleView, prop);
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
