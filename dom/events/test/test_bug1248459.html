@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248459
+-->
+<head>
+  <title>Test for Bug 1248459</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<input id="input" value="foo">
+<div id="div">bar</div>
+<script type="application/javascript">
+
+/** Test for Bug 1248459 **/
+/**
+ * The bug occurs when a piece of text outside of the editor's root element is
+ * somehow selected when the editor is focused. In the bug's case, it's the
+ * placeholder anonymous div that's selected. In this test's case, it's a
+ * document div that's selected.
+ */
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("div");
+  var input = document.getElementById("input");
+
+  input.appendChild(div);
+  input.focus();
+
+  var editor = SpecialPowers.wrap(input).editor;
+  var sel = editor.selection;
+
+  sel.selectAllChildren(editor.rootElement);
+  var result = synthesizeQuerySelectedText();
+
+  ok(result.succeeded, "Query selected text should succeed");
+  is(result.offset, 0, "Selected text should be at offset 0");
+  is(result.text, "foo", "Selected text should match");
+
+  var range = document.createRange();
+  range.selectNode(div);
+
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  result = synthesizeQuerySelectedText();
+
+  ok(!result.succeeded, "Query out-of-bounds selection should fail");
+
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
