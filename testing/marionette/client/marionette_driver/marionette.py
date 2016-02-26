@@ -944,12 +944,18 @@ class Marionette(object):
                 return true;
                 """, script_args=[perm])
 
-        with self.using_context('content'):
+        with self.using_context("content"):
             self.execute_async_script("""
-                waitFor(marionetteScriptFinished, function() {
-                  return window.wrappedJSObject.permChanged;
-                });
-                """, sandbox='system')
+                let start = new Date();
+                let end = new Date(start.valueOf() + 5000);
+                let wait = function() {
+                  let now = new Date();
+                  if (window.wrappedJSObject.permChanged || end >= now) {
+                    marionetteScriptFinished();
+                  }
+                };
+                window.setTimeout(wait, 100);
+                """, sandbox="system")
 
     @contextmanager
     def using_permissions(self, perms):
@@ -1778,13 +1784,13 @@ class Marionette(object):
         el = self._send_message("getActiveElement", key="value")
         return HTMLElement(self, el)
 
-    def log(self, msg, level=None):
+    def log(self, msg, level="INFO"):
         """Stores a timestamped log message in the Marionette server
         for later retrieval.
 
         :param msg: String with message to log.
-        :param level: String with log level (e.g. "INFO" or "DEBUG"). If None,
-            defaults to "INFO".
+        :param level: String with log level (e.g. "INFO" or "DEBUG").
+            Defaults to "INFO".
         """
         body = {"value": msg, "level": level}
         self._send_message("log", body)
