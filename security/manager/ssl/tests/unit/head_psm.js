@@ -33,49 +33,49 @@ const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 const PRErrorCodeSuccess = 0;
 
 // Sort in numerical order
-const SEC_ERROR_INVALID_TIME                            = SEC_ERROR_BASE +   8;
-const SEC_ERROR_BAD_DER                                 = SEC_ERROR_BASE +   9;
-const SEC_ERROR_BAD_SIGNATURE                           = SEC_ERROR_BASE +  10;
-const SEC_ERROR_EXPIRED_CERTIFICATE                     = SEC_ERROR_BASE +  11;
-const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE +  12; // -8180
-const SEC_ERROR_UNKNOWN_ISSUER                          = SEC_ERROR_BASE +  13;
-const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE +  20; // -8172
-const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE +  21; // -8171
-const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE +  30; // -8162
-const SEC_ERROR_CA_CERT_INVALID                         = SEC_ERROR_BASE +  36;
-const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION              = SEC_ERROR_BASE +  41;
-const SEC_ERROR_INADEQUATE_KEY_USAGE                    = SEC_ERROR_BASE +  90; // -8102
-const SEC_ERROR_INADEQUATE_CERT_TYPE                    = SEC_ERROR_BASE +  91; // -8101
-const SEC_ERROR_CERT_NOT_IN_NAME_SPACE                  = SEC_ERROR_BASE + 112; // -8080
-const SEC_ERROR_CERT_BAD_ACCESS_LOCATION                = SEC_ERROR_BASE + 117; // -8075
+const SEC_ERROR_INVALID_TIME                            = SEC_ERROR_BASE + 8;
+const SEC_ERROR_BAD_DER                                 = SEC_ERROR_BASE + 9;
+const SEC_ERROR_BAD_SIGNATURE                           = SEC_ERROR_BASE + 10;
+const SEC_ERROR_EXPIRED_CERTIFICATE                     = SEC_ERROR_BASE + 11;
+const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE + 12;
+const SEC_ERROR_UNKNOWN_ISSUER                          = SEC_ERROR_BASE + 13;
+const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE + 20;
+const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE + 21;
+const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE + 30;
+const SEC_ERROR_CA_CERT_INVALID                         = SEC_ERROR_BASE + 36;
+const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION              = SEC_ERROR_BASE + 41;
+const SEC_ERROR_INADEQUATE_KEY_USAGE                    = SEC_ERROR_BASE + 90;
+const SEC_ERROR_INADEQUATE_CERT_TYPE                    = SEC_ERROR_BASE + 91;
+const SEC_ERROR_CERT_NOT_IN_NAME_SPACE                  = SEC_ERROR_BASE + 112;
+const SEC_ERROR_CERT_BAD_ACCESS_LOCATION                = SEC_ERROR_BASE + 117;
 const SEC_ERROR_OCSP_MALFORMED_REQUEST                  = SEC_ERROR_BASE + 120;
-const SEC_ERROR_OCSP_SERVER_ERROR                       = SEC_ERROR_BASE + 121; // -8071
+const SEC_ERROR_OCSP_SERVER_ERROR                       = SEC_ERROR_BASE + 121;
 const SEC_ERROR_OCSP_TRY_SERVER_LATER                   = SEC_ERROR_BASE + 122;
 const SEC_ERROR_OCSP_REQUEST_NEEDS_SIG                  = SEC_ERROR_BASE + 123;
 const SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST               = SEC_ERROR_BASE + 124;
-const SEC_ERROR_OCSP_UNKNOWN_CERT                       = SEC_ERROR_BASE + 126; // -8066
+const SEC_ERROR_OCSP_UNKNOWN_CERT                       = SEC_ERROR_BASE + 126;
 const SEC_ERROR_OCSP_MALFORMED_RESPONSE                 = SEC_ERROR_BASE + 129;
 const SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE              = SEC_ERROR_BASE + 130;
 const SEC_ERROR_OCSP_OLD_RESPONSE                       = SEC_ERROR_BASE + 132;
-const SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE              = SEC_ERROR_BASE + 141; // -8051
+const SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE              = SEC_ERROR_BASE + 141;
 const SEC_ERROR_OCSP_INVALID_SIGNING_CERT               = SEC_ERROR_BASE + 144;
-const SEC_ERROR_POLICY_VALIDATION_FAILED                = SEC_ERROR_BASE + 160; // -8032
+const SEC_ERROR_POLICY_VALIDATION_FAILED                = SEC_ERROR_BASE + 160;
 const SEC_ERROR_OCSP_BAD_SIGNATURE                      = SEC_ERROR_BASE + 157;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
 
-const SSL_ERROR_NO_CYPHER_OVERLAP                       = SSL_ERROR_BASE +   2;
-const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE +  12;
-const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE +  17;
+const SSL_ERROR_NO_CYPHER_OVERLAP                       = SSL_ERROR_BASE + 2;
+const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE + 12;
+const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE + 17;
 const SSL_ERROR_WEAK_SERVER_CERT_KEY                    = SSL_ERROR_BASE + 132;
 
-const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE            = MOZILLA_PKIX_ERROR_BASE +   0;
-const MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY     = MOZILLA_PKIX_ERROR_BASE +   1;
-const MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE            = MOZILLA_PKIX_ERROR_BASE +   2; // -16382
-const MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA             = MOZILLA_PKIX_ERROR_BASE +   3;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE      = MOZILLA_PKIX_ERROR_BASE +   5;
+const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE            = MOZILLA_PKIX_ERROR_BASE + 0;
+const MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY     = MOZILLA_PKIX_ERROR_BASE + 1;
+const MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE            = MOZILLA_PKIX_ERROR_BASE + 2;
+const MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA             = MOZILLA_PKIX_ERROR_BASE + 3;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE      = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
-const MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING = MOZILLA_PKIX_ERROR_BASE +   8;
-const MOZILLA_PKIX_ERROR_REQUIRED_TLS_FEATURE_MISSING   = MOZILLA_PKIX_ERROR_BASE +  10;
+const MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING = MOZILLA_PKIX_ERROR_BASE + 8;
+const MOZILLA_PKIX_ERROR_REQUIRED_TLS_FEATURE_MISSING   = MOZILLA_PKIX_ERROR_BASE + 10;
 
 // Supported Certificate Usages
 const certificateUsageSSLClient              = 0x0001;
@@ -196,7 +196,7 @@ function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
   let nsslib;
   try {
     nsslib = ctypes.open(path);
-  } catch(e) {
+  } catch (e) {
     // In case opening the library without a full path fails,
     // try again with a full path.
     let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
@@ -482,12 +482,12 @@ function _setupTLSServerTest(serverBinName, certsPath)
 // [ [typeOfResponse, certnick, extracertnick]...]
 function generateOCSPResponses(ocspRespArray, nssDBlocation)
 {
-  let utilBinName =  "GenerateOCSPResponse";
+  let utilBinName = "GenerateOCSPResponse";
   let ocspGenBin = _getBinaryUtil(utilBinName);
-  let retArray = new Array();
+  let retArray = [];
 
   for (let i = 0; i < ocspRespArray.length; i++) {
-    let argArray = new Array();
+    let argArray = [];
     let ocspFilepre = do_get_file(i.toString() + ".ocsp", true);
     let filename = ocspFilepre.path;
     // Using "sql:" causes the SQL DB to be used so we can run tests on Android.

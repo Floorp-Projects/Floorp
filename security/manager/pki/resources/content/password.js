@@ -28,7 +28,7 @@ function onLoad()
   try {
      params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
      tokenName = params.GetString(1);
-  } catch(exception) {
+  } catch (e) {
       // this should not happen.
       // previously we had self.name, but self.name was a bad idea
       // as window name must be a subset of ascii, and the code was

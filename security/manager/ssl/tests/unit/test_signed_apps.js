@@ -72,7 +72,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
 
     // Any leftover modification means that we were expecting to modify an entry
     // in the input file that wasn't there.
-    for(var name in modifications) {
+    for (let name in modifications) {
       if (modifications.hasOwnProperty(name)) {
         throw "input file was missing expected entries: " + name;
       }
