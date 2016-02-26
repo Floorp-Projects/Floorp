@@ -6,42 +6,59 @@ from marionette import MarionetteTestCase
 
 
 class TestLog(MarionetteTestCase):
-    def test_log_basic(self):
-        # clear any previous data
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        # clears log cache
         self.marionette.get_logs()
 
-        self.marionette.log("I am info")
-        self.assertTrue("I am info" in self.marionette.get_logs()[0])
-        self.marionette.log("I AM ERROR", "ERROR")
-        self.assertTrue("I AM ERROR" in self.marionette.get_logs()[0])
+    def test_log(self):
+        self.marionette.log("foo")
+        logs = self.marionette.get_logs()
+        self.assertEqual("INFO", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
 
-    def test_that_we_can_clear_the_logs(self):
-        # clear any previous data
-        self.marionette.get_logs()
+    def test_log_level(self):
+        self.marionette.log("foo", "ERROR")
+        logs = self.marionette.get_logs()
+        self.assertEqual("ERROR", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
 
-        self.marionette.log("I am info")
-        self.assertTrue("I am info" in self.marionette.get_logs()[0])
-        self.marionette.log("I AM ERROR", "ERROR")
-        self.assertTrue("I AM ERROR" in self.marionette.get_logs()[0])
-
-        # Check that is empty if we call it again
+    def test_clear(self):
+        self.marionette.log("foo")
+        self.assertEqual(1, len(self.marionette.get_logs()))
         self.assertEqual(0, len(self.marionette.get_logs()))
 
-    def test_log_script(self):
-        # clear any previous data
-        self.marionette.get_logs()
+    def test_multiple_entries(self):
+        self.marionette.log("foo")
+        self.marionette.log("bar")
+        self.assertEqual(2, len(self.marionette.get_logs()))
 
-        self.marionette.execute_script("log('some log');")
-        self.assertTrue("some log" in self.marionette.get_logs()[0])
-        self.marionette.execute_script("log('some error', 'ERROR');")
-        self.assertTrue("some error" in self.marionette.get_logs()[0])
-        self.marionette.set_script_timeout(2000)
-        self.marionette.execute_async_script("log('some more logs'); finish();")
-        self.assertTrue("some more logs" in self.marionette.get_logs()[0])
-        self.marionette.execute_async_script("log('some more errors', 'ERROR'); finish();")
-        self.assertTrue("some more errors" in self.marionette.get_logs()[0])
+    def test_log_from_sync_script(self):
+        self.marionette.execute_script("log('foo')")
+        logs = self.marionette.get_logs()
+        self.assertEqual("INFO", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
+
+    def test_log_from_sync_script_level(self):
+        self.marionette.execute_script("log('foo', 'ERROR')")
+        logs = self.marionette.get_logs()
+        self.assertEqual("ERROR", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
+
+    def test_log_from_async_script(self):
+        self.marionette.execute_async_script("log('foo'); arguments[0]();")
+        logs = self.marionette.get_logs()
+        self.assertEqual("INFO", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
+
+    def test_log_from_async_script_variable_arguments(self):
+        self.marionette.execute_async_script("log('foo', 'ERROR'); arguments[0]();")
+        logs = self.marionette.get_logs()
+        self.assertEqual("ERROR", logs[0][0])
+        self.assertEqual("foo", logs[0][1])
+
 
 class TestLogChrome(TestLog):
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        TestLog.setUp(self)
         self.marionette.set_context("chrome")
