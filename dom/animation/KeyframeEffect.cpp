@@ -19,6 +19,7 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h"
 #include "nsCSSValue.h"
+#include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsStyleUtil.h"
 #include <algorithm> // For std::max
 
@@ -2151,6 +2152,35 @@ KeyframeEffect::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto)
 {
   return KeyframeEffectBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void KeyframeEffect::NotifySpecifiedTimingUpdated()
+{
+  nsIDocument* doc = nullptr;
+  // Bug 1249219:
+  // We don't support animation mutation observers on pseudo-elements yet.
+  if (mTarget &&
+      mPseudoType == CSSPseudoElementType::NotPseudo) {
+    doc = mTarget->OwnerDoc();
+  }
+
+  nsAutoAnimationMutationBatch mb(doc);
+
+  if (mAnimation) {
+    mAnimation->NotifyEffectTimingUpdated();
+
+    if (mAnimation->IsRelevant()) {
+      nsNodeUtils::AnimationChanged(mAnimation);
+    }
+
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType,
+                       EffectCompositor::RestyleType::Layer,
+                       mAnimation->CascadeLevel());
+    }
+  }
 }
 
 KeyframeEffect::~KeyframeEffect()
