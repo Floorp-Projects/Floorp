@@ -34,8 +34,8 @@ public:
   EffectSet()
     : mCascadeNeedsUpdate(false)
     , mAnimationGeneration(0)
-    , mActiveIterators(0)
 #ifdef DEBUG
+    , mActiveIterators(0)
     , mCalledPropertyDtor(false)
 #endif
   {
@@ -87,7 +87,9 @@ public:
       , mHashIterator(mozilla::Move(aEffectSet.mEffects.Iter()))
       , mIsEndIterator(false)
     {
+#ifdef DEBUG
       mEffectSet.mActiveIterators++;
+#endif
     }
 
     Iterator(Iterator&& aOther)
@@ -95,7 +97,9 @@ public:
       , mHashIterator(mozilla::Move(aOther.mHashIterator))
       , mIsEndIterator(aOther.mIsEndIterator)
     {
+#ifdef DEBUG
       mEffectSet.mActiveIterators++;
+#endif
     }
 
     static Iterator EndIterator(EffectSet& aEffectSet)
@@ -107,8 +111,10 @@ public:
 
     ~Iterator()
     {
+#ifdef DEBUG
       MOZ_ASSERT(mEffectSet.mActiveIterators > 0);
       mEffectSet.mActiveIterators--;
+#endif
     }
 
     bool operator!=(const Iterator& aOther) const {
@@ -221,11 +227,11 @@ private:
   // the animation manager.
   uint64_t mAnimationGeneration;
 
+#ifdef DEBUG
   // Track how many iterators are referencing this effect set when we are
   // destroyed, we can assert that nothing is still pointing to us.
-  DebugOnly<uint64_t> mActiveIterators;
+  uint64_t mActiveIterators;
 
-#ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif
 };
