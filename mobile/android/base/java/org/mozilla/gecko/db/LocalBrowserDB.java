@@ -1690,13 +1690,11 @@ public class LocalBrowserDB implements BrowserDB {
                 Bookmarks.TITLE,
                 Bookmarks.TYPE});
 
-        for (int i = 0; i < blanksRequired; i++) {
-            final MatrixCursor.RowBuilder rb = blanksCursor.newRow();
-            rb.add(-1);
-            rb.add("");
-            rb.add("");
-            rb.add(TopSites.TYPE_BLANK);
-        }
+        final MatrixCursor.RowBuilder rb = blanksCursor.newRow();
+        rb.add(-1);
+        rb.add("");
+        rb.add("");
+        rb.add(TopSites.TYPE_BLANK);
 
         return new MergeCursor(new Cursor[] {topSitesCursor, blanksCursor});
 
