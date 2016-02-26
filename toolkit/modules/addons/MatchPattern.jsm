@@ -15,8 +15,7 @@ this.EXPORTED_SYMBOLS = ["MatchPattern"];
 
 /* globals MatchPattern */
 
-const PERMITTED_SCHEMES = ["http", "https", "file", "ftp", "app", "data"];
-const PERMITTED_SCHEMES_REGEXP = PERMITTED_SCHEMES.join("|");
+const PERMITTED_SCHEMES = ["http", "https", "file", "ftp", "app"];
 
 // This function converts a glob pattern (containing * and possibly ?
 // as wildcards) to a regular expression.
@@ -43,7 +42,7 @@ function SingleMatchPattern(pat) {
   } else if (!pat) {
     this.schemes = [];
   } else {
-    let re = new RegExp(`^(${PERMITTED_SCHEMES_REGEXP}|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$`);
+    let re = new RegExp("^(http|https|file|ftp|app|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$");
     let match = re.exec(pat);
     if (!match) {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
