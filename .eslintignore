@@ -64,7 +64,6 @@ browser/base/content/test/**
 browser/base/content/newtab/**
 browser/components/downloads/**
 browser/components/feeds/**
-browser/components/pocket/**
 browser/components/preferences/**
 browser/components/privatebrowsing/**
 browser/components/sessionstore/**
