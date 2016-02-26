@@ -60,6 +60,7 @@ function processCSU(csuName, csu)
 function findVirtualFunctions(initialCSU, field, suppressed)
 {
     var worklist = [initialCSU];
+    var functions = [];
 
     // Virtual call targets on subclasses of nsISupports may be incomplete,
     // if the interface is scriptable. Just treat all indirect calls on
@@ -71,8 +72,12 @@ function findVirtualFunctions(initialCSU, field, suppressed)
             suppressed[0] = true;
             return [];
         }
-        if (isOverridableField(initialCSU, csu, field))
-            return null;
+        if (isOverridableField(initialCSU, csu, field)) {
+            // We will still resolve the virtual function call, because it's
+            // nice to have as complete a callgraph as possible for other uses.
+            // But push a token saying that we can run arbitrary code.
+            functions.push(null);
+        }
 
         if (csu in superclasses) {
             for (var superclass of superclasses[csu])
@@ -80,9 +85,7 @@ function findVirtualFunctions(initialCSU, field, suppressed)
         }
     }
 
-    var functions = [];
-    var worklist = [csu];
-
+    worklist = [csu];
     while (worklist.length) {
         var csu = worklist.pop();
         var key = csu + ":" + field;
@@ -155,14 +158,21 @@ function getCallees(edge)
                 // pointer held live across this field call, it will know
                 // whether any of the direct callees can GC or not.
                 var targets = [];
+                var fullyResolved = true;
                 for (var name of functions) {
-                    callees.push({'kind': "direct", 'name': name});
-                    targets.push({'kind': "direct", 'name': name});
+                    if (name === null) {
+                        // virtual call on an nsISupports object
+                        callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+                        fullyResolved = false;
+                    } else {
+                        callees.push({'kind': "direct", 'name': name});
+                        targets.push({'kind': "direct", 'name': name});
+                    }
                 }
-                callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
+                if (fullyResolved)
+                    callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
             } else {
-                // Unknown set of call targets. Non-virtual field call,
-                // or virtual call on an nsISupports object.
+                // Unknown set of call targets. Non-virtual field call.
                 callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
             }
         } else if (callee.Exp[0].Kind == "Var") {
