@@ -23,7 +23,7 @@ using namespace mozilla::a11y;
 TreeWalker::
   TreeWalker(Accessible* aContext) :
   mDoc(aContext->Document()), mContext(aContext), mAnchorNode(nullptr),
-  mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(aFlags)
+  mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(0)
 {
   mChildFilter |= mContext->NoXBLKids() ?
     nsIContent::eAllButXBL | nsIContent::eAllChildren;
