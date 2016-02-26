@@ -131,7 +131,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
                              clock, channels, enabled),
         mPacketSize(packetSize),
         mBitrate(bitRate),
-        mMaxPlaybackRate(0)
+        mMaxPlaybackRate(0),
+        mForceMono(false)
   {
   }
 
@@ -160,10 +161,16 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       return;
     }
 
-    if (mName == "opus" && mMaxPlaybackRate) {
+    if (mName == "opus") {
       SdpFmtpAttributeList::OpusParameters opusParams(
           GetOpusParameters(mDefaultPt, msection));
-      opusParams.maxplaybackrate = mMaxPlaybackRate;
+      if (mMaxPlaybackRate) {
+        opusParams.maxplaybackrate = mMaxPlaybackRate;
+      }
+      if (mChannels == 2 && !mForceMono) {
+        // We prefer to receive stereo, if available.
+        opusParams.stereo = 1;
+      }
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
     }
   }
@@ -178,6 +185,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
           GetOpusParameters(mDefaultPt, remoteMsection));
 
       mMaxPlaybackRate = opusParams.maxplaybackrate;
+      mForceMono = !opusParams.stereo;
     }
 
     return true;
@@ -186,6 +194,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   uint32_t mPacketSize;
   uint32_t mBitrate;
   uint32_t mMaxPlaybackRate;
+  bool mForceMono;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {
