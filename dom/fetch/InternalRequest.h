@@ -93,6 +93,7 @@ public:
     , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
     , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
     , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
+    , mReferrerPolicy(ReferrerPolicy::_empty)
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(LoadTainting::Basic)
@@ -120,12 +121,14 @@ public:
                   RequestRedirect aRequestRedirect,
                   RequestCredentials aRequestCredentials,
                   const nsAString& aReferrer,
+                  ReferrerPolicy aReferrerPolicy,
                   nsContentPolicyType aContentPolicyType)
     : mMethod(aMethod)
     , mURL(aURL)
     , mHeaders(aHeaders)
     , mContentPolicyType(aContentPolicyType)
     , mReferrer(aReferrer)
+    , mReferrerPolicy(aReferrerPolicy)
     , mMode(aMode)
     , mCredentialsMode(aRequestCredentials)
     , mResponseTainting(LoadTainting::Basic)
@@ -228,6 +231,18 @@ public:
 #endif
 
     mReferrer.Assign(aReferrer);
+  }
+
+  ReferrerPolicy
+  ReferrerPolicy_() const
+  {
+    return mReferrerPolicy;
+  }
+
+  void
+  SetReferrerPolicy(ReferrerPolicy aReferrerPolicy)
+  {
+    mReferrerPolicy = aReferrerPolicy;
   }
 
   bool
@@ -442,6 +457,7 @@ private:
   // "about:client": client (default)
   // URL: an URL
   nsString mReferrer;
+  ReferrerPolicy mReferrerPolicy;
 
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
