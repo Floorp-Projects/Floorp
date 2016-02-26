@@ -958,12 +958,12 @@ function is_visible(element) {
 
 function is_element_visible(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
-  ok(is_visible(element), msg);
+  ok(is_visible(element), msg || "Element should be visible");
 }
 
 function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
-  ok(is_hidden(element), msg);
+  ok(is_hidden(element), msg || "Element should be hidden");
 }
 
 function promisePopupEvent(popup, eventSuffix) {
@@ -1213,5 +1213,14 @@ function promiseCrashReport(expectedExtra={}) {
         }
       }
     }
+  });
+}
+
+function promiseErrorPageLoaded(browser) {
+  return new Promise(resolve => {
+    browser.addEventListener("DOMContentLoaded", function onLoad() {
+      browser.removeEventListener("DOMContentLoaded", onLoad, false, true);
+      resolve();
+    }, false, true);
   });
 }
