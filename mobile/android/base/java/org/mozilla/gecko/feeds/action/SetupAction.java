@@ -40,6 +40,11 @@ public class SetupAction implements BaseAction {
         return false;
     }
 
+    @Override
+    public boolean requiresPreferenceEnabled() {
+        return false;
+    }
+
     private void cancelPreviousAlarms(AlarmManager alarmManager) {
         final PendingIntent withdrawIntent = getWithdrawPendingIntent();
         alarmManager.cancel(withdrawIntent);

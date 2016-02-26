@@ -17,6 +17,7 @@ import android.util.Log;
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.feeds.action.BaseAction;
 import org.mozilla.gecko.feeds.action.CheckAction;
 import org.mozilla.gecko.feeds.action.EnrollAction;
@@ -24,6 +25,7 @@ import org.mozilla.gecko.feeds.action.SetupAction;
 import org.mozilla.gecko.feeds.action.SubscribeAction;
 import org.mozilla.gecko.feeds.action.WithdrawAction;
 import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.Experiments;
 
 /**
@@ -79,6 +81,11 @@ public class FeedService extends IntentService {
                 return;
             }
 
+            if (action.requiresPreferenceEnabled() && !isPreferenceEnabled()) {
+                Log.d(LOGTAG, "Preference is disabled. Skipping.");
+                return;
+            }
+
             if (action.requiresNetwork() && !isConnectedToUnmeteredNetwork()) {
                 // For now just skip if we are not connected or the network is metered. We do not want
                 // to use precious mobile traffic.
@@ -130,5 +137,9 @@ public class FeedService extends IntentService {
         }
 
         return !ConnectivityManagerCompat.isActiveNetworkMetered(manager);
+    }
+
+    private boolean isPreferenceEnabled() {
+        return GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_NOTIFICATIONS_CONTENT, true);
     }
 }

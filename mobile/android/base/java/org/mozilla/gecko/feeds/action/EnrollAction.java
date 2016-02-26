@@ -52,6 +52,11 @@ public class EnrollAction implements BaseAction {
         return false;
     }
 
+    @Override
+    public boolean requiresPreferenceEnabled() {
+        return true;
+    }
+
     private void searchFor(BrowserDB db, KnownSite knownSite) {
         Cursor cursor = db.getBookmarksForPartialUrl(context.getContentResolver(), "://" + knownSite.getURLSearchString() + "/");
         if (cursor == null) {

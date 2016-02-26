@@ -22,4 +22,5 @@ public interface BaseAction {
      * Does this action require an active network connection?
      */
     boolean requiresNetwork();
+    boolean requiresPreferenceEnabled();
 }
