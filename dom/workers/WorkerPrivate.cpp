@@ -869,7 +869,9 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    return aWorkerPrivate->NotifyInternal(aCx, mStatus);
+    bool ok = aWorkerPrivate->NotifyInternal(aCx, mStatus);
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+    return ok;
   }
 };
 
@@ -1272,11 +1274,10 @@ public:
   { }
 
   bool
-  SetTimeout(JSContext* aCx, uint32_t aDelayMS)
+  SetTimeout(uint32_t aDelayMS)
   {
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (!timer) {
-      JS_ReportError(aCx, "Failed to create timer!");
       return false;
     }
 
@@ -1287,14 +1288,12 @@ public:
       new TimerThreadEventTarget(mWorkerPrivate, runnable);
 
     if (NS_FAILED(timer->SetTarget(target))) {
-      JS_ReportError(aCx, "Failed to set timer's target!");
       return false;
     }
 
     if (NS_FAILED(timer->InitWithNamedFuncCallback(
           DummyCallback, nullptr, aDelayMS, nsITimer::TYPE_ONE_SHOT,
           "dom::workers::DummyCallback(1)"))) {
-      JS_ReportError(aCx, "Failed to start timer!");
       return false;
     }
 
@@ -4415,9 +4414,9 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     // kill this thread.
     if (currentStatus != Running && !HasActiveFeatures()) {
       if (mCloseHandlerFinished && currentStatus != Killing) {
-        if (!NotifyInternal(aCx, Killing)) {
-          JS_ReportPendingException(aCx);
-        }
+        NotifyInternal(aCx, Killing);
+        MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
 #ifdef DEBUG
         {
           MutexAutoLock lock(mMutex);
@@ -5142,6 +5141,7 @@ void
 WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
 {
   AssertIsOnWorkerThread();
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   NS_ASSERTION(aStatus > Running, "Bad status!");
 
@@ -5155,6 +5155,7 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
     if (!feature->Notify(aCx, aStatus)) {
       NS_WARNING("Failed to notify feature!");
     }
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   }
 
   AutoTArray<ParentType*, 10> children;
@@ -5627,6 +5628,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 
   // Let all our features know the new status.
   NotifyFeatures(aCx, aStatus);
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   // If this is the first time our status has changed then we need to clear the
   // main event queue.
@@ -5689,7 +5691,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     if (killSeconds) {
       mKillTime = TimeStamp::Now() + TimeDuration::FromSeconds(killSeconds);
 
-      if (!mCloseHandlerFinished && !ScheduleKillCloseEventRunnable(aCx)) {
+      if (!mCloseHandlerFinished && !ScheduleKillCloseEventRunnable()) {
         return false;
       }
     }
@@ -5703,7 +5705,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   mKillTime = TimeStamp::Now();
 
   if (mCloseHandlerStarted && !mCloseHandlerFinished) {
-    ScheduleKillCloseEventRunnable(aCx);
+    ScheduleKillCloseEventRunnable();
   }
 
   // Always abort the script.
@@ -5711,14 +5713,14 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 }
 
 bool
-WorkerPrivate::ScheduleKillCloseEventRunnable(JSContext* aCx)
+WorkerPrivate::ScheduleKillCloseEventRunnable()
 {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(!mKillTime.IsNull());
 
   RefPtr<KillCloseEventRunnable> killCloseEventRunnable =
     new KillCloseEventRunnable(this);
-  if (!killCloseEventRunnable->SetTimeout(aCx, RemainingRunTimeMS())) {
+  if (!killCloseEventRunnable->SetTimeout(RemainingRunTimeMS())) {
     return false;
   }
 

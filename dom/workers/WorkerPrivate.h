@@ -1369,7 +1369,7 @@ private:
   CancelAllTimeouts();
 
   bool
-  ScheduleKillCloseEventRunnable(JSContext* aCx);
+  ScheduleKillCloseEventRunnable();
 
   bool
   ProcessAllControlRunnables()
