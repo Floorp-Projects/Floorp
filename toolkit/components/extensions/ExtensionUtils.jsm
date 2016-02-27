@@ -475,7 +475,6 @@ function EventManager(context, name, register) {
   this.register = register;
   this.unregister = null;
   this.callbacks = new Set();
-  this.registered = false;
 }
 
 EventManager.prototype = {
@@ -485,25 +484,24 @@ EventManager.prototype = {
       return;
     }
 
-    if (!this.registered) {
+    if (!this.callbacks.size) {
       this.context.callOnClose(this);
 
       let fireFunc = this.fire.bind(this);
       let fireWithoutClone = this.fireWithoutClone.bind(this);
       fireFunc.withoutClone = fireWithoutClone;
       this.unregister = this.register(fireFunc);
-      this.registered = true;
     }
     this.callbacks.add(callback);
   },
 
   removeListener(callback) {
-    if (!this.registered) {
+    if (!this.callbacks.size) {
       return;
     }
 
     this.callbacks.delete(callback);
-    if (this.callbacks.length == 0) {
+    if (this.callbacks.size == 0) {
       this.unregister();
 
       this.context.forgetOnClose(this);
@@ -527,7 +525,10 @@ EventManager.prototype = {
   },
 
   close() {
-    this.unregister();
+    if (this.callbacks.size) {
+      this.unregister();
+    }
+    this.callbacks = null;
   },
 
   api() {
