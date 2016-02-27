@@ -2,8 +2,8 @@ const BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstre
 
 function isCatchall(v)
 {
-  // "image/*" item exactly or with a quality factor
-  return /^image\/\*(?:|;q=(?:1(?:\.0{0,3})?|0(?:\.\d{0,3})?))$/.test(v);
+  // "*/*" exactly
+  return /^\*\/\*$/.test(v);
 }
 
 /*
