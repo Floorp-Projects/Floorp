@@ -734,13 +734,13 @@ var StyleSheetActor = protocol.ActorClass({
   _fetchSourceMap: function() {
     let deferred = promise.defer();
 
-    this._getText().then((content) => {
-      let url = this._extractSourceMapUrl(content);
+    this._getText().then(sheetContent => {
+      let url = this._extractSourceMapUrl(sheetContent);
       if (!url) {
         // no source map for this stylesheet
         deferred.resolve(null);
         return;
-      };
+      }
 
       url = normalize(url, this.href);
       let options = {
@@ -748,15 +748,24 @@ var StyleSheetActor = protocol.ActorClass({
         policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
         window: this.window
       };
-      let map = fetch(url, options)
-        .then(({content}) => {
-          let map = new SourceMapConsumer(content);
-          this._setSourceMapRoot(map, url, this.href);
-          this._sourceMap = promise.resolve(map);
 
-          deferred.resolve(map);
-          return map;
-        }, deferred.reject);
+      let map = fetch(url, options).then(({content}) => {
+        // Fetching the source map might have failed with a 404 or other. When
+        // this happens, SourceMapConsumer may fail with a JSON.parse error.
+        let consumer;
+        try {
+          consumer = new SourceMapConsumer(content);
+        } catch (e) {
+          deferred.reject(new Error(
+            `Source map at ${url} not found or invalid`));
+          return null;
+        }
+        this._setSourceMapRoot(consumer, url, this.href);
+        this._sourceMap = promise.resolve(consumer);
+
+        deferred.resolve(consumer);
+        return consumer;
+      }, deferred.reject);
 
       this._sourceMap = map;
     }, deferred.reject);
