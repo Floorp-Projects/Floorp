@@ -11,7 +11,6 @@
 #include "nsNetCID.h"
 #include "nsObserverService.h"
 #include "nsXPCOMPrivate.h"
-#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsIIOService.h"
 #include "nsIDirectoryService.h"
 #ifdef ACCESSIBILITY
@@ -29,7 +28,6 @@
 #include "nsIAsyncShutdown.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIGfxInfo.h"
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
 using namespace mozilla;
 using namespace mozilla::services;
