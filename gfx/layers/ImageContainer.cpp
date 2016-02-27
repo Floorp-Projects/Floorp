@@ -549,6 +549,12 @@ SourceSurfaceImage::SourceSurfaceImage(const gfx::IntSize& aSize, gfx::SourceSur
     mSourceSurface(aSourceSurface)
 {}
 
+SourceSurfaceImage::SourceSurfaceImage(gfx::SourceSurface* aSourceSurface)
+  : Image(nullptr, ImageFormat::CAIRO_SURFACE),
+    mSize(aSourceSurface->GetSize()),
+    mSourceSurface(aSourceSurface)
+{}
+
 SourceSurfaceImage::~SourceSurfaceImage()
 {
 }
