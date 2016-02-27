@@ -160,7 +160,7 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
   let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
-  return new DeveloperToolbar(window, document.getElementById("developer-toolbar"));
+  return new DeveloperToolbar(window);
 });
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
