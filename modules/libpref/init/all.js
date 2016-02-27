@@ -143,9 +143,6 @@ pref("dom.workers.maxPerDomain", 50);
 
 pref("dom.serviceWorkers.enabled", false);
 
-// Allow service workers to intercept network requests using the fetch event
-pref("dom.serviceWorkers.interception.enabled", false);
-
 // Allow service workers to intercept opaque (cross origin) responses
 pref("dom.serviceWorkers.interception.opaque.enabled", true);
 
