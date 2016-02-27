@@ -77,7 +77,7 @@ enum TracingMetadata {
   TRACING_TIMESTAMP
 };
 
-#if !defined(MOZ_ENABLE_PROFILER_SPS) || defined(MOZILLA_XPCOMRT_API)
+#if !defined(MOZ_ENABLE_PROFILER_SPS)
 
 #include <stdint.h>
 #include <stdarg.h>
