@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Test for bug 1247483</title>
+<style src="/tests/SimpleTest/test.css" type="text/css"></style>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+
+function runTest() {
+  // Copy content from table.
+  var selection = getSelection();
+  var startRange = document.createRange();
+  startRange.setStart(document.getElementById("start"), 0);
+  startRange.setEnd(document.getElementById("end"), 2);
+  selection.removeAllRanges();
+  selection.addRange(startRange);
+  SpecialPowers.wrap(document).execCommand("copy", false, null);
+
+  // Paste content into "pastecontainer"
+  var pasteContainer = document.getElementById("pastecontainer");
+  var pasteRange = document.createRange();
+  pasteRange.selectNodeContents(pasteContainer);
+  pasteRange.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(pasteRange);
+  SpecialPowers.wrap(document).execCommand("paste", false, null);
+
+  is(pasteContainer.querySelectorAll("td").length, 4, "4 <td> should be pasted.");
+
+  document.execCommand("undo", false, null);
+
+  is(pasteContainer.querySelectorAll("td").length, 0, "Undo should have remove the 4 pasted <td>.");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(runTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247483">Mozilla Bug 1247483</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+<div id="container" contenteditable="true">
+<table>
+  <tr id="start"><td>1 1</td><td>1 2</td></tr>
+  <tr id="end"><td>2 1</td><td>2 2</td></tr>
+</table>
+</div>
+
+<div id="pastecontainer" contenteditable="true">
+</div>
+
+</body>
+</html>
