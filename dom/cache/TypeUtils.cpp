@@ -170,6 +170,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   }
 
   aIn->GetReferrer(aOut.referrer());
+  aOut.referrerPolicy() = aIn->ReferrerPolicy_();
 
   RefPtr<InternalHeaders> headers = aIn->Headers();
   MOZ_ASSERT(headers);
@@ -340,6 +341,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetURL(url);
 
   internalRequest->SetReferrer(aIn.referrer());
+  internalRequest->SetReferrerPolicy(aIn.referrerPolicy());
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
   internalRequest->SetContentPolicyType(aIn.contentPolicyType());
