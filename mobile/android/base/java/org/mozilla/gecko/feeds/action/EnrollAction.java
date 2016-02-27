@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.feeds.action;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,6 +15,7 @@ import android.util.Log;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.knownsites.KnownSiteBlogger;
 import org.mozilla.gecko.feeds.knownsites.KnownSite;
@@ -39,13 +41,13 @@ public class EnrollAction implements BaseAction {
     }
 
     @Override
-    public void perform(Intent intent) {
+    public void perform(BrowserDB db, Intent intent) {
         Log.i(LOGTAG, "Searching for bookmarks to enroll in updates");
 
-        BrowserDB db = GeckoProfile.get(context).getDB();
+        final ContentResolver contentResolver = context.getContentResolver();
 
         for (KnownSite knownSite : knownSites) {
-            searchFor(db, knownSite);
+            searchFor(db, contentResolver, knownSite);
         }
     }
 
@@ -59,10 +61,12 @@ public class EnrollAction implements BaseAction {
         return true;
     }
 
-    private void searchFor(BrowserDB db, KnownSite knownSite) {
-        Cursor cursor = db.getBookmarksForPartialUrl(context.getContentResolver(), "://" + knownSite.getURLSearchString() + "/");
+    private void searchFor(BrowserDB db, ContentResolver contentResolver, KnownSite knownSite) {
+        final UrlAnnotations urlAnnotations = db.getUrlAnnotations();
+
+        final Cursor cursor = db.getBookmarksForPartialUrl(contentResolver, knownSite.getURLSearchString());
         if (cursor == null) {
-            Log.d(LOGTAG, "Nothing found");
+            Log.d(LOGTAG, "Nothing found (" + knownSite.getClass().getSimpleName() + ")");
             return;
         }
 
@@ -70,18 +74,29 @@ public class EnrollAction implements BaseAction {
             Log.d(LOGTAG, "Found " + cursor.getCount() + " websites");
 
             while (cursor.moveToNext()) {
-                final String guid = cursor.getString(cursor.getColumnIndex(BrowserContract.Bookmarks.GUID));
+
                 final String url = cursor.getString(cursor.getColumnIndex(BrowserContract.Bookmarks.URL));
 
-                Log.d(LOGTAG, " (" + guid + ") " + url);
+                Log.d(LOGTAG, " URL: " + url);
 
                 String feedUrl = knownSite.getFeedFromURL(url);
-                if (!TextUtils.isEmpty(feedUrl)) {
-                    FeedService.subscribe(context, guid, feedUrl);
+                if (TextUtils.isEmpty(feedUrl)) {
+
+
+                    Log.w(LOGTAG, "Could not determine feed for URL: " + url);
+                }
+
+                if (!urlAnnotations.hasFeedUrlForWebsite(contentResolver, url)) {
+                    urlAnnotations.insertFeedUrl(contentResolver, url, feedUrl);
+                }
+
+                if (!urlAnnotations.hasFeedSubscription(contentResolver, feedUrl)) {
+                    FeedService.subscribe(context, feedUrl);
                 }
             }
         } finally {
             cursor.close();
         }
     }
+
 }

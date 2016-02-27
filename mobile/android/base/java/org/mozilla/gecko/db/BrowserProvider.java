@@ -470,6 +470,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
+            case URL_ANNOTATIONS:
+                trace("Delete on URL_ANNOTATIONS: " + uri);
+                deleteUrlAnnotation(uri, selection, selectionArgs);
+                break;
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -651,6 +656,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 }
                 break;
             }
+
+            case URL_ANNOTATIONS:
+                updateUrlAnnotation(uri, values, selection, selectionArgs);
+                break;
 
             default: {
                 Table table = findTableFor(match);
@@ -1277,7 +1286,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Compute matching IDs.
         final Cursor cursor = db.query(TABLE_BOOKMARKS, bookmarksProjection,
-                                       selection, selectionArgs, null, null, null);
+                selection, selectionArgs, null, null, null);
 
         // Now that we're done reading, open a transaction.
         final String inClause;
@@ -1518,6 +1527,20 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_URL_ANNOTATIONS, null, values);
+    }
+
+    private void deleteUrlAnnotation(final Uri uri, final String selection, final String[] selectionArgs) {
+        trace("Deleting url annotation for URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        db.delete(TABLE_URL_ANNOTATIONS, selection, selectionArgs);
+    }
+
+    private void updateUrlAnnotation(final Uri uri, final ContentValues values, final String selection, final String[] selectionArgs) {
+        trace("Updating url annotation for URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        db.update(TABLE_URL_ANNOTATIONS, values, selection, selectionArgs);
     }
 
     private int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,

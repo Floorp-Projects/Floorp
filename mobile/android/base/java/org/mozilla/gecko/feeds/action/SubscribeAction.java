@@ -5,15 +5,15 @@
 
 package org.mozilla.gecko.feeds.action;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
-import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
-
-import java.util.UUID;
 
 /**
  * SubscribeAction: Try to fetch a feed and create a subscription if successful.
@@ -21,31 +21,29 @@ import java.util.UUID;
 public class SubscribeAction implements BaseAction {
     private static final String LOGTAG = "FeedSubscribeAction";
 
-    public static final String EXTRA_GUID = "guid";
     public static final String EXTRA_FEED_URL = "feed_url";
 
-    private SubscriptionStorage storage;
+    private Context context;
 
-    public SubscribeAction(SubscriptionStorage storage) {
-        this.storage = storage;
+    public SubscribeAction(Context context) {
+        this.context = context;
     }
 
     @Override
-    public void perform(Intent intent) {
+    public void perform(BrowserDB browserDB, Intent intent) {
+        final UrlAnnotations urlAnnotations = browserDB.getUrlAnnotations();
+
         final Bundle extras = intent.getExtras();
+        final String feedUrl = extras.getString(EXTRA_FEED_URL);
 
-        // TODO: Using a random UUID as fallback just so that I can subscribe for things that are not bookmarks (testing)
-        final String guid = extras.getString(EXTRA_GUID, UUID.randomUUID().toString());
-        final String feedUrl = intent.getStringExtra(EXTRA_FEED_URL);
-
-        if (storage.hasSubscriptionForBookmark(guid)) {
+        if (urlAnnotations.hasFeedSubscription(context.getContentResolver(), feedUrl)) {
             Log.d(LOGTAG, "Already subscribed to " + feedUrl + ". Skipping.");
             return;
         }
 
         Log.d(LOGTAG, "Subscribing to feed: " + feedUrl);
 
-        subscribe(guid, feedUrl);
+        subscribe(urlAnnotations, feedUrl);
     }
 
     @Override
@@ -58,7 +56,7 @@ public class SubscribeAction implements BaseAction {
         return true;
     }
 
-    private void subscribe(String guid, String feedUrl) {
+    private void subscribe(UrlAnnotations urlAnnotations, String feedUrl) {
         FeedFetcher.FeedResponse response = FeedFetcher.fetchAndParseFeed(feedUrl);
         if (response == null) {
             Log.w(LOGTAG, String.format("Could not fetch feed (%s). Not subscribing for now.", feedUrl));
@@ -66,9 +64,10 @@ public class SubscribeAction implements BaseAction {
         }
 
         Log.d(LOGTAG, "Subscribing to feed: " + response.feed.getTitle());
-        Log.d(LOGTAG, "               GUID: " + guid);
         Log.d(LOGTAG, "          Last item: " + response.feed.getLastItem().getTitle());
 
-        storage.addSubscription(FeedSubscription.create(guid, feedUrl, response));
+        final FeedSubscription subscription = FeedSubscription.create(feedUrl, response);
+
+        urlAnnotations.insertFeedSubscription(context.getContentResolver(), subscription);
     }
 }

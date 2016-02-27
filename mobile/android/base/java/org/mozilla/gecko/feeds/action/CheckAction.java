@@ -8,8 +8,10 @@ package org.mozilla.gecko.feeds.action;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -17,12 +19,14 @@ import android.support.v4.content.ContextCompat;
 import android.text.format.DateFormat;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.parser.Feed;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
-import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.util.ArrayList;
@@ -36,39 +40,62 @@ public class CheckAction implements BaseAction {
     private static final String LOGTAG = "FeedCheckAction";
 
     private Context context;
-    private SubscriptionStorage storage;
 
-    public CheckAction(Context context, SubscriptionStorage storage) {
+    public CheckAction(Context context) {
         this.context = context;
-        this.storage = storage;
     }
 
     @Override
-    public void perform(Intent intent) {
-        final List<FeedSubscription> subscriptions = storage.getSubscriptions();
+    public void perform(BrowserDB browserDB, Intent intent) {
+        final UrlAnnotations urlAnnotations = browserDB.getUrlAnnotations();
+        final ContentResolver resolver = context.getContentResolver();
+        final List<Feed> updatedFeeds = new ArrayList<>();
 
-        Log.d(LOGTAG, "Checking feeds for updates (" + subscriptions.size() + " feeds) ..");
+        Log.d(LOGTAG, "Checking feeds for updates..");
 
-        List<Feed> updatedFeeds = new ArrayList<>();
+        Cursor cursor = urlAnnotations.getFeedSubscriptions(resolver);
+        if (cursor == null) {
+            return;
+        }
 
-        for (FeedSubscription subscription : subscriptions) {
-            Log.i(LOGTAG, "Checking feed: " + subscription.getFeedTitle());
+        try {
+            while (cursor.moveToNext()) {
+                FeedSubscription subscription = FeedSubscription.fromCursor(cursor);
 
-            FeedFetcher.FeedResponse response = fetchFeed(subscription);
-            if (response == null) {
-                continue;
+                FeedFetcher.FeedResponse response = checkFeedForUpdates(subscription);
+                if (response != null) {
+                    updatedFeeds.add(response.feed);
+
+                    urlAnnotations.updateFeedSubscription(resolver, subscription);
+                }
             }
-
-            if (subscription.isNewer(response)) {
-                Log.d(LOGTAG, "* Feed has changed. New item: " + response.feed.getLastItem().getTitle());
-
-                storage.updateSubscription(subscription, response);
-
-                updatedFeeds.add(response.feed);
-            }
+        } catch (JSONException e) {
+            Log.w(LOGTAG, "Could not deserialize subscription", e);
+        } finally {
+            cursor.close();
         }
 
         notify(updatedFeeds);
+    }
+
+    private FeedFetcher.FeedResponse checkFeedForUpdates(FeedSubscription subscription) {
+        Log.i(LOGTAG, "Checking feed: " + subscription.getFeedTitle());
+
+        FeedFetcher.FeedResponse response = fetchFeed(subscription);
+        if (response == null) {
+            return null;
+        }
+
+        if (subscription.isNewer(response)) {
+            Log.d(LOGTAG, "* Feed has changed. New item: " + response.feed.getLastItem().getTitle());
+
+            subscription.update(response);
+
+            return response;
+
+        }
+
+        return null;
     }
 
     private void notify(List<Feed> updatedFeeds) {

@@ -5,16 +5,17 @@
 
 package org.mozilla.gecko.feeds.action;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.util.Log;
 
-import org.mozilla.gecko.GeckoProfile;
+import org.json.JSONException;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
-import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
-
-import java.util.List;
 
 /**
  * WithdrawAction: Look for feeds to unsubscribe from.
@@ -23,25 +24,70 @@ public class WithdrawAction implements BaseAction {
     private static final String LOGTAG = "FeedWithdrawAction";
 
     private Context context;
-    private SubscriptionStorage storage;
 
-    public WithdrawAction(Context context, SubscriptionStorage storage) {
+    public WithdrawAction(Context context) {
         this.context = context;
-        this.storage = storage;
     }
 
     @Override
-    public void perform(Intent intent) {
-        BrowserDB db = GeckoProfile.get(context).getDB();
+    public void perform(BrowserDB browserDB, Intent intent) {
+        Log.d(LOGTAG, "Searching for subscriptions to remove..");
 
-        List<FeedSubscription> subscriptions = storage.getSubscriptions();
+        final UrlAnnotations urlAnnotations = browserDB.getUrlAnnotations();
+        final ContentResolver resolver = context.getContentResolver();
 
-        Log.d(LOGTAG, "Checking " + subscriptions.size() + " subscriptions");
+        removeFeedsOfUnknownUrls(browserDB, urlAnnotations, resolver);
+        removeSubscriptionsOfRemovedFeeds(urlAnnotations, resolver);
+    }
 
-        for (FeedSubscription subscription : subscriptions) {
-            if (!db.hasBookmarkWithGuid(context.getContentResolver(), subscription.getBookmarkGUID())) {
-                unsubscribe(subscription);
+    /**
+     * Search for website URLs with a feed assigned. Remove entry if website URL is not known anymore:
+     * For now this means the website is not bookmarked.
+     */
+    private void removeFeedsOfUnknownUrls(BrowserDB browserDB, UrlAnnotations urlAnnotations, ContentResolver resolver) {
+        Cursor cursor = urlAnnotations.getWebsitesWithFeedUrl(resolver);
+        if (cursor == null) {
+            return;
+        }
+
+        try {
+            while (cursor.moveToNext()) {
+                final String url = cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.URL));
+
+                if (!browserDB.isBookmark(resolver, url)) {
+                    Log.d(LOGTAG, "Removing feed for unknown URL: " + url);
+
+                    urlAnnotations.deleteFeedUrl(resolver, url);
+                }
             }
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /**
+     * Remove subscriptions of feed URLs that are not assigned to a website URL (anymore).
+     */
+    private void removeSubscriptionsOfRemovedFeeds(UrlAnnotations urlAnnotations, ContentResolver resolver) {
+        Cursor cursor = urlAnnotations.getFeedSubscriptions(resolver);
+        if (cursor == null) {
+            return;
+        }
+
+        try {
+            while (cursor.moveToNext()) {
+                final FeedSubscription subscription = FeedSubscription.fromCursor(cursor);
+
+                if (!urlAnnotations.hasWebsiteForFeedUrl(resolver, subscription.getFeedUrl())) {
+                    Log.d(LOGTAG, "Removing subscription for feed: " + subscription.getFeedUrl());
+
+                    urlAnnotations.deleteFeedSubscription(resolver, subscription);
+                }
+            }
+        } catch (JSONException e) {
+            Log.w(LOGTAG, "Could not deserialize subscription", e);
+        } finally {
+            cursor.close();
         }
     }
 
@@ -53,11 +99,5 @@ public class WithdrawAction implements BaseAction {
     @Override
     public boolean requiresPreferenceEnabled() {
         return true;
-    }
-
-    private void unsubscribe(FeedSubscription subscription) {
-        Log.d(LOGTAG, "Unsubscribing from: (" + subscription.getBookmarkGUID() + ") " + subscription.getFeedUrl());
-
-        storage.removeSubscription(subscription);
     }
 }
