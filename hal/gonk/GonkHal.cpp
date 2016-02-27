@@ -55,6 +55,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Preferences.h"
 #include "nsAlgorithm.h"
@@ -720,7 +721,7 @@ bool sScreenEnabled = true;
 bool sCpuSleepAllowed = true;
 
 // Some CPU wake locks may be acquired internally in HAL. We use a counter to
-// keep track of these needs. Note we have to hold |sInternalLockCpuMonitor|
+// keep track of these needs. Note we have to hold |sInternalLockCpuMutex|
 // when reading or writing this variable to ensure thread-safe.
 int32_t sInternalLockCpuCount = 0;
 
@@ -818,7 +819,7 @@ SetScreenBrightness(double brightness)
   }
 }
 
-static Monitor* sInternalLockCpuMonitor = nullptr;
+static StaticMutex sInternalLockCpuMutex;
 
 static void
 UpdateCpuSleepState()
@@ -826,21 +827,21 @@ UpdateCpuSleepState()
   const char *wakeLockFilename = "/sys/power/wake_lock";
   const char *wakeUnlockFilename = "/sys/power/wake_unlock";
 
-  sInternalLockCpuMonitor->AssertCurrentThreadOwns();
+  sInternalLockCpuMutex.AssertCurrentThreadOwns();
   bool allowed = sCpuSleepAllowed && !sInternalLockCpuCount;
   WriteSysFile(allowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
 }
 
 static void
 InternalLockCpu() {
-  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
+  StaticMutexAutoLock lock(sInternalLockCpuMutex);
   ++sInternalLockCpuCount;
   UpdateCpuSleepState();
 }
 
 static void
 InternalUnlockCpu() {
-  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
+  StaticMutexAutoLock lock(sInternalLockCpuMutex);
   --sInternalLockCpuCount;
   UpdateCpuSleepState();
 }
@@ -854,7 +855,7 @@ GetCpuSleepAllowed()
 void
 SetCpuSleepAllowed(bool aAllowed)
 {
-  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
+  StaticMutexAutoLock lock(sInternalLockCpuMutex);
   sCpuSleepAllowed = aAllowed;
   UpdateCpuSleepState();
 }
@@ -1141,14 +1142,10 @@ EnableAlarm()
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-  // Initialize the monitor for internally locking CPU to ensure thread-safe
-  // before running the alarm-watcher thread.
-  sInternalLockCpuMonitor = new Monitor("sInternalLockCpuMonitor");
   int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm,
                               alarmData.get());
   if (status) {
     alarmData = nullptr;
-    delete sInternalLockCpuMonitor;
     HAL_LOG("Failed to create alarm-watcher thread. Status: %d.", status);
     return false;
   }
@@ -1172,8 +1169,6 @@ DisableAlarm()
   // data pointed at by sAlarmData.
   DebugOnly<int> err = pthread_kill(sAlarmFireWatcherThread, SIGUSR1);
   MOZ_ASSERT(!err);
-
-  delete sInternalLockCpuMonitor;
 }
 
 bool
