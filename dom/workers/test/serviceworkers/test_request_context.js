@@ -70,7 +70,6 @@ onload = function() {
     ["dom.image.srcset.enabled", true],
     ["dom.requestcontext.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.interception.enabled", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
   ]}, runTest);

@@ -166,7 +166,6 @@ comma-seperate list of `pref.name:value` items to set e.g.
 
     [filename.html]
         prefs: [dom.serviceWorkers.enabled:true,
-                dom.serviceWorkers.interception.enabled:true,
                 dom.serviceWorkers.exemptFromPerDomainMax:true,
                 dom.caches.enabled:true]
 
