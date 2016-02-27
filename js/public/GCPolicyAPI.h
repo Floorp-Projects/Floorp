@@ -33,9 +33,10 @@
 #ifndef GCPolicyAPI_h
 #define GCPolicyAPI_h
 
+#include "mozilla/UniquePtr.h"
+
 #include "js/TraceKind.h"
 #include "js/TracingAPI.h"
-#include "mozilla/UniquePtr.h"
 
 class JSAtom;
 class JSFunction;
