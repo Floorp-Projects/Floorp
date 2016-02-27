@@ -953,7 +953,7 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
 #ifdef MOZ_WEBRTC_OMX
       encoder =
           OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
-#elif !defined(MOZILLA_XPCOMRT_API)
+#else
       encoder = GmpVideoCodec::CreateEncoder();
 #endif
       if (encoder) {
@@ -966,7 +966,7 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
 #ifdef MOZ_WEBRTC_OMX
       decoder =
           OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#elif !defined(MOZILLA_XPCOMRT_API)
+#else
       decoder = GmpVideoCodec::CreateDecoder();
 #endif
       if (decoder) {
