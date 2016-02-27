@@ -24,6 +24,8 @@ registerCleanupFunction(() => {
 
 SimpleTest.requestCompleteLog();
 
+const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+
 /**
  * Open the Responsive Design Mode
  * @param {Tab} The browser tab to open it into (defaults to the selected tab).
@@ -32,7 +34,7 @@ SimpleTest.requestCompleteLog();
  */
 var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
                                    method = "menu") {
-  let manager = ResponsiveUI.ResponsiveUIManager;
+  let manager = ResponsiveUIManager;
 
   let opened = once(manager, "on");
   let resized = once(manager, "contentResize");
@@ -61,7 +63,7 @@ var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
  * @param {rdm} ResponsiveUI instance for the tab
  */
 var closeRDM = Task.async(function*(rdm) {
-  let manager = ResponsiveUI.ResponsiveUIManager;
+  let manager = ResponsiveUIManager;
   if (!rdm) {
     rdm = manager.getResponsiveUIForTab(gBrowser.selectedTab);
   }
