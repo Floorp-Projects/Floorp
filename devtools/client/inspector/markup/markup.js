@@ -42,7 +42,6 @@ const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
 
 Cu.import("resource://devtools/shared/gcli/Templater.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");

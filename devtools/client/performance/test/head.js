@@ -4,12 +4,12 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { console } = require("resource://gre/modules/Console.jsm");
+var Services = require("Services");
 var { TargetFactory } = require("devtools/client/framework/target");
 var Promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

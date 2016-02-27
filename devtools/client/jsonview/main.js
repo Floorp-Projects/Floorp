@@ -7,9 +7,9 @@
 "use strict";
 
 const {Cu, Ci, Cc} = require("chrome");
+const Services = require("Services");
 
 const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
   return require("devtools/client/jsonview/utils");

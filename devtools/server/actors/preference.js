@@ -5,8 +5,7 @@
 const {Cc, Ci, Cu, CC} = require("chrome");
 const protocol = require("devtools/server/protocol");
 const {Arg, method, RetVal} = protocol;
-
-Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 exports.register = function(handle) {
   handle.addGlobalActor(PreferenceActor, "preferenceActor");

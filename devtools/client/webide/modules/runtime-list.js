@@ -4,7 +4,7 @@
 
 const {Cu} = require("chrome");
 
-const {Services} = Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
