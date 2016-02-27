@@ -7,20 +7,27 @@ package org.mozilla.gecko.feeds.action;
 
 import android.content.Intent;
 
+import org.mozilla.gecko.db.BrowserDB;
+
 /**
  * Interface for actions run by FeedService.
  */
 public interface BaseAction {
     /**
      * Perform this action.
-     *
+     * 
+     * @param browserDB database instance to perform the action.
      * @param intent used to start the service.
      */
-    void perform(Intent intent);
+    void perform(BrowserDB browserDB, Intent intent);
 
     /**
      * Does this action require an active network connection?
      */
     boolean requiresNetwork();
+
+	/**
+     * Should this action only run if the preference is enabled?
+     */
     boolean requiresPreferenceEnabled();
 }

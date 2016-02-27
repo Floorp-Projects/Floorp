@@ -17,14 +17,15 @@ import android.util.Log;
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.action.BaseAction;
 import org.mozilla.gecko.feeds.action.CheckAction;
 import org.mozilla.gecko.feeds.action.EnrollAction;
 import org.mozilla.gecko.feeds.action.SetupAction;
 import org.mozilla.gecko.feeds.action.SubscribeAction;
 import org.mozilla.gecko.feeds.action.WithdrawAction;
-import org.mozilla.gecko.feeds.subscriptions.SubscriptionStorage;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.Experiments;
 
@@ -46,29 +47,34 @@ public class FeedService extends IntentService {
         context.startService(intent);
     }
 
-    public static void subscribe(Context context, String guid, String feedUrl) {
+    public static void subscribe(Context context, String feedUrl) {
         Intent intent = new Intent(context, FeedService.class);
         intent.setAction(ACTION_SUBSCRIBE);
-        intent.putExtra(SubscribeAction.EXTRA_GUID, guid);
         intent.putExtra(SubscribeAction.EXTRA_FEED_URL, feedUrl);
         context.startService(intent);
     }
-
-    private SubscriptionStorage storage;
 
     public FeedService() {
         super(LOGTAG);
     }
 
+    private BrowserDB browserDB;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
-        storage = new SubscriptionStorage(getApplicationContext());
+        browserDB = GeckoProfile.get(this).getDB();
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+
+        Log.d(LOGTAG, "Service started with action: " + intent.getAction());
+
         try {
             if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
                 Log.d(LOGTAG, "Not in content notifications experiment. Skipping.");
@@ -93,9 +99,7 @@ public class FeedService extends IntentService {
                 return;
             }
 
-            action.perform(intent);
-
-            storage.persistChanges();
+            action.perform(browserDB, intent);
         } finally {
             FeedAlarmReceiver.completeWakefulIntent(intent);
         }
@@ -103,29 +107,26 @@ public class FeedService extends IntentService {
 
     @Nullable
     private BaseAction createActionForIntent(Intent intent) {
-        if (intent == null) {
-            return null;
-        }
+        final Context context = getApplicationContext();
 
         switch (intent.getAction()) {
             case ACTION_SETUP:
-                return new SetupAction(this);
+                return new SetupAction(context);
 
             case ACTION_SUBSCRIBE:
-                return new SubscribeAction(storage);
+                return new SubscribeAction(context);
 
             case ACTION_CHECK:
-                return new CheckAction(this, storage);
+                return new CheckAction(context);
 
             case ACTION_ENROLL:
-                return new EnrollAction(this);
+                return new EnrollAction(context);
 
             case ACTION_WITHDRAW:
-                return new WithdrawAction(this, storage);
+                return new WithdrawAction(context);
 
             default:
-                Log.e(LOGTAG, "Unknown action: " + intent.getAction());
-                return null;
+                throw new AssertionError("Unknown action: " + intent.getAction());
         }
     }
 
