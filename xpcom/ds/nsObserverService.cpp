@@ -172,13 +172,17 @@ nsObserverService::~nsObserverService(void)
 void
 nsObserverService::RegisterReporter()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   RegisterWeakMemoryReporter(this);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 void
 nsObserverService::Shutdown()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   UnregisterWeakMemoryReporter(this);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   mShuttingDown = true;
 
@@ -318,6 +322,7 @@ nsObserverService::UnmarkGrayStrongObservers()
 {
   NS_ENSURE_VALIDCALL
 
+#if !defined(MOZILLA_XPCOMRT_API)
   nsCOMArray<nsIObserver> strongObservers;
   for (auto iter = mObserverTopicTable.Iter(); !iter.Done(); iter.Next()) {
     nsObserverList* aObserverList = iter.Get();
@@ -329,6 +334,7 @@ nsObserverService::UnmarkGrayStrongObservers()
   for (uint32_t i = 0; i < strongObservers.Length(); ++i) {
     xpc_TryUnmarkWrappedGrayObject(strongObservers[i]);
   }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   return NS_OK;
 }

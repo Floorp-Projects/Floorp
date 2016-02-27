@@ -59,3 +59,19 @@ TEST_F(TestSyncRunnable, TestDispatchStatic)
   SyncRunnable::DispatchToThread(gThread, r);
   ASSERT_TRUE(r->ran());
 }
+
+
+#include "mtransport_test_utils.h"
+MtransportTestUtils *test_utils;
+
+int main(int argc, char **argv)
+{
+  test_utils = new MtransportTestUtils();
+  // Start the tests
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int rv = RUN_ALL_TESTS();
+
+  delete test_utils;
+  return rv;
+}

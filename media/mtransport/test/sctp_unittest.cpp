@@ -23,6 +23,7 @@
 #include "transportlayer.h"
 #include "transportlayerloopback.h"
 
+#include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 #include "usrsctp.h"
 
@@ -33,6 +34,7 @@
 
 using namespace mozilla;
 
+MtransportTestUtils *test_utils;
 static bool sctp_logging = false;
 static int port_number = 5000;
 
@@ -61,16 +63,14 @@ NS_IMPL_ISUPPORTS(SendPeriodic, nsITimerCallback)
 
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
-  TransportTestPeer(std::string name, int local_port, int remote_port,
-                    MtransportTestUtils* utils)
+  TransportTestPeer(std::string name, int local_port, int remote_port)
       : name_(name), connected_(false),
         sent_(0), received_(0),
         flow_(new TransportFlow()),
         loopback_(new TransportLayerLoopback()),
         sctp_(usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, receive_cb, nullptr, 0, nullptr)),
         timer_(do_CreateInstance(NS_TIMER_CONTRACTID)),
-        periodic_(nullptr),
-        test_utils_(utils) {
+        periodic_(nullptr) {
     std::cerr << "Creating TransportTestPeer; flow=" <<
         static_cast<void *>(flow_.get()) <<
         " local=" << local_port <<
@@ -124,7 +124,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     usrsctp_close(sctp_);
     usrsctp_deregister_address(static_cast<void *>(this));
 
-    test_utils_->sts_target()->Dispatch(WrapRunnable(this,
+    test_utils->sts_target()->Dispatch(WrapRunnable(this,
                                                    &TransportTestPeer::Disconnect_s),
                                       NS_DISPATCH_SYNC);
 
@@ -132,7 +132,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
-    test_utils_->sts_target()->Dispatch(WrapRunnable(
+    test_utils->sts_target()->Dispatch(WrapRunnable(
         this, &TransportTestPeer::ConnectSocket_s, peer),
                                        NS_DISPATCH_SYNC);
   }
@@ -170,7 +170,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   void StartTransfer(size_t to_send) {
     periodic_ = new SendPeriodic(this, to_send);
-    timer_->SetTarget(test_utils_->sts_target());
+    timer_->SetTarget(test_utils->sts_target());
     timer_->InitWithCallback(periodic_, 10, nsITimer::TYPE_REPEATING_SLACK);
   }
 
@@ -215,7 +215,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     // normal for most transfers outside of connect() and close().  Passes
     // a refptr to flow_ to avoid any async deletion issues (since we can't
     // make 'this' into a refptr as it isn't refcounted)
-    RUN_ON_THREAD(test_utils_->sts_target(), WrapRunnableNM(
+    RUN_ON_THREAD(test_utils->sts_target(), WrapRunnableNM(
         &TransportTestPeer::SendPacket_s, buffer, len, flow_),
                   NS_DISPATCH_NORMAL);
 
@@ -296,7 +296,6 @@ class TransportTestPeer : public sigslot::has_slots<> {
   struct socket *sctp_;
   nsCOMPtr<nsITimer> timer_;
   RefPtr<SendPeriodic> periodic_;
-  MtransportTestUtils* test_utils_;
 };
 
 
@@ -310,12 +309,18 @@ NS_IMETHODIMP SendPeriodic::Notify(nsITimer *timer) {
   return NS_OK;
 }
 
-class SctpTransportTest : public MtransportTest {
+class TransportTest : public ::testing::Test {
  public:
-  SctpTransportTest() {
+  TransportTest() {
   }
 
-  ~SctpTransportTest() {
+  ~TransportTest() {
+    if (p1_)
+      p1_->Disconnect();
+    if (p2_)
+      p2_->Disconnect();
+    delete p1_;
+    delete p2_;
   }
 
   static void debug_printf(const char *format, ...) {
@@ -336,17 +341,8 @@ class SctpTransportTest : public MtransportTest {
     }
   }
 
-  void TearDown() override {
-    if (p1_)
-      p1_->Disconnect();
-    if (p2_)
-      p2_->Disconnect();
-    delete p1_;
-    delete p2_;
-
-    MtransportTest::TearDown();
+  void SetUp() {
   }
-
 
   void ConnectSocket(int p1port = 0, int p2port = 0) {
     if (!p1port)
@@ -354,8 +350,8 @@ class SctpTransportTest : public MtransportTest {
     if (!p2port)
       p2port = port_number++;
 
-    p1_ = new TransportTestPeer("P1", p1port, p2port, test_utils_);
-    p2_ = new TransportTestPeer("P2", p2port, p1port, test_utils_);
+    p1_ = new TransportTestPeer("P1", p1port, p2port);
+    p2_ = new TransportTestPeer("P2", p2port, p1port);
 
     p1_->ConnectSocket(p2_);
     p2_->ConnectSocket(p1_);
@@ -376,18 +372,35 @@ class SctpTransportTest : public MtransportTest {
   TransportTestPeer *p2_;
 };
 
-TEST_F(SctpTransportTest, TestConnect) {
+TEST_F(TransportTest, TestConnect) {
   ConnectSocket();
 }
 
-TEST_F(SctpTransportTest, TestConnectSymmetricalPorts) {
+TEST_F(TransportTest, TestConnectSymmetricalPorts) {
   ConnectSocket(5002,5002);
 }
 
-TEST_F(SctpTransportTest, TestTransfer) {
+TEST_F(TransportTest, TestTransfer) {
   ConnectSocket();
   TestTransfer(50);
 }
 
 
 }  // end namespace
+
+int main(int argc, char **argv)
+{
+  test_utils = new MtransportTestUtils();
+  // Start the tests
+  ::testing::InitGoogleTest(&argc, argv);
+
+  for(int i=0; i<argc; i++) {
+    if (!strcmp(argv[i],"-v")) {
+      sctp_logging = true;
+    }
+  }
+
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
+}

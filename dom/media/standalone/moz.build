@@ -33,6 +33,7 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['MOZILLA_XPCOMRT_API'] = True
 DEFINES['MOZILLA_EXTERNAL_LINKAGE'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')

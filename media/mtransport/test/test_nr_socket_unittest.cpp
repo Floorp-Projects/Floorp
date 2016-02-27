@@ -25,6 +25,7 @@ extern "C" {
 #include "nsServiceManagerUtils.h"
 #include "nsAutoPtr.h"
 #include "runnable_utils.h"
+#include "mtransport_test_utils.h"
 
 #include <vector>
 
@@ -36,31 +37,23 @@ extern "C" {
 
 namespace mozilla {
 
-class TestNrSocketTest : public MtransportTest {
+class TestNrSocketTest : public ::testing::Test {
  public:
   TestNrSocketTest() :
-    MtransportTest(),
     wait_done_for_main_(false),
     sts_(),
     public_addrs_(),
     private_addrs_(),
     nats_() {
-  }
-
-  void SetUp() override {
-    MtransportTest::SetUp();
-
     // Get the transport service as a dispatch target
     nsresult rv;
     sts_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     EXPECT_TRUE(NS_SUCCEEDED(rv)) << "Failed to get STS: " << (int)rv;
   }
 
-  void TearDown() override {
+  ~TestNrSocketTest() {
     sts_->Dispatch(WrapRunnable(this, &TestNrSocketTest::TearDown_s),
                    NS_DISPATCH_SYNC);
-
-    MtransportTest::TearDown();
   }
 
   void TearDown_s() {
@@ -860,4 +853,19 @@ TEST_F(TestNrSocketTest, NoConnectivityPublicToPrivateTcp)
   CreatePublicAddrs(1, "127.0.0.1", IPPROTO_TCP);
 
   ASSERT_FALSE(CheckTcpConnectivity(public_addrs_[0], private_addrs_[0]));
+}
+
+int main(int argc, char **argv)
+{
+  // Inits STS and some other stuff.
+  MtransportTestUtils test_utils;
+
+  NR_reg_init(NR_REG_MODE_LOCAL);
+
+  // Start the tests
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int rv = RUN_ALL_TESTS();
+
+  return rv;
 }
