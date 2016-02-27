@@ -24,7 +24,7 @@ var prefSvc = Cc['@mozilla.org/preferences-service;1']
                         .getService(Ci.nsIPrefService);
 var prefBranch = prefSvc.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 
-var Services = Cu.import('resource://gre/modules/Services.jsm', {}).Services;
+var Services = require("Services");
 var stringBundle = Services.strings.createBundle(
         'chrome://devtools-shared/locale/gclicommands.properties');
 

@@ -8,7 +8,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
-const { Services } = devtools.require("resource://gre/modules/Services.jsm");
+const Services = devtools.require("Services");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const BROWSER_BASED_DIRS = [

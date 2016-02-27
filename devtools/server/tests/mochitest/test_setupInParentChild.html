@@ -17,10 +17,10 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
 let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let {DebuggerClient} = require("devtools/shared/client/main");
 let {DebuggerServer} = require("devtools/server/main");
+let Services = require("Services");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();

@@ -9,8 +9,8 @@
 const {Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
+var Services = require("Services");
 var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 

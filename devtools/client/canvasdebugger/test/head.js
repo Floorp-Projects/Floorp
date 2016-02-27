@@ -4,17 +4,11 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-
-// Disable logging for all the tests. Both the debugger server and frontend will
-// be affected by this pref.
-var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-Services.prefs.setBoolPref("devtools.debugger.log", false);
-
 var { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
+var Services = require("Services");
 var promise = require("promise");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/main");
@@ -42,6 +36,11 @@ const WEBGL_BINDINGS_URL = EXAMPLE_URL + "doc_webgl-bindings.html";
 const WEBGL_DRAW_ARRAYS = EXAMPLE_URL + "doc_webgl-drawArrays.html";
 const WEBGL_DRAW_ELEMENTS = EXAMPLE_URL + "doc_webgl-drawElements.html";
 const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
+
+// Disable logging for all the tests. Both the debugger server and frontend will
+// be affected by this pref.
+var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 // All tests are asynchronous.
 waitForExplicitFinish();

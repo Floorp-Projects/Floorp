@@ -8,7 +8,7 @@ const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 

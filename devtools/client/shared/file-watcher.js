@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci, Cu, ChromeWorker } = require("chrome");
-const { Services } = require("resource://gre/modules/Services.jsm");
+const { Ci, ChromeWorker } = require("chrome");
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const HOTRELOAD_PREF = "devtools.loader.hotreload";

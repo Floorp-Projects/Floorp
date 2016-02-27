@@ -14,6 +14,7 @@ const ToolDefinitions = require("devtools/client/main").Tools;
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const promise = require("promise");
+const Services = require("Services");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
@@ -25,7 +26,6 @@ loader.lazyRequireGetter(this, "overlays",
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
   "devtools/client/inspector/shared/style-inspector-menu");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",

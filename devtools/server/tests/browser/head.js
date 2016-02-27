@@ -6,13 +6,13 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
 const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 const {defer} = require("promise");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Services = require("Services");
 
 const PATH = "browser/devtools/server/tests/browser/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;

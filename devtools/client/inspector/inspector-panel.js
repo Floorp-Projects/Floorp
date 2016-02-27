@@ -8,8 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/Services.jsm");
-
+var Services = require("Services");
 var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");

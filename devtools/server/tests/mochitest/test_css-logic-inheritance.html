@@ -19,7 +19,7 @@ Test that css-logic handles inherited properties correctly
     var Cu = Components.utils;
 
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    Cu.import("resource://gre/modules/Services.jsm");
+    var Services = require("Services");
     const {CssLogic} = require("devtools/shared/inspector/css-logic");
 
     SimpleTest.waitForExplicitFinish();
