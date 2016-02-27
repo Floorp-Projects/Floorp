@@ -10,5 +10,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 
 public interface UrlAnnotations {
     @RobocopTarget void insertAnnotation(ContentResolver cr, String url, String key, String value);
+
     Cursor getScreenshots(ContentResolver cr);
+    void insertScreenshot(ContentResolver cr, String pageUrl, String screenshotPath);
 }

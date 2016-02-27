@@ -156,6 +156,9 @@ class StubUrlAnnotations implements UrlAnnotations {
 
     @Override
     public Cursor getScreenshots(ContentResolver cr) { return null; }
+
+    @Override
+    public void insertScreenshot(ContentResolver cr, String pageUrl, final String screenshotLocation) {}
 }
 
 /*

@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.Key;
 
@@ -54,5 +53,9 @@ public class LocalUrlAnnotations implements UrlAnnotations {
                         BrowserContract.UrlAnnotations.DATE_CREATED,
                 },
                 BrowserContract.UrlAnnotations.DATE_CREATED + " DESC");
+    }
+
+    public void insertScreenshot(final ContentResolver cr, final String pageUrl, final String screenshotPath) {
+        insertAnnotation(cr, pageUrl, Key.SCREENSHOT.getDbValue(), screenshotPath);
     }
 }
