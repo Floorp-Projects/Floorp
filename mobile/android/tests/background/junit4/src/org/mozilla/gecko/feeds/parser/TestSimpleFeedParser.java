@@ -20,6 +20,8 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 @RunWith(TestRunner.class)
 public class TestSimpleFeedParser {
@@ -284,6 +286,30 @@ public class TestSimpleFeedParser {
         Assert.assertEquals("Hello World!", item.getTitle());
         Assert.assertEquals("https://justasimpletest2016.wordpress.com/2016/02/26/hello-world/", item.getURL());
         Assert.assertEquals(1456524466000L, item.getTimestamp());
+    }
+
+    /**
+     * Parse and test a snapshot of mykzilla.blogspot.com
+     */
+    @Test
+    public void testBloggerFeed() throws Exception {
+        InputStream stream = openFeed("feed_atom_blogger.xml");
+
+        SimpleFeedParser parser = new SimpleFeedParser();
+        Feed feed = parser.parse(stream);
+
+        Assert.assertNotNull(feed);
+        Assert.assertEquals("mykzilla", feed.getTitle());
+        Assert.assertEquals("http://mykzilla.blogspot.com/", feed.getWebsiteURL());
+        Assert.assertEquals("http://www.blogger.com/feeds/18929277/posts/default", feed.getFeedURL());
+        Assert.assertTrue(feed.isSufficientlyComplete());
+
+        Item item = feed.getLastItem();
+
+        Assert.assertNotNull(item);
+        Assert.assertEquals("URL Has Been Changed", item.getTitle());
+        Assert.assertEquals("http://mykzilla.blogspot.com/2016/01/url-has-been-changed.html", item.getURL());
+        Assert.assertEquals(1452531451366L, item.getTimestamp());
     }
 
     private InputStream openFeed(String fileName) throws URISyntaxException, FileNotFoundException, UnsupportedEncodingException {
