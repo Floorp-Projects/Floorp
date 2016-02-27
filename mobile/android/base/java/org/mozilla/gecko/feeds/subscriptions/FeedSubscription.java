@@ -5,10 +5,12 @@
 
 package org.mozilla.gecko.feeds.subscriptions;
 
+import android.database.Cursor;
 import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.parser.Item;
 
@@ -17,68 +19,57 @@ import org.mozilla.gecko.feeds.parser.Item;
  * the feed.
  */
 public class FeedSubscription {
-    private static final String JSON_KEY_FEED_URL = "feed_url";
     private static final String JSON_KEY_FEED_TITLE = "feed_title";
-    private static final String JSON_KEY_WEBSITE_URL = "website_url";
     private static final String JSON_KEY_LAST_ITEM_TITLE = "last_item_title";
     private static final String JSON_KEY_LAST_ITEM_URL = "last_item_url";
     private static final String JSON_KEY_LAST_ITEM_TIMESTAMP = "last_item_timestamp";
     private static final String JSON_KEY_ETAG = "etag";
     private static final String JSON_KEY_LAST_MODIFIED = "last_modified";
-    private static final String JSON_KEY_BOOKMARK_GUID = "bookmark_guid";
 
-    private String bookmarkGuid; // Currently a subscription is linked to a bookmark
     private String feedUrl;
     private String feedTitle;
-    private String websiteUrl;
     private String lastItemTitle;
     private String lastItemUrl;
     private long lastItemTimestamp;
     private String etag;
     private String lastModified;
 
-    public static FeedSubscription create(String bookmarkGuid, String url, FeedFetcher.FeedResponse response) {
+    public static FeedSubscription create(String feedUrl, FeedFetcher.FeedResponse response) {
         FeedSubscription subscription = new FeedSubscription();
-        subscription.bookmarkGuid = bookmarkGuid;
-        subscription.feedUrl = url;
+        subscription.feedUrl = feedUrl;
 
         subscription.update(response);
 
         return subscription;
     }
 
-    public static FeedSubscription fromJSON(JSONObject object) throws JSONException {
-        FeedSubscription subscription = new FeedSubscription();
+    public static FeedSubscription fromCursor(Cursor cursor) throws JSONException {
+        final FeedSubscription subscription = new FeedSubscription();
+        subscription.feedUrl = cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.URL));
 
-        subscription.feedUrl = object.getString(JSON_KEY_FEED_URL);
-        subscription.feedTitle = object.getString(JSON_KEY_FEED_TITLE);
-        subscription.websiteUrl = object.getString(JSON_KEY_WEBSITE_URL);
-        subscription.lastItemTitle = object.getString(JSON_KEY_LAST_ITEM_TITLE);
-        subscription.lastItemUrl = object.getString(JSON_KEY_LAST_ITEM_URL);
-        subscription.lastItemTimestamp = object.getLong(JSON_KEY_LAST_ITEM_TIMESTAMP);
-        subscription.etag = object.optString(JSON_KEY_ETAG);
-        subscription.lastModified = object.optString(JSON_KEY_LAST_MODIFIED);
-        subscription.bookmarkGuid = object.getString(JSON_KEY_BOOKMARK_GUID);
+        final String value = cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.VALUE));
+        subscription.fromJSON(new JSONObject(value));
 
         return subscription;
     }
 
-    /* package-private */ void update(FeedFetcher.FeedResponse response) {
-        final String feedUrl = response.feed.getFeedURL();
-        if (!TextUtils.isEmpty(feedUrl)) {
-            // Prefer to use the URL we get from the feed for further requests
-            this.feedUrl = feedUrl;
-        }
+    private void fromJSON(JSONObject object) throws JSONException {
+        feedTitle = object.getString(JSON_KEY_FEED_TITLE);
+        lastItemTitle = object.getString(JSON_KEY_LAST_ITEM_TITLE);
+        lastItemUrl = object.getString(JSON_KEY_LAST_ITEM_URL);
+        lastItemTimestamp = object.getLong(JSON_KEY_LAST_ITEM_TIMESTAMP);
+        etag = object.optString(JSON_KEY_ETAG);
+        lastModified = object.optString(JSON_KEY_LAST_MODIFIED);
+    }
 
+    public void update(FeedFetcher.FeedResponse response) {
         feedTitle = response.feed.getTitle();
-        websiteUrl = response.feed.getWebsiteURL();
         lastItemTitle = response.feed.getLastItem().getTitle();
         lastItemUrl = response.feed.getLastItem().getURL();
         lastItemTimestamp = response.feed.getLastItem().getTimestamp();
         etag = response.etag;
         lastModified = response.lastModified;
     }
-
 
     /**
      * Guesstimate if this response is a newer representation of the feed.
@@ -111,22 +102,6 @@ public class FeedSubscription {
         return feedTitle;
     }
 
-    public String getWebsiteUrl() {
-        return websiteUrl;
-    }
-
-    public String getLastItemTitle() {
-        return lastItemTitle;
-    }
-
-    public String getLastItemUrl() {
-        return lastItemUrl;
-    }
-
-    public long getLastItemTimestamp() {
-        return lastItemTimestamp;
-    }
-
     public String getETag() {
         return etag;
     }
@@ -135,26 +110,15 @@ public class FeedSubscription {
         return lastModified;
     }
 
-    public String getBookmarkGUID() {
-        return bookmarkGuid;
-    }
-
-    public boolean isForTheSameBookmarkAs(FeedSubscription other) {
-        return TextUtils.equals(bookmarkGuid, other.bookmarkGuid);
-    }
-
     public JSONObject toJSON() throws JSONException {
         JSONObject object = new JSONObject();
 
-        object.put(JSON_KEY_FEED_URL, feedUrl);
         object.put(JSON_KEY_FEED_TITLE, feedTitle);
-        object.put(JSON_KEY_WEBSITE_URL, websiteUrl);
         object.put(JSON_KEY_LAST_ITEM_TITLE, lastItemTitle);
         object.put(JSON_KEY_LAST_ITEM_URL, lastItemUrl);
         object.put(JSON_KEY_LAST_ITEM_TIMESTAMP, lastItemTimestamp);
         object.put(JSON_KEY_ETAG, etag);
         object.put(JSON_KEY_LAST_MODIFIED, lastModified);
-        object.put(JSON_KEY_BOOKMARK_GUID, bookmarkGuid);
 
         return object;
     }

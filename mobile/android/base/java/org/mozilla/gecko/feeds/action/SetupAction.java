@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.FeedAlarmReceiver;
 import org.mozilla.gecko.feeds.FeedService;
 
@@ -28,7 +29,7 @@ public class SetupAction implements BaseAction {
     }
 
     @Override
-    public void perform(Intent intent) {
+    public void perform(BrowserDB browserDB, Intent intent) {
         final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         cancelPreviousAlarms(alarmManager);

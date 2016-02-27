@@ -290,7 +290,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'feeds/parser/Item.java',
     'feeds/parser/SimpleFeedParser.java',
     'feeds/subscriptions/FeedSubscription.java',
-    'feeds/subscriptions/SubscriptionStorage.java',
     'FilePicker.java',
     'FilePickerResultHandler.java',
     'FindInPageBar.java',
