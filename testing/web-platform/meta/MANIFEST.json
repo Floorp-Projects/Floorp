@@ -33764,6 +33764,18 @@
     "deleted": [],
     "items": {
       "testharness": {
+        "XMLHttpRequest/send-send.worker.js": [
+          {
+            "path": "XMLHttpRequest/send-send.worker.js",
+            "url": "/XMLHttpRequest/send-send.worker"
+          }
+        ],
+        "XMLHttpRequest/abort-during-open.worker.js": [
+          {
+            "path": "XMLHttpRequest/abort-during-open.worker.js",
+            "url": "/XMLHttpRequest/abort-during-open.worker"
+          }
+        ],
         "html/semantics/embedded-content/the-img-element/update-media.html": [
           {
             "path": "html/semantics/embedded-content/the-img-element/update-media.html",

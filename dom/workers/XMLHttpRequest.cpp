@@ -1546,7 +1546,7 @@ SendRunnable::MainThreadRun()
 
   // Send() has been already called.
   if (mProxy->mWorkerPrivate) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   mProxy->mWorkerPrivate = mWorkerPrivate;
@@ -2278,6 +2278,12 @@ XMLHttpRequest::Abort(ErrorResult& aRv)
   MaybeDispatchPrematureAbortEvents(aRv);
   if (aRv.Failed()) {
     return;
+  }
+
+  if (mStateData.mReadyState == 4) {
+    // No one did anything to us while we fired abort events, so reset our state
+    // to "unsent"
+    mStateData.mReadyState = 0;
   }
 
   mProxy->mOuterEventStreamId++;
