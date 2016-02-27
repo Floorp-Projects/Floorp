@@ -433,7 +433,7 @@ public:
   explicit Variant(RefT&& aT)
     : tag(Impl::template tag<T>())
   {
-    new (ptr()) T(Forward<T>(aT));
+    new (ptr()) T(Forward<RefT>(aT));
   }
 
   /**
