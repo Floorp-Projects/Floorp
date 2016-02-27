@@ -233,39 +233,42 @@ extensions.registerSchemaAPI("pageAction", (extension, context) => {
       }).api(),
 
       show(tabId) {
-        let tab = TabManager.getTab(tabId);
+        let tab = TabManager.getTab(tabId, context);
         PageAction.for(extension).setProperty(tab, "show", true);
         return Promise.resolve();
       },
 
       hide(tabId) {
-        let tab = TabManager.getTab(tabId);
+        let tab = TabManager.getTab(tabId, context);
         PageAction.for(extension).setProperty(tab, "show", false);
         return Promise.resolve();
       },
 
       setTitle(details) {
-        let tab = TabManager.getTab(details.tabId);
+        let tab = TabManager.getTab(details.tabId, context);
 
         // Clear the tab-specific title when given a null string.
         PageAction.for(extension).setProperty(tab, "title", details.title || null);
       },
 
       getTitle(details) {
-        let tab = TabManager.getTab(details.tabId);
+        let tab = TabManager.getTab(details.tabId, context);
+
         let title = PageAction.for(extension).getProperty(tab, "title");
         return Promise.resolve(title);
       },
 
       setIcon(details) {
-        let tab = TabManager.getTab(details.tabId);
+        let tab = TabManager.getTab(details.tabId, context);
+
         let icon = IconDetails.normalize(details, extension, context);
         PageAction.for(extension).setProperty(tab, "icon", icon);
         return Promise.resolve();
       },
 
       setPopup(details) {
-        let tab = TabManager.getTab(details.tabId);
+        let tab = TabManager.getTab(details.tabId, context);
+
         // Note: Chrome resolves arguments to setIcon relative to the calling
         // context, but resolves arguments to setPopup relative to the extension
         // root.
@@ -276,7 +279,8 @@ extensions.registerSchemaAPI("pageAction", (extension, context) => {
       },
 
       getPopup(details) {
-        let tab = TabManager.getTab(details.tabId);
+        let tab = TabManager.getTab(details.tabId, context);
+
         let popup = PageAction.for(extension).getProperty(tab, "popup");
         return Promise.resolve(popup);
       },
