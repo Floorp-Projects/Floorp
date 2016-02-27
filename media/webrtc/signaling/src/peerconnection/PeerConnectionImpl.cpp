@@ -973,7 +973,6 @@ class CompareCodecPriority {
     std::string mPreferredCodec;
 };
 
-#if !defined(MOZILLA_XPCOMRT_API)
 class ConfigureCodec {
   public:
     explicit ConfigureCodec(nsCOMPtr<nsIPrefBranch>& branch) :
@@ -1121,11 +1120,9 @@ class ConfigureCodec {
     int32_t mVP8MaxFr;
     bool mUseTmmbr;
 };
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
 nsresult
 PeerConnectionImpl::ConfigureJsepSessionCodecs() {
-#if !defined(MOZILLA_XPCOMRT_API)
   nsresult res;
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService("@mozilla.org/preferences-service;1", &res);
@@ -1159,7 +1156,6 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
   }
 
   mJsepSession->SortCodecs(comparator);
-#endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_OK;
 }
 
