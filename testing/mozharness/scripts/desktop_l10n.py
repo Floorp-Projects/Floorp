@@ -46,6 +46,9 @@ except ImportError:
 SUCCESS = 0
 FAILURE = 1
 
+SUCCESS_STR = "Success"
+FAILURE_STR = "Failed"
+
 # when running get_output_form_command, pymake has some extra output
 # that needs to be filtered out
 PyMakeIgnoreList = [
@@ -491,7 +494,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
 
     def _add_failure(self, locale, message, **kwargs):
         """marks current step as failed"""
-        self.locales_property[locale] = "Failed"
+        self.locales_property[locale] = FAILURE_STR
         prop_key = "%s_failure" % locale
         prop_value = self.query_buildbot_property(prop_key)
         if prop_value:
@@ -501,13 +504,17 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.set_buildbot_property(prop_key, prop_value, write_to_file=True)
         BaseScript.add_failure(self, locale, message=message, **kwargs)
 
+    def query_failed_locales(self):
+        return [l for l, res in self.locales_property.items() if
+                res == FAILURE_STR]
+
     def summary(self):
         """generates a summary"""
         BaseScript.summary(self)
         # TODO we probably want to make this configurable on/off
         locales = self.query_locales()
         for locale in locales:
-            self.locales_property.setdefault(locale, "Success")
+            self.locales_property.setdefault(locale, SUCCESS_STR)
         self.set_buildbot_property("locales",
                                    json.dumps(self.locales_property),
                                    write_to_file=True)
@@ -1035,7 +1042,13 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             tc.report_completed(task)
 
         if artifacts_task:
-            artifacts_tc.report_completed(artifacts_task)
+            if not self.query_failed_locales():
+                artifacts_tc.report_completed(artifacts_task)
+            else:
+                # If some locales fail, we want to mark the artifacts
+                # task failed, so a retry can reuse the same task ID
+                artifacts_tc.report_failed(artifacts_task)
+
 
 # main {{{
 if __name__ == '__main__':
