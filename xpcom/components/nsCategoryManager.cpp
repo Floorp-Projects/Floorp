@@ -418,7 +418,9 @@ nsCategoryManager::nsCategoryManager()
 void
 nsCategoryManager::InitMemoryReporter()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   RegisterStrongMemoryReporter(this);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 nsCategoryManager::~nsCategoryManager()
@@ -803,8 +805,10 @@ NS_CreateServicesFromCategory(const char* aCategory,
 
     nsCOMPtr<nsISupports> instance = do_GetService(contractID);
     if (!instance) {
+#if !defined(MOZILLA_XPCOMRT_API)
       LogMessage("While creating services from category '%s', could not create service for entry '%s', contract ID '%s'",
                  aCategory, entryString.get(), contractID.get());
+#endif // !defined(MOZILLA_XPCOMRT_API)
       continue;
     }
 
@@ -814,8 +818,10 @@ NS_CreateServicesFromCategory(const char* aCategory,
       if (observer) {
         observer->Observe(aOrigin, aObserverTopic, EmptyString().get());
       } else {
+#if !defined(MOZILLA_XPCOMRT_API)
         LogMessage("While creating services from category '%s', service for entry '%s', contract ID '%s' does not implement nsIObserver.",
                    aCategory, entryString.get(), contractID.get());
+#endif // !defined(MOZILLA_XPCOMRT_API)
       }
     }
   }

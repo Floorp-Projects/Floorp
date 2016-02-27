@@ -105,3 +105,11 @@ TEST(SimpleTokenBucketTest, TestNoOverflow) {
   b.fastForward(50000);
   ASSERT_EQ(10U, b.getTokens(11));
 }
+
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int rv = RUN_ALL_TESTS();
+  return rv;
+}
+

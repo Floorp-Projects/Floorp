@@ -1,0 +1,142 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    Library('xpcomrt')
+
+src_list = [
+    'XPCOMRTInit.cpp',
+    'XPCOMRTStubs.cpp',
+]
+
+xpcom_base_src = [
+    'nsDebugImpl.cpp',
+    'nsMemoryImpl.cpp',
+    'nsUUIDGenerator.cpp',
+]
+src_list += [
+    '/xpcom/base/%s' % s for s in xpcom_base_src
+]
+
+xpcom_build_src = [
+    'FileLocation.cpp',
+    'Services.cpp',
+]
+src_list += [
+    '/xpcom/build/%s' % s for s in xpcom_build_src
+]
+
+xpcom_components_src = [
+    'nsCategoryManager.cpp',
+    'nsComponentManager.cpp',
+]
+src_list += [
+    '/xpcom/components/%s' % s for s in xpcom_components_src
+]
+
+xpcom_ds_src = [
+    'nsObserverList.cpp',
+    'nsObserverService.cpp',
+    'nsStringEnumerator.cpp',
+    'nsSupportsPrimitives.cpp',
+]
+
+src_list += [
+    '/xpcom/ds/%s' % s for s in xpcom_ds_src
+]
+
+xpcom_glue_src = [
+    'BlockingResourceBase.cpp',
+    'nsArrayEnumerator.cpp',
+    'nsClassInfoImpl.cpp',
+    'nsCOMArray.cpp',
+    'nsCOMPtr.cpp',
+    'nsCRTGlue.cpp',
+    'nsComponentManagerUtils.cpp',
+    'nsEnumeratorUtils.cpp',
+    'GenericFactory.cpp',
+    'nsID.cpp',
+    'nsISupportsImpl.cpp',
+    'nsMemory.cpp',
+    'nsQuickSort.cpp',
+    'nsTArray.cpp',
+    'nsTObserverArray.cpp',
+    'nsThreadUtils.cpp',
+    'nsWeakReference.cpp',
+    'PLDHashTable.cpp',
+]
+src_list += [
+    '/xpcom/glue/%s' % s for s in xpcom_glue_src
+]
+
+xpcom_io_src = [
+    'nsNativeCharsetUtils.cpp',
+]
+src_list += [
+    '/xpcom/io/%s' % s for s in xpcom_io_src
+]
+
+xpcom_string_src = [
+    'nsDependentSubstring.cpp',
+    'nsPromiseFlatString.cpp',
+    'nsReadableUtils.cpp',
+    'nsString.cpp',
+    'nsStringComparator.cpp',
+    'nsStringObsolete.cpp',
+    'nsSubstring.cpp',
+    'nsSubstringTuple.cpp',
+]
+if CONFIG['INTEL_ARCHITECTURE']:
+    xpcom_string_src += ['nsUTF8UtilsSSE2.cpp']
+src_list += [
+    '/xpcom/string/%s' % s for s in xpcom_string_src
+]
+
+xpcom_threads_src = [
+    'LazyIdleThread.cpp',
+    'nsEnvironment.cpp',
+    'nsEventQueue.cpp',
+    'nsMemoryPressure.cpp',
+    'nsProcessCommon.cpp',
+    'nsThread.cpp',
+    'nsThreadManager.cpp',
+    'nsThreadPool.cpp',
+    'nsTimerImpl.cpp',
+    'TimerThread.cpp',
+]
+src_list += [
+    '/xpcom/threads/%s' % s for s in xpcom_threads_src
+]
+
+
+SOURCES += sorted(src_list)
+
+if CONFIG['INTEL_ARCHITECTURE']:
+    sse_string_path = '/xpcom/string/nsUTF8UtilsSSE2.cpp'
+    SOURCES[sse_string_path].flags += CONFIG['SSE2_FLAGS']
+
+LOCAL_INCLUDES = [
+    '!..',
+    '../base',
+    '../build',
+    '../components',
+    '../ds',
+    '../glue',
+    '../threads',
+    '/netwerk/standalone/',
+    '/xpcom/reflect/xptinfo/',
+]
+
+DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['MOZILLA_XPCOMRT_API'] = True
+DEFINES['MOZILLA_EXTERNAL_LINKAGE'] = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+SPHINX_TREES['libxpcomrt'] = 'docs'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
