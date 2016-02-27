@@ -1512,9 +1512,7 @@ MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
   : GenericReceiveListener(source, track_id, source->GraphRate(), queue_track),
     width_(640),
     height_(480),
-#if defined(MOZILLA_XPCOMRT_API)
-    image_(new SimpleImageBuffer),
-#elif defined(MOZILLA_INTERNAL_API)
+#if defined(MOZILLA_INTERNAL_API)
     image_container_(),
     image_(),
 #endif
@@ -1547,11 +1545,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
   ReentrantMonitorAutoEnter enter(monitor_);
 #endif // MOZILLA_INTERNAL_API
 
-#if defined(MOZILLA_XPCOMRT_API)
-  if (buffer) {
-    image_->SetImage(buffer, buffer_size, width_, height_);
-  }
-#elif defined(MOZILLA_INTERNAL_API)
+#if defined(MOZILLA_INTERNAL_API)
   if (buffer) {
     // Create a video frame using |buffer|.
 #ifdef MOZ_WIDGET_GONK
@@ -1595,9 +1589,7 @@ void MediaPipelineReceiveVideo::PipelineListener::
 NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   ReentrantMonitorAutoEnter enter(monitor_);
 
-#if defined(MOZILLA_XPCOMRT_API)
-  RefPtr<SimpleImageBuffer> image = image_;
-#elif defined(MOZILLA_INTERNAL_API)
+#if defined(MOZILLA_INTERNAL_API)
   RefPtr<Image> image = image_;
   // our constructor sets track_rate_ to the graph rate
   MOZ_ASSERT(track_rate_ == source_->GraphRate());
@@ -1620,12 +1612,6 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
       return;
     }
   }
-#endif
-#if defined(MOZILLA_XPCOMRT_API)
-  // Clear the image without deleting the memory.
-  // This prevents image_ from being used if it
-  // does not have new content during the next NotifyPull.
-  image_->SetImage(nullptr, 0, 0, 0);
 #endif
 }
 

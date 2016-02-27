@@ -114,7 +114,7 @@ nrappkit copyright:
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 // csi_platform.h deep in nrappkit defines LOG_INFO and LOG_WARNING
 #ifdef LOG_INFO
 #define LOG_TEMP_INFO LOG_INFO
@@ -172,7 +172,7 @@ extern "C" {
 // Implement the nsISupports ref counting
 namespace mozilla {
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 class SingletonThreadHolder final
 {
 private:
@@ -260,7 +260,7 @@ static void ClearSingletonOnShutdown()
 static nsIThread* GetIOThreadAndAddUse_s()
 {
   // Always runs on STS thread!
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
   // We need to safely release this on shutdown to avoid leaks
   if (!sThread) {
     sThread = new SingletonThreadHolder(NS_LITERAL_CSTRING("mtransport"));
@@ -1076,7 +1076,7 @@ NrUdpSocketIpc::~NrUdpSocketIpc()
   // also guarantees socket_child_ is released from the io_thread, and
   // tells the SingletonThreadHolder we're done with it
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
   // close(), but transfer the socket_child_ reference to die as well
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnableNM(&NrUdpSocketIpc::release_child_i,
@@ -1544,7 +1544,7 @@ void NrUdpSocketIpc::close_i() {
   }
 }
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 // close(), but transfer the socket_child_ reference to die as well
 // static
 void NrUdpSocketIpc::release_child_i(nsIUDPSocketChild* aChild,
@@ -1583,7 +1583,7 @@ void NrUdpSocketIpc::recv_callback_s(RefPtr<nr_udp_message> msg) {
   }
 }
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 // TCPSocket.
 class NrTcpSocketIpc::TcpSocketReadyRunner: public nsRunnable
 {
@@ -2078,7 +2078,7 @@ NrSocketBase::CreateSocket(nr_transport_addr *addr, RefPtr<NrSocketBase> *sock)
         *sock = new NrUdpSocketIpc();
         break;
       case IPPROTO_TCP:
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
         {
           nsCOMPtr<nsIThread> main_thread;
           NS_GetMainThread(getter_AddRefs(main_thread));

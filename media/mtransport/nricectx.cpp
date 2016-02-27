@@ -422,7 +422,6 @@ void NrIceCtx::Init(bool allow_loopback,
     int32_t ice_tcp_so_sock_count = 3;
     int32_t ice_tcp_listen_backlog = 10;
     nsAutoCString force_net_interface;
-#ifndef MOZILLA_XPCOMRT_API
     nsresult res;
     nsCOMPtr<nsIPrefService> prefs =
       do_GetService("@mozilla.org/preferences-service;1", &res);
@@ -447,7 +446,7 @@ void NrIceCtx::Init(bool allow_loopback,
             getter_Copies(force_net_interface));
       }
     }
-#endif
+
     NR_reg_set_uint4((char *)"stun.client.maximum_transmits",
                      stun_client_maximum_transmits);
     NR_reg_set_uint4((char *)NR_ICE_REG_TRICKLE_GRACE_PERIOD,

@@ -260,7 +260,7 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
 MediaConduitErrorCode
 WebrtcVideoConduit::InitMain()
 {
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
   // already know we must be on MainThread barring unit test weirdness
   MOZ_ASSERT(NS_IsMainThread());
 
