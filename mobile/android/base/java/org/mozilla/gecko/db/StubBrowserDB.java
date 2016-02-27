@@ -153,6 +153,9 @@ class StubTabsAccessor implements TabsAccessor {
 class StubUrlAnnotations implements UrlAnnotations {
     @Override
     public void insertAnnotation(ContentResolver cr, String url, String key, String value) {}
+
+    @Override
+    public Cursor getScreenshots(ContentResolver cr) { return null; }
 }
 
 /*

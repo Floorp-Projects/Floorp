@@ -512,6 +512,17 @@ public class BrowserContract {
         public static final String VALUE = "value";
         public static final String SYNC_STATUS = "sync_status";
 
+        public enum Key {
+            // We use a parameter, rather than name(), as defensive coding: we can't let the
+            // enum name change because we've already stored values into the DB.
+            SCREENSHOT ("screenshot");
+
+            private final String dbValue;
+
+            Key(final String dbValue) { this.dbValue = dbValue; }
+            public String getDbValue() { return dbValue; }
+        }
+
         public enum SyncStatus {
             // We use a parameter, rather than ordinal(), as defensive coding: we can't let the
             // ordinal values change because we've already stored values into the DB.
