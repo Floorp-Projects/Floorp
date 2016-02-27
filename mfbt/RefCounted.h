@@ -22,7 +22,6 @@
 #endif
 
 #if defined(MOZILLA_INTERNAL_API) && \
-    !defined(MOZILLA_XPCOMRT_API) && \
     (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
 #define MOZ_REFCOUNTED_LEAK_CHECKING
 #endif
