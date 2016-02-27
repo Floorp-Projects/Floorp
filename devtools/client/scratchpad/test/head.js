@@ -7,6 +7,7 @@
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+const {ScratchpadManager} = Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -44,7 +45,7 @@ SimpleTest.registerCleanupFunction(() => {
 function openScratchpad(aReadyCallback, aOptions = {})
 {
   let win = aOptions.window ||
-            Scratchpad.ScratchpadManager.openScratchpad(aOptions.state);
+            ScratchpadManager.openScratchpad(aOptions.state);
   if (!win) {
     return;
   }

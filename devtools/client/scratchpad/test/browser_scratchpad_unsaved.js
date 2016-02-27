@@ -13,8 +13,6 @@ function done()
   }
 }
 
-var ScratchpadManager = Scratchpad.ScratchpadManager;
-
 
 function test()
 {

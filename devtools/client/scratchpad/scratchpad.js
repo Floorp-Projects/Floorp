@@ -81,6 +81,7 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice");
 
 XPCOMUtils.defineLazyGetter(this, "REMOTE_TIMEOUT", () =>
   Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
@@ -1591,7 +1592,7 @@ var Scratchpad = {
    */
   openErrorConsole: function SP_openErrorConsole()
   {
-    this.browserWindow.HUDService.toggleBrowserConsole();
+    HUDService.toggleBrowserConsole();
   },
 
   /**
