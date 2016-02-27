@@ -22,6 +22,7 @@ function run_test() {
       ok(request.redirect === 'follow', 'request.redirect should default to "follow"');
       ok(request.cache === 'default', 'request.cache should have been updated to "default"' + request.cache);
       ok(request.mode === 'navigate', 'request.mode should have been updated to "navigate"');
+      ok(request.referrerPolicy === 'no-referrer-when-downgrade', 'request.referrerPolicy should have been updated to "no-referrer-when-downgrade"');
     });
     return Promise.all(requestList.map(function(request) {
       return cache.match(request);
