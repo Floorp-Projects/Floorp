@@ -22,12 +22,24 @@ from mozboot.archlinux import ArchlinuxBootstrapper
 APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
 %s
+
+Note: (For Firefox for Android)
+
+Firefox for Android is built on top of the Gecko technology platform. Gecko is Mozilla's web rendering engine, similar to Edge, Blink, and WebKit. Gecko is implemented in C++ and JavaScript. If you want to work on web rendering, this is what you want.
+
+The Firefox for Android Front-End is built using Java, the Android Platform SDK, JavaScript, HTML, and CSS. If you want to work on the look-and-feel of Firefox for Android, this is what you want.
+
+If you don't know what you want, start with just the Firefox for Android Artifact Mode. Your builds will be much shorter than if you build Gecko as well. But don't worry! You can always switch configurations later.
+
+You can learn more about Artifact builds from https://developer.mozilla.org/en-US/docs/Artifact_builds
+
 Your choice:
 '''
 
 APPLICATIONS_LIST=[
     ('Firefox for Desktop', 'browser'),
-    ('Firefox for Android', 'mobile_android')
+    ('Firefox for Android', 'mobile_android'),
+    ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode')
 ]
 
 # This is a workaround for the fact that we must support python2.6 (which has
@@ -35,6 +47,7 @@ APPLICATIONS_LIST=[
 APPLICATIONS = dict(
     desktop=APPLICATIONS_LIST[0],
     android=APPLICATIONS_LIST[1],
+    android_artifact_mode=APPLICATIONS_LIST[2],
 )
 
 FINISHED = '''
@@ -119,7 +132,7 @@ class Bootstrapper(object):
 
     def bootstrap(self):
         if self.choice is None:
-            # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
+            # Like ['1. Firefox for Desktop', '2. Firefox for Android', '3. Firefox for Android Artifact Mode'].
             labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
             prompt = APPLICATION_CHOICE % '\n'.join(labels)
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
