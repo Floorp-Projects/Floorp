@@ -5,8 +5,10 @@
 package org.mozilla.gecko.db;
 
 import android.content.ContentResolver;
+import android.database.Cursor;
 import org.mozilla.gecko.annotation.RobocopTarget;
 
 public interface UrlAnnotations {
     @RobocopTarget void insertAnnotation(ContentResolver cr, String url, String key, String value);
+    Cursor getScreenshots(ContentResolver cr);
 }
