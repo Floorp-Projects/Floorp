@@ -496,10 +496,21 @@ DeveloperToolbar.prototype.show = function(focus) {
           this._element.hidden = false;
 
           if (focus) {
-            this._input.focus();
+            // If the toolbar was just inserted, the <textbox> may still have
+            // its binding in process of being applied and not be focusable yet
+            let waitForBinding = () => {
+              // mInputField is a xbl field of <xul:textbox>
+              if (typeof this._input.mInputField != "undefined") {
+                this._input.focus();
+                this._notify(NOTIFICATIONS.SHOW);
+              } else {
+                this._input.ownerDocument.defaultView.setTimeout(waitForBinding, 50);
+              }
+            };
+            waitForBinding();
+          } else {
+            this._notify(NOTIFICATIONS.SHOW);
           }
-
-          this._notify(NOTIFICATIONS.SHOW);
 
           if (!DeveloperToolbar.introShownThisSession) {
             let intro = require("gcli/ui/intro");
