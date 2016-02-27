@@ -6,7 +6,7 @@
 
 const {Cu} = require("chrome");
 const Editor = require("devtools/client/sourceeditor/editor");
-Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 /**

@@ -7,7 +7,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 const EXPAND_TAB = "devtools.editor.expandtab";
 const TAB_SIZE = "devtools.editor.tabsize";

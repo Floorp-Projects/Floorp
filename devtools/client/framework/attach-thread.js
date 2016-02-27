@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Ci, Cu} = require("chrome");
-const Services = Cu.import("resource://gre/modules/Services.jsm", {}).Services;
+const Services = require("Services");
 const promise = require("promise");
 
 function l10n(name) {

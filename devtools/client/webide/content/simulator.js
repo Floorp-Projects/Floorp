@@ -7,8 +7,8 @@ var Ci = Components.interfaces;
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const { Simulators, Simulator } = require("devtools/client/webide/modules/simulators");
+const Services = require("Services");
 const EventEmitter = require('devtools/shared/event-emitter');
 const promise = require("promise");
 const utils = require("devtools/client/webide/modules/utils");

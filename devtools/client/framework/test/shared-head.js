@@ -17,7 +17,6 @@ function scopedCuImport(path) {
   return scope;
 }
 
-const {Services} = scopedCuImport("resource://gre/modules/Services.jsm");
 const {console} = scopedCuImport("resource://gre/modules/Console.jsm");
 const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 const {require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
@@ -26,6 +25,7 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 let promise = require("promise");
+const Services = require("Services");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
