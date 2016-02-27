@@ -7,8 +7,9 @@
 #ifndef js_TraceKind_h
 #define js_TraceKind_h
 
-#include "js/TypeDecls.h"
 #include "mozilla/UniquePtr.h"
+
+#include "js/TypeDecls.h"
 
 // Forward declarations of all the types a TraceKind can denote.
 namespace js {
