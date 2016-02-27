@@ -26,7 +26,6 @@ this.EXPORTED_SYMBOLS = [
   "DevToolsLoader",
   "devtools",
   "BuiltinProvider",
-  "SrcdirProvider",
   "require",
   "loader"
 ];
