@@ -37,8 +37,8 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 
+#include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/TypedArray.h"
 #endif
 
@@ -1012,7 +1012,7 @@ PushMessageData::Json(JSContext* cx, JS::MutableHandle<JS::Value> aRetval,
     aRv.Throw(NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
-  FetchUtil::ConsumeJson(cx, aRetval, mDecodedText, aRv);
+  BodyUtil::ConsumeJson(cx, aRetval, mDecodedText, aRv);
 }
 
 void
@@ -1030,7 +1030,7 @@ PushMessageData::ArrayBuffer(JSContext* cx,
 {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    FetchUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
+    BodyUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
   }
 }
 
@@ -1039,7 +1039,7 @@ PushMessageData::Blob(ErrorResult& aRv)
 {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    RefPtr<mozilla::dom::Blob> blob = FetchUtil::ConsumeBlob(
+    RefPtr<mozilla::dom::Blob> blob = BodyUtil::ConsumeBlob(
       mOwner, EmptyString(), mBytes.Length(), data, aRv);
     if (blob) {
       return blob.forget();
@@ -1054,7 +1054,7 @@ PushMessageData::EnsureDecodedText()
   if (mBytes.IsEmpty() || !mDecodedText.IsEmpty()) {
     return NS_OK;
   }
-  nsresult rv = FetchUtil::ConsumeText(
+  nsresult rv = BodyUtil::ConsumeText(
     mBytes.Length(),
     reinterpret_cast<uint8_t*>(mBytes.Elements()),
     mDecodedText
