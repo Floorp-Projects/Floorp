@@ -464,10 +464,8 @@ nsTimerImpl::Fire()
     return;
   }
 
-#if !defined(MOZILLA_XPCOMRT_API)
   PROFILER_LABEL("Timer", "Fire",
                  js::ProfileEntry::Category::OTHER);
-#endif
 
   TimeStamp now = TimeStamp::Now();
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
