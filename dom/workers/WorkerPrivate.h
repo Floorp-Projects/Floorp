@@ -1366,7 +1366,7 @@ private:
   RemainingRunTimeMS() const;
 
   void
-  CancelAllTimeouts(JSContext* aCx);
+  CancelAllTimeouts();
 
   bool
   ScheduleKillCloseEventRunnable(JSContext* aCx);
