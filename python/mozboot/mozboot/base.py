@@ -136,6 +136,28 @@ class BaseBootstrapper(object):
         raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
                                   __name__)
 
+    def install_mobile_android_artifact_mode_packages(self):
+        '''
+        Install packages required to build Firefox for Android (application
+        'mobile/android', also known as Fennec) in Artifact Mode.
+        '''
+        raise NotImplementedError(
+            'Cannot bootstrap Firefox for Android Artifact Mode: '
+            '%s does not yet implement install_mobile_android_artifact_mode_packages()'
+            % __name__)
+
+    def suggest_mobile_android_artifact_mode_mozconfig(self):
+        '''
+        Print a message to the console detailing what the user's mozconfig
+        should contain.
+
+        Firefox for Android Artifact Mode needs an application and an ABI set,
+        and it needs paths to the Android SDK.
+        '''
+        raise NotImplementedError(
+            '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
+            % __name__)
+
     def which(self, name):
         """Python implementation of which.
 
