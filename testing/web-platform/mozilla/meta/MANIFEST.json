@@ -218,6 +218,12 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-request-css-base-url.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-request-css-images.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-request-css-images.https.html",
+            "url": "/_mozilla/service-workers/service-worker/fetch-request-css-images.https.html"
+          }
+        ],
         "service-workers/service-worker/fetch-request-fallback.https.html": [
           {
             "path": "service-workers/service-worker/fetch-request-fallback.https.html",
