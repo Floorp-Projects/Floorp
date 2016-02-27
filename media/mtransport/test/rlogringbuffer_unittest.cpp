@@ -35,14 +35,6 @@ class RLogRingBufferTest : public ::testing::Test {
       Free();
     }
 
-    static void SetUpTestCase() {
-      NR_reg_init(NR_REG_MODE_LOCAL);
-      r_log_init();
-      /* Would be nice to be able to unregister in the fixture */
-      const char* facility = "rlogringbuffer_test";
-      r_log_register(const_cast<char*>(facility), &NR_LOG_TEST);
-    }
-
     void Init() {
       RLogRingBuffer::CreateInstance();
     }
@@ -262,3 +254,16 @@ TEST_F(RLogRingBufferTest, TestReInit) {
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
   ASSERT_EQ(0U, logs.size());
 }
+
+int main(int argc, char** argv) {
+  NR_reg_init(NR_REG_MODE_LOCAL);
+  r_log_init();
+  /* Would be nice to be able to register/unregister in the fixture */
+  const char* facility = "rlogringbuffer_test";
+  r_log_register(const_cast<char*>(facility), &NR_LOG_TEST);
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int rv = RUN_ALL_TESTS();
+  return rv;
+}
+

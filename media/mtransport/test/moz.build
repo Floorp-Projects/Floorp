@@ -5,30 +5,28 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    SOURCES += [
-        'buffered_stun_socket_unittest.cpp',
-        'ice_unittest.cpp',
-        'multi_tcp_socket_unittest.cpp',
-        'nrappkit_unittest.cpp',
-        'proxy_tunnel_socket_unittest.cpp',
-        'rlogringbuffer_unittest.cpp',
-        'runnable_utils_unittest.cpp',
-        'simpletokenbucket_unittest.cpp',
-        'sockettransportservice_unittest.cpp',
-        'stunserver.cpp',
-        'test_nr_socket_unittest.cpp',
-        'TestSyncRunnable.cpp',
-        'transport_unittests.cpp',
-        'turn_unittest.cpp',
-    ]
+    CppUnitTests([
+        'buffered_stun_socket_unittest',
+        'ice_unittest',
+        'multi_tcp_socket_unittest',
+        'nrappkit_unittest',
+        'proxy_tunnel_socket_unittest',
+        'rlogringbuffer_unittest',
+        'runnable_utils_unittest',
+        'simpletokenbucket_unittest',
+        'sockettransportservice_unittest',
+        'test_nr_socket_unittest',
+        'TestSyncRunnable',
+        'transport_unittests',
+        'turn_unittest',
+    ])
 
     if CONFIG['MOZ_SCTP']:
-        SOURCES += [
-            'sctp_unittest.cpp',
-        ]
+        CppUnitTests([
+            'sctp_unittest',
+        ])
 
-
-for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
+for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LINKAGE', 'HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
     DEFINES[var] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
@@ -44,6 +42,12 @@ if CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['LINUX'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+    ]
+    USE_LIBS += [
+        'nspr',
+    ]
+    OS_LIBS += [
+        '-lrt',
     ]
 
 if CONFIG['OS_TARGET'] == 'Darwin':
@@ -90,8 +94,35 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/stats',
     '/media/mtransport/third_party/nrappkit/src/util/',
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/media/webrtc/trunk/testing/gtest/include/',
     '/netwerk/sctp/src/',
-    '/xpcom/tests/'
+    '/xpcom/libxpcomrt',
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+USE_LIBS += [
+    '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+    'fallible',
+    'mfbt',
+    'mozglue',
+    'mtransport_standalone',
+    'necko_standalone',
+    'nicer',
+    'nrappkit',
+    'nspr',
+    'nss',
+    'unicharutil_standalone',
+    'xpcomrt',
+]
+
+if not CONFIG['MOZ_NATIVE_NSS'] and not CONFIG['MOZ_FOLD_LIBS']:
+    USE_LIBS += [
+        # Statically linking NSS libssl ensures that we can debug NSS too
+        'static:/security/nss/lib/ssl/ssl',
+    ]
+
+if CONFIG['MOZ_SCTP']:
+    USE_LIBS += [
+        'nksctp_s',
+    ]
+
+USE_LIBS += ['mozglue']

@@ -396,10 +396,15 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
   s->SignalCandidate(s, candidate_str);
 }
 
-void NrIceCtx::Init(bool allow_loopback,
-                    bool tcp_enabled,
-                    bool allow_link_local)
-{
+RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
+                                  bool offerer,
+                                  bool allow_loopback,
+                                  bool tcp_enabled,
+                                  bool allow_link_local,
+                                  bool hide_non_default,
+                                  Policy policy) {
+   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
+
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
     NR_reg_init(NR_REG_MODE_LOCAL);
@@ -472,19 +477,6 @@ void NrIceCtx::Init(bool allow_loopback,
       NR_reg_set_string((char *)NR_ICE_REG_PREF_FORCE_INTERFACE_NAME, const_cast<char*>(flat.get()));
     }
   }
-}
-
-RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
-                                  bool offerer,
-                                  bool allow_loopback,
-                                  bool tcp_enabled,
-                                  bool allow_link_local,
-                                  bool hide_non_default,
-                                  Policy policy) {
-   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer, policy);
-
-  // Initialize the crypto callbacks and logging stuff
-  Init(allow_loopback, tcp_enabled, allow_link_local);
 
   // Create the ICE context
   int r;

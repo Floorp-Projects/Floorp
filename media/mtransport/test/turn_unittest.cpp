@@ -53,6 +53,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
+#include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
 #define GTEST_HAS_RTTI 0
@@ -81,14 +82,20 @@ extern "C" {
 #include "nricectx.h"
 
 
+MtransportTestUtils *test_utils;
+
 using namespace mozilla;
 
-static std::string kDummyTurnServer("192.0.2.1");  // From RFC 5737
+std::string g_turn_server;
+std::string g_turn_user;
+std::string g_turn_password;
 
-class TurnClient : public MtransportTest {
+std::string kDummyTurnServer("192.0.2.1");  // From RFC 5737
+
+class TurnClient : public ::testing::Test {
  public:
   TurnClient()
-      : MtransportTest(),
+      : turn_server_(g_turn_server),
         real_socket_(nullptr),
         net_socket_(nullptr),
         buffered_socket_(nullptr),
@@ -100,10 +107,6 @@ class TurnClient : public MtransportTest {
   }
 
   ~TurnClient() {
-  }
-
-  static void SetUpTestCase() {
-    NrIceCtx::Init(false, false, false);
   }
 
   void SetTcp() {
@@ -134,11 +137,11 @@ class TurnClient : public MtransportTest {
     ASSERT_EQ(0, r);
 
     std::vector<unsigned char> password_vec(
-        turn_password_.begin(), turn_password_.end());
+        g_turn_password.begin(), g_turn_password.end());
     Data password;
     INIT_DATA(password, &password_vec[0], password_vec.size());
     r = nr_turn_client_ctx_create("test", net_socket_,
-                                  turn_user_.c_str(),
+                                  g_turn_user.c_str(),
                                   &password,
                                   &addr, &turn_ctx_);
     ASSERT_EQ(0, r);
@@ -160,7 +163,7 @@ class TurnClient : public MtransportTest {
   }
 
   void TearDown() {
-    RUN_ON_THREAD(test_utils_->sts_target(),
+    RUN_ON_THREAD(test_utils->sts_target(),
                   WrapRunnable(this, &TurnClient::TearDown_s),
                   NS_DISPATCH_SYNC);
   }
@@ -176,7 +179,7 @@ class TurnClient : public MtransportTest {
   }
 
   void Allocate(bool expect_success=true) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
+    RUN_ON_THREAD(test_utils->sts_target(),
                   WrapRunnable(this, &TurnClient::Allocate_s),
                   NS_DISPATCH_SYNC);
 
@@ -216,7 +219,7 @@ class TurnClient : public MtransportTest {
   }
 
   void Deallocate() {
-    RUN_ON_THREAD(test_utils_->sts_target(),
+    RUN_ON_THREAD(test_utils->sts_target(),
                   WrapRunnable(this, &TurnClient::Deallocate_s),
                   NS_DISPATCH_SYNC);
   }
@@ -245,7 +248,7 @@ class TurnClient : public MtransportTest {
   }
 
   void RequestPermission(const std::string& target) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
+    RUN_ON_THREAD(test_utils->sts_target(),
                   WrapRunnable(this, &TurnClient::RequestPermission_s, target),
                   NS_DISPATCH_SYNC);
 
@@ -343,7 +346,7 @@ class TurnClient : public MtransportTest {
   }
 
   void SendTo(const std::string& target, int expect_return=0) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
+    RUN_ON_THREAD(test_utils->sts_target(),
                   WrapRunnable(this, &TurnClient::SendTo_s, target,
                                expect_return),
                   NS_DISPATCH_SYNC);
@@ -373,33 +376,21 @@ class TurnClient : public MtransportTest {
 };
 
 TEST_F(TurnClient, Allocate) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   Allocate();
 }
 
 TEST_F(TurnClient, AllocateTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   SetTcp();
   Allocate();
 }
 
 TEST_F(TurnClient, AllocateAndHold) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   Allocate();
   PR_Sleep(20000);
   ASSERT_TRUE(turn_ctx_->state == NR_TURN_CLIENT_STATE_ALLOCATED);
 }
 
 TEST_F(TurnClient, SendToSelf) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   Allocate();
   SendTo(relay_addr_);
   ASSERT_TRUE_WAIT(received() == 100, 5000);
@@ -409,9 +400,6 @@ TEST_F(TurnClient, SendToSelf) {
 
 
 TEST_F(TurnClient, SendToSelfTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   SetTcp();
   Allocate();
   SendTo(relay_addr_);
@@ -421,9 +409,6 @@ TEST_F(TurnClient, SendToSelfTcp) {
 }
 
 TEST_F(TurnClient, PermissionDenied) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   Allocate();
   RequestPermission(relay_addr_);
   PR_Sleep(1000);
@@ -447,9 +432,6 @@ TEST_F(TurnClient, PermissionDenied) {
 }
 
 TEST_F(TurnClient, DeallocateReceiveFailure) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   Allocate();
   SendTo(relay_addr_);
   ASSERT_TRUE_WAIT(received() == 100, 5000);
@@ -461,9 +443,6 @@ TEST_F(TurnClient, DeallocateReceiveFailure) {
 }
 
 TEST_F(TurnClient, DeallocateReceiveFailureTcp) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   SetTcp();
   Allocate();
   SendTo(relay_addr_);
@@ -480,9 +459,59 @@ TEST_F(TurnClient, DeallocateReceiveFailureTcp) {
 }
 
 TEST_F(TurnClient, AllocateDummyServer) {
-  if (WarnIfTurnNotConfigured())
-    return;
-
   turn_server_ = kDummyTurnServer;
   Allocate(false);
+}
+
+static std::string get_environment(const char *name) {
+  char *value = getenv(name);
+
+  if (!value)
+    return "";
+
+  return value;
+}
+
+int main(int argc, char **argv)
+{
+  g_turn_server = get_environment("TURN_SERVER_ADDRESS");
+  g_turn_user = get_environment("TURN_SERVER_USER");
+  g_turn_password = get_environment("TURN_SERVER_PASSWORD");
+
+  if (g_turn_server.empty() ||
+      g_turn_user.empty(),
+      g_turn_password.empty()) {
+    printf(
+        "Set TURN_SERVER_ADDRESS, TURN_SERVER_USER, and TURN_SERVER_PASSWORD\n"
+        "environment variables to run this test\n");
+    return 0;
+  }
+  {
+    nr_transport_addr addr;
+    if (nr_str_port_to_transport_addr(g_turn_server.c_str(), 3478,
+                                      IPPROTO_UDP, &addr)) {
+      printf("Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
+             g_turn_server.c_str());
+      return 0;
+    }
+  }
+  test_utils = new MtransportTestUtils();
+  NSS_NoDB_Init(nullptr);
+  NSS_SetDomesticPolicy();
+
+  // Set up the ICE registry, etc.
+  // TODO(ekr@rtfm.com): Clean up
+  std::string dummy("dummy");
+  RUN_ON_THREAD(test_utils->sts_target(),
+                WrapRunnableNM(&NrIceCtx::Create,
+                               dummy, false, false, false, false, false,
+                               NrIceCtx::ICE_POLICY_ALL),
+                NS_DISPATCH_SYNC);
+
+  // Start the tests
+  ::testing::InitGoogleTest(&argc, argv);
+
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }
