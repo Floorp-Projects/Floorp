@@ -5651,31 +5651,39 @@ PrintHelp(JSContext* cx, HandleObject obj)
 }
 
 static bool
+PrintEnumeratedHelp(JSContext* cx, HandleObject obj, bool brief)
+{
+    AutoIdVector idv(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv))
+        return false;
+
+    for (size_t i = 0; i < idv.length(); i++) {
+        RootedValue v(cx);
+        RootedId id(cx, idv[i]);
+        if (!JS_GetPropertyById(cx, obj, id, &v))
+            return false;
+        if (v.isObject()) {
+            RootedObject funcObj(cx, &v.toObject());
+            if (!PrintHelp(cx, funcObj))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+static bool
 Help(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
 
     RootedObject obj(cx);
     if (args.length() == 0) {
-        RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-        Rooted<IdVector> ida(cx, IdVector(cx));
-        if (!JS_Enumerate(cx, global, &ida))
-            return false;
+        fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
 
-        for (size_t i = 0; i < ida.length(); i++) {
-            RootedValue v(cx);
-            RootedId id(cx, ida[i]);
-            if (!JS_GetPropertyById(cx, global, id, &v))
-                return false;
-            if (v.isPrimitive()) {
-                JS_ReportError(cx, "primitive arg");
-                return false;
-            }
-            obj = v.toObjectOrNull();
-            if (!PrintHelp(cx, obj))
-                return false;
-        }
+        RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+        if (!PrintEnumeratedHelp(cx, global, false))
+            return false;
     } else {
         for (unsigned i = 0; i < args.length(); i++) {
             if (args[i].isPrimitive()) {

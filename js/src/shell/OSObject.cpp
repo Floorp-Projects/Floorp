@@ -756,13 +756,20 @@ DefineOS(JSContext* cx, HandleObject global, bool fuzzingSafe)
             return false;
     }
 
+    if (!GenerateInterfaceHelp(cx, osfile, "os.file"))
+        return false;
+
     RootedObject ospath(cx, JS_NewPlainObject(cx));
     if (!ospath ||
         !JS_DefineFunctionsWithHelp(cx, ospath, ospath_functions) ||
-        !JS_DefineProperty(cx, obj, "path", ospath, 0))
+        !JS_DefineProperty(cx, obj, "path", ospath, 0) ||
+        !GenerateInterfaceHelp(cx, ospath, "os.path"))
     {
         return false;
     }
+
+    if (!GenerateInterfaceHelp(cx, obj, "os"))
+        return false;
 
     // For backwards compatibility, expose various os.file.* functions as
     // direct methods on the global.
