@@ -213,6 +213,9 @@ exports.CommandUtils = CommandUtils;
 loader.lazyGetter(this, "isLinux", function() {
   return OS == "Linux";
 });
+loader.lazyGetter(this, "isMac", function() {
+  return OS == "Darwin";
+});
 
 loader.lazyGetter(this, "OS", function() {
   let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
@@ -223,26 +226,19 @@ loader.lazyGetter(this, "OS", function() {
  * A component to manage the global developer toolbar, which contains a GCLI
  * and buttons for various developer tools.
  * @param aChromeWindow The browser window to which this toolbar is attached
- * @param aToolbarElement See browser.xul:<toolbar id="developer-toolbar">
  */
-function DeveloperToolbar(aChromeWindow, aToolbarElement)
+function DeveloperToolbar(aChromeWindow)
 {
   this._chromeWindow = aChromeWindow;
 
   this.target = null; // Will be setup when show() is called
 
-  this._element = aToolbarElement;
-  this._element.hidden = true;
-  this._doc = this._element.ownerDocument;
+  this._doc = aChromeWindow.document;
 
   this._telemetry = new Telemetry();
   this._errorsCount = {};
   this._warningsCount = {};
   this._errorListeners = {};
-  this._errorCounterButton = this._doc
-                             .getElementById("developer-toolbar-toolbox-button");
-  this._errorCounterButton._defaultTooltipText =
-      this._errorCounterButton.getAttribute("tooltiptext");
 
   EventEmitter.decorate(this);
 }
@@ -273,7 +269,7 @@ DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
  */
 Object.defineProperty(DeveloperToolbar.prototype, "visible", {
   get: function() {
-    return !this._element.hidden;
+    return this._element && !this._element.hidden;
   },
   enumerable: true
 });
@@ -289,6 +285,62 @@ Object.defineProperty(DeveloperToolbar.prototype, "sequenceId", {
   },
   enumerable: true
 });
+
+/**
+ * Create the <toolbar> element to insert within browser UI
+ */
+DeveloperToolbar.prototype.createToolbar = function() {
+  if (this._element) {
+    return;
+  }
+  let toolbar = this._doc.createElement("toolbar");
+  toolbar.setAttribute("id", "developer-toolbar");
+  toolbar.setAttribute("hidden", "true");
+
+  let close = this._doc.createElement("toolbarbutton");
+  close.setAttribute("id", "developer-toolbar-closebutton");
+  close.setAttribute("class", "devtools-closebutton");
+  close.setAttribute("oncommand", "DeveloperToolbar.hide();");
+  close.setAttribute("tooltiptext", "developerToolbarCloseButton.tooltiptext");
+
+  let stack = this._doc.createElement("stack");
+  stack.setAttribute("flex", "1");
+
+  let input = this._doc.createElement("textbox");
+  input.setAttribute("class", "gclitoolbar-input-node");
+  input.setAttribute("rows", "1");
+  stack.appendChild(input);
+
+  let hbox = this._doc.createElement("hbox");
+  hbox.setAttribute("class", "gclitoolbar-complete-node");
+  stack.appendChild(hbox);
+
+  let toolboxBtn = this._doc.createElement("toolbarbutton");
+  toolboxBtn.setAttribute("id", "developer-toolbar-toolbox-button");
+  toolboxBtn.setAttribute("class", "developer-toolbar-button");
+  toolboxBtn.setAttribute("observes", "devtoolsMenuBroadcaster_DevToolbox");
+  toolboxBtn.setAttribute("tooltiptext", "devToolbarToolsButton.tooltip");
+
+  // On Mac, the close button is on the left,
+  // while it is on the right on every other platforms.
+  if (isMac) {
+    toolbar.appendChild(close);
+    toolbar.appendChild(stack);
+    toolbar.appendChild(toolboxBtn);
+  } else {
+    toolbar.appendChild(stack);
+    toolbar.appendChild(toolboxBtn);
+    toolbar.appendChild(close);
+  }
+
+  let bottomBox = this._doc.getElementById("browser-bottombox");
+  this._element = toolbar;
+  bottomBox.appendChild(this._element);
+
+  this._errorCounterButton = toolboxBtn
+  this._errorCounterButton._defaultTooltipText =
+      this._errorCounterButton.getAttribute("tooltiptext");
+};
 
 /**
  * Called from browser.xul in response to menu-click or keyboard shortcut to
@@ -356,6 +408,8 @@ DeveloperToolbar.prototype.show = function(focus) {
   var waitPromise = this._hidePromise || promise.resolve();
 
   this._showPromise = waitPromise.then(() => {
+    this.createToolbar();
+
     Services.prefs.setBoolPref("devtools.toolbar.visible", true);
 
     this._telemetry.toolOpened("developertoolbar");
@@ -383,7 +437,10 @@ DeveloperToolbar.prototype.show = function(focus) {
       return CommandUtils.createRequisition(this.target, options).then(requisition => {
         this.requisition = requisition;
 
-        return this.requisition.update(this._input.value).then(() => {
+        // The <textbox> `value` may still be undefined on the XUL binding if
+        // we fetch it early
+        let value = this._input.value || "";
+        return this.requisition.update(value).then(() => {
           const Inputter = require('gcli/mozui/inputter').Inputter;
           const Completer = require('gcli/mozui/completer').Completer;
           const Tooltip = require('gcli/mozui/tooltip').Tooltip;
@@ -599,6 +656,9 @@ DeveloperToolbar.prototype.destroy = function() {
 
   CommandUtils.destroyRequisition(this.requisition, this.target);
   this.target = undefined;
+
+  this._element.remove();
+  delete this._element;
 };
 
 /**
