@@ -459,7 +459,7 @@ public:
     mShadowClipRect = aRect;
   }
 
-  void SetShadowTransform(const gfx::Matrix4x4& aMatrix)
+  void SetShadowBaseTransform(const gfx::Matrix4x4& aMatrix)
   {
     mShadowTransform = aMatrix;
   }
