@@ -128,7 +128,7 @@ private:
 
 // Macros for reference-count and constructor logging
 
-#if defined(NS_BUILD_REFCNT_LOGGING) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(NS_BUILD_REFCNT_LOGGING)
 
 #define NS_LOG_ADDREF(_p, _rc, _type, _size) \
   NS_LogAddRef((_p), (_rc), (_type), (uint32_t) (_size))
