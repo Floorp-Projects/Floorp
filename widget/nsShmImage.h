@@ -16,6 +16,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsIWidget.h"
 #include "nsAutoPtr.h"
+#include "Units.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XShm.h>
@@ -42,6 +43,7 @@ public:
     , mVisual(aVisual)
     , mDepth(aDepth)
     , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
+    , mRequest(0)
   {
     mInfo.shmid = -1;
   }
@@ -58,6 +60,8 @@ private:
   bool CreateImage(const mozilla::gfx::IntSize& aSize);
   void DestroyImage();
 
+  void WaitForRequest();
+
   XImage*                      mImage;
   Display*                     mDisplay;
   Drawable                     mWindow;
@@ -65,6 +69,7 @@ private:
   unsigned int                 mDepth;
   XShmSegmentInfo              mInfo;
   mozilla::gfx::SurfaceFormat  mFormat;
+  unsigned long                mRequest;
 };
 
 #endif // MOZ_HAVE_SHMIMAGE

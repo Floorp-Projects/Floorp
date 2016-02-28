@@ -457,7 +457,8 @@ private:
 
 #ifdef MOZ_HAVE_SHMIMAGE
     // If we're using xshm rendering
-    RefPtr<nsShmImage>  mShmImage;
+    RefPtr<nsShmImage>  mFrontShmImage;
+    RefPtr<nsShmImage>  mBackShmImage;
 #endif
 
 #ifdef ACCESSIBILITY
