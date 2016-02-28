@@ -52,7 +52,7 @@ this.LoginManagerStorage_json.prototype = {
                                   "logins.json");
       this._store = new LoginStore(jsonPath);
 
-      return Task.spawn(function () {
+      return Task.spawn(function* () {
         // Load the data asynchronously.
         this.log("Opening database at", this._store.path);
         yield this._store.load();
