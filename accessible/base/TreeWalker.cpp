@@ -23,6 +23,7 @@ using namespace mozilla::a11y;
 TreeWalker::
   TreeWalker(Accessible* aContext) :
   mDoc(aContext->Document()), mContext(aContext), mAnchorNode(nullptr),
+  mARIAOwnsIdx(0),
   mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(0)
 {
   mChildFilter |= mContext->NoXBLKids() ?
@@ -41,9 +42,12 @@ TreeWalker::
 TreeWalker::
   TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags) :
   mDoc(aContext->Document()), mContext(aContext), mAnchorNode(aAnchorNode),
+  mARIAOwnsIdx(0),
   mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(aFlags)
 {
   MOZ_ASSERT(aAnchorNode, "No anchor node for the accessible tree walker");
+  MOZ_ASSERT(mDoc->GetAccessibleOrContainer(aAnchorNode) == mContext,
+             "Unexpected anchor node was given");
 
   mChildFilter |= mContext->NoXBLKids() ?
     nsIContent::eAllButXBL : nsIContent::eAllChildren;
@@ -64,29 +68,44 @@ TreeWalker::~TreeWalker()
 Accessible*
 TreeWalker::Next()
 {
-  if (mStateStack.IsEmpty())
-    return nullptr;
+  if (mStateStack.IsEmpty()) {
+    return mDoc->ARIAOwnedAt(mContext, mARIAOwnsIdx++);
+  }
 
-  ChildrenIterator* top = &mStateStack[mStateStack.Length() - 1];
+  dom::AllChildrenIterator* top = &mStateStack[mStateStack.Length() - 1];
   while (top) {
-    Accessible* child = nullptr;
-    bool skipSubtree = false;
-    while (nsIContent* childNode = Next(top, &child, &skipSubtree)) {
-      if (child)
+    while (nsIContent* childNode = top->GetNextChild()) {
+      bool skipSubtree = false;
+      Accessible* child = nullptr;
+      if (mFlags & eWalkCache) {
+        child = mDoc->GetAccessible(childNode);
+      }
+      else if (mContext->IsAcceptableChild(childNode)) {
+        child = GetAccService()->
+          GetOrCreateAccessible(childNode, mContext, &skipSubtree);
+      }
+
+      // Ignore the accessible and its subtree if it was repositioned by means
+      // of aria-owns.
+      if (child) {
+        if (child->IsRelocated()) {
+          continue;
+        }
         return child;
+      }
 
       // Walk down into subtree to find accessibles.
-      if (!skipSubtree && childNode->IsElement())
+      if (!skipSubtree && childNode->IsElement()) {
         top = PushState(childNode);
+      }
     }
-
     top = PopState();
   }
 
   // If we traversed the whole subtree of the anchor node. Move to next node
   // relative anchor node within the context subtree if possible.
   if (mFlags != eWalkContextTree)
-    return nullptr;
+    return Next();
 
   nsINode* contextNode = mContext->GetNode();
   while (mAnchorNode != contextNode) {
@@ -96,7 +115,7 @@ TreeWalker::Next()
 
     nsIContent* parent = parentNode->AsElement();
     top = PushState(parent);
-    if (top->mDOMIter.Seek(mAnchorNode)) {
+    if (top->Seek(mAnchorNode)) {
       mAnchorNode = parent;
       return Next();
     }
@@ -108,55 +127,10 @@ TreeWalker::Next()
     mAnchorNode = parent;
   }
 
-  return nullptr;
+  return Next();
 }
 
-nsIContent*
-TreeWalker::Next(ChildrenIterator* aIter, Accessible** aAccesible,
-                 bool* aSkipSubtree)
-{
-  nsIContent* childEl = aIter->mDOMIter.GetNextChild();
-  if (!aAccesible)
-    return childEl;
-
-  *aAccesible = nullptr;
-  *aSkipSubtree = false;
-
-  if (childEl) {
-    Accessible* accessible = nullptr;
-    if (mFlags & eWalkCache) {
-      accessible = mDoc->GetAccessible(childEl);
-    }
-    else if (mContext->IsAcceptableChild(childEl)) {
-      accessible = GetAccService()->
-        GetOrCreateAccessible(childEl, mContext, aSkipSubtree);
-    }
-
-    // Ignore the accessible and its subtree if it was repositioned by means of
-    // aria-owns.
-    if (accessible) {
-      if (accessible->IsRelocated()) {
-        *aSkipSubtree = true;
-      } else {
-        *aAccesible = accessible;
-      }
-    }
-    return childEl;
-  }
-
-  // At last iterate over ARIA owned children.
-  Accessible* parent = mDoc->GetAccessible(aIter->mDOMIter.Parent());
-  if (parent) {
-    Accessible* child = mDoc->ARIAOwnedAt(parent, aIter->mARIAOwnsIdx++);
-    if (child) {
-      *aAccesible = child;
-      return child->GetContent();
-    }
-  }
-  return nullptr;
-}
-
-TreeWalker::ChildrenIterator*
+dom::AllChildrenIterator*
 TreeWalker::PopState()
 {
   size_t length = mStateStack.Length();
