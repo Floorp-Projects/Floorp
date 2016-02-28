@@ -7,7 +7,7 @@ var Feedback = {
 
   get _feedbackURL() {
     delete this._feedbackURL;
-    return this._feedbackURL = Services.prefs.getCharPref("app.feedbackURL");
+    return this._feedbackURL = Services.urlFormatter.formatURLPref("app.feedbackURL");
   },
 
   observe: function(aMessage, aTopic, aData) {
@@ -21,7 +21,7 @@ var Feedback = {
       return;
     } catch (e) {}
 
-    let url = this._feedbackURL + "?source=feedback-prompt";
+    let url = this._feedbackURL;
     let browser = BrowserApp.selectOrAddTab(url, { parentId: BrowserApp.selectedTab.id }).browser;
     browser.addEventListener("FeedbackClose", this, false, true);
     browser.addEventListener("FeedbackMaybeLater", this, false, true);
