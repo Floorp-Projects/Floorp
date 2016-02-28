@@ -332,6 +332,7 @@ FetchDriver::HttpFetch()
     // dom/workers/ServiceWorkerManager.cpp
     internalChan->SetCorsMode(static_cast<uint32_t>(mRequest->Mode()));
     internalChan->SetRedirectMode(static_cast<uint32_t>(mRequest->GetRedirectMode()));
+    internalChan->SetFetchCacheMode(static_cast<uint32_t>(mRequest->GetCacheMode()));
   }
 
   // Step 5. Proxy authentication will be handled by Necko.
