@@ -4,6 +4,8 @@
 
 /*** =================== REJECTED SIGNONS CODE =================== ***/
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
 function RejectsStartup() {
   LoadRejects();
 
@@ -89,11 +91,10 @@ function FinalizeRejectDeletions() {
 }
 
 function HandleRejectKeyPress(e) {
-  if (e.keyCode == KeyEvent.DOM_VK_DELETE
-#ifdef XP_MACOSX
-      || e.keyCode == KeyEvent.DOM_VK_BACK_SPACE
-#endif
-     ) {
+  if (e.keyCode == KeyEvent.DOM_VK_DELETE ||
+      (AppConstants.platform == "macosx" &&
+       e.keyCode == KeyEvent.DOM_VK_BACK_SPACE))
+  {
     DeleteReject();
   }
 }
