@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/TelemetryUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
@@ -316,7 +317,7 @@ var PingPicker = {
     this.update();
   },
 
-  update: function() {
+  update: Task.async(function*() {
     let viewCurrent = document.getElementById("ping-source-current").checked;
     let viewStructured = document.getElementById("ping-source-structured").checked;
     let currentChanged = viewCurrent !== this.viewCurrentPingData;
@@ -331,8 +332,8 @@ var PingPicker = {
         this._updateCurrentPingData();
       } else {
         document.getElementById("current-ping-picker").classList.add("hidden");
-        this._updateArchivedPingList().then(() =>
-          document.getElementById("archived-ping-picker").classList.remove("hidden"));
+        yield this._updateArchivedPingList();
+        document.getElementById("archived-ping-picker").classList.remove("hidden");
       }
     }
 
@@ -343,7 +344,7 @@ var PingPicker = {
         this._showRawPingData();
       }
     }
-  },
+  }),
 
   _updateCurrentPingData: function() {
     const subsession = document.getElementById("show-subsession-data").checked;
@@ -356,55 +357,50 @@ var PingPicker = {
 
   _updateArchivedPingData: function() {
     let id = this._getSelectedPingId();
-    TelemetryArchive.promiseArchivedPingById(id)
-                    .then((ping) => displayPingData(ping, true));
+    return TelemetryArchive.promiseArchivedPingById(id)
+                           .then((ping) => displayPingData(ping, true));
   },
 
-  _updateArchivedPingList: function() {
-    return TelemetryArchive.promiseArchivedPingList().then((pingList) => {
-      // The archived ping list is sorted in ascending timestamp order,
-      // but descending is more practical for the operations we do here.
-      pingList.reverse();
+  _updateArchivedPingList: Task.async(function*() {
+    let pingList = yield TelemetryArchive.promiseArchivedPingList();
+    // The archived ping list is sorted in ascending timestamp order,
+    // but descending is more practical for the operations we do here.
+    pingList.reverse();
 
-      // Currently about:telemetry can only handle the Telemetry session pings,
-      // so we have to filter out everything else.
-      pingList = pingList.filter(
-        (p) => ["main", "saved-session"].indexOf(p.type) != -1);
-      this._archivedPings = pingList;
+    this._archivedPings = pingList;
 
-      // Collect the start dates for all the weeks we have pings for.
-      let weekStart = (date) => {
-        let weekDay = (date.getDay() + 6) % 7;
-        let monday = new Date(date);
-        monday.setDate(date.getDate() - weekDay);
-        return TelemetryUtils.truncateToDays(monday);
-      };
+    // Collect the start dates for all the weeks we have pings for.
+    let weekStart = (date) => {
+      let weekDay = (date.getDay() + 6) % 7;
+      let monday = new Date(date);
+      monday.setDate(date.getDate() - weekDay);
+      return TelemetryUtils.truncateToDays(monday);
+    };
 
-      let weekStartDates = new Set();
-      for (let p of pingList) {
-        weekStartDates.add(weekStart(new Date(p.timestampCreated)).getTime());
-      }
+    let weekStartDates = new Set();
+    for (let p of pingList) {
+      weekStartDates.add(weekStart(new Date(p.timestampCreated)).getTime());
+    }
 
-      // Build a list of the week date ranges we have ping data for.
-      let plusOneWeek = (date) => {
-        let d = date;
-        d.setDate(d.getDate() + 7);
-        return d;
-      };
+    // Build a list of the week date ranges we have ping data for.
+    let plusOneWeek = (date) => {
+      let d = date;
+      d.setDate(d.getDate() + 7);
+      return d;
+    };
 
-      this._weeks = Array.from(weekStartDates.values(), startTime => ({
-        startDate: new Date(startTime),
-        endDate: plusOneWeek(new Date(startTime)),
-      }));
+    this._weeks = Array.from(weekStartDates.values(), startTime => ({
+      startDate: new Date(startTime),
+      endDate: plusOneWeek(new Date(startTime)),
+    }));
 
-      // Render the archive data.
-      this._renderWeeks();
-      this._renderPingList();
+    // Render the archive data.
+    this._renderWeeks();
+    this._renderPingList();
 
-      // Update the displayed ping.
-      this._updateArchivedPingData();
-    });
-  },
+    // Update the displayed ping.
+    yield this._updateArchivedPingData();
+  }),
 
   _renderWeeks: function() {
     let weekSelector = document.getElementById("choose-ping-week");
@@ -993,6 +989,17 @@ var StackRenderer = {
 
     div.appendChild(titleElement);
     div.appendChild(document.createElement("br"));
+  }
+};
+
+var RawPayload = {
+  /**
+   * Renders the raw payload
+   */
+  render: function(aPing) {
+    setHasData("raw-payload-section", true);
+    let pre = document.getElementById("raw-payload-data-pre");
+    pre.textContent = JSON.stringify(aPing.payload, null, 2);
   }
 };
 
@@ -1776,6 +1783,31 @@ function renderPayloadList(ping) {
   }
 }
 
+function toggleElementHidden(element, isHidden) {
+  if (isHidden) {
+    element.classList.add("hidden");
+  } else {
+    element.classList.remove("hidden");
+  }
+}
+
+function togglePingSections(isMainPing) {
+  // We always show the sections that are "common" to all pings.
+  // The raw payload section is only used for pings other than "main" and "saved-session".
+  let commonSections = new Set(["general-data-section", "environment-data-section"]);
+  let otherPingSections = new Set(["raw-payload-section"]);
+
+  let elements = document.getElementById("structured-ping-data-section").children;
+  for (let section of elements) {
+    if (commonSections.has(section.id)) {
+      continue;
+    }
+
+    let showElement = isMainPing != otherPingSections.has(section.id);
+    toggleElementHidden(section, !showElement);
+  }
+}
+
 function displayPingData(ping, updatePayloadList = false) {
   gPingData = ping;
 
@@ -1797,6 +1829,16 @@ function displayPingData(ping, updatePayloadList = false) {
 
   // Show environment data.
   EnvironmentData.render(ping);
+
+  // We only have special rendering code for the payloads from "main" pings.
+  // For any other pings we just render the raw JSON payload.
+  let isMainPing = (ping.type == "main" || ping.type == "saved-session");
+  togglePingSections(isMainPing);
+
+  if (!isMainPing) {
+    RawPayload.render(ping);
+    return;
+  }
 
   // Show telemetry log.
   TelLog.render(ping);
