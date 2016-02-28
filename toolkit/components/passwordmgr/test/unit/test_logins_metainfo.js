@@ -275,9 +275,9 @@ add_task(function test_searchLogins_metainfo()
  * Tests that the default nsILoginManagerStorage module attached to the Login
  * Manager service is able to save and reload nsILoginMetaInfo properties.
  */
-add_task(function test_storage_metainfo()
+add_task(function* test_storage_metainfo()
 {
-  yield LoginTestUtils.reloadData();
+  yield* LoginTestUtils.reloadData();
   LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 
   assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo1), gLoginMetaInfo1);
