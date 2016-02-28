@@ -485,7 +485,8 @@ pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/
 pref("app.feedback.postURL", "https://input.mozilla.org/api/v1/feedback/");
 
 // URL for feedback page
-pref("app.feedbackURL", "about:feedback");
+// This should be kept in sync with the "feedback_link" string defined in strings.xml.in
+pref("app.feedbackURL", "https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-prompt");
 
 pref("app.privacyURL", "https://www.mozilla.org/privacy/firefox/");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
