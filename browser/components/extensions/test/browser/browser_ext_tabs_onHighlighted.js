@@ -57,7 +57,7 @@ add_task(function* testTabEvents() {
      * Opens a new tab and asserts that the correct events are fired.
      */
     function openTab(windowId) {
-      return browser.tabs.create({ windowId }).then(tab => {
+      return browser.tabs.create({windowId}).then(tab => {
         tabIds.push(tab.id);
         browser.test.log(`Opened tab ${tab.id}`);
         return expectEvents(tab.id, [
@@ -72,7 +72,7 @@ add_task(function* testTabEvents() {
      */
     function highlightTab(tabId) {
       browser.test.log(`Highlighting tab ${tabId}`);
-      return browser.tabs.update(tabId, { active: true }).then(tab => {
+      return browser.tabs.update(tabId, {active: true}).then(tab => {
         browser.test.assertEq(tab.id, tabId, `Tab ${tab.id} highlighted`);
         return expectEvents(tab.id, [
           "onActivated",
@@ -84,7 +84,7 @@ add_task(function* testTabEvents() {
     /**
      * The main entry point to the tests.
      */
-    browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+    browser.tabs.query({active: true, currentWindow: true}, tabs => {
       let activeWindow = tabs[0].windowId;
       Promise.all([
         openTab(activeWindow),
