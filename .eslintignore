@@ -180,7 +180,6 @@ toolkit/modules/tests/xpcshell/test_task.js
 
 # Not yet updated
 toolkit/components/osfile/**
-toolkit/components/passwordmgr/**
 
 # Uses preprocessing
 toolkit/content/widgets/videocontrols.xml
