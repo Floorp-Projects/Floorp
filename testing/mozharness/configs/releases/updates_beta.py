@@ -1,6 +1,6 @@
 
 config = {
-    "log_name": "updates_date",
+    "log_name": "updates_beta",
     "repo": {
         "repo": "https://hg.mozilla.org/build/tools",
         "revision": "default",
@@ -22,10 +22,10 @@ config = {
         "beta": {
             "version_regex": r"^(\d+\.\d+(b\d+)?)$",
             "requires_mirrors": False,
-            "patcher_config": "moBeta-branch-patcher2.cfg",
+            "patcher_config": "mozBeta-branch-patcher2.cfg",
             "update_verify_channel": "beta-localtest",
             "mar_channel_ids": [
-                "firefox-mozilla-beta", "firefox-mozilla-beta",
+                "firefox-mozilla-beta", "firefox-mozilla-release",
             ],
             "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
