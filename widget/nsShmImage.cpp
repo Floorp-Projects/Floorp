@@ -19,10 +19,32 @@
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <X11/Xlibint.h>
 
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
+
+nsShmImage::nsShmImage(Display* aDisplay,
+                       Drawable aWindow,
+                       Visual* aVisual,
+                       unsigned int aDepth)
+  : mImage(nullptr)
+  , mDisplay(aDisplay)
+  , mWindow(aWindow)
+  , mVisual(aVisual)
+  , mDepth(aDepth)
+  , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
+  , mPixmap(None)
+  , mGC(nullptr)
+  , mRequest(0)
+  , mPreviousRequestProcessed(0)
+{
+  memset(&mInfo, -1, sizeof(mInfo));
+}
+
+nsShmImage::~nsShmImage()
+{
+  DestroyImage();
+}
 
 // If XShm isn't available to our client, we'll try XShm once, fail,
 // set this to false and then never try again.
@@ -100,10 +122,52 @@ nsShmImage::DestroyShmSegment()
   }
 }
 
+static bool gShmInitialized = false;
+static int gShmEvent = -1;
+static Atom gShmPixmapAtom = None;
+
+bool
+nsShmImage::InitExtension()
+{
+  if (gShmInitialized) {
+    return gShmAvailable;
+  }
+
+  gShmInitialized = true;
+
+  if (!XShmQueryExtension(mDisplay)) {
+    gShmAvailable = false;
+    return false;
+  }
+
+  int major, minor;
+  Bool pixmaps;
+  if (!XShmQueryVersion(mDisplay, &major, &minor, &pixmaps)) {
+    gShmAvailable = false;
+    return false;
+  }
+
+  gShmEvent = XShmGetEventBase(mDisplay);
+  if (gShmEvent < 0) {
+    gShmAvailable = false;
+    return false;
+  }
+
+  if (pixmaps && XShmPixmapFormat(mDisplay) == ZPixmap) {
+    gShmPixmapAtom = XInternAtom(mDisplay, "_MOZ_SHM_PIXMAP", 0);
+  }
+
+  return true;
+}
+
 bool
 nsShmImage::CreateImage(const IntSize& aSize)
 {
   MOZ_ASSERT(mDisplay && mVisual);
+
+  if (!InitExtension()) {
+    return false;
+  }
 
   mFormat = SurfaceFormat::UNKNOWN;
   switch (mDepth) {
@@ -124,7 +188,11 @@ nsShmImage::CreateImage(const IntSize& aSize)
     }
     break;
   case 16:
-    mFormat = SurfaceFormat::R5G6B5_UINT16;
+    if (mVisual->red_mask == 0xf800 &&
+        mVisual->green_mask == 0x07e0 &&
+        mVisual->blue_mask == 0x1f) {
+      mFormat = SurfaceFormat::R5G6B5_UINT16;
+    }
     break;
   }
 
@@ -162,6 +230,12 @@ nsShmImage::CreateImage(const IntSize& aSize)
     return false;
   }
 
+  if (gShmPixmapAtom != None) {
+    mPixmap = XShmCreatePixmap(mDisplay, mWindow,
+                               mImage->data, &mInfo,
+                               mImage->width, mImage->height, mImage->depth);
+  }
+
   return true;
 }
 
@@ -170,6 +244,16 @@ nsShmImage::DestroyImage()
 {
   if (mImage) {
     mozilla::FinishX(mDisplay);
+  }
+  if (mGC) {
+    XFreeGC(mDisplay, mGC);
+    mGC = nullptr;
+  }
+  if (mPixmap != None) {
+    XFreePixmap(mDisplay, mPixmap);
+    mPixmap = None;
+  }
+  if (mImage) {
     if (mInfo.shmid != -1) {
       XShmDetach(mDisplay, &mInfo);
     }
@@ -206,6 +290,24 @@ nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
     mFormat);
 }
 
+bool
+nsShmImage::RequestWasProcessed()
+{
+  // Check for either that the sequence number has advanced to the request,
+  // or that it has advanced so far around that it appears to be before the
+  // last request processed at the time the request was initially sent.
+  unsigned long processed = LastKnownRequestProcessed(mDisplay);
+  return long(processed - mRequest) >= 0 ||
+         long(processed - mPreviousRequestProcessed) < 0;
+}
+
+Bool
+nsShmImage::FindEvent(Display* aDisplay, XEvent* aEvent, XPointer aArg)
+{
+  nsShmImage* image = (nsShmImage*)aArg;
+  return image->RequestWasProcessed();
+}
+
 void
 nsShmImage::WaitForRequest()
 {
@@ -213,13 +315,27 @@ nsShmImage::WaitForRequest()
     return;
   }
 
-  while (long(LastKnownRequestProcessed(mDisplay) - mRequest) < 0) {
-    LockDisplay(mDisplay);
-    _XReadEvents(mDisplay);
-    UnlockDisplay(mDisplay);
+  if (!RequestWasProcessed()) {
+    XEvent event;
+    XPeekIfEvent(mDisplay, &event, FindEvent, (XPointer)this);
   }
 
   mRequest = 0;
+}
+
+void
+nsShmImage::SendEvent()
+{
+  XClientMessageEvent event;
+  memset(&event, 0, sizeof(event));
+
+  event.type = ClientMessage;
+  event.window = mWindow;
+  event.message_type = gShmPixmapAtom;
+  event.format = 32;
+  event.data.l[0] = (long)mInfo.shmseg;
+
+  XSendEvent(mDisplay, mWindow, False, 0, (XEvent*)&event);
 }
 
 void
@@ -238,18 +354,25 @@ nsShmImage::Put(const mozilla::LayoutDeviceIntRegion& aRegion)
     xrects.AppendElement(xrect);
   }
 
-  GC gc = XCreateGC(mDisplay, mWindow, 0, nullptr);
-  XSetClipRectangles(mDisplay, gc, 0, 0, xrects.Elements(), xrects.Length(), YXBanded);
+  if (!mGC) {
+    mGC = XCreateGC(mDisplay, mWindow, 0, nullptr);
+    if (!mGC) {
+      return;
+    }
+  }
+  XSetClipRectangles(mDisplay, mGC, 0, 0, xrects.Elements(), xrects.Length(), YXBanded);
 
   mRequest = XNextRequest(mDisplay);
-  XShmPutImage(mDisplay, mWindow, gc, mImage,
-               0, 0,
-               0, 0,
-               mImage->width, mImage->height,
-               True);
+  if (mPixmap != None) {
+    XCopyArea(mDisplay, mPixmap, mWindow, mGC, 0, 0, mImage->width, mImage->height, 0, 0);
+    // Send a synthetic event to ensure WaitForRequest can safely poll it.
+    SendEvent();
+  } else {
+    // The send_event parameter is True here for WaitForRequest polling.
+    XShmPutImage(mDisplay, mWindow, mGC, mImage, 0, 0, 0, 0, mImage->width, mImage->height, True);
+  }
 
-  XFreeGC(mDisplay, gc);
-
+  mPreviousRequestProcessed = LastKnownRequestProcessed(mDisplay);
   XFlush(mDisplay);
 }
 
