@@ -289,7 +289,7 @@ if (this.addMessageListener) {
   var SpecialPowers = { Cc, Ci, Cr, Cu, };
   var ok, is;
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
-  ok = is = () => {};
+  ok = is = () => {}; // eslint-disable-line no-native-reassign
 
   Cu.import("resource://gre/modules/Task.jsm");
 
