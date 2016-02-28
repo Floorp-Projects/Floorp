@@ -717,7 +717,7 @@ function* runTest() {
   newField.setAttribute("type", "text");
   newField.setAttribute("name", "uname2");
   pword.parentNode.insertBefore(newField, pword);
-  is($_(7, "uname2").value, "", "Verifying empty uname2");;
+  is($_(7, "uname2").value, "", "Verifying empty uname2");
 
   // Delete login6B. It was created just to prevent filling in a login
   // automatically, removing it makes it more likely that we'll catch a
@@ -739,7 +739,7 @@ function* runTest() {
   // the password field should have any values filled in.
   yield spinEventLoop();
   checkACForm("form7user1", "");
-  is($_(7, "uname2").value, "", "Verifying empty uname2");;
+  is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
 
   pwmgr.removeLogin(login6A);

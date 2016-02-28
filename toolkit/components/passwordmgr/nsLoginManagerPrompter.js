@@ -613,7 +613,7 @@ LoginManagerPrompter.prototype = {
         this.log("New login seen for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
 
-        var notifyObj = this._getPopupNote() || notifyBox;
+        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showSaveLoginNotification(notifyObj, newLogin);
         else
@@ -623,7 +623,7 @@ LoginManagerPrompter.prototype = {
 
         this.log("Updating password for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
-        var notifyObj = this._getPopupNote() || notifyBox;
+        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showChangeLoginNotification(notifyObj,
                                             selectedLogin, newLogin);

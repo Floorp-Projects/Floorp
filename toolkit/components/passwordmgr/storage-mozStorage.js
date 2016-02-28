@@ -43,7 +43,7 @@ Transaction.prototype = {
 };
 
 
-function LoginManagerStorage_mozStorage() { };
+function LoginManagerStorage_mozStorage() { }
 
 LoginManagerStorage_mozStorage.prototype = {
 
