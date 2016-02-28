@@ -159,7 +159,6 @@ UNIFIED_SOURCES += [
     'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsScreenManagerProxy.cpp',
-    'nsShmImage.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
     'PluginWidgetProxy.cpp',
@@ -197,6 +196,9 @@ if CONFIG['MOZ_X11']:
     DIRS += ['x11']
     UNIFIED_SOURCES += [
         'GfxInfoX11.cpp'
+    ]
+    SOURCES += [
+        'nsShmImage.cpp'
     ]
 
 if toolkit in ('cocoa', 'windows'):
