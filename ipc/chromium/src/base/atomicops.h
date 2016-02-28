@@ -138,8 +138,10 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 #include "base/atomicops_internals_x86_macosx.h"
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_X86_FAMILY)
 #include "base/atomicops_internals_x86_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM_FAMILY)
+#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
 #include "base/atomicops_internals_arm_gcc.h"
+#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM64)
+#include "base/atomicops_internals_arm64_gcc.h"
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_MIPS)
 #include "base/atomicops_internals_mips_gcc.h"
 #else
