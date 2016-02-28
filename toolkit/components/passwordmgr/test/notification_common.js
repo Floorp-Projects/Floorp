@@ -90,7 +90,7 @@ function dumpNotifications() {
     ok(true, "is popup panel open? " + container.isPanelOpen);
     var notes = container._currentNotifications;
     ok(true, "Found " + notes.length + " popup notifications.");
-    for (var i = 0; i < notes.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
         ok(true, "#" + i + ": " + notes[i].id);
     }
 
@@ -101,9 +101,9 @@ function dumpNotifications() {
                            .QueryInterface(Ci.nsIDocShell)
                            .chromeEventHandler.ownerDocument.defaultView;
     var nb = chromeWin.getNotificationBox(window.top);
-    var notes = nb.allNotifications;
+    notes = nb.allNotifications;
     ok(true, "Found " + notes.length + " notification bars.");
-    for (var i = 0; i < notes.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
         ok(true, "#" + i + ": " + notes[i].getAttribute("value"));
     }
   } catch(e) { todo(false, "WOAH! " + e); }
