@@ -101,6 +101,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mCorsIncludeCredentials(false)
   , mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS)
   , mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW)
+  , mFetchCacheMode(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT)
   , mOnStartRequestCalled(false)
   , mTransferSize(0)
   , mDecodedBodySize(0)
@@ -2330,6 +2331,47 @@ HttpBaseChannel::SetRedirectMode(uint32_t aMode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
+{
+  *aFetchCacheMode = mFetchCacheMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+  MOZ_ASSERT(mFetchCacheMode == nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT,
+             "SetFetchCacheMode() should only be called once per channel");
+
+  mFetchCacheMode = aFetchCacheMode;
+
+  // Now, set the load flags that implement each cache mode.
+  switch (mFetchCacheMode) {
+  case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE:
+    // no-store means don't consult the cache on the way to the network, and
+    // don't store the response in the cache even if it's cacheable.
+    mLoadFlags |= INHIBIT_CACHING | LOAD_BYPASS_CACHE;
+    break;
+  case nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD:
+    // reload means don't consult the cache on the way to the network, but
+    // do store the response in the cache if possible.
+    mLoadFlags |= LOAD_BYPASS_CACHE;
+    break;
+  case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE:
+    // no-cache means always validate what's in the cache.
+    mLoadFlags |= VALIDATE_ALWAYS;
+    break;
+  case nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE:
+    // force-cache means don't validate unless if the response would vary.
+    mLoadFlags |= LOAD_FROM_CACHE;
+    break;
+  }
+
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -2813,6 +2855,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
     // Preserve Redirect mode flag.
     httpInternal->SetRedirectMode(mRedirectMode);
+
+    // Preserve Cache mode flag.
+    httpInternal->SetFetchCacheMode(mFetchCacheMode);
   }
 
   // transfer application cache information

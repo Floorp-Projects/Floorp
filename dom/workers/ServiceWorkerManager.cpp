@@ -112,6 +112,19 @@ static_assert(nsIHttpChannelInternal::REDIRECT_MODE_MANUAL == static_cast<uint32
 static_assert(3 == static_cast<uint32_t>(RequestRedirect::EndGuard_),
               "RequestRedirect enumeration value should make Necko Redirect mode value.");
 
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT == static_cast<uint32_t>(RequestCache::Default),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE == static_cast<uint32_t>(RequestCache::No_store),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD == static_cast<uint32_t>(RequestCache::Reload),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE == static_cast<uint32_t>(RequestCache::No_cache),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE == static_cast<uint32_t>(RequestCache::Force_cache),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(5 == static_cast<uint32_t>(RequestCache::EndGuard_),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 struct ServiceWorkerManager::RegistrationDataPerPrincipal final
