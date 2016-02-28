@@ -29,7 +29,7 @@ var Assert = null;
 
 this.LoginTestUtils = {
   set Assert(assert) {
-    Assert = assert;
+    Assert = assert; // eslint-disable-line no-native-reassign
   },
 
   /**
