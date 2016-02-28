@@ -546,6 +546,11 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
 {
+  if (aEvent->touches.IsEmpty()) {
+    AC_LOG("%s: Receive a touch event without any touch data!", __FUNCTION__);
+    return nsEventStatus_eIgnore;
+  }
+
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   int32_t id = (mActiveTouchId == kInvalidTouchId ?
