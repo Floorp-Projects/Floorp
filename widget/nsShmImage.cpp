@@ -11,13 +11,15 @@
 
 #ifdef MOZ_HAVE_SHMIMAGE
 #include "mozilla/X11Util.h"
-
 #include "mozilla/ipc/SharedMemory.h"
+#include "nsPrintfCString.h"
+#include "nsTArray.h"
 
 #include <errno.h>
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <X11/Xlibint.h>
 
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
@@ -34,7 +36,6 @@ bool nsShmImage::UseShm()
 #endif
 }
 
-#ifdef MOZ_WIDGET_GTK
 static int gShmError = 0;
 
 static int
@@ -44,7 +45,6 @@ TrapShmError(Display* aDisplay, XErrorEvent* aEvent)
   gShmError = aEvent->error_code;
   return 0;
 }
-#endif
 
 bool
 nsShmImage::CreateShmSegment()
@@ -143,7 +143,6 @@ nsShmImage::CreateImage(const IntSize& aSize)
     return false;
   }
 
-#ifdef MOZ_WIDGET_GTK
   gShmError = 0;
   XErrorHandler previousHandler = XSetErrorHandler(TrapShmError);
   Status attachOk = XShmAttach(mDisplay, &mInfo);
@@ -152,9 +151,6 @@ nsShmImage::CreateImage(const IntSize& aSize)
   if (gShmError) {
     attachOk = 0;
   }
-#else
-  Status attachOk = XShmAttach(mDisplay, &mInfo);
-#endif
 
   if (!attachOk) {
     DestroyShmSegment();
@@ -184,8 +180,11 @@ nsShmImage::DestroyImage()
 }
 
 already_AddRefed<DrawTarget>
-nsShmImage::CreateDrawTarget(const LayoutDeviceIntRegion& aRegion)
+nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
 {
+  // Wait for any in-flight XShmPutImage requests to complete.
+  WaitForRequest();
+
   // Due to bug 1205045, we must avoid making GTK calls off the main thread to query window size.
   // Instead we just track the largest offset within the image we are drawing to and grow the image
   // to accomodate it. Since usually the entire window is invalidated on the first paint to it,
@@ -208,34 +207,50 @@ nsShmImage::CreateDrawTarget(const LayoutDeviceIntRegion& aRegion)
 }
 
 void
-nsShmImage::Put(const LayoutDeviceIntRegion& aRegion)
+nsShmImage::WaitForRequest()
+{
+  if (!mRequest) {
+    return;
+  }
+
+  while (long(LastKnownRequestProcessed(mDisplay) - mRequest) < 0) {
+    LockDisplay(mDisplay);
+    _XReadEvents(mDisplay);
+    UnlockDisplay(mDisplay);
+  }
+
+  mRequest = 0;
+}
+
+void
+nsShmImage::Put(const mozilla::LayoutDeviceIntRegion& aRegion)
 {
   if (!mImage) {
     return;
   }
 
-  GC gc = XCreateGC(mDisplay, mWindow, 0, nullptr);
-  LayoutDeviceIntRegion bounded;
-  bounded.And(aRegion,
-              LayoutDeviceIntRect(0, 0, mImage->width, mImage->height));
-  for (auto iter = bounded.RectIter(); !iter.Done(); iter.Next()) {
-    const LayoutDeviceIntRect& r = iter.Get();
-    XShmPutImage(mDisplay, mWindow, gc, mImage,
-                 r.x, r.y,
-                 r.x, r.y,
-                 r.width, r.height,
-                 False);
+  AutoTArray<XRectangle, 32> xrects;
+  xrects.SetCapacity(aRegion.GetNumRects());
+
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const mozilla::LayoutDeviceIntRect &r = iter.Get();
+    XRectangle xrect = { (short)r.x, (short)r.y, (unsigned short)r.width, (unsigned short)r.height };
+    xrects.AppendElement(xrect);
   }
+
+  GC gc = XCreateGC(mDisplay, mWindow, 0, nullptr);
+  XSetClipRectangles(mDisplay, gc, 0, 0, xrects.Elements(), xrects.Length(), YXBanded);
+
+  mRequest = XNextRequest(mDisplay);
+  XShmPutImage(mDisplay, mWindow, gc, mImage,
+               0, 0,
+               0, 0,
+               mImage->width, mImage->height,
+               True);
 
   XFreeGC(mDisplay, gc);
 
-  // FIXME/bug 597336: we need to ensure that the shm image isn't
-  // scribbled over before all its pending XShmPutImage()s complete.
-  // However, XSync() is an unnecessarily heavyweight
-  // synchronization mechanism; other options are possible.  If this
-  // XSync is shown to hurt responsiveness, we need to explore the
-  // other options.
-  XSync(mDisplay, False);
+  XFlush(mDisplay);
 }
 
 #endif  // MOZ_HAVE_SHMIMAGE
