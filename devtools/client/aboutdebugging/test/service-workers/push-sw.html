@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker push test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+var sw = navigator.serviceWorker.register("push-sw.js");
+sw.then(
+  function(registration) {
+    dump("SW registered\n");
+  },
+  function(error) {
+    dump("SW not registered: " + error + "\n");
+  }
+);
+</script>
+</body>
+</html>
