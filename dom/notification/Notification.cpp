@@ -2510,8 +2510,7 @@ Notification::RegisterFeature()
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mFeature);
   mFeature = MakeUnique<NotificationFeature>(this);
-  bool added = mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
-                                          mFeature.get());
+  bool added = mWorkerPrivate->AddFeature(mFeature.get());
   if (!added) {
     mFeature = nullptr;
   }
@@ -2525,8 +2524,7 @@ Notification::UnregisterFeature()
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mFeature);
-  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(),
-                                mFeature.get());
+  mWorkerPrivate->RemoveFeature(mFeature.get());
   mFeature = nullptr;
 }
 

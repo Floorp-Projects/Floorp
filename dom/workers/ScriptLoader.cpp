@@ -1897,7 +1897,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     }
   }
 
-  aWorkerPrivate->RemoveFeature(aCx, &mScriptLoader);
+  aWorkerPrivate->RemoveFeature(&mScriptLoader);
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
 }
 
@@ -1949,7 +1949,7 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
-  if (!aWorkerPrivate->AddFeature(aCx, loader)) {
+  if (!aWorkerPrivate->AddFeature(loader)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1957,7 +1957,7 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (NS_FAILED(NS_DispatchToMainThread(loader))) {
     NS_ERROR("Failed to dispatch!");
 
-    aWorkerPrivate->RemoveFeature(aCx, loader);
+    aWorkerPrivate->RemoveFeature(loader);
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

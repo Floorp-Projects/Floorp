@@ -818,7 +818,7 @@ FetchBody<Derived>::RegisterFeature()
   MOZ_ASSERT(!mFeature);
   mFeature = new FetchBodyFeature<Derived>(this);
 
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), mFeature)) {
+  if (!mWorkerPrivate->AddFeature(mFeature)) {
     NS_WARNING("Failed to add feature");
     mFeature = nullptr;
     return false;
@@ -835,7 +835,7 @@ FetchBody<Derived>::UnregisterFeature()
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mFeature);
 
-  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), mFeature);
+  mWorkerPrivate->RemoveFeature(mFeature);
   mFeature = nullptr;
 }
 

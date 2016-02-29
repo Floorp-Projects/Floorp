@@ -1071,10 +1071,10 @@ public:
   RemoveChildWorker(JSContext* aCx, ParentType* aChildWorker);
 
   bool
-  AddFeature(JSContext* aCx, WorkerFeature* aFeature);
+  AddFeature(WorkerFeature* aFeature);
 
   void
-  RemoveFeature(JSContext* aCx, WorkerFeature* aFeature);
+  RemoveFeature(WorkerFeature* aFeature);
 
   void
   NotifyFeatures(JSContext* aCx, Status aStatus);
