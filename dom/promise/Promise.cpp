@@ -2607,7 +2607,7 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
     worker->AssertIsOnWorkerThread();
 
     mFeature = new PromiseReportRejectFeature(this);
-    if (NS_WARN_IF(!worker->AddFeature(worker->GetJSContext(), mFeature))) {
+    if (NS_WARN_IF(!worker->AddFeature(mFeature))) {
       // To avoid a false RemoveFeature().
       mFeature = nullptr;
       // Worker is shutting down, report rejection immediately since it is
@@ -2657,7 +2657,7 @@ Promise::RemoveFeature()
   if (mFeature) {
     workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
-    worker->RemoveFeature(worker->GetJSContext(), mFeature);
+    worker->RemoveFeature(mFeature);
     mFeature = nullptr;
   }
 }
@@ -2833,8 +2833,7 @@ PromiseWorkerProxy::AddRefObject()
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mFeatureAdded);
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
-                                  this)) {
+  if (!mWorkerPrivate->AddFeature(this)) {
     return false;
   }
 
@@ -2953,7 +2952,7 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
     MOZ_ASSERT(mFeatureAdded);
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mWorkerPrivate->RemoveFeature(this);
     mFeatureAdded = false;
     CleanProperties();
   }
