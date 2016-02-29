@@ -1088,7 +1088,7 @@ var SelectionHandler = {
     if (selectedText.length) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(selectedText);
-      NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
+      NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "long");
     }
     this._closeSelection();
   },
