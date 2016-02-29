@@ -309,6 +309,7 @@ function testPointerEventCTORS()
 }
 
 function runTests() {
+  SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
   testTarget = document.getElementById("testTarget");
   parent = testTarget.parentNode;
   gOnPointerPropHandled = new Array;
