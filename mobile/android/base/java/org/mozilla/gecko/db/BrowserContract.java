@@ -513,6 +513,16 @@ public class BrowserContract {
         }
     }
 
+    public static final class Numbers {
+        private Numbers() {}
+
+        public static final String TABLE_NAME = "numbers";
+
+        public static final String POSITION = "position";
+
+        public static final int MAX_VALUE = 50;
+    }
+
     // We refer to the service by name to decouple services from the rest of the code base.
     public static final String TAB_RECEIVED_SERVICE_CLASS_NAME = "org.mozilla.gecko.tabqueue.TabReceivedService";
 
