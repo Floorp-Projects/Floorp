@@ -92,6 +92,79 @@
   <deck id="body" class="theme-sidebar" flex="1">
 
     <vbox id="network-inspector-view" flex="1">
+      <hbox id="netmonitor-toolbar" class="devtools-toolbar">
+        <toolbarbutton id="requests-menu-clear-button"
+                       class="devtools-toolbarbutton devtools-clear-icon"
+                       tooltip="&netmonitorUI.footer.clear;"/>
+        <hbox id="requests-menu-filter-buttons">
+          <button id="requests-menu-filter-all-button"
+                  class="requests-menu-filter-button"
+                  checked="true"
+                  data-key="all"
+                  label="&netmonitorUI.footer.filterAll;">
+          </button>
+          <button id="requests-menu-filter-html-button"
+                  class="requests-menu-filter-button"
+                  data-key="html"
+                  label="&netmonitorUI.footer.filterHTML;">
+          </button>
+          <button id="requests-menu-filter-css-button"
+                  class="requests-menu-filter-button"
+                  data-key="css"
+                  label="&netmonitorUI.footer.filterCSS;">
+          </button>
+          <button id="requests-menu-filter-js-button"
+                  class="requests-menu-filter-button"
+                  data-key="js"
+                  label="&netmonitorUI.footer.filterJS;">
+          </button>
+          <button id="requests-menu-filter-xhr-button"
+                  class="requests-menu-filter-button"
+                  data-key="xhr"
+                  label="&netmonitorUI.footer.filterXHR;">
+          </button>
+          <button id="requests-menu-filter-fonts-button"
+                  class="requests-menu-filter-button"
+                  data-key="fonts"
+                  label="&netmonitorUI.footer.filterFonts;">
+          </button>
+          <button id="requests-menu-filter-images-button"
+                  class="requests-menu-filter-button"
+                  data-key="images"
+                  label="&netmonitorUI.footer.filterImages;">
+          </button>
+          <button id="requests-menu-filter-media-button"
+                  class="requests-menu-filter-button"
+                  data-key="media"
+                  label="&netmonitorUI.footer.filterMedia;">
+          </button>
+          <button id="requests-menu-filter-flash-button"
+                  class="requests-menu-filter-button"
+                  data-key="flash"
+                  label="&netmonitorUI.footer.filterFlash;">
+          </button>
+          <button id="requests-menu-filter-other-button"
+                  class="requests-menu-filter-button"
+                  data-key="other"
+                  label="&netmonitorUI.footer.filterOther;">
+          </button>
+        </hbox>
+        <spacer id="requests-menu-spacer"
+                flex="1"/>
+        <toolbarbutton id="requests-menu-network-summary-button"
+                       class="devtools-toolbarbutton icon-and-text"
+                       tooltiptext="&netmonitorUI.footer.perf;"/>
+        <textbox id="requests-menu-filter-freetext-text"
+                 class="devtools-searchinput"
+                 type="search"
+                 required="true"
+                 placeholder="&netmonitorUI.footer.filterFreetext.label;"/>
+        <toolbarbutton id="details-pane-toggle"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&netmonitorUI.panesButton.tooltip;"
+                       disabled="true"
+                       tabindex="0"/>
+      </hbox>
       <hbox id="network-table-and-sidebar"
             class="devtools-responsive-container"
             flex="1">
@@ -194,11 +267,6 @@
                 </button>
               </hbox>
             </hbox>
-            <toolbarbutton id="details-pane-toggle"
-                           class="devtools-toolbarbutton"
-                           tooltiptext="&netmonitorUI.panesButton.tooltip;"
-                           disabled="true"
-                           tabindex="0"/>
           </toolbar>
 
           <vbox id="requests-menu-empty-notice"
@@ -756,81 +824,6 @@
             </tabpanels>
           </tabbox>
         </deck>
-      </hbox>
-
-      <hbox id="requests-menu-footer">
-        <button id="requests-menu-filter-all-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                checked="true"
-                data-key="all"
-                label="&netmonitorUI.footer.filterAll;">
-        </button>
-        <button id="requests-menu-filter-html-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="html"
-                label="&netmonitorUI.footer.filterHTML;">
-        </button>
-        <button id="requests-menu-filter-css-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="css"
-                label="&netmonitorUI.footer.filterCSS;">
-        </button>
-        <button id="requests-menu-filter-js-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="js"
-                label="&netmonitorUI.footer.filterJS;">
-        </button>
-        <button id="requests-menu-filter-xhr-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="xhr"
-                label="&netmonitorUI.footer.filterXHR;">
-        </button>
-        <button id="requests-menu-filter-fonts-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="fonts"
-                label="&netmonitorUI.footer.filterFonts;">
-        </button>
-        <button id="requests-menu-filter-images-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="images"
-                label="&netmonitorUI.footer.filterImages;">
-        </button>
-        <button id="requests-menu-filter-media-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="media"
-                label="&netmonitorUI.footer.filterMedia;">
-        </button>
-        <button id="requests-menu-filter-flash-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="flash"
-                label="&netmonitorUI.footer.filterFlash;">
-        </button>
-        <button id="requests-menu-filter-other-button"
-                class="requests-menu-filter-button requests-menu-footer-button"
-                data-key="other"
-                label="&netmonitorUI.footer.filterOther;">
-        </button>
-        <spacer id="requests-menu-spacer-textbox"
-                class="requests-menu-footer-spacer"
-                flex="0"/>
-        <textbox id="requests-menu-filter-freetext-text"
-                 class="requests-menu-footer-textbox devtools-searchinput"
-                 type="search"
-                 required="true"
-                 placeholder="&netmonitorUI.footer.filterFreetext.label;"/>
-        <spacer id="requests-menu-spacer"
-                class="requests-menu-footer-spacer"
-                flex="100"/>
-        <button id="requests-menu-network-summary-button"
-                class="requests-menu-footer-button"
-                tooltiptext="&netmonitorUI.footer.perf;"/>
-        <label id="requests-menu-network-summary-label"
-               class="plain requests-menu-footer-label"
-               crop="end"
-               tooltiptext="&netmonitorUI.footer.perf;"/>
-        <button id="requests-menu-clear-button"
-                class="requests-menu-footer-button"
-                label="&netmonitorUI.footer.clear;"/>
       </hbox>
 
     </vbox>

@@ -126,7 +126,6 @@ var NetMonitorView = {
       $("#request-menu-context-perf").hidden = true;
       $("#notice-perf-message").hidden = true;
       $("#requests-menu-network-summary-button").hidden = true;
-      $("#requests-menu-network-summary-label").hidden = true;
     }
   },
 
@@ -367,8 +366,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget = new SideMenuWidget($("#requests-menu-contents"));
     this._splitter = $("#network-inspector-view-splitter");
-    this._summary = $("#requests-menu-network-summary-label");
-    this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
+    this._summary = $("#requests-menu-network-summary-button");
+    this._summary.setAttribute("label", L10N.getStr("networkMenu.empty"));
     this.userInputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     Prefs.filters.forEach(type => this.filterOn(type));
@@ -409,7 +408,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.freetextFilterBox.addEventListener("command", this.requestsFreetextFilterEvent, false);
 
     $("#toolbar-labels").addEventListener("click", this.requestsMenuSortEvent, false);
-    $("#requests-menu-footer").addEventListener("click", this.requestsMenuFilterEvent, false);
+    $("#requests-menu-filter-buttons").addEventListener("click", this.requestsMenuFilterEvent, false);
     $("#requests-menu-clear-button").addEventListener("click", this.reqeustsMenuClearEvent, false);
     $("#network-request-popup").addEventListener("popupshowing", this._onContextShowing, false);
     $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
@@ -438,13 +437,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       $("#request-menu-context-perf").addEventListener("command", this._onContextPerfCommand, false);
       $("#requests-menu-perf-notice-button").addEventListener("command", this._onContextPerfCommand, false);
       $("#requests-menu-network-summary-button").addEventListener("command", this._onContextPerfCommand, false);
-      $("#requests-menu-network-summary-label").addEventListener("click", this._onContextPerfCommand, false);
       $("#network-statistics-back-button").addEventListener("command", this._onContextPerfCommand, false);
     } else {
       $("#notice-perf-message").hidden = true;
       $("#request-menu-context-perf").hidden = true;
       $("#requests-menu-network-summary-button").hidden = true;
-      $("#requests-menu-network-summary-label").hidden = true;
     }
 
     if (!NetMonitorController.supportsTransferredResponseSize) {
@@ -467,7 +464,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     window.removeEventListener("resize", this._onResize, false);
 
     $("#toolbar-labels").removeEventListener("click", this.requestsMenuSortEvent, false);
-    $("#requests-menu-footer").removeEventListener("click", this.requestsMenuFilterEvent, false);
+    $("#requests-menu-filter-buttons").removeEventListener("click", this.requestsMenuFilterEvent, false);
     $("#requests-menu-clear-button").removeEventListener("click", this.reqeustsMenuClearEvent, false);
     this.freetextFilterBox.removeEventListener("input", this.requestsFreetextFilterEvent, false);
     this.freetextFilterBox.removeEventListener("command", this.requestsFreetextFilterEvent, false);
@@ -486,7 +483,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#requests-menu-reload-notice-button").removeEventListener("command", this._onReloadCommand, false);
     $("#requests-menu-perf-notice-button").removeEventListener("command", this._onContextPerfCommand, false);
     $("#requests-menu-network-summary-button").removeEventListener("command", this._onContextPerfCommand, false);
-    $("#requests-menu-network-summary-label").removeEventListener("click", this._onContextPerfCommand, false);
     $("#network-statistics-back-button").removeEventListener("command", this._onContextPerfCommand, false);
 
     $("#custom-request-send-button").removeEventListener("click", this.sendCustomRequestEvent, false);
@@ -1255,7 +1251,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let visibleItems = this.visibleItems;
     let visibleRequestsCount = visibleItems.length;
     if (!visibleRequestsCount) {
-      this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
+      this._summary.setAttribute("label", L10N.getStr("networkMenu.empty"));
       return;
     }
 
@@ -1266,7 +1262,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     // https://developer.mozilla.org/en-US/docs/Localization_and_Plurals
     let str = PluralForm.get(visibleRequestsCount, L10N.getStr("networkMenu.summary"));
-    this._summary.setAttribute("value", str
+    this._summary.setAttribute("label", str
       .replace("#1", visibleRequestsCount)
       .replace("#2", L10N.numberWithDecimals((totalBytes || 0) / 1024, CONTENT_SIZE_DECIMALS))
       .replace("#3", L10N.numberWithDecimals((totalMillis || 0) / 1000, REQUEST_TIME_DECIMALS))
