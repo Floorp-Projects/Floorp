@@ -59,11 +59,19 @@ public:
                                const dom::OriginAttributesPatternDictionary& aPattern);
 
   static void
-  CreateOriginAttributesWithUserContextId(dom::GlobalObject& aGlobal,
-                                          const nsAString& aOrigin,
-                                          uint32_t aUserContextId,
-                                          dom::OriginAttributesDictionary& aAttrs,
-                                          ErrorResult& aRv);
+  CreateDefaultOriginAttributes(dom::GlobalObject& aGlobal,
+                                dom::OriginAttributesDictionary& aAttrs);
+
+  static void
+  CreateOriginAttributesFromOrigin(dom::GlobalObject& aGlobal,
+                                   const nsAString& aOrigin,
+                                   dom::OriginAttributesDictionary& aAttrs,
+                                   ErrorResult& aRv);
+
+  static void
+  CreateOriginAttributesFromDict(dom::GlobalObject& aGlobal,
+                                 const dom::OriginAttributesDictionary& aAttrs,
+                                 dom::OriginAttributesDictionary& aNewAttrs);
 
   static bool
   IsOriginAttributesEqual(dom::GlobalObject& aGlobal,

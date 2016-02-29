@@ -33,9 +33,6 @@ function checkOriginAttributes(prin, attrs, suffix) {
   } else {
     checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
   }
-
-  do_check_eq(ChromeUtils.createOriginAttributesWithUserContextId("http://example.org", 2).userContextId, 2);
-  do_check_eq(ChromeUtils.createOriginAttributesWithUserContextId("https://www.example.com:123^userContextId=4", 2).userContextId, 2);
 }
 
 function run_test() {
