@@ -406,7 +406,7 @@ public:
       promise->MaybeReject(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE);
     }
 
-    mProxy->CleanUp(aCx);
+    mProxy->CleanUp();
     return true;
   }
 private:
@@ -601,7 +601,7 @@ public:
       promise->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
     }
 
-    mProxy->CleanUp(aCx);
+    mProxy->CleanUp();
     return true;
   }
 private:
@@ -872,7 +872,7 @@ public:
       promise->MaybeReject(aCx, JS::UndefinedHandleValue);
     }
 
-    mProxy->CleanUp(aCx);
+    mProxy->CleanUp();
     return true;
   }
 

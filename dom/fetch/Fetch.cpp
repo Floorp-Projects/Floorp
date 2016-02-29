@@ -307,7 +307,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    mResolver->mPromiseProxy->CleanUp(aCx);
+    mResolver->mPromiseProxy->CleanUp();
     return true;
   }
 };

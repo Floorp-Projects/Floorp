@@ -101,7 +101,7 @@ class WorkerPrivate;
 //          aWorkerPrivate->AssertIsOnWorkerThread();
 //          RefPtr<Promise> promise = mProxy->WorkerPromise();
 //          promise->MaybeResolve(mResult);
-//          mProxy->CleanUp(aCx);
+//          mProxy->CleanUp();
 //        }
 //
 // Note: If a PromiseWorkerProxy is not cleaned up by a WorkerRunnable - this
@@ -154,7 +154,7 @@ public:
   // sure this is the last thing you do.
   // 1. WorkerPrivate() will no longer return a valid worker.
   // 2. WorkerPromise() will crash!
-  void CleanUp(JSContext* aCx);
+  void CleanUp();
 
   Mutex& Lock()
   {
