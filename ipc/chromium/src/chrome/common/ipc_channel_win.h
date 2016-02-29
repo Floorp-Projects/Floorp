@@ -10,6 +10,7 @@
 #include <queue>
 #include <string>
 
+#include "base/buffer.h"
 #include "base/message_loop.h"
 #include "mozilla/UniquePtr.h"
 
@@ -86,7 +87,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   // Large messages that span multiple pipe buffers, get built-up using
   // this buffer.
-  std::string input_overflow_buf_;
+  Buffer input_overflow_buf_;
 
   // In server-mode, we have to wait for the client to connect before we
   // can begin reading.  We make use of the input_state_ when performing

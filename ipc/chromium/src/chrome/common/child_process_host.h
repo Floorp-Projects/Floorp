@@ -75,7 +75,7 @@ class ChildProcessHost :
   void InstanceCreated();
 
   // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(const IPC::Message& msg) { }
+  virtual void OnMessageReceived(IPC::Message&& msg) { }
   virtual void OnChannelConnected(int32_t peer_pid) { }
   virtual void OnChannelError() { }
 
@@ -102,7 +102,7 @@ class ChildProcessHost :
   class ListenerHook : public IPC::Channel::Listener {
    public:
     explicit ListenerHook(ChildProcessHost* host);
-    virtual void OnMessageReceived(const IPC::Message& msg);
+    virtual void OnMessageReceived(IPC::Message&& msg);
     virtual void OnChannelConnected(int32_t peer_pid);
     virtual void OnChannelError();
     virtual void GetQueuedMessages(std::queue<IPC::Message>& queue);
