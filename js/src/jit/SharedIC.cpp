@@ -732,7 +732,8 @@ ICStubCompiler::getStubCode()
     // Compile new stubcode.
     JitContext jctx(cx, nullptr);
     MacroAssembler masm;
-#ifndef JS_USE_LINK_REGISTER
+#if !defined(JS_USE_LINK_REGISTER) && \
+    !(defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64))
     // The first value contains the return addres,
     // which we pull into ICTailCallReg for tail calls.
     masm.adjustFrame(sizeof(intptr_t));
