@@ -8,11 +8,6 @@ var testGenerator = testSteps();
 var testResult;
 var testException;
 
-function testFinishedCallback(result, exception)
-{
-  throw new Error("Bad testFinishedCallback!");
-}
-
 function runTest()
 {
   testGenerator.next();
@@ -29,7 +24,18 @@ function finishTestNow()
 function finishTest()
 {
   setTimeout(finishTestNow, 0);
-  setTimeout(testFinishedCallback, 0, testResult, testException);
+  setTimeout(() => {
+    if (window.testFinishedCallback)
+      window.testFinishedCallback(testResult, testException);
+    else {
+      let message;
+      if (testResult)
+        message = "ok";
+      else
+        message = testException;
+      window.parent.postMessage(message, "*");
+    }
+  }, 0);
 }
 
 function grabEventAndContinueHandler(event)
