@@ -145,7 +145,6 @@ public class GeckoApplication extends Application
 
         // Make sure that all browser-ish applications default to the real LocalBrowserDB.
         // GeckoView consumers use their own Application class, so this doesn't affect them.
-        // WebappImpl overrides this on creation.
         //
         // We need to do this before any access to the profile; it controls
         // which database class is used.

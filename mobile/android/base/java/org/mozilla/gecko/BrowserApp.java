@@ -679,6 +679,7 @@ public class BrowserApp extends GeckoApp
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+            "Gecko:DelayedStartup",
             "Menu:Open",
             "Menu:Update",
             "LightweightTheme:Update",
@@ -1390,6 +1391,7 @@ public class BrowserApp extends GeckoApp
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
+            "Gecko:DelayedStartup",
             "Menu:Open",
             "Menu:Update",
             "LightweightTheme:Update",
