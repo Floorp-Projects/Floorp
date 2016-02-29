@@ -711,10 +711,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_context(context): yield o
 
-        for path in context['CONFIGURE_SUBST_FILES']:
-            yield self._create_substitution(ConfigFileSubstitution, context,
-                path)
-
         for obj in self._process_xpidl(context):
             yield obj
 
@@ -787,6 +783,12 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_generated_files(context):
             generated_files.add(obj.output)
             yield obj
+
+        for path in context['CONFIGURE_SUBST_FILES']:
+            sub = self._create_substitution(ConfigFileSubstitution, context,
+                path)
+            generated_files.add(str(sub.relpath))
+            yield sub
 
         for obj in self._process_test_harness_files(context):
             yield obj
