@@ -99,9 +99,9 @@ class ArenaCellIterImpl
 #endif
 
     // These three are set in reset() (which is called by init()).
+    ArenaHeader* arenaAddr;
     FreeSpan span;
-    uintptr_t thing;
-    uintptr_t limit;
+    uint_fast16_t thing;
 
     // Upon entry, |thing| points to any thing (free or used) and finds the
     // first used thing, which may be |thing|.
@@ -114,19 +114,23 @@ class ArenaCellIterImpl
         // never need to move forward.
         if (thing == span.first) {
             thing = span.last + thingSize;
-            span = *span.nextSpan();
+            span = *span.nextSpan(arenaAddr);
         }
     }
 
   public:
     ArenaCellIterImpl()
-      : firstThingOffset(0)     // Squelch
-      , thingSize(0)            //   warnings
-      , limit(0)
+      : firstThingOffset(0)
+      , thingSize(0)
+#ifdef DEBUG
+      , isInited(false)
+#endif
+      , arenaAddr(nullptr)
+      , thing(0)
     {
     }
 
-    void initUnsynchronized(ArenaHeader* aheader) {
+    void init(ArenaHeader* aheader) {
         AllocKind kind = aheader->getAllocKind();
 #ifdef DEBUG
         isInited = true;
@@ -136,32 +140,24 @@ class ArenaCellIterImpl
         reset(aheader);
     }
 
-    void init(ArenaHeader* aheader) {
-#ifdef DEBUG
-        AllocKind kind = aheader->getAllocKind();
-        MOZ_ASSERT(aheader->zone->arenas.isSynchronizedFreeList(kind));
-#endif
-        initUnsynchronized(aheader);
-    }
-
     // Use this to move from an Arena of a particular kind to another Arena of
     // the same kind.
     void reset(ArenaHeader* aheader) {
         MOZ_ASSERT(isInited);
-        span = aheader->getFirstFreeSpan();
-        uintptr_t arenaAddr = aheader->arenaAddress();
-        thing = arenaAddr + firstThingOffset;
-        limit = arenaAddr + ArenaSize;
+        arenaAddr = aheader;
+        span = aheader->firstFreeSpan;
+        thing = firstThingOffset;
         moveForwardIfFree();
     }
 
     bool done() const {
-        return thing == limit;
+        MOZ_ASSERT(thing <= ArenaSize);
+        return thing == ArenaSize;
     }
 
     TenuredCell* getCell() const {
         MOZ_ASSERT(!done());
-        return reinterpret_cast<TenuredCell*>(thing);
+        return reinterpret_cast<TenuredCell*>(uintptr_t(arenaAddr) + thing);
     }
 
     template<typename T> T* get() const {
@@ -172,7 +168,7 @@ class ArenaCellIterImpl
     void next() {
         MOZ_ASSERT(!done());
         thing += thingSize;
-        if (thing < limit)
+        if (thing < ArenaSize)
             moveForwardIfFree();
     }
 };
@@ -194,7 +190,7 @@ class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
 {
   public:
     explicit ArenaCellIterUnderFinalize(ArenaHeader* aheader) {
-        initUnsynchronized(aheader);
+        init(aheader);
     }
 };
 
@@ -207,7 +203,6 @@ class ZoneCellIterImpl
     ZoneCellIterImpl() {}
 
     void init(JS::Zone* zone, AllocKind kind) {
-        MOZ_ASSERT(zone->arenas.isSynchronizedFreeList(kind));
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
             cellIter.init(arenaIter.get());
@@ -253,14 +248,9 @@ class ZoneCellIterUnderGC : public ZoneCellIterImpl
 class ZoneCellIter : public ZoneCellIterImpl
 {
     JS::AutoAssertNoAlloc noAlloc;
-    ArenaLists* lists;
-    AllocKind kind;
 
   public:
-    ZoneCellIter(JS::Zone* zone, AllocKind kind)
-      : lists(&zone->arenas),
-        kind(kind)
-    {
+    ZoneCellIter(JS::Zone* zone, AllocKind kind) {
         JSRuntime* rt = zone->runtimeFromMainThread();
 
         /*
@@ -278,22 +268,10 @@ class ZoneCellIter : public ZoneCellIterImpl
         /* Evict the nursery before iterating so we can see all things. */
         rt->gc.evictNursery();
 
-        if (lists->isSynchronizedFreeList(kind)) {
-            lists = nullptr;
-        } else {
-            MOZ_ASSERT(!rt->isHeapBusy());
-            lists->copyFreeListToArena(kind);
-        }
-
         /* Assert that no GCs can occur while a ZoneCellIter is live. */
         noAlloc.disallowAlloc(rt);
 
         init(zone, kind);
-    }
-
-    ~ZoneCellIter() {
-        if (lists)
-            lists->clearFreeListInArena(kind);
     }
 };
 
