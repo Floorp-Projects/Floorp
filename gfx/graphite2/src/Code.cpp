@@ -84,8 +84,9 @@ public:
     struct limits;
     struct analysis
     {
+        static const int NUMCONTEXTS = 256;
         uint8     slotref;
-        context   contexts[256];
+        context   contexts[NUMCONTEXTS];
         byte      max_ref;
         
         analysis() : slotref(0), max_ref(0) {};
@@ -368,6 +369,8 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
             if (--_stack_depth < 0)
                 failure(underfull_stack);
             valid_upto(gr_slatMax, bc[0]);
+            if (attrCode(bc[0]) == gr_slatUserDefn)     // use IATTR for user attributes
+                failure(out_of_range_data);
             test_context();
             break;
         case IATTR_SET_SLOT :
@@ -381,6 +384,8 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
             ++_stack_depth;
             valid_upto(gr_slatMax, bc[0]);
             valid_upto(_rule_length, _pre_context + int8(bc[1]));
+            if (attrCode(bc[0]) == gr_slatUserDefn)     // use IATTR for user attributes
+                failure(out_of_range_data);
             break;
         case PUSH_GLYPH_ATTR_OBS :
             ++_stack_depth;
@@ -661,14 +666,14 @@ bool Machine::Code::decoder::validate_opcode(const opcode opc, const byte * cons
 
 bool Machine::Code::decoder::valid_upto(const uint16 limit, const uint16 x) const throw()
 {
-    const bool t = x < limit;
+    const bool t = (limit != 0) && (x < limit);
     if (!t) failure(out_of_range_data);
     return t;
 }
 
 bool Machine::Code::decoder::test_context() const throw()
 {
-    if (_pre_context >= _rule_length)
+    if (_pre_context >= _rule_length || _analysis.slotref >= analysis::NUMCONTEXTS - 1)
     {
         failure(out_of_range_data);
         return false;
@@ -686,7 +691,7 @@ void Machine::Code::failure(const status_t s) throw() {
 inline
 void Machine::Code::decoder::analysis::set_ref(int index, bool incinsert) throw() {
     if (incinsert && contexts[slotref].flags.inserted) --index;
-    if (index + slotref < 0) return;
+    if (index + slotref < 0 || index + slotref >= NUMCONTEXTS) return;
     contexts[index + slotref].flags.referenced = true;
     if ((index > 0 || !contexts[index + slotref].flags.inserted) && index + slotref > max_ref) max_ref = index + slotref;
 }
@@ -695,7 +700,7 @@ void Machine::Code::decoder::analysis::set_ref(int index, bool incinsert) throw(
 inline
 void Machine::Code::decoder::analysis::set_noref(int index) throw() {
     if (contexts[slotref].flags.inserted) --index;
-    if (index + slotref < 0) return;
+    if (index + slotref < 0 || index + slotref >= NUMCONTEXTS) return;
     if ((index > 0 || !contexts[index + slotref].flags.inserted) && index + slotref > max_ref) max_ref = index + slotref;
 }
 
@@ -703,7 +708,7 @@ void Machine::Code::decoder::analysis::set_noref(int index) throw() {
 inline
 void Machine::Code::decoder::analysis::set_changed(int index) throw() {
     if (contexts[slotref].flags.inserted) --index;
-    if (index + slotref < 0) return;
+    if (index + slotref < 0 || index + slotref >= NUMCONTEXTS) return;
     contexts[index + slotref].flags.changed = true;
     if ((index > 0 || !contexts[index + slotref].flags.inserted) && index + slotref > max_ref) max_ref = index + slotref;
 }

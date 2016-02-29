@@ -265,7 +265,7 @@ GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
     {
         if ((m_pGlat = Face::Table(face, Tag::Glat, 0x00030000)) == NULL
             || (m_pGloc = Face::Table(face, Tag::Gloc)) == NULL
-            || m_pGloc.size() < 6)
+            || m_pGloc.size() < 8)
         {
             _head = Face::Table();
             return;

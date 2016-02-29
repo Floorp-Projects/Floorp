@@ -62,6 +62,7 @@ const void * direct_run(const bool          get_table_mode,
                         Machine::stack_t  * stack,
                         slotref         * & __map,
                         uint8                _dir,
+                        Machine::status_t & status,
                         SlotMap           * __smap=0)
 {
     // We need to define and return to opcode table from within this function 
@@ -71,17 +72,17 @@ const void * direct_run(const bool          get_table_mode,
         return opcode_table;
 
     // Declare virtual machine registers
-    const instr       * ip = program;
-    const byte        * dp = data;
-    Machine::stack_t  * sp = stack + Machine::STACK_GUARD,
-                * const sb = sp;
-    SlotMap         & smap = *__smap;
-    Segment          & seg = smap.segment;
-    slotref             is = *__map,
-                     * map = __map,
-              * const mapb = smap.begin()+smap.context();
-    uint8            dir = _dir;
-    int8             flags = 0;
+    const instr           * ip = program;
+    const byte            * dp = data;
+    Machine::stack_t      * sp = stack + Machine::STACK_GUARD,
+                    * const sb = sp;
+    SlotMap             & smap = *__smap;
+    Segment              & seg = smap.segment;
+    slotref                 is = *__map,
+                         * map = __map,
+                  * const mapb = smap.begin()+smap.context();
+    uint8                  dir = _dir;
+    int8                 flags = 0;
     
     // start the program
     goto **ip;
@@ -100,7 +101,8 @@ const void * direct_run(const bool          get_table_mode,
 const opcode_t * Machine::getOpcodeTable() throw()
 {
     slotref * dummy;
-    return static_cast<const opcode_t *>(direct_run(true, 0, 0, 0, dummy, 0));
+    Machine::status_t dumstat = Machine::finished;
+    return static_cast<const opcode_t *>(direct_run(true, 0, 0, 0, dummy, 0, dumstat));
 }
 
 
@@ -111,7 +113,7 @@ Machine::stack_t  Machine::run(const instr   * program,
     assert(program != 0);
     
     const stack_t *sp = static_cast<const stack_t *>(
-                direct_run(false, program, data, _stack, is, _map.dir(), &_map));
+                direct_run(false, program, data, _stack, is, _map.dir(), _status, &_map));
     const stack_t ret = sp == _stack+STACK_GUARD+1 ? *sp-- : 0;
     check_final_stack(sp);
     return ret;
