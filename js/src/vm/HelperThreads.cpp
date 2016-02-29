@@ -1089,17 +1089,10 @@ js::GCParallelTask::runFromHelperThread()
 }
 
 bool
-js::GCParallelTask::isRunningWithLockHeld() const
+js::GCParallelTask::isRunning() const
 {
     MOZ_ASSERT(HelperThreadState().isLocked());
     return state == Dispatched;
-}
-
-bool
-js::GCParallelTask::isRunning() const
-{
-    AutoLockHelperThreadState helperLock;
-    return isRunningWithLockHeld();
 }
 
 void
