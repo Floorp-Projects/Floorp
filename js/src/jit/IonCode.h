@@ -418,11 +418,8 @@ struct IonScript
     void incNumBailouts() {
         numBailouts_++;
     }
-    uint32_t numBailouts() const {
-        return numBailouts_;
-    }
     bool bailoutExpected() const {
-        return numBailouts_ > 0;
+        return numBailouts_ >= JitOptions.frequentBailoutThreshold;
     }
     void setHasProfilingInstrumentation() {
         hasProfilingInstrumentation_ = true;

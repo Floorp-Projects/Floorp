@@ -278,7 +278,7 @@ jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutK
         // we compile this script LICM will be disabled.
         IonScript* ionScript = script->ionScript();
 
-        if (ionScript->numBailouts() >= JitOptions.frequentBailoutThreshold) {
+        if (ionScript->bailoutExpected()) {
             // If we bailout because of the first execution of a basic block,
             // then we should record which basic block we are returning in,
             // which should prevent this from happening again.  Also note that
