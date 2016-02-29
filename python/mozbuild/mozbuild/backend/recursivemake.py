@@ -1275,6 +1275,7 @@ INSTALL_TARGETS += %(prefix)s
                         target_var, self._pretty_path(f, backend_file)))
                     have_objdir_files = True
             if have_objdir_files:
+                self._no_skip['export'].add(backend_file.relobjdir)
                 backend_file.write('%s_DEST := $(DEPTH)/%s\n'
                                    % (target_var,
                                       mozpath.join(target, path)))
