@@ -61,7 +61,7 @@ var MasterPassword = {
     } catch(e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
-    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "long");
     return false;
   }
 };

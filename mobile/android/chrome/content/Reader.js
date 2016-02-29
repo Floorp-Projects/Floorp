@@ -179,7 +179,7 @@ var Reader = {
 
       case "Reader:ToolbarHidden":
         if (!this._hasUsedToolbar) {
-          NativeWindow.toast.show(Strings.browser.GetStringFromName("readerMode.toolbarTip"), "short");
+          NativeWindow.toast.show(Strings.browser.GetStringFromName("readerMode.toolbarTip"), "long");
           Services.prefs.setBoolPref("reader.has_used_toolbar", true);
           this._hasUsedToolbar = true;
         }
