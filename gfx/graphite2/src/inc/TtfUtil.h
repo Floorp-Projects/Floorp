@@ -137,11 +137,11 @@ public:
     ////////////////////////////////// cmap lookup tools 
     const void * FindCmapSubtable(const void * pCmap, int nPlatformId = 3, 
         int nEncodingId = 1, size_t length = 0);
-    bool CheckCmapSubtable4(const void * pCmap31, size_t table_len /*, unsigned int maxgid*/);
+    bool CheckCmapSubtable4(const void * pCmap31, const void * pCmapEnd /*, unsigned int maxgid*/);
     gid16 CmapSubtable4Lookup(const void * pCmapSubtabel4, unsigned int nUnicodeId, int rangeKey = 0);
     unsigned int CmapSubtable4NextCodepoint(const void *pCmap31, unsigned int nUnicodeId,
         int * pRangeKey = 0);
-    bool CheckCmapSubtable12(const void *pCmap310, size_t table_len /*, unsigned int maxgid*/);
+    bool CheckCmapSubtable12(const void *pCmap310, const void * pCmapEnd /*, unsigned int maxgid*/);
     gid16 CmapSubtable12Lookup(const void * pCmap310, unsigned int uUnicodeId, int rangeKey = 0);
     unsigned int CmapSubtable12NextCodepoint(const void *pCmap310, unsigned int nUnicodeId,
         int * pRangeKey = 0);

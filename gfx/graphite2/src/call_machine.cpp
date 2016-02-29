@@ -72,6 +72,7 @@ struct regbank  {
     const instr * & ip;
     uint8           direction;
     int8            flags;
+    Machine::status_t & status;
 };
 
 typedef bool        (* ip_t)(registers);
@@ -88,6 +89,7 @@ namespace {
 #define mapb    reg.map_base
 #define flags   reg.flags
 #define dir     reg.direction
+#define status  reg.status
 
 #include "inc/opcodes.h"
 
@@ -113,7 +115,7 @@ Machine::stack_t  Machine::run(const instr   * program,
     const byte    * dp = data;
     stack_t       * sp = _stack + Machine::STACK_GUARD,
             * const sb = sp;
-    regbank         reg = {*map, map, _map, _map.begin()+_map.context(), ip, _map.dir(), 0};
+    regbank         reg = {*map, map, _map, _map.begin()+_map.context(), ip, _map.dir(), 0, _status};
 
     // Run the program        
     while ((reinterpret_cast<ip_t>(*++ip))(dp, sp, sb, reg)) {}

@@ -160,8 +160,7 @@ public:
 
     bool isWhitespace(const int cid) const;
     bool hasCollisionInfo() const { return (m_flags & SEG_HASCOLLISIONS); }
-    SlotCollision *collisionInfo(const Slot *s) const { return hasCollisionInfo() ? reinterpret_cast<SlotCollision *>(s->userAttrs() + m_silf->numUser()) : 0; }
-
+    SlotCollision *collisionInfo(const Slot *s) const { return m_collisions ? m_collisions + s->index() : 0; }
     CLASS_NEW_DELETE
 
 public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, const GrFace *face, uint32 script, const FeaturesHandle& pFeats/*must not be IsNull*/, encform enc, const void* pStart, size_t nChars, int dir);
@@ -179,6 +178,7 @@ private:
     Slot          * m_freeSlots;        // linked list of free slots
     SlotJustify   * m_freeJustifies;    // Slot justification blocks free list
     CharInfo      * m_charinfo;         // character info, one per input character
+    SlotCollision * m_collisions;
     const Face    * m_face;             // GrFace
     const Silf    * m_silf;
     Slot          * m_first;            // first slot in segment

@@ -38,11 +38,11 @@ const void * bmp_subtable(const Face::Table & cmap)
 {
     const void * stbl;
     if (!cmap.size()) return 0;
-    if (TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 1, cmap.size()), cmap.size())
-     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 3, cmap.size()), cmap.size())
-     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 2, cmap.size()), cmap.size())
-     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 1, cmap.size()), cmap.size())
-     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 0, cmap.size()), cmap.size()))
+    if (TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 1, cmap.size()), cmap + cmap.size())
+     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 3, cmap.size()), cmap + cmap.size())
+     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 2, cmap.size()), cmap + cmap.size())
+     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 1, cmap.size()), cmap + cmap.size())
+     || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 0, cmap.size()), cmap + cmap.size()))
         return stbl;
     return 0;
 }
@@ -51,8 +51,8 @@ const void * smp_subtable(const Face::Table & cmap)
 {
     const void * stbl;
     if (!cmap.size()) return 0;
-    if (TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 10, cmap.size()), cmap.size())
-     || TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 4, cmap.size()), cmap.size()))
+    if (TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 10, cmap.size()), cmap + cmap.size())
+     || TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 4, cmap.size()), cmap + cmap.size()))
         return stbl;
     return 0;
 }
@@ -64,7 +64,7 @@ bool cache_subtable(uint16 * blocks[], const void * cst, const unsigned int limi
     int rangeKey = 0;
     uint32          codePoint = NextCodePoint(cst, 0, &rangeKey),
                     prevCodePoint = 0;
-    while (codePoint != limit)
+    while (codePoint < limit)
     {
         unsigned int block = codePoint >> 8;
         if (!blocks[block])
