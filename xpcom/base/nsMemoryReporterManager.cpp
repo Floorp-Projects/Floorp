@@ -23,9 +23,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h" // for dom::MemoryReport
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
@@ -622,14 +622,14 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
   }
 
   DWORD infoArraySize = tmpSize + (entries * sizeof(PSAPI_WORKING_SET_BLOCK));
-  mozilla::ScopedFreePtr<PSAPI_WORKING_SET_INFORMATION> infoArray(
+  UniqueFreePtr<PSAPI_WORKING_SET_INFORMATION> infoArray(
       static_cast<PSAPI_WORKING_SET_INFORMATION*>(malloc(infoArraySize)));
 
   if (!infoArray) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!QueryWorkingSet(proc, infoArray, infoArraySize)) {
+  if (!QueryWorkingSet(proc, infoArray.get(), infoArraySize)) {
     return NS_ERROR_FAILURE;
   }
 
