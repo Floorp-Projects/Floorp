@@ -9,6 +9,8 @@
 
 #include "jsgc.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "gc/GCTrace.h"
 #include "gc/Zone.h"
 
@@ -43,19 +45,18 @@ class ArenaIter
     ArenaHeader* aheader;
     ArenaHeader* unsweptHeader;
     ArenaHeader* sweptHeader;
+    mozilla::DebugOnly<bool> initialized;
 
   public:
-    ArenaIter() {
-        aheader = nullptr;
-        unsweptHeader = nullptr;
-        sweptHeader = nullptr;
-    }
+    ArenaIter()
+      : aheader(nullptr), unsweptHeader(nullptr), sweptHeader(nullptr), initialized(false) {}
 
-    ArenaIter(JS::Zone* zone, AllocKind kind) {
-        init(zone, kind);
-    }
+    ArenaIter(JS::Zone* zone, AllocKind kind) : initialized(false) { init(zone, kind); }
 
     void init(JS::Zone* zone, AllocKind kind) {
+        MOZ_ASSERT(!initialized);
+        MOZ_ASSERT(zone);
+        initialized = true;
         aheader = zone->arenas.getFirstArena(kind);
         unsweptHeader = zone->arenas.getFirstArenaToSweep(kind);
         sweptHeader = zone->arenas.getFirstSweptArena(kind);
@@ -71,10 +72,12 @@ class ArenaIter
     }
 
     bool done() const {
+        MOZ_ASSERT(initialized);
         return !aheader;
     }
 
     ArenaHeader* get() const {
+        MOZ_ASSERT(!done());
         return aheader;
     }
 
@@ -91,17 +94,12 @@ class ArenaIter
 
 class ArenaCellIterImpl
 {
-    // These three are set in initUnsynchronized().
     size_t firstThingOffset;
     size_t thingSize;
-#ifdef DEBUG
-    bool isInited;
-#endif
-
-    // These three are set in reset() (which is called by init()).
     ArenaHeader* arenaAddr;
     FreeSpan span;
     uint_fast16_t thing;
+    mozilla::DebugOnly<bool> initialized;
 
     // Upon entry, |thing| points to any thing (free or used) and finds the
     // first used thing, which may be |thing|.
@@ -120,21 +118,15 @@ class ArenaCellIterImpl
 
   public:
     ArenaCellIterImpl()
-      : firstThingOffset(0)
-      , thingSize(0)
-#ifdef DEBUG
-      , isInited(false)
-#endif
-      , arenaAddr(nullptr)
-      , thing(0)
-    {
-    }
+      : firstThingOffset(0), thingSize(0), arenaAddr(nullptr), thing(0), initialized(false) {}
+
+    explicit ArenaCellIterImpl(ArenaHeader* aheader) : initialized(false) { init(aheader); }
 
     void init(ArenaHeader* aheader) {
+        MOZ_ASSERT(!initialized);
+        MOZ_ASSERT(aheader);
+        initialized = true;
         AllocKind kind = aheader->getAllocKind();
-#ifdef DEBUG
-        isInited = true;
-#endif
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
         reset(aheader);
@@ -143,7 +135,8 @@ class ArenaCellIterImpl
     // Use this to move from an Arena of a particular kind to another Arena of
     // the same kind.
     void reset(ArenaHeader* aheader) {
-        MOZ_ASSERT(isInited);
+        MOZ_ASSERT(initialized);
+        MOZ_ASSERT(aheader);
         arenaAddr = aheader;
         span = *aheader->getFirstFreeSpan();
         thing = firstThingOffset;
@@ -151,6 +144,7 @@ class ArenaCellIterImpl
     }
 
     bool done() const {
+        MOZ_ASSERT(initialized);
         MOZ_ASSERT(thing <= ArenaSize);
         return thing == ArenaSize;
     }
@@ -180,29 +174,32 @@ ArenaCellIterImpl::get<JSObject>() const;
 class ArenaCellIterUnderGC : public ArenaCellIterImpl
 {
   public:
-    explicit ArenaCellIterUnderGC(ArenaHeader* aheader) {
+    explicit ArenaCellIterUnderGC(ArenaHeader* aheader) : ArenaCellIterImpl(aheader) {
         MOZ_ASSERT(aheader->zone->runtimeFromAnyThread()->isHeapBusy());
-        init(aheader);
     }
 };
 
 class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
 {
   public:
-    explicit ArenaCellIterUnderFinalize(ArenaHeader* aheader) {
-        init(aheader);
-    }
+    explicit ArenaCellIterUnderFinalize(ArenaHeader* aheader) : ArenaCellIterImpl(aheader) {}
 };
 
 class ZoneCellIterImpl
 {
     ArenaIter arenaIter;
     ArenaCellIterImpl cellIter;
+    mozilla::DebugOnly<bool> initialized;
 
   protected:
-    ZoneCellIterImpl() {}
+    ZoneCellIterImpl() : initialized(false) {}
+
+    ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) : initialized(false) { init(zone, kind); }
 
     void init(JS::Zone* zone, AllocKind kind) {
+        MOZ_ASSERT(!initialized);
+        MOZ_ASSERT(zone);
+        initialized = true;
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
             cellIter.init(arenaIter.get());
@@ -210,6 +207,7 @@ class ZoneCellIterImpl
 
   public:
     bool done() const {
+        MOZ_ASSERT(initialized);
         return arenaIter.done();
     }
 
@@ -238,10 +236,9 @@ class ZoneCellIterImpl
 class ZoneCellIterUnderGC : public ZoneCellIterImpl
 {
   public:
-    ZoneCellIterUnderGC(JS::Zone* zone, AllocKind kind) {
+    ZoneCellIterUnderGC(JS::Zone* zone, AllocKind kind) : ZoneCellIterImpl(zone, kind) {
         MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
         MOZ_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
-        init(zone, kind);
     }
 };
 
@@ -281,9 +278,7 @@ class GCZonesIter
     ZonesIter zone;
 
   public:
-    explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
-      : zone(rt, selector)
-    {
+    explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms) : zone(rt, selector) {
         if (!zone->isCollecting())
             next();
     }
