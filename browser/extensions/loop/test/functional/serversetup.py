@@ -19,7 +19,7 @@ from config import CONTENT_SERVER_PORT, LOOP_SERVER_PORT, LOOP_SERVER_URL, \
 
 hanging_threads.start_monitoring()
 
-CONTENT_SERVER_COMMAND = ["make", "runserver"]
+CONTENT_SERVER_COMMAND = ["make", "runserver_nowatch"]
 CONTENT_SERVER_ENV = os.environ.copy()
 # Set PORT so that it does not interfere with any other
 # development server that might be running
@@ -27,7 +27,7 @@ CONTENT_SERVER_ENV.update({"PORT": str(CONTENT_SERVER_PORT),
                            "LOOP_SERVER_URL": LOOP_SERVER_URL})
 
 ROOMS_WEB_APP_URL = "http://localhost:" + str(CONTENT_SERVER_PORT) + \
-    "/content/{token}"
+    "/{token}"
 
 LOOP_SERVER_COMMAND = ["make", "runserver"]
 LOOP_SERVER_ENV = os.environ.copy()

@@ -74,7 +74,7 @@ function promisePanelLoaded() {
 function waitForCondition(condition, nextTest, errorMsg) {
   var tries = 0;
   var interval = setInterval(function() {
-    if (tries >= 100) {
+    if (tries >= 200) {
       ok(false, errorMsg);
       moveOn();
     }
