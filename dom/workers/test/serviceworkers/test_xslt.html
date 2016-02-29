@@ -20,7 +20,23 @@
   function start() {
     return navigator.serviceWorker.register("xslt_worker.js",
                                             { scope: "./" })
-      .then((swr) => registration = swr);
+      .then((swr) => {
+        registration = swr;
+
+        // Ensure the registration is active before continuing
+        var worker = registration.installing;
+        return new Promise((resolve) => {
+          if (worker.state === 'activated') {
+            resolve();
+            return;
+          }
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'activated') {
+              resolve();
+            }
+          });
+        });
+      });
   }
 
   function unregister() {
