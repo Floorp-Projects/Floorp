@@ -2747,7 +2747,7 @@ public:
     (workerPromise->*mFunc)(aCx, value);
 
     // Release the Promise because it has been resolved/rejected for sure.
-    mPromiseWorkerProxy->CleanUp(aCx);
+    mPromiseWorkerProxy->CleanUp();
     return true;
   }
 
@@ -2925,14 +2925,14 @@ bool
 PromiseWorkerProxy::Notify(JSContext* aCx, Status aStatus)
 {
   if (aStatus >= Canceling) {
-    CleanUp(aCx);
+    CleanUp();
   }
 
   return true;
 }
 
 void
-PromiseWorkerProxy::CleanUp(JSContext* aCx)
+PromiseWorkerProxy::CleanUp()
 {
   // Can't release Mutex while it is still locked, so scope the lock.
   {
@@ -2946,7 +2946,6 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
 
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
 
     // Release the Promise and remove the PromiseWorkerProxy from the features of
     // the worker thread since the Promise has been resolved/rejected or the

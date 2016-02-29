@@ -333,7 +333,7 @@ public:
       promise->MaybeResolve(JS::UndefinedHandleValue);
     }
     mStatus.SuppressException();
-    mPromiseProxy->CleanUp(aCx);
+    mPromiseProxy->CleanUp();
     return true;
   }
 
@@ -498,7 +498,7 @@ public:
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     }
 
-    mPromiseWorkerProxy->CleanUp(aCx);
+    mPromiseWorkerProxy->CleanUp();
     return true;
   }
 };
