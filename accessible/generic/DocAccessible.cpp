@@ -1248,12 +1248,6 @@ DocAccessible::GetAccessibleOrContainer(nsINode* aNode) const
     if (!(currNode = parent)) break;
   }
 
-  // HTML comboboxes have no-content list accessible as an intermediate
-  // containing all options.
-  if (accessible && accessible->IsHTMLCombobox()) {
-    return accessible->FirstChild();
-  }
-
   return accessible;
 }
 
@@ -1711,6 +1705,11 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
       // For example, elements may be inserted under the document element while
       // there is no HTML body element.
     }
+
+    // HTML comboboxes have no-content list accessible as an intermidiate
+    // containing all options.
+    if (container->IsHTMLCombobox())
+      container = container->FirstChild();
 
     // We have a DOM/layout change under the container accessible, and its tree
     // might need an update. Since DOM/layout change of the element may affect
