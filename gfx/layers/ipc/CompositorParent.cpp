@@ -132,6 +132,19 @@ static void EnsureLayerTreeMapReady()
   }
 }
 
+template <typename Lambda>
+inline void
+CompositorParent::ForEachIndirectLayerTree(const Lambda& aCallback)
+{
+  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
+  for (auto it = sIndirectLayerTrees.begin(); it != sIndirectLayerTrees.end(); it++) {
+    LayerTreeState* state = &it->second;
+    if (state->mParent == this) {
+      aCallback(state, it->first);
+    }
+  }
+}
+
 /**
   * A global map referencing each compositor by ID.
   *
@@ -774,16 +787,11 @@ CompositorParent::RecvWillStop()
   // Ensure that the layer manager is destroyed before CompositorChild.
   if (mLayerManager) {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
-         it != sIndirectLayerTrees.end(); it++)
-    {
-      LayerTreeState* lts = &it->second;
-      if (lts->mParent == this) {
-        mLayerManager->ClearCachedResources(lts->mRoot);
-        lts->mLayerManager = nullptr;
-        lts->mParent = nullptr;
-      }
-    }
+    ForEachIndirectLayerTree([this] (LayerTreeState* lts, uint64_t) -> void {
+      mLayerManager->ClearCachedResources(lts->mRoot);
+      lts->mLayerManager = nullptr;
+      lts->mParent = nullptr;
+    });
     mLayerManager->Destroy();
     mLayerManager = nullptr;
     mCompositionManager = nullptr;
@@ -2013,14 +2021,12 @@ CompositorParent::DidComposite(TimeStamp& aCompositeStart,
   }
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
-       it != sIndirectLayerTrees.end(); it++) {
-    LayerTreeState* lts = &it->second;
-    if (lts->mParent == this && lts->mCrossProcessParent) {
-      static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent)->DidComposite(
-        it->first, aCompositeStart, aCompositeEnd);
+  ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
+    if (lts->mCrossProcessParent) {
+      auto cpcp = static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent);
+      cpcp->DidComposite(aLayersId, aCompositeStart, aCompositeEnd);
     }
-  }
+  });
 }
 
 static void
