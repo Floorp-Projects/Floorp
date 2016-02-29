@@ -272,7 +272,7 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
 /* static */ void*
 GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind, size_t thingSize)
 {
-    MOZ_ASSERT(cx->arenas()->freeLists[thingKind].isEmpty());
+    cx->arenas()->checkEmptyFreeList(thingKind);
 
     if (cx->isJSContext())
         return refillFreeListFromMainThread(cx->asJSContext(), thingKind, thingSize);
@@ -328,7 +328,7 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
         // Empty arenas should be immediately freed.
         MOZ_ASSERT(!aheader->isEmpty());
 
-        return allocateFromArenaInner<HasFreeThings>(zone, aheader, thingKind);
+        return allocateFromArenaInner(zone, aheader, thingKind);
     }
 
     // Parallel threads have their own ArenaLists, but chunks are shared;
@@ -348,32 +348,21 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
 
     MOZ_ASSERT(!maybeLock->wasUnlocked());
     MOZ_ASSERT(al.isCursorAtEnd());
-    al.insertAtCursor(aheader);
+    al.insertBeforeCursor(aheader);
 
-    return allocateFromArenaInner<IsEmpty>(zone, aheader, thingKind);
+    return allocateFromArenaInner(zone, aheader, thingKind);
 }
 
-template <ArenaLists::ArenaAllocMode hasFreeThings>
-TenuredCell*
+inline TenuredCell*
 ArenaLists::allocateFromArenaInner(JS::Zone* zone, ArenaHeader* aheader, AllocKind kind)
 {
     size_t thingSize = Arena::thingSize(kind);
 
-    FreeSpan span;
-    if (hasFreeThings) {
-        MOZ_ASSERT(aheader->hasFreeThings());
-        span = aheader->getFirstFreeSpan();
-        aheader->setAsFullyUsed();
-    } else {
-        MOZ_ASSERT(!aheader->hasFreeThings());
-        Arena* arena = aheader->getArena();
-        span.initFinal(arena->thingsStart(kind), arena->thingsEnd() - thingSize, thingSize);
-    }
-    freeLists[kind].setHead(&span);
+    freeLists[kind] = aheader;
 
     if (MOZ_UNLIKELY(zone->wasGCStarted()))
         zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-    TenuredCell* thing = freeLists[kind].allocate(thingSize);
+    TenuredCell* thing = aheader->allocate(thingSize);
     MOZ_ASSERT(thing); // This allocation is infallible.
     return thing;
 }
@@ -389,5 +378,3 @@ GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, ArenaHeader* arena)
         arenasAllocatedDuringSweep = arena;
     }
 }
-
-

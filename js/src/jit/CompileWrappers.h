@@ -97,9 +97,7 @@ class CompileZone
 
     const void* addressOfNeedsIncrementalBarrier();
 
-    // arenas.getFreeList(allocKind)
-    const void* addressOfFreeListFirst(gc::AllocKind allocKind);
-    const void* addressOfFreeListLast(gc::AllocKind allocKind);
+    const void* addressOfFreeList(gc::AllocKind allocKind);
 };
 
 class JitCompartment;
