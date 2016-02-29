@@ -63,7 +63,7 @@ add_task(function* () {
   glue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
 
   Assert.equal(Services.prefs.getCharPref("distribution.test.string"), "Test String");
-  Assert.throws(() => Services.prefs.getCharPref("distribution.test.string.noquotes"));
+  Assert.equal(Services.prefs.getCharPref("distribution.test.string.noquotes"), "Test String");
   Assert.equal(Services.prefs.getIntPref("distribution.test.int"), 777);
   Assert.equal(Services.prefs.getBoolPref("distribution.test.bool.true"), true);
   Assert.equal(Services.prefs.getBoolPref("distribution.test.bool.false"), false);
