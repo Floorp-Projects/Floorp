@@ -657,14 +657,8 @@ static PRFileDesc * InitializeRecording( void )
     logLostData = 0; /* reset at entry */
     logState = LogReset;
 
-#ifdef XP_UNIX
-    if ((getuid() != geteuid()) || (getgid() != getegid())) {
-        return NULL;
-    }
-#endif /* XP_UNIX */
-
     /* Get the filename for the logfile from the environment */
-    logFileName = PR_GetEnv( "NSPR_TRACE_LOG" );
+    logFileName = PR_GetEnvSecure( "NSPR_TRACE_LOG" );
     if ( logFileName == NULL )
     {
         PR_LOG( lm, PR_LOG_ERROR,
