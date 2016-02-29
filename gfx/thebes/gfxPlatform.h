@@ -609,11 +609,14 @@ public:
 
     virtual void FlushContentDrawing() {}
 
-    // If a device reset has occurred, update the necessary platform backend
-    // bits.
-    virtual bool UpdateForDeviceReset() {
-      return false;
-    }
+    // If a device reset has occurred, schedule any necessary paints in the
+    // widget. This should only be used within nsRefreshDriver.
+    virtual void SchedulePaintIfDeviceReset() {}
+
+    // Immediately update all platform bits if a device reset has occurred.
+    // This should only be used at the top of the callstack (i.e. within
+    // a task, OS event, or IPDL message).
+    virtual void UpdateRenderModeIfDeviceReset() {}
 
     /**
      * Helper method, creates a draw target for a specific Azure backend.

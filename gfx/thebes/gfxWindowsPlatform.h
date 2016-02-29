@@ -204,7 +204,8 @@ public:
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
 
     bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
-    bool UpdateForDeviceReset() override;
+    void SchedulePaintIfDeviceReset() override;
+    void UpdateRenderModeIfDeviceReset() override;
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
