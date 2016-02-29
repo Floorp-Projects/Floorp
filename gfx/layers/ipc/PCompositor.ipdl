@@ -41,8 +41,10 @@ sync protocol PCompositor
   manages PLayerTransaction;
 
 child:
-  // The child should invalidate everything so that the whole window is redrawn.
-  async InvalidateAll();
+  // The child should invalidate retained layers. This is used for local
+  // compositor device resets, such as in CompositorD3D9, and ensures that
+  // TextureSources are recreated.
+  async InvalidateLayers(uint64_t layersId);
 
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying

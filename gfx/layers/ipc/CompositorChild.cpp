@@ -197,10 +197,15 @@ CompositorChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 }
 
 bool
-CompositorChild::RecvInvalidateAll()
+CompositorChild::RecvInvalidateLayers(const uint64_t& aLayersId)
 {
   if (mLayerManager) {
+    MOZ_ASSERT(aLayersId == 0);
     FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
+  } else if (aLayersId != 0) {
+    if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
+      child->InvalidateLayers();
+    }
   }
   return true;
 }
