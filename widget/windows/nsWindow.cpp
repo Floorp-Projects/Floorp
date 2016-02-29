@@ -6793,12 +6793,6 @@ bool nsWindow::AutoErase(HDC dc)
   return false;
 }
 
-void
-nsWindow::ClearCompositor(nsWindow* aWindow)
-{
-  aWindow->DestroyLayerManager();
-}
-
 bool
 nsWindow::IsPopup()
 {

@@ -684,6 +684,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
+  , mResetCompositorMonitor("ResetCompositorMonitor")
   , mRootLayerTreeID(AllocateLayerTreeId())
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
@@ -2052,6 +2053,92 @@ CompositorParent::InvalidateRemoteLayers()
       Unused << cpcp->SendInvalidateLayers(aLayersId);
     }
   });
+}
+
+bool
+CompositorParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendHints,
+                                  TextureFactoryIdentifier* aOutIdentifier)
+{
+  Maybe<TextureFactoryIdentifier> newIdentifier;
+  {
+    MonitorAutoLock lock(mResetCompositorMonitor);
+
+    CompositorLoop()->PostTask(FROM_HERE,
+      NewRunnableMethod(this,
+                        &CompositorParent::ResetCompositorTask,
+                        aBackendHints,
+                        &newIdentifier));
+
+    mResetCompositorMonitor.Wait();
+  }
+
+  if (!newIdentifier) {
+    return false;
+  }
+
+  *aOutIdentifier = newIdentifier.value();
+  return true;
+}
+
+// Invoked on the compositor thread. The main thread is waiting on the given
+// monitor.
+void
+CompositorParent::ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,
+                                      Maybe<TextureFactoryIdentifier>* aOutNewIdentifier)
+{
+  // Perform the reset inside a lock, so the main thread can wake up as soon as
+  // possible. We notify child processes (if necessary) outside the lock.
+  Maybe<TextureFactoryIdentifier> newIdentifier;
+  {
+    MonitorAutoLock lock(mResetCompositorMonitor);
+
+    newIdentifier = ResetCompositorImpl(aBackendHints);
+    *aOutNewIdentifier = newIdentifier;
+
+    mResetCompositorMonitor.NotifyAll();
+  }
+
+  // NOTE: |aBackendHints|, and |aOutNewIdentifier| are now all invalid since
+  // they are allocated on ResetCompositor's stack on the main thread, which
+  // is no longer waiting on the lock.
+
+  if (!newIdentifier) {
+    // No compositor change; nothing to do.
+    return;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachIndirectLayerTree([&] (LayerTreeState* lts, uint64_t layersId) -> void {
+    if (CrossProcessCompositorParent* cpcp = lts->mCrossProcessParent) {
+      Unused << cpcp->SendCompositorUpdated(layersId, newIdentifier.value());
+    }
+  });
+}
+
+Maybe<TextureFactoryIdentifier>
+CompositorParent::ResetCompositorImpl(const nsTArray<LayersBackend>& aBackendHints)
+{
+  if (!mLayerManager) {
+    return Nothing();
+  }
+
+  RefPtr<Compositor> compositor = NewCompositor(aBackendHints);
+  if (!compositor) {
+    return Nothing();
+  }
+
+  // Don't bother changing from basic->basic.
+  if (mCompositor &&
+      mCompositor->GetBackendType() == LayersBackend::LAYERS_BASIC &&
+      compositor->GetBackendType() == LayersBackend::LAYERS_BASIC)
+  {
+    return Nothing();
+  }
+
+  mCompositor = compositor;
+  mLayerManager->ChangeCompositor(compositor);
+
+  return Some(compositor->GetTextureFactoryIdentifier());
 }
 
 static void

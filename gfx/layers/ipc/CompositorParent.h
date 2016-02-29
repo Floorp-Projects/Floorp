@@ -22,6 +22,7 @@
 #include "base/thread.h"                // for Thread
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"            // for Monitor
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
@@ -276,6 +277,20 @@ public:
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) override { return mCompositionManager; }
 
   /**
+   * Request that the compositor be recreated due to a shared device reset.
+   * This must be called on the main thread, and blocks until a task posted
+   * to the compositor thread has completed.
+   *
+   * Note that this posts a task directly, rather than using synchronous
+   * IPDL, and waits on a monitor notification from the compositor thread.
+   * We do this as a best-effort attempt to jump any IPDL messages that
+   * have not yet been posted (and are sitting around in the IO pipe), to
+   * minimize the amount of time the main thread is blocked.
+   */
+  bool ResetCompositor(const nsTArray<LayersBackend>& aBackendHints,
+                       TextureFactoryIdentifier* aOutIdentifier);
+
+  /**
    * This forces the is-first-paint flag to true. This is intended to
    * be called by the widget code when it loses its viewport information
    * (or for whatever reason wants to refresh the viewport information).
@@ -502,6 +517,9 @@ protected:
   void Invalidate();
 
   RefPtr<Compositor> NewCompositor(const nsTArray<LayersBackend>& aBackendHints);
+  void ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,
+                           Maybe<TextureFactoryIdentifier>* aOutNewIdentifier);
+  Maybe<TextureFactoryIdentifier> ResetCompositorImpl(const nsTArray<LayersBackend>& aBackendHints);
 
   /**
    * Add a compositor to the global compositor map.
@@ -541,6 +559,7 @@ protected:
 
   mozilla::Monitor mPauseCompositionMonitor;
   mozilla::Monitor mResumeCompositionMonitor;
+  mozilla::Monitor mResetCompositorMonitor;
 
   uint64_t mCompositorID;
   const uint64_t mRootLayerTreeID;
