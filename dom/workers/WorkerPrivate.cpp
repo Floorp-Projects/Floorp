@@ -608,9 +608,6 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    JS::Rooted<JSObject*> target(aCx, JS::CurrentGlobalOrNull(aCx));
-    NS_ASSERTION(target, "This must never be null!");
-
     aWorkerPrivate->CloseHandlerStarted();
 
     WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
