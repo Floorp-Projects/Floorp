@@ -301,11 +301,15 @@ public:
 
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
   // as these are only used for globals going in and out of the bfcache.
+  //
+  // XXXbz: This is a bald-faced lie given the uses in RegisterSharedWorker and
+  // CloseSharedWorkersForWindow, which pass null for aWindow to Thaw and Freeze
+  // respectively.  See bug 1251722.
   bool
-  Freeze(JSContext* aCx, nsPIDOMWindowInner* aWindow);
+  Freeze(nsPIDOMWindowInner* aWindow);
 
   bool
-  Thaw(JSContext* aCx, nsPIDOMWindowInner* aWindow);
+  Thaw(nsPIDOMWindowInner* aWindow);
 
   void
   Suspend();
@@ -344,36 +348,33 @@ public:
                              ErrorResult& aRv);
 
   void
-  UpdateRuntimeOptions(JSContext* aCx,
-                       const JS::RuntimeOptions& aRuntimeOptions);
+  UpdateRuntimeOptions(const JS::RuntimeOptions& aRuntimeOptions);
 
   void
-  UpdateLanguages(JSContext* aCx, const nsTArray<nsString>& aLanguages);
+  UpdateLanguages(const nsTArray<nsString>& aLanguages);
 
   void
-  UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue);
+  UpdatePreference(WorkerPreference aPref, bool aValue);
 
   void
-  UpdateJSWorkerMemoryParameter(JSContext* aCx, JSGCParamKey key,
-                                uint32_t value);
+  UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
 
 #ifdef JS_GC_ZEAL
   void
-  UpdateGCZeal(JSContext* aCx, uint8_t aGCZeal, uint32_t aFrequency);
+  UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency);
 #endif
 
   void
-  GarbageCollect(JSContext* aCx, bool aShrinking);
+  GarbageCollect(bool aShrinking);
 
   void
-  CycleCollect(JSContext* aCx, bool aDummy);
+  CycleCollect(bool aDummy);
 
   void
-  OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline);
+  OfflineStatusChangeEvent(bool aIsOffline);
 
   bool
-  RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker,
-                       MessagePort* aPort);
+  RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
 
   void
   BroadcastErrorToSharedWorkers(JSContext* aCx,
@@ -1061,7 +1062,7 @@ public:
   TraceTimeouts(const TraceCallbacks& aCallbacks, void* aClosure) const;
 
   bool
-  ModifyBusyCountFromWorker(JSContext* aCx, bool aIncrease);
+  ModifyBusyCountFromWorker(bool aIncrease);
 
   bool
   AddChildWorker(JSContext* aCx, ParentType* aChildWorker);
@@ -1111,7 +1112,7 @@ public:
   PostMessageToDebugger(const nsAString& aMessage);
 
   void
-  SetDebuggerImmediate(JSContext* aCx, Function& aHandler, ErrorResult& aRv);
+  SetDebuggerImmediate(Function& aHandler, ErrorResult& aRv);
 
   void
   ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
@@ -1159,10 +1160,10 @@ public:
   UpdateRuntimeOptionsInternal(JSContext* aCx, const JS::RuntimeOptions& aRuntimeOptions);
 
   void
-  UpdateLanguagesInternal(JSContext* aCx, const nsTArray<nsString>& aLanguages);
+  UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages);
 
   void
-  UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue);
+  UpdatePreferenceInternal(WorkerPreference aPref, bool aValue);
 
   void
   UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key, uint32_t aValue);
@@ -1188,10 +1189,10 @@ public:
                          bool aCollectChildren);
 
   void
-  CycleCollectInternal(JSContext* aCx, bool aCollectChildren);
+  CycleCollectInternal(bool aCollectChildren);
 
   void
-  OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline);
+  OfflineStatusChangeEventInternal(bool aIsOffline);
 
   JSContext*
   GetJSContext() const
@@ -1299,6 +1300,9 @@ public:
   ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
 
   void
+  ClearDebuggerEventQueue();
+
+  void
   OnProcessNextEvent();
 
   void
@@ -1362,10 +1366,10 @@ private:
   RemainingRunTimeMS() const;
 
   void
-  CancelAllTimeouts(JSContext* aCx);
+  CancelAllTimeouts();
 
   bool
-  ScheduleKillCloseEventRunnable(JSContext* aCx);
+  ScheduleKillCloseEventRunnable();
 
   bool
   ProcessAllControlRunnables()

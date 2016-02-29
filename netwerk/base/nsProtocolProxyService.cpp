@@ -75,7 +75,7 @@ struct nsProtocolInfo {
 static nsresult
 GetProxyURI(nsIChannel *channel, nsIURI **aOut)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> proxyURI;
   nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {

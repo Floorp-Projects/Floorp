@@ -515,7 +515,7 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 
 }
 
-#if defined(MOZ_DMD) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_DMD)
 #if !defined(MOZ_MEMORY)
 #error "MOZ_DMD requires MOZ_MEMORY"
 #endif

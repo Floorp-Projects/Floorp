@@ -38,7 +38,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsTHashtable.h"
 

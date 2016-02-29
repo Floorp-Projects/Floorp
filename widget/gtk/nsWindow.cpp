@@ -2304,8 +2304,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     dt->PopClip();
 
 #  ifdef MOZ_HAVE_SHMIMAGE
-    if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-      mShmImage->Put(region);
+    if (mBackShmImage && MOZ_LIKELY(!mIsDestroyed)) {
+      mBackShmImage->Put(region);
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
@@ -6497,13 +6497,14 @@ nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBuffe
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
   if (nsShmImage::UseShm()) {
-    if (!mShmImage) {
-      mShmImage = new nsShmImage(mXDisplay, mXWindow, mXVisual, mXDepth);
+    mBackShmImage.swap(mFrontShmImage);
+    if (!mBackShmImage) {
+      mBackShmImage = new nsShmImage(mXDisplay, mXWindow, mXVisual, mXDepth);
     }
-    dt = mShmImage->CreateDrawTarget(aRegion);
+    dt = mBackShmImage->CreateDrawTarget(aRegion);
     *aBufferMode = BufferMode::BUFFER_NONE;
     if (!dt) {
-      mShmImage = nullptr;
+      mBackShmImage = nullptr;
     }
   }
 #  endif  // MOZ_HAVE_SHMIMAGE
@@ -6533,11 +6534,11 @@ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
 {
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
-  if (!mGdkWindow || !mShmImage) {
+  if (!mGdkWindow || !mBackShmImage) {
     return;
   }
 
-  mShmImage->Put(aInvalidRegion);
+  mBackShmImage->Put(aInvalidRegion);
 #  endif // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
 }

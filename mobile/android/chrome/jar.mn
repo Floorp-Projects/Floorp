@@ -67,9 +67,6 @@ chrome.jar:
 #ifdef NIGHTLY_BUILD
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
-#ifdef MOZ_PAY
-  content/payment.xhtml                (content/payment.xhtml)
-#endif
 
 % content branding %content/branding/
 

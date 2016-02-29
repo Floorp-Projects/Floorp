@@ -5,7 +5,6 @@
 #ifndef FakeLogging_h
 #define FakeLogging_h
 
-#if !defined(MOZILLA_XPCOMRT_API)
 namespace mozilla {
 namespace detail {
 void log_print(const PRLogModuleInfo* aModule,
@@ -13,6 +12,5 @@ void log_print(const PRLogModuleInfo* aModule,
                       const char* aFmt, ...) { }
 }
 }
-#endif
 
 #endif

@@ -21,7 +21,7 @@ import android.util.AttributeSet;
 
 public class ThemedTextSwitcher extends android.widget.TextSwitcher
                                      implements LightweightTheme.OnChangeListener {
-    private LightweightTheme mTheme;
+    private LightweightTheme theme;
 
     private static final int[] STATE_PRIVATE_MODE = { R.attr.state_private };
     private static final int[] STATE_LIGHT = { R.attr.state_light };
@@ -31,12 +31,12 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     protected static final int[] PRIVATE_FOCUSED_STATE_SET = { R.attr.state_private, android.R.attr.state_focused };
     protected static final int[] PRIVATE_STATE_SET = { R.attr.state_private };
 
-    private boolean mIsPrivate;
-    private boolean mIsLight;
-    private boolean mIsDark;
-    private boolean mAutoUpdateTheme;        // always false if there's no theme.
+    private boolean isPrivate;
+    private boolean isLight;
+    private boolean isDark;
+    private boolean autoUpdateTheme;        // always false if there's no theme.
 
-    private ColorStateList mDrawableColors;
+    private ColorStateList drawableColors;
 
     public ThemedTextSwitcher(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,11 +48,11 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
         // might be instantiating this View in an IDE, with no ambient GeckoApplication.
         final Context applicationContext = context.getApplicationContext();
         if (applicationContext instanceof GeckoApplication) {
-            mTheme = ((GeckoApplication) applicationContext).getLightweightTheme();
+            theme = ((GeckoApplication) applicationContext).getLightweightTheme();
         }
 
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
-        mAutoUpdateTheme = mTheme != null && a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
+        autoUpdateTheme = theme != null && a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
         a.recycle();
     }
 
@@ -60,27 +60,27 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        if (mAutoUpdateTheme)
-            mTheme.addListener(this);
+        if (autoUpdateTheme)
+            theme.addListener(this);
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
-        if (mAutoUpdateTheme)
-            mTheme.removeListener(this);
+        if (autoUpdateTheme)
+            theme.removeListener(this);
     }
 
     @Override
     public int[] onCreateDrawableState(int extraSpace) {
         final int[] drawableState = super.onCreateDrawableState(extraSpace + 1);
 
-        if (mIsPrivate)
+        if (isPrivate)
             mergeDrawableStates(drawableState, STATE_PRIVATE_MODE);
-        else if (mIsLight)
+        else if (isLight)
             mergeDrawableStates(drawableState, STATE_LIGHT);
-        else if (mIsDark)
+        else if (isDark)
             mergeDrawableStates(drawableState, STATE_DARK);
 
         return drawableState;
@@ -88,13 +88,13 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
 
     @Override
     public void onLightweightThemeChanged() {
-        if (mAutoUpdateTheme && mTheme.isEnabled())
-            setTheme(mTheme.isLightTheme());
+        if (autoUpdateTheme && theme.isEnabled())
+            setTheme(theme.isLightTheme());
     }
 
     @Override
     public void onLightweightThemeReset() {
-        if (mAutoUpdateTheme)
+        if (autoUpdateTheme)
             resetTheme();
     }
 
@@ -105,12 +105,12 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     }
 
     public boolean isPrivateMode() {
-        return mIsPrivate;
+        return isPrivate;
     }
 
     public void setPrivateMode(boolean isPrivate) {
-        if (mIsPrivate != isPrivate) {
-            mIsPrivate = isPrivate;
+        if (this.isPrivate != isPrivate) {
+            this.isPrivate = isPrivate;
             refreshDrawableState();
             invalidate();
         }
@@ -118,14 +118,14 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
 
     public void setTheme(boolean isLight) {
         // Set the theme only if it is different from existing theme.
-        if ((isLight && mIsLight != isLight) ||
-            (!isLight && mIsDark == isLight)) {
+        if ((isLight && this.isLight != isLight) ||
+            (!isLight && this.isDark == isLight)) {
             if (isLight) {
-                mIsLight = true;
-                mIsDark = false;
+                this.isLight = true;
+                this.isDark = false;
             } else {
-                mIsLight = false;
-                mIsDark = true;
+                this.isLight = false;
+                this.isDark = true;
             }
 
             refreshDrawableState();
@@ -134,26 +134,26 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     }
 
     public void resetTheme() {
-        if (mIsLight || mIsDark) {
-            mIsLight = false;
-            mIsDark = false;
+        if (isLight || isDark) {
+            isLight = false;
+            isDark = false;
             refreshDrawableState();
             invalidate();
         }
     }
 
     public void setAutoUpdateTheme(boolean autoUpdateTheme) {
-        if (mTheme == null) {
+        if (theme == null) {
             return;
         }
 
-        if (mAutoUpdateTheme != autoUpdateTheme) {
-            mAutoUpdateTheme = autoUpdateTheme;
+        if (this.autoUpdateTheme != autoUpdateTheme) {
+            this.autoUpdateTheme = autoUpdateTheme;
 
-            if (mAutoUpdateTheme)
-                mTheme.addListener(this);
+            if (autoUpdateTheme)
+                theme.addListener(this);
             else
-                mTheme.removeListener(this);
+                theme.removeListener(this);
         }
     }
 
@@ -162,6 +162,6 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     }
 
     protected LightweightTheme getTheme() {
-        return mTheme;
+        return theme;
     }
 }

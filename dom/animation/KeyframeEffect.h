@@ -19,7 +19,6 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectTiming.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h" // TimingParams
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
@@ -428,6 +427,11 @@ public:
     return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
                                                    aTiming, aRv);
   }
+
+  void NotifySpecifiedTimingUpdated();
+
+protected:
+  ~KeyframeEffect() override;
 };
 
 } // namespace dom

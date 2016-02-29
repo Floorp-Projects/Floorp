@@ -384,8 +384,10 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
   if (outer == svg) {
     return nullptr;
   }
-  *aRect = (aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) ?
-             nsRect(0, 0, 0, 0) : svg->GetCoveredRegion();
+  nsMargin bp = outer->GetUsedBorderAndPadding();
+  *aRect = ((aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) ?
+             nsRect(0, 0, 0, 0) : svg->GetCoveredRegion()) +
+                 nsPoint(bp.left, bp.top);
   return outer;
 }
 

@@ -56,13 +56,17 @@ typedef struct nsID nsID;
  * Every XPCOM typelib file begins with a header.
  */
 struct XPTHeader {
-    uint8_t                     magic[16];
+    // Some of these fields exists in the on-disk format but don't need to be
+    // stored in memory (other than very briefly, which can be done with local
+    // variables).
+
+    //uint8_t                   magic[16];
     uint8_t                     major_version;
     uint8_t                     minor_version;
     uint16_t                    num_interfaces;
-    uint32_t                    file_length;
+    //uint32_t                  file_length;
     XPTInterfaceDirectoryEntry  *interface_directory;
-    uint32_t                    data_pool;
+    //uint32_t                  data_pool;
 };
 
 #define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
@@ -71,15 +75,14 @@ struct XPTHeader {
 #define XPT_MAJOR_VERSION 0x01
 #define XPT_MINOR_VERSION 0x02
 
-/* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION 
+/* Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION
  * or higher is to be considered incompatible by this version of xpt and
  * we will refuse to read it. We will return a header with magic, major and
- * minor versions set from the file. num_interfaces and file_length will be
- * set to zero to confirm our inability to read the file; i.e. even if some
- * client of this library gets out of sync with us regarding the agreed upon
- * value for XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces and
- * file_length are both zero we *know* that this library refused to read the 
- * file due to version imcompatibility.  
+ * minor versions set from the file. num_interfaces will be set to zero to
+ * confirm our inability to read the file; i.e. even if some client of this
+ * library gets out of sync with us regarding the agreed upon value for
+ * XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces is zero we *know*
+ * that this library refused to read the file due to version incompatibility.
  */
 #define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
 
@@ -92,13 +95,17 @@ struct XPTHeader {
 struct XPTInterfaceDirectoryEntry {
     nsID                   iid;
     char                   *name;
-    char                   *name_space;
+
+    // This field exists in the on-disk format. But it isn't used so we don't
+    // allocate space for it in memory.
+    //char                 *name_space;
+
     XPTInterfaceDescriptor *interface_descriptor;
 };
 
 /*
- * An InterfaceDescriptor is a variable-size record used to describe a 
- * single XPCOM interface, including all of its methods. 
+ * An InterfaceDescriptor describes a single XPCOM interface, including all of
+ * its methods.
  */
 struct XPTInterfaceDescriptor {
     /* This field ordering minimizes the size of this struct.
@@ -128,7 +135,7 @@ struct XPTInterfaceDescriptor {
     *  them to be of fixed size. This additional_types scheme is here to allow 
     *  for that.
     */
-    uint16_t                num_additional_types;
+    uint8_t                 num_additional_types;
 };
 
 #define XPT_ID_SCRIPTABLE           0x80
@@ -141,10 +148,6 @@ struct XPTInterfaceDescriptor {
 #define XPT_ID_IS_FUNCTION(flags) (!!(flags & XPT_ID_FUNCTION))
 #define XPT_ID_IS_BUILTINCLASS(flags) (!!(flags & XPT_ID_BUILTINCLASS))
 #define XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(flags) (!!(flags & XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY))
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
-                                uint16_t num);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -210,12 +213,38 @@ enum XPTTypeDescriptorTags {
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
-    uint8_t argnum;                 /* used for iid_is and size_is */
-    uint8_t argnum2;                /* used for length_is */
-    union {                         
-        uint16_t iface;             /* used for TD_INTERFACE_TYPE */
-        uint16_t additional_type;   /* used for TD_ARRAY */
-    } type;
+
+    // The memory layout here doesn't exactly match (for the appropriate types)
+    // the on-disk format. This is to save memory.
+    union {
+        // Used for TD_INTERFACE_IS_TYPE.
+        struct {
+            uint8_t argnum;
+        } interface_is;
+
+        // Used for TD_PSTRING_SIZE_IS, TD_PWSTRING_SIZE_IS.
+        struct {
+            uint8_t argnum;
+            //uint8_t argnum2;          // Present on disk, omitted here.
+        } pstring_is;
+
+        // Used for TD_ARRAY.
+        struct {
+            uint8_t argnum;
+            //uint8_t argnum2;          // Present on disk, omitted here.
+            uint8_t additional_type;    // uint16_t on disk, uint8_t here;
+                                        // in practice it never exceeds 20.
+        } array;
+
+        // Used for TD_INTERFACE_TYPE.
+        struct {
+            // We store the 16-bit iface value as two 8-bit values in order to
+            // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
+            // reduces its size and also the size of XPTParamDescriptor.
+            uint8_t iface_hi8;
+            uint8_t iface_lo8;
+        } iface;
+    } u;
 };
 
 /*

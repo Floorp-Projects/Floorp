@@ -215,6 +215,10 @@ class NrIceCtx {
                 ICE_POLICY_ALL
   };
 
+  static void Init(bool allow_loopback = false,
+                   bool tcp_enabled = true,
+                   bool allow_link_local = false);
+
   // TODO(ekr@rtfm.com): Too many bools here. Bug 1193437.
   static RefPtr<NrIceCtx> Create(const std::string& name,
                                  bool offerer,

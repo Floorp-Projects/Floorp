@@ -23,7 +23,8 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_SkipStringInline(XPTCursor *cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp);
+XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp,
+              bool ignore = false);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
@@ -40,8 +41,6 @@ XPT_Do16(XPTCursor *cursor, uint16_t *u16p);
 extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, uint8_t *u8p);
 
-extern XPT_PUBLIC_API(PRBool)
-XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, uint32_t * ide_offset);
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
 

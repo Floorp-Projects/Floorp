@@ -16,6 +16,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsIWidget.h"
 #include "nsAutoPtr.h"
+#include "Units.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XShm.h>
@@ -35,22 +36,12 @@ public:
   nsShmImage(Display* aDisplay,
              Drawable aWindow,
              Visual* aVisual,
-             unsigned int aDepth)
-    : mImage(nullptr)
-    , mDisplay(aDisplay)
-    , mWindow(aWindow)
-    , mVisual(aVisual)
-    , mDepth(aDepth)
-    , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
-  {
-    mInfo.shmid = -1;
-  }
+             unsigned int aDepth);
 
 private:
-  ~nsShmImage()
-  {
-    DestroyImage();
-  }
+  ~nsShmImage();
+
+  bool InitExtension();
 
   bool CreateShmSegment();
   void DestroyShmSegment();
@@ -58,13 +49,22 @@ private:
   bool CreateImage(const mozilla::gfx::IntSize& aSize);
   void DestroyImage();
 
+  static Bool FindEvent(Display* aDisplay, XEvent* aEvent, XPointer aArg);
+  bool RequestWasProcessed();
+  void WaitForRequest();
+  void SendEvent();
+
   XImage*                      mImage;
   Display*                     mDisplay;
-  Drawable                     mWindow;
+  Window                       mWindow;
   Visual*                      mVisual;
   unsigned int                 mDepth;
   XShmSegmentInfo              mInfo;
   mozilla::gfx::SurfaceFormat  mFormat;
+  Pixmap                       mPixmap;
+  GC                           mGC;
+  unsigned long                mRequest;
+  unsigned long                mPreviousRequestProcessed;
 };
 
 #endif // MOZ_HAVE_SHMIMAGE

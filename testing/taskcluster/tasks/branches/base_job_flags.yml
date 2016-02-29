@@ -30,6 +30,8 @@ flags:
     crashtest: /crashtest.*/
     crashtest-e10s: /crashtest-e10s.*/
     e10s: /.*e10s.*/
+    firefox-ui: /firefox-ui.*/
+    firefox-ui-e10s: /firefox-ui-e10s.*/
     gaia-js-integration: /.*gaia-js-integration.*/
     gtest: /gtest.*/
     jittest: /jittest.*/
@@ -76,6 +78,7 @@ flags:
     - linux32_gecko  # b2g desktop linux 32 bit
     - linux64_gecko  # b2g desktop linux 64 bit
     - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
+    - linux64-mulet-haz  # Firefox desktop - b2g gecko linux 64 bit, rooting hazard analysis
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
     - flame-kk       # b2g flame kitkat
@@ -114,6 +117,8 @@ flags:
     - crashtest
     - crashtest-e10s
     - crashtest-ipc
+    - firefox-ui
+    - firefox-ui-e10s
     - gaia-build
     - gaia-build-unit
     - gaia-js-integration

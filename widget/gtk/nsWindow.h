@@ -450,14 +450,15 @@ private:
 
 #ifdef MOZ_X11
     Display*            mXDisplay;
-    Drawable            mXWindow;
+    Window              mXWindow;
     Visual*             mXVisual;
     int                 mXDepth;
 #endif
 
 #ifdef MOZ_HAVE_SHMIMAGE
     // If we're using xshm rendering
-    RefPtr<nsShmImage>  mShmImage;
+    RefPtr<nsShmImage>  mFrontShmImage;
+    RefPtr<nsShmImage>  mBackShmImage;
 #endif
 
 #ifdef ACCESSIBILITY

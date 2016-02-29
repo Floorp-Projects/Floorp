@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsXULAppAPI.h"
 
@@ -126,11 +127,14 @@ nsresult
 ShowWithBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
                 nsIObserver* aAlertListener)
 {
-  nsresult rv = ShowWithIconBackend(aBackend, aAlert, aAlertListener);
-  if (NS_SUCCEEDED(rv)) {
-    return rv;
+  if (Preferences::GetBool("alerts.showFavicons")) {
+    nsresult rv = ShowWithIconBackend(aBackend, aAlert, aAlertListener);
+    if (NS_SUCCEEDED(rv)) {
+      return rv;
+    }
   }
-  // If the backend doesn't support favicons, show the alert without one.
+  // If favicons are disabled, or the backend doesn't support them, show the
+  // alert without one.
   return aBackend->ShowAlert(aAlert, aAlertListener);
 }
 

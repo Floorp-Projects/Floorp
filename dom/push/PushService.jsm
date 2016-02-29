@@ -598,14 +598,15 @@ this.PushService = {
       return;
     }
 
-    this._setState(PUSH_SERVICE_UNINIT);
-
     prefs.ignore("serverURL", this);
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
     this._stateChangeProcessEnqueue(_ =>
-            this._changeServerURL("", UNINIT_EVENT));
-    console.debug("uninit: shutdown complete!");
+      {
+        this._changeServerURL("", UNINIT_EVENT);
+        this._setState(PUSH_SERVICE_UNINIT);
+        console.debug("uninit: shutdown complete!");
+      });
   },
 
   /** |delay| should be in milliseconds. */

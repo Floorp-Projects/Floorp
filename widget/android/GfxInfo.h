@@ -92,6 +92,7 @@ private:
   nsString mModel, mHardware, mManufacturer, mProduct;
   nsCString mOSVersion;
   uint32_t mOSVersionInteger;
+  int32_t mSDKVersion;
 };
 
 } // namespace widget

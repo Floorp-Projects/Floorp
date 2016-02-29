@@ -328,6 +328,7 @@ private:
     };
     void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
+    void AsyncNotifyIME(int32_t aNotification);
 
 public:
     bool NotifyIME(const IMENotification& aIMENotification);
@@ -2761,6 +2762,21 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
     }
 }
 
+void
+nsWindow::GeckoViewSupport::AsyncNotifyIME(int32_t aNotification)
+{
+    // Keep a strong reference to the window to keep 'this' alive.
+    RefPtr<nsWindow> window(&this->window);
+
+    nsAppShell::PostEvent([this, window, aNotification] {
+        if (mIMEMaskEventsCount) {
+            return;
+        }
+
+        mEditable->NotifyIME(aNotification);
+    });
+}
+
 bool
 nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 {
@@ -2769,17 +2785,20 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
     switch (aIMENotification.mMessage) {
         case REQUEST_TO_COMMIT_COMPOSITION: {
             ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION");
+
             window.RemoveIMEComposition();
-            mEditable->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
+
+            AsyncNotifyIME(GeckoEditableListener::
+                           NOTIFY_IME_TO_COMMIT_COMPOSITION);
             return true;
         }
 
         case REQUEST_TO_CANCEL_COMPOSITION: {
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
+            RefPtr<nsWindow> kungFuDeathGrip(&window);
 
             // Cancel composition on Gecko side
             if (window.GetIMEComposition()) {
-                RefPtr<nsWindow> kungFuDeathGrip(&window);
                 WidgetCompositionEvent compositionCommitEvent(
                         true, eCompositionCommit, &window);
                 window.InitEvent(compositionCommitEvent, nullptr);
@@ -2787,13 +2806,14 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
                 window.DispatchEvent(&compositionCommitEvent);
             }
 
-            mEditable->NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
+            AsyncNotifyIME(GeckoEditableListener::
+                           NOTIFY_IME_TO_CANCEL_COMPOSITION);
             return true;
         }
 
         case NOTIFY_IME_OF_FOCUS: {
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
-            mEditable->NotifyIME(NOTIFY_IME_OF_FOCUS);
+            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_FOCUS);
             return true;
         }
 
@@ -2805,7 +2825,7 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
             // event back to Gecko. That is where we unmask event handling
             mIMEMaskEventsCount++;
 
-            mEditable->NotifyIME(NOTIFY_IME_OF_BLUR);
+            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_BLUR);
             return true;
         }
 
@@ -3094,6 +3114,8 @@ nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
         return;
     }
 
+    RefPtr<nsWindow> kungFuDeathGrip(&window);
+
     // A composition with no ranges means we want to set the selection.
     if (mIMERanges->IsEmpty()) {
         MOZ_ASSERT(aStart >= 0 && aEnd >= 0);
@@ -3119,7 +3141,6 @@ nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
           to eliminate the possibility of this event altering the
           text content unintentionally.
     */
-    RefPtr<nsWindow> kungFuDeathGrip(&window);
     const auto composition(window.GetIMEComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 

@@ -111,10 +111,14 @@ public:
 
   bool ElementHasHref() const;
 
+  // This is called by HTMLAnchorElement.
   void TryDNSPrefetch();
-
   void CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
                          nsWrapperCache::FlagsType aRequestedFlag);
+
+  // This is called by HTMLLinkElement.
+  void TryDNSPrefetchPreconnectOrPrefetch();
+  void CancelPrefetch();
 
 protected:
   virtual ~Link();

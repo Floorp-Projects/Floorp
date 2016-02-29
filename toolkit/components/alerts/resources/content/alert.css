@@ -13,8 +13,14 @@
 }
 
 #alertBox:not([hasOrigin]) > box > #alertTextBox > #alertFooter,
+#alertBox:not([hasIcon]) > box > #alertIcon,
 #alertImage:not([src]) {
   display: none;
+}
+
+#alertTitleBox {
+  -moz-box-pack: center;
+  -moz-box-align: center;
 }
 
 .alertText {

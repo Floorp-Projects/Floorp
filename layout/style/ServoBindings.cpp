@@ -171,7 +171,46 @@ Servo_ReleaseStylesheet(RawServoStyleSheet* sheet)
 }
 
 void
-Servo_RestyleDocument(RawGeckoDocument* aDoc)
+Servo_AppendStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_AppendStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void Servo_PrependStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_PrependStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_RemoveStyleSheet in a "
+            "non-MOZ_STYLO build");
+}
+
+int Servo_StyleSheetHasRules(RawServoStyleSheet* sheet)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_StyleSheetHasRules in a "
+            "non-MOZ_STYLO build");
+}
+
+RawServoStyleSet*
+Servo_InitStyleSet()
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_InitStyleSet in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_DropStyleSet(RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_DropStyleSet in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleDocument in a "
             "non-MOZ_STYLO build");

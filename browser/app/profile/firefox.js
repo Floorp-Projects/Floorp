@@ -1201,10 +1201,6 @@ pref("security.sandbox.content.level", 2);
 pref("security.sandbox.content.level", 0);
 #endif
 
-// ID (a UUID when set by gecko) that is used as a per profile suffix to a low
-// integrity temp directory.
-pref("security.sandbox.content.tempDirSuffix", "");
-
 #if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when Windows sandbox
 // logging is turned on.  This is only currently available for the content
@@ -1225,6 +1221,15 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
 pref("security.sandbox.content.level", 1);
+#endif
+
+#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
+// ID (a UUID when set by gecko) that is used to form the name of a
+// sandbox-writable temporary directory to be used by content processes
+// when a temporary writable file is required in a level 1 sandbox.
+pref("security.sandbox.content.tempDirSuffix", "");
+#endif
 #endif
 
 // This pref governs whether we attempt to work around problems caused by

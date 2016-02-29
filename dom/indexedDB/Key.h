@@ -235,7 +235,7 @@ public:
   SetFromValueArray(mozIStorageValueArray* aValues, uint32_t aIndex);
 
   static int16_t
-  CompareKeys(Key& aFirst, Key& aSecond)
+  CompareKeys(const Key& aFirst, const Key& aSecond)
   {
     int32_t result = Compare(aFirst.mBuffer, aSecond.mBuffer);
 

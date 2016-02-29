@@ -692,7 +692,11 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
   if (!LinkContextIsOurDocument(aAnchor)) {
     return NS_OK;
   }
-  
+
+  if (!nsContentUtils::PrefetchEnabled(mDocShell)) {
+    return NS_OK;
+  }
+
   bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
@@ -827,35 +831,6 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
                             nsINode *aSource,
                             bool aExplicit)
 {
-  //
-  // SECURITY CHECK: disable prefetching from mailnews!
-  //
-  // walk up the docshell tree to see if any containing
-  // docshell are of type MAIL.
-  //
-  if (!mDocShell)
-    return;
-
-  nsCOMPtr<nsIDocShell> docshell = mDocShell;
-
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  do {
-    uint32_t appType = 0;
-    nsresult rv = docshell->GetAppType(&appType);
-    if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL)
-      return; // do not prefetch from mailnews
-    docshell->GetParent(getter_AddRefs(parentItem));
-    if (parentItem) {
-      docshell = do_QueryInterface(parentItem);
-      if (!docshell) {
-        NS_ERROR("cannot get a docshell from a treeItem!");
-        return;
-      }
-    }
-  } while (parentItem);
-  
-  // OK, we passed the security check...
-  
   nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     // construct URI using document charset

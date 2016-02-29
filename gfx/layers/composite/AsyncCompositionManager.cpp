@@ -234,7 +234,7 @@ SetShadowTransform(Layer* aLayer, LayerToParentLayerMatrix4x4 aTransform)
   aTransform.PostScale(1.0f / aLayer->GetPostXScale(),
                        1.0f / aLayer->GetPostYScale(),
                        1);
-  aLayer->AsLayerComposite()->SetShadowTransform(aTransform.ToUnknownMatrix());
+  aLayer->AsLayerComposite()->SetShadowBaseTransform(aTransform.ToUnknownMatrix());
 }
 
 static void
@@ -641,7 +641,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       if (ContainerLayer* c = aLayer->AsContainerLayer()) {
         matrix.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
       }
-      layerComposite->SetShadowTransform(matrix);
+      layerComposite->SetShadowBaseTransform(matrix);
       layerComposite->SetShadowTransformSetByAnimation(true);
       break;
     }
@@ -1434,7 +1434,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
 
   gfx::Matrix4x4 trans = rootComposite->GetShadowBaseTransform();
   trans *= gfx::Matrix4x4::From2D(mWorldTransform);
-  rootComposite->SetShadowTransform(trans);
+  rootComposite->SetShadowBaseTransform(trans);
 
   if (gfxPrefs::CollectScrollTransforms()) {
     RecordShadowTransforms(root);

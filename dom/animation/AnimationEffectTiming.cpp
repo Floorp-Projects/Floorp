@@ -18,5 +18,32 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return AnimationEffectTimingBinding::Wrap(aCx, this, aGivenProto);
 }
 
+void
+AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
+{
+  if (mTiming.mDuration.IsUnrestrictedDouble() &&
+      aDuration.IsUnrestrictedDouble() &&
+      mTiming.mDuration.GetAsUnrestrictedDouble() ==
+        aDuration.GetAsUnrestrictedDouble()) {
+    return;
+  }
+
+  if (mTiming.mDuration.IsString() && aDuration.IsString() &&
+      mTiming.mDuration.GetAsString() == aDuration.GetAsString()) {
+    return;
+  }
+
+  if (aDuration.IsUnrestrictedDouble()) {
+    mTiming.mDuration.SetAsUnrestrictedDouble() =
+      aDuration.GetAsUnrestrictedDouble();
+  } else {
+    mTiming.mDuration.SetAsString() = aDuration.GetAsString();
+  }
+
+  if (mEffect) {
+    mEffect->NotifySpecifiedTimingUpdated();
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
