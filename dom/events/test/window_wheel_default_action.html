@@ -504,7 +504,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function () { SpecialPowers.setIntPref("mousewheel.default.action", 0); },
+      prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
       cleanup: function () { SpecialPowers.setIntPref("mousewheel.default.action", 1); } },
 
     // momentum scroll should cause scroll even if the action is history, but if the default action is none,
@@ -607,7 +607,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function () { SpecialPowers.setIntPref("mousewheel.default.action", 0); },
+      prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
       cleanup: function () { SpecialPowers.setIntPref("mousewheel.default.action", 1); } },
 
     // Don't scroll along axis whose overflow style is hidden.
@@ -618,7 +618,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 1, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollDown,
-      prepare: function() { gScrollableElement.style.overflowX = "hidden"; } },
+      prepare: function(cb) { gScrollableElement.style.overflowX = "hidden"; cb(); } },
     { description: "Scroll to only bottom by oblique line wheel event with overflow-x: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -662,7 +662,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollRight,
-      prepare: function() { gScrollableElement.style.overflowY = "hidden"; } },
+      prepare: function(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
     { description: "Scroll to only right by oblique line wheel event with overflow-y: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -706,7 +706,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 1, expectedOverflowDeltaY: 1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function() { gScrollableElement.style.overflow = "hidden"; } },
+      prepare: function(cb) { gScrollableElement.style.overflow = "hidden"; cb(); } },
     { description: "Don't be scrolled by oblique line wheel event with overflow: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -753,7 +753,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollDown,
-      prepare: function() {
+      prepare: function(cb) {
         gScrollableElement.style.overflowX = "hidden";
         gScrollableElement.style.position = "fixed";
         gScrollableElement.style.top = "30px";
@@ -763,6 +763,7 @@ function doTestScroll(aSettings, aCallback)
         gSpacerForBodyElement.style.height = "5000px";
         document.documentElement.scrollTop = 500;
         document.documentElement.scrollLeft = 500;
+        cb();
       } },
     { description: "Scroll to only bottom by oblique line wheel event with overflow-x: hidden (body is scrollable)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
@@ -806,7 +807,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollRight,
-      prepare: function() { gScrollableElement.style.overflowY = "hidden"; } },
+      prepare: function(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
     { description: "Scroll to only right by oblique line wheel event with overflow-y: hidden (body is scrollable)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -869,9 +870,14 @@ function doTestScroll(aSettings, aCallback)
     var currentTest = kTests[currentTestIndex];
     description = "doTestScroll(aSettings=" + aSettings.description + "), " + currentTest.description + ": ";
     if (currentTest.prepare) {
-      currentTest.prepare();
+      currentTest.prepare(doTestCurrentScroll);
+    } else {
+      doTestCurrentScroll();
     }
+  }
 
+  function doTestCurrentScroll() {
+    var currentTest = kTests[currentTestIndex];
     sendWheelAndWait(10, 10, currentTest.event, function () {
       if (currentTest.expected == kNoScroll) {
         is(gScrollableElement.scrollTop, 1000, description + "scrolled vertical");
