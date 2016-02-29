@@ -133,6 +133,8 @@
   <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="76c4bf4bc430a1b8317f2f21ef735867733e50cc"/>
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
+  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" revision="26e93f6af47f7bd3a9beb5c102a5f45e19bfa38a"/>
+  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" revision="d9735fc81434f2af2c44d86ca57740c673c8d9bc"/>
   <!-- Platform common things -->
   <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="68157e0302df53490e7d721eb4e8b0c7c7e49fdf"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
@@ -166,5 +168,5 @@
   <!-- Shinano specific things -->
   <project name="device-shinano" path="device/sony/leo" remote="b2g" revision="653f7e1f093b948e40262fcb3c665c2b4976df74"/>
   <!-- Aries specific things -->
-  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="a19052e4389c3ae2d8fc3e7a74a475401baacc56"/>
+  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="d14b864406bfd8bbfa13daf588207ab863f72f40"/>
 </manifest>
