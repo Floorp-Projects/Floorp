@@ -567,10 +567,7 @@ class ChainedIter
     T operator->() const { return get(); }
 };
 
-typedef js::HashMap<Value*,
-                    const char*,
-                    js::DefaultHasher<Value*>,
-                    js::SystemAllocPolicy> RootedValueMap;
+typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy> RootedValueMap;
 
 class GCRuntime
 {
@@ -658,7 +655,7 @@ class GCRuntime
 
   public:
     // Internal public interface
-    js::gc::State state() const { return incrementalState; }
+    State state() const { return incrementalState; }
     bool isHeapCompacting() const { return state() == COMPACT; }
     bool isForegroundSweeping() const { return state() == SWEEP; }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
@@ -736,7 +733,7 @@ class GCRuntime
     void disallowIncrementalGC() { incrementalAllowed = false; }
 
     bool isIncrementalGCEnabled() const { return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed; }
-    bool isIncrementalGCInProgress() const { return state() != gc::NO_INCREMENTAL; }
+    bool isIncrementalGCInProgress() const { return state() != NO_INCREMENTAL; }
 
     bool isGenerationalGCEnabled() const { return generationalDisabled == 0; }
     void disableGenerationalGC();
@@ -991,14 +988,14 @@ class GCRuntime
     JS::Zone* systemZone;
 
     /* List of compartments and zones (protected by the GC lock). */
-    js::gc::ZoneVector zones;
+    ZoneVector zones;
 
-    js::Nursery nursery;
-    js::gc::StoreBuffer storeBuffer;
+    Nursery nursery;
+    StoreBuffer storeBuffer;
 
-    js::gcstats::Statistics stats;
+    gcstats::Statistics stats;
 
-    js::GCMarker marker;
+    GCMarker marker;
 
     /* Track heap usage for this runtime. */
     HeapUsage usage;
@@ -1131,7 +1128,7 @@ class GCRuntime
      * The current incremental GC phase. This is also used internally in
      * non-incremental GC.
      */
-    js::gc::State incrementalState;
+    State incrementalState;
 
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool lastMarkSlice;
@@ -1152,7 +1149,7 @@ class GCRuntime
      * Free LIFO blocks are transferred to this allocator before being freed on
      * the background GC thread.
      */
-    js::LifoAlloc freeLifoAlloc;
+    LifoAlloc freeLifoAlloc;
 
     /* Index of current zone group (for stats). */
     unsigned zoneGroupIndex;
@@ -1177,17 +1174,17 @@ class GCRuntime
     /*
      * List head of arenas allocated during the sweep phase.
      */
-    js::gc::Arena* arenasAllocatedDuringSweep;
+    Arena* arenasAllocatedDuringSweep;
 
     /*
      * Incremental compacting state.
      */
     bool startedCompacting;
-    js::gc::ZoneList zonesToMaybeCompact;
+    ZoneList zonesToMaybeCompact;
     Arena* relocatedArenasToRelease;
 
 #ifdef JS_GC_ZEAL
-    js::gc::MarkingValidator* markingValidator;
+    MarkingValidator* markingValidator;
 #endif
 
     /*
@@ -1201,7 +1198,7 @@ class GCRuntime
     int64_t defaultTimeBudget_;
 
     /*
-     * We disable incremental GC if we encounter a js::Class with a trace hook
+     * We disable incremental GC if we encounter a Class with a trace hook
      * that does not implement write barriers.
      */
     bool incrementalAllowed;
@@ -1274,7 +1271,7 @@ class GCRuntime
     bool deterministicOnly;
     int incrementalLimit;
 
-    js::Vector<JSObject*, 0, js::SystemAllocPolicy> selectedForMarking;
+    Vector<JSObject*, 0, SystemAllocPolicy> selectedForMarking;
 #endif
 
     bool fullCompartmentChecks;
@@ -1336,8 +1333,8 @@ class GCRuntime
     SortedArenaList incrementalSweepList;
 
     friend class js::GCHelperState;
-    friend class js::gc::MarkingValidator;
-    friend class js::gc::AutoTraceSession;
+    friend class MarkingValidator;
+    friend class AutoTraceSession;
     friend class AutoEnterIteration;
 };
 
