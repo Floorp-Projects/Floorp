@@ -81,8 +81,8 @@ function test() {
     })
 
     function testStatus() {
-      let summary = $("#requests-menu-network-summary-label");
-      let value = summary.getAttribute("value");
+      let summary = $("#requests-menu-network-summary-button");
+      let value = summary.getAttribute("label");
       info("Current summary: " + value);
 
       let visibleItems = RequestsMenu.visibleItems;

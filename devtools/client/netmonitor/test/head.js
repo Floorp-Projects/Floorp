@@ -425,7 +425,7 @@ function testFilterButtons(aMonitor, aFilterType) {
  */
 function testFilterButtonsCustom(aMonitor, aIsChecked) {
   let doc = aMonitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".requests-menu-footer-button");
+  let buttons = doc.querySelectorAll(".requests-menu-filter-button");
   for (let i = 0; i < aIsChecked.length; i++) {
     let button = buttons[i];
     if (aIsChecked[i]) {
