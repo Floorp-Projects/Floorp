@@ -1336,9 +1336,14 @@ function doTestZoomedScroll(aCallback)
 
 function doTestWholeScroll(aCallback)
 {
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 99999999);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 99999999);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["mousewheel.default.delta_multiplier_x", 99999999],
+    ["mousewheel.default.delta_multiplier_y", 99999999]]},
+    function() { doTestWholeScroll2(aCallback); });
+}
 
+function doTestWholeScroll2(aCallback)
+{
   const kTests = [
     { description: "try whole-scroll to top (line)",
       prepare: function () {
@@ -1576,9 +1581,6 @@ function doTestWholeScroll(aCallback)
       is(gScrollableElement.scrollLeft, kTest.expectedScrollLeft,
          "doTestWholeScroll, " + kTest.description + ": unexpected scrollLeft");
       if (++index == kTests.length) {
-        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
-        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
-        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
         SimpleTest.executeSoon(aCallback);
       } else {
         doIt();
@@ -1815,9 +1817,6 @@ function finishTests()
 {
   SpecialPowers.clearUserPref("mousewheel.default.action");
   SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
 
   winUtils.restoreNormalRefresh();
 
