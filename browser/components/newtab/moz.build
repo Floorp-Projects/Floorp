@@ -12,6 +12,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 EXTRA_JS_MODULES += [
     'NewTabPrefsProvider.jsm',
+    'NewTabRemoteResources.jsm',
     'NewTabURL.jsm',
     'PlacesProvider.jsm'
 ]
