@@ -210,8 +210,13 @@ void Segment::freeSlot(Slot *aSlot)
         aSlot->attachedTo()->removeChild(aSlot);
     while (aSlot->firstChild())
     {
-        aSlot->firstChild()->attachTo(NULL);
-        aSlot->removeChild(aSlot->firstChild());
+        if (aSlot->firstChild()->attachedTo() == aSlot)
+        {
+            aSlot->firstChild()->attachTo(NULL);
+            aSlot->removeChild(aSlot->firstChild());
+        }
+        else
+            aSlot->firstChild(NULL);
     }
     // reset the slot incase it is reused
     ::new (aSlot) Slot(aSlot->userAttrs());
