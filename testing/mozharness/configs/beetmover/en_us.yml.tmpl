@@ -29,6 +29,9 @@ mapping:
     jsshell:
       artifact: {{ artifact_base_url }}/jsshell-{{ platform }}.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/jsshell-{{ platform }}.zip
+    mozharness_package:
+      artifact: {{ artifact_base_url }}/mozharness.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/mozharness.zip
 
   {% if platform == "win32" %}
     full_installer:
