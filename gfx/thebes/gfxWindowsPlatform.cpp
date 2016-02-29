@@ -1056,13 +1056,13 @@ InvalidateWindowForDeviceReset(HWND aWnd, LPARAM aMsg)
     return TRUE;
 }
 
-bool
-gfxWindowsPlatform::UpdateForDeviceReset()
+void
+gfxWindowsPlatform::SchedulePaintIfDeviceReset()
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
 
   if (!DidRenderingDeviceReset()) {
-    return false;
+    return;
   }
 
   // Trigger an ::OnPaint for each window.
@@ -1071,7 +1071,16 @@ gfxWindowsPlatform::UpdateForDeviceReset()
                       0);
 
   gfxCriticalNote << "Detected rendering device reset on refresh";
-  return true;
+}
+
+void
+gfxWindowsPlatform::UpdateRenderModeIfDeviceReset()
+{
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+
+  if (DidRenderingDeviceReset()) {
+    UpdateRenderMode();
+  }
 }
 
 void
