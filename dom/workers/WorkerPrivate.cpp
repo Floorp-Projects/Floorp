@@ -504,7 +504,7 @@ private:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     ErrorResult rv;
-    scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript, rv);
+    scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -563,7 +563,8 @@ private:
 
     ErrorResult rv;
     JSAutoCompartment ac(aCx, global);
-    scriptloader::LoadMainScript(aCx, mScriptURL, DebuggerScript, rv);
+    scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL,
+                                 DebuggerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -574,7 +575,7 @@ private:
       return false;
     }
     // Make sure to propagate exceptions from rv onto aCx, so that our PostRun
-    // can report it.  We do this for alll failures on rv, because now we're
+    // can report it.  We do this for all failures on rv, because now we're
     // using rv to track all the state we care about.
     if (rv.MaybeSetPendingException(aCx)) {
       return false;
@@ -4031,7 +4032,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
                               aWorkerType, stackLoadInfo.ptr());
     aRv.MightThrowJSException();
     if (NS_FAILED(rv)) {
-      scriptloader::ReportLoadError(aCx, aRv, rv, aScriptURL);
+      scriptloader::ReportLoadError(aRv, rv, aScriptURL);
       return nullptr;
     }
 
