@@ -48,7 +48,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.graphics.Bitmap;
@@ -1493,84 +1492,6 @@ public class LocalBrowserDB implements BrowserDB {
         builder.withSelection(Favicons.PAGE_URL + " = ?", new String[] { url });
         // Queue the operation
         operations.add(builder.build());
-    }
-
-    // This wrapper adds a fake "Desktop Bookmarks" folder entry to the
-    // beginning of the cursor's data set.
-    private static class SpecialFoldersCursorWrapper extends CursorWrapper {
-        private int mIndexOffset;
-
-        private int mDesktopBookmarksIndex = -1;
-
-        private boolean mAtDesktopBookmarksPosition;
-
-        public SpecialFoldersCursorWrapper(Cursor c, boolean showDesktopBookmarks) {
-            super(c);
-
-            if (showDesktopBookmarks) {
-                mDesktopBookmarksIndex = mIndexOffset;
-                mIndexOffset++;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return super.getCount() + mIndexOffset;
-        }
-
-        @Override
-        public boolean moveToPosition(int position) {
-            mAtDesktopBookmarksPosition = (mDesktopBookmarksIndex == position);
-
-            if (mAtDesktopBookmarksPosition) {
-                return true;
-            }
-
-            return super.moveToPosition(position - mIndexOffset);
-        }
-
-        @Override
-        public long getLong(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getLong(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.PARENT)) {
-                return Bookmarks.FIXED_ROOT_ID;
-            }
-
-            return -1;
-        }
-
-        @Override
-        public int getInt(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getInt(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks._ID) && mAtDesktopBookmarksPosition) {
-                return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.TYPE)) {
-                return Bookmarks.TYPE_FOLDER;
-            }
-
-            return -1;
-        }
-
-        @Override
-        public String getString(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getString(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.GUID) && mAtDesktopBookmarksPosition) {
-                return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
-            }
-
-            return "";
-        }
     }
 
     @Override
