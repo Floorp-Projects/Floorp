@@ -20,13 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=967796
 
 /** Test for Bug 967796 **/
 
+SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
+
 SimpleTest.waitForExplicitFinish();
-
-SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]},
-  function() {
-    SimpleTest.waitForFocus(runTests);
-  });
-
+SimpleTest.waitForFocus(runTests);
 var outer;
 var middle;
 var inner;
@@ -164,6 +161,8 @@ function runTests() {
       elt.onpointerenter = null;
       elt.onpointerleave = null;
     });
+  SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
+
   SimpleTest.finish();
 }
 
