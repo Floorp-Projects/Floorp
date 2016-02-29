@@ -94,7 +94,7 @@ public class SearchEnginePreference extends CustomListPreference {
 
             SnackbarHelper.showSnackbar(activity,
                     activity.getString(R.string.pref_search_last_toast),
-                    Snackbar.LENGTH_SHORT);
+                    Snackbar.LENGTH_LONG);
 
             return;
         }
