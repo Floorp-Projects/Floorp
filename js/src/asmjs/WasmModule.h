@@ -249,6 +249,9 @@ class CodeRange
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit;
     }
+    bool isErrorExit() const {
+        return kind() == ErrorExit;
+    }
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());
         return begin();
