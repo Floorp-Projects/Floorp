@@ -577,9 +577,8 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
       break;
 
     case eTouchCancel:
-      AC_LOGV("Before eTouchCancel, state: %s", mState->Name());
-      rv = mState->OnRelease(this);
-      AC_LOGV("After eTouchCancel, state: %s, consume: %d", mState->Name(), rv);
+      AC_LOGV("Got eTouchCancel, state: %s", mState->Name());
+      // Do nothing since we don't really care eTouchCancel anyway.
       break;
 
     default:
