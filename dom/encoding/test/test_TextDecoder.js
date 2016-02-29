@@ -359,7 +359,7 @@ function testDecoderGetEncoding()
     {encoding: "big5", labels: ["big5", "cn-big5", "csbig5", "x-x-big5", "big5-hkscs"]},
     {encoding: "euc-jp", labels: ["cseucpkdfmtjapanese", "euc-jp", "x-euc-jp"]},
     {encoding: "iso-2022-jp", labels: ["csiso2022jp", "iso-2022-jp"]},
-    {encoding: "shift_jis", labels: ["csshiftjis", "ms_kanji", "shift-jis", "shift_jis", "sjis", "windows-31j", "x-sjis"]},
+    {encoding: "shift_jis", labels: ["csshiftjis", "ms932", "ms_kanji", "shift-jis", "shift_jis", "sjis", "windows-31j", "x-sjis"]},
     {encoding: "euc-kr", labels: ["cseuckr", "csksc56011987", "euc-kr", "iso-ir-149", "korean", "ks_c_5601-1987", "ks_c_5601-1989", "ksc5601", "ksc_5601", "windows-949"]},
     {encoding: "utf-16le", labels: ["utf-16", "utf-16le"]},
     {encoding: "utf-16be", labels: ["utf-16be"]},
