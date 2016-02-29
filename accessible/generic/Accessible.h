@@ -568,6 +568,8 @@ public:
     return mContent->IsAnyOfHTMLElements(nsGkAtoms::abbr, nsGkAtoms::acronym);
   }
 
+  bool IsAlert() const { return HasGenericType(eAlert); }
+
   bool IsApplication() const { return mType == eApplicationType; }
   ApplicationAccessible* AsApplication();
 
@@ -946,6 +948,11 @@ public:
   bool IsARIAHidden() const { return mContextFlags & eARIAHidden; }
   void SetARIAHidden(bool aIsDefined);
 
+  /**
+   * Return true if the element is inside an alert.
+   */
+  bool IsInsideAlert() const { return mContextFlags & eInsideAlert; }
+
 protected:
   virtual ~Accessible();
 
@@ -1034,8 +1041,9 @@ protected:
   enum ContextFlags {
     eHasNameDependentParent = 1 << 0, // Parent's name depends on this accessible.
     eARIAHidden = 1 << 1,
+    eInsideAlert = 1 << 2,
 
-    eLastContextFlag = eARIAHidden
+    eLastContextFlag = eInsideAlert
   };
 
 protected:
@@ -1141,9 +1149,9 @@ protected:
 
   static const uint8_t kChildrenFlagsBits = 2;
   static const uint8_t kStateFlagsBits = 11;
-  static const uint8_t kContextFlagsBits = 2;
+  static const uint8_t kContextFlagsBits = 3;
   static const uint8_t kTypeBits = 6;
-  static const uint8_t kGenericTypesBits = 14;
+  static const uint8_t kGenericTypesBits = 15;
 
   /**
    * Keep in sync with ChildrenFlags, StateFlags, ContextFlags, and AccTypes.
