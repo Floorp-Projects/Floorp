@@ -4479,7 +4479,7 @@ nsDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheet
 }
 
 StyleSheetHandle
-nsDocument::FirstAdditionalAuthorSheet()
+nsDocument::GetFirstAdditionalAuthorSheet()
 {
   return mAdditionalSheets[eAuthorSheet].SafeElementAt(0, StyleSheetHandle());
 }
