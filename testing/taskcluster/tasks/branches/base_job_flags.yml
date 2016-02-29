@@ -126,7 +126,6 @@ flags:
     - gaia-unit
     - gaia-unit-oop
     - gtest
-    - jetpack
     - jittests
     - jsreftest
     - jsreftest-e10s

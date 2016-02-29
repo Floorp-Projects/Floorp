@@ -238,10 +238,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_gtest.yml
-  jetpack:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_jetpack.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -298,6 +294,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_dt.yml
+  mochitest-jetpack:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_jetpack.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
