@@ -141,6 +141,12 @@ public:
     , mUnsafeRequest(false)
     , mUseURLCredentials(false)
   {
+    // Normally we strip the fragment from the URL in Request::Constructor.
+    // If internal code is directly constructing this object they must
+    // strip the fragment first.  Since these should be well formed URLs we
+    // can use a simple check for a fragment here.  The full parser is
+    // difficult to use off the main thread.
+    MOZ_ASSERT(mURL.Find(NS_LITERAL_CSTRING("#")) == kNotFound);
   }
 
   already_AddRefed<InternalRequest> Clone();
