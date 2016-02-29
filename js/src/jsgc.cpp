@@ -307,7 +307,7 @@ FreeSpan ArenaLists::placeholder;
 #undef CHECK_THING_SIZE_INNER
 #undef CHECK_THING_SIZE
 
-#define OFFSET(type) uint32_t(sizeof(ArenaHeader) + (ArenaSize - sizeof(ArenaHeader)) % sizeof(type))
+#define OFFSET(type) uint32_t(ArenaHeaderSize + (ArenaSize - ArenaHeaderSize) % sizeof(type))
 
 const uint32_t Arena::FirstThingOffsets[] = {
     OFFSET(JSFunction),         /* AllocKind::FUNCTION            */
@@ -339,7 +339,7 @@ const uint32_t Arena::FirstThingOffsets[] = {
 
 #undef OFFSET
 
-#define COUNT(type) uint32_t((ArenaSize - sizeof(ArenaHeader)) / sizeof(type))
+#define COUNT(type) uint32_t((ArenaSize - ArenaHeaderSize) / sizeof(type))
 
 const uint32_t Arena::ThingsPerArena[] = {
     COUNT(JSFunction),          /* AllocKind::FUNCTION            */
@@ -452,7 +452,7 @@ ArenaCellIterImpl::get<JSObject>() const
 }
 
 void
-ArenaHeader::unmarkAll()
+Arena::unmarkAll()
 {
     uintptr_t* word = chunk()->bitmap.arenaBits(this);
     memset(word, 0, ArenaBitmapWords * sizeof(uintptr_t));
@@ -461,6 +461,8 @@ ArenaHeader::unmarkAll()
 /* static */ void
 Arena::staticAsserts()
 {
+    static_assert(size_t(AllocKind::LIMIT) <= 255,
+                  "We must be able to fit the allockind into uint8_t.");
     static_assert(JS_ARRAY_LENGTH(ThingSizes) == size_t(AllocKind::LIMIT),
                   "We haven't defined all thing sizes.");
     static_assert(JS_ARRAY_LENGTH(FirstThingOffsets) == size_t(AllocKind::LIMIT),
@@ -477,12 +479,12 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     MOZ_ASSERT(thingSize % CellSize == 0);
     MOZ_ASSERT(thingSize <= 255);
 
-    MOZ_ASSERT(aheader.allocated());
-    MOZ_ASSERT(thingKind == aheader.getAllocKind());
-    MOZ_ASSERT(thingSize == aheader.getThingSize());
-    MOZ_ASSERT(!aheader.hasDelayedMarking);
-    MOZ_ASSERT(!aheader.markOverflow);
-    MOZ_ASSERT(!aheader.allocatedDuringIncremental);
+    MOZ_ASSERT(allocated());
+    MOZ_ASSERT(thingKind == getAllocKind());
+    MOZ_ASSERT(thingSize == getThingSize());
+    MOZ_ASSERT(!hasDelayedMarking);
+    MOZ_ASSERT(!markOverflow);
+    MOZ_ASSERT(!allocatedDuringIncremental);
 
     uint_fast16_t firstThing = firstThingOffset(thingKind);
     uint_fast16_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
@@ -493,14 +495,14 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     size_t nmarked = 0;
 
     if (MOZ_UNLIKELY(MemProfiler::enabled())) {
-        for (ArenaCellIterUnderFinalize i(&aheader); !i.done(); i.next()) {
+        for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
             T* t = i.get<T>();
             if (t->asTenured().isMarked())
                 MemProfiler::MarkTenured(reinterpret_cast<void*>(t));
         }
     }
 
-    for (ArenaCellIterUnderFinalize i(&aheader); !i.done(); i.next()) {
+    for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
         T* t = i.get<T>();
         if (t->asTenured().isMarked()) {
             uint_fast16_t thing = uintptr_t(t) & ArenaMask;
@@ -508,8 +510,8 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
                 // We just finished passing over one or more free things,
                 // so record a new FreeSpan.
                 newListTail->initBounds(firstThingOrSuccessorOfLastMarkedThing,
-                                        thing - thingSize, &aheader);
-                newListTail = newListTail->nextSpanUnchecked(&aheader);
+                                        thing - thingSize, this);
+                newListTail = newListTail->nextSpanUnchecked(this);
             }
             firstThingOrSuccessorOfLastMarkedThing = thing + thingSize;
             nmarked++;
@@ -521,7 +523,7 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     }
 
     if (nmarked == 0) {
-        // Do nothing. The caller will update the arena header appropriately.
+        // Do nothing. The caller will update the arena appropriately.
         MOZ_ASSERT(newListTail == &newListHead);
         JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
         return nmarked;
@@ -535,12 +537,12 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
         newListTail->initAsEmpty();
     } else {
         // Otherwise, end the list with a span that covers the final stretch of free things.
-        newListTail->initFinal(firstThingOrSuccessorOfLastMarkedThing, lastThing, &aheader);
+        newListTail->initFinal(firstThingOrSuccessorOfLastMarkedThing, lastThing, this);
     }
 
-    aheader.firstFreeSpan = newListHead;
+    firstFreeSpan = newListHead;
 #ifdef DEBUG
-    size_t nfree = aheader.numFreeThings(thingSize);
+    size_t nfree = numFreeThings(thingSize);
     MOZ_ASSERT(nfree + nmarked == thingsPerArena(thingKind));
 #endif
     return nmarked;
@@ -552,7 +554,7 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
 template<typename T>
 static inline bool
 FinalizeTypedArenas(FreeOp* fop,
-                    ArenaHeader** src,
+                    Arena** src,
                     SortedArenaList& dest,
                     AllocKind thingKind,
                     SliceBudget& budget,
@@ -570,17 +572,17 @@ FinalizeTypedArenas(FreeOp* fop,
     size_t thingSize = Arena::thingSize(thingKind);
     size_t thingsPerArena = Arena::thingsPerArena(thingKind);
 
-    while (ArenaHeader* aheader = *src) {
-        *src = aheader->next;
-        size_t nmarked = aheader->getArena()->finalize<T>(fop, thingKind, thingSize);
+    while (Arena* arena = *src) {
+        *src = arena->next;
+        size_t nmarked = arena->finalize<T>(fop, thingKind, thingSize);
         size_t nfree = thingsPerArena - nmarked;
 
         if (nmarked)
-            dest.insertAt(aheader, nfree);
+            dest.insertAt(arena, nfree);
         else if (keepArenas == ArenaLists::KEEP_ARENAS)
-            aheader->chunk()->recycleArena(aheader, dest, thingsPerArena);
+            arena->chunk()->recycleArena(arena, dest, thingsPerArena);
         else
-            fop->runtime()->gc.releaseArena(aheader, maybeLock.ref());
+            fop->runtime()->gc.releaseArena(arena, maybeLock.ref());
 
         budget.step(thingsPerArena);
         if (budget.isOverBudget())
@@ -596,7 +598,7 @@ FinalizeTypedArenas(FreeOp* fop,
  */
 static bool
 FinalizeArenas(FreeOp* fop,
-               ArenaHeader** src,
+               Arena** src,
                SortedArenaList& dest,
                AllocKind thingKind,
                SliceBudget& budget,
@@ -860,7 +862,7 @@ Chunk::findDecommittedArenaOffset()
     MOZ_CRASH("No decommitted arenas found.");
 }
 
-ArenaHeader*
+Arena*
 Chunk::fetchNextDecommittedArena()
 {
     MOZ_ASSERT(info.numArenasFreeCommitted == 0);
@@ -873,9 +875,9 @@ Chunk::fetchNextDecommittedArena()
 
     Arena* arena = &arenas[offset];
     MarkPagesInUse(arena, ArenaSize);
-    arena->aheader.setAsNotAllocated();
+    arena->setAsNotAllocated();
 
-    return &arena->aheader;
+    return arena;
 }
 
 inline void
@@ -885,30 +887,30 @@ GCRuntime::updateOnFreeArenaAlloc(const ChunkInfo& info)
     --numArenasFreeCommitted;
 }
 
-inline ArenaHeader*
+inline Arena*
 Chunk::fetchNextFreeArena(JSRuntime* rt)
 {
     MOZ_ASSERT(info.numArenasFreeCommitted > 0);
     MOZ_ASSERT(info.numArenasFreeCommitted <= info.numArenasFree);
 
-    ArenaHeader* aheader = info.freeArenasHead;
-    info.freeArenasHead = aheader->next;
+    Arena* arena = info.freeArenasHead;
+    info.freeArenasHead = arena->next;
     --info.numArenasFreeCommitted;
     --info.numArenasFree;
     rt->gc.updateOnFreeArenaAlloc(info);
 
-    return aheader;
+    return arena;
 }
 
-ArenaHeader*
+Arena*
 Chunk::allocateArena(JSRuntime* rt, Zone* zone, AllocKind thingKind, const AutoLockGC& lock)
 {
-    ArenaHeader* aheader = info.numArenasFreeCommitted > 0
-                           ? fetchNextFreeArena(rt)
-                           : fetchNextDecommittedArena();
-    aheader->init(zone, thingKind);
+    Arena* arena = info.numArenasFreeCommitted > 0
+                   ? fetchNextFreeArena(rt)
+                   : fetchNextDecommittedArena();
+    arena->init(zone, thingKind);
     updateChunkListAfterAlloc(rt, lock);
-    return aheader;
+    return arena;
 }
 
 inline void
@@ -918,38 +920,38 @@ GCRuntime::updateOnArenaFree(const ChunkInfo& info)
 }
 
 void
-Chunk::addArenaToFreeList(JSRuntime* rt, ArenaHeader* aheader)
+Chunk::addArenaToFreeList(JSRuntime* rt, Arena* arena)
 {
-    MOZ_ASSERT(!aheader->allocated());
-    aheader->next = info.freeArenasHead;
-    info.freeArenasHead = aheader;
+    MOZ_ASSERT(!arena->allocated());
+    arena->next = info.freeArenasHead;
+    info.freeArenasHead = arena;
     ++info.numArenasFreeCommitted;
     ++info.numArenasFree;
     rt->gc.updateOnArenaFree(info);
 }
 
 void
-Chunk::addArenaToDecommittedList(JSRuntime* rt, const ArenaHeader* aheader)
+Chunk::addArenaToDecommittedList(JSRuntime* rt, const Arena* arena)
 {
     ++info.numArenasFree;
-    decommittedArenas.set(Chunk::arenaIndex(aheader->address()));
+    decommittedArenas.set(Chunk::arenaIndex(arena->address()));
 }
 
 void
-Chunk::recycleArena(ArenaHeader* aheader, SortedArenaList& dest, size_t thingsPerArena)
+Chunk::recycleArena(Arena* arena, SortedArenaList& dest, size_t thingsPerArena)
 {
-    aheader->setAsFullyUnused();
-    dest.insertAt(aheader, thingsPerArena);
+    arena->setAsFullyUnused();
+    dest.insertAt(arena, thingsPerArena);
 }
 
 void
-Chunk::releaseArena(JSRuntime* rt, ArenaHeader* aheader, const AutoLockGC& lock)
+Chunk::releaseArena(JSRuntime* rt, Arena* arena, const AutoLockGC& lock)
 {
-    MOZ_ASSERT(aheader->allocated());
-    MOZ_ASSERT(!aheader->hasDelayedMarking);
+    MOZ_ASSERT(arena->allocated());
+    MOZ_ASSERT(!arena->hasDelayedMarking);
 
-    aheader->setAsNotAllocated();
-    addArenaToFreeList(rt, aheader);
+    arena->setAsNotAllocated();
+    addArenaToFreeList(rt, arena);
     updateChunkListAfterFree(rt, lock);
 }
 
@@ -957,19 +959,19 @@ bool
 Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock)
 {
     MOZ_ASSERT(info.numArenasFreeCommitted > 0);
-    ArenaHeader* aheader = fetchNextFreeArena(rt);
+    Arena* arena = fetchNextFreeArena(rt);
     updateChunkListAfterAlloc(rt, lock);
 
     bool ok;
     {
         AutoUnlockGC unlock(lock);
-        ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
+        ok = MarkPagesUnused(arena, ArenaSize);
     }
 
     if (ok)
-        addArenaToDecommittedList(rt, aheader);
+        addArenaToDecommittedList(rt, arena);
     else
-        addArenaToFreeList(rt, aheader);
+        addArenaToFreeList(rt, arena);
     updateChunkListAfterFree(rt, lock);
 
     return ok;
@@ -979,7 +981,7 @@ void
 Chunk::decommitAllArenasWithoutUnlocking(const AutoLockGC& lock)
 {
     for (size_t i = 0; i < ArenasPerChunk; ++i) {
-        if (decommittedArenas.get(i) || arenas[i].aheader.allocated())
+        if (decommittedArenas.get(i) || arenas[i].allocated())
             continue;
 
         if (MarkPagesUnused(&arenas[i], ArenaSize)) {
@@ -1068,7 +1070,7 @@ GCRuntime::pickChunk(const AutoLockGC& lock,
     return chunk;
 }
 
-ArenaHeader*
+Arena*
 GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind, const AutoLockGC& lock)
 {
     MOZ_ASSERT(chunk->hasAvailableArenas());
@@ -1081,23 +1083,23 @@ GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind, const Au
         return nullptr;
     }
 
-    ArenaHeader* aheader = chunk->allocateArena(rt, zone, thingKind, lock);
+    Arena* arena = chunk->allocateArena(rt, zone, thingKind, lock);
     zone->usage.addGCArena();
 
     // Trigger an incremental slice if needed.
     if (!rt->isHeapMinorCollecting() && !isHeapCompacting())
         maybeAllocTriggerZoneGC(zone, lock);
 
-    return aheader;
+    return arena;
 }
 
 void
-GCRuntime::releaseArena(ArenaHeader* aheader, const AutoLockGC& lock)
+GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock)
 {
-    aheader->zone->usage.removeGCArena();
+    arena->zone->usage.removeGCArena();
     if (isBackgroundSweeping())
-        aheader->zone->threshold.updateForRemovedArena(tunables);
-    return aheader->chunk()->releaseArena(rt, aheader, lock);
+        arena->zone->threshold.updateForRemovedArena(tunables);
+    return arena->chunk()->releaseArena(rt, arena, lock);
 }
 
 GCRuntime::GCRuntime(JSRuntime* rt) :
@@ -1928,14 +1930,14 @@ ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables& tunables)
 }
 
 void
-GCMarker::delayMarkingArena(ArenaHeader* aheader)
+GCMarker::delayMarkingArena(Arena* arena)
 {
-    if (aheader->hasDelayedMarking) {
+    if (arena->hasDelayedMarking) {
         /* Arena already scheduled to be marked later */
         return;
     }
-    aheader->setNextDelayedMarking(unmarkedArenaStackTop);
-    unmarkedArenaStackTop = aheader;
+    arena->setNextDelayedMarking(unmarkedArenaStackTop);
+    unmarkedArenaStackTop = arena;
     markLaterArenas++;
 }
 
@@ -1943,8 +1945,8 @@ void
 GCMarker::delayMarkingChildren(const void* thing)
 {
     const TenuredCell* cell = TenuredCell::fromPointer(thing);
-    cell->arenaHeader()->markOverflow = 1;
-    delayMarkingArena(cell->arenaHeader());
+    cell->arena()->markOverflow = 1;
+    delayMarkingArena(cell->arena());
 }
 
 inline void
@@ -1954,9 +1956,9 @@ ArenaLists::prepareForIncrementalGC(JSRuntime* rt)
         FreeSpan* span = freeLists[i];
         if (span != &placeholder) {
             if (!span->isEmpty()) {
-                ArenaHeader* aheader = span->getArena();
-                aheader->allocatedDuringIncremental = true;
-                rt->gc.marker.delayMarkingArena(aheader);
+                Arena* arena = span->getArena();
+                arena->allocatedDuringIncremental = true;
+                rt->gc.marker.delayMarkingArena(arena);
             } else {
                 freeLists[i] = &placeholder;
             }
@@ -2022,16 +2024,16 @@ CanRelocateAllocKind(AllocKind kind)
     return IsObjectAllocKind(kind);
 }
 
-ArenaHeader*
-ArenaList::removeRemainingArenas(ArenaHeader** arenap)
+Arena*
+ArenaList::removeRemainingArenas(Arena** arenap)
 {
     // This is only ever called to remove arenas that are after the cursor, so
     // we don't need to update it.
 #ifdef DEBUG
-    for (ArenaHeader* arena = *arenap; arena; arena = arena->next)
+    for (Arena* arena = *arenap; arena; arena = arena->next)
         MOZ_ASSERT(cursorp_ != &arena->next);
 #endif
-    ArenaHeader* remainingArenas = *arenap;
+    Arena* remainingArenas = *arenap;
     *arenap = nullptr;
     check();
     return remainingArenas;
@@ -2047,7 +2049,7 @@ ShouldRelocateAllArenas(JS::gcreason::Reason reason)
  * Choose which arenas to relocate all cells from. Return an arena cursor that
  * can be passed to removeRemainingArenas().
  */
-ArenaHeader**
+Arena**
 ArenaList::pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut)
 {
     // Relocate the greatest number of arenas such that the number of used cells
@@ -2065,17 +2067,17 @@ ArenaList::pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut)
     if (isCursorAtEnd())
         return nullptr;
 
-    ArenaHeader** arenap = cursorp_;  // Next arena to consider for relocation.
-    size_t previousFreeCells = 0;     // Count of free cells before arenap.
-    size_t followingUsedCells = 0;    // Count of used cells after arenap.
-    size_t fullArenaCount = 0;        // Number of full arenas (not relocated).
-    size_t nonFullArenaCount = 0;     // Number of non-full arenas (considered for relocation).
-    size_t arenaIndex = 0;            // Index of the next arena to consider.
+    Arena** arenap = cursorp_;     // Next arena to consider for relocation.
+    size_t previousFreeCells = 0;  // Count of free cells before arenap.
+    size_t followingUsedCells = 0; // Count of used cells after arenap.
+    size_t fullArenaCount = 0;     // Number of full arenas (not relocated).
+    size_t nonFullArenaCount = 0;  // Number of non-full arenas (considered for relocation).
+    size_t arenaIndex = 0;         // Index of the next arena to consider.
 
-    for (ArenaHeader* arena = head_; arena != *cursorp_; arena = arena->next)
+    for (Arena* arena = head_; arena != *cursorp_; arena = arena->next)
         fullArenaCount++;
 
-    for (ArenaHeader* arena = *cursorp_; arena; arena = arena->next) {
+    for (Arena* arena = *cursorp_; arena; arena = arena->next) {
         followingUsedCells += arena->countUsedCells();
         nonFullArenaCount++;
     }
@@ -2084,7 +2086,7 @@ ArenaList::pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut)
     size_t cellsPerArena = Arena::thingsPerArena((*arenap)->getAllocKind());
 
     while (*arenap) {
-        ArenaHeader* arena = *arenap;
+        Arena* arena = *arenap;
         if (followingUsedCells <= previousFreeCells)
             break;
 
@@ -2187,25 +2189,25 @@ RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize
 }
 
 static void
-RelocateArena(ArenaHeader* aheader, SliceBudget& sliceBudget)
+RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 {
-    MOZ_ASSERT(aheader->allocated());
-    MOZ_ASSERT(!aheader->hasDelayedMarking);
-    MOZ_ASSERT(!aheader->markOverflow);
-    MOZ_ASSERT(!aheader->allocatedDuringIncremental);
+    MOZ_ASSERT(arena->allocated());
+    MOZ_ASSERT(!arena->hasDelayedMarking);
+    MOZ_ASSERT(!arena->markOverflow);
+    MOZ_ASSERT(!arena->allocatedDuringIncremental);
 
-    Zone* zone = aheader->zone;
+    Zone* zone = arena->zone;
 
-    AllocKind thingKind = aheader->getAllocKind();
-    size_t thingSize = aheader->getThingSize();
+    AllocKind thingKind = arena->getAllocKind();
+    size_t thingSize = arena->getThingSize();
 
-    for (ArenaCellIterUnderFinalize i(aheader); !i.done(); i.next()) {
+    for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
         RelocateCell(zone, i.getCell(), thingKind, thingSize);
         sliceBudget.step();
     }
 
 #ifdef DEBUG
-    for (ArenaCellIterUnderFinalize i(aheader); !i.done(); i.next()) {
+    for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
         TenuredCell* src = i.getCell();
         MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
         TenuredCell* dest = Forwarded(src);
@@ -2232,13 +2234,13 @@ ShouldProtectRelocatedArenas(JS::gcreason::Reason reason)
  * Relocate all arenas identified by pickArenasToRelocate: for each arena,
  * relocate each cell within it, then add it to a list of relocated arenas.
  */
-ArenaHeader*
-ArenaList::relocateArenas(ArenaHeader* toRelocate, ArenaHeader* relocated, SliceBudget& sliceBudget,
+Arena*
+ArenaList::relocateArenas(Arena* toRelocate, Arena* relocated, SliceBudget& sliceBudget,
                           gcstats::Statistics& stats)
 {
     check();
 
-    while (ArenaHeader* arena = toRelocate) {
+    while (Arena* arena = toRelocate) {
         toRelocate = arena->next;
         RelocateArena(arena, sliceBudget);
         // Prepend to list of relocated arenas
@@ -2276,7 +2278,7 @@ ShouldRelocateZone(size_t arenaCount, size_t relocCount, JS::gcreason::Reason re
 }
 
 bool
-ArenaLists::relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcreason::Reason reason,
+ArenaLists::relocateArenas(Zone* zone, Arena*& relocatedListOut, JS::gcreason::Reason reason,
                            SliceBudget& sliceBudget, gcstats::Statistics& stats)
 {
     // This is only called from the main thread while we are doing a GC, so
@@ -2293,7 +2295,7 @@ ArenaLists::relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcrea
         for (auto i : AllAllocKinds()) {
             if (CanRelocateAllocKind(i)) {
                 ArenaList& al = arenaLists[i];
-                ArenaHeader* allArenas = al.head();
+                Arena* allArenas = al.head();
                 al.clear();
                 relocatedListOut = al.relocateArenas(allArenas, relocatedListOut, sliceBudget, stats);
             }
@@ -2301,7 +2303,7 @@ ArenaLists::relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcrea
     } else {
         size_t arenaCount = 0;
         size_t relocCount = 0;
-        AllAllocKindArray<ArenaHeader**> toRelocate;
+        AllAllocKindArray<Arena**> toRelocate;
 
         for (auto i : AllAllocKinds()) {
             toRelocate[i] = nullptr;
@@ -2316,7 +2318,7 @@ ArenaLists::relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcrea
         for (auto i : AllAllocKinds()) {
             if (toRelocate[i]) {
                 ArenaList& al = arenaLists[i];
-                ArenaHeader* arenas = al.removeRemainingArenas(toRelocate[i]);
+                Arena* arenas = al.removeRemainingArenas(toRelocate[i]);
                 relocatedListOut = al.relocateArenas(arenas, relocatedListOut, sliceBudget, stats);
             }
         }
@@ -2326,7 +2328,7 @@ ArenaLists::relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcrea
 }
 
 bool
-GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, ArenaHeader*& relocatedListOut,
+GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                           SliceBudget& sliceBudget)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_MOVE);
@@ -2347,7 +2349,7 @@ GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, ArenaHeader*&
         if (CanRelocateAllocKind(i)) {
             ArenaList& al = zone->arenas.arenaLists[i];
             size_t freeCells = 0;
-            for (ArenaHeader* arena = al.arenaAfterCursor(); arena; arena = arena->next)
+            for (Arena* arena = al.arenaAfterCursor(); arena; arena = arena->next)
                 freeCells += arena->countFreeCells();
             MOZ_ASSERT(freeCells < thingsPerArena);
         }
@@ -2420,7 +2422,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
 
 template <typename T>
 static void
-UpdateCellPointersTyped(MovingTracer* trc, ArenaHeader* arena, JS::TraceKind traceKind)
+UpdateCellPointersTyped(MovingTracer* trc, Arena* arena, JS::TraceKind traceKind)
 {
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
         T* cell = reinterpret_cast<T*>(i.getCell());
@@ -2433,7 +2435,7 @@ UpdateCellPointersTyped(MovingTracer* trc, ArenaHeader* arena, JS::TraceKind tra
  * Update the interal pointers for all cells in an arena.
  */
 static void
-UpdateCellPointers(MovingTracer* trc, ArenaHeader* arena)
+UpdateCellPointers(MovingTracer* trc, Arena* arena)
 {
     AllocKind kind = arena->getAllocKind();
     JS::TraceKind traceKind = MapAllocToTraceKind(kind);
@@ -2493,17 +2495,17 @@ struct ArenasToUpdate
     };
     ArenasToUpdate(Zone* zone, KindsToUpdate kinds);
     bool done() { return kind == AllocKind::LIMIT; }
-    ArenaHeader* getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
+    Arena* getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
 
   private:
     KindsToUpdate kinds; // Selects which thing kinds to iterate
     Zone* zone;          // Zone to process
     AllocKind kind;      // Current alloc kind to process
-    ArenaHeader* arena;  // Next arena to process
+    Arena* arena;  // Next arena to process
 
     AllocKind nextAllocKind(AllocKind i) { return AllocKind(uint8_t(i) + 1); }
     bool shouldProcessKind(AllocKind kind);
-    ArenaHeader* next(AutoLockHelperThreadState& lock);
+    Arena* next(AutoLockHelperThreadState& lock);
 };
 
 bool ArenasToUpdate::shouldProcessKind(AllocKind kind)
@@ -2541,7 +2543,7 @@ ArenasToUpdate::ArenasToUpdate(Zone* zone, KindsToUpdate kinds)
     MOZ_ASSERT(kinds && !(kinds & ~ALL));
 }
 
-ArenaHeader*
+Arena*
 ArenasToUpdate::next(AutoLockHelperThreadState& lock)
 {
     // Find the next arena to update.
@@ -2566,17 +2568,17 @@ ArenasToUpdate::next(AutoLockHelperThreadState& lock)
     return nullptr;
 }
 
-ArenaHeader*
+Arena*
 ArenasToUpdate::getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned count)
 {
     if (done())
         return nullptr;
 
-    ArenaHeader* head = nullptr;
-    ArenaHeader* tail = nullptr;
+    Arena* head = nullptr;
+    Arena* tail = nullptr;
 
     for (unsigned i = 0; i < count; ++i) {
-        ArenaHeader* arena = next(lock);
+        Arena* arena = next(lock);
         if (!arena)
             break;
 
@@ -2606,7 +2608,7 @@ struct UpdateCellPointersTask : public GCParallelTask
   private:
     JSRuntime* rt_;
     ArenasToUpdate* source_;
-    ArenaHeader* arenaList_;
+    Arena* arenaList_;
 
     virtual void run() override;
     void getArenasToUpdate(AutoLockHelperThreadState& lock);
@@ -2631,7 +2633,7 @@ void
 UpdateCellPointersTask::updateArenas()
 {
     MovingTracer trc(rt_);
-    for (ArenaHeader* arena = arenaList_;
+    for (Arena* arena = arenaList_;
          arena;
          arena = arena->getNextArenaToUpdateAndUnlink())
     {
@@ -2775,11 +2777,11 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
 }
 
 void
-GCRuntime::protectAndHoldArenas(ArenaHeader* arenaList)
+GCRuntime::protectAndHoldArenas(Arena* arenaList)
 {
-    for (ArenaHeader* arena = arenaList; arena; ) {
+    for (Arena* arena = arenaList; arena; ) {
         MOZ_ASSERT(arena->allocated());
-        ArenaHeader* next = arena->next;
+        Arena* next = arena->next;
         if (!next) {
             // Prepend to hold list before we protect the memory.
             arena->next = relocatedArenasToRelease;
@@ -2793,14 +2795,14 @@ GCRuntime::protectAndHoldArenas(ArenaHeader* arenaList)
 void
 GCRuntime::unprotectHeldRelocatedArenas()
 {
-    for (ArenaHeader* arena = relocatedArenasToRelease; arena; arena = arena->next) {
+    for (Arena* arena = relocatedArenasToRelease; arena; arena = arena->next) {
         UnprotectPages(arena, ArenaSize);
         MOZ_ASSERT(arena->allocated());
     }
 }
 
 void
-GCRuntime::releaseRelocatedArenas(ArenaHeader* arenaList)
+GCRuntime::releaseRelocatedArenas(Arena* arenaList)
 {
     AutoLockGC lock(rt);
     releaseRelocatedArenasWithoutUnlocking(arenaList, lock);
@@ -2808,28 +2810,26 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader* arenaList)
 }
 
 void
-GCRuntime::releaseRelocatedArenasWithoutUnlocking(ArenaHeader* arenaList, const AutoLockGC& lock)
+GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList, const AutoLockGC& lock)
 {
     // Release the relocated arenas, now containing only forwarding pointers
     unsigned count = 0;
     while (arenaList) {
-        ArenaHeader* aheader = arenaList;
+        Arena* arena = arenaList;
         arenaList = arenaList->next;
 
         // Clear the mark bits
-        aheader->unmarkAll();
+        arena->unmarkAll();
 
         // Mark arena as empty
-        aheader->setAsFullyUnused();
+        arena->setAsFullyUnused();
 
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-        Arena* arena = aheader->getArena();
-        AllocKind thingKind = aheader->getAllocKind();
-        JS_POISON(reinterpret_cast<void*>(arena->thingsStart(thingKind)),
-                  JS_MOVED_TENURED_PATTERN, Arena::thingsSpan(thingKind));
+        JS_POISON(reinterpret_cast<void*>(arena->thingsStart()),
+                  JS_MOVED_TENURED_PATTERN, arena->getThingsSpan());
 #endif
 
-        releaseArena(aheader, lock);
+        releaseArena(arena, lock);
         ++count;
     }
 }
@@ -2859,12 +2859,12 @@ GCRuntime::releaseHeldRelocatedArenasWithoutUnlocking(const AutoLockGC& lock)
 }
 
 void
-ReleaseArenaList(JSRuntime* rt, ArenaHeader* aheader, const AutoLockGC& lock)
+ReleaseArenaList(JSRuntime* rt, Arena* arena, const AutoLockGC& lock)
 {
-    ArenaHeader* next;
-    for (; aheader; aheader = next) {
-        next = aheader->next;
-        rt->gc.releaseArena(aheader, lock);
+    Arena* next;
+    for (; arena; arena = next) {
+        next = arena->next;
+        rt->gc.releaseArena(arena, lock);
     }
 }
 
@@ -2896,18 +2896,19 @@ ArenaLists::finalizeNow(FreeOp* fop, const FinalizePhase& phase)
 }
 
 void
-ArenaLists::finalizeNow(FreeOp* fop, AllocKind thingKind, KeepArenasEnum keepArenas, ArenaHeader** empty)
+ArenaLists::finalizeNow(FreeOp* fop, AllocKind thingKind, KeepArenasEnum keepArenas, Arena** empty)
 {
     MOZ_ASSERT(!IsBackgroundFinalized(thingKind));
     forceFinalizeNow(fop, thingKind, keepArenas, empty);
 }
 
 void
-ArenaLists::forceFinalizeNow(FreeOp* fop, AllocKind thingKind, KeepArenasEnum keepArenas, ArenaHeader** empty)
+ArenaLists::forceFinalizeNow(FreeOp* fop, AllocKind thingKind,
+                             KeepArenasEnum keepArenas, Arena** empty)
 {
     MOZ_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 
-    ArenaHeader* arenas = arenaLists[thingKind].head();
+    Arena* arenas = arenaLists[thingKind].head();
     if (!arenas)
         return;
     arenaLists[thingKind].clear();
@@ -2973,7 +2974,7 @@ ArenaLists::queueForBackgroundSweep(FreeOp* fop, AllocKind thingKind)
 }
 
 /*static*/ void
-ArenaLists::backgroundFinalize(FreeOp* fop, ArenaHeader* listHead, ArenaHeader** empty)
+ArenaLists::backgroundFinalize(FreeOp* fop, Arena* listHead, Arena** empty)
 {
     MOZ_ASSERT(listHead);
     MOZ_ASSERT(empty);
@@ -3401,13 +3402,13 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
         return;
 
     // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
-    ArenaHeader* emptyArenas = nullptr;
+    Arena* emptyArenas = nullptr;
     FreeOp fop(rt, threadType);
     for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
         for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
             for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
                 AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
-                ArenaHeader* arenas = zone->arenas.arenaListsToSweep[kind];
+                Arena* arenas = zone->arenas.arenaListsToSweep[kind];
                 MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(-1));
                 if (arenas)
                     ArenaLists::backgroundFinalize(&fop, arenas, &emptyArenas);
@@ -4464,15 +4465,15 @@ js::gc::MarkingValidator::validate()
             if (chunk->decommittedArenas.get(i))
                 continue;
             Arena* arena = &chunk->arenas[i];
-            if (!arena->aheader.allocated())
+            if (!arena->allocated())
                 continue;
-            if (!arena->aheader.zone->isGCSweeping())
+            if (!arena->zone->isGCSweeping())
                 continue;
-            if (arena->aheader.allocatedDuringIncremental)
+            if (arena->allocatedDuringIncremental)
                 continue;
 
-            AllocKind kind = arena->aheader.getAllocKind();
-            uintptr_t thing = arena->thingsStart(kind);
+            AllocKind kind = arena->getAllocKind();
+            uintptr_t thing = arena->thingsStart();
             uintptr_t end = arena->thingsEnd();
             while (thing < end) {
                 Cell* cell = (Cell*)thing;
@@ -5308,7 +5309,7 @@ GCRuntime::endSweepingZoneGroup()
         sweepBackgroundThings(zones, freeLifoAlloc, MainThread);
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
-    while (ArenaHeader* arena = arenasAllocatedDuringSweep) {
+    while (Arena* arena = arenasAllocatedDuringSweep) {
         arenasAllocatedDuringSweep = arena->getNextAllocDuringSweep();
         arena->unsetAllocDuringSweep();
     }
@@ -5412,9 +5413,9 @@ SweepThing(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM* oom)
 
 template <typename T, typename... Args>
 static bool
-SweepArenaList(ArenaHeader** arenasToSweep, SliceBudget& sliceBudget, Args... args)
+SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget, Args... args)
 {
-    while (ArenaHeader* arena = *arenasToSweep) {
+    while (Arena* arena = *arenasToSweep) {
         for (ArenaCellIterUnderGC i(arena); !i.done(); i.next())
             SweepThing(i.get<T>(), args...);
 
@@ -5668,7 +5669,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget)
     while (!zonesToMaybeCompact.isEmpty()) {
         Zone* zone = zonesToMaybeCompact.front();
         MOZ_ASSERT(zone->isGCFinished());
-        ArenaHeader* relocatedArenas = nullptr;
+        Arena* relocatedArenas = nullptr;
         if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
             zone->setGCState(Zone::Compact);
             updatePointersToRelocatedCells(zone);
@@ -6877,8 +6878,8 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     for (auto thingKind : AllAllocKinds()) {
         for (ArenaIter aiter(source->zone(), thingKind); !aiter.done(); aiter.next()) {
-            ArenaHeader* aheader = aiter.get();
-            aheader->zone = target->zone();
+            Arena* arena = aiter.get();
+            arena->zone = target->zone();
         }
     }
 
@@ -7093,13 +7094,13 @@ ArenaLists::adoptArenas(JSRuntime* rt, ArenaLists* fromArenaLists)
         ArenaList* toList = &arenaLists[thingKind];
         fromList->check();
         toList->check();
-        ArenaHeader* next;
-        for (ArenaHeader* fromHeader = fromList->head(); fromHeader; fromHeader = next) {
-            // Copy fromHeader->next before releasing/reinserting.
-            next = fromHeader->next;
+        Arena* next;
+        for (Arena* fromArena = fromList->head(); fromArena; fromArena = next) {
+            // Copy fromArena->next before releasing/reinserting.
+            next = fromArena->next;
 
-            MOZ_ASSERT(!fromHeader->isEmpty());
-            toList->insertAtCursor(fromHeader);
+            MOZ_ASSERT(!fromArena->isEmpty());
+            toList->insertAtCursor(fromArena);
         }
         fromList->clear();
         toList->check();
@@ -7107,12 +7108,12 @@ ArenaLists::adoptArenas(JSRuntime* rt, ArenaLists* fromArenaLists)
 }
 
 bool
-ArenaLists::containsArena(JSRuntime* rt, ArenaHeader* needle)
+ArenaLists::containsArena(JSRuntime* rt, Arena* needle)
 {
     AutoLockGC lock(rt);
     ArenaList& list = arenaLists[needle->getAllocKind()];
-    for (ArenaHeader* aheader = list.head(); aheader; aheader = aheader->next) {
-        if (aheader == needle)
+    for (Arena* arena = list.head(); arena; arena = arena->next) {
+        if (arena == needle)
             return true;
     }
     return false;

@@ -355,9 +355,9 @@ StatsArenaCallback(JSRuntime* rt, void* data, gc::Arena* arena,
 {
     RuntimeStats* rtStats = static_cast<StatsClosure*>(data)->rtStats;
 
-    // The admin space includes (a) the header and (b) the padding between the
-    // end of the header and the start of the first GC thing.
-    size_t allocationSpace = gc::Arena::thingsSpan(arena->aheader.getAllocKind());
+    // The admin space includes (a) the header fields and (b) the padding
+    // between the end of the header fields and the first GC thing.
+    size_t allocationSpace = gc::Arena::thingsSpan(arena->getAllocKind());
     rtStats->currZoneStats->gcHeapArenaAdmin += gc::ArenaSize - allocationSpace;
 
     // We don't call the callback on unused things.  So we compute the
