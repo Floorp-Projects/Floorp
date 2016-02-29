@@ -280,11 +280,11 @@ public:
   }
 
   Pair<already_AddRefed<CachedSurface>, MatchType>
-  LookupBestMatch(const SurfaceKey& aSurfaceKey)
+  LookupBestMatch(const SurfaceKey& aIdealKey)
   {
     // Try for an exact match first.
     RefPtr<CachedSurface> exactMatch;
-    mSurfaces.Get(aSurfaceKey, getter_AddRefs(exactMatch));
+    mSurfaces.Get(aIdealKey, getter_AddRefs(exactMatch));
     if (exactMatch && exactMatch->IsDecoded()) {
       return MakePair(exactMatch.forget(), MatchType::EXACT);
     }
@@ -292,26 +292,26 @@ public:
     // There's no perfect match, so find the best match we can.
     RefPtr<CachedSurface> bestMatch;
     for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
-      CachedSurface* surface = iter.UserData();
-      const SurfaceKey& idealKey = aSurfaceKey;
+      CachedSurface* current = iter.UserData();
+      const SurfaceKey& currentKey = current->GetSurfaceKey();
 
       // We never match a placeholder.
-      if (surface->IsPlaceholder()) {
+      if (current->IsPlaceholder()) {
         continue;
       }
       // Matching the animation time and SVG context is required.
-      if (aSurfaceKey.AnimationTime() != idealKey.AnimationTime() ||
-          aSurfaceKey.SVGContext() != idealKey.SVGContext()) {
+      if (currentKey.AnimationTime() != aIdealKey.AnimationTime() ||
+          currentKey.SVGContext() != aIdealKey.SVGContext()) {
         continue;
       }
       // Matching the flags is required.
-      if (aSurfaceKey.Flags() != idealKey.Flags()) {
+      if (currentKey.Flags() != aIdealKey.Flags()) {
         continue;
       }
       // Anything is better than nothing! (Within the constraints we just
       // checked, of course.)
       if (!bestMatch) {
-        bestMatch = surface;
+        bestMatch = current;
         continue;
       }
 
@@ -319,11 +319,11 @@ public:
 
       // Always prefer completely decoded surfaces.
       bool bestMatchIsDecoded = bestMatch->IsDecoded();
-      if (bestMatchIsDecoded && !surface->IsDecoded()) {
+      if (bestMatchIsDecoded && !current->IsDecoded()) {
         continue;
       }
-      if (!bestMatchIsDecoded && surface->IsDecoded()) {
-        bestMatch = surface;
+      if (!bestMatchIsDecoded && current->IsDecoded()) {
+        bestMatch = current;
         continue;
       }
 
@@ -332,20 +332,20 @@ public:
       // Compare sizes. We use an area-based heuristic here instead of computing a
       // truly optimal answer, since it seems very unlikely to make a difference
       // for realistic sizes.
-      int64_t idealArea = AreaOfIntSize(idealKey.Size());
-      int64_t surfaceArea = AreaOfIntSize(aSurfaceKey.Size());
+      int64_t idealArea = AreaOfIntSize(aIdealKey.Size());
+      int64_t currentArea = AreaOfIntSize(currentKey.Size());
       int64_t bestMatchArea = AreaOfIntSize(bestMatchKey.Size());
 
       // If the best match is smaller than the ideal size, prefer bigger sizes.
       if (bestMatchArea < idealArea) {
-        if (surfaceArea > bestMatchArea) {
-          bestMatch = surface;
+        if (currentArea > bestMatchArea) {
+          bestMatch = current;
         }
         continue;
       }
       // Other, prefer sizes closer to the ideal size, but still not smaller.
-      if (idealArea <= surfaceArea && surfaceArea < bestMatchArea) {
-        bestMatch = surface;
+      if (idealArea <= currentArea && currentArea < bestMatchArea) {
+        bestMatch = current;
         continue;
       }
       // This surface isn't an improvement over the current best match.
