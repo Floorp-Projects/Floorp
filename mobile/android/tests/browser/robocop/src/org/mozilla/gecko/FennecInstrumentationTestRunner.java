@@ -40,21 +40,25 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
 
     @Override
     public void onStart() {
-        final Context app = getTargetContext();
-        if (app != null) {
-            final String name = FennecInstrumentationTestRunner.class.getSimpleName();
-            // Unlock the device so that the tests can input keystrokes.
-            final KeyguardManager keyguard = (KeyguardManager) app.getSystemService(Context.KEYGUARD_SERVICE);
-            // Deprecated in favour of window flags, which aren't appropriate here.
-            keyguardLock = keyguard.newKeyguardLock(name);
-            keyguardLock.disableKeyguard();
+        final Context context = getContext(); // The Robocop package itself has DISABLE_KEYGUARD and WAKE_LOCK.
+        if (context != null) {
+            try {
+                String name = FennecInstrumentationTestRunner.class.getSimpleName();
+                // Unlock the device so that the tests can input keystrokes.
+                final KeyguardManager keyguard = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+                // Deprecated in favour of window flags, which aren't appropriate here.
+                keyguardLock = keyguard.newKeyguardLock(name);
+                keyguardLock.disableKeyguard();
 
-            // Wake up the screen.
-            final PowerManager power = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
-            wakeLock = power.newWakeLock(FULL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE, name);
-            wakeLock.acquire();
+                // Wake up the screen.
+                final PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                wakeLock = power.newWakeLock(FULL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE, name);
+                wakeLock.acquire();
+            } catch (SecurityException e) {
+                Log.w("GeckoInstTestRunner", "Got SecurityException: not disabling keyguard and not taking wakelock.");
+            }
         } else {
-            Log.e("GeckoInstTestRunner", "Application target context is null: not disabling keyguard and not taking wakelock.");
+            Log.w("GeckoInstTestRunner", "Application target context is null: not disabling keyguard and not taking wakelock.");
         }
 
         super.onStart();
