@@ -628,9 +628,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
                "Someone should have destroyed the presshell!");
 
   // Create the style set...
-  StyleSetHandle styleSet;
-  nsresult rv = CreateStyleSet(mDocument, &styleSet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  StyleSetHandle styleSet = CreateStyleSet(mDocument);
 
   // Now make the shell for the document
   mPresShell = mDocument->CreateShell(mPresContext, mViewManager, styleSet);
@@ -699,7 +697,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     return NS_ERROR_FAILURE;
   }
 
-  rv = selection->AddSelectionListener(mSelectionListener);
+  nsresult rv = selection->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2165,9 +2163,8 @@ StyleBackendTypeForDocument(nsIDocument* aDocument, nsIDocShell* aContainer)
            StyleBackendType::Gecko;
 }
 
-nsresult
-nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
-                                 StyleSetHandle* aStyleSet)
+StyleSetHandle
+nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 {
   // Make sure this does the same thing as PresShell::AddSheet wrt ordering.
 
@@ -2199,8 +2196,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     // should matter for SVG-as-an-image. If it does, I want to know why!
 
     // Caller will handle calling EndUpdate, per contract.
-    *aStyleSet = styleSet;
-    return NS_OK;
+    return styleSet;
   }
 
   auto cache = nsLayoutStylesheetCache::For(backendType);
@@ -2354,8 +2350,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   }
 
   // Caller will handle calling EndUpdate, per contract.
-  *aStyleSet = styleSet;
-  return NS_OK;
+  return styleSet;
 }
 
 NS_IMETHODIMP
