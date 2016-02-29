@@ -506,6 +506,11 @@ protected:
 
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
+  // The indirect layer tree lock must be held before calling this function.
+  // Callback should take (LayerTreeState* aState, const uint64_t& aLayersId)
+  template <typename Lambda>
+  inline void ForEachIndirectLayerTree(const Lambda& aCallback);
+
   RefPtr<LayerManagerComposite> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
