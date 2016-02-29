@@ -962,7 +962,8 @@ public:
    * @param aSheet the sheet to get the index of
    * @return aIndex the index of the sheet in the full list
    */
-  virtual int32_t GetIndexOfStyleSheet(mozilla::StyleSheetHandle aSheet) const = 0;
+  virtual int32_t GetIndexOfStyleSheet(
+      const mozilla::StyleSheetHandle aSheet) const = 0;
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in

@@ -805,7 +805,8 @@ public:
    */
   virtual int32_t GetNumberOfStyleSheets() const override;
   virtual mozilla::StyleSheetHandle GetStyleSheetAt(int32_t aIndex) const override;
-  virtual int32_t GetIndexOfStyleSheet(mozilla::StyleSheetHandle aSheet) const override;
+  virtual int32_t GetIndexOfStyleSheet(
+      const mozilla::StyleSheetHandle aSheet) const override;
   virtual void AddStyleSheet(mozilla::StyleSheetHandle aSheet) override;
   virtual void RemoveStyleSheet(mozilla::StyleSheetHandle aSheet) override;
 
@@ -1494,7 +1495,7 @@ protected:
 
   void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(
-      nsTArray<mozilla::StyleSheetHandle::RefPtr>& aSheets,
+      const nsTArray<mozilla::StyleSheetHandle::RefPtr>& aSheets,
       mozilla::SheetType aType);
   void ResetStylesheetsToURI(nsIURI* aURI);
   void FillStyleSet(mozilla::StyleSetHandle aStyleSet);

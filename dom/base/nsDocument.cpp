@@ -2320,7 +2320,7 @@ nsDocument::RemoveDocStyleSheetsFromStyleSets()
 
 void
 nsDocument::RemoveStyleSheetsFromStyleSets(
-    nsTArray<StyleSheetHandle::RefPtr>& aSheets,
+    const nsTArray<StyleSheetHandle::RefPtr>& aSheets,
     SheetType aType)
 {
   // The stylesheets should forget us
@@ -4140,7 +4140,7 @@ nsDocument::GetStyleSheetAt(int32_t aIndex) const
 }
 
 int32_t
-nsDocument::GetIndexOfStyleSheet(StyleSheetHandle aSheet) const
+nsDocument::GetIndexOfStyleSheet(const StyleSheetHandle aSheet) const
 {
   return mStyleSheets.IndexOf(aSheet);
 }
