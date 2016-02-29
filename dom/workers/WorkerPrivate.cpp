@@ -901,7 +901,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    return aWorkerPrivate->FreezeInternal(aCx);
+    return aWorkerPrivate->FreezeInternal();
   }
 };
 
@@ -916,7 +916,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    return aWorkerPrivate->ThawInternal(aCx);
+    return aWorkerPrivate->ThawInternal();
   }
 };
 
@@ -4998,7 +4998,7 @@ WorkerPrivate::RemainingRunTimeMS() const
 }
 
 bool
-WorkerPrivate::FreezeInternal(JSContext* aCx)
+WorkerPrivate::FreezeInternal()
 {
   AssertIsOnWorkerThread();
 
@@ -5009,7 +5009,7 @@ WorkerPrivate::FreezeInternal(JSContext* aCx)
 }
 
 bool
-WorkerPrivate::ThawInternal(JSContext* aCx)
+WorkerPrivate::ThawInternal()
 {
   AssertIsOnWorkerThread();
 
