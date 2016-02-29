@@ -153,22 +153,28 @@ Sanitizer.prototype = {
     };
 
     // Array of objects in form { name, promise }.
-    // Name is the itemName and promise may be a promise, if the sanitization
-    // is asynchronous, or the function return value, if synchronous.
-    let promises = [];
+    // `name` is the item's name and `promise` may be a promise, if the
+    // sanitization is asynchronous, or the function return value, otherwise.
+    let handles = [];
     for (let itemName of itemsToClear) {
-      let item = this.items[itemName];
+      // Workaround for bug 449811.
+      let name = itemName;
+      let item = this.items[name];
       try {
-        // Note we need to catch errors here, otherwise Promise.all would stop
-        // at the first rejection.
-        promises.push(item.clear(range)
-                          .then(() => progress[itemName] = "cleared",
-                                ex => annotateError(itemName, ex)));
+        // Catch errors here, so later we can just loop through these.
+        handles.push({ name,
+                       promise: item.clear(range)
+                                    .then(() => progress[name] = "cleared",
+                                          ex => annotateError(name, ex))
+                     });
       } catch (ex) {
-        annotateError(itemName, ex);
+        annotateError(name, ex);
       }
     }
-    yield Promise.all(promises);
+    for (let handle of handles) {
+      progress[handle.name] = "blocking";
+      yield handle.promise;
+    }
 
     // Sanitization is complete.
     TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
