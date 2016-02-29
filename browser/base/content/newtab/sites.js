@@ -295,7 +295,11 @@ Site.prototype = {
   _speculativeConnect: function Site_speculativeConnect() {
     let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
     let uri = Services.io.newURI(this.url, null, null);
-    sc.speculativeConnect(uri, null);
+    try {
+      // This can throw for certain internal URLs, when they wind up in
+      // about:newtab. Be sure not to propagate the error.
+      sc.speculativeConnect(uri, null);
+    } catch (e) {}
   },
 
   /**
