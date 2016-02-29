@@ -847,7 +847,7 @@ class GCRuntime
     void freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo);
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
-    void releaseArena(ArenaHeader* aheader, const AutoLockGC& lock);
+    void releaseArena(Arena* arena, const AutoLockGC& lock);
 
     void releaseHeldRelocatedArenas();
     void releaseHeldRelocatedArenasWithoutUnlocking(const AutoLockGC& lock);
@@ -878,8 +878,8 @@ class GCRuntime
     friend class ArenaLists;
     Chunk* pickChunk(const AutoLockGC& lock,
                      AutoMaybeStartBackgroundAllocation& maybeStartBGAlloc);
-    ArenaHeader* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind, const AutoLockGC& lock);
-    void arenaAllocatedDuringGC(JS::Zone* zone, ArenaHeader* arena);
+    Arena* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind, const AutoLockGC& lock);
+    void arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena);
 
     // Allocator internals
     bool gcIfNeededPerAllocation(JSContext* cx);
@@ -961,15 +961,15 @@ class GCRuntime
     void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone* zone);
     void sweepZoneAfterCompacting(Zone* zone);
-    bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, ArenaHeader*& relocatedListOut,
+    bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                         SliceBudget& sliceBudget);
     void updateAllCellPointersParallel(MovingTracer* trc, Zone* zone);
     void updateAllCellPointersSerial(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
-    void protectAndHoldArenas(ArenaHeader* arenaList);
+    void protectAndHoldArenas(Arena* arenaList);
     void unprotectHeldRelocatedArenas();
-    void releaseRelocatedArenas(ArenaHeader* arenaList);
-    void releaseRelocatedArenasWithoutUnlocking(ArenaHeader* arenaList, const AutoLockGC& lock);
+    void releaseRelocatedArenas(Arena* arenaList);
+    void releaseRelocatedArenasWithoutUnlocking(Arena* arenaList, const AutoLockGC& lock);
     void finishCollection(JS::gcreason::Reason reason);
 
     void computeNonIncrementalMarkingForValidation();
@@ -1177,14 +1177,14 @@ class GCRuntime
     /*
      * List head of arenas allocated during the sweep phase.
      */
-    js::gc::ArenaHeader* arenasAllocatedDuringSweep;
+    js::gc::Arena* arenasAllocatedDuringSweep;
 
     /*
      * Incremental compacting state.
      */
     bool startedCompacting;
     js::gc::ZoneList zonesToMaybeCompact;
-    ArenaHeader* relocatedArenasToRelease;
+    Arena* relocatedArenasToRelease;
 
 #ifdef JS_GC_ZEAL
     js::gc::MarkingValidator* markingValidator;
