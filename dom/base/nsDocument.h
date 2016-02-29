@@ -827,7 +827,7 @@ public:
                                            mozilla::StyleSheetHandle aSheet) override;
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType,
                                           nsIURI* sheetURI) override;
-  virtual mozilla::StyleSheetHandle FirstAdditionalAuthorSheet() override;
+  virtual mozilla::StyleSheetHandle GetFirstAdditionalAuthorSheet() override;
 
   virtual nsIChannel* GetChannel() const override {
     return mChannel;
