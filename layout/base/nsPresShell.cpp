@@ -1814,6 +1814,9 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  const bool isHeightChanging =
+    (mPresContext->GetVisibleArea().height != aHeight);
+
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
   // There isn't anything useful we can do if the initial reflow hasn't happened.
@@ -1840,6 +1843,14 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     if (!mIsDestroying && rootFrame) {
       // XXX Do a full invalidate at the beginning so that invalidates along
       // the way don't have region accumulation issues?
+
+      if (isHeightChanging) {
+        // For BSize changes driven by style, RestyleManager handles this.
+        // For height:auto BSizes (i.e. layout-controlled), descendant
+        // intrinsic sizes can't depend on them. So the only other case is
+        // viewport-controlled BSizes which we handle here.
+        nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
+      }
 
       {
         nsAutoCauseReflowNotifier crNotifier(this);
