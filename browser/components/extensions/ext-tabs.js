@@ -828,12 +828,26 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
         let gBrowser = tab.ownerDocument.defaultView.gBrowser;
         let newTab = gBrowser.duplicateTab(tab);
-        gBrowser.moveTabTo(newTab, tab._tPos + 1);
-        gBrowser.selectTabAtIndex(newTab._tPos);
 
         return new Promise(resolve => {
+          // We need to use SSTabRestoring because any attributes set before
+          // are ignored. SSTabRestored is too late and results in a jump in
+          // the UI. See http://bit.ly/session-store-api for more information.
+          newTab.addEventListener("SSTabRestoring", function listener() {
+            // As the tab is restoring, move it to the correct position.
+            newTab.removeEventListener("SSTabRestoring", listener);
+            // Pinned tabs that are duplicated are inserted
+            // after the existing pinned tab and pinned.
+            if (tab.pinned) {
+              gBrowser.pinTab(newTab);
+            }
+            gBrowser.moveTabTo(newTab, tab._tPos + 1);
+          });
+
           newTab.addEventListener("SSTabRestored", function listener() {
+            // Once it has been restored, select it and return the promise.
             newTab.removeEventListener("SSTabRestored", listener);
+            gBrowser.selectedTab = newTab;
             return resolve(TabManager.convert(extension, newTab));
           });
         });
