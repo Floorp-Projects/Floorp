@@ -2005,6 +2005,12 @@ private:
   bool mNotifyAfterRemotePaint;
 };
 
+PCompositorParent*
+CompositorParent::LayerTreeState::CrossProcessPCompositor() const
+{
+  return mCrossProcessParent;
+}
+
 void
 CompositorParent::DidComposite(TimeStamp& aCompositeStart,
                                TimeStamp& aCompositeEnd)
@@ -2023,7 +2029,7 @@ CompositorParent::DidComposite(TimeStamp& aCompositeStart,
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
     if (lts->mCrossProcessParent) {
-      auto cpcp = static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent);
+      CrossProcessCompositorParent* cpcp = lts->mCrossProcessParent;
       cpcp->DidComposite(aLayersId, aCompositeStart, aCompositeEnd);
     }
   });
@@ -2039,7 +2045,7 @@ CompositorParent::InvalidateRemoteLayers()
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
     if (lts->mCrossProcessParent) {
-      auto cpcp = static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent);
+      CrossProcessCompositorParent* cpcp = lts->mCrossProcessParent;
       Unused << cpcp->SendInvalidateLayers(aLayersId);
     }
   });

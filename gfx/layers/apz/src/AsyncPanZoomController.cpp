@@ -885,9 +885,11 @@ AsyncPanZoomController::GetSharedFrameMetricsCompositor()
   APZThreadUtils::AssertOnCompositorThread();
 
   if (mSharingFrameMetricsAcrossProcesses) {
-    const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId);
     // |state| may be null here if the CrossProcessCompositorParent has already been destroyed.
-    return state ? state->mCrossProcessParent : nullptr;
+    if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId)) {
+      return state->CrossProcessPCompositor();
+    }
+    return nullptr;
   }
   return mCompositorParent.get();
 }
