@@ -390,8 +390,7 @@ class LifeCycleEventWatcher final : public PromiseNativeHandler,
     // the resulting Promise.all will be cycle collected and it will drop its
     // native handlers (including this object). Instead of waiting for a timeout
     // we report the failure now.
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-    ReportResult(cx, false);
+    ReportResult(false);
   }
 
 public:

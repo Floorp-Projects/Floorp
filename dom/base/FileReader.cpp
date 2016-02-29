@@ -742,7 +742,7 @@ FileReader::Shutdown()
   }
 
   if (mWorkerPrivate && mBusyCount != 0) {
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mWorkerPrivate->RemoveFeature(this);
     mWorkerPrivate = nullptr;
     mBusyCount = 0;
   }
