@@ -65,11 +65,6 @@ SocialErrorListener = {
   },
 
   receiveMessage(message) {
-    if (!content) {
-      Cu.reportError("Message received whilst `content` is null: " + message.name);
-      return;
-    }
-
     let document = content.document;
 
     switch (message.name) {
