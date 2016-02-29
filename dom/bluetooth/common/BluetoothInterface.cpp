@@ -565,7 +565,7 @@ BluetoothAvrcpNotificationHandler::VolumeChangeNotification(
 
 void
 BluetoothAvrcpNotificationHandler::PassthroughCmdNotification(
-  int aId, int aKeyState)
+  uint8_t aId, uint8_t aKeyState)
 { }
 
 // Result handling
