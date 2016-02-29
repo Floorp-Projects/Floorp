@@ -1714,12 +1714,20 @@ function doTestActionOverride(aCallback)
   function doIt()
   {
     const kTest = kTests[index];
+    SpecialPowers.pushPrefEnv({"set": [
+      ["mousewheel.default.action", kTest.action],
+      ["mousewheel.default.action.override_x", kTest.override_x]]},
+      doIt2
+    );
+  }
+
+  function doIt2()
+  {
+    const kTest = kTests[index];
     description = "doTestActionOverride(action=" + kTest.action + ", " +
                   "override_x=" + kTest.override_x + ", " +
                   "deltaX=" + kTest.event.deltaX + ", " +
                   "deltaY=" + kTest.event.deltaY + "): ";
-    SpecialPowers.setIntPref("mousewheel.default.action", kTest.action);
-    SpecialPowers.setIntPref("mousewheel.default.action.override_x", kTest.override_x);
     gScrollableElement.scrollTop = 1000;
     gScrollableElement.scrollLeft = 1000;
     sendWheelAndWait(10, 10, kTest.event, function () {
@@ -1738,8 +1746,6 @@ function doTestActionOverride(aCallback)
         is(gScrollableElement.scrollLeft, 1000, description + "scrolled horizontal");
       }
       if (++index == kTests.length) {
-        SpecialPowers.setIntPref("mousewheel.default.action", 1);
-        SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
         SimpleTest.executeSoon(aCallback);
       } else {
         doIt();
@@ -1816,7 +1822,6 @@ function runTests2()
 function finishTests()
 {
   SpecialPowers.clearUserPref("mousewheel.default.action");
-  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
 
   winUtils.restoreNormalRefresh();
 
