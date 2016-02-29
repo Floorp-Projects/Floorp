@@ -199,19 +199,19 @@ protected:
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
     NotificationHandlerWrapper, void, uint8_t,
-    nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
+    UniquePtr<BluetoothAvrcpPlayerAttribute[]>,
     uint8_t, const BluetoothAvrcpPlayerAttribute*>
     GetPlayerAppValueNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
     NotificationHandlerWrapper, void, uint8_t,
-    nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>,
+    UniquePtr<BluetoothAvrcpPlayerAttribute[]>,
     uint8_t, const BluetoothAvrcpPlayerAttribute*>
     GetPlayerAppAttrsTextNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
     NotificationHandlerWrapper, void, uint8_t, uint8_t,
-    nsAutoArrayPtr<uint8_t>, uint8_t, uint8_t, const uint8_t*>
+    UniquePtr<uint8_t[]>, uint8_t, uint8_t, const uint8_t*>
     GetPlayerAppValuesTextNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable1<
@@ -221,7 +221,7 @@ protected:
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
     NotificationHandlerWrapper, void, uint8_t,
-    nsAutoArrayPtr<BluetoothAvrcpMediaAttribute>,
+    UniquePtr<BluetoothAvrcpMediaAttribute[]>,
     uint8_t, const BluetoothAvrcpMediaAttribute*>
     GetElementAttrNotification;
 
