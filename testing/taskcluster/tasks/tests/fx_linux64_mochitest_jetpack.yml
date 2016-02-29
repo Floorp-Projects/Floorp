@@ -3,7 +3,6 @@ $inherits:
 task:
   scopes:
     - 'docker-worker:capability:device:loopbackVideo'
-    - 'docker-worker:capability:device:loopbackAudio'
   metadata:
     name: '[TC] Linux64 mochitest-jetpack'
     description: Mochitest jetpack run
@@ -11,7 +10,6 @@ task:
     capabilities:
       devices:
         loopbackVideo: true
-        loopbackAudio: true
   extra:
     suite:
       name: mochitest
