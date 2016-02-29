@@ -894,7 +894,7 @@ AsyncFulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
   } else {
     RefPtr<FulfillImageBitmapPromiseWorkerTask> task =
       new FulfillImageBitmapPromiseWorkerTask(aPromise, aImageBitmap);
-    task->Dispatch(GetCurrentThreadWorkerPrivate()->GetJSContext()); // Actually, to the current worker-thread.
+    task->Dispatch(); // Actually, to the current worker-thread.
   }
 }
 
@@ -1167,7 +1167,7 @@ AsyncCreateImageBitmapFromBlob(Promise* aPromise, nsIGlobalObject* aGlobal,
   } else {
     RefPtr<CreateImageBitmapFromBlobWorkerTask> task =
       new CreateImageBitmapFromBlobWorkerTask(aPromise, aGlobal, aBlob, aCropRect);
-    task->Dispatch(GetCurrentThreadWorkerPrivate()->GetJSContext()); // Actually, to the current worker-thread.
+    task->Dispatch(); // Actually, to the current worker-thread.
   }
 }
 

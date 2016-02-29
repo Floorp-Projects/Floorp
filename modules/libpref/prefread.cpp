@@ -253,8 +253,6 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_UNTIL_NAME:
             if (c == '\"' || c == '\'') {
                 ps->fdefault = (ps->smatch == kPref || ps->smatch == kPrefSticky);
-                ps->fdefault = (ps->smatch == kPref ||
-                                ps->smatch == kPrefSticky);
                 ps->fstickydefault = (ps->smatch == kPrefSticky);
                 ps->quotechar = c;
                 ps->nextstate = PREF_PARSE_UNTIL_COMMA; /* return here when done */

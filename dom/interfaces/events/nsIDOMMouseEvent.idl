@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[builtinclass, uuid(7e9a1eff-2007-45f9-8f28-cc47a7b80bd5)]
+[builtinclass, uuid(5bdab8d8-7933-4c5c-b6d1-ab34481237f7)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
@@ -33,6 +33,23 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute short              button;
   readonly attribute unsigned short     buttons;
   readonly attribute nsIDOMEventTarget  relatedTarget;
+
+  void                      initMouseEvent(in DOMString typeArg,
+                                           in boolean canBubbleArg,
+                                           in boolean cancelableArg,
+                                           in mozIDOMWindow viewArg,
+                                           in long detailArg,
+                                           in long screenXArg,
+                                           in long screenYArg,
+                                           in long clientXArg,
+                                           in long clientYArg,
+                                           in boolean ctrlKeyArg,
+                                           in boolean altKeyArg,
+                                           in boolean shiftKeyArg,
+                                           in boolean metaKeyArg,
+                                           in unsigned short buttonArg,
+                                           in nsIDOMEventTarget relatedTargetArg);
+
 
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0

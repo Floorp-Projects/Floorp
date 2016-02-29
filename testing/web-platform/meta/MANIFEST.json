@@ -27412,6 +27412,18 @@
         "url": "/web-animations/animatable/animate.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/duration.html",
+        "url": "/web-animations/animation-effect-timing/duration.html"
+      },
+      {
+        "path": "web-animations/animation-effect-timing/getAnimations.html",
+        "url": "/web-animations/animation-effect-timing/getAnimations.html"
+      },
+      {
+        "path": "web-animations/animation-effect-timing/getComputedStyle.html",
+        "url": "/web-animations/animation-effect-timing/getComputedStyle.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },
@@ -33764,11 +33776,29 @@
     "deleted": [],
     "items": {
       "testharness": {
+        "XMLHttpRequest/send-send.worker.js": [
+          {
+            "path": "XMLHttpRequest/send-send.worker.js",
+            "url": "/XMLHttpRequest/send-send.worker"
+          }
+        ],
+        "XMLHttpRequest/abort-during-open.worker.js": [
+          {
+            "path": "XMLHttpRequest/abort-during-open.worker.js",
+            "url": "/XMLHttpRequest/abort-during-open.worker"
+          }
+        ],
         "html/semantics/embedded-content/the-img-element/update-media.html": [
           {
             "path": "html/semantics/embedded-content/the-img-element/update-media.html",
             "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
-          }
+	  }
+	],
+        "IndexedDB/idbkeyrange-includes.htm": [
+          {
+            "path": "IndexedDB/idbkeyrange-includes.htm",
+            "url": "/IndexedDB/idbkeyrange-includes.htm"
+	  }
         ]
       }
     },

@@ -251,11 +251,13 @@ enum CheckboxValue {
 {
   mozAccessible* nativeAcc = nil;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    Accessible* accTab = accWrap->GetSelectedItem(0);
-    accTab->GetNativeInterface((void**)&nativeAcc);
+    if (Accessible* accTab = accWrap->GetSelectedItem(0)) {
+      accTab->GetNativeInterface((void**)&nativeAcc);
+    }
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    ProxyAccessible* proxyTab = proxy->GetSelectedItem(0);
-    nativeAcc = GetNativeFromProxy(proxyTab);
+    if (ProxyAccessible* proxyTab = proxy->GetSelectedItem(0)) {
+      nativeAcc = GetNativeFromProxy(proxyTab);
+    }
   }
 
   return nativeAcc;

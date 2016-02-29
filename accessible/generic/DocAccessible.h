@@ -359,9 +359,6 @@ protected:
 
   void LastRelease();
 
-  // Accessible
-  virtual void CacheChildren() override;
-
   // DocAccessible
   virtual nsresult AddEventListeners();
   virtual nsresult RemoveEventListeners();

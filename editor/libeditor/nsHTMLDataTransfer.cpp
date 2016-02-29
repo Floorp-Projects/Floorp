@@ -2297,22 +2297,26 @@ nsHTMLEditor::ReplaceOrphanedStructure(StartOrEnd aStartOrEnd,
   }
 
   // If we found substructure, paste it instead of its descendants.
-  // Postprocess list to remove any descendants of this node so that we don't
-  // insert them twice.
-  while (aNodeArray.Length()) {
-    int32_t idx = aStartOrEnd == StartOrEnd::start ? 0
-                                                   : aNodeArray.Length() - 1;
+  // Only replace with the substructure if all the nodes in the list are
+  // descendants.
+  bool shouldReplaceNodes = true;
+  for (uint32_t i = 0; i < aNodeArray.Length(); i++) {
+    uint32_t idx = aStartOrEnd == StartOrEnd::start ?
+      i : (aNodeArray.Length() - i - 1);
     OwningNonNull<nsINode> endpoint = aNodeArray[idx];
     if (!nsEditorUtils::IsDescendantOf(endpoint, replaceNode)) {
+      shouldReplaceNodes = false;
       break;
     }
-    aNodeArray.RemoveElementAt(idx);
   }
 
-  // Now replace the removed nodes with the structural parent
-  if (aStartOrEnd == StartOrEnd::end) {
-    aNodeArray.AppendElement(*replaceNode);
-  } else {
-    aNodeArray.InsertElementAt(0, *replaceNode);
+  if (shouldReplaceNodes) {
+    // Now replace the removed nodes with the structural parent
+    aNodeArray.Clear();
+    if (aStartOrEnd == StartOrEnd::end) {
+      aNodeArray.AppendElement(*replaceNode);
+    } else {
+      aNodeArray.InsertElementAt(0, *replaceNode);
+    }
   }
 }

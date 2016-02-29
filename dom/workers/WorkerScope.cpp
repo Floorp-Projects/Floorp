@@ -599,9 +599,7 @@ public:
     RefPtr<SkipWaitingResultRunnable> runnable =
       new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    if (!runnable->Dispatch(jsapi.cx())) {
+    if (!runnable->Dispatch()) {
       NS_WARNING("Failed to dispatch SkipWaitingResultRunnable to the worker.");
     }
     return NS_OK;
@@ -911,10 +909,9 @@ WorkerDebuggerGlobalScope::PostMessage(const nsAString& aMessage)
 }
 
 void
-WorkerDebuggerGlobalScope::SetImmediate(JSContext* aCx, Function& aHandler,
-                                        ErrorResult& aRv)
+WorkerDebuggerGlobalScope::SetImmediate(Function& aHandler, ErrorResult& aRv)
 {
-  mWorkerPrivate->SetDebuggerImmediate(aCx, aHandler, aRv);
+  mWorkerPrivate->SetDebuggerImmediate(aHandler, aRv);
 }
 
 void

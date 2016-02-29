@@ -135,17 +135,17 @@ public:
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::Handle<JS::PropertyDescriptor> desc,
                         JS::Handle<JS::PropertyDescriptor> existingDesc,
-                        JS::ObjectOpResult& result, bool* defined);
+                        JS::ObjectOpResult& result, bool* defined)
+    {
+        *defined = false;
+        return true;
+    }
     virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector& props);
     static bool call(JSContext* cx, JS::HandleObject wrapper,
                      const JS::CallArgs& args, const js::Wrapper& baseInstance);
     static bool construct(JSContext* cx, JS::HandleObject wrapper,
                           const JS::CallArgs& args, const js::Wrapper& baseInstance);
-
-    static bool resolveDOMCollectionProperty(JSContext* cx, JS::HandleObject wrapper,
-                                             JS::HandleObject holder, JS::HandleId id,
-                                             JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     static XPCWrappedNative* getWN(JSObject* wrapper);
 

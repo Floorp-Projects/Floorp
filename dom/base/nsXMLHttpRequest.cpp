@@ -2527,14 +2527,13 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT & mState) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   // Make sure we've been opened
   if (!mChannel || !(XML_HTTP_REQUEST_OPENED & mState)) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
-
 
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
   // in turn keeps STOP button from becoming active.  If the consumer passed in

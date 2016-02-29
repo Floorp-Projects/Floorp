@@ -54,15 +54,8 @@ leak:mozilla::plugins::PPluginModuleParent::OnCallReceived
 leak:sec_asn1e_allocate_item
 leak:PORT_Strdup_Util
 
-# Bug 1021302 - Leak of fds allocated in nsSocketTransport::BuildSocket(). m1, m5, dt, oth
-leak:nsSocketTransport::BuildSocket
-leak:nsServerSocket::OnSocketReady
-
 # Bug 1021350 - Small leak under event_base_once. m1, m4, bc3
 leak:event_base_once
-
-# Bug 1021854 - nsFileStreamBase::DoOpen() leaking fds. bc1, oth
-leak:nsLocalFile::OpenNSPRFileDesc
 
 # Bug 1022010 - Small leak under _render_glyph_outline. bc1
 leak:_render_glyph_outline
@@ -74,7 +67,7 @@ leak:SECITEM_AllocItem_Util
 leak:GlobalPrinters::InitializeGlobalPrinters
 leak:nsPSPrinterList::GetPrinterList
 
-# Bug 1028456 - More leaks with _PR_Getfd, in nsLocalFile::CopyToNative and do_create. bc1, bc3
+# Bug 1028456 - Various NSPR fd-related leaks. m1-m5, bc1,bc2,bc5,bc7,dt4,dt5.
 leak:_PR_Getfd
 
 # Bug 1028483 - The XML parser sometimes leaks an object. bc3

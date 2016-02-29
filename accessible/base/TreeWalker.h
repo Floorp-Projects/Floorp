@@ -33,14 +33,20 @@ public:
   };
 
   /**
-   * Constructor
+   * Used to navigate and create if needed the accessible children.
+   */
+  explicit TreeWalker(Accessible* aContext);
+
+  /**
+   * Used to navigate the accessible children relative to the anchor.
    *
    * @param aContext [in] container accessible for the given node, used to
    *                   define accessible context
-   * @param aNode    [in] the node the search will be prepared relative to
+   * @param aAnchorNode [in] the node the search will be prepared relative to
    * @param aFlags   [in] flags (see enum above)
    */
-  TreeWalker(Accessible* aContext, nsIContent* aNode, uint32_t aFlags = 0);
+  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = 0);
+
   ~TreeWalker();
 
   /**
@@ -57,37 +63,30 @@ private:
   TreeWalker(const TreeWalker&);
   TreeWalker& operator =(const TreeWalker&);
 
-  struct ChildrenIterator {
-    ChildrenIterator(nsIContent* aNode, uint32_t aFilter) :
-      mDOMIter(aNode, aFilter), mARIAOwnsIdx(0) { }
-
-    dom::AllChildrenIterator mDOMIter;
-    uint32_t mARIAOwnsIdx;
-  };
-
-  nsIContent* Next(ChildrenIterator* aIter, Accessible** aAccessible = nullptr,
-                   bool* aSkipSubtree = nullptr);
-
   /**
    * Create new state for the given node and push it on top of stack.
    *
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
    */
-  ChildrenIterator* PushState(nsIContent* aContent)
+  dom::AllChildrenIterator* PushState(nsIContent* aContent)
   {
-    return mStateStack.AppendElement(ChildrenIterator(aContent, mChildFilter));
+    return mStateStack.AppendElement(
+      dom::AllChildrenIterator(aContent, mChildFilter));
   }
 
   /**
    * Pop state from stack.
    */
-  ChildrenIterator* PopState();
+  dom::AllChildrenIterator* PopState();
 
   DocAccessible* mDoc;
   Accessible* mContext;
   nsIContent* mAnchorNode;
-  AutoTArray<ChildrenIterator, 20> mStateStack;
+
+  AutoTArray<dom::AllChildrenIterator, 20> mStateStack;
+  uint32_t mARIAOwnsIdx;
+
   int32_t mChildFilter;
   uint32_t mFlags;
 };

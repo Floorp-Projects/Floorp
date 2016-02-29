@@ -293,7 +293,6 @@
           ],
           'defines' : [
             'MOZILLA_INTERNAL_API',
-            'MOZILLA_XPCOMRT_API',
             'MOZILLA_EXTERNAL_LINKAGE',
             'NO_CHROMIUM_LOGGING',
             'USE_FAKE_MEDIA_STREAMS',

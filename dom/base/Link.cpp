@@ -11,6 +11,9 @@
 #include "mozilla/dom/Element.h"
 #include "nsIURL.h"
 #include "nsISizeOf.h"
+#include "nsIDocShell.h"
+#include "nsIPrefetchService.h"
+#include "nsCPrefetchService.h"
 
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
@@ -69,6 +72,70 @@ Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
     // Possible that hostname could have changed since binding, but since this
     // covers common cases, most DNS prefetch requests will be canceled
     nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+  }
+}
+
+void
+Link::TryDNSPrefetchPreconnectOrPrefetch()
+{
+  MOZ_ASSERT(mElement->IsInComposedDoc());
+  if (!ElementHasHref()) {
+    return;
+  }
+
+  nsAutoString rel;
+  if (!mElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
+    return;
+  }
+
+  if (!nsContentUtils::PrefetchEnabled(mElement->OwnerDoc()->GetDocShell())) {
+    return;
+  }
+
+  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel,
+                         mElement->NodePrincipal());
+
+  if ((linkTypes & nsStyleLinkElement::ePREFETCH) ||
+      (linkTypes & nsStyleLinkElement::eNEXT)){
+    nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+    if (prefetchService) {
+      nsCOMPtr<nsIURI> uri(GetURI());
+      if (uri) {
+        nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
+        prefetchService->PrefetchURI(uri,
+                                     mElement->OwnerDoc()->GetDocumentURI(),
+                                     domNode, true);
+        return;
+      }
+    }
+  }
+
+  if (linkTypes & nsStyleLinkElement::ePRECONNECT) {
+    nsCOMPtr<nsIURI> uri(GetURI());
+    if (uri && mElement->OwnerDoc()) {
+      mElement->OwnerDoc()->MaybePreconnect(uri,
+        mElement->AttrValueToCORSMode(mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
+      return;
+    }
+  }
+
+  if (linkTypes & nsStyleLinkElement::eDNS_PREFETCH) {
+    if (nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
+      nsHTMLDNSPrefetch::PrefetchLow(this);
+    }
+  }
+}
+
+void
+Link::CancelPrefetch()
+{
+  nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+  if (prefetchService) {
+    nsCOMPtr<nsIURI> uri(GetURI());
+    if (uri) {
+      nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
+      prefetchService->CancelPrefetchURI(uri, domNode);
+    }
   }
 }
 

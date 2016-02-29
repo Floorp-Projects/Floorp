@@ -84,9 +84,7 @@ class WorkerPrivate;
 //
 //        RefPtr<FinishTaskWorkerRunnable> runnable =
 //          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy, result);
-//        AutoJSAPI jsapi;
-//        jsapi.Init();
-//        if (!r->Dispatch(jsapi.cx())) {
+//        if (!r->Dispatch()) {
 //          // Worker is alive but not Running any more, so the Promise can't
 //          // be resolved, give up. The proxy will get Release()d at some
 //          // point.

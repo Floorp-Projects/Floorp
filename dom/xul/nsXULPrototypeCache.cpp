@@ -103,6 +103,7 @@ nsXULPrototypeCache::GetInstance()
             nsXULPrototypeCache *p = sInstance;
             obsSvc->AddObserver(p, "chrome-flush-skin-caches", false);
             obsSvc->AddObserver(p, "chrome-flush-caches", false);
+            obsSvc->AddObserver(p, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
             obsSvc->AddObserver(p, "startupcache-invalidate", false);
         }
 
@@ -120,7 +121,8 @@ nsXULPrototypeCache::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "chrome-flush-skin-caches")) {
         FlushSkinFiles();
     }
-    else if (!strcmp(aTopic, "chrome-flush-caches")) {
+    else if (!strcmp(aTopic, "chrome-flush-caches") ||
+             !strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         Flush();
     }
     else if (!strcmp(aTopic, "startupcache-invalidate")) {

@@ -73,12 +73,10 @@ public:
   // appropriately.
   NS_DECL_NSICANCELABLERUNNABLE
 
-  // Passing a JSContext here is required for the WorkerThreadModifyBusyCount
-  // behavior. It also guarantees that any failure (false return) will throw an
-  // exception on the given context. If a context is not passed then failures
-  // must be dealt with by the caller.
+  // The return value is true if and only if both PreDispatch and
+  // DispatchInternal return true.
   bool
-  Dispatch(JSContext* aCx);
+  Dispatch();
 
   // See above note about Cancel().
   virtual bool
@@ -121,12 +119,8 @@ protected:
 
   // By default asserts that Dispatch() is being called on the right thread
   // (ParentThread if |mTarget| is WorkerThread, or WorkerThread otherwise).
-  // Also reports any Dispatch() failures as an exception on |aCx|, and busy
-  // count if targeting the WorkerThread and Dispatch() failed.  The JSContext
-  // passed in here is the one that was passed to Dispatch().
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult);
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult);
 
   // Must be implemented by subclasses. Called on the target thread.  The return
   // value will be passed to PostRun().  The JSContext passed in here comes from
@@ -191,18 +185,8 @@ private:
     return true;
   }
 
-  // We want to be able to assert in PostDispatch that no exceptions were thrown
-  // on aCx.  We can do that if we know no one is subclassing our
-  // DispatchInternal to do weird things.
-  virtual bool
-  DispatchInternal() override final
-  {
-    return WorkerRunnable::DispatchInternal();
-  }
-
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 };
 
 // This runnable is used to send a message directly to a worker's sync loop.
@@ -258,18 +242,8 @@ private:
     return true;
   }
 
-  // We want to be able to assert in PostDispatch that no exceptions were thrown
-  // on aCx.  We can do that if we know no one is subclassing our
-  // DispatchInternal to do weird things.
-  virtual bool
-  DispatchInternal() override final
-  {
-    return WorkerSyncRunnable::DispatchInternal();
-  }
-
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 };
 
 // This runnable is used to stop a sync loop . As sync loops keep the busy count
@@ -293,18 +267,20 @@ protected:
   virtual ~StopSyncLoopRunnable()
   { }
 
-  // Called on the worker thread to set an exception on the context if mResult
-  // is false. Override if you need an exception.
+  // Called on the worker thread, in WorkerRun, right before stopping the
+  // syncloop to set an exception (however subclasses want to handle that) if
+  // mResult is false.  Note that overrides of this method must NOT set an
+  // actual exception on the JSContext; they may only set some state that will
+  // get turned into an exception once the syncloop actually terminates and
+  // control is returned to whoever was spinning the syncloop.
   virtual void
-  MaybeSetException(JSContext* aCx)
+  MaybeSetException()
   { }
 
 private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
-  // If this stops being final, reevaluate the assumptions
-  // MainThreadWorkerSyncRunnable::PostDispatch makes.
   virtual bool
   DispatchInternal() override final;
 };
@@ -337,8 +313,7 @@ private:
   }
 
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 };
 
 // This runnable is processed as soon as it is received by the worker,
@@ -397,8 +372,7 @@ protected:
   }
 
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 };
 
 // A WorkerRunnable that should be dispatched from the worker to itself for
@@ -421,8 +395,7 @@ protected:
   PreDispatch(WorkerPrivate* aWorkerPrivate) override;
 
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 
   // We just delegate PostRun to WorkerRunnable, since it does exactly
   // what we want.

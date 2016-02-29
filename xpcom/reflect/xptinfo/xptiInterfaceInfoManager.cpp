@@ -52,7 +52,7 @@ XPTInterfaceInfoManager::CollectReports(nsIHandleReportCallback* aHandleReport,
     // Measure gXPTIStructArena here, too.  This is a bit grotty because it
     // doesn't belong to the XPTIInterfaceInfoManager, but there's no
     // obviously better place to measure it.
-    amount += XPT_SizeOfArena(gXPTIStructArena, XPTIMallocSizeOf);
+    amount += XPT_SizeOfArenaIncludingThis(gXPTIStructArena, XPTIMallocSizeOf);
 
     return MOZ_COLLECT_REPORT(
         "explicit/xpti-working-set", KIND_HEAP, UNITS_BYTES, amount,

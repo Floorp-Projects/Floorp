@@ -506,7 +506,7 @@ static void ucs4toUtf16(const uint32_t *in, nsAString& out)
 static nsresult punycode(const nsAString& in, nsACString& out)
 {
   uint32_t ucs4Buf[kMaxDNSNodeLen + 1];
-  uint32_t ucs4Len;
+  uint32_t ucs4Len = 0u;
   nsresult rv = utf16ToUcs4(in, ucs4Buf, kMaxDNSNodeLen, &ucs4Len);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -1248,6 +1248,12 @@ DocAccessible::GetAccessibleOrContainer(nsINode* aNode) const
     if (!(currNode = parent)) break;
   }
 
+  // HTML comboboxes have no-content list accessible as an intermediate
+  // containing all options.
+  if (accessible && accessible->IsHTMLCombobox()) {
+    return accessible->FirstChild();
+  }
+
   return accessible;
 }
 
@@ -1416,25 +1422,6 @@ if (!aNode->IsContent() || !aNode->AsContent()->IsHTMLElement(nsGkAtoms::area))
   }
 
   return GetAccessible(aNode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Accessible protected
-
-void
-DocAccessible::CacheChildren()
-{
-  // Search for accessible children starting from the document element since
-  // some web pages tend to insert elements under it rather than document body.
-  dom::Element* rootElm = mDocumentNode->GetRootElement();
-  if (!rootElm)
-    return;
-
-  TreeWalker walker(this, rootElm);
-  Accessible* child = nullptr;
-  while ((child = walker.Next())) {
-    AppendChild(child);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1724,11 +1711,6 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
       // For example, elements may be inserted under the document element while
       // there is no HTML body element.
     }
-
-    // HTML comboboxes have no-content list accessible as an intermidiate
-    // containing all options.
-    if (container->IsHTMLCombobox())
-      container = container->FirstChild();
 
     // We have a DOM/layout change under the container accessible, and its tree
     // might need an update. Since DOM/layout change of the element may affect

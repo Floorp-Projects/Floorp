@@ -64,7 +64,7 @@ public:
     return hash;
   }
 
-  IntSize Size() const { return mSize; }
+  const IntSize& Size() const { return mSize; }
   Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
   float AnimationTime() const { return mAnimationTime; }
   SurfaceFlags Flags() const { return mFlags; }

@@ -90,6 +90,7 @@ EXPORTS.mozilla += [
     'LayerAnimationInfo.h',
     'RuleNodeCacheConditions.h',
     'RuleProcessorCache.h',
+    'ServoBindingHelpers.h',
     'ServoBindings.h',
     'ServoStyleSet.h',
     'ServoStyleSheet.h',

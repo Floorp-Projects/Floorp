@@ -141,14 +141,14 @@ public:
       const std::vector<JsepCodecDescription*>& prototype);
 
   template <class UnaryFunction>
-  void ForEachCodec(UnaryFunction& func)
+  void ForEachCodec(UnaryFunction func)
   {
     std::for_each(mPrototypeCodecs.values.begin(),
                   mPrototypeCodecs.values.end(), func);
   }
 
   template <class BinaryPredicate>
-  void SortCodecs(BinaryPredicate& sorter)
+  void SortCodecs(BinaryPredicate sorter)
   {
     std::stable_sort(mPrototypeCodecs.values.begin(),
                      mPrototypeCodecs.values.end(), sorter);

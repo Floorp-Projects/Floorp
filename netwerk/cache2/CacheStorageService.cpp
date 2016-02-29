@@ -1799,15 +1799,19 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   {
     mozilla::MutexAutoLock lock(mForcedValidEntriesLock);
 
-    for (auto iter = mForcedValidEntries.Iter(); !iter.Done(); iter.Next()) {
-      bool matches;
-      DebugOnly<nsresult> rv = CacheFileUtils::KeyMatchesLoadContextInfo(
-        iter.Key(), aContext, &matches);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (aContext) {
+      for (auto iter = mForcedValidEntries.Iter(); !iter.Done(); iter.Next()) {
+        bool matches;
+        DebugOnly<nsresult> rv = CacheFileUtils::KeyMatchesLoadContextInfo(
+          iter.Key(), aContext, &matches);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-      if (matches) {
-        iter.Remove();
+        if (matches) {
+          iter.Remove();
+        }
       }
+    } else {
+      mForcedValidEntries.Clear();
     }
   }
 
