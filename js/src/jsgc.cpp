@@ -302,7 +302,7 @@ const uint32_t Arena::ThingSizes[] = CHECK_THING_SIZE(
     sizeof(jit::JitCode),       /* AllocKind::JITCODE             */
 );
 
-ArenaHeader ArenaLists::placeholder;
+FreeSpan ArenaLists::placeholder;
 
 #undef CHECK_THING_SIZE_INNER
 #undef CHECK_THING_SIZE
@@ -1951,9 +1951,10 @@ inline void
 ArenaLists::prepareForIncrementalGC(JSRuntime* rt)
 {
     for (auto i : AllAllocKinds()) {
-        ArenaHeader* aheader = freeLists[i];
-        if (aheader != &placeholder) {
-            if (aheader->hasFreeThings()) {
+        FreeSpan* span = freeLists[i];
+        if (span != &placeholder) {
+            if (!span->isEmpty()) {
+                ArenaHeader* aheader = span->getArena();
                 aheader->allocatedDuringIncremental = true;
                 rt->gc.marker.delayMarkingArena(aheader);
             } else {
