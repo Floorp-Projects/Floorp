@@ -2029,6 +2029,22 @@ CompositorParent::DidComposite(TimeStamp& aCompositeStart,
   });
 }
 
+void
+CompositorParent::InvalidateRemoteLayers()
+{
+  MOZ_ASSERT(CompositorLoop() == MessageLoop::current());
+
+  Unused << PCompositorParent::SendInvalidateLayers(0);
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachIndirectLayerTree([] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
+    if (lts->mCrossProcessParent) {
+      auto cpcp = static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent);
+      Unused << cpcp->SendInvalidateLayers(aLayersId);
+    }
+  });
+}
+
 static void
 OpenCompositor(CrossProcessCompositorParent* aCompositor,
                Transport* aTransport, ProcessId aOtherPid,

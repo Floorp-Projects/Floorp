@@ -319,6 +319,15 @@ public:
   uint64_t RootLayerTreeId();
 
   /**
+   * Notify local and remote layer trees connected to this compositor that
+   * the compositor's local device is being reset. All layers must be
+   * invalidated to clear any cached TextureSources.
+   *
+   * This must be called on the compositor thread.
+   */
+  void InvalidateRemoteLayers();
+
+  /**
    * Returns a pointer to the compositor corresponding to the given ID.
    */
   static CompositorParent* GetCompositor(uint64_t id);
