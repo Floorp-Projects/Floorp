@@ -207,8 +207,8 @@ private:
   uint32_t mSentFileLength;
   bool mWaitingToSendPutFinal;
 
-  nsAutoArrayPtr<uint8_t> mBodySegment;
-  nsAutoArrayPtr<uint8_t> mReceivedDataBuffer;
+  UniquePtr<uint8_t[]> mBodySegment;
+  UniquePtr<uint8_t[]> mReceivedDataBuffer;
 
   int mCurrentBlobIndex;
   RefPtr<Blob> mBlob;
