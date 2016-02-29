@@ -635,10 +635,6 @@ public:
       return mCompositorBackend;
     }
 
-    // Trigger a test-driven graphics device reset.
-    virtual void TestDeviceReset(DeviceResetReason aReason)
-    {}
-
     // Return information on how child processes should initialize graphics
     // devices. Currently this is only used on Windows.
     virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);

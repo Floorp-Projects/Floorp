@@ -711,12 +711,6 @@ child:
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
 
     /**
-     * Tell the child that for testing purposes, a graphics device reset has
-     * occurred.
-     */
-    async TestGraphicsDeviceReset(uint32_t aReason);
-
-    /**
      * Notify the child that presentation receiver has been launched with the
      * correspondent iframe.
      */
