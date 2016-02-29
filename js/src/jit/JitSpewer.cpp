@@ -10,6 +10,14 @@
 
 #include "mozilla/Atomics.h"
 
+#if defined(XP_WIN)
+# include <windows.h>
+#else
+# include <unistd.h>
+#endif
+
+#include "jsprf.h"
+
 #include "jit/Ion.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
@@ -172,10 +180,40 @@ IonSpewer::init()
     if (inited_)
         return true;
 
+    const size_t bufferLength = 256;
+    char c1Buffer[bufferLength];
+    char jsonBuffer[bufferLength];
+    const char *c1Filename = JIT_SPEW_DIR "/ion.cfg";
+    const char *jsonFilename = JIT_SPEW_DIR "/ion.json";
+
+    const char* usePid = getenv("ION_SPEW_BY_PID");
+    if (usePid && *usePid != 0) {
+#if defined(XP_WIN)
+        size_t pid = GetCurrentProcessId();
+#else
+        size_t pid = getpid();
+#endif
+
+        size_t len;
+        len = JS_snprintf(jsonBuffer, bufferLength, JIT_SPEW_DIR "/ion%" PRIuSIZE ".json", pid);
+        if (bufferLength <= len) {
+            fprintf(stderr, "Warning: IonSpewer::init: Cannot serialize file name.");
+            return false;
+        }
+        jsonFilename = jsonBuffer;
+
+        len = JS_snprintf(c1Buffer, bufferLength, JIT_SPEW_DIR "/ion%" PRIuSIZE ".cfg", pid);
+        if (bufferLength <= len) {
+            fprintf(stderr, "Warning: IonSpewer::init: Cannot serialize file name.");
+            return false;
+        }
+        c1Filename = c1Buffer;
+    }
+
     outputLock_ = PR_NewLock();
     if (!outputLock_ ||
-        !c1Output_.init(JIT_SPEW_DIR "ion.cfg") ||
-        !jsonOutput_.init(JIT_SPEW_DIR "ion.json"))
+        !c1Output_.init(c1Filename) ||
+        !jsonOutput_.init(jsonFilename))
     {
         release();
         return false;
