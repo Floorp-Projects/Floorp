@@ -172,7 +172,10 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         command = ['makepkg', '-s']
         self.run(command)
         pack = glob.glob(name + '*.tar.xz')[0]
-        command = ['pacman', '-U', pack]
+        command = ['pacman', '-U']
+        if self.no_interactive:
+            command.append('--noconfirm')
+        command.append(pack)
         self.run_as_root(command)
 
     def aur_install(self, *packages):
