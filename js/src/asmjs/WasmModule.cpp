@@ -800,10 +800,13 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
     }
 
     // Update the function-pointer tables to point to profiling prologues.
-    for (FuncPtrTable& funcPtrTable : funcPtrTables_) {
-        auto array = reinterpret_cast<void**>(globalData() + funcPtrTable.globalDataOffset);
-        for (size_t i = 0; i < funcPtrTable.numElems; i++) {
+    for (FuncPtrTable& table : funcPtrTables_) {
+        auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
+        for (size_t i = 0; i < table.numElems; i++) {
             const CodeRange* codeRange = lookupCodeRange(array[i]);
+            // Don't update entries for the BadIndirectCall exit.
+            if (codeRange->isErrorExit())
+                continue;
             void* from = code() + codeRange->funcNonProfilingEntry();
             void* to = code() + codeRange->funcProfilingEntry();
             if (!enabled)
@@ -1057,8 +1060,9 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
         auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
         for (size_t i = 0; i < table.elemOffsets.length(); i++) {
             uint8_t* elem = code() + table.elemOffsets[i];
-            if (profilingEnabled_)
-                elem = code() + lookupCodeRange(elem)->funcProfilingEntry();
+            const CodeRange* codeRange = lookupCodeRange(elem);
+            if (profilingEnabled_ && !codeRange->isErrorExit())
+                elem = code() + codeRange->funcProfilingEntry();
             array[i] = elem;
         }
     }
