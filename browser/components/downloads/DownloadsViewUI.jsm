@@ -24,7 +24,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
-this.DownloadsViewUI = {};
+this.DownloadsViewUI = {
+  /**
+   * Returns true if the given string is the name of a command that can be
+   * handled by the Downloads user interface, including standard commands.
+   */
+  isCommandName(name) {
+    return name.startsWith("cmd_") || name.startsWith("downloadsCmd_");
+  },
+};
 
 /**
  * A download element shell is responsible for handling the commands and the
