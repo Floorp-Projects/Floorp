@@ -35,7 +35,6 @@ if not CONFIG['MOZ_B2GDROID']:
         'PromptService.js',
         'SessionStore.js',
         'SiteSpecificUserAgent.js',
-        'WebappsUpdateTimer.js',
     ]
 
 # Keep it this way if at all possible.  If you need preprocessing,

@@ -523,8 +523,6 @@
   <string name="bookmarkhistory_import_history">&bookmarkhistory_import_history;</string>
   <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
 
-  <string name="webapp_generic_name">&webapp_generic_name;</string>
-
   <string name="searchable_description">&searchable_description;</string>
 
   <!-- Updater notifications -->

@@ -865,30 +865,6 @@ pref("browser.snippets.enabled", true);
 pref("browser.snippets.syncPromo.enabled", true);
 pref("browser.snippets.firstrunHomepage.enabled", true);
 
-// The URL of the APK factory from which we obtain APKs for webapps.
-pref("browser.webapps.apkFactoryUrl", "https://controller.apk.firefox.com/application.apk");
-
-// How frequently to check for webapp updates, in seconds (86400 is daily).
-pref("browser.webapps.updateInterval", 86400);
-
-// Whether or not to check for updates.  Enabled by default, but the runtime
-// disables it for webapp profiles on firstrun, so only the main Fennec process
-// checks for updates (to avoid duplicate update notifications).
-//
-// In the future, we might want to make each webapp process check for updates
-// for its own webapp, in which case we'll need to have a third state for this
-// preference.  Thus it's an integer rather than a boolean.
-//
-// Possible values:
-//   0: don't check for updates
-//   1: do check for updates
-pref("browser.webapps.checkForUpdates", 1);
-
-// The URL of the service that checks for updates.
-// To test updates, set this to http://apk-update-checker.paas.allizom.org,
-// which is a test server that always reports all apps as having updates.
-pref("browser.webapps.updateCheckUrl", "https://controller.apk.firefox.com/app_updates");
-
 // The mode of home provider syncing.
 // 0: Sync always
 // 1: Sync only when on wifi
