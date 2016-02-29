@@ -77,16 +77,16 @@ var tests = [
 
   // Test escaping
   {
-    loadURL: "http://example.com/()%C3%A9",
-    expectedURL: "example.com/()\xe9",
-    copyExpected: "http://example.com/%28%29%C3%A9"
+    loadURL: "http://example.com/()%28%29%C3%A9",
+    expectedURL: "example.com/()()\xe9",
+    copyExpected: "http://example.com/()%28%29%C3%A9"
   },
   {
-    copyVal: "<example.com/(>)\xe9",
+    copyVal: "<example.com/(>)()\xe9",
     copyExpected: "http://example.com/("
   },
   {
-    copyVal: "e<xample.com/(>)\xe9",
+    copyVal: "e<xample.com/(>)()\xe9",
     copyExpected: "xample.com/("
   },
 

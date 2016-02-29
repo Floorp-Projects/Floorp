@@ -601,11 +601,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
 
           let uri;
-          try {
-            uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-          } catch (e) {}
-          if (!uri)
-            return selectedVal;
+          if (this.getAttribute("pageproxystate") == "valid") {
+            uri = gBrowser.currentURI;
+          } else {
+            // We're dealing with an autocompleted value, create a new URI from that.
+            try {
+              uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+            } catch (e) {}
+            if (!uri)
+              return selectedVal;
+          }
 
           // Only copy exposable URIs
           try {
@@ -617,8 +622,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // ... but only if  isn't a javascript: or data: URI, since those
             // are hard to read when encoded
             if (!uri.schemeIs("javascript") && !uri.schemeIs("data")) {
-              // Parentheses are known to confuse third-party applications (bug 458565).
-              selectedVal = uri.spec.replace(/[()]/g, c => escape(c));
+              selectedVal = uri.spec;
             }
 
             return selectedVal;
