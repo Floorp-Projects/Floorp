@@ -911,7 +911,7 @@ DataStoreChangeEventProxy::DataStoreChangeEventProxy(
 
   // We do this to make sure the worker thread won't shut down before the event
   // is dispatched to the WorkerStore on the worker thread.
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), this)) {
+  if (!mWorkerPrivate->AddFeature(this)) {
     MOZ_ASSERT(false, "cannot add the worker feature!");
     return;
   }
@@ -980,7 +980,7 @@ DataStoreChangeEventProxy::Notify(JSContext* aCx, Status aStatus)
   // features of the worker thread since the worker thread has been cancelled.
   if (aStatus >= Canceling) {
     mWorkerStore = nullptr;
-    mWorkerPrivate->RemoveFeature(aCx, this);
+    mWorkerPrivate->RemoveFeature(this);
     mCleanedUp = true;
   }
 

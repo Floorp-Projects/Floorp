@@ -1070,7 +1070,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
   worker->AssertIsOnWorkerThread();
 
   mListener = new WorkerListener(worker, this);
-  if (!worker->AddFeature(worker->GetJSContext(), this)) {
+  if (!worker->AddFeature(this)) {
     mListener = nullptr;
     NS_WARNING("Could not add feature");
     return;
@@ -1128,7 +1128,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   //    be null and we won't reach here.
   // 2) Otherwise, worker is still around even if we are going away.
   mWorkerPrivate->AssertIsOnWorkerThread();
-  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+  mWorkerPrivate->RemoveFeature(this);
 
   mListener->ClearRegistration();
 
