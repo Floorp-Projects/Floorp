@@ -562,7 +562,7 @@ public:
   VolumeChangeNotification(uint8_t aVolume, uint8_t aCType);
 
   virtual void
-  PassthroughCmdNotification(int aId, int aKeyState);
+  PassthroughCmdNotification(uint8_t aId, uint8_t aKeyState);
 
 protected:
   BluetoothAvrcpNotificationHandler();
