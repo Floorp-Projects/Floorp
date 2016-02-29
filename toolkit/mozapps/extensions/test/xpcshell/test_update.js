@@ -1347,3 +1347,47 @@ function check_test_7_cache() {
     run_next_test();
   });
 }
+
+// Test that the update check returns nothing for addons in locked install
+// locations.
+add_test(function run_test_locked_install() {
+  const lockedDir = gProfD.clone();
+  lockedDir.append("locked_extensions");
+  registerDirectory("XREAppFeat", lockedDir);
+  restartManager();
+  writeInstallRDFForExtension({
+    id: "addon13@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2"
+    }],
+    name: "Test Addon 13",
+  }, lockedDir);
+  restartManager();
+
+  AddonManager.getAddonByID("addon13@tests.mozilla.org", function(a13) {
+    do_check_neq(a13, null);
+
+    a13.findUpdates({
+      onCompatibilityUpdateAvailable: function() {
+        ok(false, "Should have not have seen compatibility information");
+      },
+
+      onUpdateAvailable: function() {
+        ok(false, "Should not have seen an available update");
+      },
+
+      onUpdateFinished: function() {
+        ok(true, "Should have seen an onUpdateFinished");
+      }
+    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+
+  AddonManager.getAllInstalls(aInstalls => {
+    do_check_eq(aInstalls.length, 0);
+  });
+  run_next_test();
+});
