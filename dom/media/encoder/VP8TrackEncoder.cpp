@@ -112,7 +112,9 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
   config.rc_dropframe_thresh = 0;
   config.rc_end_usage = VPX_CBR;
   config.g_pass = VPX_RC_ONE_PASS;
-  config.rc_resize_allowed = 1;
+  // ffmpeg doesn't currently support streams that use resize.
+  // Therefore, for safety, we should turn it off until it does.
+  config.rc_resize_allowed = 0;
   config.rc_undershoot_pct = 100;
   config.rc_overshoot_pct = 15;
   config.rc_buf_initial_sz = 500;
