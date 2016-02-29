@@ -110,6 +110,12 @@ class ProxyObject : public JSObject
     static const Class proxyClass;
 };
 
+inline bool
+IsProxyClass(const Class* clasp)
+{
+    return clasp->isProxy();
+}
+
 bool IsDerivedProxyObject(const JSObject* obj, const js::BaseProxyHandler* handler);
 
 } // namespace js
