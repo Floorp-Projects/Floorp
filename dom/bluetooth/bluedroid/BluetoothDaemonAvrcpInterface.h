@@ -234,7 +234,7 @@ protected:
     VolumeChangeNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, uint8_t, uint8_t, int, int>
+    NotificationHandlerWrapper, void, uint8_t, uint8_t, uint8_t, uint8_t>
     PassthroughCmdNotification;
 
   class GetElementAttrInitOp;
