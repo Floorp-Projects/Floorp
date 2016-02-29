@@ -8,7 +8,7 @@
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 
-using mozilla::ScopedDeletePtr;
+using mozilla::MakeUnique;
 
 BEGIN_TEST(testGCHeapPostBarriers)
 {
@@ -46,7 +46,7 @@ TestHeapPostBarriers(T initialObj)
     CHECK(js::gc::IsInsideNursery(initialObj));
 
     /* Construct Heap<> wrapper. */
-    ScopedDeletePtr<JS::Heap<T>> heapData(new JS::Heap<T>);
+    auto heapData = MakeUnique<JS::Heap<T>>();
     CHECK(heapData.get());
     CHECK(Passthrough(heapData->get() == nullptr));
     *heapData = initialObj;
