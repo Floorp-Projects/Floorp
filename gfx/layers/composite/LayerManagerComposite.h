@@ -77,11 +77,6 @@ public:
   virtual void Destroy() override;
 
   /**
-   * return True if initialization was succesful, false when it was not.
-   */
-  bool Initialize();
-
-  /**
    * Sets the clipping region for this layer manager. This is important on
    * windows because using OGL we no longer have GDI's native clipping. Therefor
    * widget must tell us what part of the screen is being invalidated,
