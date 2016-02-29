@@ -43,7 +43,7 @@
 </div>
 <div id="spacerForBody"></div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -93,26 +93,28 @@ function onZoomReset(aCallback) {
   }, topic, false);
 }
 
-function setDeltaMultiplierSettings(aSettings)
+function setDeltaMultiplierSettings(aSettings, aCallback)
 {
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", aSettings.deltaMultiplierX * 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", aSettings.deltaMultiplierY * 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", aSettings.deltaMultiplierZ * 100);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["mousewheel.default.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.default.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.default.delta_multiplier_z", aSettings.deltaMultiplierZ * 100],
+    ["mousewheel.with_alt.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.with_alt.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.with_alt.delta_multiplier_z", aSettings.deltaMultiplierZ * 100],
+    ["mousewheel.with_control.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.with_control.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.with_control.delta_multiplier_z", aSettings.deltaMultiplierZ * 100],
+    ["mousewheel.with_meta.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.with_meta.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.with_meta.delta_multiplier_z", aSettings.deltaMultiplierZ * 100],
+    ["mousewheel.with_shift.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.with_shift.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.with_shift.delta_multiplier_z", aSettings.deltaMultiplierZ * 100],
+    ["mousewheel.with_win.delta_multiplier_x", aSettings.deltaMultiplierX * 100],
+    ["mousewheel.with_win.delta_multiplier_y", aSettings.deltaMultiplierY * 100],
+    ["mousewheel.with_win.delta_multiplier_z", aSettings.deltaMultiplierZ * 100]
+   ]}, aCallback);
 }
 
 function doTestScroll(aSettings, aCallback)
@@ -1782,21 +1784,23 @@ function runTests()
   var index = 0;
 
   function doTest() {
-    setDeltaMultiplierSettings(kSettings[index]);
-    doTestScroll(kSettings[index], function () {
-      doTestZoom(kSettings[index], function() {
-        if (++index == kSettings.length) {
-          setDeltaMultiplierSettings(kSettings[0]);
-          doTestZoomedScroll(function() {
-            doTestWholeScroll(function() {
-              doTestActionOverride(function() {
-                finishTests();
+    setDeltaMultiplierSettings(kSettings[index], function () {
+      doTestScroll(kSettings[index], function () {
+        doTestZoom(kSettings[index], function() {
+          if (++index == kSettings.length) {
+            setDeltaMultiplierSettings(kSettings[0], function() {
+              doTestZoomedScroll(function() {
+                doTestWholeScroll(function() {
+                  doTestActionOverride(function() {
+                    finishTests();
+                  });
+                });
               });
             });
-          });
-        } else {
-          doTest();
-        }
+          } else {
+            doTest();
+          }
+        });
       });
     });
   }
@@ -1817,21 +1821,6 @@ function finishTests()
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
 
   winUtils.restoreNormalRefresh();
 
