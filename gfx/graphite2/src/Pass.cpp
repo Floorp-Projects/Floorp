@@ -238,7 +238,7 @@ bool Pass::readRules(const byte * rule_map, const size_t num_entries,
     if (e.test(!(m_rules && m_codes && m_progs), E_OUTOFMEM)) return face.error(e);
 
     Rule * r = m_rules + m_numRules - 1;
-    for (size_t n = m_numRules; n; --n, --r, ac_end = ac_begin, rc_end = rc_begin)
+    for (size_t n = m_numRules; r >= m_rules; --n, --r, ac_end = ac_begin, rc_end = rc_begin)
     {
         face.error_context((face.error_context() & 0xFFFF00) + EC_ARULE + ((n - 1) << 24));
         r->preContext = *--precontext;
@@ -410,6 +410,7 @@ bool Pass::runGraphite(vm::Machine & m, FiniteStateMachine & fsm, bool reverse) 
         do
         {
             findNDoRule(s, m, fsm);
+            if (m.status() != Machine::finished) return false;
             if (s && (s == m.slotMap().highwater() || m.slotMap().highpassed() || --lc == 0)) {
                 if (!lc)
                     s = m.slotMap().highwater();
@@ -500,7 +501,12 @@ void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) cons
         // Search for the first rule which passes the constraint
         const RuleEntry *        r = fsm.rules.begin(),
                         * const re = fsm.rules.end();
-        while (r != re && !testConstraint(*r->rule, m)) ++r;
+        while (r != re && !testConstraint(*r->rule, m))
+        {
+            ++r;
+            if (m.status() != Machine::finished)
+                return;
+        }
 
 #if !defined GRAPHITE2_NTRACING
         if (fsm.dbgout)
@@ -535,6 +541,7 @@ void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) cons
             if (r != re)
             {
                 const int adv = doAction(r->rule->action, slot, m);
+                if (m.status() != Machine::finished) return;
                 if (r->rule->action->deletes()) fsm.slots.collectGarbage(slot);
                 adjustSlot(adv, slot, fsm.slots);
                 return;
