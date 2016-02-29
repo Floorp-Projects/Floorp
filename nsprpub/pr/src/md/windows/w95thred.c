@@ -65,7 +65,7 @@ _PR_MD_INIT_THREAD(PRThread *thread)
         ** suspending).  Therefore, get a real handle from
         ** the pseudo handle via DuplicateHandle(...)
         */
-        DuplicateHandle(
+        BOOL ok = DuplicateHandle(
                 GetCurrentProcess(),     /* Process of source handle */
                 GetCurrentThread(),      /* Pseudo Handle to dup */
                 GetCurrentProcess(),     /* Process of handle */
@@ -73,6 +73,11 @@ _PR_MD_INIT_THREAD(PRThread *thread)
                 0L,                      /* access flags */
                 FALSE,                   /* Inheritable */
                 DUPLICATE_SAME_ACCESS);  /* Options */
+        if (!ok) {
+            return PR_FAILURE;
+        }
+        thread->id = GetCurrentThreadId();
+        thread->md.id = thread->id;
     }
 
     /* Create the blocking IO semaphore */
