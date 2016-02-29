@@ -11,13 +11,12 @@ mapping:
     complete_mar:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
-# Bug 1242782 - release promotion mozharness l10n tasks should upload checksum and sigs
-#    checksum:
-#      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums
-#      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums
-#    checksum_sig:
-#      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums.asc
-#      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+    checksum:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums
+    checksum_sig:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums.asc
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
 
   {% if platform == "win32" %}
     full_installer:
