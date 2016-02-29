@@ -6505,13 +6505,14 @@ UpdateChecker.prototype = {
                             this.addon.compatibilityOverrides;
 
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
-                                               this.appVersion,
-                                               this.platformVersion,
-                                               ignoreMaxVersion,
-                                               ignoreStrictCompat,
-                                               compatOverrides);
+                                           this.appVersion,
+                                           this.platformVersion,
+                                           ignoreMaxVersion,
+                                           ignoreStrictCompat,
+                                           compatOverrides);
 
-    if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
+    if (update && Services.vc.compare(this.addon.version, update.version) < 0
+        && !this.addon._installLocation.locked) {
       for (let currentInstall of XPIProvider.installs) {
         // Skip installs that don't match the available update
         if (currentInstall.existingAddon != this.addon ||
