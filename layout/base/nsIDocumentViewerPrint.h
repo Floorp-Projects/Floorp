@@ -69,18 +69,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTVIEWERPRINT \
-  void     SetIsPrinting(bool aIsPrinting) override; \
-  bool     GetIsPrinting() override; \
-  void     SetIsPrintPreview(bool aIsPrintPreview) override; \
-  bool     GetIsPrintPreview() override; \
+  void SetIsPrinting(bool aIsPrinting) override; \
+  bool GetIsPrinting() override; \
+  void SetIsPrintPreview(bool aIsPrintPreview) override; \
+  bool GetIsPrintPreview() override; \
   mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) override; \
-  void     IncrementDestroyRefCount() override; \
-  void     ReturnToGalleyPresentation() override; \
-  void     OnDonePrinting() override; \
-  bool     IsInitializedForPrintPreview() override; \
-  void     InitializeForPrintPreview() override; \
-  void     SetPrintPreviewPresentation(nsViewManager* aViewManager, \
-                                       nsPresContext* aPresContext, \
-                                       nsIPresShell* aPresShell) override;
+  void IncrementDestroyRefCount() override; \
+  void ReturnToGalleyPresentation() override; \
+  void OnDonePrinting() override; \
+  bool IsInitializedForPrintPreview() override; \
+  void InitializeForPrintPreview() override; \
+  void SetPrintPreviewPresentation(nsViewManager* aViewManager, \
+                                   nsPresContext* aPresContext, \
+                                   nsIPresShell* aPresShell) override;
 
 #endif /* nsIDocumentViewerPrint_h___ */
