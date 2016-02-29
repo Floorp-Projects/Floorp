@@ -46,6 +46,11 @@ child:
   // TextureSources are recreated.
   async InvalidateLayers(uint64_t layersId);
 
+  // The compositor type or device has changed, and a new texture factory
+  // identifier is available. Layers must be invalidated and the new identifier
+  // must be propagated.
+  async CompositorUpdated(uint64_t layersId, TextureFactoryIdentifier newIdentifier);
+
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying
   // the root layer tree).
