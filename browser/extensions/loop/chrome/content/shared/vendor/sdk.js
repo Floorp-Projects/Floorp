@@ -1,21 +1,21 @@
 /**
- * @license OpenTok.js v2.7.2 6a37d02 HEAD
+ * @license OpenTok.js v2.7.3 c273b40 HEAD
  *
  * Copyright (c) 2010-2015 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: December 16 12:20:36 2015
+ * Date: February 03 09:39:18 2016
  */
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = Array;
 
 },{}],2:[function(require,module,exports){
-arguments[4][110][0].apply(exports,arguments)
-},{"dup":110}],3:[function(require,module,exports){
-arguments[4][111][0].apply(exports,arguments)
-},{"./buffer":1,"./rng":2,"dup":111}],4:[function(require,module,exports){
+arguments[4][108][0].apply(exports,arguments)
+},{"dup":108}],3:[function(require,module,exports){
+arguments[4][109][0].apply(exports,arguments)
+},{"./buffer":1,"./rng":2,"dup":109}],4:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -113,18 +113,7 @@ module.exports = OTHelpers;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../vendor/async":37,"./ajax":5,"./analytics":8,"./behaviours/eventing":9,"./behaviours/eventing/event":11,"./behaviours/statable":13,"./callbacks":14,"./capabilities":15,"./casting":16,"./collection":17,"./cookies":18,"./domExtras":19,"./domLoad":20,"./elementCollection/index":25,"./elementCollection/shorthandSelector":26,"./env":27,"./error":28,"./isWebSocketSupported":29,"./logging":31,"./logging/mixin":32,"./modal":34,"./requestAnimationFrame":35,"./util":36}],5:[function(require,module,exports){
-'use strict';
-
-var env = require('./env');
-
-module.exports = (
-  env.name === 'Node' ?
-  require('./ajax/node') :
-  require('./ajax/browser')
-);
-
-},{"./ajax/browser":6,"./ajax/node":7,"./env":27}],6:[function(require,module,exports){
+},{"../vendor/async":35,"./ajax":5,"./analytics":6,"./behaviours/eventing":7,"./behaviours/eventing/event":9,"./behaviours/statable":11,"./callbacks":12,"./capabilities":13,"./casting":14,"./collection":15,"./cookies":16,"./domExtras":17,"./domLoad":18,"./elementCollection/index":23,"./elementCollection/shorthandSelector":24,"./env":25,"./error":26,"./isWebSocketSupported":27,"./logging":29,"./logging/mixin":30,"./modal":32,"./requestAnimationFrame":33,"./util":34}],5:[function(require,module,exports){
 'use strict';
 
 /* jshint browser:true, smarttabs:true */
@@ -310,82 +299,12 @@ if (env.name !== 'Node') {
   makeEverythingAttachToOTHelpers(browserAjax);
 }
 
-},{"../elementCollection/shorthandSelector":26,"../env":27,"../makeEverythingAttachToOTHelpers":33,"../util":36}],7:[function(require,module,exports){
-'use strict';
-
-/* jshint browser:false, smarttabs:true */
-
-var env = require('../env');
-var makeEverythingAttachToOTHelpers = require('../makeEverythingAttachToOTHelpers');
-var util = require('../util');
-
-var nodeAjax = {};
-module.exports = nodeAjax;
-
-if (env.name === 'Node') {
-  var request = require('request' + ''); // make browserify happy with + ''
-
-  nodeAjax.request = function(url, options, callback) {
-    var completion = function(error, response, body) {
-      var event = {response: response, body: body};
-
-      // We need to detect things that Request considers a success,
-      // but we consider to be failures.
-      if (!error && response.statusCode >= 200 &&
-                  (response.statusCode < 300 || response.statusCode === 304) ) {
-        callback(null, event);
-      } else {
-        callback(error, event);
-      }
-    };
-
-    if (options.method.toLowerCase() === 'get') {
-      request.get(url, completion);
-    }
-    else {
-      request.post(url, options.body, completion);
-    }
-  };
-
-  nodeAjax.get = function(url, options, callback) {
-    var _options = util.extend(options || {}, {
-      method: 'GET'
-    });
-    nodeAjax.request(url, _options, callback);
-  };
-
-  nodeAjax.post = function(url, options, callback) {
-    var _options = util.extend(options || {}, {
-      method: 'POST'
-    });
-
-    nodeAjax.request(url, _options, callback);
-  };
-
-  nodeAjax.getJSON = function(url, options, callback) {
-    var extendedHeaders = require('underscore' + '').extend( // make browserify happy with + ''
-      {
-        'Accept': 'application/json'
-      },
-      options.headers || {}
-    );
-
-    request.get({
-      url: url,
-      headers: extendedHeaders,
-      json: true
-    }, function(err, response) {
-      callback(err, response && response.body);
-    });
-  };
-
-  makeEverythingAttachToOTHelpers(nodeAjax);
-}
-},{"../env":27,"../makeEverythingAttachToOTHelpers":33,"../util":36}],8:[function(require,module,exports){
+},{"../elementCollection/shorthandSelector":24,"../env":25,"../makeEverythingAttachToOTHelpers":31,"../util":34}],6:[function(require,module,exports){
 'use strict';
 
 var ajax = require('./ajax');
 var env = require('./env');
+var logging = require('./logging');
 var util = require('./util');
 var uuid = require('uuid');
 
@@ -541,9 +460,12 @@ module.exports = function Analytics(loggingUrl, debugFn) {
 
     if (throttle && !isNaN(throttle)) {
       if (Math.random() > throttle) {
+        logging.debug('skipping sending analytics due to throttle:', data);
         return;
       }
     }
+
+    logging.debug('sending analytics:', data);
 
     // remove properties that have null values:
     for (var key in data) {
@@ -578,7 +500,7 @@ module.exports = function Analytics(loggingUrl, debugFn) {
   };
 };
 
-},{"./ajax":5,"./env":27,"./util":36,"uuid":3}],9:[function(require,module,exports){
+},{"./ajax":5,"./env":25,"./logging":29,"./util":34,"uuid":3}],7:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -907,11 +829,7 @@ module.exports = function eventing(self, syncronous) {
   // @return this
   //
   self.trigger = function(/* eventName [, arg0, arg1, ..., argN ] */) {
-    var args = Array.prototype.slice.call(arguments);
-
-    // Shifting to remove the eventName from the other args
-    _.trigger(args.shift(), args);
-
+    _.trigger.apply(_, arguments);
     return this;
   };
 
@@ -1020,7 +938,7 @@ module.exports = function eventing(self, syncronous) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../logging":31,"../util":36,"./eventing/browser":10,"./eventing/node":12}],10:[function(require,module,exports){
+},{"../logging":29,"../util":34,"./eventing/browser":8,"./eventing/node":10}],8:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1187,7 +1105,10 @@ if(env.name !== 'Node') {
       executeListeners(event.type, [event], defaultAction);
     };
 
-    api.trigger = function(eventName, args) {
+    api.trigger = function(/* eventName [, arg1, arg2, ...argN] */) {
+      var args = Array.prototype.slice.call(arguments);
+      var eventName = args.shift();
+
       if (!api.events[eventName] || api.events[eventName].length === 0) {
         return;
       }
@@ -1221,7 +1142,7 @@ if(env.name !== 'Node') {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../callbacks":14,"../../env":27}],11:[function(require,module,exports){
+},{"../../callbacks":12,"../../env":25}],9:[function(require,module,exports){
 'use strict';
 
 var logging = require('../../logging');
@@ -1248,7 +1169,7 @@ module.exports = function Event() {
   };
 };
 
-},{"../../logging":31}],12:[function(require,module,exports){
+},{"../../logging":29}],10:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1362,7 +1283,7 @@ else {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../env":27,"events":78,"util":83}],13:[function(require,module,exports){
+},{"../../env":25,"events":76,"util":81}],11:[function(require,module,exports){
 'use strict';
 
 var util = require('../util');
@@ -1419,7 +1340,7 @@ module.exports = function statable(
   return setState;
 };
 
-},{"../util":36}],14:[function(require,module,exports){
+},{"../util":34}],12:[function(require,module,exports){
 'use strict';
 
 var makeEverythingAttachToOTHelpers = require('./makeEverythingAttachToOTHelpers');
@@ -1466,7 +1387,7 @@ callbacks.createAsyncHandler = function(handler) {
 
 makeEverythingAttachToOTHelpers(callbacks);
 
-},{"./makeEverythingAttachToOTHelpers":33}],15:[function(require,module,exports){
+},{"./makeEverythingAttachToOTHelpers":31}],13:[function(require,module,exports){
 'use strict';
 
 var logging = require('./logging');
@@ -1596,7 +1517,7 @@ capabilities.hasCapabilities = function(/* capability1, capability2, ..., capabi
 
 makeEverythingAttachToOTHelpers(capabilities);
 
-},{"./logging":31,"./makeEverythingAttachToOTHelpers":33,"./util":36}],16:[function(require,module,exports){
+},{"./logging":29,"./makeEverythingAttachToOTHelpers":31,"./util":34}],14:[function(require,module,exports){
 'use strict';
 
 var makeEverythingAttachToOTHelpers = require('./makeEverythingAttachToOTHelpers');
@@ -1618,7 +1539,7 @@ casting.roundFloat = function(value, places) {
 
 makeEverythingAttachToOTHelpers(casting);
 
-},{"./makeEverythingAttachToOTHelpers":33}],17:[function(require,module,exports){
+},{"./makeEverythingAttachToOTHelpers":31}],15:[function(require,module,exports){
 'use strict';
 
 var eventing = require('./behaviours/eventing');
@@ -1801,7 +1722,7 @@ module.exports = function Collection(idField) {
   };
 };
 
-},{"./behaviours/eventing":9,"./logging":31,"./util":36}],18:[function(require,module,exports){
+},{"./behaviours/eventing":7,"./logging":29,"./util":34}],16:[function(require,module,exports){
 'use strict';
 
 var makeEverythingAttachToOTHelpers = require('./makeEverythingAttachToOTHelpers');
@@ -1851,7 +1772,7 @@ cookies.getCookie = function(key) {
 
 makeEverythingAttachToOTHelpers(cookies);
 
-},{"./makeEverythingAttachToOTHelpers":33}],19:[function(require,module,exports){
+},{"./makeEverythingAttachToOTHelpers":31}],17:[function(require,module,exports){
 'use strict';
 
 var $ = require('./elementCollection/shorthandSelector');
@@ -1921,7 +1842,7 @@ domExtras.createButton = function(innerHTML, attributes, events) {
 
 makeEverythingAttachToOTHelpers(domExtras);
 
-},{"./elementCollection/shorthandSelector":26,"./makeEverythingAttachToOTHelpers":33}],20:[function(require,module,exports){
+},{"./elementCollection/shorthandSelector":24,"./makeEverythingAttachToOTHelpers":31}],18:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -2017,7 +1938,7 @@ makeEverythingAttachToOTHelpers(domLoad);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./makeEverythingAttachToOTHelpers":33}],21:[function(require,module,exports){
+},{"./makeEverythingAttachToOTHelpers":31}],19:[function(require,module,exports){
 'use strict';
 
 var util = require('../../util');
@@ -2168,7 +2089,7 @@ module.exports = function(ElementCollection) {
   };
 };
 
-},{"../../util":36}],22:[function(require,module,exports){
+},{"../../util":34}],20:[function(require,module,exports){
 'use strict';
 
 var capabilities = require('../../capabilities');
@@ -2337,7 +2258,7 @@ module.exports = function(ElementCollection) {
   };
 };
 
-},{"../../capabilities":15}],23:[function(require,module,exports){
+},{"../../capabilities":13}],21:[function(require,module,exports){
 (function (global){
 'use strict';
 var env = require('../../env');
@@ -2549,7 +2470,7 @@ module.exports = function(ElementCollection, findElementWithDisplayNone) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../env":27}],24:[function(require,module,exports){
+},{"../../env":25}],22:[function(require,module,exports){
 'use strict';
 
 var callbacks = require('../../callbacks');
@@ -2783,7 +2704,7 @@ module.exports = function(ElementCollection) {
   };
 };
 
-},{"../../callbacks":14,"../../util":36}],25:[function(require,module,exports){
+},{"../../callbacks":12,"../../util":34}],23:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -3140,7 +3061,7 @@ extensions.observers(ElementCollection);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../env":27,"../util":36,"./extensions/attributes":21,"./extensions/classNames":22,"./extensions/css":23,"./extensions/observers":24}],26:[function(require,module,exports){
+},{"../env":25,"../util":34,"./extensions/attributes":19,"./extensions/classNames":20,"./extensions/css":21,"./extensions/observers":22}],24:[function(require,module,exports){
 'use strict';
 
 var ElementCollection = require('./index');
@@ -3149,7 +3070,7 @@ module.exports = function(selector, context) {
   return new ElementCollection(selector, context);
 };
 
-},{"./index":25}],27:[function(require,module,exports){
+},{"./index":23}],25:[function(require,module,exports){
 (function (process,global){
 'use strict';
 
@@ -3299,7 +3220,7 @@ env._attachToOTHelpers.browserVersion = function() {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"_process":81}],28:[function(require,module,exports){
+},{"_process":79}],26:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -3551,7 +3472,7 @@ getErrorLocation = function getErrorLocation () {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./env":27,"./util":36}],29:[function(require,module,exports){
+},{"./env":25,"./util":34}],27:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -3568,7 +3489,7 @@ capabilities.registerCapability('websockets', isWebSocketSupported);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./capabilities":15}],30:[function(require,module,exports){
+},{"./capabilities":13}],28:[function(require,module,exports){
 'use strict';
 var util = require('../util');
 
@@ -3622,7 +3543,7 @@ module.exports = function toDebugStringIE9(object) {
   return components.join(', ');
 };
 
-},{"../util":36}],31:[function(require,module,exports){
+},{"../util":34}],29:[function(require,module,exports){
 'use strict';
 
 var useLogHelpers = require('./mixin');
@@ -3633,7 +3554,7 @@ useLogHelpers(logging);
 
 makeEverythingAttachToOTHelpers(logging);
 
-},{"../makeEverythingAttachToOTHelpers":33,"./mixin":32}],32:[function(require,module,exports){
+},{"../makeEverythingAttachToOTHelpers":31,"./mixin":30}],30:[function(require,module,exports){
 'use strict';
 
 /* jshint browser:true, smarttabs:true */
@@ -3737,7 +3658,7 @@ module.exports = function applyLoggerMixin(logging) {
   logging.setLogLevel(logging.ERROR);
 };
 
-},{"../env":27,"./debug_helper_ie9":30}],33:[function(require,module,exports){
+},{"../env":25,"./debug_helper_ie9":28}],31:[function(require,module,exports){
 'use strict';
 
 module.exports = function(mod) {
@@ -3750,7 +3671,7 @@ module.exports = function(mod) {
   mod._attachToOTHelpers = attachments;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 var $ = require('./elementCollection/shorthandSelector');
@@ -3855,7 +3776,7 @@ module.exports = function Modal(options) {
   this.element = domElement;
 };
 
-},{"./behaviours/eventing":9,"./elementCollection/shorthandSelector":26,"./env":27,"./util":36,"uuid":3}],35:[function(require,module,exports){
+},{"./behaviours/eventing":7,"./elementCollection/shorthandSelector":24,"./env":25,"./util":34,"uuid":3}],33:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -3885,7 +3806,7 @@ module.exports = reqAnimationFrame;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./util":36}],36:[function(require,module,exports){
+},{"./util":34}],34:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -3895,12 +3816,12 @@ var makeEverythingAttachToOTHelpers = require('./makeEverythingAttachToOTHelpers
 var util = exports;
 
 /**
- * @license  Common JS Helpers on OpenTok v2.7.2 6a37d02 HEAD
+ * @license  Common JS Helpers on OpenTok v2.7.3 c273b40 HEAD
  * http://www.tokbox.com/
  *
- * Copyright (c) 2015 TokBox, Inc.
+ * Copyright (c) 2016 TokBox, Inc.
  *
- * Date: December 16 12:20:56 2015
+ * Date: February 03 09:39:35 2016
  *
  */
 
@@ -4154,7 +4075,7 @@ makeEverythingAttachToOTHelpers(util);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./makeEverythingAttachToOTHelpers":33,"bluebird":72}],37:[function(require,module,exports){
+},{"./makeEverythingAttachToOTHelpers":31,"bluebird":70}],35:[function(require,module,exports){
 (function (process,global){
 'use strict';
 
@@ -4258,7 +4179,7 @@ makeEverythingAttachToOTHelpers(async);
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../lib/makeEverythingAttachToOTHelpers":33,"_process":81}],38:[function(require,module,exports){
+},{"../lib/makeEverythingAttachToOTHelpers":31,"_process":79}],36:[function(require,module,exports){
 (function (__dirname){
 var path = require('path');
 var pkg = require('./package.json');
@@ -4268,24 +4189,24 @@ exports.installer = path.join(__dirname, 'OpenTokPluginMain.msi');
 
 }).call(this,"/node_modules/@opentok/otplugin.js/node_modules/@opentok/opentok-plugin")
 
-},{"./package.json":39,"path":80}],39:[function(require,module,exports){
+},{"./package.json":37,"path":78}],37:[function(require,module,exports){
 module.exports={
   "name": "@opentok/opentok-plugin",
-  "version": "1.0.0-alpha.238",
-  "publicVersion": "1.0.0.238",
-  "_id": "@opentok/opentok-plugin@1.0.0-alpha.238",
+  "version": "1.0.0-alpha.240",
+  "publicVersion": "1.0.0.240",
+  "_id": "@opentok/opentok-plugin@1.0.0-alpha.240",
   "scripts": {},
-  "_shasum": "579a56a26fef20b5e76954d8f89cfd610f4365de",
+  "_shasum": "2ff5d8bc0fe8ddf4b38d0b8277fbb47d92a4628f",
   "_from": "@opentok/opentok-plugin@>=1.0.0-alpha.229 <2.0.0",
-  "_npmVersion": "2.12.1",
-  "_nodeVersion": "0.12.7",
+  "_npmVersion": "2.14.7",
+  "_nodeVersion": "4.2.2",
   "_npmUser": {
     "name": "opentok",
     "email": "adam@tokbox.com"
   },
   "dist": {
-    "shasum": "579a56a26fef20b5e76954d8f89cfd610f4365de",
-    "tarball": "http://registry.npmjs.org/@opentok/opentok-plugin/-/opentok-plugin-1.0.0-alpha.238.tgz"
+    "shasum": "2ff5d8bc0fe8ddf4b38d0b8277fbb47d92a4628f",
+    "tarball": "http://registry.npmjs.org/@opentok/opentok-plugin/-/opentok-plugin-1.0.0-alpha.240.tgz"
   },
   "maintainers": [
     {
@@ -4294,18 +4215,11 @@ module.exports={
     }
   ],
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/@opentok/opentok-plugin/-/opentok-plugin-1.0.0-alpha.238.tgz"
+  "_resolved": "https://registry.npmjs.org/@opentok/opentok-plugin/-/opentok-plugin-1.0.0-alpha.240.tgz"
 }
 
-},{}],40:[function(require,module,exports){
-/**
- * lodash 3.0.4 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
+},{}],38:[function(require,module,exports){
+/** Used as the `TypeError` message for "Functions" methods. */
 
 /** Used as the `TypeError` message for "Functions" methods. */
 var FUNC_ERROR_TEXT = 'Expected a function';
@@ -4394,7 +4308,7 @@ function mapSet(key, value) {
  *
  * **Note:** The cache is exposed as the `cache` property on the memoized
  * function. Its creation may be customized by replacing the `_.memoize.Cache`
- * constructor with one whose instances implement the [`Map`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-properties-of-the-map-prototype-object)
+ * constructor with one whose instances implement the [`Map`](http://ecma-international.org/ecma-262/6.0/#sec-properties-of-the-map-prototype-object)
  * method interface of `get`, `has`, and `set`.
  *
  * @static
@@ -4466,7 +4380,7 @@ memoize.Cache = MapCache;
 
 module.exports = memoize;
 
-},{}],41:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4500,7 +4414,7 @@ function once(func) {
 
 module.exports = once;
 
-},{"lodash.before":42}],42:[function(require,module,exports){
+},{"lodash.before":40}],40:[function(require,module,exports){
 /**
  * lodash 3.0.3 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4553,7 +4467,7 @@ function before(n, func) {
 
 module.exports = before;
 
-},{}],43:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // This file exists so users of this module can
 // get the path to the plugin installer contained
 // in the opentok-plugin module, and (likely)
@@ -4561,7 +4475,7 @@ module.exports = before;
 
 module.exports = require('@opentok/opentok-plugin');
 
-},{"@opentok/opentok-plugin":38}],44:[function(require,module,exports){
+},{"@opentok/opentok-plugin":36}],42:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -4749,7 +4663,7 @@ module.exports = OTPlugin;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./auto_updater.js":45,"./logging.js":48,"./media_constraints.js":49,"./media_devices.js":50,"./media_stream.js":51,"./meta.js":52,"./peer_connection/peer_connection.js":59,"./plugin_proxies.js":61,"./readiness.js":63,"./rtc_ice_candidate.js":65,"./rtc_session_description.js":66,"./rumor_socket.js":68,"@opentok/ot-helpers":4}],45:[function(require,module,exports){
+},{"./auto_updater.js":43,"./logging.js":46,"./media_constraints.js":47,"./media_devices.js":48,"./media_stream.js":49,"./meta.js":50,"./peer_connection/peer_connection.js":57,"./plugin_proxies.js":59,"./readiness.js":61,"./rtc_ice_candidate.js":63,"./rtc_session_description.js":64,"./rumor_socket.js":66,"@opentok/ot-helpers":4}],43:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -4899,7 +4813,7 @@ module.exports = AutoUpdater;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./curry_call_async.js":46,"./logging.js":48,"./meta.js":52,"./plugin_proxies.js":61,"./version_greater_than.js":70,"@opentok/ot-helpers":4}],46:[function(require,module,exports){
+},{"./curry_call_async.js":44,"./logging.js":46,"./meta.js":50,"./plugin_proxies.js":59,"./version_greater_than.js":68,"@opentok/ot-helpers":4}],44:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -4912,13 +4826,13 @@ module.exports = function curryCallAsync(fn) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],47:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],45:[function(require,module,exports){
 'use strict';
 
 // Magic number to avoid plugin crashes through a settimeout call
 module.exports = 3000;
 
-},{}],48:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -4928,7 +4842,7 @@ OTHelpers.useLogHelpers(logging);
 
 module.exports = logging;
 
-},{"@opentok/ot-helpers":4}],49:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],47:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -4972,7 +4886,7 @@ module.exports = function MediaConstraints(userConstraints) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],50:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],48:[function(require,module,exports){
 'use strict';
 
 var isReady = require('./readiness.js').isReady;
@@ -5018,7 +4932,7 @@ module.exports = function MediaDevices() {
   return api;
 };
 
-},{"./plugin_proxies.js":61,"./readiness.js":63}],51:[function(require,module,exports){
+},{"./plugin_proxies.js":59,"./readiness.js":61}],49:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -5136,7 +5050,7 @@ MediaStream.fromJson = function(json, plugin) {
 
 module.exports = MediaStream;
 
-},{"./video_container.js":71,"@opentok/ot-helpers":4}],52:[function(require,module,exports){
+},{"./video_container.js":69,"@opentok/ot-helpers":4}],50:[function(require,module,exports){
 'use strict';
 
 /* global ActiveXObject */
@@ -5267,7 +5181,7 @@ meta.pathToInstaller = function(callback) {
   }
 };
 
-},{"../../opentok-plugin":43,"./version_greater_than.js":70,"@opentok/ot-helpers":4}],53:[function(require,module,exports){
+},{"../../opentok-plugin":41,"./version_greater_than.js":68,"@opentok/ot-helpers":4}],51:[function(require,module,exports){
 'use strict';
 
 var createSingleElementContainer = require('./create_single_element_container.js');
@@ -5321,7 +5235,7 @@ module.exports = function(pluginElement, id) {
   });
 };
 
-},{"../../curry_call_async.js":46,"../../rtc_stats_report.js":67,"./create_single_element_container.js":55,"./request_manager.js":57,"bluebird":72,"lodash.once":41}],54:[function(require,module,exports){
+},{"../../curry_call_async.js":44,"../../rtc_stats_report.js":65,"./create_single_element_container.js":53,"./request_manager.js":55,"bluebird":70,"lodash.once":39}],52:[function(require,module,exports){
 'use strict';
 
 // A resolver for lodash.memoize (its second argument, see lodash docs) that assigns a consistent
@@ -5343,7 +5257,7 @@ module.exports = function() {
   };
 };
 
-},{}],55:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -5388,7 +5302,7 @@ module.exports = function() {
   return container;
 };
 
-},{"assert":73}],56:[function(require,module,exports){
+},{"assert":71}],54:[function(require,module,exports){
 'use strict';
 
 // core modules
@@ -5416,7 +5330,7 @@ module.exports = function(request) {
   };
 };
 
-},{"assert":73}],57:[function(require,module,exports){
+},{"assert":71}],55:[function(require,module,exports){
 'use strict';
 
 var createLinearResolver = require('./create_linear_resolver.js');
@@ -5460,7 +5374,7 @@ module.exports = function(request) {
   };
 };
 
-},{"./create_linear_resolver.js":54,"./request_compressor.js":56,"./request_serializer.js":58,"lodash.memoize":40}],58:[function(require,module,exports){
+},{"./create_linear_resolver.js":52,"./request_compressor.js":54,"./request_serializer.js":56,"lodash.memoize":38}],56:[function(require,module,exports){
 'use strict';
 
 // core modules
@@ -5514,7 +5428,7 @@ module.exports = function(request) {
   return serializedRequest;
 };
 
-},{"assert":73,"bluebird":72}],59:[function(require,module,exports){
+},{"assert":71,"bluebird":70}],57:[function(require,module,exports){
 'use strict';
 
 var bluebird = require('bluebird');
@@ -5839,7 +5753,7 @@ PeerConnection.create = function(iceServers, options, plugin, ready) {
 
 module.exports = PeerConnection;
 
-},{"../curry_call_async.js":46,"../empiric_delay.js":47,"../logging.js":48,"../media_stream":51,"../rtc_ice_candidate.js":65,"../rtc_session_description.js":66,"./create_get_stats_adaptor/create_get_stats_adaptor.js":53,"@opentok/ot-helpers":4,"bluebird":72,"uuid":111}],60:[function(require,module,exports){
+},{"../curry_call_async.js":44,"../empiric_delay.js":45,"../logging.js":46,"../media_stream":49,"../rtc_ice_candidate.js":63,"../rtc_session_description.js":64,"./create_get_stats_adaptor/create_get_stats_adaptor.js":51,"@opentok/ot-helpers":4,"bluebird":70,"uuid":109}],58:[function(require,module,exports){
 'use strict';
 
 var curryCallAsync = require('./curry_call_async.js');
@@ -5963,7 +5877,7 @@ module.exports = function pluginEventingBehaviour(api) {
   };
 };
 
-},{"./curry_call_async.js":46,"./empiric_delay.js":47,"./logging.js":48,"./task_queue.js":69,"@opentok/ot-helpers":4}],61:[function(require,module,exports){
+},{"./curry_call_async.js":44,"./empiric_delay.js":45,"./logging.js":46,"./task_queue.js":67,"@opentok/ot-helpers":4}],59:[function(require,module,exports){
 'use strict';
 
 var meta = require('./meta.js');
@@ -6059,7 +5973,7 @@ api.createMediaCapturer = function createMediaCapturer(completion) {
 
 module.exports = api;
 
-},{"./meta.js":52,"./proxy_extras.js":62,"@opentok/ot-helpers":4}],62:[function(require,module,exports){
+},{"./meta.js":50,"./proxy_extras.js":60,"@opentok/ot-helpers":4}],60:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -6286,7 +6200,7 @@ module.exports = {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./plugin_eventing_behaviour.js":60,"./ref_count_behaviour.js":64,"@opentok/ot-helpers":4,"uuid":111}],63:[function(require,module,exports){
+},{"./plugin_eventing_behaviour.js":58,"./ref_count_behaviour.js":62,"@opentok/ot-helpers":4,"uuid":109}],61:[function(require,module,exports){
 'use strict';
 
 var AutoUpdater = require('./auto_updater.js');
@@ -6367,7 +6281,7 @@ module.exports = {
   isReady: function() { return isReady; }
 };
 
-},{"./auto_updater.js":45,"./logging.js":48,"./plugin_proxies.js":61,"@opentok/ot-helpers":4}],64:[function(require,module,exports){
+},{"./auto_updater.js":43,"./logging.js":46,"./plugin_proxies.js":59,"@opentok/ot-helpers":4}],62:[function(require,module,exports){
 'use strict';
 
 module.exports = function refCountBehaviour(api) {
@@ -6400,7 +6314,7 @@ module.exports = function refCountBehaviour(api) {
   };
 };
 
-},{}],65:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 'use strict';
 
 // A RTCIceCandidate like object exposed for native WebRTC compatability
@@ -6410,7 +6324,7 @@ module.exports = function RTCIceCandidate(options) {
   this.candidate = options.candidate;
 };
 
-},{}],66:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 'use strict';
 
 // A RTCSessionDescription like object exposed for native WebRTC compatability
@@ -6419,7 +6333,7 @@ module.exports = function RTCSessionDescription(options) {
   this.sdp = options.sdp;
 };
 
-},{}],67:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 'use strict';
 
 var RTCStatsReport = function RTCStatsReport(reports) {
@@ -6440,7 +6354,7 @@ RTCStatsReport.prototype.forEach = function(callback, context) {
 
 module.exports = RTCStatsReport;
 
-},{}],68:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 'use strict';
 
 var curryCallAsync = require('./curry_call_async.js');
@@ -6522,7 +6436,7 @@ module.exports = function RumorSocket(plugin, server) {
   return api;
 };
 
-},{"./curry_call_async.js":46,"./logging.js":48,"@opentok/ot-helpers":4}],69:[function(require,module,exports){
+},{"./curry_call_async.js":44,"./logging.js":46,"@opentok/ot-helpers":4}],67:[function(require,module,exports){
 'use strict';
 
 module.exports = function TaskQueue() {
@@ -6548,7 +6462,7 @@ module.exports = function TaskQueue() {
   return api;
 };
 
-},{}],70:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 'use strict';
 
 module.exports = function versionGreaterThan(version1, version2) {
@@ -6584,7 +6498,7 @@ module.exports = function versionGreaterThan(version1, version2) {
   return false;
 };
 
-},{}],71:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 'use strict';
 
 var logging = require('./logging.js');
@@ -6687,7 +6601,7 @@ module.exports = function VideoContainer(plugin, stream) {
   return api;
 };
 
-},{"./logging.js":48,"@opentok/ot-helpers":4}],72:[function(require,module,exports){
+},{"./logging.js":46,"@opentok/ot-helpers":4}],70:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -11578,7 +11492,7 @@ module.exports = ret;
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"_process":81}],73:[function(require,module,exports){
+},{"_process":79}],71:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -11939,7 +11853,7 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":83}],74:[function(require,module,exports){
+},{"util/":81}],72:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -11948,6 +11862,8 @@ var objectKeys = Object.keys || function (obj) {
  * @license  MIT
  */
 /* eslint-disable no-proto */
+
+'use strict'
 
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
@@ -12031,8 +11947,10 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  this.length = 0
-  this.parent = undefined
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
 
   // Common case.
   if (typeof arg === 'number') {
@@ -12163,6 +12081,10 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -12312,10 +12234,6 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -13488,7 +13406,7 @@ function blitBuffer (src, dst, offset, length) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"base64-js":75,"ieee754":76,"isarray":77}],75:[function(require,module,exports){
+},{"base64-js":73,"ieee754":74,"isarray":75}],73:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -13614,7 +13532,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],76:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -13700,14 +13618,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],77:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],78:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14010,7 +13928,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],79:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -14035,7 +13953,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],80:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14264,7 +14182,7 @@ var substr = 'ab'.substr(-1) === 'b'
 
 }).call(this,require('_process'))
 
-},{"_process":81}],81:[function(require,module,exports){
+},{"_process":79}],79:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -14357,14 +14275,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],82:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],83:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14955,7 +14873,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./support/isBuffer":82,"_process":81,"inherits":79}],84:[function(require,module,exports){
+},{"./support/isBuffer":80,"_process":79,"inherits":77}],82:[function(require,module,exports){
 /**
  * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15037,7 +14955,7 @@ var assign = createAssigner(function(object, source, customizer) {
 
 module.exports = assign;
 
-},{"lodash._baseassign":85,"lodash._createassigner":87,"lodash.keys":91}],85:[function(require,module,exports){
+},{"lodash._baseassign":83,"lodash._createassigner":85,"lodash.keys":89}],83:[function(require,module,exports){
 /**
  * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15066,7 +14984,7 @@ function baseAssign(object, source) {
 
 module.exports = baseAssign;
 
-},{"lodash._basecopy":86,"lodash.keys":91}],86:[function(require,module,exports){
+},{"lodash._basecopy":84,"lodash.keys":89}],84:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15100,7 +15018,7 @@ function baseCopy(source, props, object) {
 
 module.exports = baseCopy;
 
-},{}],87:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 /**
  * lodash 3.1.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15154,7 +15072,7 @@ function createAssigner(assigner) {
 
 module.exports = createAssigner;
 
-},{"lodash._bindcallback":88,"lodash._isiterateecall":89,"lodash.restparam":90}],88:[function(require,module,exports){
+},{"lodash._bindcallback":86,"lodash._isiterateecall":87,"lodash.restparam":88}],86:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15221,7 +15139,7 @@ function identity(value) {
 
 module.exports = bindCallback;
 
-},{}],89:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /**
  * lodash 3.0.9 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15355,7 +15273,7 @@ function isObject(value) {
 
 module.exports = isIterateeCall;
 
-},{}],90:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 /**
  * lodash 3.6.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15424,7 +15342,7 @@ function restParam(func, start) {
 
 module.exports = restParam;
 
-},{}],91:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 /**
  * lodash 3.1.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15662,7 +15580,7 @@ function keysIn(object) {
 
 module.exports = keys;
 
-},{"lodash._getnative":92,"lodash.isarguments":93,"lodash.isarray":94}],92:[function(require,module,exports){
+},{"lodash._getnative":90,"lodash.isarguments":91,"lodash.isarray":92}],90:[function(require,module,exports){
 /**
  * lodash 3.9.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -15801,41 +15719,39 @@ function isNative(value) {
 
 module.exports = getNative;
 
-},{}],93:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
+(function (global){
 /**
- * lodash 3.0.4 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * lodash 3.0.5 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <https://lodash.com/license>
  */
 
-/**
- * Checks if `value` is object-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
+/** Used as references for various `Number` constants. */
+var MAX_SAFE_INTEGER = 9007199254740991;
 
-/** Used for native method references. */
-var objectProto = Object.prototype;
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]';
+
+/** Used for built-in method references. */
+var objectProto = global.Object.prototype;
 
 /** Used to check objects for own properties. */
 var hasOwnProperty = objectProto.hasOwnProperty;
 
-/** Native method references. */
-var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-
 /**
- * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
- * of an array-like value.
+ * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * of values.
  */
-var MAX_SAFE_INTEGER = 9007199254740991;
+var objectToString = objectProto.toString;
+
+/** Built-in value references. */
+var propertyIsEnumerable = objectProto.propertyIsEnumerable;
 
 /**
  * The base implementation of `_.property` without support for deep paths.
@@ -15863,31 +15779,7 @@ function baseProperty(key) {
 var getLength = baseProperty('length');
 
 /**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Checks if `value` is classified as an `arguments` object.
+ * Checks if `value` is likely an `arguments` object.
  *
  * @static
  * @memberOf _
@@ -15903,13 +15795,183 @@ function isLength(value) {
  * // => false
  */
 function isArguments(value) {
-  return isObjectLike(value) && isArrayLike(value) &&
-    hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee');
+  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
+  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+}
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null &&
+    !(typeof value == 'function' && isFunction(value)) && isLength(getLength(value));
+}
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8 which returns 'object' for typed array constructors, and
+  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is loosely based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
 }
 
 module.exports = isArguments;
 
-},{}],94:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{}],92:[function(require,module,exports){
 /**
  * lodash 3.0.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16091,7 +16153,7 @@ function isNative(value) {
 
 module.exports = isArray;
 
-},{}],95:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16143,7 +16205,7 @@ var pick = restParam(function(object, props) {
 
 module.exports = pick;
 
-},{"lodash._baseflatten":96,"lodash._bindcallback":99,"lodash._pickbyarray":100,"lodash._pickbycallback":101,"lodash.restparam":106}],96:[function(require,module,exports){
+},{"lodash._baseflatten":94,"lodash._bindcallback":97,"lodash._pickbyarray":98,"lodash._pickbycallback":99,"lodash.restparam":104}],94:[function(require,module,exports){
 /**
  * lodash 3.1.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16276,13 +16338,263 @@ function isLength(value) {
 
 module.exports = baseFlatten;
 
-},{"lodash.isarguments":97,"lodash.isarray":98}],97:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],98:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],99:[function(require,module,exports){
-arguments[4][88][0].apply(exports,arguments)
-},{"dup":88}],100:[function(require,module,exports){
+},{"lodash.isarguments":95,"lodash.isarray":96}],95:[function(require,module,exports){
+(function (global){
+/**
+ * lodash 3.0.5 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Used as references for various `Number` constants. */
+var MAX_SAFE_INTEGER = 9007199254740991;
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]';
+
+/** Used for built-in method references. */
+var objectProto = global.Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/** Built-in value references. */
+var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is likely an `arguments` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isArguments(function() { return arguments; }());
+ * // => true
+ *
+ * _.isArguments([1, 2, 3]);
+ * // => false
+ */
+function isArguments(value) {
+  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
+  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+}
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null &&
+    !(typeof value == 'function' && isFunction(value)) && isLength(getLength(value));
+}
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8 which returns 'object' for typed array constructors, and
+  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is loosely based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+module.exports = isArguments;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{}],96:[function(require,module,exports){
+arguments[4][92][0].apply(exports,arguments)
+},{"dup":92}],97:[function(require,module,exports){
+arguments[4][86][0].apply(exports,arguments)
+},{"dup":86}],98:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16357,7 +16669,7 @@ function isObject(value) {
 
 module.exports = pickByArray;
 
-},{}],101:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16403,13 +16715,13 @@ function pickByCallback(object, predicate) {
 
 module.exports = pickByCallback;
 
-},{"lodash._basefor":102,"lodash.keysin":103}],102:[function(require,module,exports){
+},{"lodash._basefor":100,"lodash.keysin":101}],100:[function(require,module,exports){
 /**
- * lodash 3.0.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * lodash 3.0.3 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <https://lodash.com/license>
  */
 
@@ -16428,7 +16740,7 @@ module.exports = pickByCallback;
 var baseFor = createBaseFor();
 
 /**
- * Creates a base function for `_.forIn` or `_.forInRight`.
+ * Creates a base function for methods like `_.forIn`.
  *
  * @private
  * @param {boolean} [fromRight] Specify iterating from right to left.
@@ -16436,13 +16748,13 @@ var baseFor = createBaseFor();
  */
 function createBaseFor(fromRight) {
   return function(object, iteratee, keysFunc) {
-    var iterable = toObject(object),
+    var index = -1,
+        iterable = Object(object),
         props = keysFunc(object),
-        length = props.length,
-        index = fromRight ? length : -1;
+        length = props.length;
 
-    while ((fromRight ? index-- : ++index < length)) {
-      var key = props[index];
+    while (length--) {
+      var key = props[fromRight ? length : ++index];
       if (iteratee(iterable[key], key, iterable) === false) {
         break;
       }
@@ -16451,47 +16763,9 @@ function createBaseFor(fromRight) {
   };
 }
 
-/**
- * Converts `value` to an object if it's not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
 module.exports = baseFor;
 
-},{}],103:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 /**
  * lodash 3.0.8 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -16625,13 +16899,263 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"lodash.isarguments":104,"lodash.isarray":105}],104:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],105:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],106:[function(require,module,exports){
-arguments[4][90][0].apply(exports,arguments)
-},{"dup":90}],107:[function(require,module,exports){
+},{"lodash.isarguments":102,"lodash.isarray":103}],102:[function(require,module,exports){
+(function (global){
+/**
+ * lodash 3.0.5 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Used as references for various `Number` constants. */
+var MAX_SAFE_INTEGER = 9007199254740991;
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]';
+
+/** Used for built-in method references. */
+var objectProto = global.Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/** Built-in value references. */
+var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is likely an `arguments` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isArguments(function() { return arguments; }());
+ * // => true
+ *
+ * _.isArguments([1, 2, 3]);
+ * // => false
+ */
+function isArguments(value) {
+  // Safari 8.1 incorrectly makes `arguments.callee` enumerable in strict mode.
+  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+}
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null &&
+    !(typeof value == 'function' && isFunction(value)) && isLength(getLength(value));
+}
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8 which returns 'object' for typed array constructors, and
+  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is loosely based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+module.exports = isArguments;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{}],103:[function(require,module,exports){
+arguments[4][92][0].apply(exports,arguments)
+},{"dup":92}],104:[function(require,module,exports){
+arguments[4][88][0].apply(exports,arguments)
+},{"dup":88}],105:[function(require,module,exports){
 // Copyright 2014 Joshua Bell. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16653,7 +17177,7 @@ module.exports = {
   TextDecoder: encoding.TextDecoder,
 };
 
-},{"./lib/encoding.js":109}],108:[function(require,module,exports){
+},{"./lib/encoding.js":107}],106:[function(require,module,exports){
 // Copyright 2014 Joshua Bell. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16709,7 +17233,7 @@ module.exports = {
 };
 }(this));
 
-},{}],109:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 // Copyright 2014 Joshua Bell. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19779,7 +20303,7 @@ if (typeof module !== "undefined" && module.exports) {
     global['TextDecoder'] = TextDecoder;
 }(this));
 
-},{"./encoding-indexes.js":108}],110:[function(require,module,exports){
+},{"./encoding-indexes.js":106}],108:[function(require,module,exports){
 (function (global){
 
 var rng;
@@ -19815,7 +20339,7 @@ module.exports = rng;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],111:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 //     uuid.js
 //
 //     Copyright (c) 2010-2012 Robert Kieffer
@@ -20000,7 +20524,7 @@ uuid.unparse = unparse;
 
 module.exports = uuid;
 
-},{"./rng":110}],112:[function(require,module,exports){
+},{"./rng":108}],110:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -20045,11 +20569,11 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],113:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 module.exports = {
-  "version": "v2.7.2",
-  "build": "6a37d02",
-  "buildTime": "December 16 12:20:56 2015",
+  "version": "v2.7.3",
+  "build": "c273b40",
+  "buildTime": "February 03 09:39:35 2016",
   "debug": "false",
   "websiteURL": "http://www.tokbox.com",
   "cdnURL": "http://static.opentok.com",
@@ -20066,7 +20590,7 @@ module.exports = {
     "chrome": null
   }
 }
-},{}],114:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20157,7 +20681,7 @@ module.exports = function Analytics(loggingUrl) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../ot/logging.js":162,"./guid_storage.js":125,"./properties.js":128,"@opentok/ot-helpers":4}],115:[function(require,module,exports){
+},{"../ot/logging.js":160,"./guid_storage.js":123,"./properties.js":126,"@opentok/ot-helpers":4}],113:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20178,7 +20702,7 @@ module.exports = audioContext;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],116:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 'use strict';
 
 /*
@@ -20219,7 +20743,7 @@ module.exports = function GetstatsAudioOutputLevelSampler(getStatsFn) {
   };
 };
 
-},{}],117:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -20285,7 +20809,7 @@ module.exports = function WebaudioAudioLevelSampler(audioContext) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],118:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],116:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20330,9 +20854,9 @@ OTHelpers.registerCapability('PeerConnection', function() {
   } else if (typeof global.webkitRTCPeerConnection === 'function' &&
                     !!global.webkitRTCPeerConnection.prototype.addStream) {
     return true;
-  } else if (typeof global.mozRTCPeerConnection === 'function' && OTHelpers.env.version > 20.0) {
-    return true;
   } else if (typeof global.RTCPeerConnection === 'function') {
+    return true;
+  } else if (typeof global.mozRTCPeerConnection === 'function' && OTHelpers.env.version > 20.0) {
     return true;
   }
 
@@ -20409,7 +20933,7 @@ OTHelpers.registerCapability('webAudio', function() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../ot/logging.js":162,"./properties.js":128,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],119:[function(require,module,exports){
+},{"../ot/logging.js":160,"./properties.js":126,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],117:[function(require,module,exports){
 'use strict';
 
 // TODO: this is not unit tested
@@ -20499,7 +21023,7 @@ module.exports = function ConnectivityAttemptPinger(options) {
   };
 };
 
-},{"../ot/analytics.js":141,"@opentok/ot-helpers":4}],120:[function(require,module,exports){
+},{"../ot/analytics.js":139,"@opentok/ot-helpers":4}],118:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20508,8 +21032,8 @@ require('./web_rtc_polyfills.js');
 var OTPlugin = require('@opentok/otplugin.js');
 
 var NativeRTCPeerConnection = (global.webkitRTCPeerConnection ||
-                               global.mozRTCPeerConnection ||
-                               global.RTCPeerConnection);
+                               global.RTCPeerConnection ||
+                               global.mozRTCPeerConnection);
 
 module.exports =  function createPeerConnection(
   config,
@@ -20536,7 +21060,7 @@ module.exports =  function createPeerConnection(
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./web_rtc_polyfills.js":138,"@opentok/otplugin.js":44}],121:[function(require,module,exports){
+},{"./web_rtc_polyfills.js":136,"@opentok/otplugin.js":42}],119:[function(require,module,exports){
 'use strict';
 
 module.exports = function cssLoader(cssURL) {
@@ -20549,7 +21073,7 @@ module.exports = function cssLoader(cssURL) {
   head.appendChild(style);
 };
 
-},{}],122:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20682,7 +21206,7 @@ deviceHelpers.shouldAskForDevices = function(callback) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./web_rtc_polyfills.js":138,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],123:[function(require,module,exports){
+},{"./web_rtc_polyfills.js":136,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],121:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -21025,7 +21549,7 @@ Dialogs.Plugin.updateComplete = function(error) {
   return modal;
 };
 
-},{"../ot/logging.js":162,"./properties.js":128,"@opentok/ot-helpers":4}],124:[function(require,module,exports){
+},{"../ot/logging.js":160,"./properties.js":126,"@opentok/ot-helpers":4}],122:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -21275,7 +21799,7 @@ module.exports = function(constraints, success, failure, accessDialogOpened,
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../ot/logging.js":162,"./throttle_until_complete.js":130,"./web_rtc_polyfills.js":138,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44,"bluebird":72}],125:[function(require,module,exports){
+},{"../ot/logging.js":160,"./throttle_until_complete.js":128,"./web_rtc_polyfills.js":136,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42,"bluebird":70}],123:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -21414,7 +21938,7 @@ guidStorage.set = function(guid) {
   currentGuid = guid;
 };
 
-},{"../ot/logging.js":162,"@opentok/ot-helpers":4,"uuid":111}],126:[function(require,module,exports){
+},{"../ot/logging.js":160,"@opentok/ot-helpers":4,"uuid":109}],124:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -21434,7 +21958,7 @@ module.exports = function() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"uuid":111}],127:[function(require,module,exports){
+},{"uuid":109}],125:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -21451,7 +21975,7 @@ module.exports = function noConflict() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],128:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -21511,7 +22035,7 @@ module.exports = properties;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../conf/current_properties.js":113,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44,"lodash.assign":84,"lodash.pick":95}],129:[function(require,module,exports){
+},{"../../conf/current_properties.js":111,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42,"lodash.assign":82,"lodash.pick":93}],127:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -21533,7 +22057,7 @@ module.exports = function supportedCryptoScheme() {
   return (chromeBefore25 ? 'SDES_SRTP' : 'DTLS_SRTP');
 };
 
-},{"@opentok/ot-helpers":4}],130:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],128:[function(require,module,exports){
 'use strict';
 
 var Bluebird = require('bluebird');
@@ -21565,7 +22089,7 @@ module.exports = function(fn) {
   };
 };
 
-},{"bluebird":72}],131:[function(require,module,exports){
+},{"bluebird":70}],129:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -21606,7 +22130,7 @@ module.exports = function(self, domElement) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],132:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],130:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -21690,7 +22214,7 @@ module.exports = function canBeOrientatedMixin(
   });
 };
 
-},{"@opentok/ot-helpers":4}],133:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],131:[function(require,module,exports){
 'use strict';
 
 require('../web_rtc_polyfills.js');
@@ -21895,7 +22419,7 @@ module.exports = function VideoElementFacade(
   };
 };
 
-},{"../web_rtc_polyfills.js":138,"./native_video_element_wrapper":134,"./plugin_video_element_wrapper":135,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],134:[function(require,module,exports){
+},{"../web_rtc_polyfills.js":136,"./native_video_element_wrapper":132,"./plugin_video_element_wrapper":133,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],132:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -22208,7 +22732,7 @@ module.exports = function NativeVideoElementWrapper(
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../ot/logging.js":162,"../audio_context":115,"../audio_level_samplers/webaudio_audio_level_sampler":117,"../video_content_resizes_mixin.js":131,"./can_be_oriented_mixin.js":132,"./video_element_error_code_to_str.js":136,"@opentok/ot-helpers":4,"bluebird":72}],135:[function(require,module,exports){
+},{"../../ot/logging.js":160,"../audio_context":113,"../audio_level_samplers/webaudio_audio_level_sampler":115,"../video_content_resizes_mixin.js":129,"./can_be_oriented_mixin.js":130,"./video_element_error_code_to_str.js":134,"@opentok/ot-helpers":4,"bluebird":70}],133:[function(require,module,exports){
 'use strict';
 
 var Promise = require('bluebird');
@@ -22317,7 +22841,7 @@ module.exports = function PluginVideoElementWrapper(
   };
 };
 
-},{"./can_be_oriented_mixin.js":132,"@opentok/ot-helpers":4,"bluebird":72}],136:[function(require,module,exports){
+},{"./can_be_oriented_mixin.js":130,"@opentok/ot-helpers":4,"bluebird":70}],134:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -22345,7 +22869,7 @@ module.exports = function videoElementErrorCodeToStr(errorCode) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],137:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -22355,7 +22879,7 @@ module.exports = {
   ROTATED_UPSIDE_DOWN: 180
 };
 
-},{}],138:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -22444,7 +22968,7 @@ if (global && typeof navigator !== 'undefined') {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"@opentok/ot-helpers":4}],139:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],137:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -22816,7 +23340,7 @@ WidgetView.VideoElementFacade = VideoElementFacade;
 
 module.exports = WidgetView;
 
-},{"../ot/logging.js":162,"./video_element/index.js":133,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44,"uuid":111}],140:[function(require,module,exports){
+},{"../ot/logging.js":160,"./video_element/index.js":131,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42,"uuid":109}],138:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -23296,7 +23820,7 @@ module.exports = OT;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./helpers/analytics.js":114,"./helpers/audio_context.js":115,"./helpers/audio_level_samplers/getstats_audio_output_level_sampler":116,"./helpers/audio_level_samplers/webaudio_audio_level_sampler":117,"./helpers/capabilities":118,"./helpers/connectivity_attempt_pinger.js":119,"./helpers/css_loader.js":121,"./helpers/dialogs.js":123,"./helpers/get_user_media.js":124,"./helpers/guid_storage.js":125,"./helpers/no_conflict.js":127,"./helpers/properties.js":128,"./helpers/video_element/index.js":133,"./helpers/video_orientation.js":137,"./helpers/widget_view.js":139,"./ot/analytics.js":141,"./ot/anvil.js":142,"./ot/api_key.js":143,"./ot/archive.js":144,"./ot/audio_level_transformer":145,"./ot/capabilities.js":146,"./ot/chrome/chrome.js":151,"./ot/connection.js":155,"./ot/environment_loader.js":156,"./ot/events.js":157,"./ot/exception_codes.js":158,"./ot/generate_simple_state_machine.js":159,"./ot/get_devices.js":160,"./ot/interval_runner.js":161,"./ot/logging.js":162,"./ot/messaging/raptor/legacy_structure.js":166,"./ot/messaging/raptor/session_dispatcher.js":172,"./ot/messaging/raptor/signal.js":173,"./ot/messaging/rumor/legacy_structure.js":176,"./ot/ot_error.js":183,"./ot/peer_connection/get_stats_adapter.js":186,"./ot/peer_connection/get_stats_helpers.js":187,"./ot/peer_connection/peer_connection.js":190,"./ot/peer_connection/peer_connections.js":192,"./ot/peer_connection/publisher_peer_connection.js":193,"./ot/peer_connection/qos.js":194,"./ot/peer_connection/subscriber_peer_connection.js":198,"./ot/publisher":199,"./ot/publisher/init.js":200,"./ot/publisher/microphone.js":202,"./ot/publisher/state.js":203,"./ot/qos_testing/http_test.js":204,"./ot/qos_testing/webrtc_test.js":205,"./ot/report_issue.js":206,"./ot/screensharing/screen_sharing.js":210,"./ot/session/handle.js":211,"./ot/session/info.js":212,"./ot/session/init.js":213,"./ot/session/objects.js":214,"./ot/stream.js":216,"./ot/stream_channel.js":217,"./ot/stylable_component.js":218,"./ot/subscriber":220,"./ot/subscriber/state.js":221,"./ot/system_requirements.js":222,"@opentok/ot-helpers":4}],141:[function(require,module,exports){
+},{"./helpers/analytics.js":112,"./helpers/audio_context.js":113,"./helpers/audio_level_samplers/getstats_audio_output_level_sampler":114,"./helpers/audio_level_samplers/webaudio_audio_level_sampler":115,"./helpers/capabilities":116,"./helpers/connectivity_attempt_pinger.js":117,"./helpers/css_loader.js":119,"./helpers/dialogs.js":121,"./helpers/get_user_media.js":122,"./helpers/guid_storage.js":123,"./helpers/no_conflict.js":125,"./helpers/properties.js":126,"./helpers/video_element/index.js":131,"./helpers/video_orientation.js":135,"./helpers/widget_view.js":137,"./ot/analytics.js":139,"./ot/anvil.js":140,"./ot/api_key.js":141,"./ot/archive.js":142,"./ot/audio_level_transformer":143,"./ot/capabilities.js":144,"./ot/chrome/chrome.js":149,"./ot/connection.js":153,"./ot/environment_loader.js":154,"./ot/events.js":155,"./ot/exception_codes.js":156,"./ot/generate_simple_state_machine.js":157,"./ot/get_devices.js":158,"./ot/interval_runner.js":159,"./ot/logging.js":160,"./ot/messaging/raptor/legacy_structure.js":164,"./ot/messaging/raptor/session_dispatcher.js":170,"./ot/messaging/raptor/signal.js":171,"./ot/messaging/rumor/legacy_structure.js":174,"./ot/ot_error.js":181,"./ot/peer_connection/get_stats_adapter.js":184,"./ot/peer_connection/get_stats_helpers.js":185,"./ot/peer_connection/peer_connection.js":188,"./ot/peer_connection/peer_connections.js":190,"./ot/peer_connection/publisher_peer_connection.js":191,"./ot/peer_connection/qos.js":192,"./ot/peer_connection/subscriber_peer_connection.js":196,"./ot/publisher":197,"./ot/publisher/init.js":198,"./ot/publisher/microphone.js":200,"./ot/publisher/state.js":201,"./ot/qos_testing/http_test.js":202,"./ot/qos_testing/webrtc_test.js":203,"./ot/report_issue.js":204,"./ot/screensharing/screen_sharing.js":208,"./ot/session/handle.js":209,"./ot/session/info.js":210,"./ot/session/init.js":211,"./ot/session/objects.js":212,"./ot/stream.js":214,"./ot/stream_channel.js":215,"./ot/stylable_component.js":216,"./ot/subscriber":218,"./ot/subscriber/state.js":219,"./ot/system_requirements.js":220,"@opentok/ot-helpers":4}],139:[function(require,module,exports){
 'use strict';
 
 var Analytics = require('../helpers/analytics.js');
@@ -23304,7 +23828,7 @@ var properties = require('../helpers/properties.js');
 
 module.exports = new Analytics(properties.loggingURL);
 
-},{"../helpers/analytics.js":114,"../helpers/properties.js":128}],142:[function(require,module,exports){
+},{"../helpers/analytics.js":112,"../helpers/properties.js":126}],140:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -23462,7 +23986,7 @@ Anvil.get = function getFromAnvil(resourcePath, token) {
   });
 };
 
-},{"../helpers/properties.js":128,"./exception_codes.js":158,"@opentok/ot-helpers":4,"bluebird":72,"uuid":111}],143:[function(require,module,exports){
+},{"../helpers/properties.js":126,"./exception_codes.js":156,"@opentok/ot-helpers":4,"bluebird":70,"uuid":109}],141:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -23485,7 +24009,7 @@ if (OTHelpers.env.name === 'Node') {
   module.exports = { value: m ? m[1] : '' };
 }
 
-},{"@opentok/ot-helpers":4}],144:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],142:[function(require,module,exports){
 'use strict';
 
 var Events = require('./events.js');
@@ -23517,7 +24041,7 @@ module.exports = function Archive(id, name, status) {
   this.destroy = function() {};
 };
 
-},{"./events.js":157,"@opentok/ot-helpers":4}],145:[function(require,module,exports){
+},{"./events.js":155,"@opentok/ot-helpers":4}],143:[function(require,module,exports){
 'use strict';
 
 /*
@@ -23553,7 +24077,7 @@ module.exports = function AudioLevelTransformer() {
   };
 };
 
-},{}],146:[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -23597,7 +24121,7 @@ module.exports = function Capabilities(permissions) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],147:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],145:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -23705,7 +24229,7 @@ module.exports = function Archiving(options) {
   };
 };
 
-},{"./behaviour/widget.js":150,"@opentok/ot-helpers":4}],148:[function(require,module,exports){
+},{"./behaviour/widget.js":148,"@opentok/ot-helpers":4}],146:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -23768,7 +24292,7 @@ module.exports = function AudioLevelMeter(options) {
   };
 };
 
-},{"./behaviour/widget.js":150,"@opentok/ot-helpers":4}],149:[function(require,module,exports){
+},{"./behaviour/widget.js":148,"@opentok/ot-helpers":4}],147:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -23829,7 +24353,7 @@ module.exports = function BackingBar(options) {
   };
 };
 
-},{"./behaviour/widget.js":150}],150:[function(require,module,exports){
+},{"./behaviour/widget.js":148}],148:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -23921,7 +24445,7 @@ module.exports = function Widget(widget, options) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],151:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],149:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -24003,7 +24527,7 @@ module.exports = function Chrome(properties) {
   };
 };
 
-},{"@opentok/ot-helpers":4}],152:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],150:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -24070,7 +24594,7 @@ module.exports = function MuteButton(options) {
   });
 };
 
-},{"./behaviour/widget.js":150,"@opentok/ot-helpers":4}],153:[function(require,module,exports){
+},{"./behaviour/widget.js":148,"@opentok/ot-helpers":4}],151:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -24112,7 +24636,7 @@ module.exports = function NamePanel(options) {
   });
 };
 
-},{"./behaviour/widget.js":150}],154:[function(require,module,exports){
+},{"./behaviour/widget.js":148}],152:[function(require,module,exports){
 'use strict';
 
 var Widget = require('./behaviour/widget.js');
@@ -24169,7 +24693,7 @@ module.exports = function VideoDisabledIndicator(options) {
   };
 };
 
-},{"./behaviour/widget.js":150,"@opentok/ot-helpers":4}],155:[function(require,module,exports){
+},{"./behaviour/widget.js":148,"@opentok/ot-helpers":4}],153:[function(require,module,exports){
 'use strict';
 
 var Capabilities = require('./capabilities.js');
@@ -24271,7 +24795,7 @@ Connection.Capabilities = function(capabilitiesHash) {
 
 module.exports = Connection;
 
-},{"./capabilities.js":146,"./events.js":157,"@opentok/ot-helpers":4}],156:[function(require,module,exports){
+},{"./capabilities.js":144,"./events.js":155,"@opentok/ot-helpers":4}],154:[function(require,module,exports){
 'use strict';
 
 var Events = require('./events.js');
@@ -24359,7 +24883,7 @@ function EnvironmentLoader() {
 
 module.exports = new EnvironmentLoader();
 
-},{"./events.js":157,"./logging.js":162,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],157:[function(require,module,exports){
+},{"./events.js":155,"./logging.js":160,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],155:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -25342,7 +25866,7 @@ Events.MediaStoppedEvent = function(target) {
 
 module.exports = Events;
 
-},{"./logging.js":162,"@opentok/ot-helpers":4}],158:[function(require,module,exports){
+},{"./logging.js":160,"@opentok/ot-helpers":4}],156:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -25367,7 +25891,7 @@ module.exports = {
   REPORT_ISSUE_ERROR: 2011
 };
 
-},{}],159:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -25439,7 +25963,7 @@ module.exports = function generateSimpleStateMachine(initialState, states, trans
   };
 };
 
-},{"@opentok/ot-helpers":4}],160:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],158:[function(require,module,exports){
 'use strict';
 
 var getMediaDevices = require('../helpers/device_helpers.js').getMediaDevices;
@@ -25490,7 +26014,7 @@ module.exports = function getDevices(callback) {
   getMediaDevices(callback);
 };
 
-},{"../helpers/device_helpers.js":122}],161:[function(require,module,exports){
+},{"../helpers/device_helpers.js":120}],159:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -25518,7 +26042,7 @@ module.exports = function IntervalRunner(callback, frequency) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],162:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -25627,7 +26151,7 @@ logging.setLogLevel(debugTrue ? logging.DEBUG : logging.ERROR);
   * @see <a href="#setLogLevel">OT.setLogLevel()</a>
   */
 
-},{"../helpers/properties.js":128,"@opentok/ot-helpers":4}],163:[function(require,module,exports){
+},{"../helpers/properties.js":126,"@opentok/ot-helpers":4}],161:[function(require,module,exports){
 'use strict';
 
 var DelayedEventQueue = function DelayedEventQueue(eventDispatcher) {
@@ -25668,7 +26192,7 @@ var DelayedEventQueue = function DelayedEventQueue(eventDispatcher) {
 
 module.exports = DelayedEventQueue;
 
-},{}],164:[function(require,module,exports){
+},{}],162:[function(require,module,exports){
 'use strict';
 
 // Deserialising a Raptor message mainly means doing a JSON.parse on it.
@@ -25714,7 +26238,7 @@ module.exports = function deserializeMessage(msg) {
   return message;
 };
 
-},{}],165:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 'use strict';
 
 var OTError = require('../../ot_error.js');
@@ -25982,7 +26506,7 @@ Dispatcher.prototype.dispatchArchive = function(message) {
   }
 };
 
-},{"../../logging.js":162,"../../ot_error.js":183,"../rumor/rumor_message_types.js":180,"./unbox_from_rumor_message.js":174,"@opentok/ot-helpers":4}],166:[function(require,module,exports){
+},{"../../logging.js":160,"../../ot_error.js":181,"../rumor/rumor_message_types.js":178,"./unbox_from_rumor_message.js":172,"@opentok/ot-helpers":4}],164:[function(require,module,exports){
 'use strict';
 
 var RaptorConstants = require('./raptor_constants.js');
@@ -26001,7 +26525,7 @@ Raptor.Socket = require('./raptor_socket.js');
 
 module.exports = Raptor;
 
-},{"./deserialize_message.js":164,"./dispatcher.js":165,"./message.js":167,"./parse_ice_servers.js":168,"./raptor_constants.js":169,"./raptor_socket.js":170,"./serialize_message.js":171,"./unbox_from_rumor_message.js":174}],167:[function(require,module,exports){
+},{"./deserialize_message.js":162,"./dispatcher.js":163,"./message.js":165,"./parse_ice_servers.js":166,"./raptor_constants.js":167,"./raptor_socket.js":168,"./serialize_message.js":169,"./unbox_from_rumor_message.js":172}],165:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -26242,18 +26766,29 @@ Message.signals.create =
     });
   };
 
-},{"../../../helpers/properties.js":128,"../../../helpers/supported_crypto_scheme.js":129,"./serialize_message.js":171,"@opentok/ot-helpers":4,"uuid":111}],168:[function(require,module,exports){
+},{"../../../helpers/properties.js":126,"../../../helpers/supported_crypto_scheme.js":127,"./serialize_message.js":169,"@opentok/ot-helpers":4,"uuid":109}],166:[function(require,module,exports){
 'use strict';
 
 module.exports = function parseIceServers(message) {
+  var iceServers;
+
   try {
-    return JSON.parse(message.data).content.iceServers;
+    iceServers = JSON.parse(message.data).content.iceServers;
   } catch (e) {
     return [];
   }
+
+  return iceServers.map(function(iceServer) {
+    return {
+      url: iceServer.url, // soon to be deprecated
+      urls: iceServer.url,
+      username: iceServer.username,
+      credential: iceServer.credential
+    };
+  });
 };
 
-},{}],169:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 'use strict';
 
 // Rumor Messaging for JS
@@ -26350,7 +26885,7 @@ module.exports = {
   }
 };
 
-},{}],170:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -26784,14 +27319,14 @@ RaptorSocket.RumorSocket = RumorSocket;
 
 module.exports = RaptorSocket;
 
-},{"../../analytics.js":141,"../../exception_codes.js":158,"../../logging.js":162,"../../ot_error.js":183,"../rumor/rumor_socket.js":181,"./dispatcher.js":165,"./message.js":167,"./signal.js":173,"@opentok/ot-helpers":4,"uuid":111}],171:[function(require,module,exports){
+},{"../../analytics.js":139,"../../exception_codes.js":156,"../../logging.js":160,"../../ot_error.js":181,"../rumor/rumor_socket.js":179,"./dispatcher.js":163,"./message.js":165,"./signal.js":171,"@opentok/ot-helpers":4,"uuid":109}],169:[function(require,module,exports){
 'use strict';
 
 module.exports = function serializeMessage(message) {
   return JSON.stringify(message);
 };
 
-},{}],172:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 'use strict';
 
 var Archive = require('../../archive.js');
@@ -27226,7 +27761,7 @@ module.exports = function SessionDispatcher(session) {
   return dispatcher;
 };
 
-},{"../../archive.js":144,"../../connection.js":155,"../../logging.js":162,"../../session/objects.js":214,"../../stream.js":216,"../../stream_channel.js":217,"./delayed_event_queue.js":163,"./dispatcher.js":165,"@opentok/ot-helpers":4}],173:[function(require,module,exports){
+},{"../../archive.js":142,"../../connection.js":153,"../../logging.js":160,"../../session/objects.js":212,"../../stream.js":214,"../../stream_channel.js":215,"./delayed_event_queue.js":161,"./dispatcher.js":163,"@opentok/ot-helpers":4}],171:[function(require,module,exports){
 'use strict';
 
 var APIKEY = require('../../api_key.js');
@@ -27389,7 +27924,7 @@ module.exports = function Signal(sessionId, fromConnectionId, options) {
   this.valid = this.error === null;
 };
 
-},{"../../api_key.js":143,"../../connection.js":155,"../../session/tag.js":215,"./message.js":167,"@opentok/ot-helpers":4}],174:[function(require,module,exports){
+},{"../../api_key.js":141,"../../connection.js":153,"../../session/tag.js":213,"./message.js":165,"@opentok/ot-helpers":4}],172:[function(require,module,exports){
 'use strict';
 
 var deserializeMessage = require('./deserialize_message.js');
@@ -27402,7 +27937,7 @@ module.exports = function unboxFromRumorMessage(rumorMessage) {
   return message;
 };
 
-},{"./deserialize_message.js":164}],175:[function(require,module,exports){
+},{"./deserialize_message.js":162}],173:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -27418,7 +27953,7 @@ module.exports = {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"text-encoding":107}],176:[function(require,module,exports){
+},{"text-encoding":105}],174:[function(require,module,exports){
 'use strict';
 
 var Rumor = {};
@@ -27432,7 +27967,7 @@ Rumor.Socket = require('./rumor_socket.js');
 
 module.exports = Rumor;
 
-},{"./native_socket.js":177,"./plugin_socket.js":178,"./rumor_message.js":179,"./rumor_message_types.js":180,"./rumor_socket.js":181,"./socket_error.js":182}],177:[function(require,module,exports){
+},{"./native_socket.js":175,"./plugin_socket.js":176,"./rumor_message.js":177,"./rumor_message_types.js":178,"./rumor_socket.js":179,"./socket_error.js":180}],175:[function(require,module,exports){
 'use strict';
 
 var Message = require('./rumor_message.js');
@@ -27522,7 +28057,7 @@ module.exports = function NativeSocket(TheWebSocket, messagingURL, events) {
   
 };
 
-},{"./rumor_message.js":179}],178:[function(require,module,exports){
+},{"./rumor_message.js":177}],176:[function(require,module,exports){
 'use strict';
 
 var Message = require('./rumor_message.js');
@@ -27605,7 +28140,7 @@ module.exports = function PluginSocket(messagingURL, events) {
 
 };
 
-},{"./rumor_message.js":179,"@opentok/otplugin.js":44}],179:[function(require,module,exports){
+},{"./rumor_message.js":177,"@opentok/otplugin.js":42}],177:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -27834,7 +28369,7 @@ RumorMessage.Ping = function() {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./encoding.js":175,"./rumor_message_types.js":180,"buffer":74,"uuid":111}],180:[function(require,module,exports){
+},{"./encoding.js":173,"./rumor_message_types.js":178,"buffer":72,"uuid":109}],178:[function(require,module,exports){
 'use strict';
 
 // Rumor Messaging for JS
@@ -27875,7 +28410,7 @@ module.exports = {
   STATUS: 9
 };
 
-},{}],181:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 'use strict';
 
 var uuid = require('uuid');
@@ -28454,7 +28989,7 @@ RumorSocket.RECONNECT_RETRY = 500;
 
 module.exports = RumorSocket;
 
-},{"../../../helpers/is_dom_unloaded.js":126,"../../logging.js":162,"./native_socket.js":177,"./plugin_socket.js":178,"./rumor_message.js":179,"./rumor_message_types.js":180,"./socket_error.js":182,"@opentok/ot-helpers":4,"uuid":111,"ws":112}],182:[function(require,module,exports){
+},{"../../../helpers/is_dom_unloaded.js":124,"../../logging.js":160,"./native_socket.js":175,"./plugin_socket.js":176,"./rumor_message.js":177,"./rumor_message_types.js":178,"./socket_error.js":180,"@opentok/ot-helpers":4,"uuid":109,"ws":110}],180:[function(require,module,exports){
 'use strict';
 
 module.exports = function(code, message) {
@@ -28462,7 +28997,7 @@ module.exports = function(code, message) {
   this.message = message;
 };
 
-},{}],183:[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 'use strict';
 
 var analytics = require('./analytics.js');
@@ -28875,7 +29410,7 @@ OTError.handleJsException = function(errorMsg, code, options) {
   _exceptionHandler(options.target, errorMsg, code, context);
 };
 
-},{"./analytics.js":141,"./api_key.js":143,"./events.js":157,"./logging.js":162,"@opentok/ot-helpers":4}],184:[function(require,module,exports){
+},{"./analytics.js":139,"./api_key.js":141,"./events.js":155,"./logging.js":160,"@opentok/ot-helpers":4}],182:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -28962,7 +29497,7 @@ module.exports = function connectionStateLogger(pc) {
   };
 };
 
-},{"../logging.js":162,"@opentok/ot-helpers":4}],185:[function(require,module,exports){
+},{"../logging.js":160,"@opentok/ot-helpers":4}],183:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -29129,7 +29664,7 @@ module.exports = function DataChannel(dataChannel) {
   return api;
 };
 
-},{"../logging.js":162,"@opentok/ot-helpers":4}],186:[function(require,module,exports){
+},{"../logging.js":160,"@opentok/ot-helpers":4}],184:[function(require,module,exports){
 'use strict';
 
 var OTPlugin = require('@opentok/otplugin.js');
@@ -29193,7 +29728,7 @@ module.exports = function getStatsAdapter() {
   return getStatsOldAPI;
 };
 
-},{"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],187:[function(require,module,exports){
+},{"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],185:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -29249,7 +29784,7 @@ getStatsHelpers.normalizeTimestamp = function(timestamp) {
   return timestamp;
 };
 
-},{"@opentok/ot-helpers":4}],188:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],186:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -29259,7 +29794,7 @@ var OTPlugin = require('@opentok/otplugin.js');
 var NativeRTCIceCandidate;
 
 if (!OTPlugin.isInstalled()) {
-  NativeRTCIceCandidate = (global.mozRTCIceCandidate || global.RTCIceCandidate);
+  NativeRTCIceCandidate = (global.RTCIceCandidate || global.mozRTCIceCandidate);
 } else {
   NativeRTCIceCandidate = OTPlugin.RTCIceCandidate;
 }
@@ -29306,7 +29841,7 @@ module.exports = function IceCandidateProcessor() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"@opentok/otplugin.js":44}],189:[function(require,module,exports){
+},{"@opentok/otplugin.js":42}],187:[function(require,module,exports){
 'use strict';
 
 var logging = require('../logging.js');
@@ -29391,7 +29926,7 @@ module.exports = function offerProcessor(
   );
 };
 
-},{"../logging.js":162,"./sdp_helpers.js":195}],190:[function(require,module,exports){
+},{"../logging.js":160,"./sdp_helpers.js":193}],188:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -29415,9 +29950,8 @@ var Qos = require('./qos.js');
 var NativeRTCSessionDescription;
 
 if (!OTPlugin.isInstalled()) {
-  // order is very important: 'RTCSessionDescription' defined in Firefox Nighly but useless
-  NativeRTCSessionDescription = (global.mozRTCSessionDescription ||
-                                 global.RTCSessionDescription);
+  NativeRTCSessionDescription = (global.RTCSessionDescription ||
+                                 global.mozRTCSessionDescription);
 } else {
   NativeRTCSessionDescription = OTPlugin.RTCSessionDescription;
 }
@@ -29910,7 +30444,7 @@ module.exports = PeerConnection;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../helpers/create_peer_connection.js":120,"../../helpers/web_rtc_polyfills.js":138,"../analytics.js":141,"../logging.js":162,"../messaging/raptor/raptor_constants.js":169,"./connection_state_logger.js":184,"./get_stats_adapter.js":186,"./ice_candidate_processor":188,"./offer_processor.js":189,"./peer_connection_channels.js":191,"./qos.js":194,"./subscribe_processor.js":197,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],191:[function(require,module,exports){
+},{"../../helpers/create_peer_connection.js":118,"../../helpers/web_rtc_polyfills.js":136,"../analytics.js":139,"../logging.js":160,"../messaging/raptor/raptor_constants.js":167,"./connection_state_logger.js":182,"./get_stats_adapter.js":184,"./ice_candidate_processor":186,"./offer_processor.js":187,"./peer_connection_channels.js":189,"./qos.js":192,"./subscribe_processor.js":195,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],189:[function(require,module,exports){
 'use strict';
 
 var DataChannel = require('./data_channel.js');
@@ -30025,7 +30559,7 @@ module.exports = function PeerConnectionChannels(pc) {
   return api;
 };
 
-},{"./data_channel.js":185,"@opentok/ot-helpers":4}],192:[function(require,module,exports){
+},{"./data_channel.js":183,"@opentok/ot-helpers":4}],190:[function(require,module,exports){
 'use strict';
 
 var PeerConnection = require('./peer_connection.js');
@@ -30066,7 +30600,7 @@ PeerConnections.remove = function(remoteConnection, streamId) {
   }
 };
 
-},{"./peer_connection.js":190}],193:[function(require,module,exports){
+},{"./peer_connection.js":188}],191:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -30254,7 +30788,7 @@ module.exports = function PublisherPeerConnection(
   };
 };
 
-},{"../messaging/raptor/raptor_constants.js":169,"./peer_connections.js":192,"./set_certificates.js":196,"@opentok/ot-helpers":4}],194:[function(require,module,exports){
+},{"../messaging/raptor/raptor_constants.js":167,"./peer_connections.js":190,"./set_certificates.js":194,"@opentok/ot-helpers":4}],192:[function(require,module,exports){
 'use strict';
 
 var OTPlugin = require('@opentok/otplugin.js');
@@ -30604,7 +31138,7 @@ Qos.INTERVAL = 30000;
 
 module.exports = Qos;
 
-},{"../logging.js":162,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],195:[function(require,module,exports){
+},{"../logging.js":160,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],193:[function(require,module,exports){
 'use strict';
 
 var logging = require('../logging.js');
@@ -30906,6 +31440,11 @@ SDPHelpers.enableSimulcast = function enableSimulcast(sdp, numberOfStreams) {
     return sdp;
   }
 
+  if (!videoAttrs.msid) {
+    logging.debug('No local stream attached, not enabling simulcast.');
+    return sdp;
+  }
+
   var usingRTX = videoAttrs.isUsingRTX();
   var mediaSSRC = [];
   var rtxSSRC = [];
@@ -30955,7 +31494,7 @@ SDPHelpers.fixChromeBug528089 = function(sdp) {
   return sdp.replace(/sendonly/g, 'recvonly');
 };
 
-},{"../logging.js":162,"@opentok/ot-helpers":4}],196:[function(require,module,exports){
+},{"../logging.js":160,"@opentok/ot-helpers":4}],194:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -30987,7 +31526,7 @@ module.exports = function(pcConfig, completion) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"@opentok/ot-helpers":4}],197:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],195:[function(require,module,exports){
 'use strict';
 
 var logging = require('../logging.js');
@@ -31057,7 +31596,7 @@ module.exports = function subscribeProcessor(
   );
 };
 
-},{"../logging.js":162,"./sdp_helpers.js":195}],198:[function(require,module,exports){
+},{"../logging.js":160,"./sdp_helpers.js":193}],196:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -31361,7 +31900,7 @@ module.exports = function SubscriberPeerConnection(remoteConnection, session, st
   };
 };
 
-},{"../messaging/raptor/parse_ice_servers.js":168,"../messaging/raptor/raptor_constants.js":169,"./peer_connections.js":192,"./set_certificates.js":196,"@opentok/ot-helpers":4}],199:[function(require,module,exports){
+},{"../messaging/raptor/parse_ice_servers.js":166,"../messaging/raptor/raptor_constants.js":167,"./peer_connections.js":190,"./set_certificates.js":194,"@opentok/ot-helpers":4}],197:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -33202,7 +33741,7 @@ module.exports = Publisher;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../helpers/audio_context.js":115,"../../helpers/connectivity_attempt_pinger.js":119,"../../helpers/device_helpers.js":122,"../../helpers/get_user_media.js":124,"../../helpers/properties.js":128,"../../helpers/video_orientation.js":137,"../../helpers/widget_view.js":139,"../analytics.js":141,"../api_key.js":143,"../audio_level_transformer":145,"../chrome/archiving.js":147,"../chrome/audio_level_meter.js":148,"../chrome/backing_bar.js":149,"../chrome/chrome.js":151,"../chrome/mute_button.js":152,"../chrome/name_panel.js":153,"../environment_loader.js":156,"../events.js":157,"../exception_codes.js":158,"../interval_runner.js":161,"../logging.js":162,"../messaging/raptor/parse_ice_servers.js":168,"../ot_error.js":183,"../peer_connection/publisher_peer_connection.js":193,"../screensharing/screen_sharing.js":210,"../stream_channel.js":217,"../stylable_component.js":218,"../system_requirements.js":222,"./max_delay.js":201,"./microphone.js":202,"./state.js":203,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44,"bluebird":72,"uuid":111}],200:[function(require,module,exports){
+},{"../../helpers/audio_context.js":113,"../../helpers/connectivity_attempt_pinger.js":117,"../../helpers/device_helpers.js":120,"../../helpers/get_user_media.js":122,"../../helpers/properties.js":126,"../../helpers/video_orientation.js":135,"../../helpers/widget_view.js":137,"../analytics.js":139,"../api_key.js":141,"../audio_level_transformer":143,"../chrome/archiving.js":145,"../chrome/audio_level_meter.js":146,"../chrome/backing_bar.js":147,"../chrome/chrome.js":149,"../chrome/mute_button.js":150,"../chrome/name_panel.js":151,"../environment_loader.js":154,"../events.js":155,"../exception_codes.js":156,"../interval_runner.js":159,"../logging.js":160,"../messaging/raptor/parse_ice_servers.js":166,"../ot_error.js":181,"../peer_connection/publisher_peer_connection.js":191,"../screensharing/screen_sharing.js":208,"../stream_channel.js":215,"../stylable_component.js":216,"../system_requirements.js":220,"./max_delay.js":199,"./microphone.js":200,"./state.js":201,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42,"bluebird":70,"uuid":109}],198:[function(require,module,exports){
 'use strict';
 
 var logging = require('../logging.js');
@@ -33582,12 +34121,12 @@ module.exports = function initPublisher(targetElement, properties, completionHan
   return publisher;
 };
 
-},{"../logging.js":162,"../session/objects.js":214,"./index.js":199,"@opentok/ot-helpers":4}],201:[function(require,module,exports){
+},{"../logging.js":160,"../session/objects.js":212,"./index.js":197,"@opentok/ot-helpers":4}],199:[function(require,module,exports){
 'use strict';
 
 module.exports = 15000;
 
-},{}],202:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -33632,7 +34171,7 @@ module.exports = function Microphone(webRTCStream, muted) {
   }
 };
 
-},{"@opentok/ot-helpers":4}],203:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],201:[function(require,module,exports){
 'use strict';
 
 var generateSimpleStateMachine = require('../generate_simple_state_machine.js');
@@ -33733,7 +34272,7 @@ PublishingState.prototype.isPublishing = function() {
   return this.current === 'Publishing';
 };
 
-},{"../generate_simple_state_machine.js":159}],204:[function(require,module,exports){
+},{"../generate_simple_state_machine.js":157}],202:[function(require,module,exports){
 'use strict';
 
 var Bluebird = require('bluebird');
@@ -33866,7 +34405,7 @@ module.exports = function httpTest(config) {
     });
 };
 
-},{"bluebird":72}],205:[function(require,module,exports){
+},{"bluebird":70}],203:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -33895,7 +34434,7 @@ module.exports = function webrtcTest(config) {
     // order is very important: 'RTCSessionDescription' defined in Firefox Nighly but useless
     // NativeRTCSessionDescription = (global.mozRTCSessionDescription ||
     //   global.RTCSessionDescription);
-    NativeRTCIceCandidate = (global.mozRTCIceCandidate || global.RTCIceCandidate);
+    NativeRTCIceCandidate = (global.RTCIceCandidate || global.mozRTCIceCandidate);
   } else {
     // NativeRTCSessionDescription = OTPlugin.RTCSessionDescription;
     NativeRTCIceCandidate = OTPlugin.RTCIceCandidate;
@@ -34192,7 +34731,7 @@ module.exports = function webrtcTest(config) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../helpers/create_peer_connection.js":120,"../../helpers/video_element/index.js":133,"../logging.js":162,"../peer_connection/get_stats_adapter.js":186,"../peer_connection/get_stats_helpers.js":187,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}],206:[function(require,module,exports){
+},{"../../helpers/create_peer_connection.js":118,"../../helpers/video_element/index.js":131,"../logging.js":160,"../peer_connection/get_stats_adapter.js":184,"../peer_connection/get_stats_helpers.js":185,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}],204:[function(require,module,exports){
 'use strict';
 
 var analytics      = require('./analytics.js');
@@ -34259,7 +34798,7 @@ module.exports = function reportIssue(completionHandler) {
   }
 };
 
-},{"./analytics.js":141,"./exception_codes.js":158,"./ot_error.js":183,"./session/objects.js":214,"@opentok/ot-helpers":4,"uuid":111}],207:[function(require,module,exports){
+},{"./analytics.js":139,"./exception_codes.js":156,"./ot_error.js":181,"./session/objects.js":212,"@opentok/ot-helpers":4,"uuid":109}],205:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -34475,7 +35014,7 @@ module.exports = {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"uuid":111}],208:[function(require,module,exports){
+},{"uuid":109}],206:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -34517,7 +35056,7 @@ module.exports = {
   }
 };
 
-},{"@opentok/ot-helpers":4}],209:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],207:[function(require,module,exports){
 'use strict';
 
 var OTPlugin = require('@opentok/otplugin.js');
@@ -34547,7 +35086,7 @@ module.exports = {
   }
 };
 
-},{"@opentok/otplugin.js":44}],210:[function(require,module,exports){
+},{"@opentok/otplugin.js":42}],208:[function(require,module,exports){
 'use strict';
 
 var chromeExtensionHelper = require('./chrome_extension_helper.js');
@@ -34741,7 +35280,7 @@ screenSharing.registerExtensionHelper('chrome', chromeExtensionHelper);
 screenSharing.registerExtensionHelper('firefox', firefoxExtensionHelper);
 screenSharing.registerExtensionHelper('OpenTokPlugin', ieExtensionHelper);
 
-},{"./chrome_extension_helper.js":207,"./firefox_extension_helper.js":208,"./ie_extension_helper.js":209,"@opentok/ot-helpers":4}],211:[function(require,module,exports){
+},{"./chrome_extension_helper.js":205,"./firefox_extension_helper.js":206,"./ie_extension_helper.js":207,"@opentok/ot-helpers":4}],209:[function(require,module,exports){
 'use strict';
 
 var uuid                      = require('uuid');
@@ -37008,7 +37547,7 @@ SessionHandle.Session = function(apiKey, sessionId) {
 
 SessionHandle.Session.RaptorSocket = RaptorSocket;
 
-},{"../../helpers/connectivity_attempt_pinger.js":119,"../../helpers/properties.js":128,"../analytics.js":141,"../api_key.js":143,"../capabilities.js":146,"../events.js":157,"../exception_codes.js":158,"../logging.js":162,"../messaging/raptor/raptor_socket.js":170,"../messaging/raptor/session_dispatcher.js":172,"../ot_error.js":183,"../publisher":199,"../publisher/init.js":200,"../qos_testing/http_test.js":204,"../qos_testing/webrtc_test.js":205,"../subscriber":220,"../system_requirements.js":222,"./info.js":212,"./objects.js":214,"./tag.js":215,"@opentok/ot-helpers":4,"bluebird":72,"uuid":111}],212:[function(require,module,exports){
+},{"../../helpers/connectivity_attempt_pinger.js":117,"../../helpers/properties.js":126,"../analytics.js":139,"../api_key.js":141,"../capabilities.js":144,"../events.js":155,"../exception_codes.js":156,"../logging.js":160,"../messaging/raptor/raptor_socket.js":168,"../messaging/raptor/session_dispatcher.js":170,"../ot_error.js":181,"../publisher":197,"../publisher/init.js":198,"../qos_testing/http_test.js":202,"../qos_testing/webrtc_test.js":203,"../subscriber":218,"../system_requirements.js":220,"./info.js":210,"./objects.js":212,"./tag.js":213,"@opentok/ot-helpers":4,"bluebird":70,"uuid":109}],210:[function(require,module,exports){
 'use strict';
 
 var Anvil          = require('../anvil.js');
@@ -37099,7 +37638,7 @@ SessionInfo.get = function(id, token) {
 
 module.exports = SessionInfo;
 
-},{"../anvil.js":142,"../exception_codes.js":158,"../logging.js":162,"bluebird":72}],213:[function(require,module,exports){
+},{"../anvil.js":140,"../exception_codes.js":156,"../logging.js":160,"bluebird":70}],211:[function(require,module,exports){
 'use strict';
 
 var SessionHandle  = require('./handle.js');
@@ -37176,7 +37715,7 @@ module.exports = function initSession(apiKey, sessionId) {
   return session;
 };
 
-},{"./handle.js":211,"./objects.js":214}],214:[function(require,module,exports){
+},{"./handle.js":209,"./objects.js":212}],212:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -37195,7 +37734,7 @@ sessionObjects.sessions = new OTHelpers.Collection();
 
 module.exports = sessionObjects;
 
-},{"@opentok/ot-helpers":4}],215:[function(require,module,exports){
+},{"@opentok/ot-helpers":4}],213:[function(require,module,exports){
 'use strict';
 
 // This is used to break the dependency Raptor had on Session. It only needs to be able to know
@@ -37204,7 +37743,7 @@ module.exports = sessionObjects;
 
 module.exports = {};
 
-},{}],216:[function(require,module,exports){
+},{}],214:[function(require,module,exports){
 'use strict';
 
 var Events         = require('./events.js');
@@ -37646,7 +38185,7 @@ module.exports = function Stream(id, name, creationTime, connection, session, ch
   };
 };
 
-},{"./events.js":157,"./logging.js":162,"./session/objects.js":214,"@opentok/ot-helpers":4}],217:[function(require,module,exports){
+},{"./events.js":155,"./logging.js":160,"./session/objects.js":212,"@opentok/ot-helpers":4}],215:[function(require,module,exports){
 'use strict';
 
 var OTHelpers = require('@opentok/ot-helpers');
@@ -37750,7 +38289,7 @@ module.exports = function StreamChannel(options) {
   };
 };
 
-},{"../helpers/video_orientation.js":137,"./logging.js":162,"@opentok/ot-helpers":4}],218:[function(require,module,exports){
+},{"../helpers/video_orientation.js":135,"./logging.js":160,"@opentok/ot-helpers":4}],216:[function(require,module,exports){
 'use strict';
 
 var logging = require('./logging.js');
@@ -38016,7 +38555,7 @@ module.exports = function StylableComponent(
   }
 };
 
-},{"./logging.js":162,"./style.js":219}],219:[function(require,module,exports){
+},{"./logging.js":160,"./style.js":217}],217:[function(require,module,exports){
 'use strict';
 
 var logging = require('./logging.js');
@@ -38141,7 +38680,7 @@ module.exports = function Style(initalStyles, onStyleChange) {
   if (initalStyles) { this.setAll(initalStyles, true); }
 };
 
-},{"./logging.js":162,"@opentok/ot-helpers":4}],220:[function(require,module,exports){
+},{"./logging.js":160,"@opentok/ot-helpers":4}],218:[function(require,module,exports){
 'use strict';
 
 var uuid =                            require('uuid');
@@ -39602,7 +40141,7 @@ Subscriber.SubscriberPeerConnection = SubscriberPeerConnection;
 
 module.exports = Subscriber;
 
-},{"../../helpers/audio_context.js":115,"../../helpers/audio_level_samplers/getstats_audio_output_level_sampler":116,"../../helpers/audio_level_samplers/webaudio_audio_level_sampler":117,"../../helpers/connectivity_attempt_pinger.js":119,"../../helpers/properties.js":128,"../../helpers/widget_view.js":139,"../analytics.js":141,"../audio_level_transformer":145,"../chrome/audio_level_meter.js":148,"../chrome/backing_bar.js":149,"../chrome/chrome.js":151,"../chrome/mute_button.js":152,"../chrome/name_panel.js":153,"../chrome/video_disabled_indicator.js":154,"../events.js":157,"../exception_codes.js":158,"../interval_runner.js":161,"../logging.js":162,"../messaging/raptor/message.js":167,"../ot_error.js":183,"../peer_connection/get_stats_helpers.js":187,"../peer_connection/subscriber_peer_connection.js":198,"../stylable_component.js":218,"./state.js":221,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44,"uuid":111}],221:[function(require,module,exports){
+},{"../../helpers/audio_context.js":113,"../../helpers/audio_level_samplers/getstats_audio_output_level_sampler":114,"../../helpers/audio_level_samplers/webaudio_audio_level_sampler":115,"../../helpers/connectivity_attempt_pinger.js":117,"../../helpers/properties.js":126,"../../helpers/widget_view.js":137,"../analytics.js":139,"../audio_level_transformer":143,"../chrome/audio_level_meter.js":146,"../chrome/backing_bar.js":147,"../chrome/chrome.js":149,"../chrome/mute_button.js":150,"../chrome/name_panel.js":151,"../chrome/video_disabled_indicator.js":152,"../events.js":155,"../exception_codes.js":156,"../interval_runner.js":159,"../logging.js":160,"../messaging/raptor/message.js":165,"../ot_error.js":181,"../peer_connection/get_stats_helpers.js":185,"../peer_connection/subscriber_peer_connection.js":196,"../stylable_component.js":216,"./state.js":219,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42,"uuid":109}],219:[function(require,module,exports){
 'use strict';
 
 var generateSimpleStateMachine = require('../generate_simple_state_machine.js');
@@ -39706,7 +40245,7 @@ SubscribingState.prototype.isAttemptingToSubscribe = function() {
 
 module.exports = SubscribingState;
 
-},{"../generate_simple_state_machine.js":159}],222:[function(require,module,exports){
+},{"../generate_simple_state_machine.js":157}],220:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -39853,5 +40392,5 @@ module.exports = systemRequirements;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../helpers/dialogs.js":123,"../helpers/properties.js":128,"../ot/environment_loader.js":156,"./analytics.js":141,"./api_key.js":143,"./logging.js":162,"@opentok/ot-helpers":4,"@opentok/otplugin.js":44}]},{},[140])
+},{"../helpers/dialogs.js":121,"../helpers/properties.js":126,"../ot/environment_loader.js":154,"./analytics.js":139,"./api_key.js":141,"./logging.js":160,"@opentok/ot-helpers":4,"@opentok/otplugin.js":42}]},{},[138])
 
