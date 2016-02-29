@@ -15,9 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsComponentManagerUtils.h"
-#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsIProtocolProxyCallback.h"
-#endif
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 #include "FakeMediaStreams.h"
@@ -401,7 +399,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalEndOfLocalCandidates;
 
  private:
-#if !defined(MOZILLA_XPCOMRT_API)
   class ProtocolProxyQueryHandler : public nsIProtocolProxyCallback {
    public:
     explicit ProtocolProxyQueryHandler(PeerConnectionMedia *pcm) :
@@ -418,7 +415,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     RefPtr<PeerConnectionMedia> pcm_;
     virtual ~ProtocolProxyQueryHandler() {}
   };
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
   // Shutdown media transport. Must be called on STS thread.
   void ShutdownMediaTransport_s();

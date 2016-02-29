@@ -127,10 +127,8 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
     }                                                                          \
                                                                                \
     if (!workers.IsEmpty()) {                                                  \
-      AutoSafeJSContext cx;                                                    \
-      JSAutoRequest ar(cx);                                                    \
       for (uint32_t index = 0; index < workers.Length(); index++) {            \
-        workers[index]-> _func (cx, __VA_ARGS__);                              \
+        workers[index]-> _func (__VA_ARGS__);                                  \
       }                                                                        \
     }                                                                          \
   PR_END_MACRO
@@ -601,7 +599,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   bool
-  Dispatch(JSContext* aCx)
+  Dispatch()
   {
     AutoSyncLoopHolder syncLoop(mWorkerPrivate);
 
@@ -609,7 +607,6 @@ public:
     MOZ_ASSERT(mSyncLoopTarget);
 
     if (NS_FAILED(NS_DispatchToMainThread(this))) {
-      JS_ReportError(aCx, "Failed to dispatch to main thread!");
       return false;
     }
 
@@ -636,15 +633,13 @@ ContentSecurityPolicyAllows(JSContext* aCx)
     if (JS::DescribeScriptedCaller(aCx, &file, &lineNum) && file.get()) {
       fileName = NS_ConvertUTF8toUTF16(file.get());
     } else {
-      JS_ReportPendingException(aCx);
+      MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     }
 
     RefPtr<LogViolationDetailsRunnable> runnable =
         new LogViolationDetailsRunnable(worker, fileName, lineNum);
 
-    if (!runnable->Dispatch(aCx)) {
-      JS_ReportPendingException(aCx);
-    }
+    runnable->Dispatch();
   }
 
   return worker->IsEvalAllowed();
@@ -1076,8 +1071,7 @@ private:
   }
 
   virtual void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) override
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
   {
     // May be called on any thread!
   }
@@ -1256,7 +1250,7 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
 
   RefPtr<WorkerTaskRunnable> runnable =
     new WorkerTaskRunnable(mWorkerPrivate, aTask);
-  return runnable->Dispatch(nullptr);
+  return runnable->Dispatch();
 }
 
 WorkerPrivate*
@@ -2167,18 +2161,8 @@ RuntimeService::FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
-  if (!workers.IsEmpty()) {
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(aWindow))) {
-      return;
-    }
-    JSContext* cx = jsapi.cx();
-
-    for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->Freeze(cx, aWindow)) {
-        JS_ReportPendingException(cx);
-      }
-    }
+  for (uint32_t index = 0; index < workers.Length(); index++) {
+    workers[index]->Freeze(aWindow);
   }
 }
 
@@ -2191,18 +2175,8 @@ RuntimeService::ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
-  if (!workers.IsEmpty()) {
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(aWindow))) {
-      return;
-    }
-    JSContext* cx = jsapi.cx();
-
-    for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->Thaw(cx, aWindow)) {
-        JS_ReportPendingException(cx);
-      }
-    }
+  for (uint32_t index = 0; index < workers.Length(); index++) {
+    workers[index]->Thaw(aWindow);
   }
 }
 
@@ -2322,8 +2296,7 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
   RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
                                                          channel->Port1());
 
-  if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker,
-                                           channel->Port2())) {
+  if (!workerPrivate->RegisterSharedWorker(sharedWorker, channel->Port2())) {
     NS_WARNING("Worker is unreachable, this shouldn't happen!");
     sharedWorker->Close();
     return NS_ERROR_FAILURE;
@@ -2588,7 +2561,7 @@ LogViolationDetailsRunnable::Run()
   RefPtr<MainThreadStopSyncLoopRunnable> response =
     new MainThreadStopSyncLoopRunnable(mWorkerPrivate, mSyncLoopTarget.forget(),
                                        true);
-  MOZ_ALWAYS_TRUE(response->Dispatch(nullptr));
+  MOZ_ALWAYS_TRUE(response->Dispatch());
 
   return NS_OK;
 }
@@ -2663,8 +2636,10 @@ WorkerThreadPrimaryRunnable::Run()
         JSAutoRequest ar(cx);
 
         mWorkerPrivate->DoRunLoop(cx);
-
-        JS_ReportPendingException(cx);
+        // The AutoJSAPI in DoRunLoop should have reported any exceptions left
+        // on cx.  Note that we still need the JSAutoRequest above because
+        // AutoJSAPI on workers does NOT enter a request!
+        MOZ_ASSERT(!JS_IsExceptionPending(cx));
       }
 
       BackgroundChild::CloseForCurrentThread();
@@ -2675,6 +2650,13 @@ WorkerThreadPrimaryRunnable::Run()
       }
 #endif
     }
+
+    // There may still be runnables on the debugger event queue that hold a
+    // strong reference to the debugger global scope. These runnables are not
+    // visible to the cycle collector, so we need to make sure to clear the
+    // debugger event queue before we try to destroy the context. If we don't,
+    // the garbage collector will crash.
+    mWorkerPrivate->ClearDebuggerEventQueue();
 
     // Destroy the main context. This will unroot the main worker global and GC,
     // which should break all cycles that touch JS.

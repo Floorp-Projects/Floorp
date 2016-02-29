@@ -24,18 +24,16 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include "mtransport_test_utils.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
-MtransportTestUtils *test_utils;
-
 namespace {
-class SocketTransportServiceTest : public ::testing::Test {
+class SocketTransportServiceTest : public MtransportTest {
  public:
-  SocketTransportServiceTest() : received_(0),
+  SocketTransportServiceTest() : MtransportTest(),
+                                 received_(0),
                                  readpipe_(nullptr),
                                  writepipe_(nullptr),
                                  registered_(false) {
@@ -143,6 +141,8 @@ class SocketHandler : public nsASocketHandler {
 NS_IMPL_ISUPPORTS0(SocketHandler)
 
 void SocketTransportServiceTest::SetUp() {
+  MtransportTest::SetUp();
+
   // Get the transport service as a dispatch target
   nsresult rv;
   target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
@@ -204,15 +204,3 @@ TEST_F(SocketTransportServiceTest, SendPacket) {
 
 
 }  // end namespace
-
-
-int main(int argc, char **argv) {
-  test_utils = new MtransportTestUtils();
-
-  // Start the tests
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-  delete test_utils;
-  return rv;
-}

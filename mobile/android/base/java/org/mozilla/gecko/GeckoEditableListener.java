@@ -17,9 +17,13 @@ interface GeckoEditableListener {
     int NOTIFY_IME_OPEN_VKB = -2;
     @WrapForJNI
     int NOTIFY_IME_REPLY_EVENT = -1;
+    @WrapForJNI
     int NOTIFY_IME_OF_FOCUS = 1;
+    @WrapForJNI
     int NOTIFY_IME_OF_BLUR = 2;
+    @WrapForJNI
     int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
+    @WrapForJNI
     int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
     // IME enabled state for notifyIMEContext()
     int IME_STATE_DISABLED = 0;

@@ -442,12 +442,9 @@ public:
       return NS_OK;
     }
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-
     RefPtr<UnsubscribeResultRunnable> r =
       new UnsubscribeResultRunnable(proxy, aStatus, aSuccess);
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 
@@ -644,9 +641,6 @@ public:
       return NS_OK;
     }
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-
     nsAutoString endpoint;
     nsTArray<uint8_t> rawP256dhKey, authSecret;
     if (NS_SUCCEEDED(aStatus)) {
@@ -661,7 +655,7 @@ public:
                                         mScope,
                                         rawP256dhKey,
                                         authSecret);
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 
@@ -913,11 +907,9 @@ public:
       state
     );
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
     RefPtr<PermissionResultRunnable> r =
       new PermissionResultRunnable(mProxy, rv, state);
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 

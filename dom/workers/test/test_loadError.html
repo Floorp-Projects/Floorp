@@ -13,6 +13,8 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
+var loadErrorMessage = ': SecurityError: Failed to load worker script at "about:blank"';
+
 function nextTest() {
   (function(){
     function workerfunc() {
@@ -35,10 +37,14 @@ function nextTest() {
         return;
       }
       w.onmessage = function(e) {
-        is(e.data.indexOf('Error: Failed to load script'), 0, "Error: Failed to load script");
+        is(e.data, loadErrorMessage,
+           "Should catch the error when loading inner script");
         if (++i < 2) callworker(i);
         else SimpleTest.finish();
       };
+      w.onerrror = function(e) {
+        ok(false, "Should not get any errors from this worker");
+      }
     }
     callworker(0);
   })();
@@ -48,7 +54,8 @@ try {
   var worker = new Worker("about:blank");
   worker.onerror = function(e) {
     e.preventDefault();
-    ok(true, "Shouldn't success!");
+    is(e.message, loadErrorMessage,
+       "Should get the right error from the toplevel script");
     nextTest();
   }
 

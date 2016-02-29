@@ -14,7 +14,7 @@ Index: LICENSE
 +
  This code is released under the libpng license.
  
- libpng versions 1.0.7, July 1, 2000, through 1.6.19, November 12, 2015, are
+ libpng versions 1.0.7, July 1, 2000, through 1.6.21, January 15, 2016, are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -295,13 +295,14 @@ Index: png.c
 ===================================================================
 --- png.c
 +++ png.c
-@@ -775,16 +775,20 @@
+@@ -775,17 +775,21 @@
  #else
  #  ifdef __STDC__
     return PNG_STRING_NEWLINE \
--      "libpng version 1.6.19 - November 12, 2015" PNG_STRING_NEWLINE \
-+      "libpng version 1.6.19+apng - November 12, 2015" PNG_STRING_NEWLINE \
-       "Copyright (c) 1998-2015 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+-      "libpng version 1.6.21 - January 15, 2016" PNG_STRING_NEWLINE \
++      "libpng version 1.6.21+apng - January 15, 2016" PNG_STRING_NEWLINE \
+       "Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson" \
+       PNG_STRING_NEWLINE \
        "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
        "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
 -      PNG_STRING_NEWLINE;
@@ -309,9 +310,9 @@ Index: png.c
 +      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
 +      "Portions Copyright (c) 2008-2015 Max Stepin" PNG_STRING_NEWLINE ;
  #  else
--   return "libpng version 1.6.19 - November 12, 2015\
-+   return "libpng version 1.6.19+apng - November 12, 2015\
-       Copyright (c) 1998-2015 Glenn Randers-Pehrson\
+-   return "libpng version 1.6.21 - January 15, 2016\
++   return "libpng version 1.6.21+apng - January 15, 2016\
+       Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson\
        Copyright (c) 1996-1997 Andreas Dilger\
 -      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
 +      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
@@ -324,7 +325,7 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -22,6 +22,12 @@
+@@ -23,6 +23,12 @@
   * If you modify libpng you may insert additional notices immediately following
   * this sentence.
   *
@@ -336,20 +337,20 @@ Index: png.h
 + *
   * This code is released under the libpng license.
   *
-  * libpng versions 1.0.7, July 1, 2000, through 1.6.19, November 12, 2015, are
-@@ -281,9 +287,9 @@
+  * libpng versions 1.0.7, July 1, 2000, through 1.6.21, January 15, 2016, are
+@@ -282,9 +288,9 @@
   */
  
  /* Version information for png.h - this should match the version in png.c */
--#define PNG_LIBPNG_VER_STRING "1.6.19"
-+#define PNG_LIBPNG_VER_STRING "1.6.19+apng"
+-#define PNG_LIBPNG_VER_STRING "1.6.21"
++#define PNG_LIBPNG_VER_STRING "1.6.21+apng"
  #define PNG_HEADER_VERSION_STRING \
--     " libpng version 1.6.19 - November 12, 2015\n"
-+     " libpng version 1.6.19+apng - November 12, 2015\n"
+-     " libpng version 1.6.21 - January 15, 2016\n"
++     " libpng version 1.6.21+apng - January 15, 2016\n"
  
  #define PNG_LIBPNG_VER_SONUM   16
  #define PNG_LIBPNG_VER_DLLNUM  16
-@@ -334,6 +340,10 @@
+@@ -335,6 +341,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -360,7 +361,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -429,6 +439,17 @@
+@@ -430,6 +440,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -378,7 +379,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -751,6 +772,10 @@
+@@ -752,6 +773,10 @@
  #if INT_MAX >= 0x8000 /* else this might break */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
  #endif
@@ -389,7 +390,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -788,6 +813,10 @@
+@@ -789,6 +814,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -400,7 +401,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3109,6 +3138,75 @@
+@@ -3110,6 +3139,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -476,7 +477,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3117,7 +3215,11 @@
+@@ -3118,7 +3216,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -520,7 +521,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1433,6 +1447,49 @@
+@@ -1441,6 +1455,49 @@
  
  #endif /* PROGRESSIVE_READ */
  
@@ -597,7 +598,7 @@ Index: pngstruct.h
 ===================================================================
 --- pngstruct.h
 +++ pngstruct.h
-@@ -400,6 +400,27 @@
+@@ -403,6 +403,27 @@
     png_byte filter_type;
  #endif
  
@@ -1096,7 +1097,7 @@ Index: pngrutil.c
 ===================================================================
 --- pngrutil.c
 +++ pngrutil.c
-@@ -824,6 +824,11 @@
+@@ -855,6 +855,11 @@
     filter_type = buf[11];
     interlace_type = buf[12];
  
@@ -1108,7 +1109,7 @@ Index: pngrutil.c
     /* Set internal variables */
     png_ptr->width = width;
     png_ptr->height = height;
-@@ -2724,6 +2729,180 @@
+@@ -2755,6 +2760,180 @@
  }
  #endif
  
@@ -1289,7 +1290,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -3983,6 +4162,38 @@
+@@ -4014,6 +4193,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1328,7 +1329,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -3994,6 +4205,7 @@
+@@ -4025,6 +4236,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1336,7 +1337,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4057,6 +4269,9 @@
+@@ -4088,6 +4300,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1346,7 +1347,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4495,4 +4710,80 @@
+@@ -4526,4 +4741,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1431,7 +1432,7 @@ Index: pngwutil.c
 ===================================================================
 --- pngwutil.c
 +++ pngwutil.c
-@@ -901,6 +901,11 @@
+@@ -817,6 +817,11 @@
     /* Write the chunk */
     png_write_complete_chunk(png_ptr, png_IHDR, buf, (png_size_t)13);
  
@@ -1443,7 +1444,7 @@ Index: pngwutil.c
     if ((png_ptr->do_filter) == PNG_NO_FILTERS)
     {
        if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-@@ -1082,7 +1087,15 @@
+@@ -998,7 +1003,15 @@
                 optimize_cmf(data, png_image_size(png_ptr));
  #endif
  
@@ -1459,7 +1460,7 @@ Index: pngwutil.c
           png_ptr->mode |= PNG_HAVE_IDAT;
  
           png_ptr->zstream.next_out = data;
-@@ -1128,7 +1141,15 @@
+@@ -1044,7 +1057,15 @@
              optimize_cmf(data, png_image_size(png_ptr));
  #endif
  
@@ -1475,7 +1476,7 @@ Index: pngwutil.c
           png_ptr->zstream.avail_out = 0;
           png_ptr->zstream.next_out = NULL;
           png_ptr->mode |= PNG_HAVE_IDAT | PNG_AFTER_IDAT;
-@@ -1941,6 +1962,82 @@
+@@ -1857,6 +1878,82 @@
  }
  #endif
  
@@ -1558,7 +1559,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -2706,4 +2803,39 @@
+@@ -2622,4 +2719,39 @@
     }
  #endif /* WRITE_FLUSH */
  }

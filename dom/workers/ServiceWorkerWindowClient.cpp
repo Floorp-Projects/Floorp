@@ -118,9 +118,7 @@ private:
       new ResolveOrRejectPromiseRunnable(mPromiseProxy->GetWorkerPrivate(),
                                          mPromiseProxy, Move(aClientInfo));
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    resolveRunnable->Dispatch(jsapi.cx());
+    resolveRunnable->Dispatch();
   }
 };
 

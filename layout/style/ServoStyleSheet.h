@@ -9,24 +9,13 @@
 
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoBindingHelpers.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
-
-template<>
-struct RefPtrTraits<RawServoStyleSheet>
-{
-  static void AddRef(RawServoStyleSheet* aPtr) {
-    MOZ_CRASH("stylo: not implemented");
-  }
-  static void Release(RawServoStyleSheet* aPtr) {
-    Servo_ReleaseStylesheet(aPtr);
-  }
-};
 
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
@@ -63,6 +52,8 @@ public:
 #ifdef DEBUG
   void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
+
+  RawServoStyleSheet* RawSheet() const { return mSheet; }
 
 protected:
   ~ServoStyleSheet();

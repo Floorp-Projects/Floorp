@@ -65,12 +65,7 @@ public:
    * @param aName The name of the module.
    * @return A log module for the given name. This may be shared.
    */
-#if !defined(MOZILLA_XPCOMRT_API)
   static LogModule* Get(const char* aName);
-#else
-  // For simplicity, libxpcomrt doesn't supoort logging.
-  static LogModule* Get(const char* aName) { return nullptr; }
-#endif
 
   static void Init();
 
@@ -176,13 +171,9 @@ inline bool log_test(const LogModule* module, LogLevel level) {
   return module && module->ShouldLog(level);
 }
 
-#if !defined(MOZILLA_XPCOMRT_API)
 void log_print(const LogModule* aModule,
                LogLevel aLevel,
                const char* aFmt, ...);
-#else
-inline void log_print(const LogModule* aModule, LogLevel aLevel, const char* aFmt, ...) {}
-#endif
 } // namespace detail
 
 } // namespace mozilla

@@ -52,12 +52,13 @@
           <button id="continue-button" label="&continue;"
                   oncommand="continueClicked()"/>
         </hbox>
-        <hbox id="restartPanel">
-          <spacer id="restartSpacer"/>
-          <description id="restartMessage" flex="1">&restartMessage;</description>
-          <button id="restart-button" label="&restartButton;" oncommand="restartClicked()"/>
-          <button id="cancel-button" label="&cancelButton;" oncommand="cancelClicked()"/>
-        </hbox>
+        <vbox id="restartPanel">
+          <description id="restartMessage">&restartMessage;</description>
+          <hbox id="restartPanelButtons">
+            <button id="restart-button" label="&restartButton;" oncommand="restartClicked()"/>
+            <button id="cancel-button" label="&cancelButton;" oncommand="cancelClicked()"/>
+          </hbox>
+        </vbox>
       </deck>
     </vbox>
 

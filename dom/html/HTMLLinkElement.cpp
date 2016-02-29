@@ -180,10 +180,7 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   if (IsInComposedDoc()) {
-    UpdatePreconnect();
-    if (HasDNSPrefetchRel()) {
-      TryDNSPrefetch();
-    }
+    TryDNSPrefetchPreconnectOrPrefetch();
   }
 
   void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
@@ -217,6 +214,7 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
   CancelDNSPrefetch(HTML_LINK_DNS_PREFETCH_DEFERRED,
                     HTML_LINK_DNS_PREFETCH_REQUESTED);
+  CancelPrefetch();
 
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -344,41 +342,6 @@ HTMLLinkElement::UpdateImport()
   }
 }
 
-void
-HTMLLinkElement::UpdatePreconnect()
-{
-  // rel type should be preconnect
-  nsAutoString rel;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
-    return;
-  }
-
-  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel, NodePrincipal());
-  if (!(linkTypes & ePRECONNECT)) {
-    return;
-  }
-
-  nsIDocument *owner = OwnerDoc();
-  if (owner) {
-    nsCOMPtr<nsIURI> uri = GetHrefURI();
-    if (uri) {
-        owner->MaybePreconnect(uri, GetCORSMode());
-    }
-  }
-}
-
-bool
-HTMLLinkElement::HasDNSPrefetchRel()
-{
-  nsAutoString rel;
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
-    return !!(ParseLinkTypes(rel, NodePrincipal()) &
-              nsStyleLinkElement::eDNS_PREFETCH);
-  }
-
-  return false;
-}
-
 nsresult
 HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                nsAttrValueOrString* aValue, bool aNotify)
@@ -387,6 +350,7 @@ HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       (aName == nsGkAtoms::href || aName == nsGkAtoms::rel)) {
     CancelDNSPrefetch(HTML_LINK_DNS_PREFETCH_DEFERRED,
                       HTML_LINK_DNS_PREFETCH_REQUESTED);
+    CancelPrefetch();
   }
 
   return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName,
@@ -427,21 +391,16 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           dropSheet = !(linkTypes & nsStyleLinkElement::eSTYLESHEET);
         } else if (linkTypes & eHTMLIMPORT) {
           UpdateImport();
-        } else if ((linkTypes & ePRECONNECT) && IsInComposedDoc()) {
-          UpdatePreconnect();
         }
       }
 
       if (aName == nsGkAtoms::href) {
         UpdateImport();
-        if (IsInComposedDoc()) {
-          UpdatePreconnect();
-        }
       }
 
       if ((aName == nsGkAtoms::rel || aName == nsGkAtoms::href) &&
-          HasDNSPrefetchRel() && IsInComposedDoc()) {
-        TryDNSPrefetch();
+          IsInComposedDoc()) {
+        TryDNSPrefetchPreconnectOrPrefetch();
       }
 
       UpdateStyleSheetInternal(nullptr, nullptr,

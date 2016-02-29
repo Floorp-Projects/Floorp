@@ -19,7 +19,6 @@ interface nsINotificationStorageCallback : nsISupports
    * @param body: the notification body
    * @param tag: the notification tag
    */
-  [implicit_jscontext]
   void handle(in DOMString id,
               in DOMString title,
               in DOMString dir,
@@ -35,7 +34,6 @@ interface nsINotificationStorageCallback : nsISupports
    * Callback function used to notify C++ the we have returned
    * all notification objects for this Notification.get call.
    */
-  [implicit_jscontext]
   void done();
 };
 

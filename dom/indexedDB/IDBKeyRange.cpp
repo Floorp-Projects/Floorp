@@ -334,6 +334,55 @@ IDBKeyRange::GetUpper(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
   aResult.set(mCachedUpperVal);
 }
 
+bool
+IDBKeyRange::Includes(JSContext* aCx,
+                      JS::Handle<JS::Value> aValue,
+                      ErrorResult& aRv) const
+{
+  Key key;
+  aRv = GetKeyFromJSVal(aCx, aValue, key);
+  if (aRv.Failed()) {
+    return false;
+  }
+
+  switch (Key::CompareKeys(Lower(), key)) {
+  case 1:
+    return false;
+  case 0:
+    // Identical keys.
+    if (LowerOpen()) {
+      return false;
+    }
+    break;
+  case -1:
+    if (IsOnly()) {
+      return false;
+    }
+    break;
+  default:
+    MOZ_CRASH();
+  }
+
+  if (!IsOnly()) {
+    switch (Key::CompareKeys(key, Upper())) {
+    case 1:
+      return false;
+    case 0:
+      // Identical keys.
+      if (UpperOpen()) {
+        return false;
+      }
+      break;
+    case -1:
+      break;
+    }
+  } else {
+    MOZ_ASSERT(key == Lower());
+  }
+
+  return true;
+}
+
 // static
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::Only(const GlobalObject& aGlobal,

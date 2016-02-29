@@ -751,11 +751,11 @@ fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 != block-float-1a.html block-float-1a-noref.html
 == block-float-1b.html block-float-1b-ref.html
 == block-float-1b.html block-float-1b-ref2.html
-fails-if(Android&&AndroidVersion==18) != block-float-1b.html block-float-1b-noref.html # bug 1146690
+!= block-float-1b.html block-float-1b-noref.html
 == block-float-2a.html block-float-2a-ref.html
 != block-float-2a.html block-float-2a-noref.html
 == block-float-2b.html block-float-2b-ref.html
-fails-if(Android&&AndroidVersion==18) != block-float-2b.html block-float-2b-noref.html # bug 1146690
+!= block-float-2b.html block-float-2b-noref.html
 == block-float-3a.html block-float-3a-ref.html
 == block-float-3b.html block-float-3b-ref.html
 == block-float-1a-dyn.html block-float-1a-ref.html

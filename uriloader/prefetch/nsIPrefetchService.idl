@@ -8,7 +8,7 @@ interface nsIURI;
 interface nsIDOMNode;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(2df8b475-f536-4a1a-afea-b39843df8005)]
+[scriptable, uuid(422a1807-4e7f-463d-b8d7-ca2ceb9b5d53)]
 interface nsIPrefetchService : nsISupports
 {
     /**
@@ -30,5 +30,8 @@ interface nsIPrefetchService : nsISupports
      */
     boolean hasMoreElements();
 
-    // XXX do we need a way to cancel prefetch requests?
+    /**
+     * Cancel prefetch
+     */
+    void cancelPrefetchURI(in nsIURI aURI, in nsIDOMNode aSource);
 };

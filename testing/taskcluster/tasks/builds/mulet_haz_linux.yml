@@ -48,6 +48,7 @@ task:
     treeherder:
       groupSymbol: "tc"
       symbol: "H"
+      tier: 3
       machine:
         platform: mulet-linux64
     # Rather then enforcing particular conventions we require that all build

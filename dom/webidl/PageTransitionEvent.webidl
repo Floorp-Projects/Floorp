@@ -4,9 +4,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * The PageTransitionEvent interface is used for the pageshow and
+ * pagehide events, which are generic events that apply to both page
+ * load/unload and saving/restoring a document from session history.
+ */
+
 [Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)]
 interface PageTransitionEvent : Event
 {
+  /**
+   * Set to true if the document has been or will be persisted across
+   * firing of the event.  For example, if a document is being cached in
+   * session history, |persisted| is true for the PageHide event.
+   */
   readonly attribute boolean persisted;
 };
 

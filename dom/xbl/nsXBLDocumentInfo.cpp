@@ -12,7 +12,6 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIURI.h"

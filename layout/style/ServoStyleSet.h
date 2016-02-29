@@ -10,8 +10,10 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoBindingHelpers.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/SheetType.h"
+#include "mozilla/UniquePtr.h"
 #include "nsChangeHint.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIAtom.h"
@@ -112,8 +114,9 @@ public:
                                        EventStates aStateMask);
 
 private:
-  mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
-                           nsTArray<RefPtr<mozilla::ServoStyleSheet>>> mSheets;
+  UniquePtr<RawServoStyleSet> mRawSet;
+  EnumeratedArray<SheetType, SheetType::Count,
+                  nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
 };
 

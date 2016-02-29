@@ -412,6 +412,16 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
     return kMediaConduitUnknownError;
   }
 
+  if (codecConfig->mName == "opus" && codecConfig->mMaxPlaybackRate) {
+    if (mPtrVoECodec->SetOpusMaxPlaybackRate(
+          mChannel,
+          codecConfig->mMaxPlaybackRate) == -1) {
+      CSFLogError(logTag, "%s SetOpusMaxPlaybackRate Failed %d ", __FUNCTION__,
+                  mPtrVoEBase->LastError());
+      return kMediaConduitUnknownError;
+    }
+  }
+
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // TEMPORARY - see bug 694814 comment 2
   nsresult rv;
