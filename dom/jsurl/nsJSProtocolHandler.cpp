@@ -263,6 +263,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
+    // Fail if someone tries to execute in a global with system principal.
+    if (nsContentUtils::IsSystemPrincipal(objectPrincipal)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
     // Finally, we have everything needed to evaluate the expression.
     JS::CompileOptions options(cx);
