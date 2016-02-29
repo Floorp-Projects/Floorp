@@ -19,7 +19,7 @@ then
     exit 1
 fi
 
-TARBALL="https://github.com/silnrsi/graphite/releases/download/$RELEASE/graphite2-minimal-$RELEASE.tgz"
+TARBALL="https://github.com/silnrsi/graphite/releases/download/$RELEASE/graphite-minimal-$RELEASE.tgz"
 
 foo=`basename $0`
 TMPFILE=`mktemp -t ${foo}` || exit 1

@@ -114,7 +114,7 @@ public:
 inline
 size_t  Machine::Code::estimateCodeDataOut(size_t n_bc)
 {
-    return n_bc * (sizeof(instr)+sizeof(byte));
+    return (n_bc + 1) * (sizeof(instr)+sizeof(byte));
 }
 
 
