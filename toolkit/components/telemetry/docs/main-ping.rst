@@ -283,7 +283,7 @@ Structure::
 
 webrtc
 ------
-Contains special statistics gathered by WebRTC releated components.
+Contains special statistics gathered by WebRTC related components.
 
 So far only a bitmask for the ICE candidate type present in a successful or
 failed WebRTC connection is getting reported through C++ code as
@@ -341,11 +341,48 @@ Structure::
 
 lateWrites
 ----------
-This sections reports writes to the file system that happen during shutdown.
+This sections reports writes to the file system that happen during shutdown. The reported data contains the stack and the loaded libraries at the time the writes happened.
+
+Structure::
+
+    "lateWrites" : {
+      "memoryMap" : [
+        ["wgdi32.pdb", "08A541B5942242BDB4AEABD8C87E4CFF2"],
+        ... other entries in the format ["module name", "breakpad identifier"] ...
+       ],
+      "stacks" : [
+        [
+          [
+            0, // the module index or -1 for invalid module indices
+            190649 // the offset of this program counter in its module or an absolute pc
+          ],
+          [1, 2540075],
+          ... other frames ...
+         ],
+         ... other stacks ...
+      ],
+    },
 
 addonDetails
 ------------
-This section contains per-addon telemetry details, as reported by each addon provider.
+This section contains per-addon telemetry details, as reported by each addon provider. The XPI provider is the only one reporting at the time of writing (`see DXR <https://dxr.mozilla.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
+
+Structure::
+
+    "addonDetails": {
+      "XPI": {
+        "adbhelper@mozilla.org": {
+          "scan_items": 24,
+          "scan_MS": 3,
+          "location": "app-profile",
+          "name": "ADB Helper",
+          "creator": "Mozilla & Android Open Source Project",
+          "startup_MS": 30
+        },
+        ...
+      },
+      ...
+    }
 
 addonHistograms
 ---------------
@@ -359,6 +396,50 @@ slowSQL
 -------
 This section contains the informations about the slow SQL queries for both the main and other threads. The execution of an SQL statement is considered slow if it takes 50ms or more on the main thread or 100ms or more on other threads. Slow SQL statements will be automatically trimmed to 1000 characters. This limit doesn't include the ellipsis and database name, that are appended at the end of the stored statement.
 
+Structure::
+
+    "slowSQL": {
+      "mainThread": {
+        "Sanitized SQL Statement": [
+          1, // the number of times this statement was hit
+          200  // the total time (in milliseconds) that was spent on this statement
+        ],
+        ...
+      },
+      "otherThreads": {
+        "VACUUM /* places.sqlite */": [
+          1,
+          330
+        ],
+        ...
+      }
+    },
+
 slowSQLStartup
 --------------
-This section contains the slow SQL statements gathered at startup (until the "sessionstore-windows-restored" event is fired).
+This section contains the slow SQL statements gathered at startup (until the "sessionstore-windows-restored" event is fired). The structure of this section resembles the one for `slowSQL`_.
+
+UIMeasurements
+--------------
+This section contains UI specific telemetry measurements and events. This section is mainly populated with Android-specific data and events (`see here <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3AUITelemetry.%28addEvent|startSession|stopSession%29&redirect=false&case=false>`_).
+
+Structure::
+
+    "UIMeasurements": [
+      {
+        "type": "event", // either "session" or "event"
+        "action": "action.1",
+        "method": "menu",
+        "sessions": [],
+        "timestamp": 12345,
+        "extras": "settings"
+      },
+      {
+        "type": "session",
+        "name": "awesomescreen.1",
+        "reason": "commit",
+        "start": 123,
+        "end": 456
+      }
+      ...
+    ],
