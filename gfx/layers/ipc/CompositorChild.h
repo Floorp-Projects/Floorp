@@ -79,7 +79,7 @@ public:
                    const TimeStamp& aCompositeEnd) override;
 
   virtual bool
-  RecvInvalidateAll() override;
+  RecvInvalidateLayers(const uint64_t& aLayersId) override;
 
   virtual bool
   RecvOverfill(const uint32_t &aOverfill) override;
