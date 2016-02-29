@@ -4,7 +4,7 @@
 
 var Cu = Components.utils;
 const {require} = Cu.import('resource://devtools/shared/Loader.jsm', {});
-const {Services} = Cu.import('resource://gre/modules/Services.jsm');
+const Services = require('Services');
 const {AppManager} = require('devtools/client/webide/modules/app-manager');
 const {AppActorFront} = require('devtools/shared/apps/app-actor-front');
 const {Connection} = require('devtools/shared/client/connection-manager');

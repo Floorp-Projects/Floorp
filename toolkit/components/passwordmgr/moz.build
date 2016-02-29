@@ -32,11 +32,11 @@ XPIDL_MODULE = 'loginmgr'
 EXTRA_COMPONENTS += [
     'crypto-SDR.js',
     'nsLoginInfo.js',
+    'nsLoginManager.js',
     'nsLoginManagerPrompter.js',
 ]
 
 EXTRA_PP_COMPONENTS += [
-    'nsLoginManager.js',
     'passwordmgr.manifest',
 ]
 

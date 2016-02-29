@@ -312,8 +312,8 @@ partner
 
 If the user is using a partner repack, this contains information identifying the repack being used, otherwise "partnerNames" will be an empty array and other entries will be null. The information may be missing when the profile just becomes available. In Firefox for desktop, the information along with other customizations defined in distribution.ini are processed later in the startup phase, and will be fully applied when "distribution-customization-complete" notification is sent.
 
-Distributions are most reliably identified by the ``distributionId`` field. Most partner information can be found in the `partner repacks <http://hg.mozilla.org/build/partner-repacks/>`_.
-Important values include:
+Distributions are most reliably identified by the ``distributionId`` field. Partner information can be found in the `partner repacks <https://github.com/mozilla-partners>`_ (`the old one <http://hg.mozilla.org/build/partner-repacks/>`_ is deprecated): it contains one private repository per partner.
+Important values for ``distributionId`` include:
 
 - "MozillaOnline" for the Mozilla China repack.
 - "canonical", for the `Ubuntu Firefox repack <http://bazaar.launchpad.net/~mozillateam/firefox/firefox.trusty/view/head:/debian/distribution.ini>`_.

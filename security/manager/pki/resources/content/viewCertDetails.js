@@ -77,18 +77,10 @@ function setWindowName()
   var certDetails = bundle.getString('certDetails');
   if (myName != "") {
     document.title = certDetails + '"' + myName + '"'; // XXX l10n?
-    //  Get the token
-    //  XXX ignore this for now.  NSS will find the cert on a token
-    //      by "tokenname:certname", which is what we have.
-    //var tokenName = "";
-    //var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
-    //var token = pk11db.findTokenByName(tokenName);
-
-    //var cert = certdb.findCertByNickname(token, myName);
     cert = certdb.findCertByNickname(myName);
   } else {
     var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    var cert = params.objects.queryElementAt(0, nsIX509Cert);
+    cert = params.objects.queryElementAt(0, nsIX509Cert);
     document.title = certDetails + '"' + cert.windowTitle + '"'; // XXX l10n?
   }
 

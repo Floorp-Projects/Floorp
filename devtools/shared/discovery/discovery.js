@@ -34,6 +34,7 @@
 const { Cu, CC, Cc, Ci } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { setTimeout, clearTimeout } = require("sdk/timers");
+const Services = require("Services");
 
 const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
@@ -45,7 +46,6 @@ const ADDRESS = "224.0.0.115";
 const REPLY_TIMEOUT = 5000;
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "converter", () => {
   let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].

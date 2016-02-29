@@ -12,11 +12,11 @@ const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} =
   require("devtools/shared/webconsole/utils");
 const promise = require("promise");
 const Debugger = require("Debugger");
+const Services = require("Services");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
-loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/framework/sidebar", true);

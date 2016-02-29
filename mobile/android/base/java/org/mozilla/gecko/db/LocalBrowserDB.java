@@ -101,6 +101,7 @@ public class LocalBrowserDB implements BrowserDB {
     private LocalTabsAccessor tabsAccessor;
     private LocalURLMetadata urlMetadata;
     private LocalReadingListAccessor readingListAccessor;
+    private LocalUrlAnnotations urlAnnotations;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
             new String[] { Bookmarks._ID,
@@ -134,6 +135,7 @@ public class LocalBrowserDB implements BrowserDB {
         tabsAccessor = new LocalTabsAccessor(mProfile);
         urlMetadata = new LocalURLMetadata(mProfile);
         readingListAccessor = new LocalReadingListAccessor(mProfile);
+        urlAnnotations = new LocalUrlAnnotations(mProfile);
     }
 
     @Override
@@ -154,6 +156,12 @@ public class LocalBrowserDB implements BrowserDB {
     @Override
     public ReadingListAccessor getReadingListAccessor() {
         return readingListAccessor;
+    }
+
+    @RobocopTarget
+    @Override
+    public UrlAnnotations getUrlAnnotations() {
+        return urlAnnotations;
     }
 
     /**

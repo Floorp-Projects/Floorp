@@ -485,6 +485,34 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "suggestedsites");
     }
 
+    @RobocopTarget
+    public static final class UrlAnnotations implements CommonColumns, DateSyncColumns {
+        private UrlAnnotations() {}
+
+        public static final String TABLE_NAME = "urlannotations";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, TABLE_NAME);
+
+        public static final String URL = "url";
+        public static final String KEY = "key";
+        public static final String VALUE = "value";
+        public static final String SYNC_STATUS = "sync_status";
+
+        public enum SyncStatus {
+            // We use a parameter, rather than ordinal(), as defensive coding: we can't let the
+            // ordinal values change because we've already stored values into the DB.
+            NEW (0);
+
+            // Value stored into the database for this column.
+            private final int dbValue;
+
+            SyncStatus(final int dbValue) {
+                this.dbValue = dbValue;
+            }
+
+            public int getDBValue() { return dbValue; }
+        }
+    }
+
     // We refer to the service by name to decouple services from the rest of the code base.
     public static final String TAB_RECEIVED_SERVICE_CLASS_NAME = "org.mozilla.gecko.tabqueue.TabReceivedService";
 

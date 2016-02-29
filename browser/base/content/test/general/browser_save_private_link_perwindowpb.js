@@ -106,7 +106,7 @@ function test() {
         EventUtils.synthesizeMouseAtCenter(img,
                                            { type: "contextmenu", button: 2 },
                                            aWindow.gBrowser.contentWindow);
-      }, aWindow.gBrowser.selectedBrowser.contentWindow);
+      }, aWindow.gBrowser.selectedBrowser);
     });
   }
 

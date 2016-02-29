@@ -5,7 +5,7 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 

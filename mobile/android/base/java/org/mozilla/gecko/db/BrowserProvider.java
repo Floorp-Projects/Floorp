@@ -18,6 +18,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.sync.Utils;
 
@@ -60,6 +61,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_TABS = Tabs.TABLE_NAME;
+    static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -98,6 +100,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final int THUMBNAILS = 800;
     static final int THUMBNAIL_ID = 801;
 
+    static final int URL_ANNOTATIONS = 900;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -112,6 +116,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final Map<String, String> SCHEMA_PROJECTION_MAP;
     static final Map<String, String> FAVICONS_PROJECTION_MAP;
     static final Map<String, String> THUMBNAILS_PROJECTION_MAP;
+    static final Map<String, String> URL_ANNOTATIONS_PROJECTION_MAP;
     static final Table[] sTables;
 
     static {
@@ -189,6 +194,19 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Thumbnails.URL, Thumbnails.URL);
         map.put(Thumbnails.DATA, Thumbnails.DATA);
         THUMBNAILS_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        // Url annotations
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, TABLE_URL_ANNOTATIONS, URL_ANNOTATIONS);
+
+        map = new HashMap<>();
+        map.put(UrlAnnotations._ID, UrlAnnotations._ID);
+        map.put(UrlAnnotations.URL, UrlAnnotations.URL);
+        map.put(UrlAnnotations.KEY, UrlAnnotations.KEY);
+        map.put(UrlAnnotations.VALUE, UrlAnnotations.VALUE);
+        map.put(UrlAnnotations.DATE_CREATED, UrlAnnotations.DATE_CREATED);
+        map.put(UrlAnnotations.DATE_MODIFIED, UrlAnnotations.DATE_MODIFIED);
+        map.put(UrlAnnotations.SYNC_STATUS, UrlAnnotations.SYNC_STATUS);
+        URL_ANNOTATIONS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Combined bookmarks and history
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "combined", COMBINED);
@@ -490,6 +508,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
+            case URL_ANNOTATIONS: {
+                trace("Insert on URL_ANNOTATIONS: " + uri);
+                id = insertUrlAnnotation(uri, values);
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -735,6 +759,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 break;
             }
+
+            case URL_ANNOTATIONS:
+                debug("Query is on url annotations: " + uri);
+
+                qb.setProjectionMap(URL_ANNOTATIONS_PROJECTION_MAP);
+                qb.setTables(TABLE_URL_ANNOTATIONS);
+                break;
 
             case SCHEMA: {
                 debug("Query is on schema.");
@@ -1186,6 +1217,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
+        final String url = values.getAsString(UrlAnnotations.URL);
+        trace("Inserting url annotations for URL: " + url);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_URL_ANNOTATIONS, null, values);
     }
 
     private int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,

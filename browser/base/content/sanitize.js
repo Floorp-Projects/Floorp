@@ -288,9 +288,8 @@ Sanitizer.prototype = {
       }),
 
       promiseClearPluginCookies: Task.async(function* (range) {
-        const phInterface = Ci.nsIPluginHost;
-        const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
-        let ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface);
+        const FLAG_CLEAR_ALL = Ci.nsIPluginHost.FLAG_CLEAR_ALL;
+        let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
         // Determine age range in seconds. (-1 means clear all.) We don't know
         // that range[1] is actually now, so we compute age range based
@@ -299,6 +298,13 @@ Sanitizer.prototype = {
         if (!range || age >= 0) {
           let tags = ph.getPluginTags();
           for (let tag of tags) {
+            let refObj = {};
+            let probe = "";
+            if (/\bFlash\b/.test(tag.name)) {
+              probe = tag.loaded ? "FX_SANITIZE_LOADED_FLASH"
+                                 : "FX_SANITIZE_UNLOADED_FLASH";
+              TelemetryStopwatch.start(probe, refObj);
+            }
             try {
               let rv = yield new Promise(resolve =>
                 ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
@@ -309,8 +315,14 @@ Sanitizer.prototype = {
                   ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
                 );
               }
+              if (probe) {
+                TelemetryStopwatch.finish(probe, refObj);
+              }
             } catch (ex) {
               // Ignore errors from plug-ins
+              if (probe) {
+                TelemetryStopwatch.cancel(probe, refObj);
+              }
             }
           }
         }

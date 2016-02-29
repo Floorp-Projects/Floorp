@@ -8,15 +8,16 @@ const { Ci } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const Services = require("Services");
 
-const React = require("devtools/client/shared/vendor/react");
-const { TargetList } = require("./target-list");
-const { TabHeader } = require("./tab-header");
+const { createClass, createFactory, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
+const TabHeader = createFactory(require("./tab-header"));
+const TargetList = createFactory(require("./target-list"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 
-exports.WorkersTab = React.createClass({
+module.exports = createClass({
   displayName: "WorkersTab",
 
   getInitialState() {
@@ -48,27 +49,30 @@ exports.WorkersTab = React.createClass({
     let { client } = this.props;
     let { workers } = this.state;
 
-    return React.createElement(
-      "div", { id: "tab-workers", className: "tab", role: "tabpanel",
-        "aria-labelledby": "tab-workers-header-name" },
-        React.createElement(TabHeader, {
-          id: "tab-workers-header-name",
-          name: Strings.GetStringFromName("workers")}),
-        React.createElement(
-          "div", { id: "workers", className: "inverted-icons" },
-          React.createElement(TargetList, {
-            id: "service-workers",
-            name: Strings.GetStringFromName("serviceWorkers"),
-            targets: workers.service, client }),
-          React.createElement(TargetList, {
-            id: "shared-workers",
-            name: Strings.GetStringFromName("sharedWorkers"),
-            targets: workers.shared, client }),
-          React.createElement(TargetList, {
-            id: "other-workers",
-            name: Strings.GetStringFromName("otherWorkers"),
-            targets: workers.other, client }))
-      );
+    return dom.div({
+      id: "tab-workers",
+      className: "tab",
+      role: "tabpanel",
+      "aria-labelledby": "tab-workers-header-name" },
+    TabHeader({
+      id: "tab-workers-header-name",
+      name: Strings.GetStringFromName("workers") }),
+    dom.div({ id: "workers", className: "inverted-icons" },
+      TargetList({
+        id: "service-workers",
+        name: Strings.GetStringFromName("serviceWorkers"),
+        targets: workers.service,
+        client }),
+      TargetList({
+        id: "shared-workers",
+        name: Strings.GetStringFromName("sharedWorkers"),
+        targets: workers.shared,
+        client }),
+      TargetList({
+        id: "other-workers",
+        name: Strings.GetStringFromName("otherWorkers"),
+        targets: workers.other,
+        client })));
   },
 
   update() {

@@ -29,14 +29,14 @@ var Assert = null;
 
 this.LoginTestUtils = {
   set Assert(assert) {
-    Assert = assert;
+    Assert = assert; // eslint-disable-line no-native-reassign
   },
 
   /**
    * Forces the storage module to save all data, and the Login Manager service
    * to replace the storage module with a newly initialized instance.
    */
-  reloadData() {
+  * reloadData() {
     Services.obs.notifyObservers(null, "passwordmgr-storage-replace", null);
     yield TestUtils.topicObserved("passwordmgr-storage-replace-complete");
   },

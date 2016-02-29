@@ -159,7 +159,7 @@ add_task(function* test_url() {
         browser.test.assertEq(tabId, tab.id, "Check tab id");
         browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
         if ("url" in changeInfo) {
-          browser.test.assertEq("about:preferences", changeInfo.url,
+          browser.test.assertEq("about:blank", changeInfo.url,
                                 "Check changeInfo.url");
           browser.tabs.onUpdated.removeListener(onUpdated);
           // Remove created tab.
@@ -168,7 +168,7 @@ add_task(function* test_url() {
           return;
         }
       });
-      browser.tabs.update(tab.id, {url: "about:preferences"});
+      browser.tabs.update(tab.id, {url: "about:blank"});
     });
   });
 });

@@ -18,9 +18,9 @@ function excMessage(e) {
       msg = msg + ": " + e.data;
     }
     return msg;
-  } else {
-    return e.toString();
   }
+
+  return e.toString();
 }
 
 function testGood(data) {

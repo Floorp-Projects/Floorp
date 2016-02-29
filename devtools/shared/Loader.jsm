@@ -22,7 +22,7 @@ var { Loader } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", 
 var promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
-                         "SrcdirProvider", "require", "loader"];
+                         "require", "loader"];
 
 /**
  * Providers are different strategies for loading the devtools.
@@ -88,8 +88,6 @@ BuiltinProvider.prototype = {
       id: "fx-devtools",
       modules: loaderModules,
       paths: {
-        // When you add a line to this mapping, don't forget to make a
-        // corresponding addition to the SrcdirProvider mapping below as well.
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "": "resource://gre/modules/commonjs/",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
@@ -124,125 +122,6 @@ BuiltinProvider.prototype = {
   },
 };
 
-/**
- * Used when the tools should be loaded from a mozilla-central checkout.  In
- * addition to different paths, it needs to write chrome.manifest files to
- * override chrome urls from the builtin tools.
- */
-function SrcdirProvider() {}
-SrcdirProvider.prototype = {
-  fileURI: function(path) {
-    let file = new FileUtils.File(path);
-    return Services.io.newFileURI(file).spec;
-  },
-
-  load: function() {
-    let srcDir = Services.prefs.getComplexValue("devtools.loader.srcdir",
-                                                Ci.nsISupportsString);
-    srcDir = OS.Path.normalize(srcDir.data.trim());
-    let devtoolsDir = OS.Path.join(srcDir, "devtools");
-    let sharedDir = OS.Path.join(devtoolsDir, "shared");
-    let modulesDir = OS.Path.join(srcDir, "toolkit", "modules");
-    let devtoolsURI = this.fileURI(devtoolsDir);
-    let gcliURI = this.fileURI(OS.Path.join(sharedDir,
-                                            "gcli", "source", "lib", "gcli"));
-    let promiseURI = this.fileURI(OS.Path.join(modulesDir,
-                                               "Promise-backend.js"));
-    let acornURI = this.fileURI(OS.Path.join(sharedDir, "acorn"));
-    let acornWalkURI = OS.Path.join(acornURI, "walk.js");
-    let sourceMapURI = this.fileURI(OS.Path.join(sharedDir,
-                                                 "sourcemap", "source-map.js"));
-    this.loader = new Loader.Loader({
-      id: "fx-devtools",
-      modules: loaderModules,
-      paths: {
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "": "resource://gre/modules/commonjs/",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "devtools": devtoolsURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "gcli": gcliURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "promise": promiseURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn": acornURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn/util/walk": acornWalkURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "source-map": sourceMapURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-      },
-      globals: this.globals,
-      invisibleToDebugger: this.invisibleToDebugger,
-      sharedGlobal: true,
-      sharedGlobalBlocklist,
-    });
-
-    return this._writeManifest(srcDir).then(null, Cu.reportError);
-  },
-
-  unload: function(reason) {
-    Loader.unload(this.loader, reason);
-    delete this.loader;
-  },
-
-  _readFile: function(filename) {
-    let deferred = promise.defer();
-    let file = new FileUtils.File(filename);
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true
-    }, (inputStream, status) => {
-        if (!Components.isSuccessCode(status)) {
-          deferred.reject(new Error("Couldn't load manifest: " + filename + "\n"));
-          return;
-        }
-        var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-        deferred.resolve(data);
-      });
-
-    return deferred.promise;
-  },
-
-  _writeFile: function(filename, data) {
-    let promise = OS.File.writeAtomic(filename, data, {encoding: "utf-8"});
-    return promise.then(null, (ex) => new Error("Couldn't write manifest: " + ex + "\n"));
-  },
-
-  _writeManifest: function(srcDir) {
-    let clientDir = OS.Path.join(srcDir, "devtools", "client");
-    return this._readFile(OS.Path.join(clientDir, "jar.mn")).then((data) => {
-      // The file data is contained within inputStream.
-      // You can read it into a string with
-      let entries = [];
-      let lines = data.split(/\n/);
-      let preprocessed = /^\s*\*/;
-      let contentEntry = /^\s+content\/(\S+)\s+\((\S+)\)/;
-      for (let line of lines) {
-        if (preprocessed.test(line)) {
-          dump("Unable to override preprocessed file: " + line + "\n");
-          continue;
-        }
-        let match = contentEntry.exec(line);
-        if (match) {
-          let pathComponents = match[2].split("/");
-          pathComponents.unshift(clientDir);
-          let path = OS.Path.join.apply(OS.Path, pathComponents);
-          let uri = this.fileURI(path);
-          let chromeURI = "chrome://devtools/content/" + match[1];
-          let entry = "override " + chromeURI + "\t" + uri;
-          entries.push(entry);
-        }
-      }
-      return this._writeFile(OS.Path.join(clientDir, "chrome.manifest"),
-                             entries.join("\n"));
-    }).then(() => {
-      let clientDirFile = new FileUtils.File(clientDir);
-      Components.manager.addBootstrappedManifestLocation(clientDirFile);
-    });
-  }
-};
-
 var gNextLoaderID = 0;
 
 /**
@@ -264,7 +143,7 @@ this.DevToolsLoader = function DevToolsLoader() {
 DevToolsLoader.prototype = {
   get provider() {
     if (!this._provider) {
-      this._chooseProvider();
+      this._loadProvider();
     }
     return this._provider;
   },
@@ -286,7 +165,7 @@ DevToolsLoader.prototype = {
    */
   require: function() {
     if (!this._provider) {
-      this._chooseProvider();
+      this._loadProvider();
     }
     return this.require.apply(this, arguments);
   },
@@ -431,12 +310,8 @@ DevToolsLoader.prototype = {
   /**
    * Choose a default tools provider based on the preferences.
    */
-  _chooseProvider: function() {
-    if (Services.prefs.prefHasUserValue("devtools.loader.srcdir")) {
-      this.setProvider(new SrcdirProvider());
-    } else {
-      this.setProvider(new BuiltinProvider());
-    }
+  _loadProvider: function() {
+    this.setProvider(new BuiltinProvider());
   },
 
   /**
@@ -450,7 +325,7 @@ DevToolsLoader.prototype = {
     this._provider.unload("reload");
     delete this._provider;
     delete this._mainid;
-    this._chooseProvider();
+    this._loadProvider();
     this.main("devtools/client/main");
   },
 

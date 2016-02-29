@@ -11,7 +11,7 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("destroy");
 
 function test() {
-  let manager = ResponsiveUI.ResponsiveUIManager;
+  let manager = ResponsiveUIManager;
   let done;
 
   function isOpen() {

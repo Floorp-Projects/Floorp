@@ -8,6 +8,8 @@
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
 //                                  [path to]/getHSTSPreloadlist.js \
 //                                  [absolute path to]/nsSTSPreloadlist.inc'
+// Note: Running this file outputs a new nsSTSPreloadlist.inc in the current
+//       working directory.
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -128,13 +130,10 @@ function processStsHeader(host, header, status, securityInfo) {
            host.name + ": " + e + "\n");
       error = e;
     }
-  }
-  else {
-    if (status == 0) {
-      error = ERROR_CONNECTING_TO_HOST;
-    } else {
-      error = ERROR_NO_HSTS_HEADER;
-    }
+  } else if (status == 0) {
+    error = ERROR_CONNECTING_TO_HOST;
+  } else {
+    error = ERROR_NO_HSTS_HEADER;
   }
 
   let forceInclude = (host.forceInclude || host.pins == "google");
@@ -204,7 +203,13 @@ function getHSTSStatus(host, resultList) {
 }
 
 function compareHSTSStatus(a, b) {
-  return (a.name > b.name ? 1 : (a.name < b.name ? -1 : 0));
+  if (a.name > b.name) {
+    return 1;
+  }
+  if (a.name < b.name) {
+    return -1;
+  }
+  return 0;
 }
 
 function writeTo(string, fos) {
@@ -294,7 +299,7 @@ function getHSTSStatuses(inHosts, outStatuses) {
   var expectedOutputLength = inHosts.length;
   var tmpOutput = [];
   for (var i = 0; i < MAX_CONCURRENT_REQUESTS && inHosts.length > 0; i++) {
-    var host = inHosts.shift();
+    let host = inHosts.shift();
     dump("spinning off request to '" + host.name + "' (remaining retries: " +
          host.retries + ")\n");
     getHSTSStatus(host, tmpOutput);
@@ -311,7 +316,7 @@ function getHSTSStatuses(inHosts, outStatuses) {
     }
 
     if (inHosts.length > 0) {
-      var host = inHosts.shift();
+      let host = inHosts.shift();
       dump("spinning off request to '" + host.name + "' (remaining retries: " +
            host.retries + ")\n");
       getHSTSStatus(host, tmpOutput);

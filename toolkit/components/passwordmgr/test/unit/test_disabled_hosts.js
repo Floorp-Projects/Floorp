@@ -145,12 +145,12 @@ add_task(function test_rememberSignons()
 /**
  * Tests storing disabled hosts containing non-ASCII characters.
  */
-add_task(function test_storage_setLoginSavingEnabled_nonascii()
+add_task(function* test_storage_setLoginSavingEnabled_nonascii()
 {
   let hostname = "http://" + String.fromCharCode(355) + ".example.com";
   Services.logins.setLoginSavingEnabled(hostname, false);
 
-  yield LoginTestUtils.reloadData();
+  yield* LoginTestUtils.reloadData();
   LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
                                           [hostname]);
   LoginTestUtils.clearData();

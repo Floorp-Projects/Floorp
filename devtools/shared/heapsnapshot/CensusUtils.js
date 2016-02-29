@@ -359,7 +359,7 @@ function diff(breakdown, startCensus, endCensus) {
   walk(breakdown, startCensus, visitor);
   return visitor.results();
 };
-exports.diff = diff
+exports.diff = diff;
 
 /**
  * Creates a hash map mapping node IDs to its parent node.
