@@ -38,8 +38,7 @@ public:
   // The style set returned by CreateStyleSet is in the middle of an
   // update batch so that the caller can add sheets to it if needed.
   // Callers should call EndUpdate() on it when ready to use.
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument,
-                                  mozilla::StyleSetHandle* aStyleSet) = 0;
+  virtual mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) = 0;
 
   virtual void IncrementDestroyRefCount() = 0;
 
@@ -74,8 +73,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   virtual bool     GetIsPrinting() override; \
   virtual void     SetIsPrintPreview(bool aIsPrintPreview) override; \
   virtual bool     GetIsPrintPreview() override; \
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument, \
-                                  mozilla::StyleSetHandle* aStyleSet) override; \
+  virtual mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) override; \
   virtual void     IncrementDestroyRefCount() override; \
   virtual void     ReturnToGalleyPresentation() override; \
   virtual void     OnDonePrinting() override; \
