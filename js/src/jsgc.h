@@ -594,12 +594,12 @@ class ArenaLists
      * GC we only move the head of the of the list of spans back to the arena
      * only for the arena that was not fully allocated.
      */
-    AllAllocKindArray<ArenaHeader*> freeLists;
+    AllAllocKindArray<FreeSpan*> freeLists;
 
     // Because the JITs can allocate from the free lists, they cannot be null.
-    // We use a placeholder ArenaHeader with an empty span (and no associated
+    // We use a placeholder FreeSpan that is empty (and wihout an associated
     // Arena) so the JITs can fall back gracefully.
-    static ArenaHeader placeholder;
+    static FreeSpan placeholder;
 
     AllAllocKindArray<ArenaList> arenaLists;
 
@@ -716,7 +716,7 @@ class ArenaLists
     /* Check if |aheader|'s arena is in use. */
     bool arenaIsInUse(ArenaHeader* aheader, AllocKind kind) const {
         MOZ_ASSERT(aheader);
-        return aheader == freeLists[kind];
+        return aheader == freeLists[kind]->getArenaUnchecked();
     }
 
     MOZ_ALWAYS_INLINE TenuredCell* allocateFromFreeList(AllocKind thingKind, size_t thingSize) {
@@ -739,7 +739,7 @@ class ArenaLists
     }
 
     void checkEmptyFreeList(AllocKind kind) {
-        MOZ_ASSERT(!freeLists[kind]->hasFreeThings());
+        MOZ_ASSERT(freeLists[kind]->isEmpty());
     }
 
     bool relocateArenas(Zone* zone, ArenaHeader*& relocatedListOut, JS::gcreason::Reason reason,

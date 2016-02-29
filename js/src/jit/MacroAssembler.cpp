@@ -777,7 +777,7 @@ MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind al
     }
 }
 
-// Inlined version of ArenaHeader::allocate. This does not fill in slots_.
+// Inlined version of FreeSpan::allocate. This does not fill in slots_.
 void
 MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label* fail)
 {
@@ -790,14 +790,14 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     // Load the first and last offsets of |zone|'s free list for |allocKind|.
     // If there is no room remaining in the span, fall back to get the next one.
     loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
-    load16ZeroExtend(Address(temp, js::gc::ArenaHeader::offsetOfFreeSpanFirst()), result);
-    load16ZeroExtend(Address(temp, js::gc::ArenaHeader::offsetOfFreeSpanLast()), temp);
+    load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfFirst()), result);
+    load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfLast()), temp);
     branch32(Assembler::AboveOrEqual, result, temp, &fallback);
 
     // Bump the offset for the next allocation.
     add32(Imm32(thingSize), result);
     loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
-    store16(result, Address(temp, js::gc::ArenaHeader::offsetOfFreeSpanFirst()));
+    store16(result, Address(temp, js::gc::FreeSpan::offsetOfFirst()));
     sub32(Imm32(thingSize), result);
     addPtr(temp, result); // Turn the offset into a pointer.
     jump(&success);
@@ -812,7 +812,7 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     Push(result);
     // Update the free list to point to the next span (which may be empty).
     load32(Address(result, 0), result);
-    store32(result, Address(temp, js::gc::ArenaHeader::offsetOfFreeSpanFirst()));
+    store32(result, Address(temp, js::gc::FreeSpan::offsetOfFirst()));
     Pop(result);
 
     bind(&success);

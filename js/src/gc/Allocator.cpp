@@ -358,11 +358,11 @@ ArenaLists::allocateFromArenaInner(JS::Zone* zone, ArenaHeader* aheader, AllocKi
 {
     size_t thingSize = Arena::thingSize(kind);
 
-    freeLists[kind] = aheader;
+    freeLists[kind] = aheader->getFirstFreeSpan();
 
     if (MOZ_UNLIKELY(zone->wasGCStarted()))
         zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-    TenuredCell* thing = aheader->allocate(thingSize);
+    TenuredCell* thing = freeLists[kind]->allocate(thingSize);
     MOZ_ASSERT(thing); // This allocation is infallible.
     return thing;
 }
