@@ -389,7 +389,7 @@ protected:
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
     aWorkerPrivate->ModifyBusyCountFromWorker(true);
-    WorkerRunInternal(aCx, aWorkerPrivate);
+    WorkerRunInternal(aWorkerPrivate);
     return true;
   }
 
@@ -401,7 +401,7 @@ protected:
   }
 
   virtual void
-  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) = 0;
+  WorkerRunInternal(WorkerPrivate* aWorkerPrivate) = 0;
 };
 
 // Overrides dispatch and run handlers so we can directly dispatch from main
@@ -419,7 +419,7 @@ public:
   {}
 
   void
-  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override
   {
     mNotification->DispatchTrustedEvent(mEventName);
   }
@@ -435,7 +435,7 @@ public:
   {}
 
   void
-  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override
   {
     mNotification->ReleaseObject();
   }
@@ -1364,7 +1364,7 @@ public:
   }
 
   void
-  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override
   {
     bool doDefaultAction = mNotification->DispatchClickEvent();
     MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !doDefaultAction);
@@ -2080,7 +2080,7 @@ public:
   }
 
   void
-  WorkerRunInternal(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override
   {
     RefPtr<Promise> workerPromise = mPromiseProxy->WorkerPromise();
 
