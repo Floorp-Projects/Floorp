@@ -20,9 +20,6 @@ BUILD_TYPE_ALIASES = {
     'd': 'debug'
 }
 
-class InvalidCommitException(Exception):
-    pass
-
 def escape_whitespace_in_brackets(input_str):
     '''
     In tests you may restrict them by platform [] inside of the brackets
@@ -249,8 +246,7 @@ def parse_commit(message, jobs):
             break
 
     if try_idx is None:
-        raise InvalidCommitException('Invalid commit format contain ' +
-                TRY_DELIMITER)
+        return [], 0
 
     # Argument parser based on try flag flags
     parser = argparse.ArgumentParser()

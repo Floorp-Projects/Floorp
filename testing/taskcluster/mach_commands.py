@@ -308,15 +308,8 @@ class Graph(object):
         project = params['project']
         message = params.get('message', '') if project == 'try' else DEFAULT_TRY
 
-        # Message would only be blank when not created from decision task
-        if project == 'try' and not message:
-            sys.stderr.write(
-                    "Must supply commit message when creating try graph. " \
-                    "Example: --message='try: -b do -p all -u all'"
-            )
-            sys.exit(1)
-
         templates = Templates(ROOT)
+
         job_path = os.path.join(ROOT, 'tasks', 'branches', project, 'job_flags.yml')
         job_path = job_path if os.path.exists(job_path) else DEFAULT_JOB_PATH
 
