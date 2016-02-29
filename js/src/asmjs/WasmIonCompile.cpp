@@ -1412,24 +1412,39 @@ static bool EmitExpr(FunctionCompiler&, ExprType, MDefinition**, LabelVector* = 
 static bool EmitExprStmt(FunctionCompiler&, MDefinition**, LabelVector* = nullptr);
 
 static bool
-EmitLoadStoreAddress(FunctionCompiler& f, uint32_t* offset, uint32_t* align, MDefinition** base)
+EmitLoadStoreAddress(FunctionCompiler& f, Scalar::Type viewType, uint32_t* offset,
+                     uint32_t* align, MDefinition** base)
 {
     *offset = f.readVarU32();
     MOZ_ASSERT(*offset == 0, "Non-zero offsets not supported yet");
 
     *align = f.readVarU32();
 
-    return EmitExpr(f, ExprType::I32, base);
+    if (!EmitExpr(f, ExprType::I32, base))
+        return false;
+
+    // TODO Remove this (and the viewType param) after implementing unaligned
+    // loads/stores.
+    if (f.mg().isAsmJS())
+        return true;
+
+    int32_t maskVal = ~(Scalar::byteSize(viewType) - 1);
+    if (maskVal == -1)
+        return true;
+
+    MDefinition* mask = f.constant(Int32Value(maskVal), MIRType_Int32);
+    *base = f.bitwise<MBitAnd>(*base, mask, MIRType_Int32);
+    return true;
 }
 
 static bool
-EmitLoad(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
+EmitLoad(FunctionCompiler& f, Scalar::Type viewType, MDefinition** def)
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
-    *def = f.loadHeap(scalarType, ptr);
+    *def = f.loadHeap(viewType, ptr);
     return true;
 }
 
@@ -1438,7 +1453,7 @@ EmitStore(FunctionCompiler& f, Scalar::Type viewType, MDefinition** def)
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
 
     MDefinition* rhs = nullptr;
@@ -1471,7 +1486,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
 
     MDefinition* rhs = nullptr;
@@ -1544,7 +1559,7 @@ EmitAtomicsLoad(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     *def = f.atomicLoadHeap(viewType, index);
@@ -1558,7 +1573,7 @@ EmitAtomicsStore(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
@@ -1577,7 +1592,7 @@ EmitAtomicsBinOp(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
@@ -1594,7 +1609,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* oldValue;
@@ -1614,7 +1629,7 @@ EmitAtomicsExchange(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
