@@ -2307,8 +2307,7 @@ TemporaryTypeSet::forAllClasses(CompilerConstraintList* constraints,
             true_results = true;
             if (false_results)
                 return ForAllResult::MIXED;
-        }
-        else {
+        } else {
             false_results = true;
             if (true_results)
                 return ForAllResult::MIXED;
