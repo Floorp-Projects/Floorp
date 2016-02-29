@@ -4382,20 +4382,10 @@ bool nsDisplayMixBlendMode::TryMerge(nsDisplayItem* aItem) {
 
 nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame, nsDisplayList* aList,
-                                                 BlendModeSet& aContainedBlendModes)
+                                                 const BlendModeSet& aContainedBlendModes)
     : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mIndex(0)
-    , mContainedBlendModes(aContainedBlendModes)
-    , mCanBeActive(true)
-{
-  MOZ_COUNT_CTOR(nsDisplayBlendContainer);
-}
-
-nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
-                                                 nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mIndex(1)
-    , mCanBeActive(false)
+    , mIndex(aContainedBlendModes.isEmpty() ? 1 : 0)
+    , mCanBeActive(!aContainedBlendModes.isEmpty())
 {
   MOZ_COUNT_CTOR(nsDisplayBlendContainer);
 }
