@@ -796,7 +796,7 @@ public:
 
   nsresult
   operator () (BluetoothStatus& aArg1, int& aArg2,
-               nsAutoArrayPtr<BluetoothProperty>& aArg3) const
+               UniquePtr<BluetoothProperty[]>& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -845,7 +845,7 @@ public:
 
   nsresult
   operator () (BluetoothStatus& aArg1, BluetoothAddress& aArg2, int& aArg3,
-               nsAutoArrayPtr<BluetoothProperty>& aArg4) const
+               UniquePtr<BluetoothProperty[]>& aArg4) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -899,7 +899,7 @@ public:
   { }
 
   nsresult
-  operator () (int& aArg1, nsAutoArrayPtr<BluetoothProperty>& aArg2) const
+  operator () (int& aArg1, UniquePtr<BluetoothProperty[]>& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -986,7 +986,7 @@ public:
   { }
 
   nsresult
-  operator () (uint16_t& aArg1, nsAutoArrayPtr<uint8_t>& aArg2,
+  operator () (uint16_t& aArg1, UniquePtr<uint8_t[]>& aArg2,
                uint8_t& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
