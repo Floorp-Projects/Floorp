@@ -151,10 +151,6 @@ mobile/android/locales/
 # Pretty sure we're disabling this one anyway
 mobile/android/modules/ContactService.jsm
 
-# es7 proposed: array comprehensions
-#   https://github.com/eslint/espree/issues/125
-mobile/android/modules/WebappManager.jsm
-
 # Non-standard `(catch ex if ...)`
 mobile/android/components/Snippets.js
 

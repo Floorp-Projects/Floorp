@@ -184,43 +184,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
-            android:noHistory="true" >
-            <intent-filter>
-                <!-- catch links from synthetic apks -->
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/webapp" />
-            </intent-filter>
-        </activity>
-
-        <receiver android:name="org.mozilla.gecko.webapp.UninstallListener" >
-          <intent-filter>
-             <action android:name="android.intent.action.PACKAGE_REMOVED" />
-             <data android:scheme="package" />
-          </intent-filter>
-        </receiver>
-
-        <receiver android:name="org.mozilla.gecko.webapp.TaskKiller">
-          <intent-filter>
-             <action android:name="org.mozilla.webapp.TASK_REMOVED" />
-             <category android:name="android.intent.category.DEFAULT" />
-          </intent-filter>
-        </receiver>
-
         <receiver android:name="org.mozilla.gecko.restrictions.RestrictionProvider">
           <intent-filter>
             <action android:name="android.intent.action.GET_RESTRICTION_ENTRIES" />
           </intent-filter>
         </receiver>
-
-        <!-- Declare a predefined number of Webapp<num> activities. These are
-             used so that each web app can launch in its own process. Keep
-             this number in sync with the total number of web apps handled in
-             WebappAllocator. -->
-
-#define FRAGMENT WebappManifestFragment.xml.frag.in
-#include WebappFragmentRepeater.inc
 
         <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->
         <activity-alias

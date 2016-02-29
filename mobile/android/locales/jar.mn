@@ -37,7 +37,6 @@
   locale/@AB_CD@/browser/feedback.dtd             (%chrome/feedback.dtd)
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
-  locale/@AB_CD@/browser/webapp.properties        (%chrome/webapp.properties)
   locale/@AB_CD@/browser/aboutLogins.dtd          (%chrome/aboutLogins.dtd)
   locale/@AB_CD@/browser/aboutLogins.properties  (%chrome/aboutLogins.properties)
 #ifdef NIGHTLY_BUILD

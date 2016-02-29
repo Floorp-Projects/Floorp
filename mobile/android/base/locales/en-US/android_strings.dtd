@@ -650,8 +650,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      replaced with the search query. -->
 <!ENTITY suggestion_for_engine "Search &formatS1; for &formatS2;">
 
-<!ENTITY webapp_generic_name "App">
-
 <!ENTITY searchable_description "Bookmarks and history">
 
  <!-- Updater notifications -->
