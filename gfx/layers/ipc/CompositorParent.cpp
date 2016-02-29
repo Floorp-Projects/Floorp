@@ -1566,6 +1566,20 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
   NS_ASSERTION(!mCompositor,   "Already initialised mCompositor");
 
+  mCompositor = NewCompositor(aBackendHints);
+  if (!mCompositor) {
+    return;
+  }
+
+  mLayerManager = new LayerManagerComposite(mCompositor);
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = mLayerManager;
+}
+
+RefPtr<Compositor>
+CompositorParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHints)
+{
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
     RefPtr<Compositor> compositor;
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
@@ -1590,24 +1604,13 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
 #endif
     }
 
-    if (!compositor) {
-      // We passed a backend hint for which we can't create a compositor.
-      // For example, we sometime pass LayersBackend::LAYERS_NONE as filler in aBackendHints.
-      continue;
-    }
-
-    compositor->SetCompositorID(mCompositorID);
-    RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
-
-    if (layerManager->Initialize()) {
-      mLayerManager = layerManager;
-      MOZ_ASSERT(compositor);
-      mCompositor = compositor;
-      MonitorAutoLock lock(*sIndirectLayerTreesLock);
-      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = layerManager;
-      return;
+    if (compositor && compositor->Initialize()) {
+      compositor->SetCompositorID(mCompositorID);
+      return compositor;
     }
   }
+
+  return nullptr;
 }
 
 PLayerTransactionParent*
