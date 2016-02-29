@@ -470,17 +470,7 @@ gfxWindowsPlatform::HandleDeviceReset()
     return false;
   }
 
-  if (mHasFakeDeviceReset) {
-    if (XRE_IsParentProcess()) {
-      // Notify child processes that we got a device reset.
-      nsTArray<dom::ContentParent*> processes;
-      dom::ContentParent::GetAll(processes);
-
-      for (size_t i = 0; i < processes.Length(); i++) {
-        processes[i]->SendTestGraphicsDeviceReset(uint32_t(resetReason));
-      }
-    }
-  } else {
+  if (!mHasFakeDeviceReset) {
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
   }
 
