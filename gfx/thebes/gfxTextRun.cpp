@@ -564,23 +564,20 @@ struct BufferAlphaColor {
 };
 
 void
-gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
-                 Range aRange,
-                 PropertyProvider *aProvider, gfxFloat *aAdvanceWidth,
-                 gfxTextContextPaint *aContextPaint,
-                 gfxTextRunDrawCallbacks *aCallbacks)
+gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
-    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH ||
-                 !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
+    NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH ||
+                 !(int(aParams.drawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
-    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !aCallbacks,
+    NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                  "callback must not be specified unless using GLYPH_PATH");
 
     bool skipDrawing = mSkipDrawing;
-    if (aDrawMode == DrawMode::GLYPH_FILL) {
+    if (aParams.drawMode == DrawMode::GLYPH_FILL) {
         Color currentColor;
-        if (aContext->GetDeviceColor(currentColor) && currentColor.a == 0) {
+        if (aParams.context->GetDeviceColor(currentColor) &&
+            currentColor.a == 0) {
             skipDrawing = true;
         }
     }
@@ -590,12 +587,11 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     if (skipDrawing) {
         // We don't need to draw anything;
         // but if the caller wants advance width, we need to compute it here
-        if (aAdvanceWidth) {
-            gfxTextRun::Metrics metrics = MeasureText(aRange,
-                                                      gfxFont::LOOSE_INK_EXTENTS,
-                                                      aContext->GetDrawTarget(),
-                                                      aProvider);
-            *aAdvanceWidth = metrics.mAdvanceWidth * direction;
+        if (aParams.advanceWidth) {
+            gfxTextRun::Metrics metrics = MeasureText(
+                aRange, gfxFont::LOOSE_INK_EXTENTS,
+                aParams.context->GetDrawTarget(), aParams.provider);
+            *aParams.advanceWidth = metrics.mAdvanceWidth * direction;
         }
 
         // return without drawing
@@ -604,19 +600,18 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
     // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
     // correctly unless first drawn without alpha
-    BufferAlphaColor syntheticBoldBuffer(aContext);
+    BufferAlphaColor syntheticBoldBuffer(aParams.context);
     Color currentColor;
     bool needToRestore = false;
 
-    if (aDrawMode == DrawMode::GLYPH_FILL &&
-        HasNonOpaqueNonTransparentColor(aContext, currentColor) &&
+    if (aParams.drawMode == DrawMode::GLYPH_FILL &&
+        HasNonOpaqueNonTransparentColor(aParams.context, currentColor) &&
         HasSyntheticBoldOrColor(this, aRange)) {
         needToRestore = true;
         // measure text, use the bounding box
-        gfxTextRun::Metrics metrics = MeasureText(aRange,
-                                                  gfxFont::LOOSE_INK_EXTENTS,
-                                                  aContext->GetDrawTarget(),
-                                                  aProvider);
+        gfxTextRun::Metrics metrics = MeasureText(
+            aRange, gfxFont::LOOSE_INK_EXTENTS,
+            aParams.context->GetDrawTarget(), aParams.provider);
         metrics.mBoundingBox.MoveBy(aPt);
         syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor,
                                            GetAppUnitsPerDevUnit());
@@ -625,17 +620,19 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     // Set up parameters that will be constant across all glyph runs we need
     // to draw, regardless of the font used.
     TextRunDrawParams params;
-    params.context = aContext;
+    params.context = aParams.context;
     params.devPerApp = 1.0 / double(GetAppUnitsPerDevUnit());
     params.isVerticalRun = IsVertical();
     params.isRTL = IsRightToLeft();
     params.direction = direction;
-    params.drawMode = aDrawMode;
-    params.callbacks = aCallbacks;
-    params.runContextPaint = aContextPaint;
-    params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
-    params.dt = aContext->GetDrawTarget();
-    params.fontSmoothingBGColor = aContext->GetFontSmoothingBackgroundColor();
+    params.drawMode = aParams.drawMode;
+    params.callbacks = aParams.callbacks;
+    params.runContextPaint = aParams.contextPaint;
+    params.paintSVGGlyphs = !aParams.callbacks ||
+        aParams.callbacks->mShouldPaintSVGGlyphs;
+    params.dt = aParams.context->GetDrawTarget();
+    params.fontSmoothingBGColor =
+        aParams.context->GetFontSmoothingBackgroundColor();
 
     GlyphRunIterator iter(this, aRange);
     gfxFloat advance = 0.0;
@@ -647,23 +644,24 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
         Range ligatureRange(start, end);
         ShrinkToLigatureBoundaries(&ligatureRange);
 
-        bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
-                           (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
+        bool drawPartial = aParams.drawMode == DrawMode::GLYPH_FILL ||
+                           (aParams.drawMode == DrawMode::GLYPH_PATH &&
+                            aParams.callbacks);
         gfxPoint origPt = aPt;
 
         if (drawPartial) {
             DrawPartialLigature(font, Range(start, ligatureRange.start),
-                                &aPt, aProvider, params,
+                                &aPt, aParams.provider, params,
                                 iter.GetGlyphRun()->mOrientation);
         }
 
         DrawGlyphs(font, ligatureRange, &aPt,
-                   aProvider, ligatureRange, params,
+                   aParams.provider, ligatureRange, params,
                    iter.GetGlyphRun()->mOrientation);
 
         if (drawPartial) {
             DrawPartialLigature(font, Range(ligatureRange.end, end),
-                                &aPt, aProvider, params,
+                                &aPt, aParams.provider, params,
                                 iter.GetGlyphRun()->mOrientation);
         }
 
@@ -679,8 +677,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
         syntheticBoldBuffer.PopAlpha();
     }
 
-    if (aAdvanceWidth) {
-        *aAdvanceWidth = advance;
+    if (aParams.advanceWidth) {
+        *aParams.advanceWidth = advance;
     }
 }
 
