@@ -1749,15 +1749,19 @@ function doTestActionOverride(aCallback)
 
 function runTests()
 {
-  SpecialPowers.setBoolPref("general.smoothScroll", false);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["general.smoothScroll", false],
+    ["mousewheel.default.action", 1],      // scroll
+    ["mousewheel.default.action.override_x", -1],
+    ["mousewheel.with_shift.action", 2],   // history
+    ["mousewheel.with_shift.action.override_x", -1],
+    ["mousewheel.with_control.action", 3], // zoom
+    ["mousewheel.with_control.action.override_x", -1]]},
+    runTests2);
+}
 
-  SpecialPowers.setIntPref("mousewheel.default.action", 1);      // scroll
-  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_shift.action", 2);   // history
-  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_control.action", 3); // zoom
-  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
-
+function runTests2()
+{
   const kSettings = [
     { description: "all delta values are not customized",
       deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  1.0 },
@@ -1809,15 +1813,8 @@ function runTests()
 
 function finishTests()
 {
-  SpecialPowers.clearUserPref("general.smoothScroll");
-
   SpecialPowers.clearUserPref("mousewheel.default.action");
   SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.action");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.action");
-  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
-
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
