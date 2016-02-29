@@ -2940,12 +2940,19 @@ public:
 
           // Use a combination of DwmFlush + DwmGetCompositionTimingInfoPtr
           // Using WaitForVBlank, the whole system dies :/
-          WinUtils::dwmFlushProcPtr();
-          HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
-          vsync = TimeStamp::Now();
-          if (SUCCEEDED(hr)) {
-            vsync = GetAdjustedVsyncTimeStamp(frequency, vblankTime.qpcVBlank);
+          HRESULT hr = WinUtils::dwmFlushProcPtr();
+          if (!SUCCEEDED(hr)) {
+            // We don't actually know how long we had to wait on DWMFlush
+            // Instead of trying to calculate how long DwmFlush actually took
+            // Fallback to software vsync.
+            ScheduleSoftwareVsync(TimeStamp::Now());
+            return;
           }
+
+          hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
+          vsync = SUCCEEDED(hr) ?
+                    GetAdjustedVsyncTimeStamp(frequency, vblankTime.qpcVBlank) :
+                    TimeStamp::Now();
         } // end for
       }
 
