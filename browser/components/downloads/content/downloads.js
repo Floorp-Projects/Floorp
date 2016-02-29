@@ -1092,112 +1092,105 @@ DownloadsViewItem.prototype = {
 
   doCommand(aCommand) {
     if (this.isCommandEnabled(aCommand)) {
-      this.commands[aCommand].apply(this);
+      this[aCommand]();
     }
   },
 
   //////////////////////////////////////////////////////////////////////////////
   //// Item commands
 
-  /**
-   * This object contains one key for each command that operates on this item.
-   *
-   * In commands, the "this" identifier points to the DownloadsViewItem.
-   */
-  commands: {
-    cmd_delete() {
-      DownloadsCommon.removeAndFinalizeDownload(this.download);
-      PlacesUtils.bhistory.removePage(
-                             NetUtil.newURI(this.download.source.url));
-    },
+  cmd_delete() {
+    DownloadsCommon.removeAndFinalizeDownload(this.download);
+    PlacesUtils.bhistory.removePage(
+                           NetUtil.newURI(this.download.source.url));
+  },
 
-    downloadsCmd_cancel() {
-      this.download.cancel().catch(() => {});
-      this.download.removePartialData().catch(Cu.reportError);
-    },
+  downloadsCmd_cancel() {
+    this.download.cancel().catch(() => {});
+    this.download.removePartialData().catch(Cu.reportError);
+  },
 
-    downloadsCmd_unblock() {
-      DownloadsPanel.hidePanel();
-      DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
-                                             window).then((confirmed) => {
-        if (confirmed) {
-          return this.download.unblock();
-        }
-      }).catch(Cu.reportError);
-    },
-
-    downloadsCmd_confirmBlock() {
-      this.download.confirmBlock().catch(Cu.reportError);
-    },
-
-    downloadsCmd_open() {
-      this.download.launch().catch(Cu.reportError);
-
-      // We explicitly close the panel here to give the user the feedback that
-      // their click has been received, and we're handling the action.
-      // Otherwise, we'd have to wait for the file-type handler to execute
-      // before the panel would close. This also helps to prevent the user from
-      // accidentally opening a file several times.
-      DownloadsPanel.hidePanel();
-    },
-
-    downloadsCmd_show() {
-      let file = new FileUtils.File(this.download.target.path);
-      DownloadsCommon.showDownloadedFile(file);
-
-      // We explicitly close the panel here to give the user the feedback that
-      // their click has been received, and we're handling the action.
-      // Otherwise, we'd have to wait for the operating system file manager
-      // window to open before the panel closed. This also helps to prevent the
-      // user from opening the containing folder several times.
-      DownloadsPanel.hidePanel();
-    },
-
-    downloadsCmd_pauseResume() {
-      if (this.download.stopped) {
-        this.download.start();
-      } else {
-        this.download.cancel();
+  downloadsCmd_unblock() {
+    DownloadsPanel.hidePanel();
+    DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
+                                           window).then((confirmed) => {
+      if (confirmed) {
+        return this.download.unblock();
       }
-    },
+    }).catch(Cu.reportError);
+  },
 
-    downloadsCmd_retry() {
-      this.download.start().catch(() => {});
-    },
+  downloadsCmd_confirmBlock() {
+    this.download.confirmBlock().catch(Cu.reportError);
+  },
 
-    downloadsCmd_openReferrer() {
-      openURL(this.download.source.referrer);
-    },
+  downloadsCmd_open() {
+    this.download.launch().catch(Cu.reportError);
 
-    downloadsCmd_copyLocation() {
-      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
-                      .getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(this.download.source.url);
-    },
+    // We explicitly close the panel here to give the user the feedback that
+    // their click has been received, and we're handling the action.
+    // Otherwise, we'd have to wait for the file-type handler to execute
+    // before the panel would close. This also helps to prevent the user from
+    // accidentally opening a file several times.
+    DownloadsPanel.hidePanel();
+  },
 
-    downloadsCmd_doDefault() {
-      const nsIDM = Ci.nsIDownloadManager;
+  downloadsCmd_show() {
+    let file = new FileUtils.File(this.download.target.path);
+    DownloadsCommon.showDownloadedFile(file);
 
-      // Determine the default command for the current item.
-      let defaultCommand = function () {
-        switch (DownloadsCommon.stateOfDownload(this.download)) {
-          case nsIDM.DOWNLOAD_NOTSTARTED:       return "downloadsCmd_cancel";
-          case nsIDM.DOWNLOAD_FINISHED:         return "downloadsCmd_open";
-          case nsIDM.DOWNLOAD_FAILED:           return "downloadsCmd_retry";
-          case nsIDM.DOWNLOAD_CANCELED:         return "downloadsCmd_retry";
-          case nsIDM.DOWNLOAD_PAUSED:           return "downloadsCmd_pauseResume";
-          case nsIDM.DOWNLOAD_QUEUED:           return "downloadsCmd_cancel";
-          case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: return "downloadsCmd_openReferrer";
-          case nsIDM.DOWNLOAD_SCANNING:         return "downloadsCmd_show";
-          case nsIDM.DOWNLOAD_DIRTY:            return "downloadsCmd_openReferrer";
-          case nsIDM.DOWNLOAD_BLOCKED_POLICY:   return "downloadsCmd_openReferrer";
-        }
-        return "";
-      }.apply(this);
-      if (defaultCommand && this.isCommandEnabled(defaultCommand)) {
-        this.doCommand(defaultCommand);
+    // We explicitly close the panel here to give the user the feedback that
+    // their click has been received, and we're handling the action.
+    // Otherwise, we'd have to wait for the operating system file manager
+    // window to open before the panel closed. This also helps to prevent the
+    // user from opening the containing folder several times.
+    DownloadsPanel.hidePanel();
+  },
+
+  downloadsCmd_pauseResume() {
+    if (this.download.stopped) {
+      this.download.start();
+    } else {
+      this.download.cancel();
+    }
+  },
+
+  downloadsCmd_retry() {
+    this.download.start().catch(() => {});
+  },
+
+  downloadsCmd_openReferrer() {
+    openURL(this.download.source.referrer);
+  },
+
+  downloadsCmd_copyLocation() {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
+                    .getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(this.download.source.url);
+  },
+
+  downloadsCmd_doDefault() {
+    const nsIDM = Ci.nsIDownloadManager;
+
+    // Determine the default command for the current item.
+    let defaultCommand = function () {
+      switch (DownloadsCommon.stateOfDownload(this.download)) {
+        case nsIDM.DOWNLOAD_NOTSTARTED:       return "downloadsCmd_cancel";
+        case nsIDM.DOWNLOAD_FINISHED:         return "downloadsCmd_open";
+        case nsIDM.DOWNLOAD_FAILED:           return "downloadsCmd_retry";
+        case nsIDM.DOWNLOAD_CANCELED:         return "downloadsCmd_retry";
+        case nsIDM.DOWNLOAD_PAUSED:           return "downloadsCmd_pauseResume";
+        case nsIDM.DOWNLOAD_QUEUED:           return "downloadsCmd_cancel";
+        case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: return "downloadsCmd_openReferrer";
+        case nsIDM.DOWNLOAD_SCANNING:         return "downloadsCmd_show";
+        case nsIDM.DOWNLOAD_DIRTY:            return "downloadsCmd_openReferrer";
+        case nsIDM.DOWNLOAD_BLOCKED_POLICY:   return "downloadsCmd_openReferrer";
       }
-    },
+      return "";
+    }.apply(this);
+    if (defaultCommand && this.isCommandEnabled(defaultCommand)) {
+      this.doCommand(defaultCommand);
+    }
   },
 };
 
@@ -1226,8 +1219,11 @@ const DownloadsViewController = {
 
   supportsCommand(aCommand) {
     // Firstly, determine if this is a command that we can handle.
-    if (!(aCommand in this.commands) &&
-        !(aCommand in DownloadsViewItem.prototype.commands)) {
+    if (!DownloadsViewUI.isCommandName(aCommand)) {
+      return false;
+    }
+    if (!(aCommand in this) &&
+        !(aCommand in DownloadsViewItem.prototype)) {
       return false;
     }
     // Secondly, determine if focus is on a control in the downloads list.
@@ -1254,8 +1250,8 @@ const DownloadsViewController = {
 
   doCommand(aCommand) {
     // If this command is not selection-specific, execute it.
-    if (aCommand in this.commands) {
-      this.commands[aCommand].apply(this);
+    if (aCommand in this) {
+      this[aCommand]();
       return;
     }
 
@@ -1273,23 +1269,23 @@ const DownloadsViewController = {
   //// Other functions
 
   updateCommands() {
-    Object.keys(this.commands).forEach(goUpdateCommand);
-    Object.keys(DownloadsViewItem.prototype.commands)
-          .forEach(goUpdateCommand);
+    function updateCommandsForObject(object) {
+      for (let name in object) {
+        if (DownloadsViewUI.isCommandName(name)) {
+          goUpdateCommand(name);
+        }
+      }
+    }
+    updateCommandsForObject(this);
+    updateCommandsForObject(DownloadsViewItem.prototype);
   },
 
   //////////////////////////////////////////////////////////////////////////////
   //// Selection-independent commands
 
-  /**
-   * This object contains one key for each command that operates regardless of
-   * the currently selected item in the list.
-   */
-  commands: {
-    downloadsCmd_clearList() {
-      DownloadsCommon.getData(window).removeFinished();
-    }
-  }
+  downloadsCmd_clearList() {
+    DownloadsCommon.getData(window).removeFinished();
+  },
 };
 
 XPCOMUtils.defineConstant(this, "DownloadsViewController", DownloadsViewController);
