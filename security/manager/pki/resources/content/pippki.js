@@ -141,8 +141,7 @@ function exportToFile(parent, cert)
     fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
     written = fos.write(content, content.length);
     fos.close();
-  }
-  catch(e) {
+  } catch (e) {
     switch (e.result) {
       case Components.results.NS_ERROR_FILE_ACCESS_DENIED:
         msg = bundle.getString("writeFileAccessDenied");

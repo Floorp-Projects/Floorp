@@ -2,8 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var ScratchpadManager = Scratchpad.ScratchpadManager;
-
 /* Call the iterator for each item in the list,
    calling the final callback with all the results
    after every iterator call has sent its result */

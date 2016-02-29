@@ -47,7 +47,7 @@ this.LoginDoorhangers.FillDoorhanger = function (properties) {
       let handler = handlers[eventName];
       this.eventHandlers.push([elementName, eventName, handler.bind(this)]);
     }
-  };
+  }
   for (let name of Object.getOwnPropertyNames(properties)) {
     this[name] = properties[name];
   }

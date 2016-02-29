@@ -6,10 +6,10 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://testing-common/Assert.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://devtools/client/shared/browser-loader.js");
 var { require } = BrowserLoader("resource://devtools/client/memory/", this);
+var Services = require("Services");
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;

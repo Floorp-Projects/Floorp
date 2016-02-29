@@ -104,7 +104,7 @@ function checkCert() {
 
   var req = new XMLHttpRequest();
   try {
-    if(uri) {
+    if (uri) {
       req.open('GET', uri.prePath, false);
       req.channel.notificationCallbacks = new badCertListener();
       req.send(null);

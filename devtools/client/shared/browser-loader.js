@@ -8,7 +8,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
-const { Services } = devtools.require("resource://gre/modules/Services.jsm");
+const Services = devtools.require("Services");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const BROWSER_BASED_DIRS = [
@@ -17,6 +17,10 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/shared/components",
   "resource://devtools/client/shared/redux"
 ];
+
+function clearCache() {
+  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+}
 
 /*
  * Create a loader to be used in a browser environment. This evaluates
@@ -151,8 +155,9 @@ function BrowserLoaderBuilder(baseURI, window) {
 
   if (hotReloadEnabled) {
     const watcher = devtools.require("devtools/client/shared/file-watcher");
-    const onFileChanged = (_, fileURI) => {
-      this.hotReloadFile(window, componentProxies, fileURI);
+    const onFileChanged = (_, relativePath) => {
+      this.hotReloadFile(window, componentProxies,
+                         "resource://devtools/" + relativePath);
     };
     watcher.on("file-changed", onFileChanged);
 
@@ -185,13 +190,7 @@ BrowserLoaderBuilder.prototype = {
     });
   },
 
-  clearCache: function() {
-    Services.obs.notifyObservers(null, "startupcache-invalidate", null);
-  },
-
   hotReloadFile: function(window, componentProxies, fileURI) {
-    dump("Hot reloading: " + fileURI + "\n");
-
     if (fileURI.match(/\.js$/)) {
       // Test for React proxy components
       const proxy = componentProxies.get(fileURI);
@@ -199,23 +198,9 @@ BrowserLoaderBuilder.prototype = {
         // Remove the old module and re-require the new one; the require
         // hook in the loader will take care of the rest
         delete this.loader.modules[fileURI];
-        this.clearCache();
+        clearCache();
         this.require(fileURI);
       }
-    } else if (fileURI.match(/\.css$/)) {
-      const links = [...window.document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "link")];
-      links.forEach(link => {
-        if (link.href.indexOf(fileURI) === 0) {
-          const parentNode = link.parentNode;
-          const newLink = window.document.createElementNS("http://www.w3.org/1999/xhtml", "link");
-          newLink.rel = "stylesheet";
-          newLink.type = "text/css";
-          newLink.href = fileURI + "?s=" + Math.random();
-
-          parentNode.insertBefore(newLink, link);
-          parentNode.removeChild(link);
-        }
-      });
     }
   }
 };

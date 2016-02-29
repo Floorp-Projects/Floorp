@@ -4,9 +4,10 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const { createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
 
-exports.TabMenuEntry = React.createClass({
+module.exports = createClass({
   displayName: "TabMenuEntry",
 
   render() {
@@ -15,13 +16,13 @@ exports.TabMenuEntry = React.createClass({
     // Here .category, .category-icon, .category-name classnames are used to
     // apply common styles defined.
     let className = "category" + (selected ? " selected" : "");
-    return React.createElement(
-      "div", { className, onClick: this.onClick,
-        "aria-selected": selected, role: "tab" },
-        React.createElement("img", { className: "category-icon", src: icon,
-          role: "presentation" }),
-        React.createElement("div", { className: "category-name" }, name)
-      );
+    return dom.div({
+      "aria-selected": selected,
+      className,
+      onClick: this.onClick,
+      role: "tab" },
+    dom.img({ className: "category-icon", src: icon, role: "presentation" }),
+    dom.div({ className: "category-name" }, name));
   },
 
   onClick() {

@@ -16,7 +16,7 @@ require("devtools/client/framework/devtools-browser");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { ViewHelpers } =
   Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});

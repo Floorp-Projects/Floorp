@@ -13,8 +13,6 @@ const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return domUtils.getCSSPseudoElementNames();
 });

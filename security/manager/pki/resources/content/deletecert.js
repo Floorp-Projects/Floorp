@@ -22,40 +22,36 @@ function setWindowName()
   var confirm;
   var impact;
 
-  if(typeFlag == "mine_tab")
-  {
-     title = bundle.getString("deleteUserCertTitle");
-     confirm = bundle.getString("deleteUserCertConfirm");
-     impact = bundle.getString("deleteUserCertImpact");
+  switch (typeFlag) {
+    case "mine_tab":
+      title = bundle.getString("deleteUserCertTitle");
+      confirm = bundle.getString("deleteUserCertConfirm");
+      impact = bundle.getString("deleteUserCertImpact");
+      break;
+    case "websites_tab":
+      title = bundle.getString("deleteSslCertTitle3");
+      confirm = bundle.getString("deleteSslCertConfirm3");
+      impact = bundle.getString("deleteSslCertImpact3");
+      break;
+    case "ca_tab":
+      title = bundle.getString("deleteCaCertTitle2");
+      confirm = bundle.getString("deleteCaCertConfirm2");
+      impact = bundle.getString("deleteCaCertImpactX2");
+      break;
+    case "others_tab":
+      title = bundle.getString("deleteEmailCertTitle");
+      confirm = bundle.getString("deleteEmailCertConfirm");
+      impact = bundle.getString("deleteEmailCertImpactDesc");
+      break;
+    case "orphan_tab":
+      title = bundle.getString("deleteOrphanCertTitle");
+      confirm = bundle.getString("deleteOrphanCertConfirm");
+      impact = "";
+      break;
+    default:
+      return;
   }
-  else if(typeFlag == "websites_tab")
-  {
-     title = bundle.getString("deleteSslCertTitle3");
-     confirm = bundle.getString("deleteSslCertConfirm3");
-     impact = bundle.getString("deleteSslCertImpact3");
-  }
-  else if(typeFlag == "ca_tab")
-  {
-     title = bundle.getString("deleteCaCertTitle2");
-     confirm = bundle.getString("deleteCaCertConfirm2");
-     impact = bundle.getString("deleteCaCertImpactX2");
-  }
-  else if(typeFlag == "others_tab")
-  {
-     title = bundle.getString("deleteEmailCertTitle");
-     confirm = bundle.getString("deleteEmailCertConfirm");
-     impact = bundle.getString("deleteEmailCertImpactDesc");
-  }
-  else if(typeFlag == "orphan_tab")
-  {
-     title = bundle.getString("deleteOrphanCertTitle");
-     confirm = bundle.getString("deleteOrphanCertConfirm");
-     impact = "";
-  }
-  else
-  {
-     return;
-  }
+
   var confirReference = document.getElementById('confirm');
   var impactReference = document.getElementById('impact');
   document.title = title;

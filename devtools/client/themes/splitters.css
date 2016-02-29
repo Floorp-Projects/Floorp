@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Splitters */
-:root[devtoolstheme="light"] .devtools-horizontal-splitter {
+:root[devtoolstheme="light"] {
   /* These variables are used in browser.xul but inside the toolbox they are overridden by --theme-splitter-color */
   --devtools-splitter-color: #dde1e4;
 }
 
-:root[devtoolstheme="dark"] .devtools-horizontal-splitter {
+:root[devtoolstheme="dark"] {
   --devtools-splitter-color: #42484f;
 }
 

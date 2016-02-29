@@ -397,16 +397,20 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       create: function(createProperties) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           function createInWindow(window) {
             let url;
+
             if (createProperties.url !== null) {
               url = context.uri.resolve(createProperties.url);
-            } else {
-              url = window.BROWSER_NEW_TAB_URL;
+
+              if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+                reject({message: `URL not allowed: ${url}`});
+                return;
+              }
             }
 
-            let tab = window.gBrowser.addTab(url);
+            let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
 
             let active = true;
             if (createProperties.active !== null) {
@@ -460,10 +464,23 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
       update: function(tabId, updateProperties) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
-        let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-        if (updateProperties.url !== null) {
-          tab.linkedBrowser.loadURI(updateProperties.url);
+
+        if (!tab) {
+          return Promise.reject({message: `No tab found with tabId: ${tabId}`});
         }
+
+        let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
+
+        if (updateProperties.url !== null) {
+          let url = context.uri.resolve(updateProperties.url);
+
+          if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+            return Promise.reject({message: `URL not allowed: ${url}`});
+          }
+
+          tab.linkedBrowser.loadURI(url);
+        }
+
         if (updateProperties.active !== null) {
           if (updateProperties.active) {
             tabbrowser.selectedTab = tab;
@@ -626,7 +643,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
                                    message, recipient);
       },
 
-      _execute: function(tabId, details, kind) {
+      _execute: function(tabId, details, kind, method) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
 
@@ -634,6 +651,15 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           js: [],
           css: [],
         };
+
+        // We require a `code` or a `file` property, but we can't accept both.
+        if ((details.code === null) == (details.file === null)) {
+          return Promise.reject({message: `${method} requires either a 'code' or a 'file' property, but not both`});
+        }
+
+        if (details.frameId !== null && details.allFrames) {
+          return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
+        }
 
         let recipient = {
           innerWindowID: tab.linkedBrowser.innerWindowID,
@@ -660,22 +686,27 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         if (details.allFrames) {
           options.all_frames = details.allFrames;
         }
+        if (details.frameId !== null) {
+          options.frame_id = details.frameId;
+        }
         if (details.matchAboutBlank) {
           options.match_about_blank = details.matchAboutBlank;
         }
         if (details.runAt !== null) {
           options.run_at = details.runAt;
+        } else {
+          options.run_at = "document_idle";
         }
 
         return context.sendMessage(mm, "Extension:Execute", {options}, recipient);
       },
 
       executeScript: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "js");
+        return self.tabs._execute(tabId, details, "js", "executeScript");
       },
 
       insertCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css");
+        return self.tabs._execute(tabId, details, "css", "insertCSS");
       },
 
       connect: function(tabId, connectInfo) {

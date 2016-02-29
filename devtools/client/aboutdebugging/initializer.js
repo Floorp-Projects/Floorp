@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* global DebuggerClient, DebuggerServer */
 
 "use strict";
 
@@ -22,8 +21,11 @@ const { BrowserLoader } = Components.utils.import(
 const { require } =
   BrowserLoader("resource://devtools/client/aboutdebugging/", window);
 
-const React = require("devtools/client/shared/vendor/react");
-const { AboutDebuggingApp } = require("./components/aboutdebugging");
+const {
+  createFactory,
+  render,
+  unmountComponentAtNode } = require("devtools/client/shared/vendor/react");
+const AboutDebuggingApp = createFactory(require("./components/aboutdebugging"));
 
 var AboutDebugging = {
   init() {
@@ -38,13 +40,13 @@ var AboutDebugging = {
       let client = this.client;
       let telemetry = new Telemetry();
 
-      let app = React.createElement(AboutDebuggingApp, { client, telemetry });
-      React.render(app, document.querySelector("#body"));
+      render(AboutDebuggingApp({ client, telemetry }),
+        document.querySelector("#body"));
     });
   },
 
   destroy() {
-    React.unmountComponentAtNode(document.querySelector("#body"));
+    unmountComponentAtNode(document.querySelector("#body"));
 
     this.client.close();
     this.client = null;

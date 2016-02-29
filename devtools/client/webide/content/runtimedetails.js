@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var Cu = Components.utils;
-const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const {RuntimeTypes} = require("devtools/client/webide/modules/runtimes");

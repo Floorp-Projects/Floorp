@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 
 function LoginManagerCrypto_SDR() {
   this.init();
-};
+}
 
 LoginManagerCrypto_SDR.prototype = {
 

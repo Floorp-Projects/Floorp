@@ -6,7 +6,6 @@
 package org.mozilla.gecko.db;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +18,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
@@ -36,12 +36,13 @@ import android.os.Build;
 import android.util.Log;
 
 
-final class BrowserDatabaseHelper extends SQLiteOpenHelper {
+// public for robocop testing
+public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 27; // Bug 826400
+    public static final int DATABASE_VERSION = 28; // Bug 1250707
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -358,6 +359,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createReadingListTable(db, TABLE_READING_LIST);
         didCreateCurrentReadingListTable = true;      // Mostly correct, in the absence of transactions.
         createReadingListIndices(db, TABLE_READING_LIST);
+        createUrlAnnotationsTable(db);
     }
 
     /**
@@ -453,6 +455,23 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                            + ReadingListItems.URL + ")");
         db.execSQL("CREATE INDEX reading_list_content_status ON " + tableName + "("
                            + ReadingListItems.CONTENT_STATUS + ")");
+    }
+
+    private void createUrlAnnotationsTable(final SQLiteDatabase db) {
+        debug("Creating " + UrlAnnotations.TABLE_NAME + " table");
+
+        db.execSQL("CREATE TABLE " + UrlAnnotations.TABLE_NAME + "(" +
+                UrlAnnotations._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                UrlAnnotations.URL + " TEXT NOT NULL, " +
+                UrlAnnotations.KEY + " TEXT NOT NULL, " +
+                UrlAnnotations.VALUE + " TEXT, " +
+                UrlAnnotations.DATE_CREATED + " INTEGER NOT NULL, " +
+                UrlAnnotations.DATE_MODIFIED + " INTEGER NOT NULL, " +
+                UrlAnnotations.SYNC_STATUS + " TINYINT NOT NULL DEFAULT " + UrlAnnotations.SyncStatus.NEW.getDBValue() +
+                " );");
+
+        db.execSQL("CREATE INDEX idx_url_annotations_url_key ON " +
+                UrlAnnotations.TABLE_NAME + "(" + UrlAnnotations.URL + ", " + UrlAnnotations.KEY + ")");
     }
 
     private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {
@@ -1032,6 +1051,11 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP INDEX IF EXISTS favicons_url_index");
     }
 
+    private void upgradeDatabaseFrom27to28(final SQLiteDatabase db) {
+        debug("Adding url annotations table");
+        createUrlAnnotationsTable(db);
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1114,6 +1138,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 26:
                     upgradeDatabaseFrom25to26(db);
+                    break;
+
+                case 28:
+                    upgradeDatabaseFrom27to28(db);
                     break;
             }
         }

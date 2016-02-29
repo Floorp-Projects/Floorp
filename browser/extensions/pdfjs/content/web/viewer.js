@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals PDFJS, PDFBug, FirefoxCom, Stats, ProgressBar,
-           DownloadManager, getFileName, getPDFFileNameFromURL,
-           PDFHistory, Preferences, SidebarView, ViewHistory, Stats,
-           PDFThumbnailViewer, URL, noContextMenuHandler, SecondaryToolbar,
-           PasswordPrompt, PDFPresentationMode, PDFDocumentProperties, HandTool,
-           Promise, PDFLinkService, PDFOutlineView, PDFAttachmentView,
-           OverlayManager, PDFFindController, PDFFindBar, PDFViewer,
-           PDFRenderingQueue, PresentationModeState, parseQueryString,
-           RenderingStates, UNKNOWN_SCALE, DEFAULT_SCALE_VALUE,
+/* globals PDFJS, PDFBug, FirefoxCom, Stats, ProgressBar, DownloadManager,
+           getPDFFileNameFromURL, PDFHistory, Preferences, SidebarView,
+           ViewHistory, Stats, PDFThumbnailViewer, URL, noContextMenuHandler,
+           SecondaryToolbar, PasswordPrompt, PDFPresentationMode,
+           PDFDocumentProperties, HandTool, Promise, PDFLinkService,
+           PDFOutlineView, PDFAttachmentView, OverlayManager,
+           PDFFindController, PDFFindBar, PDFViewer, PDFRenderingQueue,
+           PresentationModeState, parseQueryString, RenderingStates,
+           UNKNOWN_SCALE, DEFAULT_SCALE_VALUE,
            IGNORE_CURRENT_POSITION_ON_ZOOM: true */
 
 'use strict';
@@ -51,15 +51,6 @@ var UNKNOWN_SCALE = 0;
 var MAX_AUTO_SCALE = 1.25;
 var SCROLLBAR_PADDING = 40;
 var VERTICAL_PADDING = 5;
-
-function getFileName(url) {
-  var anchor = url.indexOf('#');
-  var query = url.indexOf('?');
-  var end = Math.min(
-    anchor > 0 ? anchor : url.length,
-    query > 0 ? query : url.length);
-  return url.substring(url.lastIndexOf('/', end) + 1, end);
-}
 
 /**
  * Returns scale factor for the canvas. It makes sense for the HiDPI displays.
@@ -4299,6 +4290,7 @@ DefaultTextLayerFactory.prototype = {
  * @property {HTMLDivElement} pageDiv
  * @property {PDFPage} pdfPage
  * @property {IPDFLinkService} linkService
+ * @property {DownloadManager} downloadManager
  */
 
 /**
@@ -4313,6 +4305,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
     this.pageDiv = options.pageDiv;
     this.pdfPage = options.pdfPage;
     this.linkService = options.linkService;
+    this.downloadManager = options.downloadManager;
 
     this.div = null;
   }
@@ -4337,7 +4330,8 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           div: self.div,
           annotations: annotations,
           page: self.pdfPage,
-          linkService: self.linkService
+          linkService: self.linkService,
+          downloadManager: self.downloadManager
         };
 
         if (self.div) {
@@ -4401,6 +4395,8 @@ DefaultAnnotationLayerFactory.prototype = {
  * @property {HTMLDivElement} container - The container for the viewer element.
  * @property {HTMLDivElement} viewer - (optional) The viewer element.
  * @property {IPDFLinkService} linkService - The navigation/linking service.
+ * @property {DownloadManager} downloadManager - (optional) The download
+ *   manager component.
  * @property {PDFRenderingQueue} renderingQueue - (optional) The rendering
  *   queue object.
  * @property {boolean} removePageBorders - (optional) Removes the border shadow
@@ -4453,6 +4449,7 @@ var PDFViewer = (function pdfViewer() {
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
     this.linkService = options.linkService || new SimpleLinkService();
+    this.downloadManager = options.downloadManager || null;
     this.removePageBorders = options.removePageBorders || false;
 
     this.defaultRenderingQueue = !options.renderingQueue;
@@ -5118,7 +5115,8 @@ var PDFViewer = (function pdfViewer() {
       return new AnnotationLayerBuilder({
         pageDiv: pageDiv,
         pdfPage: pdfPage,
-        linkService: this.linkService
+        linkService: this.linkService,
+        downloadManager: this.downloadManager
       });
     },
 
@@ -5242,7 +5240,6 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     this.linkService = linkService;
     this.renderingQueue = renderingQueue;
 
-    this.hasImage = false;
     this.resume = null;
     this.renderingState = RenderingStates.INITIAL;
 
@@ -5298,7 +5295,6 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
       if (this.renderTask) {
         this.renderTask.cancel();
       }
-      this.hasImage = false;
       this.resume = null;
       this.renderingState = RenderingStates.INITIAL;
 
@@ -5401,11 +5397,9 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     draw: function PDFThumbnailView_draw() {
       if (this.renderingState !== RenderingStates.INITIAL) {
         console.error('Must be in new state before drawing');
-      }
-      if (this.hasImage) {
         return Promise.resolve(undefined);
       }
-      this.hasImage = true;
+
       this.renderingState = RenderingStates.RUNNING;
 
       var resolveRenderPromise, rejectRenderPromise;
@@ -5426,6 +5420,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
           rejectRenderPromise(error);
           return;
         }
+
         self.renderingState = RenderingStates.FINISHED;
         self._convertCanvasToImage();
 
@@ -5469,14 +5464,17 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     },
 
     setImage: function PDFThumbnailView_setImage(pageView) {
+      if (this.renderingState !== RenderingStates.INITIAL) {
+        return;
+      }
       var img = pageView.canvas;
-      if (this.hasImage || !img) {
+      if (!img) {
         return;
       }
       if (!this.pdfPage) {
         this.setPdfPage(pageView.pdfPage);
       }
-      this.hasImage = true;
+
       this.renderingState = RenderingStates.FINISHED;
 
       var ctx = this._getPageDrawContext(true);
@@ -5927,7 +5925,7 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
 
       for (var i = 0; i < attachmentsCount; i++) {
         var item = attachments[names[i]];
-        var filename = getFileName(item.filename);
+        var filename = PDFJS.getFilenameFromUrl(item.filename);
         var div = document.createElement('div');
         div.className = 'attachmentsItem';
         var button = document.createElement('button');
@@ -5993,7 +5991,8 @@ var PDFViewerApplication = {
       container: container,
       viewer: viewer,
       renderingQueue: pdfRenderingQueue,
-      linkService: pdfLinkService
+      linkService: pdfLinkService,
+      downloadManager: new DownloadManager()
     });
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
@@ -6334,7 +6333,7 @@ var PDFViewerApplication = {
   setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
     this.url = url;
     try {
-      this.setTitle(decodeURIComponent(getFileName(url)) || url);
+      this.setTitle(decodeURIComponent(PDFJS.getFilenameFromUrl(url)) || url);
     } catch (e) {
       // decodeURIComponent may throw URIError,
       // fall back to using the unprocessed url in that case

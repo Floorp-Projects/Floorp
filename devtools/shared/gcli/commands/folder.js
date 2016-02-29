@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, CC } = require("chrome");
-const { Services } = require("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 const l10n = require("gcli/l10n");
 const dirService = Cc["@mozilla.org/file/directory_service;1"]
                       .getService(Ci.nsIProperties);

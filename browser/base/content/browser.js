@@ -160,7 +160,7 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
   let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
-  return new DeveloperToolbar(window, document.getElementById("developer-toolbar"));
+  return new DeveloperToolbar(window);
 });
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
@@ -5492,9 +5492,9 @@ function BrowserCharsetReload()
 }
 
 function UpdateCurrentCharset(target) {
+  let selectedCharset = CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet);
   for (let menuItem of target.getElementsByTagName("menuitem")) {
-    let isSelected = menuItem.getAttribute("charset") ===
-                     CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet);
+    let isSelected = menuItem.getAttribute("charset") === selectedCharset;
     menuItem.setAttribute("checked", isSelected);
   }
 }

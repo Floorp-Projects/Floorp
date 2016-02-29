@@ -20,7 +20,7 @@ window.onload = function() {
 
   var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   var {DebuggerServer} = require("devtools/server/main");
-  Cu.import("resource://gre/modules/Services.jsm");
+  var Services = require("Services");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

@@ -12,6 +12,7 @@ var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {Utils: WebConsoleUtils} = require("devtools/shared/webconsole/utils");
 var {Messages} = require("devtools/client/webconsole/console-output");
 const asyncStorage = require("devtools/shared/async-storage");
+const HUDService = require("devtools/client/webconsole/hudservice");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 
