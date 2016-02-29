@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 
+#include "base/buffer.h"
 #include "base/message_loop.h"
 #include "chrome/common/file_descriptor_set_posix.h"
 
@@ -127,7 +128,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   // Large messages that span multiple pipe buffers, get built-up using
   // this buffer.
-  std::string input_overflow_buf_;
+  Buffer input_overflow_buf_;
   std::vector<int> input_overflow_fds_;
 
   // In server-mode, we have to wait for the client to connect before we

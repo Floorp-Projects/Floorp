@@ -62,7 +62,7 @@ bool ChildThread::Send(IPC::Message* msg) {
   return channel_->Send(msg);
 }
 
-void ChildThread::OnMessageReceived(const IPC::Message& msg) {
+void ChildThread::OnMessageReceived(IPC::Message&& msg) {
   if (msg.routing_id() == MSG_ROUTING_CONTROL) {
     OnControlMessageReceived(msg);
   }

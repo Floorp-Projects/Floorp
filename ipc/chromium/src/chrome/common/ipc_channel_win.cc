@@ -350,16 +350,53 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
         CHROMIUM_LOG(ERROR) << "IPC message is too big";
         return false;
       }
+
       input_overflow_buf_.append(input_buf_, bytes_read);
       p = input_overflow_buf_.data();
       end = p + input_overflow_buf_.size();
+
+      // If we've received the entire header, then we know the message
+      // length. In that case, reserve enough space to hold the entire
+      // message. This is more efficient than repeatedly enlarging the buffer as
+      // more data comes in.
+      uint32_t length = Message::GetLength(p, end);
+      if (length) {
+        input_overflow_buf_.reserve(length + kReadBufferSize);
+
+        // Recompute these pointers in case the buffer moved.
+        p = input_overflow_buf_.data();
+        end = p + input_overflow_buf_.size();
+      }
     }
 
     while (p < end) {
       const char* message_tail = Message::FindNext(p, end);
       if (message_tail) {
         int len = static_cast<int>(message_tail - p);
-        const Message m(p, len);
+        char* buf;
+
+        // The Message |m| allocated below needs to own its data. We can either
+        // copy the data out of the buffer or else steal the buffer and move the
+        // remaining data elsewhere. If len is large enough, we steal. Otherwise
+        // we copy.
+        if (len > kMaxCopySize) {
+          // Since len > kMaxCopySize > kReadBufferSize, we know that we must be
+          // using the overflow buffer. And since we always shift everything to
+          // the left at the end of a read, we must be at the start of the
+          // overflow buffer.
+          buf = input_overflow_buf_.trade_bytes(len);
+
+          // At this point the remaining data is at the front of
+          // input_overflow_buf_. p will get fixed up at the end of the
+          // loop. Set it to null here to make sure no one uses it.
+          p = nullptr;
+          message_tail = input_overflow_buf_.data();
+          end = message_tail + input_overflow_buf_.size();
+        } else {
+          buf = (char*)malloc(len);
+          memcpy(buf, p, len);
+        }
+        Message m(buf, len, Message::OWNS);
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
         DLOG(INFO) << "received message on channel @" << this <<
                       " with type " << m.type();
@@ -380,7 +417,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           waiting_for_shared_secret_ = false;
           listener_->OnChannelConnected(claimed_pid);
         } else {
-          listener_->OnMessageReceived(m);
+          listener_->OnMessageReceived(mozilla::Move(m));
         }
         p = message_tail;
       } else {
