@@ -326,7 +326,7 @@ var ActionBarHandler = {
         clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
-        NativeWindow.toast.show(msg, "short");
+        NativeWindow.toast.show(msg, "long");
 
         // Then cut the selection text.
         ActionBarHandler._getSelection(element, win).deleteFromDocument();
@@ -361,7 +361,7 @@ var ActionBarHandler = {
         clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
-        NativeWindow.toast.show(msg, "short");
+        NativeWindow.toast.show(msg, "long");
 
         ActionBarHandler._uninit();
         UITelemetry.addEvent("action.1", "actionbar", null, "copy");

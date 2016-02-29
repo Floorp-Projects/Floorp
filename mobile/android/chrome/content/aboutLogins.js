@@ -30,10 +30,10 @@ function copyStringAndToast(string, notifyString) {
   try {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(string);
-    gChromeWin.NativeWindow.toast.show(notifyString, "short");
+    gChromeWin.NativeWindow.toast.show(notifyString, "long");
   } catch (e) {
     debug("Error copying from about:logins");
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), "short");
+    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), "long");
   }
 }
 
@@ -300,7 +300,7 @@ var Logins = {
       if ((newUsername === origUsername) &&
           (newPassword === origPassword) &&
           (newDomain === origDomain) ) {
-        gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
+        gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "long");
         this._showList();
         return;
       }
@@ -319,10 +319,10 @@ var Logins = {
         }
       }
     } catch (e) {
-      gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), "short");
+      gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), "long");
       return;
     }
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
+    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "long");
     this._showList();
   },
 

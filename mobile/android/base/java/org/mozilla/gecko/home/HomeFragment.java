@@ -410,7 +410,7 @@ public abstract class HomeFragment extends Fragment {
         public void onPostExecute(Void result) {
             SnackbarHelper.showSnackbar((Activity) mContext,
                     mContext.getString(R.string.page_removed),
-                    Snackbar.LENGTH_SHORT);
+                    Snackbar.LENGTH_LONG);
         }
     }
 }
