@@ -68,7 +68,8 @@ public:
     aContext->SetState(aContext->ScrollState());
   }
 
-  virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
+  virtual void OnScrollPositionChanged(
+    AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollPositionChanged();
   }
@@ -387,8 +388,8 @@ AccessibleCaretEventHub::AccessibleCaretEventHub(nsIPresShell* aPresShell)
 {
   static bool prefsAdded = false;
   if (!prefsAdded) {
-    Preferences::AddBoolVarCache(&sUseLongTapInjector,
-                                 "layout.accessiblecaret.use_long_tap_injector");
+    Preferences::AddBoolVarCache(
+      &sUseLongTapInjector, "layout.accessiblecaret.use_long_tap_injector");
     prefsAdded = true;
   }
 }
@@ -476,20 +477,20 @@ AccessibleCaretEventHub::HandleEvent(WidgetEvent* aEvent)
   MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
   switch (aEvent->mClass) {
-  case eMouseEventClass:
-    status = HandleMouseEvent(aEvent->AsMouseEvent());
-    break;
+    case eMouseEventClass:
+      status = HandleMouseEvent(aEvent->AsMouseEvent());
+      break;
 
-  case eTouchEventClass:
-    status = HandleTouchEvent(aEvent->AsTouchEvent());
-    break;
+    case eTouchEventClass:
+      status = HandleTouchEvent(aEvent->AsTouchEvent());
+      break;
 
-  case eKeyboardEventClass:
-    status = HandleKeyboardEvent(aEvent->AsKeyboardEvent());
-    break;
+    case eKeyboardEventClass:
+      status = HandleKeyboardEvent(aEvent->AsKeyboardEvent());
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return status;
@@ -504,40 +505,38 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
     return rv;
   }
 
-  int32_t id = (mActiveTouchId == kInvalidTouchId ?
-                kDefaultTouchId : mActiveTouchId);
+  int32_t id =
+    (mActiveTouchId == kInvalidTouchId ? kDefaultTouchId : mActiveTouchId);
   nsPoint point = GetMouseEventPosition(aEvent);
 
   switch (aEvent->mMessage) {
-  case eMouseDown:
-    AC_LOGV("Before eMouseDown, state: %s", mState->Name());
-    rv = mState->OnPress(this, point, id);
-    AC_LOGV("After eMouseDown, state: %s, consume: %d",
-            mState->Name(), rv);
-    break;
+    case eMouseDown:
+      AC_LOGV("Before eMouseDown, state: %s", mState->Name());
+      rv = mState->OnPress(this, point, id);
+      AC_LOGV("After eMouseDown, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eMouseMove:
-    AC_LOGV("Before eMouseMove, state: %s", mState->Name());
-    rv = mState->OnMove(this, point);
-    AC_LOGV("After eMouseMove, state: %s, consume: %d", mState->Name(), rv);
-    break;
+    case eMouseMove:
+      AC_LOGV("Before eMouseMove, state: %s", mState->Name());
+      rv = mState->OnMove(this, point);
+      AC_LOGV("After eMouseMove, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eMouseUp:
-    AC_LOGV("Before eMouseUp, state: %s", mState->Name());
-    rv = mState->OnRelease(this);
-    AC_LOGV("After eMouseUp, state: %s, consume: %d", mState->Name(),
-            rv);
-    break;
+    case eMouseUp:
+      AC_LOGV("Before eMouseUp, state: %s", mState->Name());
+      rv = mState->OnRelease(this);
+      AC_LOGV("After eMouseUp, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eMouseLongTap:
-    AC_LOGV("Before eMouseLongTap, state: %s", mState->Name());
-    rv = mState->OnLongTap(this, point);
-    AC_LOGV("After eMouseLongTap, state: %s, consume: %d", mState->Name(),
-            rv);
-    break;
+    case eMouseLongTap:
+      AC_LOGV("Before eMouseLongTap, state: %s", mState->Name());
+      rv = mState->OnLongTap(this, point);
+      AC_LOGV("After eMouseLongTap, state: %s, consume: %d", mState->Name(),
+              rv);
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return rv;
@@ -553,38 +552,38 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
 
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  int32_t id = (mActiveTouchId == kInvalidTouchId ?
-                aEvent->touches[0]->Identifier() : mActiveTouchId);
+  int32_t id =
+    (mActiveTouchId == kInvalidTouchId ? aEvent->touches[0]->Identifier()
+                                       : mActiveTouchId);
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
   switch (aEvent->mMessage) {
-  case eTouchStart:
-    AC_LOGV("Before eTouchStart, state: %s", mState->Name());
-    rv = mState->OnPress(this, point, id);
-    AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
-    break;
+    case eTouchStart:
+      AC_LOGV("Before eTouchStart, state: %s", mState->Name());
+      rv = mState->OnPress(this, point, id);
+      AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eTouchMove:
-    AC_LOGV("Before eTouchMove, state: %s", mState->Name());
-    rv = mState->OnMove(this, point);
-    AC_LOGV("After eTouchMove, state: %s, consume: %d", mState->Name(), rv);
-    break;
+    case eTouchMove:
+      AC_LOGV("Before eTouchMove, state: %s", mState->Name());
+      rv = mState->OnMove(this, point);
+      AC_LOGV("After eTouchMove, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eTouchEnd:
-    AC_LOGV("Before eTouchEnd, state: %s", mState->Name());
-    rv = mState->OnRelease(this);
-    AC_LOGV("After eTouchEnd, state: %s, consume: %d", mState->Name(), rv);
-    break;
+    case eTouchEnd:
+      AC_LOGV("Before eTouchEnd, state: %s", mState->Name());
+      rv = mState->OnRelease(this);
+      AC_LOGV("After eTouchEnd, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  case eTouchCancel:
-    AC_LOGV("Before eTouchCancel, state: %s", mState->Name());
-    rv = mState->OnRelease(this);
-    AC_LOGV("After eTouchCancel, state: %s, consume: %d", mState->Name(),
-            rv);
-    break;
+    case eTouchCancel:
+      AC_LOGV("Before eTouchCancel, state: %s", mState->Name());
+      rv = mState->OnRelease(this);
+      AC_LOGV("After eTouchCancel, state: %s, consume: %d", mState->Name(), rv);
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return rv;
@@ -594,23 +593,23 @@ nsEventStatus
 AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-  case eKeyUp:
-    AC_LOGV("eKeyUp, state: %s", mState->Name());
-    mManager->OnKeyboardEvent();
-    break;
+    case eKeyUp:
+      AC_LOGV("eKeyUp, state: %s", mState->Name());
+      mManager->OnKeyboardEvent();
+      break;
 
-  case eKeyDown:
-    AC_LOGV("eKeyDown, state: %s", mState->Name());
-    mManager->OnKeyboardEvent();
-    break;
+    case eKeyDown:
+      AC_LOGV("eKeyDown, state: %s", mState->Name());
+      mManager->OnKeyboardEvent();
+      break;
 
-  case eKeyPress:
-    AC_LOGV("eKeyPress, state: %s", mState->Name());
-    mManager->OnKeyboardEvent();
-    break;
+    case eKeyPress:
+      AC_LOGV("eKeyPress, state: %s", mState->Name());
+      mManager->OnKeyboardEvent();
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return nsEventStatus_eIgnore;
