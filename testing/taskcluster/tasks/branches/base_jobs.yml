@@ -92,18 +92,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_spark_eng.yml
-  nexus-4:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_user.yml
-  nexus-4-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_eng.yml
   nexus-4-kk:
     platforms:
       - b2g
