@@ -113,6 +113,12 @@ invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
 #pragma GCC target ("no-avx")
 #endif
 
+// Avoid AddressSanitizer instrumentation for the next function because it
+// depends on __builtin_alloca behavior and alignment that cannot be relied on
+// once the function is compiled with a version of ASan that has dynamic-alloca
+// instrumentation enabled.
+
+MOZ_ASAN_BLACKLIST
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
                  uint32_t paramCount, nsXPTCVariant * params)
