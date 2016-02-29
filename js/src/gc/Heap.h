@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
@@ -352,20 +353,53 @@ class FreeSpan
         checkSpan(aheader);
     }
 
-    bool isEmpty(const ArenaHeader* aheader) const {
-        checkSpan(aheader);
+    bool isEmpty() const {
         return !first;
+    }
+
+    ArenaHeader* getArenaUnchecked() { return reinterpret_cast<ArenaHeader*>(this); }
+    inline ArenaHeader* getArena();
+
+    static size_t offsetOfFirst() {
+        return offsetof(FreeSpan, first);
+    }
+
+    static size_t offsetOfLast() {
+        return offsetof(FreeSpan, last);
     }
 
     // Like nextSpan(), but no checking of the following span is done.
     FreeSpan* nextSpanUnchecked(const ArenaHeader* aheader) const {
-        MOZ_ASSERT(aheader && first);
+        MOZ_ASSERT(aheader && !isEmpty());
         return reinterpret_cast<FreeSpan*>(uintptr_t(aheader) + last);
     }
 
     const FreeSpan* nextSpan(const ArenaHeader* aheader) const {
-        MOZ_ASSERT(!isEmpty(aheader));
+        checkSpan(aheader);
         return nextSpanUnchecked(aheader);
+    }
+
+    MOZ_ALWAYS_INLINE TenuredCell* allocate(size_t thingSize) {
+        // Eschew the usual checks, because this might be the placeholder span.
+        // If this is somehow an invalid, non-empty span, checkSpan() will catch it.
+        ArenaHeader* arena = getArenaUnchecked();
+        checkSpan(arena);
+        uintptr_t thing = uintptr_t(arena) + first;
+        if (first < last) {
+            // We have space for at least two more things, so do a simple bump-allocate.
+            first += thingSize;
+        } else if (MOZ_LIKELY(first)) {
+            // The last space points to the next free span (which may be empty).
+            const FreeSpan* next = nextSpan(arena);
+            first = next->first;
+            last = next->last;
+        } else {
+            return nullptr; // The span is empty.
+        }
+        checkSpan(arena);
+        JS_EXTRA_POISON(reinterpret_cast<void*>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        MemProfiler::SampleTenured(reinterpret_cast<void*>(thing), thingSize);
+        return reinterpret_cast<TenuredCell*>(thing);
     }
 
     inline void checkSpan(const ArenaHeader* aheader) const;
@@ -376,8 +410,14 @@ class FreeSpan
 struct ArenaHeader
 {
     friend struct Arena;
-    friend class ArenaCellIterImpl;
 
+  private:
+    /*
+     * The first span of free things in the arena.
+     */
+    FreeSpan firstFreeSpan;
+
+  public:
     JS::Zone* zone;
 
     /*
@@ -388,11 +428,6 @@ struct ArenaHeader
     ArenaHeader* next;
 
   private:
-    /*
-     * The first span of free things in the arena.
-     */
-    FreeSpan firstFreeSpan;
-
     /*
      * One of AllocKind constants or AllocKind::LIMIT when the arena does not
      * contain any GC things and is on the list of empty arenas in the GC
@@ -436,7 +471,13 @@ struct ArenaHeader
 
     ArenaHeader() { setAsNotAllocated(); }
 
-    inline uintptr_t address() const;
+    uintptr_t address() const {
+        checkAddress();
+        return uintptr_t(this);
+    }
+
+    inline void checkAddress() const;
+
     inline Chunk* chunk() const;
 
     bool allocated() const {
@@ -472,6 +513,7 @@ struct ArenaHeader
     }
 
     Arena* getArena() { return reinterpret_cast<Arena*>(address()); }
+    FreeSpan* getFirstFreeSpan() { return &firstFreeSpan; }
 
     AllocKind getAllocKind() const {
         MOZ_ASSERT(allocated());
@@ -481,32 +523,24 @@ struct ArenaHeader
     inline size_t getThingSize() const;
 
     bool hasFreeThings() const {
-        return !firstFreeSpan.isEmpty(this);
+        return !firstFreeSpan.isEmpty();
     }
 
     size_t numFreeThings(size_t thingSize) const {
         firstFreeSpan.checkSpan(this);
         size_t numFree = 0;
         const FreeSpan* span = &firstFreeSpan;
-        for (; !span->isEmpty(this); span = span->nextSpan(this))
+        for (; !span->isEmpty(); span = span->nextSpan(this))
             numFree += (span->last - span->first) / thingSize + 1;
         return numFree;
     }
 
     inline bool isEmpty() const;
 
-    static size_t offsetOfFreeSpanFirst() {
-        return offsetof(ArenaHeader, firstFreeSpan) + offsetof(FreeSpan, first);
-    }
-
-    static size_t offsetOfFreeSpanLast() {
-        return offsetof(ArenaHeader, firstFreeSpan) + offsetof(FreeSpan, last);
-    }
-
     bool inFreeList(uintptr_t thing) {
         uintptr_t base = address();
         const FreeSpan* span = &firstFreeSpan;
-        for (; !span->isEmpty(this); span = span->nextSpan(this)) {
+        for (; !span->isEmpty(); span = span->nextSpan(this)) {
             /* If the thing comes before the current span, it's not free. */
             if (thing < base + span->first)
                 return false;
@@ -516,24 +550,6 @@ struct ArenaHeader
                 return true;
         }
         return false;
-    }
-
-    MOZ_ALWAYS_INLINE TenuredCell* allocate(size_t thingSize) {
-        firstFreeSpan.checkSpan(this);
-        uintptr_t thing = uintptr_t(this) + firstFreeSpan.first;
-        if (firstFreeSpan.first < firstFreeSpan.last) {
-            // We have space for at least two more things, so do a simple bump-allocate.
-            firstFreeSpan.first += thingSize;
-        } else if (MOZ_LIKELY(firstFreeSpan.first)) {
-            // The last space points to the next free span (which may be empty).
-            firstFreeSpan = *firstFreeSpan.nextSpan(this);
-        } else {
-            return nullptr; // The span is empty.
-        }
-        firstFreeSpan.checkSpan(this);
-        JS_EXTRA_POISON(reinterpret_cast<void*>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        MemProfiler::SampleTenured(reinterpret_cast<void*>(thing), thingSize);
-        return reinterpret_cast<TenuredCell*>(thing);
     }
 
     inline ArenaHeader* getNextDelayedMarking() const;
@@ -630,6 +646,8 @@ FreeSpan::checkSpan(const ArenaHeader* aheader) const
         MOZ_ASSERT(!first && !last);
         return;
     }
+
+    aheader->checkAddress();
 
     checkRange(first, last, aheader);
 
@@ -1006,14 +1024,21 @@ class HeapUsage
     }
 };
 
-inline uintptr_t
-ArenaHeader::address() const
+inline ArenaHeader*
+FreeSpan::getArena()
 {
-    uintptr_t addr = reinterpret_cast<uintptr_t>(this);
+    ArenaHeader* arena = getArenaUnchecked();
+    arena->checkAddress();
+    return arena;
+}
+
+inline void
+ArenaHeader::checkAddress() const
+{
+    mozilla::DebugOnly<uintptr_t> addr = uintptr_t(this);
     MOZ_ASSERT(addr);
     MOZ_ASSERT(!(addr & ArenaMask));
     MOZ_ASSERT(Chunk::withinValidRange(addr));
-    return addr;
 }
 
 inline Chunk*

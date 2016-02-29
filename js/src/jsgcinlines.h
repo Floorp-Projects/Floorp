@@ -145,7 +145,7 @@ class ArenaCellIterImpl
     void reset(ArenaHeader* aheader) {
         MOZ_ASSERT(isInited);
         arenaAddr = aheader;
-        span = aheader->firstFreeSpan;
+        span = *aheader->getFirstFreeSpan();
         thing = firstThingOffset;
         moveForwardIfFree();
     }
