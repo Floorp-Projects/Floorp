@@ -505,7 +505,7 @@ function doTestScroll(aSettings, aCallback)
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
       prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
-      cleanup: function () { SpecialPowers.setIntPref("mousewheel.default.action", 1); } },
+      cleanup: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
 
     // momentum scroll should cause scroll even if the action is history, but if the default action is none,
     // shouldn't do it.
@@ -608,7 +608,7 @@ function doTestScroll(aSettings, aCallback)
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
       prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
-      cleanup: function () { SpecialPowers.setIntPref("mousewheel.default.action", 1); } },
+      cleanup: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
 
     // Don't scroll along axis whose overflow style is hidden.
     { description: "Scroll to only bottom by oblique pixel wheel event with overflow-x: hidden",
@@ -654,7 +654,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: -1, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollUp,
-      cleanup: function () { gScrollableElement.style.overflowX = "auto"; } },
+      cleanup: function (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
     { description: "Scroll to only right by oblique pixel wheel event with overflow-y: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -698,7 +698,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: -1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollLeft,
-      cleanup: function () { gScrollableElement.style.overflowY = "auto"; } },
+      cleanup: function (cb) { gScrollableElement.style.overflowY = "auto"; cb(); } },
     { description: "Don't be scrolled by oblique pixel wheel event with overflow: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -742,7 +742,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: -1, expectedOverflowDeltaY: -1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      cleanup: function () { gScrollableElement.style.overflow = "auto"; } },
+      cleanup: function (cb) { gScrollableElement.style.overflow = "auto"; cb(); } },
 
     // Don't scroll along axis whose overflow style is hidden and overflow delta values should
     // be zero if there is ancestor scrollable element.
@@ -799,7 +799,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollUp,
-      cleanup: function () { gScrollableElement.style.overflowX = "auto"; } },
+      cleanup: function (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
     { description: "Scroll to only right by oblique pixel wheel event with overflow-y: hidden (body is scrollable)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -843,11 +843,12 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollLeft,
-      cleanup: function () {
+      cleanup: function (cb) {
         gScrollableElement.style.overflowY = "auto";
         gScrollableElement.style.position = "static";
         gSpacerForBodyElement.style.width = "";
         gSpacerForBodyElement.style.height = "";
+        cb();
       } },
   ];
 
@@ -907,10 +908,15 @@ function doTestScroll(aSettings, aCallback)
         }
       }
       if (currentTest.cleanup) {
-        currentTest.cleanup();
+        currentTest.cleanup(nextStep);
+      } else {
+        nextStep();
       }
-      winUtils.advanceTimeAndRefresh(100);
-      doNextTest();
+
+      function nextStep() {
+        winUtils.advanceTimeAndRefresh(100);
+        doNextTest();
+      }
     }, 10);
   }
   doNextTest();
