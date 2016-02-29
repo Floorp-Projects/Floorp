@@ -17,28 +17,29 @@ loader.lazyImporter(this, "BrowserToolboxProcess",
       "resource://devtools/client/framework/ToolboxProcess.jsm");
 
 const Services = require("Services");
-const React = require("devtools/client/shared/vendor/react");
+const { createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-exports.Target = React.createClass({
+module.exports = createClass({
   displayName: "Target",
 
   render() {
     let { target, debugDisabled } = this.props;
     let isServiceWorker = (target.type === "serviceworker");
     let isRunning = (!isServiceWorker || target.workerActor);
-    return React.createElement("div", { className: "target" },
-      React.createElement("img", {
+    return dom.div({ className: "target" },
+      dom.img({
         className: "target-icon",
         role: "presentation",
         src: target.icon }),
-      React.createElement("div", { className: "target-details" },
-        React.createElement("div", { className: "target-name" }, target.name)
+      dom.div({ className: "target-details" },
+        dom.div({ className: "target-name" }, target.name)
       ),
       (isRunning ?
-        React.createElement("button", {
+        dom.button({
           className: "debug-button",
           onClick: this.debug,
           disabled: debugDisabled,

@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -170,13 +171,20 @@ class SearchEngineRow extends AnimatedHeightLayout {
      */
     private void refreshOccurrencesWith(String pattern, String string) {
         mOccurrences.clear();
+
+        // Don't try to search for an empty string - String.indexOf will return 0, which would result
+        // in us iterating with lastIndexOfMatch = 0, which eventually results in an OOM.
+        if (TextUtils.isEmpty(pattern)) {
+            return;
+        }
+
         final int patternLength = pattern.length();
+
         int indexOfMatch = 0;
         int lastIndexOfMatch = 0;
         while(indexOfMatch != -1) {
             indexOfMatch = string.indexOf(pattern, lastIndexOfMatch);
             lastIndexOfMatch = indexOfMatch + patternLength;
-            // Crash here?
             if(indexOfMatch != -1) {
                 mOccurrences.add(indexOfMatch);
             }
@@ -211,7 +219,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
             int nextStartSpanIndex = 0;
             // Done to make sure that the stretch of text after the last occurrence, till the end of the suggestion, is made bold
             mOccurrences.add(suggestion.length());
-            for(int occurrence : mOccurrences) {
+            for (int occurrence : mOccurrences) {
                 // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
                 StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
                 sb.setSpan(boldSpan, nextStartSpanIndex, occurrence, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
@@ -387,12 +395,12 @@ class SearchEngineRow extends AnimatedHeightLayout {
         List<String> searchHistorySuggestions = (rawSearchHistorySuggestions != null) ? rawSearchHistorySuggestions : new ArrayList<String>();
 
         // Filter out URLs and long search suggestions
-        Iterator<String> searchistoryIterator = searchHistorySuggestions.iterator();
-        while (searchistoryIterator.hasNext()) {
-            final String currentSearchHistory = searchistoryIterator.next();
+        Iterator<String> searchHistoryIterator = searchHistorySuggestions.iterator();
+        while (searchHistoryIterator.hasNext()) {
+            final String currentSearchHistory = searchHistoryIterator.next();
 
             if (currentSearchHistory.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", currentSearchHistory)) {
-                searchHistorySuggestions.remove(currentSearchHistory);
+                searchHistoryIterator.remove();
             }
         }
 

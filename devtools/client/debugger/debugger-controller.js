@@ -93,7 +93,6 @@ const FRAME_TYPE = {
   PUBLIC_CLIENT_EVAL: 3
 };
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 Cu.import("resource://devtools/client/shared/widgets/SimpleListWidget.jsm");
@@ -137,6 +136,7 @@ var services = {
   WAIT_UNTIL: waitUntilService.NAME
 };
 
+var Services = require("Services");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Toolbox} = require("devtools/client/framework/toolbox");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

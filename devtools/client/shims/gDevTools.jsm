@@ -11,7 +11,7 @@
 
 const Cu = Components.utils;
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 
 const WARNING_PREF = "devtools.migration.warnings";
 if (Services.prefs.getBoolPref(WARNING_PREF)) {

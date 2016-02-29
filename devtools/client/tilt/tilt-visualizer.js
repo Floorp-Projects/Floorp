@@ -7,13 +7,12 @@
 
 const {Cu, Ci, ChromeWorker} = require("chrome");
 
+var Services = require("Services");
 var TiltGL = require("devtools/client/tilt/tilt-gl");
 var TiltUtils = require("devtools/client/tilt/tilt-utils");
 var TiltVisualizerStyle = require("devtools/client/tilt/tilt-visualizer-style");
 var {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/client/tilt/tilt-math");
 var {TargetFactory} = require("devtools/client/framework/target");
-
-Cu.import("resource://gre/modules/Services.jsm");
 var {gDevTools} = require("devtools/client/framework/devtools");
 
 const ELEMENT_MIN_SIZE = 4;

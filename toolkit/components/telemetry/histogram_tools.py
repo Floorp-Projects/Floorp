@@ -68,16 +68,18 @@ always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'alert_emails', 'keyed', 'releaseChannelCollection',
                        'bug_numbers']
 
-n_buckets_whitelist = None;
+whitelists = None;
 try:
-    whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))), 'bucket-whitelist.json')
+    whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))), 'histogram-whitelists.json')
     with open(whitelist_path, 'r') as f:
         try:
-            n_buckets_whitelist = set(json.load(f))
+            whitelists = json.load(f)
+            for name, whitelist in whitelists.iteritems():
+              whitelists[name] = set(whitelist)
         except ValueError, e:
-            raise BaseException, 'error parsing bucket whitelist (%s)' % whitelist_path
+            raise BaseException, 'error parsing whitelist (%s)' % whitelist_path
 except IOError:
-    n_buckets_whitelist = None
+    whitelists = None
     print 'Unable to parse whitelist (%s). Assuming all histograms are acceptable.' % whitelist_path
 
 class Histogram:
@@ -204,9 +206,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
-        if ('alert_emails' in definition
-            and not isinstance(definition['alert_emails'], list)):
-            raise KeyError, 'alert_emails must be an array if present (in Histogram %s)' % name
+        if 'alert_emails' not in definition:
+            if whitelists is not None and name not in whitelists['alert_emails']:
+                raise KeyError, 'New histogram "%s" must have an alert_emails field.' % name
+        elif not isinstance(definition['alert_emails'], list):
+            raise KeyError, 'alert_emails must be an array (in histogram "%s")' % name
 
         Histogram.check_name(name)
         Histogram.check_field_types(name, definition)
@@ -236,7 +240,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     def check_bug_numbers(name, definition):
         bug_numbers = definition.get('bug_numbers')
         if not bug_numbers:
-            return
+            if whitelists is None or name in whitelists['bug_numbers']:
+                return
+            else:
+                raise KeyError, 'New histogram "%s" must have a bug_numbers field.' % name
 
         if not isinstance(bug_numbers, list):
             raise ValueError, 'bug_numbers field for "%s" should be an array' % (name)
@@ -279,9 +286,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self._low = low
         self._high = high
         self._n_buckets = n_buckets
-        if n_buckets_whitelist is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
-            if self._name not in n_buckets_whitelist:
-                raise KeyError, ('New histogram %s is not permitted to have more than 100 buckets. '
+        if whitelists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
+            if self._name not in whitelists['n_buckets']:
+                raise KeyError, ('New histogram "%s" is not permitted to have more than 100 buckets. '
                                 'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
                                 'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
 

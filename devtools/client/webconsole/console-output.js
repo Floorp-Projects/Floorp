@@ -8,7 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const { Services } = require("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource://devtools/client/shared/widgets/VariablesView.jsm");

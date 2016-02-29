@@ -8,6 +8,8 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
+const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+
 add_task(function*() {
   yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
@@ -38,13 +40,12 @@ function* testButton(toolbox, Telemetry) {
 function waitForToggle() {
   return new Promise(resolve => {
     let handler = () => {
-      manager.off("on", handler);
-      manager.off("off", handler);
+      ResponsiveUIManager.off("on", handler);
+      ResponsiveUIManager.off("off", handler);
       resolve();
     };
-    let manager = ResponsiveUI.ResponsiveUIManager;
-    manager.on("on", handler);
-    manager.on("off", handler);
+    ResponsiveUIManager.on("on", handler);
+    ResponsiveUIManager.on("off", handler);
   });
 }
 

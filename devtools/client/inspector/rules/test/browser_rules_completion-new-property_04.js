@@ -10,8 +10,8 @@
 // - press RETURN to move to the property value
 // - blur the input to commit
 
-const TEST_URI = "<style>.title {margin: 0;}</style>" +
-  "<h1 class=title style='color: red'>Header</h1>";
+const TEST_URI = "<style>.title {color: red;}</style>" +
+                 "<h1 class=title>Header</h1>";
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -21,7 +21,7 @@ add_task(function*() {
   yield selectNode("h1", inspector);
 
   info("Focusing the new property editable field");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
   let editor = yield focusNewRuleViewProperty(ruleEditor);
 
   info("Sending \"background\" to the editable field.");
@@ -45,18 +45,17 @@ add_task(function*() {
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 
   info("Press RETURN to move the focus to a property value editor.");
-  let onModifications = view.once("ruleview-changed");
+  let onModifications = waitForNEvents(view, "ruleview-changed", 2);
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onModifications;
 
   // Getting the new value editor after focus
-  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
   editor = inplaceEditor(view.styleDocument.activeElement);
-  let textProp = elementRuleEditor.rule.textProps[1];
+  let textProp = ruleEditor.rule.textProps[1];
 
-  is(elementRuleEditor.rule.textProps.length, 2,
+  is(ruleEditor.rule.textProps.length, 2,
     "Created a new text property.");
-  is(elementRuleEditor.propertyList.children.length, 2,
+  is(ruleEditor.propertyList.children.length, 2,
     "Created a property editor.");
   is(editor, inplaceEditor(textProp.editor.valueSpan),
     "Editing the value span now.");

@@ -11,7 +11,7 @@ const Environment = require("sdk/system/environment").env;
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Subprocess = require("sdk/system/child_process/subprocess");
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 
 loader.lazyGetter(this, "OS", () => {
   const Runtime = require("sdk/system/runtime");

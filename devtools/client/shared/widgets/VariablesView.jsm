@@ -17,13 +17,13 @@ const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 300; // ms
 const ITEM_FLASH_DURATION = 300 // ms
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 Cu.import("resource://gre/modules/Task.jsm");
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Services = require("Services");
 const promise = require("promise");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",

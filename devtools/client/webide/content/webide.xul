@@ -58,7 +58,6 @@
       <command id="cmd_zoomin" label="&viewMenu_zoomin_label;" oncommand="Cmds.zoomIn()"/>
       <command id="cmd_zoomout" label="&viewMenu_zoomout_label;" oncommand="Cmds.zoomOut()"/>
       <command id="cmd_resetzoom" label="&viewMenu_resetzoom_label;" oncommand="Cmds.resetZoom()"/>
-      <command id="cmd_reload_devtools" oncommand="Cmds.reloadDevtools()"/>
     </commandset>
   </commandset>
 
@@ -116,7 +115,6 @@
     <key key="&key_zoomin2;" id="key_zoomin2" command="cmd_zoomin" modifiers="accel"/>
     <key key="&key_zoomout;" id="key_zoomout" command="cmd_zoomout" modifiers="accel"/>
     <key key="&key_resetzoom;" id="key_resetzoom" command="cmd_resetzoom" modifiers="accel"/>
-    <key key="&key_reload_devtools;" id="key_reload_devtools" command="cmd_reload_devtools" modifiers="accel alt"/>
   </keyset>
 
   <tooltip id="aHTMLTooltip" page="true"/>

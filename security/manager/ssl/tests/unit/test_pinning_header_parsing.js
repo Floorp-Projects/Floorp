@@ -17,7 +17,7 @@ function certFromFile(cert_name) {
 
 function loadCert(cert_name, trust_string) {
   let cert_filename = "test_pinning_dynamic/" + cert_name + ".pem";
-  addCertFromFile(certdb,  cert_filename, trust_string);
+  addCertFromFile(certdb, cert_filename, trust_string);
   return constructCertFromFile(cert_filename);
 }
 

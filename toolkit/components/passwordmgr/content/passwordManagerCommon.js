@@ -87,7 +87,7 @@ function DeleteAllFromTree(tree, view, table, deletedTable, removeButton, remove
   table.length = 0;
 
   // clear out selections
-  view.selection.select(-1); 
+  view.selection.select(-1);
 
   // update the tree view and notify the tree
   view.rowCount = 0;

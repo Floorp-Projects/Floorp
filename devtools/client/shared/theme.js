@@ -11,7 +11,7 @@
 
 const { Ci, Cu } = require("chrome");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-loader.lazyRequireGetter(this, "Services");
+const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 const VARIABLES_URI = "chrome://devtools/skin/variables.css";

@@ -61,7 +61,7 @@ PasswordMgrObserver = {
 
 // Remember, Never for This Site, Not Now
 function checkTest() {
-    var popup, login, logins;
+    var popup, login, logins, popupWin, popupNotificationsInPopup;
 
     switch(testNum) {
 
@@ -105,9 +105,9 @@ function checkTest() {
         login1.password = "notifyp1";
 
         // password-save with chrome visible
-        var popupWin = iframe.contentWindow.popupWin;
+        popupWin = iframe.contentWindow.popupWin;
         ok(popupWin, "Check popupWin is accessible");
-        var popupNotificationsInPopup = getPopupNotifications(popupWin);
+        popupNotificationsInPopup = getPopupNotifications(popupWin);
         ok(popupNotificationsInPopup, "Got popupNotificationsInPopup");
         popup = getPopup(popupNotificationsInPopup, "password-save");
         ok(popup, "got notification popup");
@@ -123,9 +123,9 @@ function checkTest() {
         ok(login.timesUsed, 1, "Check times used on new entry");
 
         // password-change with chrome visible
-        var popupWin = iframe.contentWindow.popupWin;
+        popupWin = iframe.contentWindow.popupWin;
         ok(popupWin, "Check popupWin is accessible");
-        var popupNotificationsInPopup = getPopupNotifications(popupWin);
+        popupNotificationsInPopup = getPopupNotifications(popupWin);
         ok(popupNotificationsInPopup, "Got popupNotificationsInPopup");
         popup = getPopup(popupNotificationsInPopup, "password-change");
         ok(popup, "got notification popup");

@@ -4,16 +4,16 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const { createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
 
-exports.TabHeader = React.createClass({
+module.exports = createClass({
   displayName: "TabHeader",
 
   render() {
     let { name, id } = this.props;
 
-    return React.createElement(
-      "div", { className: "header" }, React.createElement(
-        "h1", { id, className: "header-name" }, name));
+    return dom.div({ className: "header" },
+      dom.h1({ id, className: "header-name" }, name));
   },
 });
