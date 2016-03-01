@@ -131,6 +131,7 @@ class Database;
 struct DatabaseActorInfo;
 class DatabaseFile;
 class DatabaseLoggingInfo;
+class DatabaseMaintenance;
 class Factory;
 class Maintenance;
 class MutableFile;
@@ -8780,6 +8781,7 @@ class QuotaClient final
   // then we will attempt a full vacuum.
   static const int32_t kPercentUnusedThreshold = 20;
 
+public:
   class AutoProgressHandler;
 
   enum class MaintenanceAction
@@ -8788,6 +8790,7 @@ class QuotaClient final
     IncrementalVacuum,
     FullVacuum
   };
+private:
 
   static QuotaClient* sInstance;
 
@@ -8902,35 +8905,28 @@ private:
                                UsageInfo* aUsageInfo,
                                bool aDatabaseFiles);
 
-
-  // Runs on mMaintenanceThreadPool. Does maintenance on one database.
-  void
-  PerformIdleMaintenanceOnDatabase(Maintenance* aMaintenance,
-                                   PersistenceType aPersistenceType,
-                                   const nsACString& aGroup,
-                                   const nsACString& aOrigin,
-                                   const nsAString& aDatabasePath);
-
+public:
   // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
-  nsresult
+  static nsresult
   CheckIntegrity(mozIStorageConnection* aConnection, bool* aOk);
 
   // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
-  nsresult
+  static nsresult
   DetermineMaintenanceAction(mozIStorageConnection* aConnection,
                              nsIFile* aDatabaseFile,
                              PRTime aStartTime,
                              MaintenanceAction* aMaintenanceAction);
 
   // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
-  void
+  static void
   IncrementalVacuum(mozIStorageConnection* aConnection);
 
   // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
-  void
+  static void
   FullVacuum(mozIStorageConnection* aConnection,
              nsIFile* aDatabaseFile);
 
+private:
   // Runs on the PBackground thread. Checks to see if there's a queued
   // maintanance to run.
   void
@@ -9026,8 +9022,17 @@ class Maintenance final
     DirectoryOpenPending,
 
     // Waiting to do/doing work on the QuotaManager IO thread. Its next step is
-    // Finishing.
+    // BeginDatabaseMaintenance.
     DirectoryWorkOpen,
+
+    // Dispatching a runnable for each database on the PBackground thread. The
+    // next state is either WaitingForDatabaseMaintenancesToComplete if at least
+    // one runnable has been dispatched, or Finishing otherwise.
+    BeginDatabaseMaintenance,
+
+    // Waiting for database maintenances to finish on maintenance thread pool.
+    // The next state is Finishing if the last runnable has finished.
+    WaitingForDatabaseMaintenancesToComplete,
 
     // Waiting to finish/finishing on the PBackground thread. The next step is
     // Completed.
@@ -9042,6 +9047,7 @@ class Maintenance final
   PRTime mStartTime;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTArray<DirectoryInfo> mDirectoryInfos;
+  nsDataHashtable<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
   Atomic<bool> mAbortedOnAnyThread;
   State mState;
   bool mAborted;
@@ -9118,10 +9124,17 @@ public:
     }
   }
 
+  void
+  RegisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
+
+  void
+  UnregisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
+
 private:
   ~Maintenance()
   {
     MOZ_ASSERT(mState == State::Complete);
+    MOZ_ASSERT(!mDatabaseMaintenances.Count());
   }
 
   // Runs on the PBackground thread. Checks if IndexedDatabaseManager is
@@ -9145,9 +9158,14 @@ private:
   DirectoryOpen();
 
   // Runs on the QuotaManager I/O thread. Once it finds databases it will
-  // dispatch to the PBackground thread on which Finish() is called.
+  // dispatch to the PBackground thread on which BeginDatabaseMaintenance()
+  // is called.
   nsresult
   DirectoryWork();
+
+  // Runs on the PBackground thread. It dispatches a runnable for each database.
+  nsresult
+  BeginDatabaseMaintenance();
 
   // Runs on the PBackground thread. Called when the maintenance is finished or
   // if any of above methods fails.
@@ -9217,6 +9235,74 @@ struct Maintenance::DirectoryInfo final
   }
 
   DirectoryInfo(const DirectoryInfo& aOther) = delete;
+};
+
+class DatabaseMaintenance final
+  : public nsRunnable
+{
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+  RefPtr<Maintenance> mMaintenance;
+  const nsCString mGroup;
+  const nsCString mOrigin;
+  const nsString mDatabasePath;
+  const PersistenceType mPersistenceType;
+
+public:
+  DatabaseMaintenance(Maintenance* aMaintenance,
+                      PersistenceType aPersistenceType,
+                      const nsCString& aGroup,
+                      const nsCString& aOrigin,
+                      const nsString& aDatabasePath)
+    : mOwningThread(NS_GetCurrentThread())
+    , mMaintenance(aMaintenance)
+    , mGroup(aGroup)
+    , mOrigin(aOrigin)
+    , mDatabasePath(aDatabasePath)
+    , mPersistenceType(aPersistenceType)
+  { }
+
+  bool
+  IsOnOwningThread() const
+  {
+    MOZ_ASSERT(mOwningThread);
+
+    bool current;
+    return NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)) && current;
+  }
+
+  void
+  AssertIsOnOwningThread() const
+  {
+    MOZ_ASSERT(IsOnBackgroundThread());
+    MOZ_ASSERT(IsOnOwningThread());
+  }
+
+  const nsString&
+  DatabasePath() const
+  {
+    return mDatabasePath;
+  }
+
+private:
+  ~DatabaseMaintenance()
+  { }
+
+  // Runs on maintenance thread pool. Does maintenance on the database.
+  void
+  PerformMaintenanceOnDatabase();
+
+  // Runs on the PBackground thread. It dispatches a complete callback and
+  // unregisters from Maintenance.
+  void
+  RunOnOwningThread();
+
+  // Runs on maintenance thread pool. Once it performs database maintenance
+  // it will dispatch to the PBackground thread on which RunOnOwningThread()
+  // is called.
+  void
+  RunOnConnectionThread();
+
+  NS_DECL_NSIRUNNABLE
 };
 
 class IntString : public nsAutoString
@@ -17212,7 +17298,7 @@ Maintenance::DirectoryWork()
     }
   }
 
-  mState = State::Finishing;
+  mState = State::BeginDatabaseMaintenance;
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
                                                        NS_DISPATCH_NORMAL)));
@@ -17221,20 +17307,15 @@ Maintenance::DirectoryWork()
 }
 
 void
-QuotaClient::PerformIdleMaintenanceOnDatabase(Maintenance* aMaintenance,
-                                              PersistenceType aPersistenceType,
-                                              const nsACString& aGroup,
-                                              const nsACString& aOrigin,
-                                              const nsAString& aDatabasePath)
+DatabaseMaintenance::PerformMaintenanceOnDatabase()
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mMaintenanceThreadPool);
-  MOZ_ASSERT(aMaintenance);
-  MOZ_ASSERT(aMaintenance->StartTime());
-  MOZ_ASSERT(!aDatabasePath.IsEmpty());
-  MOZ_ASSERT(!aGroup.IsEmpty());
-  MOZ_ASSERT(!aOrigin.IsEmpty());
+  MOZ_ASSERT(mMaintenance);
+  MOZ_ASSERT(mMaintenance->StartTime());
+  MOZ_ASSERT(!mDatabasePath.IsEmpty());
+  MOZ_ASSERT(!mGroup.IsEmpty());
+  MOZ_ASSERT(!mOrigin.IsEmpty());
 
   class MOZ_STACK_CLASS AutoClose final
   {
@@ -17255,14 +17336,14 @@ QuotaClient::PerformIdleMaintenanceOnDatabase(Maintenance* aMaintenance,
     }
   };
 
-  nsCOMPtr<nsIFile> databaseFile = GetFileForPath(aDatabasePath);
+  nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
   nsCOMPtr<mozIStorageConnection> connection;
   nsresult rv = GetStorageConnection(databaseFile,
-                                     aPersistenceType,
-                                     aGroup,
-                                     aOrigin,
+                                     mPersistenceType,
+                                     mGroup,
+                                     mOrigin,
                                      TelemetryIdForFile(databaseFile),
                                      getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17271,17 +17352,17 @@ QuotaClient::PerformIdleMaintenanceOnDatabase(Maintenance* aMaintenance,
 
   AutoClose autoClose(connection);
 
-  if (aMaintenance->IsAbortedOnAnyThread()) {
+  if (mMaintenance->IsAbortedOnAnyThread()) {
     return;
   }
 
-  AutoProgressHandler progressHandler(aMaintenance);
+  QuotaClient::AutoProgressHandler progressHandler(mMaintenance);
   if (NS_WARN_IF(NS_FAILED(progressHandler.Register(connection)))) {
     return;
   }
 
   bool databaseIsOk;
-  rv = CheckIntegrity(connection, &databaseIsOk);
+  rv = QuotaClient::CheckIntegrity(connection, &databaseIsOk);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -17293,33 +17374,33 @@ QuotaClient::PerformIdleMaintenanceOnDatabase(Maintenance* aMaintenance,
     return;
   }
 
-  if (aMaintenance->IsAbortedOnAnyThread()) {
+  if (mMaintenance->IsAbortedOnAnyThread()) {
     return;
   }
 
-  MaintenanceAction maintenanceAction;
-  rv = DetermineMaintenanceAction(connection,
-                                  databaseFile,
-                                  aMaintenance->StartTime(),
-                                  &maintenanceAction);
+  QuotaClient::MaintenanceAction maintenanceAction;
+  rv = QuotaClient::DetermineMaintenanceAction(connection,
+                                               databaseFile,
+                                               mMaintenance->StartTime(),
+                                               &maintenanceAction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  if (aMaintenance->IsAbortedOnAnyThread()) {
+  if (mMaintenance->IsAbortedOnAnyThread()) {
     return;
   }
 
   switch (maintenanceAction) {
-    case MaintenanceAction::Nothing:
+    case QuotaClient::MaintenanceAction::Nothing:
       break;
 
-    case MaintenanceAction::IncrementalVacuum:
-      IncrementalVacuum(connection);
+    case QuotaClient::MaintenanceAction::IncrementalVacuum:
+      QuotaClient::IncrementalVacuum(connection);
       break;
 
-    case MaintenanceAction::FullVacuum:
-      FullVacuum(connection, databaseFile);
+    case QuotaClient::MaintenanceAction::FullVacuum:
+      QuotaClient::FullVacuum(connection, databaseFile);
       break;
 
     default:
@@ -17824,6 +17905,38 @@ AutoProgressHandler::OnProgress(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
+void
+Maintenance::RegisterDatabaseMaintenance(
+                                      DatabaseMaintenance* aDatabaseMaintenance)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDatabaseMaintenance);
+  MOZ_ASSERT(mState == State::BeginDatabaseMaintenance);
+  MOZ_ASSERT(!mDatabaseMaintenances.Get(aDatabaseMaintenance->DatabasePath()));
+
+  mDatabaseMaintenances.Put(aDatabaseMaintenance->DatabasePath(),
+                            aDatabaseMaintenance);
+}
+
+void
+Maintenance::UnregisterDatabaseMaintenance(
+                                      DatabaseMaintenance* aDatabaseMaintenance)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDatabaseMaintenance);
+  MOZ_ASSERT(mState == State::WaitingForDatabaseMaintenancesToComplete);
+  MOZ_ASSERT(mDatabaseMaintenances.Get(aDatabaseMaintenance->DatabasePath()));
+
+  mDatabaseMaintenances.Remove(aDatabaseMaintenance->DatabasePath());
+
+  if (mDatabaseMaintenances.Count()) {
+    return;
+  }
+
+  mState = State::Finishing;
+  Finish();
+}
+
 nsresult
 Maintenance::Start()
 {
@@ -17919,6 +18032,70 @@ Maintenance::DirectoryOpen()
   return NS_OK;
 }
 
+nsresult
+Maintenance::BeginDatabaseMaintenance()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::BeginDatabaseMaintenance);
+
+  class MOZ_STACK_CLASS Helper final
+  {
+  public:
+    static bool
+    IsSafeToRunMaintenance(const nsAString& aDatabasePath)
+    {
+      if (gLiveDatabaseHashtable) {
+        for (auto iter = gLiveDatabaseHashtable->ConstIter();
+             !iter.Done(); iter.Next()) {
+          for (Database* database : iter.Data()->mLiveDatabases) {
+            if (database->FilePath() == aDatabasePath) {
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    }
+  };
+
+  RefPtr<nsThreadPool> threadPool;
+
+  for (DirectoryInfo& directoryInfo : mDirectoryInfos) {
+    for (const nsString& databasePath : directoryInfo.mDatabasePaths) {
+      if (Helper::IsSafeToRunMaintenance(databasePath)) {
+        RefPtr<DatabaseMaintenance> databaseMaintenance =
+          new DatabaseMaintenance(this,
+                                  directoryInfo.mPersistenceType,
+                                  directoryInfo.mGroup,
+                                  directoryInfo.mOrigin,
+                                  databasePath);
+
+        if (!threadPool) {
+          threadPool = mQuotaClient->GetOrCreateThreadPool();
+          MOZ_ASSERT(threadPool);
+        }
+
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          threadPool->Dispatch(databaseMaintenance, NS_DISPATCH_NORMAL)));
+
+        RegisterDatabaseMaintenance(databaseMaintenance);
+      }
+    }
+  }
+
+  mDirectoryInfos.Clear();
+
+  if (mDatabaseMaintenances.Count()) {
+    mState = State::WaitingForDatabaseMaintenancesToComplete;
+  } else {
+    mState = State::Finishing;
+    Finish();
+  }
+
+  return NS_OK;
+}
+
 void
 Maintenance::Finish()
 {
@@ -17956,6 +18133,10 @@ Maintenance::Run()
 
     case State::DirectoryWorkOpen:
       rv = DirectoryWork();
+      break;
+
+    case State::BeginDatabaseMaintenance:
+      rv = BeginDatabaseMaintenance();
       break;
 
     case State::Finishing:
@@ -18009,6 +18190,38 @@ Maintenance::DirectoryLockFailed()
 
   mState = State::Finishing;
   Finish();
+}
+
+void
+DatabaseMaintenance::RunOnOwningThread()
+{
+  AssertIsOnOwningThread();
+
+  mMaintenance->UnregisterDatabaseMaintenance(this);
+}
+
+void
+DatabaseMaintenance::RunOnConnectionThread()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+
+  PerformMaintenanceOnDatabase();
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
+}
+
+NS_IMETHODIMP
+DatabaseMaintenance::Run()
+{
+  if (IsOnOwningThread()) {
+    RunOnOwningThread();
+  } else {
+    RunOnConnectionThread();
+  }
+
+  return NS_OK;
 }
 
 /*******************************************************************************
