@@ -1428,7 +1428,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 513318-1.xul 513318-1-ref.xul # bug 97
 skip-if(B2G||Mulet) fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
-fuzzy-if(browserIsRemote&&winWidget,73,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
+fuzzy-if(browserIsRemote&&winWidget,73,133) fuzzy-if(browserIsRemote&&cocoaWidget,103,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
 HTTP(..) == 518172-2a.html 518172-a-ref.html
 fuzzy-if(browserIsRemote&&winWidget,73,133) HTTP(..) == 518172-2b.html 518172-b-ref.html
 == 520421-1.html 520421-1-ref.html
