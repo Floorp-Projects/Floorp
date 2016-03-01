@@ -639,6 +639,13 @@ ExtensionData.prototype = {
       this.readJSON("manifest.json"),
       Management.lazyInit(),
     ]).then(([manifest]) => {
+      this.manifest = manifest;
+      this.rawManifest = manifest;
+
+      if (manifest && manifest.default_locale) {
+        return this.initLocale();
+      }
+    }).then(() => {
       let context = {
         url: this.baseURI && this.baseURI.spec,
 
@@ -647,12 +654,17 @@ ExtensionData.prototype = {
         logError: error => {
           this.logger.warn(`Loading extension '${this.id}': Reading manifest: ${error}`);
         },
+
+        preprocessors: {},
       };
 
-      let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
+      if (this.localeData) {
+        context.preprocessors.localize = this.localize.bind(this);
+      }
+
+      let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
       if (normalized.error) {
         this.manifestError(normalized.error);
-        this.manifest = manifest;
       } else {
         this.manifest = normalized.value;
       }
@@ -696,7 +708,7 @@ ExtensionData.prototype = {
   // stores its parsed contents in |this.localeMessages.get(locale)|.
   readLocaleFile: Task.async(function* (locale) {
     let locales = yield this.promiseLocales();
-    let dir = locales.get(locale);
+    let dir = locales.get(locale) || locale;
     let file = `_locales/${dir}/messages.json`;
 
     try {

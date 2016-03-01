@@ -36,7 +36,7 @@ global.IconDetails = {
   //
   // If no context is specified, instead of throwing an error, this
   // function simply logs a warning message.
-  normalize(details, extension, context = null, localize = false) {
+  normalize(details, extension, context = null) {
     let result = {};
 
     try {
@@ -73,12 +73,7 @@ global.IconDetails = {
             throw new Error(`Invalid icon size ${size}, must be an integer`);
           }
 
-          let url = path[size];
-          if (localize) {
-            url = extension.localize(url);
-          }
-
-          url = baseURI.resolve(path[size]);
+          let url = baseURI.resolve(path[size]);
 
           // The Chrome documentation specifies these parameters as
           // relative paths. We currently accept absolute URLs as well,
