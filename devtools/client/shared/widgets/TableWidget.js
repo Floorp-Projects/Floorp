@@ -24,6 +24,7 @@ const EVENTS = {
   ROW_CONTEXT_MENU: "row-context-menu",
   ROW_SELECTED: "row-selected",
   ROW_UPDATED: "row-updated",
+  TABLE_FILTERED: "table-filtered",
   SCROLL_END: "scroll-end"
 };
 Object.defineProperty(this, "EVENTS", {
@@ -441,6 +442,41 @@ TableWidget.prototype = {
   },
 
   /**
+   * Filters the table based on a specific value
+   *
+   * @param {String} value: The filter value
+   * @param {Array} ignoreProps: Props to ignore while filtering
+   */
+  filterItems(value, ignoreProps = []) {
+    if (this.filteredValue == value) {
+      return;
+    }
+    if (!value) {
+      this.emit(EVENTS.TABLE_FILTERED, []);
+      return;
+    }
+    this.filteredValue = value;
+    // Shouldn't be case-sensitive
+    value = value.toLowerCase();
+
+    let itemsToHide = [...this.items.keys()];
+    // Loop through all items and hide unmatched items
+    for (let [id, val] of this.items) {
+      for (let prop in val) {
+        if (ignoreProps.includes(prop)) {
+          continue;
+        }
+        let propValue = val[prop].toString().toLowerCase();
+        if (propValue.includes(value)) {
+          itemsToHide.splice(itemsToHide.indexOf(id), 1);
+          break;
+        }
+      }
+    }
+    this.emit(EVENTS.TABLE_FILTERED, itemsToHide);
+  },
+
+  /**
    * Calls the afterScroll function when the user has stopped scrolling
    */
   onScroll: function() {
@@ -521,6 +557,9 @@ function Column(table, id, header) {
   this.onRowUpdated = this.onRowUpdated.bind(this);
   this.table.on(EVENTS.ROW_UPDATED, this.onRowUpdated);
 
+  this.onTableFiltered = this.onTableFiltered.bind(this);
+  this.table.on(EVENTS.TABLE_FILTERED, this.onTableFiltered);
+
   this.onClick = this.onClick.bind(this);
   this.onMousedown = this.onMousedown.bind(this);
   this.onKeydown = this.onKeydown.bind(this);
@@ -599,6 +638,19 @@ Column.prototype = {
     }
   },
 
+  onTableFiltered: function(event, itemsToHide) {
+    this._updateItems();
+    if (!this.cells) {
+      return;
+    }
+    for (let cell of this.cells) {
+      cell.hidden = false;
+    }
+    for (let id of itemsToHide) {
+      this.cells[this.items[id]].hidden = true;
+    }
+  },
+
   /**
    * Called when a row is updated.
    *
@@ -618,6 +670,7 @@ Column.prototype = {
     this.table.off(EVENTS.COLUMN_SORTED, this.onColumnSorted);
     this.table.off(EVENTS.HEADER_CONTEXT_MENU, this.toggleColumn);
     this.table.off(EVENTS.ROW_UPDATED, this.onRowUpdated);
+    this.table.off(EVENTS.TABLE_FILTERED, this.onTableFiltered);
     this.splitter.remove();
     this.column.parentNode.remove();
     this.cells = null;
@@ -962,6 +1015,18 @@ Cell.prototype = {
 
   get id() {
     return this._id;
+  },
+
+  get hidden() {
+    return this.label.hasAttribute("hidden");
+  },
+
+  set hidden(value) {
+    if (value) {
+      this.label.setAttribute("hidden", "hidden");
+    } else {
+      this.label.removeAttribute("hidden");
+    }
   },
 
   set value(value) {

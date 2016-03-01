@@ -7,6 +7,11 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/storage.css" type="text/css"?>
 
+<!DOCTYPE window [
+  <!ENTITY % storageDTD SYSTEM "chrome://devtools/locale/storage.dtd">
+  %storageDTD;
+]>
+
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -20,7 +25,15 @@
   <box flex="1" class="devtools-responsive-container theme-body">
     <vbox id="storage-tree"/>
     <splitter class="devtools-side-splitter"/>
-    <vbox id="storage-table" class="theme-sidebar" flex="1"/>
+    <vbox flex="1">
+      <hbox id="storage-toolbar" class="devtools-toolbar">
+        <textbox id="storage-searchbox"
+                 class="devtools-searchinput"
+                 type="search"
+                 placeholder="&searchBox.placeholder;"/>
+      </hbox>
+      <vbox id="storage-table" class="theme-sidebar" flex="1"/>
+    </vbox>
     <splitter class="devtools-side-splitter"/>
     <vbox id="storage-sidebar" class="devtools-sidebar-tabs" hidden="true">
       <vbox flex="1"/>
