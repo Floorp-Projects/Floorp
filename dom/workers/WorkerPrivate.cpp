@@ -5742,7 +5742,7 @@ WorkerPrivate::ScheduleKillCloseEventRunnable()
 }
 
 void
-WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
+WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
                            JSErrorReport* aReport)
 {
   AssertIsOnWorkerThread();
@@ -5763,19 +5763,9 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   bool mutedError = aReport && aReport->isMuted;
 
   if (aReport) {
-    // ErrorEvent objects don't have a |name| field the way ES |Error| objects
-    // do. Traditionally (and mostly by accident), the |message| field of
-    // ErrorEvent has corresponded to |Name: Message| of the original Error
-    // object. Things have been cleaned up in the JS engine, so now we need to
-    // format this string explicitly.
-    JS::Rooted<JSString*> messageStr(aCx,
-                                     js::ErrorReportToString(aCx, aReport));
-    if (messageStr) {
-      nsAutoJSString autoStr;
-      if (autoStr.init(aCx, messageStr)) {
-        message = autoStr;
-      }
-    }
+    // We want the same behavior here as xpc::ErrorReport::init here.
+    xpc::ErrorReport::ErrorReportToMessageString(aReport, message);
+
     filename = NS_ConvertUTF8toUTF16(aReport->filename);
     line = aReport->uclinebuf;
     lineNumber = aReport->lineno;
@@ -5791,7 +5781,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   }
 
   if (message.IsEmpty()) {
-    message = NS_ConvertUTF8toUTF16(aMessage);
+    message = NS_ConvertUTF8toUTF16(aFallbackMessage);
   }
 
   mErrorHandlerRecursionCount++;
