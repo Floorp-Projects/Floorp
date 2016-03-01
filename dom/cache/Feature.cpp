@@ -25,7 +25,7 @@ Feature::Create(WorkerPrivate* aWorkerPrivate)
 
   RefPtr<Feature> feature = new Feature(aWorkerPrivate);
 
-  if (!aWorkerPrivate->AddFeature(aWorkerPrivate->GetJSContext(), feature)) {
+  if (!aWorkerPrivate->AddFeature(feature)) {
     return nullptr;
   }
 
@@ -102,7 +102,7 @@ Feature::~Feature()
   NS_ASSERT_OWNINGTHREAD(Feature);
   MOZ_ASSERT(mActorList.IsEmpty());
 
-  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+  mWorkerPrivate->RemoveFeature(this);
 }
 
 } // namespace cache

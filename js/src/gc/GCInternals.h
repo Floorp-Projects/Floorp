@@ -19,16 +19,6 @@
 namespace js {
 namespace gc {
 
-class MOZ_RAII AutoCopyFreeListToArenas
-{
-    JSRuntime* runtime;
-    ZoneSelector selector;
-
-  public:
-    AutoCopyFreeListToArenas(JSRuntime* rt, ZoneSelector selector);
-    ~AutoCopyFreeListToArenas();
-};
-
 struct MOZ_RAII AutoFinishGC
 {
     explicit AutoFinishGC(JSRuntime* rt);
@@ -60,7 +50,6 @@ struct MOZ_RAII AutoPrepareForTracing
 {
     AutoFinishGC finish;
     AutoTraceSession session;
-    AutoCopyFreeListToArenas copy;
 
     AutoPrepareForTracing(JSRuntime* rt, ZoneSelector selector);
 };

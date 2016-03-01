@@ -38,8 +38,7 @@ public:
   // The style set returned by CreateStyleSet is in the middle of an
   // update batch so that the caller can add sheets to it if needed.
   // Callers should call EndUpdate() on it when ready to use.
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument,
-                                  mozilla::StyleSetHandle* aStyleSet) = 0;
+  virtual mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) = 0;
 
   virtual void IncrementDestroyRefCount() = 0;
 
@@ -70,19 +69,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTVIEWERPRINT \
-  virtual void     SetIsPrinting(bool aIsPrinting) override; \
-  virtual bool     GetIsPrinting() override; \
-  virtual void     SetIsPrintPreview(bool aIsPrintPreview) override; \
-  virtual bool     GetIsPrintPreview() override; \
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument, \
-                                  mozilla::StyleSetHandle* aStyleSet) override; \
-  virtual void     IncrementDestroyRefCount() override; \
-  virtual void     ReturnToGalleyPresentation() override; \
-  virtual void     OnDonePrinting() override; \
-  virtual bool     IsInitializedForPrintPreview() override; \
-  virtual void     InitializeForPrintPreview() override; \
-  virtual void     SetPrintPreviewPresentation(nsViewManager* aViewManager, \
-                                               nsPresContext* aPresContext, \
-                                               nsIPresShell* aPresShell) override;
+  void SetIsPrinting(bool aIsPrinting) override; \
+  bool GetIsPrinting() override; \
+  void SetIsPrintPreview(bool aIsPrintPreview) override; \
+  bool GetIsPrintPreview() override; \
+  mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) override; \
+  void IncrementDestroyRefCount() override; \
+  void ReturnToGalleyPresentation() override; \
+  void OnDonePrinting() override; \
+  bool IsInitializedForPrintPreview() override; \
+  void InitializeForPrintPreview() override; \
+  void SetPrintPreviewPresentation(nsViewManager* aViewManager, \
+                                   nsPresContext* aPresContext, \
+                                   nsIPresShell* aPresShell) override;
 
 #endif /* nsIDocumentViewerPrint_h___ */

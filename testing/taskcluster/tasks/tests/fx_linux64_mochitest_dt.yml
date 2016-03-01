@@ -4,7 +4,6 @@ $inherits:
 task:
   scopes:
     - 'docker-worker:capability:device:loopbackVideo'
-    - 'docker-worker:capability:device:loopbackAudio'
   metadata:
     name: '[TC] Linux64 mochitest-devtools-chrome-{{chunk}}'
     description: Mochitest devtools-chrome run {{chunk}}
@@ -14,7 +13,6 @@ task:
     capabilities:
       devices:
         loopbackVideo: true
-        loopbackAudio: true
   extra:
     chunks:
       total: 10

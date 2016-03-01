@@ -13,7 +13,7 @@
         "{workdir}/out/target/product/generic/tests/*.zip",
         "{workdir}/out/emulator.tar.gz",
         "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
-        "{objdir}/dist/test_packages.json",
+        "{objdir}/dist/b2g-*.test_packages.json",
         "{workdir}/sources.xml"
     ],
     "public_upload_files": [

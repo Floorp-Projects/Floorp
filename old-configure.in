@@ -75,7 +75,7 @@ GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.10.2
+SQLITE_VERSION=3.11.0
 FONTCONFIG_VERSION=2.7.0
 
 MSMANIFEST_TOOL=
@@ -782,7 +782,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROGS(UNZIP, unzip)
 if test -z "$UNZIP" -o "$UNZIP" = ":"; then
     AC_MSG_ERROR([unzip not found in \$PATH])
@@ -1505,6 +1504,18 @@ dnl ========================================================
 dnl Special rust checks
 dnl ========================================================
 
+if test -n "$MOZ_RUST"; then
+  AC_MSG_CHECKING([rustc target sse2 support])
+  case "$OS_ARCH:$CPU_ARCH" in
+    WINNT:x86)
+      RUSTFLAGS="${RUSTFLAGS} -C target-feature=-sse2"
+      AC_MSG_RESULT([no])
+      ;;
+    *)
+      AC_MSG_RESULT([ok])
+  esac
+fi
+
 if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
   AC_MSG_CHECKING([if we're targeting 32-bit])
   if test -z "$HAVE_64BIT_BUILD"; then
@@ -2192,7 +2203,9 @@ ia64*-hpux*)
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
-        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        num_cores=$($PYTHON -c 'import multiprocessing; print(min(8,multiprocessing.cpu_count()))')
+        cgthreads="-CGTHREADS:${num_cores}"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT -PogoSafeMode $cgthreads"
         dnl XXX: PGO builds can fail with warnings treated as errors,
         dnl specifically "no profile data available" appears to be
         dnl treated as an error sometimes. This might be a consequence
@@ -2203,7 +2216,7 @@ ia64*-hpux*)
         PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
         dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
         dnl Probably also a compiler bug, but what can you do?
-        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
         if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" = "31101"; then
@@ -8774,6 +8787,8 @@ AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_BIN_SUFFIX)
 AC_SUBST(HOST_OS_ARCH)
 
+AC_SUBST(RUSTFLAGS)
+
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
@@ -9159,6 +9174,7 @@ export CPPFLAGS
 export CFLAGS
 export CXXFLAGS
 export LDFLAGS
+export RUSTFLAGS
 export HOST_CC
 export HOST_CXX
 export HOST_CFLAGS

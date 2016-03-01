@@ -33,7 +33,7 @@ mv *.linux-x86_64.json          $HOME/artifacts/target.linux-x86_64.json
 for name in common cppunittest reftest mochitest xpcshell web-platform; do
     mv *.$name.tests.zip          $HOME/artifacts/target.$name.tests.zip ;
 done
-mv test_packages_tc.json        $HOME/artifacts/test_packages.json
+mv *.test_packages.json         $HOME/artifacts/target.test_packages.json
 mv *.crashreporter-symbols.zip  $HOME/artifacts/target.crashreporter-symbols.zip
 mv jsshell-linux-x86_64.zip     $HOME/artifacts/jsshell-linux-x86_64.zip
 mv mozharness.zip               $HOME/artifacts/mozharness.zip
