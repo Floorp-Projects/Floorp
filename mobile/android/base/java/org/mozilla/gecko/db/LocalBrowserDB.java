@@ -765,6 +765,25 @@ public class LocalBrowserDB implements BrowserDB {
         }
     }
 
+    private void assertDefaultBookmarkColumnOrdering() {
+        // We need to insert MatrixCursor values in a specific order - in order to protect against changes
+        // in DEFAULT_BOOKMARK_COLUMNS we can just assert that we're using the correct ordering.
+        // Alternatively we could use RowBuilder.add(columnName, value) but that needs api >= 19,
+        // or we could iterate over DEFAULT_BOOKMARK_COLUMNS, but that gets messy once we need
+        // to add more than one artificial folder.
+        if (!((DEFAULT_BOOKMARK_COLUMNS[0].equals(Bookmarks._ID)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[1].equals(Bookmarks.GUID)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[2].equals(Bookmarks.URL)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[3].equals(Bookmarks.TITLE)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[4].equals(Bookmarks.TYPE)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[5].equals(Bookmarks.PARENT)) &&
+                (DEFAULT_BOOKMARK_COLUMNS.length == 6))) {
+            // If DEFAULT_BOOKMARK_COLUMNS changes we need to update all the MatrixCursor rows
+            // to contain appropriate data.
+            throw new IllegalStateException("Fake folder MatrixCursor creation code must be updated to match DEFAULT_BOOKMARK_COLUMNS");
+        }
+    }
+
     @Override
     @RobocopTarget
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
@@ -809,8 +828,19 @@ public class LocalBrowserDB implements BrowserDB {
         }
 
         if (addDesktopFolder) {
-            // Wrap cursor to add fake desktop bookmarks and reading list folders
-            return new SpecialFoldersCursorWrapper(c, addDesktopFolder);
+            MatrixCursor desktopFolderCursor = new MatrixCursor(DEFAULT_BOOKMARK_COLUMNS);
+
+            assertDefaultBookmarkColumnOrdering();
+
+            desktopFolderCursor.addRow(
+                    new Object[] { Bookmarks.FAKE_DESKTOP_FOLDER_ID,
+                                   Bookmarks.FAKE_DESKTOP_FOLDER_GUID,
+                                   "",
+                                   "", // Title localisation is done later, in the UI layer (BookmarksListAdapter)
+                                   Bookmarks.TYPE_FOLDER,
+                                   Bookmarks.FIXED_ROOT_ID
+                    });
+            return new MergeCursor(new Cursor[] { desktopFolderCursor, c });
         }
 
         return c;
