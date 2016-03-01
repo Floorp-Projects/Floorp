@@ -4,4 +4,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 AS=$(FFVPX_AS)
-ASM_SUFFIX=asm
+
