@@ -350,13 +350,8 @@ gfxPlatformGtk::GetDPIScale()
 bool
 gfxPlatformGtk::UseImageOffscreenSurfaces()
 {
-    // We want to turn on image offscreen surfaces ONLY for GTK3 builds since
-    // GTK2 theme rendering still requires xlib surfaces.
-#if (MOZ_WIDGET_GTK == 3)
-    return gfxPrefs::UseImageOffscreenSurfaces();
-#else
-    return false;
-#endif
+    return GetDefaultContentBackend() != mozilla::gfx::BackendType::CAIRO ||
+           gfxPrefs::UseImageOffscreenSurfaces();
 }
 
 gfxImageFormat

@@ -537,11 +537,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     gfxPoint deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
     cairo_t* cairo = static_cast<cairo_t*>
         (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
-    if (!cairo) {
-        return;
-    }
-
-    cairo_surface_t* cairoTarget = cairo_get_group_target(cairo);
+    cairo_surface_t* cairoTarget = cairo ? cairo_get_group_target(cairo) : nullptr;
     cairo_surface_t* tempXlibSurface =
         CreateTempXlibSurface(cairoTarget, drawTarget, size,
                               canDrawOverBackground, flags, screen, visual,
