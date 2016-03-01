@@ -5103,6 +5103,17 @@ MClz::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MPopcnt::foldsTo(TempAllocator& alloc)
+{
+    if (num()->isConstant()) {
+        int32_t n = num()->toConstant()->toInt32();
+        return MConstant::New(alloc, Int32Value(mozilla::CountPopulation32(n)));
+    }
+
+    return this;
+}
+
+MDefinition*
 MBoundsCheck::foldsTo(TempAllocator& alloc)
 {
     if (index()->isConstant() && length()->isConstant()) {

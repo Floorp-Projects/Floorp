@@ -955,6 +955,30 @@ CodeGeneratorARM::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorARM::visitPopcntI(LPopcntI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // Equivalent to GCC output of mozilla::CountPopulation32()
+    Register tmp = ToRegister(ins->temp());
+
+    masm.ma_mov(input, output);
+    masm.as_mov(tmp, asr(output, 1));
+    masm.ma_and(Imm32(0x55555555), tmp);
+    masm.ma_sub(output, tmp, output);
+    masm.as_mov(tmp, asr(output, 2));
+    masm.ma_and(Imm32(0x33333333), output);
+    masm.ma_and(Imm32(0x33333333), tmp);
+    masm.ma_add(output, tmp, output);
+    masm.as_add(output, output, lsr(output, 4));
+    masm.ma_and(Imm32(0xF0F0F0F), output);
+    masm.as_add(output, output, lsl(output, 8));
+    masm.as_add(output, output, lsl(output, 16));
+    masm.as_mov(output, asr(output, 24));
+}
+
+void
 CodeGeneratorARM::visitPowHalfD(LPowHalfD* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
