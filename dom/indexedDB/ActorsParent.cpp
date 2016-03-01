@@ -16379,6 +16379,42 @@ QuotaClient::~QuotaClient()
   sInstance = nullptr;
 }
 
+nsThreadPool*
+QuotaClient::GetOrCreateThreadPool()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mShutdownRequested);
+
+  if (!mMaintenanceThreadPool) {
+    RefPtr<nsThreadPool> threadPool = new nsThreadPool();
+
+    // PR_GetNumberOfProcessors() can return -1 on error, so make sure we
+    // don't set some huge number here. We add 2 in case some threads block on
+    // the disk I/O.
+    const uint32_t threadCount =
+      std::max(int32_t(PR_GetNumberOfProcessors()), int32_t(1)) +
+      2;
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetThreadLimit(threadCount)));
+
+    // Don't keep more than one idle thread.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetIdleThreadLimit(1)));
+
+    // Don't keep idle threads alive very long.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC)));
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt"))));
+
+    mMaintenanceThreadPool = Move(threadPool);
+  }
+
+  return mMaintenanceThreadPool;
+}
+
 mozilla::dom::quota::Client::Type
 QuotaClient::GetType()
 {
@@ -16963,42 +16999,6 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
   }
 
   return NS_OK;
-}
-
-nsThreadPool*
-QuotaClient::GetOrCreateThreadPool()
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mShutdownRequested);
-
-  if (!mMaintenanceThreadPool) {
-    RefPtr<nsThreadPool> threadPool = new nsThreadPool();
-
-    // PR_GetNumberOfProcessors() can return -1 on error, so make sure we
-    // don't set some huge number here. We add 2 in case some threads block on
-    // the disk I/O.
-    const uint32_t threadCount =
-      std::max(int32_t(PR_GetNumberOfProcessors()), int32_t(1)) +
-      2;
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetThreadLimit(threadCount)));
-
-    // Don't keep more than one idle thread.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetIdleThreadLimit(1)));
-
-    // Don't keep idle threads alive very long.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC)));
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt"))));
-
-    mMaintenanceThreadPool = Move(threadPool);
-  }
-
-  return mMaintenanceThreadPool;
 }
 
 nsresult
