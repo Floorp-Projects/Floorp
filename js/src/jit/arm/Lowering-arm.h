@@ -75,6 +75,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
     void lowerDivI(MDiv* div);
     void lowerModI(MMod* mod);
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);

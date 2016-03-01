@@ -792,18 +792,6 @@
 @RESPATH@/res/table-remove-row-active.gif
 @RESPATH@/res/table-remove-row-hover.gif
 @RESPATH@/res/table-remove-row.gif
-@RESPATH@/res/accessiblecaret.png
-@RESPATH@/res/accessiblecaret@1.5x.png
-@RESPATH@/res/accessiblecaret@2.25x.png
-@RESPATH@/res/accessiblecaret@2x.png
-@RESPATH@/res/accessiblecaret_tilt_left.png
-@RESPATH@/res/accessiblecaret_tilt_left@1.5x.png
-@RESPATH@/res/accessiblecaret_tilt_left@2.25x.png
-@RESPATH@/res/accessiblecaret_tilt_left@2x.png
-@RESPATH@/res/accessiblecaret_tilt_right.png
-@RESPATH@/res/accessiblecaret_tilt_right@1.5x.png
-@RESPATH@/res/accessiblecaret_tilt_right@2.25x.png
-@RESPATH@/res/accessiblecaret_tilt_right@2x.png
 @RESPATH@/res/grabber.gif
 #ifdef XP_MACOSX
 @RESPATH@/res/cursors/*

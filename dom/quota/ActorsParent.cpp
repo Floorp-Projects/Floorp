@@ -3773,6 +3773,7 @@ QuotaManager::OpenDirectory(PersistenceType aPersistenceType,
 void
 QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
                                     const OriginScope& aOriginScope,
+                                    Nullable<Client::Type> aClientType,
                                     bool aExclusive,
                                     OpenDirectoryListener* aOpenListener)
 {
@@ -3783,7 +3784,7 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
                         EmptyCString(),
                         aOriginScope,
                         Nullable<bool>(),
-                        Nullable<Client::Type>(),
+                        Nullable<Client::Type>(aClientType),
                         aExclusive,
                         true,
                         aOpenListener);
@@ -5029,6 +5030,7 @@ NormalOriginOperationBase::Open()
 
   QuotaManager::Get()->OpenDirectoryInternal(mPersistenceType,
                                              mOriginScope,
+                                             Nullable<Client::Type>(),
                                              mExclusive,
                                              this);
 }

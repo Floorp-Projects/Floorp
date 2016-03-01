@@ -74,7 +74,10 @@ function testStoreError(type, ext, base, offset, align, errorMsg) {
 }
 
 testLoad('i32', '', 0, 0, 0, 0x03020100);
+
+testLoad('i32', '', 1, 0, 0, 0x03020100);   // TODO: unaligned NYI
 //testLoad('i32', '', 1, 0, 0, 0x04030201); // TODO: unaligned NYI
+
 //testLoad('i32', '', 0, 1, 0, 0x01020304); // TODO: offsets NYI
 //testLoad('i32', '', 1, 1, 4, 0x02030405); // TODO: offsets NYI
 //testLoad('i64', '', 0, 0, 0, 0x0001020304050607); // TODO: i64 NYI

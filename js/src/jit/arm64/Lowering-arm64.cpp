@@ -147,6 +147,18 @@ LIRGeneratorARM64::lowerModI(MMod* mod)
 }
 
 void
+LIRGeneratorARM64::lowerDivI64(MDiv* div)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorARM64::lowerModI64(MMod* mod)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 LIRGeneratorARM64::visitPowHalf(MPowHalf* ins)
 {
     MOZ_CRASH("visitPowHalf");
