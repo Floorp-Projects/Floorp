@@ -99,6 +99,71 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LDivOrModI64 : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(DivOrModI64)
+
+    LDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    const LDefinition* remainder() {
+        return getTemp(0);
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+    bool canBeNegativeOverflow() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeOverflow();
+    }
+};
+
+// This class performs a simple x86 'div', yielding either a quotient or
+// remainder depending on whether this instruction is defined to output
+// rax (quotient) or rdx (remainder).
+class LUDivOrMod64 : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(UDivOrMod64);
+
+    LUDivOrMod64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    const LDefinition* remainder() {
+        return getTemp(0);
+    }
+
+    const char* extraName() const {
+        return mir()->isTruncated() ? "Truncated" : nullptr;
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

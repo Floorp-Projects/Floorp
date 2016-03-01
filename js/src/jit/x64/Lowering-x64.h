@@ -36,6 +36,11 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     bool needTempForPostBarrier() { return false; }
 
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
+    void lowerUDiv64(MDiv* div);
+    void lowerUMod64(MMod* mod);
+
   public:
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);

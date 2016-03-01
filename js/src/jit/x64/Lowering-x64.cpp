@@ -341,3 +341,47 @@ LIRGeneratorX64::visitRandom(MRandom* ins)
                                         temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
 }
+
+void
+LIRGeneratorX64::lowerDivI64(MDiv* div)
+{
+    if (div->isUnsigned()) {
+        lowerUDiv64(div);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()),
+                                                  tempFixed(rdx));
+    defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
+}
+
+void
+LIRGeneratorX64::lowerModI64(MMod* mod)
+{
+    if (mod->isUnsigned()) {
+        lowerUMod64(mod);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()),
+                                                  tempFixed(rax));
+    defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
+}
+
+void
+LIRGeneratorX64::lowerUDiv64(MDiv* div)
+{
+    LUDivOrMod64* lir = new(alloc()) LUDivOrMod64(useRegister(div->lhs()),
+                                                  useRegister(div->rhs()),
+                                                  tempFixed(rdx));
+    defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
+}
+
+void
+LIRGeneratorX64::lowerUMod64(MMod* mod)
+{
+    LUDivOrMod64* lir = new(alloc()) LUDivOrMod64(useRegister(mod->lhs()),
+                                                  useRegister(mod->rhs()),
+                                                  tempFixed(rax));
+    defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
+}
