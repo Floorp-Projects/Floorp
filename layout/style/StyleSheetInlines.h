@@ -26,6 +26,15 @@ StyleSheet::AsServo()
   return *static_cast<ServoStyleSheet*>(this);
 }
 
+StyleSheetHandle
+StyleSheet::AsHandle()
+{
+  if (IsServo()) {
+    return &AsServo();
+  }
+  return &AsGecko();
+}
+
 }
 
 #endif // mozilla_StyleSheetInlines_h

@@ -853,7 +853,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr& aSheet,
   MOZ_ASSERT(uri, "URI creation shouldn't fail");
 
   aSheet->SetURIs(uri, uri, uri);
-  aSheet->SetComplete();
+  aSheet->AsStyleSheet()->SetComplete();
 
   static const uint32_t kPreallocSize = 1024;
 

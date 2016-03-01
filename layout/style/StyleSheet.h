@@ -9,6 +9,7 @@
 
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/StyleBackendType.h"
+#include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetInfo.h"
 
 class nsIDocument;
@@ -46,6 +47,12 @@ public:
   // The document this style sheet is associated with.  May be null
   nsIDocument* GetDocument() const { return mDocument; }
 
+  /**
+   * Whether the sheet is complete.
+   */
+  bool IsComplete() const;
+  void SetComplete();
+
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
   StyleSheetInfo& SheetInfo();
@@ -65,6 +72,7 @@ public:
   // correct type.
   inline CSSStyleSheet& AsGecko();
   inline ServoStyleSheet& AsServo();
+  inline StyleSheetHandle AsHandle();
 
 protected:
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children

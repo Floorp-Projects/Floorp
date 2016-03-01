@@ -149,12 +149,6 @@ public:
    */
   void SetEnabled(bool aEnabled);
 
-  /**
-   * Whether the sheet is complete.
-   */
-  bool IsComplete() const;
-  void SetComplete();
-
   // style sheet owner info
   CSSStyleSheet* GetParentSheet() const;  // may be null
   nsIDocument* GetOwningDocument() const;  // may be null
