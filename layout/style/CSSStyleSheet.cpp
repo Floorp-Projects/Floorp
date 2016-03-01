@@ -1075,7 +1075,8 @@ CSSStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 //
 
 CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
-  : mTitle(), 
+  : StyleSheet(StyleBackendType::Gecko),
+    mTitle(),
     mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),
@@ -1090,7 +1091,8 @@ CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
 CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode,
                              ReferrerPolicy aReferrerPolicy,
                              const SRIMetadata& aIntegrity)
-  : mTitle(),
+  : StyleSheet(StyleBackendType::Gecko),
+    mTitle(),
     mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),

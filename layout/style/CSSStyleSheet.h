@@ -380,6 +380,7 @@ protected:
 
   friend class ::nsMediaList;
   friend class ::nsCSSRuleProcessor;
+  friend class mozilla::StyleSheet;
   friend struct mozilla::ChildSheetListBuilder;
 };
 
