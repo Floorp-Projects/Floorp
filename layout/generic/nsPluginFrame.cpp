@@ -417,7 +417,8 @@ nsPluginFrame::GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfi
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (XRE_IsContentProcess()) {
     configuration->mWindowID = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-    configuration->mVisible = mWidget->IsVisible();
+    configuration->mVisible = !mIsHiddenDueToScroll && mWidget->IsVisible();
+
   }
 #endif // defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 }
@@ -1121,11 +1122,13 @@ nsPluginFrame::DidSetWidgetGeometry()
 bool
 nsPluginFrame::IsOpaque() const
 {
+#if defined(MOZ_WIDGET_GTK)
   // Insure underlying content gets painted when we clip windowed plugins
   // during remote content scroll operations managed by nsGfxScrollFrame.
   if (mIsHiddenDueToScroll) {
     return false;
   }
+#endif
 #if defined(XP_MACOSX)
   return false;
 #elif defined(MOZ_WIDGET_ANDROID)
@@ -1171,11 +1174,13 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
+#if defined(MOZ_WIDGET_GTK)
   // Clip windowed plugin frames from the list during remote content scroll
   // operations managed by nsGfxScrollFrame.
   if (mIsHiddenDueToScroll) {
     return;
   }
+#endif
 
   // XXX why are we painting collapsed object frames?
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
@@ -1397,6 +1402,10 @@ nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_ACTIVE;
 #endif
 
+  if (mInstanceOwner->NeedsScrollImageLayer()) {
+    return LAYER_ACTIVE;
+  }
+
   if (!mInstanceOwner->UseAsyncRendering()) {
     return LAYER_NONE;
   }
@@ -1461,10 +1470,13 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
 
   if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN) {
-    // Create image
-    RefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
+    RefPtr<ImageContainer> container;
+    // Image for Windowed plugins that support window capturing for scroll
+    // operations or async windowless rendering.
+    container = mInstanceOwner->GetImageContainer();
     if (!container) {
-      // This can occur if our instance is gone.
+      // This can occur if our instance is gone or if the current plugin
+      // configuration does not require a backing image layer.
       return nullptr;
     }
 
