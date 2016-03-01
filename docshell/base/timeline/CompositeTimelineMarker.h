@@ -15,8 +15,8 @@ namespace mozilla {
 class CompositeTimelineMarker : public TimelineMarker
 {
 public:
-  explicit CompositeTimelineMarker(const TimeStamp& aTime,
-                                   MarkerTracingType aTracingType)
+  CompositeTimelineMarker(const TimeStamp& aTime,
+                          MarkerTracingType aTracingType)
     : TimelineMarker("Composite", aTime, aTracingType)
   {
     // Even though these markers end up being created on the main thread in the
