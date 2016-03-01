@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <script>
+      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+      function init() {
+        if (document.location.hash.indexOf("#auto") == 0) {
+          let mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIContentFrameMessageManager);
+
+          mm.addMessageListener("TabPaint:FinalResults", function onResults(msg) {
+            mm.removeMessageListener("TabPaint:FinalResults", onResults);
+
+            let { fromParent, fromContent } = msg.data;
+
+            tpRecordTime([fromParent, fromContent].join(','), 0, "tabpaint-from-parent, tabpaint-from-content");
+          });
+
+          mm.addMessageListener("TabPaint:OpenFromContent", function openFromContent() {
+            let target = document.getElementById("target");
+            let now = Date.now();
+            let href = "target.html?" + now;
+            target.href = href;
+            target.click();
+          });
+
+          mm.sendAsyncMessage("TabPaint:Go");
+        }
+      }
+
+    </script>
+  </head>
+  <body onload="init();">
+    Hello, Talos!
+
+    <a href="#" id="target" target="_blank">I'll open a new tab</a>
+  </body>
+</html>

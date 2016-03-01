@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>tabpaint-test@mozilla.org</em:id>
+    <em:type>2</em:type>
+    <em:name>tabpaint test</em:name>
+    <em:version>1.0.0</em:version>
+    <em:bootstrap>true</em:bootstrap>
+    <em:description>Measures the performance of opening tabs</em:description>
+    <em:creator>Mike Conley</em:creator>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
+
+    <!-- Desktop -->
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>38.0</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+  <em:description>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:description>
+  <em:homepageURL>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:homepageURL>
+</RDF>
