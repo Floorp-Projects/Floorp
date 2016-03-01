@@ -554,15 +554,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
-  // Allow opaque response interception to be disabled until we can ensure the
-  // security implications are not a complete disaster.
-  if (response->Type() == ResponseType::Opaque &&
-      !worker->OpaqueInterceptionEnabled()) {
-    autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("OpaqueInterceptionDisabledWithURL"), mRequestURL);
-    return;
-  }
-
   // Section "HTTP Fetch", step 2.2:
   //  If one of the following conditions is true, return a network error:
   //    * response's type is "error".

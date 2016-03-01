@@ -15,9 +15,9 @@ namespace mozilla {
 class EventTimelineMarker : public TimelineMarker
 {
 public:
-  explicit EventTimelineMarker(const nsAString& aType,
-                               uint16_t aPhase,
-                               MarkerTracingType aTracingType)
+  EventTimelineMarker(const nsAString& aType,
+                      uint16_t aPhase,
+                      MarkerTracingType aTracingType)
     : TimelineMarker("DOMEvent", aTracingType)
     , mType(aType)
     , mPhase(aPhase)

@@ -1159,18 +1159,6 @@ PREF_DIR = defaults/preferences
 endif
 
 ################################################################################
-# Copy each element of AUTOCFG_JS_EXPORTS to $(FINAL_TARGET)/defaults/autoconfig
-
-ifneq ($(AUTOCFG_JS_EXPORTS),)
-ifndef NO_DIST_INSTALL
-AUTOCFG_JS_EXPORTS_FILES := $(AUTOCFG_JS_EXPORTS)
-AUTOCFG_JS_EXPORTS_DEST := $(FINAL_TARGET)/defaults/autoconfig
-AUTOCFG_JS_EXPORTS_TARGET := export
-INSTALL_TARGETS += AUTOCFG_JS_EXPORTS
-endif
-endif
-
-################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))

@@ -899,6 +899,9 @@ MConstant::printOpcode(GenericPrinter& out) const
       case MIRType_Int32:
         out.printf("0x%x", toInt32());
         break;
+      case MIRType_Int64:
+        out.printf("0x%" PRIx64, toInt64());
+        break;
       case MIRType_Double:
         out.printf("%.16g", toDouble());
         break;
@@ -2701,6 +2704,9 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
     if (specialization_ == MIRType_None)
         return this;
 
+    if (specialization_ == MIRType_Int64)
+        return this;
+
     MDefinition* lhs = getOperand(0);
     MDefinition* rhs = getOperand(1);
     if (MConstant* folded = EvaluateConstantOperands(alloc, this)) {
@@ -2913,6 +2919,9 @@ MDiv::foldsTo(TempAllocator& alloc)
     if (specialization_ == MIRType_None)
         return this;
 
+    if (specialization_ == MIRType_Int64)
+        return this;
+
     if (MDefinition* folded = EvaluateConstantOperands(alloc, this))
         return folded;
 
@@ -2973,6 +2982,9 @@ MDefinition*
 MMod::foldsTo(TempAllocator& alloc)
 {
     if (specialization_ == MIRType_None)
+        return this;
+
+    if (specialization_ == MIRType_Int64)
         return this;
 
     if (MDefinition* folded = EvaluateConstantOperands(alloc, this))
@@ -5435,7 +5447,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                     TypeSet::TypeList types;
                     if (!property.maybeTypes()->enumerateTypes(&types))
                         break;
-                    if (types.length()) {
+                    if (types.length() == 1) {
                         // Note: the return value here is ignored.
                         observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
                         break;

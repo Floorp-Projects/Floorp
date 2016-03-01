@@ -746,8 +746,6 @@ nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization)
     if (organization) {
       aOrganization = NS_ConvertUTF8toUTF16(organization);
       PORT_Free(organization);
-    } else {
-      return GetIssuerCommonName(aOrganization);
     }
   }
   return NS_OK;

@@ -42,6 +42,9 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
+
   public:
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
