@@ -9019,6 +9019,13 @@
     "kind": "count",
     "description": "Count slow script notices"
   },
+  "SLOW_SCRIPT_PAGE_COUNT": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1251667],
+    "description": "The number of pages that trigger slow script notices"
+  },
   "PLUGIN_HANG_NOTICE_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
