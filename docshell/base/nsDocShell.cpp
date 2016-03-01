@@ -2881,12 +2881,15 @@ nsDocShell::PopProfileTimelineMarkers(
     JSContext* aCx,
     JS::MutableHandle<JS::Value> aOut)
 {
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  if (!timelines) {
+    return NS_OK;
+  }
+
   nsTArray<dom::ProfileTimelineMarker> store;
   SequenceRooter<dom::ProfileTimelineMarker> rooter(aCx, &store);
 
-  if (mObserved) {
-    mObserved->PopMarkers(aCx, store);
-  }
+  timelines->PopMarkers(this, aCx, store);
 
   if (!ToJSValue(aCx, store, aOut)) {
     JS_ClearPendingException(aCx);
