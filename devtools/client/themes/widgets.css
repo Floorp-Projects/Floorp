@@ -1185,6 +1185,10 @@
   color: var(--theme-body-color);
 }
 
+.table-widget-cell[hidden] {
+  display: none;
+}
+
 .table-widget-column-header + .table-widget-cell {
   border-top: 1px solid var(--theme-splitter-color);
 }

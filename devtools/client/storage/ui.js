@@ -81,6 +81,10 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   this.view = new VariablesView(this.sidebar.firstChild,
                                 GENERIC_VARIABLES_VIEW_SETTINGS);
 
+  this.searchBox = this._panelDoc.getElementById("storage-searchbox");
+  this.filterItems = this.filterItems.bind(this);
+  this.searchBox.addEventListener("input", this.filterItems);
+
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
   }).then(null, console.error);
@@ -113,6 +117,8 @@ StorageUI.prototype = {
     this.front.off("stores-update", this.onUpdate);
     this.front.off("stores-cleared", this.onCleared);
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
+    this.searchBox.removeEventListener("input", this.filterItems);
+    this.searchBox = null;
     this._telemetry.toolClosed("storage");
   },
 
@@ -546,6 +552,7 @@ StorageUI.prototype = {
   onHostSelect: function(event, item) {
     this.table.clear();
     this.hideSidebar();
+    this.searchBox.value = "";
 
     let [type, host] = item;
     let names = null;
@@ -642,6 +649,15 @@ StorageUI.prototype = {
       event.stopPropagation();
       event.preventDefault();
     }
+  },
+
+  /**
+   * Handles filtering the table
+   */
+  filterItems() {
+    let value = this.searchBox.value;
+    this.table.filterItems(value, ["valueActor"]);
+    this._panelDoc.documentElement.classList.toggle("filtering", !!value);
   },
 
   /**
