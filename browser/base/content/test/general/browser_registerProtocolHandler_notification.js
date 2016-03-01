@@ -19,6 +19,10 @@ function test() {
         let notificationBox = window.gBrowser.getNotificationBox();
         let notification = notificationBox.getNotificationWithValue(notificationValue);
         ok(notification, "Notification box should be displayed");
+        if (notification == null) {
+            finish();
+            return;
+        }
         is(notification.type, "info", "We expect this notification to have the type of 'info'.");
         isnot(notification.image, null, "We expect this notification to have an icon.");
 
@@ -33,7 +37,7 @@ function test() {
         todo_isnot(button.accesskey, null, "We expect the add button to have a accesskey.");
 
         finish();
-    }, 100);
+    }, "Still can not get notification after retry 100 times.", 100);
 
     window.gBrowser.selectedBrowser.loadURI(testURI);
 }

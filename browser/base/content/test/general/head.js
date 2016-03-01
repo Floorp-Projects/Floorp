@@ -95,10 +95,11 @@ function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
   aBrowserWin.gCustomizeMode.exit();
 }
 
-function waitForCondition(condition, nextTest, errorMsg) {
+function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
+  retryTimes = typeof retryTimes !== 'undefined' ?  retryTimes : 30;
   var tries = 0;
   var interval = setInterval(function() {
-    if (tries >= 30) {
+    if (tries >= retryTimes) {
       ok(false, errorMsg);
       moveOn();
     }
