@@ -86,6 +86,8 @@ public class BookmarksListView extends HomeListView
         cursor.moveToPosition(position);
 
         if (adapter.getOpenFolderType() == BookmarksListAdapter.FolderType.SCREENSHOTS) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "bookmarks-screenshot");
+
             final String fileUrl = "file://" + cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.VALUE));
             getOnUrlOpenListener().onUrlOpen(fileUrl, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
             return;
