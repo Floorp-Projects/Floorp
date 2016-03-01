@@ -102,6 +102,10 @@ this.WebappRT = {
       return;
     }
 
+    if (!window.navigator.mozApps) {
+      return;
+    }
+
     // Check for updates once a day.
     let timerManager = Cc["@mozilla.org/updates/timer-manager;1"].
                        getService(Ci.nsIUpdateTimerManager);
