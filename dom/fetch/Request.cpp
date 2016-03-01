@@ -64,25 +64,6 @@ Request::RequestContextEnabled(JSContext* aCx, JSObject* aObj)
   return workerPrivate->RequestContextEnabled();
 }
 
-// static
-bool
-Request::RequestCacheEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.requestcache.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->RequestCacheEnabled();
-}
-
 already_AddRefed<InternalRequest>
 Request::GetInternalRequest()
 {
