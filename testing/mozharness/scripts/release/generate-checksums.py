@@ -32,6 +32,10 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
             "dest": "bucket_name_prefix",
             "help": "Prefix of bucket name, eg: net-mozaws-prod-delivery. This will be used to generate a full bucket name (such as net-mozaws-prod-delivery-{firefox,archive}.",
         }],
+        [["--bucket-name-full"], {
+            "dest": "bucket_name_full",
+            "help": "Full bucket name, eg: net-mozaws-prod-delivery-firefox",
+        }],
         [["-j", "--parallelization"], {
             "dest": "parallelization",
             "default": 20,
@@ -129,6 +133,9 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
             ]
 
     def _get_bucket_name(self):
+        if self.config.get('bucket_name_full'):
+            return self.config['bucket_name_full']
+
         suffix = "archive"
         # Firefox has a special bucket, per https://github.com/mozilla-services/product-delivery-tools/blob/master/bucketmap.go
         if self.config["stage_product"] == "firefox":
