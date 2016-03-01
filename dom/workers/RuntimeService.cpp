@@ -1666,6 +1666,9 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   if (queuedWorker && !ScheduleWorker(aCx, queuedWorker)) {
     UnregisterWorker(aCx, queuedWorker);
+    // There's nowhere sane to report the exception from ScheduleWorker, if any,
+    // here.
+    JS_ClearPendingException(aCx);
   }
 }
 
