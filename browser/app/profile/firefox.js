@@ -1328,12 +1328,6 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
-#ifdef NIGHTLY_BUILD
-pref("services.sync.syncedTabsUIRefresh", true);
-#else
-pref("services.sync.syncedTabsUIRefresh", false);
-#endif
-
 // A preference that controls whether we should show the icon for a remote tab.
 // This pref has no UI but exists because some people may be concerned that
 // fetching these icons to show remote tabs may leak information about that
