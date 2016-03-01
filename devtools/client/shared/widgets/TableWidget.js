@@ -1070,6 +1070,11 @@ Cell.prototype = {
     this.label.classList.remove("flash-out");
     // Cause a reflow so that the animation retriggers on adding back the class
     let a = this.label.parentNode.offsetWidth; // eslint-disable-line
+    let onAnimEnd = () => {
+      this.label.classList.remove("flash-out");
+      this.label.removeEventListener("animationend", onAnimEnd);
+    };
+    this.label.addEventListener("animationend", onAnimEnd);
     this.label.classList.add("flash-out");
   },
 
