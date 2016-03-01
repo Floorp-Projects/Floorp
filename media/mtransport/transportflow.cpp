@@ -35,14 +35,14 @@ TransportFlow::~TransportFlow() {
   // destroy it simultaneously. The conversion to an nsAutoPtr
   // ensures automatic destruction of the queue at exit of
   // DestroyFinal.
-  nsAutoPtr<std::deque<TransportLayer*>> layers_tmp(layers_.release());
+  nsAutoPtr<std::deque<TransportLayer*> > layers_tmp(layers_.forget());
   RUN_ON_THREAD(target_,
                 WrapRunnableNM(&TransportFlow::DestroyFinal, layers_tmp),
                 NS_DISPATCH_NORMAL);
 }
 
 void TransportFlow::DestroyFinal(nsAutoPtr<std::deque<TransportLayer *> > layers) {
-  ClearLayers(layers.get());
+  ClearLayers(layers);
 }
 
 void TransportFlow::ClearLayers(std::queue<TransportLayer *>* layers) {
@@ -61,7 +61,7 @@ void TransportFlow::ClearLayers(std::deque<TransportLayer *>* layers) {
 
 nsresult TransportFlow::PushLayer(TransportLayer *layer) {
   CheckThread();
-  UniquePtr<TransportLayer> layer_tmp(layer);  // Destroy on failure.
+  ScopedDeletePtr<TransportLayer> layer_tmp(layer);  // Destroy on failure.
 
   // Don't allow pushes once we are in error state.
   if (state_ == TransportLayer::TS_ERROR) {
@@ -90,7 +90,7 @@ nsresult TransportFlow::PushLayer(TransportLayer *layer) {
     old_layer->SignalStateChange.disconnect(this);
     old_layer->SignalPacketReceived.disconnect(this);
   }
-  layers_->push_front(layer_tmp.release());
+  layers_->push_front(layer_tmp.forget());
   layer->Inserted(this, old_layer);
 
   layer->SignalStateChange.connect(this, &TransportFlow::StateChange);
@@ -146,11 +146,11 @@ nsresult TransportFlow::PushLayers(nsAutoPtr<std::queue<TransportLayer *> > laye
 
   if (NS_FAILED(rv)) {
     // Destroy any layers we could not push.
-    ClearLayers(layers.get());
+    ClearLayers(layers);
 
     // Now destroy the rest of the flow, because it's no longer
     // in an acceptable state.
-    ClearLayers(layers_.get());
+    ClearLayers(layers_);
 
     // Set ourselves to have failed.
     StateChangeInt(TransportLayer::TS_ERROR);

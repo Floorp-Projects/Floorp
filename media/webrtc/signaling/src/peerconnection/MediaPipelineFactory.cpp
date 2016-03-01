@@ -125,10 +125,10 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
     return NS_ERROR_INVALID_ARG;
   }
 
-  UniquePtr<VideoCodecConfigH264> h264Config;
+  ScopedDeletePtr<VideoCodecConfigH264> h264Config;
 
   if (desc.mName == "H264") {
-    h264Config = MakeUnique<VideoCodecConfigH264>();
+    h264Config = new VideoCodecConfigH264;
     size_t spropSize = sizeof(h264Config->sprop_parameter_sets);
     strncpy(h264Config->sprop_parameter_sets,
             desc.mSpropParameterSets.c_str(),
@@ -141,7 +141,7 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
 
   VideoCodecConfig* configRaw;
   configRaw = new VideoCodecConfig(
-      pt, desc.mName, desc.mConstraints, h264Config.get());
+      pt, desc.mName, desc.mConstraints, h264Config);
 
   configRaw->mAckFbTypes = desc.mAckFbTypes;
   configRaw->mNackFbTypes = desc.mNackFbTypes;
