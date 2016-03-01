@@ -21,7 +21,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
-import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -37,7 +37,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.provider.Browser;
 import android.util.Log;
-import android.content.SharedPreferences;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -819,6 +818,13 @@ public class Tabs implements GeckoEventListener {
     }
 
     public Tab loadUrlWithIntentExtras(final String url, final SafeIntent intent, final int flags) {
+        // We can't directly create a listener to tell when the user taps on the "What's new"
+        // notification, so we use this intent handling as a signal that they tapped the notification.
+        if (intent.getBooleanExtra(WhatsNewReceiver.EXTRA_WHATSNEW_NOTIFICATION, false)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION,
+                    WhatsNewReceiver.EXTRA_WHATSNEW_NOTIFICATION);
+        }
+
         // Note: we don't get the URL from the intent so the calling
         // method has the opportunity to change the URL if applicable.
         return loadUrl(url, null, -1, intent, flags);

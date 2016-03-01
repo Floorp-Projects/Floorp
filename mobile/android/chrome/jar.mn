@@ -34,7 +34,6 @@ chrome.jar:
   content/SelectHelper.js              (content/SelectHelper.js)
   content/SelectionHandler.js          (content/SelectionHandler.js)
   content/ActionBarHandler.js          (content/ActionBarHandler.js)
-  content/WebappRT.js                  (content/WebappRT.js)
   content/EmbedRT.js                   (content/EmbedRT.js)
   content/InputWidgetHelper.js         (content/InputWidgetHelper.js)
   content/WebrtcUI.js                  (content/WebrtcUI.js)

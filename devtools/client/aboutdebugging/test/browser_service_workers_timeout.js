@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable mozilla/no-cpows-in-tests */
-/* global sendAsyncMessage */
-
 "use strict";
 
 // Service workers can't be loaded from chrome://,
@@ -14,13 +11,6 @@ const SERVICE_WORKER = HTTP_ROOT + "service-workers/empty-sw.js";
 const TAB_URL = HTTP_ROOT + "service-workers/empty-sw.html";
 
 const SW_TIMEOUT = 1000;
-
-function assertHasWorker(expected, document, type, name) {
-  let names = [...document.querySelectorAll("#" + type + " .target-name")];
-  names = names.map(element => element.textContent);
-  is(names.includes(name), expected,
-      "The " + type + " url appears in the list: " + names);
-}
 
 add_task(function* () {
   yield new Promise(done => {
@@ -42,25 +32,10 @@ add_task(function* () {
   let serviceWorkersElement = document.getElementById("service-workers");
   yield waitForMutation(serviceWorkersElement, { childList: true });
 
-  assertHasWorker(true, document, "service-workers", SERVICE_WORKER);
+  assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
 
   // Ensure that the registration resolved before trying to connect to the sw
-  let frameScript = function() {
-    // Retrieve the `sw` promise created in the html page
-    let { sw } = content.wrappedJSObject;
-    sw.then(function() {
-      sendAsyncMessage("sw-registered");
-    });
-  };
-  let mm = swTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-
-  yield new Promise(done => {
-    mm.addMessageListener("sw-registered", function listener() {
-      mm.removeMessageListener("sw-registered", listener);
-      done();
-    });
-  });
+  yield waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
   // Retrieve the DEBUG button for the worker
@@ -88,7 +63,7 @@ add_task(function* () {
     setTimeout(done, SW_TIMEOUT * 2);
   });
 
-  assertHasWorker(true, document, "service-workers", SERVICE_WORKER);
+  assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
   ok(targetElement.querySelector(".debug-button"),
     "The debug button is still there");
 
@@ -102,35 +77,14 @@ add_task(function* () {
   ok(!targetElement.querySelector(".debug-button"),
     "The debug button was removed when the worker was killed");
 
-  // Finally, unregister the service worker itself
-  // Use message manager to work with e10s
-  frameScript = function() {
-    // Retrieve the `sw` promise created in the html page
-    let { sw } = content.wrappedJSObject;
-    sw.then(function(registration) {
-      registration.unregister().then(function() {
-        sendAsyncMessage("sw-unregistered");
-      },
-      function(e) {
-        dump("SW not unregistered; " + e + "\n");
-      });
-    });
-  };
-  mm = swTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-
-  yield new Promise(done => {
-    mm.addMessageListener("sw-unregistered", function listener() {
-      mm.removeMessageListener("sw-unregistered", listener);
-      done();
-    });
-  });
+  // Finally, unregister the service worker itself.
+  yield unregisterServiceWorker(swTab);
   ok(true, "Service worker registration unregistered");
 
   // Now ensure that the worker registration is correctly removed.
   // The list should update once the registration is destroyed.
   yield waitForMutation(serviceWorkersElement, { childList: true });
-  assertHasWorker(false, document, "service-workers", SERVICE_WORKER);
+  assertHasTarget(false, document, "service-workers", SERVICE_WORKER);
 
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);

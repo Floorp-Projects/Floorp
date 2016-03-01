@@ -27,7 +27,6 @@ globals:
     TelemetryStopwatch: false
     UITelemetry: false
     UserAgentOverrides: 0
-    WebappManager: false
     XPCOMUtils: false
     ctypes: false
     dump: false

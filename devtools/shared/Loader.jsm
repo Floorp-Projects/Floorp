@@ -32,6 +32,7 @@ var loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": Loader,
   PromiseDebugging,
+  ChromeUtils,
   ThreadSafeChromeUtils,
   HeapSnapshot,
 };

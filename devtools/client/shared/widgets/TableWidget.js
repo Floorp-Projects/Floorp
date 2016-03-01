@@ -24,6 +24,7 @@ const EVENTS = {
   ROW_CONTEXT_MENU: "row-context-menu",
   ROW_SELECTED: "row-selected",
   ROW_UPDATED: "row-updated",
+  TABLE_FILTERED: "table-filtered",
   SCROLL_END: "scroll-end"
 };
 Object.defineProperty(this, "EVENTS", {
@@ -353,6 +354,7 @@ TableWidget.prototype = {
       if (key != this.sortedOn) {
         column.insertAt(item, index);
       }
+      column.updateZebra();
     }
     this.items.set(item[this.uniqueId], item);
     this.tbody.removeAttribute("empty");
@@ -441,6 +443,41 @@ TableWidget.prototype = {
   },
 
   /**
+   * Filters the table based on a specific value
+   *
+   * @param {String} value: The filter value
+   * @param {Array} ignoreProps: Props to ignore while filtering
+   */
+  filterItems(value, ignoreProps = []) {
+    if (this.filteredValue == value) {
+      return;
+    }
+    if (!value) {
+      this.emit(EVENTS.TABLE_FILTERED, []);
+      return;
+    }
+    this.filteredValue = value;
+    // Shouldn't be case-sensitive
+    value = value.toLowerCase();
+
+    let itemsToHide = [...this.items.keys()];
+    // Loop through all items and hide unmatched items
+    for (let [id, val] of this.items) {
+      for (let prop in val) {
+        if (ignoreProps.includes(prop)) {
+          continue;
+        }
+        let propValue = val[prop].toString().toLowerCase();
+        if (propValue.includes(value)) {
+          itemsToHide.splice(itemsToHide.indexOf(id), 1);
+          break;
+        }
+      }
+    }
+    this.emit(EVENTS.TABLE_FILTERED, itemsToHide);
+  },
+
+  /**
    * Calls the afterScroll function when the user has stopped scrolling
    */
   onScroll: function() {
@@ -521,6 +558,9 @@ function Column(table, id, header) {
   this.onRowUpdated = this.onRowUpdated.bind(this);
   this.table.on(EVENTS.ROW_UPDATED, this.onRowUpdated);
 
+  this.onTableFiltered = this.onTableFiltered.bind(this);
+  this.table.on(EVENTS.TABLE_FILTERED, this.onTableFiltered);
+
   this.onClick = this.onClick.bind(this);
   this.onMousedown = this.onMousedown.bind(this);
   this.onKeydown = this.onKeydown.bind(this);
@@ -597,6 +637,21 @@ Column.prototype = {
     } else {
       this.sorted = 2;
     }
+    this.updateZebra();
+  },
+
+  onTableFiltered: function(event, itemsToHide) {
+    this._updateItems();
+    if (!this.cells) {
+      return;
+    }
+    for (let cell of this.cells) {
+      cell.hidden = false;
+    }
+    for (let id of itemsToHide) {
+      this.cells[this.items[id]].hidden = true;
+    }
+    this.updateZebra();
   },
 
   /**
@@ -612,12 +667,14 @@ Column.prototype = {
     if (this.highlightUpdated && this.items[id] != null) {
       this.cells[this.items[id]].flash();
     }
+    this.updateZebra();
   },
 
   destroy: function() {
     this.table.off(EVENTS.COLUMN_SORTED, this.onColumnSorted);
     this.table.off(EVENTS.HEADER_CONTEXT_MENU, this.toggleColumn);
     this.table.off(EVENTS.ROW_UPDATED, this.onRowUpdated);
+    this.table.off(EVENTS.TABLE_FILTERED, this.onTableFiltered);
     this.splitter.remove();
     this.column.parentNode.remove();
     this.cells = null;
@@ -718,6 +775,7 @@ Column.prototype = {
     }
     this.items[item[this.uniqueId]] = index;
     this.cells.splice(index, 0, new Cell(this, item, this.cells[index]));
+    this.updateZebra();
   },
 
   /**
@@ -846,7 +904,19 @@ Column.prototype = {
       this.cells[this.items[this.selectedRow]].toggleClass("theme-selected");
     }
     this._itemsDirty = false;
+    this.updateZebra();
     return items;
+  },
+
+  updateZebra() {
+    this._updateItems();
+    let i = 0;
+    for (let cell of this.cells) {
+      if (!cell.hidden) {
+        i++;
+      }
+      cell.toggleClass("even", !(i % 2));
+    }
   },
 
   /**
@@ -911,6 +981,12 @@ Column.prototype = {
         if (this.header == prevRow) {
           prevRow = this.column.lastChild;
         }
+        while (prevRow.hasAttribute("hidden")) {
+          prevRow = prevRow.previousSibling;
+          if (this.header == prevRow) {
+            prevRow = this.column.lastChild;
+          }
+        }
         this.table.emit(EVENTS.ROW_SELECTED, prevRow.getAttribute("data-id"));
         break;
 
@@ -918,6 +994,10 @@ Column.prototype = {
         event.preventDefault();
         let nextRow = event.originalTarget.nextSibling ||
                       this.header.nextSibling;
+        while (nextRow.hasAttribute("hidden")) {
+          nextRow = nextRow.nextSibling ||
+                    this.header.nextSibling;
+        }
         this.table.emit(EVENTS.ROW_SELECTED, nextRow.getAttribute("data-id"));
         break;
     }
@@ -964,6 +1044,18 @@ Cell.prototype = {
     return this._id;
   },
 
+  get hidden() {
+    return this.label.hasAttribute("hidden");
+  },
+
+  set hidden(value) {
+    if (value) {
+      this.label.setAttribute("hidden", "hidden");
+    } else {
+      this.label.removeAttribute("hidden");
+    }
+  },
+
   set value(value) {
     this._value = value;
     if (value == null) {
@@ -993,8 +1085,8 @@ Cell.prototype = {
     return this._value;
   },
 
-  toggleClass: function(className) {
-    this.label.classList.toggle(className);
+  toggleClass: function(className, condition) {
+    this.label.classList.toggle(className, condition);
   },
 
   /**
@@ -1005,6 +1097,11 @@ Cell.prototype = {
     this.label.classList.remove("flash-out");
     // Cause a reflow so that the animation retriggers on adding back the class
     let a = this.label.parentNode.offsetWidth; // eslint-disable-line
+    let onAnimEnd = () => {
+      this.label.classList.remove("flash-out");
+      this.label.removeEventListener("animationend", onAnimEnd);
+    };
+    this.label.addEventListener("animationend", onAnimEnd);
     this.label.classList.add("flash-out");
   },
 

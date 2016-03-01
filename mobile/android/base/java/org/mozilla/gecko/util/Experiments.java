@@ -25,15 +25,19 @@ public class Experiments {
     // Display History and Bookmarks in 3-dot menu.
     public static final String BOOKMARKS_HISTORY_MENU = "bookmark-history-menu";
 
-    // Onboarding: "Features and Story"
+    // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
+    public static final String SEARCH_TERM = "search-term";
+
+    // Show a system notification linking to a "What's New" page on app update.
+    public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
+
+    // Onboarding: "Features and Story". These experiments are determined
+    // on the client, they are not part of the server config.
     public static final String ONBOARDING2_A = "onboarding2-a"; // Control: Single (blue) welcome screen
     public static final String ONBOARDING2_B = "onboarding2-b"; // 4 static Feature slides
     public static final String ONBOARDING2_C = "onboarding2-c"; // 4 static + 1 clickable (Data saving) Feature slides
 
     public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
-
-    // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
-    public static final String SEARCH_TERM = "search-term";
 
     private static volatile Boolean disabled = null;
 

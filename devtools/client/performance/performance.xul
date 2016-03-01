@@ -29,7 +29,7 @@
   <script type="application/javascript" src="views/recordings.js"/>
 
   <popupset id="performance-options-popupset">
-    <menupopup id="performance-filter-menupopup"/>
+    <menupopup id="performance-filter-menupopup" position="before_start"/>
     <menupopup id="performance-options-menupopup" position="before_end">
       <menuitem id="option-show-platform-data"
                 type="checkbox"

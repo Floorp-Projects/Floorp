@@ -51,6 +51,7 @@ button {
 
 .target {
   margin-top: 5px;
+  min-height: 34px;
   display: flex;
   flex-direction: row;
   align-items: center;

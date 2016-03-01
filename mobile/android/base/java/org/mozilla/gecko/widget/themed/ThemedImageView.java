@@ -49,8 +49,8 @@ public class ThemedImageView extends android.widget.ImageView
     }
 
     private void initialize(final Context context, final AttributeSet attrs, final int defStyle) {
-        // The theme can be null, particularly for webapps: Bug 1089266.  Or we
-        // might be instantiating this View in an IDE, with no ambient GeckoApplication.
+        // The theme can be null, particularly if we might be instantiating this
+        // View in an IDE, with no ambient GeckoApplication.
         final Context applicationContext = context.getApplicationContext();
         if (applicationContext instanceof GeckoApplication) {
             theme = ((GeckoApplication) applicationContext).getLightweightTheme();
