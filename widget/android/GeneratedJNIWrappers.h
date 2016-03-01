@@ -1597,6 +1597,22 @@ public:
 
     auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
 
+    struct OnDefaultKeyEvent_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onDefaultKeyEvent";
+        static constexpr char signature[] =
+                "(Landroid/view/KeyEvent;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnDefaultKeyEvent(mozilla::jni::Object::Param) const -> void;
+
     struct OnImeAcknowledgeFocus_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
@@ -1691,10 +1707,11 @@ public:
                 int32_t,
                 int32_t,
                 int32_t,
-                bool> Args;
+                bool,
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "onKeyEvent";
         static constexpr char signature[] =
-                "(IIIIJIIIIIZ)V";
+                "(IIIIJIIIIIZLandroid/view/KeyEvent;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
