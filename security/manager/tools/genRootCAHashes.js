@@ -215,8 +215,9 @@ function insertTrustAnchorsFromDatabase() {
 //  PRIMARY LOGIC
 //
 
-if (arguments.length < 1) {
-  throw "Usage: genRootCAHashes.js <absolute path to current RootHashes.inc>";
+if (arguments.length != 1) {
+  throw new Error("Usage: genRootCAHashes.js " +
+                  "<absolute path to current RootHashes.inc>");
 }
 
 var trustAnchorsFile = FileUtils.getFile("CurWorkD", [FILENAME_TRUST_ANCHORS]);
