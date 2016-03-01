@@ -894,8 +894,8 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
 
-    if (JSObject* metadata = allocationMetadataBuilder->build(cx, obj)) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (JSObject* metadata = allocationMetadataBuilder->build(cx, obj, oomUnsafe)) {
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);

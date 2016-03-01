@@ -19,6 +19,7 @@
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/Utility.h"
 
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
@@ -2672,8 +2673,13 @@ struct AllocationMetadataBuilder {
     // nullptr if there's no metadata to attach.
     //
     // Implementations should treat all errors as fatal; there is no way to
-    // report errors from this callback.
-    virtual JSObject* build(JSContext *cx, JS::HandleObject obj) const { return nullptr; }
+    // report errors from this callback. In particular, the caller provides an
+    // oomUnsafe for overriding implementations to use.
+    virtual JSObject* build(JSContext* cx, JS::HandleObject obj,
+                            AutoEnterOOMUnsafeRegion& oomUnsafe) const
+    {
+        return nullptr;
+    }
 };
 
 /**
