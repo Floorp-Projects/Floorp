@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 
 import android.content.Context;
@@ -19,7 +18,6 @@ import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.View;
-import android.widget.TextView;
 
 /**
  * Adapter to back the BookmarksListView with a list of bookmarks.
@@ -316,9 +314,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         }
 
         if (viewType == VIEW_TYPE_SCREENSHOT) {
-            // TODO: Update view in a more robust way.
-            ((TextView) view.findViewById(R.id.title)).setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.UrlAnnotations.URL)));
-            ((TextView) view.findViewById(R.id.date)).setText(Long.toString(cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.UrlAnnotations.DATE_CREATED))));
+            ((BookmarkScreenshotRow) view).updateFromCursor(cursor);
         } else if (viewType == VIEW_TYPE_BOOKMARK_ITEM) {
             final TwoLinePageRow row = (TwoLinePageRow) view;
             row.updateFromCursor(cursor);
