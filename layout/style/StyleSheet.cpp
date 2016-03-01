@@ -9,15 +9,18 @@
 namespace mozilla {
 
 StyleSheet::StyleSheet()
-  : mOwningNode(nullptr)
+  : mDocument(nullptr)
+  , mOwningNode(nullptr)
   , mParsingMode(css::eUserSheetFeatures)
   , mDisabled(false)
 {
 }
 
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
+                       nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
-  : mOwningNode(aOwningNodeToUse)
+  : mDocument(aDocumentToUse)
+  , mOwningNode(aOwningNodeToUse)
   , mParsingMode(aCopy.mParsingMode)
   , mDisabled(aCopy.mDisabled)
 {
