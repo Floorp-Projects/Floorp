@@ -250,6 +250,9 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 final Cursor c = readingListAccessor.getReadingListUnfetched(context.getContentResolver());
+                if (c == null) {
+                    return;
+                }
                 try {
                     while (c.moveToNext()) {
                         JSONObject json = new JSONObject();
