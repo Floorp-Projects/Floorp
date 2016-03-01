@@ -1,8 +1,0 @@
-.Python
-bin/
-include/
-lib/
-talos.egg-info
-talos/tests/tp5n.zip
-talos/tests/tp5n
-talos/tests/devtools/damp.manifest.develop
