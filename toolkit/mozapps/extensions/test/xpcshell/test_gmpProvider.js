@@ -28,7 +28,8 @@ for (let plugin of GMPScope.GMP_PLUGINS) {
       missingFilesKey: plugin.missingFilesKey,
   });
   gMockAddons.set(mockAddon.id, mockAddon);
-  if (mockAddon.id.indexOf("gmp-eme-") == 0) {
+  if (mockAddon.id == "gmp-widevinecdm" ||
+      mockAddon.id.indexOf("gmp-eme-") == 0) {
     gMockEmeAddons.set(mockAddon.id, mockAddon);
   }
 }
@@ -236,7 +237,11 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
   let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
 
   createFile(libName);
-  createFile(id + ".info");
+  if (aPluginId == "gmp-widevinecdm") {
+    createFile("manifest.json");
+  } else {
+    createFile(id + ".info");
+  }
   if (aPluginId == "gmp-eme-adobe")
     createFile(id + ".voucher");
 }
@@ -307,10 +312,14 @@ add_task(function* test_pluginRegistration() {
 
     // Test that the GMPProvider tried to report via telemetry that the
     // addon's lib files are missing.
-    Assert.strictEqual(reportedKeys[addon.missingKey], true);
-    Assert.strictEqual(reportedKeys[addon.missingFilesKey],
-                       addon.missingFilesKey != "VIDEO_ADOBE_GMP_MISSING_FILES"
-                       ? (1+2) : (1+2+4));
+    if (addon.missingKey) {
+      Assert.strictEqual(reportedKeys[addon.missingKey], true);
+    }
+    if (addon.missingFilesKey) {
+      Assert.strictEqual(reportedKeys[addon.missingFilesKey],
+                         addon.missingFilesKey != "VIDEO_ADOBE_GMP_MISSING_FILES"
+                         ? (1+2) : (1+2+4));
+    }
     reportedKeys = {};
 
     // Create dummy GMP library/info files, and test that plugin registration
@@ -326,7 +335,9 @@ add_task(function* test_pluginRegistration() {
 
     // Test that the GMPProvider tried to report via telemetry that the
     // addon's lib files are NOT missing.
-    Assert.strictEqual(reportedKeys[addon.missingFilesKey], 0);
+    if (addon.missingFilesKey) {
+      Assert.strictEqual(reportedKeys[addon.missingFilesKey], 0);
+    }
 
     // Setting the ABI to something invalid should cause plugin to be removed at startup.
     clearPaths();
