@@ -1,0 +1,25 @@
+﻿<!DOCTYPE HTML>
+<html>
+  <!--
+  Bug 970517 - Storage inspector front end - tests
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>Storage inspector cookie test</title>
+  </head>
+  <body>
+    <script type="application/javascript;version=1.7">
+    "use strict";
+    let partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
+    let expiresIn24Hours = new Date(Date.now() + 60 * 60 * 24 * 1000).toUTCString();
+    for (let i = 1; i <= 5; i++) {
+    let cookieString = "test" + i + "=value" + i +
+    ";expires=" + expiresIn24Hours + ";path=/browser";
+    if (i % 2) {
+    cookieString += ";domain=.example.org";
+    }
+    document.cookie = cookieString;
+    }
+    </script>
+  </body>
+</html>
