@@ -1636,12 +1636,16 @@ public class LocalBrowserDB implements BrowserDB {
         }
 
         MatrixCursor blanksCursor = new MatrixCursor(new String[] {
-                Bookmarks._ID,
-                Bookmarks.URL,
-                Bookmarks.TITLE,
-                Bookmarks.TYPE});
+                TopSites._ID,
+                TopSites.BOOKMARK_ID,
+                TopSites.HISTORY_ID,
+                TopSites.URL,
+                TopSites.TITLE,
+                TopSites.TYPE});
 
         final MatrixCursor.RowBuilder rb = blanksCursor.newRow();
+        rb.add(-1);
+        rb.add(-1);
         rb.add(-1);
         rb.add("");
         rb.add("");

@@ -804,6 +804,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             db.execSQL("CREATE TEMP TABLE " + TABLE_TOPSITES + " AS" +
                        " SELECT " +
                        Bookmarks._ID + ", " +
+                       Combined.BOOKMARK_ID + ", " +
+                       Combined.HISTORY_ID + ", " +
                        Bookmarks.URL + ", " +
                        Bookmarks.TITLE + ", " +
                        Combined.HISTORY_ID + ", " +
@@ -822,6 +824,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
                        " SELECT * FROM (SELECT " +
                        Bookmarks._ID + ", " +
+                       Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
+                       " -1 AS " + Combined.HISTORY_ID + ", " +
                        Bookmarks.URL + ", " +
                        Bookmarks.TITLE + ", " +
                        "NULL AS " + Combined.HISTORY_ID + ", " +
@@ -840,6 +844,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             final SQLiteCursor c = (SQLiteCursor) db.rawQuery(
                         "SELECT " +
                         Bookmarks._ID + ", " +
+                        TopSites.BOOKMARK_ID + ", " +
+                        TopSites.HISTORY_ID + ", " +
                         Bookmarks.URL + ", " +
                         Bookmarks.TITLE + ", " +
                         Bookmarks.POSITION + ", " +
@@ -855,6 +861,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                         "SELECT " +
                         Bookmarks._ID + ", " +
+                        Bookmarks._ID + " AS " + TopSites.BOOKMARK_ID + ", " +
+                        " -1 AS " + TopSites.HISTORY_ID + ", " +
                         Bookmarks.URL + ", " +
                         Bookmarks.TITLE + ", " +
                         Bookmarks.POSITION + ", " +
