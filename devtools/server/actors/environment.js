@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { ActorClass, Arg, RetVal, method } = require("devtools/server/protocol");
 const { createValueGrip } = require("devtools/server/actors/object");
 
 /**
@@ -17,14 +18,13 @@ const { createValueGrip } = require("devtools/server/actors/object");
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this environment.
  */
-function EnvironmentActor(aEnvironment, aThreadActor)
-{
-  this.obj = aEnvironment;
-  this.threadActor = aThreadActor;
-}
+let EnvironmentActor = ActorClass({
+  typeName: "environment",
 
-EnvironmentActor.prototype = {
-  actorPrefix: "environment",
+  initialize: function (environment, threadActor) {
+    this.obj = environment;
+    this.threadActor = threadActor;
+  },
 
   /**
    * Return an environment form for use in a protocol message.
@@ -61,17 +61,54 @@ EnvironmentActor.prototype = {
 
     // Shall we list this environment's bindings?
     if (this.obj.type == "declarative") {
-      form.bindings = this._bindings();
+      form.bindings = this.bindings();
     }
 
     return form;
   },
 
   /**
-   * Return the identifier bindings object as required by the remote protocol
-   * specification.
+   * Handle a protocol request to change the value of a variable bound in this
+   * lexical environment.
+   *
+   * @param string name
+   *        The name of the variable to be changed.
+   * @param any value
+   *        The value to be assigned.
    */
-  _bindings: function () {
+  assign: method(function (name, value) {
+    // TODO: enable the commented-out part when getVariableDescriptor lands
+    // (bug 725815).
+    /*let desc = this.obj.getVariableDescriptor(name);
+
+    if (!desc.writable) {
+      return { error: "immutableBinding",
+               message: "Changing the value of an immutable binding is not " +
+                        "allowed" };
+    }*/
+
+    try {
+      this.obj.setVariable(name, value);
+    } catch (e) {
+      if (e instanceof Debugger.DebuggeeWouldRun) {
+        throw new Error("Assigning a value would cause the debuggee to run");
+      } else {
+        throw e;
+      }
+    }
+    return { from: this.actorID };
+  }, {
+    request: {
+      name: Arg(1),
+      value: Arg(2)
+    }
+  }),
+
+  /**
+   * Handle a protocol request to fully enumerate the bindings introduced by the
+   * lexical environment.
+   */
+  bindings: method(function () {
     let bindings = { arguments: [], variables: {} };
 
     // TODO: this part should be removed in favor of the commented-out part
@@ -159,56 +196,12 @@ EnvironmentActor.prototype = {
     }
 
     return bindings;
-  },
-
-  /**
-   * Handle a protocol request to change the value of a variable bound in this
-   * lexical environment.
-   *
-   * @param aRequest object
-   *        The protocol request object.
-   */
-  onAssign: function (aRequest) {
-    // TODO: enable the commented-out part when getVariableDescriptor lands
-    // (bug 725815).
-    /*let desc = this.obj.getVariableDescriptor(aRequest.name);
-
-    if (!desc.writable) {
-      return { error: "immutableBinding",
-               message: "Changing the value of an immutable binding is not " +
-                        "allowed" };
-    }*/
-
-    try {
-      this.obj.setVariable(aRequest.name, aRequest.value);
-    } catch (e) {
-      if (e instanceof Debugger.DebuggeeWouldRun) {
-        return { error: "threadWouldRun",
-                 cause: e.cause ? e.cause : "setter",
-                 message: "Assigning a value would cause the debuggee to run" };
-      } else {
-        throw e;
-      }
+  }, {
+    request: {},
+    response: {
+      bindings: RetVal("json")
     }
-    return { from: this.actorID };
-  },
-
-  /**
-   * Handle a protocol request to fully enumerate the bindings introduced by the
-   * lexical environment.
-   *
-   * @param aRequest object
-   *        The protocol request object.
-   */
-  onBindings: function (aRequest) {
-    return { from: this.actorID,
-             bindings: this._bindings() };
-  }
-};
-
-EnvironmentActor.prototype.requestTypes = {
-  "assign": EnvironmentActor.prototype.onAssign,
-  "bindings": EnvironmentActor.prototype.onBindings
-};
+  })
+});
 
 exports.EnvironmentActor = EnvironmentActor;

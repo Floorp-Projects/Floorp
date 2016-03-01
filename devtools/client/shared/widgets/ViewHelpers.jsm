@@ -225,7 +225,8 @@ this.ViewHelpers = {
   },
 
   /**
-   * Sets a side pane hidden or visible.
+   * Sets a toggled pane hidden or visible. The pane can either be displayed on
+   * the side (right or left depending on the locale) or at the bottom.
    *
    * @param object aFlags
    *        An object containing some of the following properties:
@@ -246,9 +247,7 @@ this.ViewHelpers = {
     aPane.removeAttribute("hidden");
 
     // Add a class to the pane to handle min-widths, margins and animations.
-    if (!aPane.classList.contains("generic-toggled-side-pane")) {
-      aPane.classList.add("generic-toggled-side-pane");
-    }
+    aPane.classList.add("generic-toggled-pane");
 
     // Avoid useless toggles.
     if (aFlags.visible == !aPane.hasAttribute("pane-collapsed")) {
@@ -265,29 +264,37 @@ this.ViewHelpers = {
 
     // Computes and sets the pane margins in order to hide or show it.
     let doToggle = () => {
+      // Negative margins are applied to "right" and "left" to support RTL and
+      // LTR directions, as well as to "bottom" to support vertical layouts.
+      // Unnecessary negative margins are forced to 0 via CSS in widgets.css.
       if (aFlags.visible) {
         aPane.style.marginLeft = "0";
         aPane.style.marginRight = "0";
+        aPane.style.marginBottom = "0";
         aPane.removeAttribute("pane-collapsed");
       } else {
-        let margin = ~~(aPane.getAttribute("width")) + 1;
-        aPane.style.marginLeft = -margin + "px";
-        aPane.style.marginRight = -margin + "px";
+        let width = Math.floor(aPane.getAttribute("width")) + 1;
+        let height = Math.floor(aPane.getAttribute("height")) + 1;
+        aPane.style.marginLeft = -width + "px";
+        aPane.style.marginRight = -width + "px";
+        aPane.style.marginBottom = -height + "px";
         aPane.setAttribute("pane-collapsed", "");
       }
 
-      // Invoke the callback when the transition ended.
+      // Wait for the animation to end before calling afterToggle()
       if (aFlags.animated) {
         aPane.addEventListener("transitionend", function onEvent() {
           aPane.removeEventListener("transitionend", onEvent, false);
+          // Prevent unwanted transitions: if the panel is hidden and the layout
+          // changes margins will be updated and the panel will pop out.
+          aPane.removeAttribute("animated");
           if (aFlags.callback) aFlags.callback();
         }, false);
-      }
-      // Invoke the callback immediately since there's no transition.
-      else {
+      } else {
+        // Invoke the callback immediately since there's no transition.
         if (aFlags.callback) aFlags.callback();
       }
-    }
+    };
 
     // Sometimes it's useful delaying the toggle a few ticks to ensure
     // a smoother slide in-out animation.
