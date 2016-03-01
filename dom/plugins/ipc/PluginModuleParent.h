@@ -259,6 +259,11 @@ protected:
     virtual nsresult EndUpdateBackground(NPP instance,
                                          const nsIntRect& aRect) override;
 
+#if defined(XP_WIN)
+    virtual nsresult GetScrollCaptureContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
+    virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling);
+#endif
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) override;
 #else
