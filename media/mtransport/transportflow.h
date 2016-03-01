@@ -15,7 +15,7 @@
 
 #include "nscore.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Scoped.h"
 #include "transportlayer.h"
 #include "m_cpp_utils.h"
 #include "nsAutoPtr.h"
@@ -135,7 +135,7 @@ class TransportFlow final : public nsISupports,
 
   std::string id_;
   TransportLayer::State state_;
-  UniquePtr<std::deque<TransportLayer *>> layers_;
+  ScopedDeletePtr<std::deque<TransportLayer *> > layers_;
   nsCOMPtr<nsIEventTarget> target_;
 };
 

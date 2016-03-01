@@ -463,7 +463,7 @@ bool TransportLayerDtls::Setup() {
     MOZ_MTLOG(ML_ERROR, "DTLS layer with nothing below. This is useless");
     return false;
   }
-  nspr_io_adapter_ = MakeUnique<TransportLayerNSPRAdapter>(downward_);
+  nspr_io_adapter_ = new TransportLayerNSPRAdapter(downward_);
 
   if (!identity_) {
     MOZ_MTLOG(ML_ERROR, "Can't start DTLS without an identity");
