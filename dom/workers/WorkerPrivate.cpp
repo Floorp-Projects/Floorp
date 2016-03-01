@@ -514,9 +514,9 @@ private:
       rv.SuppressException();
       return false;
     }
-    // Make sure to propagate exceptions from rv onto aCx, so that our PostRun
-    // can report it.  We do this for all failures on rv, because now we're
-    // using rv to track all the state we care about.
+    // Make sure to propagate exceptions from rv onto aCx, so that they will get
+    // reported after we return.  We do this for all failures on rv, because now
+    // we're using rv to track all the state we care about.
     //
     // This is a little dumb, but aCx is in the null compartment here because we
     // set it up that way in our Run(), since we had not created the global at
@@ -574,9 +574,9 @@ private:
       rv.SuppressException();
       return false;
     }
-    // Make sure to propagate exceptions from rv onto aCx, so that our PostRun
-    // can report it.  We do this for all failures on rv, because now we're
-    // using rv to track all the state we care about.
+    // Make sure to propagate exceptions from rv onto aCx, so that they will get
+    // reported after we return.  We do this for all failures on rv, because now
+    // we're using rv to track all the state we care about.
     if (rv.MaybeSetPendingException(aCx)) {
       return false;
     }
