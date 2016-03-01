@@ -763,7 +763,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         String[] suggestedSiteArgs = new String[0];
 
-        boolean firstClause = true;
+        boolean hasProcessedAnySuggestedSites = true;
 
         final int idColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks._ID);
         final int urlColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks.URL);
@@ -771,10 +771,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         while (suggestedSitesCursor.moveToNext()) {
             // We'll be using this as a subquery, hence we need to avoid the preceding UNION ALL
-            if (!firstClause) {
+            if (!hasProcessedAnySuggestedSites) {
                 suggestedSitesBuilder.append(" UNION ALL");
             } else {
-                firstClause = false;
+                hasProcessedAnySuggestedSites = false;
             }
             suggestedSitesBuilder.append(" SELECT" +
                                          " ? AS " + Bookmarks._ID + "," +
@@ -818,28 +818,30 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        DBUtils.appendSelectionArgs(ignoreForTopSitesArgs,
                                                    totalLimitArgs));
 
-            db.execSQL("INSERT INTO " + TABLE_TOPSITES +
-                       // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
-                       // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
-                       // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
-                       " SELECT * FROM (SELECT " +
-                       Bookmarks._ID + ", " +
-                       Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
-                       " -1 AS " + Combined.HISTORY_ID + ", " +
-                       Bookmarks.URL + ", " +
-                       Bookmarks.TITLE + ", " +
-                       "NULL AS " + Combined.HISTORY_ID + ", " +
-                       TopSites.TYPE_SUGGESTED + " as " + TopSites.TYPE +
-                       " FROM ( " + suggestedSitesBuilder.toString() + " )" +
-                       " WHERE " +
-                       Bookmarks.URL + " NOT IN (SELECT url FROM " + TABLE_TOPSITES + ")" +
-                       " AND " +
-                       Bookmarks.URL + " NOT IN (SELECT url " + pinnedSitesFromClause + ")" +
-                       suggestedLimitClause + " )",
+            if (!hasProcessedAnySuggestedSites) {
+                db.execSQL("INSERT INTO " + TABLE_TOPSITES +
+                           // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
+                           // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
+                           // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
+                           " SELECT * FROM (SELECT " +
+                           Bookmarks._ID + ", " +
+                           Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
+                           " -1 AS " + Combined.HISTORY_ID + ", " +
+                           Bookmarks.URL + ", " +
+                           Bookmarks.TITLE + ", " +
+                           "NULL AS " + Combined.HISTORY_ID + ", " +
+                           TopSites.TYPE_SUGGESTED + " as " + TopSites.TYPE +
+                           " FROM ( " + suggestedSitesBuilder.toString() + " )" +
+                           " WHERE " +
+                           Bookmarks.URL + " NOT IN (SELECT url FROM " + TABLE_TOPSITES + ")" +
+                           " AND " +
+                           Bookmarks.URL + " NOT IN (SELECT url " + pinnedSitesFromClause + ")" +
+                           suggestedLimitClause + " )",
 
-                       DBUtils.concatenateSelectionArgs(suggestedSiteArgs,
-                                                        pinnedSitesArgs,
-                                                        suggestedLimitArgs));
+                           DBUtils.concatenateSelectionArgs(suggestedSiteArgs,
+                                                            pinnedSitesArgs,
+                                                            suggestedLimitArgs));
+            }
 
             final SQLiteCursor c = (SQLiteCursor) db.rawQuery(
                         "SELECT " +
