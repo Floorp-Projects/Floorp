@@ -312,9 +312,6 @@ WorkerRunnable::Run()
   // http://www.whatwg.org/specs/web-apps/current-work/#run-a-worker
   // If we don't have a globalObject we have to use an AutoJSAPI instead, but
   // this is OK as we won't be running script in these circumstances.
-  // It's important that aes is declared after jsapi, because if WorkerRun
-  // creates a global then we construct aes before PostRun and we need them to
-  // be destroyed in the correct order.
   Maybe<mozilla::dom::AutoJSAPI> jsapi;
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
@@ -377,15 +374,26 @@ WorkerRunnable::Run()
   // We can't even assert that this didn't create our global, since in the case
   // of CompileScriptRunnable it _does_.
 
-  // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
-  // lazily create a global, so we construct aes here before calling PostRun.
-  if (targetIsWorkerThread && !aes && DefaultGlobalObject()) {
-    aes.emplace(DefaultGlobalObject(), "worker runnable",
-                false, GetCurrentThreadJSContext());
-    cx = aes->cx();
-  }
-
+  // It would be nice to avoid passing a JSContext to PostRun, but in the case
+  // of ScriptExecutorRunnable we need to know the current compartment on the
+  // JSContext (the one we set up based on the global returned from PreRun) so
+  // that we can sanely do exception reporting.  In particular, we want to make
+  // sure that we do our JS_SetPendingException while still in that compartment,
+  // because otherwise we might end up trying to create a cross-compartment
+  // wrapper when we try to move the JS exception from our runnable's
+  // ErrorResult to the JSContext, and that's not desirable in this case.
+  //
+  // We _could_ skip passing a JSContext here and then in
+  // ScriptExecutorRunnable::PostRun end up grabbing it from the WorkerPrivate
+  // and looking at its current compartment.  But that seems like slightly weird
+  // action-at-a-distance...
+  //
+  // In any case, we do NOT try to change the compartment on the JSContext at
+  // this point; in the one case in which we could do that
+  // (CompileScriptRunnable) it actually doesn't matter which compartment we're
+  // in for PostRun.
   PostRun(cx, mWorkerPrivate, result);
+  MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
