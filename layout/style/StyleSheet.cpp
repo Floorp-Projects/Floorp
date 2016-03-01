@@ -4,14 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StyleSheet.h"
+#include "mozilla/StyleSheet.h"
+
+#include "mozilla/ServoStyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
+#include "mozilla/CSSStyleSheet.h"
 
 namespace mozilla {
 
-StyleSheet::StyleSheet()
+StyleSheet::StyleSheet(StyleBackendType aType)
   : mDocument(nullptr)
   , mOwningNode(nullptr)
   , mParsingMode(css::eUserSheetFeatures)
+  , mType(aType)
   , mDisabled(false)
 {
 }
@@ -22,8 +27,18 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   : mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
   , mParsingMode(aCopy.mParsingMode)
+  , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
 {
+}
+
+StyleSheetInfo&
+StyleSheet::SheetInfo()
+{
+  if (IsServo()) {
+    return AsServo();
+  }
+  return *AsGecko().mInner;
 }
 
 } // namespace mozilla
