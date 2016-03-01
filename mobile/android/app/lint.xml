@@ -6,6 +6,12 @@
     <!-- We have a custom menu and don't conform to the recommended styles. -->
     <issue id="IconColors" severity="ignore" />
 
+    <!-- We use our own preprocessing to either add or remove
+         `android:debuggable` when building with mach so it's
+         not actually hard-coded. We can probably remove this
+         warning when we switch to gradle. -->
+    <issue id="HardcodedDebugMode" severity="ignore" />
+
     <!-- We want all lint warnings to be fatal errors.
          Right now, we set these to lint warnings so:
 
