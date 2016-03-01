@@ -15,7 +15,7 @@
 #include "sigslot.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Scoped.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
@@ -177,7 +177,7 @@ class TransportLayerDtls final : public TransportLayer {
 
   // Must delete nspr_io_adapter after ssl_fd_ b/c ssl_fd_ causes an alert
   // (ssl_fd_ contains an un-owning pointer to nspr_io_adapter_)
-  UniquePtr<TransportLayerNSPRAdapter> nspr_io_adapter_;
+  ScopedDeletePtr<TransportLayerNSPRAdapter> nspr_io_adapter_;
   ScopedPRFileDesc ssl_fd_;
 
   ScopedCERTCertificate peer_cert_;

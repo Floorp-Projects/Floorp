@@ -1103,7 +1103,7 @@ static auto& MediaManager_AnonymizeDevices = MediaManager::AnonymizeDevices;
 already_AddRefed<MediaManager::PledgeChar>
 MediaManager::SelectSettings(
     MediaStreamConstraints& aConstraints,
-    RefPtr<Refcountable<UniquePtr<SourceSet>>>& aSources)
+    RefPtr<Refcountable<ScopedDeletePtr<SourceSet>>>& aSources)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<PledgeChar> p = new PledgeChar();
@@ -1414,7 +1414,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       realBackend = manager->GetBackend(aWindowId);
     }
 
-    auto result = MakeUnique<SourceSet>();
+    ScopedDeletePtr<SourceSet> result(new SourceSet);
 
     if (hasVideo) {
       nsTArray<RefPtr<VideoDevice>> videos;
@@ -1432,16 +1432,16 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
         result->AppendElement(source);
       }
     }
-    SourceSet* handoff = result.release();
+    SourceSet* handoff = result.forget();
     NS_DispatchToMainThread(do_AddRef(NewRunnableFrom([id, handoff]() mutable {
-      UniquePtr<SourceSet> result(handoff); // grab result
+      ScopedDeletePtr<SourceSet> result(handoff); // grab result
       RefPtr<MediaManager> mgr = MediaManager_GetInstance();
       if (!mgr) {
         return NS_OK;
       }
       RefPtr<PledgeSourceSet> p = mgr->mOutstandingPledges.Remove(id);
       if (p) {
-        p->Resolve(result.release());
+        p->Resolve(result.forget());
       }
       return NS_OK;
     })));
@@ -1609,9 +1609,9 @@ media::Parent<media::NonE10s>*
 MediaManager::GetNonE10sParent()
 {
   if (!mNonE10sParent) {
-    mNonE10sParent = MakeUnique<media::Parent<media::NonE10s>>(true);
+    mNonE10sParent = new media::Parent<media::NonE10s>(true);
   }
-  return mNonE10sParent.get();
+  return mNonE10sParent;
 }
 
 /* static */ void
@@ -2115,8 +2115,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   p->Then([this, onSuccess, onFailure, windowID, c, listener, askPermission,
            prefs, isHTTPS, callID, origin](SourceSet*& aDevices) mutable {
 
-    RefPtr<Refcountable<UniquePtr<SourceSet>>> devices(
-         new Refcountable<UniquePtr<SourceSet>>(aDevices)); // grab result
+    RefPtr<Refcountable<ScopedDeletePtr<SourceSet>>> devices(
+         new Refcountable<ScopedDeletePtr<SourceSet>>(aDevices)); // grab result
 
     // Ensure that the captured 'this' pointer and our windowID are still good.
     if (!MediaManager::Exists() ||
@@ -2176,7 +2176,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                                              onFailure.forget(),
                                                              windowID, listener,
                                                              prefs, origin,
-                                                             devices->release()));
+                                                             devices->forget()));
       // Store the task w/callbacks.
       mActiveCallbacks.Put(callID, task.forget());
 
@@ -2335,7 +2335,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
                                                          aVideoType, aAudioType,
                                                          aFake, aFakeTracks);
     p->Then([id, aWindowId, aOriginKey](SourceSet*& aDevices) mutable {
-      UniquePtr<SourceSet> devices(aDevices); // secondary result
+      ScopedDeletePtr<SourceSet> devices(aDevices); // secondary result
 
       // Only run if window is still on our active list.
       RefPtr<MediaManager> mgr = MediaManager_GetInstance();
@@ -2347,7 +2347,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
         return NS_OK;
       }
       MediaManager_AnonymizeDevices(*devices, aOriginKey);
-      p->Resolve(devices.release());
+      p->Resolve(devices.forget());
       return NS_OK;
     });
   });
@@ -2381,7 +2381,7 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                                      MediaSourceEnum::Microphone,
                                                      fake);
   p->Then([onSuccess, windowId, listener](SourceSet*& aDevices) mutable {
-    UniquePtr<SourceSet> devices(aDevices); // grab result
+    ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
     RefPtr<MediaManager> mgr = MediaManager_GetInstance();
     mgr->RemoveFromWindowList(windowId, listener);
     nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*devices);

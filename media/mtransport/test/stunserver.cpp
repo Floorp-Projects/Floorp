@@ -78,8 +78,7 @@ nrappkit copyright:
    ekr@rtfm.com  Thu Dec 20 20:14:49 2001
 */
 #include "logging.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Scoped.h"
 #include "databuffer.h"
 
 extern "C" {
@@ -175,7 +174,7 @@ static nr_socket_vtbl nr_socket_wrapped_vtbl = {
 };
 
 int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
-  auto wrapped = MakeUnique<nr_socket_wrapped>();
+  ScopedDeletePtr<nr_socket_wrapped> wrapped(new nr_socket_wrapped());
 
   wrapped->sock_ = inner;
 
@@ -183,7 +182,7 @@ int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
   if (r)
     return r;
 
-  Unused << wrapped.release();
+  wrapped.forget();
   return 0;
 }
 
@@ -191,10 +190,10 @@ int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
 // Instance static.
 // Note: Calling Create() at static init time is not going to be safe, since
 // we have no reason to expect this will be initted to a nullptr yet.
-UniquePtr<TestStunServer> TestStunServer::instance;
-UniquePtr<TestStunTcpServer> TestStunTcpServer::instance;
-UniquePtr<TestStunServer> TestStunServer::instance6;
-UniquePtr<TestStunTcpServer> TestStunTcpServer::instance6;
+TestStunServer *TestStunServer::instance;
+TestStunTcpServer *TestStunTcpServer::instance;
+TestStunServer *TestStunServer::instance6;
+TestStunTcpServer *TestStunTcpServer::instance6;
 uint16_t TestStunServer::instance_port = 3478;
 uint16_t TestStunTcpServer::instance_port = 3478;
 
@@ -324,10 +323,10 @@ int TestStunServer::Initialize(int address_family) {
   return 0;
 }
 
-UniquePtr<TestStunServer> TestStunServer::Create(int address_family) {
+TestStunServer* TestStunServer::Create(int address_family) {
   NR_reg_init(NR_REG_MODE_LOCAL);
 
-  UniquePtr<TestStunServer> server(new TestStunServer());
+  ScopedDeletePtr<TestStunServer> server(new TestStunServer());
 
   if (server->Initialize(address_family))
     return nullptr;
@@ -341,7 +340,7 @@ UniquePtr<TestStunServer> TestStunServer::Create(int address_family) {
 
   NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, &TestStunServer::readable_cb, server.get());
 
-  return server;
+  return server.forget();
 }
 
 void TestStunServer::ConfigurePort(uint16_t port) {
@@ -355,19 +354,21 @@ TestStunServer* TestStunServer::GetInstance(int address_family) {
         instance = Create(address_family);
 
       MOZ_ASSERT(instance);
-      return instance.get();
+      return instance;
     case AF_INET6:
       if (!instance6)
         instance6 = Create(address_family);
 
-      return instance6.get();
+      return instance6;
     default:
       MOZ_CRASH();
   }
 }
 
 void TestStunServer::ShutdownInstance() {
+  delete instance;
   instance = nullptr;
+  delete instance6;
   instance6 = nullptr;
 }
 
@@ -536,19 +537,21 @@ TestStunTcpServer* TestStunTcpServer::GetInstance(int address_family) {
         instance = Create(address_family);
 
       MOZ_ASSERT(instance);
-      return instance.get();
+      return instance;
     case AF_INET6:
       if (!instance6)
         instance6 = Create(address_family);
 
-      return instance6.get();
+      return instance6;
     default:
       MOZ_CRASH();
   }
 }
 
 void TestStunTcpServer::ShutdownInstance() {
+  delete instance;
   instance = nullptr;
+  delete instance6;
   instance6 = nullptr;
 }
 
@@ -628,10 +631,10 @@ void TestStunTcpServer::accept_cb(NR_SOCKET s, int how, void *cb_arg) {
   NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, &TestStunServer::readable_cb, server);
 }
 
-  UniquePtr<TestStunTcpServer> TestStunTcpServer::Create(int address_family) {
+TestStunTcpServer* TestStunTcpServer::Create(int address_family) {
   NR_reg_init(NR_REG_MODE_LOCAL);
 
-  UniquePtr<TestStunTcpServer> server(new TestStunTcpServer());
+  ScopedDeletePtr<TestStunTcpServer> server(new TestStunTcpServer());
 
   if (server->Initialize(address_family)) {
     return nullptr;
@@ -645,7 +648,7 @@ void TestStunTcpServer::accept_cb(NR_SOCKET s, int how, void *cb_arg) {
 
   NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_READ, &TestStunTcpServer::accept_cb, server.get());
 
-  return server;
+  return server.forget();
 }
 
 TestStunTcpServer::~TestStunTcpServer() {
