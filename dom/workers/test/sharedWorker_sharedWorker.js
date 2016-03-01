@@ -72,6 +72,11 @@ onconnect = function(event) {
     throw new Error("'connect' event has data: " + event.data);
   }
 
+  // "".contains("") should trigger a warning in debug builds, but NOT fire
+  // error events at us.  If we ever actually remove contains() we'll need
+  // something else to test this case.
+  "".contains("");
+
   event.ports[0].onmessage = function(event) {
     if (!(event instanceof MessageEvent)) {
       throw new Error("'message' event is not a MessageEvent!");
