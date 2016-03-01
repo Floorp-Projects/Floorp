@@ -45,6 +45,7 @@ ObservedDocShell::AddOTMTMarker(UniquePtr<AbstractTimelineMarker>&& aMarker)
 void
 ObservedDocShell::ClearMarkers()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(GetLock()); // for `mOffTheMainThreadTimelineMarkers`.
   mTimelineMarkers.Clear();
   mOffTheMainThreadTimelineMarkers.Clear();
