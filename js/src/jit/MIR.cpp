@@ -899,6 +899,9 @@ MConstant::printOpcode(GenericPrinter& out) const
       case MIRType_Int32:
         out.printf("0x%x", toInt32());
         break;
+      case MIRType_Int64:
+        out.printf("0x%" PRIx64, toInt64());
+        break;
       case MIRType_Double:
         out.printf("%.16g", toDouble());
         break;

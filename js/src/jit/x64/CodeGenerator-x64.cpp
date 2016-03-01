@@ -286,7 +286,7 @@ CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
     const LAllocation* rhs = lir->getOperand(1);
 
     if (rhs->isConstant()) {
-        int32_t shift = ToInt32(rhs) & 0x3F;
+        int32_t shift = int32_t(ToInt64(rhs) & 0x3F);
         switch (lir->bitop()) {
           case JSOP_LSH:
             if (shift)
