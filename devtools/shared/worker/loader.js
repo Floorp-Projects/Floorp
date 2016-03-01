@@ -366,6 +366,7 @@ var loader = {
 
 var {
   Debugger,
+  URL,
   createSandbox,
   dump,
   rpc,
@@ -428,6 +429,7 @@ var {
 
     return {
       Debugger,
+      URL: this.URL,
       createSandbox,
       dump: this.dump,
       rpc,
@@ -465,6 +467,7 @@ var {
 
     return {
       Debugger: this.Debugger,
+      URL: this.URL,
       createSandbox: this.createSandbox,
       dump: this.dump,
       rpc: this.rpc,
@@ -494,7 +497,7 @@ this.worker = new WorkerDebuggerLoader({
     "Debugger": Debugger,
     "PromiseDebugging": PromiseDebugging,
     "Services": Object.create(null),
-    "URL": null,
+    "URL": URL,
     "chrome": chrome,
     "xpcInspector": xpcInspector
   },

@@ -5,6 +5,8 @@ var { DebuggerServer } = require("devtools/server/main");
 const protocol = require("devtools/server/protocol");
 const { Arg, method, RetVal } = protocol;
 
+loader.lazyRequireGetter(this, "ChromeUtils");
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -137,6 +139,20 @@ let WorkerActor = protocol.ActorClass({
     request: {
       options: Arg(0, "json"),
     },
+    response: RetVal("json")
+  }),
+
+  push: method(function () {
+    if (this._dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      return { error: "wrongType" };
+    }
+    let registration = this._getServiceWorkerRegistrationInfo();
+    let originAttributes = ChromeUtils.originAttributesToSuffix(
+      this._dbg.principal.originAttributes);
+    swm.sendPushEvent(originAttributes, registration.scope);
+    return { type: "pushed" };
+  }, {
+    request: {},
     response: RetVal("json")
   }),
 

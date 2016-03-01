@@ -2,15 +2,18 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env browser */
+/* eslint-disable mozilla/no-cpows-in-tests */
 /* exported openAboutDebugging, closeAboutDebugging, installAddon,
-   uninstallAddon, waitForMutation */
+   uninstallAddon, waitForMutation, assertHasTarget,
+   waitForServiceWorkerRegistered, unregisterServiceWorker */
+/* global sendAsyncMessage */
 
 "use strict";
 
-var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+var { utils: Cu, classes: Cc, interfaces: Ci } = Components;
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
@@ -144,5 +147,75 @@ function waitForMutation(target, mutationOptions) {
       resolve();
     });
     observer.observe(target, mutationOptions);
+  });
+}
+
+/**
+ * Checks if an about:debugging TargetList element contains a Target element
+ * corresponding to the specified name.
+ * @param {Boolean} expected
+ * @param {Document} document
+ * @param {String} type
+ * @param {String} name
+ */
+function assertHasTarget(expected, document, type, name) {
+  let names = [...document.querySelectorAll("#" + type + " .target-name")];
+  names = names.map(element => element.textContent);
+  is(names.includes(name), expected,
+    "The " + type + " url appears in the list: " + names);
+}
+
+/**
+ * Returns a promise that will resolve after the service worker in the page
+ * has successfully registered itself.
+ * @param {Tab} tab
+ */
+function waitForServiceWorkerRegistered(tab) {
+  // Make the test page notify us when the service worker is registered.
+  let frameScript = function() {
+    // Retrieve the `sw` promise created in the html page.
+    let { sw } = content.wrappedJSObject;
+    sw.then(function(registration) {
+      sendAsyncMessage("sw-registered");
+    });
+  };
+  let mm = tab.linkedBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+
+  return new Promise(done => {
+    mm.addMessageListener("sw-registered", function listener() {
+      mm.removeMessageListener("sw-registered", listener);
+      done();
+    });
+  });
+}
+
+/**
+ * Asks the service worker within the test page to unregister, and returns a
+ * promise that will resolve when it has successfully unregistered itself.
+ * @param {Tab} tab
+ */
+function unregisterServiceWorker(tab) {
+  // Use message manager to work with e10s.
+  let frameScript = function() {
+    // Retrieve the `sw` promise created in the html page.
+    let { sw } = content.wrappedJSObject;
+    sw.then(function(registration) {
+      registration.unregister().then(function() {
+        sendAsyncMessage("sw-unregistered");
+      },
+      function(e) {
+        dump("SW not unregistered; " + e + "\n");
+      });
+    });
+  };
+  let mm = tab.linkedBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+
+  return new Promise(done => {
+    mm.addMessageListener("sw-unregistered", function listener() {
+      mm.removeMessageListener("sw-unregistered", listener);
+      done();
+    });
   });
 }

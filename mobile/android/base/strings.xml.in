@@ -523,8 +523,6 @@
   <string name="bookmarkhistory_import_history">&bookmarkhistory_import_history;</string>
   <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
 
-  <string name="webapp_generic_name">&webapp_generic_name;</string>
-
   <string name="searchable_description">&searchable_description;</string>
 
   <!-- Updater notifications -->
@@ -611,4 +609,9 @@
   <string name="eol_notification_summary">&eol_notification_summary;</string>
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/honeycomb -->
   <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/unsupported-version</string>
+
+  <string name="whatsnew_notification_title">&whatsnew_notification_title;</string>
+  <string name="whatsnew_notification_summary">&whatsnew_notification_summary;</string>
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/new-android -->
+  <string name="whatsnew_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/new-android</string>
 </resources>

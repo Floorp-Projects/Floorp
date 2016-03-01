@@ -209,8 +209,7 @@ Structure::
             "annotations" : [
               {
                 "pluginName" : "Shockwave Flash",
-                "pluginVersion" : "18.0.0.209",
-                "pluginIsWhitelistedForShumway" : "false"
+                "pluginVersion" : "18.0.0.209"
               },
               ... other annotations ...
             ]
@@ -257,7 +256,6 @@ Structure::
           {
             "pluginName" : "Shockwave Flash",
             "pluginVersion" : "18.0.0.209",
-            "pluginIsWhitelistedForShumway" : "false",
             ... other annotations as key:value pairs ...
           }
         ],

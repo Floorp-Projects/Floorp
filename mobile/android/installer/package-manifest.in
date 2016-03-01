@@ -543,7 +543,6 @@
 @BINPATH@/components/marionettecomponent.js
 #endif
 
-@BINPATH@/components/WebappsUpdateTimer.js
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreImpl.js
 @BINPATH@/components/dom_datastore.xpt

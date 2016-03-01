@@ -117,6 +117,12 @@
         <description id="identity-popup-content-verifier"
                      when-connection="secure secure-ev secure-cert-user-overridden"/>
 
+        <!-- Remove Certificate Exception -->
+        <button when-connection="secure-cert-user-overridden"
+                label="&identity.removeCertException.label;"
+                accesskey="&identity.removeCertException.accesskey;"
+                oncommand="gIdentityHandler.removeCertException()"/>
+
         <!-- Connection is Not Secure -->
         <description when-connection="not-secure"
                      and-when-loginforms="secure">&identity.description.insecure;</description>
