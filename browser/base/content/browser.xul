@@ -69,6 +69,8 @@
 
 <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
+<script type="application/javascript" src="chrome://browser/content/downloads/downloads.js"/>
+<script type="application/javascript" src="chrome://browser/content/downloads/indicator.js"/>
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the

@@ -154,6 +154,7 @@ AnimationsTimeline.prototype = {
     for (let animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
     }
+    this.stopAnimatingScrubber();
     TimeScale.reset();
     this.destroySubComponents("targetNodes");
     this.destroySubComponents("timeBlocks");

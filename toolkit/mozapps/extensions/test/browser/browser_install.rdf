@@ -3,7 +3,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
-  <Description about="urn:mozilla:extension:addon1@tests.mozilla.org">
+  <Description about="urn:mozilla:extension:install1@tests.mozilla.org">
     <em:updates>
       <Seq>
         <li>
@@ -15,7 +15,7 @@
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
                 <em:updateLink>https://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_install1_3.xpi</em:updateLink>
-                <em:updateHash>sha1:6760e51269941245105a17076afeb5f45621de0e</em:updateHash>
+                <em:updateHash>sha1:4f0f4391914e3e036beca50cbac33958e5269643</em:updateHash>
               </Description>
             </em:targetApplication>
           </Description>

@@ -35,7 +35,7 @@ add_task(function*() {
   table.scrollTop += cellHeight * 50;
   yield onStoresUpdate;
 
-  is($$("#value .table-widget-cell").length, 200,
-     "Table should display all 200 items after scrolling");
+  is($$("#value .table-widget-cell").length, 160,
+     "Table should display all 160 items after scrolling");
   yield finishTests();
 });
