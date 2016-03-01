@@ -20,6 +20,7 @@
          We did this so we can land lint in automation
          and not fail everything. -->
     <issue id="AppCompatResource" severity="warning" />
+    <issue id="GoogleAppIndexingDeepLinkError" severity="warning" />
     <issue id="Instantiatable" severity="warning" />
     <issue id="LongLogTag" severity="warning" />
     <issue id="MissingPermission" severity="warning" />
