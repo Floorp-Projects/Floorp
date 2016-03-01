@@ -246,13 +246,6 @@ const CustomizableWidgets = [
         recentlyClosedWindows.removeChild(recentlyClosedWindows.firstChild);
       }
 
-      let tabsFromOtherComputers = doc.getElementById("sync-tabs-menuitem2");
-      if (PlacesUIUtils.shouldShowTabsFromOtherComputersMenuitem()) {
-        tabsFromOtherComputers.removeAttribute("hidden");
-      } else {
-        tabsFromOtherComputers.setAttribute("hidden", true);
-      }
-
       let utils = RecentlyClosedTabsAndWindowsMenuUtils;
       let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,
                                                "menuRestoreAllTabsSubview.label");
