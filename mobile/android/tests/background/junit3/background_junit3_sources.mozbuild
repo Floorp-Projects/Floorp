@@ -21,6 +21,7 @@ background_junit3_sources = [
     'src/org/mozilla/gecko/background/db/TestFennecTabsStorage.java',
     'src/org/mozilla/gecko/background/db/TestFormHistoryRepositorySession.java',
     'src/org/mozilla/gecko/background/db/TestPasswordsRepository.java',
+    'src/org/mozilla/gecko/background/db/TestTopSites.java',
     'src/org/mozilla/gecko/background/fxa/authenticator/TestAccountPickler.java',
     'src/org/mozilla/gecko/background/fxa/TestAccountLoader.java',
     'src/org/mozilla/gecko/background/fxa/TestBrowserIDKeyPairGeneration.java',

@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1247243
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1247243</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const Ci = Components.interfaces;
+  const {AnimationsFront} = require("devtools/server/actors/animation");
+  const {InspectorFront} = require("devtools/server/actors/inspector");
+
+  SimpleTest.waitForExplicitFinish();
+
+  let gWalker = null;
+  let gClient = null;
+  let animationsFront = null;
+
+  addTest(function setup() {
+    info ("Setting up inspector and animation actors.");
+
+    let url = document.getElementById("animationContent").href;
+    attachURL(url, function(err, client, tab, doc) {
+      let inspector = InspectorFront(client, tab);
+
+      animationsFront = new AnimationsFront(client, tab);
+
+      promiseDone(inspector.getWalker().then(walker => {
+        ok(walker, "getWalker() should return an actor.");
+        gClient = client;
+        gWalker = walker;
+      }).then(runNextTest));
+
+    });
+  });
+
+  addAsyncTest(function* testActorLifetime() {
+
+    info ("Testing animated node actor");
+    let animatedNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+      ".animated");
+    yield animationsFront.getAnimationPlayersForNode(animatedNodeActor);
+
+    let serverConnection = animationsFront.conn._transport._serverConnection;
+    let animationsActor = serverConnection.getActor(animationsFront.actorID);
+
+    is(animationsActor.actors.length, 1,
+      "AnimationActor have 1 AnimationPlayerActors");
+
+    info ("Testing AnimationPlayerActors release");
+    let stillNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+      ".still");
+    yield animationsFront.getAnimationPlayersForNode(stillNodeActor);
+    is(animationsActor.actors.length, 0,
+      "AnimationActor does not have any AnimationPlayerActors anymore");
+
+    info ("Testing multi animated node actor");
+    let multiNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+      ".multi");
+    yield animationsFront.getAnimationPlayersForNode(multiNodeActor);
+    is(animationsActor.actors.length, 2,
+      "AnimationActor has now 2 AnimationPlayerActors");
+
+    info ("Testing single animated node actor");
+    yield animationsFront.getAnimationPlayersForNode(animatedNodeActor);
+    is(animationsActor.actors.length, 1,
+      "AnimationActor has only one AnimationPlayerActors");
+
+    info ("Testing AnimationPlayerActors release again");
+    yield animationsFront.getAnimationPlayersForNode(stillNodeActor);
+    is(animationsActor.actors.length, 0,
+      "AnimationActor does not have any AnimationPlayerActors anymore");
+
+    runNextTest();
+  });
+
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247243">Mozilla Bug 1247243</a>
+  <a id="animationContent" target="_blank" href="animation-data.html">Test Document</a>
+</body>
+</html>

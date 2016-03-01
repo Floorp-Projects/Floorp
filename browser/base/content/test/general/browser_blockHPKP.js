@@ -49,11 +49,12 @@ function test() {
 
 // Start by making a successful connection to a domain that will pin a site
 function loadPinningPage() {
-  gBrowser.selectedBrowser.addEventListener("load",
-                                             successfulPinningPageListener,
-                                             true);
 
-  gBrowser.selectedBrowser.loadURI("https://" + kPinningDomain + kURLPath + "valid");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kPinningDomain + kURLPath + "valid").then(function() {
+    gBrowser.selectedBrowser.addEventListener("load",
+                                               successfulPinningPageListener,
+                                               true);
+  });
 }
 
 // After the site is pinned try to load with a subdomain site that should
@@ -61,49 +62,40 @@ function loadPinningPage() {
 var successfulPinningPageListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
-    gBrowser.addProgressListener(certErrorProgressListener);
-    gBrowser.selectedBrowser.loadURI("https://" + kBadPinningDomain);
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
+      return promiseErrorPageLoaded(gBrowser.selectedBrowser);
+    }).then(errorPageLoaded);
   }
 };
 
 // The browser should load about:neterror, when this happens, proceed
 // to load the pinning domain again, this time removing the pinning information
-var certErrorProgressListener = {
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      let textElement = content.document.getElementById("errorShortDescText");
-      let text = textElement.innerHTML;
-      ok(text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,
-         "Got a pinning error page");
-      gBrowser.removeProgressListener(this);
-      gBrowser.selectedBrowser.addEventListener("load",
-                                                successfulPinningRemovalPageListener,
-                                                true);
-      gBrowser.selectedBrowser.loadURI("https://" + kPinningDomain + kURLPath + "zeromaxagevalid");
-    }
-  }
+function errorPageLoaded() {
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    let textElement = content.document.getElementById("errorShortDescText");
+    let text = textElement.innerHTML;
+    ok(text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,
+       "Got a pinning error page");
+  }).then(function() {
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kPinningDomain + kURLPath + "zeromaxagevalid").then(function() {
+      return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    }).then(pinningRemovalLoaded);
+  });
 };
 
 // After the pinning information has been removed (successful load) proceed
 // to load again with the invalid pin domain.
-var successfulPinningRemovalPageListener = {
-  handleEvent: function() {
-    gBrowser.selectedBrowser.removeEventListener("load", this, true);
-    gBrowser.selectedBrowser.addEventListener("load",
-                                              successfulLoadListener,
-                                              true);
-
-    gBrowser.selectedBrowser.loadURI("https://" + kBadPinningDomain);
-  }
+function pinningRemovalLoaded() {
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
+    return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  }).then(badPinningPageLoaded);
 };
 
 // Finally, we should successfully load
 // https://bad.include-subdomains.pinning-dynamic.example.com.
-var successfulLoadListener = {
-  handleEvent: function() {
-    gBrowser.selectedBrowser.removeEventListener("load", this, true);
-    gBrowser.removeTab(gBrowser.selectedTab);
+function badPinningPageLoaded() {
+  BrowserTestUtils.removeTab(gBrowser.selectedTab).then(function() {
     ok(true, "load complete");
     finish();
-  }
+  });
 };

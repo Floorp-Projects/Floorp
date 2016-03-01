@@ -8,8 +8,7 @@
 }
 
 #details-pane-toggle[disabled] {
-  /* Don't use display: none; to avoid collapsing #requests-menu-toolbar */
-  visibility: hidden;
+  display: none;
 }
 
 #custom-pane {
@@ -39,7 +38,7 @@
   #details-pane-toggle,
   #details-pane[pane-collapsed],
   .requests-menu-waterfall,
-  .requests-menu-footer-label {
+  #requests-menu-network-summary-button > .toolbarbutton-text {
     display: none;
   }
 }
