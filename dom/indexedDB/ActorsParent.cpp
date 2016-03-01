@@ -7182,6 +7182,7 @@ protected:
   nsCString mGroup;
   nsCString mOrigin;
   nsCString mDatabaseId;
+  nsString mDatabaseFilePath;
   State mState;
   bool mIsApp;
   bool mEnforcingQuota;
@@ -7204,6 +7205,12 @@ public:
     return !mMaybeBlockedDatabases.IsEmpty();
   }
 #endif
+
+  const nsString&
+  DatabaseFilePath() const
+  {
+    return mDatabaseFilePath;
+  }
 
 protected:
   FactoryOp(Factory* aFactory,
@@ -7295,13 +7302,13 @@ private:
   CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
                                   const nsACString& aPermissionString);
 
-  void
+  nsresult
   FinishOpen();
 
   nsresult
   QuotaManagerOpen();
 
-  void
+  nsresult
   OpenDirectory();
 
   // Test whether this FactoryOp needs to wait for the given op.
@@ -7360,7 +7367,6 @@ class OpenDatabaseOp final
   RefPtr<FullDatabaseMetadata> mMetadata;
 
   uint64_t mRequestedVersion;
-  nsString mDatabaseFilePath;
   RefPtr<FileManager> mFileManager;
 
   RefPtr<Database> mDatabase;
@@ -8838,6 +8844,13 @@ public:
     return mShutdownRequested;
   }
 
+  already_AddRefed<Maintenance>
+  GetCurrentMaintenance() const
+  {
+    RefPtr<Maintenance> result = mCurrentMaintenance;
+    return result.forget();
+  }
+
   void
   NoteFinishedMaintenance(Maintenance* aMaintenance)
   {
@@ -9130,6 +9143,16 @@ public:
   void
   UnregisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
 
+  already_AddRefed<DatabaseMaintenance>
+  GetDatabaseMaintenance(const nsAString& aDatabasePath) const
+  {
+    AssertIsOnOwningThread();
+
+    RefPtr<DatabaseMaintenance> result =
+      mDatabaseMaintenances.Get(aDatabasePath);
+    return result.forget();
+  }
+
 private:
   ~Maintenance()
   {
@@ -9245,6 +9268,7 @@ class DatabaseMaintenance final
   const nsCString mGroup;
   const nsCString mOrigin;
   const nsString mDatabasePath;
+  nsCOMPtr<nsIRunnable> mCompleteCallback;
   const PersistenceType mPersistenceType;
 
 public:
@@ -9281,6 +9305,15 @@ public:
   DatabasePath() const
   {
     return mDatabasePath;
+  }
+
+  void
+  WaitForComplete(nsIRunnable* aCallback)
+  {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(!mCompleteCallback);
+
+    mCompleteCallback = aCallback;
   }
 
 private:
@@ -18044,6 +18077,18 @@ Maintenance::BeginDatabaseMaintenance()
     static bool
     IsSafeToRunMaintenance(const nsAString& aDatabasePath)
     {
+      if (gFactoryOps) {
+        for (uint32_t index = gFactoryOps->Length(); index > 0; index--) {
+          RefPtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
+
+          MOZ_ASSERT(!existingOp->DatabaseFilePath().IsEmpty());
+
+          if (existingOp->DatabaseFilePath() == aDatabasePath) {
+            return false;
+          }
+        }
+      }
+
       if (gLiveDatabaseHashtable) {
         for (auto iter = gLiveDatabaseHashtable->ConstIter();
              !iter.Done(); iter.Next()) {
@@ -18196,6 +18241,12 @@ void
 DatabaseMaintenance::RunOnOwningThread()
 {
   AssertIsOnOwningThread();
+
+  if (mCompleteCallback) {
+    MOZ_ALWAYS_TRUE(
+      NS_SUCCEEDED(NS_DispatchToCurrentThread(mCompleteCallback)));
+    mCompleteCallback = nullptr;
+  }
 
   mMaintenance->UnregisterDatabaseMaintenance(this);
 }
@@ -19558,6 +19609,7 @@ FactoryOp::DirectoryOpen()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
 
   // gFactoryOps could be null here if the child process crashed or something
   // and that cleaned up the last Factory actor.
@@ -19581,6 +19633,20 @@ FactoryOp::DirectoryOpen()
   // Adding this to the factory ops list will block any additional ops from
   // proceeding until this one is done.
   gFactoryOps->AppendElement(this);
+
+  if (!delayed) {
+    QuotaClient* quotaClient = QuotaClient::GetInstance();
+    MOZ_ASSERT(quotaClient);
+
+    if (RefPtr<Maintenance> currentMaintenance =
+          quotaClient->GetCurrentMaintenance()) {
+      if (RefPtr<DatabaseMaintenance> databaseMaintenance =
+            currentMaintenance->GetDatabaseMaintenance(mDatabaseFilePath)) {
+        databaseMaintenance->WaitForComplete(this);
+        delayed = true;
+      }
+    }
+  }
 
   mBlockedDatabaseOpen = true;
 
@@ -19940,7 +20006,7 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
 #endif // MOZ_CHILD_PERMISSIONS
 }
 
-void
+nsresult
 FactoryOp::FinishOpen()
 {
   AssertIsOnOwningThread();
@@ -19948,13 +20014,18 @@ FactoryOp::FinishOpen()
   MOZ_ASSERT(!mContentParent);
 
   if (QuotaManager::Get()) {
-    OpenDirectory();
+    nsresult rv = OpenDirectory();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    return;
+    return NS_OK;
   }
 
   mState = State::QuotaManagerPending;
   QuotaManager::GetOrCreate(this);
+
+  return NS_OK;
 }
 
 nsresult
@@ -19967,12 +20038,15 @@ FactoryOp::QuotaManagerOpen()
     return NS_ERROR_FAILURE;
   }
 
-  OpenDirectory();
+  nsresult rv = OpenDirectory();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
 
-void
+nsresult
 FactoryOp::OpenDirectory()
 {
   AssertIsOnOwningThread();
@@ -19983,15 +20057,50 @@ FactoryOp::OpenDirectory()
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
 
+  // Need to get database file path in advance.
+  const nsString& databaseName = mCommonParams.metadata().name();
+  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = quotaManager->GetDirectoryForOrigin(persistenceType,
+                                                    mOrigin,
+                                                    getter_AddRefs(dbFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = dbFile->Append(NS_LITERAL_STRING(IDB_DIRECTORY_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoString filename;
+  GetDatabaseFilename(databaseName, filename);
+
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = dbFile->GetPath(mDatabaseFilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   mState = State::DirectoryOpenPending;
 
-  QuotaManager::Get()->OpenDirectory(mCommonParams.metadata().persistenceType(),
-                                     mGroup,
-                                     mOrigin,
-                                     mIsApp,
-                                     Client::IDB,
-                                     /* aExclusive */ false,
-                                     this);
+  quotaManager->OpenDirectory(persistenceType,
+                              mGroup,
+                              mOrigin,
+                              mIsApp,
+                              Client::IDB,
+                              /* aExclusive */ false,
+                              this);
+
+  return NS_OK;
 }
 
 bool
@@ -20059,8 +20168,8 @@ FactoryOp::Run()
       break;
 
     case State::FinishOpen:
-      FinishOpen();
-      return NS_OK;
+      rv = FinishOpen();
+      break;
 
     case State::QuotaManagerPending:
       rv = QuotaManagerOpen();
@@ -20290,10 +20399,15 @@ OpenDatabaseOp::DoDatabaseWork()
 
   mTelemetryId = TelemetryIdForFile(dbFile);
 
-  rv = dbFile->GetPath(mDatabaseFilePath);
+#ifdef DEBUG
+  nsString databaseFilePath;
+  rv = dbFile->GetPath(databaseFilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+#endif
 
   nsCOMPtr<nsIFile> fmDirectory;
   rv = dbDirectory->Clone(getter_AddRefs(fmDirectory));
@@ -21619,6 +21733,16 @@ DeleteDatabaseOp::DoDatabaseWork()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+#ifdef DEBUG
+  nsString databaseFilePath;
+  rv = dbFile->GetPath(databaseFilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+#endif
 
   bool exists;
   rv = dbFile->Exists(&exists);
