@@ -61,6 +61,7 @@ SEARCH_PATHS = [
     'python/blessings',
     'python/compare-locales',
     'python/configobj',
+    'python/futures',
     'python/jsmin',
     'python/psutil',
     'python/which',
