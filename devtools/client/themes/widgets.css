@@ -1193,9 +1193,8 @@
   display: none;
 }
 
-:root:not(.filtering) .table-widget-cell:nth-child(odd):not(.theme-selected),
-.table-widget-cell:not(.theme-selected)[odd] {
-  background: var(--table-zebra-background);
+.table-widget-cell.even:not(.theme-selected) {
+  background-color: var(--table-zebra-background);
 }
 
 :root:not(.no-animate) .table-widget-cell.flash-out {
