@@ -33,16 +33,16 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
  */
 
 // describe the addons
-var ao1 = { file: "browser_bug557956_1", id: "addon1@tests.mozilla.org"};
-var ao2 = { file: "browser_bug557956_2", id: "addon2@tests.mozilla.org"};
-var ao3 = { file: "browser_bug557956_3", id: "addon3@tests.mozilla.org"};
-var ao4 = { file: "browser_bug557956_4", id: "addon4@tests.mozilla.org"};
-var ao5 = { file: "browser_bug557956_5", id: "addon5@tests.mozilla.org"};
-var ao6 = { file: "browser_bug557956_6", id: "addon6@tests.mozilla.org"};
-var ao7 = { file: "browser_bug557956_7", id: "addon7@tests.mozilla.org"};
-var ao8 = { file: "browser_bug557956_8_1", id: "addon8@tests.mozilla.org"};
-var ao9 = { file: "browser_bug557956_9_1", id: "addon9@tests.mozilla.org"};
-var ao10 = { file: "browser_bug557956_10", id: "addon10@tests.mozilla.org"};
+var ao1 = { file: "browser_bug557956_1", id: "bug557956-1@tests.mozilla.org"};
+var ao2 = { file: "browser_bug557956_2", id: "bug557956-2@tests.mozilla.org"};
+var ao3 = { file: "browser_bug557956_3", id: "bug557956-3@tests.mozilla.org"};
+var ao4 = { file: "browser_bug557956_4", id: "bug557956-4@tests.mozilla.org"};
+var ao5 = { file: "browser_bug557956_5", id: "bug557956-5@tests.mozilla.org"};
+var ao6 = { file: "browser_bug557956_6", id: "bug557956-6@tests.mozilla.org"};
+var ao7 = { file: "browser_bug557956_7", id: "bug557956-7@tests.mozilla.org"};
+var ao8 = { file: "browser_bug557956_8_1", id: "bug557956-8@tests.mozilla.org"};
+var ao9 = { file: "browser_bug557956_9_1", id: "bug557956-9@tests.mozilla.org"};
+var ao10 = { file: "browser_bug557956_10", id: "bug557956-10@tests.mozilla.org"};
 
 // Return a promise that resolves after the specified delay in MS
 function delayMS(aDelay) {

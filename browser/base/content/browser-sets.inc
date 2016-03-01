@@ -190,7 +190,6 @@
     <broadcaster id="sync-reauth-state" hidden="true"/>
     <broadcaster id="viewTabsSidebar" autoCheck="false" sidebartitle="&syncedTabs.sidebar.label;"
                  type="checkbox" group="sidebar"
-                 hidden="true"
                  sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>

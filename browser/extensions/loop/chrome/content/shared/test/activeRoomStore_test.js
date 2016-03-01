@@ -1600,6 +1600,7 @@ describe("loop.store.ActiveRoomStore", function() {
     it("should request the new metadata when the browser being shared change", function() {
       store.startBrowserShare(new sharedActions.StartBrowserShare());
       clock.tick(500);
+
       sinon.assert.calledOnce(getSelectedTabMetadataStub);
       sinon.assert.calledTwice(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch.getCall(1),
@@ -1630,35 +1631,42 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should not process a request without url", function() {
-      clock.tick(500);
       getSelectedTabMetadataStub.returns({
         title: "fakeTitle",
         favicon: "fakeFavicon"
       });
 
       store.startBrowserShare(new sharedActions.StartBrowserShare());
+      clock.tick(500);
+
       sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      sinon.assert.calledOnce(dispatcher.dispatch);
+    });
+
+    it("should not process a request if sharing is paused", function() {
+      store.setStoreState({
+        sharingPaused: true
+      });
+
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
+      clock.tick(500);
+
+      sinon.assert.notCalled(getSelectedTabMetadataStub);
       sinon.assert.calledOnce(dispatcher.dispatch);
     });
 
     it("should not process a request if no-one is in the room", function() {
       store.setStoreState({
-        roomState: ROOM_STATES.JOINED,
-        roomToken: "fakeToken",
-        sessionToken: "1627384950",
         participants: [{
           displayName: "Owner",
           owner: true
         }]
       });
-      clock.tick(500);
-      getSelectedTabMetadataStub.returns({
-        title: "fakeTitle",
-        favicon: "fakeFavicon"
-      });
 
       store.startBrowserShare(new sharedActions.StartBrowserShare());
-      sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      clock.tick(500);
+
+      sinon.assert.notCalled(getSelectedTabMetadataStub);
       sinon.assert.calledOnce(dispatcher.dispatch);
     });
   });
@@ -1728,6 +1736,54 @@ describe("loop.store.ActiveRoomStore", function() {
       store.endScreenShare();
 
       sinon.assert.calledOnce(requestStubs.RemoveBrowserSharingListener);
+    });
+  });
+
+  describe("#toggleBrowserSharing", function() {
+    it("should set paused to false when enabled", function() {
+      store.toggleBrowserSharing(new sharedActions.ToggleBrowserSharing({
+        enabled: true
+      }));
+
+      expect(store.getStoreState().sharingPaused).eql(false);
+    });
+
+    it("should set paused to true when not enabled", function() {
+      store.toggleBrowserSharing(new sharedActions.ToggleBrowserSharing({
+        enabled: false
+      }));
+
+      expect(store.getStoreState().sharingPaused).eql(true);
+    });
+
+    it("should update context when enabled", function() {
+      var getSelectedTabMetadataStub = sinon.stub();
+      LoopMochaUtils.stubLoopRequest({
+        GetSelectedTabMetadata: getSelectedTabMetadataStub.returns({
+          title: "fakeTitle",
+          favicon: "fakeFavicon",
+          url: "http://www.fakeurl.com"
+        })
+      });
+      store.setStoreState({
+        roomState: ROOM_STATES.JOINED,
+        roomToken: "fakeToken"
+      });
+
+      store.toggleBrowserSharing(new sharedActions.ToggleBrowserSharing({
+        enabled: true
+      }));
+      clock.tick(500);
+
+      sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWith(dispatcher.dispatch,
+        new sharedActions.UpdateRoomContext({
+          newRoomDescription: "fakeTitle",
+          newRoomThumbnail: "fakeFavicon",
+          newRoomURL: "http://www.fakeurl.com",
+          roomToken: "fakeToken"
+      }));
     });
   });
 

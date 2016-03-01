@@ -41,20 +41,17 @@
 /* Expand/collapse panel toolbar button */
 
 #inspector-pane-toggle {
-  list-style-image: url(images/debugger-collapse.png);
+  list-style-image: url(chrome://devtools/skin/images/pane-collapse.svg);
 }
 
 #inspector-pane-toggle[pane-collapsed] {
-  list-style-image: url(images/debugger-expand.png);
+  list-style-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
-@media (min-resolution: 1.1dppx) {
-  #inspector-pane-toggle {
-    list-style-image: url(images/debugger-collapse@2x.png);
-  }
-
+@media (max-width: 700px) {
+  #inspector-pane-toggle,
   #inspector-pane-toggle[pane-collapsed] {
-    list-style-image: url(images/debugger-expand@2x.png);
+    transform: rotate(90deg);
   }
 }
 
