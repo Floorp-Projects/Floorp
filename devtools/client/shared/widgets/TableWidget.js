@@ -354,6 +354,7 @@ TableWidget.prototype = {
       if (key != this.sortedOn) {
         column.insertAt(item, index);
       }
+      column.updateZebra();
     }
     this.items.set(item[this.uniqueId], item);
     this.tbody.removeAttribute("empty");
@@ -636,6 +637,7 @@ Column.prototype = {
     } else {
       this.sorted = 2;
     }
+    this.updateZebra();
   },
 
   onTableFiltered: function(event, itemsToHide) {
@@ -649,6 +651,7 @@ Column.prototype = {
     for (let id of itemsToHide) {
       this.cells[this.items[id]].hidden = true;
     }
+    this.updateZebra();
   },
 
   /**
@@ -664,6 +667,7 @@ Column.prototype = {
     if (this.highlightUpdated && this.items[id] != null) {
       this.cells[this.items[id]].flash();
     }
+    this.updateZebra();
   },
 
   destroy: function() {
@@ -771,6 +775,7 @@ Column.prototype = {
     }
     this.items[item[this.uniqueId]] = index;
     this.cells.splice(index, 0, new Cell(this, item, this.cells[index]));
+    this.updateZebra();
   },
 
   /**
@@ -899,7 +904,19 @@ Column.prototype = {
       this.cells[this.items[this.selectedRow]].toggleClass("theme-selected");
     }
     this._itemsDirty = false;
+    this.updateZebra();
     return items;
+  },
+
+  updateZebra() {
+    this._updateItems();
+    let i = 0;
+    for (let cell of this.cells) {
+      if (!cell.hidden) {
+        i++;
+      }
+      cell.toggleClass("even", !(i % 2));
+    }
   },
 
   /**
@@ -1068,8 +1085,8 @@ Cell.prototype = {
     return this._value;
   },
 
-  toggleClass: function(className) {
-    this.label.classList.toggle(className);
+  toggleClass: function(className, condition) {
+    this.label.classList.toggle(className, condition);
   },
 
   /**
