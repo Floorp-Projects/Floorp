@@ -122,6 +122,16 @@ protected:
   virtual void
   PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult);
 
+  // May be implemented by subclasses if desired if they need to do some sort of
+  // setup before we try to set up our JSContext and compartment for real.
+  // Typically the only thing that should go in here is creation of the worker's
+  // global.
+  //
+  // If false is returned, WorkerRun will not be called at all.  PostRun will
+  // still be called, with false passed for aRunResult.
+  virtual bool
+  PreRun(WorkerPrivate* aWorkerPrivate);
+
   // Must be implemented by subclasses. Called on the target thread.  The return
   // value will be passed to PostRun().  The JSContext passed in here comes from
   // an AutoJSAPI (or AutoEntryScript) that we set up on the stack.  If
