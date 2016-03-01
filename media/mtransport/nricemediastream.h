@@ -50,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sigslot.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Scoped.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
@@ -159,8 +159,7 @@ class NrIceMediaStream {
   // Get the candidate pair currently active. It's the
   // caller's responsibility to free these.
   nsresult GetActivePair(int component,
-                         UniquePtr<NrIceCandidate>* local,
-                         UniquePtr<NrIceCandidate>* remote);
+                         NrIceCandidate** local, NrIceCandidate** remote);
 
   // The number of components
   size_t components() const { return components_; }

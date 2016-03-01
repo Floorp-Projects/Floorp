@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 
+#include "mozilla/Scoped.h"
 #include "mozilla/Atomics.h"
 #include "runnable_utils.h"
 #include "nss.h"
@@ -105,7 +106,7 @@ class MultiTcpSocketTest : public MtransportTest {
 
     if (!stun_server_addr.empty()) {
       std::vector<NrIceStunServer> stun_servers;
-      UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
+      ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
           stun_server_addr, stun_server_port, kNrIceTransportTcp));
       stun_servers.push_back(*server);
 

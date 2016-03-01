@@ -58,8 +58,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "prnetdb.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
@@ -99,15 +99,16 @@ class NrIceStunServer {
   }
 
    // The main function to use. Will take either an address or a hostname.
-  static UniquePtr<NrIceStunServer> Create(const std::string& addr, uint16_t port,
+  static NrIceStunServer* Create(const std::string& addr, uint16_t port,
       const char *transport = kNrIceTransportUdp) {
-    UniquePtr<NrIceStunServer> server(new NrIceStunServer(transport));
+    ScopedDeletePtr<NrIceStunServer> server(
+        new NrIceStunServer(transport));
 
     nsresult rv = server->Init(addr, port);
     if (NS_FAILED(rv))
       return nullptr;
 
-    return server;
+    return server.forget();
   }
 
   nsresult ToNicerStunStruct(nr_ice_stun_server* server) const;
@@ -145,17 +146,18 @@ class NrIceStunServer {
 
 class NrIceTurnServer : public NrIceStunServer {
  public:
-  static UniquePtr<NrIceTurnServer> Create(const std::string& addr, uint16_t port,
-                                           const std::string& username,
-                                           const std::vector<unsigned char>& password,
-                                           const char *transport = kNrIceTransportUdp) {
-    UniquePtr<NrIceTurnServer> server(new NrIceTurnServer(username, password, transport));
+  static NrIceTurnServer *Create(const std::string& addr, uint16_t port,
+                                 const std::string& username,
+                                 const std::vector<unsigned char>& password,
+                                 const char *transport = kNrIceTransportUdp) {
+    ScopedDeletePtr<NrIceTurnServer> server(
+        new NrIceTurnServer(username, password, transport));
 
     nsresult rv = server->Init(addr, port);
     if (NS_FAILED(rv))
       return nullptr;
 
-    return server;
+    return server.forget();
   }
 
   nsresult ToNicerTurnStruct(nr_ice_turn_server *server) const;

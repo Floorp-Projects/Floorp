@@ -13,7 +13,6 @@
 #include <string>
 #include "prio.h"
 #include "nsError.h"
-#include "mozilla/UniquePtr.h"
 
 typedef struct nr_stun_server_ctx_ nr_stun_server_ctx;
 typedef struct nr_socket_ nr_socket;
@@ -32,7 +31,7 @@ class TestStunServer {
   // to |GetInstance| (possibly following a |ShutdownInstance| call)
   static void ConfigurePort(uint16_t port);
   // AF_INET, AF_INET6
-  static UniquePtr<TestStunServer> Create(int address_family);
+  static TestStunServer *Create(int address_family);
 
   virtual ~TestStunServer();
 
@@ -90,8 +89,8 @@ class TestStunServer {
   void *timer_handle_;
   std::map<std::string, uint32_t> received_ct_;
 
-  static UniquePtr<TestStunServer> instance;
-  static UniquePtr<TestStunServer> instance6;
+  static TestStunServer *instance;
+  static TestStunServer *instance6;
   static uint16_t instance_port;
 };
 
@@ -111,10 +110,10 @@ class TestStunTcpServer: public TestStunServer {
 
  private:
   virtual int TryOpenListenSocket(nr_local_addr *addr, uint16_t port);
-  static UniquePtr<TestStunTcpServer> Create(int address_family);
+  static TestStunTcpServer *Create(int address_family);
 
-  static UniquePtr<TestStunTcpServer> instance;
-  static UniquePtr<TestStunTcpServer> instance6;
+  static TestStunTcpServer *instance;
+  static TestStunTcpServer *instance6;
   static uint16_t instance_port;
 
   std::map<NR_SOCKET, nr_socket*> connections_;

@@ -11,8 +11,8 @@
 
 using namespace std;
 
+#include "mozilla/Scoped.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/UniquePtr.h"
 #include <MediaConduitInterface.h>
 #include "GmpVideoCodec.h"
 #include "nsIEventTarget.h"
@@ -92,8 +92,8 @@ public:
   {
         mSession = aSession;
         mLen = ((width * height) * 3 / 2);
-        mFrame = mozilla::MakeUnique<uint8_t[]>(mLen);
-        memset(mFrame.get(), COLOR, mLen);
+        mFrame = (uint8_t*) PR_MALLOC(mLen);
+        memset(mFrame, COLOR, mLen);
         numFrames = 121;
   }
 
@@ -101,7 +101,7 @@ public:
   {
     do
     {
-      mSession->SendVideoFrame(reinterpret_cast<unsigned char*>(mFrame.get()),
+      mSession->SendVideoFrame((unsigned char*)mFrame,
                                 mLen,
                                 width,
                                 height,
@@ -115,7 +115,7 @@ public:
 
 private:
 RefPtr<mozilla::VideoSessionConduit> mSession;
-mozilla::UniquePtr<uint8_t[]> mFrame;
+mozilla::ScopedDeletePtr<uint8_t> mFrame;
 int mLen;
 int width, height;
 int rate;
@@ -290,8 +290,8 @@ void AudioSendAndReceive::GenerateMusic(short* buf, int len)
 //Hardcoded for 16 bit samples for now
 void AudioSendAndReceive::GenerateAndReadSamples()
 {
-   mozilla::UniquePtr<int16_t[]> audioInput(mozilla::MakeUnique<int16_t []>(PLAYOUT_SAMPLE_LENGTH));
-   mozilla::UniquePtr<int16_t[]> audioOutput(mozilla::MakeUnique<int16_t []>(PLAYOUT_SAMPLE_LENGTH));
+   mozilla::ScopedDeletePtr<int16_t> audioInput(new int16_t [PLAYOUT_SAMPLE_LENGTH]);
+   mozilla::ScopedDeletePtr<int16_t> audioOutput(new int16_t [PLAYOUT_SAMPLE_LENGTH]);
    short* inbuf;
    int sampleLengthDecoded = 0;
    unsigned int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY * 10); //10 seconds
