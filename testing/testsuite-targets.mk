@@ -209,7 +209,7 @@ test-packages-manifest:
 	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE))
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
-      --dest-file $(MOZ_TEST_PACKAGES_FILE) \
+      --dest-file '$(MOZ_TEST_PACKAGES_FILE)' \
       $(call PKG_ARG,common) \
       $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
