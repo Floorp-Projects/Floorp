@@ -22,6 +22,9 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/MessagePortTimelineMarker.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/TimelineMarker.h"
 #include "mozilla/unused.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -107,7 +110,27 @@ private:
     ErrorResult rv;
     JS::Rooted<JS::Value> value(cx);
 
+    UniquePtr<AbstractTimelineMarker> start;
+    UniquePtr<AbstractTimelineMarker> end;
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    bool isTimelineRecording = timelines && !timelines->IsEmpty();
+
+    if (isTimelineRecording) {
+      start = MakeUnique<MessagePortTimelineMarker>(
+        ProfileTimelineMessagePortOperationType::DeserializeData,
+        MarkerTracingType::START);
+    }
+
     mData->Read(mPort->GetParentObject(), cx, &value, rv);
+
+    if (isTimelineRecording) {
+      end = MakeUnique<MessagePortTimelineMarker>(
+        ProfileTimelineMessagePortOperationType::DeserializeData,
+        MarkerTracingType::END);
+      timelines->AddMarkerForAllObservedDocShells(start);
+      timelines->AddMarkerForAllObservedDocShells(end);
+    }
+
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
@@ -420,7 +443,27 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
+  UniquePtr<AbstractTimelineMarker> start;
+  UniquePtr<AbstractTimelineMarker> end;
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  bool isTimelineRecording = timelines && !timelines->IsEmpty();
+
+  if (isTimelineRecording) {
+    start = MakeUnique<MessagePortTimelineMarker>(
+      ProfileTimelineMessagePortOperationType::SerializeData,
+      MarkerTracingType::START);
+  }
+
   data->Write(aCx, aMessage, transferable, aRv);
+
+  if (isTimelineRecording) {
+    end = MakeUnique<MessagePortTimelineMarker>(
+      ProfileTimelineMessagePortOperationType::SerializeData,
+      MarkerTracingType::END);
+    timelines->AddMarkerForAllObservedDocShells(start);
+    timelines->AddMarkerForAllObservedDocShells(end);
+  }
+
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
