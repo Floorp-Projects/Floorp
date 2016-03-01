@@ -28,17 +28,6 @@ ServoStyleSheet::IsApplicable() const
   return !mDisabled && mComplete;
 }
 
-void
-ServoStyleSheet::SetComplete()
-{
-  MOZ_ASSERT(!mComplete);
-
-  mComplete = true;
-
-  NS_ERROR("stylo: ServoStyleSheet::SetComplete should do the things "
-           "CSSStyleSheet::SetComplete does");
-}
-
 bool
 ServoStyleSheet::HasRules() const
 {
