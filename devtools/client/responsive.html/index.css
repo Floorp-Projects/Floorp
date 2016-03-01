@@ -105,7 +105,7 @@ body {
 }
 
 .viewport-rotate-button {
-  mask-image: url("./images/rotate-viewport.svg");
+  mask: url("./images/rotate-viewport.svg");
 }
 
 /**
