@@ -15,6 +15,13 @@ Deck
    :members:
    :inherited-members:
 
+PageInfoPanel
+-------------
+
+.. autoclass:: firefox_puppeteer.ui.pageinfo.deck.PageInfoPanel
+   :members:
+   :inherited-members:
+
 SecurityPanel
 -------------
 
