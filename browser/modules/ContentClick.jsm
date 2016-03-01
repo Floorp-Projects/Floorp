@@ -63,14 +63,16 @@ var ContentClick = {
 
     // This part is based on handleLinkClick.
     var where = window.whereToOpenLink(json);
+    if (where == "current")
+      return;
+
     // Todo(903022): code for where == save
-    if (where != "current") {
-      let params = { charset: browser.characterSet,
-                     referrerURI: browser.documentURI,
-                     referrerPolicy: json.referrerPolicy,
-                     noReferrer: json.noReferrer };
-      window.openLinkIn(json.href, where, params);
-    }
+
+    let params = { charset: browser.characterSet,
+                   referrerURI: browser.documentURI,
+                   referrerPolicy: json.referrerPolicy,
+                   noReferrer: json.noReferrer };
+    window.openLinkIn(json.href, where, params);
 
     // Mark the page as a user followed link.  This is done so that history can
     // distinguish automatic embed visits from user activated ones.  For example
