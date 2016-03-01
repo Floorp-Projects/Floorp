@@ -8,7 +8,6 @@
   <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.testInChaosMode();
 
 // this page just serially loads each one of the following test helper pages in
 // a new window and waits for it to call testDone()
@@ -53,8 +52,10 @@ window.onload = function() {
         ["apz.touch_start_tolerance", "0.0"],
         // The touchstart from the drag can turn into a long-tap if the touch-move
         // events get held up. Try to prevent that by making long-taps require
-        // a 10 second hold.
-        ["ui.click_hold_context_menus.delay", "10000"],
+        // a 10 second hold. Note that we also cannot enable chaos mode on this
+        // test for this reason, since chaos mode can cause the long-press timer
+        // to fire sooner than the pref dictates.
+        ["ui.click_hold_context_menus.delay", 10000],
         // The subtests in this test do touch-drags to pan the page, but we don't
         // want those pans to turn into fling animations, so we increase the
         // fling-stop threshold velocity to absurdly high.
