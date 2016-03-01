@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1224115 - Storage Inspector table filtering
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector table filtering test</title>
+</head>
+<body>
+<script type="text/javascript;version=1.8">
+"use strict";
+window.clear = () => {
+  localStorage.clear();
+};
+
+localStorage.setItem("01234", "56789");
+localStorage.setItem("ANIMAL", "hOrSe");
+localStorage.setItem("FOO", "bArBaz");
+localStorage.setItem("food", "energy bar");
+localStorage.setItem("money", "##$$$**");
+localStorage.setItem("sport", "football");
+localStorage.setItem("year", "2016");
+</script>
+</body>
+</html>

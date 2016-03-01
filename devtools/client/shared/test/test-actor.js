@@ -456,6 +456,25 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   /**
+   * Get an attribute on a DOM Node.
+   * @param {String} selector The node selector
+   * @param {String} attribute The attribute name
+   * @return {String} value The attribute value
+   */
+  getAttribute: protocol.method(function (selector, attribute) {
+    let node = this._querySelector(selector);
+    return node.getAttribute(attribute);
+  }, {
+    request: {
+      selector: Arg(0, "string"),
+      property: Arg(1, "string")
+    },
+    response: {
+      value: RetVal("string")
+    }
+  }),
+
+  /**
    * Set an attribute on a DOM Node.
    * @param {String} selector The node selector
    * @param {String} attribute The attribute name

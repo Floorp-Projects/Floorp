@@ -49,8 +49,7 @@
 }
 
 @media (max-width: 700px) {
-  #inspector-pane-toggle,
-  #inspector-pane-toggle[pane-collapsed] {
+  #inspector-pane-toggle > .toolbarbutton-icon {
     transform: rotate(90deg);
   }
 }

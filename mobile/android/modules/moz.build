@@ -30,8 +30,6 @@ EXTRA_JS_MODULES += [
     'Snackbars.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
-    'WebappManager.jsm',
-    'WebappManagerWorker.js',
 ]
 
 if not CONFIG['MOZ_B2GDROID']:

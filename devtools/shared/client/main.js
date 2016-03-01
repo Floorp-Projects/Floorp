@@ -1450,7 +1450,8 @@ WorkerClient.prototype = {
 
       return this.request({
         to: connectReponse.threadActor,
-        type: "attach"
+        type: "attach",
+        options: aOptions
       }).then(attachResponse => {
         if (attachResponse.error) {
           aOnResponse(attachResponse, null);

@@ -41,11 +41,6 @@ category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
 
-# WebappsUpdateTimer.js
-component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
-contract @mozilla.org/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
-category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
-
 # PromptService.js
 component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
 contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
