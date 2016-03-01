@@ -27,6 +27,12 @@
         var data = "{'first': 'John', 'last': 'Doe'}";
         post(url, data);
       }
+
+      function executeTest2(size) {
+        var url = "html_har_post-data-test-page.html";
+        var data = "x".repeat(size);
+        post(url, data);
+      }
     </script>
   </body>
 
