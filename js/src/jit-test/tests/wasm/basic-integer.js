@@ -15,6 +15,16 @@ function testBinary(type, opcode, lhs, rhs, expect) {
                             (func (param i64) (param i64) (result i64) (i64.${opcode} (get_local 0) (get_local 1)))
                             (func (result i32) (i64.eq (call 0 (i64.const ${lhs}) (i64.const ${rhs})) (i64.const ${expect})))
                             (export "" 1))`)(), 1);
+    // The same, but now the RHS is a constant.
+    assertEq(wasmEvalText(`(module
+                            (func (param i64) (result i64) (i64.${opcode} (get_local 0) (i64.const ${rhs})))
+                            (func (result i32) (i64.eq (call 0 (i64.const ${lhs})) (i64.const ${expect})))
+                            (export "" 1))`)(), 1);
+    // LHS and RHS are constants.
+    assertEq(wasmEvalText(`(module
+                            (func (result i64) (i64.${opcode} (i64.const ${lhs}) (i64.const ${rhs})))
+                            (func (result i32) (i64.eq (call 0) (i64.const ${expect})))
+                            (export "" 1))`)(), 1);
   } else {
     assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
   }
