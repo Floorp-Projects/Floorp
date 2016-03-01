@@ -12,7 +12,6 @@ function testScript(script) {
   SpecialPowers.pushPrefEnv({
     "set": [["dom.requestcache.enabled", true],
             ["dom.serviceWorkers.enabled", true],
-            ["dom.serviceWorkers.interception.opaque.enabled", true],
             ["dom.serviceWorkers.testing.enabled", true],
             ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
   }, function() {
