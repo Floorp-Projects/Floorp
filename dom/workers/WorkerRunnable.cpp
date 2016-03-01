@@ -155,6 +155,12 @@ WorkerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
   }
 }
 
+bool
+WorkerRunnable::PreRun(WorkerPrivate* aWorkerPrivate)
+{
+  return true;
+}
+
 void
 WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                         bool aRunResult)
@@ -256,7 +262,20 @@ WorkerRunnable::Run()
     return NS_OK;
   }
 
-  // Track down the appropriate global to use for the AutoJSAPI/AutoEntryScript.
+  bool result = PreRun(mWorkerPrivate);
+  if (!result) {
+    MOZ_ASSERT(targetIsWorkerThread,
+               "The only PreRun implementation that can fail is "
+               "ScriptExecutorRunnable");
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(!JS_IsExceptionPending(mWorkerPrivate->GetJSContext()));
+    // We can't enter a useful compartment on the JSContext here; just pass it
+    // in as-is.
+    PostRun(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Track down the appropriate global, if any, to use for the AutoEntryScript.
   nsCOMPtr<nsIGlobalObject> globalObject;
   bool isMainThread = !targetIsWorkerThread && !mWorkerPrivate->GetParent();
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
@@ -273,6 +292,12 @@ WorkerRunnable::Run()
     } else {
       globalObject = DefaultGlobalObject();
     }
+
+    // We may still not have a globalObject here: in the case of
+    // CompileScriptRunnable, we don't actually create the global object until
+    // we have the script data, which happens in a syncloop under
+    // CompileScriptRunnable::WorkerRun, so we can't assert that it got created
+    // in the PreRun call above.
   } else {
     kungFuDeathGrip = mWorkerPrivate;
     if (isMainThread) {
@@ -290,7 +315,7 @@ WorkerRunnable::Run()
   // It's important that aes is declared after jsapi, because if WorkerRun
   // creates a global then we construct aes before PostRun and we need them to
   // be destroyed in the correct order.
-  mozilla::dom::AutoJSAPI jsapi;
+  Maybe<mozilla::dom::AutoJSAPI> jsapi;
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
   if (globalObject) {
@@ -299,8 +324,9 @@ WorkerRunnable::Run()
                 isMainThread ? nullptr : GetCurrentThreadJSContext());
     cx = aes->cx();
   } else {
-    jsapi.Init();
-    cx = jsapi.cx();
+    jsapi.emplace();
+    jsapi->Init();
+    cx = jsapi->cx();
   }
 
   // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
@@ -344,9 +370,12 @@ WorkerRunnable::Run()
     ac.emplace(cx, mWorkerPrivate->GetWrapper());
   }
 
-  bool result = WorkerRun(cx, mWorkerPrivate);
+  result = WorkerRun(cx, mWorkerPrivate);
   MOZ_ASSERT_IF(result, !JS_IsExceptionPending(cx));
   JS_ReportPendingException(cx);
+
+  // We can't even assert that this didn't create our global, since in the case
+  // of CompileScriptRunnable it _does_.
 
   // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
   // lazily create a global, so we construct aes here before calling PostRun.
