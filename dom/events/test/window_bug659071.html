@@ -10,7 +10,7 @@
 <video id="v" controls></video>
 <script type="application/javascript">
 
-SimpleTest.waitForFocus(runTests, window);
+SimpleTest.waitForFocus(startTests, window);
 SimpleTest.requestFlakyTimeout("untriaged");
 
 function is()
@@ -32,9 +32,12 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
+function startTests() {
+  SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_control.action", 3]]}, runTests);
+}
+
 function runTests()
 {
-  SpecialPowers.setIntPref("mousewheel.with_control.action", 3);
   synthesizeKey("0", { accelKey: true });
 
   var video = document.getElementById("v");
@@ -54,8 +57,6 @@ function runTests()
       hitEventLoop(function () {
         is(SpecialPowers.getFullZoom(window), 1.0,
            "failed to reset zoom");
-
-        SpecialPowers.clearUserPref("mousewheel.with_control.action");
 
         hitEventLoop(window.opener.finish, 20);
       }, 20);
