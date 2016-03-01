@@ -24,7 +24,7 @@
 
       worker.onerror = function(error) {
         var msg = error.message;
-        if (msg.match(/^: NetworkError/) || msg.match(/Failed to load worker script/)) {
+        if (msg.match(/^NetworkError/) || msg.match(/Failed to load worker script/)) {
           // this means CSP blocked it
           msg = "blocked";
         }

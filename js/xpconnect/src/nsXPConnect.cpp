@@ -177,15 +177,7 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
                           : NS_LITERAL_CSTRING("content javascript");
     mWindowID = aWindowID;
 
-    const char16_t* m = static_cast<const char16_t*>(aReport->ucmessage);
-    if (m) {
-        JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Runtime(), aReport->exnType);
-        if (name) {
-            AssignJSFlatString(mErrorMsg, name);
-            mErrorMsg.AppendLiteral(": ");
-        }
-        mErrorMsg.Append(m);
-    }
+    ErrorReportToMessageString(aReport, mErrorMsg);
 
     if (mErrorMsg.IsEmpty() && aFallbackMessage) {
         mErrorMsg.AssignWithConversion(aFallbackMessage);
@@ -269,6 +261,23 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
     NS_ENSURE_SUCCESS_VOID(rv);
     consoleService->LogMessage(errorObject);
 
+}
+
+/* static */
+void
+xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
+                                             nsAString& aString)
+{
+    aString.Truncate();
+    const char16_t* m = aReport->ucmessage;
+    if (m) {
+        JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Runtime(), aReport->exnType);
+        if (name) {
+            AssignJSFlatString(aString, name);
+            aString.AppendLiteral(": ");
+        }
+        aString.Append(m);
+    }
 }
 
 /***************************************************************************/
