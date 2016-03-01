@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.reader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
@@ -260,7 +264,7 @@ public final class ReadingListHelper implements NativeEventListener {
                             json.put("id", c.getInt(c.getColumnIndexOrThrow(ReadingListItems._ID)));
                             json.put("url", c.getString(c.getColumnIndexOrThrow(ReadingListItems.URL)));
                             GeckoAppShell.sendEventToGecko(
-                                GeckoEvent.createBroadcastEvent("Reader:FetchContent", json.toString()));
+                                    GeckoEvent.createBroadcastEvent("Reader:FetchContent", json.toString()));
                         } catch (JSONException e) {
                             Log.e(LOGTAG, "Failed to fetch reading list content for item");
                         }
