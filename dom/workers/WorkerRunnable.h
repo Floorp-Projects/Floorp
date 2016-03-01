@@ -136,6 +136,10 @@ protected:
   // multiple globals per worker???).  If it wasn't in a compartment, aCx will
   // be in either the debugger global's compartment or the worker's global's
   // compartment depending on whether IsDebuggerRunnable() is true.
+  //
+  // Immediately after WorkerRun returns, the caller will assert that either it
+  // returns false or there is no exception pending on aCx.  Then it will report
+  // any pending exceptions on aCx.
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) = 0;
 
@@ -144,9 +148,7 @@ protected:
   // busy count was previously modified in PreDispatch().
   //
   // The aCx passed here is the same one as was passed to WorkerRun and is
-  // still in the same compartment.  If aRunResult is false, any failures on
-  // aCx are reported.  Otherwise failures are left to linger on the JSContext
-  // and maim later code (XXXbz: Aiming to fix that in bug 1072144).
+  // still in the same compartment.
   virtual void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult);
 

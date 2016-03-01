@@ -184,10 +184,6 @@ WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (mBehavior == WorkerThreadModifyBusyCount) {
     aWorkerPrivate->ModifyBusyCountFromWorker(false);
   }
-
-  if (!aRunResult) {
-    JS_ReportPendingException(aCx);
-  }
 }
 
 // static
@@ -349,6 +345,8 @@ WorkerRunnable::Run()
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
+  MOZ_ASSERT_IF(result, !JS_IsExceptionPending(cx));
+  JS_ReportPendingException(cx);
 
   // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
   // lazily create a global, so we construct aes here before calling PostRun.
