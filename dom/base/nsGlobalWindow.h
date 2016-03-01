@@ -1691,6 +1691,11 @@ protected:
   // Window offline status. Checked to see if we need to fire offline event
   bool                          mWasOffline : 1;
 
+  // Represents whether the inner window's page has had a slow script notice.
+  // Only used by inner windows; will always be false for outer windows.
+  // This is used to implement Telemetry measures such as SLOW_SCRIPT_PAGE_COUNT.
+  bool                          mHasHadSlowScript : 1;
+
   // Track what sorts of events we need to fire when thawed
   bool                          mNotifyIdleObserversIdleOnThaw : 1;
   bool                          mNotifyIdleObserversActiveOnThaw : 1;
