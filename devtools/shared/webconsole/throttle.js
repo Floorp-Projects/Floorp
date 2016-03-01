@@ -360,16 +360,28 @@ NetworkThrottleQueue.prototype = {
  * downloadBPSMax {Number} Maximum bytes per second for downloads.
  * uploadBPSMean {Number} Mean bytes per second for uploads.
  * uploadBPSMax {Number} Maximum bytes per second for uploads.
+ *
+ * Download throttling will not be done if downloadBPSMean and
+ * downloadBPSMax are <= 0.  Upload throttling will not be done if
+ * uploadBPSMean and uploadBPSMax are <= 0.
  */
 function NetworkThrottleManager({roundTripTimeMean, roundTripTimeMax,
                                  downloadBPSMean, downloadBPSMax,
                                  uploadBPSMean, uploadBPSMax}) {
-  this.downloadQueue =
-    new NetworkThrottleQueue(downloadBPSMean, downloadBPSMax,
-                             roundTripTimeMean, roundTripTimeMax);
-  this.uploadQueue = Cc["@mozilla.org/network/throttlequeue;1"]
-    .createInstance(Ci.nsIInputChannelThrottleQueue);
-  this.uploadQueue.init(uploadBPSMean, uploadBPSMax);
+  if (downloadBPSMax <= 0 && downloadBPSMean <= 0) {
+    this.downloadQueue = null;
+  } else {
+    this.downloadQueue =
+      new NetworkThrottleQueue(downloadBPSMean, downloadBPSMax,
+                               roundTripTimeMean, roundTripTimeMax);
+  }
+  if (uploadBPSMax <= 0 && uploadBPSMean <= 0) {
+    this.uploadQueue = null;
+  } else {
+    this.uploadQueue = Cc["@mozilla.org/network/throttlequeue;1"]
+      .createInstance(Ci.nsIInputChannelThrottleQueue);
+    this.uploadQueue.init(uploadBPSMean, uploadBPSMax);
+  }
 }
 exports.NetworkThrottleManager = NetworkThrottleManager;
 
@@ -379,13 +391,17 @@ NetworkThrottleManager.prototype = {
    * install it using |setNewListener|.
    *
    * @param {nsITraceableChannel} channel the channel to manage
-   * @return {NetworkThrottleListener} the new listener
+   * @return {NetworkThrottleListener} the new listener, or null if
+   *         download throttling is not being done.
    */
   manage: function (channel) {
-    let listener = new NetworkThrottleListener(this.downloadQueue);
-    let originalListener = channel.setNewListener(listener);
-    listener.setOriginalListener(originalListener);
-    return listener;
+    if (this.downloadQueue) {
+      let listener = new NetworkThrottleListener(this.downloadQueue);
+      let originalListener = channel.setNewListener(listener);
+      listener.setOriginalListener(originalListener);
+      return listener;
+    }
+    return null;
   },
 
   /**
@@ -394,7 +410,9 @@ NetworkThrottleManager.prototype = {
    * @param {nsITraceableChannel} channel the channel to manage
    */
   manageUpload: function (channel) {
-    channel = channel.QueryInterface(Ci.nsIThrottledInputChannel);
-    channel.throttleQueue = this.uploadQueue;
+    if (this.uploadQueue) {
+      channel = channel.QueryInterface(Ci.nsIThrottledInputChannel);
+      channel.throttleQueue = this.uploadQueue;
+    }
   },
 };
