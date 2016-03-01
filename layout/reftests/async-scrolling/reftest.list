@@ -8,7 +8,7 @@
 fuzzy(1,246) fuzzy-if(skiaContent,2,160) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 == bg-fixed-child-no-culling.html bg-fixed-child-no-culling-ref.html
-fuzzy-if(B2G,2,5366) fuzzy-if(Android,2,4000) skip-if(!asyncPan||((browserIsRemote&&winWidget))) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
+fuzzy-if(B2G,2,5366) fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 == element-1.html element-1-ref.html
 pref(layers.force-active,true) == iframe-1.html iframe-1-ref.html
 == nested-1.html nested-1-ref.html
@@ -22,13 +22,13 @@ pref(layers.force-active,true) == iframe-1.html iframe-1-ref.html
 fuzzy-if(Android,5,4) skip-if(!asyncPan) == position-fixed-transformed-1.html position-fixed-transformed-1-ref.html
 == split-layers-1.html split-layers-1-ref.html
 == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
-fuzzy-if(skiaContent,1,32000) skip-if(!asyncPan||(browserIsRemote&&winWidget)) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
+fuzzy-if(skiaContent,1,32000) fuzzy-if(browserIsRemote&&(cocoaWidget||winWidget),1,240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
 == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 == culling-1.html culling-1-ref.html
 == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
-fuzzy-if(skiaContent,1,10000) skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
+fuzzy-if(skiaContent||(browserIsRemote&&cocoaWidget),1,10000) skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
 fuzzy(1,60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 == position-sticky-transformed.html position-sticky-transformed-ref.html
 
