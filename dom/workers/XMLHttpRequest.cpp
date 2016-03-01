@@ -28,6 +28,7 @@
 #include "nsVariant.h"
 
 #include "RuntimeService.h"
+#include "WorkerScope.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "XMLHttpRequestUpload.h"
@@ -1355,7 +1356,12 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
         ErrorResult rv;
         JS::Rooted<JS::Value> response(aCx);
-        Read(nullptr, aCx, &response, rv);
+
+        GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
+        nsCOMPtr<nsIGlobalObject> global =
+          do_QueryInterface(globalObj.GetAsSupports());
+
+        Read(global, aCx, &response, rv);
         if (NS_WARN_IF(rv.Failed())) {
           rv.SuppressException();
           return false;
@@ -1532,8 +1538,18 @@ SendRunnable::MainThreadRun()
 
     ErrorResult rv;
 
+    JS::Rooted<JSObject*> globalObject(cx, JS::CurrentGlobalOrNull(cx));
+    if (NS_WARN_IF(!globalObject)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIGlobalObject> parent = xpc::NativeGlobal(globalObject);
+    if (NS_WARN_IF(!parent)) {
+      return NS_ERROR_FAILURE;
+    }
+
     JS::Rooted<JS::Value> body(cx);
-    Read(nullptr, cx, &body, rv);
+    Read(parent, cx, &body, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
