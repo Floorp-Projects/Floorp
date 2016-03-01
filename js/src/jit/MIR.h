@@ -6728,13 +6728,13 @@ class MMod : public MBinaryArithInstruction
     }
 
     bool canBeNegativeDividend() const {
-        MOZ_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Int64);
         MOZ_ASSERT(!unsigned_);
         return canBeNegativeDividend_;
     }
 
     bool canBeDivideByZero() const {
-        MOZ_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Int64);
         return canBeDivideByZero_;
     }
 

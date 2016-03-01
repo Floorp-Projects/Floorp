@@ -478,7 +478,6 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I64DivU:
       case Expr::I64RemS:
       case Expr::I64RemU:
-        return f.fail("NYI: i64");
       case Expr::I64And:
       case Expr::I64Or:
       case Expr::I64Xor:

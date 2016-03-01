@@ -1412,24 +1412,39 @@ static bool EmitExpr(FunctionCompiler&, ExprType, MDefinition**, LabelVector* = 
 static bool EmitExprStmt(FunctionCompiler&, MDefinition**, LabelVector* = nullptr);
 
 static bool
-EmitLoadStoreAddress(FunctionCompiler& f, uint32_t* offset, uint32_t* align, MDefinition** base)
+EmitLoadStoreAddress(FunctionCompiler& f, Scalar::Type viewType, uint32_t* offset,
+                     uint32_t* align, MDefinition** base)
 {
     *offset = f.readVarU32();
     MOZ_ASSERT(*offset == 0, "Non-zero offsets not supported yet");
 
     *align = f.readVarU32();
 
-    return EmitExpr(f, ExprType::I32, base);
+    if (!EmitExpr(f, ExprType::I32, base))
+        return false;
+
+    // TODO Remove this (and the viewType param) after implementing unaligned
+    // loads/stores.
+    if (f.mg().isAsmJS())
+        return true;
+
+    int32_t maskVal = ~(Scalar::byteSize(viewType) - 1);
+    if (maskVal == -1)
+        return true;
+
+    MDefinition* mask = f.constant(Int32Value(maskVal), MIRType_Int32);
+    *base = f.bitwise<MBitAnd>(*base, mask, MIRType_Int32);
+    return true;
 }
 
 static bool
-EmitLoad(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
+EmitLoad(FunctionCompiler& f, Scalar::Type viewType, MDefinition** def)
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
-    *def = f.loadHeap(scalarType, ptr);
+    *def = f.loadHeap(viewType, ptr);
     return true;
 }
 
@@ -1438,7 +1453,7 @@ EmitStore(FunctionCompiler& f, Scalar::Type viewType, MDefinition** def)
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
 
     MDefinition* rhs = nullptr;
@@ -1471,7 +1486,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 {
     uint32_t offset, align;
     MDefinition* ptr;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &ptr))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &ptr))
         return false;
 
     MDefinition* rhs = nullptr;
@@ -1544,7 +1559,7 @@ EmitAtomicsLoad(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     *def = f.atomicLoadHeap(viewType, index);
@@ -1558,7 +1573,7 @@ EmitAtomicsStore(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
@@ -1577,7 +1592,7 @@ EmitAtomicsBinOp(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
@@ -1594,7 +1609,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* oldValue;
@@ -1614,7 +1629,7 @@ EmitAtomicsExchange(FunctionCompiler& f, MDefinition** def)
 
     uint32_t offset, align;
     MDefinition* index;
-    if (!EmitLoadStoreAddress(f, &offset, &align, &index))
+    if (!EmitLoadStoreAddress(f, viewType, &offset, &align, &index))
         return false;
 
     MDefinition* value;
@@ -2184,7 +2199,8 @@ EmitDivOrMod(FunctionCompiler& f, ExprType type, bool isDiv, bool isUnsigned, MD
 static bool
 EmitDivOrMod(FunctionCompiler& f, ExprType type, bool isDiv, MDefinition** def)
 {
-    MOZ_ASSERT(type != ExprType::I32, "int div or mod must precise signedness");
+    MOZ_ASSERT(type != ExprType::I32 && type != ExprType::I64,
+               "int div or mod must indicate signedness");
     return EmitDivOrMod(f, type, isDiv, false, def);
 }
 
@@ -2897,6 +2913,18 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitBitwise<MRsh>(f, ExprType::I64, def);
       case Expr::I64ShrU:
         return EmitBitwise<MUrsh>(f, ExprType::I64, def);
+      case Expr::I64Add:
+        return EmitAddOrSub(f, ExprType::I64, IsAdd(true), def);
+      case Expr::I64Sub:
+        return EmitAddOrSub(f, ExprType::I64, IsAdd(false), def);
+      case Expr::I64Mul:
+        return EmitMultiply(f, ExprType::I64, def);
+      case Expr::I64DivS:
+      case Expr::I64DivU:
+        return EmitDivOrMod(f, ExprType::I64, IsDiv(true), IsUnsigned(op == Expr::I64DivU), def);
+      case Expr::I64RemS:
+      case Expr::I64RemU:
+        return EmitDivOrMod(f, ExprType::I64, IsDiv(false), IsUnsigned(op == Expr::I64RemU), def);
       // F32
       case Expr::F32Const:
         return EmitLiteral(f, ExprType::F32, def);
@@ -3066,13 +3094,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-      case Expr::I64Add:
-      case Expr::I64Sub:
-      case Expr::I64Mul:
-      case Expr::I64DivS:
-      case Expr::I64DivU:
-      case Expr::I64RemS:
-      case Expr::I64RemU:
         MOZ_CRASH("NYI");
       case Expr::Unreachable:
         break;

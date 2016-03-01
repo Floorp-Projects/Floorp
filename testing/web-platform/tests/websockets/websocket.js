@@ -8,7 +8,7 @@ var wsocket;
 var data;
 
 function IsWebSocket() {
-    if (!window.WebSocket) {
+    if (!self.WebSocket) {
         assert_true(false, "Browser does not support WebSocket");
     }
 }

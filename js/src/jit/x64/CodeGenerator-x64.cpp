@@ -6,6 +6,8 @@
 
 #include "jit/x64/CodeGenerator-x64.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "jit/IonCaches.h"
 #include "jit/MIR.h"
 
@@ -286,7 +288,7 @@ CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
     const LAllocation* rhs = lir->getOperand(1);
 
     if (rhs->isConstant()) {
-        int32_t shift = ToInt32(rhs) & 0x3F;
+        int32_t shift = int32_t(ToInt64(rhs) & 0x3F);
         switch (lir->bitop()) {
           case JSOP_LSH:
             if (shift)
@@ -319,6 +321,160 @@ CodeGeneratorX64::visitShiftI64(LShiftI64* lir)
             MOZ_CRASH("Unexpected shift op");
         }
     }
+}
+
+void
+CodeGeneratorX64::visitAddI64(LAddI64* lir)
+{
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
+
+    if (rhs->isConstant())
+        masm.addPtr(ImmWord(ToInt64(rhs)), lhs);
+    else
+        masm.addq(ToOperand(rhs), lhs);
+}
+
+void
+CodeGeneratorX64::visitSubI64(LSubI64* lir)
+{
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
+
+    if (rhs->isConstant())
+        masm.subPtr(ImmWord(ToInt64(rhs)), lhs);
+    else
+        masm.subq(ToOperand(rhs), lhs);
+}
+
+void
+CodeGeneratorX64::visitMulI64(LMulI64* lir)
+{
+    Register lhs = ToRegister(lir->getOperand(0));
+    const LAllocation* rhs = lir->getOperand(1);
+
+    MOZ_ASSERT(ToRegister(lir->getDef(0)) == lhs);
+
+    if (rhs->isConstant()) {
+        int64_t constant = ToInt64(rhs);
+        switch (constant) {
+          case -1:
+            masm.negq(lhs);
+            return;
+          case 0:
+            masm.xorl(lhs, lhs);
+            return;
+          case 1:
+            // nop
+            return;
+          case 2:
+            masm.addq(lhs, lhs);
+            return;
+          default:
+            if (constant > 0) {
+                // Use shift if constant is power of 2.
+                int32_t shift = mozilla::FloorLog2(constant);
+                if (int64_t(1 << shift) == constant) {
+                    masm.shlq(Imm32(shift), lhs);
+                    return;
+                }
+            }
+            masm.mul64(Imm64(constant), Register64(lhs));
+        }
+    } else {
+        masm.imulq(ToOperand(rhs), lhs);
+    }
+}
+
+void
+CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register output = ToRegister(lir->output());
+
+    MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+    MOZ_ASSERT(rhs != rdx);
+    MOZ_ASSERT_IF(output == rax, ToRegister(lir->remainder()) == rdx);
+    MOZ_ASSERT_IF(output == rdx, ToRegister(lir->remainder()) == rax);
+
+    Label done;
+
+    // Put the lhs in rax.
+    if (lhs != rax)
+        masm.mov(lhs, rax);
+
+    // Handle divide by zero. For now match asm.js and return 0, but
+    // eventually this should trap.
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
+        masm.xorl(output, output);
+        masm.jump(&done);
+        masm.bind(&nonZero);
+    }
+
+    // Handle an integer overflow exception from INT64_MIN / -1. Eventually
+    // signed integer division should trap, instead of returning the
+    // LHS (INT64_MIN).
+    if (lir->canBeNegativeOverflow()) {
+        Label notmin;
+        masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notmin);
+        masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notmin);
+        if (lir->mir()->isMod()) {
+            masm.xorl(output, output);
+        } else {
+            if (lhs != output)
+                masm.mov(lhs, output);
+        }
+        masm.jump(&done);
+        masm.bind(&notmin);
+    }
+
+    // Sign extend the lhs into rdx to make rdx:rax.
+    masm.cqo();
+    masm.idivq(rhs);
+
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX64::visitUDivOrMod64(LUDivOrMod64* lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register output = ToRegister(lir->output());
+
+    MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+    MOZ_ASSERT(rhs != rdx);
+    MOZ_ASSERT_IF(output == rax, ToRegister(lir->remainder()) == rdx);
+    MOZ_ASSERT_IF(output == rdx, ToRegister(lir->remainder()) == rax);
+
+    // Put the lhs in rax.
+    if (lhs != rax)
+        masm.mov(lhs, rax);
+
+    Label done;
+
+    // Prevent divide by zero. For now match asm.js and return 0, but
+    // eventually this should trap.
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
+        masm.xorl(output, output);
+        masm.jump(&done);
+        masm.bind(&nonZero);
+    }
+
+    // Zero extend the lhs into rdx to make (rdx:rax).
+    masm.xorl(rdx, rdx);
+    masm.udivq(rhs);
+
+    masm.bind(&done);
 }
 
 void

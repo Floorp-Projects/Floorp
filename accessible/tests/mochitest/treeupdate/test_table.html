@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Table update tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    function appendCaption(aTableID)
+    {
+      this.invoke = function appendCaption_invoke()
+      {
+        // append a caption, it should appear as a first element in the
+        // accessible tree.
+        var caption = document.createElement("caption");
+        caption.textContent = "table caption";
+        getNode(aTableID).appendChild(caption);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aTableID)
+      ];
+
+      this.finalCheck = function appendCaption_finalCheck()
+      {
+        var tree =
+          { TABLE: [
+            { CAPTION: [ 
+              { TEXT_LEAF: [] }
+            ] },
+            { ROW: [ 
+              { CELL: [ {TEXT_LEAF: [] }]},
+              { CELL: [ {TEXT_LEAF: [] }]}
+            ] }
+          ] };
+        testAccessibleTree(aTableID, tree);
+      }
+
+      this.getID = function appendCaption_getID()
+      {
+        return "append caption";
+      }
+    }
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new appendCaption("table"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="table">
+    <tr>
+      <td>cell1</td>
+      <td>cell2</td>
+    </tr>
+  </table>
+</body>
+</html>

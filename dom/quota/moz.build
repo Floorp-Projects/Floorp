@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom.quota += [
     'ActorsParent.h',
     'Client.h',
     'FileStreams.h',
+    'OriginScope.h',
     'PersistenceType.h',
     'QuotaCommon.h',
     'QuotaManager.h',
