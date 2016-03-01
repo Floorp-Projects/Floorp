@@ -147,6 +147,13 @@ const Formatters = {
       [L10N.getStr("marker.field.type")]:
         L10N.getStr(`marker.worker.${marker.workerOperation}`)
     };
+  },
+
+  MessagePortFields: function(marker) {
+    return {
+      [L10N.getStr("marker.field.type")]:
+        L10N.getStr(`marker.messagePort.${marker.messagePortOperation}`)
+    };
   }
 };
 
