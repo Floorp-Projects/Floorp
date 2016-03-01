@@ -19,6 +19,7 @@ function setupPrefs() {
   return new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.push.enabled", true],
+      ["dom.push.connection.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true]
