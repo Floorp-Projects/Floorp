@@ -5,7 +5,6 @@
 # Set up the libvpx assembler config.
 
 AS=$(VPX_AS)
-ASM_SUFFIX=$(VPX_ASM_SUFFIX)
 
 ifdef VPX_ARM_ASM
 
@@ -15,7 +14,7 @@ ifdef VPX_AS_CONVERSION
 
 GENERATED_DIRS += $(dir $(ASFILES))
 
-%.asm.$(ASM_SUFFIX): %.asm $(ASM_OFFSETS)
+%.asm.s: %.asm $(ASM_OFFSETS)
 	$(VPX_AS_CONVERSION) < $< > $@
 
 endif

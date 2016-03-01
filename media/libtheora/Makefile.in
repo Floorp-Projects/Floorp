@@ -6,16 +6,16 @@
 ifdef GNU_AS
 ifeq ($(CPU_ARCH),arm)
 
-armfrag-gnu.$(ASM_SUFFIX): armopts-gnu.S
-armidct-gnu.$(ASM_SUFFIX): armopts-gnu.S
-armloop-gnu.$(ASM_SUFFIX): armopts-gnu.S
+armfrag-gnu.s: armopts-gnu.S
+armidct-gnu.s: armopts-gnu.S
+armloop-gnu.s: armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S
 # suffix when translating the files that include it.
 armopts-gnu.S: lib/arm/armopts.s
 	$(PERL) $(srcdir)/lib/arm/arm2gnu.pl < $< > $@
-# For all others, we can use an implicit rule with the configured $(ASM_SUFFIX).
-%-gnu.$(ASM_SUFFIX): lib/arm/%.s
+# For all others, we can use an implicit rule
+%-gnu.s: lib/arm/%.s
 	$(PERL) $(srcdir)/lib/arm/arm2gnu.pl < $< > $@
 
 endif

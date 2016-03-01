@@ -34,9 +34,7 @@ if CONFIG['VPX_ARM_ASM']:
 
     if CONFIG['VPX_AS_CONVERSION']:
         SOURCES += sorted([
-            "!%s.%s" % (f, CONFIG['VPX_ASM_SUFFIX'])
-            if f.endswith('.asm') else f
-            for f in sorted(arm_asm_files)
+            "!%s.s" % f if f.endswith('.asm') else f for f in arm_asm_files
         ])
     else:
         SOURCES += sorted(arm_asm_files)
