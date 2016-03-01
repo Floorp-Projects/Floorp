@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.authenticator;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -772,6 +773,7 @@ public class AndroidFxAccount {
     });
   }
 
+  @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.
   private class ProfileResultReceiver extends ResultReceiver {
     public ProfileResultReceiver(Handler handler) {
       super(handler);
