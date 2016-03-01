@@ -1691,16 +1691,16 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
 
 class ShellAllocationMetadataBuilder : public AllocationMetadataBuilder {
   public:
-    virtual JSObject* build(JSContext *cx, HandleObject) const override;
+    virtual JSObject* build(JSContext *cx, HandleObject,
+                            AutoEnterOOMUnsafeRegion& oomUnsafe) const override;
 
     static const ShellAllocationMetadataBuilder metadataBuilder;
 };
 
 JSObject*
-ShellAllocationMetadataBuilder::build(JSContext* cx, HandleObject) const
+ShellAllocationMetadataBuilder::build(JSContext* cx, HandleObject,
+                                      AutoEnterOOMUnsafeRegion& oomUnsafe) const
 {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
         oomUnsafe.crash("ShellAllocationMetadataBuilder::build");
