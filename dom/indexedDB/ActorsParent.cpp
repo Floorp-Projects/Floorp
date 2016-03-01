@@ -8788,8 +8788,6 @@ class QuotaClient final
   static const int32_t kPercentUnusedThreshold = 20;
 
 public:
-  class AutoProgressHandler;
-
   enum class MaintenanceAction
   {
     Nothing = 0,
@@ -8944,66 +8942,6 @@ private:
   // maintanance to run.
   void
   ProcessMaintenanceQueue();
-};
-
-class MOZ_STACK_CLASS QuotaClient::AutoProgressHandler final
-  : public mozIStorageProgressHandler
-{
-  Maintenance* mMaintenance;
-  mozIStorageConnection* mConnection;
-
-  NS_DECL_OWNINGTHREAD
-
-  // This class is stack-based so we never actually allow AddRef/Release to do
-  // anything. But we need to know if any consumer *thinks* that they have a
-  // reference to this object so we track the reference countin DEBUG builds.
-  DebugOnly<nsrefcnt> mDEBUGRefCnt;
-
-public:
-  explicit AutoProgressHandler(Maintenance* aMaintenance)
-    : mMaintenance(aMaintenance)
-    , mConnection(nullptr)
-    , mDEBUGRefCnt(0)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!IsOnBackgroundThread());
-    NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
-    MOZ_ASSERT(aMaintenance);
-  }
-
-  ~AutoProgressHandler()
-  {
-    NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
-
-    if (mConnection) {
-      Unregister();
-    }
-
-    MOZ_ASSERT(!mDEBUGRefCnt);
-  }
-
-  nsresult
-  Register(mozIStorageConnection* aConnection);
-
-  // We don't want the mRefCnt member but this class does not "inherit"
-  // nsISupports.
-  NS_DECL_ISUPPORTS_INHERITED
-
-private:
-  void
-  Unregister();
-
-  NS_DECL_MOZISTORAGEPROGRESSHANDLER
-
-  // Not available for the heap!
-  void*
-  operator new(size_t) = delete;
-  void*
-  operator new[](size_t) = delete;
-  void
-  operator delete(void*) = delete;
-  void
-  operator delete[](void*) = delete;
 };
 
 class Maintenance final
@@ -9263,6 +9201,8 @@ struct Maintenance::DirectoryInfo final
 class DatabaseMaintenance final
   : public nsRunnable
 {
+  class AutoProgressHandler;
+
   nsCOMPtr<nsIEventTarget> mOwningThread;
   RefPtr<Maintenance> mMaintenance;
   const nsCString mGroup;
@@ -9336,6 +9276,66 @@ private:
   RunOnConnectionThread();
 
   NS_DECL_NSIRUNNABLE
+};
+
+class MOZ_STACK_CLASS DatabaseMaintenance::AutoProgressHandler final
+  : public mozIStorageProgressHandler
+{
+  Maintenance* mMaintenance;
+  mozIStorageConnection* mConnection;
+
+  NS_DECL_OWNINGTHREAD
+
+  // This class is stack-based so we never actually allow AddRef/Release to do
+  // anything. But we need to know if any consumer *thinks* that they have a
+  // reference to this object so we track the reference countin DEBUG builds.
+  DebugOnly<nsrefcnt> mDEBUGRefCnt;
+
+public:
+  explicit AutoProgressHandler(Maintenance* aMaintenance)
+    : mMaintenance(aMaintenance)
+    , mConnection(nullptr)
+    , mDEBUGRefCnt(0)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!IsOnBackgroundThread());
+    NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
+    MOZ_ASSERT(aMaintenance);
+  }
+
+  ~AutoProgressHandler()
+  {
+    NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
+
+    if (mConnection) {
+      Unregister();
+    }
+
+    MOZ_ASSERT(!mDEBUGRefCnt);
+  }
+
+  nsresult
+  Register(mozIStorageConnection* aConnection);
+
+  // We don't want the mRefCnt member but this class does not "inherit"
+  // nsISupports.
+  NS_DECL_ISUPPORTS_INHERITED
+
+private:
+  void
+  Unregister();
+
+  NS_DECL_MOZISTORAGEPROGRESSHANDLER
+
+  // Not available for the heap!
+  void*
+  operator new(size_t) = delete;
+  void*
+  operator new[](size_t) = delete;
+  void
+  operator delete(void*) = delete;
+  void
+  operator delete[](void*) = delete;
 };
 
 class IntString : public nsAutoString
@@ -17389,7 +17389,7 @@ DatabaseMaintenance::PerformMaintenanceOnDatabase()
     return;
   }
 
-  QuotaClient::AutoProgressHandler progressHandler(mMaintenance);
+  AutoProgressHandler progressHandler(mMaintenance);
   if (NS_WARN_IF(NS_FAILED(progressHandler.Register(connection)))) {
     return;
   }
@@ -17859,85 +17859,6 @@ QuotaClient::ProcessMaintenanceQueue()
   mCurrentMaintenance->RunImmediately();
 }
 
-nsresult
-QuotaClient::
-AutoProgressHandler::Register(mozIStorageConnection* aConnection)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aConnection);
-
-  // We want to quickly bail out of any operation if the user becomes active, so
-  // use a small granularity here since database performance isn't critical.
-  static const int32_t kProgressGranularity = 50;
-
-  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-  nsresult rv = aConnection->SetProgressHandler(kProgressGranularity,
-                                                this,
-                                                getter_AddRefs(oldHandler));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(!oldHandler);
-  mConnection = aConnection;
-
-  return NS_OK;
-}
-
-void
-QuotaClient::
-AutoProgressHandler::Unregister()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mConnection);
-
-  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-  nsresult rv = mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler));
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), oldHandler == this);
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-QuotaClient::
-AutoProgressHandler::AddRef()
-{
-  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
-
-  mDEBUGRefCnt++;
-  return 2;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-QuotaClient::
-AutoProgressHandler::Release()
-{
-  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
-
-  mDEBUGRefCnt--;
-  return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE(QuotaClient::AutoProgressHandler,
-                        mozIStorageProgressHandler)
-
-NS_IMETHODIMP
-QuotaClient::
-AutoProgressHandler::OnProgress(mozIStorageConnection* aConnection,
-                                bool* _retval)
-{
-  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
-  MOZ_ASSERT(aConnection);
-  MOZ_ASSERT(mConnection == aConnection);
-  MOZ_ASSERT(_retval);
-
-  *_retval = mMaintenance->IsAbortedOnAnyThread();
-
-  return NS_OK;
-}
-
 void
 Maintenance::RegisterDatabaseMaintenance(
                                       DatabaseMaintenance* aDatabaseMaintenance)
@@ -18271,6 +18192,85 @@ DatabaseMaintenance::Run()
   } else {
     RunOnConnectionThread();
   }
+
+  return NS_OK;
+}
+
+nsresult
+DatabaseMaintenance::
+AutoProgressHandler::Register(mozIStorageConnection* aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+
+  // We want to quickly bail out of any operation if the user becomes active, so
+  // use a small granularity here since database performance isn't critical.
+  static const int32_t kProgressGranularity = 50;
+
+  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
+  nsresult rv = aConnection->SetProgressHandler(kProgressGranularity,
+                                                this,
+                                                getter_AddRefs(oldHandler));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!oldHandler);
+  mConnection = aConnection;
+
+  return NS_OK;
+}
+
+void
+DatabaseMaintenance::
+AutoProgressHandler::Unregister()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mConnection);
+
+  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
+  nsresult rv = mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), oldHandler == this);
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+DatabaseMaintenance::
+AutoProgressHandler::AddRef()
+{
+  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
+
+  mDEBUGRefCnt++;
+  return 2;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+DatabaseMaintenance::
+AutoProgressHandler::Release()
+{
+  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
+
+  mDEBUGRefCnt--;
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE(DatabaseMaintenance::AutoProgressHandler,
+                        mozIStorageProgressHandler)
+
+NS_IMETHODIMP
+DatabaseMaintenance::
+AutoProgressHandler::OnProgress(mozIStorageConnection* aConnection,
+                                bool* _retval)
+{
+  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(mConnection == aConnection);
+  MOZ_ASSERT(_retval);
+
+  *_retval = mMaintenance->IsAbortedOnAnyThread();
 
   return NS_OK;
 }
