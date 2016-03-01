@@ -1394,6 +1394,15 @@ LIRGenerator::visitClz(MClz* ins)
 }
 
 void
+LIRGenerator::visitPopcnt(MPopcnt* ins)
+{
+    MDefinition* num = ins->num();
+
+    LPopcntI* lir = new(alloc()) LPopcntI(useRegisterAtStart(num), temp());
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitSqrt(MSqrt* ins)
 {
     MDefinition* num = ins->input();

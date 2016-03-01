@@ -1285,6 +1285,13 @@ public:
         m_formatter.twoByteOp(OP2_BSR_GvEv, src, dst);
     }
 
+    void popcnt_rr(RegisterID src, RegisterID dst)
+    {
+        spew("popcnt     %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.legacySSEPrefix(VEX_SS);
+        m_formatter.twoByteOp(OP2_POPCNT_GvEv, src, dst);
+    }
+
     void imull_rr(RegisterID src, RegisterID dst)
     {
         spew("imull      %s, %s", GPReg32Name(src), GPReg32Name(dst));

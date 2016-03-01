@@ -201,6 +201,7 @@ enum TwoByteOpcodeID {
     OP2_IMUL_GvEv       = 0xAF,
     OP2_CMPXCHG_GvEb    = 0xB0,
     OP2_CMPXCHG_GvEw    = 0xB1,
+    OP2_POPCNT_GvEv     = 0xB8,
     OP2_BSR_GvEv        = 0xBD,
     OP2_MOVSX_GvEb      = 0xBE,
     OP2_MOVSX_GvEw      = 0xBF,

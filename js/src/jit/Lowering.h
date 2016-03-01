@@ -130,6 +130,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitAbs(MAbs* ins);
     void visitClz(MClz* ins);
     void visitSqrt(MSqrt* ins);
+    void visitPopcnt(MPopcnt* ins);
     void visitAtan2(MAtan2* ins);
     void visitHypot(MHypot* ins);
     void visitPow(MPow* ins);

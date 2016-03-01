@@ -1473,6 +1473,12 @@ MClz::computeRange(TempAllocator& alloc)
 }
 
 void
+MPopcnt::computeRange(TempAllocator& alloc)
+{
+    setRange(Range::NewUInt32Range(alloc, 0, 32));
+}
+
+void
 MMinMax::computeRange(TempAllocator& alloc)
 {
     if (specialization_ != MIRType_Int32 && specialization_ != MIRType_Double)

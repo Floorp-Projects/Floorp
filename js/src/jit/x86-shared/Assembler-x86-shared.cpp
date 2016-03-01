@@ -158,6 +158,7 @@ CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;
 CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
 bool CPUInfo::avxPresent = false;
 bool CPUInfo::avxEnabled = false;
+bool CPUInfo::popcntPresent = false;
 
 static uintptr_t
 ReadXGETBV()
@@ -252,4 +253,8 @@ CPUInfo::SetSSEVersion()
         static const int xcr0AVXBit = 1 << 2;
         avxPresent = (xcr0EAX & xcr0SSEBit) && (xcr0EAX & xcr0AVXBit);
     }
+
+    static const int POPCNTBit = 1 << 23;
+
+    popcntPresent = (flagsECX & POPCNTBit);
 }

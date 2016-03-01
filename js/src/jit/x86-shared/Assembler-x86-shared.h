@@ -211,6 +211,7 @@ class CPUInfo
     static SSEVersion maxEnabledSSEVersion;
     static bool avxPresent;
     static bool avxEnabled;
+    static bool popcntPresent;
 
     static void SetSSEVersion();
 
@@ -226,6 +227,7 @@ class CPUInfo
     static bool IsSSSE3Present() { return GetSSEVersion() >= SSSE3; }
     static bool IsSSE41Present() { return GetSSEVersion() >= SSE4_1; }
     static bool IsSSE42Present() { return GetSSEVersion() >= SSE4_2; }
+    static bool IsPOPCNTPresent() { return popcntPresent; }
 
 #ifdef JS_CODEGEN_X86
     static void SetFloatingPointDisabled() { maxEnabledSSEVersion = NoSSE; avxEnabled = false; }
@@ -1043,6 +1045,7 @@ class AssemblerX86Shared : public AssemblerShared
     static bool HasSSE2() { return CPUInfo::IsSSE2Present(); }
     static bool HasSSE3() { return CPUInfo::IsSSE3Present(); }
     static bool HasSSE41() { return CPUInfo::IsSSE41Present(); }
+    static bool HasPOPCNT() { return CPUInfo::IsPOPCNTPresent(); }
     static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
     static bool SupportsSimd() { return CPUInfo::IsSSE2Present(); }
     static bool HasAVX() { return CPUInfo::IsAVXPresent(); }
@@ -1544,6 +1547,9 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void bsr(const Register& src, const Register& dest) {
         masm.bsr_rr(src.encoding(), dest.encoding());
+    }
+    void popcnt(const Register& src, const Register& dest) {
+        masm.popcnt_rr(src.encoding(), dest.encoding());
     }
     void imull(Register multiplier) {
         masm.imull_r(multiplier.encoding());
