@@ -293,6 +293,30 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.twoByteOp64(OP2_IMUL_GvEv, src, dst);
     }
 
+    void imulq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("imulq      " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));
+        m_formatter.twoByteOp64(OP2_IMUL_GvEv, offset, base, dst);
+    }
+
+    void cqo()
+    {
+        spew("cqo        ");
+        m_formatter.oneByteOp64(OP_CDQ);
+    }
+
+    void idivq_r(RegisterID divisor)
+    {
+        spew("idivq      %s", GPReg64Name(divisor));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, divisor, GROUP3_OP_IDIV);
+    }
+
+    void divq_r(RegisterID divisor)
+    {
+        spew("divq       %s", GPReg64Name(divisor));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, divisor, GROUP3_OP_DIV);
+    }
+
     // Comparisons:
 
     void cmpq_rr(RegisterID rhs, RegisterID lhs)

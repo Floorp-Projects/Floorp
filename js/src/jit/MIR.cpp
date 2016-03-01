@@ -2704,6 +2704,9 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
     if (specialization_ == MIRType_None)
         return this;
 
+    if (specialization_ == MIRType_Int64)
+        return this;
+
     MDefinition* lhs = getOperand(0);
     MDefinition* rhs = getOperand(1);
     if (MConstant* folded = EvaluateConstantOperands(alloc, this)) {
@@ -2916,6 +2919,9 @@ MDiv::foldsTo(TempAllocator& alloc)
     if (specialization_ == MIRType_None)
         return this;
 
+    if (specialization_ == MIRType_Int64)
+        return this;
+
     if (MDefinition* folded = EvaluateConstantOperands(alloc, this))
         return folded;
 
@@ -2976,6 +2982,9 @@ MDefinition*
 MMod::foldsTo(TempAllocator& alloc)
 {
     if (specialization_ == MIRType_None)
+        return this;
+
+    if (specialization_ == MIRType_Int64)
         return this;
 
     if (MDefinition* folded = EvaluateConstantOperands(alloc, this))
