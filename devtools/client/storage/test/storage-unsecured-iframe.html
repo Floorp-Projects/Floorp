@@ -14,17 +14,6 @@ localStorage.setItem("iframe-u-ls1", "foobar");
 sessionStorage.setItem("iframe-u-ss1", "foobar1");
 sessionStorage.setItem("iframe-u-ss2", "foobar2");
 console.log("added cookies and stuff from unsecured iframe");
-
-window.clear = function*() {
-  document.cookie = "uc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; " +
-                    "domain=.example.org; secure=true";
-
-  localStorage.clear();
-  sessionStorage.clear();
-
-  dump("removed cookies, localStorage and sessionStorage from " +
-       document.location + "\n");
-};
 </script>
 </body>
 </html>
