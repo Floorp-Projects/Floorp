@@ -1449,6 +1449,7 @@ NetworkMonitorChild.prototype = {
   owner: null,
   _netEvents: null,
   _saveRequestAndResponseBodies: true,
+  _throttleData: null,
 
   get saveRequestAndResponseBodies() {
     return this._saveRequestAndResponseBodies;
@@ -1461,6 +1462,22 @@ NetworkMonitorChild.prototype = {
       action: "setPreferences",
       preferences: {
         saveRequestAndResponseBodies: this._saveRequestAndResponseBodies,
+      },
+    });
+  },
+
+  get throttleData() {
+    return this._throttleData;
+  },
+
+  set throttleData(val) {
+    this._throttleData = val;
+
+    this._messageManager.sendAsyncMessage("debug:netmonitor:" + this.connID, {
+      appId: this.appId,
+      action: "setPreferences",
+      preferences: {
+        throttleData: this._throttleData,
       },
     });
   },
@@ -1649,8 +1666,9 @@ NetworkMonitorManager.prototype = {
       case "setPreferences": {
         let {preferences} = msg.json;
         for (let key of Object.keys(preferences)) {
-          if (key == "saveRequestAndResponseBodies" && this.netMonitor) {
-            this.netMonitor.saveRequestAndResponseBodies = preferences[key];
+          if ((key == "saveRequestAndResponseBodies" ||
+               key == "throttleData") && this.netMonitor) {
+            this.netMonitor[key] = preferences[key];
           }
         }
         break;
