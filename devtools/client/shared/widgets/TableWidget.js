@@ -20,10 +20,14 @@ const EVENTS = {
   CELL_EDIT: "cell-edit",
   COLUMN_SORTED: "column-sorted",
   COLUMN_TOGGLED: "column-toggled",
+  FIELDS_EDITABLE: "fields-editable",
   HEADER_CONTEXT_MENU: "header-context-menu",
+  ROW_EDIT: "row-edit",
   ROW_CONTEXT_MENU: "row-context-menu",
+  ROW_REMOVED: "row-removed",
   ROW_SELECTED: "row-selected",
   ROW_UPDATED: "row-updated",
+  TABLE_CLEARED: "table-cleared",
   TABLE_FILTERED: "table-filtered",
   SCROLL_END: "scroll-end"
 };
@@ -102,6 +106,16 @@ function TableWidget(node, options = {}) {
     this.selectedRow = id;
   };
   this.on(EVENTS.ROW_SELECTED, this.bindSelectedRow);
+
+  this.onChange = this.onChange.bind(this);
+  this.onEditorDestroyed = this.onEditorDestroyed.bind(this);
+  this.onEditorTab = this.onEditorTab.bind(this);
+  this.onKeydown = this.onKeydown.bind(this);
+  this.onMousedown = this.onMousedown.bind(this);
+  this.onRowRemoved = this.onRowRemoved.bind(this);
+
+  this.document.addEventListener("keydown", this.onKeydown, false);
+  this.document.addEventListener("mousedown", this.onMousedown, false);
 }
 
 TableWidget.prototype = {
@@ -150,9 +164,421 @@ TableWidget.prototype = {
     return this.columns.get(this.uniqueId).selectedIndex;
   },
 
+  /**
+   * Returns the index of the selected row disregarding hidden rows.
+   */
+  get visibleSelectedIndex() {
+    let cells = this.columns.get(this.uniqueId).visibleCellNodes;
+
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i].classList.contains("theme-selected")) {
+        return i;
+      }
+    }
+
+    return -1;
+  },
+
+  /**
+   * returns all editable columns.
+   */
+  get editableColumns() {
+    let filter = columns => {
+      columns = [...columns].filter(col => {
+        if (col.clientWidth === 0) {
+          return false;
+        }
+
+        let cell = col.querySelector(".table-widget-cell");
+
+        for (let selector of this._editableFieldsEngine.selectors) {
+          if (cell.matches(selector)) {
+            return true;
+          }
+        }
+
+        return false;
+      });
+
+      return columns;
+    };
+
+    let columns = this._parent.querySelectorAll(".table-widget-column");
+    return filter(columns);
+  },
+
+  /**
+   * Emit all cell edit events.
+   */
+  onChange: function(type, data) {
+    let changedField = data.change.field;
+    let colName = changedField.parentNode.id;
+    let column = this.columns.get(colName);
+    let uniqueId = column.table.uniqueId;
+    let itemIndex = column.cellNodes.indexOf(changedField);
+    let items = {};
+
+    for (let [name, col] of this.columns) {
+      items[name] = col.cellNodes[itemIndex].value;
+    }
+
+    let change = {
+      key: uniqueId,
+      field: colName,
+      oldValue: data.change.oldValue,
+      newValue: data.change.newValue,
+      items: items
+    };
+
+    // A rows position in the table can change as the result of an edit. In
+    // order to ensure that the correct row is highlighted after an edit we
+    // save the uniqueId in editBookmark.
+    this.editBookmark = colName === uniqueId ? change.newValue
+                                             : items[uniqueId];
+    this.emit(EVENTS.CELL_EDIT, change);
+  },
+
+  onEditorDestroyed: function() {
+    this._editableFieldsEngine = null;
+  },
+
+  /**
+   * Called by the inplace editor when Tab / Shift-Tab is pressed in edit-mode.
+   * Because tables are live any row, column, cell or table can be added,
+   * deleted or moved by deleting and adding e.g. a row again.
+   *
+   * This presents various challenges when navigating via the keyboard so please
+   * keep this in mind whenever editing this method.
+   *
+   * @param  {Event} event
+   *         Keydown event
+   */
+  onEditorTab: function(event) {
+    let textbox = event.target;
+    let editor = this._editableFieldsEngine;
+
+    if (textbox.id !== editor.INPUT_ID) {
+      return;
+    }
+
+    let column = textbox.parentNode;
+
+    // Changing any value can change the position of the row depending on which
+    // column it is currently sorted on. In addition to this, the table cell may
+    // have been edited and had to be recreated when the user has pressed tab or
+    // shift+tab. Both of these situations require us to recover our target,
+    // select the appropriate row and move the textbox on to the next cell.
+    if (editor.changePending) {
+      // We need to apply a change, which can mean that the position of cells
+      // within the table can change. Because of this we need to wait for
+      // EVENTS.ROW_EDIT and then move the textbox.
+      this.once(EVENTS.ROW_EDIT, (e, uniqueId) => {
+        let cell;
+        let cells;
+        let columnObj;
+        let cols = this.editableColumns;
+        let rowIndex = this.visibleSelectedIndex;
+        let colIndex = cols.indexOf(column);
+        let newIndex;
+
+        // If the row has been deleted we should bail out.
+        if (!uniqueId) {
+          return;
+        }
+
+        // Find the column we need to move to.
+        if (event.shiftKey) {
+          // Navigate backwards on shift tab.
+          if (colIndex === 0) {
+            if (rowIndex === 0) {
+              return;
+            }
+            newIndex = cols.length - 1;
+          } else {
+            newIndex = colIndex - 1;
+          }
+        } else if (colIndex === cols.length - 1) {
+          let id = cols[0].id;
+          columnObj = this.columns.get(id);
+          let maxRowIndex = columnObj.visibleCellNodes.length - 1;
+          if (rowIndex === maxRowIndex) {
+            return;
+          }
+          newIndex = 0;
+        } else {
+          newIndex = colIndex + 1;
+        }
+
+        let newcol = cols[newIndex];
+        columnObj = this.columns.get(newcol.id);
+
+        // Select the correct row even if it has moved due to sorting.
+        let dataId = editor.currentTarget.getAttribute("data-id");
+        if (this.items.get(dataId)) {
+          this.emit(EVENTS.ROW_SELECTED, dataId);
+        } else {
+          this.emit(EVENTS.ROW_SELECTED, uniqueId);
+        }
+
+        // EVENTS.ROW_SELECTED may have changed the selected row so let's save
+        // the result in rowIndex.
+        rowIndex = this.visibleSelectedIndex;
+
+        // Edit the appropriate cell.
+        cells = columnObj.visibleCellNodes;
+        cell = cells[rowIndex];
+        editor.edit(cell);
+
+        // Remove flash-out class... it won't have been auto-removed because the
+        // cell was hidden for editing.
+        cell.classList.remove("flash-out");
+      });
+    }
+
+    // Begin cell edit. We always do this so that we can begin editing even in
+    // the case that the previous edit will cause the row to move.
+    let cell = this.getEditedCellOnTab(event, column);
+    editor.edit(cell);
+  },
+
+  /**
+   * Get the cell that will be edited next on tab / shift tab and highlight the
+   * appropriate row. Edits etc. are not taken into account.
+   *
+   * This is used to tab from one field to another without editing and makes the
+   * editor much more responsive.
+   *
+   * @param  {Event} event
+   *         Keydown event
+   */
+  getEditedCellOnTab: function(event, column) {
+    let cell = null;
+    let cols = this.editableColumns;
+    let rowIndex = this.visibleSelectedIndex;
+    let colIndex = cols.indexOf(column);
+    let maxCol = cols.length - 1;
+    let maxRow = this.columns.get(column.id).visibleCellNodes.length - 1;
+
+    if (event.shiftKey) {
+      // Navigate backwards on shift tab.
+      if (colIndex === 0) {
+        if (rowIndex === 0) {
+          this._editableFieldsEngine.completeEdit();
+          return null;
+        }
+
+        column = cols[cols.length - 1];
+        let cells = this.columns.get(column.id).visibleCellNodes;
+        cell = cells[rowIndex - 1];
+
+        let rowId = cell.getAttribute("data-id");
+        this.emit(EVENTS.ROW_SELECTED, rowId);
+      } else {
+        column = cols[colIndex - 1];
+        let cells = this.columns.get(column.id).visibleCellNodes;
+        cell = cells[rowIndex];
+      }
+    } else if (colIndex === maxCol) {
+      // If in the rightmost column on the last row stop editing.
+      if (rowIndex === maxRow) {
+        this._editableFieldsEngine.completeEdit();
+        return null;
+      }
+
+      // If in the rightmost column of a row then move to the first column of
+      // the next row.
+      column = cols[0];
+      let cells = this.columns.get(column.id).visibleCellNodes;
+      cell = cells[rowIndex + 1];
+
+      let rowId = cell.getAttribute("data-id");
+      this.emit(EVENTS.ROW_SELECTED, rowId);
+    } else {
+      // Navigate forwards on tab.
+      column = cols[colIndex + 1];
+      let cells = this.columns.get(column.id).visibleCellNodes;
+      cell = cells[rowIndex];
+    }
+
+    return cell;
+  },
+
+  /**
+   * Reset the editable fields engine if the currently edited row is removed.
+   *
+   * @param  {String} event
+   *         The event name "event-removed."
+   * @param  {Object} row
+   *         The values from the removed row.
+   */
+  onRowRemoved: function(event, row) {
+    if (!this._editableFieldsEngine || !this._editableFieldsEngine.isEditing) {
+      return;
+    }
+
+    let removedKey = row[this.uniqueId];
+    let column = this.columns.get(this.uniqueId);
+
+    if (removedKey in column.items) {
+      return;
+    }
+
+    // The target is lost so we need to hide the remove the textbox from the DOM
+    // and reset the target nodes.
+    this.onEditorTargetLost();
+  },
+
+  /**
+   * Cancel an edit because the edit target has been lost.
+   */
+  onEditorTargetLost: function() {
+    let editor = this._editableFieldsEngine;
+
+    if (!editor || !editor.isEditing) {
+      return;
+    }
+
+    editor.cancelEdit();
+  },
+
+  /**
+   * Keydown event handler for the table. Used for keyboard navigation amongst
+   * rows.
+   */
+  onKeydown: function(event) {
+    // If we are in edit mode bail out.
+    if (this._editableFieldsEngine && this._editableFieldsEngine.isEditing) {
+      return;
+    }
+
+    let selectedCell = this.tbody.querySelector(".theme-selected");
+    if (!selectedCell) {
+      return;
+    }
+
+    let colName;
+    let column;
+    let visibleCells;
+    let index;
+    let cell;
+
+    switch (event.keyCode) {
+      case event.DOM_VK_UP:
+        event.preventDefault();
+
+        colName = selectedCell.parentNode.id;
+        column = this.columns.get(colName);
+        visibleCells = column.visibleCellNodes;
+        index = visibleCells.indexOf(selectedCell);
+
+        if (index > 0) {
+          index--;
+        } else {
+          index = visibleCells.length - 1;
+        }
+
+        cell = visibleCells[index];
+
+        this.emit(EVENTS.ROW_SELECTED, cell.getAttribute("data-id"));
+        break;
+      case event.DOM_VK_DOWN:
+        event.preventDefault();
+
+        colName = selectedCell.parentNode.id;
+        column = this.columns.get(colName);
+        visibleCells = column.visibleCellNodes;
+        index = visibleCells.indexOf(selectedCell);
+
+        if (index === visibleCells.length - 1) {
+          index = 0;
+        } else {
+          index++;
+        }
+
+        cell = visibleCells[index];
+
+        this.emit(EVENTS.ROW_SELECTED, cell.getAttribute("data-id"));
+        break;
+    }
+  },
+
+  /**
+   * Close any editors if the area "outside the table" is clicked. In reality,
+   * the table covers the whole area but there are labels filling the top few
+   * rows. This method clears any inline editors if an area outside a textbox or
+   * label is clicked.
+   */
+  onMousedown: function({target}) {
+    let nodeName = target.nodeName;
+
+    if (nodeName === "textbox" || !this._editableFieldsEngine) {
+      return;
+    }
+
+    // Force any editor fields to hide due to XUL focus quirks.
+    this._editableFieldsEngine.blur();
+  },
+
+  /**
+   * Make table fields editable.
+   *
+   * @param  {String|Array} editableColumns
+   *         An array or comma separated list of editable column names.
+   */
+  makeFieldsEditable: function(editableColumns) {
+    let selectors = [];
+
+    if (typeof editableColumns === "string") {
+      editableColumns = [editableColumns];
+    }
+
+    for (let id of editableColumns) {
+      selectors.push("#" + id + " .table-widget-cell");
+    }
+
+    for (let [name, column] of this.columns) {
+      if (!editableColumns.includes(name)) {
+        column.column.setAttribute("readonly", "");
+      }
+    }
+
+    if (this._editableFieldsEngine) {
+      this._editableFieldsEngine.selectors = selectors;
+    } else {
+      this._editableFieldsEngine = new EditableFieldsEngine({
+        root: this.tbody,
+        onTab: this.onEditorTab,
+        onTriggerEvent: "dblclick",
+        selectors: selectors
+      });
+
+      this._editableFieldsEngine.on("change", this.onChange);
+      this._editableFieldsEngine.on("destroyed", this.onEditorDestroyed);
+
+      this.on(EVENTS.ROW_REMOVED, this.onRowRemoved);
+      this.on(EVENTS.TABLE_CLEARED, this._editableFieldsEngine.cancelEdit);
+
+      this.emit(EVENTS.FIELDS_EDITABLE, this._editableFieldsEngine);
+    }
+  },
+
   destroy: function() {
     this.off(EVENTS.ROW_SELECTED, this.bindSelectedRow);
+    this.off(EVENTS.ROW_REMOVED, this.onRowRemoved);
+
+    this.document.removeEventListener("keydown", this.onKeydown, false);
+    this.document.removeEventListener("mousedown", this.onMousedown, false);
+
+    if (this._editableFieldsEngine) {
+      this.off(EVENTS.TABLE_CLEARED, this._editableFieldsEngine.cancelEdit);
+      this._editableFieldsEngine.off("change", this.onChange);
+      this._editableFieldsEngine.off("destroyed", this.onEditorDestroyed);
+      this._editableFieldsEngine.destroy();
+      this._editableFieldsEngine = null;
+    }
+
     if (this.menupopup) {
+      this.menupopup.removeEventListener("command", this.onPopupCommand);
       this.menupopup.remove();
     }
   },
@@ -358,9 +784,12 @@ TableWidget.prototype = {
     }
     this.items.set(item[this.uniqueId], item);
     this.tbody.removeAttribute("empty");
+
     if (!suppressFlash) {
       this.emit(EVENTS.ROW_UPDATED, item[this.uniqueId]);
     }
+
+    this.emit(EVENTS.ROW_EDIT, item[this.uniqueId]);
   },
 
   /**
@@ -375,13 +804,14 @@ TableWidget.prototype = {
     if (!removed) {
       return;
     }
-
     for (let column of this.columns.values()) {
       column.remove(item);
     }
     if (this.items.size == 0) {
       this.tbody.setAttribute("empty", "empty");
     }
+
+    this.emit(EVENTS.ROW_REMOVED, item);
   },
 
   /**
@@ -405,6 +835,7 @@ TableWidget.prototype = {
     }
     if (changed) {
       this.emit(EVENTS.ROW_UPDATED, item[this.uniqueId]);
+      this.emit(EVENTS.ROW_EDIT, item[this.uniqueId]);
     }
   },
 
@@ -418,6 +849,8 @@ TableWidget.prototype = {
     }
     this.tbody.setAttribute("empty", "empty");
     this.setPlaceholderText(this.emptyText);
+
+    this.emit(EVENTS.TABLE_CLEARED, this);
   },
 
   /**
@@ -452,6 +885,10 @@ TableWidget.prototype = {
     if (this.filteredValue == value) {
       return;
     }
+    if (this._editableFieldsEngine) {
+      this._editableFieldsEngine.completeEdit();
+    }
+
     this.filteredValue = value;
     if (!value) {
       this.emit(EVENTS.TABLE_FILTERED, []);
@@ -563,10 +1000,8 @@ function Column(table, id, header) {
 
   this.onClick = this.onClick.bind(this);
   this.onMousedown = this.onMousedown.bind(this);
-  this.onKeydown = this.onKeydown.bind(this);
   this.column.addEventListener("click", this.onClick);
   this.column.addEventListener("mousedown", this.onMousedown);
-  this.column.addEventListener("keydown", this.onKeydown);
 }
 
 Column.prototype = {
@@ -620,6 +1055,23 @@ Column.prototype = {
     return this.items[this.selectedRow];
   },
 
+  get cellNodes() {
+    return [...this.column.querySelectorAll(".table-widget-cell")];
+  },
+
+  get visibleCellNodes() {
+    let editor = this.table._editableFieldsEngine;
+    let nodes = this.cellNodes.filter(node => {
+      // If the cell is currently being edited we should class it as visible.
+      if (editor && editor.currentTarget === node) {
+        return true;
+      }
+      return node.clientWidth !== 0;
+    });
+
+    return nodes;
+  },
+
   /**
    * Called when the column is sorted by.
    *
@@ -665,6 +1117,15 @@ Column.prototype = {
   onRowUpdated: function(event, id) {
     this._updateItems();
     if (this.highlightUpdated && this.items[id] != null) {
+      if (this.table.editBookmark) {
+        // A rows position in the table can change as the result of an edit. In
+        // order to ensure that the correct row is highlighted after an edit we
+        // save the uniqueId in editBookmark. Here we send the signal that the
+        // row has been edited and that the row needs to be selected again.
+        this.table.emit(EVENTS.ROW_SELECTED, this.table.editBookmark);
+        this.table.editBookmark = null;
+      }
+
       this.cells[this.items[id]].flash();
     }
     this.updateZebra();
@@ -675,6 +1136,10 @@ Column.prototype = {
     this.table.off(EVENTS.HEADER_CONTEXT_MENU, this.toggleColumn);
     this.table.off(EVENTS.ROW_UPDATED, this.onRowUpdated);
     this.table.off(EVENTS.TABLE_FILTERED, this.onTableFiltered);
+
+    this.column.removeEventListener("click", this.onClick);
+    this.column.removeEventListener("mousedown", this.onMousedown);
+
     this.splitter.remove();
     this.column.parentNode.remove();
     this.cells = null;
@@ -695,7 +1160,6 @@ Column.prototype = {
     }
     let cell = this.cells[index];
     cell.toggleClass("theme-selected");
-    cell.focus();
     this.selectedRow = cell.id;
   },
 
@@ -924,11 +1388,13 @@ Column.prototype = {
    * for sorting.
    */
   onClick: function(event) {
-    if (event.originalTarget == this.column) {
+    let target = event.originalTarget;
+
+    if (target.nodeType !== target.ELEMENT_NODE || target == this.column) {
       return;
     }
 
-    if (event.button == 0 && event.originalTarget == this.header) {
+    if (event.button == 0 && target == this.header) {
       this.table.sortBy(this.id);
     }
   },
@@ -937,71 +1403,23 @@ Column.prototype = {
    * Mousedown event handler for the column. Used to select rows.
    */
   onMousedown: function(event) {
-    if (event.originalTarget == this.column ||
-        event.originalTarget == this.header) {
+    let target = event.originalTarget;
+
+    if (target.nodeType !== target.ELEMENT_NODE ||
+        target == this.column ||
+        target == this.header) {
       return;
     }
     if (event.button == 0) {
-      let target = event.originalTarget;
-      let dataid = null;
-
-      while (target) {
-        dataid = target.getAttribute("data-id");
-        if (dataid) {
-          break;
-        }
-        target = target.parentNode;
+      let closest = target.closest("[data-id]");
+      if (!closest) {
+        return;
       }
 
+      let dataid = target.getAttribute("data-id");
       this.table.emit(EVENTS.ROW_SELECTED, dataid);
     }
   },
-
-  /**
-   * Keydown event handler for the column. Used for keyboard navigation amongst
-   * rows.
-   */
-  onKeydown: function(event) {
-    if (event.originalTarget == this.column ||
-        event.originalTarget == this.header) {
-      return;
-    }
-
-    switch (event.keyCode) {
-      case event.DOM_VK_ESCAPE:
-      case event.DOM_VK_LEFT:
-      case event.DOM_VK_RIGHT:
-        return;
-      case event.DOM_VK_HOME:
-      case event.DOM_VK_END:
-        return;
-      case event.DOM_VK_UP:
-        event.preventDefault();
-        let prevRow = event.originalTarget.previousSibling;
-        if (this.header == prevRow) {
-          prevRow = this.column.lastChild;
-        }
-        while (prevRow.hasAttribute("hidden")) {
-          prevRow = prevRow.previousSibling;
-          if (this.header == prevRow) {
-            prevRow = this.column.lastChild;
-          }
-        }
-        this.table.emit(EVENTS.ROW_SELECTED, prevRow.getAttribute("data-id"));
-        break;
-
-      case event.DOM_VK_DOWN:
-        event.preventDefault();
-        let nextRow = event.originalTarget.nextSibling ||
-                      this.header.nextSibling;
-        while (nextRow.hasAttribute("hidden")) {
-          nextRow = nextRow.nextSibling ||
-                    this.header.nextSibling;
-        }
-        this.table.emit(EVENTS.ROW_SELECTED, nextRow.getAttribute("data-id"));
-        break;
-    }
-  }
 };
 
 /**
@@ -1023,6 +1441,7 @@ function Cell(column, item, nextCell) {
   this.label = document.createElementNS(XUL_NS, "label");
   this.label.setAttribute("crop", "end");
   this.label.className = "plain table-widget-cell";
+
   if (nextCell) {
     column.column.insertBefore(this.label, nextCell.label);
   } else {
@@ -1090,10 +1509,13 @@ Cell.prototype = {
   },
 
   /**
-   * Flashes the cell for a brief time. This when done for ith cells in all
+   * Flashes the cell for a brief time. This when done for with cells in all
    * columns, makes it look like the row is being highlighted/flashed.
    */
   flash: function() {
+    if (!this.label.parentNode) {
+      return;
+    }
     this.label.classList.remove("flash-out");
     // Cause a reflow so that the animation retriggers on adding back the class
     let a = this.label.parentNode.offsetWidth; // eslint-disable-line
@@ -1113,4 +1535,264 @@ Cell.prototype = {
     this.label.remove();
     this.label = null;
   }
+};
+
+/**
+ * Simple widget to make nodes matching a CSS selector editable.
+ *
+ * @param {Object} options
+ *        An object with the following format:
+ *          {
+ *            // The node that will act as a container for the editor e.g. a
+ *            // div or table.
+ *            root: someNode,
+ *
+ *            // The onTab event to be handled by the caller.
+ *            onTab: function(event) { ... }
+ *
+ *            // Optional event used to trigger the editor. By default this is
+ *            // dblclick.
+ *            onTriggerEvent: "dblclick",
+ *
+ *            // Array or comma separated string of CSS Selectors matching
+ *            // elements that are to be made editable.
+ *            selectors: [
+ *              "#name .table-widget-cell",
+ *              "#value .table-widget-cell"
+ *            ]
+ *          }
+ */
+function EditableFieldsEngine(options) {
+  EventEmitter.decorate(this);
+
+  if (!Array.isArray(options.selectors)) {
+    options.selectors = [options.selectors];
+  }
+
+  this.root = options.root;
+  this.selectors = options.selectors;
+  this.onTab = options.onTab;
+  this.onTriggerEvent = options.onTriggerEvent || "dblclick";
+
+  this.edit = this.edit.bind(this);
+  this.cancelEdit = this.cancelEdit.bind(this);
+  this.destroy = this.destroy.bind(this);
+
+  this.onTrigger = this.onTrigger.bind(this);
+  this.root.addEventListener(this.onTriggerEvent, this.onTrigger);
+}
+
+EditableFieldsEngine.prototype = {
+  INPUT_ID: "inlineEditor",
+
+  get changePending() {
+    return this.isEditing && (this.textbox.value !== this.currentValue);
+  },
+
+  get isEditing() {
+    return this.root && !this.textbox.hidden;
+  },
+
+  get textbox() {
+    if (!this._textbox) {
+      let doc = this.root.ownerDocument;
+      this._textbox = doc.createElementNS(XUL_NS, "textbox");
+      this._textbox.id = this.INPUT_ID;
+
+      this._textbox.setAttribute("flex", "1");
+
+      this.onKeydown = this.onKeydown.bind(this);
+      this._textbox.addEventListener("keydown", this.onKeydown);
+
+      this.completeEdit = this.completeEdit.bind(this);
+      doc.addEventListener("blur", this.completeEdit);
+    }
+
+    return this._textbox;
+  },
+
+  /**
+   * Called when a trigger event is detected (default is dblclick).
+   *
+   * @param  {EventTarget} target
+   *         Calling event's target.
+   */
+  onTrigger: function({target}) {
+    this.edit(target);
+  },
+
+  /**
+   * Handle keypresses when in edit mode:
+   *   - <escape> revert the value and close the textbox.
+   *   - <return> apply the value and close the textbox.
+   *   - <tab> Handled by the consumer's `onTab` callback.
+   *   - <shift><tab> Handled by the consumer's `onTab` callback.
+   *
+   * @param  {Event} event
+   *         The calling event.
+   */
+  onKeydown: function(event) {
+    if (!this.textbox) {
+      return;
+    }
+
+    switch (event.keyCode) {
+      case event.DOM_VK_ESCAPE:
+        this.cancelEdit();
+        event.preventDefault();
+        break;
+      case event.DOM_VK_RETURN:
+        this.completeEdit();
+        break;
+      case event.DOM_VK_TAB:
+        if (this.onTab) {
+          this.onTab(event);
+        }
+        break;
+    }
+  },
+
+  /**
+   * Overlay the target node with an edit field.
+   *
+   * @param  {Node} target
+   *         Dom node to be edited.
+   */
+  edit: function(target) {
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView();
+    target.focus();
+
+    if (!target.matches(this.selectors.join(","))) {
+      return;
+    }
+
+    // If we are actively editing something complete the edit first.
+    if (this.isEditing) {
+      this.completeEdit();
+    }
+
+    this.copyStyles(target, this.textbox);
+
+    target.parentNode.insertBefore(this.textbox, target);
+    this.currentTarget = target;
+    this.textbox.value = this.currentValue = target.value;
+    target.hidden = true;
+    this.textbox.hidden = false;
+
+    this.textbox.focus();
+    this.textbox.select();
+  },
+
+  completeEdit: function() {
+    if (!this.isEditing) {
+      return;
+    }
+
+    let oldValue = this.currentValue;
+    let newValue = this.textbox.value;
+    let changed = oldValue !== newValue;
+
+    this.textbox.hidden = true;
+
+    if (!this.currentTarget) {
+      return;
+    }
+
+    this.currentTarget.hidden = false;
+    if (changed) {
+      this.currentTarget.value = newValue;
+
+      let data = {
+        change: {
+          field: this.currentTarget,
+          oldValue: oldValue,
+          newValue: newValue
+        }
+      };
+
+      this.emit("change", data);
+    }
+  },
+
+  /**
+   * Cancel an edit.
+   */
+  cancelEdit: function() {
+    if (!this.isEditing) {
+      return;
+    }
+    if (this.currentTarget) {
+      this.currentTarget.hidden = false;
+    }
+
+    this.textbox.hidden = true;
+  },
+
+  /**
+   * Stop edit mode and apply changes.
+   */
+  blur: function() {
+    if (this.isEditing) {
+      this.completeEdit();
+    }
+  },
+
+  /**
+   * Copies various styles from one node to another.
+   *
+   * @param  {Node} source
+   *         The node to copy styles from.
+   * @param  {Node} destination [description]
+   *         The node to copy styles to.
+   */
+  copyStyles: function(source, destination) {
+    let style = source.ownerGlobal.getComputedStyle(source);
+    let props = [
+      "borderTopWidth",
+      "borderRightWidth",
+      "borderBottomWidth",
+      "borderLeftWidth",
+      "fontFamily",
+      "fontSize",
+      "fontWeight",
+      "height",
+      "marginTop",
+      "marginRight",
+      "marginBottom",
+      "marginLeft",
+      "MozMarginStart",
+      "MozMarginEnd"
+    ];
+
+    for (let prop of props) {
+      destination.style[prop] = style[prop];
+    }
+
+    // We need to set the label width to 100% to work around a XUL flex bug.
+    destination.style.width = "100%";
+  },
+
+  /**
+   * Destroys all editors in the current document.
+   */
+  destroy: function() {
+    if (this.textbox) {
+      this.textbox.removeEventListener("keydown", this.onKeydown);
+      this.textbox.remove();
+    }
+
+    if (this.root) {
+      this.root.removeEventListener(this.onTriggerEvent, this.onTrigger);
+      this.root.ownerDocument.removeEventListener("blur", this.completeEdit);
+    }
+
+    this._textbox = this.root = this.selectors = this.onTab = null;
+    this.currentTarget = this.currentValue = null;
+
+    this.emit("destroyed");
+  },
 };

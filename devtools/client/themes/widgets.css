@@ -1185,6 +1185,14 @@
   background-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
 }
 
+.theme-dark .table-widget-column[readonly] {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.theme-light .table-widget-column[readonly] {
+  background-color: rgba(0,0,0,0.1);
+}
+
 /* Cells */
 
 .table-widget-cell {
