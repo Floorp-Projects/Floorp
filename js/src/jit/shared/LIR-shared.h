@@ -3418,6 +3418,12 @@ class LAddI : public LBinaryMath<0>
     }
 };
 
+class LAddI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(AddI64)
+};
+
 // Subtracts two integers, returning an integer value.
 class LSubI : public LBinaryMath<0>
 {
@@ -3443,6 +3449,18 @@ class LSubI : public LBinaryMath<0>
     MSub* mir() const {
         return mir_->toSub();
     }
+};
+
+class LSubI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(SubI64)
+};
+
+class LMulI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(MulI64)
 };
 
 // Performs an add, sub, mul, or div on two double values.

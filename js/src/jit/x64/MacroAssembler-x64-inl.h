@@ -190,6 +190,19 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::subPtr(ImmWord imm, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(dest != scratch);
+    if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
+        subq(Imm32((int32_t)imm.value), dest);
+    } else {
+        mov(imm, scratch);
+        subq(scratch, dest);
+    }
+}
+
+void
 MacroAssembler::subPtr(const Address& addr, Register dest)
 {
     subq(Operand(addr), dest);

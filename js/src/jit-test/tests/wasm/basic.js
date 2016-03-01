@@ -325,26 +325,40 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
     (export "i2v" 8)
 )`);
 
+const badIndirectCall = /wasm indirect call signature mismatch/;
+
 assertEq(v2i(0), 13);
 assertEq(v2i(1), 42);
-assertErrorMessage(() => v2i(2), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => v2i(3), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => v2i(4), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => v2i(5), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => v2i(2), Error, badIndirectCall);
+assertErrorMessage(() => v2i(3), Error, badIndirectCall);
+assertErrorMessage(() => v2i(4), Error, badIndirectCall);
+assertErrorMessage(() => v2i(5), Error, badIndirectCall);
 
-assertErrorMessage(() => i2i(0), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2i(1), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2i(0), Error, badIndirectCall);
+assertErrorMessage(() => i2i(1), Error, badIndirectCall);
 assertEq(i2i(2, 100), 101);
 assertEq(i2i(3, 100), 102);
 assertEq(i2i(4, 100), 103);
 assertEq(i2i(5, 100), 104);
 
-assertErrorMessage(() => i2v(0), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2v(1), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2v(2), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2v(3), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2v(4), Error, /wasm indirect call signature mismatch/);
-assertErrorMessage(() => i2v(5), Error, /wasm indirect call signature mismatch/);
+assertErrorMessage(() => i2v(0), Error, badIndirectCall);
+assertErrorMessage(() => i2v(1), Error, badIndirectCall);
+assertErrorMessage(() => i2v(2), Error, badIndirectCall);
+assertErrorMessage(() => i2v(3), Error, badIndirectCall);
+assertErrorMessage(() => i2v(4), Error, badIndirectCall);
+assertErrorMessage(() => i2v(5), Error, badIndirectCall);
+
+{
+    enableSPSProfiling();
+    wasmEvalText(`(
+        module
+        (func (result i32) (i32.const 0))
+        (func)
+        (table 1 0)
+        (export "" 0)
+    )`)();
+    disableSPSProfiling();
+}
 
 for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math.pow(2,32)-2, Math.pow(2,32)-1]) {
     assertThrowsInstanceOf(() => v2i(bad), RangeError);

@@ -2326,18 +2326,6 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     // maximized.  If we try to mess with the frame sizes by setting these
     // offsets to positive values, our client area will fall off the screen.
     mNonClientOffset.top = mCaptionHeight;
-    // Adjust for the case where the window is maximized on a screen with DPI
-    // different from the primary monitor; this seems to be linked to Windows'
-    // failure to scale the non-client area the same as the client area.
-    // Any modifications here need to be tested for both high- and low-dpi
-    // secondary displays, and for windows both with and without the titlebar
-    // and/or menubar displayed.
-    double ourScale = WinUtils::LogToPhysFactor(mWnd);
-    double primaryScale =
-      WinUtils::LogToPhysFactor(WinUtils::GetPrimaryMonitor());
-    mNonClientOffset.top +=
-      NSToIntRound(mVertResizeMargin * (ourScale - primaryScale));
-
     mNonClientOffset.bottom = 0;
     mNonClientOffset.left = 0;
     mNonClientOffset.right = 0;

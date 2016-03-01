@@ -71,6 +71,8 @@ AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
 /*static*/ bool
 AccessibleCaretManager::sCaretsExtendedVisibility = false;
 /*static*/ bool
+AccessibleCaretManager::sCaretsAlwaysTilt = false;
+/*static*/ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
 /*static*/ bool
 AccessibleCaretManager::sHapticFeedback = false;
@@ -95,6 +97,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
       "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
     Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
                                  "layout.accessiblecaret.extendedvisibility");
+    Preferences::AddBoolVarCache(&sCaretsAlwaysTilt,
+                                 "layout.accessiblecaret.always_tilt");
     Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
       "layout.accessiblecaret.allow_script_change_updates");
     Preferences::AddBoolVarCache(&sHapticFeedback,
@@ -394,7 +398,11 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
   if (aHint == UpdateCaretsHint::Default) {
     // Only check for tilt carets with default update hint. Otherwise we might
     // override the appearance set by the caller.
-    UpdateCaretsForTilt();
+    if (sCaretsAlwaysTilt) {
+      UpdateCaretsForAlwaysTilt(startFrame, endFrame);
+    } else {
+      UpdateCaretsForOverlappingTilt();
+    }
   }
 
   if (!mActiveCaret) {
@@ -403,7 +411,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForTilt()
+AccessibleCaretManager::UpdateCaretsForOverlappingTilt()
 {
   if (mFirstCaret->IsVisuallyVisible() && mSecondCaret->IsVisuallyVisible()) {
     if (mFirstCaret->Intersects(*mSecondCaret)) {
@@ -419,6 +427,22 @@ AccessibleCaretManager::UpdateCaretsForTilt()
       mFirstCaret->SetAppearance(Appearance::Normal);
       mSecondCaret->SetAppearance(Appearance::Normal);
     }
+  }
+}
+
+void
+AccessibleCaretManager::UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
+                                                  nsIFrame* aEndFrame)
+{
+  if (mFirstCaret->IsVisuallyVisible()) {
+    auto startFrameWritingMode = aStartFrame->GetWritingMode();
+    mFirstCaret->SetAppearance(startFrameWritingMode.IsBidiLTR() ?
+                               Appearance::Left : Appearance::Right);
+  }
+  if (mSecondCaret->IsVisuallyVisible()) {
+    auto endFrameWritingMode = aEndFrame->GetWritingMode();
+    mSecondCaret->SetAppearance(endFrameWritingMode.IsBidiLTR() ?
+                                Appearance::Right : Appearance::Left);
   }
 }
 

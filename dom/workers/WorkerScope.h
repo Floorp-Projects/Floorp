@@ -240,9 +240,6 @@ public:
                    JS::MutableHandle<JSObject*> aReflector) override;
 
   static bool
-  InterceptionEnabled(JSContext* aCx, JSObject* aObj);
-
-  static bool
   OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
 
   void
