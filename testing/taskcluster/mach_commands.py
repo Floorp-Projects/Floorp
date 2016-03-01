@@ -337,7 +337,7 @@ class Graph(object):
                              len(vcs_info.changesets))
             for c in vcs_info.changesets:
                 sys.stderr.write('%s %s\n' % (
-                    c['node'][0:12], c['desc'].splitlines()[0]))
+                    c['node'][0:12], c['desc'].splitlines()[0].encode('ascii', 'ignore')))
 
                 changed_files |= set(c['files'])
 
