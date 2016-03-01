@@ -5435,7 +5435,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                     TypeSet::TypeList types;
                     if (!property.maybeTypes()->enumerateTypes(&types))
                         break;
-                    if (types.length()) {
+                    if (types.length() == 1) {
                         // Note: the return value here is ignored.
                         observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
                         break;
