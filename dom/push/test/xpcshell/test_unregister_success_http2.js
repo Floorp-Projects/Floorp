@@ -9,6 +9,8 @@ const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 
 var prefs;
 var tlsProfile;
+var pushEnabled;
+var pushConnectionEnabled;
 
 var serverPort = -1;
 
@@ -21,11 +23,15 @@ function run_test() {
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
   tlsProfile = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
+  pushEnabled = prefs.getBoolPref("dom.push.enabled");
+  pushConnectionEnabled = prefs.getBoolPref("dom.push.connection.enabled");
 
   // Set to allow the cert presented by our H2 server
   var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
+  prefs.setBoolPref("dom.push.enabled", true);
+  prefs.setBoolPref("dom.push.connection.enabled", true);
 
   addCertOverride("localhost", serverPort,
                   Ci.nsICertOverrideService.ERROR_UNTRUSTED |
@@ -72,4 +78,6 @@ add_task(function* test_pushUnsubscriptionSuccess() {
 
 add_task(function* test_complete() {
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlsProfile);
+  prefs.setBoolPref("dom.push.enabled", pushEnabled);
+  prefs.setBoolPref("dom.push.connection.enabled", pushConnectionEnabled);
 });

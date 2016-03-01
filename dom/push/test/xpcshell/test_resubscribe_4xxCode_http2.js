@@ -50,6 +50,7 @@ function run_test() {
 
   servicePrefs.set('testing.notifyWorkers', false);
   servicePrefs.set('testing.notifyAllObservers', true);
+  setPrefs();
 
   run_next_test();
 }
