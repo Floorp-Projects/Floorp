@@ -1038,6 +1038,13 @@ void nsXULWindow::OnChromeLoaded()
     ApplyChromeFlags();
     SyncAttributesToWidget();
 
+    int32_t specWidth = -1, specHeight = -1;
+    bool gotSize = false;
+
+    if (!mIgnoreXULSize) {
+      gotSize = LoadSizeFromXUL(specWidth, specHeight);
+    }
+
     bool positionSet = !mIgnoreXULPosition;
     nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -1047,11 +1054,14 @@ void nsXULWindow::OnChromeLoaded()
     if (!parentWindow)
       positionSet = false;
 #endif
-    if (positionSet)
-      positionSet = LoadPositionFromXUL();
+    if (positionSet) {
+      positionSet = LoadPositionFromXUL(specWidth, specHeight);
+    }
 
-    if (!mIgnoreXULSize)
-      LoadSizeFromXUL();
+    if (gotSize) {
+      SetSpecifiedSize(specWidth, specHeight);
+    }
+
     if (mIntrinsicallySized) {
       // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
       nsCOMPtr<nsIContentViewer> cv;
@@ -1073,8 +1083,9 @@ void nsXULWindow::OnChromeLoaded()
 
     LoadMiscPersistentAttributesFromXUL();
 
-    if (mCenterAfterLoad && !positionSet)
+    if (mCenterAfterLoad && !positionSet) {
       Center(parentWindow, parentWindow ? false : true, false);
+    }
 
     if (mShowAfterLoad) {
       SetVisibility(true);
@@ -1085,7 +1096,10 @@ void nsXULWindow::OnChromeLoaded()
   mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
 }
 
-bool nsXULWindow::LoadPositionFromXUL()
+// If aSpecWidth and/or aSpecHeight are > 0, we will use these CSS px sizes
+// to fit to the screen when staggering windows; if they're negative,
+// we use the window's current size instead.
+bool nsXULWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight)
 {
   bool     gotPosition = false;
 
@@ -1108,11 +1122,16 @@ bool nsXULWindow::LoadPositionFromXUL()
 
   // Convert to global display pixels for consistent window management across
   // screens with diverse resolutions
-  double scale = mWindow->GetDesktopToDeviceScale().scale;
-  currX = NSToIntRound(currX / scale);
-  currY = NSToIntRound(currY / scale);
-  currWidth = NSToIntRound(currWidth / scale);
-  currHeight = NSToIntRound(currHeight / scale);
+  double devToDesktopScale = 1.0 / mWindow->GetDesktopToDeviceScale().scale;
+  currX = NSToIntRound(currX * devToDesktopScale);
+  currY = NSToIntRound(currY * devToDesktopScale);
+
+  // For size, use specified value if > 0, else current value
+  double devToCSSScale = 1.0 / mWindow->GetDefaultScale().scale;
+  int32_t cssWidth =
+    aSpecWidth > 0 ? aSpecWidth : NSToIntRound(currWidth * devToCSSScale);
+  int32_t cssHeight =
+    aSpecHeight > 0 ? aSpecHeight : NSToIntRound(currHeight * devToCSSScale);
 
   // Obtain the position information from the <xul:window> element.
   int32_t specX = currX;
@@ -1148,7 +1167,7 @@ bool nsXULWindow::LoadPositionFromXUL()
       }
     }
     else {
-      StaggerPosition(specX, specY, currWidth, currHeight);
+      StaggerPosition(specX, specY, cssWidth, cssHeight);
     }
   }
   mWindow->ConstrainPosition(false, &specX, &specY);
@@ -1159,76 +1178,81 @@ bool nsXULWindow::LoadPositionFromXUL()
   return gotPosition;
 }
 
-bool nsXULWindow::LoadSizeFromXUL()
+bool
+nsXULWindow::LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight)
 {
   bool     gotSize = false;
 
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
-  if (mIsHiddenWindow)
+  if (mIsHiddenWindow) {
     return false;
+  }
 
   nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
 
-  int32_t currWidth = 0;
-  int32_t currHeight = 0;
   nsresult errorCode;
   int32_t temp;
 
-  NS_ASSERTION(mWindow, "we expected to have a window already");
-
-  GetSize(&currWidth, &currHeight);
-  double displayToDevPx =
-    mWindow ? mWindow->GetDesktopToDeviceScale().scale : 1.0;
-  double cssToDevPx = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
-  currWidth = NSToIntRound(currWidth * displayToDevPx / cssToDevPx);
-  currHeight = NSToIntRound(currHeight * displayToDevPx / cssToDevPx);
-
-  // Obtain the position and sizing information from the <xul:window> element.
-  int32_t specWidth = currWidth;
-  int32_t specHeight = currHeight;
+  // Obtain the sizing information from the <xul:window> element.
+  aSpecWidth = 100;
+  aSpecHeight = 100;
   nsAutoString sizeString;
 
   windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
   temp = sizeString.ToInteger(&errorCode);
   if (NS_SUCCEEDED(errorCode) && temp > 0) {
-    specWidth = std::max(temp, 100);
+    aSpecWidth = std::max(temp, 100);
     gotSize = true;
   }
   windowElement->GetAttribute(HEIGHT_ATTRIBUTE, sizeString);
   temp = sizeString.ToInteger(&errorCode);
   if (NS_SUCCEEDED(errorCode) && temp > 0) {
-    specHeight = std::max(temp, 100);
+    aSpecHeight = std::max(temp, 100);
     gotSize = true;
   }
 
-  if (gotSize) {
-    // constrain to screen size
-    nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    GetWindowDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      auto* window = nsPIDOMWindowOuter::From(domWindow);
-      nsCOMPtr<nsIDOMScreen> screen = window->GetScreen();
-      if (screen) {
-        int32_t screenWidth;
-        int32_t screenHeight;
-        screen->GetAvailWidth(&screenWidth); // CSS pixels
-        screen->GetAvailHeight(&screenHeight);
-        if (specWidth > screenWidth)
-          specWidth = screenWidth;
-        if (specHeight > screenHeight)
-          specHeight = screenHeight;
-      }
-    }
+  return gotSize;
+}
 
-    mIntrinsicallySized = false;
-    if (specWidth != currWidth || specHeight != currHeight) {
-      SetSize(specWidth * cssToDevPx, specHeight * cssToDevPx, false);
+void
+nsXULWindow::SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight)
+{
+  // constrain to screen size
+  nsCOMPtr<mozIDOMWindowProxy> domWindow;
+  GetWindowDOMWindow(getter_AddRefs(domWindow));
+  if (domWindow) {
+    auto* window = nsPIDOMWindowOuter::From(domWindow);
+    nsCOMPtr<nsIDOMScreen> screen = window->GetScreen();
+    if (screen) {
+      int32_t screenWidth;
+      int32_t screenHeight;
+      screen->GetAvailWidth(&screenWidth); // CSS pixels
+      screen->GetAvailHeight(&screenHeight);
+      if (aSpecWidth > screenWidth) {
+        aSpecWidth = screenWidth;
+      }
+      if (aSpecHeight > screenHeight) {
+        aSpecHeight = screenHeight;
+      }
     }
   }
 
-  return gotSize;
+  NS_ASSERTION(mWindow, "we expected to have a window already");
+
+  int32_t currWidth = 0;
+  int32_t currHeight = 0;
+  GetSize(&currWidth, &currHeight); // returns device pixels
+
+  // convert specified values to device pixels, and resize if needed
+  double cssToDevPx = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
+  aSpecWidth = NSToIntRound(aSpecWidth * cssToDevPx);
+  aSpecHeight = NSToIntRound(aSpecHeight * cssToDevPx);
+  mIntrinsicallySized = false;
+  if (aSpecWidth != currWidth || aSpecHeight != currHeight) {
+    SetSize(aSpecWidth, aSpecHeight, false);
+  }
 }
 
 /* Miscellaneous persistent attributes are attributes named in the
@@ -1315,12 +1339,17 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
    This code does have a scary double loop -- it'll keep passing through
    the entire list of open windows until it finds a non-collision. Doesn't
    seem to be a problem, but it deserves watching.
+   The aRequested{X,Y} parameters here are in desktop pixels;
+   the aSpec{Width,Height} parameters are CSS pixel dimensions.
 */
 void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                   int32_t aSpecWidth, int32_t aSpecHeight)
 {
-  const int32_t kOffset = 22;
-  const uint32_t kSlop  = 4;
+  // These "constants" will be converted from CSS to desktop pixels
+  // for the appropriate screen, assuming we find a screen to use...
+  // hence they're not actually declared const here.
+  int32_t kOffset = 22;
+  uint32_t kSlop  = 4;
 
   bool     keepTrying;
   int      bouncedX = 0, // bounced off vertical edge of screen
@@ -1361,6 +1390,17 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                           &screenWidth, &screenHeight);
         screenBottom = screenTop + screenHeight;
         screenRight = screenLeft + screenWidth;
+        // Get the screen's scaling factors and convert staggering constants
+        // from CSS px to desktop pixel units
+        double desktopToDeviceScale = 1.0, cssToDeviceScale = 1.0;
+        ourScreen->GetContentsScaleFactor(&desktopToDeviceScale);
+        ourScreen->GetDefaultCSSScaleFactor(&cssToDeviceScale);
+        double cssToDesktopFactor = cssToDeviceScale / desktopToDeviceScale;
+        kOffset = NSToIntRound(kOffset * cssToDesktopFactor);
+        kSlop = NSToIntRound(kSlop * cssToDesktopFactor);
+        // Convert dimensions from CSS to desktop pixels
+        aSpecWidth = NSToIntRound(aSpecWidth * cssToDesktopFactor);
+        aSpecHeight = NSToIntRound(aSpecHeight * cssToDesktopFactor);
         gotScreen = true;
       }
     }
@@ -1391,7 +1431,7 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
         nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
         listBaseWindow->GetPosition(&listX, &listY);
         double scale;
-        if (NS_SUCCEEDED(listBaseWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
+        if (NS_SUCCEEDED(listBaseWindow->GetDevicePixelsPerDesktopPixel(&scale))) {
           listX = NSToIntRound(listX / scale);
           listY = NSToIntRound(listY / scale);
         }
