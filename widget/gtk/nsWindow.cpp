@@ -6496,6 +6496,9 @@ nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBuffe
 
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
+#    ifdef MOZ_WIDGET_GTK
+  if (!gfxPlatformGtk::GetPlatform()->UseXRender())
+#    endif
   if (nsShmImage::UseShm()) {
     mBackShmImage.swap(mFrontShmImage);
     if (!mBackShmImage) {
