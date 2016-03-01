@@ -10,5 +10,5 @@ task:
       taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
   extra:
     locations:
-      test_packages: 'public/build/test_packages.json'
+      test_packages: 'public/build/target.test_packages.json'
       mozharness: 'public/build/mozharness.zip'

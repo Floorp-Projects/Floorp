@@ -177,10 +177,6 @@ FilteringWrapper<Base, Policy>::enter(JSContext* cx, HandleObject wrapper,
     return true;
 }
 
-CrossOriginXrayWrapper::CrossOriginXrayWrapper(unsigned flags) : SecurityXrayDOM(flags)
-{
-}
-
 bool
 CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
                                               JS::Handle<JSObject*> wrapper,

@@ -751,7 +751,8 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
   if (parentBackend == LayersBackend::LAYERS_D3D11 &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       !!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) &&
+       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
+        gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice())) &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize)
   {

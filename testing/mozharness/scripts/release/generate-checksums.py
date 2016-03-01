@@ -68,6 +68,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
                     "boto",
                 ],
                 "virtualenv_path": "venv",
+                'buildbot_json_path': 'buildprops.json',
             },
             all_actions=[
                 "create-virtualenv",

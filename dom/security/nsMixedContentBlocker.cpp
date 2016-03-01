@@ -773,6 +773,11 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     }
   }
 
+  // set hasMixedContentObjectSubrequest on this object if necessary
+  if (aContentType == TYPE_OBJECT_SUBREQUEST) {
+    rootDoc->SetHasMixedContentObjectSubrequest(true);
+  }
+
   // If the content is display content, and the pref says display content should be blocked, block it.
   if (sBlockMixedDisplay && classification == eMixedDisplay) {
     if (allowMixedContent) {

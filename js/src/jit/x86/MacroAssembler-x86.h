@@ -52,6 +52,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
   public:
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
+    using MacroAssemblerX86Shared::store16;
     using MacroAssemblerX86Shared::call;
 
     MacroAssemblerX86()
@@ -643,6 +644,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void store32(Register src, AbsoluteAddress address) {
         movl(src, Operand(address));
+    }
+    void store16(Register src, AbsoluteAddress address) {
+        movw(src, Operand(address));
     }
     void store64(Register64 src, Address address) {
         movl(src.low, Operand(address));

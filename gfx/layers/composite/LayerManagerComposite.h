@@ -77,11 +77,6 @@ public:
   virtual void Destroy() override;
 
   /**
-   * return True if initialization was succesful, false when it was not.
-   */
-  bool Initialize();
-
-  /**
    * Sets the clipping region for this layer manager. This is important on
    * windows because using OGL we no longer have GDI's native clipping. Therefor
    * widget must tell us what part of the screen is being invalidated,
@@ -230,6 +225,12 @@ public:
     return mCompositor;
   }
 
+  // Called by CompositorParent when a new compositor has been created due
+  // to a device reset. The layer manager must clear any cached resources
+  // attached to the old compositor, and make a best effort at ignoring
+  // layer or texture updates against the old compositor.
+  void ChangeCompositor(Compositor* aNewCompositor);
+
   /**
    * LayerManagerComposite provides sophisticated debug overlays
    * that can request a next frame.
@@ -336,6 +337,8 @@ private:
                                bool aGrayscaleEffect,
                                bool aInvertEffect,
                                float aContrastEffect);
+
+  void ChangeCompositorInternal(Compositor* aNewCompositor);
 
   float mWarningLevel;
   mozilla::TimeStamp mWarnTime;
@@ -486,6 +489,9 @@ public:
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool HasLayerBeenComposited() { return mLayerComposited; }
   gfx::IntRect GetClearRect() { return mClearRect; }
+
+  // Returns false if the layer is attached to an older compositor.
+  bool HasStaleCompositor() const;
 
   /**
    * Return the part of the visible region that has been fully rendered.

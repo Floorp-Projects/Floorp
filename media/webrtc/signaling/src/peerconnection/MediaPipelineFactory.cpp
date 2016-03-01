@@ -72,7 +72,7 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
                                   desc.mName,
                                   desc.mClock,
                                   desc.mPacketSize,
-                                  desc.mChannels,
+                                  desc.mForceMono ? 1 : desc.mChannels,
                                   desc.mBitrate);
   (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
 

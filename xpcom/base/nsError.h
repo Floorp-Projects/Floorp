@@ -11,6 +11,7 @@
 #error nsError.h no longer supports C sources
 #endif
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 
 #include <stdint.h>
@@ -190,12 +191,12 @@ NS_ErrorAccordingToNSPR();
  * @name Standard Macros for retrieving error bits
  */
 
-inline uint16_t
+inline MOZ_CONSTEXPR uint16_t
 NS_ERROR_GET_CODE(nsresult aErr)
 {
   return uint32_t(aErr) & 0xffff;
 }
-inline uint16_t
+inline MOZ_CONSTEXPR uint16_t
 NS_ERROR_GET_MODULE(nsresult aErr)
 {
   return ((uint32_t(aErr) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff;
