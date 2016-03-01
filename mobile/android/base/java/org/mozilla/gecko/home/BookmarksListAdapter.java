@@ -140,6 +140,10 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         return Collections.unmodifiableList(mParentStack);
     }
 
+    public FolderType getOpenFolderType() {
+        return openFolderType;
+    }
+
     /**
      * Moves to parent folder, if one exists.
      *
