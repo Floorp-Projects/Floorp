@@ -28,6 +28,7 @@ const {editableField, InplaceEditor} =
       require("devtools/client/shared/inplace-editor");
 const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
+const Services = require("Services");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
