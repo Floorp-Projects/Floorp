@@ -593,7 +593,7 @@ js::Nursery::FreeMallocedBuffersTask::transferBuffersToFree(MallocedBuffersSet& 
 {
     // Transfer the contents of the source set to the task's buffers_ member by
     // swapping the sets, which also clears the source.
-    MOZ_ASSERT(!isRunning());
+    MOZ_ASSERT(!isRunningWithLockHeld());
     MOZ_ASSERT(buffers_.empty());
     mozilla::Swap(buffers_, buffersToFree);
 }

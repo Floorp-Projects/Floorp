@@ -617,8 +617,38 @@ class Assembler : public AssemblerX86Shared
     void imulq(Register src, Register dest) {
         masm.imulq_rr(src.encoding(), dest.encoding());
     }
+    void imulq(const Operand& src, Register dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.imulq_rr(src.reg(), dest.encoding());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.imulq_mr(src.disp(), src.base(), dest.encoding());
+            break;
+          case Operand::MEM_ADDRESS32:
+            MOZ_CRASH("NYI");
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+
+    void cqo() {
+        masm.cqo();
+    }
+    void idivq(Register divisor) {
+        masm.idivq_r(divisor.encoding());
+    }
+    void udivq(Register divisor) {
+        masm.divq_r(divisor.encoding());
+    }
+
     void vcvtsi2sdq(Register src, FloatRegister dest) {
         masm.vcvtsi2sdq_rr(src.encoding(), dest.encoding());
+    }
+
+    void negq(Register reg) {
+        masm.negq_r(reg.encoding());
     }
 
     void mov(ImmWord word, Register dest) {

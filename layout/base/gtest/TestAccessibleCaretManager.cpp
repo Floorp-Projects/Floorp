@@ -61,6 +61,7 @@ public:
     using AccessibleCaretManager::HideCarets;
     using AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent;
     using AccessibleCaretManager::sCaretsExtendedVisibility;
+    using AccessibleCaretManager::sCaretsAlwaysTilt;
 
     MockAccessibleCaretManager()
       : AccessibleCaretManager(nullptr)
@@ -91,7 +92,18 @@ public:
       return true;
     }
 
-    virtual void UpdateCaretsForTilt() override {}
+    virtual void UpdateCaretsForOverlappingTilt() override {}
+
+    virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
+                                           nsIFrame* aEndFrame)
+    {
+      if (mFirstCaret->IsVisuallyVisible()) {
+        mFirstCaret->SetAppearance(Appearance::Left);
+      }
+      if (mSecondCaret->IsVisuallyVisible()) {
+        mSecondCaret->SetAppearance(Appearance::Right);
+      }
+    }
 
     virtual bool IsTerminated() const override { return false; }
 
@@ -411,7 +423,7 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
 }
 
 TEST_F(AccessibleCaretManagerTester,
-       TestScrollInSelectionModeWithExtendedVisibility)
+       TestScrollInSelectionModeWithExtendedVisibilityAndAlwaysTilt)
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Selection));
@@ -459,13 +471,17 @@ TEST_F(AccessibleCaretManagerTester,
     EXPECT_CALL(check, Call("scrollend2"));
   }
 
-  AutoRestore<bool> savePref(
+  // Simulate Firefox Android preferences.
+  AutoRestore<bool> saveCaretsExtendedVisibility(
     MockAccessibleCaretManager::sCaretsExtendedVisibility);
   MockAccessibleCaretManager::sCaretsExtendedVisibility = true;
+  AutoRestore<bool> saveCaretsAlwaysTilt(
+    MockAccessibleCaretManager::sCaretsAlwaysTilt);
+  MockAccessibleCaretManager::sCaretsAlwaysTilt = true;
 
   mManager.UpdateCarets();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
-  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
   check.Call("updatecarets");
 
   mManager.OnScrollStart();
@@ -479,7 +495,7 @@ TEST_F(AccessibleCaretManagerTester,
   check.Call("reflow1");
 
   mManager.OnScrollEnd();
-  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
   check.Call("scrollend1");
 
@@ -494,8 +510,8 @@ TEST_F(AccessibleCaretManagerTester,
   check.Call("reflow2");
 
   mManager.OnScrollEnd();
-  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
-  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
   check.Call("scrollend2");
 }
 

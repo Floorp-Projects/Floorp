@@ -61,6 +61,8 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void lowerTruncateFToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
     void lowerDivI(MDiv*) { MOZ_CRASH(); }
     void lowerModI(MMod*) { MOZ_CRASH(); }
+    void lowerDivI64(MDiv*) { MOZ_CRASH(); }
+    void lowerModI64(MMod*) { MOZ_CRASH(); }
     void lowerMulI(MMul*, MDefinition*, MDefinition*) { MOZ_CRASH(); }
     void lowerUDiv(MDiv*) { MOZ_CRASH(); }
     void lowerUMod(MMod*) { MOZ_CRASH(); }

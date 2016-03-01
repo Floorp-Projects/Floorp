@@ -15,8 +15,8 @@ namespace mozilla {
 class ConsoleTimelineMarker : public TimelineMarker
 {
 public:
-  explicit ConsoleTimelineMarker(const nsAString& aCause,
-                                 MarkerTracingType aTracingType)
+  ConsoleTimelineMarker(const nsAString& aCause,
+                        MarkerTracingType aTracingType)
     : TimelineMarker("ConsoleTime", aTracingType)
     , mCause(aCause)
   {

@@ -25,6 +25,11 @@ dictionary ProfileTimelineLayerRect {
   long height = 0;
 };
 
+enum ProfileTimelineMessagePortOperationType {
+  "serializeData",
+  "deserializeData",
+};
+
 enum ProfileTimelineWorkerOperationType {
   "serializeDataOffMainThread",
   "serializeDataOnMainThread",
@@ -60,6 +65,9 @@ dictionary ProfileTimelineMarker {
 
   /* For Style markers. */
   DOMString restyleHint;
+
+  /* For MessagePort markers. */
+  ProfileTimelineMessagePortOperationType messagePortOperation;
 
   /* For Worker markers. */
   ProfileTimelineWorkerOperationType workerOperation;

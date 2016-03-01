@@ -393,24 +393,14 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableAccessible, Accessible)
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: Accessible
 
-void
-HTMLTableAccessible::CacheChildren()
+bool
+HTMLTableAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 {
   // Move caption accessible so that it's the first child. Check for the first
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  TreeWalker walker(this, mContent);
-
-  Accessible* child = nullptr;
-  while ((child = walker.Next())) {
-    if (child->Role() == roles::CAPTION) {
-      InsertChildAt(0, child);
-      while ((child = walker.Next()) && AppendChild(child));
-      break;
-    }
-    AppendChild(child);
-  }
+  return Accessible::InsertChildAt(aChild->IsHTMLCaption() ? 0 : aIndex, aChild);
 }
 
 role

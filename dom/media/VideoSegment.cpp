@@ -8,6 +8,7 @@
 #include "gfx2DGlue.h"
 #include "ImageContainer.h"
 #include "Layers.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -52,18 +53,18 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
   int len = ((aSize.width * aSize.height) * 3 / 2);
 
   // Generate a black image.
-  ScopedDeletePtr<uint8_t> frame(new uint8_t[len]);
+  auto frame = MakeUnique<uint8_t[]>(len);
   int y = aSize.width * aSize.height;
   // Fill Y plane.
-  memset(frame.rwget(), 0x10, y);
+  memset(frame.get(), 0x10, y);
   // Fill Cb/Cr planes.
-  memset(frame.rwget() + y, 0x80, (len - y));
+  memset(frame.get() + y, 0x80, (len - y));
 
   const uint8_t lumaBpp = 8;
   const uint8_t chromaBpp = 4;
 
   layers::PlanarYCbCrData data;
-  data.mYChannel = frame.rwget();
+  data.mYChannel = frame.get();
   data.mYSize = gfx::IntSize(aSize.width, aSize.height);
   data.mYStride = (int32_t) (aSize.width * lumaBpp / 8.0);
   data.mCbCrStride = (int32_t) (aSize.width * chromaBpp / 8.0);
