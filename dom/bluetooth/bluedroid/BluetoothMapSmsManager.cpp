@@ -1444,7 +1444,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   // Get Body
   uint8_t* bodyPtr = nullptr;
   aHeader.GetBody(&bodyPtr, &mBodySegmentLength);
-  mBodySegment = bodyPtr;
+  mBodySegment.reset(bodyPtr);
 
   RefPtr<BluetoothMapBMessage> bmsg =
     new BluetoothMapBMessage(bodyPtr, mBodySegmentLength);

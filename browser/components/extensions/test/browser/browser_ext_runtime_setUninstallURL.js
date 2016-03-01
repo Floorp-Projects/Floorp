@@ -3,18 +3,6 @@
 let {AddonManager} = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
 let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
-function install(url) {
-  return new Promise((resolve, reject) => {
-    AddonManager.getInstallForURL(url, (install) => {
-      install.addListener({
-        onInstallEnded: (i, addon) => resolve(addon),
-        onInstallFailed: () => reject(),
-      });
-      install.install();
-    }, "application/x-xpinstall");
-  });
-}
-
 function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
   let xpi = Extension.generateXPI(id, {
     background: "(" + backgroundScript.toString() + ")()",
@@ -26,9 +14,9 @@ function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
 
   let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, loadedURL);
 
-  let fileURI = Services.io.newFileURI(xpi);
-  info(`installing ${fileURI.spec}`);
-  let addon = yield install(fileURI.spec);
+
+  info(`installing ${xpi.path}`);
+  let addon = yield AddonManager.installTemporaryAddon(xpi);
   info("installed");
 
   // A WebExtension is started asynchronously, we have our test extension

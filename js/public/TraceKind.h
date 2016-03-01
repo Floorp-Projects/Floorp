@@ -7,6 +7,8 @@
 #ifndef js_TraceKind_h
 #define js_TraceKind_h
 
+#include "mozilla/UniquePtr.h"
+
 #include "js/TypeDecls.h"
 
 // Forward declarations of all the types a TraceKind can denote.
@@ -134,8 +136,12 @@ struct MapTypeToRootKind {
 };
 template <typename T>
 struct MapTypeToRootKind<T*> {
-    static const JS::RootKind kind = \
+    static const JS::RootKind kind =
         JS::MapTraceKindToRootKind<JS::MapTypeToTraceKind<T>::kind>::kind;
+};
+template <typename T>
+struct MapTypeToRootKind<mozilla::UniquePtr<T>> {
+    static const JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
 };
 template <> struct MapTypeToRootKind<JS::Value> {
     static const JS::RootKind kind = JS::RootKind::Value;

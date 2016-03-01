@@ -298,7 +298,7 @@ public:
       return false;
     }
 
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
       return false;
     }
 
@@ -360,7 +360,7 @@ private:
         mRunnable->ReleaseData();
         mRunnable->mConsole = nullptr;
 
-        aWorkerPrivate->RemoveFeature(aCx, mRunnable);
+        aWorkerPrivate->RemoveFeature(mRunnable);
         return true;
       }
 

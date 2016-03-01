@@ -5216,7 +5216,6 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
         StoreToTypedArray(cx, masm, type, value, dest,
                           secondScratch, &failurePopRHS, &failurePopRHS);
         masm.popValue(R1);
-        EmitReturnFromIC(masm);
     } else {
         ReferenceTypeDescr::Type type = fieldDescr_->as<ReferenceTypeDescr>().type();
 
@@ -5252,9 +5251,11 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
           default:
             MOZ_CRASH();
         }
-
-        EmitReturnFromIC(masm);
     }
+
+    // The RHS has to be in R0.
+    masm.moveValue(R1, R0);
+    EmitReturnFromIC(masm);
 
     masm.bind(&failurePopRHS);
     masm.popValue(R1);

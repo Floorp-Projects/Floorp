@@ -305,7 +305,10 @@ class Build(MachCommandBase):
         """
         import which
         from mozbuild.controller.building import BuildMonitor
-        from mozbuild.util import resolve_target_to_make
+        from mozbuild.util import (
+            mkdir,
+            resolve_target_to_make,
+        )
 
         self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
 
@@ -313,6 +316,10 @@ class Build(MachCommandBase):
         monitor = self._spawn(BuildMonitor)
         monitor.init(warnings_path)
         ccache_start = monitor.ccache_stats()
+
+        # Disable indexing in objdir because it is not necessary and can slow
+        # down builds.
+        mkdir(self.topobjdir, not_indexed=True)
 
         with BuildOutputManager(self.log_manager, monitor) as output:
             monitor.start()

@@ -250,7 +250,7 @@ oom:
 static bool
 IsMarkedOrAllocated(TenuredCell* cell)
 {
-    return cell->isMarked() || cell->arenaHeader()->allocatedDuringIncremental;
+    return cell->isMarked() || cell->arena()->allocatedDuringIncremental;
 }
 
 struct CheckEdgeTracer : public JS::CallbackTracer {

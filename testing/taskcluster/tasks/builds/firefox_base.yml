@@ -6,7 +6,7 @@ task:
   extra:
     locations:
       mozharness: 'public/build/mozharness.zip'
-      test_packages: 'public/build/test_packages.json'
+      test_packages: 'public/build/target.test_packages.json'
   payload:
     image:
       type: 'task-image'

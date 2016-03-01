@@ -8,7 +8,7 @@
 
 #include "GLDefs.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 #include "nscore.h"
 #include "nsTArray.h"
 #include <stdint.h>
@@ -93,9 +93,9 @@ private:
     friend struct TreeForType;
 
     FallibleTArray<uint8_t> mBytes;
-    ScopedDeletePtr<WebGLElementArrayCacheTree<uint8_t>> mUint8Tree;
-    ScopedDeletePtr<WebGLElementArrayCacheTree<uint16_t>> mUint16Tree;
-    ScopedDeletePtr<WebGLElementArrayCacheTree<uint32_t>> mUint32Tree;
+    UniquePtr<WebGLElementArrayCacheTree<uint8_t>> mUint8Tree;
+    UniquePtr<WebGLElementArrayCacheTree<uint16_t>> mUint16Tree;
+    UniquePtr<WebGLElementArrayCacheTree<uint32_t>> mUint32Tree;
 };
 
 } // end namespace mozilla

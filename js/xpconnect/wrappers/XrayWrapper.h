@@ -61,7 +61,7 @@ enum XrayType {
 class XrayTraits
 {
 public:
-    XrayTraits() {}
+    MOZ_CONSTEXPR XrayTraits() {}
 
     static JSObject* getTargetObject(JSObject* wrapper) {
         return js::UncheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false);
@@ -160,6 +160,8 @@ public:
 class DOMXrayTraits : public XrayTraits
 {
 public:
+    MOZ_CONSTEXPR DOMXrayTraits() = default;
+
     enum {
         HasPrototype = 1
     };

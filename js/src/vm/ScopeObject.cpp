@@ -3171,16 +3171,43 @@ js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr fra
 
         RootedScript script(cx, si.fun().nonLazyScript());
 
-        if (!script->functionHasThisBinding()) {
-            MOZ_ASSERT(!script->isDerivedClassConstructor(),
-                       "Derived class constructors always have a this-binding");
+        if (si.withinInitialFrame() &&
+            (pc < script->main() || !script->functionHasThisBinding()))
+        {
+            // Either we're in the script prologue and we may still have to
+            // initialize the this-binding (JSOP_FUNCTIONTHIS), or the script
+            // does not have a this-binding (because it doesn't use |this|).
 
-            // If we're still inside `frame`, we can use the this-value passed
-            // to it, if it does not require boxing.
-            if (si.withinInitialFrame() && (frame.thisArgument().isObject() || script->strict()))
+            // If our this-argument is an object, or we're in strict mode,
+            // the this-binding is always the same as our this-argument.
+            if (frame.thisArgument().isObject() || script->strict()) {
                 res.set(frame.thisArgument());
-            else
-                res.setMagic(JS_OPTIMIZED_OUT);
+                return true;
+            }
+
+            // Figure out if we already executed JSOP_FUNCTIONTHIS.
+            bool executedInitThisOp = false;
+            if (script->functionHasThisBinding()) {
+                jsbytecode* initThisPc = script->code();
+                while (*initThisPc != JSOP_FUNCTIONTHIS && initThisPc < script->main())
+                    initThisPc = GetNextPc(initThisPc);
+                executedInitThisOp = (pc > initThisPc);
+            }
+
+            if (!executedInitThisOp) {
+                // We didn't initialize the this-binding yet. Determine the
+                // correct |this| value for this frame (box primitives if not
+                // in strict mode), and assign it to the this-argument slot so
+                // JSOP_FUNCTIONTHIS will use it and not box a second time.
+                if (!GetFunctionThis(cx, frame, res))
+                    return false;
+                frame.thisArgument() = res;
+                return true;
+            }
+        }
+
+        if (!script->functionHasThisBinding()) {
+            res.setMagic(JS_OPTIMIZED_OUT);
             return true;
         }
 

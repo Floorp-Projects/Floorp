@@ -694,7 +694,6 @@ NP_GetValue(void* future, NPPVariable aVariable, void* aValue) {
       break;
     default:
       return NPERR_INVALID_PARAM;
-      break;
   }
   return NPERR_NO_ERROR;
 }
@@ -2206,7 +2205,9 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
     return false;
   }
 
-  switch (var1->type) {
+  // Cast var1->type from NPVariantType to int to avoid compiler warnings about
+  // not needing a default case when we have cases for every enum value.
+  switch (static_cast<int>(var1->type)) {
     case NPVariantType_Int32: {
         int32_t result = NPVARIANT_TO_INT32(*var1);
         int32_t expected = NPVARIANT_TO_INT32(*var2);
@@ -2299,6 +2300,7 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
     default:
       id->err << "Unknown variant type";
       success = false;
+      MOZ_ASSERT_UNREACHABLE("Unknown variant type?!");
   }
 
   return success;
@@ -3981,4 +3983,3 @@ getAudioMuted(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
   BOOLEAN_TO_NPVARIANT(id->audioMuted, *result);
   return true;
 }
-

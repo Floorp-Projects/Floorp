@@ -959,8 +959,7 @@ public:
     mActor = nullptr;
 
     mWorkerPrivate->AssertIsOnWorkerThread();
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-    mWorkerPrivate->RemoveFeature(cx, this);
+    mWorkerPrivate->RemoveFeature(this);
   }
 
 private:
@@ -1412,10 +1411,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
 
-    JSContext* cx = workerPrivate->GetJSContext();
-    MOZ_ASSERT(cx);
-
-    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, challenge))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(challenge))) {
       return false;
     }
 

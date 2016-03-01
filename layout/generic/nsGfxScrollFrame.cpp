@@ -3388,6 +3388,13 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
               nsRect rootCompBounds =
                 nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
 
+              // If rootFrame is the RCD-RSF then CalculateCompositionSizeForFrame
+              // did not take the document's resolution into account, so we must.
+              if (rootPresContext->IsRootContentDocument() &&
+                  rootFrame == rootPresShell->GetRootScrollFrame()) {
+                rootCompBounds = rootCompBounds.RemoveResolution(rootPresShell->GetResolution());
+              }
+
               nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
 
               displayportBase = displayportBase.Intersect(rootCompBounds);
