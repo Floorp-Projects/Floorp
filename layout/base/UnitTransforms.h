@@ -9,6 +9,7 @@
 
 #include "Units.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/Maybe.h"
 #include "nsRegion.h"
 
 namespace mozilla {

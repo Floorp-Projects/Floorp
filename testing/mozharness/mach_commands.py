@@ -37,7 +37,7 @@ class MozharnessRunner(MozbuildObject):
         MozbuildObject.__init__(self, *args, **kwargs)
 
 
-        self.test_packages_url = os.path.join(self.topobjdir, "dist", "test_packages.json")
+        self.test_packages_url = self._test_packages_url()
         self.installer_url = self._installer_url()
 
         desktop_unittest_config = [
@@ -171,6 +171,12 @@ class MozharnessRunner(MozbuildObject):
         assert len(filenames) == 1
         return self.path_to_url(os.path.join(dist_path, filenames[0]))
 
+    def _test_packages_url(self):
+        dist_path = os.path.join(self.topobjdir, "dist")
+        filenames = [item for item in os.listdir(dist_path) if
+                     item.endswith('test_packages.json')]
+        assert len(filenames) == 1
+        return self.path_to_url(os.path.join(dist_path, filenames[0]))
 
     def config_path(self, *parts):
         return self.path_to_url(os.path.join(self.topsrcdir, "testing", "mozharness",

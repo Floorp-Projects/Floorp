@@ -13,6 +13,8 @@
 #include "nsIXPConnect.h"
 
 #include "jsfriendapi.h"
+#include "js/TracingAPI.h"
+#include "js/GCPolicyAPI.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
@@ -30,10 +32,18 @@
 #include "WorkerRunnable.h"
 #include "XMLHttpRequestUpload.h"
 
+#include "mozilla/UniquePtr.h"
+
 using namespace mozilla;
 
 using namespace mozilla::dom;
 USING_WORKERS_NAMESPACE
+
+/* static */ void
+XMLHttpRequest::StateData::trace(JSTracer *aTrc)
+{
+    JS::TraceEdge(aTrc, &mResponse, "XMLHttpRequest::StateData::mResponse");
+}
 
 /**
  *  XMLHttpRequest in workers
@@ -559,27 +569,6 @@ class EventRunnable final : public MainThreadProxyRunnable
   JS::PersistentRooted<JSObject*> mScopeObj;
 
 public:
-  class MOZ_RAII StateDataAutoRooter : private JS::CustomAutoRooter
-  {
-    XMLHttpRequest::StateData* mStateData;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-  public:
-    explicit StateDataAutoRooter(JSContext* aCx, XMLHttpRequest::StateData* aData
-                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : CustomAutoRooter(aCx), mStateData(aData)
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-  private:
-    virtual void trace(JSTracer* aTrc)
-    {
-      JS::TraceEdge(aTrc, &mStateData->mResponse,
-                    "XMLHttpRequest::StateData::mResponse");
-    }
-  };
-
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
                 bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal,
                 JS::Handle<JSObject*> aScopeObj)
@@ -1347,8 +1336,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
-  nsAutoPtr<XMLHttpRequest::StateData> state(new XMLHttpRequest::StateData());
-  StateDataAutoRooter rooter(aCx, state);
+  JS::Rooted<UniquePtr<XMLHttpRequest::StateData>> state(aCx, new XMLHttpRequest::StateData());
 
   state->mResponseTextResult = mResponseTextResult;
   state->mResponseText = mResponseText;
@@ -1391,7 +1379,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   state->mResponseURL = mResponseURL;
 
   XMLHttpRequest* xhr = mProxy->mXMLHttpRequestPrivate;
-  xhr->UpdateState(*state, mUseCachedArrayBufferResponse);
+  xhr->UpdateState(*state.get(), mUseCachedArrayBufferResponse);
 
   if (mUploadEvent && !xhr->GetUploadObjectNoCreate()) {
     return true;
@@ -1726,9 +1714,7 @@ XMLHttpRequest::MaybePin(ErrorResult& aRv)
     return;
   }
 
-  JSContext* cx = GetCurrentThreadJSContext();
-
-  if (!mWorkerPrivate->AddFeature(cx, this)) {
+  if (!mWorkerPrivate->AddFeature(this)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1846,9 +1832,7 @@ XMLHttpRequest::Unpin()
 
   MOZ_ASSERT(mRooted, "Mismatched calls to Unpin!");
 
-  JSContext* cx = GetCurrentThreadJSContext();
-
-  mWorkerPrivate->RemoveFeature(cx, this);
+  mWorkerPrivate->RemoveFeature(this);
 
   mRooted = false;
 

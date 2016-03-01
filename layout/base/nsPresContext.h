@@ -1029,7 +1029,7 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  bool IsRootContentDocument();
+  bool IsRootContentDocument() const;
   bool IsCrossProcessRootContentDocument();
 
   bool IsGlyph() const {

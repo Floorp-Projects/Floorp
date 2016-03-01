@@ -9,6 +9,7 @@ from __future__ import absolute_import, unicode_literals
 
 import argparse
 import collections
+import ctypes
 import difflib
 import errno
 import functools
@@ -35,6 +36,11 @@ if sys.version_info[0] == 3:
     str_type = str
 else:
     str_type = basestring
+
+if sys.platform == 'win32':
+    _kernel32 = ctypes.windll.kernel32
+    _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
+
 
 def hash_file(path, hasher=None):
     """Hashes a file specified by the path given and returns the hex digest."""
@@ -109,6 +115,28 @@ def ensureParentDir(path):
         except OSError, error:
             if error.errno != errno.EEXIST:
                 raise
+
+
+def mkdir(path, not_indexed=False):
+    """Ensure a directory exists.
+
+    If ``not_indexed`` is True, an attribute is set that disables content
+    indexing on the directory.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    if not_indexed:
+        if sys.platform == 'win32':
+            if isinstance(path, str_type):
+                fn = _kernel32.SetFileAttributesW
+            else:
+                fn = _kernel32.SetFileAttributesA
+
+            fn(path, _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)
 
 
 def simple_diff(filename, old_lines, new_lines):

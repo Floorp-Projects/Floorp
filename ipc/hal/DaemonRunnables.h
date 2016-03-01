@@ -8,10 +8,34 @@
 #define mozilla_ipc_DaemonRunnables_h
 
 #include "mozilla/unused.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace ipc {
+
+namespace details {
+
+class DaemonRunnable : public nsRunnable
+{
+protected:
+  DaemonRunnable() = default;
+  virtual ~DaemonRunnable() = default;
+
+  template<typename Out, typename In>
+  static Out& ConvertArg(In& aArg)
+  {
+    return aArg;
+  }
+
+  template<typename Out, typename In>
+  static Out ConvertArg(UniquePtr<In>& aArg)
+  {
+    return aArg.get();
+  }
+};
+
+} // namespace detail
 
 //
 // Result handling
@@ -30,7 +54,7 @@ namespace ipc {
 //
 
 template <typename Obj, typename Res>
-class DaemonResultRunnable0 final : public nsRunnable
+class DaemonResultRunnable0 final : public details::DaemonRunnable
 {
 public:
   typedef DaemonResultRunnable0<Obj, Res> SelfType;
@@ -86,7 +110,7 @@ private:
 };
 
 template <typename Obj, typename Res, typename Tin1, typename Arg1>
-class DaemonResultRunnable1 final : public nsRunnable
+class DaemonResultRunnable1 final : public details::DaemonRunnable
 {
 public:
   typedef DaemonResultRunnable1<Obj, Res, Tin1, Arg1> SelfType;
@@ -118,7 +142,7 @@ public:
 
   NS_IMETHODIMP Run() override
   {
-    ((*mObj).*mMethod)(mArg1);
+    ((*mObj).*mMethod)(ConvertArg<Arg1>(mArg1));
     return NS_OK;
   }
 
@@ -145,7 +169,7 @@ private:
 template <typename Obj, typename Res,
           typename Tin1, typename Tin2, typename Tin3,
           typename Arg1, typename Arg2, typename Arg3>
-class DaemonResultRunnable3 final : public nsRunnable
+class DaemonResultRunnable3 final : public details::DaemonRunnable
 {
 public:
   typedef DaemonResultRunnable3<Obj, Res,
@@ -181,7 +205,9 @@ public:
 
   NS_IMETHODIMP Run() override
   {
-    ((*mObj).*mMethod)(mArg1, mArg2, mArg3);
+    ((*mObj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                       ConvertArg<Arg2>(mArg2),
+                       ConvertArg<Arg3>(mArg3));
     return NS_OK;
   }
 
@@ -226,7 +252,7 @@ private:
 //
 
 template <typename ObjectWrapper, typename Res>
-class DaemonNotificationRunnable0 final : public nsRunnable
+class DaemonNotificationRunnable0 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -285,7 +311,7 @@ private:
 
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Arg1=Tin1>
-class DaemonNotificationRunnable1 final : public nsRunnable
+class DaemonNotificationRunnable1 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -322,7 +348,7 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1));
     }
     return NS_OK;
   }
@@ -351,7 +377,7 @@ private:
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2,
           typename Arg1=Tin1, typename Arg2=Tin2>
-class DaemonNotificationRunnable2 final : public nsRunnable
+class DaemonNotificationRunnable2 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -389,7 +415,8 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2));
     }
     return NS_OK;
   }
@@ -420,7 +447,7 @@ private:
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2, typename Tin3,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3>
-class DaemonNotificationRunnable3 final : public nsRunnable
+class DaemonNotificationRunnable3 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -459,7 +486,9 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3));
     }
     return NS_OK;
   }
@@ -492,7 +521,7 @@ template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2, typename Tin3, typename Tin4,
           typename Arg1=Tin1, typename Arg2=Tin2,
           typename Arg3=Tin3, typename Arg4=Tin4>
-class DaemonNotificationRunnable4 final : public nsRunnable
+class DaemonNotificationRunnable4 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -531,7 +560,10 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3),
+                        ConvertArg<Arg4>(mArg4));
     }
     return NS_OK;
   }
@@ -566,7 +598,7 @@ template <typename ObjectWrapper, typename Res,
           typename Tin4, typename Tin5,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5>
-class DaemonNotificationRunnable5 final : public nsRunnable
+class DaemonNotificationRunnable5 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -605,7 +637,11 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3),
+                        ConvertArg<Arg4>(mArg4),
+                        ConvertArg<Arg5>(mArg5));
     }
     return NS_OK;
   }
@@ -641,7 +677,7 @@ template <typename ObjectWrapper, typename Res,
           typename Tin4, typename Tin5, typename Tin6,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6>
-class DaemonNotificationRunnable6 final : public nsRunnable
+class DaemonNotificationRunnable6 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -681,7 +717,12 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5, mArg6);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3),
+                        ConvertArg<Arg4>(mArg4),
+                        ConvertArg<Arg5>(mArg5),
+                        ConvertArg<Arg6>(mArg6));
     }
     return NS_OK;
   }
@@ -720,7 +761,7 @@ template <typename ObjectWrapper, typename Res,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6,
           typename Arg7=Tin7, typename Arg8=Tin8>
-class DaemonNotificationRunnable8 final : public nsRunnable
+class DaemonNotificationRunnable8 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -763,8 +804,14 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4,
-                        mArg5, mArg6, mArg7, mArg8);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3),
+                        ConvertArg<Arg4>(mArg4),
+                        ConvertArg<Arg5>(mArg5),
+                        ConvertArg<Arg6>(mArg6),
+                        ConvertArg<Arg7>(mArg7),
+                        ConvertArg<Arg8>(mArg8));
     }
     return NS_OK;
   }
@@ -808,7 +855,7 @@ template <typename ObjectWrapper, typename Res,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6,
           typename Arg7=Tin7, typename Arg8=Tin8, typename Arg9=Tin9>
-class DaemonNotificationRunnable9 final : public nsRunnable
+class DaemonNotificationRunnable9 final : public details::DaemonRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
@@ -851,8 +898,15 @@ public:
     if (!obj) {
       NS_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4,
-                        mArg5, mArg6, mArg7, mArg8, mArg9);
+      ((*obj).*mMethod)(ConvertArg<Arg1>(mArg1),
+                        ConvertArg<Arg2>(mArg2),
+                        ConvertArg<Arg3>(mArg3),
+                        ConvertArg<Arg4>(mArg4),
+                        ConvertArg<Arg5>(mArg5),
+                        ConvertArg<Arg6>(mArg6),
+                        ConvertArg<Arg7>(mArg7),
+                        ConvertArg<Arg8>(mArg8),
+                        ConvertArg<Arg9>(mArg9));
     }
     return NS_OK;
   }

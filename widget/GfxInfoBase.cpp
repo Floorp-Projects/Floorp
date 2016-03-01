@@ -155,7 +155,9 @@ GetPrefNameForFeature(int32_t aFeature)
       break;
     case nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION:
       name = BLACKLIST_PREF_BRANCH "canvas2d.acceleration";
+      break;
     default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
   }
 

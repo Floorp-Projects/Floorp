@@ -1972,7 +1972,7 @@ public:
                BluetoothAttributeHandle& aArg4,
                int& aArg5,
                int& aArg6,
-               nsAutoArrayPtr<uint8_t>& aArg7,
+               UniquePtr<uint8_t[]>& aArg7,
                bool& aArg8,
                bool& aArg9) const
   {

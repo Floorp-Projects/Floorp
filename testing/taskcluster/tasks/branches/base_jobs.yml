@@ -92,18 +92,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_spark_eng.yml
-  nexus-4:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_user.yml
-  nexus-4-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_eng.yml
   nexus-4-kk:
     platforms:
       - b2g
@@ -238,10 +226,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_gtest.yml
-  jetpack:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_jetpack.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -298,6 +282,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_dt.yml
+  mochitest-jetpack:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_jetpack.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

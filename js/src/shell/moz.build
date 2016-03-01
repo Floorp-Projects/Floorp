@@ -13,6 +13,7 @@ if CONFIG['JS_SHELL_NAME']:
 UNIFIED_SOURCES += [
     'js.cpp',
     'jsoptparse.cpp',
+    'jsshell.cpp',
     'OSObject.cpp'
 ]
 

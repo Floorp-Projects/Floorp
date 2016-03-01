@@ -210,6 +210,9 @@ ContainerRenderVR(ContainerT* aContainer,
     if (!layer->IsVisible() && !layer->AsContainerLayer()) {
       continue;
     }
+    if (layerToRender->HasStaleCompositor()) {
+      continue;
+    }
 
     // We flip between pre-rendered and Gecko-rendered VR based on
     // whether the child layer of this VR container layer has
@@ -552,6 +555,10 @@ RenderLayers(ContainerT* aContainer,
     LayerComposite* layerToRender = preparedData.mLayer;
     const RenderTargetIntRect& clipRect = preparedData.mClipRect;
     Layer* layer = layerToRender->GetLayer();
+
+    if (layerToRender->HasStaleCompositor()) {
+      continue;
+    }
 
     Color color;
     if (NeedToDrawCheckerboardingForLayer(layer, &color)) {

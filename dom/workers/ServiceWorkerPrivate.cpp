@@ -390,8 +390,7 @@ class LifeCycleEventWatcher final : public PromiseNativeHandler,
     // the resulting Promise.all will be cycle collected and it will drop its
     // native handlers (including this object). Instead of waiting for a timeout
     // we report the failure now.
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-    ReportResult(cx, false);
+    ReportResult(false);
   }
 
 public:
@@ -412,7 +411,6 @@ public:
   {
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
-    JSContext* cx = mWorkerPrivate->GetJSContext();
 
     // We need to listen for worker termination in case the event handler
     // never completes or never resolves the waitUntil promise. There are
@@ -421,9 +419,9 @@ public:
     //    case the registration/update promise will be rejected
     // 2. A new service worker is registered which will terminate the current
     //    installing worker.
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
       NS_WARNING("LifeCycleEventWatcher failed to add feature.");
-      ReportResult(cx, false);
+      ReportResult(false);
       return false;
     }
 
@@ -438,13 +436,13 @@ public:
     }
 
     MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
-    ReportResult(aCx, false);
+    ReportResult(false);
 
     return true;
   }
 
   void
-  ReportResult(JSContext* aCx, bool aResult)
+  ReportResult(bool aResult)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -459,7 +457,7 @@ public:
       NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
     }
 
-    mWorkerPrivate->RemoveFeature(aCx, this);
+    mWorkerPrivate->RemoveFeature(this);
   }
 
   void
@@ -468,7 +466,7 @@ public:
     MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    ReportResult(aCx, true);
+    ReportResult(true);
   }
 
   void
@@ -477,7 +475,7 @@ public:
     MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    ReportResult(aCx, false);
+    ReportResult(false);
 
     // Note, all WaitUntil() rejections are reported to client consoles
     // by the WaitUntilHandler in ServiceWorkerEvents.  This ensures that
@@ -525,7 +523,7 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
   if (waitUntil) {
     waitUntil->AppendNativeHandler(watcher);
   } else {
-    watcher->ReportResult(aCx, false);
+    watcher->ReportResult(false);
   }
 
   return true;
@@ -1044,7 +1042,15 @@ public:
     rv = mInterceptedChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uri->GetSpec(mSpec);
+    // Normally we rely on the Request constructor to strip the fragment, but
+    // when creating the FetchEvent we bypass the constructor.  So strip the
+    // fragment manually here instead.  We can't do it later when we create
+    // the Request because that code executes off the main thread.
+    nsCOMPtr<nsIURI> uriNoFragment;
+    rv = uri->CloneIgnoringRef(getter_AddRefs(uriNoFragment));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = uriNoFragment->GetSpec(mSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t loadFlags;

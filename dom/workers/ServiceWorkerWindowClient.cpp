@@ -63,7 +63,7 @@ public:
     }
 
     // Release the reference on the worker thread.
-    mPromiseProxy->CleanUp(aCx);
+    mPromiseProxy->CleanUp();
 
     return true;
   }

@@ -663,6 +663,12 @@ class TemporaryTypeSet : public TypeSet
         this->objectSet = objectSet;
     }
 
+    TemporaryTypeSet(LifoAlloc* alloc, jit::MIRType type)
+      : TemporaryTypeSet(alloc, PrimitiveType(ValueTypeFromMIRType(type)))
+    {
+        MOZ_ASSERT(type != jit::MIRType_Value);
+    }
+
     /*
      * Constraints for JIT compilation.
      *

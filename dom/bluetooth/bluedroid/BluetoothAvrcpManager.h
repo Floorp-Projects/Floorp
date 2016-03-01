@@ -108,7 +108,7 @@ private:
 
   void VolumeChangeNotification(uint8_t aVolume, uint8_t aCType) override;
 
-  void PassthroughCmdNotification(int aId, int aKeyState) override;
+  void PassthroughCmdNotification(uint8_t aId, uint8_t aKeyState) override;
 
   BluetoothAddress mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;

@@ -215,15 +215,9 @@ CompileZone::addressOfNeedsIncrementalBarrier()
 }
 
 const void*
-CompileZone::addressOfFreeListFirst(gc::AllocKind allocKind)
+CompileZone::addressOfFreeList(gc::AllocKind allocKind)
 {
-    return zone()->arenas.getFreeList(allocKind)->addressOfFirst();
-}
-
-const void*
-CompileZone::addressOfFreeListLast(gc::AllocKind allocKind)
-{
-    return zone()->arenas.getFreeList(allocKind)->addressOfLast();
+    return zone()->arenas.addressOfFreeList(allocKind);
 }
 
 JSCompartment*

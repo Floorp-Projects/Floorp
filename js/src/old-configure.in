@@ -570,7 +570,6 @@ fi
 AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" -o "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])

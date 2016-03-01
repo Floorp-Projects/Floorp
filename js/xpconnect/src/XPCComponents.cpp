@@ -3517,11 +3517,14 @@ NS_IMETHODIMP nsXPCComponents::ReportError(HandleValue error, JSContext* cx)
 class ComponentsSH : public nsIXPCScriptable
 {
 public:
-    explicit ComponentsSH(unsigned dummy)
+    explicit MOZ_CONSTEXPR ComponentsSH(unsigned dummy)
     {
     }
 
-    NS_DECL_ISUPPORTS
+    // We don't actually inherit any ref counting infrastructure, but we don't
+    // need an nsAutoRefCnt member, so the _INHERITED macro is a hack to avoid
+    // having one.
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIXPCSCRIPTABLE
     // The NS_IMETHODIMP isn't really accurate here, but NS_CALLBACK requires
     // the referent to be declared __stdcall on Windows, and this is the only
