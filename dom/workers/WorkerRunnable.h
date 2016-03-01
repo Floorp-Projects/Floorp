@@ -122,16 +122,6 @@ protected:
   virtual void
   PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult);
 
-  // May be implemented by subclasses if desired if they need to do some sort of
-  // setup before we try to set up our JSContext and compartment for real.
-  // Typically the only thing that should go in here is creation of the worker's
-  // global.
-  //
-  // If false is returned, WorkerRun will not be called at all.  PostRun will
-  // still be called, with false passed for aRunResult.
-  virtual bool
-  PreRun(WorkerPrivate* aWorkerPrivate);
-
   // Must be implemented by subclasses. Called on the target thread.  The return
   // value will be passed to PostRun().  The JSContext passed in here comes from
   // an AutoJSAPI (or AutoEntryScript) that we set up on the stack.  If
@@ -142,16 +132,10 @@ protected:
   // in the null compartment if there is no parent global.  For other mBehavior
   // values, we're running on the worker thread and aCx is in whatever
   // compartment GetCurrentThreadJSContext() was in when nsIRunnable::Run() got
-  // called.  This is actually important for cases when a runnable spins a
-  // syncloop and wants everything that happens during the syncloop to happen in
-  // the compartment that runnable set up (which may, for example, be a debugger
-  // sandbox compartment!).  If aCx wasn't in a compartment to start with, aCx
-  // will be in either the debugger global's compartment or the worker's
-  // global's compartment depending on whether IsDebuggerRunnable() is true.
-  //
-  // Immediately after WorkerRun returns, the caller will assert that either it
-  // returns false or there is no exception pending on aCx.  Then it will report
-  // any pending exceptions on aCx.
+  // called (XXXbz: Why is this a sane thing to be doing now that we have
+  // multiple globals per worker???).  If it wasn't in a compartment, aCx will
+  // be in either the debugger global's compartment or the worker's global's
+  // compartment depending on whether IsDebuggerRunnable() is true.
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) = 0;
 
@@ -160,9 +144,9 @@ protected:
   // busy count was previously modified in PreDispatch().
   //
   // The aCx passed here is the same one as was passed to WorkerRun and is
-  // still in the same compartment.  PostRun implementations must NOT leave an
-  // exception on the JSContext and must not run script, because the incoming
-  // JSContext may be in the null compartment.
+  // still in the same compartment.  If aRunResult is false, any failures on
+  // aCx are reported.  Otherwise failures are left to linger on the JSContext
+  // and maim later code (XXXbz: Aiming to fix that in bug 1072144).
   virtual void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult);
 

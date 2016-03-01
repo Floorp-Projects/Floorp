@@ -307,9 +307,6 @@ private:
   IsDebuggerRunnable() const override;
 
   virtual bool
-  PreRun(WorkerPrivate* aWorkerPrivate) override;
-
-  virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   virtual void
@@ -1727,41 +1724,6 @@ ScriptExecutorRunnable::IsDebuggerRunnable() const
 }
 
 bool
-ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate)
-{
-  aWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (!mIsWorkerScript) {
-    return true;
-  }
-
-  if (!aWorkerPrivate->GetJSContext()) {
-    return false;
-  }
-
-  MOZ_ASSERT(mFirstIndex == 0);
-  MOZ_ASSERT(!mScriptLoader.mRv.Failed());
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  jsapi.TakeOwnershipOfErrorReporting();
-
-  WorkerGlobalScope* globalScope =
-    aWorkerPrivate->GetOrCreateGlobalScope(jsapi.cx());
-  if (NS_WARN_IF(!globalScope)) {
-    NS_WARNING("Failed to make global!");
-    // There's no way to report the exception on jsapi right now, because there
-    // is no way to even enter a compartment on this thread anymore.  Just clear
-    // the exception.  We'll report some sort of error to our caller thread in
-    // ShutdownScriptLoader.
-    jsapi.ClearException();
-    return false;
-  }
-
-  return true;
-}
-
-bool
 ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
@@ -1783,10 +1745,31 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   // If nothing else has failed, our ErrorResult better not be a failure either.
   MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
 
-  // Slightly icky action at a distance, but there's no better place to stash
-  // this value, really.
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+  JS::Rooted<JSObject*> global(aCx);
+
+  if (mIsWorkerScript) {
+    WorkerGlobalScope* globalScope =
+      aWorkerPrivate->GetOrCreateGlobalScope(aCx);
+    if (NS_WARN_IF(!globalScope)) {
+      NS_WARNING("Failed to make global!");
+      // There's no way to report the exception on aCx right now, because there
+      // is no way to even enter a compartment on this thread anymore.  Just
+      // clear the exception.  We'll report some sort of error to our caller
+      // thread in ShutdownScriptLoader.
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
+    global.set(globalScope->GetWrapper());
+  } else {
+    // XXXbz Icky action at a distance...  Would be better to capture this state
+    // in mScriptLoader!
+    global.set(JS::CurrentGlobalOrNull(aCx));
+  }
+
   MOZ_ASSERT(global);
+
+  JSAutoCompartment ac(aCx, global);
 
   for (uint32_t index = mFirstIndex; index <= mLastIndex; index++) {
     ScriptLoadInfo& loadInfo = loadInfos.ElementAt(index);
