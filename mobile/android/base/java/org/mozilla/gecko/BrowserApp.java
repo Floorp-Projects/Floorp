@@ -752,6 +752,10 @@ public class BrowserApp extends GeckoApp
                 // Treat screenshots as a sharing method.
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "screenshot");
 
+                if (!AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED) {
+                    return;
+                }
+
                 final Tab selectedTab = Tabs.getInstance().getSelectedTab();
                 if (selectedTab == null) {
                     Log.w(LOGTAG, "Selected tab is null: could not page info to store screenshot.");
