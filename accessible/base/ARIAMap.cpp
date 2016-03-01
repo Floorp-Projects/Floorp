@@ -43,7 +43,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eAlert,
     kNoReqStates
   },
   { // alertdialog

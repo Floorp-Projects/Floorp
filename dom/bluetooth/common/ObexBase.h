@@ -144,8 +144,8 @@ public:
     , mDataLength(aDataLength)
     , mData(nullptr)
   {
-    mData = new uint8_t[mDataLength];
-    memcpy(mData, aData, aDataLength);
+    mData.reset(new uint8_t[mDataLength]);
+    memcpy(mData.get(), aData, aDataLength);
   }
 
   ~ObexHeader()
@@ -154,7 +154,7 @@ public:
 
   ObexHeaderId mId;
   int mDataLength;
-  nsAutoArrayPtr<uint8_t> mData;
+  UniquePtr<uint8_t[]> mData;
 };
 
 class ObexHeaderSet

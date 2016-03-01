@@ -70,6 +70,16 @@ function handleUsedCheck(event) {
   }
 }
 
+function handleFragmentCheck(event) {
+  var body;
+  if (event.request.url.indexOf('#') === -1) {
+    body = 'Fragment Not Found';
+  } else {
+    body = 'Fragment Found';
+  }
+  event.respondWith(new Response(body));
+}
+
 self.addEventListener('fetch', function(event) {
     var url = event.request.url;
     var handlers = [
@@ -82,7 +92,8 @@ self.addEventListener('fetch', function(event) {
       { pattern: '?fetch', fn: handleFetch },
       { pattern: '?form-post', fn: handleFormPost },
       { pattern: '?multiple-respond-with', fn: handleMultipleRespondWith },
-      { pattern: '?used-check', fn: handleUsedCheck }
+      { pattern: '?used-check', fn: handleUsedCheck },
+      { pattern: '?fragment-check', fn: handleFragmentCheck }
     ];
 
     var handler = null;

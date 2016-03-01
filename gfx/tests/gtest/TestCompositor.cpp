@@ -128,7 +128,7 @@ static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, 
 #endif
   }
 
-  if (!compositor) {
+  if (!compositor || !compositor->Initialize()) {
     printf_stderr("Failed to construct layer manager for the requested backend\n");
     abort();
   }
@@ -150,8 +150,6 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
     RefPtr<Compositor> compositor = CreateTestCompositor(backend, widget);
 
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
-
-    layerManager->Initialize();
 
     managers.push_back(LayerManagerData(compositor, widget, layerManager));
   }

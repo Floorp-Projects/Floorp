@@ -2607,7 +2607,7 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
     worker->AssertIsOnWorkerThread();
 
     mFeature = new PromiseReportRejectFeature(this);
-    if (NS_WARN_IF(!worker->AddFeature(worker->GetJSContext(), mFeature))) {
+    if (NS_WARN_IF(!worker->AddFeature(mFeature))) {
       // To avoid a false RemoveFeature().
       mFeature = nullptr;
       // Worker is shutting down, report rejection immediately since it is
@@ -2657,7 +2657,7 @@ Promise::RemoveFeature()
   if (mFeature) {
     workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
-    worker->RemoveFeature(worker->GetJSContext(), mFeature);
+    worker->RemoveFeature(mFeature);
     mFeature = nullptr;
   }
 }
@@ -2747,7 +2747,7 @@ public:
     (workerPromise->*mFunc)(aCx, value);
 
     // Release the Promise because it has been resolved/rejected for sure.
-    mPromiseWorkerProxy->CleanUp(aCx);
+    mPromiseWorkerProxy->CleanUp();
     return true;
   }
 
@@ -2833,8 +2833,7 @@ PromiseWorkerProxy::AddRefObject()
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mFeatureAdded);
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
-                                  this)) {
+  if (!mWorkerPrivate->AddFeature(this)) {
     return false;
   }
 
@@ -2926,14 +2925,14 @@ bool
 PromiseWorkerProxy::Notify(JSContext* aCx, Status aStatus)
 {
   if (aStatus >= Canceling) {
-    CleanUp(aCx);
+    CleanUp();
   }
 
   return true;
 }
 
 void
-PromiseWorkerProxy::CleanUp(JSContext* aCx)
+PromiseWorkerProxy::CleanUp()
 {
   // Can't release Mutex while it is still locked, so scope the lock.
   {
@@ -2947,13 +2946,12 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
 
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
 
     // Release the Promise and remove the PromiseWorkerProxy from the features of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
     MOZ_ASSERT(mFeatureAdded);
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mWorkerPrivate->RemoveFeature(this);
     mFeatureAdded = false;
     CleanProperties();
   }

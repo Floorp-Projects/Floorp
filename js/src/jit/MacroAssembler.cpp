@@ -777,7 +777,7 @@ MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind al
     }
 }
 
-// Inlined version of FreeList::allocate. This does not fill in slots_.
+// Inlined version of FreeSpan::allocate. This does not fill in slots_.
 void
 MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label* fail)
 {
@@ -787,24 +787,33 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     Label fallback;
     Label success;
 
-    // Load FreeList::head::first of |zone|'s freeLists for |allocKind|. If
-    // there is no room remaining in the span, fall back to get the next one.
-    loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
-    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, &fallback);
-    computeEffectiveAddress(Address(result, thingSize), temp);
-    storePtr(temp, AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)));
+    // Load the first and last offsets of |zone|'s free list for |allocKind|.
+    // If there is no room remaining in the span, fall back to get the next one.
+    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfFirst()), result);
+    load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfLast()), temp);
+    branch32(Assembler::AboveOrEqual, result, temp, &fallback);
+
+    // Bump the offset for the next allocation.
+    add32(Imm32(thingSize), result);
+    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    store16(result, Address(temp, js::gc::FreeSpan::offsetOfFirst()));
+    sub32(Imm32(thingSize), result);
+    addPtr(temp, result); // Turn the offset into a pointer.
     jump(&success);
 
     bind(&fallback);
-    // If there are no FreeSpans left, we bail to finish the allocation. The
-    // interpreter will call |refillFreeLists|, setting up a new FreeList so
-    // that we can continue allocating in the jit.
-    branchPtr(Assembler::Equal, result, ImmPtr(0), fail);
-    // Point the free list head at the subsequent span (which may be empty).
-    loadPtr(Address(result, js::gc::FreeSpan::offsetOfFirst()), temp);
-    storePtr(temp, AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)));
-    loadPtr(Address(result, js::gc::FreeSpan::offsetOfLast()), temp);
-    storePtr(temp, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)));
+    // If there are no free spans left, we bail to finish the allocation. The
+    // interpreter will call the GC allocator to set up a new arena to allocate
+    // from, after which we can resume allocating in the jit.
+    branchTest32(Assembler::Zero, result, result, fail);
+    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    addPtr(temp, result); // Turn the offset into a pointer.
+    Push(result);
+    // Update the free list to point to the next span (which may be empty).
+    load32(Address(result, 0), result);
+    store32(result, Address(temp, js::gc::FreeSpan::offsetOfFirst()));
+    Pop(result);
 
     bind(&success);
 }
@@ -1164,7 +1173,7 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
 void
 MacroAssembler::initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject)
 {
-    const UnboxedLayout& layout = templateObject->layout();
+    const UnboxedLayout& layout = templateObject->layoutDontCheckGeneration();
 
     // Initialize reference fields of the object, per UnboxedPlainObject::create.
     if (const int32_t* list = layout.traceList()) {

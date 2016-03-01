@@ -3255,15 +3255,6 @@ ContentChild::RecvEndDragSession(const bool& aDoneDrag,
 }
 
 bool
-ContentChild::RecvTestGraphicsDeviceReset(const uint32_t& aResetReason)
-{
-#if defined(XP_WIN)
-  gfxPlatform::GetPlatform()->TestDeviceReset(DeviceResetReason(aResetReason));
-#endif
-  return true;
-}
-
-bool
 ContentChild::RecvPush(const nsCString& aScope,
                        const IPC::Principal& aPrincipal)
 {

@@ -56,6 +56,8 @@ flags:
     mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
     mochitest-gl: /mochitest-webgl.*/
     mochitest-push: /mochitest-push.*/
+    mochitest-media: /mochitest-media.*/
+    mochitest-media-e10s: /mochitest-media-e10s.*/
     mochitest-vg: /mochitest-valgrind.*/
     reftest: /(plain-)?reftest.*/
     reftest-no-accel: /(plain-)?reftest-no-accel.*/
@@ -85,8 +87,6 @@ flags:
     - flame-kk-eng   # b2g flame eng build
     - flame-kk-spark-eng
     - flame-kk-ota
-    - nexus-4
-    - nexus-4-eng
     - nexus-4-kk
     - nexus-4-kk-ota
     - nexus-4-kk-eng
@@ -126,7 +126,6 @@ flags:
     - gaia-unit
     - gaia-unit-oop
     - gtest
-    - jetpack
     - jittests
     - jsreftest
     - jsreftest-e10s
@@ -144,6 +143,7 @@ flags:
     - mochitest-e10s
     - mochitest-jetpack
     - mochitest-media
+    - mochitest-media-e10s
     - mochitest-oop
     - mochitest-push
     - mochitest-webgl

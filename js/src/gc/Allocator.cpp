@@ -92,7 +92,7 @@ GCRuntime::checkIncrementalZoneState(ExclusiveContext* cx, T* t)
 
     Zone* zone = cx->asJSContext()->zone();
     MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                  t->asTenured().arenaHeader()->allocatedDuringIncremental);
+                  t->asTenured().arena()->allocatedDuringIncremental);
 #endif
 }
 
@@ -272,7 +272,7 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
 /* static */ void*
 GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind, size_t thingSize)
 {
-    MOZ_ASSERT(cx->arenas()->freeLists[thingKind].isEmpty());
+    cx->arenas()->checkEmptyFreeList(thingKind);
 
     if (cx->isJSContext())
         return refillFreeListFromMainThread(cx->asJSContext(), thingKind, thingSize);
@@ -323,12 +323,12 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
         maybeLock.emplace(rt);
 
     ArenaList& al = arenaLists[thingKind];
-    ArenaHeader* aheader = al.takeNextArena();
-    if (aheader) {
+    Arena* arena = al.takeNextArena();
+    if (arena) {
         // Empty arenas should be immediately freed.
-        MOZ_ASSERT(!aheader->isEmpty());
+        MOZ_ASSERT(!arena->isEmpty());
 
-        return allocateFromArenaInner<HasFreeThings>(zone, aheader, thingKind);
+        return allocateFromArenaInner(zone, arena, thingKind);
     }
 
     // Parallel threads have their own ArenaLists, but chunks are shared;
@@ -342,44 +342,33 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
 
     // Although our chunk should definitely have enough space for another arena,
     // there are other valid reasons why Chunk::allocateArena() may fail.
-    aheader = rt->gc.allocateArena(chunk, zone, thingKind, maybeLock.ref());
-    if (!aheader)
+    arena = rt->gc.allocateArena(chunk, zone, thingKind, maybeLock.ref());
+    if (!arena)
         return nullptr;
 
     MOZ_ASSERT(!maybeLock->wasUnlocked());
     MOZ_ASSERT(al.isCursorAtEnd());
-    al.insertAtCursor(aheader);
+    al.insertBeforeCursor(arena);
 
-    return allocateFromArenaInner<IsEmpty>(zone, aheader, thingKind);
+    return allocateFromArenaInner(zone, arena, thingKind);
 }
 
-template <ArenaLists::ArenaAllocMode hasFreeThings>
-TenuredCell*
-ArenaLists::allocateFromArenaInner(JS::Zone* zone, ArenaHeader* aheader, AllocKind kind)
+inline TenuredCell*
+ArenaLists::allocateFromArenaInner(JS::Zone* zone, Arena* arena, AllocKind kind)
 {
     size_t thingSize = Arena::thingSize(kind);
 
-    FreeSpan span;
-    if (hasFreeThings) {
-        MOZ_ASSERT(aheader->hasFreeThings());
-        span = aheader->getFirstFreeSpan();
-        aheader->setAsFullyUsed();
-    } else {
-        MOZ_ASSERT(!aheader->hasFreeThings());
-        Arena* arena = aheader->getArena();
-        span.initFinal(arena->thingsStart(kind), arena->thingsEnd() - thingSize, thingSize);
-    }
-    freeLists[kind].setHead(&span);
+    freeLists[kind] = arena->getFirstFreeSpan();
 
     if (MOZ_UNLIKELY(zone->wasGCStarted()))
-        zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-    TenuredCell* thing = freeLists[kind].allocate(thingSize);
+        zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, arena);
+    TenuredCell* thing = freeLists[kind]->allocate(thingSize);
     MOZ_ASSERT(thing); // This allocation is infallible.
     return thing;
 }
 
 void
-GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, ArenaHeader* arena)
+GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena)
 {
     if (zone->needsIncrementalBarrier()) {
         arena->allocatedDuringIncremental = true;
@@ -389,5 +378,3 @@ GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, ArenaHeader* arena)
         arenasAllocatedDuringSweep = arena;
     }
 }
-
-

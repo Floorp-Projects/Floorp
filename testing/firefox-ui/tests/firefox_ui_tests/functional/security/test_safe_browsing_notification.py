@@ -25,7 +25,7 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             },
             # Phishing URL info
             {
-                'button_property': 'safebrowsing.notAForgeryButton.label',
+                'button_property': 'safebrowsing.notADeceptiveSiteButton.label',
                 'report_page': 'www.google.com/safebrowsing/report_error',
                 'unsafe_page': 'https://www.itisatrap.org/firefox/its-a-trap.html'
             },

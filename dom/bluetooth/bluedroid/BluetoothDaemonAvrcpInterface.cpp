@@ -550,7 +550,7 @@ public:
 
   nsresult
   operator () (uint8_t& aArg1,
-               nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>& aArg2) const
+               UniquePtr<BluetoothAvrcpPlayerAttribute[]>& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -591,7 +591,7 @@ public:
 
   nsresult
   operator () (uint8_t& aArg1,
-               nsAutoArrayPtr<BluetoothAvrcpPlayerAttribute>& aArg2) const
+               UniquePtr<BluetoothAvrcpPlayerAttribute[]>& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -632,7 +632,7 @@ public:
 
   nsresult
   operator () (uint8_t& aArg1, uint8_t& aArg2,
-               nsAutoArrayPtr<uint8_t>& aArg3) const
+               UniquePtr<uint8_t[]>& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -687,7 +687,7 @@ public:
 
   nsresult
   operator () (uint8_t& aArg1,
-               nsAutoArrayPtr<BluetoothAvrcpMediaAttribute>& aArg2) const
+               UniquePtr<BluetoothAvrcpMediaAttribute[]>& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 

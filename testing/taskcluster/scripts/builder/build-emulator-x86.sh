@@ -60,7 +60,7 @@ mv $WORKSPACE/B2G/out/target/product/generic_x86/tests/gaia-tests.zip $HOME/arti
 for name in common cppunittest reftest mochitest xpcshell web-platform; do
     mv $gecko_objdir/dist/*.$name.tests.zip $HOME/artifacts/target.$name.tests.zip ;
 done
-mv $gecko_objdir/dist/test_packages_tc.json $HOME/artifacts/test_packages.json
+mv $gecko_objdir/dist/b2g-*.test_packages.json $HOME/artifacts/target.test_packages.json
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $gecko_objdir/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 mv $gecko_objdir/dist/mozharness.zip $HOME/artifacts/mozharness.zip

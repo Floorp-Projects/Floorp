@@ -44,6 +44,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
   public:
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
+    using MacroAssemblerX86Shared::store16;
 
     MacroAssemblerX64()
     {
@@ -642,6 +643,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             ScratchRegisterScope scratch(asMasm());
             mov(ImmPtr(address.addr), scratch);
             store32(src, Address(scratch, 0x0));
+        }
+    }
+    void store16(Register src, AbsoluteAddress address) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
+            movw(src, Operand(address));
+        } else {
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            store16(src, Address(scratch, 0x0));
         }
     }
     void store64(Register64 src, Address address) {

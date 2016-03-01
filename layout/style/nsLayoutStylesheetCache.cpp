@@ -768,18 +768,21 @@ nsLayoutStylesheetCache::InvalidateSheet(StyleSheetHandle::RefPtr* aGeckoSheet,
   MOZ_ASSERT(gCSSLoader_Gecko || gCSSLoader_Servo,
              "pref changed before we loaded a sheet?");
 
+  const bool gotGeckoSheet = aGeckoSheet && *aGeckoSheet;
+  const bool gotServoSheet = aServoSheet && *aServoSheet;
+
   // Make sure sheets have the expected types
-  MOZ_ASSERT(!aGeckoSheet || (*aGeckoSheet)->IsGecko());
-  MOZ_ASSERT(!aServoSheet || (*aServoSheet)->IsServo());
+  MOZ_ASSERT(!gotGeckoSheet || (*aGeckoSheet)->IsGecko());
+  MOZ_ASSERT(!gotServoSheet || (*aServoSheet)->IsServo());
   // Make sure the URIs match
-  MOZ_ASSERT(!aGeckoSheet || !aServoSheet ||
+  MOZ_ASSERT(!gotServoSheet || !gotGeckoSheet ||
              (*aGeckoSheet)->GetSheetURI() == (*aServoSheet)->GetSheetURI(),
              "Sheets passed should have the same URI");
 
   nsIURI* uri;
-  if (aGeckoSheet && *aGeckoSheet) {
+  if (gotGeckoSheet) {
     uri = (*aGeckoSheet)->GetSheetURI();
-  } else if (aServoSheet && *aServoSheet) {
+  } else if (gotServoSheet) {
     uri = (*aServoSheet)->GetSheetURI();
   } else {
     return;
@@ -791,10 +794,10 @@ nsLayoutStylesheetCache::InvalidateSheet(StyleSheetHandle::RefPtr* aGeckoSheet,
   if (gCSSLoader_Servo) {
     gCSSLoader_Servo->ObsoleteSheet(uri);
   }
-  if (aGeckoSheet) {
+  if (gotGeckoSheet) {
     *aGeckoSheet = nullptr;
   }
-  if (aServoSheet) {
+  if (gotServoSheet) {
     *aServoSheet = nullptr;
   }
 }

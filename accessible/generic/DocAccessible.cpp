@@ -1764,22 +1764,16 @@ DocAccessible::UpdateTreeOnInsertion(Accessible* aContainer)
 
   // Check to see if change occurred inside an alert, and fire an EVENT_ALERT
   // if it did.
-  if (!(updateFlags & eAlertAccessible)) {
-    // XXX: tree traversal is perf issue, accessible should know if they are
-    // children of alert accessible to avoid this.
+  if (!(updateFlags & eAlertAccessible) &&
+      (aContainer->IsAlert() || aContainer->IsInsideAlert())) {
     Accessible* ancestor = aContainer;
-    while (ancestor) {
-      if (ancestor->ARIARole() == roles::ALERT) {
+    do {
+      if (ancestor->IsAlert()) {
         FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, ancestor);
         break;
       }
-
-      // Don't climb above this document.
-      if (ancestor == this)
-        break;
-
-      ancestor = ancestor->Parent();
     }
+    while ((ancestor = ancestor->Parent()));
   }
 
   MaybeNotifyOfValueChange(aContainer);

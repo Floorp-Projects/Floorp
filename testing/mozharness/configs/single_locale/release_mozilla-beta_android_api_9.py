@@ -60,7 +60,7 @@ config = {
     "base_en_us_binary_url": EN_US_BINARY_URL,
     "upload_branch": "%s-android-api-9" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-9/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates",
+    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-9/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates %(post_upload_extra)s",
     "merge_locales": True,
     "mozilla_dir": MOZILLA_DIR,
     "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-9-10-constrained/l10n-release" % MOZILLA_DIR,

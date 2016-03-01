@@ -55,10 +55,8 @@ InitGlobals()
     }
 
     gInitialized = true;
-#if !defined(MOZILLA_XPCOMRT_API)
     Preferences::AddIntVarCache(&gMaxLength,
                                 "network.standard-url.max-length", 1048576);
-#endif
 }
 
 void
@@ -111,10 +109,6 @@ net_GetStdURLParser()
 nsresult
 net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("net_GetURLSpecFromDir not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
@@ -123,19 +117,14 @@ net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
     if (escPath.Last() != '/') {
         escPath += '/';
     }
-    
+
     result = escPath;
     return NS_OK;
-#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("net_GetURLSpecFromFile not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
@@ -152,10 +141,9 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
         if (NS_SUCCEEDED(rv) && dir)
             escPath += '/';
     }
-    
+
     result = escPath;
     return NS_OK;
-#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 //----------------------------------------------------------------------------
@@ -468,7 +456,6 @@ net_ResolveRelativePath(const nsACString &relativePath,
 // scheme fu
 //----------------------------------------------------------------------------
 
-#if !defined(MOZILLA_XPCOMRT_API)
 static bool isAsciiAlpha(char c) {
     return nsCRT::IsAsciiAlpha(c);
 }
@@ -482,17 +469,12 @@ net_IsValidSchemeChar(const char aChar)
     }
     return false;
 }
-#endif
 
 /* Extract URI-Scheme if possible */
 nsresult
 net_ExtractURLScheme(const nsACString &inURI,
                      nsACString& scheme)
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("net_ExtractURLScheme not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     Tokenizer p(inURI, "\r\n\t");
 
     while (p.CheckWhite() || p.CheckChar(' ')) {
@@ -516,7 +498,6 @@ net_ExtractURLScheme(const nsACString &inURI,
     p.Claim(scheme);
     scheme.StripChars("\r\n\t");
     return NS_OK;
-#endif
 }
 
 bool
@@ -542,7 +523,6 @@ net_IsValidScheme(const char *scheme, uint32_t schemeLen)
 bool
 net_IsAbsoluteURL(const nsACString& uri)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
     Tokenizer p(uri, "\r\n\t");
 
     while (p.CheckWhite() || p.CheckChar(' ')) {
@@ -571,7 +551,6 @@ net_IsAbsoluteURL(const nsACString& uri)
         // aSpec is really absolute. Ignore aBaseURI in this case
         return true;
     }
-#endif
     return false;
 }
 

@@ -913,7 +913,8 @@ BluetoothAvrcpManager::VolumeChangeNotification(uint8_t aVolume,
 }
 
 void
-BluetoothAvrcpManager::PassthroughCmdNotification(int aId, int aKeyState)
+BluetoothAvrcpManager::PassthroughCmdNotification(uint8_t aId,
+                                                  uint8_t aKeyState)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
