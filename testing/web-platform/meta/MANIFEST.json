@@ -15530,6 +15530,10 @@
         "url": "/fetch/api/redirect/redirect-mode.html"
       },
       {
+        "path": "fetch/api/request/request-cache.html",
+        "url": "/fetch/api/request/request-cache.html"
+      },
+      {
         "path": "fetch/api/request/request-clone.sub.html",
         "url": "/fetch/api/request/request-clone.sub.html"
       },
@@ -34734,6 +34738,13 @@
           {
             "path": "dom/collections/HTMLCollection-supported-property-indices.html",
             "url": "/dom/collections/HTMLCollection-supported-property-indices.html"
+          }
+        ],
+        "fetch/api/request/request-cache.html": [
+          {
+            "path": "fetch/api/request/request-cache.html",
+            "timeout": "long",
+            "url": "/fetch/api/request/request-cache.html"
           }
         ]
       }
