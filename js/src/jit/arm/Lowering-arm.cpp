@@ -339,6 +339,18 @@ LIRGeneratorARM::lowerModI(MMod* mod)
 }
 
 void
+LIRGeneratorARM::lowerDivI64(MDiv* div)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorARM::lowerModI64(MMod* mod)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 LIRGeneratorARM::visitPowHalf(MPowHalf* ins)
 {
     MDefinition* input = ins->input();

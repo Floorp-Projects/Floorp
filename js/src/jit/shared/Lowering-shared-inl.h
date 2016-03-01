@@ -74,6 +74,35 @@ LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y>* lir, MDefinition* m
 }
 
 template <size_t Ops, size_t Temps> void
+LIRGeneratorShared::defineInt64Fixed(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir, MDefinition* mir,
+                                     const LInt64Allocation& output)
+{
+    uint32_t vreg = getVirtualRegister();
+
+#if JS_BITS_PER_WORD == 64
+    LDefinition def(LDefinition::GENERAL, LDefinition::FIXED);
+    def.setOutput(output.value());
+    lir->setDef(0, def);
+    lir->getDef(0)->setVirtualRegister(vreg);
+#else
+    LDefinition def0(LDefinition::GENERAL, LDefinition::FIXED);
+    def0.setOutput(output.low());
+    lir->setDef(0, def0);
+    lir->getDef(0)->setVirtualRegister(vreg);
+
+    getVirtualRegister();
+    LDefinition def1(LDefinition::GENERAL, LDefinition::FIXED);
+    def1.setOutput(output.high());
+    lir->setDef(1, def1);
+    lir->getDef(1)->setVirtualRegister(vreg + 1);
+#endif
+
+    lir->setMir(mir);
+    mir->setVirtualRegister(vreg);
+    add(lir);
+}
+
+template <size_t Ops, size_t Temps> void
 LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand)
 {
     // The input should be used at the start of the instruction, to avoid moves.

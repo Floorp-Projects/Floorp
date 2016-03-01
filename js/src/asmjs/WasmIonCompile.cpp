@@ -2199,7 +2199,8 @@ EmitDivOrMod(FunctionCompiler& f, ExprType type, bool isDiv, bool isUnsigned, MD
 static bool
 EmitDivOrMod(FunctionCompiler& f, ExprType type, bool isDiv, MDefinition** def)
 {
-    MOZ_ASSERT(type != ExprType::I32, "int div or mod must precise signedness");
+    MOZ_ASSERT(type != ExprType::I32 && type != ExprType::I64,
+               "int div or mod must indicate signedness");
     return EmitDivOrMod(f, type, isDiv, false, def);
 }
 
@@ -2912,6 +2913,18 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitBitwise<MRsh>(f, ExprType::I64, def);
       case Expr::I64ShrU:
         return EmitBitwise<MUrsh>(f, ExprType::I64, def);
+      case Expr::I64Add:
+        return EmitAddOrSub(f, ExprType::I64, IsAdd(true), def);
+      case Expr::I64Sub:
+        return EmitAddOrSub(f, ExprType::I64, IsAdd(false), def);
+      case Expr::I64Mul:
+        return EmitMultiply(f, ExprType::I64, def);
+      case Expr::I64DivS:
+      case Expr::I64DivU:
+        return EmitDivOrMod(f, ExprType::I64, IsDiv(true), IsUnsigned(op == Expr::I64DivU), def);
+      case Expr::I64RemS:
+      case Expr::I64RemU:
+        return EmitDivOrMod(f, ExprType::I64, IsDiv(false), IsUnsigned(op == Expr::I64RemU), def);
       // F32
       case Expr::F32Const:
         return EmitLiteral(f, ExprType::F32, def);
@@ -3081,13 +3094,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-      case Expr::I64Add:
-      case Expr::I64Sub:
-      case Expr::I64Mul:
-      case Expr::I64DivS:
-      case Expr::I64DivU:
-      case Expr::I64RemS:
-      case Expr::I64RemU:
         MOZ_CRASH("NYI");
       case Expr::Unreachable:
         break;

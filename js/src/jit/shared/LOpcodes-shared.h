@@ -158,8 +158,11 @@
     _(NotO)                         \
     _(NotV)                         \
     _(AddI)                         \
+    _(AddI64)                       \
     _(SubI)                         \
+    _(SubI64)                       \
     _(MulI)                         \
+    _(MulI64)                       \
     _(MathD)                        \
     _(MathF)                        \
     _(DivI)                         \
