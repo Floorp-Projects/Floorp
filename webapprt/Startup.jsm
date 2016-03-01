@@ -9,6 +9,7 @@
 
 this.EXPORTED_SYMBOLS = ["startup"];
 
+const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
@@ -102,6 +103,43 @@ this.startup = function(window) {
     if (updatePending) {
       appUpdated = yield WebappRT.applyUpdate();
     }
+
+    const SHOW_DISABLE_WARNING_PREF = "webapprt.showDisableWarning";
+    let checkState = { value: Services.prefs.prefHasUserValue(SHOW_DISABLE_WARNING_PREF) ?
+                              Services.prefs.getBoolPref(SHOW_DISABLE_WARNING_PREF) : true };
+    if (checkState.value) {
+      const webappBundle = Services.strings.createBundle("chrome://webapprt/locale/webapp.properties");
+
+      let windowTitle = webappBundle.GetStringFromName("disable-warning.title");
+      let windowText = webappBundle.GetStringFromName("disable-warning.description");
+      let infoLabel = webappBundle.GetStringFromName("disable-warning.info.label");
+      let infoURL = webappBundle.GetStringFromName("disable-warning.info.url");
+      let showAgainLabel = webappBundle.GetStringFromName("disable-warning.show-again");
+
+      let buttonFlags = (Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_OK) +
+                        (Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_IS_STRING) +
+                        Services.prompt.BUTTON_POS_0_DEFAULT;
+
+      let rv = Services.prompt.confirmEx(
+        window,
+        windowTitle,
+        windowText,
+        buttonFlags,
+        null,
+        infoLabel,
+        null,
+        showAgainLabel,
+        checkState
+      );
+      if (rv === 1) {
+        var uri = Services.io.newURI(infoURL, null, null);
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+        getService(Ci.nsIExternalProtocolService).
+        getProtocolHandlerInfo(uri.scheme).
+        launchWithURI(uri);
+      }
+    }
+    Services.prefs.setBoolPref(SHOW_DISABLE_WARNING_PREF, checkState.value);
 
     yield WebappRT.configPromise;
 
