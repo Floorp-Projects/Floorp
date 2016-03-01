@@ -12,7 +12,6 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "mozilla/css/GroupRule.h"
@@ -1407,32 +1406,6 @@ CSSStyleSheet::SetEnabled(bool aEnabled)
     if (mDocument) {
       mDocument->SetStyleSheetApplicableState(this, !mDisabled);
     }
-  }
-}
-
-bool
-CSSStyleSheet::IsComplete() const
-{
-  return mInner->mComplete;
-}
-
-void
-CSSStyleSheet::SetComplete()
-{
-  NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
-  mInner->mComplete = true;
-  if (mDocument && !mDisabled) {
-    // Let the document know
-    mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(this, true);
-    mDocument->EndUpdate(UPDATE_STYLE);
-  }
-
-  if (mOwningNode && !mDisabled &&
-      mOwningNode->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-      mOwningNode->IsContent()) {
-    ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
-    shadowRoot->StyleSheetChanged();
   }
 }
 
