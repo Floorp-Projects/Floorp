@@ -4805,8 +4805,12 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(mVisIStartEdge >= 0, "illegal start edge");
   NS_ASSERTION(mVisIEndEdge >= 0, "illegal end edge");
-  f->PaintText(aCtx, ToReferenceFrame(), extraVisible, *this,
-               nullptr, nullptr, mOpacity);
+
+  nsPoint framePt = ToReferenceFrame();
+  nsTextFrame::PaintTextParams params(aCtx->ThebesContext());
+  params.framePt = gfxPoint(framePt.x, framePt.y);
+  params.dirtyRect = extraVisible;
+  f->PaintText(params, *this, mOpacity);
 }
 
 void
@@ -5921,41 +5925,39 @@ nsTextFrame::PaintOneShadow(Range aRange,
 // Paints selection backgrounds and text in the correct colors. Also computes
 // aAllTypes, the union of all selection types that are applying to this text.
 bool
-nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
-    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
-    const LayoutDeviceRect& aDirtyRect,
-    PropertyProvider& aProvider,
-    Range aContentRange,
-    nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
-    SelectionType* aAllTypes,
-    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-    nsTextFrame::DrawPathCallbacks* aCallbacks)
+nsTextFrame::PaintTextWithSelectionColors(
+    const PaintTextSelectionParams& aParams,
+    SelectionDetails* aDetails, SelectionType* aAllTypes,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges)
 {
+  const gfxTextRun::Range& contentRange = aParams.contentRange;
+
   // Figure out which selections control the colors to use for each character.
   AutoTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
   SelectionDetails** prevailingSelections =
-    prevailingSelectionsBuffer.AppendElements(aContentRange.Length(), fallible);
+    prevailingSelectionsBuffer.AppendElements(contentRange.Length(), fallible);
   if (!prevailingSelections) {
     return false;
   }
 
   SelectionType allTypes = 0;
-  for (uint32_t i = 0; i < aContentRange.Length(); ++i) {
+  for (uint32_t i = 0; i < contentRange.Length(); ++i) {
     prevailingSelections[i] = nullptr;
   }
 
   SelectionDetails *sdptr = aDetails;
   bool anyBackgrounds = false;
   while (sdptr) {
-    int32_t start = std::max(0, sdptr->mStart - int32_t(aContentRange.start));
-    int32_t end = std::min(int32_t(aContentRange.Length()),
-                           sdptr->mEnd - int32_t(aContentRange.start));
+    int32_t start = std::max(0, sdptr->mStart - int32_t(contentRange.start));
+    int32_t end = std::min(int32_t(contentRange.Length()),
+                           sdptr->mEnd - int32_t(contentRange.start));
     SelectionType type = sdptr->mType;
     if (start < end) {
       allTypes |= type;
       // Ignore selections that don't set colors
       nscolor foreground, background;
-      if (GetSelectionTextColors(type, aTextPaintStyle, sdptr->mTextRangeStyle,
+      if (GetSelectionTextColors(type, *aParams.textPaintStyle,
+                                 sdptr->mTextRangeStyle,
                                  &foreground, &background)) {
         if (NS_GET_A(background) > 0) {
           anyBackgrounds = true;
@@ -5980,78 +5982,81 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
 
   bool vertical = mTextRun->IsVertical();
   const gfxFloat startIOffset = vertical ?
-    aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
+    aParams.textBaselinePt.y - aParams.framePt.y :
+    aParams.textBaselinePt.x - aParams.framePt.x;
   gfxFloat iOffset, hyphenWidth;
   Range range; // in transformed string
   SelectionType type;
   TextRangeStyle rangeStyle;
   // Draw background colors
   if (anyBackgrounds) {
-    int32_t appUnitsPerDevPixel = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
-    SelectionIterator iterator(prevailingSelections, aContentRange,
-                               aProvider, mTextRun, startIOffset);
+    int32_t appUnitsPerDevPixel =
+      aParams.textPaintStyle->PresContext()->AppUnitsPerDevPixel();
+    SelectionIterator iterator(prevailingSelections, contentRange,
+                               *aParams.provider, mTextRun, startIOffset);
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                    &type, &rangeStyle)) {
       nscolor foreground, background;
-      GetSelectionTextColors(type, aTextPaintStyle, rangeStyle,
+      GetSelectionTextColors(type, *aParams.textPaintStyle, rangeStyle,
                              &foreground, &background);
       // Draw background color
       gfxFloat advance = hyphenWidth +
-        mTextRun->GetAdvanceWidth(range, &aProvider);
+        mTextRun->GetAdvanceWidth(range, aParams.provider);
       if (NS_GET_A(background) > 0) {
         nsRect bgRect;
         gfxFloat offs = iOffset - (mTextRun->IsInlineReversed() ? advance : 0);
         if (vertical) {
-          bgRect = nsRect(aFramePt.x, aFramePt.y + offs,
+          bgRect = nsRect(aParams.framePt.x, aParams.framePt.y + offs,
                           GetSize().width, advance);
         } else {
-          bgRect = nsRect(aFramePt.x + offs, aFramePt.y,
+          bgRect = nsRect(aParams.framePt.x + offs, aParams.framePt.y,
                           advance, GetSize().height);
         }
         PaintSelectionBackground(
-          *aCtx->GetDrawTarget(), background, aDirtyRect,
+          *aParams.context->GetDrawTarget(), background, aParams.dirtyRect,
           LayoutDeviceRect::FromAppUnits(bgRect, appUnitsPerDevPixel),
-          aCallbacks);
+          aParams.callbacks);
       }
       iterator.UpdateWithAdvance(advance);
     }
   }
 
   gfxFloat advance;
-  DrawTextParams params(aCtx);
-  params.dirtyRect = aDirtyRect;
-  params.framePt = aFramePt;
-  params.provider = &aProvider;
-  params.textStyle = &aTextPaintStyle;
+  DrawTextParams params(aParams.context);
+  params.dirtyRect = aParams.dirtyRect;
+  params.framePt = aParams.framePt;
+  params.provider = aParams.provider;
+  params.textStyle = aParams.textPaintStyle;
   params.clipEdges = &aClipEdges;
   params.advanceWidth = &advance;
-  params.callbacks = aCallbacks;
-  
+  params.callbacks = aParams.callbacks;
+
   // Draw text
   const nsStyleText* textStyle = StyleText();
-  SelectionIterator iterator(prevailingSelections, aContentRange,
-                             aProvider, mTextRun, startIOffset);
+  SelectionIterator iterator(prevailingSelections, contentRange,
+                             *aParams.provider, mTextRun, startIOffset);
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                  &type, &rangeStyle)) {
     nscolor foreground, background;
-    GetSelectionTextColors(type, aTextPaintStyle, rangeStyle,
+    GetSelectionTextColors(type, *aParams.textPaintStyle, rangeStyle,
                            &foreground, &background);
     gfxPoint textBaselinePt = vertical ?
-      gfxPoint(aTextBaselinePt.x, aFramePt.y + iOffset) :
-      gfxPoint(aFramePt.x + iOffset, aTextBaselinePt.y);
+      gfxPoint(aParams.textBaselinePt.x, aParams.framePt.y + iOffset) :
+      gfxPoint(aParams.framePt.x + iOffset, aParams.textBaselinePt.y);
 
     // Determine what shadow, if any, to draw - either from textStyle
     // or from the ::-moz-selection pseudo-class if specified there
     nsCSSShadowArray* shadow = textStyle->GetTextShadow();
-    GetSelectionTextShadow(this, type, aTextPaintStyle, &shadow);
+    GetSelectionTextShadow(this, type, *aParams.textPaintStyle, &shadow);
     if (shadow) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
         startEdge -= hyphenWidth +
-          mTextRun->GetAdvanceWidth(range, &aProvider);
+          mTextRun->GetAdvanceWidth(range, aParams.provider);
       }
-      PaintShadows(shadow, range, aDirtyRect, aFramePt, textBaselinePt,
-          startEdge, aProvider, foreground, aClipEdges, aCtx);
+      PaintShadows(
+        shadow, range, aParams.dirtyRect, aParams.framePt, textBaselinePt,
+        startEdge, *aParams.provider, foreground, aClipEdges, aParams.context);
     }
 
     // Draw text segment
@@ -6065,35 +6070,32 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
 }
 
 void
-nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
-    const gfxPoint& aFramePt,
-    const gfxPoint& aTextBaselinePt, const LayoutDeviceRect& aDirtyRect,
-    PropertyProvider& aProvider, Range aContentRange,
-    nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
-    SelectionType aSelectionType,
-    nsTextFrame::DrawPathCallbacks* aCallbacks)
+nsTextFrame::PaintTextSelectionDecorations(
+    const PaintTextSelectionParams& aParams,
+    SelectionDetails* aDetails, SelectionType aSelectionType)
 {
   // Hide text decorations if we're currently hiding @font-face fallback text
-  if (aProvider.GetFontGroup()->ShouldSkipDrawing())
+  if (aParams.provider->GetFontGroup()->ShouldSkipDrawing())
     return;
 
   // Figure out which characters will be decorated for this selection.
+  const gfxTextRun::Range& contentRange = aParams.contentRange;
   AutoTArray<SelectionDetails*, BIG_TEXT_NODE_SIZE> selectedCharsBuffer;
   SelectionDetails** selectedChars =
-    selectedCharsBuffer.AppendElements(aContentRange.Length(), fallible);
+    selectedCharsBuffer.AppendElements(contentRange.Length(), fallible);
   if (!selectedChars) {
     return;
   }
-  for (uint32_t i = 0; i < aContentRange.Length(); ++i) {
+  for (uint32_t i = 0; i < contentRange.Length(); ++i) {
     selectedChars[i] = nullptr;
   }
 
   SelectionDetails *sdptr = aDetails;
   while (sdptr) {
     if (sdptr->mType == aSelectionType) {
-      int32_t start = std::max(0, sdptr->mStart - int32_t(aContentRange.start));
-      int32_t end = std::min(int32_t(aContentRange.Length()),
-                             sdptr->mEnd - int32_t(aContentRange.start));
+      int32_t start = std::max(0, sdptr->mStart - int32_t(contentRange.start));
+      int32_t end = std::min(int32_t(contentRange.Length()),
+                             sdptr->mEnd - int32_t(contentRange.start));
       for (int32_t i = start; i < end; ++i) {
         selectedChars[i] = sdptr;
       }
@@ -6101,7 +6103,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     sdptr = sdptr->mNext;
   }
 
-  gfxFont* firstFont = aProvider.GetFontGroup()->GetFirstValidFont();
+  gfxFont* firstFont = aParams.provider->GetFontGroup()->GetFirstValidFont();
   bool verticalRun = mTextRun->IsVertical();
   bool rightUnderline = verticalRun && IsUnderlineRight(this);
   const uint8_t kDecoration =
@@ -6115,22 +6117,23 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     // The potential adjustment from using gfxFontGroup::GetUnderlineOffset
     // is only valid for horizontal font metrics.
     decorationMetrics.underlineOffset =
-      aProvider.GetFontGroup()->GetUnderlineOffset();
+      aParams.provider->GetFontGroup()->GetUnderlineOffset();
   }
 
-  gfxFloat startIOffset =
-    verticalRun ? aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
-  SelectionIterator iterator(selectedChars, aContentRange,
-                             aProvider, mTextRun, startIOffset);
+  gfxFloat startIOffset = verticalRun ?
+    aParams.textBaselinePt.y - aParams.framePt.y :
+    aParams.textBaselinePt.x - aParams.framePt.x;
+  SelectionIterator iterator(selectedChars, contentRange,
+                             *aParams.provider, mTextRun, startIOffset);
   gfxFloat iOffset, hyphenWidth;
   Range range;
-  int32_t app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+  int32_t app = aParams.textPaintStyle->PresContext()->AppUnitsPerDevPixel();
   // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
   Point pt;
   if (verticalRun) {
-    pt.x = (aTextBaselinePt.x - mAscent) / app;
+    pt.x = (aParams.textBaselinePt.x - mAscent) / app;
   } else {
-    pt.y = (aTextBaselinePt.y - mAscent) / app;
+    pt.y = (aParams.textBaselinePt.y - mAscent) / app;
   }
   gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
   SelectionType type;
@@ -6138,37 +6141,31 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                  &type, &selectedStyle)) {
     gfxFloat advance = hyphenWidth +
-      mTextRun->GetAdvanceWidth(range, &aProvider);
+      mTextRun->GetAdvanceWidth(range, aParams.provider);
     if (type == aSelectionType) {
       if (verticalRun) {
-        pt.y = (aFramePt.y + iOffset -
+        pt.y = (aParams.framePt.y + iOffset -
                (mTextRun->IsInlineReversed() ? advance : 0)) / app;
       } else {
-        pt.x = (aFramePt.x + iOffset -
+        pt.x = (aParams.framePt.x + iOffset -
                (mTextRun->IsInlineReversed() ? advance : 0)) / app;
       }
       gfxFloat width = Abs(advance) / app;
-      gfxFloat xInFrame = pt.x - (aFramePt.x / app);
-      DrawSelectionDecorations(aCtx, aDirtyRect, aSelectionType,
-                               aTextPaintStyle, selectedStyle, pt, xInFrame,
-                               width, mAscent / app, decorationMetrics,
-                               aCallbacks, verticalRun, decorationOffsetDir,
-                               kDecoration);
+      gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
+      DrawSelectionDecorations(
+        aParams.context, aParams.dirtyRect, aSelectionType,
+        *aParams.textPaintStyle, selectedStyle, pt, xInFrame,
+        width, mAscent / app, decorationMetrics, aParams.callbacks,
+        verticalRun, decorationOffsetDir, kDecoration);
     }
     iterator.UpdateWithAdvance(advance);
   }
 }
 
 bool
-nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
-    const gfxPoint& aFramePt,
-    const gfxPoint& aTextBaselinePt, const LayoutDeviceRect& aDirtyRect,
-    PropertyProvider& aProvider,
-    Range aContentRange,
-    nsTextPaintStyle& aTextPaintStyle,
-    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-    gfxTextContextPaint* aContextPaint,
-    nsTextFrame::DrawPathCallbacks* aCallbacks)
+nsTextFrame::PaintTextWithSelection(
+    const PaintTextSelectionParams& aParams,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges)
 {
   NS_ASSERTION(GetContent()->IsSelectionDescendant(), "wrong paint path");
 
@@ -6178,10 +6175,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   }
 
   SelectionType allTypes;
-  if (!PaintTextWithSelectionColors(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
-                                    aProvider, aContentRange,
-                                    aTextPaintStyle, details, &allTypes,
-                                    aClipEdges, aCallbacks)) {
+  if (!PaintTextWithSelectionColors(aParams, details, &allTypes, aClipEdges)) {
     DestroySelectionDetails(details);
     return false;
   }
@@ -6197,9 +6191,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
       // There is some selection of this type. Try to paint its decorations
       // (there might not be any for this type but that's OK,
       // PaintTextSelectionDecorations will exit early).
-      PaintTextSelectionDecorations(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
-                                    aProvider, aContentRange, aTextPaintStyle,
-                                    details, type, aCallbacks);
+      PaintTextSelectionDecorations(aParams, details, type);
     }
   }
 
@@ -6470,15 +6462,13 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
 }
 
 void
-nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
-                       const LayoutDeviceRect& aDirtyRect,
+nsTextFrame::PaintText(const PaintTextParams& aParams,
                        const nsCharClipDisplayItem& aItem,
-                       gfxTextContextPaint* aContextPaint,
-                       nsTextFrame::DrawPathCallbacks* aCallbacks,
                        float aOpacity /* = 1.0f */)
 {
-  // Don't pass in aRenderingContext here, because we need a *reference*
-  // context and aRenderingContext might have some transform in it
+  // Don't pass in the rendering context here, because we need a
+  // *reference* context and rendering context might have some transform
+  // in it
   // XXX get the block and line passed to us somehow! This is slow!
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
@@ -6492,27 +6482,28 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   // which should include trailing spaces if present (bug 1146754).
   provider.InitializeForDisplay(!aItem.mIsFrameSelected.value());
 
-  gfxContext* ctx = aRenderingContext->ThebesContext();
   const bool reversed = mTextRun->IsInlineReversed();
   const bool verticalRun = mTextRun->IsVertical();
   WritingMode wm = GetWritingMode();
-  const nscoord frameWidth = GetSize().width;
-  gfxPoint framePt(aPt.x, aPt.y);
+  const gfxFloat frameWidth = GetSize().width;
+  const gfxFloat frameHeight = GetSize().height;
   gfxPoint textBaselinePt;
   if (verticalRun) {
     if (wm.IsVerticalLR()) {
-      textBaselinePt.x =
-        nsLayoutUtils::GetSnappedBaselineX(this, ctx, aPt.x, mAscent);
+      textBaselinePt.x = nsLayoutUtils::GetSnappedBaselineX(
+        this, aParams.context, nscoord(aParams.framePt.x), mAscent);
     } else {
-      textBaselinePt.x =
-        nsLayoutUtils::GetSnappedBaselineX(this, ctx, aPt.x + frameWidth,
-                                           -mAscent);
+      textBaselinePt.x = nsLayoutUtils::GetSnappedBaselineX(
+        this, aParams.context, nscoord(aParams.framePt.x) + frameWidth,
+        -mAscent);
     }
-    textBaselinePt.y = reversed ? aPt.y + GetSize().height : aPt.y;
+    textBaselinePt.y = reversed ? aParams.framePt.y + frameHeight
+                                : aParams.framePt.y;
   } else {
     textBaselinePt =
-      gfxPoint(reversed ? gfxFloat(aPt.x + frameWidth) : framePt.x,
-               nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
+      gfxPoint(reversed ? aParams.framePt.x + frameWidth : aParams.framePt.x,
+               nsLayoutUtils::GetSnappedBaselineY(
+                 this, aParams.context, aParams.framePt.y, mAscent));
   }
   Range range = ComputeTransformedRange(provider);
   uint32_t startOffset = range.start;
@@ -6530,7 +6521,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   nsCharClipDisplayItem::ClipEdges clipEdges(aItem, snappedStartEdge,
                                              snappedEndEdge);
   nsTextPaintStyle textPaintStyle(this);
-  textPaintStyle.SetResolveColors(!aCallbacks);
+  textPaintStyle.SetResolveColors(!aParams.callbacks);
 
   // Fork off to the (slower) paint-with-selection path if necessary.
   if (aItem.mIsFrameSelected.value()) {
@@ -6539,9 +6530,12 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
     Range contentRange(
       uint32_t(tmp.ConvertSkippedToOriginal(startOffset)),
       uint32_t(tmp.ConvertSkippedToOriginal(startOffset + maxLength)));
-    if (PaintTextWithSelection(ctx, framePt, textBaselinePt, aDirtyRect,
-                               provider, contentRange, textPaintStyle,
-                               clipEdges, aContextPaint, aCallbacks)) {
+    PaintTextSelectionParams params(aParams);
+    params.textBaselinePt = textBaselinePt;
+    params.provider = &provider;
+    params.contentRange = contentRange;
+    params.textPaintStyle = &textPaintStyle;
+    if (PaintTextWithSelection(params, clipEdges)) {
       return;
     }
   }
@@ -6554,25 +6548,25 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   }
 
   range = Range(startOffset, startOffset + maxLength);
-  if (!aCallbacks) {
+  if (!aParams.callbacks) {
     const nsStyleText* textStyle = StyleText();
-    PaintShadows(
-        textStyle->mTextShadow, range, aDirtyRect, framePt, textBaselinePt,
-        snappedStartEdge, provider, foregroundColor, clipEdges, ctx);
+    PaintShadows(textStyle->mTextShadow, range, aParams.dirtyRect,
+                 aParams.framePt, textBaselinePt, snappedStartEdge,
+                 provider, foregroundColor, clipEdges, aParams.context);
   }
 
   gfxFloat advanceWidth;
-  DrawTextParams params(ctx);
-  params.dirtyRect = aDirtyRect;
-  params.framePt = framePt;
+  DrawTextParams params(aParams.context);
+  params.dirtyRect = aParams.dirtyRect;
+  params.framePt = aParams.framePt;
   params.provider = &provider;
   params.advanceWidth = &advanceWidth;
   params.textStyle = &textPaintStyle;
   params.textColor = foregroundColor;
   params.clipEdges = &clipEdges;
   params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
-  params.contextPaint = aContextPaint;
-  params.callbacks = aCallbacks;
+  params.contextPaint = aParams.contextPaint;
+  params.callbacks = aParams.callbacks;
   DrawText(range, textBaselinePt, params);
 }
 

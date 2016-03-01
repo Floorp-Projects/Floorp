@@ -391,6 +391,26 @@ public:
     virtual void NotifySelectionDecorationLinePathEmitted() { }
   };
 
+  struct PaintTextParams
+  {
+    gfxContext* context;
+    gfxPoint framePt;
+    LayoutDeviceRect dirtyRect;
+    gfxTextContextPaint* contextPaint = nullptr;
+    DrawPathCallbacks* callbacks = nullptr;
+    explicit PaintTextParams(gfxContext* aContext) : context(aContext) {}
+  };
+
+  struct PaintTextSelectionParams : PaintTextParams
+  {
+    gfxPoint textBaselinePt;
+    PropertyProvider* provider = nullptr;
+    Range contentRange;
+    nsTextPaintStyle* textPaintStyle = nullptr;
+    explicit PaintTextSelectionParams(const PaintTextParams& aParams)
+      : PaintTextParams(aParams) {}
+  };
+
   struct DrawTextRunParams
   {
     gfxContext* context;
@@ -419,52 +439,27 @@ public:
   // to generate paths rather than paint the frame's text by passing a callback
   // object.  The private DrawText() is what applies the text to a graphics
   // context.
-  void PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
-                 const LayoutDeviceRect& aDirtyRect,
+  void PaintText(const PaintTextParams& aParams,
                  const nsCharClipDisplayItem& aItem,
-                 gfxTextContextPaint* aContextPaint = nullptr,
-                 DrawPathCallbacks* aCallbacks = nullptr,
                  float aOpacity = 1.0f);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
   // the fast path.
-  bool PaintTextWithSelection(gfxContext* aCtx,
-                              const gfxPoint& aFramePt,
-                              const gfxPoint& aTextBaselinePt,
-                              const LayoutDeviceRect& aDirtyRect,
-                              PropertyProvider& aProvider,
-                              Range aRange,
-                              nsTextPaintStyle& aTextPaintStyle,
-                              const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                              gfxTextContextPaint* aContextPaint,
-                              DrawPathCallbacks* aCallbacks);
+  bool PaintTextWithSelection(const PaintTextSelectionParams& aParams,
+                              const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text with foreground and background colors determined
   // by selection(s). Also computes a mask of all selection types applying to
   // our text, returned in aAllTypes.
   // Return false if the text was not painted and we should continue with
   // the fast path.
-  bool PaintTextWithSelectionColors(gfxContext* aCtx,
-                                    const gfxPoint& aFramePt,
-                                    const gfxPoint& aTextBaselinePt,
-                                    const LayoutDeviceRect& aDirtyRect,
-                                    PropertyProvider& aProvider,
-                                    Range aContentRange,
-                                    nsTextPaintStyle& aTextPaintStyle,
+  bool PaintTextWithSelectionColors(const PaintTextSelectionParams& aParams,
                                     SelectionDetails* aDetails,
                                     SelectionType* aAllTypes,
-                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                                    DrawPathCallbacks* aCallbacks);
+                                    const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text decorations for text selected by aSelectionType
-  void PaintTextSelectionDecorations(gfxContext* aCtx,
-                                     const gfxPoint& aFramePt,
-                                     const gfxPoint& aTextBaselinePt,
-                                     const LayoutDeviceRect& aDirtyRect,
-                                     PropertyProvider& aProvider,
-                                     Range aContentRange,
-                                     nsTextPaintStyle& aTextPaintStyle,
+  void PaintTextSelectionDecorations(const PaintTextSelectionParams& aParams,
                                      SelectionDetails* aDetails,
-                                     SelectionType aSelectionType,
-                                     DrawPathCallbacks* aCallbacks);
+                                     SelectionType aSelectionType);
 
   void DrawEmphasisMarks(gfxContext* aContext,
                          mozilla::WritingMode aWM,
