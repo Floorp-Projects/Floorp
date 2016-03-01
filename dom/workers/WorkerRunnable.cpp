@@ -312,19 +312,23 @@ WorkerRunnable::Run()
   // http://www.whatwg.org/specs/web-apps/current-work/#run-a-worker
   // If we don't have a globalObject we have to use an AutoJSAPI instead, but
   // this is OK as we won't be running script in these circumstances.
-  Maybe<mozilla::dom::AutoJSAPI> jsapi;
+  Maybe<mozilla::dom::AutoJSAPI> maybeJSAPI;
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
+  AutoJSAPI* jsapi;
   if (globalObject) {
     aes.emplace(globalObject, "Worker runnable",
                 isMainThread,
                 isMainThread ? nullptr : GetCurrentThreadJSContext());
+    jsapi = aes.ptr();
     cx = aes->cx();
   } else {
-    jsapi.emplace();
-    jsapi->Init();
+    maybeJSAPI.emplace();
+    maybeJSAPI->Init();
+    jsapi = maybeJSAPI.ptr();
     cx = jsapi->cx();
   }
+  jsapi->TakeOwnershipOfErrorReporting();
 
   // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
   // existing, since it may in fact have been GCed (and we may be one of the
@@ -367,9 +371,10 @@ WorkerRunnable::Run()
     ac.emplace(cx, mWorkerPrivate->GetWrapper());
   }
 
+  MOZ_ASSERT(!jsapi->HasException());
   result = WorkerRun(cx, mWorkerPrivate);
-  MOZ_ASSERT_IF(result, !JS_IsExceptionPending(cx));
-  JS_ReportPendingException(cx);
+  MOZ_ASSERT_IF(result, !jsapi->HasException());
+  jsapi->ReportException();
 
   // We can't even assert that this didn't create our global, since in the case
   // of CompileScriptRunnable it _does_.
@@ -393,7 +398,7 @@ WorkerRunnable::Run()
   // (CompileScriptRunnable) it actually doesn't matter which compartment we're
   // in for PostRun.
   PostRun(cx, mWorkerPrivate, result);
-  MOZ_ASSERT(!JS_IsExceptionPending(cx));
+  MOZ_ASSERT(!jsapi->HasException());
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }

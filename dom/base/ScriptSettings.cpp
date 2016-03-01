@@ -548,6 +548,7 @@ AutoJSAPI::ReportException()
     }
   } else {
     NS_WARNING("OOMed while acquiring uncaught exception from JSAPI");
+    ClearException();
   }
 }
 
