@@ -165,7 +165,7 @@ listener.prototype.QueryInterface =
       return this;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
   };
 
 listener.prototype.notify =

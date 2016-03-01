@@ -28,7 +28,7 @@ badCertListener.prototype = {
       return this;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
   },
   handle_test_result: function () {
     if (gSSLStatus) {
