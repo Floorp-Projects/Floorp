@@ -61,7 +61,7 @@ exports.ZipWriter = function (zipPath, mode) {
 
     let nsfile = createNsFile(filePath);
     if (!nsfile.exists()) {
-      reject(new Error("This file doesn't exists : " + nsfile.path));
+      reject(new Error("This file doesn't exist: " + nsfile.path));
       return promise;
     }
 

@@ -611,6 +611,14 @@ public:
   }
 
   /**
+   * Set the mixed content object subrequest flag for this document.
+   */
+  void SetHasMixedContentObjectSubrequest(bool aHasMixedContentObjectSubrequest)
+  {
+    mHasMixedContentObjectSubrequest = aHasMixedContentObjectSubrequest;
+  }
+
+  /**
    * Get tracking content blocked flag for this document.
    */
   bool GetHasTrackingContentBlocked()
@@ -954,7 +962,8 @@ public:
    * @param aSheet the sheet to get the index of
    * @return aIndex the index of the sheet in the full list
    */
-  virtual int32_t GetIndexOfStyleSheet(mozilla::StyleSheetHandle aSheet) const = 0;
+  virtual int32_t GetIndexOfStyleSheet(
+      const mozilla::StyleSheetHandle aSheet) const = 0;
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in
@@ -998,7 +1007,7 @@ public:
                                            mozilla::StyleSheetHandle aSheet) = 0;
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType,
                                           nsIURI* sheetURI) = 0;
-  virtual mozilla::StyleSheetHandle FirstAdditionalAuthorSheet() = 0;
+  virtual mozilla::StyleSheetHandle GetFirstAdditionalAuthorSheet() = 0;
 
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
@@ -2906,6 +2915,9 @@ protected:
 
   // True if a document has blocked Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
   bool mHasMixedDisplayContentBlocked : 1;
+
+  // True if a document loads a plugin object that attempts to load mixed content subresources through necko(see nsMixedContentBlocker.cpp)
+  bool mHasMixedContentObjectSubrequest : 1;
 
   // True if a document has blocked Tracking Content
   bool mHasTrackingContentBlocked : 1;

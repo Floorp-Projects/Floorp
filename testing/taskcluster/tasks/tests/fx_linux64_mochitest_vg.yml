@@ -4,13 +4,11 @@ $inherits:
 task:
   scopes:
     - 'docker-worker:capability:device:loopbackVideo'
-    - 'docker-worker:capability:device:loopbackAudio'
   payload:
     maxRunTime: 28800
     capabilities:
       devices:
         loopbackVideo: true
-        loopbackAudio: true
     command:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}

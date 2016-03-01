@@ -1776,7 +1776,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
     mScriptLoader.mRv.MightThrowJSException();
     if (NS_FAILED(loadInfo.mLoadResult)) {
-      scriptloader::ReportLoadError(aCx, mScriptLoader.mRv,
+      scriptloader::ReportLoadError(mScriptLoader.mRv,
                                     loadInfo.mLoadResult, loadInfo.mURL);
       // Top level scripts only!
       if (mIsWorkerScript) {
@@ -1897,7 +1897,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     }
   }
 
-  aWorkerPrivate->RemoveFeature(aCx, &mScriptLoader);
+  aWorkerPrivate->RemoveFeature(&mScriptLoader);
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
 }
 
@@ -1933,7 +1933,7 @@ ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
 }
 
 void
-LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+LoadAllScripts(WorkerPrivate* aWorkerPrivate,
                nsTArray<ScriptLoadInfo>& aLoadInfos, bool aIsMainScript,
                WorkerScriptType aWorkerScriptType, ErrorResult& aRv)
 {
@@ -1949,7 +1949,7 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
-  if (!aWorkerPrivate->AddFeature(aCx, loader)) {
+  if (!aWorkerPrivate->AddFeature(loader)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1957,7 +1957,7 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (NS_FAILED(NS_DispatchToMainThread(loader))) {
     NS_ERROR("Failed to dispatch!");
 
-    aWorkerPrivate->RemoveFeature(aCx, loader);
+    aWorkerPrivate->RemoveFeature(loader);
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2019,7 +2019,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
   return getter->GetResult();
 }
 
-void ReportLoadError(JSContext* aCx, ErrorResult& aRv, nsresult aLoadResult,
+void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
                      const nsAString& aScriptURL)
 {
   MOZ_ASSERT(!aRv.Failed());
@@ -2072,23 +2072,21 @@ void ReportLoadError(JSContext* aCx, ErrorResult& aRv, nsresult aLoadResult,
 }
 
 void
-LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
+LoadMainScript(WorkerPrivate* aWorkerPrivate,
+               const nsAString& aScriptURL,
                WorkerScriptType aWorkerScriptType,
                ErrorResult& aRv)
 {
-  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
-  NS_ASSERTION(worker, "This should never be null!");
-
   nsTArray<ScriptLoadInfo> loadInfos;
 
   ScriptLoadInfo* info = loadInfos.AppendElement();
   info->mURL = aScriptURL;
 
-  LoadAllScripts(aCx, worker, loadInfos, true, aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, loadInfos, true, aWorkerScriptType, aRv);
 }
 
 void
-Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+Load(WorkerPrivate* aWorkerPrivate,
      const nsTArray<nsString>& aScriptURLs, WorkerScriptType aWorkerScriptType,
      ErrorResult& aRv)
 {
@@ -2110,7 +2108,7 @@ Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
     loadInfos[index].mURL = aScriptURLs[index];
   }
 
-  LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false, aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, loadInfos, false, aWorkerScriptType, aRv);
 }
 
 } // namespace scriptloader

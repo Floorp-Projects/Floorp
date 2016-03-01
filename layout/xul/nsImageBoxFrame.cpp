@@ -345,6 +345,13 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
+  // Don't draw if the image's size isn't available.
+  uint32_t imgStatus;
+  if (!NS_SUCCEEDED(mImageRequest->GetImageStatus(&imgStatus)) ||
+      !(imgStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+    return DrawResult::NOT_READY;
+  }
+
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 

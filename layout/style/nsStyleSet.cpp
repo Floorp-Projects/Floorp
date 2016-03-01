@@ -752,10 +752,10 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
           break;
         }
       }
-      MOZ_ASSERT(!aDocument->FirstAdditionalAuthorSheet() ||
-                 aDocument->FirstAdditionalAuthorSheet()->IsGecko(),
+      MOZ_ASSERT(!aDocument->GetFirstAdditionalAuthorSheet() ||
+                 aDocument->GetFirstAdditionalAuthorSheet()->IsGecko(),
                  "why do we have a ServoStyleSheet for an nsStyleSet?");
-      if (sheet == aDocument->FirstAdditionalAuthorSheet()->GetAsGecko()) {
+      if (sheet == aDocument->GetFirstAdditionalAuthorSheet()->GetAsGecko()) {
         break;
       }
     }

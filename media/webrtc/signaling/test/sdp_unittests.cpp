@@ -1143,7 +1143,7 @@ const std::string kBasicAudioVideoOffer =
 "c=IN IP4 0.0.0.0" CRLF
 "a=mid:first" CRLF
 "a=rtpmap:109 opus/48000/2" CRLF
-"a=fmtp:109 maxplaybackrate=32000" CRLF
+"a=fmtp:109 maxplaybackrate=32000;stereo=1" CRLF
 "a=ptime:20" CRLF
 "a=maxptime:20" CRLF
 "a=rtpmap:9 G722/8000" CRLF
@@ -1505,7 +1505,7 @@ const std::string kH264AudioVideoOffer =
 "a=rtpmap:0 PCMU/8000" CRLF
 "a=rtpmap:8 PCMA/8000" CRLF
 "a=rtpmap:101 telephone-event/8000" CRLF
-"a=fmtp:109 maxplaybackrate=32000" CRLF
+"a=fmtp:109 maxplaybackrate=32000;stereo=1" CRLF
 "a=ice-ufrag:00000000" CRLF
 "a=ice-pwd:0000000000000000000000000000000" CRLF
 "a=sendonly" CRLF
@@ -1566,6 +1566,7 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
     static_cast<SdpFmtpAttributeList::OpusParameters*>(
         audio_format_params[0].parameters.get());
   ASSERT_EQ(32000U, opus_parameters->maxplaybackrate);
+  ASSERT_EQ(1U, opus_parameters->stereo);
 
   ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
       SdpAttribute::kFmtpAttribute));

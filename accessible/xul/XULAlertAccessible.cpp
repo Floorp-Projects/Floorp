@@ -19,6 +19,7 @@ XULAlertAccessible::
   XULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mGenericTypes |= eAlert;
 }
 
 XULAlertAccessible::~XULAlertAccessible()

@@ -17,6 +17,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ProxyObject.h"
 
 #include "jsscriptinlines.h"
 
@@ -2210,17 +2211,26 @@ IonBuilder::inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappi
     bool result = false;
     switch (types->forAllClasses(constraints(), IsTypedArrayClass)) {
       case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-      case TemporaryTypeSet::ForAllResult::EMPTY: {
         // Wrapped typed arrays won't appear to be typed arrays per a
         // |forAllClasses| query.  If wrapped typed arrays are to be considered
         // typed arrays, a negative answer is not conclusive.  Don't inline in
         // that case.
-        if (wrappingBehavior == AllowWrappedTypedArrays)
-            return InliningStatus_NotInlined;
+        if (wrappingBehavior == AllowWrappedTypedArrays) {
+            switch (types->forAllClasses(constraints(), IsProxyClass)) {
+              case TemporaryTypeSet::ForAllResult::ALL_FALSE:
+              case TemporaryTypeSet::ForAllResult::EMPTY:
+                break;
+              case TemporaryTypeSet::ForAllResult::ALL_TRUE:
+              case TemporaryTypeSet::ForAllResult::MIXED:
+                return InliningStatus_NotInlined;
+            }
+        }
 
+        MOZ_FALLTHROUGH;
+
+      case TemporaryTypeSet::ForAllResult::EMPTY:
         result = false;
         break;
-      }
 
       case TemporaryTypeSet::ForAllResult::ALL_TRUE:
         result = true;

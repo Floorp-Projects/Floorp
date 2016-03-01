@@ -109,6 +109,7 @@
 #include "nsIScriptError.h"
 #include "mozilla/EventForwards.h"
 #include "nsDeviceContext.h"
+#include "FrameLayerBuilder.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -2830,8 +2831,7 @@ TabChild::DidComposite(uint64_t aTransactionId,
   MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
                LayersBackend::LAYERS_CLIENT);
 
-  ClientLayerManager *manager =
-    static_cast<ClientLayerManager*>(mPuppetWidget->GetLayerManager());
+  ClientLayerManager *manager = mPuppetWidget->GetLayerManager()->AsClientLayerManager();
 
   manager->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
 }
@@ -2864,9 +2864,33 @@ TabChild::ClearCachedResources()
   MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
                LayersBackend::LAYERS_CLIENT);
 
-  ClientLayerManager *manager =
-    static_cast<ClientLayerManager*>(mPuppetWidget->GetLayerManager());
+  ClientLayerManager *manager = mPuppetWidget->GetLayerManager()->AsClientLayerManager();
   manager->ClearCachedResources();
+}
+
+void
+TabChild::InvalidateLayers()
+{
+  MOZ_ASSERT(mPuppetWidget);
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager());
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
+               LayersBackend::LAYERS_CLIENT);
+
+  RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+  FrameLayerBuilder::InvalidateAllLayers(lm);
+}
+
+void
+TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
+{
+  gfxPlatform::GetPlatform()->UpdateRenderModeIfDeviceReset();
+
+  RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+  ClientLayerManager* clm = lm->AsClientLayerManager();
+
+  mTextureFactoryIdentifier = aNewIdentifier;
+  clm->UpdateTextureFactoryIdentifier(aNewIdentifier);
+  FrameLayerBuilder::InvalidateAllLayers(clm);
 }
 
 NS_IMETHODIMP

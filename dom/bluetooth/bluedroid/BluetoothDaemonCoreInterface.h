@@ -244,18 +244,18 @@ private:
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
     NotificationHandlerWrapper, void, BluetoothStatus, int,
-    nsAutoArrayPtr<BluetoothProperty>, BluetoothStatus, int,
+    UniquePtr<BluetoothProperty[]>, BluetoothStatus, int,
     const BluetoothProperty*>
     AdapterPropertiesNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable4<
     NotificationHandlerWrapper, void, BluetoothStatus, BluetoothAddress, int,
-    nsAutoArrayPtr<BluetoothProperty>, BluetoothStatus,
+    UniquePtr<BluetoothProperty[]>, BluetoothStatus,
     const BluetoothAddress&, int, const BluetoothProperty*>
     RemoteDevicePropertiesNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, int, nsAutoArrayPtr<BluetoothProperty>,
+    NotificationHandlerWrapper, void, int, UniquePtr<BluetoothProperty[]>,
     int, const BluetoothProperty*>
     DeviceFoundNotification;
 
@@ -288,7 +288,7 @@ private:
     AclStateChangedNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, uint16_t, nsAutoArrayPtr<uint8_t>,
+    NotificationHandlerWrapper, void, uint16_t, UniquePtr<uint8_t[]>,
     uint8_t, uint16_t, const uint8_t*>
     DutModeRecvNotification;
 

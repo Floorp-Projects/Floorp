@@ -476,6 +476,7 @@ gfxPlatform::gfxPlatform()
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
   , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)
   , mScreenDepth(0)
+  , mDeviceCounter(0)
 {
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mFallbackUsesCmaps = UNINITIALIZED_VALUE;
@@ -891,24 +892,6 @@ gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aS
   aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget.forget();
 }
-
-// This is a temporary function used by ContentClient to build a DrawTarget
-// around the gfxASurface. This should eventually be replaced by plumbing
-// the DrawTarget through directly
-already_AddRefed<DrawTarget>
-gfxPlatform::CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const IntSize& aSize)
-{
-#ifdef XP_MACOSX
-  // this is a bit of a hack that assumes that the buffer associated with the CGContext
-  // will live around long enough that nothing bad will happen.
-  if (aSurface->GetType() == gfxSurfaceType::Quartz) {
-    return Factory::CreateDrawTargetForCairoCGContext(static_cast<gfxQuartzSurface*>(aSurface)->GetCGContext(), aSize);
-  }
-#endif
-  MOZ_CRASH("GFX: unused function");
-  return nullptr;
-}
-
 
 cairo_user_data_key_t kSourceSurface;
 
@@ -2380,4 +2363,10 @@ bool
 gfxPlatform::SupportsApzDragInput() const
 {
   return gfxPrefs::APZDragEnabled();
+}
+
+void
+gfxPlatform::BumpDeviceCounter()
+{
+  mDeviceCounter++;
 }

@@ -19,4 +19,4 @@ assertEq(frameThis, 33);
 g.eval("var bar = function() { }; bar.call(22);");
 assertEq(typeof evalThis.return, "object");
 assertEq(evalThis.return.unsafeDereference().valueOf(), 22);
-assertEq(frameThis.optimizedOut, true); // Frame.this currently doesn't box missing primitive this.
+assertEq(frameThis.unsafeDereference().valueOf(), 22);

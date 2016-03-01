@@ -491,7 +491,7 @@ public:
     MOZ_COUNT_DTOR(IDBOpenDBRequest::WorkerFeature);
 
     if (mWorkerPrivate) {
-      mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+      mWorkerPrivate->RemoveFeature(this);
     }
   }
 
@@ -572,11 +572,8 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    JSContext* cx = workerPrivate->GetJSContext();
-    MOZ_ASSERT(cx);
-
     nsAutoPtr<WorkerFeature> feature(new WorkerFeature(workerPrivate));
-    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, feature))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(feature))) {
       feature->NoteAddFeatureFailed();
       return nullptr;
     }

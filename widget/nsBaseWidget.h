@@ -487,6 +487,9 @@ protected:
 
   nsIDocument* GetDocument() const;
 
+  // Notify the compositor that a device reset has occurred.
+  void OnRenderingDeviceReset();
+
 protected:
   /**
    * Starts the OMTC compositor destruction sequence.
