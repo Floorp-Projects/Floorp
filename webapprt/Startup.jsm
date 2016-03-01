@@ -113,8 +113,12 @@ this.startup = function(window) {
       let windowTitle = webappBundle.GetStringFromName("disable-warning.title");
       let windowText = webappBundle.GetStringFromName("disable-warning.description");
       let infoLabel = webappBundle.GetStringFromName("disable-warning.info.label");
-      let infoURL = webappBundle.GetStringFromName("disable-warning.info.url");
       let showAgainLabel = webappBundle.GetStringFromName("disable-warning.show-again");
+
+      // Hard-code the URL to the SUMO article, because SUMO will take care
+      // of directing users to the locale-appropriate version (or the en-US
+      // version if there isn't a version for the user's locale).
+      let infoURL = "https://support.mozilla.org/kb/runtime";
 
       let buttonFlags = (Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_OK) +
                         (Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_IS_STRING) +
