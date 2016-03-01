@@ -12,6 +12,7 @@
 #include "MediaCodec.h"
 #include "WebrtcMediaCodecVP8VideoCodec.h"
 #include "AndroidJNIWrapper.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"

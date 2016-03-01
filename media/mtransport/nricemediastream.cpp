@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "logging.h"
 #include "nsError.h"
+#include "mozilla/Scoped.h"
 
 // nICEr includes
 extern "C" {
@@ -168,13 +169,13 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
 // Make an NrIceCandidate from the candidate |cand|.
 // This is not a member fxn because we want to hide the
 // defn of nr_ice_candidate but we pass by reference.
-static UniquePtr<NrIceCandidate> MakeNrIceCandidate(const nr_ice_candidate& candc) {
-  UniquePtr<NrIceCandidate> out(new NrIceCandidate());
+static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
+  ScopedDeletePtr<NrIceCandidate> out(new NrIceCandidate());
 
-  if (!ToNrIceCandidate(candc, out.get())) {
+  if (!ToNrIceCandidate(candc, out)) {
     return nullptr;
   }
-  return out;
+  return out.forget();
 }
 
 // NrIceMediaStream
@@ -258,8 +259,8 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate) {
 
 // Returns NS_ERROR_NOT_AVAILABLE if component is unpaired or disabled.
 nsresult NrIceMediaStream::GetActivePair(int component,
-                                         UniquePtr<NrIceCandidate>* localp,
-                                         UniquePtr<NrIceCandidate>* remotep) {
+                                         NrIceCandidate **localp,
+                                         NrIceCandidate **remotep) {
   int r;
   nr_ice_candidate *local_int;
   nr_ice_candidate *remote_int;
@@ -279,20 +280,20 @@ nsresult NrIceMediaStream::GetActivePair(int component,
   if (r)
     return NS_ERROR_FAILURE;
 
-  UniquePtr<NrIceCandidate> local(
+  ScopedDeletePtr<NrIceCandidate> local(
       MakeNrIceCandidate(*local_int));
   if (!local)
     return NS_ERROR_FAILURE;
 
-  UniquePtr<NrIceCandidate> remote(
+  ScopedDeletePtr<NrIceCandidate> remote(
       MakeNrIceCandidate(*remote_int));
   if (!remote)
     return NS_ERROR_FAILURE;
 
   if (localp)
-    *localp = Move(local);
+    *localp = local.forget();
   if (remotep)
-    *remotep = Move(remote);
+    *remotep = remote.forget();
 
   return NS_OK;
 }

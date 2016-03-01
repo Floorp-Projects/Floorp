@@ -1688,19 +1688,19 @@ class SignalingAgentTest : public ::testing::Test {
   }
 
   bool CreateAgent(const std::string stun_addr, uint16_t stun_port) {
-    UniquePtr<SignalingAgent> agent(
+    ScopedDeletePtr<SignalingAgent> agent(
         new SignalingAgent("agent", stun_addr, stun_port));
 
     agent->Init();
 
-    agents_.push_back(agent.release());
+    agents_.push_back(agent.forget());
 
     return true;
   }
 
   void CreateAgentNoInit() {
-    UniquePtr<SignalingAgent> agent(new SignalingAgent("agent"));
-    agents_.push_back(agent.release());
+    ScopedDeletePtr<SignalingAgent> agent(new SignalingAgent("agent"));
+    agents_.push_back(agent.forget());
   }
 
   SignalingAgent *agent(size_t i) {
@@ -1749,8 +1749,8 @@ public:
     if (init_)
       return;
 
-    a1_ = MakeUnique<SignalingAgent>(callerName, stun_addr_, stun_port_);
-    a2_ = MakeUnique<SignalingAgent>(calleeName, stun_addr_, stun_port_);
+    a1_ = new SignalingAgent(callerName, stun_addr_, stun_port_);
+    a2_ = new SignalingAgent(calleeName, stun_addr_, stun_port_);
 
     if (GetParam() == "no_bundle") {
       a1_->SetBundleEnabled(false);
@@ -2170,8 +2170,8 @@ public:
 
  protected:
   bool init_;
-  UniquePtr<SignalingAgent> a1_;  // Canonically "caller"
-  UniquePtr<SignalingAgent> a2_;  // Canonically "callee"
+  ScopedDeletePtr<SignalingAgent> a1_;  // Canonically "caller"
+  ScopedDeletePtr<SignalingAgent> a2_;  // Canonically "callee"
   std::string stun_addr_;
   uint16_t stun_port_;
 };
