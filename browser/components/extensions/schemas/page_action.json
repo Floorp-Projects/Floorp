@@ -12,9 +12,21 @@
           "page_action": {
             "type": "object",
             "properties": {
-              "default_title": { "type": "string", "optional": true },
-              "default_icon": { "$ref": "IconPath", "optional": true },
-              "default_popup": { "type": "string", "format": "relativeUrl", "optional": true }
+              "default_title": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "default_icon": {
+                "$ref": "IconPath",
+                "optional": true
+              },
+              "default_popup": {
+                "type": "string",
+                "format": "relativeUrl",
+                "optional": true,
+                "preprocess": "localize"
+              }
             },
             "optional": true
           }

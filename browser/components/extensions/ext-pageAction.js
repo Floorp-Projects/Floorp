@@ -19,18 +19,11 @@ function PageAction(options, extension) {
 
   this.tabManager = TabManager.for(extension);
 
-  let title = extension.localize(options.default_title || "");
-  let popup = extension.localize(options.default_popup || "");
-  if (popup) {
-    popup = extension.baseURI.resolve(popup);
-  }
-
   this.defaults = {
     show: false,
-    title: title || extension.name,
-    icon: IconDetails.normalize({path: options.default_icon}, extension,
-                                null, true),
-    popup: popup && extension.baseURI.resolve(popup),
+    title: options.default_title || extension.name,
+    icon: IconDetails.normalize({path: options.default_icon}, extension),
+    popup: options.default_popup || "",
   };
 
   this.tabContext = new TabContext(tab => Object.create(this.defaults),

@@ -55,15 +55,20 @@ add_task(function* testInvalidDefaultLocale() {
     },
   });
 
-  equal(extension.errors.length, 0, "No errors reported");
-
-  yield extension.initAllLocales();
-
   equal(extension.errors.length, 1, "One error reported");
 
   do_print(`Got error: ${extension.errors[0]}`);
 
-  ok(extension.errors[0].includes('"default_locale" property must correspond'),
+  ok(extension.errors[0].includes("Loading locale file _locales/en/messages.json"),
+     "Got invalid default_locale error");
+
+  yield extension.initAllLocales();
+
+  equal(extension.errors.length, 2, "Two errors reported");
+
+  do_print(`Got error: ${extension.errors[1]}`);
+
+  ok(extension.errors[1].includes('"default_locale" property must correspond'),
      "Got invalid default_locale error");
 });
 
@@ -75,15 +80,20 @@ add_task(function* testUnexpectedDefaultLocale() {
     },
   });
 
-  equal(extension.errors.length, 0, "No errors reported");
-
-  yield extension.initAllLocales();
-
   equal(extension.errors.length, 1, "One error reported");
 
   do_print(`Got error: ${extension.errors[0]}`);
 
-  ok(extension.errors[0].includes('"default_locale" property must correspond'),
+  ok(extension.errors[0].includes("Loading locale file _locales/en-US/messages.json"),
+     "Got invalid default_locale error");
+
+  yield extension.initAllLocales();
+
+  equal(extension.errors.length, 2, "One error reported");
+
+  do_print(`Got error: ${extension.errors[1]}`);
+
+  ok(extension.errors[1].includes('"default_locale" property must correspond'),
      "Got unexpected default_locale error");
 });
 
@@ -99,14 +109,19 @@ add_task(function* testInvalidSyntax() {
     },
   });
 
-  equal(extension.errors.length, 0, "No errors reported");
-
-  yield extension.initAllLocales();
-
-  equal(extension.errors.length, 1, "One error reported");
+  equal(extension.errors.length, 1, "No errors reported");
 
   do_print(`Got error: ${extension.errors[0]}`);
 
   ok(extension.errors[0].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
+     "Got syntax error");
+
+  yield extension.initAllLocales();
+
+  equal(extension.errors.length, 2, "One error reported");
+
+  do_print(`Got error: ${extension.errors[1]}`);
+
+  ok(extension.errors[1].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
      "Got syntax error");
 });
