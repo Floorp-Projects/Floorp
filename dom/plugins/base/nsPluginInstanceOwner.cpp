@@ -327,6 +327,21 @@ nsPluginInstanceOwner::GetCurrentImageSize()
   return size;
 }
 
+bool
+nsPluginInstanceOwner::UpdateScrollState(bool aIsScrolling)
+{
+#if defined(XP_WIN)
+  if (!mInstance) {
+    return false;
+  }
+  mScrollState = aIsScrolling;
+  nsresult rv = mInstance->UpdateScrollState(aIsScrolling);
+  return NS_SUCCEEDED(rv);
+#else
+  return false;
+#endif
+}
+
 nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
   // create nsPluginNativeWindow object, it is derived from NPWindow
@@ -374,6 +389,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mGotCompositionData = false;
   mSentStartComposition = false;
   mPluginDidNotHandleIMEComposition = false;
+  mScrollState = false;
 #endif
 }
 

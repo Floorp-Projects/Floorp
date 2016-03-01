@@ -779,7 +779,8 @@ nsPluginFrame::SetScrollVisibility(bool aState)
     mIsHiddenDueToScroll = aState;
     // Force a paint so plugin window visibility gets flushed via
     // the compositor.
-    if (changed) {
+    if (changed && mInstanceOwner) {
+      mInstanceOwner->UpdateScrollState(mIsHiddenDueToScroll);
       SchedulePaint();
     }
   }
