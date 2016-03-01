@@ -1631,7 +1631,7 @@ public class LocalBrowserDB implements BrowserDB {
         // that inside out topsites SQL query would be difficult given the other processing we're already doing there).
         final int blanksRequired = suggestedRangeLimit - topSitesCursor.getCount();
 
-        if (blanksRequired < 0) {
+        if (blanksRequired <= 0) {
             return topSitesCursor;
         }
 
