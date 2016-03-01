@@ -15,8 +15,8 @@ namespace mozilla {
 class WorkerTimelineMarker : public TimelineMarker
 {
 public:
-  explicit WorkerTimelineMarker(ProfileTimelineWorkerOperationType aOperationType,
-                                MarkerTracingType aTracingType)
+  WorkerTimelineMarker(ProfileTimelineWorkerOperationType aOperationType,
+                       MarkerTracingType aTracingType)
     : TimelineMarker("Worker", aTracingType, MarkerStackRequest::NO_STACK)
     , mOperationType(aOperationType)
   {}

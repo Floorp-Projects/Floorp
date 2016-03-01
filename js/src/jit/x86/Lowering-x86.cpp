@@ -421,6 +421,18 @@ LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
 }
 
 void
+LIRGeneratorX86::lowerDivI64(MDiv* div)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorX86::lowerModI64(MMod* mod)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 LIRGeneratorX86::visitSubstr(MSubstr* ins)
 {
     // Due to lack of registers on x86, we reuse the string register as

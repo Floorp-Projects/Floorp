@@ -1505,6 +1505,12 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     break;
   }
 
+  // If any user trimming policy is in effect, use the trimmed URI.
+  if (userReferrerTrimmingPolicy) {
+    rv = NS_NewURI(getter_AddRefs(clone), spec);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   // finally, remember the referrer URI and set the Referer header.
   rv = SetRequestHeader(NS_LITERAL_CSTRING("Referer"), spec, false);
   if (NS_FAILED(rv)) return rv;

@@ -30,12 +30,12 @@ private:
   void operator=(const AbstractTimelineMarker& aOther) = delete;
 
 public:
-  explicit AbstractTimelineMarker(const char* aName,
-                                  MarkerTracingType aTracingType);
+  AbstractTimelineMarker(const char* aName,
+                         MarkerTracingType aTracingType);
 
-  explicit AbstractTimelineMarker(const char* aName,
-                                  const TimeStamp& aTime,
-                                  MarkerTracingType aTracingType);
+  AbstractTimelineMarker(const char* aName,
+                         const TimeStamp& aTime,
+                         MarkerTracingType aTracingType);
 
   virtual ~AbstractTimelineMarker();
 

@@ -326,8 +326,6 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   MOZ_COUNT_DTOR(MediaDecoderStateMachine);
 
-  mReader = nullptr;
-
 #ifdef XP_WIN
   timeEndPeriod(1);
 #endif

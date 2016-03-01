@@ -19,5 +19,17 @@ toolkit.jar:
    res/arrowd.gif       (arrowd.gif)
    res/arrowd-left.gif  (arrowd-left.gif)
    res/arrowd-right.gif (arrowd-right.gif)
+   res/accessiblecaret-normal@1x.png         (res/accessiblecaret-normal@1x.png)
+   res/accessiblecaret-normal@1.5x.png       (res/accessiblecaret-normal@1.5x.png)
+   res/accessiblecaret-normal@2x.png         (res/accessiblecaret-normal@2x.png)
+   res/accessiblecaret-normal@2.25x.png      (res/accessiblecaret-normal@2.25x.png)
+   res/accessiblecaret-tilt-left@1x.png      (res/accessiblecaret-tilt-left@1x.png)
+   res/accessiblecaret-tilt-left@1.5x.png    (res/accessiblecaret-tilt-left@1.5x.png)
+   res/accessiblecaret-tilt-left@2x.png      (res/accessiblecaret-tilt-left@2x.png)
+   res/accessiblecaret-tilt-left@2.25x.png   (res/accessiblecaret-tilt-left@2.25x.png)
+   res/accessiblecaret-tilt-right@1x.png     (res/accessiblecaret-tilt-right@1x.png)
+   res/accessiblecaret-tilt-right@1.5x.png   (res/accessiblecaret-tilt-right@1.5x.png)
+   res/accessiblecaret-tilt-right@2x.png     (res/accessiblecaret-tilt-right@2x.png)
+   res/accessiblecaret-tilt-right@2.25x.png  (res/accessiblecaret-tilt-right@2.25x.png)
 
 % resource gre-resources %res/

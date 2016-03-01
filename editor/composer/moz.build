@@ -27,18 +27,6 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 RESOURCE_FILES += [
-    'res/accessiblecaret.png',
-    'res/accessiblecaret@1.5x.png',
-    'res/accessiblecaret@2.25x.png',
-    'res/accessiblecaret@2x.png',
-    'res/accessiblecaret_tilt_left.png',
-    'res/accessiblecaret_tilt_left@1.5x.png',
-    'res/accessiblecaret_tilt_left@2.25x.png',
-    'res/accessiblecaret_tilt_left@2x.png',
-    'res/accessiblecaret_tilt_right.png',
-    'res/accessiblecaret_tilt_right@1.5x.png',
-    'res/accessiblecaret_tilt_right@2.25x.png',
-    'res/accessiblecaret_tilt_right@2x.png',
     'res/EditorOverride.css',
     'res/grabber.gif',
     'res/table-add-column-after-active.gif',

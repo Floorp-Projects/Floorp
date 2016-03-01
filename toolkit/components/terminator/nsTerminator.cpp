@@ -33,6 +33,12 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#if defined(XP_WIN)
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
@@ -127,7 +133,6 @@ RunWatchdog(void* arg)
   options = nullptr;
 
   const uint32_t timeToLive = crashAfterTicks;
-  const PRIntervalTime ticksDuration = PR_MillisecondsToInterval(1000);
   while (true) {
     //
     // We do not want to sleep for the entire duration,
@@ -139,7 +144,11 @@ RunWatchdog(void* arg)
     // we have lost at most one second, which is much
     // more reasonable.
     //
-    PR_Sleep(ticksDuration);
+#if defined(XP_WIN)
+    Sleep(1000 /* ms */);
+#else
+    usleep(1000000 /* usec */);
+#endif
 
     if (gHeartbeat++ < timeToLive) {
       continue;
