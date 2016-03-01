@@ -212,12 +212,10 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  // Drop reference to mReader and mResource. Only called during shutdown dance.
+  // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mReader) {
-      mReader->BreakCycles();
-    }
+    mReader->BreakCycles();
     mResource = nullptr;
   }
 
@@ -248,17 +246,11 @@ public:
   bool IsRealTime() const { return mRealTime; }
 
   size_t SizeOfVideoQueue() {
-    if (mReader) {
-      return mReader->SizeOfVideoQueueInBytes();
-    }
-    return 0;
+    return mReader->SizeOfVideoQueueInBytes();
   }
 
   size_t SizeOfAudioQueue() {
-    if (mReader) {
-      return mReader->SizeOfAudioQueueInBytes();
-    }
-    return 0;
+    return mReader->SizeOfAudioQueueInBytes();
   }
 
 private:
