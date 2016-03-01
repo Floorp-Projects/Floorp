@@ -12,7 +12,6 @@ assertEq(gcstate(), "none");
 // sized slices while background finalization is on-going, so we need to loop.
 gcslice(1000000);
 while (gcstate() == "finalize") { gcslice(1); }
-while (gcstate() == "decommit") { gcslice(1); }
 assertEq(gcstate(), "none");
 
 // Incremental GC in multiple slices: if marking takes more than one slice,
@@ -24,7 +23,6 @@ gcslice(1000000);
 assertEq(gcstate(), "mark");
 gcslice(1000000);
 while (gcstate() == "finalize") { gcslice(1); }
-while (gcstate() == "decommit") { gcslice(1); }
 assertEq(gcstate(), "none");
 
 // Zeal mode 8: Incremental GC in two main slices:
@@ -36,7 +34,6 @@ gcslice(1);
 assertEq(gcstate(), "mark");
 gcslice(1);
 while (gcstate() == "finalize") { gcslice(1); }
-while (gcstate() == "decommit") { gcslice(1); }
 assertEq(gcstate(), "none");
 
 // Zeal mode 9: Incremental GC in two main slices:
@@ -48,7 +45,6 @@ gcslice(1);
 assertEq(gcstate(), "mark");
 gcslice(1);
 while (gcstate() == "finalize") { gcslice(1); }
-while (gcstate() == "decommit") { gcslice(1); }
 assertEq(gcstate(), "none");
 
 // Zeal mode 10: Incremental GC in multiple slices (always yeilds before
@@ -59,5 +55,4 @@ gcslice(1000000);
 assertEq(gcstate(), "sweep");
 gcslice(1000000);
 while (gcstate() == "finalize") { gcslice(1); }
-while (gcstate() == "decommit") { gcslice(1); }
 assertEq(gcstate(), "none");
