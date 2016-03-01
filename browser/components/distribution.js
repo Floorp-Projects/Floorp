@@ -15,6 +15,7 @@ const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -322,27 +323,24 @@ DistributionCustomizer.prototype = {
     if (!(globalPrefs["id"] && globalPrefs["version"] && globalPrefs["about"]))
       return this._checkCustomizationComplete();
 
-    let defaults = this._prefSvc.getDefaultBranch(null);
+    let defaults = new Preferences({defaultBranch: true});
 
     // Global really contains info we set as prefs.  They're only
     // separate because they are "special" (read: required)
 
-    defaults.setCharPref("distribution.id", this._ini.getString("Global", "id"));
-    defaults.setCharPref("distribution.version",
-                         this._ini.getString("Global", "version"));
+    defaults.set("distribution.id", this._ini.getString("Global", "id"));
+    defaults.set("distribution.version", this._ini.getString("Global", "version"));
 
-    let partnerAbout = Cc["@mozilla.org/supports-string;1"].
-      createInstance(Ci.nsISupportsString);
+    let partnerAbout;
     try {
       if (globalPrefs["about." + this._locale]) {
-        partnerAbout.data = this._ini.getString("Global", "about." + this._locale);
+        partnerAbout = this._ini.getString("Global", "about." + this._locale);
       } else if (globalPrefs["about." + this._language]) {
-        partnerAbout.data = this._ini.getString("Global", "about." + this._language);
+        partnerAbout = this._ini.getString("Global", "about." + this._language);
       } else {
-        partnerAbout.data = this._ini.getString("Global", "about");
+        partnerAbout = this._ini.getString("Global", "about");
       }
-      defaults.setComplexValue("distribution.about",
-                               Ci.nsISupportsString, partnerAbout);
+      defaults.set("distribution.about", partnerAbout);
     } catch (e) {
       /* ignore bad prefs due to bug 895473 and move on */
       Cu.reportError(e);
@@ -352,27 +350,10 @@ DistributionCustomizer.prototype = {
       for (let key of enumerate(this._ini.getKeys("Preferences"))) {
         try {
           let value = parseValue(this._ini.getString("Preferences", key));
-          switch (typeof value) {
-          case "boolean":
-            defaults.setBoolPref(key, value);
-            break;
-          case "number":
-            defaults.setIntPref(key, value);
-            break;
-          case "string":
-            defaults.setCharPref(key, value);
-            break;
-          case "undefined":
-            defaults.setCharPref(key, value);
-            break;
-          }
+          Preferences.set(key, value);
         } catch (e) { /* ignore bad prefs and move on */ }
       }
     }
-
-    // We eval() the localizable prefs as well (even though they'll
-    // always get set as a string) to keep the INI format consistent:
-    // string prefs always need to be in quotes
 
     let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
       createInstance(Ci.nsIPrefLocalizedString);
@@ -385,7 +366,7 @@ DistributionCustomizer.prototype = {
           let value = parseValue(this._ini.getString("LocalizablePreferences-" + this._locale, key));
           if (value !== undefined) {
             localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
+            defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
           usedLocalizablePreferences.push(key);
         } catch (e) { /* ignore bad prefs and move on */ }
@@ -401,7 +382,7 @@ DistributionCustomizer.prototype = {
           let value = parseValue(this._ini.getString("LocalizablePreferences-" + this._language, key));
           if (value !== undefined) {
             localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
+            defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
           usedLocalizablePreferences.push(key);
         } catch (e) { /* ignore bad prefs and move on */ }
@@ -419,7 +400,7 @@ DistributionCustomizer.prototype = {
             value = value.replace(/%LOCALE%/g, this._locale);
             value = value.replace(/%LANGUAGE%/g, this._language);
             localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
+            defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
         } catch (e) { /* ignore bad prefs and move on */ }
       }
