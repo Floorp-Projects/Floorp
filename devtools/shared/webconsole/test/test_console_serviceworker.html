@@ -56,6 +56,7 @@ let startTest = Task.async(function*() {
 
   yield new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.enabled", true],
       ["devtools.webconsole.filter.serviceworkers", true]
     ]}, resolve);
   });
