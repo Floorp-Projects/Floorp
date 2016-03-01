@@ -3700,7 +3700,6 @@ MOZ_ANDROID_BEAM=
 MOZ_LOCALE_SWITCHER=
 MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
-MOZ_ANDROID_GCM=
 MOZ_ANDROID_MLS_STUMBLER=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
@@ -3855,14 +3854,6 @@ MOZ_ARG_WITH_STRING(adjust-sdk-keyfile,
 [  --with-adjust-sdk-keyfile=file   Use the app token contained in the given keyfile for Adjust SDK requests],
   MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN=`cat $withval`)
 AC_SUBST(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)
-
-# Allow specifying a GCM sender ID key file that contains the sender ID used for
-# GCM requests.  Note that GCM sender IDs are not sensitive: see, for example,
-# http://stackoverflow.com/a/18216063.
-MOZ_ARG_WITH_STRING(gcm-senderid-keyfile,
-[  --with-gcm-senderid-keyfile=file GCM sender ID for GCM requests],
-  MOZ_ANDROID_GCM_SENDERID=`cat $withval`)
-AC_SUBST(MOZ_ANDROID_GCM_SENDERID)
 
 # Whether this APK is destined for resource constrained devices.
 # We want this in mobile/android/confvars.sh, so it goes early.
@@ -8576,7 +8567,9 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 # set, it falls back to a Mozilla-specific value derived from the
 # build ID.
 # - MOZ_ANDROID_SHARED_ID: On Android, "android:sharedUserId" for all Android
-# - packages produced.
+# packages produced.
+# - MOZ_ANDROID_GCM_SENDERID: On Android, the Android GCM Sender ID used.  GCM
+# sender IDs are not sensitive: see, http://stackoverflow.com/a/18216063.
 # - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
 
 if test -z "$MOZ_APP_NAME"; then
@@ -8634,6 +8627,7 @@ AC_SUBST(MOZ_APP_PROFILE)
 AC_SUBST(MOZ_APP_ID)
 AC_SUBST(MOZ_APP_ANDROID_VERSION_CODE)
 AC_SUBST(MOZ_ANDROID_SHARED_ID)
+AC_SUBST(MOZ_ANDROID_GCM_SENDERID)
 AC_SUBST(MAR_CHANNEL_ID)
 AC_SUBST(ACCEPTED_MAR_CHANNEL_IDS)
 AC_SUBST(MOZ_PROFILE_MIGRATOR)
