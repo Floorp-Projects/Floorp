@@ -181,11 +181,17 @@ html, body, #app, #memory-tool {
   color: var(--theme-body-color);
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
+  cursor: default;
 }
 
 .snapshot-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+}
+
+.snapshot-list-item.selected ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
 }
 
 .snapshot-list-item .snapshot-info {
@@ -365,6 +371,7 @@ html, body, #app, #memory-tool {
 .tree-node {
   height: var(--heap-tree-row-height);
   line-height: var(--heap-tree-row-height);
+  cursor: default;
 }
 
 .children-pointer {
@@ -395,6 +402,11 @@ html, body, #app, #memory-tool {
 .heap-tree-item.focused {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+}
+
+.heap-tree-item.focused ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
 }
 
 .heap-tree-item-bytes,
