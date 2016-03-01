@@ -559,15 +559,6 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
   }
 }
 
-void
-ErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
-{
-  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
-  MOZ_ASSERT(worker);
-
-  return worker->ReportError(aCx, aMessage, aReport);
-}
-
 bool
 InterruptCallback(JSContext* aCx)
 {
@@ -811,8 +802,6 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     NS_WARNING("Could not create new context!");
     return nullptr;
   }
-
-  JS_SetErrorReporter(aRuntime, ErrorReporter);
 
   JS_SetInterruptCallback(aRuntime, InterruptCallback);
 
