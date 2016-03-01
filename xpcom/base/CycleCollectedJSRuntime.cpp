@@ -454,12 +454,6 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   NS_RELEASE(mOwningThread);
 }
 
-static void
-MozCrashErrorReporter(JSContext*, const char*, JSErrorReport*)
-{
-  MOZ_CRASH("Why is someone touching JSAPI without an AutoJSAPI?");
-}
-
 nsresult
 CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
                                     uint32_t aMaxBytes,
@@ -503,9 +497,6 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   JS_SetContextCallback(mJSRuntime, ContextCallback, this);
   JS_SetDestroyZoneCallback(mJSRuntime, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSRuntime, XPCStringConvert::ClearZoneCache);
-  // XPCJSRuntime currently overrides this because we don't
-  // TakeOwnershipOfErrorReporting everwhere on the main thread yet.
-  JS_SetErrorReporter(mJSRuntime, MozCrashErrorReporter);
 
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth
