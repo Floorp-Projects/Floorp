@@ -349,9 +349,10 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
     mAutoNullableCompartment.emplace(mCx, aGlobal);
   }
 
+  JSRuntime* rt = JS_GetRuntime(aCx);
+  mOldErrorReporter.emplace(JS_GetErrorReporter(rt));
+
   if (aIsMainThread) {
-    JSRuntime* rt = JS_GetRuntime(aCx);
-    mOldErrorReporter.emplace(JS_GetErrorReporter(rt));
     JS_SetErrorReporter(rt, xpc::SystemErrorReporter);
   }
 }
@@ -465,8 +466,21 @@ AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
 void
 WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aRep)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
+  if (!NS_IsMainThread()) {
+    // Reporting a warning on workers is a bit complicated because we have to
+    // climb our parent chain until we get to the main thread.  So go ahead and
+    // just go through the worker ReportError codepath here.
+    //
+    // That said, it feels like we should be able to short-circuit things a bit
+    // here by posting an appropriate runnable to the main thread directly...
+    // Worth looking into sometime.
+    workers::WorkerPrivate* worker = workers::GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(worker);
+
+    worker->ReportError(aCx, aMessage, aRep);
+    return;
+  }
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   nsGlobalWindow* win = xpc::CurrentWindowOrNull(aCx);
@@ -484,13 +498,7 @@ AutoJSAPI::TakeOwnershipOfErrorReporting()
   JSRuntime *rt = JS_GetRuntime(cx());
   mOldAutoJSAPIOwnsErrorReporting = JS::ContextOptionsRef(cx()).autoJSAPIOwnsErrorReporting();
   JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(true);
-  // Workers have their own error reporting mechanism which deals with warnings
-  // as well, so don't change the worker error reporter for now.  Once we switch
-  // all of workers to TakeOwnershipOfErrorReporting(), we will just make the
-  // default worker error reporter assert that it only sees warnings.
-  if (mIsMainThread) {
-    JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
-  }
+  JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
 }
 
 void
