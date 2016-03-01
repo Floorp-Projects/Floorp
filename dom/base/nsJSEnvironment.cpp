@@ -1437,6 +1437,11 @@ TimeUntilNow(TimeStamp start)
 
 struct CycleCollectorStats
 {
+  MOZ_CONSTEXPR CycleCollectorStats() :
+    mMaxGCDuration(0), mRanSyncForgetSkippable(false), mSuspected(0),
+    mMaxSkippableDuration(0), mMaxSliceTime(0), mMaxSliceTimeSinceClear(0),
+    mTotalSliceTime(0), mAnyLockedOut(false), mExtraForgetSkippableCalls(0) {}
+
   void Init()
   {
     Clear();
