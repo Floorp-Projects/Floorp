@@ -16,6 +16,7 @@ const TAB_URL = HTTP_ROOT + "service-workers/empty-sw.html";
 add_task(function* () {
   yield new Promise(done => {
     let options = {"set": [
+      ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
