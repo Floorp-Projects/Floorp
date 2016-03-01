@@ -45,14 +45,16 @@ static ModuleRep sModuleMap[] = {
 
   { "events", logging::eEvents },
   { "platforms", logging::ePlatforms },
-  { "stack", logging::eStack },
   { "text", logging::eText },
   { "tree", logging::eTree },
 
   { "DOMEvents", logging::eDOMEvents },
   { "focus", logging::eFocus },
   { "selection", logging::eSelection },
-  { "notifications", logging::eNotifications }
+  { "notifications", logging::eNotifications },
+
+  { "stack", logging::eStack },
+  { "verbose", logging::eVerbose }
 };
 
 static void
@@ -607,6 +609,61 @@ logging::SelChange(nsISelection* aSelection, DocAccessible* aDocument,
 }
 
 void
+logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...)
+{
+  if (IsEnabledAll(logging::eTree | aExtraFlags)) {
+    MsgBegin("TREE", aMsg);
+
+    va_list vl;
+    va_start(vl, aExtraFlags);
+    const char* descr = nullptr;
+    while ((descr = va_arg(vl, const char*))) {
+      AccessibleInfo(descr, va_arg(vl, Accessible*));
+    }
+    va_end(vl);
+
+    MsgEnd();
+
+    if (aExtraFlags & eStack) {
+      Stack();
+    }
+  }
+}
+
+void
+logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
+                  const char* aMsg1, Accessible* aAcc,
+                  const char* aMsg2, nsINode* aNode)
+{
+  if (IsEnabledAll(logging::eTree | logging::eVerbose)) {
+    MsgBegin("TREE", aMsg);
+    AccessibleInfo(aMsg1, aAcc);
+    Accessible* acc = aAcc->Document()->GetAccessible(aNode);
+    if (acc) {
+      AccessibleInfo(aMsg2, acc);
+    }
+    else {
+      Node(aMsg2, aNode);
+    }
+    MsgEnd();
+  }
+}
+
+
+void
+logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, Accessible* aParent)
+{
+  if (IsEnabledAll(logging::eTree | aExtraFlags)) {
+    MsgBegin("TREE", aMsg);
+    AccessibleInfo("container", aParent);
+    for (uint32_t idx = 0; idx < aParent->ChildCount(); idx++) {
+      AccessibleInfo("child", aParent->GetChildAt(idx));
+    }
+    MsgEnd();
+  }
+}
+
+void
 logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
 {
   printf("\nA11Y %s: ", aTitle);
@@ -737,6 +794,62 @@ logging::Document(DocAccessible* aDocument)
 }
 
 void
+logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible)
+{
+  printf("    %s: %p; ", aDescr, static_cast<void*>(aAccessible));
+  if (!aAccessible) {
+    printf("\n");
+    return;
+  }
+  if (aAccessible->IsDefunct()) {
+    printf("defunct\n");
+    return;
+  }
+  if (!aAccessible->Document() || aAccessible->Document()->IsDefunct()) {
+    printf("document is shutting down, no info\n");
+    return;
+  }
+
+  nsAutoString role;
+  GetAccService()->GetStringRole(aAccessible->Role(), role);
+  printf("role: %s", NS_ConvertUTF16toUTF8(role).get());
+
+  nsAutoString name;
+  aAccessible->Name(name);
+  if (!name.IsEmpty()) {
+    printf(", name: '%s'", NS_ConvertUTF16toUTF8(name).get());
+  }
+
+  printf(", idx: %d", aAccessible->IndexInParent());
+
+  nsINode* node = aAccessible->GetNode();
+  if (!node) {
+    printf(", node: null\n");
+  }
+  else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
+    printf(", document node: %p\n", static_cast<void*>(node));
+  }
+  else if (node->IsNodeOfType(nsINode::eTEXT)) {
+    printf(", text node: %p\n", static_cast<void*>(node));
+  }
+  else if (node->IsElement()) {
+    dom::Element* el = node->AsElement();
+
+    nsAutoCString tag;
+    el->NodeInfo()->NameAtom()->ToUTF8String(tag);
+
+    nsIAtom* idAtom = el->GetID();
+    nsAutoCString id;
+    if (idAtom) {
+      idAtom->ToUTF8String(id);
+    }
+
+    printf(", element node: %p, %s@id='%s'\n",
+           static_cast<void*>(el), tag.get(), id.get());
+  }
+}
+
+void
 logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible)
 {
   printf("    %s: %p; ", aDescr, static_cast<void*>(aAccessible));
@@ -812,6 +925,12 @@ bool
 logging::IsEnabled(uint32_t aModules)
 {
   return sModules & aModules;
+}
+
+bool
+logging::IsEnabledAll(uint32_t aModules)
+{
+  return (sModules & aModules) == aModules;
 }
 
 bool
