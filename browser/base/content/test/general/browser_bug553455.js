@@ -9,6 +9,8 @@ const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
+const { REQUIRE_SIGNING } = Cu.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+
 var rootDir = getRootDirectory(gTestPath);
 var path = rootDir.split('/');
 var chromeName = path[0] + '//' + path[2];
@@ -205,7 +207,7 @@ function test_disabled_install() {
   });
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -254,7 +256,7 @@ function test_blocked_install() {
   });
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -296,7 +298,7 @@ function test_whitelisted_install() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "amosigned.xpi"
   }));
   let originalTab = gBrowser.selectedTab;
   let tab = gBrowser.addTab();
@@ -458,7 +460,7 @@ function test_multiple() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": "unsigned.xpi",
+    "Unsigned XPI": "amosigned.xpi",
     "Restartless XPI": "restartless.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
@@ -547,7 +549,8 @@ function test_someunverified() {
   // This test is only relevant if using the new doorhanger UI and allowing
   // unsigned add-ons
   if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
-      Preferences.get("xpinstall.signatures.required", true)) {
+      Preferences.get("xpinstall.signatures.required", true) ||
+      REQUIRE_SIGNING) {
     runNextTest();
     return;
   }
@@ -593,7 +596,7 @@ function test_someunverified() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Extension XPI": "restartless.xpi",
+    "Extension XPI": "restartless-unsigned.xpi",
     "Theme XPI": "theme.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
@@ -604,7 +607,8 @@ function test_allunverified() {
   // This test is only relevant if using the new doorhanger UI and allowing
   // unsigned add-ons
   if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
-      Preferences.get("xpinstall.signatures.required", true)) {
+      Preferences.get("xpinstall.signatures.required", true) ||
+      REQUIRE_SIGNING) {
     runNextTest();
     return;
   }
@@ -641,7 +645,7 @@ function test_allunverified() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Extension XPI": "restartless.xpi"
+    "Extension XPI": "restartless-unsigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -675,7 +679,7 @@ function test_url() {
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    gBrowser.loadURI(TESTROOT + "unsigned.xpi");
+    gBrowser.loadURI(TESTROOT + "amosigned.xpi");
   });
 },
 
@@ -737,7 +741,7 @@ function test_tabclose() {
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    gBrowser.loadURI(TESTROOT + "unsigned.xpi");
+    gBrowser.loadURI(TESTROOT + "amosigned.xpi");
   });
 },
 
@@ -774,7 +778,7 @@ function test_tabnavigate() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Extension XPI": "unsigned.xpi"
+    "Extension XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -795,7 +799,7 @@ function test_urlbar() {
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    gURLBar.value = TESTROOT + "unsigned.xpi";
+    gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
     EventUtils.synthesizeKey("VK_RETURN", {});
   });
@@ -869,7 +873,7 @@ function test_reload() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Unsigned XPI": "unsigned.xpi"
+    "Unsigned XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -951,7 +955,7 @@ function test_renotify_blocked() {
   });
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -1006,7 +1010,7 @@ function test_renotify_installed() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -1064,7 +1068,7 @@ function test_cancel() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "slowinstall.sjs?file=unsigned.xpi"
+    "XPI": "slowinstall.sjs?file=amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -1074,7 +1078,7 @@ function test_failed_security() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   setup_redirect({
-    "Location": TESTROOT + "unsigned.xpi"
+    "Location": TESTROOT + "amosigned.xpi"
   });
 
   // Wait for the blocked notification

@@ -141,6 +141,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         localVideoDimensions: {},
         remoteVideoDimensions: {},
         screenSharingState: SCREEN_SHARE_STATES.INACTIVE,
+        sharingPaused: false,
         receivingScreenShare: false,
         // Any urls (aka context) associated with the room.
         roomContextUrls: null,
@@ -264,6 +265,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         "videoDimensionsChanged",
         "startBrowserShare",
         "endScreenShare",
+        "toggleBrowserSharing",
         "updateSocialShareInfo",
         "connectionStatus",
         "mediaConnected"
@@ -924,10 +926,19 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         console.error("Unexpectedly received windowId for browser sharing when pending");
       }
 
-      // The browser being shared changed, so update to the new context
+      // Only update context if sharing is not paused and there's somebody.
+      if (!this.getStoreState().sharingPaused && this._hasParticipants()) {
+        this._checkTabContext();
+      }
+    },
+
+    /**
+     * Get the current tab context to update the room context.
+     */
+    _checkTabContext: function() {
       loop.request("GetSelectedTabMetadata").then(function(meta) {
-        // Avoid sending the event if there is no data nor participants nor url
-        if (!meta || !meta.url || !this._hasParticipants()) {
+        // Avoid sending the event if there is no data nor url.
+        if (!meta || !meta.url) {
           return;
         }
 
@@ -986,6 +997,22 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         this.dispatchAction(new sharedActions.ScreenSharingState({
           state: SCREEN_SHARE_STATES.INACTIVE
         }));
+      }
+    },
+
+    /**
+     * Handle browser sharing being enabled or disabled.
+     *
+     * @param {sharedActions.ToggleBrowserSharing} actionData
+     */
+    toggleBrowserSharing: function(actionData) {
+      this.setStoreState({
+        sharingPaused: !actionData.enabled
+      });
+
+      // If unpausing, check the context as it might have changed.
+      if (actionData.enabled) {
+        this._checkTabContext();
       }
     },
 
