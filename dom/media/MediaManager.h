@@ -30,7 +30,6 @@
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Logging.h"
-#include "mozilla/UniquePtr.h"
 #include "DOMMediaStream.h"
 
 #ifdef MOZ_WEBRTC
@@ -502,7 +501,7 @@ private:
   already_AddRefed<PledgeChar>
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,
-      RefPtr<media::Refcountable<UniquePtr<SourceSet>>>& aSources);
+      RefPtr<media::Refcountable<ScopedDeletePtr<SourceSet>>>& aSources);
 
   StreamListeners* AddWindowID(uint64_t aWindowId);
   WindowTable *GetActiveWindows() {
@@ -551,7 +550,7 @@ private:
 #endif
 public:
   media::CoatCheck<media::Pledge<nsCString>> mGetOriginKeyPledges;
-  UniquePtr<media::Parent<media::NonE10s>> mNonE10sParent;
+  ScopedDeletePtr<media::Parent<media::NonE10s>> mNonE10sParent;
 };
 
 } // namespace mozilla

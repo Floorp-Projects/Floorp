@@ -15,6 +15,7 @@
 #include "sigslot.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/Scoped.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
