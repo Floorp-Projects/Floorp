@@ -11,6 +11,7 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
+const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
@@ -249,12 +250,16 @@ function* finishTests() {
 
     let windows = getAllWindows(content);
     for (let win of windows) {
+      win.localStorage.clear();
+      win.sessionStorage.clear();
+
       if (win.clear) {
         yield win.clear();
       }
     }
   });
 
+  Services.cookies.removeAll();
   forceCollections();
   finish();
 }
@@ -561,4 +566,240 @@ function once(target, eventName, useCapture = false) {
   }
 
   return deferred.promise;
+}
+
+/**
+ * Get values for a row.
+ *
+ * @param  {String}  id
+ *         The uniqueId of the given row.
+ * @param  {Boolean} includeHidden
+ *         Include hidden columns.
+ *
+ * @return {Object}
+ *         An object of column names to values for the given row.
+ */
+function getRowValues(id, includeHidden = false) {
+  let cells = getRowCells(id, includeHidden);
+  let values = {};
+
+  for (let name in cells) {
+    let cell = cells[name];
+
+    values[name] = cell.value;
+  }
+
+  return values;
+}
+
+/**
+ * Get cells for a row.
+ *
+ * @param  {String}  id
+ *         The uniqueId of the given row.
+ * @param  {Boolean} includeHidden
+ *         Include hidden columns.
+ *
+ * @return {Object}
+ *         An object of column names to cells for the given row.
+ */
+function getRowCells(id, includeHidden = false) {
+  let doc = gPanelWindow.document;
+  let table = gUI.table;
+  let item = doc.querySelector(".table-widget-column#" + table.uniqueId +
+                               " .table-widget-cell[value='" + id + "']");
+
+  if (!item) {
+    ok(false, "Row id '" + id + "' exists");
+  }
+
+  let index = table.columns.get(table.uniqueId).visibleCellNodes.indexOf(item);
+  let cells = {};
+
+  for (let [name, column] of [...table.columns]) {
+    if (!includeHidden && column.column.parentNode.hidden) {
+      continue;
+    }
+    cells[name] = column.visibleCellNodes[index];
+  }
+
+  return cells;
+}
+
+/**
+ * Get a cell value.
+ *
+ * @param {String} id
+ *        The uniqueId of the row.
+ * @param {String} column
+ *        The id of the column
+ *
+ * @yield {String}
+ *        The cell value.
+ */
+function getCellValue(id, column) {
+  let row = getRowValues(id, true);
+
+  return row[column];
+}
+
+/**
+ * Edit a cell value. The cell is assumed to be in edit mode, see startCellEdit.
+ *
+ * @param {String} id
+ *        The uniqueId of the row.
+ * @param {String} column
+ *        The id of the column
+ * @param {String} newValue
+ *        Replacement value.
+ * @param {Boolean} validate
+ *        Validate result? Default true.
+ *
+ * @yield {String}
+ *        The uniqueId of the changed row.
+ */
+function* editCell(id, column, newValue, validate = true) {
+  let row = getRowCells(id, true);
+  let editableFieldsEngine = gUI.table._editableFieldsEngine;
+
+  editableFieldsEngine.edit(row[column]);
+
+  return yield typeWithTerminator(newValue, "VK_RETURN", validate);
+}
+
+/**
+ * Begin edit mode for a cell.
+ *
+ * @param {String} id
+ *        The uniqueId of the row.
+ * @param {String} column
+ *        The id of the column
+ * @param {Boolean} selectText
+ *        Select text? Default true.
+ */
+function* startCellEdit(id, column, selectText = true) {
+  let row = getRowCells(id, true);
+  let editableFieldsEngine = gUI.table._editableFieldsEngine;
+  let cell = row[column];
+
+  info("Selecting row " + id);
+  gUI.table.selectedRow = id;
+
+  info("Starting cell edit (" + id + ", " + column + ")");
+  editableFieldsEngine.edit(cell);
+
+  if (!selectText) {
+    let textbox = gUI.table._editableFieldsEngine.textbox;
+    textbox.selectionEnd = textbox.selectionStart;
+  }
+}
+
+/**
+ * Check a cell value.
+ *
+ * @param {String} id
+ *        The uniqueId of the row.
+ * @param {String} column
+ *        The id of the column
+ * @param {String} expected
+ *        Expected value.
+ */
+function checkCell(id, column, expected) {
+  is(getCellValue(id, column), expected,
+     column + " column has the right value for " + id);
+}
+
+/**
+ * Show or hide a column.
+ *
+ * @param  {String} id
+ *         The uniqueId of the given column.
+ * @param  {Boolean} state
+ *         true = show, false = hide
+ */
+function showColumn(id, state) {
+  let columns = gUI.table.columns;
+  let column = columns.get(id);
+
+  if (state) {
+    column.wrapper.removeAttribute("hidden");
+  } else {
+    column.wrapper.setAttribute("hidden", true);
+  }
+}
+
+/**
+ * Show or hide all columns.
+ *
+ * @param  {Boolean} state
+ *         true = show, false = hide
+ */
+function showAllColumns(state) {
+  let columns = gUI.table.columns;
+
+  for (let [id] of columns) {
+    showColumn(id, state);
+  }
+}
+
+/**
+ * Type a string in the currently selected editor and then wait for the row to
+ * be updated.
+ *
+ * @param  {String} str
+ *         The string to type.
+ * @param  {String} terminator
+ *         The terminating key e.g. VK_RETURN or VK_TAB
+ * @param  {Boolean} validate
+ *         Validate result? Default true.
+ */
+function* typeWithTerminator(str, terminator, validate = true) {
+  let editableFieldsEngine = gUI.table._editableFieldsEngine;
+  let textbox = editableFieldsEngine.textbox;
+  let colName = textbox.closest(".table-widget-column").id;
+
+  let changeExpected = str !== textbox.value;
+
+  if (!changeExpected) {
+    return editableFieldsEngine.currentTarget.getAttribute("data-id");
+  }
+
+  info("Typing " + str);
+  EventUtils.sendString(str);
+
+  info("Pressing " + terminator);
+  EventUtils.synthesizeKey(terminator, {});
+
+  if (validate) {
+    info("Validating results... waiting for ROW_EDIT event.");
+    let uniqueId = yield gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
+
+    checkCell(uniqueId, colName, str);
+    return uniqueId;
+  }
+
+  return yield gUI.table.once(TableWidget.EVENTS.ROW_EDIT);
+}
+
+function getCurrentEditorValue() {
+  let editableFieldsEngine = gUI.table._editableFieldsEngine;
+  let textbox = editableFieldsEngine.textbox;
+
+  return textbox.value;
+}
+
+/**
+ * Press a key x times.
+ *
+ * @param  {String} key
+ *         The key to press e.g. VK_RETURN or VK_TAB
+ * @param {Number} x
+ *         The number of times to press the key.
+ * @param {Object} modifiers
+ *         The event modifier e.g. {shiftKey: true}
+ */
+function PressKeyXTimes(key, x, modifiers = {}) {
+  for (let i = 0; i < x; i++) {
+    EventUtils.synthesizeKey(key, modifiers);
+  }
 }
