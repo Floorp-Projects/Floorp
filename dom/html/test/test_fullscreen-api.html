@@ -23,6 +23,7 @@
 
 /** Tests for Bug 545812 **/
 SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.expectAssertions(0, 1);
 
 // Run the tests which go full-screen in new windows, as mochitests normally
 // run in an iframe, which by default will not have the allowfullscreen
