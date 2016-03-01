@@ -4387,7 +4387,7 @@ ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
   : mHelper(aHelper)
 {
   mDriver = mHelper->mOuter->PresContext()->RefreshDriver();
-  mDriver->AddRefreshObserver(this, Flush_Layout);
+  mDriver->AddRefreshObserver(this, Flush_Style);
 }
 
 ScrollFrameHelper::ScrollEvent::~ScrollEvent()
@@ -4401,7 +4401,7 @@ ScrollFrameHelper::ScrollEvent::~ScrollEvent()
 void
 ScrollFrameHelper::ScrollEvent::WillRefresh(mozilla::TimeStamp aTime)
 {
-  mDriver->RemoveRefreshObserver(this, Flush_Layout);
+  mDriver->RemoveRefreshObserver(this, Flush_Style);
   mDriver = nullptr;
   mHelper->FireScrollEvent();
 }
