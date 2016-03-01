@@ -155,12 +155,6 @@ WorkerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
   }
 }
 
-bool
-WorkerRunnable::PreRun(WorkerPrivate* aWorkerPrivate)
-{
-  return true;
-}
-
 void
 WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                         bool aRunResult)
@@ -189,6 +183,10 @@ WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   if (mBehavior == WorkerThreadModifyBusyCount) {
     aWorkerPrivate->ModifyBusyCountFromWorker(false);
+  }
+
+  if (!aRunResult) {
+    JS_ReportPendingException(aCx);
   }
 }
 
@@ -262,20 +260,7 @@ WorkerRunnable::Run()
     return NS_OK;
   }
 
-  bool result = PreRun(mWorkerPrivate);
-  if (!result) {
-    MOZ_ASSERT(targetIsWorkerThread,
-               "The only PreRun implementation that can fail is "
-               "ScriptExecutorRunnable");
-    mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(!JS_IsExceptionPending(mWorkerPrivate->GetJSContext()));
-    // We can't enter a useful compartment on the JSContext here; just pass it
-    // in as-is.
-    PostRun(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Track down the appropriate global, if any, to use for the AutoEntryScript.
+  // Track down the appropriate global to use for the AutoJSAPI/AutoEntryScript.
   nsCOMPtr<nsIGlobalObject> globalObject;
   bool isMainThread = !targetIsWorkerThread && !mWorkerPrivate->GetParent();
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
@@ -292,12 +277,6 @@ WorkerRunnable::Run()
     } else {
       globalObject = DefaultGlobalObject();
     }
-
-    // We may still not have a globalObject here: in the case of
-    // CompileScriptRunnable, we don't actually create the global object until
-    // we have the script data, which happens in a syncloop under
-    // CompileScriptRunnable::WorkerRun, so we can't assert that it got created
-    // in the PreRun call above.
   } else {
     kungFuDeathGrip = mWorkerPrivate;
     if (isMainThread) {
@@ -312,23 +291,21 @@ WorkerRunnable::Run()
   // http://www.whatwg.org/specs/web-apps/current-work/#run-a-worker
   // If we don't have a globalObject we have to use an AutoJSAPI instead, but
   // this is OK as we won't be running script in these circumstances.
-  Maybe<mozilla::dom::AutoJSAPI> maybeJSAPI;
+  // It's important that aes is declared after jsapi, because if WorkerRun
+  // creates a global then we construct aes before PostRun and we need them to
+  // be destroyed in the correct order.
+  mozilla::dom::AutoJSAPI jsapi;
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
-  AutoJSAPI* jsapi;
   if (globalObject) {
     aes.emplace(globalObject, "Worker runnable",
                 isMainThread,
                 isMainThread ? nullptr : GetCurrentThreadJSContext());
-    jsapi = aes.ptr();
     cx = aes->cx();
   } else {
-    maybeJSAPI.emplace();
-    maybeJSAPI->Init();
-    jsapi = maybeJSAPI.ptr();
-    cx = jsapi->cx();
+    jsapi.Init();
+    cx = jsapi.cx();
   }
-  jsapi->TakeOwnershipOfErrorReporting();
 
   // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
   // existing, since it may in fact have been GCed (and we may be one of the
@@ -371,33 +348,17 @@ WorkerRunnable::Run()
     ac.emplace(cx, mWorkerPrivate->GetWrapper());
   }
 
-  result = WorkerRun(cx, mWorkerPrivate);
-  MOZ_ASSERT_IF(result, !jsapi->HasException());
-  jsapi->ReportException();
+  bool result = WorkerRun(cx, mWorkerPrivate);
 
-  // We can't even assert that this didn't create our global, since in the case
-  // of CompileScriptRunnable it _does_.
+  // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
+  // lazily create a global, so we construct aes here before calling PostRun.
+  if (targetIsWorkerThread && !aes && DefaultGlobalObject()) {
+    aes.emplace(DefaultGlobalObject(), "worker runnable",
+                false, GetCurrentThreadJSContext());
+    cx = aes->cx();
+  }
 
-  // It would be nice to avoid passing a JSContext to PostRun, but in the case
-  // of ScriptExecutorRunnable we need to know the current compartment on the
-  // JSContext (the one we set up based on the global returned from PreRun) so
-  // that we can sanely do exception reporting.  In particular, we want to make
-  // sure that we do our JS_SetPendingException while still in that compartment,
-  // because otherwise we might end up trying to create a cross-compartment
-  // wrapper when we try to move the JS exception from our runnable's
-  // ErrorResult to the JSContext, and that's not desirable in this case.
-  //
-  // We _could_ skip passing a JSContext here and then in
-  // ScriptExecutorRunnable::PostRun end up grabbing it from the WorkerPrivate
-  // and looking at its current compartment.  But that seems like slightly weird
-  // action-at-a-distance...
-  //
-  // In any case, we do NOT try to change the compartment on the JSContext at
-  // this point; in the one case in which we could do that
-  // (CompileScriptRunnable) it actually doesn't matter which compartment we're
-  // in for PostRun.
   PostRun(cx, mWorkerPrivate, result);
-  MOZ_ASSERT(!jsapi->HasException());
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
