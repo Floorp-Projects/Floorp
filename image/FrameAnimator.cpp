@@ -83,7 +83,6 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
 
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
-  int32_t timeout = 0;
 
   RefreshResult ret;
   RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
@@ -129,10 +128,8 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     }
   }
 
-  timeout = GetTimeoutForFrame(nextFrameIndex);
-
   // Bad data
-  if (timeout < 0) {
+  if (GetTimeoutForFrame(nextFrameIndex) < 0) {
     ret.animationFinished = true;
     ret.error = true;
   }
