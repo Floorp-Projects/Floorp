@@ -1447,21 +1447,6 @@ MacroAssemblerMIPS64Compat::testUndefinedSet(Condition cond, const ValueOperand&
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestNumber(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNumber(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET), label,
-         cond == Equal ? BelowOrEqual : Above);
-}
-
-void
 MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const ValueOperand& value, Label* label)
 {
     splitTag(value, SecondScratchReg);

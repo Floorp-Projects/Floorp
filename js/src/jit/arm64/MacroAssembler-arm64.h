@@ -1352,10 +1352,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testObject(cond, tag);
         B(label, c);
     }
-    void branchTestNumber(Condition cond, Register tag, Label* label) {
-        Condition c = testNumber(cond, tag);
-        B(label, c);
-    }
 
     void branchTestUndefined(Condition cond, const Address& address, Label* label) {
         Condition c = testUndefined(cond, address);
@@ -1379,10 +1375,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void branchTestObject(Condition cond, const Address& address, Label* label) {
         Condition c = testObject(cond, address);
-        B(label, c);
-    }
-    void branchTestNumber(Condition cond, const Address& address, Label* label) {
-        Condition c = testNumber(cond, address);
         B(label, c);
     }
 
@@ -1410,10 +1402,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testObject(cond, src);
-        B(label, c);
-    }
-    void branchTestNumber(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testNumber(cond, src);
         B(label, c);
     }
 

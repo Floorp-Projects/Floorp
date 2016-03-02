@@ -792,11 +792,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testUndefined(cond, t);
         ma_b(label, c);
     }
-    template <typename T>
-    void branchTestNumber(Condition cond, const T& t, Label* label) {
-        cond = testNumber(cond, t);
-        ma_b(label, cond);
-    }
     template <typename T, class L>
     void branchTestMagic(Condition cond, const T& t, L label) {
         cond = testMagic(cond, t);

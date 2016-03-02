@@ -556,6 +556,14 @@ MacroAssembler::branchTestDoubleTruthy(bool b, FloatRegister value, Label* label
     ma_bc1d(value, ScratchDoubleReg, label, cond);
 }
 
+void
+MacroAssembler::branchTestNumber(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    Condition actual = cond == Equal ? BelowOrEqual : Above;
+    ma_b(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET), label, actual);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
