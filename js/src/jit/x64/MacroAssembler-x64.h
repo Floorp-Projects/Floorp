@@ -683,34 +683,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(reg, tag);
     }
 
-    void branchTestObject(Condition cond, Register tag, Label* label) {
-        cond = testObject(cond, tag);
-        j(cond, label);
-    }
-
-    // x64 can test for certain types directly from memory when the payload
-    // of the type is limited to 32 bits. This avoids loading into a register,
-    // accesses half as much memory, and removes a right-shift.
-    // This one, though, clobbers the ScratchReg.
-    void branchTestObject(Condition cond, const Address& src, Label* label) {
-        cond = testObject(cond, src);
-        j(cond, label);
-    }
-
-    // Perform a type-test on a full Value loaded into a register.
-    // Clobbers the ScratchReg.
-    void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testObject(cond, src);
-        j(cond, label);
-    }
-
-    // Perform a type-test on a Value addressed by BaseIndex.
-    // Clobbers the ScratchReg.
-    void branchTestObject(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testObject(cond, address);
-        j(cond, label);
-    }
-
     template <typename T>
     void branchTestGCThing(Condition cond, const T& src, Label* label) {
         cond = testGCThing(cond, src);
