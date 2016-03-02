@@ -19,7 +19,8 @@ const TEST_DATA = [{
   selector: "link[rel=icon]",
   attributes: [{
     attributeName: "href",
-    links: [{type: "uri", value: "/media/img/firefox/favicon-196.223e1bcaf067.png"}]
+    links: [{type: "uri",
+             value: "/media/img/firefox/favicon-196.223e1bcaf067.png"}]
   }]
 }, {
   selector: "form",
