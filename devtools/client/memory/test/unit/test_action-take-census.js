@@ -5,9 +5,7 @@
  * Tests the async reducer responding to the action `takeCensus(heapWorker, snapshot)`
  */
 
-var { snapshotState: states, breakdowns } = require("devtools/client/memory/constants");
-var { breakdownEquals } = require("devtools/client/memory/utils");
-var { ERROR_TYPE } = require("devtools/client/shared/redux/middleware/task");
+var { snapshotState: states, censusDisplays } = require("devtools/client/memory/constants");
 var actions = require("devtools/client/memory/actions/snapshot");
 
 function run_test() {
@@ -45,8 +43,6 @@ add_task(function *() {
   snapshot = store.getState().snapshots[0];
   ok(snapshot.census, "Snapshot has census after saved census");
   ok(snapshot.census.report.children.length, "Census is in tree node form");
-  ok(isBreakdownType(snapshot.census.report, "coarseType"),
-    "Census is in tree node form with the default breakdown");
-  ok(breakdownEquals(snapshot.census.breakdown, breakdowns.coarseType.breakdown),
-    "Snapshot stored correct breakdown used for the census");
+  equal(snapshot.census.display, censusDisplays.coarseType,
+        "Snapshot stored correct display used for the census");
 });

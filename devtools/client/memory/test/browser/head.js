@@ -13,8 +13,8 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
-var { snapshotState: states } = require("devtools/client/memory/constants");
-var { breakdownEquals, breakdownNameToSpec, L10N } = require("devtools/client/memory/utils");
+var { censusDisplays, snapshotState: states } = require("devtools/client/memory/constants");
+var { L10N } = require("devtools/client/memory/utils");
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
 
@@ -117,22 +117,22 @@ function clearSnapshots (window) {
 }
 
 /**
- * Sets breakdown and waits for currently selected breakdown to use it
- * and be completed the census.
+ * Sets the current requested display and waits for the selected snapshot to use
+ * it and complete the new census that entails.
  */
-function setBreakdown (window, type) {
-  info(`Setting breakdown to ${type}...`);
+function setCensusDisplay(window, display) {
+  info(`Setting census display to ${display}...`);
   let { gStore, gHeapAnalysesClient } = window;
   // XXX: Should handle this via clicking the DOM, but React doesn't
   // fire the onChange event, so just change it in the store.
-  // window.document.querySelector(`.select-breakdown`).value = type;
-  gStore.dispatch(require("devtools/client/memory/actions/breakdown")
-                         .setBreakdownAndRefresh(gHeapAnalysesClient, breakdownNameToSpec(type)));
+  // window.document.querySelector(`.select-display`).value = type;
+  gStore.dispatch(require("devtools/client/memory/actions/census-display")
+                         .setCensusDisplayAndRefresh(gHeapAnalysesClient, display));
 
   return waitUntilState(window.gStore, () => {
     let selected = window.gStore.getState().snapshots.find(s => s.selected);
     return selected.state === states.SAVED_CENSUS &&
-           breakdownEquals(breakdownNameToSpec(type), selected.census.breakdown);
+      selected.census.display === display;
   });
 }
 

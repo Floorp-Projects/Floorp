@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Sanity test that we can show allocation stack breakdowns in the tree.
+// Sanity test that we can show allocation stack displays in the tree.
 
 "use strict";
 
@@ -20,11 +20,6 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const store = panel.panelWin.gStore;
   const { getState, dispatch } = store;
   const doc = panel.panelWin.document;
-
-  ok(!getState().inverted, "not inverted by default");
-  const invertCheckbox = doc.getElementById("invert-tree-checkbox");
-  EventUtils.synthesizeMouseAtCenter(invertCheckbox, {}, panel.panelWin);
-  yield waitUntilState(store, state => state.inverted === true);
 
   const takeSnapshotButton = doc.getElementById("take-snapshot");
   EventUtils.synthesizeMouseAtCenter(takeSnapshotButton, {}, panel.panelWin);
