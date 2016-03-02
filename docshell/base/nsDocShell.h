@@ -938,6 +938,7 @@ protected:
   bool mAllowKeywordFixup;
   bool mIsOffScreenBrowser;
   bool mIsActive;
+  bool mDisableMetaRefreshWhenInactive;
   bool mIsPrerendered;
   bool mIsAppTab;
   bool mUseGlobalHistory;
