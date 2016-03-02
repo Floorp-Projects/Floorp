@@ -2050,5 +2050,26 @@ DocAccessibleChild::RecvExtents(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvDOMNodeID(const uint64_t& aID, nsString* aDOMNodeID)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  nsIContent* content = acc->GetContent();
+  if (!content) {
+    return true;
+  }
+
+  nsIAtom* id = content->GetID();
+  if (id) {
+    id->ToString(*aDOMNodeID);
+  }
+
+  return true;
+}
+
 }
 }

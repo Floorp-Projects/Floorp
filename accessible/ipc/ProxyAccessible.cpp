@@ -1153,6 +1153,12 @@ ProxyAccessible::Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY,
   Unused << mDoc->SendExtents(mID, aNeedsScreenCoords, aX, aY, aWidth, aHeight);
 }
 
+void
+ProxyAccessible::DOMNodeID(nsString& aID)
+{
+  Unused << mDoc->SendDOMNodeID(mID, &aID);
+}
+
 Accessible*
 ProxyAccessible::OuterDocOfRemoteBrowser() const
 {
