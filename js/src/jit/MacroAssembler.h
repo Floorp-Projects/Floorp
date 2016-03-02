@@ -385,6 +385,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     //{{{ check_macroassembler_style
   public:
     // ===============================================================
+    // MacroAssembler high-level usage.
+
+    // Flushes the assembly buffer, on platforms that need it.
+    void flush() PER_SHARED_ARCH;
+
+    // ===============================================================
     // Frame manipulation functions.
 
     inline uint32_t framePushed() const;
