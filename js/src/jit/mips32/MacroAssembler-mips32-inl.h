@@ -322,6 +322,13 @@ MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Labe
     branchTestNumber(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(value.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN), label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

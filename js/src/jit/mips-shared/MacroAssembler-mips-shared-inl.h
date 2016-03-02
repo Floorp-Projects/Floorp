@@ -564,6 +564,29 @@ MacroAssembler::branchTestNumber(Condition cond, Register tag, Label* label)
     ma_b(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET), label, actual);
 }
 
+void
+MacroAssembler::branchTestBoolean(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(tag, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const Address& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestBoolean(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const BaseIndex& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestBoolean(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

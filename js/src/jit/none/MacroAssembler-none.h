@@ -346,7 +346,6 @@ class MacroAssemblerNone : public Assembler
     Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
 
     template <typename T> void branchTestUndefined(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestBoolean(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestNull(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestString(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestSymbol(Condition, T, Label*) { MOZ_CRASH(); }
