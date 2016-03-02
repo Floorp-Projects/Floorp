@@ -994,6 +994,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+    inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                                     Label* label);
+
     // Checks if given Value is evaluated to true or false in a condition.
     // The type of the value should match the type of the method.
     inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)

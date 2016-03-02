@@ -683,12 +683,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(reg, tag);
     }
 
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
     Condition testMagic(Condition cond, const ValueOperand& src) {
         ScratchRegisterScope scratch(asMasm());
         splitTag(src, scratch);
