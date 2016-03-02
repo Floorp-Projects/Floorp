@@ -48,6 +48,9 @@
         return decodeURIComponent(url.slice(error + 2, duffUrl));
       }
 
+      // Set to true on init if the error code is nssBadCert.
+      var gIsCertError;
+
       function getCSSClass()
       {
         var url = document.documentURI;
@@ -103,7 +106,7 @@
           'none': 'block',
           'block': 'none'
         };
-        node.style.display = toggle[node.style.display];
+        return (node.style.display = toggle[node.style.display]);
       }
 
       function showCertificateErrorReporting() {
@@ -118,17 +121,27 @@
         document.getElementById("errorTryAgain").style.display = "none";
 
         // Get the hostname and add it to the panel
-        var panel = document.getElementById("weakCryptoAdvancedPanel");
+        var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel";
+        var panel = document.getElementById(panelId);
         for (var span of panel.querySelectorAll("span.hostname")) {
           span.textContent = document.location.hostname;
         }
-        panel.replaceChild(document.getElementById("errorLongDesc"),
-                           document.getElementById("advancedLongDesc"));
+        if (!gIsCertError) {
+          panel.replaceChild(document.getElementById("errorLongDesc"),
+                             document.getElementById("advancedLongDesc"));
+        }
 
         // Register click handler for the weakCryptoAdvancedPanel
         document.getElementById("advancedButton")
                 .addEventListener("click", function togglePanelVisibility() {
           toggleDisplay(panel);
+          if (gIsCertError) {
+            // Toggling the advanced panel must ensure that the debugging
+            // information panel is hidden as well, since it's opened by the
+            // error code link in the advanced panel.
+            var div = document.getElementById("certificateErrorDebugInformation");
+            div.style.display = "none";
+          }
 
           if (panel.style.display == "block") {
             // send event to trigger telemetry ping
@@ -144,9 +157,68 @@
         }
       }
 
+      function initPageCertError() {
+        document.body.className = "certerror";
+        document.title = document.getElementById("certErrorPageTitle").textContent;
+        for (let host of document.querySelectorAll(".hostname")) {
+          host.textContent = document.location.hostname;
+        }
+
+        showAdvancedButton(true);
+
+        var cssClass = getCSSClass();
+        if (cssClass == "expertBadCert") {
+          toggleDisplay(document.getElementById("badCertAdvancedPanel"));
+          // Toggling the advanced panel must ensure that the debugging
+          // information panel is hidden as well, since it's opened by the
+          // error code link in the advanced panel.
+          var div = document.getElementById("certificateErrorDebugInformation");
+          div.style.display = "none";
+        }
+
+        document.getElementById("learnMoreContainer").style.display = "block";
+
+        var checkbox = document.getElementById("automaticallyReportInFuture");
+        checkbox.addEventListener("change", function ({target: {checked}}) {
+          document.dispatchEvent(new CustomEvent("AboutNetErrorSetAutomatic", {
+            detail: checked,
+            bubbles: true
+          }));
+        });
+
+        addEventListener("AboutNetErrorOptions", function (event) {
+          var options = JSON.parse(event.detail);
+          if (options && options.enabled) {
+            // Display error reporting UI
+            document.getElementById("certificateErrorReporting").style.display = "block";
+
+            // set the checkbox
+            checkbox.checked = !!options.automatic;
+          }
+        }, true, true);
+
+        // Disallow overrides if this is a Strict-Transport-Security
+        // host and the cert is bad (STS Spec section 7.3) or if the
+        // certerror is in a frame (bug 633691).
+        if (cssClass == "badStsCert" || window != top) {
+          document.getElementById("exceptionDialogButton").setAttribute("hidden", "true");
+        }
+        if (cssClass == "badStsCert") {
+          document.getElementById("badStsCertExplanation").removeAttribute("hidden");
+        }
+
+        document.getElementById("badCertTechnicalInfo").textContent = getDescription();
+
+        var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
+        document.getElementById("advancedButton").dispatchEvent(event);
+
+        addDomainErrorLinks();
+      }
+
       function initPage()
       {
         var err = getErrorCode();
+        gIsCertError = (err == "nssBadCert");
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
@@ -167,8 +239,18 @@
         }
 
         var sd = document.getElementById("errorShortDescText");
-        if (sd)
-          sd.textContent = getDescription();
+        if (sd) {
+          if (gIsCertError) {
+            sd.textContent = document.getElementById("ed_nssBadCert").textContent;
+          }
+          else {
+            sd.textContent = getDescription();
+          }
+        }
+        if (gIsCertError) {
+          initPageCertError();
+          return;
+        }
 
         var ld = document.getElementById("errorLongDesc");
         if (ld)
@@ -210,9 +292,6 @@
           faviconParent.removeChild(favicon);
           favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
           faviconParent.appendChild(favicon);
-        }
-        if (className == "expertBadCert") {
-          showSecuritySection();
         }
 
         if (err == "remoteXUL") {
@@ -265,25 +344,7 @@
         var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
         document.dispatchEvent(event);
 
-        if (err == "nssBadCert") {
-          // Remove the "Try again" button for security exceptions, since it's
-          // almost certainly useless.
-          document.getElementById("errorTryAgain").style.display = "none";
-          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
-        }
-        else {
-          // Remove the override block for non-certificate errors.  CSS-hiding
-          // isn't good enough here, because of bug 39098
-          var secOverride = document.getElementById("securityOverrideDiv");
-          secOverride.parentNode.removeChild(secOverride);
-        }
         addDomainErrorLinks();
-      }
-
-      function showSecuritySection() {
-        // Swap link out, content in
-        document.getElementById('securityOverrideContent').style.display = '';
-        document.getElementById('securityOverrideLink').style.display = 'none';
       }
 
       /* Try to preserve the links contained in the error description, like
@@ -297,7 +358,8 @@
       */
       function addDomainErrorLinks() {
         // Rather than textContent, we need to treat description as HTML
-        var sd = document.getElementById("errorShortDescText");
+        var sdid = gIsCertError ? "badCertTechnicalInfo" : "errorShortDescText";
+        var sd = document.getElementById(sdid);
         if (sd) {
           var desc = getDescription();
 
@@ -333,6 +395,21 @@
 
           // Finally, append text for anything after the last closing </a>.
           sd.appendChild(document.createTextNode(desc.slice(desc.lastIndexOf("</a>") + "</a>".length)));
+        }
+
+        if (gIsCertError) {
+          // Initialize the error code link embedded in the error message to
+          // display debug information about the cert error.
+          var errorCode = document.getElementById("errorCode");
+          if (errorCode) {
+            errorCode.href = "#technicalInformation";
+            errorCode.addEventListener("click", () => {
+              var div = document.getElementById("certificateErrorDebugInformation");
+              if (toggleDisplay(div) == "block") {
+                div.scrollIntoView({block: "start", behavior: "smooth"});
+              }
+            }, false);
+          }
         }
 
         // Initialize the cert domain link.
@@ -375,8 +452,17 @@
 
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
-        if (link.href && getCSSClass() != "expertBadCert")
-          toggleVisibility("advancedPanel");
+        if (link.href && getCSSClass() != "expertBadCert") {
+          var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel"
+          toggleDisplay(document.getElementById(panelId));
+          if (gIsCertError) {
+            // Toggling the advanced panel must ensure that the debugging
+            // information panel is hidden as well, since it's opened by the
+            // error code link in the advanced panel.
+            var div = document.getElementById("certificateErrorDebugInformation");
+            div.style.display = "none";
+          }
+        }
       }
 
       function createLink(el, id, text) {
@@ -390,6 +476,8 @@
   </head>
 
   <body dir="&locale.dir;">
+    <!-- Contains an alternate page title set on page init for cert errors. -->
+    <div id="certErrorPageTitle" style="display: none;">&certerror.pagetitle1;</div>
 
     <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
     <div id="errorContainer">
@@ -413,7 +501,7 @@
         <h1 id="et_contentEncodingError">&contentEncodingError.title;</h1>
         <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
-        <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
+        <h1 id="et_nssBadCert">&certerror.longpagetitle1;</h1>
         <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
@@ -440,7 +528,7 @@
         <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
         <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc2;</div>
-        <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
+        <div id="ed_nssBadCert">&certerror.introPara;</div>
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
@@ -464,16 +552,10 @@
         <div id="errorShortDesc">
           <p id="errorShortDescText" />
         </div>
+        <p id="badStsCertExplanation" hidden="true">&certerror.whatShouldIDo.badStsCertExplanation;</p>
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc" />
-
-        <!-- Override section - For ssl errors only.  Removed on init for other
-             error types.  -->
-        <div id="securityOverrideDiv">
-          <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
-          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningContent;</div>
-        </div>
 
         <div id="learnMoreContainer">
           <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
@@ -522,6 +604,18 @@
         </div>
       </div>
 
+      <div id="badCertAdvancedPanel">
+        <p id="badCertTechnicalInfo"/>
+        <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+      </div>
+
+    </div>
+
+    <div id="certificateErrorDebugInformation">
+      <a name="technicalInformation"></a>
+      <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+      <div id="certificateErrorText"/>
+      <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
     </div>
 
     <!--
