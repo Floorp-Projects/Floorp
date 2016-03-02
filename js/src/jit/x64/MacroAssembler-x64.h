@@ -688,10 +688,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testNull(cond, tag);
         j(cond, label);
     }
-    void branchTestString(Condition cond, Register tag, Label* label) {
-        cond = testString(cond, tag);
-        j(cond, label);
-    }
     void branchTestSymbol(Condition cond, Register tag, Label* label) {
         cond = testSymbol(cond, tag);
         j(cond, label);
@@ -726,10 +722,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testNull(cond, src);
         j(cond, label);
     }
-    void branchTestString(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testString(cond, src);
-        j(cond, label);
-    }
     void branchTestSymbol(Condition cond, const ValueOperand& src, Label* label) {
         cond = testSymbol(cond, src);
         j(cond, label);
@@ -743,10 +735,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Clobbers the ScratchReg.
     void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
         cond = testNull(cond, address);
-        j(cond, label);
-    }
-    void branchTestString(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testString(cond, address);
         j(cond, label);
     }
     void branchTestSymbol(Condition cond, const BaseIndex& address, Label* label) {

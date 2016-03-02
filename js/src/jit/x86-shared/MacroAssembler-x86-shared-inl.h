@@ -590,6 +590,32 @@ MacroAssembler::branchTestBooleanImpl(Condition cond, const T& t, Label* label)
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestString(Condition cond, Register tag, Label* label)
+{
+    branchTestStringImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestStringImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestStringImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestStringImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testString(cond, t);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

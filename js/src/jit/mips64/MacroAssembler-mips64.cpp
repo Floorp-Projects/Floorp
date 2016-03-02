@@ -1331,28 +1331,6 @@ MacroAssemblerMIPS64Compat::testObjectSet(Condition cond, const ValueOperand& va
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestString(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_STRING), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_STRING), label, cond);
-}
-
-void
 MacroAssemblerMIPS64Compat::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
 {
     splitTag(value, SecondScratchReg);

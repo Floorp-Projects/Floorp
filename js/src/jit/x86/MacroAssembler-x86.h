@@ -665,11 +665,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     template <typename T>
-    void branchTestString(Condition cond, const T& t, Label* label) {
-        cond = testString(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
     void branchTestSymbol(Condition cond, const T& t, Label* label) {
         cond = testSymbol(cond, t);
         j(cond, label);

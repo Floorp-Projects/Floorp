@@ -1332,10 +1332,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testNull(cond, tag);
         B(label, c);
     }
-    void branchTestString(Condition cond, Register tag, Label* label) {
-        Condition c = testString(cond, tag);
-        B(label, c);
-    }
     void branchTestSymbol(Condition cond, Register tag, Label* label) {
         Condition c = testSymbol(cond, tag);
         B(label, c);
@@ -1347,10 +1343,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void branchTestNull(Condition cond, const Address& address, Label* label) {
         Condition c = testNull(cond, address);
-        B(label, c);
-    }
-    void branchTestString(Condition cond, const Address& address, Label* label) {
-        Condition c = testString(cond, address);
         B(label, c);
     }
     void branchTestSymbol(Condition cond, const Address& address, Label* label) {
@@ -1368,10 +1360,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testNull(cond, src);
         B(label, c);
     }
-    void branchTestString(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testString(cond, src);
-        B(label, c);
-    }
     void branchTestSymbol(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testSymbol(cond, src);
         B(label, c);
@@ -1385,10 +1373,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Clobbers the ScratchReg.
     void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
         Condition c = testNull(cond, address);
-        B(label, c);
-    }
-    void branchTestString(Condition cond, const BaseIndex& address, Label* label) {
-        Condition c = testString(cond, address);
         B(label, c);
     }
     void branchTestSymbol(Condition cond, const BaseIndex& address, Label* label) {
