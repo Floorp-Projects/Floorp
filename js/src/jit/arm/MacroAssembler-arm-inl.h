@@ -1059,6 +1059,38 @@ MacroAssembler::branchTestNullImpl(Condition cond, const T& t, Label* label)
     ma_b(label, c);
 }
 
+void
+MacroAssembler::branchTestObject(Condition cond, Register tag, Label* label)
+{
+    branchTestObjectImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const Address& address, Label* label)
+{
+    branchTestObjectImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestObjectImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestObjectImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestObjectImpl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testObject(cond, t);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
