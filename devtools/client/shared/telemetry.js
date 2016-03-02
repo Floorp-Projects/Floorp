@@ -233,7 +233,15 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_CUSTOM_OPENED_COUNT",
       userHistogram: "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS"
-    }
+    },
+    reloadAddonInstalled: {
+      histogram: "DEVTOOLS_RELOAD_ADDON_INSTALLED_COUNT",
+      userHistogram: "DEVTOOLS_RELOAD_ADDON_INSTALLED_PER_USER_FLAG",
+    },
+    reloadAddonReload: {
+      histogram: "DEVTOOLS_RELOAD_ADDON_RELOAD_COUNT",
+      userHistogram: "DEVTOOLS_RELOAD_ADDON_RELOAD_PER_USER_FLAG",
+    },
   },
 
   /**
