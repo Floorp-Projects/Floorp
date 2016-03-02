@@ -87,7 +87,7 @@ html, body, #app, #memory-tool {
   margin-inline-end: 5px;
 }
 
-.devtools-toolbar > .toolbar-group > label.breakdown-by > span {
+.devtools-toolbar > .toolbar-group > label.display-by > span {
   margin-inline-end: 5px;
 }
 

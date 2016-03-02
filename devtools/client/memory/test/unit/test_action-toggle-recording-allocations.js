@@ -1,10 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests the action creator `setBreakdown()` for breakdown changing.
- * Does not test refreshing the census information, check `setBreakdownAndRefresh` action
- * for that.
+ * Test toggling the recording of allocation stacks.
  */
 
 let { toggleRecordingAllocationStacks } = require("devtools/client/memory/actions/allocations");
@@ -15,7 +14,6 @@ function run_test() {
 
 add_task(function *() {
   let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
   yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
@@ -39,4 +37,6 @@ add_task(function *() {
 
   equal(getState().allocations.recording, false, "now we are not recording");
   ok(front.recordingAllocations, "front is not recording anymore");
+
+  yield front.detach();
 });
