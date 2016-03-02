@@ -657,13 +657,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(reg, Operand(esp, arg * sizeof(intptr_t)));
     }
 
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
-
     // Note: this function clobbers the source register.
     void boxDouble(FloatRegister src, const ValueOperand& dest) {
         if (Assembler::HasSSE41()) {
