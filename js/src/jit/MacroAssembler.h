@@ -1011,7 +1011,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   private:
 
-    // Implementation for branchTest* methods.
+    // Implementation for branch* methods.
+    template <typename T, typename S>
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+        DEFINED_ON(x86_shared);
+
     template <typename T>
     inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
         DEFINED_ON(arm, arm64, x86_shared);

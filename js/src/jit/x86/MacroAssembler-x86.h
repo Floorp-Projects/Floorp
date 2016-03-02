@@ -554,9 +554,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    template <typename T, typename S>
-    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
-
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         jump(label);
         return CodeOffsetJump(size());

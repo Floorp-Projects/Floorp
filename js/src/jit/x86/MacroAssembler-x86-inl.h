@@ -412,14 +412,6 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
     convertDoubleToFloat32(dest, dest);
 }
 
-template <typename T, typename S>
-void
-MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
-{
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
-}
-
 void
 MacroAssemblerX86::unboxValue(const ValueOperand& src, AnyRegister dest)
 {

@@ -295,6 +295,14 @@ MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
+template <typename T, typename S>
+void
+MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+{
+    cmpPtr(Operand(lhs), rhs);
+    j(cond, label);
+}
+
 template <typename T>
 CodeOffsetJump
 MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)

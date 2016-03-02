@@ -523,9 +523,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    template <typename T, typename S>
-    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
-
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         JmpSrc src = jmpSrc(label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
