@@ -506,6 +506,26 @@ MacroAssembler::branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* la
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestNumber(Condition cond, Register tag, Label* label)
+{
+    branchTestNumberImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNumberImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestNumberImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testNumber(cond, t);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

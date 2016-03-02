@@ -710,10 +710,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testObject(cond, tag);
         j(cond, label);
     }
-    void branchTestNumber(Condition cond, Register tag, Label* label) {
-        cond = testNumber(cond, tag);
-        j(cond, label);
-    }
 
     // x64 can test for certain types directly from memory when the payload
     // of the type is limited to 32 bits. This avoids loading into a register,
@@ -777,10 +773,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
         cond = testObject(cond, src);
-        j(cond, label);
-    }
-    void branchTestNumber(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testNumber(cond, src);
         j(cond, label);
     }
 

@@ -690,11 +690,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     template <typename T>
-    void branchTestNumber(Condition cond, const T& t, Label* label) {
-        cond = testNumber(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
     void branchTestGCThing(Condition cond, const T& t, Label* label) {
         cond = testGCThing(cond, t);
         j(cond, label);

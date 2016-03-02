@@ -256,6 +256,14 @@ MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Labe
     branchTestDouble(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestNumber(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
