@@ -548,6 +548,14 @@ MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address, Label
     branchTestDouble(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestDoubleTruthy(bool b, FloatRegister value, Label* label)
+{
+    ma_lid(ScratchDoubleReg, 0.0);
+    DoubleCondition cond = b ? DoubleNotEqual : DoubleEqualOrUnordered;
+    ma_bc1d(value, ScratchDoubleReg, label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
