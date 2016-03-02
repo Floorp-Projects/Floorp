@@ -102,6 +102,13 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit with the next frame's delay time.
   if (mImage->GetNumFrames() == nextFrameIndex) {
+    // We can only accurately determine if we are at the end of the loop if we are
+    // done decoding, otherwise we don't know how many frames there will be.
+    if (!mDoneDecoding) {
+      // We've already advanced to the last decoded frame, nothing more we can do.
+      return ret;
+    }
+
     // End of an animation loop...
 
     // If we are not looping forever, initialize the loop counter
