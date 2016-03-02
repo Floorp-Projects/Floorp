@@ -350,45 +350,43 @@ function runTest() {
       datalist = document.getElementById('suggest');
       var added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
-
-      SimpleTest.executeSoon(function() {
-        doKey("down");
-        doKey("down");
-        doKey("return");
-        checkForm("Foo");
-
-        // Remove the element.
-        datalist.removeChild(added);
-        expectPopup();
-        restoreForm();
-        doKey("down");
-      });
+      waitForMenuChange(4);
       break;
 
     case 202:
-      // Change the first element value attribute.
       doKey("down");
+      doKey("down");
+      doKey("return");
+      checkForm("Foo");
+
+      // Remove the element.
+      datalist = document.getElementById('suggest');
+      datalist.removeChild(datalist.children[1]);
+      waitForMenuChange(0);
+      break;
+
+    case 203:
+      // Change the first element value attribute.
+      restoreForm();
       datalist = document.getElementById('suggest');
       prevValue = datalist.children[0].value;
       datalist.children[0].value = "foo";
       expectPopup();
       break;
 
-    case 203:
+    case 204:
       doKey("down");
       doKey("return");
       checkForm("foo");
 
       datalist = document.getElementById('suggest');
       datalist.children[0].value = prevValue;
-      expectPopup();
-      restoreForm();
-      doKey("down");
+      waitForMenuChange(0);
       break;
 
-    case 204:
+    case 205:
       // Change the textContent to update the value attribute.
-      doKey("down");
+      restoreForm();
       datalist = document.getElementById('suggest');
       prevValue = datalist.children[0].getAttribute('value');
       datalist.children[0].removeAttribute('value');
@@ -396,7 +394,7 @@ function runTest() {
       expectPopup();
       break;
 
-    case 205:
+    case 206:
       doKey("down");
       doKey("return");
       checkForm("foobar");
@@ -404,14 +402,13 @@ function runTest() {
       datalist = document.getElementById('suggest');
       datalist.children[0].setAttribute('value', prevValue);
       testNum = 299;
-      expectPopup();
-      restoreForm();
-      doKey("down");
+      waitForMenuChange(0);
       break;
 
     // Tests for filtering (or not).
     case 300:
       // Filters with first letter of the word.
+      restoreForm();
       synthesizeKey("f", {});
       expectPopup();
       break;
@@ -469,6 +466,7 @@ function runTest() {
         ok(event.bubbles, "input event should bubble");
         ok(event.cancelable, "input event should be cancelable");
         checkForm("Google");
+        input.blur();
         SimpleTest.finish();
       }, false);
 
