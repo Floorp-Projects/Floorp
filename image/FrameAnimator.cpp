@@ -106,6 +106,16 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     // done decoding, otherwise we don't know how many frames there will be.
     if (!mDoneDecoding) {
       // We've already advanced to the last decoded frame, nothing more we can do.
+      // We're blocked by network/decoding from displaying the animation at the
+      // rate specified, so that means the frame we are displaying (the latest
+      // available) is the frame we want to be displaying at this time. So we
+      // update the current animation time. If we didn't update the current
+      // animation time then it could lag behind, which would indicate that we
+      // are behind in the animation and should try to catch up. When we are
+      // done decoding (and thus can loop around back to the start of the
+      // animation) we would then jump to a random point in the animation to
+      // try to catch up. But we were never behind in the animation.
+      mCurrentAnimationFrameTime = aTime;
       return ret;
     }
 
