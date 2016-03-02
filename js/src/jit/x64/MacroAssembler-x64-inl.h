@@ -414,14 +414,6 @@ MacroAssemblerX64::incrementInt32Value(const Address& addr)
     asMasm().addPtr(Imm32(1), addr);
 }
 
-void
-MacroAssemblerX64::branchTestValue(Condition cond, const Address& valaddr, const
-                                   ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    asMasm().branchPtr(cond, valaddr, value.valueReg(), label);
-}
-
 template <typename T, typename S>
 void
 MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)

@@ -1328,26 +1328,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != value.valueReg());
-        moveValue(v, ValueOperand(scratch64.asUnsized()));
-        Cmp(ARMRegister(value.valueReg(), 64), scratch64);
-        B(label, cond);
-    }
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label)
-    {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != valaddr.base);
-        MOZ_ASSERT(scratch64.asUnsized() != value.valueReg());
-        loadValue(valaddr, scratch64.asUnsized());
-        Cmp(ARMRegister(value.valueReg(), 64), Operand(scratch64));
-        B(label, cond);
-    }
-
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         Fcmp(ARMFPRegister(lhs, 64), ARMFPRegister(rhs, 64));
     }

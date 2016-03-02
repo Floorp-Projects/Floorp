@@ -1116,42 +1116,6 @@ MacroAssemblerMIPSCompat::testUndefinedSet(Condition cond, const ValueOperand& v
     ma_cmp_set(dest, value.typeReg(), ImmType(JSVAL_TYPE_UNDEFINED), cond);
 }
 
-void
-MacroAssemblerMIPSCompat::branchTestValue(Condition cond, const ValueOperand& value,
-                                          const Value& v, Label* label)
-{
-    moveData(v, ScratchRegister);
-
-    if (cond == Equal) {
-        Label done;
-        ma_b(value.payloadReg(), ScratchRegister, &done, NotEqual, ShortJump);
-        {
-            ma_b(value.typeReg(), Imm32(getType(v)), label, Equal);
-        }
-        bind(&done);
-    } else {
-        MOZ_ASSERT(cond == NotEqual);
-        ma_b(value.payloadReg(), ScratchRegister, label, NotEqual);
-
-        ma_b(value.typeReg(), Imm32(getType(v)), label, NotEqual);
-    }
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestValue(Condition cond, const Address& valaddr,
-                                          const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-
-    // Load tag.
-    ma_lw(ScratchRegister, Address(valaddr.base, valaddr.offset + TAG_OFFSET));
-    asMasm().branchPtr(cond, ScratchRegister, value.typeReg(), label);
-
-    // Load payload
-    ma_lw(ScratchRegister, Address(valaddr.base, valaddr.offset + PAYLOAD_OFFSET));
-    asMasm().branchPtr(cond, ScratchRegister, value.payloadReg(), label);
-}
-
 // unboxing code
 void
 MacroAssemblerMIPSCompat::unboxNonDouble(const ValueOperand& operand, Register dest)
@@ -2190,6 +2154,28 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ScratchRegisterScope scratch(*this);
+    moveData(rhs, scratch);
+
+    if (cond == Equal) {
+        Label done;
+        ma_b(lhs.payloadReg(), scratch, &done, NotEqual, ShortJump);
+        {
+            ma_b(lhs.typeReg(), Imm32(getType(rhs)), label, Equal);
+        }
+        bind(&done);
+    } else {
+        ma_b(lhs.payloadReg(), scratch, label, NotEqual);
+
+        ma_b(lhs.typeReg(), Imm32(getType(rhs)), label, NotEqual);
+    }
 }
 
 //}}} check_macroassembler_style

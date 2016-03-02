@@ -1246,24 +1246,6 @@ MacroAssemblerMIPS64Compat::testUndefinedSet(Condition cond, const ValueOperand&
     ma_cmp_set(dest, SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), cond);
 }
 
-void
-MacroAssemblerMIPS64Compat::branchTestValue(Condition cond, const ValueOperand& value,
-                                            const Value& v, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    moveValue(v, ScratchRegister);
-    ma_b(value.valueReg(), ScratchRegister, label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestValue(Condition cond, const Address& valaddr,
-                                            const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    loadPtr(Address(valaddr.base, valaddr.offset), ScratchRegister);
-    ma_b(value.valueReg(), ScratchRegister, label, cond);
-}
-
 // unboxing code
 void
 MacroAssemblerMIPS64Compat::unboxNonDouble(const ValueOperand& operand, Register dest)
@@ -2336,6 +2318,16 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     addPtr(value.valueReg(), SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ScratchRegisterScope scratch(*this);
+    moveValue(rhs, scratch);
+    ma_b(lhs.valueReg(), scratch, label, cond);
 }
 
 //}}} check_macroassembler_style
