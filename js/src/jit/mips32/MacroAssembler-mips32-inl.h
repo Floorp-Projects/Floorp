@@ -316,6 +316,12 @@ MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Labe
     branchTestDouble(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNumber(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

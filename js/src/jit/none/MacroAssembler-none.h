@@ -351,7 +351,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void branchTestString(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestSymbol(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestObject(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestNumber(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestGCThing(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T> void branchTestPrimitive(Condition, T, Label*) { MOZ_CRASH(); }
     template <typename T, typename L> void branchTestMagic(Condition, T, L) { MOZ_CRASH(); }
