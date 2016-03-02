@@ -736,6 +736,12 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
     B(label, cond);
 }
 
+void
+MacroAssembler::flush()
+{
+    Assembler::flush();
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit
