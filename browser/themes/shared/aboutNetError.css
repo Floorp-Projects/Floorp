@@ -40,6 +40,10 @@ ul {
   -moz-padding-start: 5em;
 }
 
+body.certerror #errorTitle {
+  background-image: url("chrome://browser/skin/cert-error.svg");
+}
+
 #errorTitleText {
   border-bottom: 1px solid #C1C1C1;
   padding-bottom: 0.4em;
@@ -115,36 +119,12 @@ button:disabled {
   min-width: 150px;
 }
 
-#certificateErrorReporting,
-#reportSentMessage {
+#certificateErrorReporting {
   display: none;
 }
 
-div#weakCryptoAdvanced {
-  display: none;
-  float: right;
-  /* Align with the "Try Again" button */
-  margin-top: 24px;
-  -moz-margin-end: 24px;
-}
-
-div#weakCryptoAdvanced a {
-  text-decoration: none;
-}
-
-div#weakCryptoAdvanced a:hover {
-  text-decoration: underline;
-}
-
-span.downArrow {
-  display: inline-block;
-  vertical-align: middle;
-  font-size: 0.6em;
-  -moz-margin-start: 0.5em;
-  transform: scaleY(0.7);
-}
-
-div#weakCryptoAdvancedPanel {
+#weakCryptoAdvancedPanel,
+#badCertAdvancedPanel {
   /* Hidden until the link is clicked */
   display: none;
   background-color: white;
@@ -154,6 +134,7 @@ div#weakCryptoAdvancedPanel {
   padding: 0 12px 12px 12px;
   box-shadow: 0 0 4px #ddd;
   font-size: 0.9em;
+  margin-top: 24px;
 }
 
 #overrideWeakCryptoPanel {
@@ -174,8 +155,38 @@ span#hostname {
   cursor: pointer;
 }
 
-#errorCode {
+body:not(.certerror) #errorCode {
   color: var(--in-content-page-color);
   cursor: text;
   text-decoration: none;
+}
+
+body.certerror #errorCode {
+  white-space: nowrap;
+}
+
+#badCertTechnicalInfo {
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+#certificateErrorReporting {
+  display: none;
+}
+
+#certificateErrorDebugInformation {
+  display: none;
+  background-color: var(--in-content-box-background-hover) !important;
+  border-top: 1px solid var(--in-content-border-color);
+  position: absolute;
+  left: 0%;
+  top: 100%;
+  width: 65%;
+  padding: 1em 17.5%;
+}
+
+#certificateErrorText {
+  font-family: monospace;
+  white-space: pre-wrap;
+  padding: 1em 0;
 }
