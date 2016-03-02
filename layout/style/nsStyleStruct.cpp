@@ -2367,7 +2367,12 @@ bool
 nsStyleImageLayers::HasLayerWithImage() const
 {
   for (uint32_t i = 0; i < mImageCount; i++) {
-    if (mLayers[i].mSourceURI) {
+    // mLayers[i].mSourceURI can be nullptr if mask-image prop value is
+    // <element-reference> or <gradient>
+    // mLayers[i].mImage can be empty if mask-image prop value is a reference
+    // to SVG mask element.
+    // So we need to test both mSourceURI and mImage.
+    if (mLayers[i].mSourceURI || !mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }

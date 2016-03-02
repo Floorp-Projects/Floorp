@@ -8055,22 +8055,23 @@ DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Va
         return false;
     }
 
-    PropertyName* name = args[0].toString()->asAtom().asPropertyName();
+    RootedId id(cx);
+    if (!ValueToIdentifier(cx, args[0], &id))
+        return false;
+
+    RootedObject pobj(cx);
+    RootedShape shape(cx);
+    if (!LookupProperty(cx, globalLexical, id, &pobj, &shape))
+        return false;
 
     bool initialized = false;
-
-    Shape* s = nullptr;
-    JSObject* scope = nullptr;
-    JSObject* pobj = nullptr;
-
-    if (LookupNameNoGC(cx, name, globalLexical, &scope, &pobj, &s)) {
-        Value v = globalLexical->as<NativeObject>().getSlot(s->slot());
-        if (s->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
-            globalLexical->as<NativeObject>().setSlot(s->slot(), UndefinedValue());
+    if (shape) {
+        Value v = globalLexical->as<NativeObject>().getSlot(shape->slot());
+        if (shape->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+            globalLexical->as<NativeObject>().setSlot(shape->slot(), UndefinedValue());
             initialized = true;
-         }
+        }
     }
-
     args.rval().setBoolean(initialized);
     return true;
 }

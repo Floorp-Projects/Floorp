@@ -50,6 +50,78 @@ public:
 };
 
 template<>
+class nsAutoRefTraits<HDC>
+{
+public:
+  typedef HDC RawRef;
+  static HDC Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aFD)
+  {
+    if (aFD != Void()) {
+      ::DeleteDC(aFD);
+    }
+  }
+};
+
+template<>
+class nsAutoRefTraits<HBRUSH>
+{
+public:
+  typedef HBRUSH RawRef;
+  static HBRUSH Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aFD)
+  {
+    if (aFD != Void()) {
+      ::DeleteObject(aFD);
+    }
+  }
+};
+
+template<>
+class nsAutoRefTraits<HRGN>
+{
+public:
+  typedef HRGN RawRef;
+  static HRGN Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aFD)
+  {
+    if (aFD != Void()) {
+      ::DeleteObject(aFD);
+    }
+  }
+};
+
+template<>
+class nsAutoRefTraits<HBITMAP>
+{
+public:
+  typedef HBITMAP RawRef;
+  static HBITMAP Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef aFD)
+  {
+    if (aFD != Void()) {
+      ::DeleteObject(aFD);
+    }
+  }
+};
+
+template<>
 class nsAutoRefTraits<SC_HANDLE>
 {
 public:
@@ -140,6 +212,10 @@ public:
 };
 
 typedef nsAutoRef<HKEY> nsAutoRegKey;
+typedef nsAutoRef<HDC> nsAutoHDC;
+typedef nsAutoRef<HBRUSH> nsAutoBrush;
+typedef nsAutoRef<HRGN> nsAutoRegion;
+typedef nsAutoRef<HBITMAP> nsAutoBitmap;
 typedef nsAutoRef<SC_HANDLE> nsAutoServiceHandle;
 typedef nsAutoRef<HANDLE> nsAutoHandle;
 typedef nsAutoRef<HMODULE> nsModuleHandle;

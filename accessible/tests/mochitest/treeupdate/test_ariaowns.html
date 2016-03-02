@@ -441,12 +441,44 @@
       }
     }
 
+    function rearrangeARIAOwns(aContainer, aAttr, aIdList, aRoleList)
+    {
+      this.eventSeq = [];
+      for (var id of aIdList) {
+        this.eventSeq.push(new invokerChecker(EVENT_HIDE, getNode(id)));
+        this.eventSeq.push(new invokerChecker(EVENT_SHOW, getNode(id)));
+      }
+      this.eventSeq.push(new invokerChecker(EVENT_REORDER, getNode(aContainer)));
+
+      this.invoke = function rearrangeARIAOwns_invoke()
+      {
+        getNode(aContainer).setAttribute("aria-owns", aAttr);
+      }
+
+      this.finalCheck = function rearrangeARIAOwns_finalCheck()
+      {
+        var tree = { SECTION: [ ] };
+        for (var role of aRoleList) {
+          var ch = {};
+          ch[role] = [];
+          tree["SECTION"].push(ch);
+        }
+        testAccessibleTree(aContainer, tree);
+      }
+
+      this.getID = function rearrangeARIAOwns_getID()
+      {
+        return `Rearrange @aria-owns attribute to '${aAttr}'`;
+      }
+    }
+
+
     ////////////////////////////////////////////////////////////////////////////
     // Test
     ////////////////////////////////////////////////////////////////////////////
 
     //gA11yEventDumpToConsole = true;
-    //enableLogging("tree"); // debug stuff
+    //enableLogging("tree,verbose"); // debug stuff
 
     var gQueue = null;
 
@@ -473,6 +505,16 @@
 
       // test4
       gQueue.push(new showHiddenElement());
+
+      // test5
+      gQueue.push(new rearrangeARIAOwns(
+        "t5_container", "t5_checkbox t5_radio t5_button",
+        [ "t5_checkbox", "t5_radio", "t5_button" ],
+        [ "CHECKBUTTON", "RADIOBUTTON", "PUSHBUTTON" ]));
+      gQueue.push(new rearrangeARIAOwns(
+        "t5_container", "t5_radio t5_button t5_checkbox",
+        [ "t5_radio", "t5_button" ],
+        [ "RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON" ]));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -514,6 +556,12 @@
   <div id="t4_container2">
     <div id="t4_child1" style="display:none" role="checkbox"></div>
     <div id="t4_child2" role="radio"></div>
+  </div>
+
+  <div id="t5_container">
+    <div role="button" id="t5_button"></div>
+    <div role="checkbox" id="t5_checkbox"></div>
+    <div role="radio" id="t5_radio"></div>
   </div>
 </body>
 

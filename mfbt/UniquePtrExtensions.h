@@ -37,6 +37,21 @@ template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::KnownBound
 MakeUniqueFallible(Args&&... aArgs) = delete;
 
+namespace detail {
+
+template<typename T>
+struct FreePolicy
+{
+  void operator()(const void* ptr) {
+    free(const_cast<void*>(ptr));
+  }
+};
+
+} // namespace detail
+
+template<typename T>
+using UniqueFreePtr = UniquePtr<T, detail::FreePolicy<T>>;
+
 } // namespace mozilla
 
 #endif // mozilla_UniquePtrExtensions_h

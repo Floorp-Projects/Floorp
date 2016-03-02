@@ -1752,6 +1752,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       aWorkerPrivate->GetOrCreateGlobalScope(aCx);
     if (NS_WARN_IF(!globalScope)) {
       NS_WARNING("Failed to make global!");
+      // There's no way to report the exception on aCx right now, because there
+      // is no way to even enter a compartment on this thread anymore.  Just
+      // clear the exception.  We'll report some sort of error to our caller
+      // thread in ShutdownScriptLoader.
+      JS_ClearPendingException(aCx);
       return false;
     }
 

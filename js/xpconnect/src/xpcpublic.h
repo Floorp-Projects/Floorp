@@ -513,6 +513,12 @@ class ErrorReport {
     void LogToConsole();
     void LogToConsoleWithStack(JS::HandleObject aStack);
 
+    // Produce an error event message string from the given JSErrorReport.  Note
+    // that this may produce an empty string if aReport doesn't have a
+    // message attached.
+    static void ErrorReportToMessageString(JSErrorReport* aReport,
+                                           nsAString& aString);
+
   public:
 
     nsCString mCategory;

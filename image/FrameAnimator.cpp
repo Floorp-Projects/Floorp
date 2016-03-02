@@ -83,7 +83,6 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
 
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
-  int32_t timeout = 0;
 
   RefreshResult ret;
   RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
@@ -103,6 +102,23 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit with the next frame's delay time.
   if (mImage->GetNumFrames() == nextFrameIndex) {
+    // We can only accurately determine if we are at the end of the loop if we are
+    // done decoding, otherwise we don't know how many frames there will be.
+    if (!mDoneDecoding) {
+      // We've already advanced to the last decoded frame, nothing more we can do.
+      // We're blocked by network/decoding from displaying the animation at the
+      // rate specified, so that means the frame we are displaying (the latest
+      // available) is the frame we want to be displaying at this time. So we
+      // update the current animation time. If we didn't update the current
+      // animation time then it could lag behind, which would indicate that we
+      // are behind in the animation and should try to catch up. When we are
+      // done decoding (and thus can loop around back to the start of the
+      // animation) we would then jump to a random point in the animation to
+      // try to catch up. But we were never behind in the animation.
+      mCurrentAnimationFrameTime = aTime;
+      return ret;
+    }
+
     // End of an animation loop...
 
     // If we are not looping forever, initialize the loop counter
@@ -129,10 +145,8 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     }
   }
 
-  timeout = GetTimeoutForFrame(nextFrameIndex);
-
   // Bad data
-  if (timeout < 0) {
+  if (GetTimeoutForFrame(nextFrameIndex) < 0) {
     ret.animationFinished = true;
     ret.error = true;
   }
@@ -140,13 +154,10 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   if (nextFrameIndex == 0) {
     ret.dirtyRect = mFirstFrameRefreshArea;
   } else {
-    // Change frame
-    if (nextFrameIndex != currentFrameIndex + 1) {
-      nextFrame = GetRawFrame(nextFrameIndex);
-    }
+    MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 
-    if (!DoBlend(&ret.dirtyRect, currentFrameIndex,
-                               nextFrameIndex)) {
+    // Change frame
+    if (!DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);

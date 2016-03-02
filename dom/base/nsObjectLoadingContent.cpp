@@ -40,6 +40,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 #include "nsIXULRuntime.h"
+#include "nsIScriptError.h"
 
 #include "nsError.h"
 
@@ -1482,8 +1483,8 @@ nsObjectLoadingContent::CheckJavaCodebase()
   return true;
 }
 
-bool
-nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
+void
+nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI, nsIURI** aOutURI)
 {
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -1492,14 +1493,15 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   // We're only interested in switching out embed and object tags
   if (!thisContent->NodeInfo()->Equals(nsGkAtoms::embed) &&
       !thisContent->NodeInfo()->Equals(nsGkAtoms::object)) {
-    return false;
+    return;
   }
+
   nsCOMPtr<nsIEffectiveTLDService> tldService =
     do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   // If we can't analyze the URL, just pass on through.
   if(!tldService) {
     NS_WARNING("Could not get TLD service!");
-    return false;
+    return;
   }
 
   nsAutoCString currentBaseDomain;
@@ -1507,12 +1509,12 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   if (!ok) {
     // Data URIs (commonly used for things like svg embeds) won't parse
     // correctly, so just fail silently here.
-    return false;
+    return;
   }
 
   // See if URL is referencing youtube
   if (!currentBaseDomain.EqualsLiteral("youtube.com")) {
-    return false;
+    return;
   }
 
   // We should only rewrite URLs with paths starting with "/v/", as we shouldn't
@@ -1520,7 +1522,7 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   nsAutoCString path;
   aURI->GetPath(path);
   if (!StringBeginsWith(path, NS_LITERAL_CSTRING("/v/"))) {
-    return false;
+    return;
   }
 
   // See if requester is planning on using the JS API.
@@ -1528,15 +1530,73 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   aURI->GetSpec(uri);
   if (uri.Find("enablejsapi=1", true, 0, -1) != kNotFound) {
     Telemetry::Accumulate(Telemetry::YOUTUBE_NONREWRITABLE_EMBED_SEEN, 1);
-    return false;
+    return;
+  }
+
+  // Some youtube urls have invalid query strings attached, e.g.
+  // http://youtube.com/embed/7LcUOEP7Brc&start=35. These URLs work with flash,
+  // but break iframe/object embedding. If this situation occurs with rewritten
+  // URLs, and the user has flash installed, just use flash. If the user does
+  // not have flash installed or activated, chop off the query in order to make
+  // the video load correctly as an iframe. In either case, warn about it in the
+  // developer console.
+  int32_t ampIndex = uri.FindChar('&', 0);
+  bool trimQuery = false;
+  if (ampIndex != -1) {
+    int32_t qmIndex = uri.FindChar('?', 0);
+    if (qmIndex == -1 ||
+        qmIndex > ampIndex) {
+      if (!nsContentUtils::IsSWFPlayerEnabled()) {
+        trimQuery = true;
+      } else {
+        // Flash is enabled, just use it in this case.
+        return;
+      }
+    }
   }
 
   // If we've made it this far, we've got a rewritable embed. Log it in
   // telemetry.
   Telemetry::Accumulate(Telemetry::YOUTUBE_REWRITABLE_EMBED_SEEN, 1);
 
-  // Even if node is rewritable, only rewrite if the pref tells us we should.
-  return Preferences::GetBool(kPrefYoutubeRewrite);
+  // If we're pref'd off, return after telemetry has been logged.
+  if (!Preferences::GetBool(kPrefYoutubeRewrite)) {
+    return;
+  }
+
+  nsAutoString utf16OldURI = NS_ConvertUTF8toUTF16(uri);
+  // If we need to trim the query off the URL, it means it's malformed, and an
+  // ampersand comes first. Use the index we found earlier.
+  if (trimQuery) {
+    uri.Truncate(ampIndex);
+  }
+  // Switch out video access url formats, which should possibly allow HTML5
+  // video loading.
+  uri.ReplaceSubstring(NS_LITERAL_CSTRING("/v/"),
+                       NS_LITERAL_CSTRING("/embed/"));
+  nsAutoString utf16URI = NS_ConvertUTF8toUTF16(uri);
+  nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aOutURI,
+                                                          utf16URI,
+                                                          thisContent->OwnerDoc(),
+                                                          aBaseURI);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  const char16_t* params[] = { utf16OldURI.get(), utf16URI.get() };
+  const char* msgName;
+  // If there's no query to rewrite, just notify in the developer console
+  // that we're changing the embed.
+  if (!trimQuery) {
+    msgName = "RewriteYoutubeEmbed";
+  } else {
+    msgName = "RewriteYoutubeEmbedInvalidQuery";
+  }
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Plugins"),
+                                  thisContent->OwnerDoc(),
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  msgName,
+                                  params, ArrayLength(params));
 }
 
 bool
@@ -1794,15 +1854,12 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
                                                    uriStr,
                                                    thisContent->OwnerDoc(),
                                                    newBaseURI);
-    if (ShouldRewriteYoutubeEmbed(newURI)) {
-      // Switch out video access url formats, which should possibly allow HTML5
-      // video loading.
-      uriStr.ReplaceSubstring(NS_LITERAL_STRING("/v/"),
-                              NS_LITERAL_STRING("/embed/"));
-      rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(newURI),
-                                                     uriStr,
-                                                     thisContent->OwnerDoc(),
-                                                     newBaseURI);
+    nsCOMPtr<nsIURI> rewrittenURI;
+    MaybeRewriteYoutubeEmbed(newURI,
+                             newBaseURI,
+                             getter_AddRefs(rewrittenURI));
+    if (rewrittenURI) {
+      newURI = rewrittenURI;
       newMime = NS_LITERAL_CSTRING("text/html");
     }
 

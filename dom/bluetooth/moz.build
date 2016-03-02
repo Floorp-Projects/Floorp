@@ -42,6 +42,7 @@ if CONFIG['MOZ_B2G_BT']:
         'common/webapi/BluetoothPairingHandle.cpp',
         'common/webapi/BluetoothPairingListener.cpp',
         'common/webapi/BluetoothPbapRequestHandle.cpp',
+        'common/webapi/BluetoothUUID.cpp',
         'ipc/BluetoothChild.cpp',
         'ipc/BluetoothParent.cpp',
         'ipc/BluetoothServiceChildProcess.cpp'
@@ -139,6 +140,7 @@ EXPORTS.mozilla.dom.bluetooth.ipc += [
 ]
 EXPORTS.mozilla.dom.bluetooth += [
     'common/BluetoothCommon.h',
+    'common/BluetoothGattUUIDName.h',
     'common/BluetoothHashKeys.h',
     'common/webapi/BluetoothAdapter.h',
     'common/webapi/BluetoothClassOfDevice.h',
@@ -157,6 +159,9 @@ EXPORTS.mozilla.dom.bluetooth += [
     'common/webapi/BluetoothPairingHandle.h',
     'common/webapi/BluetoothPairingListener.h',
     'common/webapi/BluetoothPbapRequestHandle.h'
+]
+EXPORTS.mozilla.dom += [
+    'common/webapi/BluetoothUUID.h'
 ]
 
 UNIFIED_SOURCES += [
