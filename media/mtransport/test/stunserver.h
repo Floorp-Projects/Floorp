@@ -13,6 +13,7 @@
 #include <string>
 #include "prio.h"
 #include "nsError.h"
+#include "mozilla/UniquePtr.h"
 
 typedef struct nr_stun_server_ctx_ nr_stun_server_ctx;
 typedef struct nr_socket_ nr_socket;
@@ -31,7 +32,7 @@ class TestStunServer {
   // to |GetInstance| (possibly following a |ShutdownInstance| call)
   static void ConfigurePort(uint16_t port);
   // AF_INET, AF_INET6
-  static TestStunServer *Create(int address_family);
+  static UniquePtr<TestStunServer> Create(int address_family);
 
   virtual ~TestStunServer();
 
@@ -110,7 +111,7 @@ class TestStunTcpServer: public TestStunServer {
 
  private:
   virtual int TryOpenListenSocket(nr_local_addr *addr, uint16_t port);
-  static TestStunTcpServer *Create(int address_family);
+  static UniquePtr<TestStunTcpServer> Create(int address_family);
 
   static TestStunTcpServer *instance;
   static TestStunTcpServer *instance6;
