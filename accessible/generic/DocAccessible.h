@@ -50,8 +50,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
 public:
 
-  DocAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
-                nsIPresShell* aPresShell);
+  DocAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell);
 
   // nsIScrollPositionListener
   virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) override {}

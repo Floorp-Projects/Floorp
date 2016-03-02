@@ -22,8 +22,7 @@ class RootAccessible : public DocAccessibleWrap,
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
-  RootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
-                 nsIPresShell* aPresShell);
+  RootAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
