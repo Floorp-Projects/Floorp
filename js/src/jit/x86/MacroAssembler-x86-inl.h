@@ -379,6 +379,13 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    test32(value.payloadReg(), value.payloadReg());
+    j(truthy ? NonZero : Zero, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

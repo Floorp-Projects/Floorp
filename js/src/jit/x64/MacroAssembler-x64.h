@@ -994,10 +994,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         test32(operand.valueReg(), operand.valueReg());
         return truthy ? NonZero : Zero;
     }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        test32(operand.valueReg(), operand.valueReg());
-        j(truthy ? NonZero : Zero, label);
-    }
     Condition testStringTruthy(bool truthy, const ValueOperand& value) {
         ScratchRegisterScope scratch(asMasm());
         unboxString(value, scratch);
