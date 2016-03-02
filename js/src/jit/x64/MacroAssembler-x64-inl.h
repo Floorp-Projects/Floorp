@@ -414,14 +414,6 @@ MacroAssemblerX64::incrementInt32Value(const Address& addr)
     asMasm().addPtr(Imm32(1), addr);
 }
 
-template <typename T, typename S>
-void
-MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
-{
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
-}
-
 void
 MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
 {
