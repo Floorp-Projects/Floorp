@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>'box-decoration-break' with child overflow</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1249913">
+  <link rel="help" href="https://drafts.csswg.org/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-bug-1249913-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+p { height: 50px; width: 100px; margin:0; background:lime; }
+.clone { height: 10px; box-decoration-break:clone; }
+.border { border:3px solid black; }
+.outline { outline:3px solid brown; }
+.shadow { box-shadow: 2px 2px 0 0 blue; }
+
+.columns {
+     -moz-columns: 2;
+      -ms-columns: 2;
+  -webkit-columns: 2;
+          columns: 2;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  width:500px;
+  height:30px;
+  border:solid silver;
+  margin: 2px 0;
+}
+
+.columns div { height: 10px; }
+
+</style>
+</head>
+<body>
+
+<div class="columns"><div class="clone border"><p></p></div></div>
+<div class="columns"><div class="clone outline"><p></p></div></div>
+<div class="columns"><div class="clone shadow"><p></p></div></div>
+<div class="columns"><div class="clone border outline"><p></p></div></div>
+<div class="columns"><div class="clone border shadow"><p></p></div></div>
+
+<div class="columns"><div class="border"><p></p></div></div>
+<div class="columns"><div class="outline"><p></p></div></div>
+<div class="columns"><div class="shadow"><p></p></div></div>
+<div class="columns"><div class="border outline"><p></p></div></div>
+<div class="columns"><div class="border shadow"><p></p></div></div>
+
+</body>
+</html>
