@@ -473,6 +473,8 @@ class GeckoInputConnection
         return mEditableClient.setInputConnectionHandler(getBackgroundHandler());
     }
 
+    private boolean mIsVisible = false;
+
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         if (mIMEState == IME_STATE_DISABLED) {
@@ -585,6 +587,13 @@ class GeckoInputConnection
         Editable editable = getEditable();
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
+
+        if (mIsVisible) {
+            // The app has been brought to the foreground and the Soft Keyboard
+            // was previously visible, so request that it be shown again.
+            showSoftInput();
+        }
+
         return this;
     }
 
@@ -788,6 +797,16 @@ class GeckoInputConnection
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         return processKey(KeyEvent.ACTION_UP, keyCode, event);
+    }
+
+    @Override
+    public void onWindowVisibilityChanged (int visibility) {
+        if (visibility == View.VISIBLE) {
+            mIsVisible = true;
+        } else {
+            mIsVisible = false;
+            hideSoftInput();
+        }
     }
 
     /**
