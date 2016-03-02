@@ -1223,21 +1223,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestPrimitive(Condition cond, const ValueOperand& value,
-                                                Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestPrimitive(cond, SecondScratchReg, label);
-}
-void
-MacroAssemblerMIPS64Compat::branchTestPrimitive(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET), label,
-         (cond == Equal) ? Below : AboveOrEqual);
-}
-
-void
 MacroAssemblerMIPS64Compat::testNullSet(Condition cond, const ValueOperand& value, Register dest)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);

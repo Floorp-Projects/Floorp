@@ -659,11 +659,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Type testing instructions can take a tag in a register or a
     // ValueOperand.
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        cond = testPrimitive(cond, t);
-        j(cond, label);
-    }
     template <typename T, class L>
     void branchTestMagic(Condition cond, const T& t, L label) {
         cond = testMagic(cond, t);
