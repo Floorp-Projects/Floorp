@@ -137,6 +137,9 @@ def mkdir(path, not_indexed=False):
                 fn = _kernel32.SetFileAttributesA
 
             fn(path, _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)
+        elif sys.platform == 'darwin':
+            with open(os.path.join(path, '.metadata_never_index'), 'a'):
+                pass
 
 
 def simple_diff(filename, old_lines, new_lines):
