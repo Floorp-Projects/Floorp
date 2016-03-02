@@ -19,6 +19,49 @@ class StartTimeRendezvous;
 
 typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
 
+/**
+ * A wrapper around MediaDecoderReader to offset the timestamps of Audio/Video
+ * samples by the start time to ensure MDSM can always assume zero start time.
+ * It also adjusts the seek target passed to Seek() to ensure correct seek time
+ * is passed to the underlying reader.
+ */
+class MediaDecoderReaderWrapper {
+  typedef MediaDecoderReader::MetadataPromise MetadataPromise;
+  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
+  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
+  typedef MediaDecoderReader::SeekPromise SeekPromise;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
+
+public:
+  MediaDecoderReaderWrapper(bool aIsRealTime,
+                            AbstractThread* aOwnerThread,
+                            MediaDecoderReader* aReader);
+
+  media::TimeUnit StartTime() const;
+  RefPtr<MetadataPromise> ReadMetadata();
+  RefPtr<HaveStartTimePromise> AwaitStartTime();
+  RefPtr<AudioDataPromise> RequestAudioData();
+  RefPtr<VideoDataPromise> RequestVideoData(bool aSkipToNextKeyframe,
+                                            media::TimeUnit aTimeThreshold);
+  RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
+  void Shutdown();
+
+private:
+  ~MediaDecoderReaderWrapper();
+
+  void OnMetadataRead(MetadataHolder* aMetadata);
+  void OnMetadataNotRead() {}
+  void OnSampleDecoded(MediaData* aSample);
+  void OnNotDecoded() {}
+
+  const bool mForceZeroStartTime;
+  const RefPtr<AbstractThread> mOwnerThread;
+  const RefPtr<MediaDecoderReader> mReader;
+
+  bool mShutdown = false;
+  RefPtr<StartTimeRendezvous> mStartTimeRendezvous;
+};
+
 } // namespace mozilla
 
 #endif // MediaDecoderReaderWrapper_h_
