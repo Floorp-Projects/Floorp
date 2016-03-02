@@ -476,7 +476,7 @@ void
 MacroAssemblerX86::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
 {
     Label isDouble, done;
-    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
     asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
 
     convertInt32ToDouble(source.payloadReg(), dest);

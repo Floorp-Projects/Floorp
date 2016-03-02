@@ -532,6 +532,22 @@ MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label*
     branchTestInt32(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestDouble(Condition cond, const Address& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestDouble(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestDouble(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

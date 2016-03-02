@@ -1158,39 +1158,6 @@ MacroAssemblerMIPSCompat::branchTestBoolean(Condition cond, const BaseIndex& src
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    Assembler::Condition actual = (cond == Equal) ? Below : AboveOrEqual;
-    ma_b(value.typeReg(), ImmTag(JSVAL_TAG_CLEAR), label, actual);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestDouble(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == NotEqual);
-    Condition actual = (cond == Equal) ? Below : AboveOrEqual;
-    ma_b(tag, ImmTag(JSVAL_TAG_CLEAR), label, actual);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestDouble(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_CLEAR), label, cond);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestDouble(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    Condition actual = (cond == Equal) ? Below : AboveOrEqual;
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_CLEAR), label, actual);
-}
-
-void
 MacroAssemblerMIPSCompat::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
@@ -2014,7 +1981,7 @@ MacroAssemblerMIPSCompat::ensureDouble(const ValueOperand& source, FloatRegister
                                        Label* failure)
 {
     Label isDouble, done;
-    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
     asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
 
     convertInt32ToDouble(source.payloadReg(), dest);
