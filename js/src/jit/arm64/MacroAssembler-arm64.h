@@ -1328,11 +1328,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        Condition c = testPrimitive(cond, t);
-        B(label, c);
-    }
     template <typename T, typename L>
     void branchTestMagic(Condition cond, const T& t, L label) {
         Condition c = testMagic(cond, t);
