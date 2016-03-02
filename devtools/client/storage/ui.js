@@ -81,7 +81,7 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
 
   this.searchBox = this._panelDoc.getElementById("storage-searchbox");
   this.filterItems = this.filterItems.bind(this);
-  this.searchBox.addEventListener("input", this.filterItems);
+  this.searchBox.addEventListener("command", this.filterItems);
 
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
