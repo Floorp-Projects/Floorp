@@ -467,12 +467,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return cond == Equal ? AboveOrEqual : Below;
     }
 
-
-
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                Label* label);
-
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
         emitSet(cond, dest);

@@ -997,6 +997,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                                      Label* label);
 
+    void branchTestValue(Condition cond, const ValueOperand& lhs,
+                         const Value& rhs, Label* label) PER_ARCH;
+
     // Checks if given Value is evaluated to true or false in a condition.
     // The type of the value should match the type of the method.
     inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)

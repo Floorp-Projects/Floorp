@@ -691,15 +691,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testError(Condition cond, const ValueOperand& src) {
         return testMagic(cond, src);
     }
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        MOZ_ASSERT(value.valueReg() != scratch);
-        moveValue(v, scratch);
-        cmpPtr(value.valueReg(), scratch);
-        j(cond, label);
-    }
-    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                Label* label);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
