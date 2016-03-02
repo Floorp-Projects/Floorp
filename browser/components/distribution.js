@@ -346,11 +346,47 @@ DistributionCustomizer.prototype = {
       Cu.reportError(e);
     }
 
+    var usedPreferences = [];
+
+    if (sections["Preferences-" + this._locale]) {
+      for (let key of enumerate(this._ini.getKeys("Preferences-" + this._locale))) {
+        try {
+          let value = this._ini.getString("Preferences-" + this._locale, key);
+          if (value) {
+            Preferences.set(key, parseValue(value));
+          }
+          usedPreferences.push(key);
+        } catch (e) { /* ignore bad prefs and move on */ }
+      }
+    }
+
+    if (sections["Preferences-" + this._language]) {
+      for (let key of enumerate(this._ini.getKeys("Preferences-" + this._language))) {
+        if (usedPreferences.indexOf(key) > -1) {
+          continue;
+        }
+        try {
+          let value = this._ini.getString("Preferences-" + this._language, key);
+          if (value) {
+            Preferences.set(key, parseValue(value));
+          }
+          usedPreferences.push(key);
+        } catch (e) { /* ignore bad prefs and move on */ }
+      }
+    }
+
     if (sections["Preferences"]) {
       for (let key of enumerate(this._ini.getKeys("Preferences"))) {
+        if (usedPreferences.indexOf(key) > -1) {
+          continue;
+        }
         try {
-          let value = parseValue(this._ini.getString("Preferences", key));
-          Preferences.set(key, value);
+          let value = this._ini.getString("Preferences", key);
+          if (value) {
+            value = value.replace(/%LOCALE%/g, this._locale);
+            value = value.replace(/%LANGUAGE%/g, this._language);
+            Preferences.set(key, parseValue(value));
+          }
         } catch (e) { /* ignore bad prefs and move on */ }
       }
     }
@@ -363,8 +399,9 @@ DistributionCustomizer.prototype = {
     if (sections["LocalizablePreferences-" + this._locale]) {
       for (let key of enumerate(this._ini.getKeys("LocalizablePreferences-" + this._locale))) {
         try {
-          let value = parseValue(this._ini.getString("LocalizablePreferences-" + this._locale, key));
-          if (value !== undefined) {
+          let value = this._ini.getString("LocalizablePreferences-" + this._locale, key);
+          if (value) {
+            value = parseValue(value);
             localizedStr.data = "data:text/plain," + key + "=" + value;
             defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
@@ -379,8 +416,9 @@ DistributionCustomizer.prototype = {
           continue;
         }
         try {
-          let value = parseValue(this._ini.getString("LocalizablePreferences-" + this._language, key));
-          if (value !== undefined) {
+          let value = this._ini.getString("LocalizablePreferences-" + this._language, key);
+          if (value) {
+            value = parseValue(value);
             localizedStr.data = "data:text/plain," + key + "=" + value;
             defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
@@ -395,13 +433,14 @@ DistributionCustomizer.prototype = {
           continue;
         }
         try {
-          let value = parseValue(this._ini.getString("LocalizablePreferences", key));
-          if (value !== undefined) {
+          let value = this._ini.getString("LocalizablePreferences", key);
+          if (value) {
+            value = parseValue(value);
             value = value.replace(/%LOCALE%/g, this._locale);
             value = value.replace(/%LANGUAGE%/g, this._language);
             localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
           }
+          defaults._prefBranch.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
         } catch (e) { /* ignore bad prefs and move on */ }
       }
     }
