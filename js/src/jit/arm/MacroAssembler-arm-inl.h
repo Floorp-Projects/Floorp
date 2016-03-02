@@ -897,6 +897,38 @@ MacroAssembler::branchTestNumberImpl(Condition cond, const T& t, Label* label)
     ma_b(label, cond);
 }
 
+void
+MacroAssembler::branchTestBoolean(Condition cond, Register tag, Label* label)
+{
+    branchTestBooleanImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const Address& address, Label* label)
+{
+    branchTestBooleanImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestBooleanImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestBooleanImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestBooleanImpl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testBoolean(cond, t);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

@@ -333,9 +333,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return cond;
     }
     Condition testBoolean(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testBoolean(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
+        return cond;
     }
     Condition testDouble(Condition cond, const Address& src) {
         ScratchRegisterScope scratch(asMasm());
@@ -690,10 +689,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testUndefined(cond, tag);
         j(cond, label);
     }
-    void branchTestBoolean(Condition cond, Register tag, Label* label) {
-        cond = testBoolean(cond, tag);
-        j(cond, label);
-    }
     void branchTestNull(Condition cond, Register tag, Label* label) {
         cond = testNull(cond, tag);
         j(cond, label);
@@ -723,15 +718,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestUndefined(cond, Operand(address), label);
     }
-    void branchTestBoolean(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
-        j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestBoolean(cond, Operand(address), label);
-    }
     void branchTestNull(Condition cond, const Operand& operand, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
@@ -753,11 +739,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void branchTestUndefined(Condition cond, const ValueOperand& src, Label* label) {
         cond = testUndefined(cond, src);
         j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const ValueOperand& src, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        branchTestBoolean(cond, scratch, label);
     }
     void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
         cond = testNull(cond, src);
@@ -781,11 +762,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) {
         cond = testUndefined(cond, address);
         j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(address, scratch);
-        branchTestBoolean(cond, scratch, label);
     }
     void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
         cond = testNull(cond, address);
