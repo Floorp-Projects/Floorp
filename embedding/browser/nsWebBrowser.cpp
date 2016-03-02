@@ -1305,10 +1305,16 @@ nsWebBrowser::GetDevicePixelsPerDesktopPixel(double* aScale)
 NS_IMETHODIMP
 nsWebBrowser::SetPositionDesktopPix(int32_t aX, int32_t aY)
 {
-  // Added to nsIBaseWindow in bug 1247335;
-  // implement if a use-case is found.
-  NS_ASSERTION(false, "implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX jfkthame
+  // It's not clear to me whether this will be fully correct across
+  // potential multi-screen, mixed-DPI configurations for all platforms;
+  // we might need to add code paths that make it possible to pass the
+  // desktop-pix parameters all the way through to the native widget,
+  // to avoid the risk of device-pixel coords mapping to the wrong
+  // display on OS X with mixed retina/non-retina screens.
+  double scale = 1.0;
+  GetDevicePixelsPerDesktopPixel(&scale);
+  return SetPosition(NSToIntRound(aX * scale), NSToIntRound(aY * scale));
 }
 
 NS_IMETHODIMP
