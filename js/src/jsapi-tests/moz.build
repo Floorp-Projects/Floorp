@@ -59,6 +59,7 @@ UNIFIED_SOURCES += [
     'testLooselyEqual.cpp',
     'testMappedArrayBuffer.cpp',
     'testMutedErrors.cpp',
+    'testMutex.cpp',
     'testNewObject.cpp',
     'testNewTargetInvokeConstructor.cpp',
     'testNullRoot.cpp',
