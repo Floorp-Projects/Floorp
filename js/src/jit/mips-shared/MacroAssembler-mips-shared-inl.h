@@ -705,6 +705,14 @@ MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address, Labe
          (cond == Equal) ? AboveOrEqual : Below);
 }
 
+void
+MacroAssembler::branchTestPrimitive(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET), label,
+         (cond == Equal) ? Below : AboveOrEqual);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

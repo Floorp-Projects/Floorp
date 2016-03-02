@@ -374,6 +374,12 @@ MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Labe
     branchTestObject(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestPrimitive(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

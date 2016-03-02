@@ -1096,20 +1096,6 @@ MacroAssemblerMIPSCompat::ToType(Operand base)
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestPrimitive(Condition cond, const ValueOperand& value,
-                                              Label* label)
-{
-    branchTestPrimitive(cond, value.typeReg(), label);
-}
-void
-MacroAssemblerMIPSCompat::branchTestPrimitive(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET), label,
-         (cond == Equal) ? Below : AboveOrEqual);
-}
-
-void
 MacroAssemblerMIPSCompat::testNullSet(Condition cond, const ValueOperand& value, Register dest)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);

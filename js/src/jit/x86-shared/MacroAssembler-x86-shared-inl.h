@@ -733,6 +733,26 @@ MacroAssembler::branchTestGCThingImpl(Condition cond, const T& t, Label* label)
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestPrimitive(Condition cond, Register tag, Label* label)
+{
+    branchTestPrimitiveImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestPrimitiveImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testPrimitive(cond, t);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
