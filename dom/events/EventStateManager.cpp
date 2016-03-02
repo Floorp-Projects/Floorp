@@ -1510,7 +1510,7 @@ EventStateManager::FireContextClick()
       nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
       if (formCtrl) {
-        allowedToDispatch = formCtrl->IsTextControl(false) ||
+        allowedToDispatch = formCtrl->IsTextOrNumberControl(/*aExcludePassword*/ false) ||
                             formCtrl->GetType() == NS_FORM_INPUT_FILE;
       }
       else if (mGestureDownContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
