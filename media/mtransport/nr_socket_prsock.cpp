@@ -1880,12 +1880,10 @@ int NrTcpSocketIpc::read(void* buf, size_t maxlen, size_t *len) {
 }
 
 int NrTcpSocketIpc::listen(int backlog) {
-  MOZ_ASSERT(false);
   return R_INTERNAL;
 }
 
 int NrTcpSocketIpc::accept(nr_transport_addr *addrp, nr_socket **sockp) {
-  MOZ_ASSERT(false);
   return R_INTERNAL;
 }
 

@@ -445,19 +445,22 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       if (!ice_tcp_disabled) {
         /* passive host candidate */
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-          TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv)))
-          ABORT(r);
+          TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv))) {
+          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create passive TCP host candidate: %d",ctx->label,r);
+        }
 
         /* active host candidate */
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-          TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL)))
-          ABORT(r);
+          TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL))) {
+          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create active TCP host candidate: %d",ctx->label,r);
+        }
 
         /* simultaneous-open host candidate */
         if (so_sock_ct) {
           if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-            TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so)))
-            ABORT(r);
+            TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so))) {
+            r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create simultanous open TCP host candidate: %d",ctx->label,r);
+          }
         }
 
         /* And srvrflx candidates for each STUN server */
@@ -465,15 +468,17 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if (ctx->stun_servers[j].transport!=IPPROTO_TCP)
             continue;
 
-          if(r=nr_ice_candidate_create(ctx,component,
-            isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-            &ctx->stun_servers[j],component->component_id,&cand))
-            ABORT(r);
-          TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-          component->candidate_ct++;
-          cand=0;
+          if (isock_psv) {
+            if(r=nr_ice_candidate_create(ctx,component,
+              isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
+              &ctx->stun_servers[j],component->component_id,&cand))
+              ABORT(r);
+            TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+            component->candidate_ct++;
+            cand=0;
+          }
 
-          if (so_sock_ct) {
+          if (isock_so) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
               &ctx->stun_servers[j],component->component_id,&cand))
@@ -508,15 +513,17 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
         if (!ice_tcp_disabled) {
           /* Use TURN server to get srflx candidates */
-          if(r=nr_ice_candidate_create(ctx,component,
-            isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-            &ctx->turn_servers[j].turn_server,component->component_id,&cand))
-            ABORT(r);
-          TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
-          component->candidate_ct++;
-          cand=0;
+          if (isock_psv) {
+            if(r=nr_ice_candidate_create(ctx,component,
+              isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
+              &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+              ABORT(r);
+            TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+            component->candidate_ct++;
+            cand=0;
+          }
 
-          if (so_sock_ct) {
+          if (isock_so) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
               &ctx->turn_servers[j].turn_server,component->component_id,&cand))
@@ -539,15 +546,15 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           continue;
         }
 
-        r_log(LOG_ICE,LOG_DEBUG,"nr_ice_component_initialize_tcp create");
+        r_log(LOG_ICE,LOG_DEBUG,"nr_ice_component_initialize_tcp creating TURN TCP wrappers");
 
         if (ctx->turn_tcp_socket_wrapper) {
-          /* Wrap it */
+          /* The HTTP proxy socket */
           if((r=nr_socket_wrapper_factory_wrap(ctx->turn_tcp_socket_wrapper, local_sock, &local_sock)))
             ABORT(r);
         }
 
-        /* Wrap it */
+        /* The TCP buffered socket */
         if((r=nr_socket_buffered_stun_create(local_sock, NR_STUN_MAX_MESSAGE_SIZE, TURN_TCP_FRAMING, &buffered_sock)))
           ABORT(r);
 
