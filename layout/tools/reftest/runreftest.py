@@ -303,6 +303,7 @@ class RefTest(object):
         prefs['browser.tabs.remote.autostart.2'] = False
         if options.e10s:
             prefs['browser.tabs.remote.autostart'] = True
+            prefs['extensions.e10sBlocksEnabling'] = False
 
         for v in options.extraPrefs:
             thispref = v.split('=')
