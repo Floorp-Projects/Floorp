@@ -272,6 +272,14 @@ MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Lab
     branchTestBoolean(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestBooleanTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    unboxBoolean(value, scratch2);
+    ma_b(scratch2, scratch2, label, b ? NonZero : Zero);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

@@ -830,10 +830,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         test32(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
     }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        test32(operand.payloadReg(), operand.payloadReg());
-        j(truthy ? NonZero : Zero, label);
-    }
     Condition testStringTruthy(bool truthy, const ValueOperand& value) {
         Register string = value.payloadReg();
         cmp32(Operand(string, JSString::offsetOfLength()), Imm32(0));

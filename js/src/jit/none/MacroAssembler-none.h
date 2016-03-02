@@ -391,7 +391,6 @@ class MacroAssemblerNone : public Assembler
     void loadConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
     Condition testInt32Truthy(bool, ValueOperand) { MOZ_CRASH(); }
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
-    void branchTestBooleanTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
     void branchTestStringTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
