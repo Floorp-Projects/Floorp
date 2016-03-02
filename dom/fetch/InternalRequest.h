@@ -425,6 +425,9 @@ public:
   bool
   IsClientRequest() const;
 
+  void
+  MaybeSkipCacheIfPerformingRevalidation();
+
   static RequestMode
   MapChannelToRequestMode(nsIChannel* aChannel);
 
