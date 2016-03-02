@@ -22,6 +22,10 @@ buildscript {
         maven {
             url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
         }
+        // For android-sdk-manager SNAPSHOT releases.
+        maven {
+            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
+        }
     }
 
     dependencies {
@@ -30,6 +34,8 @@ buildscript {
             // Without these, we get errors linting.
             exclude module: 'guava'
         }
+        // Provided in tree.
+        classpath 'com.jakewharton.sdkmanager:gradle-plugin:1.5.0-SNAPSHOT'
     }
 }
 

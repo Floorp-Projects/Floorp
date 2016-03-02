@@ -1,5 +1,6 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/app"
 
+apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.application'
 
 android {
