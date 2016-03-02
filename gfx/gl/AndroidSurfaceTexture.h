@@ -56,9 +56,9 @@ public:
 
   nsresult Detach();
 
-  // Ability to detach is based on API version (16+), and we also block PowerVR since it has some type
-  // of fencing problem. Bug 1100126.
-  bool CanDetach() const { return mCanDetach; }
+  // Ability to detach is based on API version (16+), and we also block PowerVR
+  // since it has some type of fencing problem. Bug 1100126.
+  bool CanDetach() const;
 
   GLContext* AttachedContext() const { return mAttachedContext; }
 
@@ -90,14 +90,12 @@ private:
   ~AndroidSurfaceTexture();
 
   bool Init(GLContext* aContext, GLuint aTexture);
-  void UpdateCanDetach();
 
   GLuint mTexture;
   widget::sdk::SurfaceTexture::GlobalRef mSurfaceTexture;
   widget::sdk::Surface::GlobalRef mSurface;
 
   GLContext* mAttachedContext;
-  bool mCanDetach;
 
   RefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
