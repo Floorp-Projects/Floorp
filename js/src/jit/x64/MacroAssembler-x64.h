@@ -329,9 +329,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return testUndefined(cond, scratch);
     }
     Condition testInt32(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testInt32(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
+        return cond;
     }
     Condition testBoolean(Condition cond, const Address& src) {
         ScratchRegisterScope scratch(asMasm());
@@ -732,11 +731,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestUndefined(cond, Operand(address), label);
     }
-    void branchTestInt32Impl(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
-        j(cond, label);
-    }
     void branchTestDouble(Condition cond, const Operand& operand, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         ScratchRegisterScope scratch(asMasm());
@@ -1069,12 +1063,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    inline void loadInt32OrDouble(const Operand& operand, FloatRegister dest);
+    template <typename T>
+    inline void loadInt32OrDouble(const T& src, FloatRegister dest);
 
     template <typename T>
     void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
-            loadInt32OrDouble(Operand(src), dest.fpu());
+            loadInt32OrDouble(src, dest.fpu());
         else if (type == MIRType_Int32 || type == MIRType_Boolean)
             movl(Operand(src), dest.gpr());
         else

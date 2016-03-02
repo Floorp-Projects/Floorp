@@ -429,9 +429,41 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 }
 
 void
-MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
 {
-    Condition cond = testInt32Truthy(truthy, operand);
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestInt32Impl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestInt32Impl(Condition cond, const T& t, Label* label)
+{
+    cond = testInt32(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    Condition cond = testInt32Truthy(truthy, value);
     j(cond, label);
 }
 

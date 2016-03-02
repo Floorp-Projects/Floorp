@@ -291,16 +291,15 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 void
 MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(value.typeReg(), ImmType(JSVAL_TYPE_INT32), label, cond);
+    branchTestInt32(cond, value.typeReg(), label);
 }
-
 
 void
 MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
 {
-    as_and(ScratchRegister, value.payloadReg(), value.payloadReg());
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+    ScratchRegisterScope scratch(*this);
+    as_and(scratch, value.payloadReg(), value.payloadReg());
+    ma_b(scratch, scratch, label, b ? NonZero : Zero);
 }
 
 //}}} check_macroassembler_style
