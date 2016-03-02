@@ -1275,11 +1275,12 @@ INSTALL_TARGETS += %(prefix)s
                         target_var, self._pretty_path(f, backend_file)))
                     have_objdir_files = True
             if have_objdir_files:
-                self._no_skip['export'].add(backend_file.relobjdir)
+                tier = 'export' if obj.install_target == 'dist/include' else 'misc'
+                self._no_skip[tier].add(backend_file.relobjdir)
                 backend_file.write('%s_DEST := $(DEPTH)/%s\n'
                                    % (target_var,
                                       mozpath.join(target, path)))
-                backend_file.write('%s_TARGET := export\n' % target_var)
+                backend_file.write('%s_TARGET := %s\n' % (target_var, tier))
                 backend_file.write('INSTALL_TARGETS += %s\n' % target_var)
 
     def _process_final_target_pp_files(self, obj, files, backend_file):
