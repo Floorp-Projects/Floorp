@@ -30,6 +30,7 @@
         <textbox id="storage-searchbox"
                  class="devtools-searchinput"
                  type="search"
+                 timeout="200"
                  placeholder="&searchBox.placeholder;"/>
       </hbox>
       <vbox id="storage-table" class="theme-sidebar" flex="1"/>
