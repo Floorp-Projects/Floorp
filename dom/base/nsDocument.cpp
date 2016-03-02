@@ -1585,6 +1585,17 @@ nsDocument::~nsDocument()
         /* no mixed object subrequests loaded on page*/
         Accumulate(Telemetry::MIXED_CONTENT_OBJECT_SUBREQUEST, 0);
       }
+
+      // record CSP telemetry on this document
+      if (mHasCSP) {
+        Accumulate(Telemetry::CSP_DOCUMENTS_COUNT, 1);
+      }
+      if (mHasUnsafeInlineCSP) {
+        Accumulate(Telemetry::CSP_UNSAFE_INLINE_DOCUMENTS_COUNT, 1);
+      }
+      if (mHasUnsafeEvalCSP) {
+        Accumulate(Telemetry::CSP_UNSAFE_EVAL_DOCUMENTS_COUNT, 1);
+      }
     }
   }
 
