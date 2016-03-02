@@ -684,11 +684,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     template <typename T>
-    void branchTestGCThing(Condition cond, const T& src, Label* label) {
-        cond = testGCThing(cond, src);
-        j(cond, label);
-    }
-    template <typename T>
     void branchTestPrimitive(Condition cond, const T& t, Label* label) {
         cond = testPrimitive(cond, t);
         j(cond, label);
