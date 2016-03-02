@@ -1333,11 +1333,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         B(label, c);
     }
 
-    template<typename T>
-    void branchTestInt32Impl(Condition cond, T& t, Label* label) {
-        Condition c = testInt32(cond, t);
-        B(label, c);
-    }
     void branchTestDouble(Condition cond, Register tag, Label* label) {
         Condition c = testDouble(cond, tag);
         B(label, c);

@@ -921,16 +921,28 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
-    inline void branchTestInt32(Condition cond, Register tag, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const Address& address, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) PER_ARCH;
+    // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
+    // value (64bits boxing).
+    inline void branchTestInt32(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
 
-    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+    // Perform a type-test on a Value, addressed by Address or BaseIndex, or
+    // loaded into ValueOperand.
+    inline void branchTestInt32(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    // Checks if given Value is evaluated to true or false in a condition.
+    // The type of the value should match the type of the method.
+    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+  private:
+
+    // Implementation for branchTest* methods.
+    template <typename T>
+    inline void branchTestInt32Impl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style
   public:

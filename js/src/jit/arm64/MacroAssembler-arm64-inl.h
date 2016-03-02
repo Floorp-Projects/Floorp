@@ -905,15 +905,23 @@ MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label*
 }
 
 void
-MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
 {
-    branchTestInt32Impl(cond, src, label);
+    branchTestInt32Impl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestInt32Impl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testInt32(cond, t);
+    B(label, c);
 }
 
 void
-MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
 {
-    Condition c = testInt32Truthy(truthy, operand);
+    Condition c = testInt32Truthy(truthy, value);
     B(label, c);
 }
 
