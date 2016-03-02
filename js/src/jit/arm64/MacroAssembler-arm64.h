@@ -1328,10 +1328,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
     void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch64 = temps.AcquireX();
