@@ -519,17 +519,17 @@ MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
 void
 MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestInt32(cond, scratch2, label);
 }
 
 void
 MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestInt32(cond, scratch2, label);
 }
 
 //}}} check_macroassembler_style
