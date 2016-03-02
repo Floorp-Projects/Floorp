@@ -841,7 +841,7 @@ WebrtcOMXH264VideoEncoder::WebrtcOMXH264VideoEncoder()
 int32_t
 WebrtcOMXH264VideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
                                       int32_t aNumOfCores,
-                                      uint32_t aMaxPayloadSize)
+                                      size_t aMaxPayloadSize)
 {
   CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p init", this);
 
