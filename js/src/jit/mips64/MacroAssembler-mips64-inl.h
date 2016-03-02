@@ -305,6 +305,14 @@ MacroAssembler::branchTestStringTruthy(bool b, const ValueOperand& value, Label*
     ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
 }
 
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestSymbol(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

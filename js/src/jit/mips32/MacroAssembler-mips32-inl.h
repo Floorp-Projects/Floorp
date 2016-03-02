@@ -356,6 +356,12 @@ MacroAssembler::branchTestStringTruthy(bool b, const ValueOperand& value, Label*
     ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
 }
 
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestSymbol(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
