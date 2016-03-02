@@ -459,7 +459,7 @@ MacroAssemblerX64::ensureDouble(const ValueOperand& source, FloatRegister dest, 
 {
     Label isDouble, done;
     Register tag = splitTagForTest(source);
-    branchTestDouble(Assembler::Equal, tag, &isDouble);
+    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
     asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
 
     ScratchRegisterScope scratch(asMasm());

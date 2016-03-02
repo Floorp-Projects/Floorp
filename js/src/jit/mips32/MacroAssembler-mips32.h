@@ -381,11 +381,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestBoolean(Condition cond, const BaseIndex& src, Label* label);
 
 
-    void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestDouble(Condition cond, Register tag, Label* label);
-    void branchTestDouble(Condition cond, const Address& address, Label* label);
-    void branchTestDouble(Condition cond, const BaseIndex& src, Label* label);
-
     void branchTestNull(Condition cond, const ValueOperand& value, Label* label);
     void branchTestNull(Condition cond, Register tag, Label* label);
     void branchTestNull(Condition cond, const BaseIndex& src, Label* label);

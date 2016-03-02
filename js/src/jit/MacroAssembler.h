@@ -924,12 +924,19 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
     // value (64bits boxing).
     inline void branchTestInt32(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, Register tag, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
     // Perform a type-test on a Value, addressed by Address or BaseIndex, or
     // loaded into ValueOperand.
     inline void branchTestInt32(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
     inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
     inline void branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestDouble(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
     // Checks if given Value is evaluated to true or false in a condition.
@@ -942,6 +949,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Implementation for branchTest* methods.
     template <typename T>
     inline void branchTestInt32Impl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestDoubleImpl(Condition cond, const T& t, Label* label)
         DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style

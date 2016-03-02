@@ -302,6 +302,20 @@ MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* 
     ma_b(scratch, scratch, label, b ? NonZero : Zero);
 }
 
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+    ma_b(tag, ImmTag(JSVAL_TAG_CLEAR), label, actual);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestDouble(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

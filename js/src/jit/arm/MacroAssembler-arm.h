@@ -767,12 +767,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testBoolean(cond, t);
         ma_b(label, c);
     }
-
-    template<typename T>
-    void branchTestDouble(Condition cond, const T & t, Label* label) {
-        Condition c = testDouble(cond, t);
-        ma_b(label, c);
-    }
     template<typename T>
     void branchTestNull(Condition cond, const T & t, Label* label) {
         Condition c = testNull(cond, t);

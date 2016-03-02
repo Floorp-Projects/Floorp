@@ -925,6 +925,38 @@ MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& value, La
     B(label, c);
 }
 
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    branchTestDoubleImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const Address& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestDoubleImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestDoubleImpl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testDouble(cond, t);
+    B(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -1006,7 +1038,7 @@ MacroAssemblerCompat::ensureDouble(const ValueOperand& source, FloatRegister des
         vixl::UseScratchRegisterScope temps(this);
         temps.Exclude(ARMRegister(tag, 64));
 
-        branchTestDouble(Assembler::Equal, tag, &isDouble);
+        asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
         asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
     }
 

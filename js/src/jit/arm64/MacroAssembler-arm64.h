@@ -1332,11 +1332,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testUndefined(cond, tag);
         B(label, c);
     }
-
-    void branchTestDouble(Condition cond, Register tag, Label* label) {
-        Condition c = testDouble(cond, tag);
-        B(label, c);
-    }
     void branchTestBoolean(Condition cond, Register tag, Label* label) {
         Condition c = testBoolean(cond, tag);
         B(label, c);
@@ -1364,10 +1359,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void branchTestUndefined(Condition cond, const Address& address, Label* label) {
         Condition c = testUndefined(cond, address);
-        B(label, c);
-    }
-    void branchTestDouble(Condition cond, const Address& address, Label* label) {
-        Condition c = testDouble(cond, address);
         B(label, c);
     }
     void branchTestBoolean(Condition cond, const Address& address, Label* label) {
@@ -1405,10 +1396,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Condition c = testBoolean(cond, src);
         B(label, c);
     }
-    void branchTestDouble(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testDouble(cond, src);
-        B(label, c);
-    }
     void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testNull(cond, src);
         B(label, c);
@@ -1438,10 +1425,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
         Condition c = testBoolean(cond, address);
-        B(label, c);
-    }
-    void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) {
-        Condition c = testDouble(cond, address);
         B(label, c);
     }
     void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
