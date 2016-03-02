@@ -368,6 +368,12 @@ MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value, Label*
     branchTestNull(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestObject(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
