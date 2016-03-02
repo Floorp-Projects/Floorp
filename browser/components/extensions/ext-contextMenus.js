@@ -15,29 +15,33 @@ var {
 // Map[Extension -> Map[ID -> MenuItem]]
 // Note: we want to enumerate all the menu items so
 // this cannot be a weak map.
-var contextMenuMap = new Map();
+var gContextMenuMap = new Map();
 
 // Map[Extension -> MenuItem]
-var rootItems = new Map();
+var gRootItems = new Map();
 
 // Not really used yet, will be used for event pages.
-var onClickedCallbacksMap = new WeakMap();
+var gOnClickedCallbacksMap = new WeakMap();
 
 // If id is not specified for an item we use an integer.
-var nextID = 0;
+var gNextMenuItemID = 0;
 
+// Used to assign unique names to radio groups.
+var gNextRadioGroupID = 0;
+
+// The max length of a menu item's label.
 var gMaxLabelLength = 64;
 
 // When a new contextMenu is opened, this function is called and
 // we populate the |xulMenu| with all the items from extensions
 // to be displayed. We always clear all the items again when
 // popuphidden fires.
-var menuBuilder = {
+var gMenuBuilder = {
   build: function(contextData) {
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
-    for (let [, root] of rootItems) {
+    for (let [, root] of gRootItems) {
       let rootElement = this.buildElementWithChildren(root, contextData);
       if (!rootElement.childNodes.length) {
         // If the root has no visible children, there is no reason to show
@@ -46,6 +50,23 @@ var menuBuilder = {
       }
       rootElement.setAttribute("ext-type", "top-level-menu");
       rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
+
+      // Display the extension icon on the root element.
+      if (root.extension.manifest.icons) {
+        let parentWindow = contextData.menu.ownerDocument.defaultView;
+        let extension = root.extension;
+
+        let url = IconDetails.getURL(extension.manifest.icons, parentWindow, extension, 16 /* size */);
+        let resolvedURL = root.extension.baseURI.resolve(url);
+
+        if (rootElement.localName == "menu") {
+          rootElement.setAttribute("class", "menu-iconic");
+        } else if (rootElement.localName == "menuitem") {
+          rootElement.setAttribute("class", "menuitem-iconic");
+        }
+        rootElement.setAttribute("image", resolvedURL);
+      }
+
       xulMenu.appendChild(rootElement);
       this.itemsToCleanUp.add(rootElement);
     }
@@ -53,7 +74,17 @@ var menuBuilder = {
 
   buildElementWithChildren(item, contextData) {
     let element = this.buildSingleElement(item, contextData);
+    let groupName;
     for (let child of item.children) {
+      if (child.type == "radio" && !child.groupName) {
+        if (!groupName) {
+          groupName = `webext-radio-group-${gNextRadioGroupID++}`;
+        }
+        child.groupName = groupName;
+      } else {
+        groupName = null;
+      }
+
       if (child.enabledForContext(contextData)) {
         let childElement = this.buildElementWithChildren(child, contextData);
         // Here element must be a menu element and its first child
@@ -95,8 +126,7 @@ var menuBuilder = {
 
   createMenuElement(doc, item) {
     let element = doc.createElement("menu");
-    // Menu elements need to have a menupopup child for
-    // its menu items.
+    // Menu elements need to have a menupopup child for its menu items.
     let menupopup = doc.createElement("menupopup");
     element.appendChild(menupopup);
     return element;
@@ -120,11 +150,37 @@ var menuBuilder = {
       element.setAttribute("label", label);
     }
 
+    if (item.type == "checkbox") {
+      element.setAttribute("type", "checkbox");
+      if (item.checked) {
+        element.setAttribute("checked", "true");
+      }
+    } else if (item.type == "radio") {
+      element.setAttribute("type", "radio");
+      element.setAttribute("name", item.groupName);
+      if (item.checked) {
+        element.setAttribute("checked", "true");
+      }
+    }
+
     if (!item.enabled) {
-      element.setAttribute("disabled", true);
+      element.setAttribute("disabled", "true");
     }
 
     element.addEventListener("command", event => {  // eslint-disable-line mozilla/balanced-listeners
+      if (item.type == "checkbox") {
+        item.checked = !item.checked;
+      } else if (item.type == "radio") {
+        // Deselect all radio items in the current radio group.
+        for (let child of item.parent.children) {
+          if (child.type == "radio" && child.groupName == item.groupName) {
+            child.checked = false;
+          }
+        }
+        // Select the clicked radio item.
+        item.checked = true;
+      }
+
       item.tabManager.addActiveTabPermission();
       if (item.onclick) {
         let clickData = item.getClickData(contextData, event);
@@ -154,7 +210,7 @@ var menuBuilder = {
 
 function contextMenuObserver(subject, topic, data) {
   subject = subject.wrappedJSObject;
-  menuBuilder.build(subject);
+  gMenuBuilder.build(subject);
 }
 
 function getContexts(contextData) {
@@ -203,7 +259,7 @@ function MenuItem(extension, extContext, createProperties, isRoot = false) {
   this.setDefaults();
   this.setProps(createProperties);
   if (!this.hasOwnProperty("_id")) {
-    this.id = nextID++;
+    this.id = gNextMenuItemID++;
   }
   // If the item is not the root and has no parent
   // it must be a child of the root.
@@ -234,9 +290,9 @@ MenuItem.prototype = {
   setDefaults() {
     this.setProps({
       type: "normal",
-      checked: "false",
+      checked: false,
       contexts: ["all"],
-      enabled: "true",
+      enabled: true,
     });
   },
 
@@ -244,7 +300,7 @@ MenuItem.prototype = {
     if (this.hasOwnProperty("_id")) {
       throw new Error("Id of a MenuItem cannot be changed");
     }
-    let isIdUsed = contextMenuMap.get(this.extension).has(id);
+    let isIdUsed = gContextMenuMap.get(this.extension).has(id);
     if (isIdUsed) {
       throw new Error("Id already exists");
     }
@@ -259,7 +315,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       return;
     }
-    let menuMap = contextMenuMap.get(this.extension);
+    let menuMap = gContextMenuMap.get(this.extension);
     if (!menuMap.has(parentId)) {
       throw new Error("Could not find any MenuItem with id: " + parentId);
     }
@@ -280,7 +336,7 @@ MenuItem.prototype = {
     if (parentId === undefined) {
       this.root.addChild(this);
     } else {
-      let menuMap = contextMenuMap.get(this.extension);
+      let menuMap = gContextMenuMap.get(this.extension);
       menuMap.get(parentId).addChild(this);
     }
   },
@@ -308,14 +364,14 @@ MenuItem.prototype = {
 
   get root() {
     let extension = this.extension;
-    if (!rootItems.has(extension)) {
+    if (!gRootItems.has(extension)) {
       let root = new MenuItem(extension, this.context,
                               {title: extension.name},
                               /* isRoot = */ true);
-      rootItems.set(extension, root);
+      gRootItems.set(extension, root);
     }
 
-    return rootItems.get(extension);
+    return gRootItems.get(extension);
   },
 
   remove() {
@@ -327,10 +383,10 @@ MenuItem.prototype = {
       child.remove();
     }
 
-    let menuMap = contextMenuMap.get(this.extension);
+    let menuMap = gContextMenuMap.get(this.extension);
     menuMap.delete(this.id);
     if (this.root == this) {
-      rootItems.delete(this.extension);
+      gRootItems.delete(this.extension);
     }
   },
 
@@ -394,12 +450,12 @@ MenuItem.prototype = {
   },
 };
 
-var extCount = 0;
+var gExtensionCount = 0;
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
-  contextMenuMap.set(extension, new Map());
-  rootItems.delete(extension);
-  if (++extCount == 1) {
+  gContextMenuMap.set(extension, new Map());
+  gRootItems.delete(extension);
+  if (++gExtensionCount == 1) {
     Services.obs.addObserver(contextMenuObserver,
                              "on-build-contextmenu",
                              false);
@@ -407,8 +463,8 @@ extensions.on("startup", (type, extension) => {
 });
 
 extensions.on("shutdown", (type, extension) => {
-  contextMenuMap.delete(extension);
-  if (--extCount == 0) {
+  gContextMenuMap.delete(extension);
+  if (--gExtensionCount == 0) {
     Services.obs.removeObserver(contextMenuObserver,
                                 "on-build-contextmenu");
   }
@@ -420,7 +476,7 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
     contextMenus: {
       create: function(createProperties, callback) {
         let menuItem = new MenuItem(extension, context, createProperties);
-        contextMenuMap.get(extension).set(menuItem.id, menuItem);
+        gContextMenuMap.get(extension).set(menuItem.id, menuItem);
         if (callback) {
           runSafe(context, callback);
         }
@@ -428,7 +484,7 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
       },
 
       update: function(id, updateProperties) {
-        let menuItem = contextMenuMap.get(extension).get(id);
+        let menuItem = gContextMenuMap.get(extension).get(id);
         if (menuItem) {
           menuItem.setProps(updateProperties);
         }
@@ -436,7 +492,7 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
       },
 
       remove: function(id) {
-        let menuItem = contextMenuMap.get(extension).get(id);
+        let menuItem = gContextMenuMap.get(extension).get(id);
         if (menuItem) {
           menuItem.remove();
         }
@@ -444,7 +500,7 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
       },
 
       removeAll: function() {
-        let root = rootItems.get(extension);
+        let root = gRootItems.get(extension);
         if (root) {
           root.remove();
         }
@@ -457,9 +513,9 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
           fire(menuItem.data);
         };
 
-        onClickedCallbacksMap.set(extension, callback);
+        gOnClickedCallbacksMap.set(extension, callback);
         return () => {
-          onClickedCallbacksMap.delete(extension);
+          gOnClickedCallbacksMap.delete(extension);
         };
       }).api(),
     },
