@@ -9,12 +9,14 @@
 
 loadHelperScript("helper_attributes_test_runner.js");
 
+/*eslint-disable */
 const LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const DATA_URL_INLINE_STYLE='color: red; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC");';
 const DATA_URL_INLINE_STYLE_COLLAPSED='color: red; background: url("data:image/png;base64,iVBORw0KG\u2026NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC");';
 const DATA_URL_ATTRIBUTE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
 const DATA_URL_ATTRIBUTE_COLLAPSED = "data:image/png;base64,iVBORw0K\u20269/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
+/*eslint-enable */
 
 var TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
 var TEST_DATA = [{
@@ -40,7 +42,8 @@ var TEST_DATA = [{
     style: ""
   }
 }, {
-  desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
+  desc: "Try to add long data URL to make sure it is collapsed in attribute " +
+        "editor.",
   text: `style='${DATA_URL_INLINE_STYLE}'`,
   expectedAttributes: {
     "style": DATA_URL_INLINE_STYLE
@@ -53,7 +56,8 @@ var TEST_DATA = [{
     is(visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED);
   }
 }, {
-  desc: "Try to add long attribute to make sure it is collapsed in attribute editor.",
+  desc: "Try to add long attribute to make sure it is collapsed in attribute " +
+        "editor.",
   text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
     "data-long": LONG_ATTRIBUTE
@@ -66,7 +70,8 @@ var TEST_DATA = [{
     is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
   }
 }, {
-  desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
+  desc: "Try to add long data URL to make sure it is collapsed in attribute " +
+        "editor.",
   text: `src="${DATA_URL_ATTRIBUTE}"`,
   expectedAttributes: {
     "src": DATA_URL_ATTRIBUTE

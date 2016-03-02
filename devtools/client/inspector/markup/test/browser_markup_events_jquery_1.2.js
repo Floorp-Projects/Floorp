@@ -12,6 +12,7 @@ const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
+/*eslint-disable */
 const TEST_DATA = [
   {
     selector: "html",
@@ -183,6 +184,7 @@ const TEST_DATA = [
     ]
   },
 ];
+/*eslint-enable */
 
 add_task(function*() {
   yield runEventPopupTests(TEST_URL, TEST_DATA);
