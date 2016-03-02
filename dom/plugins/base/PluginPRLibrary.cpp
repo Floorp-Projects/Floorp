@@ -321,4 +321,17 @@ PluginPRLibrary::EndUpdateBackground(NPP instance, const nsIntRect&)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+#if defined(XP_WIN)
+nsresult
+PluginPRLibrary::GetScrollCaptureContainer(NPP aInstance, ImageContainer** aContainer)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+nsresult
+PluginPRLibrary::UpdateScrollState(NPP aInstance, bool aIsScrolling)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
 } // namespace mozilla

@@ -538,7 +538,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * our type to eType_Document so that we render similarly to an iframe
      * embed.
      */
-    bool ShouldRewriteYoutubeEmbed(nsIURI* uri);
+    void MaybeRewriteYoutubeEmbed(nsIURI* aURI,
+                                  nsIURI* aBaseURI,
+                                  nsIURI** aRewrittenURI);
 
     // Helper class for SetupProtoChain
     class SetupProtoChainRunner final : public nsIRunnable

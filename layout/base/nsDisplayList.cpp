@@ -399,6 +399,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                                     - timing.mDelay;
   animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
+  animation->iterationStart() = computedTiming.mIterationStart;
   animation->direction() = static_cast<uint32_t>(timing.mDirection);
   animation->property() = aProperty.mProperty;
   animation->playbackRate() = aAnimation->PlaybackRate();

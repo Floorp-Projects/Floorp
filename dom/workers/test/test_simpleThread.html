@@ -47,7 +47,7 @@ Tests of DOM Worker Threads (Bug 437152)
   worker.onerror = function(event) {
     event.preventDefault();
     is(event.target, worker);
-    is(event.message, "InternalError: uncaught exception: Bad message: asdf");
+    is(event.message, "uncaught exception: Bad message: asdf");
 
     worker.onerror = function(otherEvent) {
       otherEvent.preventDefault();

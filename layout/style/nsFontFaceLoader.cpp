@@ -297,43 +297,6 @@ nsFontFaceLoader::Cancel()
   mChannel->Cancel(NS_BINDING_ABORTED);
 }
 
-/* static */ nsresult
-nsFontFaceLoader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
-                                   nsIURI* aTargetURI,
-                                   nsISupports* aContext)
-{
-  nsresult rv;
-
-  if (!aSourcePrincipal)
-    return NS_OK;
-
-  // check with the security manager
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  rv = secMan->CheckLoadURIWithPrincipal(aSourcePrincipal, aTargetURI,
-                                        nsIScriptSecurityManager::STANDARD);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // check content policy
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_FONT,
-                                 aTargetURI,
-                                 aSourcePrincipal,
-                                 aContext,
-                                 EmptyCString(), // mime type
-                                 nullptr,
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
-  return NS_OK;
-}
-
 uint8_t
 nsFontFaceLoader::GetFontDisplay()
 {
