@@ -412,23 +412,6 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
     convertDoubleToFloat32(dest, dest);
 }
 
-void
-MacroAssemblerX86::branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                   Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    // Check payload before tag, since payload is more likely to differ.
-    if (cond == NotEqual) {
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
-        branchPtrImpl(NotEqual, tagOf(valaddr), value.typeReg(), label);
-    } else {
-        Label fallthrough;
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
-        branchPtrImpl(Equal, tagOf(valaddr), value.typeReg(), label);
-        bind(&fallthrough);
-    }
-}
-
 template <typename T, typename S>
 void
 MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)

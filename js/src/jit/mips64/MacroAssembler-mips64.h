@@ -337,10 +337,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         return SecondScratchReg;
     }
 
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label);
-
     // unboxing code
     void unboxNonDouble(const ValueOperand& operand, Register dest);
     void unboxNonDouble(const Address& src, Register dest);

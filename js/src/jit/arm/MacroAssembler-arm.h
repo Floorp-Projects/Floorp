@@ -684,10 +684,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testMagic(Condition cond, const BaseIndex& src);
     Condition testGCThing(Condition cond, const BaseIndex& src);
 
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label);
-
     // Unboxing code.
     void unboxNonDouble(const ValueOperand& operand, Register dest);
     void unboxNonDouble(const Address& src, Register dest);
