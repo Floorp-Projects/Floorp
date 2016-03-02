@@ -99,6 +99,8 @@ public:
 
   bool HasOnlySimpleHeaders() const;
 
+  bool HasRevalidationHeaders() const;
+
   static already_AddRefed<InternalHeaders>
   BasicHeaders(InternalHeaders* aHeaders);
 
@@ -142,6 +144,8 @@ private:
 
   static bool IsSimpleHeader(const nsACString& aName,
                              const nsACString& aValue);
+
+  static bool IsRevalidationHeader(const nsACString& aName);
 };
 
 } // namespace dom
