@@ -649,6 +649,38 @@ MacroAssembler::branchTestSymbolImpl(Condition cond, const T& t, Label* label)
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestNull(Condition cond, Register tag, Label* label)
+{
+    branchTestNullImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const Address& address, Label* label)
+{
+    branchTestNullImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestNullImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNullImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestNullImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testNull(cond, t);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

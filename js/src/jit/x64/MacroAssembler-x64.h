@@ -346,9 +346,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return testNumber(cond, scratch);
     }
     Condition testNull(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testNull(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
+        return cond;
     }
     Condition testString(Condition cond, const Address& src) {
         ScratchRegisterScope scratch(asMasm());
@@ -684,10 +683,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(reg, tag);
     }
 
-    void branchTestNull(Condition cond, Register tag, Label* label) {
-        cond = testNull(cond, tag);
-        j(cond, label);
-    }
     void branchTestObject(Condition cond, Register tag, Label* label) {
         cond = testObject(cond, tag);
         j(cond, label);
@@ -696,16 +691,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // x64 can test for certain types directly from memory when the payload
     // of the type is limited to 32 bits. This avoids loading into a register,
     // accesses half as much memory, and removes a right-shift.
-    void branchTestNull(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
-        j(cond, label);
-    }
-    void branchTestNull(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestNull(cond, Operand(address), label);
-    }
-
     // This one, though, clobbers the ScratchReg.
     void branchTestObject(Condition cond, const Address& src, Label* label) {
         cond = testObject(cond, src);
@@ -714,10 +699,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     // Perform a type-test on a full Value loaded into a register.
     // Clobbers the ScratchReg.
-    void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testNull(cond, src);
-        j(cond, label);
-    }
     void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
         cond = testObject(cond, src);
         j(cond, label);
@@ -725,10 +706,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     // Perform a type-test on a Value addressed by BaseIndex.
     // Clobbers the ScratchReg.
-    void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testNull(cond, address);
-        j(cond, label);
-    }
     void branchTestObject(Condition cond, const BaseIndex& address, Label* label) {
         cond = testObject(cond, address);
         j(cond, label);

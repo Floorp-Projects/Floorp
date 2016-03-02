@@ -1328,19 +1328,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    void branchTestNull(Condition cond, Register tag, Label* label) {
-        Condition c = testNull(cond, tag);
-        B(label, c);
-    }
     void branchTestObject(Condition cond, Register tag, Label* label) {
         Condition c = testObject(cond, tag);
         B(label, c);
     }
 
-    void branchTestNull(Condition cond, const Address& address, Label* label) {
-        Condition c = testNull(cond, address);
-        B(label, c);
-    }
     void branchTestObject(Condition cond, const Address& address, Label* label) {
         Condition c = testObject(cond, address);
         B(label, c);
@@ -1348,10 +1340,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // Perform a type-test on a full Value loaded into a register.
     // Clobbers the ScratchReg.
-    void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
-        Condition c = testNull(cond, src);
-        B(label, c);
-    }
     void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
         Condition c = testObject(cond, src);
         B(label, c);
@@ -1359,10 +1347,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // Perform a type-test on a Value addressed by BaseIndex.
     // Clobbers the ScratchReg.
-    void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
-        Condition c = testNull(cond, address);
-        B(label, c);
-    }
     void branchTestObject(Condition cond, const BaseIndex& address, Label* label) {
         Condition c = testObject(cond, address);
         B(label, c);
