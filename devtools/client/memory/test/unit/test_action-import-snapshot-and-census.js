@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests the task creator `importSnapshotAndCensus()` for the whole flow of
@@ -7,7 +8,6 @@
  */
 
 let { actions, snapshotState: states } = require("devtools/client/memory/constants");
-let { breakdownEquals } = require("devtools/client/memory/utils");
 let { exportSnapshot, importSnapshotAndCensus } = require("devtools/client/memory/actions/io");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 
@@ -61,8 +61,8 @@ add_task(function *() {
   let snapshot1 = getState().snapshots[0];
   let snapshot2 = getState().snapshots[1];
 
-  ok(breakdownEquals(snapshot1.breakdown, snapshot2.breakdown),
-    "imported snapshot has correct breakdown");
+  equal(snapshot1.display, snapshot2.display,
+        "imported snapshot has correct display");
 
   // Clone the census data so we can destructively remove the ID/parents to compare
   // equal census data

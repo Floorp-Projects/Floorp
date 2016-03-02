@@ -193,7 +193,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 ");");
     }
 
-    private boolean didCreateTabsTable = false;
     private void createTabsTable(SQLiteDatabase db, final String tableName) {
         debug("Creating tabs.db: " + db.getPath());
         debug("Creating " + tableName + " table");
@@ -345,7 +344,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createClientsTable(db);
         createLocalClient(db);
         createTabsTable(db, TABLE_TABS);
-        didCreateTabsTable = true;
         createTabsTableIndices(db, TABLE_TABS);
 
 
@@ -359,7 +357,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createOrUpdateAllSpecialFolders(db);
         createSearchHistoryTable(db);
         createReadingListTable(db, TABLE_READING_LIST);
-        didCreateCurrentReadingListTable = true;      // Mostly correct, in the absence of transactions.
         createReadingListIndices(db, TABLE_READING_LIST);
         createUrlAnnotationsTable(db);
         createNumbersTable(db);
@@ -374,7 +371,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     public void copyTabsDB(File tabsDBFile, SQLiteDatabase destinationDB) {
         createClientsTable(destinationDB);
         createTabsTable(destinationDB, TABLE_TABS);
-        didCreateTabsTable = true;
         createTabsTableIndices(destinationDB, TABLE_TABS);
 
         SQLiteDatabase oldTabsDB = null;
@@ -410,7 +406,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 SearchHistory.TABLE_NAME + "(" + SearchHistory.DATE_LAST_VISITED + ")");
     }
 
-    private boolean didCreateCurrentReadingListTable = false;
     private void createReadingListTable(final SQLiteDatabase db, final String tableName) {
         debug("Creating " + TABLE_READING_LIST + " table");
 
@@ -914,7 +909,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
             // Done.
             db.setTransactionSuccessful();
-            didCreateCurrentReadingListTable = true;
 
         } catch (SQLException e) {
             Log.e(LOGTAG, "Error migrating reading list items", e);
@@ -941,11 +935,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom21to22(SQLiteDatabase db) {
-        if (didCreateCurrentReadingListTable) {
-            debug("No need to add CONTENT_STATUS to reading list; we just created with the current schema.");
-            return;
-        }
-
         debug("Adding CONTENT_STATUS column to reading list table.");
 
         try {
@@ -963,11 +952,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom22to23(SQLiteDatabase db) {
-        if (didCreateCurrentReadingListTable) {
-            debug("No need to rev reading list schema; we just created with the current schema.");
-            return;
-        }
-
         debug("Rewriting reading list table.");
         createReadingListTable(db, "tmp_rl");
 
@@ -1037,11 +1021,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom24to25(SQLiteDatabase db) {
-        if (didCreateTabsTable) {
-            debug("No need to rev tabs schema; foreign key constraint exists.");
-            return;
-        }
-
         debug("Rewriting tabs table.");
         createTabsTable(db, "tmp_tabs");
 
@@ -1068,7 +1047,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE " + TABLE_TABS);
         db.execSQL("ALTER TABLE tmp_tabs RENAME TO " + TABLE_TABS);
         createTabsTableIndices(db, TABLE_TABS);
-        didCreateTabsTable =true;
     }
 
     private void upgradeDatabaseFrom25to26(SQLiteDatabase db) {

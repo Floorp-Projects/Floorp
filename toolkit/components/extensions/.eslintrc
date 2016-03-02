@@ -43,8 +43,14 @@
     // Always require spacing around a single line block
     "block-spacing": 1,
 
+    // Forbid spaces inside the square brackets of array literals.
+    "array-bracket-spacing": [2, "never"],
+
     // Forbid spaces inside the curly brackets of object literals.
     "object-curly-spacing": [2, "never"],
+
+    // No space padding in parentheses
+    "space-in-parens": [2, "never"],
 
     // Enforce one true brace style (opening brace on the same line) and avoid
     // start and end braces on the same line.
@@ -203,12 +209,8 @@
     // Require spaces before finally, catch, etc.
     "space-before-keywords": [2, "always"],
 
-    // No space padding in parentheses
-    "space-in-parens": [2, "never"],
-
     // Require spaces around operators, except for a|0.
     "space-infix-ops": [2, {"int32Hint": true}],
-
 
     // Require spaces after return, throw and case
     "space-return-throw-case": 2,

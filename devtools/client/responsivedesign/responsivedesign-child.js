@@ -5,7 +5,7 @@
 "use strict";
 
 /* global content, docShell, addEventListener, addMessageListener,
-   removeEventListener, removeMessageListener, sendAsyncMessage */
+   removeEventListener, removeMessageListener, sendAsyncMessage, Services */
 
 var global = this;
 

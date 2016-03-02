@@ -2,7 +2,7 @@
 <html dir="ltr" lang="en-US">
 <head>
   <meta charset="utf-8">
-  <title>Test the web console output - 05</title>
+  <title>Test the web console output - dom elements</title>
   <!--
   - Any copyright is dedicated to the Public Domain.
   - http://creativecommons.org/publicdomain/zero/1.0/
@@ -11,7 +11,15 @@
 <body class="body-class" id="body-id">
   <p some-attribute="some-value">hello world!</p>
   <p id="lots-of-attributes" a b c d e f g h i j k l m n></p>
-  <iframe src="data:text/html,<p>hello from iframe</p>"></iframe>
+  <!--
+    Be sure we have a charset in our iframe's data URI, otherwise we get the following extra
+    console output message:
+    "The character encoding of a framed document was not declared. The document may appear different if viewed without the document framing it."
+    This wouldn't be a big deal, but when we look for a "<p>" in our `waitForMessage` helper,
+    this extra encoding warning line contains the data URI source, returning a message
+    that was unexpected
+  -->
+  <iframe src="data:text/html;charset=US-ASCII,<p>hello from iframe</p>"></iframe>
   <div class="some       classname      here      with       more classnames here"></div>
   <script type="text/javascript">
 function testBodyNode() {

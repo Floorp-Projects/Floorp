@@ -48,7 +48,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.graphics.Bitmap;
@@ -765,6 +764,25 @@ public class LocalBrowserDB implements BrowserDB {
         }
     }
 
+    private void assertDefaultBookmarkColumnOrdering() {
+        // We need to insert MatrixCursor values in a specific order - in order to protect against changes
+        // in DEFAULT_BOOKMARK_COLUMNS we can just assert that we're using the correct ordering.
+        // Alternatively we could use RowBuilder.add(columnName, value) but that needs api >= 19,
+        // or we could iterate over DEFAULT_BOOKMARK_COLUMNS, but that gets messy once we need
+        // to add more than one artificial folder.
+        if (!((DEFAULT_BOOKMARK_COLUMNS[0].equals(Bookmarks._ID)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[1].equals(Bookmarks.GUID)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[2].equals(Bookmarks.URL)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[3].equals(Bookmarks.TITLE)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[4].equals(Bookmarks.TYPE)) &&
+                (DEFAULT_BOOKMARK_COLUMNS[5].equals(Bookmarks.PARENT)) &&
+                (DEFAULT_BOOKMARK_COLUMNS.length == 6))) {
+            // If DEFAULT_BOOKMARK_COLUMNS changes we need to update all the MatrixCursor rows
+            // to contain appropriate data.
+            throw new IllegalStateException("Fake folder MatrixCursor creation code must be updated to match DEFAULT_BOOKMARK_COLUMNS");
+        }
+    }
+
     @Override
     @RobocopTarget
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
@@ -809,8 +827,19 @@ public class LocalBrowserDB implements BrowserDB {
         }
 
         if (addDesktopFolder) {
-            // Wrap cursor to add fake desktop bookmarks and reading list folders
-            return new SpecialFoldersCursorWrapper(c, addDesktopFolder);
+            MatrixCursor desktopFolderCursor = new MatrixCursor(DEFAULT_BOOKMARK_COLUMNS);
+
+            assertDefaultBookmarkColumnOrdering();
+
+            desktopFolderCursor.addRow(
+                    new Object[] { Bookmarks.FAKE_DESKTOP_FOLDER_ID,
+                                   Bookmarks.FAKE_DESKTOP_FOLDER_GUID,
+                                   "",
+                                   "", // Title localisation is done later, in the UI layer (BookmarksListAdapter)
+                                   Bookmarks.TYPE_FOLDER,
+                                   Bookmarks.FIXED_ROOT_ID
+                    });
+            return new MergeCursor(new Cursor[] { desktopFolderCursor, c });
         }
 
         return c;
@@ -1465,84 +1494,6 @@ public class LocalBrowserDB implements BrowserDB {
         operations.add(builder.build());
     }
 
-    // This wrapper adds a fake "Desktop Bookmarks" folder entry to the
-    // beginning of the cursor's data set.
-    private static class SpecialFoldersCursorWrapper extends CursorWrapper {
-        private int mIndexOffset;
-
-        private int mDesktopBookmarksIndex = -1;
-
-        private boolean mAtDesktopBookmarksPosition;
-
-        public SpecialFoldersCursorWrapper(Cursor c, boolean showDesktopBookmarks) {
-            super(c);
-
-            if (showDesktopBookmarks) {
-                mDesktopBookmarksIndex = mIndexOffset;
-                mIndexOffset++;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return super.getCount() + mIndexOffset;
-        }
-
-        @Override
-        public boolean moveToPosition(int position) {
-            mAtDesktopBookmarksPosition = (mDesktopBookmarksIndex == position);
-
-            if (mAtDesktopBookmarksPosition) {
-                return true;
-            }
-
-            return super.moveToPosition(position - mIndexOffset);
-        }
-
-        @Override
-        public long getLong(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getLong(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.PARENT)) {
-                return Bookmarks.FIXED_ROOT_ID;
-            }
-
-            return -1;
-        }
-
-        @Override
-        public int getInt(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getInt(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks._ID) && mAtDesktopBookmarksPosition) {
-                return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.TYPE)) {
-                return Bookmarks.TYPE_FOLDER;
-            }
-
-            return -1;
-        }
-
-        @Override
-        public String getString(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition) {
-                return super.getString(columnIndex);
-            }
-
-            if (columnIndex == getColumnIndex(Bookmarks.GUID) && mAtDesktopBookmarksPosition) {
-                return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
-            }
-
-            return "";
-        }
-    }
-
     @Override
     public void pinSite(ContentResolver cr, String url, String title, int position) {
         ContentValues values = new ContentValues();
@@ -1680,17 +1631,21 @@ public class LocalBrowserDB implements BrowserDB {
         // that inside out topsites SQL query would be difficult given the other processing we're already doing there).
         final int blanksRequired = suggestedRangeLimit - topSitesCursor.getCount();
 
-        if (blanksRequired < 0) {
+        if (blanksRequired <= 0) {
             return topSitesCursor;
         }
 
         MatrixCursor blanksCursor = new MatrixCursor(new String[] {
-                Bookmarks._ID,
-                Bookmarks.URL,
-                Bookmarks.TITLE,
-                Bookmarks.TYPE});
+                TopSites._ID,
+                TopSites.BOOKMARK_ID,
+                TopSites.HISTORY_ID,
+                TopSites.URL,
+                TopSites.TITLE,
+                TopSites.TYPE});
 
         final MatrixCursor.RowBuilder rb = blanksCursor.newRow();
+        rb.add(-1);
+        rb.add(-1);
         rb.add(-1);
         rb.add("");
         rb.add("");

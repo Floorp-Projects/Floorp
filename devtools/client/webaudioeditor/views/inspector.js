@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* import-globals-from ../includes.js */
+
 const MIN_INSPECTOR_WIDTH = 300;
 
 // Strings for rendering

@@ -1,16 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests the task creator `setBreakdownAndRefreshAndRefresh()` for custom
- * breakdowns.
+ * Tests the task creator `setCensusDisplayAndRefreshAndRefresh()` for custom
+ * displays.
  */
 
 let { snapshotState: states } = require("devtools/client/memory/constants");
-let { breakdownEquals } = require("devtools/client/memory/utils");
-let { setBreakdownAndRefresh } = require("devtools/client/memory/actions/breakdown");
+let { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-let custom = { by: "internalType", then: { by: "count", bytes: true, count: false }};
+
+let CUSTOM = {
+  displayName: "Custom",
+  tooltip: "Custom tooltip",
+  inverted: false,
+  breakdown: {
+    by: "internalType",
+    then: { by: "count", bytes: true, count: false }
+  }
+};
 
 function run_test() {
   run_next_test();
@@ -23,20 +32,20 @@ add_task(function *() {
   let store = Store();
   let { getState, dispatch } = store;
 
-  dispatch(setBreakdownAndRefresh(heapWorker, custom));
-  ok(breakdownEquals(getState().breakdown, custom),
-    "Custom breakdown stored in breakdown state.");
+  dispatch(setCensusDisplayAndRefresh(heapWorker, CUSTOM));
+  equal(getState().censusDisplay, CUSTOM,
+        "CUSTOM display stored in display state.");
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
 
-  ok(breakdownEquals(getState().snapshots[0].census.breakdown, custom),
-    "New snapshot stored custom breakdown when done taking census");
+  equal(getState().snapshots[0].census.display, CUSTOM,
+  "New snapshot stored CUSTOM display when done taking census");
   ok(getState().snapshots[0].census.report.children.length, "Census has some children");
   // Ensure we don't have `count` in any results
   ok(getState().snapshots[0].census.report.children.every(c => !c.count),
-     "Census used custom breakdown without counts");
+     "Census used CUSTOM display without counts");
   // Ensure we do have `bytes` in the results
   ok(getState().snapshots[0].census.report.children.every(c => typeof c.bytes === "number"),
-     "Census used custom breakdown with bytes");
+     "Census used CUSTOM display with bytes");
 });

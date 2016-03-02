@@ -100,13 +100,24 @@ function _removeOrDisableBreakpoint(location, isDisabled) {
     }
 
     const bpClient = getBreakpointClient(bp.actor);
-
-    return dispatch({
+    const action = {
       type: constants.REMOVE_BREAKPOINT,
       breakpoint: bp,
-      disabled: isDisabled,
-      [PROMISE]: bpClient.remove()
-    });
+      disabled: isDisabled
+    };
+
+    // If the breakpoint is already disabled, we don't need to remove
+    // it from the server. We just need to dispatch an action
+    // simulating a successful server request to remove it, and it
+    // will be removed completely from the state.
+    if(!bp.disabled) {
+      return dispatch(Object.assign({}, action, {
+        [PROMISE]: bpClient.remove()
+      }));
+    }
+    else {
+      return dispatch(Object.assign({}, action, { status: "done" }));
+    }
   }
 }
 

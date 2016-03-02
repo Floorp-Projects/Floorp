@@ -10,7 +10,7 @@
 
 const { telemetry } = require("Services");
 const { makeInfallible, immutableUpdate } = require("devtools/shared/DevToolsUtils");
-const { dominatorTreeBreakdowns, breakdowns } = require("./constants");
+const { dominatorTreeDisplays, censusDisplays } = require("./constants");
 
 exports.countTakeSnapshot = makeInfallible(function () {
   const histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT");
@@ -29,26 +29,22 @@ exports.countExportSnapshot = makeInfallible(function () {
 
 const COARSE_TYPE = "Coarse Type";
 const ALLOCATION_STACK = "Allocation Stack";
-const OBJECT_CLASS = "Object Class";
-const INTERNAL_TYPE = "Internal Type";
+const INVERTED_ALLOCATION_STACK = "Inverted Allocation Stack";
 const CUSTOM = "Custom";
 
 /**
- * @param {Boolean} inverted
- *        True if the census was inverted, false otherwise.
- *
  * @param {String|null} filter
  *        The filter string used, if any.
  *
  * @param {Boolean} diffing
  *        True if the census was a diffing census, false otherwise.
  *
- * @param {Object} breakdown
- *        The breakdown used with the census.
+ * @param {censusDisplayModel} display
+ *        The display used with the census.
  */
-exports.countCensus = makeInfallible(function ({ inverted, filter, diffing, breakdown }) {
+exports.countCensus = makeInfallible(function ({ filter, diffing, display }) {
   let histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_INVERTED_CENSUS");
-  histogram.add(!!inverted);
+  histogram.add(!!display.inverted);
 
   histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_FILTER_CENSUS");
   histogram.add(!!filter);
@@ -57,10 +53,12 @@ exports.countCensus = makeInfallible(function ({ inverted, filter, diffing, brea
   histogram.add(!!diffing);
 
   histogram = telemetry.getKeyedHistogramById("DEVTOOLS_MEMORY_BREAKDOWN_CENSUS_COUNT");
-  if (breakdown === breakdowns.coarseType.breakdown) {
+  if (display === censusDisplays.coarseType) {
     histogram.add(COARSE_TYPE);
-  } else if (breakdown === breakdowns.allocationStack.breakdown) {
+  } else if (display === censusDisplays.allocationStack) {
     histogram.add(ALLOCATION_STACK);
+  } else if (display === censusDisplays.invertedAllocationStack) {
+    histogram.add(INVERTED_ALLOCATION_STACK);
   } else {
     histogram.add(CUSTOM);
   }
@@ -75,17 +73,17 @@ exports.countDiff = makeInfallible(function (opts) {
 }, "devtools/client/memory/telemetry#countDiff");
 
 /**
- * @param {Object} breakdown
- *        The breakdown used to label nodes in the dominator tree.
+ * @param {Object} display
+ *        The display used to label nodes in the dominator tree.
  */
-exports.countDominatorTree = makeInfallible(function ({ breakdown }) {
+exports.countDominatorTree = makeInfallible(function ({ display }) {
   let histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_DOMINATOR_TREE_COUNT");
   histogram.add(1);
 
   histogram = telemetry.getKeyedHistogramById("DEVTOOLS_MEMORY_BREAKDOWN_DOMINATOR_TREE_COUNT");
-  if (breakdown === dominatorTreeBreakdowns.coarseType.breakdown) {
+  if (display === dominatorTreeDisplays.coarseType) {
     histogram.add(COARSE_TYPE);
-  } else if (breakdown === dominatorTreeBreakdowns.allocationStack.breakdown) {
+  } else if (display === dominatorTreeDisplays.allocationStack) {
     histogram.add(ALLOCATION_STACK);
   } else {
     histogram.add(CUSTOM);

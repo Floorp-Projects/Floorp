@@ -10,6 +10,7 @@ const {Cc, Ci, Cu} = require("chrome");
 
 const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} =
   require("devtools/shared/webconsole/utils");
+const { getSourceNames } = require("devtools/client/shared/source-utils");
 const promise = require("promise");
 const Debugger = require("Debugger");
 const Services = require("Services");
@@ -1746,7 +1747,7 @@ WebConsoleFrame.prototype = {
       let a = this.document.createElementNS(XHTML_NS, "a");
       a.href = "#";
       a.draggable = "false";
-      let filename = WebConsoleUtils.abbreviateSourceURL(sourceURL);
+      let filename = getSourceNames(sourceURL).short;
       let functionName = message.functionName ||
                          l10n.getStr("stacktrace.anonymousFunction");
       a.textContent = l10n.getFormatStr("reflow.messageLinkText",
@@ -2505,12 +2506,11 @@ WebConsoleFrame.prototype = {
       isScratchpad = true;
     } else {
       fullURL = url.split(" -> ").pop();
-      filename = WebConsoleUtils.abbreviateSourceURL(fullURL);
+      filename = getSourceNames(fullURL).short;
     }
 
     filenameNode.className = "filename";
-    filenameNode.textContent =
-      " " + (filename || l10n.getStr("unknownLocation"));
+    filenameNode.textContent = ` ${filename}`;
     locationNode.appendChild(filenameNode);
 
     locationNode.href = isScratchpad || !fullURL ? "#" : fullURL;

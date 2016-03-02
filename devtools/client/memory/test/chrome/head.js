@@ -17,17 +17,15 @@ var { immutableUpdate } = DevToolsUtils;
 
 var constants = require("devtools/client/memory/constants");
 var {
-  breakdowns,
+  censusDisplays,
   diffingState,
-  dominatorTreeBreakdowns,
+  dominatorTreeDisplays,
   dominatorTreeState,
   snapshotState,
   viewState
 } = constants;
 
 const {
-  getBreakdownDisplayData,
-  getDominatorTreeBreakdownDisplayData,
   L10N,
 } = require("devtools/client/memory/utils");
 
@@ -122,7 +120,7 @@ var TEST_DOMINATOR_TREE = Object.freeze({
   expanded: new Set(),
   focused: null,
   error: null,
-  breakdown: dominatorTreeBreakdowns.coarseType.breakdown,
+  display: dominatorTreeDisplays.coarseType,
   activeFetchRequestCount: null,
   state: dominatorTreeState.LOADED,
 });
@@ -173,12 +171,17 @@ var TEST_HEAP_PROPS = Object.freeze({
         strings: Object.freeze({ count: 2, bytes: 200 }),
         other: Object.freeze({ count: 1, bytes: 100 }),
       }),
-      breakdown: Object.freeze({
-        by: "coarseType",
-        objects: Object.freeze({ by: "count", count: true, bytes: true }),
-        scripts: Object.freeze({ by: "count", count: true, bytes: true }),
-        strings: Object.freeze({ by: "count", count: true, bytes: true }),
-        other: Object.freeze({ by: "count", count: true, bytes: true }),
+      display: Object.freeze({
+        displayName: "Test Display",
+        tooltip: "Test display tooltup",
+        inverted: false,
+        breakdown: Object.freeze({
+          by: "coarseType",
+          objects: Object.freeze({ by: "count", count: true, bytes: true }),
+          scripts: Object.freeze({ by: "count", count: true, bytes: true }),
+          strings: Object.freeze({ by: "count", count: true, bytes: true }),
+          other: Object.freeze({ by: "count", count: true, bytes: true }),
+        }),
       }),
       inverted: false,
       filter: null,
@@ -196,10 +199,14 @@ var TEST_HEAP_PROPS = Object.freeze({
 });
 
 var TEST_TOOLBAR_PROPS = Object.freeze({
-  breakdowns: getBreakdownDisplayData(),
+  censusDisplays: [
+    censusDisplays.coarseType,
+    censusDisplays.allocationStack,
+    censusDisplays.invertedAllocationStack,
+  ],
   onTakeSnapshotClick: noop,
   onImportClick: noop,
-  onBreakdownChange: noop,
+  onCensusDisplayChange: noop,
   onToggleRecordAllocationStacks: noop,
   allocations: models.allocations,
   onToggleInverted: noop,
@@ -210,8 +217,11 @@ var TEST_TOOLBAR_PROPS = Object.freeze({
   onToggleDiffing: noop,
   view: viewState.CENSUS,
   onViewChange: noop,
-  dominatorTreeBreakdowns: getDominatorTreeBreakdownDisplayData(),
-  onDominatorTreeBreakdownChange: noop,
+  dominatorTreeDisplays: [
+    dominatorTreeDisplays.coarseType,
+    dominatorTreeDisplays.allocationStack,
+  ],
+  onDominatorTreeDisplayChange: noop,
   snapshots: [],
 });
 

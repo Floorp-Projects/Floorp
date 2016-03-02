@@ -1,10 +1,5 @@
-const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
-
 // Disable update security
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-
-// The test add-ons were signed by the dev root
-Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, true);
 
 gUseRealCertChecks = true;
 
@@ -31,7 +26,7 @@ add_task(function* test_working() {
 
   for (let addon of addons) {
     do_check_neq(addon, null);
-    do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
+    do_check_true(addon.signedState > AddonManager.SIGNEDSTATE_MISSING);
 
     addon.uninstall();
   }

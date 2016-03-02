@@ -258,7 +258,7 @@ const Heap = module.exports = createClass({
   _renderCensus(state, census, diffing, onViewSourceInDebugger) {
     const contents = [];
 
-    if (census.breakdown.by === "allocationStack"
+    if (census.display.breakdown.by === "allocationStack"
         && census.report
         && census.report.children
         && census.report.children.length === 1

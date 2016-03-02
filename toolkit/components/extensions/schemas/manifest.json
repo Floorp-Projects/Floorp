@@ -43,12 +43,26 @@
 
           "name": {
             "type": "string",
-            "optional": false
+            "optional": false,
+            "preprocess": "localize"
+          },
+
+          "short_name": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize"
           },
 
           "description": {
             "type": "string",
-            "optional": true
+            "optional": true,
+            "preprocess": "localize"
+          },
+
+          "creator": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize"
           },
 
           "version": {
@@ -59,7 +73,8 @@
           "homepage_url": {
             "type": "string",
             "format": "url",
-            "optional": true
+            "optional": true,
+            "preprocess": "localize"
           },
 
           "icons": {

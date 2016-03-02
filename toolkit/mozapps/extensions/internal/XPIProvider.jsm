@@ -898,11 +898,15 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   function getLocale(aLocale) {
+    // Use the raw manifest, here, since we need values with their
+    // localization placeholders still in place.
+    let rawManifest = extension.rawManifest;
+
     let result = {
-      name: extension.localize(manifest.name, aLocale),
-      description: extension.localize(manifest.description, aLocale),
-      creator: null,
-      homepageURL: null,
+      name: extension.localize(rawManifest.name, aLocale),
+      description: extension.localize(rawManifest.description, aLocale),
+      creator: extension.localize(rawManifest.creator, aLocale),
+      homepageURL: extension.localize(rawManifest.homepage_url, aLocale),
 
       developers: null,
       translators: null,

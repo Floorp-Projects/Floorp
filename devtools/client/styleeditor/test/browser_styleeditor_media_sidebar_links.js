@@ -47,18 +47,16 @@ function* testMediaLink(editor, tab, ui, itemIndex, type, value) {
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
 
   let onMediaChange = once("media-list-changed", ui);
-  let ruiEvent = !ResponsiveUIManager.isActiveForTab(tab) ?
-                    once("on", ResponsiveUIManager) :
-                    once("contentResize", ResponsiveUIManager);
+  let onContentResize = waitForResizeTo(ResponsiveUIManager, type, value);
 
   info("Launching responsive mode");
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
 
-  info("Waiting for the @media list to update");
-  yield ruiEvent;
-  yield onMediaChange;
-
   ResponsiveUIManager.getResponsiveUIForTab(tab).transitionsEnabled = false;
+
+  info("Waiting for the @media list to update");
+  yield onMediaChange;
+  yield onContentResize;
 
   ok(ResponsiveUIManager.isActiveForTab(tab),
     "Responsive mode should be active.");
@@ -91,6 +89,21 @@ function doFinalChecks(editor) {
 }
 
 /* Helpers */
+function waitForResizeTo(manager, type, value) {
+  return new Promise(resolve => {
+    let onResize = (_, data) => {
+      if (data[type] != value) {
+        return;
+      }
+      manager.off("contentResize", onResize);
+      info(`Got contentResize to a ${type} of ${value}`);
+      resolve();
+    };
+    info(`Waiting for contentResize to a ${type} of ${value}`);
+    manager.on("contentResize", onResize);
+  });
+}
+
 function* getSizing() {
   let browser = gBrowser.selectedBrowser;
   let sizing = yield ContentTask.spawn(browser, {}, function*() {

@@ -5,6 +5,7 @@
 
 var { Ci } = require("chrome");
 var promise = require("promise");
+var Services = require("Services");
 
 const FRAME_SCRIPT =
   "resource://devtools/shared/touch/simulator-content.js";
