@@ -685,11 +685,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testGCThing(Condition cond, const BaseIndex& src);
 
     template <typename T>
-    void branchTestGCThing(Condition cond, const T& t, Label* label) {
-        Condition c = testGCThing(cond, t);
-        ma_b(label, c);
-    }
-    template <typename T>
     void branchTestPrimitive(Condition cond, const T& t, Label* label) {
         Condition c = testPrimitive(cond, t);
         ma_b(label, c);

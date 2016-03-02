@@ -309,9 +309,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         return value.typeReg();
     }
 
-    void branchTestGCThing(Condition cond, const Address& address, Label* label);
-    void branchTestGCThing(Condition cond, const BaseIndex& src, Label* label);
-
     void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label);
     void branchTestPrimitive(Condition cond, Register tag, Label* label);
 

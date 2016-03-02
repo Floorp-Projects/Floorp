@@ -686,6 +686,25 @@ MacroAssembler::branchTestObject(Condition cond, const BaseIndex& address, Label
     branchTestObject(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestGCThing(Condition cond, const Address& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    ma_b(scratch2, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
+         (cond == Equal) ? AboveOrEqual : Below);
+}
+void
+MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    ma_b(scratch2, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
+         (cond == Equal) ? AboveOrEqual : Below);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
