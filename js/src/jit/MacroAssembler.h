@@ -934,6 +934,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestNull(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
     inline void branchTestObject(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
     inline void branchTestPrimitive(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
 
     // Perform a type-test on a Value, addressed by Address or BaseIndex, or
     // loaded into ValueOperand.
@@ -987,6 +988,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+    inline void branchTestMagic(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
     // Checks if given Value is evaluated to true or false in a condition.
     // The type of the value should match the type of the method.
     inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
@@ -1031,6 +1038,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(arm, arm64, x86_shared);
     template <typename T>
     inline void branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T, class L>
+    inline void branchTestMagicImpl(Condition cond, const T& t, L label)
         DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style

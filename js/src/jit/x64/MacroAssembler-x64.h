@@ -683,11 +683,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(reg, tag);
     }
 
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        j(cond, label);
-    }
     void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                               Label* label)
     {
