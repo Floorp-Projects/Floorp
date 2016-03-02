@@ -980,6 +980,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestObject(Condition cond, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+    inline void branchTestGCThing(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestGCThing(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+
     // Checks if given Value is evaluated to true or false in a condition.
     // The type of the value should match the type of the method.
     inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
@@ -1018,6 +1021,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(arm, arm64, x86_shared);
     template <typename T>
     inline void branchTestObjectImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestGCThingImpl(Condition cond, const T& t, Label* label)
         DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style

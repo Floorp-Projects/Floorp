@@ -1329,11 +1329,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     template <typename T>
-    void branchTestGCThing(Condition cond, const T& src, Label* label) {
-        Condition c = testGCThing(cond, src);
-        B(label, c);
-    }
-    template <typename T>
     void branchTestPrimitive(Condition cond, const T& t, Label* label) {
         Condition c = testPrimitive(cond, t);
         B(label, c);

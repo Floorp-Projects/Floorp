@@ -1190,6 +1190,26 @@ MacroAssembler::branchTestObjectImpl(Condition cond, const T& t, Label* label)
     B(label, c);
 }
 
+void
+MacroAssembler::branchTestGCThing(Condition cond, const Address& address, Label* label)
+{
+    branchTestGCThingImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestGCThingImpl(cond, address, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestGCThingImpl(Condition cond, const T& src, Label* label)
+{
+    Condition c = testGCThing(cond, src);
+    B(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

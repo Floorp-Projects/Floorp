@@ -1223,23 +1223,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
-         (cond == Equal) ? AboveOrEqual : Below);
-}
-void
-MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
-         (cond == Equal) ? AboveOrEqual : Below);
-}
-
-void
 MacroAssemblerMIPS64Compat::branchTestPrimitive(Condition cond, const ValueOperand& value,
                                                 Label* label)
 {
