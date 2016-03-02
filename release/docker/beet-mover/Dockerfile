@@ -16,4 +16,6 @@ RUN apt-get -q update \
     wget \
     && apt-get clean
 
+COPY requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
 RUN freshclam --verbose
