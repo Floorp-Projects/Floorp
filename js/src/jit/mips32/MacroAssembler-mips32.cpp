@@ -1117,43 +1117,6 @@ MacroAssemblerMIPSCompat::testUndefinedSet(Condition cond, const ValueOperand& v
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestMagic(Condition cond, const ValueOperand& value, Label* label)
-{
-    branchTestMagic(cond, value.typeReg(), label);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestMagic(Condition cond, const ValueOperand& value,
-                                          wasm::JumpTarget target)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(value.typeReg(), ImmTag(JSVAL_TAG_MAGIC), target, cond);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestMagic(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestMagic(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
-MacroAssemblerMIPSCompat::branchTestMagic(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
 MacroAssemblerMIPSCompat::branchTestValue(Condition cond, const ValueOperand& value,
                                           const Value& v, Label* label)
 {

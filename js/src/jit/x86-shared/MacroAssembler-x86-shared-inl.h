@@ -753,6 +753,39 @@ MacroAssembler::branchTestPrimitiveImpl(Condition cond, const T& t, Label* label
     j(cond, label);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, Register tag, Label* label)
+{
+    branchTestMagicImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& address, Label* label)
+{
+    branchTestMagicImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestMagicImpl(cond, address, label);
+}
+
+template <class L>
+void
+MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L label)
+{
+    branchTestMagicImpl(cond, value, label);
+}
+
+template <typename T, class L>
+void
+MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
+{
+    cond = testMagic(cond, t);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
