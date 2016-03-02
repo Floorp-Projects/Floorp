@@ -289,6 +289,12 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestUndefined(cond, value.typeReg(), label);
+}
+
+void
 MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
 {
     branchTestInt32(cond, value.typeReg(), label);

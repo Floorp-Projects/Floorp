@@ -429,6 +429,38 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 }
 
 void
+MacroAssembler::branchTestUndefined(Condition cond, Register tag, Label* label)
+{
+    branchTestUndefinedImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const Address& address, Label* label)
+{
+    branchTestUndefinedImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestUndefinedImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestUndefinedImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testUndefined(cond, t);
+    j(cond, label);
+}
+
+void
 MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
 {
     branchTestInt32Impl(cond, tag, label);
