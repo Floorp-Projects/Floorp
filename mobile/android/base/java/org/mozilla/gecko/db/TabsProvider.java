@@ -167,7 +167,6 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
                 // fall through
             case CLIENTS:
                 trace("Delete on CLIENTS: " + uri);
-                // Delete from both TABLE_TABS and TABLE_CLIENTS.
                 deleted = deleteValues(uri, selection, selectionArgs, TABLE_CLIENTS);
                 break;
 

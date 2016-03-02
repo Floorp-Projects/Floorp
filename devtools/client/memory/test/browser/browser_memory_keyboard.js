@@ -39,7 +39,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const { getState, dispatch } = store;
   const doc = panel.panelWin.document;
 
-  is(getState().breakdown.by, "coarseType");
+  is(getState().censusDisplay.breakdown.by, "coarseType");
   yield dispatch(takeSnapshotAndCensus(front, heapWorker));
   let census = getState().snapshots[0].census;
   let root1 = census.report.children[0];

@@ -630,6 +630,28 @@ function injectAPI(source, dest) {
   }
 }
 
+/**
+ * Returns a Promise which resolves when the given document's DOM has
+ * fully loaded.
+ *
+ * @param {Document} doc The document to await the load of.
+ * @returns {Promise<Document>}
+ */
+function promiseDocumentReady(doc) {
+  if (doc.readyState == "interactive" || doc.readyState == "complete") {
+    return Promise.resolve(doc);
+  }
+
+  return new Promise(resolve => {
+    doc.addEventListener("DOMContentLoaded", function onReady(event) {
+      if (event.target === event.currentTarget) {
+        doc.removeEventListener("DOMContentLoaded", onReady, true);
+        resolve(doc);
+      }
+    }, true);
+  });
+}
+
 /*
  * Messaging primitives.
  */
@@ -862,25 +884,34 @@ Messenger.prototype = {
     recipient.messageId = id;
     this.broker.sendMessage(messageManager, "message", msg, this.sender, recipient);
 
-    let onClose;
-    let listener = ({data: response}) => {
-      messageManager.removeMessageListener(replyName, listener);
-      this.context.forgetOnClose(onClose);
-
-      if (response.gotData) {
-        // TODO: Handle failure to connect to the extension?
-        runSafe(this.context, responseCallback, response.data);
-      }
-    };
-    onClose = {
-      close() {
+    let promise = new Promise((resolve, reject) => {
+      let onClose;
+      let listener = ({data: response}) => {
         messageManager.removeMessageListener(replyName, listener);
-      },
-    };
-    if (responseCallback) {
+        this.context.forgetOnClose(onClose);
+
+        if (response.gotData) {
+          resolve(response.data);
+        } else if (response.error) {
+          reject(response.error);
+        } else if (!responseCallback) {
+          // As a special case, we don't call the callback variant if we
+          // receive no response, but the promise needs to resolve or
+          // reject in either case.
+          resolve();
+        }
+      };
+      onClose = {
+        close() {
+          messageManager.removeMessageListener(replyName, listener);
+        },
+      };
+
       messageManager.addMessageListener(replyName, listener);
       this.context.callOnClose(onClose);
-    }
+    });
+
+    return this.context.wrapPromise(promise, responseCallback);
   },
 
   onMessage(name) {
@@ -895,23 +926,33 @@ Messenger.prototype = {
         let mm = getMessageManager(target);
         let replyName = `Extension:Reply-${recipient.messageId}`;
 
-        let valid = true, sent = false;
-        let sendResponse = data => {
-          if (!valid) {
-            return;
-          }
-          sent = true;
-          mm.sendAsyncMessage(replyName, {data, gotData: true});
-        };
-        sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
+        new Promise((resolve, reject) => {
+          let sendResponse = Cu.exportFunction(resolve, this.context.cloneScope);
 
-        let result = runSafeSyncWithoutClone(callback, message, sender, sendResponse);
-        if (result !== true) {
-          valid = false;
-          if (!sent) {
-            mm.sendAsyncMessage(replyName, {gotData: false});
+          // Note: We intentionally do not use runSafe here so that any
+          // errors are propagated to the message sender.
+          let result = callback(message, sender, sendResponse);
+          if (result instanceof Promise) {
+            resolve(result);
+          } else if (result !== true) {
+            reject();
           }
-        }
+        }).then(
+          data => {
+            mm.sendAsyncMessage(replyName, {data, gotData: true});
+          },
+          error => {
+            if (error) {
+              // The result needs to be structured-clonable, which
+              // ordinary Error objects are not.
+              try {
+                error = {message: String(error.message), stack: String(error.stack)};
+              } catch (e) {
+                error = {message: String(error)};
+              }
+            }
+            mm.sendAsyncMessage(replyName, {error, gotData: false});
+          });
       };
 
       this.broker.addListener("message", listener, this.filter);
@@ -992,6 +1033,7 @@ this.ExtensionUtils = {
   ignoreEvent,
   injectAPI,
   instanceOf,
+  promiseDocumentReady,
   runSafe,
   runSafeSync,
   runSafeSyncWithoutClone,

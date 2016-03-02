@@ -11,20 +11,20 @@ const L10N = exports.L10N = new ViewHelpers.L10N(STRINGS_URI);
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
-const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
-const CUSTOM_DOMINATOR_TREE_BREAKDOWN_PREF = "devtools.memory.custom-dominator-tree-breakdowns";
+const CUSTOM_CENSUS_DISPLAY_PREF = "devtools.memory.custom-census-displays";
+const CUSTOM_DOMINATOR_TREE_DISPLAY_PREF = "devtools.memory.custom-dominator-tree-displays";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   snapshotState: states,
   diffingState,
-  breakdowns,
-  dominatorTreeBreakdowns,
+  censusDisplays,
+  dominatorTreeDisplays,
   dominatorTreeState
 } = require("./constants");
 
 /**
- * Takes a snapshot object and returns the
- * localized form of its timestamp to be used as a title.
+ * Takes a snapshot object and returns the localized form of its timestamp to be
+ * used as a title.
  *
  * @param {Snapshot} snapshot
  * @return {String}
@@ -48,160 +48,35 @@ exports.getSnapshotTitle = function (snapshot) {
   });
 };
 
-/**
- * Returns an array of objects with the unique key `name`
- * and `displayName` for each breakdown.
- *
- * @return {Object{name, displayName}}
- */
-exports.getBreakdownDisplayData = function () {
-  return exports.getBreakdownNames().map(({ name, tooltip }) => {
-    // If it's a preset use the display name value
-    let preset = breakdowns[name];
-    let displayName = name;
-    if (preset && preset.displayName) {
-      displayName = preset.displayName;
-    }
-    return { name, tooltip, displayName };
-  });
-};
-
-/**
- * Returns an array of the unique names and tooltips for each breakdown in
- * presets and custom pref.
- *
- * @return {Array<Object>}
- */
-exports.getBreakdownNames = function () {
-  let custom = exports.getCustomBreakdowns();
-  return Object.keys(Object.assign({}, breakdowns, custom))
-    .map(key => {
-      return breakdowns[key]
-        ? { name: key, tooltip: breakdowns[key].tooltip }
-        : { name: key };
-    });
-};
-
-/**
- * Returns custom breakdowns defined in `devtools.memory.custom-breakdowns` pref.
- *
- * @return {Object}
- */
-exports.getCustomBreakdowns = function () {
-  let customBreakdowns = Object.create(null);
+function getCustomDisplaysHelper(pref) {
+  let customDisplays = Object.create(null);
   try {
-    customBreakdowns = JSON.parse(Preferences.get(CUSTOM_BREAKDOWN_PREF)) || Object.create(null);
+    customDisplays = JSON.parse(Preferences.get(pref)) || Object.create(null);
   } catch (e) {
     DevToolsUtils.reportException(
-      `String stored in "${CUSTOM_BREAKDOWN_PREF}" pref cannot be parsed by \`JSON.parse()\`.`);
+      `String stored in "${pref}" pref cannot be parsed by \`JSON.parse()\`.`);
   }
-  return customBreakdowns;
+  return Object.freeze(customDisplays);
 }
 
 /**
- * Converts a breakdown preset name, like "allocationStack", and returns the
- * spec for the breakdown. Also checks properties of keys in the `devtools.memory.custom-breakdowns`
- * pref. If not found, returns an empty object.
- *
- * @param {String} name
- * @return {Object}
- */
-exports.breakdownNameToSpec = function (name) {
-  let customBreakdowns = exports.getCustomBreakdowns();
-
-  // If breakdown is already a breakdown, use it
-  if (typeof name === "object") {
-    return name;
-  }
-  // If it's in our custom breakdowns, use it
-  else if (name in customBreakdowns) {
-    return customBreakdowns[name];
-  }
-  // If breakdown name is in our presets, use that
-  else if (name in breakdowns) {
-    return breakdowns[name].breakdown;
-  }
-  return Object.create(null);
-};
-
-/**
- * Returns an array of objects with the unique key `name` and `displayName` for
- * each breakdown for dominator trees.
- *
- * @return {Array<Object>}
- */
-exports.getDominatorTreeBreakdownDisplayData = function () {
-  return exports.getDominatorTreeBreakdownNames().map(({ name, tooltip }) => {
-    // If it's a preset use the display name value
-    let preset = dominatorTreeBreakdowns[name];
-    let displayName = name;
-    if (preset && preset.displayName) {
-      displayName = preset.displayName;
-    }
-    return { name, tooltip, displayName };
-  });
-};
-
-/**
- * Returns an array of the unique names for each breakdown in
- * presets and custom pref.
- *
- * @return {Array<Breakdown>}
- */
-exports.getDominatorTreeBreakdownNames = function () {
-  let custom = exports.getCustomDominatorTreeBreakdowns();
-  return Object.keys(Object.assign({}, dominatorTreeBreakdowns, custom))
-    .map(key => {
-      return dominatorTreeBreakdowns[key]
-        ? { name: key, tooltip: dominatorTreeBreakdowns[key].tooltip }
-        : { name: key };
-    });
-};
-
-/**
- * Returns custom breakdowns defined in `devtools.memory.custom-dominator-tree-breakdowns` pref.
+ * Returns custom displays defined in `devtools.memory.custom-census-displays`
+ * pref.
  *
  * @return {Object}
  */
-exports.getCustomDominatorTreeBreakdowns = function () {
-  let customBreakdowns = Object.create(null);
-  try {
-    customBreakdowns = JSON.parse(Preferences.get(CUSTOM_DOMINATOR_TREE_BREAKDOWN_PREF)) || Object.create(null);
-  } catch (e) {
-    DevToolsUtils.reportException(
-      `String stored in "${CUSTOM_BREAKDOWN_PREF}" pref cannot be parsed by \`JSON.parse()\`.`);
-  }
-  return customBreakdowns;
+exports.getCustomCensusDisplays = function () {
+  return getCustomDisplaysHelper(CUSTOM_CENSUS_DISPLAY_PREF);
 };
 
 /**
- * Converts a dominator tree breakdown preset name, like "allocationStack", and
- * returns the spec for the breakdown. Also checks properties of keys in the
- * `devtools.memory.custom-breakdowns` pref. If not found, returns an empty
- * object.
+ * Returns custom displays defined in
+ * `devtools.memory.custom-dominator-tree-displays` pref.
  *
- * @param {String} name
  * @return {Object}
  */
-exports.dominatorTreeBreakdownNameToSpec = function (name) {
-  let customBreakdowns = exports.getCustomDominatorTreeBreakdowns();
-
-  // If breakdown is already a breakdown, use it.
-  if (typeof name === "object") {
-    return name;
-  }
-
-  // If it's in our custom breakdowns, use it.
-  if (name in customBreakdowns) {
-    return customBreakdowns[name];
-  }
-
-  // If breakdown name is in our presets, use that.
-  if (name in dominatorTreeBreakdowns) {
-    return dominatorTreeBreakdowns[name].breakdown;
-  }
-
-  return Object.create(null);
+exports.getCustomDominatorTreeDisplays = function () {
+  return getCustomDisplaysHelper(CUSTOM_DOMINATOR_TREE_DISPLAY_PREF);
 };
 
 /**
@@ -389,61 +264,19 @@ exports.createSnapshot = function createSnapshot(state) {
 };
 
 /**
- * Takes two objects and compares them deeply, returning
- * a boolean indicating if they're equal or not. Used for breakdown
- * comparison.
+ * Return true if the census is up to date with regards to the current filtering
+ * and requested display, false otherwise.
  *
- * @param {Any} obj1
- * @param {Any} obj2
- * @return {Boolean}
- */
-const breakdownEquals = exports.breakdownEquals = function (obj1, obj2) {
-  let type1 = typeof obj1;
-  let type2 = typeof obj2;
-
-  // Quick checks
-  if (type1 !== type2 || (Array.isArray(obj1) !== Array.isArray(obj2))) {
-    return false;
-  }
-
-  if (obj1 === obj2) {
-    return true;
-  }
-
-  if (Array.isArray(obj1)) {
-    if (obj1.length !== obj2.length) { return false; }
-    return obj1.every((_, i) => exports.breakdownEquals(obj[1], obj2[i]));
-  }
-  else if (type1 === "object") {
-    let k1 = Object.keys(obj1);
-    let k2 = Object.keys(obj2);
-
-    if (k1.length !== k2.length) {
-      return false;
-    }
-
-    return k1.every(k => exports.breakdownEquals(obj1[k], obj2[k]));
-  }
-
-  return false;
-};
-
-/**
- * Return true if the census is up to date with regards to the current
- * inversion/filtering/breakdown, false otherwise.
- *
- * @param {Boolean} inverted
  * @param {String} filter
- * @param {Object} breakdown
+ * @param {censusDisplayModel} display
  * @param {censusModel} census
  *
  * @returns {Boolean}
  */
-exports.censusIsUpToDate = function (inverted, filter, breakdown, census) {
+exports.censusIsUpToDate = function (filter, display, census) {
   return census
-      && inverted === census.inverted
       && filter === census.filter
-      && breakdownEquals(breakdown, census.breakdown);
+      && display === census.display;
 };
 
 /**

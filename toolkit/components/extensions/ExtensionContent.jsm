@@ -25,6 +25,8 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
+                                  "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -33,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
@@ -47,6 +48,7 @@ var {
   injectAPI,
   flushJarCache,
   detectLanguage,
+  promiseDocumentReady,
 } = ExtensionUtils;
 
 function isWhenBeforeOrSame(when1, when2) {
@@ -99,7 +101,7 @@ var api = context => {
         }
 
         let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
-        context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
+        return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
       },
     },
 
@@ -732,6 +734,7 @@ class ExtensionGlobal {
     this.global = global;
 
     MessageChannel.addListener(global, "Extension:Capture", this);
+    MessageChannel.addListener(global, "Extension:DetectLanguage", this);
     MessageChannel.addListener(global, "Extension:Execute", this);
     MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
     MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
@@ -760,6 +763,8 @@ class ExtensionGlobal {
     switch (messageName) {
       case "Extension:Capture":
         return this.handleExtensionCapture(data.width, data.height, data.options);
+      case "Extension:DetectLanguage":
+        return this.handleDetectLanguage(target);
       case "Extension:Execute":
         return this.handleExtensionExecute(target, recipient.extensionId, data.options);
       case "WebNavigation:GetFrame":
@@ -788,6 +793,36 @@ class ExtensionGlobal {
     ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
 
     return canvas.toDataURL(`image/${options.format}`, options.quality / 100);
+  }
+
+  handleDetectLanguage(target) {
+    let doc = target.content.document;
+
+    return promiseDocumentReady(doc).then(() => {
+      let elem = doc.documentElement;
+
+      let language = (elem.getAttribute("xml:lang") || elem.getAttribute("lang") ||
+                      doc.contentLanguage || null);
+
+      // We only want the last element of the TLD here.
+      // Only country codes have any effect on the results, but other
+      // values cause no harm.
+      let tld = doc.location.hostname.match(/[a-z]*$/)[0];
+
+      // The CLD2 library used by the language detector is capable of
+      // analyzing raw HTML. Unfortunately, that takes much more memory,
+      // and since it's hosted by emscripten, and therefore can't shrink
+      // its heap after it's grown, it has a performance cost.
+      // So we send plain text instead.
+      let encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"].createInstance(Ci.nsIDocumentEncoder);
+      encoder.init(doc, "text/plain", encoder.SkipInvisibleContent);
+      let text = encoder.encodeToStringWithMaxLength(60 * 1024);
+
+      let encoding = doc.characterSet;
+
+      return LanguageDetector.detectLanguage({language, tld, text, encoding})
+                             .then(result => result.language);
+    });
   }
 
   handleExtensionExecute(target, extensionId, options) {

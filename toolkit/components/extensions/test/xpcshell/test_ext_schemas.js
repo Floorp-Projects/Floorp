@@ -249,6 +249,22 @@ let json = [
      },
 
      {
+       name: "localize",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             foo: {type: "string", "preprocess": "localize", "optional": true},
+             bar: {type: "string", "optional": true},
+             url: {type: "string", "preprocess": "localize", "format": "url", "optional": true},
+           },
+         },
+       ],
+     },
+
+     {
        name: "extended1",
        type: "function",
        parameters: [
@@ -323,6 +339,12 @@ let wrapper = {
 
   checkLoadURL(url) {
     return !url.startsWith("chrome:");
+  },
+
+  preprocessors: {
+    localize(value, context) {
+      return value.replace(/__MSG_(.*?)__/g, (m0, m1) => `${m1.toUpperCase()}`);
+    },
   },
 
   logError(message) {
@@ -603,6 +625,16 @@ add_task(function* () {
                   /Expected a plain JavaScript object, got a Proxy/,
                   "should throw when passing a Proxy");
   }
+
+
+  root.testing.localize({foo: "__MSG_foo__", bar: "__MSG_foo__", url: "__MSG_http://example.com/__"});
+  verify("call", "testing", "localize", [{foo: "FOO", bar: "__MSG_foo__", url: "http://example.com/"}]);
+  tallied = null;
+
+
+  Assert.throws(() => root.testing.localize({url: "__MSG_/foo/bar__"}),
+                /\/FOO\/BAR is not a valid URL\./,
+                "should throw for invalid URL");
 
 
   root.testing.extended1({prop1: "foo", prop2: "bar"});

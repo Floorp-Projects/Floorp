@@ -76,15 +76,8 @@ BackgroundPage.prototype = {
       if (this.scripts) {
         let doc = window.document;
         for (let script of this.scripts) {
-          let url = this.extension.baseURI.resolve(script);
-
-          if (!this.extension.isExtensionURL(url)) {
-            this.extension.manifestError("Background scripts must be files within the extension");
-            continue;
-          }
-
           let tag = doc.createElement("script");
-          tag.setAttribute("src", url);
+          tag.setAttribute("src", script);
           tag.async = false;
           doc.body.appendChild(tag);
         }

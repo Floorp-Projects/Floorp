@@ -62,6 +62,10 @@ add_task(function* () {
   let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
   glue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
 
+  Assert.equal(Services.prefs.getCharPref("distribution.id"), "disttest");
+  Assert.equal(Services.prefs.getCharPref("distribution.version"), "1.0");
+  Assert.equal(Services.prefs.getComplexValue("distribution.about", Ci.nsISupportsString).data, "Tèƨƭ δïƨƭřïβúƭïôñ ƒïℓè");
+
   Assert.equal(Services.prefs.getCharPref("distribution.test.string"), "Test String");
   Assert.equal(Services.prefs.getCharPref("distribution.test.string.noquotes"), "Test String");
   Assert.equal(Services.prefs.getIntPref("distribution.test.int"), 777);

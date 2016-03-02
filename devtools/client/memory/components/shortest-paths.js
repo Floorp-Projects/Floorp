@@ -12,11 +12,6 @@ const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const { L10N } = require("../utils");
 
-const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-const COMPONENTS_STRINGS_URI = "chrome://devtools/locale/components.properties";
-const componentsL10N = new ViewHelpers.L10N(COMPONENTS_STRINGS_URI);
-const UNKNOWN_SOURCE_STRING = componentsL10N.getStr("frame.unknownSource");
-
 const GRAPH_DEFAULTS = {
   translate: [20, 20],
   scale: 1
@@ -33,7 +28,7 @@ function stringifyLabel(label, id) {
     const piece = label[i];
 
     if (isSavedFrame(piece)) {
-      const { short } = getSourceNames(piece.source, UNKNOWN_SOURCE_STRING);
+      const { short } = getSourceNames(piece.source);
       sanitized[i] = `${piece.functionDisplayName} @ ${short}:${piece.line}:${piece.column}`;
     } else if (piece === NO_STACK) {
       sanitized[i] = L10N.getStr("tree-item.nostack");

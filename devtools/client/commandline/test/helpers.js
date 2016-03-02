@@ -24,6 +24,7 @@ var helpers = {};
 
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { TargetFactory } = require("devtools/client/framework/target");
+var Services = require("Services");
 
 var assert = { ok: ok, is: is, log: info };
 var util = require('gcli/util/util');
