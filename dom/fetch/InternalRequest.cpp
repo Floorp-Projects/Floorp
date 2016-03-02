@@ -363,5 +363,14 @@ InternalRequest::MapChannelToRequestCredentials(nsIChannel* aChannel)
   return RequestCredentials::Same_origin;
 }
 
+void
+InternalRequest::MaybeSkipCacheIfPerformingRevalidation()
+{
+  if (mCacheMode == RequestCache::Default &&
+      mHeaders->HasRevalidationHeaders()) {
+    mCacheMode = RequestCache::No_store;
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

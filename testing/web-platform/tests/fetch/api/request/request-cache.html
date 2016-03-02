@@ -129,6 +129,166 @@
         expected_no_cache_headers: [true, false],
       },
       {
+        name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Modified-Since": new Date().toGMTString()}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Modified-Since": new Date().toGMTString()}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Modified-Since": new Date().toGMTString()}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Modified-Since": new Date().toGMTString()}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-None-Match header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-None-Match": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-None-Match header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-None-Match": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-None-Match header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-None-Match": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-None-Match header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-None-Match": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Unmodified-Since": new Date().toGMTString()}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Unmodified-Since": new Date().toGMTString()}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Unmodified-Since": new Date().toGMTString()}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Unmodified-Since": new Date().toGMTString()}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Match header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Match": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Match header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Match": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Match header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Match": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Match header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Match": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Range header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Range": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Range header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{}, {"If-Range": '"foo"'}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [false, true],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Range header is treated similarly to "no-store"',
+        state: "stale",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Range": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
+        name: 'RequestCache "default" mode with an If-Range header is treated similarly to "no-store"',
+        state: "fresh",
+        request_cache: ["default", "default"],
+        request_headers: [{"If-Range": '"foo"'}, {}],
+        expected_validation_headers: [false, false],
+        expected_no_cache_headers: [true, false],
+      },
+      {
         name: 'Responses with the "Cache-Control: no-store" header are not stored in the cache',
         state: "stale",
         cache_control: "no-store",
@@ -201,10 +361,16 @@
       if ("cache_control" in info) {
         cache_control = "&cache_control=" + info.cache_control;
       }
+      var ignore_request_headers = "";
+      if ("request_headers" in info) {
+        // Ignore the request headers that we send since they may be synthesized by the test.
+        ignore_request_headers = "&ignore";
+      }
       return "resources/cache.py?token=" + uuid +
              "&content=" + content +
              "&" + id + "=" + value +
-             "&expires=" + dates[info.state] + vary + cache_control;
+             "&expires=" + dates[info.state] +
+             vary + cache_control + ignore_request_headers;
     }
     function server_state(uuid) {
       return fetch("resources/cache.py?querystate&token=" + uuid)
@@ -214,8 +380,12 @@
           return JSON.parse(text);
         });
     }
-    function populate_cache(url, content, cache) {
-      return fetch(url, {cache: cache})
+    function populate_cache(url, content, info) {
+      var init = {cache: info.request_cache[0]};
+      if ("request_headers" in info) {
+        init.headers = info.request_headers[0];
+      }
+      return fetch(url, init)
         .then(function(response) {
           assert_equals(response.status, 200);
           assert_equals(response.statusText, "OK");
@@ -231,11 +401,15 @@
         var content = Math.random().toString();
         var url = make_url(uuid, type, identifier, content, info);
         var fetch_functions = [function() {
-          return populate_cache(url, content, info.request_cache[0]);
+          return populate_cache(url, content, info);
         }];
         for (var i = 1; i < info.request_cache.length; ++i) {
           fetch_functions.push(function(idx) {
-            return fetch(url, {cache: info.request_cache[idx]})
+            var init = {cache: info.request_cache[idx]};
+            if ("request_headers" in info) {
+              init.headers = info.request_headers[idx];
+            }
+            return fetch(url, init)
               .then(function(response) {
                 assert_equals(response.status, 200);
                 assert_equals(response.statusText, "OK");
