@@ -6,7 +6,8 @@
 (?i)(^|/)TAGS$
 (^|/)ID$
 (^|/)\.DS_Store$
-.*\.egg-info
+\.pdb
+\.egg-info
 
 # Vim swap files.
 ^\.sw.$
@@ -106,8 +107,11 @@ GPATH
 ^embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
 
 # Ignore mozharness execution files
-^testing/mozharness/logs/
+^testing/mozharness/.tox/
 ^testing/mozharness/build/
+^testing/mozharness/logs/
+^testing/mozharness/.coverage
+^testing/mozharness/nosetests.xml
 
 # Ignore tox generated dir
 .tox/
@@ -125,4 +129,6 @@ GPATH
 ^testing/talos/bin/
 ^testing/talos/include/
 ^testing/talos/lib/
-^testing/talos/talos/page_load_test/tp5n/
+^testing/talos/talos/tests/tp5n.zip
+^testing/talos/talos/tests/tp5n
+^testing/talos/talos/tests/devtools/damp.manifest.develop

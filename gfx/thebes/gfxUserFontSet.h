@@ -262,6 +262,10 @@ public:
                                    nsIPrincipal** aPrincipal,
                                    bool* aBypassCache) = 0;
 
+    // check whether content policies allow the given URI to load.
+    virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
+                                   nsIPrincipal* aPrincipal) = 0;
+
     // initialize the process that loads external font data, which upon
     // completion will call FontDataDownloadComplete method
     virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,

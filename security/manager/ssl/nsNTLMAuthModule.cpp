@@ -12,6 +12,7 @@
 #include "mozilla/Endian.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -188,23 +189,23 @@ LogBuf(const char *tag, const uint8_t *buf, uint32_t bufLen)
     for (i=0; i<count; ++i)
     {
       int len = strlen(line);
-      PR_snprintf(line + len, sizeof(line) - len, "0x%02x ", int(buf[i]));
+      snprintf(line + len, sizeof(line) - len, "0x%02x ", int(buf[i]));
     }
     for (; i<8; ++i)
     {
       int len = strlen(line);
-      PR_snprintf(line + len, sizeof(line) - len, "     ");
+      snprintf(line + len, sizeof(line) - len, "     ");
     }
 
     int len = strlen(line);
-    PR_snprintf(line + len, sizeof(line) - len, "   ");
+    snprintf(line + len, sizeof(line) - len, "   ");
     for (i=0; i<count; ++i)
     {
       len = strlen(line);
       if (isprint(buf[i]))
-        PR_snprintf(line + len, sizeof(line) - len, "%c", buf[i]);
+        snprintf(line + len, sizeof(line) - len, "%c", buf[i]);
       else
-        PR_snprintf(line + len, sizeof(line) - len, ".");
+        snprintf(line + len, sizeof(line) - len, ".");
     }
     PR_LogPrint("%s\n", line);
 
