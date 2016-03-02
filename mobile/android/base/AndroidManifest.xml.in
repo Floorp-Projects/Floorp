@@ -359,5 +359,9 @@
 #include ../stumbler/manifests/StumblerManifest_services.xml.in
 #endif
 
+#ifdef MOZ_ANDROID_GCM
+#include GcmAndroidManifest_services.xml.in
+#endif
+
     </application>
 </manifest>
