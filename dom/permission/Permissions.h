@@ -38,6 +38,8 @@ public:
                                   JS::Handle<JSObject*> aPermission,
                                   ErrorResult& aRv);
 
+  static nsresult RemovePermission(nsIPrincipal* aPrincipal, const char* aPermissionType);
+
   already_AddRefed<Promise> Revoke(JSContext* aCx,
                                    JS::Handle<JSObject*> aPermission,
                                    ErrorResult& aRv);

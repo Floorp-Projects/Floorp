@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Permissions.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Services.h"
@@ -121,6 +122,19 @@ Permissions::Query(JSContext* aCx,
   return promise.forget();
 }
 
+/* static */ nsresult
+Permissions::RemovePermission(nsIPrincipal* aPrincipal, const char* aPermissionType)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (NS_WARN_IF(!permMgr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return permMgr->RemoveFromPrincipal(aPrincipal, aPermissionType);
+}
+
 already_AddRefed<Promise>
 Permissions::Revoke(JSContext* aCx,
                     JS::Handle<JSObject*> aPermission,
@@ -156,7 +170,19 @@ Permissions::Revoke(JSContext* aCx,
     return promise.forget();
   }
 
-  nsresult rv = permMgr->RemoveFromPrincipal(document->NodePrincipal(), PermissionNameToType(permission.mName));
+  const char* permissionType = PermissionNameToType(permission.mName);
+
+  nsresult rv;
+  if (XRE_IsParentProcess()) {
+    rv = RemovePermission(document->NodePrincipal(), permissionType);
+  } else {
+    // Permissions can't be removed from the content process. Send a message
+    // to the parent; `ContentParent::RecvRemovePermission` will call
+    // `RemovePermission`.
+    ContentChild::GetSingleton()->SendRemovePermission(
+      IPC::Principal(document->NodePrincipal()), nsDependentCString(permissionType), &rv);
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(rv);
     return promise.forget();
