@@ -313,6 +313,9 @@ user_pref("browser.tabs.remote.autostart.2", false);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 
+// Don't block add-ons for e10s
+user_pref("extensions.e10sBlocksEnabling", false);
+
 // Avoid performing Reader Mode intros during tests.
 user_pref("browser.reader.detectedFirstArticle", true);
 
