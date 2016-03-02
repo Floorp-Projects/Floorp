@@ -72,7 +72,7 @@ var ParentUtils = {
       return gAutocompletePopup.tree.view.rowCount === expectedCount &&
         (!expectedFirstValue ||
           expectedCount <= 1 ||
-          gAutocompletePopup.tree.view.getValueAt(0, gAutocompletePopup.tree.columns[0]) ===
+          gAutocompletePopup.tree.view.getCellText(0, gAutocompletePopup.tree.columns[0]) ===
           expectedFirstValue);
     }).then(() => {
       let results = this.getMenuEntries();
