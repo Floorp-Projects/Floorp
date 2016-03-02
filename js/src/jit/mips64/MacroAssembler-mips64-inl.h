@@ -225,6 +225,14 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestUndefined(cond, scratch2, label);
+}
+
+void
 MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
 {
     SecondScratchRegisterScope scratch2(*this);

@@ -510,6 +510,29 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 }
 
 void
+MacroAssembler::branchTestUndefined(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(tag, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const Address& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestUndefined(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const BaseIndex& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestUndefined(cond, scratch2, label);
+}
+
+void
 MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
