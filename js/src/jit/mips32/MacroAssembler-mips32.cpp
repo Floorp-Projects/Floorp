@@ -1568,13 +1568,6 @@ MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand& val
     ma_b(SecondScratchReg, Imm32(0), label, b ? NotEqual : Equal);
 }
 
-void
-MacroAssemblerMIPSCompat::branchTestBooleanTruthy(bool b, const ValueOperand& operand,
-                                                  Label* label)
-{
-    ma_b(operand.payloadReg(), operand.payloadReg(), label, b ? NonZero : Zero);
-}
-
 Register
 MacroAssemblerMIPSCompat::extractObject(const Address& address, Register scratch)
 {

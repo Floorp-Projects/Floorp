@@ -929,6 +929,13 @@ MacroAssembler::branchTestBooleanImpl(Condition cond, const T& t, Label* label)
     ma_b(label, c);
 }
 
+void
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    Condition c = testBooleanTruthy(truthy, value);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
