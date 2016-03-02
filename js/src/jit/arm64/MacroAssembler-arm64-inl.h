@@ -957,6 +957,25 @@ MacroAssembler::branchTestDoubleImpl(Condition cond, const T& t, Label* label)
     B(label, c);
 }
 
+void
+MacroAssembler::branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label)
+{
+    Fcmp(ARMFPRegister(reg, 64), 0.0);
+    if (!truthy) {
+        // falsy values are zero, and NaN.
+        branch(Zero, label);
+        branch(Overflow, label);
+    } else {
+        // truthy values are non-zero and not nan.
+        // If it is overflow
+        Label onFalse;
+        branch(Zero, &onFalse);
+        branch(Overflow, &onFalse);
+        B(label);
+        bind(&onFalse);
+    }
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

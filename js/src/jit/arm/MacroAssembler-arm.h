@@ -811,10 +811,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testBooleanTruthy(truthy, operand);
         ma_b(label, c);
     }
-    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
-        Condition c = testDoubleTruthy(truthy, reg);
-        ma_b(label, c);
-    }
     void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
         Condition c = testStringTruthy(truthy, value);
         ma_b(label, c);

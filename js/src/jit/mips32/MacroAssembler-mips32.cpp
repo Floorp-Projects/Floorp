@@ -1614,14 +1614,6 @@ MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand& val
 }
 
 void
-MacroAssemblerMIPSCompat::branchTestDoubleTruthy(bool b, FloatRegister value, Label* label)
-{
-    ma_lid(ScratchDoubleReg, 0.0);
-    DoubleCondition cond = b ? DoubleNotEqual : DoubleEqualOrUnordered;
-    ma_bc1d(value, ScratchDoubleReg, label, cond);
-}
-
-void
 MacroAssemblerMIPSCompat::branchTestBooleanTruthy(bool b, const ValueOperand& operand,
                                                   Label* label)
 {

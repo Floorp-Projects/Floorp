@@ -395,7 +395,6 @@ class MacroAssemblerNone : public Assembler
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
     void branchTestBooleanTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
     void branchTestStringTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestDoubleTruthy(bool, FloatRegister, Label*) { MOZ_CRASH(); }
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedValue(ConstantOrRegister, MIRType, T, MIRType) { MOZ_CRASH(); }
