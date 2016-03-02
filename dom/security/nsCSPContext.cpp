@@ -614,6 +614,9 @@ nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
     // console messages until it becomes available, see flushConsoleMessages
     mQueueUpMessages = !mInnerWindowID;
     mCallingChannelLoadGroup = doc->GetDocumentLoadGroup();
+
+    // set the flag on the document for CSP telemetry
+    doc->SetHasCSP(true);
   }
   else {
     NS_WARNING("No Document in SetRequestContext; can not query loadgroup; sending reports may fail.");
