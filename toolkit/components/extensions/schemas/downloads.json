@@ -295,7 +295,7 @@
       {
         "name": "search",
         "type": "function",
-        "async": "callback",
+        "unsupported": true,
         "description": "Find <a href='#type-DownloadItem'>DownloadItems</a>. Set <code>query</code> to the empty object to get all <a href='#type-DownloadItem'>DownloadItems</a>. To get a specific <a href='#type-DownloadItem'>DownloadItem</a>, set only the <code>id</code> field.",
         "parameters": [
           {
@@ -311,26 +311,22 @@
               "startedBefore": {
                 "description": "Limits results to downloads that started before the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "type": "string"
               },
               "startedAfter": {
                 "description": "Limits results to downloads that started after the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "type": "string"
               },
               "endedBefore": {
                 "description": "Limits results to downloads that ended before the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "type": "string"
               },
               "endedAfter": {
                 "description": "Limits results to downloads that ended after the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "type": "string"
               },
               "totalBytesGreater": {
                 "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
