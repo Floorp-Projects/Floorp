@@ -647,27 +647,6 @@ menuitem.experimental-option::before {
   display: none;
 }
 
-.opt-icon::before {
-  content: "";
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-  background-repeat: no-repeat;
-  background-size: 72px 60px;
-  /* show grey "i" bubble by default */
-  background-position: -36px -36px;
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-
-  max-height: 12px;
-}
-
-.theme-light .opt-icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
-}
-.opt-icon.warning::before {
-  background-position: -24px -24px;
-}
-
 /* for call tree */
 description.opt-icon {
   margin: 0px 0px 0px 0px;
