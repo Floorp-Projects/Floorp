@@ -288,6 +288,14 @@ MacroAssembler::branchTestBooleanTruthy(bool b, const ValueOperand& value, Label
     ma_b(scratch2, scratch2, label, b ? NonZero : Zero);
 }
 
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestString(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
