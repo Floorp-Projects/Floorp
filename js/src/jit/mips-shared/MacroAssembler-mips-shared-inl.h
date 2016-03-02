@@ -640,6 +640,29 @@ MacroAssembler::branchTestSymbol(Condition cond, const BaseIndex& address, Label
     branchTestSymbol(cond, scratch2, label);
 }
 
+void
+MacroAssembler::branchTestNull(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(tag, ImmTag(JSVAL_TAG_NULL), label, cond);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const Address& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestNull(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const BaseIndex& address, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    extractTag(address, scratch2);
+    branchTestNull(cond, scratch2, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
