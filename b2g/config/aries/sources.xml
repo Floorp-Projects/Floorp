@@ -136,7 +136,7 @@
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" revision="26e93f6af47f7bd3a9beb5c102a5f45e19bfa38a"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" revision="d9735fc81434f2af2c44d86ca57740c673c8d9bc"/>
   <!-- Platform common things -->
-  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="68157e0302df53490e7d721eb4e8b0c7c7e49fdf"/>
+  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="dd157e2795ccaf7751063fda7bcce1e1ce178002"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="559bc18796a7b97b7619ebf30042a09c3ae0398f"/>
@@ -168,5 +168,5 @@
   <!-- Shinano specific things -->
   <project name="device-shinano" path="device/sony/leo" remote="b2g" revision="653f7e1f093b948e40262fcb3c665c2b4976df74"/>
   <!-- Aries specific things -->
-  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="d14b864406bfd8bbfa13daf588207ab863f72f40"/>
+  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="791b8af16ec5f65366aa7a05aa0068c65018e882"/>
 </manifest>
