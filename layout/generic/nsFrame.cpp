@@ -1024,7 +1024,8 @@ nsIFrame::Sides
 nsIFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+                     NS_STYLE_BOX_DECORATION_BREAK_CLONE) &&
+      !(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     return Sides();
   }
 
