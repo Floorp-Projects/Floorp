@@ -591,4 +591,8 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     return retAddr;
 }
 
+void
+MacroAssembler::flush()
+{}
+
 //}}} check_macroassembler_style

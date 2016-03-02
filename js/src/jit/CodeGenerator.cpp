@@ -8329,6 +8329,8 @@ CodeGenerator::generateAsmJS(wasm::FuncOffsets* offsets)
     if (!generateOutOfLineCode())
         return false;
 
+    masm.flush();
+
     offsets->end = masm.currentOffset();
 
     MOZ_ASSERT(!masm.failureLabel()->used());
