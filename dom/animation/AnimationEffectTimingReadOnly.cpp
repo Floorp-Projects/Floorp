@@ -19,6 +19,7 @@ TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs,
   : mDuration(aRhs.mDuration)
   , mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
   , mIterations(aRhs.mIterations)
+  , mIterationStart(aRhs.mIterationStart)
   , mDirection(aRhs.mDirection)
   , mFill(aRhs.mFill)
 {
@@ -113,6 +114,7 @@ TimingParams::operator==(const TimingParams& aOther) const
   return durationEqual &&
          mDelay == aOther.mDelay &&
          mIterations == aOther.mIterations &&
+         mIterationStart == aOther.mIterationStart &&
          mDirection == aOther.mDirection &&
          mFill == aOther.mFill &&
          mFunction == aOther.mFunction;

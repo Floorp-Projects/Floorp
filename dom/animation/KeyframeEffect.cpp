@@ -36,6 +36,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
   aRetVal.mFill = aComputedTiming.mFill;
   aRetVal.mIterations = aComputedTiming.mIterations;
+  aRetVal.mIterationStart = aComputedTiming.mIterationStart;
   aRetVal.mDuration.SetAsUnrestrictedDouble() =
     aComputedTiming.mDuration.ToMilliseconds();
   aRetVal.mDirection = aTiming.mDirection;
@@ -45,6 +46,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mEndTime = aComputedTiming.mEndTime.ToMilliseconds();
   aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
+
   if (!aRetVal.mProgress.IsNull()) {
     // Convert the returned currentIteration into Infinity if we set
     // (uint64_t) aComputedTiming.mCurrentIteration to UINT64_MAX
@@ -244,6 +246,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
                        1.0f :
                        aTiming.mIterations;
+  result.mIterationStart = std::max(aTiming.mIterationStart, 0.0);
+
   result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
   // Bug 1244635: Add endDelay to the end time calculation
   result.mEndTime = aTiming.mDelay + result.mActiveDuration;
@@ -273,10 +277,11 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
       return result;
     }
     activeTime = result.mActiveDuration;
-    // Note that infinity == floor(infinity) so this will also be true when we
-    // have finished an infinitely repeating animation of zero duration.
+    double finiteProgress =
+      (IsInfinite(result.mIterations) ? 0.0 : result.mIterations)
+      + result.mIterationStart;
     isEndOfFinalIteration = result.mIterations != 0.0 &&
-                            result.mIterations == floor(result.mIterations);
+                            fmod(finiteProgress, 1.0) == 0;
   } else if (localTime < aTiming.mDelay) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
     if (!result.FillsBackwards()) {
@@ -292,49 +297,66 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     activeTime = localTime - aTiming.mDelay;
   }
 
+  // Calculate the scaled active time
+  // (We handle the case where the iterationStart is zero separately in case
+  // the duration is infinity, since 0 * Infinity is undefined.)
+  StickyTimeDuration startOffset =
+    result.mIterationStart == 0.0
+    ? StickyTimeDuration(0)
+    : result.mDuration.MultDouble(result.mIterationStart);
+  StickyTimeDuration scaledActiveTime = activeTime + startOffset;
+
   // Get the position within the current iteration.
   StickyTimeDuration iterationTime;
-  if (result.mDuration != zeroDuration) {
+  if (result.mDuration != zeroDuration &&
+      scaledActiveTime != StickyTimeDuration::Forever()) {
     iterationTime = isEndOfFinalIteration
                     ? result.mDuration
-                    : activeTime % result.mDuration;
-  } /* else, iterationTime is zero */
+      : scaledActiveTime % result.mDuration;
+  } /* else, either the duration is zero and iterationTime is zero,
+       or the scaledActiveTime is infinity in which case the iterationTime
+       should become infinity but we will not use the iterationTime in that
+       case so we just leave it as zero */
 
   // Determine the 0-based index of the current iteration.
-  if (isEndOfFinalIteration) {
+  if (result.mPhase == ComputedTiming::AnimationPhase::Before ||
+      result.mIterations == 0) {
+    result.mCurrentIteration = static_cast<uint64_t>(result.mIterationStart);
+  } else if (result.mPhase == ComputedTiming::AnimationPhase::After) {
     result.mCurrentIteration =
-      IsInfinite(result.mIterations) // Positive Infinity?
+      IsInfinite(result.mIterations)
       ? UINT64_MAX // In GetComputedTimingDictionary(), we will convert this
                    // into Infinity.
-      : static_cast<uint64_t>(result.mIterations) - 1;
-  } else if (activeTime == zeroDuration) {
-    // If the active time is zero we're either in the first iteration
-    // (including filling backwards) or we have finished an animation with an
-    // iteration duration of zero that is filling forwards (but we're not at
-    // the exact end of an iteration since we deal with that above).
-    result.mCurrentIteration =
-      result.mPhase == ComputedTiming::AnimationPhase::After
-      ? static_cast<uint64_t>(result.mIterations) // floor
-      : 0;
+      : static_cast<uint64_t>(ceil(result.mIterations +
+                              result.mIterationStart)) - 1;
+  } else if (result.mDuration == StickyTimeDuration::Forever()) {
+    result.mCurrentIteration = static_cast<uint64_t>(result.mIterationStart);
   } else {
     result.mCurrentIteration =
-      static_cast<uint64_t>(activeTime / result.mDuration); // floor
+      static_cast<uint64_t>(scaledActiveTime / result.mDuration); // floor
   }
 
   // Normalize the iteration time into a fraction of the iteration duration.
-  if (result.mPhase == ComputedTiming::AnimationPhase::Before) {
-    result.mProgress.SetValue(0.0);
+  if (result.mPhase == ComputedTiming::AnimationPhase::Before ||
+      result.mIterations == 0) {
+    double progress = fmod(result.mIterationStart, 1.0);
+    result.mProgress.SetValue(progress);
   } else if (result.mPhase == ComputedTiming::AnimationPhase::After) {
-    double progress = isEndOfFinalIteration
-                      ? 1.0
-                      : fmod(result.mIterations, 1.0);
+    double progress;
+    if (isEndOfFinalIteration) {
+      progress = 1.0;
+    } else if (IsInfinite(result.mIterations)) {
+      progress = fmod(result.mIterationStart, 1.0);
+    } else {
+      progress = fmod(result.mIterations + result.mIterationStart, 1.0);
+    }
     result.mProgress.SetValue(progress);
   } else {
     // We are in the active phase so the iteration duration can't be zero.
     MOZ_ASSERT(result.mDuration != zeroDuration,
                "In the active phase of a zero-duration animation?");
     double progress = result.mDuration == StickyTimeDuration::Forever()
-                      ? 0.0
+                      ? fmod(result.mIterationStart, 1.0)
                       : iterationTime / result.mDuration;
     result.mProgress.SetValue(progress);
   }
