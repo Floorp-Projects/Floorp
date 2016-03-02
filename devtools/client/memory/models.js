@@ -45,12 +45,32 @@ function catchAndIgnore(fn) {
 }
 
 /**
- * The breakdown object DSL describing how we want
- * the census data to be.
+ * The data describing the census report's shape, and its associated metadata.
+ *
  * @see `js/src/doc/Debugger/Debugger.Memory.md`
  */
-let breakdownModel = exports.breakdown = PropTypes.shape({
-  by: PropTypes.string.isRequired,
+const censusDisplayModel = exports.censusDisplay = PropTypes.shape({
+  displayName: PropTypes.string.isRequired,
+  tooltip: PropTypes.string.isRequired,
+  inverted: PropTypes.bool.isRequired,
+  breakdown: PropTypes.shape({
+    by: PropTypes.string.isRequired,
+  })
+});
+
+/**
+ * How we want to label nodes in the dominator tree, and associated
+ * metadata. The notable difference from `censusDisplayModel` is the lack of
+ * an `inverted` property.
+ *
+ * @see `js/src/doc/Debugger/Debugger.Memory.md`
+ */
+const dominatorTreeDisplayModel = exports.dominatorTreeDisplay = PropTypes.shape({
+  displayName: PropTypes.string.isRequired,
+  tooltip: PropTypes.string.isRequired,
+  breakdown: PropTypes.shape({
+    by: PropTypes.string.isRequired,
+  })
 });
 
 let censusModel = exports.censusModel = PropTypes.shape({
@@ -58,10 +78,8 @@ let censusModel = exports.censusModel = PropTypes.shape({
   report: PropTypes.object,
   // The parent map for the report.
   parentMap: PropTypes.object,
-  // The breakdown used to generate the current census
-  breakdown: breakdownModel,
-  // Whether the currently cached report tree is inverted or not.
-  inverted: PropTypes.bool,
+  // The display data used to generate the current census.
+  display: censusDisplayModel,
   // If present, the currently cached report's filter string used for pruning
   // the tree items.
   filter: PropTypes.string,
@@ -99,9 +117,9 @@ let dominatorTreeModel = exports.dominatorTreeModel = PropTypes.shape({
     PropTypes.object,
   ]),
 
-  // The breakdown used to generate descriptive labels of nodes in this
-  // dominator tree.
-  breakdown: breakdownModel,
+  // The display used to generate descriptive labels of nodes in this dominator
+  // tree.
+  display: dominatorTreeDisplayModel,
 
   // The number of active requests to incrementally fetch subtrees. This should
   // only be non-zero when the state is INCREMENTAL_FETCHING.
@@ -197,7 +215,8 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
     if (shouldHavePath.includes(current) && !snapshot.path) {
       throw new Error(`Snapshots in state ${current} must have a snapshot path.`);
     }
-    if (shouldHaveCensus.includes(current) && (!snapshot.census || !snapshot.census.breakdown)) {
+    if (shouldHaveCensus.includes(current) &&
+        (!snapshot.census || !snapshot.census.display || !snapshot.census.display.breakdown)) {
       throw new Error(`Snapshots in state ${current} must have a census and breakdown.`);
     }
     if (shouldHaveCreationTime.includes(current) && !snapshot.creationTime) {
@@ -269,21 +288,15 @@ let appModel = exports.app = {
   // {HeapAnalysesClient} Used to interface with snapshots
   heapWorker: PropTypes.instanceOf(HeapAnalysesClient),
 
-  // The breakdown object DSL describing how we want
-  // the census data to be.
-  // @see `js/src/doc/Debugger/Debugger.Memory.md`
-  breakdown: breakdownModel.isRequired,
+  // The display data describing how we want the census data to be.
+  censusDisplay: censusDisplayModel.isRequired,
 
-  // The breakdown object DSL describing how we want
-  // the dominator tree labels to be computed.
-  // @see `js/src/doc/Debugger/Debugger.Memory.md`
-  dominatorTreeBreakdown: breakdownModel.isRequired,
+  // The display data describing how we want the dominator tree labels to be
+  // computed.
+  dominatorTreeDisplay: dominatorTreeDisplayModel.isRequired,
 
   // List of reference to all snapshots taken
   snapshots: PropTypes.arrayOf(snapshotModel).isRequired,
-
-  // True iff we want the tree displayed inverted.
-  inverted: PropTypes.bool.isRequired,
 
   // If present, a filter string for pruning the tree items.
   filter: PropTypes.string,

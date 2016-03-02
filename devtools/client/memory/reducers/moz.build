@@ -5,12 +5,11 @@
 
 DevToolsModules(
     'allocations.js',
-    'breakdown.js',
+    'census-display.js',
     'diffing.js',
-    'dominatorTreeBreakdown.js',
+    'dominator-tree-display.js',
     'errors.js',
     'filter.js',
-    'inverted.js',
     'sizes.js',
     'snapshots.js',
     'view.js',

@@ -73,21 +73,6 @@ function waitUntilSnapshotState (store, expected) {
   return waitUntilState(store, predicate);
 }
 
-function isBreakdownType (report, type) {
-  // Little sanity check, all reports should have at least a children array.
-  if (!report || !Array.isArray(report.children)) {
-    return false;
-  }
-  switch (type) {
-    case "coarseType":
-      return report.children.find(c => c.name === "objects");
-    case "allocationStack":
-      return report.children.find(c => c.name === "noStack");
-    default:
-      throw new Error(`isBreakdownType does not yet support ${type}`);
-  }
-}
-
 function *createTempFile () {
   let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);

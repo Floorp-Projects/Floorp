@@ -4,16 +4,16 @@
 
 "use strict";
 
-const { actions, dominatorTreeBreakdowns } = require("../constants");
-const DEFAULT_BREAKDOWN = dominatorTreeBreakdowns.coarseType.breakdown;
+const { actions, dominatorTreeDisplays } = require("../constants");
+const DEFAULT_DOMINATOR_TREE_DISPLAY = dominatorTreeDisplays.coarseType;
 
 const handlers = Object.create(null);
 
-handlers[actions.SET_DOMINATOR_TREE_BREAKDOWN] = function (_, { breakdown }) {
-  return breakdown;
+handlers[actions.SET_DOMINATOR_TREE_DISPLAY] = function (_, { display }) {
+  return display;
 };
 
-module.exports = function (state = DEFAULT_BREAKDOWN, action) {
+module.exports = function (state = DEFAULT_DOMINATOR_TREE_DISPLAY, action) {
   const handler = handlers[action.type];
   return handler ? handler(state, action) : state;
 };
