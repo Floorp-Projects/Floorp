@@ -1430,7 +1430,7 @@ skip-if(B2G||Mulet) fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 fuzzy-if(browserIsRemote&&winWidget,73,133) fuzzy-if(browserIsRemote&&cocoaWidget,103,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
 HTTP(..) == 518172-2a.html 518172-a-ref.html
-fuzzy-if(browserIsRemote&&winWidget,73,133) HTTP(..) == 518172-2b.html 518172-b-ref.html
+fuzzy-if(browserIsRemote&&winWidget,73,133) fuzzy-if(browserIsRemote&&cocoaWidget,103,133) HTTP(..) == 518172-2b.html 518172-b-ref.html
 == 520421-1.html 520421-1-ref.html
 == 520563-1.xhtml 520563-1-ref.xhtml
 fuzzy-if(skiaContent,1,3) == 521525-1.html 521525-1-ref.html
