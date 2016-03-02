@@ -15,6 +15,8 @@ import pprint
 import re
 from os import listdir
 from os.path import isfile, join
+import sh
+import redo
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.log import FATAL
@@ -309,6 +311,10 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
     def _scan_files(self):
         """Scan the files we've collected. We do the download and scan concurrently to make
         it easier to have a coherent log afterwards. Uses the venv python."""
+        self.info("Refreshing clamav db...")
+        redo.retry(lambda:
+            sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+        self.info("Done.")
         external_tools_path = os.path.join(
                               os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))), 'external_tools')
         self.run_command([self.query_python_path(), os.path.join(external_tools_path,'extract_and_run_command.py'),
