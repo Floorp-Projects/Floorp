@@ -509,6 +509,8 @@ ensure_tooltip_widget()
 {
     if (!gTooltipWidget) {
         gTooltipWidget = gtk_window_new(GTK_WINDOW_POPUP);
+        GtkStyleContext* style = gtk_widget_get_style_context(gTooltipWidget);
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLTIP);
         gtk_widget_realize(gTooltipWidget);
         moz_gtk_set_widget_name(gTooltipWidget);
     }
@@ -1946,11 +1948,8 @@ moz_gtk_tooltip_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_widget_set_direction(gTooltipWidget, direction);
 
     style = gtk_widget_get_style_context(gTooltipWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLTIP);
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
     return MOZ_GTK_SUCCESS;
 }
 
