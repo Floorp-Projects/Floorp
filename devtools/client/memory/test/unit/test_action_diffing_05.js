@@ -6,11 +6,11 @@
 const {
   diffingState,
   snapshotState,
-  breakdowns,
+  censusDisplays,
 } = require("devtools/client/memory/constants");
 const {
-  setBreakdownAndRefresh,
-} = require("devtools/client/memory/actions/breakdown");
+  setCensusDisplayAndRefresh,
+} = require("devtools/client/memory/actions/census-display");
 const {
   toggleDiffing,
   selectSnapshotForDiffingAndRefresh,
@@ -19,13 +19,9 @@ const {
   setFilterStringAndRefresh,
 } = require("devtools/client/memory/actions/filter");
 const {
-  toggleInvertedAndRefresh,
-} = require("devtools/client/memory/actions/inverted");
-const {
   takeSnapshot,
   readSnapshot,
 } = require("devtools/client/memory/actions/snapshot");
-const { breakdownEquals } = require("devtools/client/memory/utils");
 
 function run_test() {
   run_next_test();
@@ -37,6 +33,11 @@ add_task(function *() {
   yield front.attach();
   let store = Store();
   const { getState, dispatch } = store;
+
+  yield dispatch(setCensusDisplayAndRefresh(heapWorker,
+                                        censusDisplays.allocationStack));
+  equal(getState().censusDisplay.inverted, false,
+        "not inverted at start");
 
   equal(getState().diffing, null, "not diffing by default");
 
@@ -61,17 +62,19 @@ add_task(function *() {
   const shouldTriggerRecompute = [
     {
       name: "toggling inversion",
-      func: () => dispatch(toggleInvertedAndRefresh(heapWorker))
+      func: () => dispatch(setCensusDisplayAndRefresh(
+        heapWorker,
+        censusDisplays.invertedAllocationStack))
     },
     {
       name: "filtering",
       func: () => dispatch(setFilterStringAndRefresh("scr", heapWorker))
     },
     {
-      name: "changing breakdowns",
+      name: "changing displays",
       func: () =>
-        dispatch(setBreakdownAndRefresh(heapWorker,
-                                        breakdowns.allocationStack.breakdown))
+        dispatch(setCensusDisplayAndRefresh(heapWorker,
+                                            censusDisplays.coarseType))
     }
   ];
 
@@ -91,12 +94,13 @@ add_task(function *() {
     ok(getState().diffing.census, "And we should have a census.");
     ok(getState().diffing.census.report,
        "And that census should have a report.");
-    ok(breakdownEquals(getState().diffing.census.breakdown,
-                       getState().breakdown),
-       "And that census should have the correct breakdown");
+    equal(getState().diffing.census.display,
+          getState().censusDisplay,
+          "And that census should have the correct display");
     equal(getState().diffing.census.filter, getState().filter,
           "And that census should have the correct filter");
-    equal(getState().diffing.census.inverted, getState().inverted,
+    equal(getState().diffing.census.display.inverted,
+          getState().censusDisplay.inverted,
           "And that census should have the correct inversion");
   }
 

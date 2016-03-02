@@ -83,19 +83,25 @@ class Context {
     this.params = params;
 
     this.path = [];
+    this.preprocessors = {
+      localize(value, context) {
+        return value;
+      },
+    };
 
     let props = ["addListener", "callFunction", "callAsyncFunction",
                  "hasListener", "removeListener",
-                 "getProperty", "setProperty"];
+                 "getProperty", "setProperty",
+                 "checkLoadURL", "logError",
+                 "preprocessors"];
     for (let prop of props) {
-      this[prop] = params[prop];
-    }
-
-    if ("checkLoadURL" in params) {
-      this.checkLoadURL = params.checkLoadURL;
-    }
-    if ("logError" in params) {
-      this.logError = params.logError;
+      if (prop in params) {
+        if (prop in this && typeof this[prop] == "object") {
+          Object.assign(this[prop], params[prop]);
+        } else {
+          this[prop] = params[prop];
+        }
+      }
     }
   }
 
@@ -267,6 +273,24 @@ class Entry {
     if ("deprecated" in schema) {
       this.deprecated = schema.deprecated;
     }
+
+    /**
+     * If set to a string value, and a preprocessor of the same is
+     * defined in the validation context, it will be applied to this
+     * value prior to any normalization.
+     */
+    this.preprocessor = schema.preprocess || null;
+  }
+
+  /**
+   * Preprocess the given value with the preprocessor declared in
+   * `preprocessor`.
+   */
+  preprocess(value, context) {
+    if (this.preprocessor) {
+      return context.preprocessors[this.preprocessor](value, context);
+    }
+    return value;
   }
 
   /**
@@ -335,7 +359,7 @@ class Type extends Entry {
   normalizeBase(type, value, context) {
     if (this.checkBaseType(getValueBaseType(value))) {
       this.checkDeprecated(context, value);
-      return {value};
+      return {value: this.preprocess(value, context)};
     }
     return context.error(`Expected ${type} instead of ${JSON.stringify(value)}`);
   }
@@ -434,6 +458,7 @@ class StringType extends Type {
     if (r.error) {
       return r;
     }
+    value = r.value;
 
     if (this.enumeration) {
       if (this.enumeration.includes(value)) {
@@ -510,6 +535,7 @@ class ObjectType extends Type {
     if (v.error) {
       return v;
     }
+    value = v.value;
 
     if (this.isInstanceOf) {
       if (Object.keys(this.properties).length ||
@@ -639,7 +665,7 @@ class NumberType extends Type {
       return r;
     }
 
-    if (isNaN(value) || !Number.isFinite(value)) {
+    if (isNaN(r.value) || !Number.isFinite(r.value)) {
       return context.error("NaN or infinity are not valid");
     }
 
@@ -663,6 +689,7 @@ class IntegerType extends Type {
     if (r.error) {
       return r;
     }
+    value = r.value;
 
     // Ensure it's between -2**31 and 2**31-1
     if (!Number.isSafeInteger(value)) {
@@ -707,6 +734,7 @@ class ArrayType extends Type {
     if (v.error) {
       return v;
     }
+    value = v.value;
 
     let result = [];
     for (let [i, element] of value.entries()) {
@@ -1032,7 +1060,7 @@ this.Schemas = {
 
     // Do some simple validation of our own schemas.
     function checkTypeProperties(...extra) {
-      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated"]);
+      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated", "preprocess"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
           throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);

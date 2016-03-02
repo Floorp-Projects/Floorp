@@ -57,6 +57,7 @@
 const {components, Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Services = require("Services");
 
 // The cache used in the `nsIURL` function.
 const gNSURLStore = new Map();

@@ -15,6 +15,7 @@
 
     // Test harness globals
     "ExtensionTestUtils": false,
+    "TestUtils": false,
 
     "clickBrowserAction": true,
     "clickPageAction": true,

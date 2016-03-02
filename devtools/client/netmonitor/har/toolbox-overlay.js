@@ -4,6 +4,7 @@
 "use strict";
 
 const { Cu, Ci } = require("chrome");
+const Services = require("Services");
 
 loader.lazyRequireGetter(this, "HarAutomation", "devtools/client/netmonitor/har/har-automation", true);
 

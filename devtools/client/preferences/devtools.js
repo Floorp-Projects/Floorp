@@ -108,8 +108,8 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 // Enable the Memory tools
 pref("devtools.memory.enabled", false);
 
-pref("devtools.memory.custom-breakdowns", "{}");
-pref("devtools.memory.custom-dominator-tree-breakdowns", "{}");
+pref("devtools.memory.custom-census-displays", "{}");
+pref("devtools.memory.custom-dominator-tree-displays", "{}");
 
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);
