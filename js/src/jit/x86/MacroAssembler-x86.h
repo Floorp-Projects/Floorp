@@ -657,13 +657,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(reg, Operand(esp, arg * sizeof(intptr_t)));
     }
 
-    // Type testing instructions can take a tag in a register or a
-    // ValueOperand.
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        j(cond, label);
-    }
     void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                               Label* label)
     {

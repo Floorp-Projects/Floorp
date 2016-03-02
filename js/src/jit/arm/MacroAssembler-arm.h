@@ -751,11 +751,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        ma_b(label, cond);
-    }
     void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                               Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);

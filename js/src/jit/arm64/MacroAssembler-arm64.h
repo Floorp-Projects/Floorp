@@ -1328,11 +1328,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, Always, documentation);
     }
 
-    template <typename T, typename L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        Condition c = testMagic(cond, t);
-        B(label, c);
-    }
     void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestValue(cond, val, MagicValue(why), label);

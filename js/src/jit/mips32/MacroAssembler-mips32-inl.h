@@ -380,6 +380,13 @@ MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, L
     branchTestPrimitive(cond, value.typeReg(), label);
 }
 
+template <class L>
+void
+MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L label)
+{
+    ma_b(value.typeReg(), ImmTag(JSVAL_TAG_MAGIC), label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
