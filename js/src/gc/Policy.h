@@ -10,6 +10,8 @@
 #define gc_Policy_h
 
 #include "mozilla/TypeTraits.h"
+#include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/GCPolicyAPI.h"
 
 // Forward declare the types we're defining policies for. This file is
@@ -17,6 +19,7 @@
 // will be available when we do template expansion, allowing for use of
 // static members in the underlying types. We cannot, however, use
 // static_assert to verify relations between types.
+class JSLinearString;
 namespace js {
 class AccessorShape;
 class ArgumentsObject;
