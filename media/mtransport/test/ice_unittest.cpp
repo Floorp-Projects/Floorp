@@ -22,7 +22,6 @@
 #include "ssl.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/Scoped.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
@@ -471,7 +470,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
 
     std::vector<NrIceStunServer> stun_servers;
-    ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
+    UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         addr, port, transport));
     stun_servers.push_back(*server);
     SetStunServers(stun_servers);
@@ -500,7 +499,7 @@ class IceTestPeer : public sigslot::has_slots<> {
                      const std::vector<unsigned char> password,
                      const char* transport) {
     std::vector<NrIceTurnServer> turn_servers;
-    ScopedDeletePtr<NrIceTurnServer> server(NrIceTurnServer::Create(
+    UniquePtr<NrIceTurnServer> server(NrIceTurnServer::Create(
         addr, port, username, password, transport));
     turn_servers.push_back(*server);
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetTurnServers(turn_servers)));
@@ -844,8 +843,8 @@ class IceTestPeer : public sigslot::has_slots<> {
       for (size_t j=0; j < streams_[i]->components(); ++j) {
         std::cerr << "Stream " << i << " component " << j+1 << std::endl;
 
-        NrIceCandidate *local;
-        NrIceCandidate *remote;
+        UniquePtr<NrIceCandidate> local;
+        UniquePtr<NrIceCandidate> remote;
 
         nsresult res = streams_[i]->GetActivePair(j+1, &local, &remote);
         if (res == NS_ERROR_NOT_AVAILABLE) {
@@ -876,8 +875,6 @@ class IceTestPeer : public sigslot::has_slots<> {
           if (!expected_remote_addr_.empty()) {
             ASSERT_EQ(expected_remote_addr_, remote->cand_addr.host);
           }
-          delete local;
-          delete remote;
         }
       }
     }
@@ -1315,12 +1312,12 @@ class IceGatherTest : public StunTest {
 
   void EnsurePeer(const unsigned int flags = ICE_TEST_PEER_OFFERER) {
     if (!peer_) {
-      peer_ = new IceTestPeer("P1", test_utils_,
-                              flags & ICE_TEST_PEER_OFFERER,
-                              flags & ICE_TEST_PEER_ALLOW_LOOPBACK,
-                              flags & ICE_TEST_PEER_ENABLED_TCP,
-                              flags & ICE_TEST_PEER_ALLOW_LINK_LOCAL,
-                              flags & ICE_TEST_PEER_HIDE_NON_DEFAULT);
+      peer_ = MakeUnique<IceTestPeer>("P1", test_utils_,
+                                      flags & ICE_TEST_PEER_OFFERER,
+                                      flags & ICE_TEST_PEER_ALLOW_LOOPBACK,
+                                      flags & ICE_TEST_PEER_ENABLED_TCP,
+                                      flags & ICE_TEST_PEER_ALLOW_LINK_LOCAL,
+                                      flags & ICE_TEST_PEER_HIDE_NON_DEFAULT);
       peer_->AddStream(1);
     }
   }
@@ -1453,7 +1450,7 @@ class IceGatherTest : public StunTest {
   }
 
  protected:
-  mozilla::ScopedDeletePtr<IceTestPeer> peer_;
+  mozilla::UniquePtr<IceTestPeer> peer_;
 };
 
 class IceConnectTest : public StunTest {
@@ -1493,10 +1490,10 @@ class IceConnectTest : public StunTest {
 
   void Init(bool allow_loopback, bool enable_tcp, bool default_only = false) {
     if (!initted_) {
-      p1_ = new IceTestPeer("P1", test_utils_, true, allow_loopback,
-                            enable_tcp, false, default_only);
-      p2_ = new IceTestPeer("P2", test_utils_, false, allow_loopback,
-                            enable_tcp, false, default_only);
+      p1_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, allow_loopback,
+                                    enable_tcp, false, default_only);
+      p2_ = MakeUnique<IceTestPeer>("P2", test_utils_, false, allow_loopback,
+                                    enable_tcp, false, default_only);
     }
     initted_ = true;
   }
@@ -1593,8 +1590,8 @@ class IceConnectTest : public StunTest {
     // to |this|, meaning that p2_->Connect(p1_, ...) simulates p1 sending an
     // offer to p2. Order matters here because it determines which peer is
     // controlling.
-    p2_->Connect(p1_, TRICKLE_NONE);
-    p1_->Connect(p2_, TRICKLE_NONE);
+    p2_->Connect(p1_.get(), TRICKLE_NONE);
+    p1_->Connect(p2_.get(), TRICKLE_NONE);
 
     ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1,
                      kDefaultTimeout);
@@ -1624,11 +1621,11 @@ class IceConnectTest : public StunTest {
   }
 
   void ConnectP1(TrickleMode mode = TRICKLE_NONE) {
-    p1_->Connect(p2_, mode);
+    p1_->Connect(p2_.get(), mode);
   }
 
   void ConnectP2(TrickleMode mode = TRICKLE_NONE) {
-    p2_->Connect(p1_, mode);
+    p2_->Connect(p1_.get(), mode);
   }
 
   void WaitForComplete(int expected_streams = 1) {
@@ -1649,8 +1646,8 @@ class IceConnectTest : public StunTest {
   }
 
   void ConnectTrickle(TrickleMode trickle = TRICKLE_SIMULATE) {
-    p2_->Connect(p1_, trickle);
-    p1_->Connect(p2_, trickle);
+    p2_->Connect(p1_.get(), trickle);
+    p1_->Connect(p2_.get(), trickle);
   }
 
   void SimulateTrickle(size_t stream) {
@@ -1676,8 +1673,8 @@ class IceConnectTest : public StunTest {
   }
 
   void ConnectThenDelete() {
-    p2_->Connect(p1_, TRICKLE_NONE, false);
-    p1_->Connect(p2_, TRICKLE_NONE, true);
+    p2_->Connect(p1_.get(), TRICKLE_NONE, false);
+    p1_->Connect(p2_.get(), TRICKLE_NONE, true);
     test_utils_->sts_target()->Dispatch(WrapRunnable(this,
                                                     &IceConnectTest::CloseP1),
                                        NS_DISPATCH_SYNC);
@@ -1701,8 +1698,8 @@ class IceConnectTest : public StunTest {
  protected:
   bool initted_;
   nsCOMPtr<nsIEventTarget> target_;
-  mozilla::ScopedDeletePtr<IceTestPeer> p1_;
-  mozilla::ScopedDeletePtr<IceTestPeer> p2_;
+  mozilla::UniquePtr<IceTestPeer> p1_;
+  mozilla::UniquePtr<IceTestPeer> p2_;
   bool use_nat_;
   TestNat::NatBehavior filtering_type_;
   TestNat::NatBehavior mapping_type_;
@@ -1860,7 +1857,7 @@ TEST_F(IceGatherTest, TestGatherStunServerIpAddressDefaultRouteOnly) {
     return;
   }
 
-  peer_ = new IceTestPeer("P1", test_utils_, true, false, false, false, true);
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, false, false, false, true);
   peer_->AddStream(1);
   peer_->SetStunServer(stun_server_address_, kDefaultStunServerPort);
   peer_->SetFakeResolver(stun_server_address_, stun_server_hostname_);
@@ -2049,7 +2046,7 @@ TEST_F(IceGatherTest, TestGatherVerifyNoLoopback) {
 
 TEST_F(IceGatherTest, TestGatherAllowLoopback) {
   // Set up peer with loopback allowed.
-  peer_ = new IceTestPeer("P1", test_utils_, true, true);
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, true);
   peer_->AddStream(1);
   Gather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "127.0.0.1"));
@@ -2057,7 +2054,7 @@ TEST_F(IceGatherTest, TestGatherAllowLoopback) {
 
 TEST_F(IceGatherTest, TestGatherTcpDisabled) {
   // Set up peer with tcp disabled.
-  peer_ = new IceTestPeer("P1", test_utils_, true, false, false);
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, false, false);
   peer_->AddStream(1);
   Gather();
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " TCP "));
@@ -2160,7 +2157,7 @@ TEST_F(IceGatherTest, TestStunServerTrickle) {
 // Test default route only with our fake STUN server and
 // apparently NATted.
 TEST_F(IceGatherTest, TestFakeStunServerNatedDefaultRouteOnly) {
-  peer_ = new IceTestPeer("P1", test_utils_, true, false, false, false, true);
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, false, false, false, true);
   peer_->AddStream(1);
   UseFakeStunUdpServerWithResponse("192.0.2.1", 3333);
   Gather(0);
@@ -2178,7 +2175,7 @@ TEST_F(IceGatherTest, TestFakeStunServerNatedDefaultRouteOnly) {
 // Test default route only with our fake STUN server and
 // apparently non-NATted.
 TEST_F(IceGatherTest, TestFakeStunServerNoNatDefaultRouteOnly) {
-  peer_ = new IceTestPeer("P1", test_utils_, true, false, false, false, true);
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, false, false, false, true);
   peer_->AddStream(1);
   UseTestStunServer();
   Gather(0);
@@ -3057,10 +3054,8 @@ TEST_F(IceConnectTest, TestHostCandPairingFilter) {
   }
 
   ConnectTrickle();
-  AddNonPairableCandidates(p1_->ControlTrickle(0), p1_, 0, host_net,
-                           test_utils_);
-  AddNonPairableCandidates(p2_->ControlTrickle(0), p2_, 0, host_net,
-                           test_utils_);
+  AddNonPairableCandidates(p1_->ControlTrickle(0), p1_.get(), 0, host_net, test_utils_);
+  AddNonPairableCandidates(p2_->ControlTrickle(0), p2_.get(), 0, host_net, test_utils_);
 
   std::vector<NrIceCandidatePair> pairs;
   p1_->GetCandidatePairs(0, &pairs);
@@ -3121,8 +3116,8 @@ TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 
-  p2_->Connect(p1_, TRICKLE_NONE, false);
-  p1_->Connect(p2_, TRICKLE_NONE, false);
+  p2_->Connect(p1_.get(), TRICKLE_NONE, false);
+  p1_->Connect(p2_.get(), TRICKLE_NONE, false);
 
   std::vector<NrIceCandidatePair> pairs1;
   std::vector<NrIceCandidatePair> pairs2;
@@ -3146,8 +3141,8 @@ TEST_F(IceConnectTest, TestRLogRingBuffer) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 
-  p2_->Connect(p1_, TRICKLE_NONE, false);
-  p1_->Connect(p2_, TRICKLE_NONE, false);
+  p2_->Connect(p1_.get(), TRICKLE_NONE, false);
+  p1_->Connect(p2_.get(), TRICKLE_NONE, false);
 
   std::vector<NrIceCandidatePair> pairs1;
   std::vector<NrIceCandidatePair> pairs2;
