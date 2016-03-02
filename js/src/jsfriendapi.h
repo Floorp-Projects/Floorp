@@ -1379,13 +1379,6 @@ class MOZ_STACK_CLASS AutoStableStringChars
     void operator=(const AutoStableStringChars& other) = delete;
 };
 
-/**
- * Creates a string of the form |ErrorType: ErrorMessage| for a JSErrorReport,
- * which generally matches the toString() behavior of an ErrorObject.
- */
-extern JS_FRIEND_API(JSString*)
-ErrorReportToString(JSContext* cx, JSErrorReport* reportp);
-
 struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
 {
     explicit ErrorReport(JSContext* cx);

@@ -589,6 +589,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     // into their start time, hence the delay is effectively zero.
     timing.mDelay = TimeDuration(0);
     timing.mIterations = animation.iterations();
+    timing.mIterationStart = animation.iterationStart();
     timing.mDirection =
       static_cast<dom::PlaybackDirection>(animation.direction());
     // Animations typically only run on the compositor during their active
