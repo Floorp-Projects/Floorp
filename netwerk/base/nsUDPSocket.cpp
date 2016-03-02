@@ -1475,6 +1475,33 @@ nsUDPSocket::SetMulticastLoopback(bool aLoopback)
 }
 
 NS_IMETHODIMP
+nsUDPSocket::GetRecvBufferSize(int* size)
+{
+  // Bug 1252759 - missing support for GetSocketOption
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUDPSocket::SetRecvBufferSize(int size)
+{
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PRSocketOptionData opt;
+
+  opt.option = PR_SockOpt_RecvBufferSize;
+  opt.value.recv_buffer_size = size;
+
+  nsresult rv = SetSocketOption(opt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUDPSocket::GetMulticastInterface(nsACString& aIface)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

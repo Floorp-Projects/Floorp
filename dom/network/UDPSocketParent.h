@@ -35,7 +35,8 @@ public:
   bool Init(const IPC::Principal& aPrincipal, const nsACString& aFilter);
 
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
-                        const bool& aAddressReuse, const bool& aLoopback) override;
+                        const bool& aAddressReuse, const bool& aLoopback,
+                        const uint32_t& recvBufferSize) override;
   virtual bool RecvConnect(const UDPAddressInfo& aAddressInfo) override;
   void DoSendConnectResponse(const UDPAddressInfo& aAddressInfo);
   void SendConnectResponse(nsIEventTarget *aThread,
@@ -62,7 +63,8 @@ private:
   void Send(const InfallibleTArray<uint8_t>& aData, const UDPSocketAddr& aAddr);
   void Send(const InputStreamParams& aStream, const UDPSocketAddr& aAddr);
   nsresult BindInternal(const nsCString& aHost, const uint16_t& aPort,
-                        const bool& aAddressReuse, const bool& aLoopback);
+                        const bool& aAddressReuse, const bool& aLoopback,
+                        const uint32_t& recvBufferSize);
   nsresult ConnectInternal(const nsCString& aHost, const uint16_t& aPort);
   void FireInternalError(uint32_t aLineNo);
   void SendInternalError(nsIEventTarget *aThread,
