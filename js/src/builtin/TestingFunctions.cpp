@@ -2776,8 +2776,11 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
                     return false;
 
                 RootedValue predecessor(cx, values[i][j][k]);
-                if (!JS_DefineProperty(cx, part, "predecessor", predecessor, JSPROP_ENUMERATE))
+                if (!cx->compartment()->wrap(cx, &predecessor) ||
+                    !JS_DefineProperty(cx, part, "predecessor", predecessor, JSPROP_ENUMERATE))
+                {
                     return false;
+                }
 
                 if (names[i][j][k]) {
                     RootedString edge(cx, NewStringCopyZ<CanGC>(cx, names[i][j][k].get()));
