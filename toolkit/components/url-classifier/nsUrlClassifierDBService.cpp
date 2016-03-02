@@ -177,6 +177,10 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
 static nsresult
 TablesToResponse(const nsACString& tables)
 {
+  if (tables.IsEmpty()) {
+    return NS_OK;
+  }
+
   // We don't check mCheckMalware and friends because BuildTables never
   // includes a table that is not enabled.
   if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
@@ -876,10 +880,11 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
 NS_IMETHODIMP
 nsUrlClassifierLookupCallback::CompletionFinished(nsresult status)
 {
-  LOG(("nsUrlClassifierLookupCallback::CompletionFinished [%p, %08x]",
-       this, status));
-  if (NS_FAILED(status)) {
-    NS_WARNING("gethash response failed.");
+  if (LOG_ENABLED()) {
+    nsAutoCString errorName;
+    mozilla::GetErrorName(status, errorName);
+    LOG(("nsUrlClassifierLookupCallback::CompletionFinished [%p, %s]",
+         this, errorName.get()));
   }
 
   mPendingCompletions--;
@@ -952,11 +957,13 @@ nsUrlClassifierLookupCallback::HandleResults()
     // Leave out results that weren't confirmed, as their existence on
     // the list can't be verified.  Also leave out randomly-generated
     // noise.
-    if (!result.Confirmed()) {
-      LOG(("Skipping result from table %s (not confirmed)", result.mTableName.get()));
+    if (result.mNoise) {
+      LOG(("Skipping result %X from table %s (noise)",
+           result.hash.prefix.ToUint32(), result.mTableName.get()));
       continue;
-    } else if (result.mNoise) {
-      LOG(("Skipping result from table %s (noise)", result.mTableName.get()));
+    } else if (!result.Confirmed()) {
+      LOG(("Skipping result %X from table %s (not confirmed)",
+           result.hash.prefix.ToUint32(), result.mTableName.get()));
       continue;
     }
 
