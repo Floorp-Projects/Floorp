@@ -330,6 +330,10 @@ public:
     nsresult BeginUpdateBackground(const nsIntRect& aRect,
                                    DrawTarget** aDrawTarget);
     nsresult EndUpdateBackground(const nsIntRect& aRect);
+#if defined(XP_WIN)
+    nsresult GetScrollCaptureContainer(mozilla::layers::ImageContainer** aContainer);
+    nsresult UpdateScrollState(bool aIsScrolling);
+#endif
     void DidComposite();
 
     bool IsUsingDirectDrawing();
@@ -388,6 +392,7 @@ private:
     nsCString mSrcAttribute;
     NPWindowType mWindowType;
     int16_t mDrawingModel;
+    IntSize mWindowSize;
 
     // Since plugins may request different drawing models to find a compatible
     // one, we only record the drawing model after a SetWindow call and if the
@@ -452,6 +457,18 @@ private:
     RefPtr<gfxASurface>    mBackground;
 
     RefPtr<ImageContainer> mImageContainer;
+
+#if defined(XP_WIN)
+    void ScheduleScrollCapture(int aTimeout);
+    void ScheduledUpdateScrollCaptureCallback();
+    bool UpdateScrollCapture(bool& aRequestNewCapture);
+    void CancelScheduledScrollCapture();
+
+    RefPtr<gfxASurface> mScrollCapture;
+    CancelableTask* mCaptureRefreshTask;
+    bool mValidFirstCapture;
+    bool mIsScrolling;
+#endif
 };
 
 

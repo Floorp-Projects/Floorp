@@ -492,8 +492,7 @@ MediaDecoderStateMachine::NeedToDecodeVideo()
              HaveEnoughDecodedVideo());
   return IsVideoDecoding() &&
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
-          (IsDecodingFirstFrame() &&
-           IsVideoDecoding() && VideoQueue().GetSize() == 0) ||
+          (IsDecodingFirstFrame() && VideoQueue().GetSize() == 0) ||
           (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
 }
 
@@ -564,11 +563,10 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 
   return IsAudioDecoding() &&
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
-          (IsDecodingFirstFrame() &&
-           IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
+          (IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
           (!mMinimizePreroll &&
-          !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate) &&
-          (mState != DECODER_STATE_SEEKING || mDecodeToSeekTarget)));
+           !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate) &&
+           (mState != DECODER_STATE_SEEKING || mDecodeToSeekTarget)));
 }
 
 bool

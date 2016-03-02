@@ -86,6 +86,8 @@ namespace jit {
     _(MinMax)                                                               \
     _(Abs)                                                                  \
     _(Clz)                                                                  \
+    _(Ctz)                                                                  \
+    _(Popcnt)                                                               \
     _(Sqrt)                                                                 \
     _(Atan2)                                                                \
     _(Hypot)                                                                \

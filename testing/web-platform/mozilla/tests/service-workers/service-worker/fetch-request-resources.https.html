@@ -134,7 +134,7 @@ async_test(function(t) {
         css_test(f, REMOTE_URL, 'use-credentials', 'cors', 'include');
 
         font_face_test(f, LOCAL_URL, 'cors', 'same-origin');
-        font_face_test(f, REMOTE_URL, 'cors', 'omit');
+        font_face_test(f, REMOTE_URL, 'cors', 'same-origin');
 
       })
       .catch(unreached_rejection(t));

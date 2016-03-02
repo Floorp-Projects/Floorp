@@ -51,8 +51,13 @@ function testComparison(type, opcode, lhs, rhs, expect) {
 }
 
 testUnary('i32', 'clz', 40, 26);
-//testUnary('i32', 'ctz', 40, 0); // TODO: NYI
-//testUnary('i32', 'popcnt', 40, 0); // TODO: NYI
+testUnary('i32', 'ctz', 40, 3);
+testUnary('i32', 'ctz', 0, 32);
+testUnary('i32', 'ctz', -2147483648, 31);
+
+testUnary('i32', 'popcnt', 40, 2);
+testUnary('i32', 'popcnt', 0, 0);
+testUnary('i32', 'popcnt', 0xFFFFFFFF, 32);
 
 testBinary('i32', 'add', 40, 2, 42);
 testBinary('i32', 'sub', 40, 2, 38);

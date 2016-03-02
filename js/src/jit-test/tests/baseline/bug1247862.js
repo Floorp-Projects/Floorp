@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("TypedObject"))
+  quit();
+
 var T = TypedObject;
 ValueStruct = new T.StructType({
     f: T.int32,

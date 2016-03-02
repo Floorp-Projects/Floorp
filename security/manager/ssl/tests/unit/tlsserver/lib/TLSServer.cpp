@@ -10,6 +10,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "base64.h"
+#include "mozilla/Snprintf.h"
 #include "nspr.h"
 #include "nss.h"
 #include "plarenas.h"
@@ -69,8 +70,8 @@ SECStatus
 ReadFileToBuffer(const char* basePath, const char* filename, char (&buf)[N])
 {
   static_assert(N > 0, "input buffer too small for ReadFileToBuffer");
-  if (PR_snprintf(buf, N - 1, "%s/%s", basePath, filename) == 0) {
-    PrintPRError("PR_snprintf failed");
+  if (snprintf(buf, N - 1, "%s/%s", basePath, filename) == 0) {
+    PrintPRError("snprintf failed");
     return SECFailure;
   }
   ScopedPRFileDesc fd(PR_OpenFile(buf, PR_RDONLY, 0));

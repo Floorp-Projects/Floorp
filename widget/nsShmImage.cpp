@@ -5,13 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsShmImage.h"
-#ifdef MOZ_WIDGET_GTK
-#include "gfxPlatformGtk.h"
-#endif
 
 #ifdef MOZ_HAVE_SHMIMAGE
 #include "mozilla/X11Util.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "gfxPlatform.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 
@@ -51,11 +49,7 @@ nsShmImage::~nsShmImage()
 static bool gShmAvailable = true;
 bool nsShmImage::UseShm()
 {
-#ifdef MOZ_WIDGET_GTK
-  return (gShmAvailable && !gfxPlatformGtk::GetPlatform()->UseXRender());
-#else
   return gShmAvailable;
-#endif
 }
 
 static int gShmError = 0;
@@ -154,7 +148,7 @@ nsShmImage::InitExtension()
   }
 
   if (pixmaps && XShmPixmapFormat(mDisplay) == ZPixmap) {
-    gShmPixmapAtom = XInternAtom(mDisplay, "_MOZ_SHM_PIXMAP", 0);
+    gShmPixmapAtom = XInternAtom(mDisplay, "_MOZ_SHM_PIXMAP", False);
   }
 
   return true;

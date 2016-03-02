@@ -28156,6 +28156,14 @@
         "url": "/web-animations/keyframe-effect/getComputedTiming.html"
       },
       {
+        "path": "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
+        "url": "/web-animations/keyframe-effect/getComputedTiming-currentIteration.html"
+      },
+      {
+        "path": "web-animations/keyframe-effect/getComputedTiming-progress.html",
+        "url": "/web-animations/keyframe-effect/getComputedTiming-progress.html"
+      },
+      {
         "path": "webaudio/the-audio-api/the-audiobuffer-interface/idl-test.html",
         "url": "/webaudio/the-audio-api/the-audiobuffer-interface/idl-test.html"
       },

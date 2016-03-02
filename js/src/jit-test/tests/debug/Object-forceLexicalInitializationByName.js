@@ -17,7 +17,6 @@ function evalErrorStr(global, evalString) {
 
 
 assertEq(evalErrorStr(g, "let y = IDONTEXIST;"), "ReferenceError: IDONTEXIST is not defined");
-
 assertEq(evalErrorStr(g, "y = 1;"),
          "ReferenceError: can't access lexical declaration `y' before initialization");
 
@@ -32,13 +31,22 @@ assertEq(g.evaluate("y"), 1);
 assertEq(gw.forceLexicalInitializationByName("idontexist"), false);
 assertEq(evalErrorStr(g, "idontexist"), "ReferenceError: idontexist is not defined");
 
+// Ensure that ropes (non-atoms) behave properly
+assertEq(gw.forceLexicalInitializationByName(("foo" + "bar" + "bop" + "zopple" + 2 + 3).slice(1)),
+                                             false);
+assertEq(evalErrorStr(g, "let oobarbopzopple23 = IDONTEXIST;"), "ReferenceError: IDONTEXIST is not defined");
+assertEq(gw.forceLexicalInitializationByName(("foo" + "bar" + "bop" + "zopple" + 2 + 3).slice(1)),
+                                             true);
+assertEq(g.evaluate("oobarbopzopple23"), undefined);
+
 // Ensure that only strings are accepted by forceLexicalInitializationByName
 const bad_types = [
     2112,
     {geddy: "lee"},
     () => 1,
     [],
-    Array
+    Array,
+    "'1'", // non-identifier
 ]
 
 for (var badType of bad_types) {
