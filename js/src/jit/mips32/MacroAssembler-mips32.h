@@ -387,10 +387,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestObject(Condition cond, const Address& src, Label* label);
     void testObjectSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestSymbol(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestSymbol(Condition cond, const Register& tag, Label* label);
-    void branchTestSymbol(Condition cond, const BaseIndex& src, Label* label);
-
     void testUndefinedSet(Condition cond, const ValueOperand& value, Register dest);
 
     void branchTestMagic(Condition cond, const ValueOperand& value, Label* label);

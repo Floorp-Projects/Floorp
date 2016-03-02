@@ -1001,6 +1001,32 @@ MacroAssembler::branchTestStringTruthy(bool truthy, const ValueOperand& value, L
     ma_b(label, c);
 }
 
+void
+MacroAssembler::branchTestSymbol(Condition cond, Register tag, Label* label)
+{
+    branchTestSymbolImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestSymbolImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestSymbolImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestSymbolImpl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testSymbol(cond, t);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
