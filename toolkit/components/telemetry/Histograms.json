@@ -8480,6 +8480,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
   },
+  "LOOP_INFOBAR_ACTION_BUTTONS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
+    "expires_in_version": "51",
+    "kind": "enumerated",
+    "n_values": 4,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1245486],
+    "description": "Number times info bar buttons are clicked (0=PAUSED, 1=CREATED)"
+  },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
