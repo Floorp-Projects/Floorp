@@ -1508,14 +1508,6 @@ MacroAssemblerMIPSCompat::loadConstantDouble(double dp, FloatRegister dest)
     ma_lid(dest, dp);
 }
 
-void
-MacroAssemblerMIPSCompat::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
-{
-    Register string = value.payloadReg();
-    ma_lw(SecondScratchReg, Address(string, JSString::offsetOfLength()));
-    ma_b(SecondScratchReg, Imm32(0), label, b ? NotEqual : Equal);
-}
-
 Register
 MacroAssemblerMIPSCompat::extractObject(const Address& address, Register scratch)
 {

@@ -1728,14 +1728,6 @@ MacroAssemblerMIPS64Compat::loadConstantDouble(double dp, FloatRegister dest)
     ma_lid(dest, dp);
 }
 
-void
-MacroAssemblerMIPS64Compat::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
-{
-    unboxString(value, SecondScratchReg);
-    load32(Address(SecondScratchReg, JSString::offsetOfLength()), SecondScratchReg);
-    ma_b(SecondScratchReg, Imm32(0), label, b ? NotEqual : Equal);
-}
-
 Register
 MacroAssemblerMIPS64Compat::extractObject(const Address& address, Register scratch)
 {

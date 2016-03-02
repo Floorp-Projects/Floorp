@@ -446,8 +446,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         branchTestValue(cond, val, MagicValue(why), label);
     }
 
-    void branchTestStringTruthy(bool b, const ValueOperand& value, Label* label);
-
     // higher level tag testing code
     Address ToPayload(Address value) {
         return value;

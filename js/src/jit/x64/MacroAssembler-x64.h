@@ -966,10 +966,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(Operand(scratch, JSString::offsetOfLength()), Imm32(0));
         return truthy ? Assembler::NotEqual : Assembler::Equal;
     }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition cond = testStringTruthy(truthy, value);
-        j(cond, label);
-    }
 
     template <typename T>
     inline void loadInt32OrDouble(const T& src, FloatRegister dest);

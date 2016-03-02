@@ -347,6 +347,15 @@ MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Labe
     branchTestString(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    Register string = value.payloadReg();
+    SecondScratchRegisterScope scratch2(*this);
+    ma_lw(scratch2, Address(string, JSString::offsetOfLength()));
+    ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

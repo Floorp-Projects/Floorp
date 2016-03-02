@@ -1906,10 +1906,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Cmp(scratch32, Operand(0));
         return truthy ? Condition::NonZero : Condition::Zero;
     }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition c = testStringTruthy(truthy, value);
-        B(label, c);
-    }
     void int32OrDouble(Register src, ARMFPRegister dest) {
         Label isInt32;
         Label join;
