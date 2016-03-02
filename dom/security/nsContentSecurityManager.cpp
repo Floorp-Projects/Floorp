@@ -476,6 +476,13 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
     return NS_OK;
   }
 
+  // Allow the load if TriggeringPrincipal is the SystemPrincipal which
+  // is e.g. necessary to allow user user stylesheets to load XBL from
+  // external files.
+  if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal())) {
+    return NS_OK;
+  }
+
   // if none of the REQUIRE_SAME_ORIGIN flags are set, then SOP does not apply
   if ((securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS) ||
       (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED)) {
