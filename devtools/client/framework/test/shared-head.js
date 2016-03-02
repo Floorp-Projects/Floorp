@@ -40,6 +40,26 @@ waitForExplicitFinish();
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+/**
+ * Watch console messages for failed propType definitions in React components.
+ */
+const ConsoleObserver = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  observe: function(subject, topic, data) {
+    var message = subject.wrappedJSObject.arguments[0];
+
+    if (/Failed propType/.test(message)) {
+      ok(false, message);
+    }
+  }
+};
+
+Services.obs.addObserver(ConsoleObserver, "console-api-log-event", false);
+registerCleanupFunction(() => {
+  Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
+});
+
 function getFrameScript() {
   let mm = gBrowser.selectedBrowser.messageManager;
   let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
