@@ -1554,10 +1554,45 @@ var BrowserApp = {
             aAllowZoom && shouldZoom && !ViewportHandler.isViewportSpecified(aBrowser.contentWindow));
       }
     } else {
-      // Using a timeout to let the viewport propagate to the compositor thread before requesting a pan and zoom animation
-      // so the element will end up in the middle of the correctly sized viewport. See Bug 1231517.
+      let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      if (!dwu) {
+        return;
+      }
+
+      let apzFlushDone = function() {
+        Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed", false);
+        dwu.zoomToFocusedInput();
+      };
+
+      let paintDone = function() {
+        window.removeEventListener("MozAfterPaint", paintDone, false);
+        if (dwu.flushApzRepaints()) {
+          Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
+        } else {
+          apzFlushDone();
+        }
+      };
+
+      let gotResizeWindow = false;
+      let resizeWindow = function(e) {
+        gotResizeWindow = true;
+        aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+        if (dwu.isMozAfterPaintPending) {
+          window.addEventListener("MozAfterPaint", paintDone, false);
+        } else {
+          paintDone();
+        }
+      }
+
+      aBrowser.contentWindow.addEventListener("resize", resizeWindow, false);
+
+      // The "resize" event sometimes fails to fire, so set a timer to catch that case
+      // and unregister the event listener. See Bug 1253469
       setTimeout(function(e) {
-        aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).zoomToFocusedInput();
+        if (!gotResizeWindow) {
+          aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+          dwu.zoomToFocusedInput();
+        }
       }, 500);
     }
   },
