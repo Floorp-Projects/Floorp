@@ -86,6 +86,7 @@ this.AutoCompleteE10S = {
     messageManager.addMessageListener("FormAutoComplete:GetSelectedIndex", this);
     messageManager.addMessageListener("FormAutoComplete:MaybeOpenPopup", this);
     messageManager.addMessageListener("FormAutoComplete:ClosePopup", this);
+    messageManager.addMessageListener("FormAutoComplete:Disconnect", this);
     messageManager.addMessageListener("FormAutoComplete:RemoveEntry", this);
   },
 
@@ -190,10 +191,17 @@ this.AutoCompleteE10S = {
       message.data.datalistResult = null;
     }
 
+    let previousResult = null;
+    let previousSearchString = message.data.previousSearchString;
+    let searchString = message.data.untrimmedSearchString.toLowerCase();
+    if (previousSearchString && previousSearchString.length > 1 &&
+        searchString.includes(previousSearchString)) {
+      previousResult = this._resultCache;
+    }
     formAutoComplete.autoCompleteSearchAsync(message.data.inputName,
                                              message.data.untrimmedSearchString,
                                              message.data.mockField,
-                                             null,
+                                             previousResult,
                                              message.data.datalistResult,
                                              { onSearchCompletion:
                                                this.onSearchComplete.bind(this) });
@@ -238,6 +246,14 @@ this.AutoCompleteE10S = {
 
       case "FormAutoComplete:ClosePopup":
         this.popup.closePopup();
+        break;
+
+      case "FormAutoComplete:Disconnect":
+        // The controller stopped controlling the current input, so clear
+        // any cached data.  This is necessary cause otherwise we'd clear data
+        // only when starting a new search, but the next input could not support
+        // autocomplete and it would end up inheriting the existing data.
+        AutoCompleteE10SView.clearResults();
         break;
     }
   },

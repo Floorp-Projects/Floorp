@@ -502,6 +502,7 @@ FormAutoCompleteChild.prototype = {
         untrimmedSearchString: aUntrimmedSearchString,
         mockField: mockField,
         datalistResult: datalistResult,
+        previousSearchString: aPreviousResult && aPreviousResult.searchString.trim().toLowerCase(),
         left: rect.left,
         top: rect.top,
         width: rect.width,
@@ -524,7 +525,7 @@ FormAutoCompleteChild.prototype = {
           null,
           Array.from(message.data.results, res => ({ text: res })),
           null,
-          null,
+          aUntrimmedSearchString,
           mm
         );
         if (aListener) {
@@ -540,6 +541,17 @@ FormAutoCompleteChild.prototype = {
       this.log("stopAutoCompleteSearch");
       this._pendingSearch = null;
     },
+
+    stopControllingInput(aField) {
+      let window = aField.ownerDocument.defaultView;
+      let topLevelDocshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDocShell)
+                                   .sameTypeRootTreeItem
+                                   .QueryInterface(Ci.nsIDocShell);
+      let mm = topLevelDocshell.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIContentFrameMessageManager);
+      mm.sendAsyncMessage("FormAutoComplete:Disconnect");
+    }
 }; // end of FormAutoCompleteChild implementation
 
 // nsIAutoCompleteResult implementation
@@ -576,7 +588,7 @@ FormAutoCompleteResult.prototype = {
     },
 
     // Interfaces from idl...
-    searchString : null,
+    searchString : "",
     errorDescription : "",
     get defaultIndex() {
         if (this.entries.length == 0)
