@@ -139,11 +139,8 @@ CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
     Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
     ret = WebGL1Context::Create();
-    if (!ret) {
-      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 0);
+    if (!ret)
       return nullptr;
-    }
-    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 1);
 
     break;
 
@@ -151,11 +148,8 @@ CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
     Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
     ret = WebGL2Context::Create();
-    if (!ret) {
-      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 0);
+    if (!ret)
       return nullptr;
-    }
-    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 1);
 
     break;
 
@@ -204,8 +198,16 @@ CanvasRenderingContextHelper::GetContext(JSContext* aCx,
       // See bug 645792 and bug 1215072.
       // We want to throw only if dictionary initialization fails,
       // so only in case aRv has been set to some error value.
+      if (contextType == CanvasContextType::WebGL1)
+        Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 0);
+      else if (contextType == CanvasContextType::WebGL2)
+        Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 0);
       return nullptr;
     }
+    if (contextType == CanvasContextType::WebGL1)
+      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 1);
+    else if (contextType == CanvasContextType::WebGL2)
+      Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 1);
   } else {
     // We already have a context of some type.
     if (contextType != mCurrentContextType)

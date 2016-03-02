@@ -69,6 +69,7 @@ struct ComputedTiming
   // Unlike TimingParams::mIterations, this value is
   // guaranteed to be in the range [0, Infinity].
   double              mIterations = 1.0;
+  double              mIterationStart = 0.0;
   StickyTimeDuration  mDuration;
 
   // This is the computed fill mode so it is never auto

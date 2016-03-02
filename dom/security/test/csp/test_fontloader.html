@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1122236 - CSP: Implement block-all-mixed-content</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <!-- Including WindowSnapshot.js so we can take screenshots of containers !-->
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="setupTests()">
+<iframe style="width:100%;" id="baselineframe"></iframe>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the tests:
+ * We load a baselineFrame and compare the testFrame using
+ * compareSnapshots whether the font got loaded or blocked.
+ * Test 1: Use font-src 'none' so font gets blocked
+ * Test 2: Use font-src * so font gets loaded
+ * Test 3: Use no csp so font gets loaded
+ * Test 4: Use font-src 'none' so font gets blocked
+ *         Makes sure the cache gets invalidated.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const BASE_URI = "https://example.com/tests/dom/security/test/csp/";
+
+const tests = [
+  { // test 1
+    query: "csp-block",
+    expected: true, // frames should be equal since font is *not* allowed to load
+    description: "font should be blocked by csp (csp-block)"
+  },
+  { // test 2
+    query: "csp-allow",
+    expected: false, // frames should *not* be equal since font is loaded
+    description: "font should load and apply (csp-allow)"
+  },
+  { // test 3
+    query: "no-csp",
+    expected: false, // frames should *not* be equals since font is loaded
+    description: "font should load and apply (no-csp)"
+  },
+  { // test 4
+    query: "csp-block",
+    expected: true, // frames should be equal since font is *not* allowed to load
+    description: "font should be blocked by csp (csp-block) [apply csp to cache]"
+  }
+];
+
+var curTest;
+var counter = -1;
+var baselineframe = document.getElementById("baselineframe");
+var testframe = document.getElementById("testframe");
+
+function checkResult() {
+  testframe.removeEventListener('load', checkResult, false);
+  try {
+    ok(compareSnapshots(snapshotWindow(baselineframe.contentWindow),
+                        snapshotWindow(testframe.contentWindow),
+                        curTest.expected)[0],
+                        curTest.description);
+  } catch(err) {
+    ok(false, "error: " + err.message);
+  }
+  loadNextTest();
+}
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  curTest = tests[counter];
+  testframe.addEventListener("load", checkResult, false);
+  testframe.src = BASE_URI + "file_fontloader.sjs?" + curTest.query;
+}
+
+// once the baselineframe is loaded we can start running tests
+function startTests() {
+  baselineframe.removeEventListener('load', startTests, false);
+  loadNextTest();
+}
+
+// make sure the main page is loaded before we start the test
+function setupTests() {
+  baselineframe.addEventListener("load", startTests, false);
+  baselineframe.src = BASE_URI + "file_fontloader.sjs?baseline";
+}
+
+</script>
+</body>
+</html>

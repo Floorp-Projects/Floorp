@@ -95,7 +95,8 @@ RilConsumer::ConnectWorkerToRIL(JSContext* aCx)
   // should ever define |postRILMessage| in a RIL worker.
   Rooted<Value> val(aCx);
   if (!JS_GetProperty(aCx, workerGlobal, "postRILMessage", &val)) {
-    JS_ReportPendingException(aCx);
+    // Just returning failure here will cause the exception on the JSContext to
+    // be reported as needed.
     return NS_ERROR_FAILURE;
   }
 
@@ -108,6 +109,8 @@ RilConsumer::ConnectWorkerToRIL(JSContext* aCx)
                                                  "postRILMessage",
                                                  PostRILMessage, 2, 0);
   if (NS_WARN_IF(!postRILMessage)) {
+    // Just returning failure here will cause the exception on the JSContext to
+    // be reported as needed.
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -246,6 +249,9 @@ RilConsumer::Receive(JSContext* aCx,
 
   Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, aBuffer->GetSize()));
   if (NS_WARN_IF(!array)) {
+    // Just suppress the exception, since our callers don't have a way to
+    // indicate they failed.
+    JS_ClearPendingException(aCx);
     return NS_ERROR_FAILURE;
   }
   {
@@ -262,6 +268,9 @@ RilConsumer::Receive(JSContext* aCx,
 
   Rooted<Value> rval(aCx);
   JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
+  // Just suppress the exception, since our callers don't have a way to
+  // indicate they failed.
+  JS_ClearPendingException(aCx);
 
   return NS_OK;
 }

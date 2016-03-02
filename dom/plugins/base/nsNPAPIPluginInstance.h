@@ -121,6 +121,10 @@ public:
   nsresult InvalidateRegion(NPRegion invalidRegion);
   nsresult GetMIMEType(const char* *result);
   nsresult GetJSContext(JSContext* *outContext);
+#if defined(XP_WIN)
+  nsresult GetScrollCaptureContainer(mozilla::layers::ImageContainer **aContainer);
+  nsresult UpdateScrollState(bool aIsScrolling);
+#endif
   nsPluginInstanceOwner* GetOwner();
   void SetOwner(nsPluginInstanceOwner *aOwner);
   void DidComposite();

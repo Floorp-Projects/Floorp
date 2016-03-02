@@ -9,6 +9,7 @@ tags
 ID
 .DS_Store*
 *.pdb
+*.egg-info
 
 # Allow the id locale directory for loop ('ID' matches this normally)
 !browser/extensions/loop/chrome/locale/id
@@ -87,6 +88,17 @@ testing/web-platform/sync/
 # Android Gradle artifacts.
 mobile/android/gradle/.gradle
 
+# XCode project cruft
+embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
+embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
+
+# Ignore mozharness execution files
+testing/mozharness/.tox/
+testing/mozharness/build/
+testing/mozharness/logs/
+testing/mozharness/.coverage
+testing/mozharness/nosetests.xml
+
 # Ignore node_modules from eslint-plugin-mozilla
 testing/eslint-plugin-mozilla/node_modules/
 
@@ -100,4 +112,6 @@ testing/talos/.Python
 testing/talos/bin/
 testing/talos/include/
 testing/talos/lib/
-testing/talos/talos/page_load_test/tp5n/
+testing/talos/talos/tests/tp5n.zip
+testing/talos/talos/tests/tp5n
+testing/talos/talos/tests/devtools/damp.manifest.develop

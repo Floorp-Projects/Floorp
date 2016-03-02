@@ -3208,6 +3208,39 @@ class LClzI : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Count trailing zeroes
+class LCtzI : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CtzI)
+    explicit LCtzI(const LAllocation& num) {
+        setOperand(0, num);
+    }
+
+    MCtz* mir() const {
+        return mir_->toCtz();
+    }
+};
+
+// Count population
+class LPopcntI : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(PopcntI)
+    explicit LPopcntI(const LAllocation& num, const LDefinition& temp) {
+        setOperand(0, num);
+        setTemp(0, temp);
+    }
+
+    MPopcnt* mir() const {
+        return mir_->toPopcnt();
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 // Square root of a double.
 class LSqrtD : public LInstructionHelper<1, 1, 0>
 {

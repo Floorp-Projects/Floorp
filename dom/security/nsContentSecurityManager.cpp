@@ -229,7 +229,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_FONT: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 
@@ -472,6 +473,13 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
     if (NS_HasBeenCrossOrigin(aChannel)) {
       loadInfo->MaybeIncreaseTainting(LoadTainting::CORS);
     }
+    return NS_OK;
+  }
+
+  // Allow the load if TriggeringPrincipal is the SystemPrincipal which
+  // is e.g. necessary to allow user user stylesheets to load XBL from
+  // external files.
+  if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal())) {
     return NS_OK;
   }
 

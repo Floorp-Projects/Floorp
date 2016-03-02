@@ -7,11 +7,11 @@
 #include "CertVerifier.h"
 #include "OCSPCache.h"
 #include "gtest/gtest.h"
+#include "mozilla/Snprintf.h"
 #include "nss.h"
 #include "pkix/pkixtypes.h"
 #include "pkixtestutil.h"
 #include "prerr.h"
-#include "prprf.h"
 #include "secerr.h"
 
 using namespace mozilla::pkix;
@@ -85,7 +85,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   SCOPED_TRACE("");
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
-    PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -134,7 +134,7 @@ TEST_F(OCSPCacheTest, TestEviction)
   // we cause the least recently used entry to be evicted.
   for (int i = 0; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
-    PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -159,7 +159,7 @@ TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
   // we cause the least recently used entry that isn't revoked to be evicted.
   for (int i = 1; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
-    PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -185,7 +185,7 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
   // Fill up the cache with revoked responses.
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
-    PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
