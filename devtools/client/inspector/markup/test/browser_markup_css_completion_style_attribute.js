@@ -153,8 +153,9 @@ function* checkData(index, editor, inspector) {
     }
   } else {
     let nodeFront = yield getNodeFront("#node14", inspector);
-    let editor = getContainerForNodeFront(nodeFront, inspector).editor;
-    let attr = editor.attrElements.get("style").querySelector(".editable");
+    let container = getContainerForNodeFront(nodeFront, inspector);
+    let attr = container.editor.attrElements.get("style")
+                                            .querySelector(".editable");
     is(attr.textContent, completion,
        "Correct value is persisted after pressing Enter");
   }

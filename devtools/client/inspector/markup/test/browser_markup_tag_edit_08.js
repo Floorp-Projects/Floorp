@@ -8,8 +8,10 @@
 // attributes with long values and quotes
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
+/*eslint-disable */
 const LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+/*eslint-enable */
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
@@ -48,8 +50,9 @@ function* testCollapsedLongAttribute(inspector, testActor) {
   setEditableFieldValue(attr, input.value + ' data-short="ABC"', inspector);
   yield inspector.once("markupmutation");
 
-  let visibleAttrText = editor.attrElements.get("data-long").querySelector(".attr-value").textContent;
-  is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
+  let visibleAttrText = editor.attrElements.get("data-long")
+                              .querySelector(".attr-value").textContent;
+  is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
 
   yield assertAttributes("#node24", {
     id: "node24",

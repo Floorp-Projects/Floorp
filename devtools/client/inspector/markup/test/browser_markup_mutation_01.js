@@ -70,7 +70,7 @@ const TEST_DATA = [
       yield testActor.eval(`
         let node1 = content.document.querySelector("#node1");
         node1.classList.add("pseudo");
-      `)
+      `);
     },
     check: function*(inspector) {
       let {children} = yield getContainerForSelector("#node1", inspector);
