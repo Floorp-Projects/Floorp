@@ -1343,6 +1343,27 @@ xpc::SimulateActivityCallback(bool aActive)
     XPCJSRuntime::ActivityCallback(XPCJSRuntime::Get(), aActive);
 }
 
+void
+XPCJSRuntime::EnvironmentPreparer::invoke(HandleObject scope, js::ScriptEnvironmentPreparer::Closure& closure)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    nsIGlobalObject* global = NativeGlobal(scope);
+
+    // Not much we can do if we simply don't have a usable global here...
+    NS_ENSURE_TRUE_VOID(global && global->GetGlobalJSObject());
+    AutoEntryScript aes(global, "JS-engine-initiated execution");
+    aes.TakeOwnershipOfErrorReporting();
+
+    MOZ_ASSERT(!JS_IsExceptionPending(aes.cx()));
+
+    DebugOnly<bool> ok = closure(aes.cx());
+
+    MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(aes.cx()));
+
+    // The AutoEntryScript will check for JS_IsExceptionPending on the
+    // JSContext and report it as needed as it comes off the stack.
+}
+
 // static
 void
 XPCJSRuntime::ActivityCallback(void* arg, bool active)
@@ -3484,6 +3505,7 @@ XPCJSRuntime::Initialize()
         stack->sampleRuntime(runtime);
 #endif
     JS_SetAccumulateTelemetryCallback(runtime, AccumulateTelemetryCallback);
+    js::SetScriptEnvironmentPreparer(runtime, &mEnvironmentPreparer);
     js::SetActivityCallback(runtime, ActivityCallback, this);
     JS_SetInterruptCallback(runtime, InterruptCallback);
     js::SetWindowProxyClass(runtime, &OuterWindowProxyClass);
