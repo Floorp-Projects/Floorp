@@ -838,6 +838,38 @@ MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& value, La
     ma_b(label, c);
 }
 
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    branchTestDoubleImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const Address& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestDoubleImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestDoubleImpl(Condition cond, const T& t, Label* label)
+{
+    Condition c = testDouble(cond, t);
+    ma_b(label, c);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

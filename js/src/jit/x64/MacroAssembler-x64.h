@@ -690,10 +690,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testUndefined(cond, tag);
         j(cond, label);
     }
-    void branchTestDouble(Condition cond, Register tag, Label* label) {
-        cond = testDouble(cond, tag);
-        j(cond, label);
-    }
     void branchTestBoolean(Condition cond, Register tag, Label* label) {
         cond = testBoolean(cond, tag);
         j(cond, label);
@@ -731,16 +727,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestUndefined(cond, Operand(address), label);
     }
-    void branchTestDouble(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(operand, scratch);
-        branchTestDouble(cond, scratch, label);
-    }
-    void branchTestDouble(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestDouble(cond, Operand(address), label);
-    }
     void branchTestBoolean(Condition cond, const Operand& operand, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
@@ -777,10 +763,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, scratch);
         branchTestBoolean(cond, scratch, label);
     }
-    void branchTestDouble(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testDouble(cond, src);
-        j(cond, label);
-    }
     void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
         cond = testNull(cond, src);
         j(cond, label);
@@ -812,10 +794,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         ScratchRegisterScope scratch(asMasm());
         splitTag(address, scratch);
         branchTestBoolean(cond, scratch, label);
-    }
-    void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testDouble(cond, address);
-        j(cond, label);
     }
     void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
         cond = testNull(cond, address);
