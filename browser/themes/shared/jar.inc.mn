@@ -7,7 +7,6 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
-  skin/classic/browser/aboutCertError.css                      (../shared/aboutCertError.css)
   skin/classic/browser/aboutNetError.css                       (../shared/aboutNetError.css)
 * skin/classic/browser/aboutProviderDirectory.css              (../shared/aboutProviderDirectory.css)
 * skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
