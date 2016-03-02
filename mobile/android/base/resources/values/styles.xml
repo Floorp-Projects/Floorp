@@ -126,7 +126,6 @@
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
-        <item name="android:ellipsize">middle</item>
     </style>
 
     <style name="Widget.ReadingListRow" />
@@ -413,7 +412,9 @@
         <item name="android:textColor">?android:attr/textColorPrimary</item>
     </style>
 
-    <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance.Medium"/>
+    <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance">
+        <item name="android:textSize">16dp</item>
+    </style>
 
     <style name="TextAppearance.Widget.Home.ItemDescription" parent="TextAppearance.Micro">
         <item name="android:textColor">@color/tabs_tray_icon_grey</item>
