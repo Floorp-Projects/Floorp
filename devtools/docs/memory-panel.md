@@ -2,14 +2,19 @@
 
 The memory tool is built of three main elements:
 
-1. `JS::ubi::Node` provides an interface to either the live heap graph, or a
-   serialized, offline snapshot of some heap graph from a previous moment in
+1. The live heap graph exists in memory, and is managed by the C++ allocator and
+   garbage collector. In order to get access to the structure of this graph, a
+   specialized interface is created to represent its state. The `JS::ubi::Node`
+   is the basis for this representation. This interface can be created from the
+   live heap graph, or a serialized, offline snapshot from a previous moment in
    time. Our various heap analyses (census, dominator trees, shortest paths,
-   etc) run on top of `JS::ubi::Node` graphs.
+   etc) run on top of `JS::ubi::Node` graphs. The `ubi` in the name stands for
+   "ubiquitous" and provides a namespace for memory analyses in C++ code.
 
 2. The `HeapAnalysesWorker` runs in a worker thread, performing analyses on
    snapshots and translating the results into something the frontend can render
-   simply and quickly.
+   simply and quickly. The `HeapAnalysesClient` is used to communicate between
+   the worker and the main thread.
 
 3. Finally, the last element is the frontend that renders data received from the
    `HeapAnalysesClient` to the DOM and translates user input into requests for
@@ -28,19 +33,20 @@ that changes to the snapshot format itself remain backwards compatible.
 
 ## `JS::ubi::Node`
 
-`JS::ubi::Node` itself is very well documented in the `js/public/UbiNode.h`
-header. I suggest you at least skim that documentation before continuing.
+`JS::ubi::Node` is a lightweight serializable interface that can represent the
+current state of the heap graph. For a deeper dive into the particulars of how
+it works, it is very well documented in the `js/public/UbiNode.h`
 
 A "heap snapshot" is a representation of the heap graph at some particular past
 instance in time.
 
-A "heap analysis" is an algorithm that runs on a `JS::ubi::Node` heap
-graph. That's it. Generally, analyses can run on either the live heap graph or a
-deserialized snapshot. Example analyses include "census", which aggregates and
-counts nodes into various user-specified buckets; "dominator trees", which
-compute the "dominates" relation and retained size for all nodes in the heap
-graph; and "shortest paths" which finds the shortest paths from the GC roots to
-some subset of nodes.
+A "heap analysis" is an algorithm that runs on a `JS::ubi::Node` heap graph.
+Generally, analyses can run on either the live heap graph or a deserialized
+snapshot. Example analyses include "census", which aggregates and counts nodes
+into various user-specified buckets; "dominator trees", which compute the
+[dominates](https://en.wikipedia.org/wiki/Dominator_%28graph_theory%29) relation
+and retained size for all nodes in the heap graph; and "shortest paths" which
+finds the shortest paths from the GC roots to some subset of nodes.
 
 ### Saving Heap Snapshots
 
@@ -55,11 +61,11 @@ Saving a heap snapshot has a few requirements:
    possible. If we are taking a snapshot to debug frequent out-of-memory errors,
    we don't want to trigger an OOM ourselves!
 
-To solve (1), we use the protobuf message format. The message definitions
-themselves are in `devtools/shared/heapsnapshot/CoreDump.proto`. We always use
-`optional` fields so we can change our mind about what fields are required
-sometime in the future. Deserialization checks the semantic integrity of
-deserialized protobuf messages.
+To solve (1), we use the [protobuf](https://developers.google.com/protocol-buffers/)
+message format. The message definitions themselves are in
+`devtools/shared/heapsnapshot/CoreDump.proto`. We always use `optional` fields
+so we can change our mind about what fields are required sometime in the future.
+Deserialization checks the semantic integrity of deserialized protobuf messages.
 
 For (2), we rely on SpiderMonkey's GC rooting hazard static analysis and the
 `AutoCheckCannotGC` dynamic analysis to ensure that neither JS nor GC runs and
@@ -108,9 +114,9 @@ Heap analyses operate on `JS::ubi::Node` graphs without knowledge of whether
 that graph is backed by the live heap graph or an offline heap snapshot. They
 must make sure never to allocate GC things or modify the live heap graph.
 
-In general, analyses are implemented in their own `js/public/UbiFooBar.h` header
-(eg `js/public/UbiCensus.h`), and are exposed to chrome JavaScript code via a
-method on the [`HeapSnapshot`](dom/webidl/HeapSnapshot.webidl) webidl
+In general, analyses are implemented in their own `js/public/Ubi{AnalysisName}.h`
+header (eg `js/public/UbiCensus.h`), and are exposed to chrome JavaScript code
+via a method on the [`HeapSnapshot`](dom/webidl/HeapSnapshot.webidl) webidl
 interface.
 
 For each analysis we expose to chrome JavaScript on the `HeapSnapshot` webidl
@@ -150,14 +156,16 @@ responsive. The `HeapAnalysisClient` provides the main thread's interface to the
 worker.
 
 The `HeapAnalysesWorker` doesn't actually do much itself; mostly just shuffling
-data and transforming it from one representation to another or calling utility
-functions that do those things. Most of these are implemented as traversals of
-the resulting census or dominator trees.
+data and transforming it from one representation to another or calling C++
+utility functions exposed by webidl that do those things. Most of these are
+implemented as traversals of the resulting census or dominator trees.
 
-See the
-`devtools/shared/heapsnapshot/{CensusUtils,CensusTreeNode,DominatorTreeNode}.js`
-files for details on the various data transformations and shuffling that the
-`HeapAnalysesWorker` delegates to.
+See the following files for details on the various data transformations and
+shuffling that the `HeapAnalysesWorker` delegates to.
+
+* `devtools/shared/heapsnapshot/CensusUtils.js`
+* `devtools/shared/heapsnapshot/CensusTreeNode.js`
+* `devtools/shared/heapsnapshot/DominatorTreeNode.js`
 
 ### Testing the `HeapAnalysesWorker` and `HeapAnalysesClient`
 
@@ -187,6 +195,19 @@ Impurity within the frontend is confined to the tasks that are creating and
 dispatching actions. All communication with the outside world (such as the
 `HeapAnalysesWorker`, the Remote Debugger Server, or the file system) is
 restricted to within these tasks.
+
+### Snapshots State
+
+On the JavaScript side, the snapshots represent a reference to the underlying
+heap dump and the various analyses. The following diagram represents a finite
+state machine describing the snapshot states. Any of these states may go to the
+ERROR state, from which they can never leave.
+
+```
+SAVING → SAVED → READING → READ    SAVED_CENSUS
+                  ↗             ↘      ↑  ↓
+         IMPORTING                SAVING_CENSUS
+```
 
 ### Testing the Frontend
 
