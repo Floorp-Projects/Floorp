@@ -773,11 +773,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, c);
     }
     template<typename T>
-    void branchTestString(Condition cond, const T & t, Label* label) {
-        Condition c = testString(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
     void branchTestSymbol(Condition cond, const T & t, Label* label) {
         Condition c = testSymbol(cond, t);
         ma_b(label, c);

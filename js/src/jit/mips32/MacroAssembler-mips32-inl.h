@@ -341,6 +341,12 @@ MacroAssembler::branchTestBooleanTruthy(bool b, const ValueOperand& value, Label
     ma_b(value.payloadReg(), value.payloadReg(), label, b ? NonZero : Zero);
 }
 
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestString(cond, value.typeReg(), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
