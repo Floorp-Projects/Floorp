@@ -2975,7 +2975,10 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       mAnimation = nullptr;
       SetState(NOTHING);
     }
-    if (wantsRepaints) {
+    // Request a repaint at the end of the animation in case something such as a
+    // call to NotifyLayersUpdated was invoked during the animation and Gecko's
+    // current state is some intermediate point of the animation.
+    if (!continueAnimation || wantsRepaints) {
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
