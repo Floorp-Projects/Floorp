@@ -145,6 +145,32 @@ public class Favicons {
     private static FaviconCache faviconsCache;
 
     /**
+     * Select the closest icon size from a list of icon sizes.
+     * We just find the first icon that is larger than the preferred size if available, or otherwise select the
+     * largest icon (if all icons are smaller than the preferred size).
+     *
+     * @return The closes icon size, or -1 if no sizes are supplied.
+     */
+    public static int selectBestSizeFromList(final List<Integer> sizes, final int preferredSize) {
+        Collections.sort(sizes);
+
+        for (int size : sizes) {
+            if (size >= preferredSize) {
+                return size;
+            }
+        }
+
+        // If all icons are smaller than the preferred size then we don't have an icon
+        // selected yet, therefore just take the largest (last) icon.
+        if (sizes.size() > 0) {
+            return sizes.get(sizes.size() - 1);
+        } else {
+            // This isn't ideal, however current code assumes this as an error value for now.
+            return -1;
+        }
+    }
+
+    /**
      * Returns either NOT_LOADING, or LOADED if the onFaviconLoaded call could
      * be made on the main thread.
      * If no listener is provided, NOT_LOADING is returned.
