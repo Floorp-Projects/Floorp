@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:gecko="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/root_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -25,7 +26,30 @@
                         android:layout_below="@+id/tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
-            <include layout="@layout/shared_ui_components"/>
+            <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
+                                         gecko:doinit="false"
+                                         android:layout_width="match_parent"
+                                         android:layout_height="match_parent"
+                                         android:scrollbars="none"/>
+
+            <AbsoluteLayout android:id="@+id/plugin_container"
+                            android:background="@android:color/transparent"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"/>
+
+            <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                               android:layout_width="match_parent"
+                                               android:layout_height="match_parent"
+                                               android:visibility="gone"/>
+
+            <include layout="@layout/text_selection_handles"/>
+
+            <FrameLayout android:id="@+id/camera_layout"
+                         android:layout_height="wrap_content"
+                         android:layout_width="wrap_content"
+                         android:layout_alignParentRight="true"
+                         android:layout_alignParentBottom="true">
+            </FrameLayout>
 
             <ViewStub android:id="@+id/zoomed_view_stub"
                       android:inflatedId="@+id/zoomed_view"
