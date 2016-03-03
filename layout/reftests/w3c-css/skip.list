@@ -1,0 +1,12 @@
+# LIST OF REFTEST NEED TO SKIP FROM IMPORTS
+#
+# Always consider adding tests to failures.list first if it doesn't
+# pass. This list should only be used if we are not able to make the
+# test itself work, e.g. some dynamic tests.
+#
+# The syntax of this file is as follows:
+#    1) All lines marked with a '#' are comments.
+#    2) A failure is denoted by a path, starting
+#       with module. E.g.:
+#         css3-multicol/block-clip-001.xht
+
