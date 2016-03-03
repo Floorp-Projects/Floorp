@@ -1420,12 +1420,23 @@ bool
 nsDisplayListBuilder::IsBuildingLayerEventRegions()
 {
   if (mMode == PAINTING) {
-    // Note: this is the only place that gets to query LayoutEventRegionsEnabled
-    // 'directly' - other code should call this function.
+    // Note: this function and LayerEventRegionsEnabled are the only places
+    // that get to query LayoutEventRegionsEnabled 'directly' - other code
+    // should call this function.
     return gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
            mAsyncPanZoomEnabled;
   }
   return false;
+}
+
+/* static */ bool
+nsDisplayListBuilder::LayerEventRegionsEnabled()
+{
+  // Note: this function and IsBuildingLayerEventRegions are the only places
+  // that get to query LayoutEventRegionsEnabled 'directly' - other code
+  // should call this function.
+  return gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
+         gfxPlatform::AsyncPanZoomEnabled();
 }
 
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
