@@ -192,7 +192,7 @@ PushNotifier::NotifyPushObservers(const nsACString& aScope,
   if (aData) {
     message = new PushMessage(aData.ref());
   }
-  return obsService->NotifyObservers(message, "push-message",
+  return obsService->NotifyObservers(message, OBSERVER_TOPIC_PUSH,
                                      NS_ConvertUTF8toUTF16(aScope).get());
 }
 
@@ -204,7 +204,8 @@ PushNotifier::NotifySubscriptionChangeObservers(const nsACString& aScope)
   if (!obsService) {
     return NS_ERROR_FAILURE;
   }
-  return obsService->NotifyObservers(nullptr, "push-subscription-change",
+  return obsService->NotifyObservers(nullptr,
+                                     OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
                                      NS_ConvertUTF8toUTF16(aScope).get());
 }
 

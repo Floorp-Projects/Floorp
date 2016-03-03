@@ -16,6 +16,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 var isParent = Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
+// Observer notification topics for system subscriptions. These are duplicated
+// and used in `PushNotifier.cpp`. They're exposed on `nsIPushService` instead
+// of `nsIPushNotifier` so that JS callers only need to import this service.
+const OBSERVER_TOPIC_PUSH = "push-message";
+const OBSERVER_TOPIC_SUBSCRIPTION_CHANGE = "push-subscription-change";
+
 /**
  * `PushServiceBase`, `PushServiceParent`, and `PushServiceContent` collectively
  * implement the `nsIPushService` interface. This interface provides calls
@@ -42,6 +48,9 @@ PushServiceBase.prototype = {
     Ci.nsIPushService,
     Ci.nsIPushQuotaManager,
   ]),
+
+  pushTopic: OBSERVER_TOPIC_PUSH,
+  subscriptionChangeTopic: OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
 
   _handleReady() {},
 
