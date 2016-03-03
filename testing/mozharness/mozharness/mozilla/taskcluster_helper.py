@@ -116,6 +116,9 @@ class Taskcluster(LogMixin):
         mime_type = self.get_mime_type(os.path.splitext(filename)[1])
         self.info("Create reference artifact: filename=%s mimetype=%s url=%s" %
                   (filename, mime_type, url))
+        # reclaim the task to avoid "claim-expired" errors
+        self.taskcluster_queue.reclaimTask(
+            task['status']['taskId'], task['status']['runs'][-1]['runId'])
         self.taskcluster_queue.createArtifact(
             task['status']['taskId'],
             task['status']['runs'][-1]['runId'],
