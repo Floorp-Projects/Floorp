@@ -54,7 +54,6 @@ static const char ExportLabel[]       = "export";
 static const char FuncLabel[]         = "func";
 static const char DataLabel[]         = "data";
 static const char SegmentLabel[]      = "segment";
-static const char InitialLabel[]      = "initial";
 static const char EndLabel[]          = "";
 
 enum class Expr : uint16_t
