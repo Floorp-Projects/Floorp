@@ -16,19 +16,15 @@ function test () {
 
   Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
 
-  let newTab = gBrowser.addTab();
+  let newTab = gBrowser.addTab(gHttpTestRoot + TEST_FILE);
   gBrowser.selectedTab = newTab;
 
-  let gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", function onLoad(){
-    gTestBrowser.removeEventListener("load", onLoad, true, true);
-
+  whenTabLoaded(newTab, function () {
     // Enter browser fullscreen mode.
     BrowserFullScreen();
 
     runNextTest();
-  }, true, true);
-  gTestBrowser.contentWindow.location.href = gHttpTestRoot + TEST_FILE;
+  });
 }
 
 registerCleanupFunction(function(){
@@ -202,11 +198,8 @@ function waitForTabOpen(aOptions) {
     gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
 
     let tab = aEvent.target;
-    tab.linkedBrowser.addEventListener("load", function onLoad(ev){
-      let browser = ev.currentTarget;
-      browser.removeEventListener("load", onLoad, true, true);
-
-      is(browser.contentWindow.document.title, message.title,
+    whenTabLoaded(tab, function () {
+      is(tab.linkedBrowser.contentTitle, message.title,
          "Opened Tab is expected: " + message.title);
 
       if (aOptions.successFn) {
@@ -215,7 +208,7 @@ function waitForTabOpen(aOptions) {
 
       gBrowser.removeTab(tab);
       finalize();
-    }, true, true);
+    });
   }
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
 
@@ -240,7 +233,7 @@ function waitForTabOpen(aOptions) {
 function waitForWindowOpen(aOptions) {
   let start = Date.now();
   let message = aOptions.message;
-  let url = aOptions.url || getBrowserURL();
+  let url = aOptions.url || "about:blank";
 
   if (!message.title) {
     ok(false, "Can't get message.title");
@@ -258,33 +251,31 @@ function waitForWindowOpen(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, url, {
+  let listener = new WindowListener(message.title, getBrowserURL(), {
     onSuccess: aOptions.successFn,
     onFinalize: onFinalize,
   });
   Services.wm.addListener(listener);
 
-  const URI = aOptions.url || "about:blank";
-
   executeWindowOpenInContent({
-    uri: URI,
+    uri: url,
     title: message.title,
     option: message.param,
   });
 }
 
 function executeWindowOpenInContent(aParam) {
-  var testWindow = gBrowser.selectedBrowser.contentWindow;
-  var testElm = testWindow.document.getElementById("test");
-
-  testElm.setAttribute("data-test-param", JSON.stringify(aParam));
-  EventUtils.synthesizeMouseAtCenter(testElm, {}, testWindow);
+  ContentTask.spawn(gBrowser.selectedBrowser, JSON.stringify(aParam), function* (dataTestParam) {
+    let testElm = content.document.getElementById("test");
+    testElm.setAttribute("data-test-param", dataTestParam);
+    testElm.click();
+  });
 }
 
 function waitForWindowOpenFromChrome(aOptions) {
   let start = Date.now();
   let message = aOptions.message;
-  let url = aOptions.url || getBrowserURL();
+  let url = aOptions.url || "about:blank";
 
   if (!message.title) {
     ok(false, "Can't get message.title");
@@ -302,16 +293,13 @@ function waitForWindowOpenFromChrome(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, url, {
+  let listener = new WindowListener(message.title, getBrowserURL(), {
     onSuccess: aOptions.successFn,
     onFinalize: onFinalize,
   });
   Services.wm.addListener(listener);
 
-
-  const URI = aOptions.url || "about:blank";
-
-  let testWindow = window.open(URI, message.title, message.option);
+  let testWindow = window.open(url, message.title, message.option);
 }
 
 function WindowListener(aTitle, aUrl, aCallBackObj) {
