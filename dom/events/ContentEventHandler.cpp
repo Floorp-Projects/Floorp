@@ -1123,6 +1123,15 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
+  nsINode* const startNode = mFirstSelectedRange->GetStartParent();
+  nsINode* const endNode = mFirstSelectedRange->GetEndParent();
+
+  // Make sure the selection is within the root content range.
+  if (!nsContentUtils::ContentIsDescendantOf(startNode, mRootContent) ||
+      !nsContentUtils::ContentIsDescendantOf(endNode, mRootContent)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(aEvent->mReply.mString.IsEmpty(),
                "The reply string must be empty");
 
