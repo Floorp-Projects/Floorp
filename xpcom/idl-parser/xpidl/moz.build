@@ -13,6 +13,8 @@ GENERATED_FILES += [
     'xpidlyacc.py',
 ]
 
+GENERATED_FILES['xpidllex.py'].script = 'header.py:main'
+
 SDK_FILES.bin += [
     '!xpidllex.py',
     '!xpidlyacc.py',
