@@ -57,6 +57,7 @@ gDefaultPreferences = {
 
 gLog = None
 gFailList = {}
+gSkipList = {}
 gDestPath = None
 gSrcPath = None
 support_dirs_mapped = set()
@@ -275,20 +276,24 @@ def setup_log():
     # information about where they came from.
     gLog = open(os.path.join(gDestPath, "import.log"), "w")
 
-def read_fail_list():
-    global gFailList
+def read_fail_and_skip_list():
+    global gFailList, gSkipList
     dirname = os.path.realpath(__file__).split(os.path.sep)
     dirname = os.path.sep.join(dirname[:len(dirname)-1])
     failListFile = open(os.path.join(dirname, "failures.list"), "r")
     gFailList = [x for x in [x.lstrip().rstrip() for x in failListFile] if bool(x)
                  and not x.startswith("#")]
     failListFile.close()
+    skipListFile = open(os.path.join(dirname, "skip.list"), "r")
+    gSkipList = [x for x in [x.lstrip().rstrip() for x in skipListFile]
+                 if bool(x) and not x.startswith("#")]
+    skipListFile.close()
 
 def main():
-    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList
+    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList, gSkipList
     read_options()
     setup_paths()
-    read_fail_list()
+    read_fail_and_skip_list()
     setup_log()
     write_log_header()
     remove_existing_dirs()
@@ -322,6 +327,8 @@ def main():
             test = ["HTTP(../../..)"] + test
         if testKey in gFailList:
             test = ["fails"] + test
+        if testKey in gSkipList:
+            test = ["skip"] + test
         listfile.write(" ".join(test) + "\n")
     listfile.close()
 
