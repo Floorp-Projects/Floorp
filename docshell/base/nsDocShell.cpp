@@ -780,6 +780,7 @@ nsDocShell::nsDocShell()
   , mAllowKeywordFixup(false)
   , mIsOffScreenBrowser(false)
   , mIsActive(true)
+  , mDisableMetaRefreshWhenInactive(false)
   , mIsPrerendered(false)
   , mIsAppTab(false)
   , mUseGlobalHistory(false)
@@ -805,6 +806,7 @@ nsDocShell::nsDocShell()
   , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
   , mBlankTiming(false)
   , mFrameType(eFrameTypeRegular)
+  , mIsInIsolatedMozBrowser(false)
   , mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
   , mUserContextId(nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID)
   , mParentCharsetSource(0)
@@ -884,8 +886,6 @@ nsDocShell::Init()
   NS_ASSERTION(mLoadGroup, "Something went wrong!");
 
   mContentListener = new nsDSURIContentListener(this);
-  NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
-
   rv = mContentListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -893,7 +893,6 @@ nsDocShell::Init()
   // ref to us...  use an InterfaceRequestorProxy to do this.
   nsCOMPtr<nsIInterfaceRequestor> proxy =
     new InterfaceRequestorProxy(static_cast<nsIInterfaceRequestor*>(this));
-  NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
   mLoadGroup->SetNotificationCallbacks(proxy);
 
   rv = nsDocLoader::AddDocLoaderAsChildOfRoot(this);
@@ -1650,7 +1649,6 @@ NS_IMETHODIMP
 nsDocShell::CreateLoadInfo(nsIDocShellLoadInfo** aLoadInfo)
 {
   nsDocShellLoadInfo* loadInfo = new nsDocShellLoadInfo();
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_OUT_OF_MEMORY);
   nsCOMPtr<nsIDocShellLoadInfo> localRef(loadInfo);
 
   localRef.forget(aLoadInfo);
@@ -2556,7 +2554,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
 NS_IMETHODIMP
 nsDocShell::SetFullscreenAllowed(bool aFullscreenAllowed)
 {
-  if (!nsIDocShell::GetIsBrowserOrApp()) {
+  if (!nsIDocShell::GetIsMozBrowserOrApp()) {
     // Only allow setting of fullscreenAllowed on content/process boundaries.
     // At non-boundaries the fullscreenAllowed attribute is calculated based on
     // whether all enclosing frames have the "mozFullscreenAllowed" attribute
@@ -2613,10 +2611,6 @@ nsDocShell::GetDocShellEnumerator(int32_t aItemType, int32_t aDirection,
     docShellEnum = new nsDocShellForwardsEnumerator;
   } else {
     docShellEnum = new nsDocShellBackwardsEnumerator;
-  }
-
-  if (!docShellEnum) {
-    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsresult rv = docShellEnum->SetEnumDocShellType(aItemType);
@@ -3364,7 +3358,7 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem** aParent)
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nullptr;
 
-  if (nsIDocShell::GetIsBrowserOrApp()) {
+  if (nsIDocShell::GetIsMozBrowserOrApp()) {
     return NS_OK;
   }
 
@@ -3500,7 +3494,8 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
-  if (targetDS->GetIsInBrowserElement() != accessingDS->GetIsInBrowserElement() ||
+  if (targetDS->GetIsInIsolatedMozBrowserElement() !=
+        accessingDS->GetIsInIsolatedMozBrowserElement() ||
       targetDS->GetAppId() != accessingDS->GetAppId()) {
     return false;
   }
@@ -4015,6 +4010,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
 
   aChild->SetTreeOwner(mTreeOwner);
   childDocShell->SetUserContextId(mUserContextId);
+  childDocShell->SetIsInIsolatedMozBrowserElement(mIsInIsolatedMozBrowser);
 
   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
   if (!childAsDocShell) {
@@ -5635,6 +5631,10 @@ nsDocShell::Create()
     gAddedPreferencesVarCache = true;
   }
 
+  mDisableMetaRefreshWhenInactive =
+    Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
+                         mDisableMetaRefreshWhenInactive);
+
   mDeviceSizeIsPageSize =
     Preferences::GetBool("docshell.device_size_is_page_size",
                          mDeviceSizeIsPageSize);
@@ -5820,10 +5820,14 @@ nsDocShell::SetPosition(int32_t aX, int32_t aY)
 NS_IMETHODIMP
 nsDocShell::SetPositionDesktopPix(int32_t aX, int32_t aY)
 {
-  // Added to nsIBaseWindow in bug 1247335;
-  // implement if a use-case is found.
-  NS_ASSERTION(false, "implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIBaseWindow> ownerWindow(do_QueryInterface(mTreeOwner));
+  if (ownerWindow) {
+    return ownerWindow->SetPositionDesktopPix(aX, aY);
+  }
+
+  double scale = 1.0;
+  GetDevicePixelsPerDesktopPixel(&scale);
+  return SetPosition(NSToIntRound(aX * scale), NSToIntRound(aY * scale));
 }
 
 NS_IMETHODIMP
@@ -6124,12 +6128,21 @@ nsDocShell::SetIsActiveInternal(bool aIsActive, bool aIsHidden)
       continue;
     }
 
-    if (!docshell->GetIsBrowserOrApp()) {
+    if (!docshell->GetIsMozBrowserOrApp()) {
       if (aIsHidden) {
         docshell->SetIsActive(aIsActive);
       } else {
         docshell->SetIsActiveAndForeground(aIsActive);
       }
+    }
+  }
+
+  // Restart or stop meta refresh timers if necessary
+  if (mDisableMetaRefreshWhenInactive) {
+    if (mIsActive) {
+      ResumeRefreshURIs();
+    } else {
+      SuspendRefreshURIs();
     }
   }
 
@@ -6578,7 +6591,6 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
   }
 
   nsRefreshTimer* refreshTimer = new nsRefreshTimer();
-  NS_ENSURE_TRUE(refreshTimer, NS_ERROR_OUT_OF_MEMORY);
   uint32_t busyFlags = 0;
   GetBusyFlags(&busyFlags);
 
@@ -6595,10 +6607,9 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
                       NS_ERROR_FAILURE);
   }
 
-  if (busyFlags & BUSY_FLAGS_BUSY) {
-    // We are busy loading another page. Don't create the
-    // timer right now. Instead queue up the request and trigger the
-    // timer in EndPageLoad().
+  if (busyFlags & BUSY_FLAGS_BUSY || (!mIsActive && mDisableMetaRefreshWhenInactive)) {
+    // We don't  want to create the timer right now. Instead queue up the request
+    // and trigger the timer in EndPageLoad() or whenever we become active.
     mRefreshURIList->AppendElement(refreshTimer);
   } else {
     // There is no page loading going on right now.  Create the
@@ -7551,7 +7562,8 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   }
   // if there's a refresh header in the channel, this method
   // will set it up for us.
-  RefreshURIFromQueue();
+  if (mIsActive || !mDisableMetaRefreshWhenInactive)
+    RefreshURIFromQueue();
 
   // Test whether this is the top frame or a subframe
   bool isTopFrame = true;
@@ -13886,13 +13898,6 @@ nsDocShell::SetUserContextId(uint32_t aUserContextId)
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
-{
-  *aIsBrowser = (mFrameType == eFrameTypeBrowser);
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsApp(bool* aIsApp)
 {
   *aIsApp = (mFrameType == eFrameTypeApp);
@@ -13900,15 +13905,15 @@ nsDocShell::GetIsApp(bool* aIsApp)
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsBrowserOrApp(bool* aIsBrowserOrApp)
+nsDocShell::GetIsMozBrowserOrApp(bool* aIsMozBrowserOrApp)
 {
   switch (mFrameType) {
     case eFrameTypeRegular:
-      *aIsBrowserOrApp = false;
+      *aIsMozBrowserOrApp = false;
       break;
     case eFrameTypeBrowser:
     case eFrameTypeApp:
-      *aIsBrowserOrApp = true;
+      *aIsMozBrowserOrApp = true;
       break;
   }
 
@@ -13934,22 +13939,42 @@ nsDocShell::GetInheritedFrameType()
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsInBrowserElement(bool* aIsInBrowserElement)
+nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 {
-  *aIsInBrowserElement = (GetInheritedFrameType() == eFrameTypeBrowser);
+  bool result = mFrameType == eFrameTypeBrowser && mIsInIsolatedMozBrowser;
+  *aIsIsolatedMozBrowserElement = result;
   return NS_OK;
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsDocShell::GetIsInBrowserOrApp(bool* aIsInBrowserOrApp)
+nsDocShell::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
+{
+  MOZ_ASSERT(!mIsInIsolatedMozBrowser ||
+             (GetInheritedFrameType() == eFrameTypeBrowser),
+             "Isolated mozbrowser should only be true inside browser frames");
+  bool result = (GetInheritedFrameType() == eFrameTypeBrowser) &&
+                mIsInIsolatedMozBrowser;
+  *aIsInIsolatedMozBrowserElement = result;
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
+nsDocShell::SetIsInIsolatedMozBrowserElement(bool aIsInIsolatedMozBrowserElement)
+{
+  mIsInIsolatedMozBrowser = aIsInIsolatedMozBrowserElement;
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
+nsDocShell::GetIsInMozBrowserOrApp(bool* aIsInMozBrowserOrApp)
 {
   switch (GetInheritedFrameType()) {
     case eFrameTypeRegular:
-      *aIsInBrowserOrApp = false;
+      *aIsInMozBrowserOrApp = false;
       break;
     case eFrameTypeBrowser:
     case eFrameTypeApp:
-      *aIsInBrowserOrApp = true;
+      *aIsInMozBrowserOrApp = true;
       break;
   }
 
@@ -13995,10 +14020,7 @@ nsDocShell::GetOriginAttributes()
   }
 
   attrs.mUserContextId = mUserContextId;
-
-  if (mFrameType == eFrameTypeBrowser) {
-    attrs.mInBrowser = true;
-  }
+  attrs.mInIsolatedMozBrowser = mIsInIsolatedMozBrowser;
 
   return attrs;
 }

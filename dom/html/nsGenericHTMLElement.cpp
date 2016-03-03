@@ -2371,7 +2371,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
 
   // Make the text controls read-write
   if (!state.HasState(NS_EVENT_STATE_MOZ_READWRITE) &&
-      IsTextControl(false)) {
+      IsTextOrNumberControl(/*aExcludePassword*/ false)) {
     bool roState = GetBoolAttr(nsGkAtoms::readonly);
 
     if (!roState) {

@@ -466,6 +466,7 @@ class Build(MachCommandBase):
 
         ccache_end = monitor.ccache_stats()
 
+        ccache_diff = None
         if ccache_start and ccache_end:
             ccache_diff = ccache_end - ccache_start
             if ccache_diff:
@@ -508,14 +509,24 @@ class Build(MachCommandBase):
             # Record build configuration data. For now, we cherry pick
             # items we need rather than grabbing everything, in order
             # to avoid accidentally disclosing PII.
+            telemetry_data['substs'] = {}
             try:
-                moz_artifact_builds = self.substs.get('MOZ_ARTIFACT_BUILDS',
-                                                      False)
-                telemetry_data['substs'] = {
-                    'MOZ_ARTIFACT_BUILDS': moz_artifact_builds,
-                }
+                for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE']:
+                    value = self.substs.get(key, False)
+                    telemetry_data['substs'][key] = value
             except BuildEnvironmentNotFoundException:
                 pass
+
+            # Grab ccache stats if available. We need to be careful not
+            # to capture information that can potentially identify the
+            # user (such as the cache location)
+            if ccache_diff:
+                telemetry_data['ccache'] = {}
+                for key in [key[0] for key in ccache_diff.STATS_KEYS]:
+                    try:
+                        telemetry_data['ccache'][key] = ccache_diff._values[key]
+                    except KeyError:
+                        pass
 
             telemetry_handler(self._mach_context, telemetry_data)
 
@@ -1459,10 +1470,7 @@ class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
 
     @Command('artifact', category='post-build',
-        description='Use pre-built artifacts to build Firefox.',
-        conditions=[
-            conditions.is_hg,  # mercurial only for now.
-        ])
+        description='Use pre-built artifacts to build Firefox.')
     def artifact(self):
         '''Download, cache, and install pre-built binary artifacts to build Firefox.
 
@@ -1480,7 +1488,7 @@ class PackageFrontend(MachCommandBase):
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
-    def _make_artifacts(self, tree=None, job=None):
+    def _make_artifacts(self, tree=None, job=None, skip_cache=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('pylru==1.0.9')
         self.virtualenv_manager.install_pip_package('taskcluster==0.0.32')
@@ -1496,14 +1504,27 @@ class PackageFrontend(MachCommandBase):
                 raise
 
         import which
-        if self._is_windows():
-          hg = which.which('hg.exe')
-        else:
-          hg = which.which('hg')
+
+        here = os.path.abspath(os.path.dirname(__file__))
+        build_obj = MozbuildObject.from_environment(cwd=here)
+
+        hg = None
+        if conditions.is_hg(build_obj):
+            if self._is_windows():
+                hg = which.which('hg.exe')
+            else:
+                hg = which.which('hg')
+
+        git = None
+        if conditions.is_git(build_obj):
+            if self._is_windows():
+                git = which.which('git.exe')
+            else:
+                git = which.which('git')
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg)
+        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, skip_cache=skip_cache, hg=hg, git=git)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
@@ -1513,9 +1534,12 @@ class PackageFrontend(MachCommandBase):
             'which case the current hg repository is inspected; an hg revision; '
             'a remote URL; or a local file.',
         default=None)
-    def artifact_install(self, source=None, tree=None, job=None, verbose=False):
+    @CommandArgument('--skip-cache', action='store_true',
+        help='Skip all local caches to force re-fetching remote artifacts.',
+        default=False)
+    def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        artifacts = self._make_artifacts(tree=tree, job=job)
+        artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache)
 
         return artifacts.install_from(source, self.distdir)
 

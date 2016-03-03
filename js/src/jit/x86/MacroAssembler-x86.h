@@ -467,12 +467,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return cond == Equal ? AboveOrEqual : Below;
     }
 
-
-
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                Label* label);
-
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
         emitSet(cond, dest);
@@ -559,9 +553,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpPtr(Operand(lhs), ptr);
         j(cond, label);
     }
-
-    template <typename T, typename S>
-    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         jump(label);
@@ -655,75 +646,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void setStackArg(Register reg, uint32_t arg) {
         movl(reg, Operand(esp, arg * sizeof(intptr_t)));
-    }
-
-    // Type testing instructions can take a tag in a register or a
-    // ValueOperand.
-    template <typename T>
-    void branchTestUndefined(Condition cond, const T& t, Label* label) {
-        cond = testUndefined(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestInt32Impl(Condition cond, const T& t, Label* label) {
-        cond = testInt32(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestBoolean(Condition cond, const T& t, Label* label) {
-        cond = testBoolean(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestDouble(Condition cond, const T& t, Label* label) {
-        cond = testDouble(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestNull(Condition cond, const T& t, Label* label) {
-        cond = testNull(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestString(Condition cond, const T& t, Label* label) {
-        cond = testString(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestSymbol(Condition cond, const T& t, Label* label) {
-        cond = testSymbol(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestObject(Condition cond, const T& t, Label* label) {
-        cond = testObject(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestNumber(Condition cond, const T& t, Label* label) {
-        cond = testNumber(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestGCThing(Condition cond, const T& t, Label* label) {
-        cond = testGCThing(cond, t);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        cond = testPrimitive(cond, t);
-        j(cond, label);
-    }
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        j(cond, label);
-    }
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
     }
 
     // Note: this function clobbers the source register.
@@ -850,18 +772,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         test32(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
     }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        test32(operand.payloadReg(), operand.payloadReg());
-        j(truthy ? NonZero : Zero, label);
-    }
     Condition testStringTruthy(bool truthy, const ValueOperand& value) {
         Register string = value.payloadReg();
         cmp32(Operand(string, JSString::offsetOfLength()), Imm32(0));
         return truthy ? Assembler::NotEqual : Assembler::Equal;
-    }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition cond = testStringTruthy(truthy, value);
-        j(cond, label);
     }
 
     template <typename T>

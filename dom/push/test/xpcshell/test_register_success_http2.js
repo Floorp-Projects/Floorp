@@ -65,7 +65,7 @@ add_task(function* test_pushSubscriptionSuccess() {
   let newRecord = yield PushService.register({
     scope: 'https://example.org/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
 
   var subscriptionUri = serverURL + '/pushSubscriptionSuccesss';
@@ -100,7 +100,7 @@ add_task(function* test_pushSubscriptionMissingLink2() {
   let newRecord = yield PushService.register({
     scope: 'https://example.org/no_receiptEndpoint',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
 
   var subscriptionUri = serverURL + '/subscriptionMissingLink2';

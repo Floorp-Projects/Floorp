@@ -577,6 +577,12 @@ MediaKeySystemAccess::NotifyObservers(nsPIDOMWindowInner* aWindow,
                                       const nsAString& aKeySystem,
                                       MediaKeySystemStatus aStatus)
 {
+  if (aStatus == MediaKeySystemStatus::Cdm_not_supported) {
+    // Ignore, since there's nothing the user can do to rectify this, and we
+    // don't want the prompt to confuse them.
+    // TODO: Remove places that call with this entirely.
+    return;
+  }
   RequestMediaKeySystemAccessNotification data;
   data.mKeySystem = aKeySystem;
   data.mStatus = aStatus;

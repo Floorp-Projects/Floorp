@@ -25,11 +25,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static const char* sAllowPushStatePrefStr =
-  "browser.history.allowPushState";
-static const char* sAllowReplaceStatePrefStr =
-  "browser.history.allowReplaceState";
-
 //
 //  History class implementation
 //
@@ -301,12 +296,6 @@ nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
   if (!win->HasActiveDocument()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
 
-    return;
-  }
-
-  // Check that PushState hasn't been pref'ed off.
-  if (!Preferences::GetBool(aReplace ? sAllowReplaceStatePrefStr :
-                            sAllowPushStatePrefStr, false)) {
     return;
   }
 

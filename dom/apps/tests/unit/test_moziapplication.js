@@ -53,8 +53,8 @@ add_test(() => {
   Assert.equal(mozapp.principal.origin, expectedPrincipalOrigin,
                "app principal origin ok");
   Assert.equal(mozapp.principal.appId, app.localId, "app principal appId ok");
-  Assert.equal(mozapp.principal.isInBrowserElement, false,
-               "app principal isInBrowserElement ok");
+  Assert.equal(mozapp.principal.isInIsolatedMozBrowserElement, false,
+               "app principal isInIsolatedMozBrowserElement ok");
   run_next_test();
 });
 

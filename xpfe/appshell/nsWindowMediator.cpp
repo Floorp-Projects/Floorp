@@ -90,8 +90,6 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
 
   // Create window info struct and add to list of windows
   nsWindowInfo* windowInfo = new nsWindowInfo(inWindow, mTimeStamp);
-  if (!windowInfo)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   WindowTitleData winData = { inWindow, nullptr };
   mListeners.EnumerateForwards(notifyOpenWindow, &winData);

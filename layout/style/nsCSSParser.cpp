@@ -946,9 +946,7 @@ protected:
   bool ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr);
   bool ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue);
 
-  // eFixedTrackSize in aFlags makes it parse a <fixed-breadth>.
-  CSSParseResult ParseGridTrackBreadth(nsCSSValue& aValue,
-    GridTrackSizeFlags aFlags = GridTrackSizeFlags::eDefaultTrackSize);
+  CSSParseResult ParseGridTrackBreadth(nsCSSValue& aValue);
   // eFixedTrackSize in aFlags makes it parse a <fixed-size>.
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue,
     GridTrackSizeFlags aFlags = GridTrackSizeFlags::eDefaultTrackSize);
@@ -8575,20 +8573,15 @@ CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
   }
 }
 
-// Parse a <track-breadth>, or <fixed-breadth> when aFlags has eFixedTrackSize.
 CSSParseResult
-CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue,
-                                     GridTrackSizeFlags aFlags)
+CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
 {
-  CSSParseResult result = (aFlags & GridTrackSizeFlags::eFixedTrackSize) ?
-      ParseNonNegativeVariant(aValue, VARIANT_LPCALC, nullptr) :
-      ParseNonNegativeVariant(aValue,
-                              VARIANT_AUTO | VARIANT_LPCALC | VARIANT_KEYWORD,
-                              nsCSSProps::kGridTrackBreadthKTable);
+  CSSParseResult result = ParseNonNegativeVariant(aValue,
+                            VARIANT_AUTO | VARIANT_LPCALC | VARIANT_KEYWORD,
+                            nsCSSProps::kGridTrackBreadthKTable);
 
   if (result == CSSParseResult::Ok ||
-      result == CSSParseResult::Error ||
-      (aFlags & GridTrackSizeFlags::eFixedTrackSize)) {
+      result == CSSParseResult::Error) {
     return result;
   }
 
@@ -8611,8 +8604,14 @@ CSSParseResult
 CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
                                   GridTrackSizeFlags aFlags)
 {
+  const bool requireFixedSize =
+    !!(aFlags & GridTrackSizeFlags::eFixedTrackSize);
   // Attempt to parse a single <track-breadth>.
-  CSSParseResult result = ParseGridTrackBreadth(aValue, aFlags);
+  CSSParseResult result = ParseGridTrackBreadth(aValue);
+  if (requireFixedSize && result == CSSParseResult::Ok &&
+      !aValue.IsLengthPercentCalcUnit()) {
+    result = CSSParseResult::Error;
+  }
   if (result == CSSParseResult::Ok ||
       result == CSSParseResult::Error) {
     return result;
@@ -8628,10 +8627,15 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
     return CSSParseResult::NotFound;
   }
   nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_minmax, 2);
-  if (ParseGridTrackBreadth(func->Item(1), aFlags) == CSSParseResult::Ok &&
+  if (ParseGridTrackBreadth(func->Item(1)) == CSSParseResult::Ok &&
       ExpectSymbol(',', true) &&
-      ParseGridTrackBreadth(func->Item(2), aFlags) == CSSParseResult::Ok &&
+      ParseGridTrackBreadth(func->Item(2)) == CSSParseResult::Ok &&
       ExpectSymbol(')', true)) {
+    if (requireFixedSize &&
+        !func->Item(1).IsLengthPercentCalcUnit() &&
+        !func->Item(2).IsLengthPercentCalcUnit()) {
+      return CSSParseResult::Error;
+    }
     return CSSParseResult::Ok;
   }
   SkipUntil(')');

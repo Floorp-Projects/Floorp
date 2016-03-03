@@ -498,6 +498,10 @@ public:
   { }
 
 private:
+  // We can't implement PreRun effectively, because at the point when that would
+  // run we have not yet done our load so don't know things like our final
+  // principal and whatnot.
+
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
@@ -514,9 +518,9 @@ private:
       rv.SuppressException();
       return false;
     }
-    // Make sure to propagate exceptions from rv onto aCx, so that our PostRun
-    // can report it.  We do this for all failures on rv, because now we're
-    // using rv to track all the state we care about.
+    // Make sure to propagate exceptions from rv onto aCx, so that they will get
+    // reported after we return.  We do this for all failures on rv, because now
+    // we're using rv to track all the state we care about.
     //
     // This is a little dumb, but aCx is in the null compartment here because we
     // set it up that way in our Run(), since we had not created the global at
@@ -574,9 +578,9 @@ private:
       rv.SuppressException();
       return false;
     }
-    // Make sure to propagate exceptions from rv onto aCx, so that our PostRun
-    // can report it.  We do this for all failures on rv, because now we're
-    // using rv to track all the state we care about.
+    // Make sure to propagate exceptions from rv onto aCx, so that they will get
+    // reported after we return.  We do this for all failures on rv, because now
+    // we're using rv to track all the state we care about.
     if (rv.MaybeSetPendingException(aCx)) {
       return false;
     }
@@ -1231,8 +1235,8 @@ private:
     JS::Rooted<JS::Value> callable(aCx, JS::ObjectValue(*mHandler->Callable()));
     JS::HandleValueArray args = JS::HandleValueArray::empty();
     JS::Rooted<JS::Value> rval(aCx);
-    if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
-        !JS_ReportPendingException(aCx)) {
+    if (!JS_CallFunctionValue(aCx, global, callable, args, &rval)) {
+      // Just return false; WorkerRunnable::Run will report the exception.
       return false;
     }
 
@@ -3144,6 +3148,14 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
 {
   AssertIsOnMainThread();
 
+  if (JSREPORT_IS_WARNING(aFlags)) {
+    // Don't fire any events anywhere.  Just log to console.
+    // XXXbz should we log to all the consoles of all the relevant windows?
+    LogErrorToConsole(aMessage, aFilename, aLine, aLineNumber, aColumnNumber,
+                      aFlags, 0);
+    return;
+  }
+
   AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
   GetAllSharedWorkers(sharedWorkers);
 
@@ -4669,6 +4681,8 @@ bool
 WorkerPrivate::InterruptCallback(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
+
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   bool mayContinue = true;
   bool scheduledIdleGC = false;

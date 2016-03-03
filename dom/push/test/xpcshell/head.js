@@ -507,7 +507,7 @@ var tearDownServiceInParent = Task.async(function* (db) {
   record = yield db.getByIdentifiers({
     scope: 'https://example.net/scope/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: 1, inBrowser: true }),
+      { appId: 1, inIsolatedMozBrowser: true }),
   });
   ok(record.pushEndpoint.startsWith('https://example.org/push'),
     'Wrong push endpoint in app record');

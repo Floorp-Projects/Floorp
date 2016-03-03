@@ -6,9 +6,9 @@ function run_test() {
   let ssm = Services.scriptSecurityManager;
   let pm = Services.perms;
 
-  function mkPrin(uri, appId, inBrowser) {
+  function mkPrin(uri, appId, inIsolatedMozBrowser) {
     return ssm.createCodebasePrincipal(Services.io.newURI(uri, null, null),
-                                       {appId: appId, inBrowser: inBrowser});
+                                       {appId: appId, inIsolatedMozBrowser: inIsolatedMozBrowser});
   }
 
   function checkPerms(perms) {
@@ -93,7 +93,7 @@ function run_test() {
   ];
 
   attrs = { appId: 1001,
-            inBrowser: true };
+            inIsolatedMozBrowser: true };
   pm.removePermissionsWithAttributes(JSON.stringify(attrs));
   checkPerms(remove_true_perms);
 }

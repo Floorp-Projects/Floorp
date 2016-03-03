@@ -618,3 +618,4 @@ load text-overflow-bug671796.xhtml
 load text-overflow-bug713610.html
 load text-overflow-form-elements.html
 load text-overflow-iframe.html
+asserts(4) load 1225005.html # bug 682647 and bug 448083

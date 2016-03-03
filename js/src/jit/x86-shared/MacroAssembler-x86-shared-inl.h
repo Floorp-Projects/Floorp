@@ -295,6 +295,14 @@ MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
+template <typename T, typename S>
+void
+MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+{
+    cmpPtr(Operand(lhs), rhs);
+    j(cond, label);
+}
+
 template <typename T>
 CodeOffsetJump
 MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
@@ -429,9 +437,360 @@ MacroAssembler::branchTestPtr(Condition cond, const Address& lhs, Imm32 rhs, Lab
 }
 
 void
-MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+MacroAssembler::branchTestUndefined(Condition cond, Register tag, Label* label)
 {
-    Condition cond = testInt32Truthy(truthy, operand);
+    branchTestUndefinedImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const Address& address, Label* label)
+{
+    branchTestUndefinedImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestUndefinedImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestUndefinedImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testUndefined(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+{
+    branchTestInt32Impl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestInt32Impl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestInt32Impl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestInt32Impl(Condition cond, const T& t, Label* label)
+{
+    cond = testInt32(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    Condition cond = testInt32Truthy(truthy, value);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    branchTestDoubleImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const Address& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestDoubleImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestDoubleImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestDoubleImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testDouble(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label)
+{
+    Condition cond = testDoubleTruthy(truthy, reg);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestNumber(Condition cond, Register tag, Label* label)
+{
+    branchTestNumberImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNumberImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestNumberImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testNumber(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, Register tag, Label* label)
+{
+    branchTestBooleanImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const Address& address, Label* label)
+{
+    branchTestBooleanImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestBooleanImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestBooleanImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestBooleanImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testBoolean(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, Register tag, Label* label)
+{
+    branchTestStringImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestStringImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestStringImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestStringImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testString(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    Condition cond = testStringTruthy(truthy, value);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, Register tag, Label* label)
+{
+    branchTestSymbolImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestSymbolImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestSymbolImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestSymbolImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testSymbol(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, Register tag, Label* label)
+{
+    branchTestNullImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const Address& address, Label* label)
+{
+    branchTestNullImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestNullImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNullImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestNullImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testNull(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, Register tag, Label* label)
+{
+    branchTestObjectImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const Address& address, Label* label)
+{
+    branchTestObjectImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestObjectImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestObjectImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestObjectImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testObject(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestGCThing(Condition cond, const Address& address, Label* label)
+{
+    branchTestGCThingImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestGCThingImpl(cond, address, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestGCThingImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testGCThing(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestPrimitive(Condition cond, Register tag, Label* label)
+{
+    branchTestPrimitiveImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestPrimitiveImpl(cond, value, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
+{
+    cond = testPrimitive(cond, t);
+    j(cond, label);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, Register tag, Label* label)
+{
+    branchTestMagicImpl(cond, tag, label);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& address, Label* label)
+{
+    branchTestMagicImpl(cond, address, label);
+}
+
+void
+MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address, Label* label)
+{
+    branchTestMagicImpl(cond, address, label);
+}
+
+template <class L>
+void
+MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L label)
+{
+    branchTestMagicImpl(cond, value, label);
+}
+
+template <typename T, class L>
+void
+MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
+{
+    cond = testMagic(cond, t);
     j(cond, label);
 }
 

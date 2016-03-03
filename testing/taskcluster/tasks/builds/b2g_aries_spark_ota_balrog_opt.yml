@@ -1,10 +1,6 @@
 $inherits:
   from: 'tasks/builds/b2g_aries_spark_ota_opt.yml'
 task:
-  scopes:
-    - 'docker-worker:feature:balrogVPNProxy'
   payload:
-    features:
-      balrogVPNProxy: true
     env:
       MOZHARNESS_CONFIG: b2g/taskcluster-spark-ota-balrog.py

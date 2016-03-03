@@ -2410,6 +2410,12 @@ Http2Session::ReadyToProcessDataFrame(enum internalStateType newState)
     if (mInputFrameDataStream->RecvdFin() || mInputFrameDataStream->RecvdReset())
       GenerateRstStream(STREAM_CLOSED_ERROR, mInputFrameID);
     ChangeDownstreamState(DISCARDING_DATA_FRAME);
+  } else if (mInputFrameDataSize == 0 && !mInputFrameFinal) {
+    // Only if non-final because the stream properly handles final frames of any
+    // size, and we want the stream to be able to notice its own end flag.
+    LOG3(("Http2Session::ReadyToProcessDataFrame %p streamID 0x%X "
+          "Ignoring 0-length non-terminal data frame.", this, mInputFrameID));
+    ChangeDownstreamState(DISCARDING_DATA_FRAME);
   }
 
   LOG3(("Start Processing Data Frame. "

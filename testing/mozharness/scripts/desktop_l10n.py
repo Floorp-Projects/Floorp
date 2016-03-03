@@ -152,6 +152,11 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
          "dest": "en_us_installer_url",
          "type": "string",
          "help": "Specify the url of the en-us binary"}
+    ], [
+        ["--disable-mock"], {
+        "dest": "disable_mock",
+        "action": "store_true",
+        "help": "do not run under mock despite what gecko-config says"}
     ]]
 
     def __init__(self, require_config_file=True):

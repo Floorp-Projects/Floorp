@@ -316,7 +316,7 @@ public:
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  uint32_t         aAppId,
                                  bool             aAnonymous,
-                                 bool             aInBrowser,
+                                 bool             aInIsolatedMozBrowser,
                                  bool             aPinning);
   static nsresult UpdateIndexEntry(CacheFileHandle *aHandle,
                                    const uint32_t  *aFrecency,

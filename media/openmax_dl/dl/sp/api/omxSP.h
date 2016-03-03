@@ -2598,6 +2598,18 @@ extern OMXResult (*omxSP_FFTInv_CCSToR_F32)(
 #define omxSP_FFTInv_CCSToR_F32 omxSP_FFTInv_CCSToR_F32_Sfs    
 #endif
 
+/*
+ * Just like omxSP_FFTInv_CCSToR_F32_Sfs, but does not scale the result.
+ * (Actually, we multiple by two for consistency with other FFT routines in
+ * use.)
+ */
+OMXResult omxSP_FFTInv_CCSToR_F32_Sfs_unscaled(
+    const OMX_F32* pSrc,
+    OMX_F32* pDst,
+    const OMXFFTSpec_R_F32* pFFTSpec
+);
+
+
 #ifdef __cplusplus
 }
 #endif

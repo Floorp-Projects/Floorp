@@ -467,4 +467,16 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
               scratch, Imm32(nursery.nurserySize()), label);
 }
 
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(lhs.valueReg() != scratch);
+    moveValue(rhs, scratch);
+    cmpPtr(lhs.valueReg(), scratch);
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
