@@ -521,6 +521,7 @@ void TestStunServer::Reset() {
   }
   delete response_addr_;
   response_addr_ = nullptr;
+  received_ct_.clear();
 }
 
 

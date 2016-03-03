@@ -10,8 +10,10 @@ artifacts from Mozilla's Task Cluster.
 
 This module performs the following steps:
 
-* find a candidate hg parent revision using the local pushlog.  The local
-  pushlog is maintained by mozext locally and updated on every pull.
+* find a candidate hg parent revision.  At one time we used the local pushlog,
+  which required the mozext hg extension.  This isn't feasible with git, and it
+  is only mildly less efficient to not use the pushlog, so we don't use it even
+  when querying hg.
 
 * map the candidate parent to candidate Task Cluster tasks and artifact
   locations.  Pushlog entries might not correspond to tasks (yet), and those
@@ -49,6 +51,7 @@ import operator
 import os
 import pickle
 import re
+import requests
 import shutil
 import stat
 import subprocess
@@ -80,6 +83,13 @@ from mozregression.persist_limit import (
 )
 
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50  # Number of candidate pushheads to cache per parent changeset.
+
+# Number of parent changesets to consider as possible pushheads.
+# There isn't really such a thing as a reasonable default here, because we don't
+# know how many pushheads we'll need to look at to find a build with our artifacts,
+# and we don't know how many changesets will be in each push. For now we assume
+# we'll find a build in the last 50 pushes, assuming each push contains 10 changesets.
+NUM_REVISIONS_TO_QUERY = 500
 
 MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data for.
 
@@ -431,7 +441,8 @@ class CacheManager(object):
     Provide simple logging.
     '''
 
-    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None, log=None):
+    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None, log=None, skip_cache=False):
+        self._skip_cache = skip_cache
         self._cache = pylru.lrucache(cache_size, callback=cache_callback)
         self._cache_filename = mozpath.join(cache_dir, cache_name + '-cache.pickle')
         self._log = log
@@ -441,6 +452,12 @@ class CacheManager(object):
             self._log(*args, **kwargs)
 
     def load_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring load_cache!')
+            return
+
         try:
             items = pickle.load(open(self._cache_filename, 'rb'))
             for key, value in items:
@@ -455,10 +472,22 @@ class CacheManager(object):
             pass
 
     def dump_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring dump_cache!')
+            return
+
         ensureParentDir(self._cache_filename)
         pickle.dump(list(reversed(list(self._cache.items()))), open(self._cache_filename, 'wb'), -1)
 
     def clear_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring clear_cache!')
+            return
+
         with self:
             self._cache.clear()
 
@@ -496,35 +525,65 @@ class CacheManager(object):
 class TreeCache(CacheManager):
     '''Map pushhead revisions to trees with tasks/artifacts known to taskcluster.'''
 
-    def __init__(self, cache_dir, log=None):
-        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log)
+    def __init__(self, cache_dir, log=None, skip_cache=False):
+        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
         self._index = taskcluster.Index()
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_trees(self, rev, trees):
-        # The "trees" argument is intentionally ignored. If this value
-        # changes over time it means a changeset we care about has become
-        # a pushhead on another tree, and our cache may no longer be
-        # valid.
+    def artifact_trees(self, rev):
         rev_ns = 'buildbot.revisions.{rev}'.format(rev=rev)
         try:
             result = self._index.listNamespaces(rev_ns, {"limit": 10})
         except Exception:
-            return []
-        return [ns['name'] for ns in result['namespaces']]
+            raise ValueError
+        trees = [ns['name'] for ns in result['namespaces']]
+        if not trees:
+            raise ValueError
+        return trees
 
     def print_last_item(self, args, sorted_kwargs, result):
-        rev, trees = args
+        rev, = args
         self.log(logging.INFO, 'artifact',
             {'rev': rev},
             'Last fetched trees for pushhead revision {rev}')
 
+class PushheadCache(CacheManager):
+    '''Helps map tree/revision pairs to parent pushheads according to the pushlog.'''
+
+    def __init__(self, cache_dir, log=None, skip_cache=False):
+        CacheManager.__init__(self, cache_dir, 'pushhead_cache', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
+
+    @cachedmethod(operator.attrgetter('_cache'))
+    def parent_pushhead_id(self, tree, revision):
+        cset_url_tmpl = ('https://hg.mozilla.org/{tree}/json-pushes?'
+                         'changeset={changeset}&version=2&tipsonly=1')
+        req = requests.get(cset_url_tmpl.format(tree=tree, changeset=revision),
+                           headers={'Accept': 'application/json'})
+        if req.status_code not in range(200, 300):
+            raise ValueError
+        result = req.json()
+        [found_pushid] = result['pushes'].keys()
+        return int(found_pushid)
+
+    @cachedmethod(operator.attrgetter('_cache'))
+    def pushid_range(self, tree, start, end):
+        pushid_url_tmpl = ('https://hg.mozilla.org/{tree}/json-pushes?'
+                           'startID={start}&endID={end}&version=2&tipsonly=1')
+
+        req = requests.get(pushid_url_tmpl.format(tree=tree, start=start,
+                                                  end=end),
+                           headers={'Accept': 'application/json'})
+        result = req.json()
+        return [
+            p['changesets'][-1] for p in result['pushes'].values()
+        ]
+
 class TaskCache(CacheManager):
     '''Map candidate pushheads to Task Cluster task IDs and artifact URLs.'''
 
-    def __init__(self, cache_dir, log=None):
-        CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log)
+    def __init__(self, cache_dir, log=None, skip_cache=False):
+        CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
         self._index = taskcluster.Index()
         self._queue = taskcluster.Queue()
 
@@ -572,14 +631,15 @@ class TaskCache(CacheManager):
 class ArtifactCache(CacheManager):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
 
-    def __init__(self, cache_dir, log=None):
+    def __init__(self, cache_dir, log=None, skip_cache=False):
         # TODO: instead of storing N artifact packages, store M megabytes.
-        CacheManager.__init__(self, cache_dir, 'fetch', MAX_CACHED_ARTIFACTS, cache_callback=self.delete_file, log=log)
+        CacheManager.__init__(self, cache_dir, 'fetch', MAX_CACHED_ARTIFACTS, cache_callback=self.delete_file, log=log, skip_cache=skip_cache)
         self._cache_dir = cache_dir
         size_limit = 1024 * 1024 * 1024 # 1Gb in bytes.
         file_limit = 4 # But always keep at least 4 old artifacts around.
         persist_limit = PersistLimit(size_limit, file_limit)
         self._download_manager = DownloadManager(self._cache_dir, persist_limit=persist_limit)
+        self._last_dl_update = -1
 
     def delete_file(self, key, value):
         try:
@@ -607,12 +667,32 @@ class ArtifactCache(CacheManager):
         # (especially on Mac OS X, where we must mount a large DMG file).
         hash = hashlib.sha256(url).hexdigest()[:16]
         fname = hash + '-' + os.path.basename(url)
+
+        path = os.path.abspath(mozpath.join(self._cache_dir, fname))
+        if self._skip_cache and os.path.exists(path):
+            self.log(logging.DEBUG, 'artifact',
+                {'path': path},
+                'Skipping cache: removing cached downloaded artifact {path}')
+            os.remove(path)
+
         self.log(logging.INFO, 'artifact',
-            {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
+            {'path': path},
             'Downloading to temporary location {path}')
         try:
             dl = self._download_manager.download(url, fname)
+
+            def download_progress(dl, bytes_so_far, total_size):
+                percent = (float(bytes_so_far) / total_size) * 100
+                now = int(percent / 5)
+                if now == self._last_dl_update:
+                    return
+                self._last_dl_update = now
+                self.log(logging.DEBUG, 'artifact',
+                         {'bytes_so_far': bytes_so_far, 'total_size': total_size, 'percent': percent},
+                         'Downloading... {percent:02.1f} %')
+
             if dl:
+                dl.set_progress(download_progress)
                 dl.wait()
             self.log(logging.INFO, 'artifact',
                 {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
@@ -638,12 +718,20 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg'):
+    def __init__(self, tree, job=None, log=None, cache_dir='.', hg=None, git=None, skip_cache=False):
+        if (hg and git) or (not hg and not git):
+            raise ValueError("Must provide path to exactly one of hg and git")
+
         self._tree = tree
         self._job = job or self._guess_artifact_job()
         self._log = log
         self._hg = hg
+        self._git = git
+        if self._git:
+            import which
+            self._cinnabar = which.which('git-cinnabar')
         self._cache_dir = cache_dir
+        self._skip_cache = skip_cache
 
         try:
             self._artifact_job = get_job_details(self._job, log=self._log)
@@ -653,17 +741,10 @@ class Artifacts(object):
                 'Unknown job {job}')
             raise KeyError("Unknown job")
 
-        self._task_cache = TaskCache(self._cache_dir, log=self._log)
-        self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log)
-        self._tree_cache = TreeCache(self._cache_dir, log=self._log)
-        # A "tree" according to mozext and an integration branch isn't always
-        # an exact match. For example, pushhead("central") refers to pushheads
-        # with artifacts under the taskcluster namespace "mozilla-central".
-        self._tree_replacements = {
-            'inbound': 'mozilla-inbound',
-            'central': 'mozilla-central',
-        }
-
+        self._task_cache = TaskCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._tree_cache = TreeCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._pushhead_cache = PushheadCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -689,61 +770,118 @@ class Artifacts(object):
             return 'macosx64'
         raise Exception('Cannot determine default job for |mach artifact|!')
 
+    def _pushheads_from_rev(self, rev, count):
+        """Queries hg.mozilla.org's json-pushlog for pushheads that are nearby
+        ancestors or `rev`. Multiple trees are queried, as the `rev` may
+        already have been pushed to multiple repositories. For each repository
+        containing `rev`, the pushhead introducing `rev` and the previous
+        `count` pushheads from that point are included in the output.
+        """
+
+        candidate_trees = (
+            'mozilla-central',
+            'integration/fx-team',
+            'integration/mozilla-inbound',
+            'releases/mozilla-aurora'
+        )
+
+        with self._pushhead_cache as pushhead_cache:
+            found_pushids = {}
+            for tree in candidate_trees:
+                self.log(logging.INFO, 'artifact',
+                         {'tree': tree,
+                          'rev': rev},
+                         'Attempting to find a pushhead containing {rev} on {tree}.')
+                try:
+                    pushid = pushhead_cache.parent_pushhead_id(tree, rev)
+                    found_pushids[tree] = pushid
+                except ValueError:
+                    continue
+
+            candidate_pushheads = []
+            for tree, pushid in found_pushids.iteritems():
+                end = pushid
+                start = pushid - NUM_PUSHHEADS_TO_QUERY_PER_PARENT
+
+                self.log(logging.INFO, 'artifact',
+                         {'tree': tree,
+                          'pushid': pushid,
+                          'num': NUM_PUSHHEADS_TO_QUERY_PER_PARENT},
+                         'Retrieving the last {num} pushheads starting with id {pushid} on {tree}')
+                candidate_pushheads.extend(pushhead_cache.pushid_range(tree, start, end))
+
+        return candidate_pushheads
+
+    def _get_hg_revisions_from_git(self):
+
+        # First commit is HEAD, next is HEAD~1, etc.
+        rev_list = subprocess.check_output([
+            self._git, 'rev-list', '--topo-order',
+            'HEAD~{num}..HEAD'.format(num=NUM_REVISIONS_TO_QUERY),
+        ])
+
+        hg_hash_list = subprocess.check_output([
+            self._cinnabar, 'git2hg'
+        ] + rev_list.splitlines())
+
+        zeroes = "0" * 40
+
+        hashes = []
+        for hg_hash in hg_hash_list.splitlines():
+            hg_hash = hg_hash.strip()
+            if not hg_hash or hg_hash == zeroes:
+                continue
+            hashes.append(hg_hash)
+        return hashes
+
+    def _get_recent_public_revisions(self):
+        """Returns recent ancestors of the working parent that are likely to
+        to be known to Mozilla automation.
+
+        If we're using git, retrieves hg revisions from git-cinnabar.
+        """
+        if self._git:
+            return self._get_hg_revisions_from_git()
+
+        return subprocess.check_output([
+            self._hg, 'log',
+            '--template', '{node}\n',
+            '-r', 'last(public() and ::., {num})'.format(
+                num=NUM_REVISIONS_TO_QUERY)
+        ]).splitlines()
+
     def _find_pushheads(self):
-        # Return an ordered dict associating revisions that are pushheads with
-        # trees they are known to be in (starting with the first tree they're
-        # known to be in).
+        """Returns an iterator of recent pushhead revisions, starting with the
+        working parent.
+        """
 
-        try:
-            output = subprocess.check_output([
-                self._hg, 'log',
-                '--template', '{node},{join(trees, ",")}\n',
-                '-r', 'last(pushhead({tree}) and ::., {num})'.format(
-                    tree=self._tree or '', num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)
-            ])
-        except subprocess.CalledProcessError:
-            # We probably don't have the mozext extension installed.
-            ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
-            if ret:
-                raise Exception('Could not find pushheads for recent revisions.\n\n'
-                                'You need to enable the "mozext" hg extension: '
-                                'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
-            raise
-
-        rev_trees = collections.OrderedDict()
-        for line in output.splitlines():
-            if not line:
+        last_revs = self._get_recent_public_revisions()
+        candidate_pushheads = set(self._pushheads_from_rev(last_revs[0].rstrip(),
+                                                           NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
+        count = 0
+        for rev in last_revs:
+            rev = rev.rstrip()
+            if not rev:
                 continue
-            rev_info = line.split(',')
-            if len(rev_info) == 1:
-                # If pushhead() is true, it would seem "trees" should be
-                # non-empty, but this is defensive.
+            if rev not in candidate_pushheads:
                 continue
-            rev_trees[rev_info[0]] = tuple(rev_info[1:])
+            count += 1
+            yield rev
 
-        if not rev_trees:
-            raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n\n'
-                            'Try running |hg pushlogsync|;\n'
+        if not count:
+            raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n'
+                            'Search started with {rev}, which must be known to Mozilla automation.\n\n'
                             'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
-                                num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
+                                rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
 
-        return rev_trees
-
-    def find_pushhead_artifacts(self, task_cache, tree_cache, job, pushhead, trees):
-        known_trees = set(tree_cache.artifact_trees(pushhead, trees))
-        if not known_trees:
+    def find_pushhead_artifacts(self, task_cache, tree_cache, job, pushhead):
+        try:
+            trees = tree_cache.artifact_trees(pushhead)
+        except ValueError:
             return None
-        if not trees:
-            # Accept artifacts from any tree where they are available.
-            trees = list(known_trees)
-            trees.sort()
+        trees.sort()
 
-        # If we ever find a rev that's a pushhead on multiple trees, we want
-        # the most recent one.
-        for tree in reversed(trees):
-            tree = self._tree_replacements.get(tree) or tree
-            if tree not in known_trees:
-                continue
+        for tree in trees:
             try:
                 urls = task_cache.artifact_urls(tree, job, pushhead)
             except ValueError:
@@ -763,6 +901,13 @@ class Artifacts(object):
 
         # Do we need to post-process?
         processed_filename = filename + PROCESSED_SUFFIX
+
+        if self._skip_cache and os.path.exists(processed_filename):
+            self.log(logging.DEBUG, 'artifact',
+                {'path': processed_filename},
+                'Skipping cache: removing cached processed artifact {path}')
+            os.remove(processed_filename)
+
         if not os.path.exists(processed_filename):
             self.log(logging.INFO, 'artifact',
                 {'filename': filename},
@@ -806,42 +951,58 @@ class Artifacts(object):
             filename = artifact_cache.fetch(url)
         return self.install_from_file(filename, distdir)
 
-    def _install_from_pushheads(self, rev_pushheads, distdir):
+    def _install_from_hg_pushheads(self, hg_pushheads, distdir):
+        """Iterate pairs (hg_hash, {tree-set}) associating hg revision hashes
+        and tree-sets they are known to be in, trying to download and
+        install from each.
+        """
+
         urls = None
+        count = 0
         # with blocks handle handle persistence.
         with self._task_cache as task_cache, self._tree_cache as tree_cache:
-            for rev, trees in rev_pushheads.items():
+            for hg_hash in hg_pushheads:
+                count += 1
                 self.log(logging.DEBUG, 'artifact',
-                         {'rev': rev},
-                         'Trying to find artifacts for pushhead {rev}.')
+                         {'hg_hash': hg_hash},
+                         'Trying to find artifacts for hg revision {hg_hash}.')
                 urls = self.find_pushhead_artifacts(task_cache, tree_cache,
-                                                    self._job, rev, trees)
+                                                    self._job, hg_hash)
                 if urls:
                     for url in urls:
                         if self.install_from_url(url, distdir):
                             return 1
                     return 0
+
         self.log(logging.ERROR, 'artifact',
-                 {'count': len(rev_pushheads)},
+                 {'count': count},
                  'Tried {count} pushheads, no built artifacts found.')
         return 1
 
     def install_from_recent(self, distdir):
-        rev_pushheads = self._find_pushheads()
-        return self._install_from_pushheads(rev_pushheads, distdir)
+        hg_pushheads = self._find_pushheads()
+        return self._install_from_hg_pushheads(hg_pushheads, distdir)
 
     def install_from_revset(self, revset, distdir):
-        revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
-                                            '-r', revset]).strip()
-        if len(revision.split('\n')) != 1:
-            raise ValueError('hg revision specification must resolve to exactly one commit')
-        rev_pushheads = {revision: None}
+        if self._hg:
+            revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
+                                                '-r', revset]).strip()
+            if len(revision.split('\n')) != 1:
+                raise ValueError('hg revision specification must resolve to exactly one commit')
+        else:
+            revision = subprocess.check_output([self._git, 'rev-parse', revset]).strip()
+            revision = subprocess.check_output([self._cinnabar, 'git2hg', revision]).strip()
+            if len(revision.split('\n')) != 1:
+                raise ValueError('hg revision specification must resolve to exactly one commit')
+            if revision == "0" * 40:
+                raise ValueError('git revision specification must resolve to a commit known to hg')
+
         self.log(logging.INFO, 'artifact',
                  {'revset': revset,
                   'revision': revision},
                  'Will only accept artifacts from a pushhead at {revision} '
                  '(matched revset "{revset}").')
-        return self._install_from_pushheads(rev_pushheads, distdir)
+        return self._install_from_hg_pushheads([revision], distdir)
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
@@ -867,6 +1028,7 @@ class Artifacts(object):
         self._tree_cache.print_last()
         self._task_cache.print_last()
         self._artifact_cache.print_last()
+        self._pushhead_cache.print_last()
 
     def clear_cache(self):
         self.log(logging.INFO, 'artifact',
@@ -875,6 +1037,7 @@ class Artifacts(object):
         self._tree_cache.clear_cache()
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
+        self._pushhead_cache.clear_cache()
 
     def print_cache(self):
         self.log(logging.INFO, 'artifact',
@@ -883,3 +1046,4 @@ class Artifacts(object):
         self._tree_cache.print_cache()
         self._task_cache.print_cache()
         self._artifact_cache.print_cache()
+        self._pushhead_cache.print_cache()

@@ -273,32 +273,6 @@ MacroAssemblerX86::handleFailureWithHandlerTail(void* handler)
     jmp(Operand(esp, offsetof(ResumeFromException, target)));
 }
 
-void
-MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label)
-{
-    jsval_layout jv = JSVAL_TO_IMPL(v);
-    if (v.isMarkable())
-        cmpPtr(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(v.toGCThing())));
-    else
-        cmpPtr(value.payloadReg(), ImmWord(jv.s.payload.i32));
-
-    if (cond == Equal) {
-        Label done;
-        j(NotEqual, &done);
-        {
-            cmp32(value.typeReg(), Imm32(jv.s.tag));
-            j(Equal, label);
-        }
-        bind(&done);
-    } else {
-        MOZ_ASSERT(cond == NotEqual);
-        j(NotEqual, label);
-
-        cmp32(value.typeReg(), Imm32(jv.s.tag));
-        j(NotEqual, label);
-    }
-}
-
 template <typename T>
 void
 MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
@@ -499,6 +473,33 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
     branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    jsval_layout jv = JSVAL_TO_IMPL(rhs);
+    if (rhs.isMarkable())
+        cmpPtr(lhs.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(rhs.toGCThing())));
+    else
+        cmpPtr(lhs.payloadReg(), ImmWord(jv.s.payload.i32));
+
+    if (cond == Equal) {
+        Label done;
+        j(NotEqual, &done);
+        {
+            cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+            j(Equal, label);
+        }
+        bind(&done);
+    } else {
+        j(NotEqual, label);
+
+        cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+        j(NotEqual, label);
+    }
 }
 
 //}}} check_macroassembler_style

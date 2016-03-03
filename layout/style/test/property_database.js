@@ -5987,6 +5987,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[a] repeat( auto-fit,[a b] minmax(0,0) )",
       "[a] 40px repeat(auto-fit,[a b] minmax(1px, 0) [])",
       "[a] auto [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c] auto",
+      "repeat(auto-fill,minmax(1%,auto))",
+      "repeat(auto-fill,minmax(1em,min-content))",
+      "repeat(auto-fill,minmax(1fr,1em))",
+      "repeat(auto-fill,minmax(max-content,1mm))",
     ],
     invalid_values: [
       "",
@@ -6036,9 +6040,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "repeat(auto-fill, 0 [] 0)",
       "repeat(auto-fill, min-content)",
       "repeat(auto-fit,max-content)",
+      "repeat(auto-fit,1fr)",
       "repeat(auto-fit,minmax(auto,auto))",
-      "repeat(auto-fit,[] minmax(1px, min-content))",
-      "repeat(auto-fit,[a] minmax(1%, auto) [])",
+      "repeat(auto-fit,minmax(min-content,1fr))",
+      "repeat(auto-fit,minmax(1fr,auto))",
     ],
     unbalanced_values: [
       "(foo] 40px",

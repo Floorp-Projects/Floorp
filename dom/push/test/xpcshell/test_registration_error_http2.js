@@ -28,7 +28,7 @@ add_task(function* test_registrations_error() {
     PushService.registration({
       scope: 'https://example.net/1',
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
     function(error) {
       return error == 'Database error';

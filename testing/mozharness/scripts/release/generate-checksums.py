@@ -12,8 +12,9 @@ from mozharness.base.script import BaseScript
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.checksums import parse_checksums_file
 from mozharness.mozilla.signing import SigningMixin
+from mozharness.mozilla.buildbot import BuildbotMixin
 
-class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
+class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, BuildbotMixin):
     config_options = [
         [["--stage-product"], {
             "dest": "stage_product",
@@ -30,6 +31,10 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
         [["--bucket-name-prefix"], {
             "dest": "bucket_name_prefix",
             "help": "Prefix of bucket name, eg: net-mozaws-prod-delivery. This will be used to generate a full bucket name (such as net-mozaws-prod-delivery-{firefox,archive}.",
+        }],
+        [["--bucket-name-full"], {
+            "dest": "bucket_name_full",
+            "help": "Full bucket name, eg: net-mozaws-prod-delivery-firefox",
         }],
         [["-j", "--parallelization"], {
             "dest": "parallelization",
@@ -98,6 +103,19 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
     def _pre_config_lock(self, rw_config):
         super(ChecksumsGenerator, self)._pre_config_lock(rw_config)
 
+        # override properties from buildbot properties here as defined by
+        # taskcluster properties
+        self.read_buildbot_config()
+        if not self.buildbot_config:
+            self.warning("Skipping buildbot properties overrides")
+            return
+        # TODO: version should come from repo
+        props = self.buildbot_config["properties"]
+        for prop in ['version', 'build_number']:
+            if props.get(prop):
+                self.info("Overriding %s with %s" % (prop, props[prop]))
+                self.config[prop] = props.get(prop)
+
         # These defaults are set here rather in the config because default
         # lists cannot be completely overidden, only appended to.
         if not self.config.get("formats"):
@@ -115,6 +133,9 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
             ]
 
     def _get_bucket_name(self):
+        if self.config.get('bucket_name_full'):
+            return self.config['bucket_name_full']
+
         suffix = "archive"
         # Firefox has a special bucket, per https://github.com/mozilla-services/product-delivery-tools/blob/master/bucketmap.go
         if self.config["stage_product"] == "firefox":

@@ -324,19 +324,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
 
     Condition testUndefined(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testUndefined(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_UNDEFINED))));
+        return cond;
     }
     Condition testInt32(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testInt32(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
+        return cond;
     }
     Condition testBoolean(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testBoolean(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
+        return cond;
     }
     Condition testDouble(Condition cond, const Address& src) {
         ScratchRegisterScope scratch(asMasm());
@@ -349,9 +346,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return testNumber(cond, scratch);
     }
     Condition testNull(Condition cond, const Address& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        return testNull(cond, scratch);
+        cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
+        return cond;
     }
     Condition testString(Condition cond, const Address& src) {
         ScratchRegisterScope scratch(asMasm());
@@ -527,9 +523,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    template <typename T, typename S>
-    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label);
-
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
         JmpSrc src = jmpSrc(label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
@@ -687,180 +680,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(reg, tag);
     }
 
-    void branchTestUndefined(Condition cond, Register tag, Label* label) {
-        cond = testUndefined(cond, tag);
-        j(cond, label);
-    }
-    void branchTestDouble(Condition cond, Register tag, Label* label) {
-        cond = testDouble(cond, tag);
-        j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, Register tag, Label* label) {
-        cond = testBoolean(cond, tag);
-        j(cond, label);
-    }
-    void branchTestNull(Condition cond, Register tag, Label* label) {
-        cond = testNull(cond, tag);
-        j(cond, label);
-    }
-    void branchTestString(Condition cond, Register tag, Label* label) {
-        cond = testString(cond, tag);
-        j(cond, label);
-    }
-    void branchTestSymbol(Condition cond, Register tag, Label* label) {
-        cond = testSymbol(cond, tag);
-        j(cond, label);
-    }
-    void branchTestObject(Condition cond, Register tag, Label* label) {
-        cond = testObject(cond, tag);
-        j(cond, label);
-    }
-    void branchTestNumber(Condition cond, Register tag, Label* label) {
-        cond = testNumber(cond, tag);
-        j(cond, label);
-    }
-
-    // x64 can test for certain types directly from memory when the payload
-    // of the type is limited to 32 bits. This avoids loading into a register,
-    // accesses half as much memory, and removes a right-shift.
-    void branchTestUndefined(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_UNDEFINED))));
-        j(cond, label);
-    }
-    void branchTestUndefined(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestUndefined(cond, Operand(address), label);
-    }
-    void branchTestInt32Impl(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
-        j(cond, label);
-    }
-    void branchTestDouble(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(operand, scratch);
-        branchTestDouble(cond, scratch, label);
-    }
-    void branchTestDouble(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestDouble(cond, Operand(address), label);
-    }
-    void branchTestBoolean(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
-        j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestBoolean(cond, Operand(address), label);
-    }
-    void branchTestNull(Condition cond, const Operand& operand, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
-        j(cond, label);
-    }
-    void branchTestNull(Condition cond, const Address& address, Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestNull(cond, Operand(address), label);
-    }
-
-    // This one, though, clobbers the ScratchReg.
-    void branchTestObject(Condition cond, const Address& src, Label* label) {
-        cond = testObject(cond, src);
-        j(cond, label);
-    }
-
-    // Perform a type-test on a full Value loaded into a register.
-    // Clobbers the ScratchReg.
-    void branchTestUndefined(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testUndefined(cond, src);
-        j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const ValueOperand& src, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
-        branchTestBoolean(cond, scratch, label);
-    }
-    void branchTestDouble(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testDouble(cond, src);
-        j(cond, label);
-    }
-    void branchTestNull(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testNull(cond, src);
-        j(cond, label);
-    }
-    void branchTestString(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testString(cond, src);
-        j(cond, label);
-    }
-    void branchTestSymbol(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testSymbol(cond, src);
-        j(cond, label);
-    }
-    void branchTestObject(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testObject(cond, src);
-        j(cond, label);
-    }
-    void branchTestNumber(Condition cond, const ValueOperand& src, Label* label) {
-        cond = testNumber(cond, src);
-        j(cond, label);
-    }
-
-    // Perform a type-test on a Value addressed by BaseIndex.
-    // Clobbers the ScratchReg.
-    void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testUndefined(cond, address);
-        j(cond, label);
-    }
-    void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(address, scratch);
-        branchTestBoolean(cond, scratch, label);
-    }
-    void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testDouble(cond, address);
-        j(cond, label);
-    }
-    void branchTestNull(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testNull(cond, address);
-        j(cond, label);
-    }
-    void branchTestString(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testString(cond, address);
-        j(cond, label);
-    }
-    void branchTestSymbol(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testSymbol(cond, address);
-        j(cond, label);
-    }
-    void branchTestObject(Condition cond, const BaseIndex& address, Label* label) {
-        cond = testObject(cond, address);
-        j(cond, label);
-    }
-
-    template <typename T>
-    void branchTestGCThing(Condition cond, const T& src, Label* label) {
-        cond = testGCThing(cond, src);
-        j(cond, label);
-    }
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        cond = testPrimitive(cond, t);
-        j(cond, label);
-    }
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        j(cond, label);
-    }
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label)
-    {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
     Condition testMagic(Condition cond, const ValueOperand& src) {
         ScratchRegisterScope scratch(asMasm());
         splitTag(src, scratch);
@@ -869,15 +688,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testError(Condition cond, const ValueOperand& src) {
         return testMagic(cond, src);
     }
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label) {
-        ScratchRegisterScope scratch(asMasm());
-        MOZ_ASSERT(value.valueReg() != scratch);
-        moveValue(v, scratch);
-        cmpPtr(value.valueReg(), scratch);
-        j(cond, label);
-    }
-    inline void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                Label* label);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
@@ -1054,27 +864,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         test32(operand.valueReg(), operand.valueReg());
         return truthy ? NonZero : Zero;
     }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        test32(operand.valueReg(), operand.valueReg());
-        j(truthy ? NonZero : Zero, label);
-    }
     Condition testStringTruthy(bool truthy, const ValueOperand& value) {
         ScratchRegisterScope scratch(asMasm());
         unboxString(value, scratch);
         cmp32(Operand(scratch, JSString::offsetOfLength()), Imm32(0));
         return truthy ? Assembler::NotEqual : Assembler::Equal;
     }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition cond = testStringTruthy(truthy, value);
-        j(cond, label);
-    }
 
-    inline void loadInt32OrDouble(const Operand& operand, FloatRegister dest);
+    template <typename T>
+    inline void loadInt32OrDouble(const T& src, FloatRegister dest);
 
     template <typename T>
     void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
-            loadInt32OrDouble(Operand(src), dest.fpu());
+            loadInt32OrDouble(src, dest.fpu());
         else if (type == MIRType_Int32 || type == MIRType_Boolean)
             movl(Operand(src), dest.gpr());
         else

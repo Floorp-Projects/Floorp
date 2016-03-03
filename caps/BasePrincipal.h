@@ -30,7 +30,7 @@ public:
   bool operator==(const OriginAttributes& aOther) const
   {
     return mAppId == aOther.mAppId &&
-           mInBrowser == aOther.mInBrowser &&
+           mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mAddonId == aOther.mAddonId &&
            mUserContextId == aOther.mUserContextId &&
            mSignedPkg == aOther.mSignedPkg;
@@ -75,10 +75,10 @@ class PrincipalOriginAttributes : public OriginAttributes
 {
 public:
   PrincipalOriginAttributes() {}
-  PrincipalOriginAttributes(uint32_t aAppId, bool aInBrowser)
+  PrincipalOriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
   {
     mAppId = aAppId;
-    mInBrowser = aInBrowser;
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
   }
 
   // Inheriting OriginAttributes from docshell to document when user navigates.
@@ -97,10 +97,10 @@ class DocShellOriginAttributes : public OriginAttributes
 {
 public:
   DocShellOriginAttributes() {}
-  DocShellOriginAttributes(uint32_t aAppId, bool aInBrowser)
+  DocShellOriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
   {
     mAppId = aAppId;
-    mInBrowser = aInBrowser;
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
   }
 
   // Inheriting OriginAttributes from document to child docshell when an
@@ -116,10 +116,10 @@ class NeckoOriginAttributes : public OriginAttributes
 {
 public:
   NeckoOriginAttributes() {}
-  NeckoOriginAttributes(uint32_t aAppId, bool aInBrowser)
+  NeckoOriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
   {
     mAppId = aAppId;
-    mInBrowser = aInBrowser;
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
   }
 
   // Inheriting OriginAttributes from document to necko when a network request
@@ -159,7 +159,7 @@ public:
       return false;
     }
 
-    if (mInBrowser.WasPassed() && mInBrowser.Value() != aAttrs.mInBrowser) {
+    if (mInIsolatedMozBrowser.WasPassed() && mInIsolatedMozBrowser.Value() != aAttrs.mInIsolatedMozBrowser) {
       return false;
     }
 
@@ -215,7 +215,7 @@ public:
   NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) final;
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) final;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) final;
+  NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
 
@@ -231,7 +231,7 @@ public:
   const PrincipalOriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
-  bool IsInBrowserElement() const { return mOriginAttributes.mInBrowser; }
+  bool IsInIsolatedMozBrowserElement() const { return mOriginAttributes.mInIsolatedMozBrowser; }
 
   enum PrincipalKind {
     eNullPrincipal,

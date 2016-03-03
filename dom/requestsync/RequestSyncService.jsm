@@ -523,7 +523,7 @@ this.RequestSyncService = {
         return;
       }
 
-      if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
+      if (aObj.principal.isInIsolatedMozBrowserElement != aData.isInBrowserElement ||
           aObj.principal.originNoSuffix != aData.origin) {
         return;
       }
@@ -572,7 +572,7 @@ this.RequestSyncService = {
         return;
       }
 
-      if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
+      if (aObj.principal.isInIsolatedMozBrowserElement != aData.isInBrowserElement ||
           aObj.principal.originNoSuffix != aData.origin) {
         return;
       }
@@ -619,7 +619,7 @@ this.RequestSyncService = {
 
     obj.app = { manifestURL: '',
                 origin: aObj.principal.originNoSuffix,
-                isInBrowserElement: aObj.principal.isInBrowserElement };
+                isInBrowserElement: aObj.principal.isInIsolatedMozBrowserElement };
 
     let app = appsService.getAppByLocalId(aObj.principal.appId);
     if (app) {

@@ -231,7 +231,7 @@ class RobocopTestRunner(MochitestDesktop):
         self.log.debug("Profile created at %s" % self.localProfile)
         # some files are not needed for robocop; save time by not pushing
         shutil.rmtree(os.path.join(self.localProfile, 'webapps'))
-        desktop_extensions = ['mochikit@mozilla.org', 'worker-test@mozilla.org', 'workerbootstrap-test@mozilla.org']
+        desktop_extensions = ['mochikit@mozilla.org', 'worker-test@mozilla.org', 'workerbootstrap-test@mozilla.org', 'indexedDB-test@mozilla.org']
         for ext in desktop_extensions:
             shutil.rmtree(os.path.join(self.localProfile, 'extensions', 'staged', ext))
         os.remove(os.path.join(self.localProfile, 'userChrome.css'))

@@ -38,12 +38,6 @@ $(IDL_PARSER_CACHE_DIR)/xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
 # generating xpidllex.py generates xpidlyacc.py too
 $(IDL_PARSER_CACHE_DIR)/xpidlyacc.py: $(IDL_PARSER_CACHE_DIR)/xpidllex.py
 
-check::
-	$(PYTHON_PATH) \
-	  $(PLY_INCLUDE) \
-	  -I. \
-	  $(srcdir)/runtests.py
-
 garbage_files := \
   xpidllex.py \
   xpidllex.pyc \

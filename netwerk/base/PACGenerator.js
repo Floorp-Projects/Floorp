@@ -107,7 +107,7 @@ PACGenerator.prototype = {
       pac += "var origins ='" + appOrigins +
              "'.split(/[ ,]+/).filter(Boolean); " +
              "if ((origins.indexOf('*') > -1 || origins.indexOf(myAppOrigin()) > -1)" +
-             " && isInBrowser()) { return 'PROXY " + proxy + "'; } ";
+             " && isInIsolatedMozBrowser()) { return 'PROXY " + proxy + "'; } ";
     }
 
     // Rules for system proxy.

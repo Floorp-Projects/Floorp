@@ -125,7 +125,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     if (!update) {
         update = new nsOfflineCacheUpdate();
 
-        // Leave aDocument argument null. Only glues and children keep 
+        // Leave aDocument argument null. Only glues and children keep
         // document instances.
         rv = update->Init(manifestURI, documentURI, mLoadingPrincipal, nullptr, nullptr);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -259,10 +259,10 @@ OfflineCacheUpdateParent::SetRemoteTabs(bool aUseRemoteTabs)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetIsInBrowserElement(bool *aIsInBrowserElement)
+OfflineCacheUpdateParent::GetIsInIsolatedMozBrowserElement(bool *aIsInIsolatedMozBrowserElement)
 {
     NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
-    return mLoadingPrincipal->GetIsInBrowserElement(aIsInBrowserElement);
+    return mLoadingPrincipal->GetIsInIsolatedMozBrowserElement(aIsInIsolatedMozBrowserElement);
 }
 
 NS_IMETHODIMP

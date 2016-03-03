@@ -166,7 +166,7 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mTxBytes(0)
   , mRxBytes(0)
   , mAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
-  , mInBrowser(false)
+  , mInIsolatedMozBrowser(false)
 #endif
 {
   if (aGlobal) {
@@ -1100,11 +1100,11 @@ TCPSocket::SetSocketBridgeParent(TCPSocketParent* aBridgeParent)
 }
 
 void
-TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInBrowser)
+TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInIsolatedMozBrowser)
 {
 #ifdef MOZ_WIDGET_GONK
   mAppId = aAppId;
-  mInBrowser = aInBrowser;
+  mInIsolatedMozBrowser = aInIsolatedMozBrowser;
 #endif
 }
 
@@ -1155,8 +1155,8 @@ TCPSocket::SaveNetworkStats(bool aEnforce)
     return;
   }
 
-  nssProxy->SaveAppStats(mAppId, mInBrowser, mActiveNetworkInfo, PR_Now(),
-                         mRxBytes, mTxBytes, false, nullptr);
+  nssProxy->SaveAppStats(mAppId, mInIsolatedMozBrowser, mActiveNetworkInfo,
+                         PR_Now(), mRxBytes, mTxBytes, false, nullptr);
 
   // Reset the counters once the statistics is saved to NetworkStatsServiceProxy.
   mTxBytes = mRxBytes = 0;

@@ -4,14 +4,17 @@
  */
 "use strict";
 
-var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-var { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
-var { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
+const { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm", {});
+const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
+const { MockRegistrar } =
+  Cu.import("resource://testing-common/MockRegistrar.jsm", {});
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
                        .getService(Ci.nsIDebug2).isDebugBuild;

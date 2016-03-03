@@ -968,8 +968,6 @@ NS_IMETHODIMP nsXULWindow::EnsureChromeTreeOwner()
     return NS_OK;
 
   mChromeTreeOwner = new nsChromeTreeOwner();
-  NS_ENSURE_TRUE(mChromeTreeOwner, NS_ERROR_OUT_OF_MEMORY);
-
   NS_ADDREF(mChromeTreeOwner);
   mChromeTreeOwner->XULWindow(this);
 
@@ -982,8 +980,6 @@ NS_IMETHODIMP nsXULWindow::EnsureContentTreeOwner()
     return NS_OK;
 
   mContentTreeOwner = new nsContentTreeOwner(false);
-  NS_ENSURE_TRUE(mContentTreeOwner, NS_ERROR_FAILURE);
-
   NS_ADDREF(mContentTreeOwner);
   mContentTreeOwner->XULWindow(this);
    
@@ -996,8 +992,6 @@ NS_IMETHODIMP nsXULWindow::EnsurePrimaryContentTreeOwner()
     return NS_OK;
 
   mPrimaryContentTreeOwner = new nsContentTreeOwner(true);
-  NS_ENSURE_TRUE(mPrimaryContentTreeOwner, NS_ERROR_FAILURE);
-
   NS_ADDREF(mPrimaryContentTreeOwner);
   mPrimaryContentTreeOwner->XULWindow(this);
 

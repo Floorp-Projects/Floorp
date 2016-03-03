@@ -81,7 +81,7 @@ add_task(function* test1() {
 
   let originAttributes = ChromeUtils.originAttributesToSuffix({
     appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
-    inBrowser: false,
+    inIsolatedMozBrowser: false,
   });
   let newRecord = yield PushService.register({
     scope: 'https://example.com/retry5xxCode',

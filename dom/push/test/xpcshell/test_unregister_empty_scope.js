@@ -32,7 +32,7 @@ add_task(function* test_unregister_empty_scope() {
     PushService.unregister({
       scope: '',
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
     'Expected error for empty endpoint'
   );

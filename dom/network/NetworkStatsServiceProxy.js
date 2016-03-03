@@ -29,7 +29,7 @@ NetworkStatsServiceProxy.prototype = {
    * Function called in the protocol layer (HTTP, FTP, WebSocket ...etc)
    * to pass the per-app stats to NetworkStatsService.
    */
-  saveAppStats: function saveAppStats(aAppId, aIsInBrowser, aNetworkInfo, aTimeStamp,
+  saveAppStats: function saveAppStats(aAppId, aIsInIsolatedMozBrowser, aNetworkInfo, aTimeStamp,
                                       aRxBytes, aTxBytes, aIsAccumulative,
                                       aCallback) {
     if (!aNetworkInfo) {
@@ -40,7 +40,7 @@ NetworkStatsServiceProxy.prototype = {
     }
 
     if (DEBUG) {
-      debug("saveAppStats: " + aAppId + " " + aIsInBrowser + " " +
+      debug("saveAppStats: " + aAppId + " " + aIsInIsolatedMozBrowser + " " +
             aNetworkInfo.type + " " + aTimeStamp + " " +
             aRxBytes + " " + aTxBytes + " " + aIsAccumulative);
     }
@@ -49,7 +49,7 @@ NetworkStatsServiceProxy.prototype = {
       aCallback = aCallback.notify;
     }
 
-    NetworkStatsService.saveStats(aAppId, aIsInBrowser, "", aNetworkInfo,
+    NetworkStatsService.saveStats(aAppId, aIsInIsolatedMozBrowser, "", aNetworkInfo,
                                   aTimeStamp, aRxBytes, aTxBytes,
                                   aIsAccumulative, aCallback);
   },

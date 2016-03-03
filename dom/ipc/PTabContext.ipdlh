@@ -13,20 +13,21 @@ namespace dom {
 // An IPCTabContext which corresponds to a PBrowser opened by a child when it
 // receives window.open().
 //
-// If isBrowserElement is false, this PopupIPCTabContext corresponds to an app
-// frame, and the frame's app-id and app-frame-owner-app-id will be equal to the
-// opener's values.
+// If isMozBrowserElement is false, this PopupIPCTabContext is either a
+// <xul:browser> or an app frame.  The frame's app-id and app-frame-owner-app-id
+// will be equal to the opener's values.  For a <xul:browser>, those app IDs
+// will be NO_APP_ID.
 //
-// If isBrowserElement is true, the frame's browserFrameOwnerAppId will be equal
-// to the opener's app-id.
+// If isMozBrowserElement is true, the frame's browserFrameOwnerAppId will be
+// equal to the opener's app-id.
 //
-// It's an error to set isBrowserElement == false if opener is a browser
+// It's an error to set isMozBrowserElement == false if opener is a mozbrowser
 // element.  Such a PopupIPCTabContext should be rejected by code which receives
 // it.
 struct PopupIPCTabContext
 {
   PBrowserOrId opener;
-  bool isBrowserElement;
+  bool isMozBrowserElement;
 };
 
 // An IPCTabContext which corresponds to an app, browser, or normal frame.
@@ -42,6 +43,10 @@ struct FrameIPCTabContext
   // This value would be empty if the TabContext doesn't own a signed
   // package.
   nsCString signedPkgOriginNoSuffix;
+
+  // Whether this is a mozbrowser frame.  <iframe mozbrowser mozapp> and
+  // <xul:browser> are not considered to be mozbrowser frames.
+  bool isMozBrowserElement;
 };
 
 // XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.

@@ -12187,6 +12187,15 @@ class CGDictionary(CGThing):
         return "DictionaryBase"
 
     def initMethod(self):
+        """
+        This function outputs the body of the Init() method for the dictionary.
+
+        For the most part, this is some bookkeeping for our atoms so
+        we can avoid atomizing strings all the time, then we just spit
+        out the getMemberConversion() output for each member,
+        separated by newlines.
+
+        """
         body = dedent("""
             // Passing a null JSContext is OK only if we're initing from null,
             // Since in that case we will not have to do any property gets
@@ -12504,6 +12513,25 @@ class CGDictionary(CGThing):
         return declType.define()
 
     def getMemberConversion(self, memberInfo):
+        """
+        A function that outputs the initialization of a single dictionary
+        member from the given dictionary value.
+
+        We start with our conversionInfo, which tells us how to
+        convert a JS::Value to whatever type this member is.  We
+        substiture the template from the conversionInfo with values
+        that point to our "temp" JS::Value and our member (which is
+        the C++ value we want to produce).  The output is a string of
+        code to do the conversion.  We store this string in
+        conversionReplacements["convert"].
+
+        Now we have three different ways we might use (or skip) this
+        string of code, depending on whether the value is required,
+        optional with default value, or optional without default
+        value.  We set up a template in the 'conversion' variable for
+        exactly how to do this, then substitute into it from the
+        conversionReplacements dictionary.
+        """
         member, conversionInfo = memberInfo
         replacements = {
             "val": "temp.ref()",
