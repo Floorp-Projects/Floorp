@@ -1576,10 +1576,6 @@ var TelemetryStorageImpl = {
     let ping;
     try {
       ping = JSON.parse(string);
-      // The ping's payload used to be stringified JSON.  Deal with that.
-      if (typeof(ping.payload) == "string") {
-        ping.payload = JSON.parse(ping.payload);
-      }
     } catch (e) {
       this._log.trace("loadPingfile - unparseable ping " + aFilePath, e);
       yield OS.File.remove(aFilePath).catch((ex) => {
