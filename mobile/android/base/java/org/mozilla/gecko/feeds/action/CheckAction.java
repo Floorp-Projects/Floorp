@@ -17,7 +17,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.format.DateFormat;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.mozilla.gecko.AppConstants;
@@ -41,7 +40,7 @@ import java.util.List;
 /**
  * CheckAction: Check if feeds we subscribed to have new content available.
  */
-public class CheckAction implements BaseAction {
+public class CheckAction extends BaseAction {
     /**
      * This extra will be added to Intents fired by the notification.
      */
@@ -61,7 +60,7 @@ public class CheckAction implements BaseAction {
         final ContentResolver resolver = context.getContentResolver();
         final List<Feed> updatedFeeds = new ArrayList<>();
 
-        Log.d(LOGTAG, "Checking feeds for updates..");
+        log("Checking feeds for updates..");
 
         Cursor cursor = urlAnnotations.getFeedSubscriptions(resolver);
         if (cursor == null) {
@@ -80,7 +79,7 @@ public class CheckAction implements BaseAction {
                 }
             }
         } catch (JSONException e) {
-            Log.w(LOGTAG, "Could not deserialize subscription", e);
+            log("Could not deserialize subscription", e);
         } finally {
             cursor.close();
         }
@@ -89,15 +88,15 @@ public class CheckAction implements BaseAction {
     }
 
     private FeedFetcher.FeedResponse checkFeedForUpdates(FeedSubscription subscription) {
-        Log.i(LOGTAG, "Checking feed: " + subscription.getFeedTitle());
+        log("Checking feed: " + subscription.getFeedTitle());
 
         FeedFetcher.FeedResponse response = fetchFeed(subscription);
         if (response == null) {
             return null;
         }
 
-        if (subscription.isNewer(response)) {
-            Log.d(LOGTAG, "* Feed has changed. New item: " + response.feed.getLastItem().getTitle());
+        if (subscription.hasBeenUpdated(response)) {
+            log("* Feed has changed. New item: " + response.feed.getLastItem().getTitle());
 
             subscription.update(response);
 
@@ -167,7 +166,7 @@ public class CheckAction implements BaseAction {
         Intent intent = new Intent(context, BrowserApp.class);
         intent.setAction(BrowserApp.ACTION_VIEW_MULTIPLE);
         intent.putStringArrayListExtra("urls", urls);
-        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
+	    intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 

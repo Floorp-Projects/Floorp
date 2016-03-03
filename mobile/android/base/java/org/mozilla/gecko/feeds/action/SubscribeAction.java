@@ -8,7 +8,6 @@ package org.mozilla.gecko.feeds.action;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -20,7 +19,7 @@ import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 /**
  * SubscribeAction: Try to fetch a feed and create a subscription if successful.
  */
-public class SubscribeAction implements BaseAction {
+public class SubscribeAction extends BaseAction {
     private static final String LOGTAG = "FeedSubscribeAction";
 
     public static final String EXTRA_FEED_URL = "feed_url";
@@ -39,11 +38,11 @@ public class SubscribeAction implements BaseAction {
         final String feedUrl = extras.getString(EXTRA_FEED_URL);
 
         if (urlAnnotations.hasFeedSubscription(context.getContentResolver(), feedUrl)) {
-            Log.d(LOGTAG, "Already subscribed to " + feedUrl + ". Skipping.");
+            log("Already subscribed to " + feedUrl + ". Skipping.");
             return;
         }
 
-        Log.d(LOGTAG, "Subscribing to feed: " + feedUrl);
+        log("Subscribing to feed: " + feedUrl);
 
         subscribe(urlAnnotations, feedUrl);
     }
@@ -61,12 +60,12 @@ public class SubscribeAction implements BaseAction {
     private void subscribe(UrlAnnotations urlAnnotations, String feedUrl) {
         FeedFetcher.FeedResponse response = FeedFetcher.fetchAndParseFeed(feedUrl);
         if (response == null) {
-            Log.w(LOGTAG, String.format("Could not fetch feed (%s). Not subscribing for now.", feedUrl));
+            log(String.format("Could not fetch feed (%s). Not subscribing for now.", feedUrl));
             return;
         }
 
-        Log.d(LOGTAG, "Subscribing to feed: " + response.feed.getTitle());
-        Log.d(LOGTAG, "          Last item: " + response.feed.getLastItem().getTitle());
+        log("Subscribing to feed: " + response.feed.getTitle());
+        log("          Last item: " + response.feed.getLastItem().getTitle());
 
         final FeedSubscription subscription = FeedSubscription.create(feedUrl, response);
 
