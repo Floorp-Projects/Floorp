@@ -16,7 +16,6 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/X11Util.h"
 
 #include "prenv.h"
 #include "GLContextProvider.h"
@@ -866,6 +865,7 @@ GLContextGLX::~GLContextGLX()
     }
 }
 
+
 bool
 GLContextGLX::Init()
 {
@@ -1071,70 +1071,12 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
     int xscreen = DefaultScreen(display);
     Window window = GET_NATIVE_WINDOW(aWidget);
 
-    int numConfigs;
     ScopedXFree<GLXFBConfig> cfgs;
-    if (sGLXLibrary.IsATI() ||
-        !sGLXLibrary.GLXVersionCheck(1, 3)) {
-        const int attribs[] = {
-            LOCAL_GLX_DOUBLEBUFFER, False,
-            0
-        };
-        cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                           xscreen,
-                                           attribs,
-                                           &numConfigs);
-    } else {
-        cfgs = sGLXLibrary.xGetFBConfigs(display,
-                                         xscreen,
-                                         &numConfigs);
-    }
-
-    if (!cfgs) {
-        NS_WARNING("[GLX] glXGetFBConfigs() failed");
-        return nullptr;
-    }
-    NS_ASSERTION(numConfigs > 0, "No FBConfigs found!");
-
-    // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
-    // we could probably do this first and replace the glXGetFBConfigs
-    // with glXChooseConfigs.  Docs are sparklingly clear as always.
-    XWindowAttributes widgetAttrs;
-    if (!XGetWindowAttributes(display, window, &widgetAttrs)) {
-        NS_WARNING("[GLX] XGetWindowAttributes() failed");
-        return nullptr;
-    }
-    const VisualID widgetVisualID = XVisualIDFromVisual(widgetAttrs.visual);
-#ifdef DEBUG
-    printf("[GLX] widget has VisualID 0x%lx\n", widgetVisualID);
-#endif
-
-    int matchIndex = -1;
-
-    for (int i = 0; i < numConfigs; i++) {
-        int visid = None;
-        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-        if (!visid) {
-            continue;
-        }
-        if (sGLXLibrary.IsATI()) {
-            int depth;
-            Visual *visual;
-            FindVisualAndDepth(display, visid, &visual, &depth);
-            if (depth == widgetAttrs.depth &&
-                AreCompatibleVisuals(widgetAttrs.visual, visual)) {
-                matchIndex = i;
-                break;
-            }
-        } else {
-            if (widgetVisualID == static_cast<VisualID>(visid)) {
-                matchIndex = i;
-                break;
-            }
-        }
-    }
-
-    if (matchIndex == -1) {
-        NS_WARNING("[GLX] Couldn't find a FBConfig matching widget visual");
+    GLXFBConfig config;
+    int visid;
+    if (!GLContextGLX::FindFBConfigForWindow(display, xscreen, window, &cfgs,
+                                             &config, &visid))
+    {
         return nullptr;
     }
 
@@ -1142,12 +1084,12 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
 
     SurfaceCaps caps = SurfaceCaps::Any();
     RefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(caps,
-                                                                     shareContext,
-                                                                     false,
-                                                                     display,
-                                                                     window,
-                                                                     cfgs[matchIndex],
-                                                                     false);
+                                                                   shareContext,
+                                                                   false,
+                                                                   display,
+                                                                   window,
+                                                                   config,
+                                                                   false);
 
     return glContext.forget();
 }
@@ -1206,6 +1148,77 @@ ChooseConfig(GLXLibrary* glx, Display* display, int screen, const SurfaceCaps& m
         return true;
     }
 
+    return false;
+}
+
+bool
+GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
+                                    ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,
+                                    GLXFBConfig* const out_config, int* const out_visid)
+{
+    ScopedXFree<GLXFBConfig>& cfgs = *out_scopedConfigArr;
+    int numConfigs;
+    if (sGLXLibrary.IsATI() ||
+        !sGLXLibrary.GLXVersionCheck(1, 3)) {
+        const int attribs[] = {
+            LOCAL_GLX_DOUBLEBUFFER, False,
+            0
+        };
+        cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                           screen,
+                                           attribs,
+                                           &numConfigs);
+    } else {
+        cfgs = sGLXLibrary.xGetFBConfigs(display,
+                                         screen,
+                                         &numConfigs);
+    }
+
+    if (!cfgs) {
+        NS_WARNING("[GLX] glXGetFBConfigs() failed");
+        return false;
+    }
+    NS_ASSERTION(numConfigs > 0, "No FBConfigs found!");
+
+    // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
+    // we could probably do this first and replace the glXGetFBConfigs
+    // with glXChooseConfigs.  Docs are sparklingly clear as always.
+    XWindowAttributes windowAttrs;
+    if (!XGetWindowAttributes(display, window, &windowAttrs)) {
+        NS_WARNING("[GLX] XGetWindowAttributes() failed");
+        return false;
+    }
+    const VisualID windowVisualID = XVisualIDFromVisual(windowAttrs.visual);
+#ifdef DEBUG
+    printf("[GLX] window %lx has VisualID 0x%lx\n", window, windowVisualID);
+#endif
+
+    for (int i = 0; i < numConfigs; i++) {
+        int visid = None;
+        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+        if (!visid) {
+            continue;
+        }
+        if (sGLXLibrary.IsATI()) {
+            int depth;
+            Visual *visual;
+            FindVisualAndDepth(display, visid, &visual, &depth);
+            if (depth == windowAttrs.depth &&
+                AreCompatibleVisuals(windowAttrs.visual, visual)) {
+                *out_config = cfgs[i];
+                *out_visid = visid;
+                return true;
+            }
+        } else {
+            if (windowVisualID == static_cast<VisualID>(visid)) {
+                *out_config = cfgs[i];
+                *out_visid = visid;
+                return true;
+            }
+        }
+    }
+
+    NS_WARNING("[GLX] Couldn't find a FBConfig matching window visual");
     return false;
 }
 
