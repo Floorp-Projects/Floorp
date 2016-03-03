@@ -40,21 +40,23 @@ function* testTopLeft(inspector, view) {
 
   info("Make sure that clicking on the twisty hides pseudo elements");
   let expander = gutters[0].querySelector(".ruleview-expander");
-  ok(!view.element.children[1].hidden, "Pseudo Elements are expanded");
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are expanded");
 
   expander.click();
-  ok(view.element.children[1].hidden,
-    "Pseudo Elements are collapsed by twisty");
+  ok(!view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are collapsed by twisty");
 
   expander.click();
-  ok(!view.element.children[1].hidden, "Pseudo Elements are expanded again");
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are expanded again");
 
   info("Make sure that dblclicking on the header container also toggles " +
        "the pseudo elements");
   EventUtils.synthesizeMouseAtCenter(gutters[0], {clickCount: 2},
                                      view.styleWindow);
-  ok(view.element.children[1].hidden,
-    "Pseudo Elements are collapsed by dblclicking");
+  ok(!view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are collapsed by dblclicking");
 
   let elementRuleView = getRuleViewRuleEditor(view, 3);
 
@@ -133,8 +135,8 @@ function* testTopRight(inspector, view) {
 
   expander.scrollIntoView();
   expander.click();
-  ok(!view.element.children[1].hidden,
-    "Pseudo Elements are shown again after clicking twisty");
+  ok(view.element.firstChild.classList.contains("show-expandable-container"),
+     "Pseudo Elements are shown again after clicking twisty");
 }
 
 function* testBottomRight(inspector, view) {
