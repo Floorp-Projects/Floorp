@@ -63,15 +63,11 @@ exports.items = [
       }
     },
 
-    getSpec: function() {
-      var matches = (typeof this.matches === 'string' || this.matches == null) ?
-                    this.matches :
-                    this.matches.source; // Assume RegExp
+    getSpec: function(commandName, paramName) {
       return {
-        name: 'file',
-        filetype: this.filetype,
-        existing: this.existing,
-        matches: matches
+        name: 'remote',
+        commandName: commandName,
+        paramName: paramName
       };
     },
 
