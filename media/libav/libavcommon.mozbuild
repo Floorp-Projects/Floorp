@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Add assembler flags and includes
-ASFLAGS += CONFIG['LIBAV_FFT_ASFLAGS']
-ASFLAGS += ['-I%s/media/libav' % TOPSRCDIR]
+if CONFIG['LIBAV_FFT_ASFLAGS']:
+    ASFLAGS += CONFIG['LIBAV_FFT_ASFLAGS']
+    ASFLAGS += ['-I%s/media/libav' % TOPSRCDIR]
+    USE_YASM = True
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     # Fix inline symbols and math defines for windows.
