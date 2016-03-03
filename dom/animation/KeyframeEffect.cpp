@@ -633,6 +633,12 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
   for (AnimationProperty& property : mProperties) {
     if (property.mProperty == aProperty) {
       property.mIsRunningOnCompositor = aIsRunning;
+      // We currently only set a performance warning message when animations
+      // cannot be run on the compositor, so if this animation is running
+      // on the compositor we don't need a message.
+      if (aIsRunning) {
+        property.mPerformanceWarning.reset();
+      }
       return;
     }
   }
@@ -2152,6 +2158,18 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
   }
 
   return false;
+}
+
+void
+KeyframeEffectReadOnly::SetPerformanceWarning(nsCSSProperty aProperty,
+                                              const nsAString &aMessage)
+{
+  for (AnimationProperty& property : mProperties) {
+    if (property.mProperty == aProperty) {
+      property.mPerformanceWarning.emplace(aMessage);
+      return;
+    }
+  }
 }
 
 //---------------------------------------------------------------------

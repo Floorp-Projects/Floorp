@@ -187,6 +187,12 @@ public:
   static Maybe<Pair<dom::Element*, CSSPseudoElementType>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
+  // Associates a warning message with effects on |aFrame| if the effect
+  // has |aProperty|.
+  static void SetPerformanceWarning(const nsIFrame* aFrame,
+                                    nsCSSProperty aProperty,
+                                    const nsAString& aMessage);
+
 private:
   ~EffectCompositor() = default;
 
