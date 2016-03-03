@@ -375,8 +375,12 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                 continue
             with open(path, 'r') as f:
                 data = f.read()
-                r = session.post(BUILD_TELEMETRY_SERVER, data=data,
-                                 headers={'Content-Type': 'application/json'})
+                try:
+                    r = session.post(BUILD_TELEMETRY_SERVER, data=data,
+                                     headers={'Content-Type': 'application/json'})
+                except Exception as e:
+                    print('Exception posting to telemetry server: %s' % str(e))
+                    break
                 # TODO: some of these errors are likely not recoverable, as
                 # written, we'll retry indefinitely
                 if r.status_code != 200:
