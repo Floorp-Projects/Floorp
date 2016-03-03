@@ -7,6 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
+Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/event.js");
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
@@ -201,7 +202,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       el = this.elementManager.getKnownElement(pack[1], this.container);
       let button = pack[2];
       let clickCount = pack[3];
-      c = this.coordinates(el, null, null);
+      c = element.coordinates(el);
       this.mouseTap(el.ownerDocument, c.x, c.y, button, clickCount, keyModifiers);
       if (button == 2) {
         this.emitMouseEvent(el.ownerDocument, "contextmenu", c.x, c.y,
@@ -230,7 +231,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
         this.scrolling = true;
       }
       el = this.elementManager.getKnownElement(pack[1], this.container);
-      c = this.coordinates(el, pack[2], pack[3]);
+      c = element.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -249,7 +250,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
 
     case "move":
       el = this.elementManager.getKnownElement(pack[1], this.container);
-      c = this.coordinates(el);
+      c = element.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -309,34 +310,6 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
   }
-};
-
-/**
- * This function generates a pair of coordinates relative to the viewport
- * given a target element and coordinates relative to that element's
- * top-left corner.
- *
- * @param {DOMElement} target
- *     The target to calculate coordinates of.
- * @param {number} x
- *     X coordinate relative to target.  If unspecified, the centre of
- *     the target is used.
- * @param {number} y
- *     Y coordinate relative to target.  If unspecified, the centre of
- *     the target is used.
- */
-action.Chain.prototype.coordinates = function(target, x, y) {
-  let box = target.getBoundingClientRect();
-  if (x == null) {
-    x = box.width / 2;
-  }
-  if (y == null) {
-    y = box.height / 2;
-  }
-  let coords = {};
-  coords.x = box.left + x;
-  coords.y = box.top + y;
-  return coords;
 };
 
 /**
