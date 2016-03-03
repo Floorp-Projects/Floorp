@@ -912,6 +912,10 @@ Toolbox.prototype = {
     if (!this.target.hasActor("gcli")) {
       return promise.resolve();
     }
+    // Disable gcli in browser toolbox until there is usages of it
+    if (this.target.chrome) {
+      return promise.resolve();
+    }
 
     const options = {
       environment: CommandUtils.createEnvironment(this, '_target')

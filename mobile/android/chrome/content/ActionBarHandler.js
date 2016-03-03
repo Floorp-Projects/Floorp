@@ -63,8 +63,9 @@ var ActionBarHandler = {
 
     // Else, update an open ActionBar.
     if (this._selectionID) {
-      if ([this._targetElement, this._contentWindow] ===
-          [Services.focus.focusedElement, Services.focus.focusedWindow]) {
+      let [element, win] = this._getSelectionTargets();
+      if (this._targetElement === element &&
+          this._contentWindow === win) {
         // We have the same focused window/element as before. Trigger "TextSelection:ActionbarStatus"
         // message only if available actions differ from when last we checked.
         this._sendActionBarActions();
@@ -225,8 +226,14 @@ var ActionBarHandler = {
    */
   _sendActionBarActions: function(sendAlways) {
     let actions = this._getActionBarActions();
+    let actionCountUnchanged = this._actionBarActions &&
+      actions.length === this._actionBarActions.length;
+    let actionsMatch = actionCountUnchanged &&
+      this._actionBarActions.every((e,i) => {
+        return e.id === actions[i].id;
+      });
 
-    if (sendAlways || actions !== this._actionBarActions) {
+    if (sendAlways || !actionsMatch) {
       Messaging.sendRequest({
         type: "TextSelection:ActionbarStatus",
         actions: actions,
