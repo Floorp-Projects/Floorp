@@ -49,6 +49,7 @@
 #include "nsSandboxFlags.h"
 #include "xpcpublic.h"
 #include "nsIFrame.h"
+#include "nsDisplayList.h"
 
 namespace mozilla {
 
@@ -469,7 +470,7 @@ EventListenerManager::ProcessApzAwareEventListenerAdd()
     }
   }
 
-  if (doc) {
+  if (doc && nsDisplayListBuilder::LayerEventRegionsEnabled()) {
     nsIPresShell* ps = doc->GetShell();
     if (ps) {
       nsIFrame* f = ps->GetRootFrame();
