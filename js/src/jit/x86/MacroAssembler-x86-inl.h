@@ -380,27 +380,10 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
-MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
 {
-    branchTestInt32Impl(cond, tag, label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
-{
-    branchTestInt32Impl(cond, address, label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
-{
-    branchTestInt32Impl(cond, address, label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
-{
-    branchTestInt32Impl(cond, src, label);
+    test32(value.payloadReg(), value.payloadReg());
+    j(truthy ? NonZero : Zero, label);
 }
 
 //}}} check_macroassembler_style
@@ -427,31 +410,6 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
     convertUInt32ToDouble(src, dest);
     convertDoubleToFloat32(dest, dest);
-}
-
-void
-MacroAssemblerX86::branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                   Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    // Check payload before tag, since payload is more likely to differ.
-    if (cond == NotEqual) {
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
-        branchPtrImpl(NotEqual, tagOf(valaddr), value.typeReg(), label);
-    } else {
-        Label fallthrough;
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
-        branchPtrImpl(Equal, tagOf(valaddr), value.typeReg(), label);
-        bind(&fallthrough);
-    }
-}
-
-template <typename T, typename S>
-void
-MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
-{
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
 }
 
 void
@@ -500,7 +458,7 @@ void
 MacroAssemblerX86::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
 {
     Label isDouble, done;
-    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
     asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
 
     convertInt32ToDouble(source.payloadReg(), dest);

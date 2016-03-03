@@ -17,6 +17,7 @@ tasks:
     reruns: 3
     task:
       routes:
+        - index.gecko.v2.{{project}}.latest.firefox.decision
         - tc-treeherder-stage.{{project}}.{{revision_hash}}
         - tc-treeherder.{{project}}.{{revision_hash}}
       created: '{{now}}'

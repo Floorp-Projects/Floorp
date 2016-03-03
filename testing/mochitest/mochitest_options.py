@@ -407,6 +407,13 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Run tests with electrolysis preferences and test filtering enabled.",
           }],
+        [["--disable-e10s"],
+         {"action": "store_false",
+          "default": False,
+          "dest": "e10s",
+          "help": "Run tests with electrolysis preferences and test filtering disabled.",
+          "suppress": True,
+          }],
         [["--store-chrome-manifest"],
          {"action": "store",
           "help": "Destination path to write a copy of any chrome manifest "

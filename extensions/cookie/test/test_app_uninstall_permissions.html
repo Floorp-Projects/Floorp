@@ -80,7 +80,7 @@ function onInstall() {
   permManager.addFromPrincipal(principal, "foo", Ci.nsIPermissionManager.DENY_ACTION);
   permManager.addFromPrincipal(principal, "bar", Ci.nsIPermissionManager.ALLOW_ACTION, Ci.nsIPermissionManager.EXPIRE_SESSION, 0);
 
-  attrs = {appId: testAppId, inBrowser: true};
+  attrs = {appId: testAppId, inIsolatedMozBrowser: true};
   principal = secMan.createCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
                                              attrs);
   permManager.addFromPrincipal(principal, "foobar", Ci.nsIPermissionManager.ALLOW_ACTION);

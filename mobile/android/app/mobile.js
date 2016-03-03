@@ -618,6 +618,9 @@ pref("dom.webnotifications.enabled", true);
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
 
+// don't allow meta-refresh when backgrounded
+pref("browser.meta_refresh_when_inactive.disabled", true);
+
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto

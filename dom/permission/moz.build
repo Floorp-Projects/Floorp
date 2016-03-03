@@ -50,3 +50,5 @@ FINAL_LIBRARY = 'xul'
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
+
+include('/ipc/chromium/chromium-config.mozbuild')

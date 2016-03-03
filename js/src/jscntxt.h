@@ -663,6 +663,7 @@ namespace js {
 MOZ_ALWAYS_INLINE bool
 CheckForInterrupt(JSContext* cx)
 {
+    MOZ_ASSERT(!cx->isExceptionPending());
     // Add an inline fast-path since we have to check for interrupts in some hot
     // C++ loops of library builtins.
     JSRuntime* rt = cx->runtime();

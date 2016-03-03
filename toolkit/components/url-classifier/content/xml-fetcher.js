@@ -42,7 +42,7 @@ this.PROT_XMLFetcher = function PROT_XMLFetcher() {
   this._request = PROT_NewXMLHttpRequest();
   // implements nsILoadContext
   this.appId = Ci.nsIScriptSecurityManager.SAFEBROWSING_APP_ID;
-  this.isInBrowserElement = false;
+  this.isInIsolatedMozBrowserElement = false;
   this.usePrivateBrowsing = false;
   this.isContent = false;
 }
@@ -52,11 +52,11 @@ PROT_XMLFetcher.prototype = {
    * Function that will be called back upon fetch completion.
    */
   _callback: null,
-  
+
 
   /**
    * Fetches some content.
-   * 
+   *
    * @param page URL to fetch
    * @param callback Function to call back when complete.
    */
@@ -65,9 +65,10 @@ PROT_XMLFetcher.prototype = {
     this._request = PROT_NewXMLHttpRequest();
     this._callback = callback;
     var asynchronous = true;
-    this._request.loadInfo.originAttributes = { appId: this.appId,
-                                                inBrowser: this.isInBrowserElement
-                                              }
+    this._request.loadInfo.originAttributes = {
+      appId: this.appId,
+      inIsolatedMozBrowser: this.isInIsolatedMozBrowserElement
+    };
     this._request.open("GET", page, asynchronous);
     this._request.channel.notificationCallbacks = this;
 
@@ -101,7 +102,7 @@ PROT_XMLFetcher.prototype = {
     var responseText = null;
     var status = Components.results.NS_ERROR_NOT_AVAILABLE;
     try {
-      G_Debug(this, "xml fetch status code: \"" + 
+      G_Debug(this, "xml fetch status code: \"" +
               fetcher._request.status + "\"");
       status = fetcher._request.status;
       responseText = fetcher._request.responseText;

@@ -568,7 +568,7 @@ function run_pac3_test() {
 
 function run_pac4_test() {
   var appId = 10;
-  var isInBrowser = true;
+  var isInIsolatedMozBrowser = true;
   var appOrigin = "apps://browser.gaiamobile.com";
 
   // We have to setup a profile, otherwise indexed db used by webapps
@@ -589,7 +589,7 @@ function run_pac4_test() {
   var pac = 'data:text/plain,' +
             'function FindProxyForURL(url, host) {' +
             ' if (myAppId() == ' + appId +
-            ' && isInBrowser() == ' + isInBrowser +
+            ' && isInIsolatedMozBrowser() == ' + isInIsolatedMozBrowser +
             ' && myAppOrigin() == "' + appOrigin + '")' +
             '   return "PROXY foopy:8080; DIRECT";' +
             '}';
@@ -598,7 +598,7 @@ function run_pac4_test() {
     loadUsingSystemPrincipal: true
   });
   channel.notificationCallbacks =
-    AppsUtils.createLoadContext(appId, isInBrowser);
+    AppsUtils.createLoadContext(appId, isInIsolatedMozBrowser);
 
   // Configure PAC
   prefs.setIntPref("network.proxy.type", 2);
@@ -745,7 +745,7 @@ function host_filters_1()
   uriStrUseProxyList = [ "http://www.mozilla.com/",
                              "http://mail.google.com/",
                              "http://somehost.domain.co.uk/",
-                             "http://somelocalhost/" ];  
+                             "http://somelocalhost/" ];
   check_host_filters(uriStrUseProxyList, false, host_filters_2);
 }
 
@@ -769,7 +769,7 @@ function host_filters_4()
 {
   // Cleanup
   prefs.setCharPref("network.proxy.no_proxies_on", "");
-  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), "");  
+  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), "");
 
   run_myipaddress_test();
 }
@@ -811,7 +811,7 @@ function myipaddress_callback(pi)
   do_check_neq(pi.host, null);
   do_check_neq(pi.host, "127.0.0.1");
   do_check_neq(pi.host, "::1");
-  
+
   run_myipaddress_test_2();
 }
 
@@ -849,7 +849,7 @@ function myipaddress2_callback(pi)
   do_check_neq(pi.host, null);
   do_check_neq(pi.host, "127.0.0.1");
   do_check_neq(pi.host, "::1");
-  
+
   run_failed_script_test();
 }
 

@@ -39,7 +39,7 @@ interface TextTrack : EventTarget {
   [Throws]
   void removeCue(VTTCue cue);
 
-           //(Not implemented)attribute EventHandler oncuechange;
+           attribute EventHandler oncuechange;
 };
 
 // Mozilla Extensions

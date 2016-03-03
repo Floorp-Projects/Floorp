@@ -871,6 +871,12 @@ function test_http2_folded_header() {
   chan.asyncOpen2(listener);
 }
 
+function test_http2_empty_data() {
+  var chan = makeChan("https://localhost:" + serverPort + "/emptydata");
+  var listener = new Http2CheckListener();
+  chan.asyncOpen2(listener);
+}
+
 function test_complete() {
   resetPrefs();
   do_test_pending();
@@ -915,6 +921,7 @@ var tests = [ test_http2_post_big
             , test_http2_illegalhpacksoft
             , test_http2_illegalhpackhard
             , test_http2_folded_header
+            , test_http2_empty_data
             // Add new tests above here - best to add new tests before h1
             // streams get too involved
             // These next two must always come in this order

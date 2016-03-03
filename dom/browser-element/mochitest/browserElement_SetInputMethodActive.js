@@ -93,7 +93,7 @@ function setPermissions() {
       url: SimpleTest.getTestFileURL('/file_empty.html'),
       originAttributes: {
         appId: currentAppId,
-        inBrowser: true
+        inIsolatedMozBrowser: true
       }
     }
   }];

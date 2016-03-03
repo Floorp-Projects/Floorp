@@ -856,7 +856,7 @@ class Marionette(object):
                 let value = {
                               'url': document.nodePrincipal.URI.spec,
                               'appId': document.nodePrincipal.appId,
-                              'isInBrowserElement': document.nodePrincipal.isInBrowserElement,
+                              'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
                               'type': arguments[0]
                             };
                 return value;
@@ -867,7 +867,7 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let attrs = {appId: perm.appId, inBrowser: perm.isInBrowserElement};
+                let attrs = {appId: perm.appId, inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
                 let principal = secMan.createCodebasePrincipal(
                                 Services.io.newURI(perm.url, null, null),
                                 attrs);
@@ -908,7 +908,7 @@ class Marionette(object):
                 let value = {
                               'url': document.nodePrincipal.URI.spec,
                               'appId': document.nodePrincipal.appId,
-                              'isInBrowserElement': document.nodePrincipal.isInBrowserElement,
+                              'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
                               'type': perm_type,
                               'action': allow
                             };
@@ -929,7 +929,7 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let attrs = {appId: perm.appId, inBrowser: perm.isInBrowserElement};
+                let attrs = {appId: perm.appId, inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
                 let principal = secMan.createCodebasePrincipal(Services.io.newURI(perm.url, null, null),
                                                                attrs);
                 Services.perms.addFromPrincipal(principal, perm.type, perm.action);

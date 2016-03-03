@@ -5,6 +5,7 @@
 from marionette_driver import By, Wait
 
 from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.deck import Panel
 
 
 class Deck(UIBaseLib):
@@ -122,16 +123,7 @@ class Deck(UIBaseLib):
         return panel
 
 
-class Panel(UIBaseLib):
-
-    def __eq__(self, other):
-        return self.element.get_attribute('id') == other.element.get_attribute('id')
-
-    def __ne__(self, other):
-        return self.element.get_attribute('id') != other.element.get_attribute('id')
-
-    def __str__(self):
-        return self.element.get_attribute('id')
+class PageInfoPanel(Panel):
 
     @property
     def tab(self):
@@ -143,23 +135,23 @@ class Panel(UIBaseLib):
         return self.window.window_element.find_element(By.ID, name + 'Tab')
 
 
-class FeedPanel(Panel):
+class FeedPanel(PageInfoPanel):
     pass
 
 
-class GeneralPanel(Panel):
+class GeneralPanel(PageInfoPanel):
     pass
 
 
-class MediaPanel(Panel):
+class MediaPanel(PageInfoPanel):
     pass
 
 
-class PermissionsPanel(Panel):
+class PermissionsPanel(PageInfoPanel):
     pass
 
 
-class SecurityPanel(Panel):
+class SecurityPanel(PageInfoPanel):
 
     @property
     def domain(self):

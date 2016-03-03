@@ -19,7 +19,7 @@ include w3c-css/received/reftest.list
 include abs-pos/reftest.list
 include position-relative/reftest.list
 
-include async-scrolling/reftest.list
+skip-if(!asyncPan) include async-scrolling/reftest.list
 
 # backgrounds/
 include backgrounds/reftest.list
@@ -411,4 +411,4 @@ include invalidation/reftest.list
 include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
-include ../../gfx/layers/apz/test/reftest/reftest.list
+skip-if(!asyncPan) include ../../gfx/layers/apz/test/reftest/reftest.list

@@ -260,13 +260,25 @@ uint16_t
 nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 {
     uint32_t appId = aPrin->GetAppId();
-    bool inMozBrowser = aPrin->GetIsInBrowserElement();
+
+    // After bug 1238160, the principal no longer knows how to answer "is this a
+    // browser element", which is really what this code path wants. Currently,
+    // desktop is the only platform where we intend to disable isolation on a
+    // browser frame, so non-desktop should be able to assume that
+    // inIsolatedMozBrowser is true for all mozbrowser frames.  Additionally,
+    // apps are no longer used on desktop, so appId is always NO_APP_ID.  We use
+    // a release assertion in nsFrameLoader::OwnerIsIsolatedMozBrowserFrame so
+    // that platforms with apps can assume inIsolatedMozBrowser is true for all
+    // mozbrowser frames.
+    bool inIsolatedMozBrowser = aPrin->GetIsInIsolatedMozBrowserElement();
+
     NS_WARN_IF_FALSE(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
                      "Asking for app status on a principal with an unknown app id");
     // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
     // and they are not inside a mozbrowser.
     if (appId == nsIScriptSecurityManager::NO_APP_ID ||
-        appId == nsIScriptSecurityManager::UNKNOWN_APP_ID || inMozBrowser)
+        appId == nsIScriptSecurityManager::UNKNOWN_APP_ID ||
+        inIsolatedMozBrowser)
     {
         return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
     }
@@ -291,7 +303,7 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 
     // The app could contain a cross-origin iframe - make sure that the content
     // is actually same-origin with the app.
-    MOZ_ASSERT(inMozBrowser == false, "Checked this above");
+    MOZ_ASSERT(inIsolatedMozBrowser == false, "Checked this above");
     PrincipalOriginAttributes attrs(appId, false);
     nsCOMPtr<nsIPrincipal> appPrin = BasePrincipal::CreateCodebasePrincipal(appURI, attrs);
     NS_ENSURE_TRUE(appPrin, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
@@ -590,7 +602,7 @@ static nsresult
 DenyAccessIfURIHasFlags(nsIURI* aURI, uint32_t aURIFlags)
 {
     NS_PRECONDITION(aURI, "Must have URI!");
-    
+
     bool uriHasFlags;
     nsresult rv =
         NS_URIChainHasFlags(aURI, aURIFlags, &uriHasFlags);
@@ -724,7 +736,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                  "must have a URI!");
         return NS_ERROR_UNEXPECTED;
     }
-    
+
     // Automatic loads are not allowed from certain protocols.
     if (aFlags & nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT) {
         nsresult rv =
@@ -958,7 +970,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
             console->LogStringMessage(message.get());
         }
     }
-    
+
     return NS_OK;
 }
 
@@ -1170,13 +1182,13 @@ nsScriptSecurityManager::CreateExpandedPrincipal(nsIPrincipal** aPrincipalArray,
 NS_IMETHODIMP
 nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
                                                  uint32_t aAppId,
-                                                 bool aInMozBrowser,
+                                                 bool aInIsolatedMozBrowser,
                                                  nsIPrincipal** aPrincipal)
 {
   NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
                  NS_ERROR_INVALID_ARG);
 
-  PrincipalOriginAttributes attrs(aAppId, aInMozBrowser);
+  PrincipalOriginAttributes attrs(aAppId, aInIsolatedMozBrowser);
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -1566,7 +1578,7 @@ nsScriptSecurityManager::InitPrefs()
 namespace mozilla {
 
 void
-GetJarPrefix(uint32_t aAppId, bool aInMozBrowser, nsACString& aJarPrefix)
+GetJarPrefix(uint32_t aAppId, bool aInIsolatedMozBrowser, nsACString& aJarPrefix)
 {
   MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
@@ -1577,14 +1589,14 @@ GetJarPrefix(uint32_t aAppId, bool aInMozBrowser, nsACString& aJarPrefix)
   aJarPrefix.Truncate();
 
   // Fallback.
-  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInMozBrowser) {
+  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInIsolatedMozBrowser) {
     return;
   }
 
   // aJarPrefix = appId + "+" + { 't', 'f' } + "+";
   aJarPrefix.AppendInt(aAppId);
   aJarPrefix.Append('+');
-  aJarPrefix.Append(aInMozBrowser ? 't' : 'f');
+  aJarPrefix.Append(aInIsolatedMozBrowser ? 't' : 'f');
   aJarPrefix.Append('+');
 
   return;
@@ -1594,12 +1606,12 @@ GetJarPrefix(uint32_t aAppId, bool aInMozBrowser, nsACString& aJarPrefix)
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetJarPrefix(uint32_t aAppId,
-                                      bool aInMozBrowser,
+                                      bool aInIsolatedMozBrowser,
                                       nsACString& aJarPrefix)
 {
   MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
-  mozilla::GetJarPrefix(aAppId, aInMozBrowser, aJarPrefix);
+  mozilla::GetJarPrefix(aAppId, aInIsolatedMozBrowser, aJarPrefix);
   return NS_OK;
 }
 
@@ -1694,4 +1706,3 @@ nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
 
     return NS_OK;
 }
-

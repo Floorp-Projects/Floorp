@@ -684,21 +684,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testMagic(Condition cond, const BaseIndex& src);
     Condition testGCThing(Condition cond, const BaseIndex& src);
 
-    template <typename T>
-    void branchTestGCThing(Condition cond, const T& t, Label* label) {
-        Condition c = testGCThing(cond, t);
-        ma_b(label, c);
-    }
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        Condition c = testPrimitive(cond, t);
-        ma_b(label, c);
-    }
-
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label);
-
     // Unboxing code.
     void unboxNonDouble(const ValueOperand& operand, Register dest);
     void unboxNonDouble(const Address& src, Register dest);
@@ -762,74 +747,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    template<typename T>
-    void branchTestInt32Impl(Condition cond, const T & t, Label* label) {
-        Condition c = testInt32(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestBoolean(Condition cond, const T & t, Label* label) {
-        Condition c = testBoolean(cond, t);
-        ma_b(label, c);
-    }
-
-    template<typename T>
-    void branchTestDouble(Condition cond, const T & t, Label* label) {
-        Condition c = testDouble(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestNull(Condition cond, const T & t, Label* label) {
-        Condition c = testNull(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestObject(Condition cond, const T & t, Label* label) {
-        Condition c = testObject(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestString(Condition cond, const T & t, Label* label) {
-        Condition c = testString(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestSymbol(Condition cond, const T & t, Label* label) {
-        Condition c = testSymbol(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestUndefined(Condition cond, const T & t, Label* label) {
-        Condition c = testUndefined(cond, t);
-        ma_b(label, c);
-    }
-    template <typename T>
-    void branchTestNumber(Condition cond, const T& t, Label* label) {
-        cond = testNumber(cond, t);
-        ma_b(label, cond);
-    }
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        ma_b(label, cond);
-    }
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testBooleanTruthy(truthy, operand);
-        ma_b(label, c);
-    }
-    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
-        Condition c = testDoubleTruthy(truthy, reg);
-        ma_b(label, c);
-    }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition c = testStringTruthy(truthy, value);
-        ma_b(label, c);
-    }
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,

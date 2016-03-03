@@ -58,7 +58,7 @@ RequestSyncManager.prototype = {
     return this.sendMessage("RequestSyncManager:Registrations", {});
   },
 
-  setPolicy: function(aTask, aOrigin, aManifestURL, aIsInBrowserElement,
+  setPolicy: function(aTask, aOrigin, aManifestURL, aIsInIsolatedMozBrowserElement,
                       aState, aOverwrittenMinInterval) {
     debug('setPolicy');
 
@@ -66,19 +66,19 @@ RequestSyncManager.prototype = {
       { task: aTask,
         origin: aOrigin,
         manifestURL: aManifestURL,
-        isInBrowserElement: aIsInBrowserElement,
+        isInBrowserElement: aIsInIsolatedMozBrowserElement,
         state: aState,
         overwrittenMinInterval: aOverwrittenMinInterval });
   },
 
-  runTask: function(aTask, aOrigin, aManifestURL, aIsInBrowserElement) {
+  runTask: function(aTask, aOrigin, aManifestURL, aIsInIsolatedMozBrowserElement) {
     debug('runTask');
 
     return this.sendMessage("RequestSyncManager:RunTask",
       { task: aTask,
         origin: aOrigin,
         manifestURL: aManifestURL,
-        isInBrowserElement: aIsInBrowserElement });
+        isInBrowserElement: aIsInIsolatedMozBrowserElement });
   },
 
   registrationsResult: function(aData) {

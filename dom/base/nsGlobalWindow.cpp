@@ -457,8 +457,6 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
 // CIDs
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
-static const char sPopStatePrefStr[] = "browser.history.allowPopState";
-
 #define NETWORK_UPLOAD_EVENT_NAME     NS_LITERAL_STRING("moznetworkupload")
 #define NETWORK_DOWNLOAD_EVENT_NAME   NS_LITERAL_STRING("moznetworkdownload")
 
@@ -1158,6 +1156,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsPopupSpam(false),
     mBlockScriptedClosingFlag(false),
     mWasOffline(false),
+    mHasHadSlowScript(false),
     mNotifyIdleObserversIdleOnThaw(false),
     mNotifyIdleObserversActiveOnThaw(false),
     mCreatingInnerWindow(false),
@@ -3801,7 +3800,7 @@ nsGlobalWindow::GetParentOuter()
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> parent;
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell->GetIsMozBrowserOrApp()) {
     parent = AsOuter();
   } else {
     parent = GetParent();
@@ -3967,7 +3966,7 @@ nsGlobalWindow::GetContentInternal(ErrorResult& aError, bool aUnprivilegedCaller
 
   // If we're contained in <iframe mozbrowser> or <iframe mozapp>, then
   // GetContent is the same as window.top.
-  if (mDocShell && mDocShell->GetIsInBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsInMozBrowserOrApp()) {
     return GetTopOuter();
   }
 
@@ -7175,7 +7174,7 @@ nsGlobalWindow::ResizeToOuter(int32_t aWidth, int32_t aHeight, ErrorResult& aErr
    * If caller is a browser-element then dispatch a resize event to
    * the embedder.
    */
-  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsMozBrowserOrApp()) {
     CSSIntSize size(aWidth, aHeight);
     if (!DispatchResizeEvent(size)) {
       // The embedder chose to prevent the default action for this
@@ -7225,7 +7224,7 @@ nsGlobalWindow::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
    * If caller is a browser-element then dispatch a resize event to
    * parent.
    */
-  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsMozBrowserOrApp()) {
     CSSIntSize size;
     if (NS_FAILED(GetInnerSize(size))) {
       return;
@@ -8174,7 +8173,7 @@ nsGlobalWindow::CloseOuter(bool aTrustedCaller)
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
   if (!mDocShell || IsInModalState() ||
-      (IsFrame() && !mDocShell->GetIsBrowserOrApp())) {
+      (IsFrame() && !mDocShell->GetIsMozBrowserOrApp())) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
@@ -8701,7 +8700,7 @@ nsGlobalWindow::GetFrameElementOuter()
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  if (!mDocShell || mDocShell->GetIsBrowserOrApp()) {
+  if (!mDocShell || mDocShell->GetIsMozBrowserOrApp()) {
     return nullptr;
   }
 
@@ -9916,11 +9915,6 @@ nsGlobalWindow::DispatchSyncPopState()
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be safe to run script here.");
 
-  // Check that PopState hasn't been pref'ed off.
-  if (!Preferences::GetBool(sPopStatePrefStr, false)) {
-    return NS_OK;
-  }
-
   nsresult rv = NS_OK;
 
   // Bail if the window is frozen.
@@ -10661,6 +10655,13 @@ nsGlobalWindow::ShowSlowScriptDialog()
   JS::UniqueChars filename;
   unsigned lineno;
   bool hasFrame = JS::DescribeScriptedCaller(cx, &filename, &lineno);
+
+  // Record the slow script event if we haven't done so already for this inner window
+  // (which represents a particular page to the user).
+  if (!mHasHadSlowScript) {
+    Telemetry::Accumulate(Telemetry::SLOW_SCRIPT_PAGE_COUNT, 1);
+  }
+  mHasHadSlowScript = true;
 
   if (XRE_IsContentProcess() &&
       ProcessHangMonitor::Get()) {

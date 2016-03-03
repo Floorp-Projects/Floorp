@@ -205,7 +205,6 @@ MSG_DEF(JSMSG_BAD_FOR_LEFTSIDE,        0, JSEXN_SYNTAXERR, "invalid for-in/of le
 MSG_DEF(JSMSG_LEXICAL_DECL_DEFINES_LET,0, JSEXN_SYNTAXERR, "a lexical declaration can't define a 'let' binding")
 MSG_DEF(JSMSG_LET_STARTING_FOROF_LHS,  0, JSEXN_SYNTAXERR, "an expression X in 'for (X of Y)' must not start with 'let'")
 MSG_DEF(JSMSG_BAD_GENERATOR_RETURN,    1, JSEXN_TYPEERR,   "generator function {0} returns a value")
-MSG_DEF(JSMSG_BAD_YIELD_SYNTAX,        0, JSEXN_SYNTAXERR, "yield expression must be parenthesized")
 MSG_DEF(JSMSG_BAD_GENERATOR_SYNTAX,    0, JSEXN_SYNTAXERR, "generator expression must be parenthesized")
 MSG_DEF(JSMSG_BAD_GENEXP_BODY,         1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,       0, JSEXN_REFERENCEERR, "invalid increment/decrement operand")
