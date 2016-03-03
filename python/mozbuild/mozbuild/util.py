@@ -72,6 +72,19 @@ class EmptyValue(unicode):
         super(EmptyValue, self).__init__()
 
 
+class ReadOnlyNamespace(object):
+    """A class for objects with immutable attributes set at initialization."""
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            super(ReadOnlyNamespace, self).__setattr__(k, v)
+
+    def __delattr__(self, key):
+        raise Exception('Object does not support deletion.')
+
+    def __setattr__(self, key, value):
+        raise Exception('Object does not support assignment.')
+
+
 class ReadOnlyDict(dict):
     """A read-only dictionary."""
     def __init__(self, *args, **kwargs):
