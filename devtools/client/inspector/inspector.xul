@@ -193,25 +193,21 @@
       </tabs>
       <tabpanels flex="1">
         <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
-            <html:div id="ruleview-toolbar">
-              <html:div class="devtools-searchbox">
-                <html:input id="ruleview-searchbox"
-                            class="devtools-searchinput devtools-rule-searchbox"
-                            type="search"
-                            placeholder="&filterStylesPlaceholder;"/>
-                <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
-              </html:div>
-              <html:div id="ruleview-command-toolbar">
-                <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
-                <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
-              </html:div>
+          <html:div id="ruleview-toolbar" class="devtools-toolbar devtools-sidebar-toolbar">
+            <html:div class="devtools-searchbox">
+              <html:input id="ruleview-searchbox"
+                          class="devtools-searchinput devtools-rule-searchbox"
+                          type="search"
+                          placeholder="&filterStylesPlaceholder;"/>
+              <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
             </html:div>
-            <html:div id="pseudo-class-panel" hidden="true">
-              <html:label><html:input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</html:label>
-              <html:label><html:input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</html:label>
-              <html:label><html:input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</html:label>
+            <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
+            <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
           </html:div>
+          <html:div id="pseudo-class-panel" class="devtools-toolbar devtools-sidebar-toolbar" hidden="true" tabindex="-1">
+            <html:label><html:input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</html:label>
+            <html:label><html:input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</html:label>
+            <html:label><html:input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</html:label>
           </html:div>
 
           <html:div id="ruleview-container" class="ruleview">
@@ -219,7 +215,7 @@
         </tabpanel>
 
         <tabpanel id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div class="devtools-toolbar">
+          <html:div class="devtools-toolbar devtools-sidebar-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="computedview-searchbox"
                           class="devtools-searchinput devtools-rule-searchbox"
@@ -242,7 +238,7 @@
         </tabpanel>
 
         <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div class="devtools-toolbar">
+          <html:div class="devtools-toolbar devtools-sidebar-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="font-preview-text-input"
                           class="devtools-textinput"

@@ -13,8 +13,6 @@
   --rule-filter-icon: url(images/magnifying-glass.png);
 }
 
-/* Rule View Tabpanel */
-
 #sidebar-panel-ruleview {
   margin: 0;
   display: flex;
@@ -26,47 +24,6 @@
   position: absolute;
 }
 
-/* Rule View Toolbar */
-
-#ruleview-toolbar-container {
-  display: flex;
-  flex-direction: column;
-  height: auto;
-}
-
-#ruleview-toolbar {
-  display: flex;
-  height: 23px;
-}
-
-#ruleview-toolbar > .devtools-searchbox:first-child {
-  -moz-padding-start: 0px;
-}
-
-#ruleview-command-toolbar {
-  display: flex;
-}
-
-#pseudo-class-panel {
-  display: flex;
-  height: 24px;
-  overflow: hidden;
-  transition: height 150ms ease;
-}
-
-#pseudo-class-panel[hidden] {
-  height: 0px;
-}
-
-#pseudo-class-panel > label {
-  -moz-user-select: none;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-}
-
-/* Rule View Container */
-
 #ruleview-container {
   -moz-user-select: text;
   overflow: auto;
@@ -77,6 +34,33 @@
   pointer-events: none;
   visibility: collapse;
   transition: visibility 0.25s;
+}
+
+.devtools-sidebar-toolbar {
+  display: flex;
+}
+
+#pseudo-class-panel {
+  position: relative;
+  margin-top: -1px;
+  margin-bottom: -1px;
+  overflow-y: hidden;
+  max-height: 24px;
+  outline: 0 !important;
+  transition-property: max-height;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+#pseudo-class-panel[hidden] {
+  max-height: 0px;
+}
+
+#pseudo-class-panel > label {
+  -moz-user-select: none;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 .ruleview-code {
