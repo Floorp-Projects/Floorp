@@ -55,6 +55,11 @@ protected:
                      uint32_t aMapIndex, GraphTime aFrom, GraphTime aTo,
                      bool* aOutputTrackFinished);
 
+  void AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+                                  TrackID aTrackID) override;
+  void RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+                                     TrackID aTrackID) override;
+
   nsTArray<TrackMapEntry> mTrackMap;
 
   // The next available TrackID, starting at 1 and progressing upwards.
@@ -63,6 +68,10 @@ protected:
 
   // Sorted array of used TrackIDs that require manual tracking.
   nsTArray<TrackID> mUsedTracks;
+
+  // Direct track listeners that have not been forwarded to their input stream
+  // yet. We'll forward these as their inputs become available.
+  nsTArray<TrackBound<MediaStreamTrackDirectListener>> mPendingDirectTrackListeners;
 };
 
 } // namespace mozilla

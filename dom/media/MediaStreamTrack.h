@@ -22,6 +22,7 @@ class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
 class MediaStreamTrackListener;
+class MediaStreamTrackDirectListener;
 class PeerConnectionImpl;
 class PeerIdentity;
 class ProcessedMediaStream;
@@ -300,6 +301,15 @@ public:
    * of this track.
    */
   void RemoveListener(MediaStreamTrackListener* aListener);
+
+  /**
+   * Attempts to add a direct track listener to this track.
+   * Callers must listen to the NotifyInstalled event to know if installing
+   * the listener succeeded (tracks originating from SourceMediaStreams) or
+   * failed (e.g., WebAudio originated tracks).
+   */
+  void AddDirectListener(MediaStreamTrackDirectListener *aListener);
+  void RemoveDirectListener(MediaStreamTrackDirectListener  *aListener);
 
   /**
    * Sets up a MediaInputPort from the underlying track that this

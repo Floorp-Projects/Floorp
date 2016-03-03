@@ -219,6 +219,24 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     map->mInputTrackID = aTrack->GetID();
     map->mOutputTrackID = track->GetID();
     map->mSegment = aTrack->GetSegment()->CreateEmptyClone();
+
+    for (int32_t i = mPendingDirectTrackListeners.Length() - 1; i >= 0; --i) {
+      TrackBound<MediaStreamTrackDirectListener>& bound =
+        mPendingDirectTrackListeners[i];
+      if (bound.mTrackID != map->mOutputTrackID) {
+        continue;
+      }
+      MediaStream* source = map->mInputPort->GetSource();
+      STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p adding direct listener "
+                                   "%p for track %d. Forwarding to input "
+                                   "stream %p track %d.",
+                                   this, bound.mListener.get(), bound.mTrackID,
+                                   source, map->mInputTrackID));
+      source->AddDirectTrackListenerImpl(bound.mListener.forget(),
+                                         map->mInputTrackID);
+      mPendingDirectTrackListeners.RemoveElementAt(i);
+    }
+
     return mTrackMap.Length() - 1;
   }
 
@@ -316,4 +334,55 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       outputTrack->GetSegment()->AppendFrom(segment);
     }
   }
+
+void
+TrackUnionStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+                                             TrackID aTrackID)
+{
+  RefPtr<MediaStreamTrackDirectListener> listener = aListener;
+
+  for (TrackMapEntry& entry : mTrackMap) {
+    if (entry.mOutputTrackID == aTrackID) {
+      MediaStream* source = entry.mInputPort->GetSource();
+      STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p adding direct listener "
+                                   "%p for track %d. Forwarding to input "
+                                   "stream %p track %d.",
+                                   this, listener.get(), aTrackID, source,
+                                   entry.mInputTrackID));
+      source->AddDirectTrackListenerImpl(listener.forget(),
+                                         entry.mInputTrackID);
+      return;
+    }
+  }
+
+  TrackBound<MediaStreamTrackDirectListener>* bound =
+    mPendingDirectTrackListeners.AppendElement();
+  bound->mListener = listener.forget();
+  bound->mTrackID = aTrackID;
+}
+
+void
+TrackUnionStream::RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+                                                TrackID aTrackID)
+{
+  for (TrackMapEntry& entry : mTrackMap) {
+    // OutputTrackID is unique to this stream so we only need to do this once.
+    if (entry.mOutputTrackID != aTrackID) {
+      continue;
+    }
+    // Forward to the input
+    MediaStream* source = entry.mInputPort->GetSource();
+    source->RemoveDirectTrackListenerImpl(aListener, entry.mInputTrackID);
+    return;
+  }
+
+  for (size_t i = 0; i < mPendingDirectTrackListeners.Length(); ++i) {
+    TrackBound<MediaStreamTrackDirectListener>& bound =
+      mPendingDirectTrackListeners[i];
+    if (bound.mListener == aListener && bound.mTrackID == aTrackID) {
+      mPendingDirectTrackListeners.RemoveElementAt(i);
+      return;
+    }
+  }
+}
 } // namespace mozilla
