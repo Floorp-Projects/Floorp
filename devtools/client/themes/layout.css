@@ -4,7 +4,6 @@
 
 #sidebar-panel-layoutview {
   display: block;
-  overflow: auto;
 }
 
 #layout-container {
@@ -42,7 +41,7 @@
   -moz-box-pack: end;
 }
 
-@media (max-height: 250px) {
+@media (max-height: 228px) {
   #layout-header {
     padding-top: 0;
     padding-bottom: 0;
@@ -92,7 +91,7 @@
 
 /* Respond to window size change by changing the size of the regions */
 
-@media (max-height: 250px) {
+@media (max-height: 228px) {
   #layout-content {
     height: 18px;
   }
@@ -228,7 +227,7 @@
 /* Coordinates should be different when the window is small, because we make
    the regions smaller then */
 
-@media (max-height: 250px) {
+@media (max-height: 228px) {
   .layout-padding.layout-top {
     top: 37px;
   }
@@ -301,7 +300,7 @@
   color: var(--theme-highlight-blue);
 }
 
-@media (max-height: 250px) {
+@media (max-height: 228px) {
   .layout-legend {
     margin: 2px 6px;
   }
