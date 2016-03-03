@@ -617,10 +617,13 @@ DOMMediaStream::InitAudioCaptureStream(MediaStreamGraph* aGraph)
 {
   const TrackID AUDIO_TRACK = 1;
 
-  InitInputStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK), aGraph);
+  AudioCaptureStream* audioCaptureStream =
+    static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK));
+  InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
   CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString());
+  audioCaptureStream->Start();
 }
 
 void
