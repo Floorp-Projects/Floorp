@@ -29,7 +29,23 @@ nsTransactionStack::Push(nsTransactionItem *aTransaction)
   }
 
   // The stack's bottom is the front of the deque, and the top is the back.
-  mDeque.push_back(aTransaction);
+  RefPtr<nsTransactionItem> item(aTransaction);
+  Push(item.forget());
+}
+
+void
+nsTransactionStack::Push(already_AddRefed<nsTransactionItem> aTransaction)
+{
+  RefPtr<nsTransactionItem> item(aTransaction);
+  if (!item) {
+    return;
+  }
+
+  // XXX we really want to use emplace_back here, but we don't have a
+  // C++11 stdlib everywhere.
+  RefPtr<nsTransactionItem> dummy;
+  auto pushedItem = mDeque.insert(mDeque.end(), dummy);
+  *pushedItem = item.forget();
 }
 
 already_AddRefed<nsTransactionItem>
