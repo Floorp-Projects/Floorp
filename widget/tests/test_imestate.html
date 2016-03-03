@@ -1252,6 +1252,9 @@ function runEditorFlagChangeTests()
     editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;
 
+  // Reset selection from previous tests.
+  editor.selection.collapse(container, 0);
+
   // input characters
   synthesizeCompositionChange(
     { "composition":
