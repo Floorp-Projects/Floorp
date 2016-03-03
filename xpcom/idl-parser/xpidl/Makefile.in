@@ -9,14 +9,6 @@ PARSER_SRCS = \
   xpidl.py \
   $(NULL)
 
-SDK_BINARY = \
-  $(PARSER_SRCS) \
-  $(IDL_PARSER_CACHE_DIR)/xpidllex.py \
-  $(IDL_PARSER_CACHE_DIR)/xpidlyacc.py \
-  $(NULL)
-
-SDK_BINARY_TARGET = xpidl-parser
-
 PLY_FILES = \
   $(topsrcdir)/other-licenses/ply/ply/__init__.py \
   $(topsrcdir)/other-licenses/ply/ply/lex.py \
@@ -26,20 +18,18 @@ PLY_FILES = \
 include $(topsrcdir)/config/rules.mk
 
 # Generate the PLY lexer and parser.
-$(IDL_PARSER_CACHE_DIR)/xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
+xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  $(srcdir)/header.py --cachedir=$(IDL_PARSER_CACHE_DIR) --regen
+	  $(srcdir)/header.py --cachedir=. --regen
 
 # generating xpidllex.py generates xpidlyacc.py too
-$(IDL_PARSER_CACHE_DIR)/xpidlyacc.py: $(IDL_PARSER_CACHE_DIR)/xpidllex.py
+xpidlyacc.py: xpidllex.py
 
-garbage_files := \
+GARBAGE += \
   xpidllex.py \
   xpidllex.pyc \
   xpidlyacc.py \
   xpidlyacc.pyc \
   xpidl_debug \
   $(NULL)
-
-GARBAGE += $(addprefix $(IDL_PARSER_CACHE_DIR)/,$(garbage_files))
