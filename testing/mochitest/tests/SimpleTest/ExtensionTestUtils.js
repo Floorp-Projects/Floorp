@@ -2,6 +2,15 @@ var ExtensionTestUtils = {};
 
 ExtensionTestUtils.loadExtension = function(ext, id = null)
 {
+  // Cleanup functions need to be registered differently depending on
+  // whether we're in browser chrome or plain mochitests.
+  var registerCleanup;
+  if (typeof registerCleanupFunction != "undefined") {
+    registerCleanup = registerCleanupFunction;
+  } else {
+    registerCleanup = SimpleTest.registerCleanupFunction.bind(SimpleTest);
+  }
+
   var testResolve;
   var testDone = new Promise(resolve => { testResolve = resolve; });
 
@@ -10,7 +19,7 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
 
   var messageQueue = new Set();
 
-  SimpleTest.registerCleanupFunction(() => {
+  registerCleanup(() => {
     if (messageQueue.size) {
       SimpleTest.is(messageQueue.size, 0, "message queue is empty");
     }
@@ -73,6 +82,15 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
   };
 
   var extension = SpecialPowers.loadExtension(id, ext, handler);
+
+  registerCleanup(() => {
+    if (extension.state == "pending" || extension.state == "running") {
+      SimpleTest.ok(false, "Extension left running at test shutdown")
+      return extension.unload();
+    } else if (extension.state == "unloading") {
+      SimpleTest.ok(false, "Extension not fully unloaded at test shutdown")
+    }
+  });
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {

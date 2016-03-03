@@ -1881,15 +1881,20 @@ SpecialPowersAPI.prototype = {
     ext = Cu.waiveXrays(ext);
 
     let sp = this;
+    let state = "uninitialized";
     let extension = {
       id,
 
+      get state() { return state; },
+
       startup() {
+        state = "pending";
         sp._sendAsyncMessage("SPStartupExtension", {id});
         return startupPromise;
       },
 
       unload() {
+        state = "unloading";
         sp._sendAsyncMessage("SPUnloadExtension", {id});
         return unloadPromise;
       },
@@ -1904,11 +1909,14 @@ SpecialPowersAPI.prototype = {
     let listener = (msg) => {
       if (msg.data.id == id) {
         if (msg.data.type == "extensionStarted") {
+          state = "running";
           resolveStartup();
         } else if (msg.data.type == "extensionFailed") {
+          state = "failed";
           rejectStartup("startup failed");
         } else if (msg.data.type == "extensionUnloaded") {
           this._removeMessageListener("SPExtensionMessage", listener);
+          state = "unloaded";
           resolveUnload();
         } else if (msg.data.type in handler) {
           handler[msg.data.type](...msg.data.args);
