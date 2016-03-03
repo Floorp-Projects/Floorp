@@ -809,8 +809,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncedTabs.context.openTab.accesskey               "O">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.label         "Bookmark This Tab…">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.accesskey     "B">
-<!ENTITY syncedTabs.context.refreshList.label               "Refresh List">
-<!ENTITY syncedTabs.context.refreshList.accesskey           "R">
 
 
 <!ENTITY syncBrand.shortName.label    "Sync">
