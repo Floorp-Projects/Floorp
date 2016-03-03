@@ -8760,6 +8760,16 @@
     "description": "OpenH264 GMP files missing (0=none, or sum of: 1=library, 2=info)",
     "releaseChannelCollection": "opt-out"
   },
+  "VIDEO_VP9_BENCHMARK_FPS": {
+    "alert_emails": ["ajones@mozilla.com"],
+    "expires_in_version": "50",
+    "bug_numbers": [1230265],
+    "kind": "linear",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "720p VP9 decode benchmark measurement in frames per second",
+    "releaseChannelCollection": "opt-out"
+  },
   "MEDIA_CODEC_USED": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "never",
