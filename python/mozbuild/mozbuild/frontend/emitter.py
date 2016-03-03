@@ -570,9 +570,12 @@ class TreeMetadataEmitter(LoggingMixin):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),
                         'action', 'generate_symbols_file.py')
+                    defines = ()
+                    if lib.defines:
+                        defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                         'generate_symbols_file', lib.symbols_file,
-                        [symbols_file.full_path], lib.defines.get_defines())
+                        [symbols_file.full_path], defines)
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
