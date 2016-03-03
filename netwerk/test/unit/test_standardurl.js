@@ -333,3 +333,16 @@ add_test(function test_filterWhitespace()
   do_check_eq(url.spec, "http://example.com/path/to%20the/file.ext?query#hash");
   run_next_test();
 });
+
+add_test(function test_backslashReplacement()
+{
+  var url = stringToURL("http:\\\\test.com\\path/to\\file?query\\backslash#hash\\");
+  do_check_eq(url.spec, "http://test.com/path/to/file?query\\backslash#hash\\");
+
+  url = stringToURL("http:\\\\test.com\\example.org/path\\to/file");
+  do_check_eq(url.spec, "http://test.com/example.org/path/to/file");
+  do_check_eq(url.host, "test.com");
+  do_check_eq(url.path, "/example.org/path/to/file");
+
+  run_next_test();
+});
