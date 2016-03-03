@@ -24,13 +24,13 @@ TEST(PrincipalOriginAttributes, Suffix_default)
   TestSuffix(attrs);
 }
 
-TEST(PrincipalOriginAttributes, Suffix_appId_inBrowser)
+TEST(PrincipalOriginAttributes, Suffix_appId_inIsolatedMozBrowser)
 {
   PrincipalOriginAttributes attrs(1, true);
   TestSuffix(attrs);
 }
 
-TEST(PrincipalOriginAttributes, Suffix_maxAppId_inBrowser)
+TEST(PrincipalOriginAttributes, Suffix_maxAppId_inIsolatedMozBrowser)
 {
   PrincipalOriginAttributes attrs(4294967295, true);
   TestSuffix(attrs);

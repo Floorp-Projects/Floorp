@@ -1,0 +1,9 @@
+Bug 1158741 added an omxSP_FFTInv_CCSToR_F32_Sfs_unscaled function as an
+optimization which performs the same operation as
+omxSP_FFTInv_CCSToR_F32_Sfs except it doesn't scale the results by the
+length of the FFT. For consistency with other FFT routines used, it does
+multiply the results by two.
+
+The affected files are:
+media/openmax_dl/dl/sp/api/omxSP.h
+media/openmax_dl/dl/sp/src/omxSP_FFTInv_CCSToR_F32_Sfs_unscaled_s.S

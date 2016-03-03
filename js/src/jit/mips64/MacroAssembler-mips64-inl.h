@@ -225,18 +225,125 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestUndefined(cond, scratch2, label);
+}
+
+void
 MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    splitTag(value, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestInt32(cond, scratch2, label);
 }
 
 void
 MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
 {
-    ma_dext(ScratchRegister, value.valueReg(), Imm32(0), Imm32(32));
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+    ScratchRegisterScope scratch(*this);
+    ma_dext(scratch, value.valueReg(), Imm32(0), Imm32(32));
+    ma_b(scratch, scratch, label, b ? NonZero : Zero);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    Condition actual = (cond == Equal) ? BelowOrEqual : Above;
+    ma_b(tag, ImmTag(JSVAL_TAG_MAX_DOUBLE), label, actual);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestDouble(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestNumber(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestBoolean(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestBooleanTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    unboxBoolean(value, scratch2);
+    ma_b(scratch2, scratch2, label, b ? NonZero : Zero);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestString(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    unboxString(value, scratch2);
+    load32(Address(scratch2, JSString::offsetOfLength()), scratch2);
+    ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestSymbol(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestNull(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestObject(cond, scratch2, label);
+}
+
+void
+MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    branchTestPrimitive(cond, scratch2, label);
+}
+
+template <class L>
+void
+MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    splitTag(value, scratch2);
+    ma_b(scratch2, ImmTag(JSVAL_TAG_MAGIC), label, cond);
 }
 
 //}}} check_macroassembler_style

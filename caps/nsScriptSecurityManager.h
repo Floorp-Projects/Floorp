@@ -151,7 +151,7 @@ namespace mozilla {
 
 void
 GetJarPrefix(uint32_t aAppid,
-             bool aInMozBrowser,
+             bool aInIsolatedMozBrowser,
              nsACString& aJarPrefix);
 
 } // namespace mozilla

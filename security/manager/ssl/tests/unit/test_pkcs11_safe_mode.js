@@ -7,8 +7,6 @@
 // In safe mode, PKCS#11 modules should not be loaded. This test tests this by
 // simulating starting in safe mode and then attempting to load a module.
 
-var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-
 function run_test() {
   do_get_profile();
 

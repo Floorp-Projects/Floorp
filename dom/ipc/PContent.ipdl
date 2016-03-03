@@ -1190,6 +1190,8 @@ parent:
      * chrome process as that's the process that receives the pointer event.
      */
     sync UngrabPointer(uint32_t time);
+
+    sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
 both:
      async AsyncMessage(nsString aMessage, ClonedMessageData aData,
                         CpowEntry[] aCpows, Principal aPrincipal);

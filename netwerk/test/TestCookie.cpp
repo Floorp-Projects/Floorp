@@ -558,7 +558,7 @@ main(int32_t argc, char *argv[])
       allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
 
 
-      // *** httponly tests 
+      // *** httponly tests
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning httponly tests...\n");
 
       // Since this cookie is NOT set via http, setting it fails
@@ -609,7 +609,7 @@ main(int32_t argc, char *argv[])
       if (NS_FAILED(rv0)) return -1;
       nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
       if (!cookieMgr2) return -1;
-      
+
       // first, ensure a clean slate
       rv[0] = NS_SUCCEEDED(cookieMgr->RemoveAll());
       // add some cookies
@@ -647,7 +647,7 @@ main(int32_t argc, char *argv[])
         nsCOMPtr<nsISupports> cookie;
         if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
         ++i;
-        
+
         // keep tabs on the second and third cookies, so we can check them later
         nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
         if (!cookie2) break;
@@ -756,5 +756,5 @@ main(int32_t argc, char *argv[])
 // Stubs to make this test happy
 
 mozilla::dom::OriginAttributesDictionary::OriginAttributesDictionary()
-  : mAppId(0), mInBrowser(false), mUserContextId(0)
+  : mAppId(0), mInIsolatedMozBrowser(false), mUserContextId(0)
 {}

@@ -11,8 +11,6 @@
 // * it does a sanity check to ensure other cert verifier behavior is
 //   unmodified
 
-var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-
 // First, we need to setup appInfo for the blocklist service to work
 var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";

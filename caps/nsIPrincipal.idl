@@ -303,10 +303,13 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute unsigned long userContextId;
 
     /**
-     * Returns true iff the principal is inside a browser element.  (<iframe
-     * mozbrowser mozapp> does not count as a browser element.)
+     * Returns true iff the principal is inside an isolated mozbrowser element.
+     * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+     * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+     * isolated since isolation is disabled.  Isolation can only be disabled if
+     * the containing document is chrome.
      */
-    [infallible] readonly attribute boolean isInBrowserElement;
+    [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
     /**
      * Returns true if this principal has an unknown appId. This shouldn't

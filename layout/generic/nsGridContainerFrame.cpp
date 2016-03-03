@@ -425,9 +425,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
     // Note that the repeat() track size is included in |sum| in this loop.
     nscoord sum = 0;
     for (uint32_t i = 0; i < numTracks; ++i) {
-      // "The <auto-repeat> variant ... requires definite minimum track sizes"
-      // "... treating each track as its max track sizing function if that is
-      //  definite or as its minimum track sizing function otherwise"
+      // "treating each track as its max track sizing function if that is
+      // definite or as its minimum track sizing function otherwise"
       // https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill
       const auto& maxCoord = mMaxSizingFunctions[i];
       const auto* coord = &maxCoord;

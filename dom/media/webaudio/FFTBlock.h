@@ -121,10 +121,7 @@ public:
 #else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
-      omxSP_FFTInv_CCSToR_F32_Sfs(mOutputBuffer.Elements()->f, aDataOut, mOmxIFFT);
-      // There is no function that computes de inverse FFT without scaling, so
-      // we have to scale back up here. Bug 1158741.
-      AudioBufferInPlaceScale(aDataOut, mFFTSize, mFFTSize);
+      omxSP_FFTInv_CCSToR_F32_Sfs_unscaled(mOutputBuffer.Elements()->f, aDataOut, mOmxIFFT);
     } else
 #endif
     {

@@ -66,6 +66,11 @@ interface nsIAppsService : nsISupports
    */
   DOMString getWebAppsBasePath();
 
+  /**
+   * Returns true if at least one app is in the registry.
+   */
+  boolean areAnyAppsInstalled();
+
   jsval getAppInfo(in DOMString appId);
 
   /**

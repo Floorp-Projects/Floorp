@@ -582,10 +582,6 @@ class MacroAssemblerX86Shared : public Assembler
         vucomisd(reg, scratch);
         return truthy ? NonZero : Zero;
     }
-    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
-        Condition cond = testDoubleTruthy(truthy, reg);
-        j(cond, label);
-    }
 
     // Class which ensures that registers used in byte ops are compatible with
     // such instructions, even if the original register passed in wasn't. This
