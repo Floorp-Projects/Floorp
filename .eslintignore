@@ -103,7 +103,6 @@ devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/**
 devtools/client/sourceeditor/**
-devtools/client/tilt/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 devtools/client/webide/**

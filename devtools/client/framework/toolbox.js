@@ -89,8 +89,6 @@ const ToolboxButtons = exports.ToolboxButtons = [
     isTargetSupported: target => !target.isAddon },
   { id: "command-button-responsive" },
   { id: "command-button-paintflashing" },
-  { id: "command-button-tilt",
-    commands: "devtools/client/tilt/tilt-commands" },
   { id: "command-button-scratchpad" },
   { id: "command-button-eyedropper" },
   { id: "command-button-screenshot" },
@@ -1008,12 +1006,6 @@ Toolbox.prototype = {
         return false;
       }
 
-      // Disable tilt in E10S mode. Removing it from the list of toolbox buttons
-      // allows a bunch of tests to pass without modification.
-      if (this.target.isMultiProcess && options.id === "command-button-tilt") {
-        return false;
-      }
-
       return {
         id: options.id,
         button: button,
@@ -1050,22 +1042,6 @@ Toolbox.prototype = {
     });
 
     this._updateNoautohideButton();
-
-    // Tilt is handled separately because it is disabled in E10S mode. Because
-    // we have removed tilt from toolboxButtons we have to deal with it here.
-    let tiltEnabled = !this.target.isMultiProcess &&
-                      Services.prefs.getBoolPref("devtools.command-button-tilt.enabled");
-    let tiltButton = this.doc.getElementById("command-button-tilt");
-    // Remote toolboxes don't add the button to the DOM at all
-    if (!tiltButton) {
-      return;
-    }
-
-    if (tiltEnabled) {
-      tiltButton.removeAttribute("hidden");
-    } else {
-      tiltButton.setAttribute("hidden", "true");
-    }
   },
 
   /**
