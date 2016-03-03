@@ -8,6 +8,19 @@ PYTHON_UNIT_TESTS += [
     'runtests.py',
 ]
 
+GENERATED_FILES += [
+    'xpidllex.py',
+    'xpidlyacc.py',
+]
+
+SDK_FILES.bin += [
+    '!xpidllex.py',
+    '!xpidlyacc.py',
+    'header.py',
+    'typelib.py',
+    'xpidl.py',
+]
+
 SDK_FILES.bin.ply += [
     '/other-licenses/ply/ply/__init__.py',
     '/other-licenses/ply/ply/lex.py',
