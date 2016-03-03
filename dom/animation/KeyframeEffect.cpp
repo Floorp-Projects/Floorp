@@ -437,6 +437,13 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
 void
 KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
 {
+  // AnimationProperty::operator== does not compare mWinsInCascade and
+  // mIsRunningOnCompositor, we don't need to update anything here because
+  // we want to preserve the values of those members.
+  if (mProperties == aOther.mProperties) {
+    return;
+  }
+
   nsCSSPropertySet winningInCascadeProperties;
   nsCSSPropertySet runningOnCompositorProperties;
 
@@ -456,6 +463,16 @@ KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
       winningInCascadeProperties.HasProperty(property.mProperty);
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
+  }
+
+  if (mAnimation) {
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType,
+                       EffectCompositor::RestyleType::Layer,
+                       mAnimation->CascadeLevel());
+    }
   }
 }
 
