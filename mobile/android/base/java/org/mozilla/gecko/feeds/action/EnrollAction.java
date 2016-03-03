@@ -10,9 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.text.TextUtils;
-import android.util.Log;
 
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
@@ -25,7 +23,7 @@ import org.mozilla.gecko.feeds.knownsites.KnownSiteWordpress;
 /**
  * EnrollAction: Search for bookmarks of known sites we can subscribe to.
  */
-public class EnrollAction implements BaseAction {
+public class EnrollAction extends BaseAction {
     private static final String LOGTAG = "FeedEnrollAction";
 
     private static final KnownSite[] knownSites = {
@@ -42,7 +40,7 @@ public class EnrollAction implements BaseAction {
 
     @Override
     public void perform(BrowserDB db, Intent intent) {
-        Log.i(LOGTAG, "Searching for bookmarks to enroll in updates");
+        log("Searching for bookmarks to enroll in updates");
 
         final ContentResolver contentResolver = context.getContentResolver();
 
@@ -66,24 +64,23 @@ public class EnrollAction implements BaseAction {
 
         final Cursor cursor = db.getBookmarksForPartialUrl(contentResolver, knownSite.getURLSearchString());
         if (cursor == null) {
-            Log.d(LOGTAG, "Nothing found (" + knownSite.getClass().getSimpleName() + ")");
+            log("Nothing found (" + knownSite.getClass().getSimpleName() + ")");
             return;
         }
 
         try {
-            Log.d(LOGTAG, "Found " + cursor.getCount() + " websites");
+            log("Found " + cursor.getCount() + " websites");
 
             while (cursor.moveToNext()) {
 
                 final String url = cursor.getString(cursor.getColumnIndex(BrowserContract.Bookmarks.URL));
 
-                Log.d(LOGTAG, " URL: " + url);
+                log(" URL: " + url);
 
                 String feedUrl = knownSite.getFeedFromURL(url);
                 if (TextUtils.isEmpty(feedUrl)) {
-
-
-                    Log.w(LOGTAG, "Could not determine feed for URL: " + url);
+                    log("Could not determine feed for URL: " + url);
+                    return;
                 }
 
                 if (!urlAnnotations.hasFeedUrlForWebsite(contentResolver, url)) {

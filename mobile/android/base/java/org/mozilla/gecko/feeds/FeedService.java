@@ -103,6 +103,8 @@ public class FeedService extends IntentService {
         } finally {
             FeedAlarmReceiver.completeWakefulIntent(intent);
         }
+
+        Log.d(LOGTAG, "Done.");
     }
 
     @Nullable

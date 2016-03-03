@@ -10,7 +10,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
-import android.util.Log;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.FeedAlarmReceiver;
@@ -19,7 +18,7 @@ import org.mozilla.gecko.feeds.FeedService;
 /**
  * SetupAction: Set up alarms to run various actions every now and then.
  */
-public class SetupAction implements BaseAction {
+public class SetupAction extends BaseAction {
     private static final String LOGTAG = "FeedSetupAction";
 
     private Context context;
@@ -56,7 +55,7 @@ public class SetupAction implements BaseAction {
         final PendingIntent checkIntent = getCheckPendingIntent();
         alarmManager.cancel(checkIntent);
 
-        Log.d(LOGTAG, "Cancelled previous alarms");
+        log("Cancelled previous alarms");
     }
 
     private void scheduleAlarms(AlarmManager alarmManager) {
@@ -80,7 +79,7 @@ public class SetupAction implements BaseAction {
                 getCheckPendingIntent()
         );
 
-        Log.d(LOGTAG, "Scheduled alarms");
+        log("Scheduled alarms");
     }
 
     private PendingIntent getWithdrawPendingIntent() {

@@ -9,7 +9,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.mozilla.gecko.db.BrowserContract;
@@ -20,7 +19,7 @@ import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 /**
  * WithdrawAction: Look for feeds to unsubscribe from.
  */
-public class WithdrawAction implements BaseAction {
+public class WithdrawAction extends BaseAction {
     private static final String LOGTAG = "FeedWithdrawAction";
 
     private Context context;
@@ -31,7 +30,7 @@ public class WithdrawAction implements BaseAction {
 
     @Override
     public void perform(BrowserDB browserDB, Intent intent) {
-        Log.d(LOGTAG, "Searching for subscriptions to remove..");
+        log("Searching for subscriptions to remove..");
 
         final UrlAnnotations urlAnnotations = browserDB.getUrlAnnotations();
         final ContentResolver resolver = context.getContentResolver();
@@ -55,7 +54,7 @@ public class WithdrawAction implements BaseAction {
                 final String url = cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.URL));
 
                 if (!browserDB.isBookmark(resolver, url)) {
-                    Log.d(LOGTAG, "Removing feed for unknown URL: " + url);
+                    log("Removing feed for unknown URL: " + url);
 
                     urlAnnotations.deleteFeedUrl(resolver, url);
                 }
@@ -79,13 +78,13 @@ public class WithdrawAction implements BaseAction {
                 final FeedSubscription subscription = FeedSubscription.fromCursor(cursor);
 
                 if (!urlAnnotations.hasWebsiteForFeedUrl(resolver, subscription.getFeedUrl())) {
-                    Log.d(LOGTAG, "Removing subscription for feed: " + subscription.getFeedUrl());
+                    log("Removing subscription for feed: " + subscription.getFeedUrl());
 
                     urlAnnotations.deleteFeedSubscription(resolver, subscription);
                 }
             }
         } catch (JSONException e) {
-            Log.w(LOGTAG, "Could not deserialize subscription", e);
+            log("Could not deserialize subscription", e);
         } finally {
             cursor.close();
         }
