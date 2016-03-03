@@ -742,7 +742,6 @@ element.generateUUID = function() {
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
  */
-// TODO(ato): Replicated from listener.js for the time being
 element.coordinates = function(node, x = undefined, y = undefined) {
   let box = node.getBoundingClientRect();
   if (!x) {
