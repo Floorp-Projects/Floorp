@@ -117,6 +117,16 @@ CSSAnimation::PauseFromStyle()
 }
 
 void
+CSSAnimation::PlayOrPauseFromStyle()
+{
+  if (mInitialPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
+    PauseFromStyle();
+  } else {
+    PlayFromStyle();
+  }
+}
+
+void
 CSSAnimation::Tick()
 {
   Animation::Tick();
@@ -384,13 +394,15 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           }
         }
         if (!oldAnim) {
+          CSSAnimation* cssAnim = newAnim->AsCSSAnimation();
+          cssAnim->PlayOrPauseFromStyle();
           // FIXME: Bug 1134163 - We shouldn't queue animationstart events
           // until the animation is actually ready to run. However, we
           // currently have some tests that assume that these events are
           // dispatched within the same tick as the animation is added
           // so we need to queue up any animationstart events from newly-created
           // animations.
-          newAnim->AsCSSAnimation()->QueueEvents();
+          cssAnim->QueueEvents();
           continue;
         }
 
@@ -418,11 +430,14 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           //  downcasting to CSSAnimation and we happen to know that
           //  newAnim will only ever be paused by calling PauseFromStyle
           //  making IsPausedOrPausing synonymous in this case.)
-          if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
+          if (!oldAnim->IsStylePaused() &&
+              newAnim->AsCSSAnimation()->InitialPlayState() ==
+                NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
             oldAnim->PauseFromStyle();
             animationChanged = true;
           } else if (oldAnim->IsStylePaused() &&
-                    !newAnim->IsPausedOrPausing()) {
+                     newAnim->AsCSSAnimation()->InitialPlayState() !=
+                        NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
             oldAnim->PlayFromStyle();
             animationChanged = true;
           }
@@ -454,10 +469,12 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                         aStyleContext->GetPseudoType(),
                                         true /* aCreateIfNeeded */);
     for (Animation* animation : newAnimations) {
+      CSSAnimation* cssAnim = animation->AsCSSAnimation();
+      cssAnim->PlayOrPauseFromStyle();
       // FIXME: Bug 1134163 - As above, we have shouldn't actually need to
       // queue events here. (But we do for now since some tests expect
       // animationstart events to be dispatched immediately.)
-      animation->AsCSSAnimation()->QueueEvents();
+      cssAnim->QueueEvents();
     }
   }
   collection->mAnimations.SwapElements(newAnimations);
@@ -616,11 +633,16 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                  aStyleContext->GetPseudoType(), timing);
     dest->SetEffect(destEffect);
 
-    if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
-      dest->PauseFromStyle();
-    } else {
-      dest->PlayFromStyle();
-    }
+    // Do not play or pause this temporary animation here. We will
+    // *actually* play or pause it if it doesn't match any existing
+    // animation. If it matches an existing animation we will read this
+    // initial state back and use it to determine if we need to update
+    // the existing animation's state.
+    //
+    // This allows us to avoid requesting unnecessary restyles (which
+    // would be triggered if we call Play()/Pause()) while updating
+    // animations, particularly in the case where nothing has changed.
+    dest->SetInitialPlayState(src.GetPlayState());
 
     // While current drafts of css3-animations say that later keyframes
     // with the same key entirely replace earlier ones (no cascading),
