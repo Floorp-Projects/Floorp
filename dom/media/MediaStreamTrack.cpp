@@ -257,6 +257,26 @@ MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
   GetOwnedStream()->RemoveTrackListener(aListener, mTrackID);
 }
 
+void
+MediaStreamTrack::AddDirectListener(MediaStreamTrackDirectListener *aListener)
+{
+  LOG(LogLevel::Debug, ("MediaStreamTrack %p (%s) adding direct listener %p to "
+                        "stream %p, track %d",
+                        this, AsAudioStreamTrack() ? "audio" : "video",
+                        aListener, GetOwnedStream(), mTrackID));
+
+  GetOwnedStream()->AddDirectTrackListener(aListener, mTrackID);
+}
+
+void
+MediaStreamTrack::RemoveDirectListener(MediaStreamTrackDirectListener *aListener)
+{
+  LOG(LogLevel::Debug, ("MediaStreamTrack %p removing direct listener %p from stream %p",
+                        this, aListener, GetOwnedStream()));
+
+  GetOwnedStream()->RemoveDirectTrackListener(aListener, mTrackID);
+}
+
 already_AddRefed<MediaInputPort>
 MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream)
 {
