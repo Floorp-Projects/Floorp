@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_Mutex_h
-#define js_Mutex_h
+#ifndef threading_ExclusiveData_h
+#define threading_ExclusiveData_h
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
@@ -16,33 +16,33 @@ namespace js {
 
 namespace detail {
 
-class MutexBase
+class ExclusiveDataBase
 {
   private:
     mutable PRLock* lock_;
 
-    MutexBase(const MutexBase&) = delete;
-    MutexBase& operator=(const MutexBase&) = delete;
+    ExclusiveDataBase(const ExclusiveDataBase&) = delete;
+    ExclusiveDataBase& operator=(const ExclusiveDataBase&) = delete;
 
   public:
     // This move constructor is only public for `mozilla::Forward`.
-    MutexBase(MutexBase&& rhs)
+    ExclusiveDataBase(ExclusiveDataBase&& rhs)
       : lock_(rhs.lock_)
     {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
         rhs.lock_ = nullptr;
     }
 
-    ~MutexBase();
+    ~ExclusiveDataBase();
 
   protected:
-    explicit MutexBase(PRLock* lock)
+    explicit ExclusiveDataBase(PRLock* lock)
       : lock_(lock)
     {
         MOZ_ASSERT(lock_);
     }
 
-    static mozilla::Maybe<MutexBase> Create();
+    static mozilla::Maybe<ExclusiveDataBase> Create();
 
     void acquire() const;
     void release() const;
@@ -53,7 +53,7 @@ class MutexBase
 /**
  * A mutual exclusion lock class.
  *
- * `Mutex` provides an RAII guard to automatically lock and unlock when
+ * `ExclusiveData` provides an RAII guard to automatically lock and unlock when
  * accessing the protected inner value.
  *
  * Unlike the STL's `std::mutex`, the protected value is internal to this
@@ -77,7 +77,8 @@ class MutexBase
  *
  *     class SharedCounter
  *     {
- *         // Remember to acquire `counter_lock` when accessing `counter`, pretty please!
+ *         // Remember to acquire `counter_lock` when accessing `counter`,
+ *         // pretty please!
  *         Counter counter;
  *         std::mutex counter_lock;
  *
@@ -88,12 +89,12 @@ class MutexBase
  *         }
  *     };
  *
- * In contrast, `Mutex` wraps the protected value, enabling the type system to
- * enforce that we acquire the lock before accessing the value:
+ * In contrast, `ExclusiveData` wraps the protected value, enabling the type
+ * system to enforce that we acquire the lock before accessing the value:
  *
  *     class SharedCounter
  *     {
- *         Mutex<Counter> counter;
+ *         ExclusiveData<Counter> counter;
  *
  *       public:
  *         void inc(size_t n) {
@@ -106,56 +107,57 @@ class MutexBase
  *
  * [0]: Of course, we don't have a borrow checker in C++, so the type system
  *      cannot guarantee that you don't stash references received from
- *      `Mutex<T>::Guard` somewhere such that the reference outlives the guard's
- *      lifetime and therefore becomes invalid. To help avoid this last
+ *      `ExclusiveData<T>::Guard` somewhere such that the reference outlives the
+ *      guard's lifetime and therefore becomes invalid. To help avoid this last
  *      foot-gun, prefer using the guard directly! Do not store raw references
  *      to the protected value in other structures!
  */
 template <typename T>
-class Mutex : private detail::MutexBase
+class ExclusiveData : private detail::ExclusiveDataBase
 {
     mutable T value_;
 
-    Mutex(const Mutex&) = delete;
-    Mutex& operator=(const Mutex&) = delete;
+    ExclusiveData(const ExclusiveData&) = delete;
+    ExclusiveData& operator=(const ExclusiveData&) = delete;
 
     template <typename U>
-    explicit Mutex(U&& u, MutexBase&& base)
-      : MutexBase(mozilla::Move(base))
+    explicit ExclusiveData(U&& u, ExclusiveDataBase&& base)
+      : ExclusiveDataBase(mozilla::Move(base))
       , value_(mozilla::Forward<U>(u))
     { }
 
   public:
     /**
-     * Create a new `Mutex`, with perfect forwarding of the protected value.
+     * Create a new `ExclusiveData`, with perfect forwarding of the protected
+     * value.
      *
      * On success, `mozilla::Some` is returned. On failure, `mozilla::Nothing`
      * is returned.
      */
     template <typename U>
-    static mozilla::Maybe<Mutex<T>> Create(U&& u) {
-        auto base = detail::MutexBase::Create();
+    static mozilla::Maybe<ExclusiveData<T>> Create(U&& u) {
+        auto base = detail::ExclusiveDataBase::Create();
         if (base.isNothing())
             return mozilla::Nothing();
-        return mozilla::Some(Mutex(mozilla::Forward<U>(u), mozilla::Move(*base)));
+        return mozilla::Some(ExclusiveData(mozilla::Forward<U>(u), mozilla::Move(*base)));
     }
 
-    Mutex(Mutex&& rhs)
-      : MutexBase(mozilla::Move(static_cast<MutexBase&&>(rhs)))
+    ExclusiveData(ExclusiveData&& rhs)
+      : ExclusiveDataBase(mozilla::Move(static_cast<ExclusiveDataBase&&>(rhs)))
       , value_(mozilla::Move(rhs.value_))
     {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
     }
 
-    Mutex& operator=(Mutex&& rhs) {
-        this->~Mutex();
-        new (this) Mutex(mozilla::Move(rhs));
+    ExclusiveData& operator=(ExclusiveData&& rhs) {
+        this->~ExclusiveData();
+        new (this) ExclusiveData(mozilla::Move(rhs));
         return *this;
     }
 
     /**
-     * An RAII class that provides exclusive access to a `Mutex<T>`'s protected
-     * inner `T` value.
+     * An RAII class that provides exclusive access to a `ExclusiveData<T>`'s
+     * protected inner `T` value.
      *
      * Note that this is intentionally marked MOZ_STACK_CLASS instead of
      * MOZ_RAII_CLASS, as the latter disallows moves and returning by value, but
@@ -163,13 +165,13 @@ class Mutex : private detail::MutexBase
      */
     class MOZ_STACK_CLASS Guard
     {
-        const Mutex* parent_;
+        const ExclusiveData* parent_;
 
         Guard(const Guard&) = delete;
         Guard& operator=(const Guard&) = delete;
 
       public:
-        explicit Guard(const Mutex& parent)
+        explicit Guard(const ExclusiveData& parent)
           : parent_(&parent)
         {
             parent_->acquire();
@@ -212,4 +214,4 @@ class Mutex : private detail::MutexBase
 
 } // namespace js
 
-#endif // js_Mutex_h
+#endif // threading_ExclusiveData_h
