@@ -1150,6 +1150,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     upgradeDatabaseFrom25to26(db);
                     break;
 
+                // case 27 occurs in UrlMetadataTable.onUpgrade
+
                 case 28:
                     upgradeDatabaseFrom27to28(db);
                     break;

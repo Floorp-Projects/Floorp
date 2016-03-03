@@ -25,12 +25,14 @@ import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,6 +52,14 @@ public class LoadFaviconTask {
     private static final HashMap<String, LoadFaviconTask> loadsInFlight = new HashMap<>();
 
     public static final int FLAG_PERSIST = 1;
+    /**
+     * Bypass all caches - this is used to directly retrieve the requested icon. Without this flag,
+     * favicons will first be pushed into the memory cache (and possibly permanent cache if using FLAG_PERSIST),
+     * where they will be downscaled to the maximum cache size, before being retrieved from the cache (resulting
+     * in a possibly smaller icon size).
+     */
+    public static final int FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS = 2;
+
     private static final int MAX_REDIRECTS_TO_FOLLOW = 5;
     // The default size of the buffer to use for downloading Favicons in the event no size is given
     // by the server.
@@ -417,10 +427,13 @@ public class LoadFaviconTask {
             return null;
         }
 
+        LoadFaviconResult loadedBitmaps = null;
         // If there are no valid bitmaps decoded, the returned LoadFaviconResult is null.
-        LoadFaviconResult loadedBitmaps = loadFaviconFromDb(db);
-        if (loadedBitmaps != null) {
-            return pushToCacheAndGetResult(loadedBitmaps);
+        if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) == 0) {
+            loadedBitmaps = loadFaviconFromDb(db);
+            if (loadedBitmaps != null) {
+                return pushToCacheAndGetResult(loadedBitmaps);
+            }
         }
 
         if (onlyFromLocal || isCancelled()) {
@@ -445,11 +458,25 @@ public class LoadFaviconTask {
         }
 
         if (loadedBitmaps != null) {
-            // Fetching bytes to store can fail. saveFaviconToDb will
-            // do the right thing, but we still choose to cache the
-            // downloaded icon in memory.
-            saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
-            return pushToCacheAndGetResult(loadedBitmaps);
+            if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) == 0) {
+                // Fetching bytes to store can fail. saveFaviconToDb will
+                // do the right thing, but we still choose to cache the
+                // downloaded icon in memory.
+                saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
+                return pushToCacheAndGetResult(loadedBitmaps);
+            } else {
+                final Map<Integer, Bitmap> iconMap = new HashMap<>();
+                final List<Integer> sizes = new ArrayList<>();
+
+                while (loadedBitmaps.getBitmaps().hasNext()) {
+                    final Bitmap b = loadedBitmaps.getBitmaps().next();
+                    iconMap.put(b.getWidth(), b);
+                    sizes.add(b.getWidth());
+                }
+
+                int bestSize = Favicons.selectBestSizeFromList(sizes, targetWidth);
+                return iconMap.get(bestSize);
+            }
         }
 
         if (isUsingDefaultURL) {
@@ -545,11 +572,15 @@ public class LoadFaviconTask {
 
     private void processResult(Bitmap image) {
         Favicons.removeLoadTask(id);
-        Bitmap scaled = image;
+        final Bitmap scaled;
 
         // Notify listeners, scaling if required.
-        if (targetWidth != -1 && image != null &&  image.getWidth() != targetWidth) {
+        if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) != 0) {
+            scaled = Bitmap.createScaledBitmap(image, targetWidth, targetWidth, true);
+        } else if (targetWidth != -1 && image != null &&  image.getWidth() != targetWidth) {
             scaled = Favicons.getSizedFaviconFromCache(faviconURL, targetWidth);
+        } else {
+            scaled = image;
         }
 
         Favicons.dispatchResult(pageUrl, faviconURL, scaled, listener);

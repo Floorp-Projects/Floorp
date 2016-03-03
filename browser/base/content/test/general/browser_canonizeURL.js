@@ -1,8 +1,3 @@
-function test() {
-  waitForExplicitFinish();
-  testNext();
-}
-
 var pairs = [
   ["example", "http://www.example.net/"],
   ["ex-ample", "http://www.ex-ample.net/"],
@@ -20,37 +15,56 @@ var pairs = [
   ["ex ample", Services.search.defaultEngine.getSubmission("ex ample", null, "keyword").uri.spec],
 ];
 
-function testNext() {
-  if (!pairs.length) {
-    finish();
-    return;
-  }
+add_task(function*() {
+  for (let [inputValue, expectedURL] of pairs) {
+    let focusEventPromise = BrowserTestUtils.waitForEvent(gURLBar, "focus");
+    let messagePromise = BrowserTestUtils.waitForMessage(gBrowser.selectedBrowser.messageManager,
+                                                         "browser_canonizeURL:start");
 
-  let [inputValue, expectedURL] = pairs.shift();
+    let stoppedLoadPromise = ContentTask.spawn(gBrowser.selectedBrowser, [inputValue, expectedURL],
+      function([inputValue, expectedURL]) {
+        return new Promise(resolve => {
+          let wpl = {
+            onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+              if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+                  aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+                if (!aRequest || !(aRequest instanceof Ci.nsIChannel)) {
+                  return;
+                }
+                aRequest.QueryInterface(Ci.nsIChannel);
+                is(aRequest.originalURI.spec, expectedURL,
+                   "entering '" + inputValue + "' loads expected URL");
 
-  gBrowser.addProgressListener({
-    onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-        is(aRequest.originalURI.spec, expectedURL,
-           "entering '" + inputValue + "' loads expected URL");
+                webProgress.removeProgressListener(filter);
+                filter.removeProgressListener(wpl);
+                docShell.QueryInterface(Ci.nsIWebNavigation);
+                docShell.stop(docShell.STOP_ALL);
+                resolve();
+              }
+            },
+          };
+          let filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
+                           .createInstance(Ci.nsIWebProgress);
+          filter.addProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_ALL);
 
-        gBrowser.removeProgressListener(this);
-        gBrowser.stop();
-
-        executeSoon(testNext);
+          let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebProgress);
+          webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+          // We're sending this off to trigger the start of the this test, when all the
+          // listeners are in place:
+          sendAsyncMessage("browser_canonizeURL:start");
+        });
       }
-    }
-  });
+    );
 
-  gURLBar.addEventListener("focus", function onFocus() {
-    gURLBar.removeEventListener("focus", onFocus);
+    gBrowser.selectedBrowser.focus();
+    gURLBar.focus();
+
+    yield Promise.all([focusEventPromise, messagePromise]);
+
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.synthesizeKey(inputValue.slice(-1) , {});
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
-  });
-
-  gBrowser.selectedBrowser.focus();
-  gURLBar.focus();
-
-}
+    yield stoppedLoadPromise;
+  }
+});

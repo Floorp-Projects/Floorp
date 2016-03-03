@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -35,9 +36,9 @@ public class TwoLinePageRow extends LinearLayout
 
     private final TextView mTitle;
     private final TextView mUrl;
+    private final ImageView mStatusIcon;
 
     private int mSwitchToTabIconId;
-    private int mPageTypeIconId;
 
     private final FaviconView mFavicon;
 
@@ -90,11 +91,14 @@ public class TwoLinePageRow extends LinearLayout
         setGravity(Gravity.CENTER_VERTICAL);
 
         LayoutInflater.from(context).inflate(R.layout.two_line_page_row, this);
+        // Merge layouts lose their padding, so set it dynamically.
+        setPadding(0, 0, (int) getResources().getDimension(R.dimen.page_row_padding_right), 0);
+
         mTitle = (TextView) findViewById(R.id.title);
         mUrl = (TextView) findViewById(R.id.url);
+        mStatusIcon = (ImageView) findViewById(R.id.status_icon_bookmark);
 
         mSwitchToTabIconId = NO_ICON;
-        mPageTypeIconId = NO_ICON;
         mShowIcons = true;
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
@@ -173,16 +177,12 @@ public class TwoLinePageRow extends LinearLayout
         }
 
         mSwitchToTabIconId = iconId;
-        mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+        mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, 0, 0);
     }
 
-    private void setPageTypeIcon(int iconId) {
-        if (mPageTypeIconId == iconId) {
-            return;
-        }
-
-        mPageTypeIconId = iconId;
-        mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+    private void showBookmarkIcon(boolean toShow) {
+        final int visibility = toShow ? VISIBLE : GONE;
+        mStatusIcon.setVisibility(visibility);
     }
 
     /**
@@ -231,13 +231,10 @@ public class TwoLinePageRow extends LinearLayout
         if (mShowIcons) {
             // The bookmark id will be 0 (null in database) when the url
             // is not a bookmark.
-            if (bookmarkId == 0) {
-                setPageTypeIcon(NO_ICON);
-            } else {
-                setPageTypeIcon(R.drawable.ic_url_bar_star);
-            }
+            final boolean isBookmark = bookmarkId != 0;
+            showBookmarkIcon(isBookmark);
         } else {
-            setPageTypeIcon(NO_ICON);
+            showBookmarkIcon(false);
         }
 
         // Use the URL instead of an empty title for consistency with the normal URL
