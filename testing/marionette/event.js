@@ -933,7 +933,7 @@ function focusElement(element) {
 event.sendKeysToElement = function(
     keySequence, el, opts = {}, window = undefined) {
 
-  if (opts.ignoreVisibility || element.checkVisible(el, window)) {
+  if (opts.ignoreVisibility || element.isVisible(el, window)) {
     focusElement(el);
 
     // make Object.<modifier, false> map
