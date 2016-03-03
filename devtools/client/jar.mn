@@ -177,8 +177,6 @@ devtools.jar:
     skin/images/command-responsivemode@2x.png (themes/images/command-responsivemode@2x.png)
     skin/images/command-scratchpad.png (themes/images/command-scratchpad.png)
     skin/images/command-scratchpad@2x.png (themes/images/command-scratchpad@2x.png)
-    skin/images/command-tilt.png (themes/images/command-tilt.png)
-    skin/images/command-tilt@2x.png (themes/images/command-tilt@2x.png)
     skin/images/command-pick.png (themes/images/command-pick.png)
     skin/images/command-pick@2x.png (themes/images/command-pick@2x.png)
     skin/images/command-frames.png (themes/images/command-frames.png)

@@ -742,10 +742,6 @@
   background-image: url("chrome://devtools/skin/images/command-responsivemode.png");
 }
 
-#command-button-tilt > image {
-  background-image: url("chrome://devtools/skin/images/command-tilt.png");
-}
-
 #command-button-scratchpad > image {
   background-image: url("chrome://devtools/skin/images/command-scratchpad.png");
 }
@@ -789,10 +785,6 @@
 
   #command-button-responsive > image {
     background-image: url("chrome://devtools/skin/images/command-responsivemode@2x.png");
-  }
-
-  #command-button-tilt > image {
-    background-image: url("chrome://devtools/skin/images/command-tilt@2x.png");
   }
 
   #command-button-scratchpad > image {

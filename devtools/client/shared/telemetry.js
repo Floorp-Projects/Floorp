@@ -160,11 +160,6 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_STORAGE_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_STORAGE_TIME_ACTIVE_SECONDS"
     },
-    tilt: {
-      histogram: "DEVTOOLS_TILT_OPENED_COUNT",
-      userHistogram: "DEVTOOLS_TILT_OPENED_PER_USER_FLAG",
-      timerHistogram: "DEVTOOLS_TILT_TIME_ACTIVE_SECONDS"
-    },
     paintflashing: {
       histogram: "DEVTOOLS_PAINTFLASHING_OPENED_COUNT",
       userHistogram: "DEVTOOLS_PAINTFLASHING_OPENED_PER_USER_FLAG",
