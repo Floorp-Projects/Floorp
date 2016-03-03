@@ -275,6 +275,66 @@ public:
 };
 
 /**
+ * This is a base class for media graph thread listener direct callbacks from
+ * within AppendToTrack(). It is bound to a certain track and can only be
+ * installed on audio tracks. Once added to a track on any stream in the graph,
+ * the graph will try to install it at that track's source of media data.
+ *
+ * This works for TrackUnionStreams, which will forward the listener to the
+ * track's input track if it exists, or wait for it to be created before
+ * forwarding if it doesn't.
+ * Once it reaches a SourceMediaStream, it can be successfully installed.
+ * Other types of streams will fail installation since they are not supported.
+ *
+ * Note that this listener and others for the same track will still get
+ * NotifyQueuedChanges() callbacks from the MSG tread, so you must be careful
+ * to ignore them if this listener was successfully installed.
+ */
+class MediaStreamTrackDirectListener : public MediaStreamTrackListener
+{
+public:
+  /*
+   * This will be called on any MediaStreamTrackDirectListener added to a
+   * SourceMediaStream when AppendToTrack() is called for the listener's bound
+   * track. The MediaSegment will be the RawSegment (unresampled) if available
+   * in AppendToTrack(). Note that NotifyQueuedTrackChanges() calls will also
+   * still occur.
+   */
+  virtual void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                                       StreamTime aTrackOffset,
+                                       const MediaSegment& aMedia) {}
+
+  /**
+   * When a direct listener is processed for installation by the
+   * MediaStreamGraph it will be notified with whether the installation was
+   * successful or not. The results of this installation are the following:
+   * TRACK_NOT_FOUND_AT_SOURCE
+   *    We found the source stream of media data for this track, but the track
+   *    didn't exist. This should only happen if you try to install the listener
+   *    directly to a SourceMediaStream that doesn't contain the given TrackID.
+   * TRACK_TYPE_NOT_SUPPORTED
+   *    This is the failure when you install the listener to a non-audio track.
+   * STREAM_NOT_SUPPORTED
+   *    While looking for the data source of this track, we found a MediaStream
+   *    that is not a SourceMediaStream or a TrackUnionStream.
+   * SUCCESS
+   *    Installation was successful and this listener will start receiving
+   *    NotifyRealtimeData on the next AppendToTrack().
+   */
+  enum class InstallationResult {
+    TRACK_NOT_FOUND_AT_SOURCE,
+    TRACK_TYPE_NOT_SUPPORTED,
+    STREAM_NOT_SUPPORTED,
+    SUCCESS
+  };
+  virtual void NotifyDirectListenerInstalled(InstallationResult aResult) {}
+  virtual void NotifyDirectListenerUninstalled() {}
+
+protected:
+  virtual ~MediaStreamTrackDirectListener() {}
+};
+
+/**
  * This is a base class for main-thread listener callbacks.
  * This callback is invoked on the main thread when the main-thread-visible
  * state of a stream has changed.
@@ -449,6 +509,29 @@ public:
                                 TrackID aTrackID);
   virtual void RemoveTrackListener(MediaStreamTrackListener* aListener,
                                    TrackID aTrackID);
+
+  /**
+   * Adds aListener to the source stream of track aTrackID in this stream.
+   * When the MediaStreamGraph processes the added listener, it will traverse
+   * the graph and add it to the track's source stream (remapping the TrackID
+   * along the way).
+   * Note that the listener will be notified on the MediaStreamGraph thread
+   * with whether the installation of it at the source was successful or not.
+   */
+  virtual void AddDirectTrackListener(MediaStreamTrackDirectListener* aListener,
+                                      TrackID aTrackID);
+
+  /**
+   * Removes aListener from the source stream of track aTrackID in this stream.
+   * Note that the listener has already been removed if the link between the
+   * source of track aTrackID and this stream has been broken (and made track
+   * aTrackID end). The caller doesn't have to care about this, removing when
+   * the source cannot be found, or when the listener had already been removed
+   * does nothing.
+   */
+  virtual void RemoveDirectTrackListener(MediaStreamTrackDirectListener* aListener,
+                                         TrackID aTrackID);
+
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
   void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
@@ -549,6 +632,10 @@ public:
                                     TrackID aTrackID);
   virtual void RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
                                        TrackID aTrackID);
+  virtual void AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+                                          TrackID aTrackID);
+  virtual void RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+                                             TrackID aTrackID);
   virtual void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
 
   void AddConsumer(MediaInputPort* aPort)
@@ -972,6 +1059,11 @@ protected:
 
   void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
 
+  void AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+                                  TrackID aTrackID) override;
+  void RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+                                     TrackID aTrackID) override;
+
   void AddTrackInternal(TrackID aID, TrackRate aRate,
                         StreamTime aStart, MediaSegment* aSegment,
                         uint32_t aFlags);
@@ -1010,6 +1102,7 @@ protected:
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
   nsTArray<RefPtr<MediaStreamDirectListener> > mDirectListeners;
+  nsTArray<TrackBound<MediaStreamTrackDirectListener>> mDirectTrackListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mNeedsMixing;
