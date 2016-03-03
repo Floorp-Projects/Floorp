@@ -2149,9 +2149,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kOpenGLInterfaceV0_ANPGetValue: {
       LOG("get openGL interface");
-      ANPOpenGLInterfaceV0 *i = (ANPOpenGLInterfaceV0*) result;
-      InitOpenGLInterface(i);
-      return NPERR_NO_ERROR;
+      return NPERR_GENERIC_ERROR;
     }
 
     case kWindowInterfaceV1_ANPGetValue: {
