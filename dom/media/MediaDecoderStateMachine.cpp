@@ -565,8 +565,7 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
           (IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
           (!mMinimizePreroll &&
-           !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate) &&
-           (mState != DECODER_STATE_SEEKING || mDecodeToSeekTarget)));
+           !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate)));
 }
 
 bool
