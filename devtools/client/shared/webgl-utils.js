@@ -43,11 +43,15 @@ function create3DContext(aCanvas)
   return context;
 }
 
-function isWebGLSupported() {
+function createCanvas(doc) {
+  return doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+}
+
+function isWebGLSupported(doc) {
   let supported =
     !isWebGLForceEnabled() &&
      isWebGLSupportedByGFX() &&
-     create3DContext(createCanvas());
+     create3DContext(createCanvas(doc));
 
   return supported;
 }
