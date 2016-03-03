@@ -71,6 +71,9 @@ gArgs = None
 gTestfiles = []
 gTestFlags = {}
 
+def to_unix_path_sep(path):
+    return path.replace('\\', '/')
+
 def log_output_of(subprocess):
     global gLog
     subprocess.wait()
@@ -121,7 +124,8 @@ def copy_file(test, srcfile, destname, isSupportFile=False):
     if not srcfile.startswith(gSrcPath):
         raise StandardError("Filename " + srcfile + " does not start with " + gSrcPath)
     logname = srcfile[len(gSrcPath):]
-    gLog.write("Importing " + logname + " to " + destname + "\n")
+    gLog.write("Importing " + to_unix_path_sep(logname) +
+               " to " + to_unix_path_sep(destname) + "\n")
     destfile = os.path.join(gDestPath, destname)
     destdir = os.path.dirname(destfile)
     if not os.path.exists(destdir):
@@ -215,8 +219,8 @@ def add_test_items(fn, spec):
 
 def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=False):
     global gTestFlags
-    newFile = open(aDestFileName, 'w')
-    unPrefixedFile = open(aSourceFileName)
+    newFile = open(aDestFileName, 'wb')
+    unPrefixedFile = open(aSourceFileName, 'rb')
     testName = aDestFileName[len(gDestPath)+1:]
     ahemFontAdded = False
     for line in unPrefixedFile:
@@ -308,8 +312,14 @@ def main():
         key = 0
         while not test[key] in gTestFlags.keys() and key < len(test):
             key = key + 1
+        testFlags = gTestFlags[test[key]]
+        # Replace the Windows separators if any. Our internal strings
+        # all use the system separator, however the failure/skip lists
+        # and reftest.list always use '/' so we fix the paths here.
+        test[key] = to_unix_path_sep(test[key])
+        test[key + 1] = to_unix_path_sep(test[key + 1])
         testKey = test[key]
-        if 'ahem' in gTestFlags[testKey]:
+        if 'ahem' in testFlags:
             test = ["HTTP(../../..)"] + test
         if testKey in gFailList:
             test = ["fails"] + test
