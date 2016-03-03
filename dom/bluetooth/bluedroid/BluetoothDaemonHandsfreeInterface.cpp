@@ -20,7 +20,7 @@ BluetoothHandsfreeNotificationHandler*
 
 #if ANDROID_VERSION < 21
 BluetoothAddress BluetoothDaemonHandsfreeModule::sConnectedDeviceAddress(
-  BluetoothAddress::ANY);
+  BluetoothAddress::ANY());
 #endif
 
 void
@@ -760,7 +760,7 @@ public:
     if (aArg1 == HFP_CONNECTION_STATE_CONNECTED) {
       sConnectedDeviceAddress = aArg2;
     } else if (aArg1 == HFP_CONNECTION_STATE_DISCONNECTED) {
-      sConnectedDeviceAddress = BluetoothAddress::ANY;
+      sConnectedDeviceAddress = BluetoothAddress::ANY();
     }
 #endif
     WarnAboutTrailingData();

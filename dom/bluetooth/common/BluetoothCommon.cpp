@@ -16,23 +16,36 @@ BEGIN_BLUETOOTH_NAMESPACE
 // |BluetoothAddress|
 //
 
-const BluetoothAddress BluetoothAddress::ANY(0x00, 0x00, 0x00,
-                                             0x00, 0x00, 0x00);
+const BluetoothAddress& BluetoothAddress::ANY()
+{
+  static const BluetoothAddress sAddress(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+  return sAddress;
+}
 
-const BluetoothAddress BluetoothAddress::ALL(0xff, 0xff, 0xff,
-                                             0xff, 0xff, 0xff);
+const BluetoothAddress& BluetoothAddress::ALL()
+{
+  static const BluetoothAddress sAddress(0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
+  return sAddress;
+}
 
-const BluetoothAddress BluetoothAddress::LOCAL(0x00, 0x00, 0x00,
-                                               0xff, 0xff, 0xff);
+const BluetoothAddress& BluetoothAddress::LOCAL()
+{
+  static const BluetoothAddress sAddress(0x00, 0x00, 0x00, 0xff, 0xff, 0xff);
+  return sAddress;
+}
 
 //
 // |BluetoothUuid|
 //
 
-const BluetoothUuid BluetoothUuid::ZERO(0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x00, 0x00);
+const BluetoothUuid& BluetoothUuid::ZERO()
+{
+  static const BluetoothUuid sUuid(0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00);
+  return sUuid;
+}
 
 /*
  * [Bluetooth Specification Version 4.2, Volume 3, Part B, Section 2.5.1]
@@ -43,9 +56,13 @@ const BluetoothUuid BluetoothUuid::ZERO(0x00, 0x00, 0x00, 0x00,
  * the Bluetooth Base UUID and has the value 00000000-0000-1000-8000-
  * 00805F9B34FB, from the Bluetooth Assigned Numbers document.
  */
-const BluetoothUuid BluetoothUuid::BASE(0x00, 0x00, 0x00, 0x00,
-                                        0x00, 0x00, 0x10, 0x00,
-                                        0x80, 0x00, 0x00, 0x80,
-                                        0x5f, 0x9b, 0x34, 0xfb);
+const BluetoothUuid& BluetoothUuid::BASE()
+{
+  static const BluetoothUuid sUuid(0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x10, 0x00,
+                                   0x80, 0x00, 0x00, 0x80,
+                                   0x5f, 0x9b, 0x34, 0xfb);
+  return sUuid;
+}
 
 END_BLUETOOTH_NAMESPACE
