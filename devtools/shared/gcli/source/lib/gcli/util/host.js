@@ -60,13 +60,6 @@ exports.Highlighter = Highlighter;
 /**
  * See docs in lib/gcli/util/host.js
  */
-exports.spawn = function(context, spawnSpec) {
-  throw new Error('Not supported');
-};
-
-/**
- * See docs in lib/gcli/util/host.js
- */
 exports.exec = function(task) {
   return Task.spawn(task);
 };
