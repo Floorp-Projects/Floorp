@@ -64,3 +64,39 @@
 == css-namespaces-3/syntax-013.xml css-namespaces-3/ref-lime-5.xml
 == css-namespaces-3/syntax-014.xml css-namespaces-3/ref-lime-3.xml
 == css-namespaces-3/syntax-015.xml css-namespaces-3/ref-lime-1.xml
+fails == css-values-3/attr-color-invalid-cast.html css-values-3/200-200-green.html
+== css-values-3/attr-color-invalid-fallback.html css-values-3/200-200-green.html
+fails == css-values-3/attr-color-valid.html css-values-3/200-200-green.html
+== css-values-3/attr-invalid-type-001.html css-values-3/200-200-green.html
+== css-values-3/attr-invalid-type-002.html css-values-3/200-200-green.html
+== css-values-3/attr-invalid-type-003.html css-values-3/200-200-green.html
+fails == css-values-3/attr-length-invalid-cast.html css-values-3/200-200-green.html
+== css-values-3/attr-length-invalid-fallback.html css-values-3/200-200-green.html
+fails == css-values-3/attr-length-valid-zero-nofallback.html css-values-3/200-200-green.html
+fails == css-values-3/attr-length-valid-zero.html css-values-3/200-200-green.html
+fails == css-values-3/attr-length-valid.html css-values-3/200-200-green.html
+fails == css-values-3/attr-px-invalid-cast.html css-values-3/200-200-green.html
+== css-values-3/attr-px-invalid-fallback.html css-values-3/200-200-green.html
+fails == css-values-3/attr-px-valid.html css-values-3/200-200-green.html
+fails == css-values-3/calc-in-calc.html css-values-3/all-green.html
+fails == css-values-3/calc-in-media-queries-001.html css-values-3/all-green.html
+fails == css-values-3/calc-in-media-queries-002.html css-values-3/all-green.html
+== css-values-3/calc-invalid-range-clamping.html css-values-3/200-200-green.html
+== css-values-3/calc-parenthesis-stack.html css-values-3/all-green.html
+== css-values-3/ch-unit-001.html css-values-3/ch-unit-001-ref.html
+== css-values-3/initial-background-color.html css-values-3/all-green.html
+== css-values-3/vh-calc-support-pct.html css-values-3/all-green.html
+== css-values-3/vh-calc-support.html css-values-3/all-green.html
+== css-values-3/vh-em-inherit.html css-values-3/all-green.html
+== css-values-3/vh-inherit.html css-values-3/all-green.html
+fails == css-values-3/vh-interpolate-pct.html css-values-3/all-green.html
+== css-values-3/vh-interpolate-px.html css-values-3/all-green.html
+== css-values-3/vh-interpolate-vh.html css-values-3/all-green.html
+== css-values-3/vh-support-atviewport.html css-values-3/all-green.html
+== css-values-3/vh-support-margin.html css-values-3/all-green.html
+== css-values-3/vh-support-transform-origin.html css-values-3/all-green.html
+== css-values-3/vh-support-transform-translate.html css-values-3/all-green.html
+== css-values-3/vh-support.html css-values-3/all-green.html
+== css-values-3/vh-zero-support.html css-values-3/all-green.html
+== css-values-3/vh_not_refreshing_on_chrome.html css-values-3/vh_not_refreshing_on_chrome-ref.html
+== css-values-3/vh_not_refreshing_on_chrome_iframe.html css-values-3/vh_not_refreshing_on_chrome-ref.html
