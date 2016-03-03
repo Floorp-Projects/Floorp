@@ -40,7 +40,7 @@ add_task(function*() {
   ok(inspector.markup, "There is a markup view");
 
   // Select an element while the tab is in the middle of a slow reload.
-  reloadTab(testActor);
+  testActor.eval("location.reload()");
   yield domContentLoaded;
   yield chooseWithInspectElementContextMenu("img", testActor);
   yield pageLoaded;

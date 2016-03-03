@@ -21,11 +21,11 @@ add_task(function*() {
   let container = yield getContainerForSelector("#retag-me", inspector);
   ok(container.expanded, "The container is expanded");
 
-  let parentInfo = yield getNodeInfo("#retag-me", testActor);
+  let parentInfo = yield testActor.getNodeInfo("#retag-me");
   is(parentInfo.tagName.toLowerCase(), "div",
      "We've got #retag-me element, it's a DIV");
   is(parentInfo.numChildren, 1, "#retag-me has one child");
-  let childInfo = yield getNodeInfo("#retag-me > *", testActor);
+  let childInfo = yield testActor.getNodeInfo("#retag-me > *");
   is(childInfo.attributes[0].value, "retag-me-2",
      "#retag-me's only child is #retag-me-2");
 
@@ -41,11 +41,11 @@ add_task(function*() {
   ok(container.selected, "The container is still selected");
 
   info("Checking that the tagname change was done");
-  parentInfo = yield getNodeInfo("#retag-me", testActor);
+  parentInfo = yield testActor.getNodeInfo("#retag-me");
   is(parentInfo.tagName.toLowerCase(), "p",
      "The #retag-me element is now a P");
   is(parentInfo.numChildren, 1, "#retag-me still has one child");
-  childInfo = yield getNodeInfo("#retag-me > *", testActor);
+  childInfo = yield testActor.getNodeInfo("#retag-me > *");
   is(childInfo.attributes[0].value, "retag-me-2",
      "#retag-me's only child is #retag-me-2");
 });

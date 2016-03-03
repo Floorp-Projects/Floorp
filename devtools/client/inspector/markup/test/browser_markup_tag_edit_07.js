@@ -45,7 +45,7 @@ var TEST_DATA = [{
   expectedAttributes: {
     "style": DATA_URL_INLINE_STYLE
   },
-  validate: (element, container, inspector) => {
+  validate: (container, inspector) => {
     let editor = container.editor;
     let visibleAttrText = editor.attrElements.get("style")
                                              .querySelector(".attr-value")
@@ -58,7 +58,7 @@ var TEST_DATA = [{
   expectedAttributes: {
     "data-long": LONG_ATTRIBUTE
   },
-  validate: (element, container, inspector) => {
+  validate: (container, inspector) => {
     let editor = container.editor;
     let visibleAttrText = editor.attrElements.get("data-long")
                                              .querySelector(".attr-value")
@@ -71,7 +71,7 @@ var TEST_DATA = [{
   expectedAttributes: {
     "src": DATA_URL_ATTRIBUTE
   },
-  validate: (element, container, inspector) => {
+  validate: (container, inspector) => {
     let editor = container.editor;
     let visibleAttrText = editor.attrElements.get("src")
                                 .querySelector(".attr-value").textContent;
@@ -87,7 +87,7 @@ var TEST_DATA = [{
   setUp: function(inspector) {
     Services.prefs.setBoolPref("devtools.markup.collapseAttributes", false);
   },
-  validate: (element, container, inspector) => {
+  validate: (container, inspector) => {
     let editor = container.editor;
     let visibleAttrText = editor.attrElements
       .get("data-long")
@@ -107,7 +107,7 @@ var TEST_DATA = [{
   setUp: function(inspector) {
     Services.prefs.setIntPref("devtools.markup.collapseAttributeLength", 2);
   },
-  validate: (element, container, inspector) => {
+  validate: (container, inspector) => {
     let firstChar = LONG_ATTRIBUTE[0];
     let lastChar = LONG_ATTRIBUTE[LONG_ATTRIBUTE.length - 1];
     let collapsed = firstChar + "\u2026" + lastChar;

@@ -13,7 +13,7 @@ const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 // The test data contains a list of mutations to test.
 // Each item is an object:
 // - desc: a description of the test step, for better logging
-// - mutate: a function that should make changes to the content DOM
+// - mutate: a generator function that should make changes to the content DOM
 // - attribute: if set, the test will expect the corresponding attribute to
 //   flash instead of the whole node
 // - flashedNode: [optional] the css selector of the node that is expected to
@@ -21,69 +21,82 @@ const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 //   If missing, the rootNode (".list") will be expected to flash
 const TEST_DATA = [{
   desc: "Adding a new node should flash the new node",
-  mutate: (doc, rootNode) => {
-    let newLi = doc.createElement("LI");
-    newLi.textContent = "new list item";
-    rootNode.appendChild(newLi);
+  mutate: function*(testActor) {
+    yield testActor.eval(`
+      let newLi = content.document.createElement("LI");
+      newLi.textContent = "new list item";
+      content.document.querySelector(".list").appendChild(newLi);
+    `);
   },
   flashedNode: ".list li:nth-child(3)"
 }, {
   desc: "Removing a node should flash its parent",
-  mutate: (doc, rootNode) => {
-    rootNode.removeChild(rootNode.lastElementChild);
+  mutate: function*(testActor) {
+    yield testActor.eval(`
+      let root = content.document.querySelector(".list");
+      root.removeChild(root.lastElementChild);
+    `);
   }
 }, {
   desc: "Re-appending an existing node should only flash this node",
-  mutate: (doc, rootNode) => {
-    rootNode.appendChild(rootNode.firstElementChild);
+  mutate: function*(testActor) {
+    yield testActor.eval(`
+      let root = content.document.querySelector(".list");
+      root.appendChild(root.firstElementChild);
+    `);
   },
   flashedNode: ".list .item:last-child"
 }, {
   desc: "Adding an attribute should flash the attribute",
   attribute: "test-name",
-  mutate: (doc, rootNode) => {
-    rootNode.setAttribute("test-name", "value-" + Date.now());
+  mutate: function*(testActor) {
+    yield testActor.setAttribute(".list", "test-name", "value-" + Date.now());
   }
 }, {
   desc: "Adding an attribute with css reserved characters should flash the " +
         "attribute",
   attribute: "one:two",
-  mutate: (doc, rootNode) => {
-    rootNode.setAttribute("one:two", "value-" + Date.now());
+  mutate: function*(testActor) {
+    yield testActor.setAttribute(".list", "one:two", "value-" + Date.now());
   }
 }, {
   desc: "Editing an attribute should flash the attribute",
   attribute: "class",
-  mutate: (doc, rootNode) => {
-    rootNode.setAttribute("class", "list value-" + Date.now());
+  mutate: function*(testActor) {
+    yield testActor.setAttribute(".list", "class", "list value-" + Date.now());
   }
 }, {
   desc: "Multiple changes to an attribute should flash the attribute",
   attribute: "class",
-  mutate: (doc, rootNode) => {
-    rootNode.removeAttribute("class");
-    rootNode.setAttribute("class", "list value-" + Date.now());
-    rootNode.setAttribute("class", "list value-" + Date.now());
-    rootNode.removeAttribute("class");
-    rootNode.setAttribute("class", "list value-" + Date.now());
-    rootNode.setAttribute("class", "list value-" + Date.now());
+  mutate: function*(testActor) {
+    yield testActor.eval(`
+      let root = content.document.querySelector(".list");
+      root.removeAttribute("class");
+      root.setAttribute("class", "list value-" + Date.now());
+      root.setAttribute("class", "list value-" + Date.now());
+      root.removeAttribute("class");
+      root.setAttribute("class", "list value-" + Date.now());
+      root.setAttribute("class", "list value-" + Date.now());
+    `);
   }
 }, {
   desc: "Removing an attribute should flash the node",
-  mutate: (doc, rootNode) => {
-    rootNode.removeAttribute("class");
+  mutate: function*(testActor) {
+    yield testActor.eval(`
+      let root = content.document.querySelector(".list");
+      root.removeAttribute("class");
+    `);
   }
 }];
 
 add_task(function*() {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   // Make sure mutated nodes flash for a very long time so we can more easily
   // assert they do
   inspector.markup.CONTAINER_FLASHING_DURATION = 1000 * 60 * 60;
 
   info("Getting the <ul.list> root node to test mutations on");
-  let rootNode = getNode(".list");
   let rootNodeFront = yield getNodeFront(".list", inspector);
 
   info("Selecting the last element of the root node before starting");
@@ -93,9 +106,14 @@ add_task(function*() {
     info("Starting test: " + desc);
 
     info("Mutating the DOM and listening for markupmutation event");
-    let mutated = inspector.once("markupmutation");
-    mutate(content.document, rootNode);
-    yield mutated;
+    let onMutation = inspector.once("markupmutation");
+    yield mutate(testActor);
+    let mutations = yield onMutation;
+
+    info("Wait for the breadcrumbs widget to update if it needs to");
+    if (inspector.breadcrumbs._hasInterestingMutations(mutations)) {
+      yield inspector.once("breadcrumbs-updated");
+    }
 
     info("Asserting that the correct markup-container is flashing");
     let flashingNodeFront = rootNodeFront;

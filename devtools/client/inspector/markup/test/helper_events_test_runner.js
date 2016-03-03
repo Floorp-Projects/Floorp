@@ -70,8 +70,7 @@ function* checkEventsForNode(test, inspector, testActor) {
   info("tooltip shown");
 
   // Check values
-  let content = tooltip.content;
-  let headers = content.querySelectorAll(".event-header");
+  let headers = tooltip.content.querySelectorAll(".event-header");
   let nodeFront = container.node;
   let cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
 
