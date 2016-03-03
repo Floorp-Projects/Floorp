@@ -337,6 +337,10 @@ var DebuggerView = {
         }
       }
     });
+
+    this.editor.on("cursorActivity", () => {
+      this.clickedLine = null;
+    });
   },
 
   updateEditorBreakpoints: function(source) {

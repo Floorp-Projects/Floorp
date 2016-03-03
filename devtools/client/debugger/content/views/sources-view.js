@@ -1147,7 +1147,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onCmdAddBreakpoint: function(e) {
     let actor = this.selectedValue;
-    let line = (e && e.sourceEvent.target.tagName == 'menuitem' ?
+    let line = (this.DebuggerView.clickedLine ?
                 this.DebuggerView.clickedLine + 1 :
                 this.DebuggerView.editor.getCursor().line + 1);
     let location = { actor, line };
