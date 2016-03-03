@@ -58,7 +58,6 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
   if (test.setUp) {
     test.setUp(inspector);
   }
-  let element = getNode(selector);
 
   info("Starting add-attribute test: " + test.desc);
   yield addNewAttributes(selector, test.text, inspector);
@@ -68,7 +67,7 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
 
   if (test.validate) {
     let container = yield getContainerForSelector(selector, inspector);
-    test.validate(element, container, inspector);
+    test.validate(container, inspector);
   }
 
   info("Undo the change");

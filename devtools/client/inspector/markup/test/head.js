@@ -52,73 +52,11 @@ function loadHelperScript(filePath) {
  * @return a promise that resolves when the inspector has emitted the event
  * new-root
  */
-function reloadPage(inspector) {
+function reloadPage(inspector, testActor) {
   info("Reloading the page");
   let newRoot = inspector.once("new-root");
-  content.location.reload();
+  testActor.reload();
   return newRoot;
-}
-
-/**
- * Reload the current tab location.
- * @param {TestActorFront} testActor An instance of the current TestActorFront
- * instantiated when the test started.
- */
-function reloadTab(testActor) {
-  return testActor.eval("location.reload()");
-}
-
-/**
- * Simple DOM node accesor function that takes either a node or a string css
- * selector as argument and returns the corresponding node
- * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
- * doesn't implement *all* of the DOMNode's properties
- */
-function getNode(nodeOrSelector) {
-  info("Getting the node for '" + nodeOrSelector + "'");
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
-}
-
-/**
- * Get information about a DOM element, identified by its selector.
- * @param {String} selector.
- * @return {Promise} a promise that resolves to the element's information.
- */
-function getNodeInfo(selector, testActor) {
-  return testActor.getNodeInfo(selector);
-}
-
-/**
- * Set the value of an attribute of a DOM element, identified by its selector.
- * @param {String} selector.
- * @param {String} attributeName.
- * @param {String} attributeValue.
- * @param {TestActorFront} testActor The current TestActorFront instance.
- * @return {Promise} resolves when done.
- */
-function setNodeAttribute(selector, attributeName, attributeValue, testActor) {
-  return testActor.setAttribute(selector, attributeName, attributeValue);
-}
-
-/**
- * Highlight a node and set the inspector's current selection to the node or
- * the first match of the given css selector.
- * @param {String|DOMNode} nodeOrSelector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves when the inspector is updated with the new
- * node
- */
-function selectAndHighlightNode(nodeOrSelector, inspector) {
-  info("Highlighting and selecting the node " + nodeOrSelector);
-
-  let node = getNode(nodeOrSelector);
-  let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNode(node, "test-highlight");
-  return updated;
 }
 
 /**
@@ -241,7 +179,7 @@ var addNewAttributes = Task.async(function*(selector, text, inspector) {
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
 var assertAttributes = Task.async(function*(selector, expected, testActor) {
-  let {attributes: actual} = yield getNodeInfo(selector, testActor);
+  let {attributes: actual} = yield testActor.getNodeInfo(selector);
 
   is(actual.length, Object.keys(expected).length,
     "The node " + selector + " has the expected number of attributes.");
@@ -325,7 +263,7 @@ function searchUsingSelectorSearch(selector, inspector) {
  */
 function wait(ms) {
   let def = promise.defer();
-  content.setTimeout(def.resolve, ms);
+  setTimeout(def.resolve, ms);
   return def.promise;
 }
 
