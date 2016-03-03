@@ -716,6 +716,21 @@ EffectCompositor::GetPresContext(Element* aElement)
   return shell->GetPresContext();
 }
 
+/* static */ void
+EffectCompositor::SetPerformanceWarning(const nsIFrame *aFrame,
+                                        nsCSSProperty aProperty,
+                                        const nsAString& aMessage)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return;
+  }
+
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    effect->SetPerformanceWarning(aProperty, aMessage);
+  }
+}
+
 // ---------------------------------------------------------
 //
 // Nested class: AnimationStyleRuleProcessor
