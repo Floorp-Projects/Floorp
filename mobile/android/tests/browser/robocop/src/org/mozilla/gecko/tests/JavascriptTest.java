@@ -11,6 +11,13 @@ import org.mozilla.gecko.tests.helpers.JavascriptMessageParser;
 
 import android.util.Log;
 
+/**
+ * Extended to test stand-alone Javascript in automation. If you're looking to test JS interactions
+ * with Java, see {@link JavascriptBridgeTest}.
+ *
+ * There are also other tests that run stand-alone javascript but are more difficult for the mobile
+ * team to run (e.g. xpcshell).
+ */
 public class JavascriptTest extends BaseTest {
     private static final String LOGTAG = "JavascriptTest";
     private static final String EVENT_TYPE = JavascriptBridge.EVENT_TYPE;
