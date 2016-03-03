@@ -1935,7 +1935,8 @@ public class GeckoAppShell
 
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists() ||
-                          (new File("/system/lib/hw/gralloc.tegra3.so")).exists();
+                          (new File("/system/lib/hw/gralloc.tegra3.so")).exists() ||
+                          (new File("/sys/class/nvidia-gpu")).exists();
         if (isTegra) {
             // disable on KitKat (bug 957694)
             if (Versions.feature19Plus) {
