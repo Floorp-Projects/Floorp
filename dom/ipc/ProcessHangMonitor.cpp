@@ -428,7 +428,8 @@ HangMonitorChild::NotifyPluginHangAsync(uint32_t aPluginId)
 
   // bounce back to parent on background thread
   if (mIPCOpen) {
-    Unused << SendHangEvidence(PluginHangData(aPluginId));
+    Unused << SendHangEvidence(PluginHangData(aPluginId,
+                                              base::GetCurrentProcId()));
   }
 }
 
@@ -819,7 +820,8 @@ HangMonitoredProcess::TerminatePlugin()
   // generates a crash report that includes a browser report taken here
   // earlier, the content process, and any plugin process(es).
   uint32_t id = mHangData.get_PluginHangData().pluginId();
-  plugins::TerminatePlugin(id, NS_LITERAL_CSTRING("HangMonitor"),
+  base::ProcessId contentPid = mHangData.get_PluginHangData().contentProcessId();
+  plugins::TerminatePlugin(id, contentPid, NS_LITERAL_CSTRING("HangMonitor"),
                            mBrowserDumpId);
 
   if (mActor) {
