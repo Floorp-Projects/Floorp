@@ -24,6 +24,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
@@ -108,12 +110,17 @@ public class CheckAction implements BaseAction {
 
     private void notify(List<Feed> updatedFeeds) {
         final int feedCount = updatedFeeds.size();
+        if (feedCount == 0) {
+            return;
+        }
 
         if (feedCount == 1) {
             notifySingle(updatedFeeds.get(0));
-        } else if (feedCount > 1) {
+        } else {
             notifyMultiple(updatedFeeds);
         }
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.NOTIFICATION, "content_update");
     }
 
     private void notifySingle(Feed feed) {
