@@ -6,6 +6,7 @@
 #include "MediaStreamTrack.h"
 
 #include "DOMMediaStream.h"
+#include "MediaStreamGraph.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 
@@ -195,6 +196,24 @@ ProcessedMediaStream*
 MediaStreamTrack::GetOwnedStream()
 {
   return GetStream()->GetOwnedStream();
+}
+
+void
+MediaStreamTrack::AddListener(MediaStreamTrackListener* aListener)
+{
+  LOG(LogLevel::Debug, ("MediaStreamTrack %p adding listener %p",
+                        this, aListener));
+
+  GetOwnedStream()->AddTrackListener(aListener, mTrackID);
+}
+
+void
+MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
+{
+  LOG(LogLevel::Debug, ("MediaStreamTrack %p removing listener %p",
+                        this, aListener));
+
+  GetOwnedStream()->RemoveTrackListener(aListener, mTrackID);
 }
 
 } // namespace dom

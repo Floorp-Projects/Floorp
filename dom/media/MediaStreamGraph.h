@@ -217,6 +217,41 @@ public:
 };
 
 /**
+ * This is a base class for media graph thread listener callbacks locked to
+ * specific tracks. Override methods to be notified of audio or video data or
+ * changes in track state.
+ *
+ * All notification methods are called from the media graph thread. Overriders
+ * of these methods are responsible for all synchronization. Beware!
+ * These methods are called without the media graph monitor held, so
+ * reentry into media graph methods is possible, although very much discouraged!
+ * You should do something non-blocking and non-reentrant (e.g. dispatch an
+ * event to some thread) and return.
+ * The listener is not allowed to add/remove any listeners from the parent
+ * stream.
+ *
+ * If a listener is attached to a track that has already ended, we guarantee
+ * to call NotifyEnded.
+ */
+class MediaStreamTrackListener
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamTrackListener)
+
+public:
+  virtual void NotifyQueuedChanges(MediaStreamGraph* aGraph,
+                                   StreamTime aTrackOffset,
+                                   const MediaSegment& aQueuedMedia) {}
+
+  virtual void NotifyEnded() {}
+
+  virtual void NotifyRemoved() {}
+
+protected:
+  virtual ~MediaStreamTrackListener() {}
+};
+
+
+/**
  * This is a base class for media graph thread listener direct callbacks
  * from within AppendToTrack().  Note that your regular listener will
  * still get NotifyQueuedTrackChanges() callbacks from the MSG thread, so
@@ -277,6 +312,16 @@ class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
 class CameraPreviewMediaStream;
+
+/**
+ * Helper struct for binding a track listener to a specific TrackID.
+ */
+template<typename Listener>
+struct TrackBound
+{
+  RefPtr<Listener> mListener;
+  TrackID mTrackID;
+};
 
 /**
  * A stream of synchronized audio and video data. All (not blocked) streams
@@ -400,6 +445,10 @@ public:
   // Events will be dispatched by calling methods of aListener.
   virtual void AddListener(MediaStreamListener* aListener);
   virtual void RemoveListener(MediaStreamListener* aListener);
+  virtual void AddTrackListener(MediaStreamTrackListener* aListener,
+                                TrackID aTrackID);
+  virtual void RemoveTrackListener(MediaStreamTrackListener* aListener,
+                                   TrackID aTrackID);
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
   void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
@@ -496,6 +545,10 @@ public:
   void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
+  virtual void AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aListener,
+                                    TrackID aTrackID);
+  virtual void RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
+                                       TrackID aTrackID);
   virtual void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
 
   void AddConsumer(MediaInputPort* aPort)
@@ -649,6 +702,7 @@ protected:
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
   nsTArray<RefPtr<MediaStreamListener> > mListeners;
+  nsTArray<TrackBound<MediaStreamTrackListener>> mTrackListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
   nsTArray<TrackID> mDisabledTrackIDs;
 
