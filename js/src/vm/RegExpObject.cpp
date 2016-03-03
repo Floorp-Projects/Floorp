@@ -918,49 +918,44 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
 {
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
 
-    // Check that the RegExpShared for |regex| is okay to reuse in the clone.
-    // If the |RegExpStatics| provides additional flags, we'll need a new
-    // |RegExpShared|.
-    RegExpStatics* currentStatics = regex->getProto()->global().getRegExpStatics(cx);
-    if (!currentStatics)
+    // Unlike RegExpAlloc, all clones must use |regex|'s group.  Allocate
+    // in the tenured heap to simplify embedding them in JIT code.
+    RootedObjectGroup group(cx, regex->group());
+    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, TenuredObject));
+    if (!clone)
         return nullptr;
+    clone->initPrivate(nullptr);
 
     if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, clone))
         return nullptr;
 
     Rooted<JSAtom*> source(cx, regex->getSource());
 
+    // Check that the RegExpShared for |regex| is okay to reuse in the clone.
+    RegExpStatics* currentStatics = regex->getProto()->global().getRegExpStatics(cx);
+    if (!currentStatics)
+        return nullptr;
+
     RegExpFlag origFlags = regex->getFlags();
     RegExpFlag staticsFlags = currentStatics->getFlags();
     if ((origFlags & staticsFlags) != staticsFlags) {
-        Rooted<RegExpObject*> clone(cx, RegExpAlloc(cx));
-        if (!clone)
-            return nullptr;
-
+        // If |currentStatics| provides additional flags, we'll have to use a
+        // new |RegExpShared|.
         if (!RegExpObject::initFromAtom(cx, clone, source, RegExpFlag(origFlags | staticsFlags)))
             return nullptr;
+    } else {
+        // Otherwise we can use |regexp|'s RegExpShared.  Initialize using its
+        // flags and associate it with the clone.
+        RegExpGuard g(cx);
+        if (!regex->getShared(cx, &g))
+            return nullptr;
 
-        return clone;
+        if (!RegExpObject::initFromAtom(cx, clone, source, g->getFlags()))
+            return nullptr;
+
+        clone->setShared(*g.re());
     }
 
-    // Otherwise, the clone can use |regexp|'s RegExpShared.
-    RootedObjectGroup group(cx, regex->group());
-
-    // Note: RegExp objects are always allocated in the tenured heap. This is
-    // not strictly required, but it simplifies embedding them in jitcode.
-    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, TenuredObject));
-    if (!clone)
-        return nullptr;
-    clone->initPrivate(nullptr);
-
-    RegExpGuard g(cx);
-    if (!regex->getShared(cx, &g))
-        return nullptr;
-
-    if (!RegExpObject::initFromAtom(cx, clone, source, g->getFlags()))
-        return nullptr;
-
-    clone->setShared(*g.re());
     return clone;
 }
 
