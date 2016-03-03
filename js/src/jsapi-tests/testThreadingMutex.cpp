@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi-tests/tests.h"
+#include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 
 BEGIN_TEST(testThreadingMutex)
@@ -16,3 +17,11 @@ BEGIN_TEST(testThreadingMutex)
     return true;
 }
 END_TEST(testThreadingMutex)
+
+BEGIN_TEST(testThreadingLockGuard)
+{
+    js::Mutex mutex;
+    js::LockGuard<js::Mutex> guard(mutex);
+    return true;
+}
+END_TEST(testThreadingLockGuard)
