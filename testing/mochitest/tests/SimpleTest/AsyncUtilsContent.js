@@ -47,7 +47,12 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
     }
   }
 
-  let result = EventUtils.synthesizeMouseAtPoint(left, top, data.event, content);
+  let result;
+  if (data.event && data.event.wheel) {
+    EventUtils.synthesizeWheelAtPoint(left, top, data.event, content);
+  } else {
+    result = EventUtils.synthesizeMouseAtPoint(left, top, data.event, content);
+  }
   sendAsyncMessage("Test:SynthesizeMouseDone", { defaultPrevented: result });
 });
 
