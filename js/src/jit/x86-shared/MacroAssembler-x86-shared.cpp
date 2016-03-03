@@ -317,6 +317,14 @@ MacroAssemblerX86Shared::asmMergeWith(const MacroAssemblerX86Shared& other)
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void
@@ -590,9 +598,5 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     addCodeLabel(cl);
     return retAddr;
 }
-
-void
-MacroAssembler::flush()
-{}
 
 //}}} check_macroassembler_style
