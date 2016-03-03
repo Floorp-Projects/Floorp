@@ -28,6 +28,7 @@ public:
   already_AddRefed<nsTransactionItem> GetItem(int32_t aIndex);
   void Clear();
   int32_t GetSize() { return mDeque.size(); }
+  bool IsEmpty() const { return mDeque.empty(); }
 
   void DoUnlink() { Clear(); }
   void DoTraverse(nsCycleCollectionTraversalCallback &cb);
