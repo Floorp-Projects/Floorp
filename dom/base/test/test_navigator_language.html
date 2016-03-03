@@ -22,21 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
   SimpleTest.waitForExplicitFinish();
 
   /** Test for NavigatorLanguage **/
-  var prefValue = null;
   var actualLanguageChangesFromHandler = 0;
   var actualLanguageChangesFromAVL = 0;
   var expectedLanguageChanges = 0;
-
-  function setUp() {
-    try {
-      prefValue = SpecialPowers.getCharPref('intl.accept_languages');
-    } catch (e) {
-    }
-  }
-
-  function tearDown() {
-    SpecialPowers.setCharPref('intl.accept_languages', prefValue);
-  }
 
   var testValues = [
     { accept_languages: 'foo', language: 'foo', languages: ['foo'] },
@@ -58,7 +46,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
   function nextTest() {
     currentTestIdx++;
     if (currentTestIdx >= tests.length) {
-      tearDown();
       SimpleTest.finish();
       return;
     }
@@ -90,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
     }
 
     setTimeout(function() {
-      SpecialPowers.setCharPref('intl.accept_languages', 'testArrayCached');
+      SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'testArrayCached']]});
     }, 0);
   });
 
@@ -103,7 +90,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
       "nextTest();");
 
     setTimeout(function() {
-      SpecialPowers.setCharPref('intl.accept_languages', 'testEventProperties');
+      SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'testEventProperties']]}, function() {});
     }, 0);
   });
 
@@ -133,7 +120,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
       for (var i = 0; i < testValues.length; ++i) {
         var data = testValues[i];
         setTimeout(function(data) {
-          SpecialPowers.setCharPref('intl.accept_languages', data.accept_languages);
+          SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', data.accept_languages]]});
         }, 0, data);
         expectedLanguageChanges++;
         yield undefined;
@@ -156,22 +143,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
     genEvents.next();
   });
 
-  // Check that the orientationchange event isn't sent twice if the preference
+  // Check that the languagechange event isn't sent twice if the preference
   // is set to the same value.
   tests.push(function testOnlyFireIfRealChange() {
     function* changeLanguage() {
       setTimeout(function() {
-        SpecialPowers.setCharPref('intl.accept_languages', 'fr-CA');
+        SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'fr-CA']]});
       });
       yield undefined;
 
       setTimeout(function() {
         // Twice the same change, should fire only one event.
-        SpecialPowers.setCharPref('intl.accept_languages', 'fr-CA');
+        SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'fr-CA']]});
         setTimeout(function() {
           // A real change to tell the test it should now count how many changes were
           // received until now.
-          SpecialPowers.setCharPref('intl.accept_languages', 'fr-FR');
+          SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'fr-FR']]});
         });
       });
       yield undefined;
@@ -210,16 +197,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
 
       SpecialPowers.exactGC(window, function() {
         // This should not crash.
-        SpecialPowers.setCharPref('intl.accept_languages', 'en-GB');
-
-        nextTest();
+        SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', 'en-GB']]}, nextTest);
       });
     }
   });
 
   // There is one test using document.body.
   addLoadEvent(function() {
-    setUp();
     tests[0]();
   });
 
