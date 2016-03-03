@@ -486,13 +486,11 @@ bool
 MediaDecoderStateMachine::NeedToDecodeVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("NeedToDecodeVideo() isDec=%d decToTar=%d minPrl=%d seek=%d enufVid=%d",
-             IsVideoDecoding(), mDecodeToSeekTarget, mMinimizePreroll,
-             mState == DECODER_STATE_SEEKING,
-             HaveEnoughDecodedVideo());
+  SAMPLE_LOG("NeedToDecodeVideo() isDec=%d minPrl=%d enufVid=%d",
+             IsVideoDecoding(), mMinimizePreroll, HaveEnoughDecodedVideo());
   return IsVideoDecoding() &&
-         ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
-          (IsDecodingFirstFrame() && VideoQueue().GetSize() == 0) ||
+         mState != DECODER_STATE_SEEKING &&
+         ((IsDecodingFirstFrame() && VideoQueue().GetSize() == 0) ||
           (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
 }
 
@@ -556,14 +554,13 @@ bool
 MediaDecoderStateMachine::NeedToDecodeAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("NeedToDecodeAudio() isDec=%d decToTar=%d minPrl=%d seek=%d enufAud=%d",
-             IsAudioDecoding(), mDecodeToSeekTarget, mMinimizePreroll,
-             mState == DECODER_STATE_SEEKING,
+  SAMPLE_LOG("NeedToDecodeAudio() isDec=%d minPrl=%d enufAud=%d",
+             IsAudioDecoding(), mMinimizePreroll,
              HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate));
 
   return IsAudioDecoding() &&
-         ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
-          (IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
+         mState != DECODER_STATE_SEEKING &&
+         ((IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
           (!mMinimizePreroll &&
            !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate)));
 }
@@ -1025,6 +1022,8 @@ MediaDecoderStateMachine::CheckIfSeekComplete()
              audioSeekComplete, videoSeekComplete);
 
   if (audioSeekComplete && videoSeekComplete) {
+    NS_ASSERTION(AudioQueue().GetSize() <= 1, "Should decode at most one sample");
+    NS_ASSERTION(VideoQueue().GetSize() <= 1, "Should decode at most one sample");
     mDecodeToSeekTarget = false;
     SeekCompleted();
   }
@@ -1648,7 +1647,8 @@ MediaDecoderStateMachine::InitiateSeek()
              // We must decode the first samples of active streams, so we can determine
              // the new stream time. So dispatch tasks to do that.
              self->mDecodeToSeekTarget = true;
-             self->DispatchDecodeTasksIfNeeded();
+             self->EnsureAudioDecodeTaskQueued();
+             self->EnsureVideoDecodeTaskQueued();
            }, [self] (nsresult aResult) -> void {
              self->mSeekRequest.Complete();
              MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
