@@ -632,7 +632,11 @@ Http2Session::CreateFrameHeader(charType dest, uint16_t frameLength,
 {
   MOZ_ASSERT(frameLength <= kMaxFrameData, "framelength too large");
   MOZ_ASSERT(!(streamID & 0x80000000));
-  MOZ_ASSERT(!frameFlags || (frameType != FRAME_TYPE_PRIORITY));
+  MOZ_ASSERT(!frameFlags ||
+             (frameType != FRAME_TYPE_PRIORITY &&
+              frameType != FRAME_TYPE_RST_STREAM &&
+              frameType != FRAME_TYPE_GOAWAY &&
+              frameType != FRAME_TYPE_WINDOW_UPDATE));
 
   dest[0] = 0x00;
   NetworkEndian::writeUint16(dest + 1, frameLength);
