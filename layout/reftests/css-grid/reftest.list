@@ -111,3 +111,4 @@ skip-if(Android&&isDebugBuild) == grid-row-gap-004.html grid-row-gap-004-ref.htm
 == grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007-ref.html
 == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008-ref.html
 == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009-ref.html
+== grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
