@@ -66,17 +66,24 @@ var o = wasmEval(toBuf(moduleHeaderThen(0)));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
 assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, extraError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 0))), TypeError, extraError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, sectionError);
 
 function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
 }
 
+function string(name) {
+    return name.split('').map(c => c.charCodeAt(0));
+}
+
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
-        bytes.push(...varU32(section.name.length + 1 + section.body.length));
-        bytes.push(...cstring(section.name));
+        var nameLength = varU32(section.name.length);
+        bytes.push(...varU32(nameLength.length + section.name.length + section.body.length));
+        bytes.push(...nameLength);
+        bytes.push(...string(section.name));
         bytes.push(...section.body);
     }
     bytes.push(0);
