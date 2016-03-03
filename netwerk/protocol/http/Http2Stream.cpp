@@ -738,8 +738,7 @@ Http2Stream::AdjustPushedPriority()
   mTxInlineFrameUsed += Http2Session::kFrameHeaderBytes + 5;
 
   mSession->CreateFrameHeader(packet, 5,
-                              Http2Session::FRAME_TYPE_PRIORITY,
-                              Http2Session::kFlag_PRIORITY,
+                              Http2Session::FRAME_TYPE_PRIORITY, 0,
                               mPushSource->mStreamID);
 
   mPushSource->SetPriority(mPriority);
