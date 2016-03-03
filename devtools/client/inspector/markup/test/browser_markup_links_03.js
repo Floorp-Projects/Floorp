@@ -13,7 +13,7 @@ add_task(function*() {
 
   info("Adding a contextmenu attribute to the body node via the content");
   let onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu1", testActor);
+  yield testActor.setAttribute("body", "contextmenu", "menu1");
   yield onMutated;
 
   info("Checking for links in the new attribute");
@@ -26,7 +26,7 @@ add_task(function*() {
 
   info("Editing the contextmenu attribute on the body node");
   onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu2", testActor);
+  yield testActor.setAttribute("body", "contextmenu", "menu2");
   yield onMutated;
 
   info("Checking for links in the updated attribute");

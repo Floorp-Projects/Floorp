@@ -25,8 +25,8 @@ function* testCollapsedLongAttribute(inspector, testActor) {
 
   info("Adding test attributes to the node");
   let onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("#node24", "class", "", testActor);
-  yield setNodeAttribute("#node24", "data-long", LONG_ATTRIBUTE, testActor);
+  yield testActor.setAttribute("#node24", "class", "");
+  yield testActor.setAttribute("#node24", "data-long", LONG_ATTRIBUTE);
   yield onMutated;
 
   yield assertAttributes("#node24", {
