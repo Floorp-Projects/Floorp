@@ -1379,44 +1379,37 @@ var BookmarkingUI = {
       aHeaderItem.nextSibling.remove();
     }
 
-    PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                       .asyncExecuteLegacyQueries([query], 1, options, {
-      handleResult: function (aResultSet) {
-        let onItemCommand = function (aEvent) {
-          let item = aEvent.target;
-          openUILink(item.getAttribute("targetURI"), aEvent);
-          CustomizableUI.hidePanelForNode(item);
-        };
+    let onItemCommand = function (aEvent) {
+      let item = aEvent.target;
+      openUILink(item.getAttribute("targetURI"), aEvent);
+      CustomizableUI.hidePanelForNode(item);
+    };
 
-        let fragment = document.createDocumentFragment();
-        let row;
-        while ((row = aResultSet.getNextRow())) {
-          let uri = row.getResultByIndex(1);
-          let title = row.getResultByIndex(2);
-          let icon = row.getResultByIndex(6);
+    let fragment = document.createDocumentFragment();
+    let root = PlacesUtils.history.executeQuery(query, options).root;
+    root.containerOpen = true;
+    for (let i = 0; i < root.childCount; i++) {
+      let node = root.getChild(i);
+      let uri = node.uri;
+      let title = node.title;
+      let icon = node.icon;
 
-          let item =
-            document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                     "menuitem");
-          item.setAttribute("label", title || uri);
-          item.setAttribute("targetURI", uri);
-          item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
-                                     extraCSSClass);
-          item.addEventListener("command", onItemCommand);
-          if (icon) {
-            let iconURL = "moz-anno:favicon:" + icon;
-            item.setAttribute("image", iconURL);
-          }
-          fragment.appendChild(item);
-        }
-        aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
-      },
-      handleError: function (aError) {
-        Cu.reportError("Error while attempting to show recent bookmarks: " + aError);
-      },
-      handleCompletion: function (aReason) {
-      },
-    });
+      let item =
+        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                 "menuitem");
+      item.setAttribute("label", title || uri);
+      item.setAttribute("targetURI", uri);
+      item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
+                                 extraCSSClass);
+      item.addEventListener("command", onItemCommand);
+      if (icon) {
+        let iconURL = "moz-anno:favicon:" + icon;
+        item.setAttribute("image", iconURL);
+      }
+      fragment.appendChild(item);
+    }
+    root.containerOpen = false;
+    aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
   },
 
   /**
