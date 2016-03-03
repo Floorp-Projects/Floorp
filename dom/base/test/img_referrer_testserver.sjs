@@ -140,7 +140,7 @@ function handleRequest(request, response) {
         let referrer = request.getHeader('Referer');
       if (referrer.indexOf("img_referrer_testserver") > 0) {
         referrerLevel = "full";
-      } else if (referrer == "http://mochi.test:8888/") {
+      } else if (referrer == "http://mochi.test:8888") {
         referrerLevel = "origin";
       }
       test.referrer = request.getHeader('Referer');
