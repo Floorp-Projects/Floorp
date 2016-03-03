@@ -19,6 +19,7 @@ class DOMMediaStream;
 class MediaEnginePhotoCallback;
 class MediaStream;
 class MediaStreamGraph;
+class MediaStreamTrackListener;
 class ProcessedMediaStream;
 
 namespace dom {
@@ -253,6 +254,18 @@ public:
    * Returns true if it was successfully removed.
    */
   bool RemovePrincipalChangeObserver(PrincipalChangeObserver<MediaStreamTrack>* aObserver);
+
+  /**
+   * Adds a MediaStreamTrackListener to the MediaStreamGraph representation of
+   * this track.
+   */
+  void AddListener(MediaStreamTrackListener* aListener);
+
+  /**
+   * Removes a MediaStreamTrackListener from the MediaStreamGraph representation
+   * of this track.
+   */
+  void RemoveListener(MediaStreamTrackListener* aListener);
 
 protected:
   virtual ~MediaStreamTrack();

@@ -183,11 +183,20 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
     for (int32_t i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
       aStream->ApplyTrackDisabling(data->mID, data->mData);
+      StreamTime offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
+          ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
       for (MediaStreamListener* l : aStream->mListeners) {
-        StreamTime offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
-            ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
         l->NotifyQueuedTrackChanges(this, data->mID,
                                     offset, data->mCommands, *data->mData);
+      }
+      for (TrackBound<MediaStreamTrackListener>& b : aStream->mTrackListeners) {
+        if (b.mTrackID != data->mID) {
+          continue;
+        }
+        b.mListener->NotifyQueuedChanges(this, offset, *data->mData);
+        if (data->mCommands & SourceMediaStream::TRACK_END) {
+          b.mListener->NotifyEnded();
+        }
       }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
@@ -2262,6 +2271,67 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
   if (!IsDestroyed()) {
     GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
   }
+}
+
+void
+MediaStream::AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aListener,
+                                  TrackID aTrackID)
+{
+  TrackBound<MediaStreamTrackListener>* l = mTrackListeners.AppendElement();
+  l->mListener = aListener;
+  l->mTrackID = aTrackID;
+}
+
+void
+MediaStream::AddTrackListener(MediaStreamTrackListener* aListener,
+                              TrackID aTrackID)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
+            TrackID aTrackID) :
+      ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
+    virtual void Run()
+    {
+      mStream->AddTrackListenerImpl(mListener.forget(), mTrackID);
+    }
+    RefPtr<MediaStreamTrackListener> mListener;
+    TrackID mTrackID;
+  };
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
+}
+
+void
+MediaStream::RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
+                                     TrackID aTrackID)
+{
+  for (size_t i = 0; i < mTrackListeners.Length(); ++i) {
+    if (mTrackListeners[i].mListener == aListener &&
+        mTrackListeners[i].mTrackID == aTrackID) {
+      mTrackListeners[i].mListener->NotifyRemoved();
+      mTrackListeners.RemoveElementAt(i);
+      return;
+    }
+  }
+}
+
+void
+MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
+                                 TrackID aTrackID)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
+            TrackID aTrackID) :
+      ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
+    virtual void Run()
+    {
+      mStream->RemoveTrackListenerImpl(mListener, mTrackID);
+    }
+    RefPtr<MediaStreamTrackListener> mListener;
+    TrackID mTrackID;
+  };
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
 }
 
 void

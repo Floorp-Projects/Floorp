@@ -239,6 +239,11 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
                                   mTrackMap[aIndex].mInputPort->GetSource(),
                                   mTrackMap[aIndex].mInputTrackID);
     }
+    for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
+      if (b.mTrackID == outputTrack->GetID()) {
+        b.mListener->NotifyEnded();
+      }
+    }
     outputTrack->SetEnded();
   }
 
@@ -299,6 +304,12 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
         MediaStreamListener* l = mListeners[j];
         l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
                                     outputStart, 0, *segment);
+      }
+      for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
+        if (b.mTrackID != outputTrack->GetID()) {
+          continue;
+        }
+        b.mListener->NotifyQueuedChanges(Graph(), outputStart, *segment);
       }
       outputTrack->GetSegment()->AppendFrom(segment);
     }
