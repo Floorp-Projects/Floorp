@@ -75,11 +75,6 @@ var tests = [
     prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", false]]
   },
   {
-    keySystem: 'unsupported-keysystem',
-    shouldPass: false,
-    expectedStatus: 'cdm-not-supported'
-  },
-  {
     keySystem: CLEARKEY_ID + '.10000' , // A stupendously high min CDM version, presumably not installed.
     shouldPass: false,
     expectedStatus: 'cdm-insufficient-version',
