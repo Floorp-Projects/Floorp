@@ -121,6 +121,9 @@ let gDevToolsBrowserMethods = [
   "selectToolCommand",
 
   // Used by browser-sets.inc, command
+  "openAboutDebugging",
+
+  // Used by browser-sets.inc, command
   "openConnectScreen",
 
   // Used by browser-sets.inc, command

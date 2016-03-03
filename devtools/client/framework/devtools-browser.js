@@ -193,6 +193,15 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
+   * Open a tab on "about:debugging", optionally pre-select a given tab.
+   */
+   // Used by browser-sets.inc, command
+  openAboutDebugging: function(gBrowser, hash) {
+    let url = "about:debugging" + (hash ? "#" + hash : "");
+    gBrowser.selectedTab = gBrowser.addTab(url);
+  },
+
+  /**
    * Open a tab to allow connects to a remote browser
    */
    // Used by browser-sets.inc, command
