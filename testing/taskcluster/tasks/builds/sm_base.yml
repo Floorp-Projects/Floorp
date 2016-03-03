@@ -8,16 +8,18 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.sm-plain'
 
   scopes:
+    - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-spidermonkey-workspace'
 
   payload:
     cache:
+      tooltool-cache: '/home/worker/tooltool-cache'
       level-{{level}}-{{project}}-build-spidermonkey-workspace: '/home/worker/workspace'
 
     env:
-      GECKO_REPOSITORY: '{{base_repository}}'
       MOZHARNESS_DISABLE: 'true'
       TOOLS_DISABLE: 'true'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
     maxRunTime: 36000
 
