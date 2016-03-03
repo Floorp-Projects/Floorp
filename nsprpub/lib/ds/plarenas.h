@@ -24,6 +24,8 @@ PR_EXTERN(void) PL_InitArenaPool(
 
 /*
 ** Finish using arenas, freeing all memory associated with them.
+** NOTE: this function is now a no-op. If you want to free a single
+** PLArenaPoolUse use PL_FreeArenaPool() or PL_FinishArenaPool().
 **/
 PR_EXTERN(void) PL_ArenaFinish(void);
 
