@@ -311,7 +311,8 @@ class GenericReceiveListener : public MediaStreamListener
       track_id_(track_id),
       track_rate_(track_rate),
       played_ticks_(0),
-      queue_track_(queue_track) {}
+      queue_track_(queue_track),
+      principal_handle_(PRINCIPAL_HANDLE_NONE) {}
 
   virtual ~GenericReceiveListener() {}
 
@@ -325,12 +326,21 @@ class GenericReceiveListener : public MediaStreamListener
     source_->EndTrack(track_id_);
   }
 
+#ifndef USE_FAKE_MEDIA_STREAMS
+  // Must be called on the main thread
+  void SetPrincipalHandle_m(const PrincipalHandle& aPrincipal);
+
+  // Must be called on the MediaStreamGraph thread
+  void SetPrincipalHandle_msg(const PrincipalHandle& aPrincipal);
+#endif // USE_FAKE_MEDIA_STREAMS
+
  protected:
   SourceMediaStream *source_;
   TrackID track_id_;
   TrackRate track_rate_;
   TrackTicks played_ticks_;
   bool queue_track_;
+  PrincipalHandle principal_handle_;
 };
 
 class TrackAddedCallback {
@@ -556,6 +566,11 @@ class MediaPipelineReceive : public MediaPipeline {
 
   int segments_added() const { return segments_added_; }
 
+#ifndef USE_FAKE_MEDIA_STREAMS
+  // Sets the PrincipalHandle we set on the media chunks produced by this
+  // pipeline. Must be called on the main thread.
+  virtual void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) = 0;
+#endif // USE_FAKE_MEDIA_STREAMS
  protected:
   ~MediaPipelineReceive() {
     MOZ_ASSERT(!stream_);  // Check that we have shut down already.
@@ -606,6 +621,13 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 
   virtual nsresult Init() override;
   virtual bool IsVideo() const override { return false; }
+
+#ifndef USE_FAKE_MEDIA_STREAMS
+  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
+  {
+    listener_->SetPrincipalHandle_m(principal_handle);
+  }
+#endif // USE_FAKE_MEDIA_STREAMS
 
  private:
   // Separate class to allow ref counting
@@ -693,6 +715,13 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
 
   virtual nsresult Init() override;
   virtual bool IsVideo() const override { return true; }
+
+#ifndef USE_FAKE_MEDIA_STREAMS
+  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
+  {
+    listener_->SetPrincipalHandle_m(principal_handle);
+  }
+#endif // USE_FAKE_MEDIA_STREAMS
 
  private:
   class PipelineRenderer : public VideoRenderer {
