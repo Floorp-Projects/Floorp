@@ -140,7 +140,7 @@ function isTestingSupported() {
     return true;
   }
 
-  let supported = isWebGLSupported();
+  let supported = isWebGLSupported(document);
 
   info("This test requires WebGL support.");
   info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
