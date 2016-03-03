@@ -6914,7 +6914,7 @@
     "expires_in_version": "never",
     "kind": "count",
     "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Scratchpad has been opened.",
+    "description": "Number of times the DevTools Scratchpad toolbox panel has been opened.",
     "releaseChannelCollection": "opt-out"
   },
   "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT": {

@@ -17,8 +17,6 @@ loader.lazyImporter(this, "ViewHelpers",
 loader.lazyImporter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
 
-const Telemetry = require("devtools/client/shared/telemetry");
-
 /**
  * Localization convenience methods.
  */
@@ -96,9 +94,6 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
 
   this.handleKeypress = this.handleKeypress.bind(this);
   this._panelDoc.addEventListener("keypress", this.handleKeypress);
-
-  this._telemetry = new Telemetry();
-  this._telemetry.toolOpened("storage");
 };
 
 exports.StorageUI = StorageUI;
@@ -119,7 +114,6 @@ StorageUI.prototype = {
     this._panelDoc.removeEventListener("keypress", this.handleKeypress);
     this.searchBox.removeEventListener("input", this.filterItems);
     this.searchBox = null;
-    this._telemetry.toolClosed("storage");
   },
 
   /**
