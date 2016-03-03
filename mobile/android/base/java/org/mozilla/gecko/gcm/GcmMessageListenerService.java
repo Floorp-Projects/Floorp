@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
 
+import org.mozilla.gecko.push.PushService;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -29,7 +30,7 @@ public class GcmMessageListenerService extends GcmListenerService {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                // PushService.getInstance().onMessageReceived(bundle);
+                PushService.getInstance().onMessageReceived(bundle);
             }
         });
     }
