@@ -355,7 +355,11 @@ HTMLSelectElement*
 HTMLOptionElement::GetSelect()
 {
   nsIContent* parent = GetParent();
-  HTMLSelectElement* select = HTMLSelectElement::FromContentOrNull(parent);
+  if (!parent) {
+    return nullptr;
+  }
+
+  HTMLSelectElement* select = HTMLSelectElement::FromContent(parent);
   if (select) {
     return select;
   }
