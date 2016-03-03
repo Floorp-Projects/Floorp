@@ -102,15 +102,13 @@ nsTransactionManager::UndoTransaction()
   // executing a  transaction's DoTransaction() method! If this happens,
   // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
-  RefPtr<nsTransactionItem> tx = mDoStack.Peek();
-
-  if (tx) {
+  if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
   // Peek at the top of the undo stack. Don't remove the transaction
   // until it has successfully completed.
-  tx = mUndoStack.Peek();
+  RefPtr<nsTransactionItem> tx = mUndoStack.Peek();
 
   // Bail if there's nothing on the stack.
   if (!tx) {
@@ -155,15 +153,13 @@ nsTransactionManager::RedoTransaction()
   // executing a  transaction's DoTransaction() method! If this happens,
   // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
-  RefPtr<nsTransactionItem> tx = mDoStack.Peek();
-
-  if (tx) {
+  if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
   // Peek at the top of the redo stack. Don't remove the transaction
   // until it has successfully completed.
-  tx = mRedoStack.Peek();
+  RefPtr<nsTransactionItem> tx = mRedoStack.Peek();
 
   // Bail if there's nothing on the stack.
   if (!tx) {
@@ -331,9 +327,7 @@ nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
   // SetMaxTransactionCount() request is ignored, and we return
   // NS_ERROR_FAILURE.
 
-  RefPtr<nsTransactionItem> tx = mDoStack.Peek();
-
-  if (tx) {
+  if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -364,7 +358,7 @@ nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
   // the bottom of the stack and pop towards the top.
 
   while (numUndoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    tx = mUndoStack.PopBottom();
+    RefPtr<nsTransactionItem> tx = mUndoStack.PopBottom();
 
     if (!tx) {
       return NS_ERROR_FAILURE;
@@ -377,7 +371,7 @@ nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
   // the bottom of the stack and pop towards the top.
 
   while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    tx = mRedoStack.PopBottom();
+    RefPtr<nsTransactionItem> tx = mRedoStack.PopBottom();
 
     if (!tx) {
       return NS_ERROR_FAILURE;
@@ -487,15 +481,11 @@ nsTransactionManager::BatchTopUndo()
 nsresult
 nsTransactionManager::RemoveTopUndo()
 {
-  RefPtr<nsTransactionItem> lastUndo;
-
-  lastUndo = mUndoStack.Peek();
-  if (!lastUndo) {
+  if (mUndoStack.IsEmpty()) {
     return NS_OK;
   }
 
-  lastUndo = mUndoStack.Pop();
-
+  RefPtr<nsTransactionItem> lastUndo = mUndoStack.Pop();
   return NS_OK;
 }
 
