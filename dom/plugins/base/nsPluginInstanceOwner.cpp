@@ -170,27 +170,6 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 
 #if MOZ_WIDGET_ANDROID
 static void
-AttachToContainerAsEGLImage(ImageContainer* container,
-                            nsNPAPIPluginInstance* instance,
-                            const LayoutDeviceRect& rect,
-                            RefPtr<Image>* out_image)
-{
-  MOZ_ASSERT(out_image);
-  MOZ_ASSERT(!*out_image);
-
-  EGLImage image = instance->AsEGLImage();
-  if (!image) {
-    return;
-  }
-
-  RefPtr<EGLImageImage> img = new EGLImageImage(
-    image, nullptr,
-    gfx::IntSize(rect.width, rect.height), instance->OriginPos(),
-    false /* owns */);
-  *out_image = img;
-}
-
-static void
 AttachToContainerAsSurfaceTexture(ImageContainer* container,
                                   nsNPAPIPluginInstance* instance,
                                   const LayoutDeviceRect& rect,
@@ -238,10 +217,7 @@ nsPluginInstanceOwner::GetImageContainer()
 
   // Try to get it as an EGLImage first.
   RefPtr<Image> img;
-  AttachToContainerAsEGLImage(container, mInstance, r, &img);
-  if (!img) {
-    AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
-  }
+  AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
 
   if (img) {
     container->SetCurrentImageInTransaction(img);
@@ -972,9 +948,9 @@ nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
   }
 
   if (aCommitted) {
-    widget->NotifyIME(widget::REQUEST_TO_COMMIT_COMPOSITION); 
+    widget->NotifyIME(widget::REQUEST_TO_COMMIT_COMPOSITION);
   } else {
-    widget->NotifyIME(widget::REQUEST_TO_CANCEL_COMPOSITION); 
+    widget->NotifyIME(widget::REQUEST_TO_CANCEL_COMPOSITION);
   }
   return true;
 }

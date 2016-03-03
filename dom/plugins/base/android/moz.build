@@ -16,7 +16,6 @@ SOURCES += [
     'ANPLog.cpp',
     'ANPMatrix.cpp',
     'ANPNativeWindow.cpp',
-    'ANPOpenGL.cpp',
     'ANPSurface.cpp',
     'ANPSystem.cpp',
     'ANPVideo.cpp',
