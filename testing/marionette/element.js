@@ -815,7 +815,7 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
  */
-element.checkVisible = function(el, win, x = undefined, y = undefined) {
+element.isVisible = function(el, win, x = undefined, y = undefined) {
   // Bug 1094246: Webdriver's isShown doesn't work with content xul
   let ns = atom.getElementAttribute(el, "namespaceURI", win);
   if (ns.indexOf("there.is.only.xul") < 0 &&
