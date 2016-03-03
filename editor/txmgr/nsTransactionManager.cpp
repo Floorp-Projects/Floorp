@@ -135,7 +135,7 @@ nsTransactionManager::UndoTransaction()
 
   if (NS_SUCCEEDED(result)) {
     tx = mUndoStack.Pop();
-    mRedoStack.Push(tx);
+    mRedoStack.Push(tx.forget());
   }
 
   nsresult result2 = DidUndoNotify(t, result);
@@ -188,7 +188,7 @@ nsTransactionManager::RedoTransaction()
 
   if (NS_SUCCEEDED(result)) {
     tx = mRedoStack.Pop();
-    mUndoStack.Push(tx);
+    mUndoStack.Push(tx.forget());
   }
 
   nsresult result2 = DidRedoNotify(t, result);
@@ -898,7 +898,7 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
 
   // Push the transaction on the undo stack:
 
-  mUndoStack.Push(tx);
+  mUndoStack.Push(tx.forget());
 
   return NS_OK;
 }

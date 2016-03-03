@@ -21,6 +21,7 @@ public:
   ~nsTransactionStack();
 
   void Push(nsTransactionItem *aTransactionItem);
+  void Push(already_AddRefed<nsTransactionItem> aTransactionItem);
   already_AddRefed<nsTransactionItem> Pop();
   already_AddRefed<nsTransactionItem> PopBottom();
   already_AddRefed<nsTransactionItem> Peek();
