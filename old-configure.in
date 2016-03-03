@@ -3596,7 +3596,7 @@ MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
 MOZ_WEBSPEECH_POCKETSPHINX=
 MOZ_WEBSPEECH_TEST_BACKEND=1
-VPX_AS=
+VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
 VPX_X86_ASM=
@@ -5268,21 +5268,20 @@ if test -z "$MOZ_NATIVE_LIBVPX"; then
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
     dnl We currently require gcc on all arm platforms.
-    VPX_AS=$YASM
     VPX_NEED_OBJ_INT_EXTRACT=
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
     Darwin:x86)
-      VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+      VPX_USE_YASM=1
       VPX_X86_ASM=1
     ;;
     Darwin:x86_64)
-      VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+      VPX_USE_YASM=1
       VPX_X86_ASM=1
     ;;
     WINNT:x86_64)
-      VPX_ASFLAGS="-f x64 -rnasm -pnasm"
+      VPX_USE_YASM=1
       VPX_X86_ASM=1
     ;;
     WINNT:x86)
@@ -5292,14 +5291,13 @@ if test -z "$MOZ_NATIVE_LIBVPX"; then
       elif test -n "$COMPILE_ENVIRONMENT" -a "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
         AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
       else
-        VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
+        VPX_USE_YASM=1
         VPX_X86_ASM=1
         dnl The encoder needs obj_int_extract to get asm offsets.
       fi # COMPILE_ENVIRONMENT and others
     ;;
     *:arm*)
       if test -n "$GNU_AS" ; then
-        VPX_AS=$AS
         dnl These flags are a lie; they're just used to enable the requisite
         dnl opcodes; actual arch detection is done at runtime.
         VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
@@ -5326,21 +5324,25 @@ if test -z "$MOZ_NATIVE_LIBVPX"; then
     ;;
     *:x86)
       if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        VPX_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC"
+        VPX_USE_YASM=1
         VPX_X86_ASM=1
       fi
     ;;
     *:x86_64)
       if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+        VPX_USE_YASM=1
         VPX_X86_ASM=1
       fi
     ;;
     esac
 
-    if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
+    if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_USE_YASM" -a -z "$YASM"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
     fi # COMPILE_ENVIRONMENT and others
+
+    if test -n "$VPX_USE_YASM" && test "$OS_ARCH:$CPU_ARCH" != "WINNT:x86_64"; then
+      VPX_ASFLAGS="-DPIC"
+    fi
 
     if test -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
       dnl We prefer to get asm offsets using inline assembler, which the above
@@ -5880,6 +5882,7 @@ dnl ========================================================
 dnl = libjpeg-turbo configuration
 dnl ========================================================
 MOZ_LIBJPEG_TURBO=
+LIBJPEG_TURBO_USE_YASM=
 if test -z "$MOZ_NATIVE_JPEG"; then
     MOZ_LIBJPEG_TURBO=1
 fi
@@ -5901,18 +5904,18 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
   dnl Do we support libjpeg-turbo on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
   Darwin:x86)
-    LIBJPEG_TURBO_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC -DMACHO"
+    LIBJPEG_TURBO_ASFLAGS="-DPIC -DMACHO"
   ;;
   Darwin:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
+    LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DMACHO"
   ;;
   Darwin:arm*)
   ;;
   WINNT:x86)
-    LIBJPEG_TURBO_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
+    LIBJPEG_TURBO_ASFLAGS="-DPIC -DWIN32"
   ;;
   WINNT:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
+    LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
   ;;
   *:arm)
     LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
@@ -5925,12 +5928,12 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
   ;;
   *:x86)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+      LIBJPEG_TURBO_ASFLAGS="-DPIC -DELF"
     fi
   ;;
   *:x86_64)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+      LIBJPEG_TURBO_ASFLAGS="-D__x86_64__ -DPIC -DELF"
     fi
   ;;
   esac
@@ -5942,9 +5945,9 @@ dnl If we're on an x86 or x64 system which supports libjpeg-turbo's asm routines
 dnl and --disable-libjpeg-turbo wasn't passed, check for Yasm, and error out if
 dnl it doesn't exist or we have too old of a version.
   x86_64|x86)
-    LIBJPEG_TURBO_AS=$YASM
+    LIBJPEG_TURBO_USE_YASM=1
 
-    if test -z "$LIBJPEG_TURBO_AS" ; then
+    if test -z "$YASM" ; then
         AC_MSG_ERROR([Yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have Yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
     fi
 
@@ -5960,15 +5963,7 @@ dnl it doesn't exist or we have too old of a version.
         fi
     fi
   ;;
-dnl On other platforms, use the C compiler as the assembler.
-  *)
-    LIBJPEG_TURBO_AS=$AS
-  ;;
   esac
-elif test -n "$MOZ_LIBJPEG_TURBO"; then
-    dnl Warn if we're not building the optimized routines, even though the user
-    dnl didn't specify --disable-libjpeg-turbo.
-    AC_MSG_WARN([No assembler or assembly support for libjpeg-turbo.  Using unoptimized C routines.])
 fi
 
 dnl ========================================================
@@ -5996,17 +5991,17 @@ if test -n "$MOZ_LIBAV_FFT"; then
   dnl Do we support libav-fft on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
   Darwin:x86_64)
-    LIBAV_FFT_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
+    LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DMACHO"
   ;;
   WINNT:x86)
-    LIBAV_FFT_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
+    LIBAV_FFT_ASFLAGS="-DPIC -DWIN32"
   ;;
   WINNT:x86_64)
-    LIBAV_FFT_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
+    LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DWIN64 -DMSVC"
   ;;
   *:x86_64)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
-      LIBAV_FFT_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+      LIBAV_FFT_ASFLAGS="-D__x86_64__ -DPIC -DELF"
     fi
   ;;
   *)
@@ -6019,8 +6014,7 @@ if test -n "$LIBAV_FFT_ASFLAGS"; then
   dnl If we're on an x86 or x64 system which supports libav-fft's asm routines
   dnl check for Yasm, and error out if it doesn't exist or we have too old of a
   dnl version.
-  LIBAV_FFT_AS=$YASM
-  if test -z "$LIBAV_FFT_AS" ; then
+  if test -z "$YASM" ; then
     AC_MSG_ERROR([Yasm is required to build with libav's optimized FFT routines, but you do not appear to have Yasm installed. See https://developer.mozilla.org/en/YASM for more details.])
   fi
   dnl Check that we have the right yasm version.  We require 1.0.1 or newer
@@ -6056,7 +6050,6 @@ esac
 dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
 if test -n "$MOZ_LIBAV_FFT"; then
   FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
-  FFVPX_AS=$LIBAV_FFT_AS
 fi
 if test -n "$MOZ_FFVPX"; then
   AC_DEFINE(MOZ_FFVPX)
@@ -8720,7 +8713,6 @@ AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FFVPX)
-AC_SUBST(FFVPX_AS)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_EME)
@@ -8730,7 +8722,7 @@ AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
-AC_SUBST(VPX_AS)
+AC_SUBST(VPX_USE_YASM)
 AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
@@ -8738,10 +8730,9 @@ AC_SUBST(VPX_ARM_ASM)
 AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(MOZ_CODE_COVERAGE)
-AC_SUBST(LIBJPEG_TURBO_AS)
+AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(MOZ_LIBAV_FFT)
-AC_SUBST(LIBAV_FFT_AS)
 AC_SUBST_LIST(LIBAV_FFT_ASFLAGS)
 AC_SUBST(MOZ_DEVTOOLS)
 

@@ -6,7 +6,7 @@
 
 # Due to duplicate file names, we compile libavutil/x86 in its own
 # moz.build file.
-if CONFIG['FFVPX_AS']:
+if CONFIG['FFVPX_ASFLAGS']:
     DIRS += ['x86']
 
 SharedLibrary('mozavutil')

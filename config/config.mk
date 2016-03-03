@@ -153,14 +153,7 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 endif
 
-ifeq ($(YASM),$(AS))
-# yasm doesn't like the GNU as flags we may already have in ASFLAGS, so reset.
-ASFLAGS := $(_DEBUG_ASFLAGS)
-# yasm doesn't like -c
-AS_DASH_C_FLAG=
-else
 ASFLAGS += $(_DEBUG_ASFLAGS)
-endif
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
