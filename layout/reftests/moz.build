@@ -279,6 +279,8 @@ with Files('w3c-css/received/css-conditional-3/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('w3c-css/received/css-namespaces-3/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('w3c-css/received/css-values-3/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('w3c-css/submitted/conditional3/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('w3c-css/submitted/css21/**'):
