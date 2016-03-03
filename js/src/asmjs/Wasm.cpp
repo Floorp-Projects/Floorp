@@ -1333,3 +1333,80 @@ wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
 
     return true;
 }
+
+static bool
+InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    MOZ_ASSERT(cx->runtime()->options().wasm());
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.get(0).isObject() || !args.get(0).toObject().is<ArrayBufferObject>()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
+
+    RootedObject exportObj(cx);
+    if (!Eval(cx, code, importObj, &exportObj))
+        return false;
+
+    args.rval().setObject(*exportObj);
+    return true;
+}
+
+#if JS_HAS_TOSOURCE
+static bool
+wasm_toSource(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().Wasm);
+    return true;
+}
+#endif
+
+static JSFunctionSpec wasm_static_methods[] = {
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
+#endif
+    JS_FN("instantiateModule", InstantiateModule, 1, 0),
+    JS_FS_END
+};
+
+const Class js::WasmClass = {
+    js_Wasm_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Wasm)
+};
+
+JSObject*
+js::InitWasmClass(JSContext* cx, HandleObject global)
+{
+    MOZ_ASSERT(cx->runtime()->options().wasm());
+
+    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    if (!proto)
+        return nullptr;
+
+    RootedObject Wasm(cx, NewObjectWithGivenProto(cx, &WasmClass, proto, SingletonObject));
+    if (!Wasm)
+        return nullptr;
+
+    if (!JS_DefineProperty(cx, global, js_Wasm_str, Wasm, JSPROP_RESOLVING))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, Wasm, wasm_static_methods))
+        return nullptr;
+
+    global->as<GlobalObject>().setConstructor(JSProto_Wasm, ObjectValue(*Wasm));
+    return Wasm;
+}
+

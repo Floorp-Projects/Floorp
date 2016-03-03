@@ -53,6 +53,8 @@ function moduleHeaderThen(...rest) {
     return [magic0, magic1, magic2, magic3, ver0, ver1, ver2, ver3, ...rest];
 }
 
+const wasmEval = Wasm.instantiateModule;
+
 assertErrorMessage(() => wasmEval(toBuf([])), TypeError, magicError);
 assertErrorMessage(() => wasmEval(toBuf([42])), TypeError, magicError);
 assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2])), TypeError, magicError);
