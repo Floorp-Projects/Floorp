@@ -454,19 +454,14 @@ class Encoder
         return bytecode_.append(bytes, numBytes);
     }
 
-    // A "section" is a contiguous range of bytes that stores its own size so
+    // A "section" is a contiguous region of bytes that stores its own size so
     // that it may be trivially skipped without examining the contents. Sections
     // require backpatching since the size of the section is only known at the
-    // end while the size's uint32 must be stored at the beginning. Immediately
-    // after the section length is the string id of the section.
+    // end while the size's uint32 must be stored at the beginning.
 
-    template <size_t IdSizeWith0>
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], size_t* offset) {
-        static const size_t IdSize = IdSizeWith0 - 1;
-        MOZ_ASSERT(id[IdSize] == '\0');
+    MOZ_WARN_UNUSED_RESULT bool startSection(const char* name, size_t* offset) {
         return writePatchableVarU32(offset) &&
-               writeVarU32(IdSize) &&
-               writeRawData(reinterpret_cast<const uint8_t*>(id), IdSize);
+               writeCString(name);
     }
     void finishSection(size_t offset) {
         return patchVarU32(offset, bytecode_.length() - offset - varU32ByteLength(offset));
@@ -692,44 +687,32 @@ class Decoder
 
     static const uint32_t NotStarted = UINT32_MAX;
 
-    template <size_t IdSizeWith0>
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset) {
-        static const size_t IdSize = IdSizeWith0 - 1;
-        MOZ_ASSERT(id[IdSize] == '\0');
+    MOZ_WARN_UNUSED_RESULT bool startSection(const char* name, uint32_t* startOffset) {
         const uint8_t* before = cur_;
-        uint32_t size;
-        if (!readVarU32(&size))
-            goto backup;
-        if (bytesRemain() < size)
+        uint32_t numBytes;
+        if (!readVarU32(&numBytes) || bytesRemain() < numBytes)
             return false;
-        uint32_t idSize;
-        if (!readVarU32(&idSize))
-            goto backup;
-        if (bytesRemain() < idSize)
-            return false;
-        if (idSize != IdSize || !!memcmp(cur_, id, IdSize))
-            goto backup;
-        cur_ += IdSize;
+        if (!readCStringIf(name)) {
+            cur_ = before;
+            *startOffset = NotStarted;
+            return true;
+        }
         *startOffset = before - beg_;
         return  true;
-      backup:
-        cur_ = before;
-        *startOffset = NotStarted;
-        return true;
     }
     MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t startOffset) {
         uint32_t currentOffset = cur_ - beg_;
         cur_ = beg_ + startOffset;
-        uint32_t size = uncheckedReadVarU32();
-        uint32_t afterSize = cur_ - beg_;
+        uint32_t numBytes = uncheckedReadVarU32();
+        uint32_t afterNumBytes = cur_ - beg_;
         cur_ = beg_ + currentOffset;
-        return size == (currentOffset - afterSize);
+        return numBytes == (currentOffset - afterNumBytes);
     }
     MOZ_WARN_UNUSED_RESULT bool skipSection() {
-        uint32_t size;
-        if (!readVarU32(&size) || bytesRemain() < size)
+        uint32_t numBytes;
+        if (!readVarU32(&numBytes) || bytesRemain() < numBytes)
             return false;
-        cur_ += size;
+        cur_ += numBytes;
         return true;
     }
 
