@@ -23,7 +23,7 @@ Gecko_ChildrenCount(RawGeckoNode* aNode)
   return aNode->GetChildCount();
 }
 
-int
+bool
 Gecko_NodeIsElement(RawGeckoNode* aNode)
 {
   return aNode->IsElement();
@@ -101,36 +101,37 @@ Gecko_ElementState(RawGeckoElement* aElement)
          ((1 << (NS_EVENT_STATE_HIGHEST_SERVO_BIT + 1)) - 1);
 }
 
-int
+bool
 Gecko_IsHTMLElementInHTMLDocument(RawGeckoElement* aElement)
 {
   return aElement->IsHTMLElement() && aElement->OwnerDoc()->IsHTMLDocument();
 }
 
-int
+bool
 Gecko_IsLink(RawGeckoElement* aElement)
 {
   return nsCSSRuleProcessor::IsLink(aElement);
 }
 
-int Gecko_IsTextNode(RawGeckoNode* aNode)
+bool
+Gecko_IsTextNode(RawGeckoNode* aNode)
 {
   return aNode->NodeInfo()->NodeType() == nsIDOMNode::TEXT_NODE;
 }
 
-int
+bool
 Gecko_IsVisitedLink(RawGeckoElement* aElement)
 {
   return aElement->StyleState().HasState(NS_EVENT_STATE_VISITED);
 }
 
-int
+bool
 Gecko_IsUnvisitedLink(RawGeckoElement* aElement)
 {
   return aElement->StyleState().HasState(NS_EVENT_STATE_UNVISITED);
 }
 
-int
+bool
 Gecko_IsRootElement(RawGeckoElement* aElement)
 {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
@@ -189,7 +190,8 @@ void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
             "non-MOZ_STYLO build");
 }
 
-int Servo_StyleSheetHasRules(RawServoStyleSheet* sheet)
+bool
+Servo_StyleSheetHasRules(RawServoStyleSheet* sheet)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_StyleSheetHasRules in a "
             "non-MOZ_STYLO build");
