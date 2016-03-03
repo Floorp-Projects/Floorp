@@ -109,11 +109,10 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
   uint32_t areaElmCount = imageMapObj->AreaCount();
   for (uint32_t idx = 0; idx < areaElmCount; idx++) {
     nsIContent* areaContent = imageMapObj->GetAreaAt(idx);
-
     Accessible* area = mChildren.SafeElementAt(idx);
     if (!area || area->GetContent() != areaContent) {
       RefPtr<Accessible> area = new HTMLAreaAccessible(areaContent, mDoc);
-      mDoc->BindToDocument(area, aria::GetRoleMap(areaContent));
+      mDoc->BindToDocument(area, aria::GetRoleMap(areaContent->AsElement()));
 
       if (!InsertChildAt(idx, area)) {
         mDoc->UnbindFromDocument(area);
