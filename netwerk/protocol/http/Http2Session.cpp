@@ -1658,6 +1658,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     LOG3(("Http2Session::PushPromise Semantics not Implemented\n"));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
     delete pushedStream;
+    self->ResetDownstreamState();
     return NS_OK;
   }
 
@@ -1666,6 +1667,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     // the decoded headers. Reset the stream and go away.
     self->GenerateRstStream(PROTOCOL_ERROR, promisedID);
     delete pushedStream;
+    self->ResetDownstreamState();
     return NS_OK;
   } else if (NS_FAILED(rv)) {
     // This is fatal to the session.
