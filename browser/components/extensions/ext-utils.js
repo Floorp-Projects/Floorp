@@ -125,19 +125,6 @@ global.makeWidgetId = id => {
   return id.replace(/[^a-z0-9_-]/g, "_");
 };
 
-function promisePopupShown(popup) {
-  return new Promise(resolve => {
-    if (popup.state == "open") {
-      resolve();
-    } else {
-      popup.addEventListener("popupshown", function onPopupShown(event) {
-        popup.removeEventListener("popupshown", onPopupShown);
-        resolve();
-      });
-    }
-  });
-}
-
 class BasePopup {
   constructor(extension, viewNode, popupURL) {
     let popupURI = Services.io.newURI(popupURL, null, extension.baseURI);
@@ -267,10 +254,6 @@ class BasePopup {
 
   // Resizes the browser to match the preferred size of the content.
   resizeBrowser() {
-    if (!this.browser) {
-      return;
-    }
-
     let width, height;
     try {
       let w = {}, h = {};
@@ -327,12 +310,7 @@ global.PanelPopup = class PanelPopup extends BasePopup {
   }
 
   closePopup() {
-    promisePopupShown(this.viewNode).then(() => {
-      // Make sure we're not already destroyed.
-      if (this.viewNode) {
-        this.viewNode.hidePopup();
-      }
-    });
+    this.viewNode.hidePopup();
   }
 };
 
